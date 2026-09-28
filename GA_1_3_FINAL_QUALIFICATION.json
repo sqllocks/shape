@@ -1,0 +1,8 @@
+{
+  "scope": ["GA worst-case generation qualification", "GA security qualification"],
+  "functional_tests": {"passed": 199, "warnings": 2},
+  "requirements": {"passed": 73, "total": 73},
+  "security": {"dedicated_tests_passed": 49, "structure_fuzz_trials": 500, "archive_fuzz_trials": 50, "fuzz_failures": 0, "repository_secret_scan": "passed", "compile": "passed"},
+  "generation": {"one_million_gate": "passed", "ten_million_gate": "passed", "deterministic": true, "target_rows_per_second": 1000000},
+  "not_claimed": ["100M qualification", "1B qualification", "independent penetration test", "live CVE/SBOM audit", "HSM/KMS/FIPS/classified-network accreditation"]
+}

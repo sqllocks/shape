@@ -1,0 +1,1282 @@
+[
+  {
+    "path": ".gitignore",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "GA_FINAL_TEST.txt",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "pyproject.toml",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "README.md",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "docs/API_STABILITY.md",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "docs/INSTALL.md",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "docs/RC1_RELEASE_CANDIDATE.md",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "docs/RELEASE_1_0_GA.md",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "docs/VALIDATION_0_3.txt",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "docs/VALIDATION_0_4.txt",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "docs/VALIDATION_0_6.txt",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "docs/VALIDATION_0_7.txt",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "docs/VALIDATION_0_8.txt",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "docs/VALIDATION_0_9.txt",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "rq/security_fuzz.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "rq/stream_fuzz.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "scripts/check_requirements.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/test_adversarial_invariants.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/test_ci_gate.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/test_future_roadmap.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/test_streaming_async.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": ".github/workflows/ci.yml",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": ".github/workflows/external-connectors.yml",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": ".github/workflows/release-ga.yml",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": ".github/workflows/release.yml",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": ".github/workflows/security.yml",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "docs/plans/M1-VALIDATION.txt",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "docs/specs/requirements.yaml",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "docs/specs/SHAPE_1_0_GA.md",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/api.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/errors.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/explain.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/types.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/admin/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/admin/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/ai/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/ai/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/artifact/canonical.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/artifact/io.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/artifact/migrate.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/artifact/secure.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/artifact/shape_file.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/artifact/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/capture/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/capture/vectorized.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/capture/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/ci/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/ci/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/cli/main.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/cli/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/compiler/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/compiler/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/connectors/dbapi.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/connectors/eventhubs.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/connectors/files.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/connectors/kafka.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/connectors/qualification.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/connectors/registry.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/connectors/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/contracts/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/contracts/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/diff/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/diff/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/distributed/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/distributed/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/drift/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/drift/policy.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/drift/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/enterprise/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/enterprise/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/etl/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/etl/runtime.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/etl/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/execution/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/execution/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/federation/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/federation/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/address_vectorized.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/advanced.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/certificate.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/compiler.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/distribution_fidelity.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/evolution.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/fidelity.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/future.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/geo_fidelity.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/joint.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/levels.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/relational.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/relational_fidelity.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/release.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/strategies.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/timeline.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/vectorized.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/generation/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/geospatial/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/geospatial/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/governance/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/governance/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/graph/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/graph/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/history/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/history/dag.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/history/series.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/history/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/hub/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/hub/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/integrations/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/integrations/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/kernel/batches.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/kernel/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/lineage/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/lineage/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/location/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/location/reference.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/location/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/marketplace/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/marketplace/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/model/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/model/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/observability/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/observability/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/packages/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/packages/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/packs/address.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/packs/base.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/packs/domains.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/packs/person.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/packs/sdk.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/packs/verify.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/packs/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/plugins/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/plugins/runtime.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/plugins/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/policy/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/policy/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/privacy/advanced.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/privacy/classification.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/privacy/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/privacy/detect.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/privacy/measure.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/privacy/policy.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/privacy/propagate.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/privacy/release.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/privacy/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/profile/advanced.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/profile/bounded_dependencies.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/profile/datetime.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/profile/dependence.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/profile/dependencies.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/profile/error.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/profile/numeric.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/profile/semantic_future.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/profile/sketches.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/profile/temporal.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/profile/text.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/profile/text_vectorized.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/profile/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/quality/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/quality/infer.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/quality/policy.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/quality/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/query/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/query/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/reference/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/reference/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/registry/local.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/registry/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/relations/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/relations/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/reproducibility/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/reproducibility/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/scenarios/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/scenarios/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/security/crypto.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/security/hardening.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/security/labels.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/security/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/spec/capabilities.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/spec/io.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/spec/migrate.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/spec/model.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/spec/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/streaming/aggregate_windows.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/streaming/checkpoint.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/streaming/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/streaming/evidence.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/streaming/failure.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/streaming/full_engine.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/streaming/keyed.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/streaming/monitor.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/streaming/online.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/streaming/platinum.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/streaming/vectorized.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/streaming/windows.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/streaming/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/temporal/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/temporal/future.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/temporal/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/testing/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/testing/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/transform/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/transform/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/validation/adversarial.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/validation/conformance.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/validation/fuzz.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/validation/invariants.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/validation/statistics.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/validation/suite.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/validation/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/webapp/core.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "src/shape/webapp/__init__.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/artifact/test_artifact.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/artifact/test_hardening.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/artifact/test_migration.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/artifact/test_rc_shape_file.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/artifact/test_secure.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/capture/test_capture.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/capture/test_late_columns.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/capture/test_vectorized.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/cli/test_cli.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/cli/test_cli_e2e.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/cli/test_five_cli.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/cli/test_product_cli.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/compiler/test_compiler.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/conformance/test_repository_constitution.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/connectors/test_adapters.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/connectors/test_dbapi.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/connectors/test_files.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/connectors/test_qualification.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/connectors/test_registry.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/contracts/test_contracts.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/diff/test_diff.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/drift/test_drift.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/drift/test_drift_gate_new.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/etl/test_etl.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/generation/test_address_partition_weights.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/generation/test_certificate.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/generation/test_distribution_fidelity.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/generation/test_fidelity_categorical.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/generation/test_fidelity_complete.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/generation/test_generation.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/generation/test_levels_evolution.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/generation/test_random_access.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/generation/test_relational.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/generation/test_shape_compiler.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/generation/test_strategies.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/generation/test_timeline.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/generation/test_vectorized_generation.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/geospatial/test_geo.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/history/test_dag.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/history/test_history.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/history/test_series.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/kernel/test_batches.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/location/test_location.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/location/test_reference.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/model/test_model.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/packs/test_address.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/packs/test_domains.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/packs/test_domain_sdk.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/packs/test_person.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/packs/test_sdk.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/packs/test_verify.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/platform12/test_features_01_04.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/platform12/test_features_05_08.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/platform12/test_features_09_12.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/platform12/test_hardening.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/platform12/test_integrations.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/plugins/test_plugins.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/plugins/test_runtime.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/privacy/test_classification.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/privacy/test_detect.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/privacy/test_measure.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/privacy/test_privacy.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/privacy/test_propagate.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/privacy/test_release_controls.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/privacy/test_release_policy_new.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/profile/test_advanced.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/profile/test_bounded_dependencies.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/profile/test_dependence_temporal.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/profile/test_dependencies.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/profile/test_error_models.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/profile/test_merge_invariants.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/profile/test_merge_properties.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/profile/test_numeric.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/quality/test_infer.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/quality/test_policy.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/query/test_query.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/registry/test_local_registry.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/relations/test_covariance.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/release/test_rc1_hardening.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/security/test_crypto.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/security/test_fuzz_boundaries.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/security/test_ga_security.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/security/test_ga_security_extended.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/security/test_rc1_leakage.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/security/test_sensitivity.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/security/test_zero_network.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/spec/test_capabilities.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/spec/test_ga_freeze.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/spec/test_io.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/spec/test_shape_contract.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/streaming/test_checkpoint_store.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/streaming/test_failure_replay.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/streaming/test_monitor.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/streaming/test_online.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/streaming/test_rc1_evidence.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/streaming/test_rq6.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/streaming/test_rq7.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/streaming/test_rq8.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/streaming/test_windows.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/torture/test_all_modules.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/torture/test_cross_feature_torture.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/transform/test_transform.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/types/test_types.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/validation/test_adversarial.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/validation/test_fuzz_artifact.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  },
+  {
+    "path": "tests/validation/test_suite.py",
+    "reason": "Final branding, qualification fixes, lint formatting/explicit imports, or evidence sanitization; see BASELINE_REPORT.md."
+  }
+]

@@ -1,0 +1,18 @@
+=== PYTEST ===
+84 passed, 1 warning in 1.50s
+
+=== REQUIREMENTS ===
+Requirement registry OK: 67 requirements.
+
+=== SECRET ===
+Basic secret check OK.
+
+=== CONFORMANCE ===
+artifact PASS
+capture PASS
+generation PASS
+
+=== LOCAL BENCHMARK ===
+rows=250000 generation_rps=62792 capture_rps=46030 maxrss_kb=157220 columns=2
+
+Note: the attempted 1,000,000-row materialized benchmark exceeded the available execution window, so no 1M throughput claim is made. The 250k result above completed on this host.

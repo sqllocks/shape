@@ -1,0 +1,66 @@
+{
+  "final_pytest": {
+    "exit_code": 0,
+    "output": "........................................................................ [ 12%]\n........................................................................ [ 24%]\n........................................................................ [ 36%]\n........................................................................ [ 48%]\n........................................................................ [ 60%]\n........................................................................ [ 72%]\n........................................................................ [ 84%]\n........................................................................ [ 97%]\n.................                                                        [100%]\n============================== warnings summary ===============================\ntests/artifact/test_hardening.py::test_duplicate_member_rejected\ntests/security/test_ga_security.py::test_archive_duplicate_member\n  <user-home>\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\zipfile\\__init__.py:1611: UserWarning: Duplicate name: 'manifest.json'\n    return self._open_to_write(zinfo, force_zip64=force_zip64)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n593 passed, 2 warnings in 16.16s\n"
+  },
+  "final_lint": {
+    "exit_code": 0,
+    "output": "All checks passed!\n"
+  },
+  "metadata": {
+    "exit_code": 0,
+    "output": "Checking \n<user-home>\\.codex\\.chatgpt-projects\\g-p-6aba3684da3881918304189cc074a35a\\wor\nk\\dist\\sqllocks_shape-1.0.0-py3-none-any.whl: PASSED\nChecking \n<user-home>\\.codex\\.chatgpt-projects\\g-p-6aba3684da3881918304189cc074a35a\\wor\nk\\dist\\sqllocks_shape-1.0.0.tar.gz: PASSED\n"
+  },
+  "wheel_contents": {
+    "name": "sqllocks-shape",
+    "version": "1.0.0",
+    "files": 202,
+    "missing": [],
+    "sha256": "d5ceab60a2da7d6ed71e468c0f7edaed92555fa8a25eb7ca59db49a205593696"
+  },
+  "sdist_contents": {
+    "files": 508,
+    "has_tests": true,
+    "has_workflows": true,
+    "has_license": true,
+    "has_pyproject": true,
+    "sha256": "20bd608031a3accbb55647ef945d63d44d64e35654474813632cd9d19327f7ea"
+  },
+  "create_clean_env": {
+    "exit_code": 0,
+    "output": ""
+  },
+  "install_wheel": {
+    "exit_code": 0,
+    "output": "Processing c:\\users\\suref\\.codex\\.chatgpt-projects\\g-p-6aba3684da3881918304189cc074a35a\\work\\dist\\sqllocks_shape-1.0.0-py3-none-any.whl\nCollecting cryptography<51,>=50 (from sqllocks-shape==1.0.0)\n  Using cached cryptography-50.0.1-cp311-abi3-win_amd64.whl.metadata (4.3 kB)\nCollecting numpy<3,>=1.26 (from sqllocks-shape==1.0.0)\n  Using cached numpy-2.5.3-cp312-cp312-win_amd64.whl.metadata (6.6 kB)\nCollecting pyarrow<24,>=23.0.1 (from sqllocks-shape==1.0.0)\n  Using cached pyarrow-23.0.1-cp312-cp312-win_amd64.whl.metadata (3.1 kB)\nCollecting pydantic<3,>=2.9 (from sqllocks-shape==1.0.0)\n  Using cached pydantic-2.13.5-py3-none-any.whl.metadata (110 kB)\nCollecting typing-extensions>=4.12 (from sqllocks-shape==1.0.0)\n  Using cached typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)\nCollecting cffi>=2.0.0 (from cryptography<51,>=50->sqllocks-shape==1.0.0)\n  Using cached cffi-2.1.1-cp312-cp312-win_amd64.whl.metadata (2.6 kB)\nCollecting annotated-types>=0.6.0 (from pydantic<3,>=2.9->sqllocks-shape==1.0.0)\n  Using cached annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)\nCollecting pydantic-core==2.46.5 (from pydantic<3,>=2.9->sqllocks-shape==1.0.0)\n  Using cached pydantic_core-2.46.5-cp312-cp312-win_amd64.whl.metadata (6.7 kB)\nCollecting typing-inspection>=0.4.2 (from pydantic<3,>=2.9->sqllocks-shape==1.0.0)\n  Using cached typing_inspection-0.4.4-py3-none-any.whl.metadata (2.6 kB)\nCollecting pycparser (from cffi>=2.0.0->cryptography<51,>=50->sqllocks-shape==1.0.0)\n  Using cached pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)\nUsing cached cryptography-50.0.1-cp311-abi3-win_amd64.whl (3.8 MB)\nUsing cached numpy-2.5.3-cp312-cp312-win_amd64.whl (12.6 MB)\nUsing cached pyarrow-23.0.1-cp312-cp312-win_amd64.whl (27.6 MB)\nUsing cached pydantic-2.13.5-py3-none-any.whl (472 kB)\nUsing cached pydantic_core-2.46.5-cp312-cp312-win_amd64.whl (2.0 MB)\nUsing cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)\nUsing cached annotated_types-0.8.0-py3-none-any.whl (13 kB)\nUsing cached cffi-2.1.1-cp312-cp312-win_amd64.whl (185 kB)\nUsing cached typing_inspection-0.4.4-py3-none-any.whl (14 kB)\nUsing cached pycparser-3.0-py3-none-any.whl (48 kB)\nInstalling collected packages: typing-extensions, pycparser, pyarrow, numpy, annotated-types, typing-inspection, pydantic-core, cffi, pydantic, cryptography, sqllocks-shape\nSuccessfully installed annotated-types-0.8.0 cffi-2.1.1 cryptography-50.0.1 numpy-2.5.3 pyarrow-23.0.1 pycparser-3.0 pydantic-2.13.5 pydantic-core-2.46.5 sqllocks-shape-1.0.0 typing-extensions-4.16.0 typing-inspection-0.4.4\n\n[notice] A new release of pip is available: 25.0.1 -> 26.2.1\n[notice] To update, run: <work>\\clean-final\\Scripts\\python.exe -m pip install --upgrade pip\n"
+  },
+  "clean_import": {
+    "exit_code": 0,
+    "output": "1.0.0\n<work>\\clean-final\\Lib\\site-packages\\shape\\__init__.py\n"
+  },
+  "clean_version": {
+    "exit_code": 0,
+    "output": "{\"artifact_format\": 1, \"shape\": \"1.0.0\", \"specification\": \"1.0\"}\n"
+  },
+  "clean_doctor": {
+    "exit_code": 0,
+    "output": "{\"cryptography\": \"50.0.1\", \"pyarrow\": \"23.0.1\", \"python\": \"3.12.10\", \"yaml\": null}\n"
+  },
+  "clean_conformance": {
+    "exit_code": 0,
+    "output": "[{\"detail\": \"\", \"name\": \"artifact\", \"passed\": true}, {\"detail\": \"\", \"name\": \"capture\", \"passed\": true}, {\"detail\": \"\", \"name\": \"generation\", \"passed\": true}]\n"
+  },
+  "dependency_audit": {
+    "exit_code": 0,
+    "output": {
+      "dependencies": 71,
+      "vulnerabilities": [],
+      "skipped": [
+        {
+          "name": "sqllocks-shape",
+          "skip_reason": "Dependency not found on PyPI and could not be audited: sqllocks-shape (1.0.0)"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,2922 @@
+[
+  {
+    "snapshot": "torture",
+    "path": "src/shape/packs/__pycache__/verify.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/packs/__pycache__/address.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/packs/__pycache__/domains.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/packs/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/packs/__pycache__/sdk.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/packs/__pycache__/base.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/packs/__pycache__/person.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/reproducibility/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/reproducibility/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/spec/__pycache__/model.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/spec/__pycache__/migrate.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/spec/__pycache__/capabilities.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/spec/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/spec/__pycache__/io.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/ci/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/ci/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/lineage/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/lineage/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/observability/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/observability/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/__pycache__/api.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/__pycache__/explain.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/__pycache__/errors.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/__pycache__/types.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/testing/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/testing/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/profile/__pycache__/sketches.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/profile/__pycache__/datetime.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/profile/__pycache__/error.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/profile/__pycache__/advanced.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/profile/__pycache__/temporal.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/profile/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/profile/__pycache__/numeric.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/profile/__pycache__/text.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/profile/__pycache__/dependencies.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/profile/__pycache__/dependence.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/profile/__pycache__/semantic_future.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/profile/__pycache__/text_vectorized.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/profile/__pycache__/bounded_dependencies.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/kernel/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/kernel/__pycache__/batches.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/geospatial/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/geospatial/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/transform/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/transform/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/contracts/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/contracts/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/streaming/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/streaming/__pycache__/windows.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/streaming/__pycache__/aggregate_windows.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/streaming/__pycache__/keyed.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/streaming/__pycache__/failure.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/streaming/__pycache__/checkpoint.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/streaming/__pycache__/platinum.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/streaming/__pycache__/vectorized.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/streaming/__pycache__/evidence.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/streaming/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/streaming/__pycache__/full_engine.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/streaming/__pycache__/monitor.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/streaming/__pycache__/online.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/webapp/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/webapp/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/privacy/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/privacy/__pycache__/release.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/privacy/__pycache__/detect.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/privacy/__pycache__/propagate.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/privacy/__pycache__/advanced.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/privacy/__pycache__/measure.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/privacy/__pycache__/classification.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/privacy/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/privacy/__pycache__/policy.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/capture/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/capture/__pycache__/vectorized.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/capture/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/ai/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/ai/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/admin/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/admin/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/etl/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/etl/__pycache__/runtime.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/etl/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/plugins/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/plugins/__pycache__/runtime.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/plugins/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/distributed/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/distributed/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/policy/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/policy/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/location/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/location/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/location/__pycache__/reference.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/temporal/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/temporal/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/temporal/__pycache__/future.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/federation/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/federation/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/validation/__pycache__/suite.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/validation/__pycache__/conformance.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/validation/__pycache__/statistics.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/validation/__pycache__/invariants.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/validation/__pycache__/adversarial.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/validation/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/validation/__pycache__/fuzz.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/security/__pycache__/hardening.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/security/__pycache__/labels.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/security/__pycache__/crypto.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/security/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/registry/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/registry/__pycache__/local.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/graph/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/graph/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/cli/__pycache__/main.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/cli/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/scenarios/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/scenarios/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/integrations/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/integrations/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/hub/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/hub/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/quality/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/quality/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/quality/__pycache__/policy.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/quality/__pycache__/infer.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/governance/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/governance/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/distribution_fidelity.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/address_vectorized.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/release.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/relational_fidelity.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/relational.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/advanced.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/certificate.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/levels.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/compiler.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/vectorized.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/timeline.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/future.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/geo_fidelity.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/fidelity.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/evolution.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/strategies.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/generation/__pycache__/joint.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/marketplace/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/marketplace/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/enterprise/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/enterprise/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/query/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/query/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/execution/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/execution/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/drift/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/drift/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/drift/__pycache__/policy.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/model/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/model/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/packages/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/packages/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/compiler/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/compiler/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/reference/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/reference/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/diff/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/diff/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/artifact/__pycache__/shape_file.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/artifact/__pycache__/migrate.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/artifact/__pycache__/secure.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/artifact/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/artifact/__pycache__/canonical.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/artifact/__pycache__/io.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/history/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/history/__pycache__/series.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/history/__pycache__/dag.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/history/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/connectors/__pycache__/kafka.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/connectors/__pycache__/qualification.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/connectors/__pycache__/eventhubs.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/connectors/__pycache__/dbapi.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/connectors/__pycache__/files.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/connectors/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/connectors/__pycache__/registry.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/relations/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "src/shape/relations/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/packs/__pycache__/test_domain_sdk.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/packs/__pycache__/test_domains.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/packs/__pycache__/test_sdk.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/packs/__pycache__/test_verify.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/packs/__pycache__/test_person.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/packs/__pycache__/test_address.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/spec/__pycache__/test_ga_freeze.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/spec/__pycache__/test_shape_contract.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/spec/__pycache__/test_io.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/spec/__pycache__/test_capabilities.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/__pycache__/test_streaming_async.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/__pycache__/test_ci_gate.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/__pycache__/test_future_roadmap.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/__pycache__/test_adversarial_invariants.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/profile/__pycache__/test_merge_invariants.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/profile/__pycache__/test_bounded_dependencies.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/profile/__pycache__/test_error_models.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/profile/__pycache__/test_dependencies.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/profile/__pycache__/test_advanced.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/profile/__pycache__/test_numeric.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/profile/__pycache__/test_merge_properties.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/profile/__pycache__/test_dependence_temporal.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/geospatial/__pycache__/test_geo.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/transform/__pycache__/test_transform.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/contracts/__pycache__/test_contracts.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/streaming/__pycache__/test_failure_replay.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/streaming/__pycache__/test_rc1_evidence.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/streaming/__pycache__/test_windows.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/streaming/__pycache__/test_rq7.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/streaming/__pycache__/test_rq6.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/streaming/__pycache__/test_online.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/streaming/__pycache__/test_rq8.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/streaming/__pycache__/test_checkpoint_store.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/streaming/__pycache__/test_monitor.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/conformance/__pycache__/test_repository_constitution.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/privacy/__pycache__/test_measure.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/privacy/__pycache__/test_release_controls.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/privacy/__pycache__/test_privacy.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/privacy/__pycache__/test_detect.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/privacy/__pycache__/test_classification.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/privacy/__pycache__/test_propagate.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/privacy/__pycache__/test_release_policy_new.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/capture/__pycache__/test_vectorized.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/capture/__pycache__/test_late_columns.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/capture/__pycache__/test_capture.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/torture/__pycache__/test_cross_feature_torture.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/torture/__pycache__/test_all_modules.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/etl/__pycache__/test_etl.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/plugins/__pycache__/test_plugins.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/plugins/__pycache__/test_runtime.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/location/__pycache__/test_reference.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/location/__pycache__/test_location.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/release/__pycache__/test_rc1_hardening.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/validation/__pycache__/test_suite.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/validation/__pycache__/test_adversarial.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/validation/__pycache__/test_fuzz_artifact.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/security/__pycache__/test_rc1_leakage.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/security/__pycache__/test_sensitivity.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/security/__pycache__/test_ga_security_extended.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/security/__pycache__/test_fuzz_boundaries.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/security/__pycache__/test_zero_network.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/security/__pycache__/test_ga_security.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/security/__pycache__/test_crypto.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/registry/__pycache__/test_local_registry.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/cli/__pycache__/test_cli.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/cli/__pycache__/test_cli_e2e.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/cli/__pycache__/test_five_cli.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/cli/__pycache__/test_product_cli.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/quality/__pycache__/test_policy.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/quality/__pycache__/test_infer.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/generation/__pycache__/test_fidelity_categorical.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/generation/__pycache__/test_vectorized_generation.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/generation/__pycache__/test_levels_evolution.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/generation/__pycache__/test_address_partition_weights.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/generation/__pycache__/test_generation.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/generation/__pycache__/test_fidelity_complete.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/generation/__pycache__/test_strategies.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/generation/__pycache__/test_relational.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/generation/__pycache__/test_distribution_fidelity.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/generation/__pycache__/test_shape_compiler.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/generation/__pycache__/test_random_access.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/generation/__pycache__/test_timeline.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/generation/__pycache__/test_certificate.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/query/__pycache__/test_query.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/drift/__pycache__/test_drift.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/drift/__pycache__/test_drift_gate_new.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/model/__pycache__/test_model.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/compiler/__pycache__/test_compiler.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/platform12/__pycache__/test_features_05_08.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/platform12/__pycache__/test_features_09_12.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/platform12/__pycache__/test_features_01_04.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/platform12/__pycache__/test_hardening.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/platform12/__pycache__/test_integrations.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/diff/__pycache__/test_diff.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/artifact/__pycache__/test_artifact.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/artifact/__pycache__/test_migration.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/artifact/__pycache__/test_hardening.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/artifact/__pycache__/test_rc_shape_file.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/artifact/__pycache__/test_secure.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/history/__pycache__/test_series.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/history/__pycache__/test_dag.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/history/__pycache__/test_history.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/connectors/__pycache__/test_adapters.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/connectors/__pycache__/test_dbapi.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/connectors/__pycache__/test_registry.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/connectors/__pycache__/test_qualification.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/connectors/__pycache__/test_files.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "torture",
+    "path": "tests/relations/__pycache__/test_covariance.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/packs/__pycache__/verify.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/packs/__pycache__/address.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/packs/__pycache__/domains.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/packs/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/packs/__pycache__/sdk.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/packs/__pycache__/base.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/packs/__pycache__/person.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/reproducibility/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/reproducibility/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/spec/__pycache__/model.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/spec/__pycache__/migrate.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/spec/__pycache__/capabilities.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/spec/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/spec/__pycache__/io.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/ci/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/ci/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/lineage/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/lineage/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/observability/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/observability/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/__pycache__/api.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/__pycache__/explain.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/__pycache__/errors.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/__pycache__/types.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/testing/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/testing/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/profile/__pycache__/sketches.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/profile/__pycache__/datetime.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/profile/__pycache__/error.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/profile/__pycache__/advanced.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/profile/__pycache__/temporal.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/profile/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/profile/__pycache__/numeric.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/profile/__pycache__/text.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/profile/__pycache__/dependencies.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/profile/__pycache__/dependence.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/profile/__pycache__/semantic_future.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/profile/__pycache__/text_vectorized.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/profile/__pycache__/bounded_dependencies.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/kernel/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/kernel/__pycache__/batches.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/geospatial/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/geospatial/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/transform/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/transform/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/contracts/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/contracts/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/streaming/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/streaming/__pycache__/windows.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/streaming/__pycache__/aggregate_windows.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/streaming/__pycache__/keyed.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/streaming/__pycache__/failure.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/streaming/__pycache__/checkpoint.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/streaming/__pycache__/platinum.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/streaming/__pycache__/vectorized.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/streaming/__pycache__/evidence.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/streaming/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/streaming/__pycache__/full_engine.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/streaming/__pycache__/monitor.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/streaming/__pycache__/online.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/webapp/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/webapp/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/privacy/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/privacy/__pycache__/release.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/privacy/__pycache__/detect.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/privacy/__pycache__/propagate.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/privacy/__pycache__/advanced.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/privacy/__pycache__/measure.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/privacy/__pycache__/classification.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/privacy/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/privacy/__pycache__/policy.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/capture/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/capture/__pycache__/vectorized.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/capture/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/ai/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/ai/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/admin/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/admin/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/etl/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/etl/__pycache__/runtime.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/etl/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/plugins/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/plugins/__pycache__/runtime.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/plugins/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/distributed/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/distributed/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/policy/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/policy/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/location/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/location/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/location/__pycache__/reference.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/temporal/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/temporal/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/temporal/__pycache__/future.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/federation/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/federation/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/validation/__pycache__/suite.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/validation/__pycache__/conformance.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/validation/__pycache__/statistics.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/validation/__pycache__/invariants.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/validation/__pycache__/adversarial.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/validation/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/validation/__pycache__/fuzz.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/security/__pycache__/hardening.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/security/__pycache__/labels.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/security/__pycache__/crypto.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/security/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/registry/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/registry/__pycache__/local.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/graph/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/graph/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/cli/__pycache__/main.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/cli/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/scenarios/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/scenarios/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/integrations/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/integrations/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/hub/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/hub/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/quality/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/quality/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/quality/__pycache__/policy.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/quality/__pycache__/infer.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/governance/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/governance/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/distribution_fidelity.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/address_vectorized.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/release.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/relational_fidelity.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/relational.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/advanced.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/certificate.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/levels.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/compiler.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/vectorized.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/timeline.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/future.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/geo_fidelity.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/fidelity.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/evolution.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/strategies.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/generation/__pycache__/joint.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/marketplace/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/marketplace/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/enterprise/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/enterprise/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/query/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/query/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/execution/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/execution/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/drift/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/drift/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/drift/__pycache__/policy.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/model/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/model/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/packages/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/packages/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/compiler/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/compiler/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/reference/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/reference/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/diff/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/diff/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/artifact/__pycache__/shape_file.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/artifact/__pycache__/migrate.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/artifact/__pycache__/secure.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/artifact/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/artifact/__pycache__/canonical.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/artifact/__pycache__/io.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/history/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/history/__pycache__/series.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/history/__pycache__/dag.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/history/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/connectors/__pycache__/kafka.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/connectors/__pycache__/qualification.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/connectors/__pycache__/eventhubs.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/connectors/__pycache__/dbapi.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/connectors/__pycache__/files.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/connectors/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/connectors/__pycache__/registry.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/relations/__pycache__/core.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "src/shape/relations/__pycache__/__init__.cpython-313.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/packs/__pycache__/test_domain_sdk.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/packs/__pycache__/test_domains.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/packs/__pycache__/test_sdk.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/packs/__pycache__/test_verify.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/packs/__pycache__/test_person.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/packs/__pycache__/test_address.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/spec/__pycache__/test_ga_freeze.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/spec/__pycache__/test_shape_contract.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/spec/__pycache__/test_io.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/spec/__pycache__/test_capabilities.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/__pycache__/test_streaming_async.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/__pycache__/test_ci_gate.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/__pycache__/test_future_roadmap.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/__pycache__/test_adversarial_invariants.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/profile/__pycache__/test_merge_invariants.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/profile/__pycache__/test_bounded_dependencies.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/profile/__pycache__/test_error_models.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/profile/__pycache__/test_dependencies.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/profile/__pycache__/test_advanced.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/profile/__pycache__/test_numeric.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/profile/__pycache__/test_merge_properties.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/profile/__pycache__/test_dependence_temporal.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/geospatial/__pycache__/test_geo.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/transform/__pycache__/test_transform.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/contracts/__pycache__/test_contracts.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/streaming/__pycache__/test_failure_replay.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/streaming/__pycache__/test_rc1_evidence.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/streaming/__pycache__/test_windows.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/streaming/__pycache__/test_rq7.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/streaming/__pycache__/test_rq6.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/streaming/__pycache__/test_online.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/streaming/__pycache__/test_rq8.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/streaming/__pycache__/test_checkpoint_store.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/streaming/__pycache__/test_monitor.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/conformance/__pycache__/test_repository_constitution.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/privacy/__pycache__/test_measure.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/privacy/__pycache__/test_release_controls.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/privacy/__pycache__/test_privacy.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/privacy/__pycache__/test_detect.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/privacy/__pycache__/test_classification.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/privacy/__pycache__/test_propagate.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/privacy/__pycache__/test_release_policy_new.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/capture/__pycache__/test_vectorized.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/capture/__pycache__/test_late_columns.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/capture/__pycache__/test_capture.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/etl/__pycache__/test_etl.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/plugins/__pycache__/test_plugins.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/plugins/__pycache__/test_runtime.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/location/__pycache__/test_reference.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/location/__pycache__/test_location.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/release/__pycache__/test_rc1_hardening.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/validation/__pycache__/test_suite.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/validation/__pycache__/test_adversarial.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/validation/__pycache__/test_fuzz_artifact.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/security/__pycache__/test_rc1_leakage.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/security/__pycache__/test_sensitivity.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/security/__pycache__/test_ga_security_extended.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/security/__pycache__/test_fuzz_boundaries.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/security/__pycache__/test_zero_network.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/security/__pycache__/test_ga_security.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/security/__pycache__/test_crypto.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/registry/__pycache__/test_local_registry.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/cli/__pycache__/test_cli.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/cli/__pycache__/test_cli_e2e.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/cli/__pycache__/test_five_cli.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/cli/__pycache__/test_product_cli.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/quality/__pycache__/test_policy.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/quality/__pycache__/test_infer.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/generation/__pycache__/test_fidelity_categorical.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/generation/__pycache__/test_vectorized_generation.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/generation/__pycache__/test_levels_evolution.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/generation/__pycache__/test_address_partition_weights.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/generation/__pycache__/test_generation.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/generation/__pycache__/test_fidelity_complete.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/generation/__pycache__/test_strategies.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/generation/__pycache__/test_relational.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/generation/__pycache__/test_distribution_fidelity.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/generation/__pycache__/test_shape_compiler.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/generation/__pycache__/test_random_access.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/generation/__pycache__/test_timeline.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/generation/__pycache__/test_certificate.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/query/__pycache__/test_query.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/drift/__pycache__/test_drift.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/drift/__pycache__/test_drift_gate_new.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/model/__pycache__/test_model.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/compiler/__pycache__/test_compiler.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/platform12/__pycache__/test_features_05_08.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/platform12/__pycache__/test_features_09_12.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/platform12/__pycache__/test_features_01_04.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/platform12/__pycache__/test_hardening.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/platform12/__pycache__/test_integrations.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/diff/__pycache__/test_diff.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/artifact/__pycache__/test_artifact.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/artifact/__pycache__/test_migration.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/artifact/__pycache__/test_hardening.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/artifact/__pycache__/test_rc_shape_file.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/artifact/__pycache__/test_secure.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/history/__pycache__/test_series.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/history/__pycache__/test_dag.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/history/__pycache__/test_history.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/connectors/__pycache__/test_adapters.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/connectors/__pycache__/test_dbapi.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/connectors/__pycache__/test_registry.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/connectors/__pycache__/test_qualification.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/connectors/__pycache__/test_files.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  },
+  {
+    "snapshot": "future",
+    "path": "tests/relations/__pycache__/test_covariance.cpython-313-pytest-9.0.2.pyc",
+    "reason": "Python cache"
+  }
+]

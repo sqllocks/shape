@@ -1,0 +1,25 @@
+{
+  "scanned_files": 507,
+  "rules": [
+    "github_token",
+    "aws_access_key",
+    "private_key",
+    "credential_literal",
+    "sas_token",
+    "bearer_literal",
+    "connection_credentials"
+  ],
+  "findings": [
+    {
+      "path": "tests/security/test_ga_security_extended.py",
+      "line": 28,
+      "rule": "aws_access_key"
+    },
+    {
+      "path": "tests/security/test_ga_security_extended.py",
+      "line": 30,
+      "rule": "private_key"
+    }
+  ],
+  "review": "Two matches are deliberately synthetic AWS/private-key markers in tests/security/test_ga_security_extended.py; no real credentials detected. Scanner signatures and external endpoints reviewed. This is pattern scanning, not proof of absence."
+}

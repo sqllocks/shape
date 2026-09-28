@@ -1,0 +1,34 @@
+{
+  "scope": "Local torture qualification of individual implementation modules and meaningful cross-feature combinations",
+  "individual_feature_torture": {
+    "implementation_modules_inventory": 134,
+    "module_and_public_surface_tests": "268 generated import/introspection cases",
+    "status": "PASS"
+  },
+  "cross_feature_torture": {
+    "generated_suite_total": "102 scenario/interaction cases plus deep lineage/replay cases",
+    "randomized_generation_seeds": 50,
+    "randomized_partition_contract_seeds": 50,
+    "deep_lineage_nodes": 100000,
+    "status": "PASS"
+  },
+  "whole_repository": {
+    "tests": "586 passed",
+    "warnings": 2,
+    "status": "PASS"
+  },
+  "adversarial": {
+    "security_fuzz": "500 structure + 50 archive trials, 0 failures",
+    "stream_fuzz": "100 trials, 0 failures",
+    "status": "PASS"
+  },
+  "connector_resilience": {
+    "deliveries": 1020000,
+    "unique": 1000000,
+    "duplicates_or_stale_suppressed": 20000,
+    "partitions": 8,
+    "status": "PASS"
+  },
+  "existing_performance_evidence": "The package retains prior GA worst-combination 1M/10M qualification. It was not re-run to completion in this final torture pass because the execution session time ceiling interrupted that long benchmark.",
+  "external_boundary": "Live cloud/broker/cluster/HSM/KMS/cross-OS/certification and multi-day/100M/1B tests still require those external environments; no local test can truthfully substitute for them."
+}

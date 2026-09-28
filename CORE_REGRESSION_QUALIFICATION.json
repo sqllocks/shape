@@ -1,0 +1,55 @@
+{
+  "stream_fuzz": {
+    "returncode": 0,
+    "stdout": "{\"trials\": 100, \"failures\": []}"
+  },
+  "text_perf": {
+    "returncode": 0,
+    "stdout": "{\"rows\": 1000000, \"runs_rps\": [1601293.891578779, 2188857.6211585966, 1971678.7395494154], \"median_rows_per_second\": 1971678.7395494154, \"semantic\": [[\"email\", 1.0]], \"distinct\": 100000}"
+  },
+  "full_evidence": {
+    "returncode": 0,
+    "median_rows_per_second": 1421380.849662989,
+    "runs": [
+      {
+        "rows": 5000000,
+        "seconds": 3.749521255000218,
+        "rows_per_second": 1333503.5755117247,
+        "fixture_generation_excluded": true,
+        "text_distinct": 10000,
+        "orphans": 0,
+        "geo_cells": 12,
+        "dependency_mi": 2.0795370306073555,
+        "out_of_order": 0,
+        "checkpoint": 5000000,
+        "maxrss_kb": 210216
+      },
+      {
+        "rows": 5000000,
+        "seconds": 3.511137403000248,
+        "rows_per_second": 1424039.9694206004,
+        "fixture_generation_excluded": true,
+        "text_distinct": 10000,
+        "orphans": 0,
+        "geo_cells": 12,
+        "dependency_mi": 2.0795370306073555,
+        "out_of_order": 0,
+        "checkpoint": 5000000,
+        "maxrss_kb": 210216
+      },
+      {
+        "rows": 5000000,
+        "seconds": 3.517706040000121,
+        "rows_per_second": 1421380.849662989,
+        "fixture_generation_excluded": true,
+        "text_distinct": 10000,
+        "orphans": 0,
+        "geo_cells": 12,
+        "dependency_mi": 2.0795370306073555,
+        "out_of_order": 0,
+        "checkpoint": 5000000,
+        "maxrss_kb": 210216
+      }
+    ]
+  }
+}

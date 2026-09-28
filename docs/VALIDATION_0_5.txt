@@ -1,0 +1,10 @@
+# Validation 0.5
+
+Local executable pytest suite: 48 passed, 0 failed (1.21s).
+Requirement registry: PASS — 38 requirements.
+Basic secret scan: PASS.
+Local benchmark (200,000 rows):
+- deterministic generation: 58,389 rows/sec
+- exact candidate-key profiling: 414,350 rows/sec
+
+Environment note: the host injects an unrelated spreadsheet-runtime warmup into Python startup; that warmup reports a daemon timeout on some invocations. The Shape pytest, benchmark, requirement and secret-check processes themselves returned exit code 0. PyArrow remains unavailable, so Arrow-specific suites are retained but not claimed as executed.

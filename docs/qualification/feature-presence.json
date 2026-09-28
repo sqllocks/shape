@@ -1,0 +1,758 @@
+[
+  {
+    "area": "admin",
+    "source_files": [
+      "src/shape/admin/core.py",
+      "src/shape/admin/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/test_future_roadmap.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "ai",
+    "source_files": [
+      "src/shape/ai/core.py",
+      "src/shape/ai/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/test_future_roadmap.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "artifact",
+    "source_files": [
+      "src/shape/artifact/canonical.py",
+      "src/shape/artifact/io.py",
+      "src/shape/artifact/migrate.py",
+      "src/shape/artifact/secure.py",
+      "src/shape/artifact/shape_file.py",
+      "src/shape/artifact/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/test_adversarial_invariants.py",
+      "tests/artifact/test_artifact.py",
+      "tests/artifact/test_hardening.py",
+      "tests/artifact/test_migration.py",
+      "tests/artifact/test_rc_shape_file.py",
+      "tests/artifact/test_secure.py",
+      "tests/cli/test_five_cli.py",
+      "tests/release/test_rc1_hardening.py",
+      "tests/security/test_fuzz_boundaries.py",
+      "tests/security/test_ga_security.py",
+      "tests/security/test_ga_security_extended.py",
+      "tests/spec/test_ga_freeze.py",
+      "tests/torture/test_cross_feature_torture.py",
+      "tests/validation/test_fuzz_artifact.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "capture",
+    "source_files": [
+      "src/shape/capture/core.py",
+      "src/shape/capture/vectorized.py",
+      "src/shape/capture/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/test_adversarial_invariants.py",
+      "tests/capture/test_capture.py",
+      "tests/capture/test_late_columns.py",
+      "tests/capture/test_vectorized.py",
+      "tests/generation/test_certificate.py",
+      "tests/generation/test_fidelity_categorical.py",
+      "tests/generation/test_shape_compiler.py",
+      "tests/quality/test_infer.py",
+      "tests/streaming/test_monitor.py",
+      "tests/torture/test_cross_feature_torture.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "ci",
+    "source_files": [
+      "src/shape/ci/core.py",
+      "src/shape/ci/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/test_ci_gate.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "cli",
+    "source_files": [
+      "src/shape/cli/main.py",
+      "src/shape/cli/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/cli/test_cli.py",
+      "tests/cli/test_cli_e2e.py",
+      "tests/cli/test_five_cli.py",
+      "tests/cli/test_product_cli.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "compiler",
+    "source_files": [
+      "src/shape/compiler/core.py",
+      "src/shape/compiler/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/compiler/test_compiler.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "connectors",
+    "source_files": [
+      "src/shape/connectors/dbapi.py",
+      "src/shape/connectors/eventhubs.py",
+      "src/shape/connectors/files.py",
+      "src/shape/connectors/kafka.py",
+      "src/shape/connectors/qualification.py",
+      "src/shape/connectors/registry.py",
+      "src/shape/connectors/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/connectors/test_adapters.py",
+      "tests/connectors/test_dbapi.py",
+      "tests/connectors/test_files.py",
+      "tests/connectors/test_qualification.py",
+      "tests/connectors/test_registry.py",
+      "tests/etl/test_etl.py",
+      "tests/torture/test_cross_feature_torture.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "contracts",
+    "source_files": [
+      "src/shape/contracts/core.py",
+      "src/shape/contracts/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/contracts/test_contracts.py",
+      "tests/spec/test_ga_freeze.py",
+      "tests/torture/test_cross_feature_torture.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "diff",
+    "source_files": [
+      "src/shape/diff/core.py",
+      "src/shape/diff/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/diff/test_diff.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "distributed",
+    "source_files": [
+      "src/shape/distributed/core.py",
+      "src/shape/distributed/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/platform12/test_features_01_04.py",
+      "tests/platform12/test_hardening.py",
+      "tests/torture/test_cross_feature_torture.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "drift",
+    "source_files": [
+      "src/shape/drift/core.py",
+      "src/shape/drift/policy.py",
+      "src/shape/drift/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/drift/test_drift.py",
+      "tests/drift/test_drift_gate_new.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "enterprise",
+    "source_files": [
+      "src/shape/enterprise/core.py",
+      "src/shape/enterprise/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/test_future_roadmap.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "etl",
+    "source_files": [
+      "src/shape/etl/core.py",
+      "src/shape/etl/runtime.py",
+      "src/shape/etl/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/etl/test_etl.py",
+      "tests/platform12/test_features_01_04.py",
+      "tests/platform12/test_hardening.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "execution",
+    "source_files": [
+      "src/shape/execution/core.py",
+      "src/shape/execution/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/test_future_roadmap.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "federation",
+    "source_files": [
+      "src/shape/federation/core.py",
+      "src/shape/federation/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/test_future_roadmap.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "generation",
+    "source_files": [
+      "src/shape/generation/address_vectorized.py",
+      "src/shape/generation/advanced.py",
+      "src/shape/generation/certificate.py",
+      "src/shape/generation/compiler.py",
+      "src/shape/generation/core.py",
+      "src/shape/generation/distribution_fidelity.py",
+      "src/shape/generation/evolution.py",
+      "src/shape/generation/fidelity.py",
+      "src/shape/generation/future.py",
+      "src/shape/generation/geo_fidelity.py",
+      "src/shape/generation/joint.py",
+      "src/shape/generation/levels.py",
+      "src/shape/generation/relational.py",
+      "src/shape/generation/relational_fidelity.py",
+      "src/shape/generation/release.py",
+      "src/shape/generation/strategies.py",
+      "src/shape/generation/timeline.py",
+      "src/shape/generation/vectorized.py",
+      "src/shape/generation/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/test_adversarial_invariants.py",
+      "tests/generation/test_address_partition_weights.py",
+      "tests/generation/test_certificate.py",
+      "tests/generation/test_distribution_fidelity.py",
+      "tests/generation/test_fidelity_categorical.py",
+      "tests/generation/test_fidelity_complete.py",
+      "tests/generation/test_generation.py",
+      "tests/generation/test_levels_evolution.py",
+      "tests/generation/test_random_access.py",
+      "tests/generation/test_relational.py",
+      "tests/generation/test_shape_compiler.py",
+      "tests/generation/test_strategies.py",
+      "tests/generation/test_timeline.py",
+      "tests/generation/test_vectorized_generation.py",
+      "tests/history/test_series.py",
+      "tests/platform12/test_features_05_08.py",
+      "tests/platform12/test_hardening.py",
+      "tests/torture/test_cross_feature_torture.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "geospatial",
+    "source_files": [
+      "src/shape/geospatial/core.py",
+      "src/shape/geospatial/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/geospatial/test_geo.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "governance",
+    "source_files": [
+      "src/shape/governance/core.py",
+      "src/shape/governance/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/test_future_roadmap.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "graph",
+    "source_files": [
+      "src/shape/graph/core.py",
+      "src/shape/graph/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/test_future_roadmap.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "history",
+    "source_files": [
+      "src/shape/history/core.py",
+      "src/shape/history/dag.py",
+      "src/shape/history/series.py",
+      "src/shape/history/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/history/test_dag.py",
+      "tests/history/test_history.py",
+      "tests/history/test_series.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "hub",
+    "source_files": [
+      "src/shape/hub/core.py",
+      "src/shape/hub/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/platform12/test_features_01_04.py",
+      "tests/platform12/test_hardening.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "integrations",
+    "source_files": [
+      "src/shape/integrations/core.py",
+      "src/shape/integrations/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/platform12/test_integrations.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "kernel",
+    "source_files": [
+      "src/shape/kernel/batches.py",
+      "src/shape/kernel/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/kernel/test_batches.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "lineage",
+    "source_files": [
+      "src/shape/lineage/core.py",
+      "src/shape/lineage/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/platform12/test_features_05_08.py",
+      "tests/platform12/test_hardening.py",
+      "tests/torture/test_cross_feature_torture.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "location",
+    "source_files": [
+      "src/shape/location/core.py",
+      "src/shape/location/reference.py",
+      "src/shape/location/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/location/test_location.py",
+      "tests/location/test_reference.py",
+      "tests/packs/test_address.py",
+      "tests/packs/test_domains.py",
+      "tests/torture/test_cross_feature_torture.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "marketplace",
+    "source_files": [
+      "src/shape/marketplace/core.py",
+      "src/shape/marketplace/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/test_future_roadmap.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "model",
+    "source_files": [
+      "src/shape/model/core.py",
+      "src/shape/model/__init__.py"
+    ],
+    "direct_import_test_files": [],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "observability",
+    "source_files": [
+      "src/shape/observability/core.py",
+      "src/shape/observability/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/platform12/test_features_09_12.py",
+      "tests/platform12/test_hardening.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "packages",
+    "source_files": [
+      "src/shape/packages/core.py",
+      "src/shape/packages/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/platform12/test_features_01_04.py",
+      "tests/platform12/test_hardening.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "packs",
+    "source_files": [
+      "src/shape/packs/address.py",
+      "src/shape/packs/base.py",
+      "src/shape/packs/domains.py",
+      "src/shape/packs/person.py",
+      "src/shape/packs/sdk.py",
+      "src/shape/packs/verify.py",
+      "src/shape/packs/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/packs/test_address.py",
+      "tests/packs/test_domains.py",
+      "tests/packs/test_domain_sdk.py",
+      "tests/packs/test_person.py",
+      "tests/packs/test_sdk.py",
+      "tests/packs/test_verify.py",
+      "tests/platform12/test_features_01_04.py",
+      "tests/platform12/test_hardening.py",
+      "tests/torture/test_cross_feature_torture.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "plugins",
+    "source_files": [
+      "src/shape/plugins/core.py",
+      "src/shape/plugins/runtime.py",
+      "src/shape/plugins/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/plugins/test_plugins.py",
+      "tests/plugins/test_runtime.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "policy",
+    "source_files": [
+      "src/shape/policy/core.py",
+      "src/shape/policy/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/privacy/test_privacy.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "privacy",
+    "source_files": [
+      "src/shape/privacy/advanced.py",
+      "src/shape/privacy/classification.py",
+      "src/shape/privacy/core.py",
+      "src/shape/privacy/detect.py",
+      "src/shape/privacy/measure.py",
+      "src/shape/privacy/policy.py",
+      "src/shape/privacy/propagate.py",
+      "src/shape/privacy/release.py",
+      "src/shape/privacy/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/test_future_roadmap.py",
+      "tests/generation/test_certificate.py",
+      "tests/privacy/test_classification.py",
+      "tests/privacy/test_detect.py",
+      "tests/privacy/test_measure.py",
+      "tests/privacy/test_privacy.py",
+      "tests/privacy/test_propagate.py",
+      "tests/privacy/test_release_controls.py",
+      "tests/privacy/test_release_policy_new.py",
+      "tests/release/test_rc1_hardening.py",
+      "tests/security/test_ga_security.py",
+      "tests/security/test_ga_security_extended.py",
+      "tests/security/test_rc1_leakage.py",
+      "tests/torture/test_cross_feature_torture.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "profile",
+    "source_files": [
+      "src/shape/profile/advanced.py",
+      "src/shape/profile/bounded_dependencies.py",
+      "src/shape/profile/datetime.py",
+      "src/shape/profile/dependence.py",
+      "src/shape/profile/dependencies.py",
+      "src/shape/profile/error.py",
+      "src/shape/profile/numeric.py",
+      "src/shape/profile/semantic_future.py",
+      "src/shape/profile/sketches.py",
+      "src/shape/profile/temporal.py",
+      "src/shape/profile/text.py",
+      "src/shape/profile/text_vectorized.py",
+      "src/shape/profile/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/generation/test_generation.py",
+      "tests/profile/test_advanced.py",
+      "tests/profile/test_bounded_dependencies.py",
+      "tests/profile/test_dependence_temporal.py",
+      "tests/profile/test_dependencies.py",
+      "tests/profile/test_error_models.py",
+      "tests/profile/test_merge_invariants.py",
+      "tests/profile/test_merge_properties.py",
+      "tests/profile/test_numeric.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "quality",
+    "source_files": [
+      "src/shape/quality/core.py",
+      "src/shape/quality/infer.py",
+      "src/shape/quality/policy.py",
+      "src/shape/quality/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/quality/test_infer.py",
+      "tests/quality/test_policy.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "query",
+    "source_files": [
+      "src/shape/query/core.py",
+      "src/shape/query/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/query/test_query.py",
+      "tests/security/test_fuzz_boundaries.py",
+      "tests/security/test_ga_security.py",
+      "tests/torture/test_cross_feature_torture.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "reference",
+    "source_files": [
+      "src/shape/reference/core.py",
+      "src/shape/reference/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/platform12/test_features_05_08.py",
+      "tests/platform12/test_hardening.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "registry",
+    "source_files": [
+      "src/shape/registry/local.py",
+      "src/shape/registry/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/registry/test_local_registry.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "relations",
+    "source_files": [
+      "src/shape/relations/core.py",
+      "src/shape/relations/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/relations/test_covariance.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "reproducibility",
+    "source_files": [
+      "src/shape/reproducibility/core.py",
+      "src/shape/reproducibility/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/test_future_roadmap.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "scenarios",
+    "source_files": [
+      "src/shape/scenarios/core.py",
+      "src/shape/scenarios/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/platform12/test_features_09_12.py",
+      "tests/platform12/test_hardening.py",
+      "tests/torture/test_cross_feature_torture.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "security",
+    "source_files": [
+      "src/shape/security/crypto.py",
+      "src/shape/security/hardening.py",
+      "src/shape/security/labels.py",
+      "src/shape/security/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/artifact/test_secure.py",
+      "tests/privacy/test_privacy.py",
+      "tests/security/test_crypto.py",
+      "tests/security/test_fuzz_boundaries.py",
+      "tests/security/test_ga_security.py",
+      "tests/security/test_ga_security_extended.py",
+      "tests/security/test_sensitivity.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "spec",
+    "source_files": [
+      "src/shape/spec/capabilities.py",
+      "src/shape/spec/io.py",
+      "src/shape/spec/migrate.py",
+      "src/shape/spec/model.py",
+      "src/shape/spec/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/spec/test_capabilities.py",
+      "tests/spec/test_io.py",
+      "tests/spec/test_shape_contract.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "streaming",
+    "source_files": [
+      "src/shape/streaming/aggregate_windows.py",
+      "src/shape/streaming/checkpoint.py",
+      "src/shape/streaming/core.py",
+      "src/shape/streaming/evidence.py",
+      "src/shape/streaming/failure.py",
+      "src/shape/streaming/full_engine.py",
+      "src/shape/streaming/keyed.py",
+      "src/shape/streaming/monitor.py",
+      "src/shape/streaming/online.py",
+      "src/shape/streaming/platinum.py",
+      "src/shape/streaming/vectorized.py",
+      "src/shape/streaming/windows.py",
+      "src/shape/streaming/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/test_streaming_async.py",
+      "tests/release/test_rc1_hardening.py",
+      "tests/security/test_rc1_leakage.py",
+      "tests/streaming/test_checkpoint_store.py",
+      "tests/streaming/test_failure_replay.py",
+      "tests/streaming/test_monitor.py",
+      "tests/streaming/test_online.py",
+      "tests/streaming/test_rc1_evidence.py",
+      "tests/streaming/test_rq6.py",
+      "tests/streaming/test_rq7.py",
+      "tests/streaming/test_rq8.py",
+      "tests/streaming/test_windows.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "temporal",
+    "source_files": [
+      "src/shape/temporal/core.py",
+      "src/shape/temporal/future.py",
+      "src/shape/temporal/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/platform12/test_features_05_08.py",
+      "tests/platform12/test_hardening.py",
+      "tests/torture/test_cross_feature_torture.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "testing",
+    "source_files": [
+      "src/shape/testing/core.py",
+      "src/shape/testing/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/platform12/test_features_09_12.py",
+      "tests/torture/test_cross_feature_torture.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "transform",
+    "source_files": [
+      "src/shape/transform/core.py",
+      "src/shape/transform/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/transform/test_transform.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "validation",
+    "source_files": [
+      "src/shape/validation/adversarial.py",
+      "src/shape/validation/conformance.py",
+      "src/shape/validation/fuzz.py",
+      "src/shape/validation/invariants.py",
+      "src/shape/validation/statistics.py",
+      "src/shape/validation/suite.py",
+      "src/shape/validation/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/validation/test_adversarial.py",
+      "tests/validation/test_fuzz_artifact.py",
+      "tests/validation/test_suite.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  },
+  {
+    "area": "webapp",
+    "source_files": [
+      "src/shape/webapp/core.py",
+      "src/shape/webapp/__init__.py"
+    ],
+    "direct_import_test_files": [
+      "tests/platform12/test_features_09_12.py",
+      "tests/platform12/test_hardening.py"
+    ],
+    "note": "Direct imports identify test coverage locations, not a claim of exhaustive behavioral coverage. All inventoried modules also have import/introspection tests."
+  }
+]

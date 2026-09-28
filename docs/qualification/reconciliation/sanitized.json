@@ -1,0 +1,14 @@
+{
+  "reason": "Replace historical machine-local checkout and random temporary paths; retain test outcomes and original archive hashes. Historical manifests are snapshot evidence, not hashes of this final tree.",
+  "files": [
+    "NAMING_MIGRATION.json",
+    "docs/VALIDATION_0_3.txt",
+    "docs/VALIDATION_0_4.txt",
+    "docs/VALIDATION_0_6.txt",
+    "docs/VALIDATION_0_7.txt",
+    "docs/VALIDATION_0_8.txt",
+    "docs/VALIDATION_0_9.txt",
+    "docs/plans/M1-VALIDATION.txt",
+    "GA_FINAL_TEST.txt"
+  ]
+}

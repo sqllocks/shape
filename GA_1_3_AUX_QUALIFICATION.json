@@ -1,0 +1,18 @@
+{
+  "requirements": {
+    "returncode": 0,
+    "stdout": "Requirement registry OK: 73 requirements."
+  },
+  "secrets": {
+    "returncode": 1,
+    "stdout": "Possible secrets:\ntests/security/test_ga_security_extended.py\ntests/security/__pycache__/test_ga_security_extended.cpython-313-pytest-9.0.2.pyc\ntests/security/__pycache__/test_ga_security.cpython-313-pytest-9.0.2.pyc"
+  },
+  "compile": {
+    "returncode": 0,
+    "stdout": ""
+  },
+  "stream_fuzz": {
+    "returncode": 0,
+    "stdout": "{\"trials\": 100, \"failures\": []}"
+  }
+}

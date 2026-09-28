@@ -1,0 +1,31 @@
+name: Release GA
+on: {workflow_dispatch: {}}
+permissions: {contents: write, id-token: write, attestations: write}
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - run: pip install build twine pip-audit cyclonedx-bom sigstore
+      - run: pip install -e '.[dev]'
+      - run: python -m pip install --upgrade pip
+      - run: python -m pytest -q
+      - run: python -m build
+      - run: python -m twine check dist/*
+      - run: pip-audit
+      - run: cyclonedx-py environment -o sbom.cdx.json
+      - run: sha256sum dist/* > SHA256SUMS
+      - run: python -m sigstore sign --bundle dist.sigstore.json dist/*
+      - uses: actions/attest-build-provenance@v2
+        with: {subject-path: 'dist/*'}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shape-ga-release
+          path: |
+            dist/*
+            sbom.cdx.json
+            SHA256SUMS
+            dist.sigstore.json

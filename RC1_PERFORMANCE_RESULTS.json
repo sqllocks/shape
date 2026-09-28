@@ -1,0 +1,14 @@
+{
+  "text_perf": {
+    "rc": 0,
+    "stdout": "{\"rows\": 1000000, \"seconds\": 0.6074337800000649, \"rows_per_second\": 1646269.9851824066, \"semantic\": [[\"email\", 1.0]], \"distinct\": 100000}"
+  },
+  "full_evidence_perf": {
+    "rc": 0,
+    "stdout": "{\"rows\": 5000000, \"seconds\": 5.138245471000118, \"rows_per_second\": 973094.8099345651, \"fixture_generation_excluded\": true, \"text_distinct\": 10000, \"orphans\": 0, \"geo_cells\": 12, \"dependency_mi\": 1.855815331357825, \"out_of_order\": 0, \"checkpoint\": 5000000, \"maxrss_kb\": 210216}"
+  },
+  "compile": {
+    "rc": 0,
+    "stdout": ""
+  }
+}

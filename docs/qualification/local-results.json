@@ -1,0 +1,82 @@
+{
+  "pytest": {
+    "exit_code": 0,
+    "seconds": 16.25,
+    "output": "........................................................................ [ 12%]\n........................................................................ [ 24%]\n........................................................................ [ 36%]\n........................................................................ [ 48%]\n........................................................................ [ 60%]\n........................................................................ [ 72%]\n........................................................................ [ 84%]\n........................................................................ [ 97%]\n.................                                                        [100%]\n============================== warnings summary ===============================\ntests/artifact/test_hardening.py::test_duplicate_member_rejected\ntests/security/test_ga_security.py::test_archive_duplicate_member\n  <user-home>\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\zipfile\\__init__.py:1611: UserWarning: Duplicate name: 'manifest.json'\n    return self._open_to_write(zinfo, force_zip64=force_zip64)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n593 passed, 2 warnings in 15.82s\n"
+  },
+  "torture": {
+    "exit_code": 0,
+    "seconds": 5.7,
+    "output": "........................................................................ [ 19%]\n........................................................................ [ 38%]\n........................................................................ [ 58%]\n........................................................................ [ 77%]\n........................................................................ [ 97%]\n..........                                                               [100%]\n370 passed in 5.33s\n"
+  },
+  "requirements": {
+    "exit_code": 0,
+    "seconds": 0.11,
+    "output": "Requirement registry OK: 89 requirements.\n"
+  },
+  "secrets": {
+    "exit_code": 0,
+    "seconds": 0.17,
+    "output": "Basic secret check OK.\n"
+  },
+  "compile": {
+    "exit_code": 0,
+    "seconds": 0.17,
+    "output": ""
+  },
+  "security_fuzz": {
+    "exit_code": 0,
+    "seconds": 3.2,
+    "output": "{\"structure_trials\": 500, \"archive_trials\": 50, \"failures\": []}\n<user-home>\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\zipfile\\__init__.py:1611: UserWarning: Duplicate name: 'a/../x'\n  return self._open_to_write(zinfo, force_zip64=force_zip64)\n<user-home>\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\zipfile\\__init__.py:1611: UserWarning: Duplicate name: '/abs'\n  return self._open_to_write(zinfo, force_zip64=force_zip64)\n<user-home>\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\zipfile\\__init__.py:1611: UserWarning: Duplicate name: '../x'\n  return self._open_to_write(zinfo, force_zip64=force_zip64)\n"
+  },
+  "stream_fuzz": {
+    "exit_code": 0,
+    "seconds": 0.48,
+    "output": "{\"trials\": 100, \"failures\": []}\n"
+  },
+  "connector_resilience": {
+    "exit_code": 0,
+    "seconds": 1.64,
+    "output": "{\"input_deliveries\": 1020000, \"unique_projected\": 1000000, \"seconds\": 0.33889670000007754, \"deliveries_per_second\": 3009766.6929178317, \"duplicates_or_stale\": 20000, \"partitions\": 8, \"reconnect_attempts\": 4}\n"
+  },
+  "connector_suite": {
+    "exit_code": 0,
+    "seconds": 0.81,
+    "output": "{\"kafka\": {\"rows\": 100000, \"max_drift\": 0, \"live_sdk_available\": true}, \"eventhubs\": {\"rows\": 100000, \"max_drift\": 0, \"live_sdk_available\": true}}\n"
+  },
+  "benchmark": {
+    "exit_code": 0,
+    "seconds": 1.16,
+    "output": "rows=200000 generation_rows_per_sec=221655 key_profile_rows_per_sec=2449981\n"
+  },
+  "version": {
+    "exit_code": 0,
+    "seconds": 0.23,
+    "output": "{\"artifact_format\": 1, \"shape\": \"1.0.0\", \"specification\": \"1.0\"}\n"
+  },
+  "doctor": {
+    "exit_code": 0,
+    "seconds": 0.3,
+    "output": "{\"cryptography\": \"50.0.1\", \"pyarrow\": \"23.0.1\", \"python\": \"3.12.10\", \"yaml\": \"6.0.3\"}\n"
+  },
+  "conformance": {
+    "exit_code": 0,
+    "seconds": 0.22,
+    "output": "[{\"detail\": \"\", \"name\": \"artifact\", \"passed\": true}, {\"detail\": \"\", \"name\": \"capture\", \"passed\": true}, {\"detail\": \"\", \"name\": \"generation\", \"passed\": true}]\n"
+  },
+  "pip_check": {
+    "exit_code": 0,
+    "seconds": 0.45,
+    "output": "No broken requirements found.\n"
+  },
+  "build": {
+    "exit_code": 0,
+    "seconds": 6.59,
+    "output": "Successfully built sqllocks_shape-1.0.0.tar.gz and sqllocks_shape-1.0.0-py3-none-any.whl\n* Creating isolated environment: venv+pip...\n* Installing packages in isolated environment:\n  - hatchling>=1.25\n* Getting build dependencies for sdist...\n* Installed build dependency versions:\n  - hatchling==1.32.4\n* Building sdist...\n* Building wheel from sdist\n* Creating isolated environment: venv+pip...\n* Installing packages in isolated environment:\n  - hatchling>=1.25\n* Getting build dependencies for wheel...\n* Installed build dependency versions:\n  - hatchling==1.32.4\n* Building wheel...\n"
+  },
+  "lint": {
+    "exit_code": 0,
+    "seconds": 0.09,
+    "output": ""
+  }
+}

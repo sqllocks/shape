@@ -1,0 +1,14 @@
+{
+  "text_perf": {
+    "returncode": 0,
+    "stdout": "{\"rows\": 1000000, \"runs_rps\": [2118938.6631216155, 1656170.5011751677, 1773106.7494888916], \"median_rows_per_second\": 1773106.7494888916, \"semantic\": [[\"email\", 1.0]], \"distinct\": 100000}"
+  },
+  "full_evidence": {
+    "returncode": 0,
+    "stdout": "{\"rows\": 5000000, \"seconds\": 3.083036317000733, \"rows_per_second\": 1621777.846867579, \"fixture_generation_excluded\": true, \"text_distinct\": 10000, \"orphans\": 0, \"geo_cells\": 12, \"dependency_mi\": 2.0795370306073555, \"out_of_order\": 0, \"checkpoint\": 5000000, \"maxrss_kb\": 210216}"
+  },
+  "reconstruction": {
+    "returncode": 0,
+    "stdout": "{\"status\": \"completed\", \"rows\": 100000, \"target\": {\"mean\": 49.95, \"variance_population\": 833.3325}, \"observed\": {\"mean\": 50.00668614274787, \"variance_population\": 718.225996656608}, \"fidelity\": {\"marginal\": {\"mean\": {\"status\": \"pass\", \"relative_error\": 0.001134857712669954, \"tolerance\": 0.05}, \"variance_population\": {\"status\": \"pass\", \"relative_error\": 0.1381279421400125, \"tolerance\": 0.15}}}}"
+  }
+}

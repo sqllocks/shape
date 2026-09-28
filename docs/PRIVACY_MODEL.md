@@ -1,0 +1,2 @@
+# Privacy Model
+A Shape is not automatically anonymous. Aggregates, rare categories, small cohorts, geography, history and differencing can disclose sensitive facts. Production policy should apply cohort thresholds, rare-value suppression, sensitivity propagation, history access control, release review and—where needed—formal privacy mechanisms. Shape 1.0 does not claim that k-anonymity alone provides anonymization.

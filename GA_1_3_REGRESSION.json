@@ -1,0 +1,22 @@
+{
+  "requirements": {
+    "returncode": 0,
+    "stdout": "Requirement registry OK: 73 requirements."
+  },
+  "secrets": {
+    "returncode": 1,
+    "stdout": "Possible secrets:\ntests/security/test_ga_security.py\ntests/security/__pycache__/test_ga_security.cpython-313-pytest-9.0.2.pyc"
+  },
+  "compile": {
+    "returncode": 0,
+    "stdout": ""
+  },
+  "platform12_perf": {
+    "returncode": 0,
+    "stdout": "{\"01_hub_protocol\": {\"units\": 200000, \"seconds\": 0.7252190380004322, \"units_per_second\": 275778.75030892505, \"minimum\": 100000, \"passed\": true}, \"02_domain_package_publish\": {\"units\": 1000, \"seconds\": 0.5545076800008246, \"units_per_second\": 1803.40153268664, \"minimum\": 500, \"passed\": true}, \"03_etl_runtime\": {\"units\": 100000, \"seconds\": 0.1645190149993141, \"units_per_second\": 607832.4745648211, \"minimum\": 500000, \"passed\": true}, \"04_distributed_profile\": {\"units\": 100000, \"seconds\": 0.13879995000024792, \"units_per_second\": 720461.354631766, \"minimum\": 500000, \"passed\": true}, \"05_joint_generation\": {\"units\": 500000, \"seconds\": 0.15524577399992268, \"units_per_second\": 3220699.585679215, \"minimum\": 500000, \"passed\": true}, \"06_temporal_generation\": {\"units\": 1000000, \"seconds\": 0.11745163500017952, \"units_per_second\": 8514142.863983728, \"minimum\": 1000000, \"passed\": true}, \"07_reference_index\": {\"units\": 100000, \"seconds\": 0.1730223840004328, \"units_per_second\": 577959.9014180145, \"minimum\": 100000, \"passed\": true}, \"08_lineage_blast_radius\": {\"units\": 10000, \"seconds\": 0.008305072999064578, \"units_per_second\": 1204083.3357065406, \"minimum\": 10000, \"passed\": true}, \"09_test_generation\": {\"units\": 100000, \"seconds\": 0.005003732998375199, \"units_per_second\": 19985079.14640365, \"minimum\": 500000, \"passed\": true}, \"10_scenario_generation\": {\"units\": 500000, \"seconds\": 0.012662961999012623, \"units_per_second\": 39485232.60505613, \"minimum\": 500000, \"passed\": true}, \"11_metrics\": {\"units\": 200000, \"seconds\": 0.2480066110001644, \"units_per_second\": 806430.1156869864, \"minimum\": 100000, \"passed\": true}, \"12_web_api\": {\"units\": 200, \"seconds\": 0.7491329409986065, \"units_per_second\": 266.9753111288855, \"minimum\": 100, \"passed\": true}, \"maxrss_kb\": 210216, \"all_passed\": true}"
+  },
+  "stream_fuzz": {
+    "returncode": 0,
+    "stdout": "{\"trials\": 100, \"failures\": []}"
+  }
+}

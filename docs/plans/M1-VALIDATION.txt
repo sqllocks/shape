@@ -1,0 +1,27 @@
+Obtaining file://<historical-checkout>
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'error'
+
+  [1;31merror[0m: [1msubprocess-exited-with-error[0m
+  
+  [31m×[0m [32mpip subprocess to install build dependencies[0m did not run successfully.
+  [31m│[0m exit code: [1;36m1[0m
+  [31m╰─>[0m [31m[8 lines of output][0m
+  [31m   [0m [33mWARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7fa5e6fd3aa0>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /simple/hatchling/[0m[33m
+  [31m   [0m [0m[33mWARNING: Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7fa5e6fbcfa0>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /simple/hatchling/[0m[33m
+  [31m   [0m [0m[33mWARNING: Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7fa5e6fbd720>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /simple/hatchling/[0m[33m
+  [31m   [0m [0m[33mWARNING: Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7fa5e6fbdd60>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /simple/hatchling/[0m[33m
+  [31m   [0m [0m[33mWARNING: Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7fa5e6fbe260>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /simple/hatchling/[0m[33m
+  [31m   [0m [0m[31mERROR: Could not find a version that satisfies the requirement hatchling>=1.25 (from versions: none)[0m[31m
+  [31m   [0m [0m[31mERROR: No matching distribution found for hatchling>=1.25[0m[31m
+  [31m   [0m [0m
+  [31m   [0m [31m[end of output][0m
+  
+  [1;35mnote[0m: This error originates from a subprocess, and is likely not a problem with pip.
+[1;31merror[0m: [1msubprocess-exited-with-error[0m
+
+[31m×[0m [32mpip subprocess to install build dependencies[0m did not run successfully.
+[31m│[0m exit code: [1;36m1[0m
+[31m╰─>[0m See above for output.
+
+[1;35mnote[0m: This error originates from a subprocess, and is likely not a problem with pip.

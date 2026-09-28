@@ -1,0 +1,719 @@
+schema_version: '1.0'
+architecture_baseline: '1.0'
+implementation_spec: '0.3'
+requirements:
+- id: SHAPE-SEC-002
+  title: Offline core
+  level: L1
+  milestone: M0
+  priority: MUST
+  text: Core Shape functions operate with zero mandatory network or external service.
+  verify: [zero-network]
+  owner: security
+- id: SHAPE-SEC-004
+  title: Secrets never persisted
+  level: L1
+  milestone: M0
+  priority: MUST
+  text: Secrets are never persisted in artifacts, logs, History, or benchmark output.
+  verify: [secret-scan]
+  owner: security
+- id: SHAPE-PERF-001
+  title: Performance regression gate
+  level: L1
+  milestone: M0
+  priority: MUST
+  text: Performance-sensitive changes are regression gated.
+  verify: [benchmark-ci]
+  owner: performance
+- id: SHAPE-AUTO-001
+  title: Architecture escalation
+  level: L1
+  milestone: M0
+  priority: MUST
+  text: Agents cannot change locked architecture or security boundaries without approval.
+  verify: [process]
+  owner: autonomy
+
+- id: SHAPE-ARCH-001
+  title: Arrow batch boundary
+  level: L1
+  milestone: M1
+  priority: MUST
+  text: Core tabular processing accepts Apache Arrow RecordBatch as the canonical in-memory batch boundary.
+  verify: [conformance, interface]
+  owner: kernel
+- id: SHAPE-ARCH-002
+  title: Bounded-memory batch processing
+  level: L1
+  milestone: M1
+  priority: MUST
+  text: Kernel batch iteration never requires materializing the complete source.
+  verify: [property, benchmark]
+  owner: kernel
+- id: SHAPE-TYPE-001
+  title: Logical type system
+  level: L1
+  milestone: M1
+  priority: MUST
+  text: Shape has an immutable logical type model independent of Arrow physical encoding and semantic annotations.
+  verify: [unit, conformance]
+  owner: types
+- id: SHAPE-TYPE-002
+  title: No silent narrowing
+  level: L1
+  milestone: M1
+  priority: MUST
+  text: Arrow-to-Shape type conversion preserves width, decimal precision and scale, timestamp unit/timezone, and nested structure without silent narrowing.
+  verify: [golden, conformance]
+  owner: types
+- id: SHAPE-MODEL-001
+  title: Immutable Shape model
+  level: L1
+  milestone: M1
+  priority: MUST
+  text: Finalized Shape objects are immutable and mutation occurs only through builders or operations returning a new Shape.
+  verify: [unit, api]
+  owner: model
+- id: SHAPE-EVID-001
+  title: Evidence provenance
+  level: L1
+  milestone: M1
+  priority: MUST
+  text: Evidence provenance distinguishes OBSERVED, INFERRED, DECLARED, DERIVED, INTERPOLATED, and EXTRAPOLATED.
+  verify: [unit, schema]
+  owner: model
+- id: SHAPE-SEC-001
+  title: Sensitivity propagation
+  level: L1
+  milestone: M1
+  priority: MUST
+  text: Sensitivity labels combine conservatively and no ordinary operation silently lowers restrictions.
+  verify: [security-property, conformance]
+  owner: security
+- id: SHAPE-ERR-001
+  title: Typed public errors
+  level: L1
+  milestone: M1
+  priority: MUST
+  text: Expected public failure classes use typed Shape errors rather than unclassified generic exceptions.
+  verify: [unit, api]
+  owner: kernel
+- id: SHAPE-PROF-001
+  title: Numeric exact counters
+  level: L2
+  milestone: M2
+  priority: MUST
+  text: Numeric profiling records finite/null/NaN/infinity counts and typed extrema.
+  verify: [unit, golden]
+  owner: profiling
+- id: SHAPE-PROF-002
+  title: Mergeable moments
+  level: L2
+  milestone: M2
+  priority: MUST
+  text: Numeric moments use stable mergeable online statistics.
+  verify: [property, merge-equivalence]
+  owner: profiling
+- id: SHAPE-ART-001
+  title: Versioned artifact
+  level: L2
+  milestone: M3
+  priority: MUST
+  text: Shape artifacts are versioned containers with manifest and independently checked components.
+  verify: [roundtrip, conformance]
+  owner: artifact
+- id: SHAPE-DIFF-001
+  title: Typed deltas
+  level: L1
+  milestone: M5
+  priority: MUST
+  text: Diff emits typed deltas rather than prose-only differences.
+  verify: [unit]
+  owner: diff
+- id: SHAPE-GEN-001
+  title: Deterministic generation
+  level: L1
+  milestone: M6
+  priority: MUST
+  text: Generation is reproducible for the same seed and versioned plan.
+  verify: [reproducibility]
+  owner: generation
+- id: SHAPE-HIST-001
+  title: Immutable history
+  level: L1
+  milestone: M7
+  priority: MUST
+  text: History stores immutable content-addressed Shape states with provenance.
+  verify: [unit]
+  owner: history
+
+- id: SHAPE-LOC-001
+  title: Location as Code
+  level: L1
+  milestone: M6
+  priority: MUST
+  text: LocationScope accepts canonical or resolvable ZIP, city, county, state, country, sets, exclusions and weighted distributions.
+  verify: [unit, conformance]
+  owner: location
+- id: SHAPE-LOC-002
+  title: Geographic coherence
+  level: L1
+  milestone: M6
+  priority: MUST
+  text: Address generation preserves coherent postal/city/county/state/country/latitude/longitude/timezone relationships.
+  verify: [golden, conformance]
+  owner: packs
+- id: SHAPE-PRIV-001
+  title: Leakage assessment
+  level: L1
+  milestone: M6
+  priority: MUST
+  text: Release workflows can evaluate rare-value and near-unique leakage signals and cannot equate synthetic with declassified.
+  verify: [security]
+  owner: privacy
+- id: SHAPE-REL-001
+  title: Mergeable numeric dependency
+  level: L2
+  milestone: M5
+  priority: MUST
+  text: Shape can capture mergeable pairwise numeric covariance/correlation evidence.
+  verify: [unit, merge-equivalence]
+  owner: profiling
+- id: SHAPE-STREAM-001
+  title: Native asynchronous streaming
+  level: L1
+  milestone: M6
+  priority: MUST
+  text: Streaming supports pull-based async consumption, bounded processing, checkpoint hooks and cancellation through the host runtime.
+  verify: [unit, integration]
+  owner: streaming
+- id: SHAPE-COMP-001
+  title: Purpose compiler
+  level: L1
+  milestone: M6
+  priority: MUST
+  text: Purpose-specific execution plans perform capability checks before execution.
+  verify: [unit]
+  owner: compiler
+- id: SHAPE-PACK-001
+  title: Versioned reference assets
+  level: L1
+  milestone: M6
+  priority: MUST
+  text: Packs declare versioned licensed provenance-aware reference assets and offline capability.
+  verify: [unit, provenance]
+  owner: packs
+- id: SHAPE-GEO-001
+  title: Location reference ingestion
+  level: L1
+  milestone: M6
+  priority: MUST
+  text: Geographic reference assets can be ingested offline with canonical identifiers and checksums.
+  verify: [unit]
+  owner: geospatial
+- id: SHAPE-ETL-001
+  title: Bounded Shape-aware ETL
+  level: L1
+  milestone: M8
+  priority: MUST
+  text: ETL operates in bounded batches and supports pre/post Shape validation hooks.
+  verify: [unit]
+  owner: etl
+- id: SHAPE-PLUG-002
+  title: Deny-by-default plugin capabilities
+  level: L1
+  milestone: M8
+  priority: MUST
+  text: Plugin capabilities are declared and denied by default unless policy authorizes them.
+  verify: [security]
+  owner: plugins
+- id: SHAPE-CRYPTO-001
+  title: Authenticated encryption
+  level: L2
+  milestone: M8
+  priority: MUST
+  text: Reference crypto supports AES-256-GCM without persisting keys.
+  verify: [security]
+  owner: security
+- id: SHAPE-CRYPTO-002
+  title: Artifact signatures
+  level: L2
+  milestone: M8
+  priority: MUST
+  text: Reference crypto supports Ed25519 signing and verification.
+  verify: [security]
+  owner: security
+
+- id: SHAPE-GEN-010
+  title: Deterministic generation strategies
+  level: L1
+  milestone: M7
+  priority: MUST
+  text: Generation plans support deterministic sequence, weighted choice, distributions, conditional, derived and relational strategies.
+  verify: [unit, property]
+  owner: generation
+- id: SHAPE-PRIV-010
+  title: Quasi-identifier risk measurement
+  level: L2
+  milestone: M8
+  priority: MUST
+  text: Release analysis can measure equivalence-class anonymity and sensitive-value diversity.
+  verify: [unit, privacy]
+  owner: privacy
+- id: SHAPE-STREAM-010
+  title: Event-time window semantics
+  level: L1
+  milestone: M8
+  priority: MUST
+  text: Streaming supports event-time windows, watermarks, allowed lateness and explicit late-event handling.
+  verify: [unit]
+  owner: streaming
+- id: SHAPE-PLUG-010
+  title: Isolated plugin execution
+  level: L2
+  milestone: M8
+  priority: MUST
+  text: Reference plugins execute out of process with authorization, timeouts and bounded messages.
+  verify: [unit, security]
+  owner: plugins
+
+- id: SHAPE-ART-020
+  title: Deterministic signed envelope
+  level: L2
+  milestone: M8
+  priority: MUST
+  text: Shape provides deterministic manifest canonicalization and authenticated signed/encrypted envelopes.
+  verify: [unit, security]
+  owner: artifact
+- id: SHAPE-PROF-020
+  title: Dependency evidence
+  level: L1
+  milestone: M5
+  priority: MUST
+  text: Shape profiles candidate keys and functional dependencies with explicit evidence.
+  verify: [unit]
+  owner: profile
+- id: SHAPE-GEN-020
+  title: Relational temporal generation
+  level: L1
+  milestone: M7
+  priority: MUST
+  text: Shape supports deterministic parent-child generation and temporal SCD2 lifecycle records.
+  verify: [unit]
+  owner: generation
+- id: SHAPE-CLI-001
+  title: Operational CLI
+  level: L1
+  milestone: M9
+  priority: MUST
+  text: Shape exposes executable diagnostics and evidence operations through a stable CLI entry point.
+  verify: [unit]
+  owner: cli
+
+- id: SHAPE-CAP-001
+  title: End-to-end bounded capture
+  level: L1
+  milestone: M5
+  priority: MUST
+  text: Shape captures row streams into bounded behavioral summaries without requiring full dataset materialization.
+  verify: [unit]
+  owner: capture
+- id: SHAPE-DRIFT-001
+  title: Explainable drift
+  level: L1
+  milestone: M7
+  priority: MUST
+  text: Shape compares captured summaries and emits path-level explainable normalized drift evidence.
+  verify: [unit]
+  owner: drift
+- id: SHAPE-CONN-010
+  title: DB-API bounded connector
+  level: L1
+  milestone: M8
+  priority: MUST
+  text: Shape supports bounded source and sink operation over DB-API compatible database drivers.
+  verify: [unit]
+  owner: connectors
+- id: SHAPE-CONF-001
+  title: Executable conformance
+  level: L1
+  milestone: M9
+  priority: MUST
+  text: Shape ships a machine-readable executable conformance command.
+  verify: [unit]
+  owner: validation
+
+- id: SHAPE-PROF-030
+  title: Bounded dependency profiling
+  level: L1
+  milestone: M6
+  priority: MUST
+  text: Dependency profiling offers deterministic bounded-memory sampling for high-cardinality streams.
+  verify: [unit, performance]
+  owner: profile
+- id: SHAPE-STREAM-020
+  title: Atomic checkpoint persistence
+  level: L1
+  milestone: M8
+  priority: MUST
+  text: Reference streaming checkpoints can be persisted atomically and recovered after restart.
+  verify: [unit]
+  owner: streaming
+- id: SHAPE-CONN-020
+  title: Optional connector registry
+  level: L1
+  milestone: M8
+  priority: MUST
+  text: Connector implementations can be registered without coupling optional drivers to the Shape kernel.
+  verify: [unit]
+  owner: connectors
+
+- id: SHAPE-PRIV-020
+  title: Sensitive semantic detection
+  level: L2
+  milestone: M8
+  priority: MUST
+  text: Shape can conservatively detect common sensitive identifier patterns without persisting sampled raw values.
+  verify: [unit, privacy]
+  owner: privacy
+- id: SHAPE-PACK-020
+  title: Reference asset verification
+  level: L1
+  milestone: M8
+  priority: MUST
+  text: Pack reference assets can be verified against declared cryptographic checksums before use.
+  verify: [unit, security]
+  owner: packs
+
+- id: SHAPE-SAC-001
+  title: Declarative Shape as Code
+  level: L1
+  milestone: M9
+  priority: MUST
+  text: Shape contracts serialize deterministically and validate fidelity, fields and sensitivity.
+  verify: [unit]
+  owner: spec
+
+- id: SHAPE-FID-020
+  title: Explicit fidelity levels
+  level: L1
+  milestone: M9
+  priority: MUST
+  text: Shape defines bronze through platinum evidence requirements and assesses attained fidelity.
+  verify: [unit]
+  owner: generation
+
+- id: SHAPE-PROF-040
+  title: Advanced dependency evidence
+  level: L1
+  milestone: M9
+  priority: MUST
+  text: Shape profiles missingness relationships, entropy, patterns and numeric correlation.
+  verify: [unit]
+  owner: profile
+
+- id: SHAPE-DQ-020
+  title: Quality policy enforcement
+  level: L1
+  milestone: M9
+  priority: MUST
+  text: Shape executes severity-aware field quality rules and uniqueness checks.
+  verify: [unit]
+  owner: quality
+
+- id: SHAPE-HIST-020
+  title: History DAG
+  level: L1
+  milestone: M9
+  priority: MUST
+  text: Shape history supports content-addressed revisions, branching ancestry and tags.
+  verify: [unit]
+  owner: history
+
+- id: SHAPE-GEN-030
+  title: Shape evolution
+  level: L1
+  milestone: M9
+  priority: MUST
+  text: Shape can interpolate compatible evidence across multiple Shapes over time.
+  verify: [unit]
+  owner: generation
+
+- id: SHAPE-STREAM-030
+  title: Online Shape
+  level: L1
+  milestone: M9
+  priority: MUST
+  text: Streaming maintains a bounded evolving Shape snapshot.
+  verify: [unit]
+  owner: streaming
+
+- id: SHAPE-PACK-030
+  title: Pack SDK
+  level: L1
+  milestone: M9
+  priority: MUST
+  text: Shape provides a minimal first-party Pack authoring SDK.
+  verify: [unit]
+  owner: packs
+
+- id: SHAPE-PRIV-030
+  title: Classification taxonomy
+  level: L1
+  milestone: M9
+  priority: MUST
+  text: Shape supports ordered configurable information classification through Top Secret.
+  verify: [unit]
+  owner: privacy
+
+- id: SHAPE-COR-001
+  title: Random-access determinism
+  level: L1
+  milestone: M12
+  priority: MUST
+  text: Generation is stable across arbitrary index partitions.
+  verify: [unit]
+  owner: generation
+
+- id: SHAPE-COR-002
+  title: Failure replay
+  level: L1
+  milestone: M12
+  priority: MUST
+  text: Streaming checkpoints resume without reprocessing committed events in the reference store.
+  verify: [unit]
+  owner: streaming
+
+- id: SHAPE-COR-003
+  title: Artifact malformed-input corpus
+  level: L1
+  milestone: M12
+  priority: MUST
+  text: Unsafe and corrupt reference artifact cases are rejected.
+  verify: [unit]
+  owner: validation
+
+- id: SHAPE-PRIV-040
+  title: Classification propagation
+  level: L1
+  milestone: M12
+  priority: MUST
+  text: Derived evidence cannot implicitly downgrade input sensitivity.
+  verify: [unit]
+  owner: privacy
+
+- id: SHAPE-FID-030
+  title: Quantitative fidelity certificate
+  level: L1
+  milestone: M12
+  priority: MUST
+  text: Generated data receives path-level quantitative fidelity evidence and pass/fail tolerances.
+  verify: [unit]
+  owner: generation
+
+- id: SHAPE-FID-040
+  title: Relational and geographic fidelity
+  level: L1
+  milestone: M12
+  priority: MUST
+  text: Fidelity evidence covers referential integrity and geographic distributions.
+  verify: [unit]
+  owner: generation
+
+- id: SHAPE-FID-050
+  title: Privacy-aware release gate
+  level: L1
+  milestone: M12
+  priority: MUST
+  text: Synthetic release decisions can combine fidelity and privacy evidence.
+  verify: [unit]
+  owner: generation
+
+- id: SHAPE-SAC-010
+  title: Shape contract file IO
+  level: L1
+  milestone: M12
+  priority: MUST
+  text: Declarative Shape contracts load from JSON and optional YAML.
+  verify: [unit]
+  owner: spec
+
+- id: SHAPE-DQ-030
+  title: Inferred quality policy
+  level: L1
+  milestone: M12
+  priority: MUST
+  text: Captured Shapes can conservatively infer executable quality rules.
+  verify: [unit]
+  owner: quality
+
+- id: SHAPE-PACK-040
+  title: First-party semantic pack
+  level: L1
+  milestone: M12
+  priority: MUST
+  text: Distribution includes a deterministic dependency-free Person Pack example.
+  verify: [unit]
+  owner: packs
+
+- id: SHAPE-CLI-020
+  title: Product CLI gates
+  level: L1
+  milestone: M12
+  priority: MUST
+  text: CLI exposes show, validate, quality, generate and fidelity workflows with machine-readable output.
+  verify: [unit]
+  owner: cli
+
+- id: SHAPE-PROF-100
+  title: Approximation evidence
+  level: L1
+  milestone: M10
+  priority: MUST
+  text: Approximate profile evidence identifies its algorithm parameters and error model.
+  verify: [unit]
+  owner: profile
+
+- id: SHAPE-HIST-100
+  title: Shape series replay
+  level: L1
+  milestone: M10
+  priority: MUST
+  text: Ordered Shapes can be interpolated and replayed through time.
+  verify: [unit]
+  owner: history
+
+- id: SHAPE-STREAM-100
+  title: Streaming drift monitor
+  level: L1
+  milestone: M10
+  priority: MUST
+  text: A bounded online Shape can emit periodic drift evidence.
+  verify: [unit]
+  owner: streaming
+
+- id: SHAPE-PRIV-100
+  title: Disclosure suppression
+  level: L1
+  milestone: M10
+  priority: MUST
+  text: Shape evidence supports small-cohort and rare-top-value suppression plus differencing warnings.
+  verify: [unit]
+  owner: privacy
+
+- id: SHAPE-SPEC-100
+  title: Capability negotiation
+  level: L1
+  milestone: M10
+  priority: MUST
+  text: Readers fail compatibility when mandatory capabilities are unknown.
+  verify: [unit]
+  owner: spec
+
+- id: SHAPE-SPEC-110
+  title: Normative 1.0 schema
+  level: L1
+  milestone: M10
+  priority: MUST
+  text: Shape as Code v1 has a machine-readable JSON Schema and normative compatibility rules.
+  verify: [unit]
+  owner: spec
+
+# Existing specification requirements recovered during baseline qualification.
+
+- id: SHAPE-ARCH-003
+  title: "Profilers SHOULD implement update(batch), merge(other), finalize()."
+  text: "Profilers SHOULD implement update(batch), merge(other), finalize()."
+  verify: [specification-review]
+  status: registered-not-independently-certified
+
+- id: SHAPE-ARCH-004
+  title: "Persisted Shapes MUST be immutable."
+  text: "Persisted Shapes MUST be immutable."
+  verify: [specification-review]
+  status: registered-not-independently-certified
+
+- id: SHAPE-ARCH-005
+  title: "Mutable builders MUST finalize into immutable logical models."
+  text: "Mutable builders MUST finalize into immutable logical models."
+  verify: [specification-review]
+  status: registered-not-independently-certified
+
+- id: SHAPE-ARCH-006
+  title: "External ecosystems MUST enter through adapters/plugins rather than core imports."
+  text: "External ecosystems MUST enter through adapters/plugins rather than core imports."
+  verify: [specification-review]
+  status: registered-not-independently-certified
+
+- id: SHAPE-ARCH-007
+  title: "The core statistical engine MUST NOT require an LLM."
+  text: "The core statistical engine MUST NOT require an LLM."
+  verify: [specification-review]
+  status: registered-not-independently-certified
+
+- id: SHAPE-ARCH-008
+  title: "Credentials and secrets MUST NOT be serialized into Shape artifacts."
+  text: "Credentials and secrets MUST NOT be serialized into Shape artifacts."
+  verify: [specification-review]
+  status: registered-not-independently-certified
+
+- id: SHAPE-COMPAT-001
+  title: "Every useful Spindle capability MUST receive a documented disposition: SUPPORTED, SUPERSEDED, PLANNED, or INTENTIONALLY-OMITTED."
+  text: "Every useful Spindle capability MUST receive a documented disposition: SUPPORTED, SUPERSEDED, PLANNED, or INTENTIONALLY-OMITTED."
+  verify: [specification-review]
+  status: registered-not-independently-certified
+
+- id: SHAPE-SEC-003
+  title: "Synthetic data generated from sensitive/classified Shapes MUST NOT automatically be labeled PUBLIC or declassified."
+  text: "Synthetic data generated from sensitive/classified Shapes MUST NOT automatically be labeled PUBLIC or declassified."
+  verify: [specification-review]
+  status: registered-not-independently-certified
+
+- id: SHAPE-SEC-010
+  title: "No operation silently lowers classification/handling requirements."
+  text: "No operation silently lowers classification/handling requirements."
+  verify: [specification-review]
+  status: registered-not-independently-certified
+
+- id: SHAPE-SEC-011
+  title: "No mandatory external service is required for core operation."
+  text: "No mandatory external service is required for core operation."
+  verify: [specification-review]
+  status: registered-not-independently-certified
+
+- id: SHAPE-SEC-012
+  title: "No secret material is persisted in a Shape."
+  text: "No secret material is persisted in a Shape."
+  verify: [specification-review]
+  status: registered-not-independently-certified
+
+- id: SHAPE-SEC-013
+  title: "Raw protected values are absent from logs by default."
+  text: "Raw protected values are absent from logs by default."
+  verify: [specification-review]
+  status: registered-not-independently-certified
+
+- id: SHAPE-SEC-014
+  title: "Synthetic does not mean declassified."
+  text: "Synthetic does not mean declassified."
+  verify: [specification-review]
+  status: registered-not-independently-certified
+
+- id: SHAPE-SEC-015
+  title: "Cross-domain transfer is an explicitly governed operation."
+  text: "Cross-domain transfer is an explicitly governed operation."
+  verify: [specification-review]
+  status: registered-not-independently-certified
+
+- id: SHAPE-SEC-016
+  title: "A Shape is treated as sensitive unless policy establishes otherwise."
+  text: "A Shape is treated as sensitive unless policy establishes otherwise."
+  verify: [specification-review]
+  status: registered-not-independently-certified
+
+- id: SHAPE-SEC-017
+  title: "Security claims distinguish technical capability from external certification/accreditation."
+  text: "Security claims distinguish technical capability from external certification/accreditation."
+  verify: [specification-review]
+  status: registered-not-independently-certified
