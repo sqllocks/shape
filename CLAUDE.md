@@ -21,11 +21,16 @@ Rules that override everything else:
 - Equivalence verification comes before any timing (§6.4).
 - Never modify the pinned Spindle checkout (`$SPINDLE_ROOT`).
 - Never report something as done without running its checks in this session.
+- Shell state does not persist between tool calls. Start every command that uses the
+  plan's environment variables with `source scripts/env.sh &&`, run from the repo
+  root. P0-00 creates that file; until then, use the §1 block from the plan.
+- Performance numbers count only after the equivalence verifier for that workload
+  exits 0.
 
 Useful commands (once P0-06 and P0-07 are done):
 
 ```bash
-make check                                   # lint, format, types, tests (T-27 scope)
-pytest -m "not emulator and not live"        # local test run
-python benchmarks/vs_spindle/run.py --quick  # verifiers + benchmarks vs pinned Spindle
+make check                                                           # lint, format, types, tests (T-27 scope)
+pytest -m "not emulator and not live"                                # local test run
+source scripts/env.sh && python benchmarks/vs_spindle/run.py --quick # verifiers + benchmarks vs pinned Spindle
 ```
