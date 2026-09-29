@@ -1246,7 +1246,7 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
             uniq = uniq_np
     if vc_mode == "hash":
         if n_nn:
-            vc = pc.value_counts(non_null if num_key is None or kind == "dt64" else pa.array(num_key))
+            vc = pc.value_counts(non_null)
             uniq = vc.field("values")
             counts = vc.field("counts").to_numpy()
         else:
@@ -1485,34 +1485,40 @@ def _correlation(works: list[_Work], row_count: int) -> dict:
     if len(cols) < 2:
         return {}
     k, n = len(cols), row_count
-    X = np.empty((n, k), dtype=np.float64)
+    X = np.empty((n, k), dtype=np.float64, order="F")  # column-contiguous fills / reductions
     for j, w in enumerate(cols):
         X[:, j] = _combine(w.col.arr).to_numpy(zero_copy_only=False)
     nulls = [j for j, w in enumerate(cols) if w.col.kind == "float" and w.prof.null_count]
     cnt = np.full(k, float(n))
-    if nulls:
-        MB = ~np.isnan(X[:, nulls])
-        cnt[nulls] = MB.sum(axis=0)
-        MB = MB.astype(np.float64)
+    masks = {}
+    for j in nulls:
+        col = X[:, j]
+        m = np.isnan(col)
+        col[m] = 0.0
+        masks[j] = m
+        cnt[j] = n - np.count_nonzero(m)
     with np.errstate(invalid="ignore", divide="ignore"):
-        gmean = np.nansum(X, axis=0) / np.where(cnt > 0, cnt, 1)
+        gmean = X.sum(axis=0) / np.where(cnt > 0, cnt, 1)
     X -= gmean
     if nulls:
-        np.nan_to_num(X, copy=False, nan=0.0)
+        MB = np.empty((n, len(nulls)), dtype=np.float64, order="F")
+        for i, j in enumerate(nulls):
+            X[:, j][masks[j]] = 0.0
+            np.logical_not(masks[j], out=MB[:, i], casting="unsafe")
     Sxy = X.T @ X
     colsum = X.sum(axis=0)
-    X2 = np.square(X)
-    colsq = X2.sum(axis=0)
     N = np.full((k, k), float(n))
     Sx = np.repeat(colsum[:, None], k, axis=1)   # Sx[a, b]: sum of x_a where a & b present
-    Sxx = np.repeat(colsq[:, None], k, axis=1)
     if nulls:
         N[:, nulls] = cnt[nulls][None, :]
         N[nulls, :] = cnt[nulls][:, None]
         N[np.ix_(nulls, nulls)] = MB.T @ MB
         Sx[:, nulls] = X.T @ MB
-        Sxx[:, nulls] = X2.T @ MB
-    del X2
+    np.square(X, out=X)                           # X no longer needed: reuse for x^2
+    colsq = X.sum(axis=0)
+    Sxx = np.repeat(colsq[:, None], k, axis=1)
+    if nulls:
+        Sxx[:, nulls] = X.T @ MB
     with np.errstate(invalid="ignore", divide="ignore"):
         cov = Sxy - Sx * Sx.T / N
         va = np.maximum(Sxx - Sx * Sx / N, 0.0)
@@ -1575,11 +1581,38 @@ def _detect_fks(tname: str, works: list[_Work], all_works: dict[str, list[_Work]
 # public API
 # ---------------------------------------------------------------------------
 
-def _profile_cols(cols: list[_Col], row_count: int, threads: int | None) -> list[_Work]:
+_FORK_STATE: dict = {}
+
+
+def _fork_task(i: int):
+    cols, row_count, keep = _FORK_STATE["args"]
+    w = _profile_column(cols[i], row_count)
+    return i, w.prof, (w.uniques if keep else None)
+
+
+def _profile_cols(cols: list[_Col], row_count: int, threads: int | None,
+                  keep_uniques: bool = False) -> list[_Work]:
+    """Profile every column.  threads == 1: sequential.  Otherwise columns are spread over
+    a pool: PROFILE_POOL=process (default; fork, copy-on-write access to the Arrow data,
+    avoids GIL contention in the Python-level optimisers) or PROFILE_POOL=thread."""
     n = _n_threads(threads)
-    if n == 1:
+    if n == 1 or len(cols) == 1:
         return [_profile_column(c, row_count) for c in cols]
-    # biggest work first (strings / numerics with fitting) for better packing
+    mode = os.environ.get("PROFILE_POOL", "process")
+    if mode == "process":
+        import multiprocessing as mp
+        _FORK_STATE["args"] = (cols, row_count, keep_uniques)
+        try:
+            ctx = mp.get_context("fork")
+            out: list = [None] * len(cols)
+            # most expensive columns first (numeric: distribution fitting; strings: hashing)
+            order = sorted(range(len(cols)), key=lambda i: cols[i].kind not in ("float", "int", "str"))
+            with ctx.Pool(min(n, len(cols))) as pool:
+                for i, prof, uniq in pool.imap_unordered(_fork_task, order, chunksize=1):
+                    out[i] = _Work(col=cols[i], prof=prof, uniques=uniq)
+            return out
+        finally:
+            _FORK_STATE.clear()
     with ThreadPoolExecutor(max_workers=n) as ex:
         return list(ex.map(lambda c: _profile_column(c, row_count), cols))
 
@@ -1647,7 +1680,7 @@ def profile_dataset(tables: dict[str, Any], threads: int | None = None) -> Datas
                 cols_by_t[name] = (_arrow_cols(tt), tt.num_rows)
         else:
             cols_by_t[name] = (_arrow_cols(t), t.num_rows)
-    works = {n: _profile_cols(c, rc, threads) for n, (c, rc) in cols_by_t.items()}
+    works = {n: _profile_cols(c, rc, threads, keep_uniques=True) for n, (c, rc) in cols_by_t.items()}
     pks = {n: _detect_primary_key(w, cols_by_t[n][1]) for n, w in works.items()}
     profiles = {}
     for n, w in works.items():
