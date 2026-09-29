@@ -103,7 +103,7 @@ Rules:
 
 - **Discovery:** each extension point has its own `importlib.metadata` entry-point
   group (`shape.sources`, `shape.sinks`, `shape.detectors`, `shape.fitters`,
-  `shape.strategies`, `shape.domains`, `shape.chaos`, `shape.emitters`,
+  `shape.strategies`, `shape.distributions`, `shape.calendars`, `shape.domains`, `shape.chaos`, `shape.emitters`,
   `shape.transforms`, `shape.commands`, `shape.reports`).
 - **Contracts:** each extension point is a `typing.Protocol` in `shape.api.v1`. Every
   plugin declares `api_version`, and the host refuses incompatible versions with a
@@ -332,6 +332,37 @@ Goal: correct types and ≥10x Spindle on D1–D4.
 4. **Profile → generate loop.** `shape generate --from customer.shape` fits strategies
    from profile evidence, using the Phase 1 distribution fits and joint/copula
    evidence. Replace the fake `gaussian_copula` and the no-op `missingness` (G5).
+4a. **Realistic distributions and calendars.** Shape must match Spindle and go
+    beyond it; everything below is vectorized and deterministic under a seed.
+    - **Value distributions:**
+      - Spindle's set: uniform, normal, lognormal, Pareto, Zipf, geometric, Poisson.
+      - Additions: exponential, gamma, beta, Weibull, triangular, negative binomial,
+        Bernoulli, power law with cutoff, and truncated/bounded variants of each.
+      - Mixtures of any of the above, such as bimodal prices.
+      - Empirical histograms taken from a profile.
+      - Pareto/80-20 helpers: "top X% of entities produce Y% of activity", applied to
+        foreign-key fan-out (for example, a few customers placing most orders).
+    - **Time patterns (Spindle parity):** month weights, day-of-week weights, and
+      hour-of-day curves including bimodal peaks.
+    - **Holiday calendar (new; Spindle only has whole-month multipliers):**
+      - Date-specific events with a lift multiplier, plus a ramp-up before and a
+        decay after, such as the Black Friday through Cyber Monday window.
+      - Negative lifts for closures, such as Christmas Day for stores.
+      - Rule-based dates, including floating holidays: Thanksgiving, Easter, Memorial
+        Day and Labor Day.
+      - Calendars ship offline, as data files under a stated license. US federal and
+        retail calendars come first; more countries arrive as plugins in the
+        `shape.calendars` extension point. Users can add custom events such as
+        product launches.
+      - Payday effects (1st and 15th, or biweekly Fridays), and month-end and
+        quarter-end effects.
+    - **Trend:** growth and decline, with regime changes (step and ramp).
+    - **Profile side:** the Phase 1 profiler detects these patterns (month,
+      day-of-week and hour profiles, holiday lift against a baseline, fitted
+      Pareto/Zipf tails), so profile → generate reproduces them.
+    - **Verification:** each pattern has a statistical test. Generated data recovers
+      the configured lift and weights within tolerance, and the fitted tail index
+      matches the configured alpha.
 5. **Fidelity report.** This replaces Spindle's `compare` and `profile diff`.
    - Per-column 0–100 scores, JSON / Markdown / HTML output, and non-zero exit on
      failure.
