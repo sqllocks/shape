@@ -246,7 +246,13 @@ Goal: correct types and ≥10x Spindle on D1–D4.
    - Accuracy checked against exact values on D1–D4.
 
 **Exit (gate):**
-- On D1–D4, Shape's median read + profile time is **≤ 1/10 of Spindle's**.
+- On D1–D4, Shape's median read + profile time is **≤ 1/10 of Spindle's**. This is
+  the hard gate; the stretch goal is ≤ 1/20.
+  - **Evidence:** an Arrow prototype (exact value counts, top-k, min/max, moments,
+    quantiles, string lengths) measured ~15x Spindle at 200k rows (0.13 s vs 2.0 s) and
+    ~11x at 2M rows (1.7 s vs 18.7 s).
+  - The prototype does not yet include sketches, pattern detection or distribution
+    fits. Reaching 20x needs parallel column kernels, or the Rust kernel.
 - Every column type matches Spindle or is more precise.
 - HLL error is within the documented bound, and KLL rank error ≤ 1%.
 - Peak RSS in bounded mode is constant as N grows. The check is D3 at 10M versus 100M
@@ -324,9 +330,16 @@ Goal: correct types and ≥10x Spindle on D1–D4.
    - `plan_reconstruction` must check what it claims (G6).
 6. **Writers** (sinks): CSV, TSV, JSONL, SQL INSERT, Parquet as core; Delta and Excel as
    plugins.
-7. **Performance gate:** ≥10x Spindle generation throughput on retail medium. The
-   baseline is 21k rows/s, so the target is ≥210k rows/s to Parquet. This gate is
-   proposed; confirm it.
+7. **Performance gate** (target not yet confirmed by the owner):
+   - **Baseline:** Spindle retail medium (1.97M rows, 9 tables), generated and written
+     to Parquet, runs at **~300k rows/s** on a 4-core machine (measured 2026-09-29). The
+     21k rows/s figure in `benchmarks/baseline-v2.3.0.json` is stale.
+   - **Prototype:** a vectorized Arrow/numpy two-table prototype (customers + orders
+     with a Pareto-skewed FK, derived emails, dates and lognormal amounts) runs at
+     ~1.6M rows/s to Parquet on a single core. That is ~5x, on a simpler schema.
+   - **Proposed:** ≥5x Spindle (≥1.5M rows/s) as the hard gate, and ≥10x (≥3M rows/s)
+     as a stretch goal, using multi-core chunked generation. Row-sequential strategies
+     (lifecycle, SCD2, state machines) are measured separately.
 
 **Exit:**
 - Every Spindle example schema (`sqllocks_spindle/domains/*`) generates in Shape with
