@@ -212,18 +212,52 @@ class Col:
         return pa.array(v, mask=m)
 
 
+_ALIAS_CACHE: dict = {}
+
+
+def _alias_table(p: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Walker/Vose alias table (loop over categories only, cached)."""
+    key = (len(p), p.tobytes())
+    if key in _ALIAS_CACHE:
+        return _ALIAS_CACHE[key]
+    k = len(p)
+    q = (np.asarray(p, dtype=np.float64) / np.sum(p) * k).tolist()
+    prob = [1.0] * k
+    alias = list(range(k))
+    small = [i for i in range(k) if q[i] < 1.0]
+    large = [i for i in range(k) if q[i] >= 1.0]
+    while small and large:
+        s_, l_ = small.pop(), large.pop()
+        prob[s_], alias[s_] = q[s_], l_
+        q[l_] = q[l_] + q[s_] - 1.0
+        (small if q[l_] < 1.0 else large).append(l_)
+    out = (np.array(prob), np.array(alias, dtype=np.int64))
+    _ALIAS_CACHE[key] = out
+    return out
+
+
 def _categorical(rng: np.random.Generator, p: np.ndarray, n: int) -> np.ndarray:
-    """Same distribution as rng.choice(len(p), size=n, p=p)."""
-    cdf = np.cumsum(p)
-    cdf /= cdf[-1]
-    return np.minimum(np.searchsorted(cdf, rng.random(n), side="right"), len(p) - 1)
+    """Same distribution as rng.choice(len(p), size=n, p=p) (which is cdf + searchsorted).
+
+    For <= 8 categories the cdf/searchsorted form is used (it is what numpy does and
+    is cheap for tiny tables); for larger tables the exact alias method avoids a
+    cache-unfriendly binary search per draw."""
+    p = np.asarray(p, dtype=np.float64)
+    if len(p) <= 8:
+        cdf = np.cumsum(p)
+        cdf /= cdf[-1]
+        return np.minimum(np.searchsorted(cdf, rng.random(n), side="right"), len(p) - 1)
+    prob, alias = _alias_table(p)
+    x = rng.random(n) * len(p)
+    j = x.astype(np.int64)
+    np.minimum(j, len(p) - 1, out=j)
+    x -= j  # fractional part: an independent U(0,1)
+    return np.where(x < prob[j], j, alias[j])
 
 
 def _truncated_zipf(rng: np.random.Generator, alpha: float, n_max: int, size: int) -> np.ndarray:
     """Values in 1..n_max with P(k) proportional to k^-alpha (== rejection-truncated rng.zipf)."""
-    cdf = np.cumsum(np.arange(1, n_max + 1, dtype=np.float64) ** -float(alpha))
-    cdf /= cdf[-1]
-    return np.minimum(np.searchsorted(cdf, rng.random(size), side="right"), n_max - 1) + 1
+    return _categorical(rng, np.arange(1, n_max + 1, dtype=np.float64) ** -float(alpha), size) + 1
 
 
 def _take_str(pool: pa.Array, idx: np.ndarray) -> pa.Array:
@@ -365,7 +399,7 @@ class Engine:
 
     # ── PK position lookup (IDManager.lookup_values / reindex semantics) ──
     def _pk_positions(self, table: str, pk_col: str, fk: Col) -> tuple[np.ndarray, np.ndarray]:
-        """Return (positions, missing_mask) of fk values within table[pk_col]."""
+        """Return (positions, missing_mask or None) of fk values within table[pk_col]."""
         key = (table, pk_col)
         if key not in self._pk_pos_cache:
             pk = np.asarray(self.tables[table][pk_col].v)
@@ -377,6 +411,10 @@ class Engine:
                 self._pk_pos_cache[key] = ("sorted", pk[order], order)
         info = self._pk_pos_cache[key]
         fv = np.asarray(fk.v)
+        if info[0] == "range" and fk.mask is None and fv.dtype == np.int64 and len(fv):
+            pos = fv - info[1]  # fast path: contiguous sequence PKs, no nulls
+            if pos.min() >= 0 and pos.max() < info[2]:
+                return pos, None
         miss = np.zeros(len(fv), dtype=bool) if fk.mask is None else fk.mask.copy()
         fvi = np.where(miss, 0, fv).astype(np.int64) if fv.dtype.kind in "iuf" else fv
         if info[0] == "range":
@@ -399,10 +437,11 @@ class Engine:
             v = _take_str(src.v, pos)
         else:
             v = np.asarray(src.v)[pos]
-        m = miss.copy()
+        m = None if miss is None else miss.copy()
         if src.mask is not None:
-            m |= src.mask[pos]
-        return Col(v, m if m.any() else None)
+            sm = src.mask[pos]
+            m = sm if m is None else (m | sm)
+        return Col(v, m if m is not None and m.any() else None)
 
     # ── generate ──────────────────────────────────────────────────────────
     def generate(self, scale: str) -> dict[str, pa.Table]:
@@ -758,14 +797,31 @@ class Engine:
         pk = np.asarray(pt[tdef["primary_key"][0]].v)
         codes = np.asarray(pt[cb].v)
         key = ("constrained", ref_table, cb)
+        cv = np.asarray(cons.v)
         if key not in self._pk_pos_cache:
             o = np.argsort(codes, kind="stable")
-            self._pk_pos_cache[key] = (o, codes[o])
-        o, sc = self._pk_pos_cache[key]
-        cv = np.asarray(cons.v)
-        lo = np.searchsorted(sc, cv, side="left")
-        hi = np.searchsorted(sc, cv, side="right")
-        cnt = hi - lo
+            cmin = int(codes.min()) if len(codes) else 0
+            R = int(codes.max()) - cmin + 1 if len(codes) else 0
+            if codes.dtype.kind in "iu" and R <= 4 * len(codes) + 1024:
+                counts = np.bincount(codes - cmin, minlength=R)  # dense group table
+                starts = np.cumsum(counts) - counts
+                self._pk_pos_cache[key] = ("dense", o, cmin, counts, starts)
+            else:
+                self._pk_pos_cache[key] = ("sorted", o, codes[o])
+        info = self._pk_pos_cache[key]
+        o = info[1]
+        if info[0] == "dense" and cv.dtype.kind in "iu":
+            _, _, cmin, counts, starts = info
+            rel = cv - cmin
+            inr = (rel >= 0) & (rel < len(counts))
+            if not inr.all():
+                rel = np.where(inr, rel, 0)
+            cnt = np.where(inr, counts[rel], 0)
+            lo = starts[rel]
+        else:
+            sc = info[2]
+            lo = np.searchsorted(sc, cv, side="left")
+            cnt = np.searchsorted(sc, cv, side="right") - lo
         has = cnt > 0
         if cons.mask is not None:
             has &= ~cons.mask
@@ -995,7 +1051,7 @@ class Engine:
                 child = self.tables[ct]
                 pos, miss = self._pk_positions(tn, pk_col, child[child_fk])
                 vals = child[cc].numeric()
-                ok = ~miss & ~np.isnan(vals)
+                ok = ~np.isnan(vals) if miss is None else (~miss & ~np.isnan(vals))
                 npar = len(self.tables[tn][pk_col].v)
                 if rule == "sum_children":
                     agg = np.bincount(pos[ok], weights=vals[ok], minlength=npar)
