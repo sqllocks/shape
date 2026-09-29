@@ -15,7 +15,7 @@ appendix was reproduced by running code.
 | Relationship to Spindle | **Full Spindle parity.** Shape replaces Spindle for profiling *and* generation (domains, FK-correct generation, chaos, simulation, incremental, Fabric writers). |
 | Streaming | **Both directions.** Full stream *profiling* (consume) and true event *streaming during generation* (emit to Kafka / Event Hub / Eventstream / file / console). |
 | Plugins | **Features are added as plugins built on core features.** A small core exposes stable extension points; first-party features (domains, writers, connectors, chaos, detectors) are built through the same plugin API. |
-| Performance | **Profiling ≥10x faster than Spindle, with correct types**, measured on identical data. |
+| Performance | **≥10x Spindle is the minimum; ≥30x is the stretch goal**, for both profiling and generation. It is measured 1:1 on identical work and data, with correct types and equivalent realism. |
 
 Defaults assumed where no decision was given (change any of these before Phase 1 starts):
 
@@ -24,8 +24,11 @@ Defaults assumed where no decision was given (change any of these before Phase 1
 - **Python:** 3.11+ (unchanged).
 - **Core dependencies:** `numpy` and `pyarrow` only. scipy, confluent-kafka, azure-*,
   pyodbc, deltalake and openpyxl stay optional extras, following Spindle's pattern.
-- **Native code:** pure Python + Arrow/numpy first. A Rust sketch kernel (pyo3/maturin)
-  is added only if the Phase 1 performance gate cannot be met without it.
+- **Native code:** Arrow/numpy kernels first. A Rust kernel spike (pyo3/maturin) runs
+  early in Phase 1 rather than as a last resort, because a 30x stretch goal is unlikely
+  in pure Python + Arrow. Rust is adopted wherever it is needed to meet the 10x
+  minimum or to approach 30x. Wheels are built for Linux, macOS and Windows through
+  CI (cibuildwheel).
 - **Typing:** mypy runs in CI. It is strict for new and rewritten modules, a per-module
   ratchet applies to the rest, and the 893 current errors are not fixed in bulk.
 
@@ -190,7 +193,7 @@ dangerous bugs are closed.
 
 ### Phase 1 — Profiling engine rewrite (L) · the heart of the project
 
-Goal: correct types and ≥10x Spindle on D1–D4.
+Goal: correct types, full Spindle parity, and ≥10x Spindle on D1–D4 (stretch ≥30x).
 
 1. **Readers → Arrow.**
    - Formats: CSV (`pyarrow.csv` with type inference and user-overridable schema),
@@ -246,8 +249,9 @@ Goal: correct types and ≥10x Spindle on D1–D4.
    - Accuracy checked against exact values on D1–D4.
 
 **Exit (gate):**
-- On D1–D4, Shape's median read + profile time is **≤ 1/10 of Spindle's**. This is
-  the hard gate; the stretch goal is ≤ 1/20.
+- On D1–D4, Shape's median read + profile time is **≤ 1/10 of Spindle's** (hard
+  minimum). The stretch goal is ≤ 1/30. Report speedups both multi-threaded and
+  single-threaded.
   - The earlier Arrow prototype (~11–15x) is **not valid evidence**, because it
     skipped distribution fitting, pattern detection and key detection. The gate is
     measured with `benchmarks/profile_1to1/`, where Shape computes everything
@@ -370,7 +374,8 @@ Goal: correct types and ≥10x Spindle on D1–D4.
    - `plan_reconstruction` must check what it claims (G6).
 6. **Writers** (sinks): CSV, TSV, JSONL, SQL INSERT, Parquet as core; Delta and Excel as
    plugins.
-7. **Performance gate** (target not yet confirmed by the owner):
+7. **Performance gate:** **≥10x Spindle minimum (≥~3M rows/s on the measured
+   baseline), stretch ≥30x (≥~9M rows/s)**, generate + write Parquet, measured 1:1:
    - **Baseline:** Spindle retail medium (1.97M rows, 9 tables), generated and written
      to Parquet, runs at **~300k rows/s** on a 4-core machine (measured 2026-09-29). The
      21k rows/s figure in `benchmarks/baseline-v2.3.0.json` is stale.
