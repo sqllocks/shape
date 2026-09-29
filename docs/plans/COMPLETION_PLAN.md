@@ -24,11 +24,8 @@ Defaults assumed where no decision was given (change any of these before Phase 1
 - **Python:** 3.11+ (unchanged).
 - **Core dependencies:** `numpy` and `pyarrow` only. scipy, confluent-kafka, azure-*,
   pyodbc, deltalake and openpyxl stay optional extras, following Spindle's pattern.
-- **Native code:** Arrow/numpy kernels first. A Rust kernel spike (pyo3/maturin) runs
-  early in Phase 1 rather than as a last resort, because a 30x stretch goal is unlikely
-  in pure Python + Arrow. Rust is adopted wherever it is needed to meet the 10x
-  minimum or to approach 30x. Wheels are built for Linux, macOS and Windows through
-  CI (cibuildwheel).
+- **Native code (decided):** Rust owns the entire per-batch data path. See
+  "Runtime split" in §3.
 - **Typing:** mypy runs in CI. It is strict for new and rewritten modules, a per-module
   ratchet applies to the rest, and the 893 current errors are not fixed in bulk.
 
@@ -101,6 +98,54 @@ Rules:
 5. **No claim without a gate.** Every performance, fidelity or security claim in the
    docs is backed by a test or benchmark that runs in CI and fails when the claim stops
    being true.
+
+### Runtime split (decided)
+
+Speed decides what goes into Rust. The kernel's size is whatever that turns out to
+be.
+
+| Layer | Technology | Owns |
+|---|---|---|
+| Data format and I/O | Arrow (C++, via pyarrow) | `RecordBatch` everywhere; CSV/Parquet/IPC read; Parquet/IPC write |
+| Per-batch data path | Rust (pyo3/maturin; batches exchanged zero-copy through the Arrow C Data Interface) | **Profiling:** one fused pass per batch across *all* columns (counts, nulls, NaN/inf, min/max, moments, seeded hash → HLL, KLL, SpaceSaving, string lengths, pattern classes, temporal histograms). **Generation:** counter-based seeded RNG streams (random access by row), weighted/alias sampling, pool-based string assembly, temporal/holiday sampling, and row-sequential strategies (lifecycle, SCD2, state machines, self-referencing keys) |
+| Orchestration and extension | Python + numpy | Job orchestration, plugin host, schema/spec, strategy composition, distribution fitting on bounded samples, reports, connectors, CLI |
+
+Rules:
+
+- **Python never touches individual values on the hot path.** The target is one Rust
+  call per batch, not one per column. The measured Python→native call overhead is
+  ~7 µs per call, which adds ~6 ms per batch for 60 columns × 15 calls.
+- **Plugin hooks work on whole batches.** Plugins receive and return Arrow batches or
+  arrays, never single values, so a Python plugin cannot slow the hot path per row.
+  Performance-critical plugins may ship their own Rust through the same interface.
+- **A pure-Python reference implementation of every Rust kernel is kept.** It acts as a
+  test oracle: property and differential tests check that Rust and Python agree on
+  random inputs. It is also the fallback on platforms without a wheel (slow, but
+  correct).
+- **Wheels:** Linux (x86_64 and aarch64), macOS (x86_64 and arm64) and Windows
+  (x86_64), built with cibuildwheel in CI. The manylinux wheels cover Fabric Spark and
+  Python runtimes.
+- **No native CLI binary.** The CLI stays Python; see "Performance measurement" below.
+  Revisit only if real users report start-up as a bottleneck.
+
+### Performance measurement (decided)
+
+- **Primary gate (in-process):** read + profile, or generate + write, timed inside a
+  running process. Interpreter start-up and imports are excluded for both tools, and
+  the result is the median of 5 warm runs. **10x Spindle is the minimum; 30x is the
+  stretch goal.**
+- **Secondary gate (end to end from the CLI):** wall time of `shape …` against the
+  equivalent `spindle …` command, start-up included for both. It is reported for every
+  dataset, and the 10x minimum applies to inputs of ≥1M rows.
+  - For reference, measured on 2026-09-29: Spindle start-up is ~1.25 s (pandas and
+    scipy); Shape-style start-up (pyarrow and numpy) is ~0.24 s.
+- **Start-up budget:** `import shape` plus CLI dispatch stays ≤300 ms, and CI fails
+  above that.
+  - Heavy libraries (scipy and similar) and every plugin load lazily, on first use.
+  - Checked with `python -X importtime` in CI.
+- **Multi-file mode:** `shape profile <glob|dir>` profiles many inputs in one process,
+  so start-up is paid once. This is the answer for workloads made of many small
+  files.
 
 ### Plugin API (Phase 2)
 
@@ -178,9 +223,9 @@ dangerous bugs are closed.
      - D3: 10M × 10 Parquet.
      - D4: 100k × 1,000 wide CSV.
      - D5: 5 related tables with PK/FK.
-   - **Method:** in-process timing of read + profile, median of 5 warm runs, on the
-     same machine for both tools. CLI end-to-end time and peak RSS are reported
-     separately.
+   - **Method:** follows "Performance measurement" in §3. Both the in-process gate and
+     the CLI end-to-end gate are recorded, along with peak RSS and multi-threaded and
+     single-threaded speedups.
    - **Baseline:** Spindle `DataProfiler.from_csv` / `from_parquet`, and Spindle
      generation for the retail domain at medium scale.
    - **Output:** `benchmarks/vs_spindle/results.json`, committed per release. CI runs D1
@@ -208,20 +253,25 @@ Goal: correct types, full Spindle parity, and ≥10x Spindle on D1–D4 (stretch
      inferred per batch, and the rules are documented.
    - Type demotion keeps what has already been seen: a mixed column becomes `string`
      and keeps its count, null, top-k and cardinality evidence (fixes P2–P4).
-3. **Columnar kernels (`profile/kernels/`),** one per type family and all vectorized:
-   - counts, nulls, NaN/±inf
-   - min/max, moments merged Welford-style
-   - KLL quantiles fed from sorted batch samples
-   - HLL fed by a vectorized seeded 64-bit hash:
-     - numeric columns hash the value bits;
-     - strings hash the Arrow offsets/data buffers, looping by position rather than by
-       row;
-     - canonicalize so that `1 == 1.0` and so that NaN is excluded (P7).
-   - SpaceSaving updated with batch value counts (`pyarrow.compute.value_counts`), with
-     a bounded heap and a correct merge that keeps error terms (P5, P6)
-   - string length stats
-   - regex/pattern classes
-   - date/time part histograms (hour, day of week, month)
+3. **Profiling kernel (Rust crate `shape-kernel`, exposed as `shape._kernel`)**
+   - Build it first as a spike, to confirm the fused per-batch design and the Arrow C
+     Data Interface round trip before the rest of the work builds on it.
+   - Keep a pure-Python reference implementation in `profile/reference/`, used as the
+     test oracle and as the fallback.
+   - One pass per batch computes, for all columns:
+     - counts, nulls, NaN/±inf
+     - min/max, moments merged Welford-style
+     - KLL quantiles fed from sorted batch samples
+     - HLL fed by a vectorized seeded 64-bit hash:
+       - numeric columns hash the value bits;
+       - strings hash the Arrow offsets/data buffers, looping by position rather than by
+         row;
+       - canonicalize so that `1 == 1.0` and so that NaN is excluded (P7).
+     - SpaceSaving updated with per-batch value counts, with
+       a bounded heap and a correct merge that keeps error terms (P5, P6)
+     - string length stats
+     - regex/pattern classes
+     - date/time part histograms (hour, day of week, month)
 4. **Spindle profiler parity (required; see the exit gate):**
    - enum detection, PK detection, cross-table FK inference (D5), outliers (IQR / MAD)
    - `pattern` for strings
@@ -270,8 +320,8 @@ Goal: correct types, full Spindle parity, and ≥10x Spindle on D1–D4 (stretch
 - HLL error is within the documented bound, and KLL rank error ≤ 1%.
 - Peak RSS in bounded mode is constant as N grows. The check is D3 at 10M versus 100M
   rows.
-- If the gate is missed after the Arrow/numpy kernels land, add the Rust kernel for the
-  hash, HLL and KLL (the scope is limited to `profile/kernels/`).
+- Rust and the Python reference kernels agree on property and differential tests.
+- `import shape` plus CLI dispatch stays ≤300 ms, and `shape profile <glob|dir>` works.
 
 ### Phase 2 — Plugin host and API v1 (M)
 
@@ -327,6 +377,9 @@ Goal: correct types, full Spindle parity, and ≥10x Spindle on D1–D4 (stretch
      Fix G1 by mixing the seed through a hash instead of adding it to the index, and
      G2 (`row_at` must not depend on call order).
    - Arrow output batches.
+   - The per-batch generation path runs in the Rust kernel (see "Runtime split" in §3).
+     That covers RNG streams, sampling, string assembly, temporal sampling and the
+     row-sequential strategies.
 3. **Strategies.** Implement all of Spindle's strategies as `shape.strategies` plugins,
    against the core API:
    - sequence, uuid, enum, distribution, empirical, pattern, faker-like, formula
