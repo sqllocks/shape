@@ -4,7 +4,7 @@ Run with the Spindle venv (needs pandas + scipy + Spindle importable):
 
     /tmp/claude-0/spindle-venv/bin/python verify.py --scale medium --seed 42
 
-Produces verify_report.json and verify_summary.txt next to this file.
+Produces verify_report_<scale>.json and verify_summary_<scale>.txt next to this file.
 
 Every per-column statistic is also computed for Spindle(seed) vs Spindle(seed+1)
 ("baseline"), i.e. how much Spindle differs from *itself* under a different seed.
@@ -434,8 +434,10 @@ def main():
     ap.add_argument("--baseline-seeds", default="43,44,45,46",
                     help="other Spindle seeds used to measure Spindle's own seed-to-seed variation")
     ap.add_argument("--spindle-root", default=port.DEFAULT_SPINDLE_ROOT)
-    ap.add_argument("--out", default=str(HERE / "verify_report.json"))
+    ap.add_argument("--out", default=None, help="default: verify_report_<scale>.json")
     a = ap.parse_args()
+    if a.out is None:
+        a.out = str(HERE / f"verify_report_{a.scale}.json")
     root = a.spindle_root
     t0 = time.time()
     res_sp = spindle_generate(root, a.scale, a.seed)
