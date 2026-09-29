@@ -828,16 +828,27 @@ def _lognorm_fit(data):
         raise _FitError("non-finite")
     data_min = np.min(data)
 
+    # Same element-wise operations as scipy, evaluated into two reusable buffers
+    # (bitwise-identical results, far fewer page-faulting temporaries on big columns).
+    B1 = np.empty_like(data)
+    B2 = np.empty_like(data)
+
     def get_shape_scale(loc):
-        lndata = np.log(data - loc)
+        lndata = np.log(np.subtract(data, loc, out=B1), out=B1)
         scale = np.exp(lndata.mean())
-        shape = np.sqrt(np.mean((lndata - np.log(scale)) ** 2))
+        d = np.subtract(lndata, np.log(scale), out=B2)
+        shape = np.sqrt(np.mean(np.square(d, out=d)))
         return shape, scale
 
     def dL_dLoc(loc):
         shape, scale = get_shape_scale(loc)
-        shifted = data - loc
-        return np.sum((1 + np.log(shifted / scale) / shape ** 2) / shifted)
+        shifted = np.subtract(data, loc, out=B1)
+        t = np.divide(shifted, scale, out=B2)
+        np.log(t, out=t)
+        np.divide(t, shape ** 2, out=t)
+        np.add(1, t, out=t)
+        np.divide(t, shifted, out=t)
+        return np.sum(t)
 
     def ll(loc):
         shape, scale = get_shape_scale(loc)
@@ -1153,32 +1164,33 @@ def _all_parse_datetime(uniques: pa.Array) -> bool:
     return False
 
 
-def _coerce_datetime_strings(arr: pa.Array) -> pa.Array:
+def _coerce_datetime_strings(arr: pa.Array, keep_nulls: bool = False):
     """pd.to_datetime(series, errors="coerce"): format guessed from the first element,
-    non-matching elements become NaT (dropped by the callers)."""
+    non-matching elements become NaT (dropped unless keep_nulls).  Returns None when the
+    first element matches no supported format (with keep_nulls) / an empty array."""
     if len(arr) == 0:
         return pa.array([], pa.timestamp("ns"))
     first = arr[0].as_py()
+    fmt = None
     if _ISO_DATE.match(first):
         fmt = "%Y-%m-%d"
     elif (m := _ISO_DT.match(first)):
         fmt = f"%Y-%m-%d{m.group(1)}%H:%M:%S"
     elif _ISO_DT_FRAC.match(first):
-        return pc.drop_null(pc.cast(arr, pa.timestamp("ns"), safe=False)) if True else None
+        out = pc.cast(arr, pa.timestamp("ns"), safe=False) if _try(
+            lambda a: pc.cast(a, pa.timestamp("ns")), arr) else None
+        if out is None:
+            return None if keep_nulls else pa.array([], pa.timestamp("ns"))
+        return out if keep_nulls else pc.drop_null(out)
     else:
         for f in _EXTRA_FORMATS:
-            try:
-                pc.strptime(pa.array([first]), format=f, unit="ns")
+            if _try(lambda a: pc.strptime(a, format=f, unit="ns"), pa.array([first])):
                 fmt = f
                 break
-            except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
-                continue
-        else:
-            try:
-                return pc.drop_null(pc.cast(arr, pa.timestamp("ns")))
-            except pa.ArrowInvalid:
-                return pa.array([], pa.timestamp("ns"))
-    return pc.drop_null(pc.strptime(arr, format=fmt, unit="s", error_is_null=True))
+    if fmt is None:
+        return None if keep_nulls else pa.array([], pa.timestamp("ns"))
+    out = pc.strptime(arr, format=fmt, unit="s", error_is_null=True)
+    return out if keep_nulls else pc.drop_null(out)
 
 
 # ---------------------------------------------------------------------------
@@ -1296,9 +1308,18 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
                     u = pc.cast(uniq, pa.float64()).to_numpy()
                     stype = "integer" if np.all(u == u.astype(np.int64)) else "float"
                     numeric = pc.cast(non_null, pa.float64()).to_numpy()
-                elif _all_parse_datetime(uniq):
-                    stype = "datetime"
-                    dt_values = _coerce_datetime_strings(non_null)
+                else:
+                    # pandas: to_datetime(format="mixed") must accept every value.  If the
+                    # strict guessed-format parse (needed later anyway) already accepts all
+                    # rows, that implies it; otherwise check the distinct values.
+                    dt_try = _coerce_datetime_strings(non_null, keep_nulls=True)
+                    if dt_try is not None and dt_try.null_count == 0:
+                        stype = "datetime"
+                        dt_values = dt_try
+                    elif _all_parse_datetime(uniq):
+                        stype = "datetime"
+                        dt_values = pc.drop_null(dt_try) if dt_try is not None else \
+                            _coerce_datetime_strings(non_null)
 
     # ---- enum + value_counts_ext ------------------------------------------
     enum_values = None
