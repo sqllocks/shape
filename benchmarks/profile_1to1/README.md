@@ -59,7 +59,7 @@ that file exists, and otherwise regenerated with the same shape.
 | min/max with pandas' Python types (`int`, `float`, `str`, `bool`, `Timestamp`, `datetime.date`) | `pc.min_max` / numpy, converted to the same Python types (a `Timestamp` subclass of `datetime` stands in for pandas') | bitwise, including type |
 | mean, std (ddof=1, pandas nanops summation) | the same numpy reductions | bitwise |
 | quantiles p1..p99, p0_5, p99_5 (`np.percentile`, linear) and 1.5 x IQR outlier_rate | One sort, then numpy's exact virtual-index and `_lerp` arithmetic on the sorted array. Outliers are counted with `searchsorted` | bitwise |
-| `_detect_distribution`: `default_rng(42).choice(..., 2000, replace=False)` sample; norm, uniform, expon and lognorm fits; `kstest` with an exact `kstwo.sf` p-value > 0.05 gate; lowest D wins | Same sample. Closed-form norm, uniform and expon MLE as in scipy. scipy 1.17's lognorm fit ported line by line: the dL/dloc bracket search, **brentq** (the zeros.c port was checked bitwise on 3000 random problems), and the fallback to the generic MLE fit (`_fitstart`, penalised NLL, **Nelder-Mead** `fmin` ported verbatim). Also ported: cephes `ndtr` (max abs error vs scipy 1.1e-16), the KS D statistic, and `_kolmogn` (Ruben-Gambino, DMTW, Pomeranz, Pelz-Good, Smirnov branches) | bitwise params. 43 lognorm fits on D4 take the Nelder-Mead fallback path |
+| `_detect_distribution`: `default_rng(42).choice(..., 2000, replace=False)` sample; norm, uniform, expon and lognorm fits; `kstest` with an exact `kstwo.sf` p-value > 0.05 gate; lowest D wins | Same sample. Closed-form norm, uniform and expon MLE as in scipy. scipy 1.17's lognorm fit ported line by line: the dL/dloc bracket search, **brentq** (the zeros.c port was checked bitwise on 3000 random problems), and the fallback to the generic MLE fit (`_fitstart`, penalised NLL, **Nelder-Mead** `fmin` ported verbatim). Also ported: cephes `ndtr` (max abs error vs scipy 1.1e-16), the KS D statistic, and `_kolmogn` (Ruben-Gambino, DMTW, Pomeranz, Pelz-Good, Smirnov branches) | bitwise params. On D4, 66 of 175 lognorm fits take the Nelder-Mead fallback, the same counts as in Spindle's cProfile |
 | `fit_score`: refit **on the full column** plus KS on the full column | same (reuses the sort) | bitwise |
 | `_detect_pattern`: `RandomState(42)` sample of 1000, 12 regexes in order at a 90% threshold, the nunique <= 200 guard | Same sample. The regexes are rewritten exactly as pandas' Arrow backend rewrites them for `fullmatch` and run through the same RE2 engine (`pc.match_substring_regex`) | bitwise |
 | string_length (min, mean rounded to 2, max, p95) | `pc.utf8_length` + numpy | bitwise |
@@ -120,4 +120,82 @@ rests on reasoning rather than on a test, or where the port is known to be narro
 
 ## Results
 
-RESULTS_PLACEHOLDER
+Machine: 4 cores (Intel Xeon @ 2.10GHz, Linux 6.18). Run on 2026-09-29 under
+`flock /tmp/claude-0/bench.lock`, with runs interleaved. The 1-minute load average before
+every run was between 1.00 and 1.50; about 1.0 of that is the previous benchmark process
+itself, and no run had to wait for the load gate. Each value is the median of 5 runs, each
+in a fresh process. The timed region is read + full profile; interpreter start-up and
+imports are excluded. Run-to-run spread is within about ±10% of the median (one port-1T D4 Parquet outlier:
+16.3 s against about 13.3 s). The raw runs are in `bench_results.json`.
+
+| dataset | Spindle s | port MT s | port 1T s | speedup MT | speedup 1T | peak RSS MB: Spindle / port MT (+largest fork child) / port 1T |
+|---|---:|---:|---:|---:|---:|---|
+| D1 csv (200k x 6) | 1.53 | 0.19 | 0.22 | 8.0x | 6.8x | 272 / 164 (+0) / 149 |
+| D1 parquet | 1.42 | 0.18 | 0.23 | 8.1x | 6.3x | 313 / 180 (+0) / 153 |
+| D2 csv (1M x 20) | 31.12 | 1.82 | 4.99 | 17.1x | 6.2x | 1122 / 617 (+703) / 845 |
+| D2 parquet | 26.51 | 1.82 | 4.83 | 14.6x | 5.5x | 991 / 523 (+547) / 685 |
+| D3 csv (5M x 10) | 78.28 | 5.57 | 14.51 | 14.1x | 5.4x | 2813 / 2725 (+0) / 2183 |
+| D3 parquet | 47.91 | 5.35 | 13.73 | 9.0x | 3.5x | 2037 / 1986 (+0) / 1146 |
+| D4 csv (100k x 200) | 32.08 | 5.42 | 14.15 | 5.9x | 2.3x | 610 / 473 (+453) / 677 |
+| D4 parquet | 28.31 | 4.23 | 13.34 | 6.7x | 2.1x | 604 / 417 (+271) / 475 |
+| MT (3 tables, 220k rows) | 2.01 | 0.38 | 0.36 | 5.3x | 5.6x | 289 / 186 (+0) / 163 |
+
+- **MT** is the port's default mode. It uses the Arrow thread pools and a column pool:
+  a fork process pool for tables with at least 3 columns per worker (D2, D4), threads
+  otherwise.
+- **1T** is the same code with `PROFILE_THREADS=1`: pyarrow cpu and io pools set to 1,
+  single-threaded CSV and Parquet readers, a sequential column loop, and
+  `OPENBLAS_NUM_THREADS=1`. The 1T column separates the algorithmic gain from the
+  multicore gain.
+- **Spindle** runs as shipped. It is single-threaded, except that `pd.read_parquet` uses
+  pyarrow's thread pool.
+- **RSS** is `ru_maxrss` measured after imports. The baseline after imports is about
+  163 MB for Spindle and 68 MB for the port. For fork-pool runs, the largest child's peak
+  is listed separately; children share the parent's pages copy-on-write, so the parent and
+  child figures must not be simply added.
+
+### Where the time goes (cProfile)
+
+**Spindle**
+- D2 (37 s under the profiler): `_infer_spindle_type` takes 21 s. Of that, about 10 s is
+  the Python set comprehension `str(v).lower()` over every distinct value of every string
+  column (7M calls); the rest is repeated `to_numeric` / `to_datetime`.
+  `_detect_primary_key` takes 4.3 s, because it re-runs type inference and pattern
+  detection for the unique columns. `read_csv` takes 5.6 s, `value_counts` 2.1 s and
+  `kstest` 2.0 s.
+- D4 (36 s): lognorm fitting takes 13.7 s, of which 12 s is the generic Nelder-Mead
+  fallback fit, 66 times. `DataFrame.corr` takes 4.6 s (Welford loop over about 7k
+  column pairs), `kstest` 4.7 s, `read_csv` 2.6 s and type inference 3.2 s.
+
+**Port (1T)**
+- D2 (5 s): Arrow hash `value_counts` on about 7M distinct strings takes about 2 s,
+  the CSV read 0.9 s, and correlation plus KS/ndtr the rest.
+- D3 (14.5 s): string hashing and strptime of the 4.8M-distinct timestamp and email
+  columns take about 5 s. The two full-column lognorm fit_score refits (5M rows, about 60
+  dL/dloc evaluations each) take about 4 s. The CSV read takes 2.4 s.
+- D4 (14 s): the same 31k penalised-NLL evaluations as scipy's Nelder-Mead take about
+  7.5 s; this is identical algorithmic work. The CSV read takes 1.4 s and correlation
+  0.3-0.8 s.
+
+### What makes the comparison unfair, and in which direction
+
+- **Favours the port:**
+  - The MT column uses 4 cores against Spindle's 1. Use the 1T column for a
+    like-for-like comparison.
+  - The port does not repeat Spindle's redundant computations (deviation 7). The outputs
+    are identical, but Spindle does roughly 2-4x the necessary work on string columns.
+    This is Spindle's real cost, but it is not intrinsic to the profile.
+  - Sort-based counting for high-cardinality numerics, and vectorised `is_in` / `cast`
+    on distinct values instead of Python loops.
+- **Favours Spindle, or neutral:**
+  - The port replicates Spindle's expensive algorithms exactly, including full-data
+    lognorm refits and the 600-evaluation Nelder-Mead fallback. That is why D4 1T is
+    only 2.1-2.3x faster. A port free to pick better estimators would be much faster, but
+    it would not be 1:1.
+  - The pandas CSV parser is single-threaded in Spindle, while pyarrow's reader is
+    multi-threaded in port MT. Port 1T also uses a single-threaded reader.
+  - Spindle's `read_parquet` is multi-threaded in every mode.
+  - Page cache is warm for both.
+- **Environment:** a shared 4-core VM. Another agent's benchmark was queued on the same
+  lock and did not overlap. Background load from other sessions may have added noise of a
+  few percent to both sides equally, since runs were interleaved.

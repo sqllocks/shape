@@ -272,11 +272,14 @@ Rust.
 | D3 CSV (5M × 10) | 78.3 s | 5.57 s (14.1x) | 14.5 s | ≤ 7.83 s |
 | D3 Parquet | 47.9 s | 5.35 s (9.0x) | 13.7 s | ≤ 4.79 s |
 | D4 CSV (100k × 200) | 32.1 s | 5.5 s (5.8x) | 14.5 s | ≤ 3.21 s |
-| D4 Parquet, MT, EDGE | see `profile_bench.json` | | | Spindle ÷ 10 |
+| D4 Parquet | 28.3 s | 4.23 s (6.7x) | 13.3 s | ≤ 2.83 s |
+| MT (3 tables, FK detection) | 2.01 s | 0.38 s (5.3x) | 0.36 s | ≤ 0.201 s |
 
 Without Rust, the port passes 10x on D2 and D3 CSV. It misses on D1 (small data, where
-fixed overhead dominates), on D3 Parquet, and on D4 (wide data, where per-column
-overhead dominates). The fused Rust kernel (P1-06) targets exactly those cases.
+fixed overhead dominates), on MT, on D3 Parquet, and on D4 (wide data, where
+distribution fitting dominates). The fused Rust kernel (P1-06) and the Rust fitting
+routines (P1-08) target exactly those cases. Profile evidence for the hotspots is in
+`benchmarks/vs_spindle/profile_1to1/README.md` ("Where time goes").
 
 ### 3.4 Gates
 
@@ -313,6 +316,7 @@ Every gate is a ratio against Spindle, measured in the same job (T-19).
                 │ Arrow PyCapsule interface (zero-copy)          │
 ┌───────────────┴─────────────── shape._kernel (Rust) ──────────┴──────────────────────────┐
 │ fused profile pass · hash · HLL/KLL/SpaceSaving · patterns · temporal histograms          │
+│ type inference · distribution fitting (MLE, Nelder-Mead, KS) · correlation               │
 │ Philox RNG · alias sampling · pool/string assembly · temporal/holiday sampler            │
 │ row-sequential strategies (lifecycle, SCD2, state machines, self-reference)              │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
@@ -690,14 +694,21 @@ Appendix A.
 - Depends: P1-07.
 - Deliverables: port the semantics of `benchmarks/vs_spindle/profile_1to1/port.py`
   into `profile/` as product code, on the Rust kernel:
-  - distribution fitting: Spindle's families, estimators and sampling rules, in numpy,
-    with `[scipy]` optional;
+  - distribution fitting: Spindle's families, estimators and sampling rules. That means
+    a 2000-row fitting sample, a 1000-row pattern sample, and the full-column refit
+    for `fit_score`, exactly as `profile_1to1/port.py` reproduces them (including
+    scipy 1.17's lognormal fit: its root-finder, the Nelder-Mead fallback and the exact
+    KS p-value). **The fitting routines run in the Rust kernel**, with the port's
+    numpy code as the reference twin. On D4, fitting is ~13.7 s of Spindle's ~32 s
+    and ~7.5 s of the single-threaded port, so it can't stay in Python.
+    `[scipy]` stays optional, for extra families only;
   - pattern detection;
   - enum detection with weights;
   - PK detection, and FK detection across tables (MT);
   - outliers and quantiles;
   - every other `ColumnProfile` and `TableProfile` field.
-  - `--spindle-compat` output, in the same JSON shape as `spindle profile capture`.
+  - `--spindle-compat` output: the `TableProfile` JSON produced by
+    `profile_1to1/spindle_dump.py` (not the `profile capture` format; see P1-11).
 - Acceptance: `profile_1to1/verify.py` passes T-22 on D1–D4, MT and every EDGE
   variant, with `src/shape` as the implementation under test.
 - Fixes: P16.
