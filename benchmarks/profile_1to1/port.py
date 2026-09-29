@@ -1614,12 +1614,16 @@ def _fork_task(i: int):
 def _profile_cols(cols: list[_Col], row_count: int, threads: int | None,
                   keep_uniques: bool = False) -> list[_Work]:
     """Profile every column.  threads == 1: sequential.  Otherwise columns are spread over
-    a pool: PROFILE_POOL=process (default; fork, copy-on-write access to the Arrow data,
-    avoids GIL contention in the Python-level optimisers) or PROFILE_POOL=thread."""
+    a pool: PROFILE_POOL=process (fork, copy-on-write access to the Arrow data; avoids
+    GIL contention in the Python-level optimisers), PROFILE_POOL=thread, or auto (default:
+    processes for wide tables with >= 3 columns per worker, threads otherwise -- a fork
+    pool's start-up and result pickling only pays off when there are many columns)."""
     n = _n_threads(threads)
     if n == 1 or len(cols) == 1:
         return [_profile_column(c, row_count) for c in cols]
-    mode = os.environ.get("PROFILE_POOL", "process")
+    mode = os.environ.get("PROFILE_POOL", "auto")
+    if mode == "auto":
+        mode = "process" if len(cols) >= 3 * n else "thread"
     if mode == "process":
         import multiprocessing as mp
         _FORK_STATE["args"] = (cols, row_count, keep_uniques)

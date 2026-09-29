@@ -304,6 +304,7 @@ class Engine:
         self._arrow_pools: dict[str, Any] = {}
         self.timings: dict[str, float] = {}
         self.col_timings: dict[str, float] = {}
+        self.rule_violations: dict[str, int] = {}
 
     # ── row counts (generator.calculate_row_counts) ───────────────────────
     def row_counts(self, scale: str) -> dict[str, int]:
@@ -476,6 +477,8 @@ class Engine:
         self.timings["_compute_phase"] = time.perf_counter() - t0
         t0 = time.perf_counter()
         self.fix_business_rules()
+        # BusinessRulesEngine.fix_violations ends with a full validate() pass; do the same
+        self.rule_violations = self.validate_business_rules()
         self.timings["_business_rules"] = time.perf_counter() - t0
         t0 = time.perf_counter()
         out = {}
@@ -1081,6 +1084,50 @@ class Engine:
                 self._fix_cross_table(rule)
             elif rule["type"] == "cross_column":
                 self._fix_cross_column(rule)
+
+    def _cmp_violations(self, a: np.ndarray, op: str, b: np.ndarray) -> int:
+        with np.errstate(invalid="ignore"):
+            bad = {">=": a < b, "<=": a > b, ">": a <= b, "<": a >= b, "==": a != b}.get(op)
+        return 0 if bad is None else int(np.count_nonzero(bad))
+
+    def _as_cmp(self, c: Col) -> np.ndarray:
+        v = np.asarray(c.v)
+        if v.dtype.kind == "M":
+            out = _dt_to_ns(v).astype(np.float64)
+        else:
+            out = c.numeric()
+        if c.mask is not None:
+            out = out.copy(); out[c.mask] = np.nan
+        return out
+
+    def validate_business_rules(self) -> dict[str, int]:
+        """BusinessRulesEngine.validate: count remaining violations per rule."""
+        out = {}
+        for rule in self.schema.get("business_rules", []):
+            l, op, r = self._parse_cmp(rule["rule"])
+            if not op:
+                continue
+            if rule["type"] == "cross_table":
+                via = rule.get("via")
+                if not via or "." not in l or "." not in r:
+                    continue
+                lt, lc = l.split(".", 1)
+                rt, rc = r.split(".", 1)
+                L = self.tables.get(lt)
+                if L is None or rt not in self.tables or via not in L or via not in self.tables[rt]:
+                    continue
+                n = self._cmp_violations(self._as_cmp(L[lc]), op,
+                                         self._as_cmp(self.lookup(rt, via, rc, L[via])))
+            else:
+                T = self.tables.get(rule.get("table"))
+                if T is None or l not in T:
+                    continue
+                a = self._as_cmp(T[l])
+                b = self._as_cmp(T[r]) if r in T else float(r)
+                n = self._cmp_violations(a, op, b)
+            if n:
+                out[rule["name"]] = n
+        return out
 
     def _fix_cross_table(self, rule):
         via = rule.get("via")
