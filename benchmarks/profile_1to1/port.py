@@ -1145,7 +1145,8 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
         nan_mask = np.isnan(fvals)
         null_count = int(nan_mask.sum())
         nn_np = fvals[~nan_mask] if null_count else fvals
-        nn_np = nn_np + 0.0  # pandas hashes -0.0 == 0.0
+        raw_nn = nn_np
+        nn_np = nn_np + 0.0  # pandas hashes -0.0 == 0.0 (key printed as the first-seen zero)
         non_null = pa.array(nn_np)
     elif kind == "nullobj":
         null_count = len(arr)
@@ -1226,6 +1227,10 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
         need = cardinality if is_enum else min(top_n, cardinality)
         top = order[:need]
         keys = _keys_py(uniq.take(pa.array(top)), kind)
+        if kind == "float" and "0.0" in keys:
+            zeros = np.flatnonzero(raw_nn == 0)
+            if len(zeros) and np.signbit(raw_nn[zeros[0]]):
+                keys[keys.index("0.0")] = "-0.0"
         props = counts[top] / n_nn
         rounded = _round6(props)
         if is_enum:
