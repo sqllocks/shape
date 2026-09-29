@@ -513,22 +513,23 @@ def _kolmogn_PelzGood(n, x):
 
 
 def _smirnov(n, d):
-    """One-sided exact Smirnov sf (Birnbaum & Tingey).  Only used in branches where the
-    two-sided p-value is far below Spindle's 0.05 gate, so only its magnitude matters."""
+    """One-sided exact Smirnov sf (Birnbaum & Tingey sum, vectorised).  Only reached in
+    branches where the two-sided p-value is far below Spindle's 0.05 gate, so only its
+    magnitude matters (it is never reported)."""
     if d <= 0:
         return 1.0
     if d >= 1:
         return 0.0
-    tot = 0.0
-    lg_n1 = math.lgamma(n + 1)
-    for j in range(int(math.floor(n * (1 - d))) + 1):
-        a = 1 - d - j / n
-        b = d + j / n
-        if a <= 0:
-            continue
-        lt = lg_n1 - math.lgamma(j + 1) - math.lgamma(n - j + 1) + (n - j) * math.log(a) + (j - 1) * math.log(b)
-        tot += math.exp(lt)
-    return min(max(d * tot, 0.0), 1.0)
+    j = np.arange(int(math.floor(n * (1 - d))) + 1, dtype=np.float64)
+    a = 1 - d - j / n
+    b = d + j / n
+    ok = a > 0
+    j, a, b = j[ok], a[ok], b[ok]
+    # log C(n, j) via cumulative sums of log((n - i + 1) / i)
+    steps = np.log((n - np.arange(1, n + 1) + 1) / np.arange(1, n + 1))
+    logc = np.concatenate(([0.0], np.cumsum(steps)))[j.astype(np.int64)]
+    lt = logc + (n - j) * np.log(a) + (j - 1) * np.log(b)
+    return float(min(max(d * np.exp(lt).sum(), 0.0), 1.0))
 
 
 def kstwo_sf(d: float, n: int) -> float:
@@ -602,23 +603,44 @@ def _lognorm_nnlf(theta, data):
     return -np.sum(_lognorm_logpdf(x, s), axis=0) + n_log_scale
 
 
+_C_SQRT2PI = np.sqrt(2 * np.pi)
+
+
+def _lognorm_logpdf_inplace(x, s):
+    """_lognorm_logpdf with fewer temporaries; same operations in the same order, so the
+    result is bitwise identical."""
+    a = np.log(x)
+    np.square(a, out=a)
+    np.negative(a, out=a)
+    np.divide(a, 2 * s ** 2, out=a)
+    b = np.multiply(s, x)
+    np.multiply(b, _C_SQRT2PI, out=b)
+    np.log(b, out=b)
+    np.subtract(a, b, out=a)
+    return a
+
+
 def _lognorm_penalized_nnlf(theta, data):
+    """rv_continuous._penalized_nnlf for lognorm."""
     s, loc, scale = theta
     if not (s > 0) or scale <= 0:
         return np.inf
-    x = np.asarray((data - loc) / scale)
+    x = np.subtract(data, loc)
+    np.divide(x, scale, out=x)
     n_log_scale = len(x) * np.log(scale)
     with np.errstate(invalid="ignore"):
-        cond0 = ~((0 < x) & (x < np.inf))
-    n_bad = np.count_nonzero(cond0, axis=0)
+        good = (0 < x) & (x < np.inf)
+    n_bad = len(x) - np.count_nonzero(good)
     if n_bad > 0:
-        x = x[~cond0]
+        x = x[good]
     with np.errstate(divide="ignore", invalid="ignore"):
-        logff = _lognorm_logpdf(x, s)
+        logff = _lognorm_logpdf_inplace(x, s)
     finite = np.isfinite(logff)
-    n_bad += np.sum(~finite, axis=0)
+    nf = len(logff) - np.count_nonzero(finite)
+    n_bad += nf
     if n_bad > 0:
-        return -np.sum(logff[finite], axis=0) + n_bad * np.log(np.finfo(float).max) * 100 + n_log_scale
+        tot = np.sum(logff[finite], axis=0) if nf else np.sum(logff, axis=0)
+        return -tot + n_bad * np.log(np.finfo(float).max) * 100 + n_log_scale
     return -np.sum(logff, axis=0) + n_log_scale
 
 
@@ -1022,6 +1044,44 @@ def _percentile_sorted(sorted_a: np.ndarray, qs) -> np.ndarray:
     return _lerp(sorted_a[prev], sorted_a[nxt], gamma)
 
 
+_HASH_MAX_CARD = 50_000
+
+
+def _top_by_first_seen(values: np.ndarray, uniq: np.ndarray, counts: np.ndarray, need: int) -> np.ndarray:
+    """Indices into `uniq` of the first `need` keys in pandas' value_counts order
+    (count desc, ties by first appearance in row order), without hashing every row:
+    keys above the need-th count are always selected; ties at that count are resolved by
+    scanning rows in order (chunked, vectorised) until enough first appearances are seen."""
+    k = len(uniq)
+    need = min(need, k)
+    c_thr = np.partition(counts, k - need)[k - need]
+    n_above = int((counts > c_thr).sum())
+    want_ties = need - n_above
+    first = np.full(k, -1, dtype=np.int64)
+    found_above = found_ties = 0
+    pos, chunk, n = 0, 1 << 14, len(values)
+    while pos < n and (found_above < n_above or found_ties < want_ties):
+        ch = values[pos:pos + chunk]
+        idx = np.searchsorted(uniq, ch)
+        rows = np.flatnonzero(counts[idx] >= c_thr)
+        if len(rows):
+            u, fi = np.unique(idx[rows], return_index=True)
+            new = first[u] < 0
+            u, fi = u[new], fi[new]
+            first[u] = pos + rows[fi]
+            ca = counts[u]
+            found_above += int((ca > c_thr).sum())
+            found_ties += int((ca == c_thr).sum())
+        pos += chunk
+        chunk *= 2
+    above = np.flatnonzero(counts > c_thr)
+    ties = np.flatnonzero((counts == c_thr) & (first >= 0))
+    ties = ties[np.argsort(first[ties], kind="stable")][:want_ties]
+    sel = np.concatenate([above, ties])
+    order = np.lexsort((first[sel], -counts[sel]))
+    return sel[order]
+
+
 _PCTS = [1, 5, 10, 25, 50, 75, 90, 95, 99]
 
 
@@ -1070,21 +1130,26 @@ _EXTRA_FORMATS = ["%Y/%m/%d", "%m/%d/%Y", "%Y/%m/%d %H:%M:%S", "%m/%d/%Y %H:%M:%
                   "%b %d %Y", "%d %b %Y"]
 
 
+def _try(fn, arr) -> bool:
+    """True if fn(arr) succeeds.  Probes the first element first so that a column that
+    obviously does not parse fails fast (pandas also stops at the first failure)."""
+    for a in ((arr.slice(0, 1), arr) if len(arr) > 1 else (arr,)):
+        try:
+            fn(a)
+        except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
+            return False
+    return True
+
+
 def _all_parse_datetime(uniques: pa.Array) -> bool:
     """Port of `pd.to_datetime(values, format="mixed")` succeeding.  Supported:
     ISO-8601 (anything Arrow's string->timestamp cast accepts) plus a list of common
     explicit formats.  dateutil-only spellings are NOT recognised (documented)."""
-    try:
-        pc.cast(uniques, pa.timestamp("ns"))
+    if _try(lambda a: pc.cast(a, pa.timestamp("ns")), uniques):
         return True
-    except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
-        pass
     for fmt in _EXTRA_FORMATS:
-        try:
-            pc.strptime(uniques, format=fmt, unit="ns")
+        if _try(lambda a: pc.strptime(a, format=fmt, unit="ns"), uniques):
             return True
-        except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
-            continue
     return False
 
 
@@ -1160,13 +1225,33 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
     null_rate = null_count / row_count if row_count > 0 else 0.0
 
     # ---- value counts (pandas: hashtable in first-appearance order, stable desc sort)
-    if n_nn:
-        vc = pc.value_counts(non_null)
-        uniq = vc.field("values")
-        counts = vc.field("counts").to_numpy()
-    else:
-        uniq = non_null
-        counts = np.zeros(0, np.int64)
+    # Numeric/timestamp columns: sort-based counting (the sort is reused for quantiles
+    # and KS); strings/bools: Arrow hash value_counts.  Both reproduce pandas' order.
+    xs_sorted = None  # sorted non-null numeric values (reused below)
+    vc_mode = "hash"
+    num_key = None  # numpy row-order values used as hash keys for numeric kinds
+    if kind == "float":
+        num_key = nn_np
+    elif kind == "int":
+        num_key = non_null.to_numpy()
+    elif kind == "dt64" and n_nn:
+        num_key = pc.cast(non_null, pa.int64()).to_numpy()
+    if n_nn and num_key is not None:
+        xs_sorted = np.sort(num_key)
+        starts = np.flatnonzero(np.concatenate(([True], xs_sorted[1:] != xs_sorted[:-1])))
+        if len(starts) > _HASH_MAX_CARD:
+            vc_mode = "sorted"
+            uniq_np = xs_sorted[starts]
+            counts = np.diff(np.append(starts, n_nn))
+            uniq = uniq_np
+    if vc_mode == "hash":
+        if n_nn:
+            vc = pc.value_counts(non_null if num_key is None or kind == "dt64" else pa.array(num_key))
+            uniq = vc.field("values")
+            counts = vc.field("counts").to_numpy()
+        else:
+            uniq = non_null
+            counts = np.zeros(0, np.int64)
     cardinality = len(uniq)
     cardinality_ratio = cardinality / row_count if row_count > 0 else 0.0
     is_unique = cardinality == row_count and null_count == 0
@@ -1206,13 +1291,9 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
             if pc.all(pc.is_in(lower, value_set=pa.array(["true", "false", "0", "1", "yes", "no"]))).as_py():
                 stype = "boolean"
             else:
-                try:
-                    uvals = pc.cast(uniq, pa.float64())
-                    ok = True
-                except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
-                    ok = False
+                ok = _try(lambda a: pc.cast(a, pa.float64()), uniq)
                 if ok:
-                    u = uvals.to_numpy()
+                    u = pc.cast(uniq, pa.float64()).to_numpy()
                     stype = "integer" if np.all(u == u.astype(np.int64)) else "float"
                     numeric = pc.cast(non_null, pa.float64()).to_numpy()
                 elif _all_parse_datetime(uniq):
@@ -1223,10 +1304,15 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
     enum_values = None
     value_counts_ext = None
     if n_nn:
-        order = np.argsort(-counts, kind="stable")
         need = cardinality if is_enum else min(top_n, cardinality)
-        top = order[:need]
-        keys = _keys_py(uniq.take(pa.array(top)), kind)
+        if vc_mode == "hash":
+            top = np.argsort(-counts, kind="stable")[:need]
+            top_keys = uniq.take(pa.array(top))
+        else:
+            top = _top_by_first_seen(num_key, uniq_np, counts, need)
+            tk = uniq_np[top]
+            top_keys = pa.array(tk) if kind != "dt64" else pc.cast(pa.array(tk), non_null.type)
+        keys = _keys_py(top_keys, kind)
         if kind == "float" and "0.0" in keys:
             zeros = np.flatnonzero(raw_nn == 0)
             if len(zeros) and np.signbit(raw_nn[zeros[0]]):
@@ -1241,7 +1327,7 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
     min_value = max_value = None
     if n_nn:
         if kind == "float":
-            min_value, max_value = float(nn_np.min()), float(nn_np.max())
+            min_value, max_value = float(raw_nn.min()), float(raw_nn.max())
         else:
             mm = pc.min_max(non_null)
             lo, hi = mm["min"].as_py(), mm["max"].as_py()
@@ -1267,8 +1353,11 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
             std_val = float("nan")
         dist_name, dist_params = detect_distribution(numeric)
         xs = None
+        if xs_sorted is not None and kind in ("int", "float"):
+            xs = xs_sorted.astype(np.float64, copy=False)
         if cnt >= 4:
-            xs = np.sort(numeric)
+            if xs is None:
+                xs = np.sort(numeric)
             vals = _percentile_sorted(xs, _PCTS + [0.5, 99.5])
             quantiles = {f"p{p}": round(float(v), 6) for p, v in zip(_PCTS, vals[:9])}
             quantiles["p0_5"] = round(float(vals[9]), 6)
@@ -1387,42 +1476,48 @@ def _detect_primary_key(works: list[_Work], row_count: int) -> list[str]:
 
 
 def _correlation(works: list[_Work], row_count: int) -> dict:
-    """DataFrame.select_dtypes(np.number).corr('pearson') -> nested dict (round 4)."""
+    """DataFrame.select_dtypes(np.number).corr('pearson') -> nested dict (round 4).
+
+    Pairwise-complete Pearson via BLAS: columns are centred on their global mean (to
+    avoid cancellation), then per-pair sums over the rows where *both* are present are
+    obtained as matrix products with the null masks of the columns that have nulls."""
     cols = [w for w in works if w.col.kind in ("int", "float")]
     if len(cols) < 2:
         return {}
-    k = len(cols)
-    X = np.empty((row_count, k), dtype=np.float64)
+    k, n = len(cols), row_count
+    X = np.empty((n, k), dtype=np.float64)
     for j, w in enumerate(cols):
-        a = _combine(w.col.arr)
-        X[:, j] = a.to_numpy(zero_copy_only=False).astype(np.float64, copy=False)
-    M = ~np.isnan(X)
-    any_null = not M.all()
-    Mf = M.astype(np.float64)
-    cnt = Mf.sum(axis=0)
+        X[:, j] = _combine(w.col.arr).to_numpy(zero_copy_only=False)
+    nulls = [j for j, w in enumerate(cols) if w.col.kind == "float" and w.prof.null_count]
+    cnt = np.full(k, float(n))
+    if nulls:
+        MB = ~np.isnan(X[:, nulls])
+        cnt[nulls] = MB.sum(axis=0)
+        MB = MB.astype(np.float64)
     with np.errstate(invalid="ignore", divide="ignore"):
-        gmean = np.where(cnt > 0, np.nansum(X, axis=0) / np.where(cnt > 0, cnt, 1), 0.0)
-    X0 = np.where(M, X - gmean, 0.0)
-    Sxy = X0.T @ X0
-    if any_null:
-        N = Mf.T @ Mf                      # pair counts
-        Sx = X0.T @ Mf                     # Sx[a,b] = sum x_a over rows where b present (and a)
-        Sxx = (X0 * X0).T @ Mf
-    else:
-        N = np.full((k, k), float(row_count))
-        s = X0.sum(axis=0)
-        Sx = np.repeat(s[:, None], k, axis=1)
-        sq = (X0 * X0).sum(axis=0)
-        Sxx = np.repeat(sq[:, None], k, axis=1)
+        gmean = np.nansum(X, axis=0) / np.where(cnt > 0, cnt, 1)
+    X -= gmean
+    if nulls:
+        np.nan_to_num(X, copy=False, nan=0.0)
+    Sxy = X.T @ X
+    colsum = X.sum(axis=0)
+    X2 = np.square(X)
+    colsq = X2.sum(axis=0)
+    N = np.full((k, k), float(n))
+    Sx = np.repeat(colsum[:, None], k, axis=1)   # Sx[a, b]: sum of x_a where a & b present
+    Sxx = np.repeat(colsq[:, None], k, axis=1)
+    if nulls:
+        N[:, nulls] = cnt[nulls][None, :]
+        N[nulls, :] = cnt[nulls][:, None]
+        N[np.ix_(nulls, nulls)] = MB.T @ MB
+        Sx[:, nulls] = X.T @ MB
+        Sxx[:, nulls] = X2.T @ MB
+    del X2
     with np.errstate(invalid="ignore", divide="ignore"):
         cov = Sxy - Sx * Sx.T / N
-        va = Sxx - Sx * Sx / N
-        vb = va.T
-        va = np.maximum(va, 0.0)
-        vb = np.maximum(vb, 0.0)
-        div = np.sqrt(va * vb)
+        va = np.maximum(Sxx - Sx * Sx / N, 0.0)
+        div = np.sqrt(va * va.T)
         r = np.where((div != 0) & (N >= 1), cov / div, np.nan)
-    # pandas' Welford gives exactly 0 variance for constant data; guard tiny residue
     names = [w.col.name for w in cols]
     out: dict[str, dict[str, float]] = {}
     for i, a in enumerate(names):

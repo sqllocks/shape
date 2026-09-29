@@ -277,7 +277,59 @@ def mt():
     print("wrote mt/{customer,product,orders}")
 
 
-ALL = {"D1": d1, "D2": d2, "D3": d3, "D4": d4, "MT": mt}
+def edge():
+    """Small tables exercising edge paths: n<4, n<20 (no fitting), n<=140 (exact KS
+    DMTW/Pomeranz branches), constant / all-null / bool-like / numeric-string columns,
+    every regex pattern family, signed zeros, fractional timestamps, uuid-only PK."""
+    import datetime as dt
+    sub = OUT / "edge"
+    sub.mkdir(parents=True, exist_ok=True)
+    for n in (3, 15, 60, 130, 3000):
+        rng = np.random.default_rng(100 + n)
+        def rstr(choices):
+            return _pick(rng, choices, n)
+        hexs = [f"{i:02x}" for i in range(256)]
+        mac = pc.binary_join_element_wise(*[_pick(rng, hexs, n) for _ in range(6)], ":")
+        ipv6 = pc.binary_join_element_wise(*[_pick(rng, [f"{i:x}" for i in range(0, 65536, 257)], n) for _ in range(8)], ":")
+        frac_ts = pa.array((np.datetime64("2021-03-01T00:00:00", "ms")
+                            + rng.integers(0, 10**10, n).astype("timedelta64[ms]")), pa.timestamp("ms"))
+        t = pa.table({
+            "paid": pa.array(rng.permutation(n) + 1000),           # unique int; name ends with "id"
+            "uid": _uuid(rng, n),
+            "const_int": pa.array(np.full(n, 7)),
+            "const_float": pa.array(np.full(n, 2.5)),
+            "all_null": pa.nulls(n, pa.float64()),
+            "yes_no": rstr(["yes", "no", "Yes", "NO"]),
+            "tf_str": _with_nulls(rstr(["true", "false", "1", "0"]), rng, 0.2),
+            "numstr_int": pc.cast(pa.array(rng.integers(-50, 50, n)), pa.string()),
+            "numstr_dec": _money(rng.integers(0, 100000, n)),
+            "ssn": _join(_istr(rng.integers(100, 999, n)), "-", _istr(rng.integers(10, 99, n)), "-", _istr(rng.integers(1000, 9999, n))),
+            "mac": mac,
+            "ipv6": ipv6,
+            "iban": _join("DE", _istr(rng.integers(10, 99, n)), _istr(rng.integers(10**9, 10**10 - 1, n)), _istr(rng.integers(10**7, 10**8 - 1, n))),
+            "lang": rstr(["en", "fr", "de", "en-US", "pt-BR", "es"]),
+            "zip5": _istr(rng.integers(0, 100000, n), 5),
+            "date_slash": _join(_istr(rng.integers(2000, 2024, n)), "/", _istr(rng.integers(1, 13, n)), "/", _istr(rng.integers(1, 29, n))),
+            "us_date": _join(_istr(rng.integers(1, 13, n), 2), "/", _istr(rng.integers(1, 29, n), 2), "/", _istr(rng.integers(2000, 2024, n))),
+            "text": _with_nulls(_join("note ", _istr(rng.integers(0, 50, n)), " about ", rstr(["alpha", "beta", "gamma"])), rng, 0.3),
+            "signed_zero": pa.array(np.round(rng.normal(0, 0.001, n), 3)),
+            "neg_normal": pa.array(np.round(rng.normal(-5, 3, n), 3)),
+            "int_nulls": _with_nulls(pa.array(rng.integers(0, 5, n)), rng, 0.4),
+            "skew_int": pa.array(np.floor(rng.lognormal(1, 1, n)).astype(np.int64)),
+            "frac_ts": frac_ts,
+            "flag": _with_nulls(pa.array(rng.random(n) < 0.5), rng, 0.3),
+        })
+        tu = t.drop_columns(["paid"])  # uuid-only primary key variant
+        for stem, tt in ((f"e{n}", t), (f"e{n}_uuidpk", tu)):
+            ct = _csv_table(tt)
+            ct = ct.set_column(ct.schema.get_field_index("frac_ts"), "frac_ts",
+                               pc.strftime(tt["frac_ts"], format="%Y-%m-%d %H:%M:%S"))
+            pacsv.write_csv(ct, sub / f"{stem}.csv", write_options=pacsv.WriteOptions(quoting_style="none"))
+            pq.write_table(tt, sub / f"{stem}.parquet")
+    print("wrote edge/*")
+
+
+ALL = {"D1": d1, "D2": d2, "D3": d3, "D4": d4, "MT": mt, "EDGE": edge}
 
 if __name__ == "__main__":
     which = sys.argv[1:] or list(ALL)

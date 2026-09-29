@@ -27,8 +27,10 @@ import spindle_dump as sd  # noqa: E402  (stdlib-only at import time)
 DATA = Path(os.environ.get("PROFILE_DATA_DIR", "/tmp/claude-0/profile_data"))
 CACHE = Path("/tmp/claude-0/profile_scratch/spindle_json")
 SPINDLE_PY = "/tmp/claude-0/spindle-venv/bin/python"
+EDGE = [f"edge/e{n}{v}.{ext}" for n in (3, 15, 60, 130, 3000) for v in ("", "_uuidpk")
+        for ext in ("csv", "parquet")]
 ALL = ["d1.csv", "d1.parquet", "d2.csv", "d2.parquet", "d3.csv", "d3.parquet", "d4.csv",
-       "d4.parquet", "mt", "mt.parquet"]
+       "d4.parquet", "mt", "mt.parquet"] + EDGE
 
 # field -> (rule, tolerance)
 RULES = {
@@ -103,7 +105,7 @@ def corr_compare(a, b):
 
 def spindle_profile(ds: str, refresh: bool):
     CACHE.mkdir(parents=True, exist_ok=True)
-    out = CACHE / f"{ds}.json"
+    out = CACHE / f"{ds.replace('/', '_')}.json"
     if refresh or not out.exists():
         if ds == "mt":
             args = [str(DATA / "mt")]

@@ -303,6 +303,7 @@ class Engine:
         self._pk_pos_cache: dict[tuple, Any] = {}
         self._arrow_pools: dict[str, Any] = {}
         self.timings: dict[str, float] = {}
+        self.col_timings: dict[str, float] = {}
 
     # ── row counts (generator.calculate_row_counts) ───────────────────────
     def row_counts(self, scale: str) -> dict[str, int]:
@@ -460,12 +461,14 @@ class Engine:
                 if not s:
                     ctx.cur[cn] = Col(np.full(ctx.n, None, dtype=object), np.ones(ctx.n, bool))
                     continue
+                tc = time.perf_counter()
                 col = getattr(self, "s_" + s)(cn, cdef, g, ctx)
                 if cdef.get("nullable", False) and cdef.get("null_rate", 0.0) > 0:
                     # Strategy.apply_nulls
                     m = ctx.rng.random(ctx.n) < cdef["null_rate"]
                     col.mask = m if col.mask is None else (col.mask | m)
                 ctx.cur[cn] = col
+                self.col_timings[f"{tn}.{cn}"] = time.perf_counter() - tc
             self.tables[tn] = ctx.cur
             self.timings[tn] = time.perf_counter() - t0
         t0 = time.perf_counter()

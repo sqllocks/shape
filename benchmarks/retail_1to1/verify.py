@@ -531,7 +531,7 @@ def main():
 
     Path(a.out).write_text(json.dumps(report, indent=1, default=str))
     txt = summary_text(report)
-    Path(a.out).with_name("verify_summary.txt").write_text(txt)
+    Path(a.out).with_name(Path(a.out).stem.replace("report", "summary") + ".txt").write_text(txt)
     print(txt)
 
 
