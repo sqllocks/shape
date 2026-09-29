@@ -3,18 +3,17 @@
 # segments, all file types). Column 2 = the work package that ports it; it must appear in plan section 11.
 # Checked by benchmarks/vs_spindle/check_coverage.py (P0-07). __init__.py files belong to their package's WP.
 # glob	wp	note
-cli.py	P8-01	every command row in plan section 10; each row names its own WP
+cli.py	P4-10	CLI entry point; each section-10 row is built by the WP named in that row; P8-01 completes remaining aliases
 mcp_bridge.py	P6-11	JSON stdio bridge, 17 commands
 mcp_bridge_server.py	P6-11	MCP server
-observability.py	P4-10	structured JSON logging and per-run metrics for generate
-__init__.py	P4-10	package API surface: Spindle().generate(...) equivalent is shape.api.generate
+observability.py	P4-10	structured JSON logging and per-run metrics
+__init__.py	P4-10	package API surface: Spindle().generate(...) equivalent is shape.api.generate (P4-10)
 chaos/*	P6-02	schema, value, file, referential, temporal, volume
 demo/*	P6-12
 demo/*/*	P6-12
 domains/__init__.py	P4-07	domain discovery
 domains/base.py	P4-07	Domain base: _build_schema, _dist, _ratio, profiles
 domains/retail/*	P4-07
-domains/_shared/*	P4-07	shared reference data
 domains/_shared/*/*	P4-07
 domains/capital_markets/*	P6-01a
 domains/education/*	P6-01a
@@ -51,7 +50,7 @@ engine/table_generator.py	P4-02	column ordering, per-table RNG
 engine/id_manager.py	P4-02
 engine/rules/*	P4-02	BusinessRulesEngine validate/fix
 engine/data/*	P4-04b	native name/street/email pools
-engine/correlation.py	P4-04c	Gaussian copula post-pass (also used by P4-08)
+engine/correlation.py	P4-02	GaussianCopula post-pass imported by engine/generator.py (also used by P4-04c, P4-08)
 engine/strategies/__init__.py	P4-04a	strategy registry (26 names, engine/generator.py:316-341)
 engine/strategies/base.py	P4-04a
 engine/strategies/sequence.py	P4-04a
@@ -103,9 +102,9 @@ fabric/semantic_model_writer.py	P6-07c	export-model (.bim)
 incremental/*	P6-05
 inference/__init__.py	P1-08
 inference/profiler.py	P1-08	DataProfiler (line 191)
-inference/advanced_profiler.py	P1-13
-inference/tier2_profiler.py	P1-13
-inference/tier3_research.py	P1-13
+inference/advanced_profiler.py	P4-11
+inference/tier2_profiler.py	P4-11
+inference/tier3_research.py	P4-11
 inference/profile_io.py	P1-11	profile capture (ProfileIO, ExportedProfile)
 inference/profile_store.py	P6-10
 inference/comparator.py	P4-09	FidelityComparator (line 365)
@@ -116,7 +115,7 @@ inference/lakehouse_profiler.py	P6-07a
 inference/safe_profile.py	P7-01
 inference/safe_profile_adapter.py	P7-01
 inference/safe_validator.py	P7-01
-manifests/*	P4-10	run manifest written by generate (also used by packs, P6-14)
+manifests/*	P6-14	run manifest written by packs/runner.py and by publish (P6-07c)
 notebooks/*	P6-13	spindle_spark_worker.ipynb for fabric_spark mode
 output/__init__.py	P4-06
 output/csv_writer.py	P4-06
