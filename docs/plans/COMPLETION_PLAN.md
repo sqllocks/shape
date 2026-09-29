@@ -334,12 +334,14 @@ Goal: correct types and ≥10x Spindle on D1–D4.
    - **Baseline:** Spindle retail medium (1.97M rows, 9 tables), generated and written
      to Parquet, runs at **~300k rows/s** on a 4-core machine (measured 2026-09-29). The
      21k rows/s figure in `benchmarks/baseline-v2.3.0.json` is stale.
-   - **Prototype:** a vectorized Arrow/numpy two-table prototype (customers + orders
-     with a Pareto-skewed FK, derived emails, dates and lognormal amounts) runs at
-     ~1.6M rows/s to Parquet on a single core. That is ~5x, on a simpler schema.
-   - **Proposed:** ≥5x Spindle (≥1.5M rows/s) as the hard gate, and ≥10x (≥3M rows/s)
-     as a stretch goal, using multi-core chunked generation. Row-sequential strategies
-     (lifecycle, SCD2, state machines) are measured separately.
+   - **The early prototype is not a valid comparison.**
+     `benchmarks/prototypes/proto_gen.py` used placeholder strings rather than
+     realistic names and addresses, and ran 2 tables against Spindle's 9. Do not use
+     its ~5x figure.
+   - **The gate is set from a 1:1 port** of the retail domain
+     (`benchmarks/retail_1to1/`). The port uses the same tables, columns and row
+     counts, and the same generation semantics and reference pools. Fidelity is
+     verified with Spindle's own comparator before any timing counts.
 
 **Exit:**
 - Every Spindle example schema (`sqllocks_spindle/domains/*`) generates in Shape with

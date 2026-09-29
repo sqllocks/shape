@@ -1,3 +1,4 @@
+# NOT A FAIR COMPARISON: placeholder strings, 2 tables. Superseded by benchmarks/retail_1to1/.
 import time, numpy as np, pyarrow as pa, pyarrow.compute as pc, pyarrow.parquet as pq, os
 FIRST=pa.array([f"First{i}" for i in range(5000)]); LAST=pa.array([f"Last{i}" for i in range(20000)])
 CITY=pa.array([f"City{i}" for i in range(30000)]); STATES=pa.array(["OH","NY","CA","TX","FL","WA"])
