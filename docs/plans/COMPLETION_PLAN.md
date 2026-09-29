@@ -1,216 +1,297 @@
 # Shape completion plan
 
-Status: **approved build specification** · Supersedes `docs/plans/REMAINING_WORK.md` and
-`docs/plans/NEXT_WORK_PACKETS.md`
+Status: **approved build specification, v2** (2026-09-29) · Supersedes
+`docs/plans/REMAINING_WORK.md` and `docs/plans/NEXT_WORK_PACKETS.md`
 
 This document is the single source of truth for finishing Shape. Every product and
-technical decision is settled in §2. The work is split into numbered work packages (§6),
-and each one has dependencies, deliverables and pass/fail acceptance criteria. Building
-every work package to its acceptance criteria, and passing every phase gate, completes
-the project. Nothing here is left open for discussion. The only items needing outside
-help are the owner actions in §8, and each of those has a defined fallback, so none of
-them blocks completion.
+technical decision is settled in §2. The work is split into numbered work packages
+(§7), each with dependencies, deliverables and mechanically checkable acceptance
+criteria. Building every work package to its acceptance criteria, and passing every
+phase gate, completes the project.
+
+v2 includes every finding of an adversarial review of v1. Line references were
+re-verified against the code on 2026-09-29.
 
 Contents:
-1. How to execute this plan
+0. Builder guide (read first)
+1. Environment setup
 2. Decisions
 3. Measured baselines and targets
 4. Target architecture
 5. Target repository layout
-6. Work packages and phase gates
-7. Keep / cut
-8. Owner actions (external)
-9. Spindle CLI parity map
-10. Status tracker
+6. Execution rules
+7. Work packages and phase gates
+8. Keep / cut / delete lists
+9. Owner actions (external)
+10. Spindle CLI parity map
+11. Status tracker
 
 Appendix A: Verified bug register
 
 ---
 
-## 1. How to execute this plan
+## 0. Builder guide (read first)
 
-### 1.1 Order
+This plan is designed to be executed by an AI coding agent working in fresh sessions.
+Follow this protocol exactly.
 
+### 0.1 At the start of every session
+
+1. Read this section, §1 (Environment setup) and §6 (Execution rules) in full.
+2. Read §11 (Status tracker). The **next work package** is the first one, in tracker
+   order, whose status is `todo` and whose `Depends` are all `done`.
+3. Run the environment setup (§1). Before touching code, confirm that
+   `make check` or the existing test suite runs.
+4. Read the whole entry for the next work package in §7, together with every bug in
+   Appendix A that it lists under "Fixes".
+
+### 0.2 While working on a work package
+
+1. **Write the acceptance tests first,** from the acceptance criteria. Every bug ID
+   gets a regression test that fails before the fix.
+2. Implement until every acceptance criterion passes.
+3. Satisfy the definition of done (§6.2).
+4. Commit on the session branch (§6.3). Update the tracker row in the same commit.
+5. Push, then move to the next work package.
+
+Keep each work package self-contained. Do not start the next one while the current
+one is failing.
+
+### 0.3 What you may decide yourself
+
+- **Implementation details inside a work package:** names of private functions, file
+  splits within the §5 layout, algorithms that meet the acceptance criteria.
+- **Fixing a factual error in this plan:** a wrong path, a wrong line number, or a
+  Spindle fact that turns out different. Fix it in a separate commit prefixed
+  `plan-fix:`, put the evidence in the commit message, and add a row to the decision
+  log (§2.3).
+
+### 0.4 Stop and escalate: never improvise
+
+Stop, record the problem in §2.3 with evidence, and report to the owner when any of
+these happens:
+- An acceptance criterion appears impossible to meet as written.
+- A gate is still missed after the protocol in §6.5.
+- A change would alter a decision in §2 (any D-xx or T-xx), a gate, or a tolerance.
+- A work package needs something that doesn't exist and that this plan doesn't say
+  how to create.
+- An owner action (§9) is needed for the current step, and its fallback doesn't
+  apply.
+
+After escalating, continue with the next work package that doesn't depend on the
+blocked one.
+
+### 0.5 Reporting
+
+At the end of each session, report:
+- the work packages completed, with their commits;
+- the gate status;
+- any escalations;
+- the next work package.
+
+Never report something as done or passing unless you ran the check in that session
+and saw it pass.
+
+---
+
+## 1. Environment setup
+
+Every path used by the harness comes from these environment variables. **Nothing in
+the repo may hard-code a machine path** (P0-07 enforces this).
+
+```bash
+export SHAPE_ROOT="$PWD"                                  # repo root
+export SPINDLE_ROOT="${SPINDLE_ROOT:-$HOME/spindle}"      # pinned Spindle checkout
+export SPINDLE_VENV="${SPINDLE_VENV:-$HOME/.venvs/spindle}"
+export SPINDLE_PY="$SPINDLE_VENV/bin/python"
+export SHAPE_VENV="${SHAPE_VENV:-$HOME/.venvs/shape}"
+export BENCH_DATA_DIR="${BENCH_DATA_DIR:-$HOME/bench-data}"  # generated datasets (not in git)
+export BENCH_OUT_DIR="${BENCH_OUT_DIR:-$HOME/bench-out}"     # scratch output (not in git)
 ```
-Phase 0 ─► Phase 1 ─► Phase 2 ─┬─► Phase 3 ─┐
-                  │            └─► Phase 4 ─┼─► Phase 5 ─► Phase 6 ─► Phase 8
-                  └────────────────► Phase 7 ┘
+
+### 1.1 Shape development environment
+
+1. Python 3.11+ is required (`python3 --version`).
+2. Rust stable, 1.83 or newer, is required from P1-01a onward:
+   `curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal && . "$HOME/.cargo/env"`.
+3. `python3 -m venv "$SHAPE_VENV" && "$SHAPE_VENV/bin/pip" install -U pip`
+4. Before P1-01a: `"$SHAPE_VENV/bin/pip" install -e ".[dev]"`
+5. From P1-01a onward: `"$SHAPE_VENV/bin/pip" install -e ".[dev]"` (maturin builds the
+   extension), or `maturin develop --release` after changing Rust code.
+
+### 1.2 Pinned Spindle baseline (T-20)
+
+Spindle is public at `https://github.com/sqllocks/spindle`, and an anonymous clone
+works. The pinned commit is 3.0.1, which is newer than the 3.0.0 on PyPI, so always
+use git.
+
+```bash
+git clone https://github.com/sqllocks/spindle "$SPINDLE_ROOT"
+git -C "$SPINDLE_ROOT" checkout 422e78df2267e73bb2fa976267e48cb437861e2f
+python3 -m venv "$SPINDLE_VENV"
+"$SPINDLE_PY" -m pip install -U pip
+"$SPINDLE_PY" -m pip install "pandas==3.0.6" "numpy==2.4.6" "scipy==1.17.1" \
+    "pyarrow==25.0.1" "click==8.5.0" "requests==2.34.2" "python-dateutil==2.9.0.post0"
+"$SPINDLE_PY" -m pip install --no-deps -e "$SPINDLE_ROOT"
+"$SPINDLE_PY" -c "import sqllocks_spindle; print('spindle ok')"
 ```
 
-- Phases 0, 1 and 2 are strictly sequential.
-- Phases 3 and 4 may run in parallel after Phase 2.
-- Phase 5 needs both Phase 3 and Phase 4.
-- Phase 7 needs Phase 1 only, and may run at any point after it.
-- Phase 6 needs Phases 4 and 5.
-- Phase 8 needs every other phase.
-- Within a phase, the "Depends" field of each work package gives its order.
+- From P0-07 onward, `benchmarks/vs_spindle/setup_spindle.sh` performs exactly these
+  steps.
+- Run Spindle's CLI as `"$SPINDLE_PY" -m sqllocks_spindle.cli …`.
+- **Never modify files under `$SPINDLE_ROOT`.**
 
-### 1.2 Definition of done for a work package
+### 1.3 Docker and external services
 
-A work package is done only when all of the following are true:
+- Emulator-backed tests (Kafka, the Azure Event Hubs emulator with Azurite, and SQL
+  Server) run **only in GitHub Actions nightly jobs**, using
+  `ci/emulators/docker-compose.yml`. Cloud builder sessions usually have no Docker
+  daemon.
+- Locally, run the contract tests only, with `pytest -m "not emulator and not live"`.
+  Check the emulator results from CI.
+- To read CI results in a session without the `gh` CLI, use the GitHub MCP tools:
+  `actions_list`, `actions_get` and `get_job_logs`.
 
-1. Every acceptance criterion passes, both locally and in CI.
-2. `ruff check`, `ruff format --check`, `mypy` (strict for every module the work
-   package creates or rewrites) and `pytest` are green.
-3. Every bug ID the work package lists has a regression test. The test is written
-   first, fails before the fix and passes after it.
-4. The benchmark harness shows no regression greater than 5% on any tracked number.
-   This applies once the harness exists (from P0-07 onward).
-5. User-facing docs touched by the change are updated in the same PR.
-6. The status tracker (§10) is updated in the same PR: the status, and the PR or commit
-   reference.
+### 1.4 Benchmark hygiene
 
-### 1.3 Branches and PRs
-
-- Each work package is one PR. A tightly coupled set of work packages may share a PR, as
-  long as the PR lists every ID it covers.
-- The PR targets `main`.
-- PR titles start with the work-package ID, for example `P1-04: sketches (HLL, KLL,
-  SpaceSaving)`.
-- Commit messages follow the repo's existing style.
-
-### 1.4 Rules that are never broken
-
-- **Equivalence before timing.** No performance number counts until the equivalence
-  verifier for that workload passes.
-- **Never lower a gate, and never loosen a verifier's tolerance, to get green.** If a
-  gate is missed, follow §1.5.
-- **Never skip, disable or quarantine a test.** Never mark a check as passed without
-  running it. Never commit generated "qualification" or "evidence" files that are not
-  produced by the harness in this repo.
-- **No claim without enforcement.** No doc, README, CHANGELOG or docstring statement
-  about performance, fidelity, privacy or security ships unless a CI test or benchmark
-  enforces it.
-
-### 1.5 When a performance gate is missed
-
-1. Profile the workload with `py-spy record --native` and `perf`, and identify the top
-   hotspots.
-2. Move any per-value or per-row work found in Python into the Rust kernel, following
-   §4.2.
-3. Re-measure. Repeat steps 1–3 at most twice.
-4. If the minimum is still not met, record the measured numbers and the hotspot
-   analysis in the decision log (§2.3) and escalate to the owner. Work continues on
-   other work packages in the meantime; the gate itself is not changed.
+- Take every timed benchmark under an exclusive lock:
+  `flock "$BENCH_OUT_DIR/bench.lock" …`.
+- Check the load average first. If it is above 1.5 on the 4-core baseline machine,
+  wait before timing.
+- Never keep persistent caches between timed runs: delete
+  `$BENCH_OUT_DIR/<run>` before each one.
 
 ---
 
 ## 2. Decisions
 
-Every decision below is final unless the owner changes it. Record any change in §2.3.
+These decisions are final. Record changes only in §2.3, and only on the owner's
+instruction.
 
 ### 2.1 Product decisions
 
 | ID | Decision | Rationale |
 |---|---|---|
-| D-01 | **Shape replaces Spindle completely.** That covers profiling, generation (all domains, strategies, chaos, simulation, incremental, transforms), Fabric integration and the MCP bridge. | Owner decision. |
-| D-02 | **Streaming works in both directions.** Shape profiles streams it consumes (Kafka, Event Hubs) and emits streams during generation (Kafka, Event Hubs, Fabric Eventstream, Eventhouse, file, console). | Owner decision. |
-| D-03 | **Features are plugins built on core features.** A small core exposes stable extension points, and first-party features use the same API as third parties. | Owner decision. |
-| D-04 | **Performance: 10x Spindle is the minimum and 30x is the stretch goal, for both profiling and generation,** always measured 1:1 on equivalent work (§3). | Owner decision. |
-| D-05 | **Realism goes beyond Spindle.** All of Spindle's distributions and temporal patterns, plus the additional families, mixtures, 80/20 helpers, date-specific holiday calendars, payday effects and trends in P4-05. | Owner decision. |
-| D-06 | **Spindle profiler parity is a hard requirement:** distribution fitting, pattern detection, enum detection, and PK/FK detection including across tables, plus every other field of Spindle's `ColumnProfile` and `TableProfile`. | Owner decision. |
-| D-07 | **Remove differential privacy.** Delete `privacy/advanced.laplace` and every DP claim. Keep k-anonymity, suppression, redaction, minimum-cohort enforcement and Spindle's "safe profile". | Spindle has no DP, and the current DP is fake (SEC1). Correct DP with budget accounting is a separate product, and nothing requires it. |
-| D-08 | **Cut the hub, the web app and the 20 other unused or stub modules** listed in §7. Remote access is provided by the MCP plugin. | Not in Spindle; no dependents; security bugs. |
-| D-09 | **Plugins are trusted, in-process code.** The subprocess "capability sandbox" is deleted along with its isolation claims. | The owner wants features as plugins built on core, not untrusted code execution. The current sandbox is cosmetic (PL1–PL4). |
-| D-10 | **Spindle's reference data** (name pools, ZIP locations, domain reference files) is copied into the `shape-domains` plugin, with attribution carried into `THIRD_PARTY_NOTICES.md`. The GeoNames data is CC-BY-4.0, and Spindle's own code is MIT (same copyright holder). | Parity needs the same data, and the licenses allow it. |
-| D-11 | **Holiday calendars are rule-based code,** not downloaded data. They cover fixed dates, the nth or last weekday of a month, Easter (computus) and observed-day rules. US federal and US retail calendars ship with core. Other countries are plugins in the `shape.calendars` extension point. | Offline, deterministic, no data license needed. |
-| D-12 | **Streaming envelope:** the default is Spindle's `EventEnvelope` format, so existing consumers work unchanged. CloudEvents is available as an option. | Drop-in migration for Spindle users. |
-| D-13 | **No `spindle` executable is shipped.** Spindle command names are accepted as aliases by `shape` wherever the meaning matches (§9), and `.spindle.json` schemas are read directly. | Avoids clashing with an installed Spindle. |
+| D-01 | **Shape replaces Spindle completely.** That covers profiling, generation (every domain, strategy, chaos mutator, simulation, incremental mode and transform), Fabric integration, the JSON bridge, MCP and the demo. | Owner decision. |
+| D-02 | **Streaming works in both directions.** Shape profiles streams it consumes (Kafka, Event Hubs) and emits streams during generation (console, file, Kafka, Event Hubs, Fabric Eventstream, Eventhouse). | Owner decision. |
+| D-03 | **Features are plugins built on core features.** First-party features use the same plugin API as third parties. | Owner decision. |
+| D-04 | **Performance: 10x Spindle is the minimum and 30x is the stretch goal, for profiling and generation,** measured 1:1 on equivalent work (§3, T-19). | Owner decision. |
+| D-05 | **Realism goes beyond Spindle.** All of Spindle's distributions and temporal patterns, plus the additions in P4-05: more families, mixtures, 80/20 helpers, date-specific holiday calendars, payday and period effects, and trends. | Owner decision. |
+| D-06 | **Spindle profiler parity is a hard requirement:** every field of Spindle's `ColumnProfile` and `TableProfile`, including distribution fitting, pattern detection, enum detection, and PK/FK detection including across tables. | Owner decision. |
+| D-07 | **Remove differential privacy.** Keep k-anonymity, suppression, redaction, minimum-cohort enforcement, and parity with Spindle's safe profile. | Spindle has no DP, and Shape's DP is fake (SEC1). |
+| D-08 | **Delete the hub, the web app and 25 other unused or stub modules** (§8.1). Remote access is provided by the JSON bridge and the MCP plugin. | Not in Spindle; no dependents; security bugs. |
+| D-09 | **Plugins are trusted, in-process code.** Delete the subprocess "capability sandbox" and its claims. | The sandbox is cosmetic (PL1–PL4). |
+| D-10 | **Copy Spindle's reference data** (name and street pools, ZIP locations, domain reference files) into `shape-domains`. Carry the GeoNames CC-BY-4.0 attribution into `THIRD_PARTY_NOTICES.md`. | Parity needs the same data. Spindle is MIT and has the same copyright holder. |
+| D-11 | **Holiday calendars are rule-based code:** fixed dates, the nth or last weekday of a month, Easter by computus, and observed-day shifts. US federal and US retail calendars ship in core, and other countries come as `shape.calendars` plugins. | Offline and deterministic. |
+| D-12 | **Stream output defaults to Spindle's flat-row format.** Each event is the row's columns plus `_spindle_table`, `_spindle_seq` and `_spindle_event_time` (Spindle `streaming/streamer.py:228-233`). `--envelope spindle` produces Spindle's `EventEnvelope` (as used by its Eventstream client), and `--envelope cloudevents` produces CloudEvents. The idempotency key is `(_spindle_table, _spindle_seq)`. | Drop-in for existing consumers; deterministic replay. |
+| D-13 | **No `spindle` executable is shipped.** `shape` accepts Spindle command names as aliases wherever the meaning matches (§10), and reads Spindle schemas and profiles. | Avoids clashing with an installed Spindle. |
 
 ### 2.2 Technical decisions
 
 | ID | Decision | Rationale |
 |---|---|---|
-| T-01 | **Runtime split: Arrow for data format and I/O, Rust for the whole per-batch data path, Python for orchestration and plugins** (§4.2). | Measured: ~7 µs per Python→native call, and Parquet writing becomes ~50% of generation time once generation is fast. Speed needs one fused native call per batch. |
-| T-02 | **Rust kernel:** a single crate `rust/shape-kernel`. It is built with pyo3 and maturin as `shape._kernel`, uses abi3 wheels (cp311+), shares data with Python through the Arrow C Data Interface, and runs in parallel with rayon. | One kernel keeps the API small. abi3 cuts the wheel matrix to one wheel per platform. |
-| T-03 | **A pure-Python reference implementation is kept for every kernel function** under `src/shape/kernel/reference/`. `SHAPE_KERNEL=auto|rust|python` selects the implementation (the default is `auto`: Rust if importable). Differential tests assert that the two agree. | It is the correctness oracle, and the fallback on platforms without a wheel. |
-| T-04 | **Wheels:** Linux x86_64 and aarch64 (manylinux_2_28 and musllinux), macOS x86_64 and arm64, and Windows x86_64, built with cibuildwheel in CI. The sdist builds from source with a Rust toolchain. | Covers developer machines, CI and Fabric runtimes. |
-| T-05 | **Build backend:** maturin, in mixed Python/Rust layout, replacing hatchling. | Needed for T-02. |
-| T-06 | **Python 3.11–3.14.** CI runs the full matrix on Linux and 3.11 plus 3.14 on macOS and Windows. | 3.11 is the current floor; 3.14 is current. |
-| T-07 | **Core dependencies: `numpy` and `pyarrow` only.** Remove `pydantic` (unused) and `typing-extensions`. Move `cryptography` to the `[sign]` extra, loaded lazily. `scipy` is an optional extra that adds more fitting families. | Import time and install size. |
-| T-08 | **Extras.** Core `sqllocks-shape` has extras `[sign]`, `[scipy]`, `[kafka]`, `[eventhubs]`, `[fabric]`, `[sqlserver]`, `[domains]`, `[simulation]`, `[mcp]`, `[excel]`, `[delta]` and `[all]`. Each plugin extra pulls in the matching `sqllocks-shape-*` distribution. | Mirrors Spindle's extras pattern. |
-| T-09 | **First-party plugins live in this repo** under `plugins/<dist-name>/`, each with its own `pyproject.toml` and version kept in lockstep with core. They are released together. | One CI, one review flow, and atomic API changes. |
-| T-10 | **Package and version.** The distribution is `sqllocks-shape`, which is not yet on PyPI (confirmed 404 on 2026-09-29). The version resets to `0.9.0.devN` during the build. **1.0.0 is released at the end of Phase 8.** | Nothing has been published, so the version can honestly restart. |
-| T-11 | **`.shape` format v2 and Shape model v2** with one schema for every path. There is a read-only v1→v2 migrator. v1 writing is removed. | Unpublished, so it can break freely, while the migrator protects local files. |
-| T-12 | **Typing:** mypy strict for every new or rewritten module, with a per-module ratchet list in `pyproject.toml`. **All of `src/shape` must be strict by Phase 8.** | Makes `make check` truthful without a big-bang fix. |
-| T-13 | **Hashing:** seeded XXH3-64 everywhere, never Python `hash()`. Values are canonicalized first: integers and integral floats hash equal, NaN is excluded, and strings are hashed as UTF-8 bytes. | Deterministic across processes and platforms (S1, P7). |
-| T-14 | **Sketches:** HLL with p=14 by default (dense, with bias correction); KLL with k=200 by default; SpaceSaving with capacity 64 by default, bounded, and with a merge that keeps error terms. All are mergeable, associative and commutative, and property-tested. | Bounded, mergeable profiles (P5, P6, P9). |
-| T-15 | **Exact versus sketch:** `exact="auto"` computes exact statistics when a column fits the exact budget (default 5M values per column per job) and uses sketches beyond it. The output schema is identical either way, and the method is recorded in `error_models`. | Exact where it's cheap, bounded where it isn't (P12). |
-| T-16 | **Generation RNG:** counter-based Philox4x64, keyed by (seed, table, column, chunk). Any row can be generated independently, and the chunk layout never changes results. Bit-identical output to Spindle is **not** required; statistical equivalence under the standard in P4-07 is. | Parallel, deterministic random access (G1, G2). |
-| T-17 | **Parquet output:** pyarrow `ParquetWriter` with snappy compression (Spindle's default, so the benchmark is fair) and dictionary encoding enabled. Tables are written in parallel, and writing is pipelined with generation (chunk *n* is written while chunk *n+1* is generated). | Parquet writing is ~50% of the time after vectorizing (§3.2). |
-| T-18 | **CLI:** stays in Python with argparse and a plugin command registry. There is no native CLI binary. Start-up budget ≤300 ms (`import shape` plus dispatch), and heavy modules and plugins load lazily. `shape profile <glob|dir>` profiles many files in one process. | Measured: Shape-style start-up is ~0.24 s and Spindle's is ~1.25 s (§3.1). |
-| T-19 | **Performance measurement.** The primary gate is timed in-process: start-up and imports are excluded for both tools, and the result is the median of 5 warm runs, each in a fresh process. The secondary gate is CLI end to end, with start-up included for both tools, applied to inputs of ≥1M rows. Both tools use their default threading, and single-threaded Shape numbers are reported alongside. Gates are ratios measured in the same CI job on the same runner. | Ratios hold across machines; fairness (§3). |
-| T-20 | **Spindle baseline:** pinned at `sqllocks-spindle` 3.0.1, git `422e78df2267e73bb2fa976267e48cb437861e2f`. It is installed into a separate venv by `benchmarks/vs_spindle/setup_spindle.sh`, and upgraded only by an explicit PR that re-records every baseline. | Reproducible comparisons. |
-| T-21 | **Equivalence standard** (from `benchmarks/retail_1to1`, which passed 60/60 columns). Shape output counts as equivalent to Spindle's when all of these hold: identical tables, columns, order, types and row counts; each column within Spindle's own seed-to-seed variation (KS for numeric and datetime, TVD for categorical, vocabulary overlap ≥0.999 for pooled strings); 100% FK integrity; matching FK fan-out; 100% of Spindle's business rules; and Spindle's `FidelityComparator` scoring the output within Spindle's own seed-to-seed range. | A proven, strict and fair standard. |
-| T-22 | **Profiling parity standard.** Field-by-field against Spindle's `DataProfiler` output. Exact match for dtype, null counts, cardinality, uniqueness, enum, PK/FK and pattern. Enum weights within 1e-9. Mean and std within 1e-9 relative. Quantiles use Spindle's interpolation method. The same distribution family must be chosen, with parameters within 1e-6 relative. Any documented estimator difference must still show KS agreement. | Owner requirement D-06. |
-| T-23 | **Remove the stale evidence files** from the tree rather than archiving them (git history keeps them). | Removes misleading claims; nothing is lost. |
-| T-24 | **Docs:** a Markdown `docs/` tree built with mkdocs-material (Spindle's toolchain). The CLI reference is generated from argparse, and the performance page is generated from `benchmarks/vs_spindle/results.json`. | Docs cannot drift from the code. |
-| T-25 | **Release:** GitHub Actions trusted publishing to PyPI (TestPyPI first), a CycloneDX SBOM and Sigstore build attestations. | Supply-chain hygiene. |
-| T-26 | **Live external services** (Fabric, Azure Event Hubs, SQL Server) are tested three ways: (a) contract tests against recorded or mocked APIs on every PR; (b) local emulators in nightly CI — the Kafka container, the Azure Event Hubs emulator container and SQL Server in a Linux container; (c) live tests that run only when owner-provided secrets are present (§8). | Completion never depends on credentials. |
+| T-01 | **Runtime split: Arrow for data format and I/O, Rust for the entire per-batch data path, Python for orchestration and plugins** (§4.2). | Measured: ~7 µs per Python→native call, and Parquet writing is ~50% of vectorized generation time. |
+| T-02 | **Rust kernel:** a single crate `rust/shape-kernel`, exposed as `shape._kernel`. Pinned versions: `pyo3 = { version = "0.29", features = ["abi3-py311", "extension-module"] }`, `pyo3-arrow = "0.19"`, `arrow-array`/`arrow-buffer`/`arrow-schema = "59"` (the versions `pyo3-arrow` 0.19 requires), `rayon = "1.12"`, `xxhash-rust = { version = "0.8", features = ["xxh3"] }` (`xxh3_64_with_seed`), maturin 1.15. Zero-copy exchange uses the Arrow PyCapsule interface (pyarrow ≥14). | A known-compatible set. |
+| T-03 | **Every kernel function has a pure-Python reference twin** under `src/shape/kernel/reference/`. `SHAPE_KERNEL=auto|rust|python` selects the implementation (default `auto`). Differential tests assert that the two agree. The Python reference hashes through the `xxhash` package (≥3.5), which is a `[dev]` dependency and is imported only on the reference path. If it is missing, the reference path raises a clear `ImportError`. | Correctness oracle and fallback. |
+| T-04 | **Wheels built with `PyO3/maturin-action`:** manylinux_2_28 and musllinux_1_2 for x86_64 (native) and aarch64 (native on `ubuntu-24.04-arm`); macOS arm64 and x86_64 (cross-compiled on `macos-14`); win_amd64. They are abi3 wheels, one per platform, test-installed on Python 3.11 and 3.14. The sdist builds with Rust ≥1.83. | Avoids redundant builds per Python version and slow QEMU emulation. |
+| T-05 | **Build backend:** maturin, with a mixed Python/Rust layout (`python-source = "src"`, `module-name = "shape._kernel"`). | Needed for T-02. |
+| T-06 | **Python 3.11–3.14.** Tests run on the full matrix on Linux, and on 3.11 plus 3.14 on macOS and Windows. | Current floor and current release. |
+| T-07 | **Core dependencies are `numpy>=2.0,<3` and `pyarrow>=25,<26`.** Remove `pydantic` (unused) and `typing-extensions`. Move `cryptography` to `[sign]`, and make `shape.security` import `crypto` lazily. Remove the `pyarrow<24` pin. The harness uses the same pyarrow version (25.0.1) in both venvs. | Import time, install size, and a fair Parquet comparison. |
+| T-08 | **Extras:** `[sign]`, `[scipy]`, `[kafka]`, `[eventhubs]`, `[fabric]`, `[sqlserver]`, `[domains]`, `[simulation]`, `[mcp]`, `[excel]`, `[delta]` and `[all]`. Each plugin extra depends on the matching `sqllocks-shape-*` distribution. `[dev]` adds pytest, pytest-cov, hypothesis, ruff, mypy, pip-audit, build, maturin, xxhash, import-linter, vulture, bandit and py-spy. | Mirrors Spindle's extras. |
+| T-09 | **First-party plugins live under `plugins/<dist-name>/`,** each with its own `pyproject.toml`. Their versions are kept in lockstep with core, and they are released together. | One CI and atomic API changes. |
+| T-10 | **Package and version.** `sqllocks-shape` is not on PyPI (confirmed 404 on 2026-09-29). The version is `0.9.0.devN` during the build and becomes **1.0.0 at G8**. | Nothing published yet. |
+| T-11 | **Shape model v2 and `.shape` format v2,** with one schema for every path. There is a read-only v1→v2 migrator, and v1 writing is removed. | Unpublished, so it can break freely. |
+| T-12 | **mypy strict for every module a work package creates or rewrites.** A ratchet list in `pyproject.toml` tracks the rest. All of `src/shape` must be strict by G8. | Makes `make check` truthful. |
+| T-13 | **Hashing:** seeded XXH3-64 everywhere, never Python `hash()`. Values are canonicalized first: integers and integral floats hash equal, NaN and null are excluded, strings are hashed as UTF-8 bytes, and timestamps as int64 in their unit, normalized to µs. | Deterministic across processes and platforms. |
+| T-14 | **Sketches:** HLL with p=14 (dense, with bias correction), KLL with k=200, and SpaceSaving with capacity 64. All are bounded and mergeable, and SpaceSaving's merge keeps its error terms. | Bounded memory. |
+| T-15 | **Two modes, one output schema.** `exact=True` is the default for files and tables, and computes every statistic exactly, as Spindle does. `exact=False` (bounded mode) uses the T-14 sketches, for streams and larger-than-RAM data. `error_models` records which one was used. **Parity (T-22) and every PROF gate run with `exact=True`,** on the same output that was timed. Bounded mode is validated only against its error bounds. | Fairness: Shape never does less work than Spindle when being timed. |
+| T-16 | **Generation RNG: Philox4x64-10, implemented in `rust/shape-kernel/src/gen/rng.rs`** (there is no maintained crate). The known-answer oracle is `numpy.random.Philox(key=…, counter=…).random_raw()`. Streams are keyed by (seed, table, column, chunk). Random access by row, and results independent of chunk layout. Bit-identical output with Spindle is **not** required; statistical equivalence under T-21 is. | Parallel, deterministic generation (G1, G2). |
+| T-17 | **Parquet output:** pyarrow `ParquetWriter`, snappy compression (Spindle's default), dictionary encoding on. Tables are written in parallel, and writing is pipelined with generation (chunk *n* is written while chunk *n+1* is generated). | Writing was ~50% of the port's time (§3.2). |
+| T-18 | **The CLI stays Python,** with argparse and a plugin command registry, and there is no native binary. Start-up budget: ≤300 ms. Heavy modules and plugins load lazily. `shape profile <glob|dir>` handles many files in one process. | Measured start-up (§3.1). |
+| T-19 | **Performance measurement:**<br>• **Primary gate (in-process):** timed inside the process, with start-up and imports excluded for both tools. Each measurement is the median of 5 runs, each in a fresh process after 1 warm-up (3 runs on PR smoke jobs).<br>• **Secondary gate (CLI end to end):** start-up included for both tools, for inputs of ≥1M rows.<br>• **Threading:** both tools use their default threading. Shape's default is all cores, and single-threaded Shape (`SHAPE_THREADS=1`) is always reported alongside.<br>• **Gates are ratios** measured in the same job on a **4-vCPU** runner, the same size as the baseline machine.<br>• **PR regression threshold:** 10% against the last nightly median. | Fair, repeatable and noise-tolerant. |
+| T-20 | **Spindle baseline:** pinned at git `422e78df2267e73bb2fa976267e48cb437861e2f` (3.0.1), with the §1.2 environment. It is upgraded only by an explicit PR that re-records every baseline. | Reproducible comparisons. |
+| T-21 | **Generation equivalence standard** (the rule implemented in `benchmarks/retail_1to1/verify.py`, which passes 60/60 columns). Shape output is equivalent to Spindle's (reference seed 42, Shape seed 1042, Spindle baseline seeds 43–46) when all of the following hold:<br>(a) identical table names, column names and order, Arrow types (`large_string` ≡ `string`) and row counts;<br>(b) per column, the null rate is within max(5σ, 1.5 × Spindle's seed-to-seed drift);<br>(c) numeric and datetime columns have KS ≤ max(critical value at α=0.001, 1.5 × Spindle's maximum seed-to-seed KS + 0.002);<br>(d) low-cardinality categorical columns have TVD ≤ max(3 × multinomial noise, 1.5 × Spindle's seed-to-seed TVD + 0.002), and vocabulary overlap ≥0.999;<br>(e) pooled high-cardinality strings have vocabulary overlap ≥0.999 against Spindle's output plus its pools, or parse at component level into pool members;<br>(f) 100% FK integrity, and FK fan-out within Spindle's seed-to-seed range;<br>(g) 0 violations from Spindle's `BusinessRulesEngine.validate`;<br>(h) **asserted per table:** Spindle's `FidelityComparator` score for Shape ≥ (min over seeds 43–46 of Spindle vs Spindle) − 0.5. | The proven standard, restated exactly. |
+| T-22 | **Profiling parity standard,** checked field by field against Spindle's `DataProfiler` (`inference/profiler.py:191`) with `exact=True`:<br>• **Exact match:** dtype, null counts, cardinality, uniqueness, enum flags, `enum_values`/`value_counts_ext` (top 500), PK/FK and pattern.<br>• enum weights within 1e-9;<br>• mean and std within 1e-9 relative;<br>• quantiles using Spindle's interpolation method, within 1e-9 relative;<br>• the same distribution family, with parameters within 1e-6 relative.<br>It applies to every dataset produced by `benchmarks/vs_spindle/profile_1to1/datasets.py`: D1, D2, D3, D4, MT (multi-table) and every EDGE variant. | The 1:1 port meets it; D-06. |
+| T-23 | **Delete the stale evidence files** rather than archiving them; git history keeps them. | Removes misleading claims. |
+| T-24 | **Docs:** mkdocs (`mkdocs>=1.6,<2`, `mkdocs-material>=9.5,<10`). The CLI reference is generated from argparse, and the performance page from `benchmarks/vs_spindle/results.json`. | Docs can't drift from the code. |
+| T-25 | **Release:** GitHub Actions trusted publishing (TestPyPI, then PyPI), a CycloneDX SBOM, and Sigstore build attestations. | Supply-chain hygiene. |
+| T-26 | **External services are tested at three levels:**<br>(a) contract tests with recorded or mocked APIs (marker `contract`), on every PR;<br>(b) emulators (marker `emulator`), nightly in GitHub Actions: `confluentinc/cp-kafka`, `mcr.microsoft.com/azure-messaging/eventhubs-emulator` with an Azurite sidecar and a `Config.json` (amd64 only), and `mcr.microsoft.com/mssql/server:2022-latest` (`ACCEPT_EULA=Y`, with `msodbcsql18` installed) — all defined in `ci/emulators/docker-compose.yml`;<br>(c) live tests (marker `live`), run only when owner secrets exist (§9). | Completion never depends on credentials. |
+| T-27 | **Lint and format scope:** `src tests plugins benchmarks/vs_spindle rust` (plus `cargo fmt --check` and `cargo clippy -D warnings` for Rust). Run `ruff format` once, in P0-06. | `ruff check .` currently reports 762 errors, all in files that are being deleted or moved. |
+| T-28 | **Profiling:** `py-spy record` for hotspots. Use `--native` or `perf` only where ptrace and `perf_event_paranoid` allow; otherwise fall back to `cProfile` plus Rust `tracing` spans. | Works in restricted containers. |
 
 ### 2.3 Decision log
 
-Record every later change or escalation here, with the date, ID, change and reason.
-
 | Date | ID | Change | Reason |
 |---|---|---|---|
-| 2026-09-29 | — | Plan approved | — |
+| 2026-09-29 | — | Plan v1 approved | — |
+| 2026-09-29 | — | Plan v2: adversarial-review fixes (Spindle stream format, CLI mapping, exact mode for parity and gates, crate pins, Philox implemented in-house, maturin-action, setup, builder guide, work-package splits, verified line references) | Red-team review |
 
 ---
 
 ## 3. Measured baselines and targets
 
-All measurements were taken on 2026-09-29 on a 4-core Linux x86_64 container with
-Python 3.11. Spindle is 3.0.1 at git `422e78d`.
+All baselines were measured on 2026-09-29 on a 4-vCPU Linux x86_64 machine (Intel Xeon
+at 2.10 GHz), Python 3.11, Spindle at git `422e78d`. The raw files are committed under
+`benchmarks/baselines/2026-09-29/`. Each number cites its file.
 
 ### 3.1 Start-up
 
-| | Measured |
+Source: `retail_bench.json` → `scales.medium.summary.*.import_s`.
+
+| Tool | Import time |
 |---|---|
-| Spindle import (profiler or CLI; pandas and scipy) | ~1.25 s |
-| Shape-style import (pyarrow and numpy) | ~0.24 s |
+| Spindle | 1.01 s |
+| Shape-style (pyarrow and numpy) | 0.13 s |
 
 ### 3.2 Generation: retail domain, medium scale (1,965,400 rows, 9 tables)
 
-Source: `benchmarks/retail_1to1/bench_results.json`. Equivalence is 60/60 columns under
-T-21.
+Sources: `retail_bench.json` and `retail_verify_medium.json`. The 1:1 port meets T-21
+with 60/60 columns equivalent.
 
-| | Generate | Write Parquet | Total | Rows/s (total) | Peak RSS |
-|---|---|---|---|---|---|
-| Spindle 3.0.1 | 4.27 s | 0.65 s | **4.90 s** | 401k | 540 MB |
-| 1:1 port (numpy + pyarrow, no Rust, single process) | 0.54 s | 0.55 s | 1.06 s | 1.85M | 424 MB |
-| **Target: 10x minimum** | | | **≤ 0.49 s** | ≥ 4.0M | |
-| **Target: 30x stretch** | | | **≤ 0.163 s** | ≥ 12.0M | |
+| | Generate | Write Parquet | Total | Rows/s |
+|---|---|---|---|---|
+| Spindle | 4.27 s | 0.65 s | **4.90 s** | 401k |
+| 1:1 port (numpy + pyarrow, no Rust, 1 process) | 0.54 s | 0.55 s | 1.06 s | 1.85M |
+| **10x minimum** | | | **≤ 0.49 s** | ≥ 4.0M |
+| **30x stretch** | | | **≤ 0.163 s** | ≥ 12.0M |
 
-What this tells us:
-- Vectorizing alone gives 7.9x on generation, but only 4.6x in total, because Parquet
-  writing does not speed up.
-- So the 10x minimum needs the Rust generation kernel (P4-03) *and* parallel,
-  pipelined writing (T-17).
+Vectorizing alone gives 7.9x on generation but only 4.6x in total, because Parquet
+writing doesn't speed up. So the 10x minimum needs the Rust kernel **and** T-17.
 
-### 3.3 Profiling
+### 3.3 Profiling (in-process, `exact=True`)
 
-Source: `benchmarks/profile_1to1/`.
+Source: `profile_bench.json`. The port column is the 1:1 numpy + pyarrow port, without
+Rust.
 
-| Dataset | Spindle 3.0.1 (in-process) | 10x minimum | 30x stretch |
-|---|---|---|---|
-| 200k rows × 6 columns (D1) | 2.0 s | ≤ 0.20 s | ≤ 0.067 s |
-| 2M rows × 6 columns | 18.7 s | ≤ 1.87 s | ≤ 0.62 s |
-| D2 1M × 20, D3 5M × 10, D4 100k × 200, D5 multi-table | recorded by P0-07 | Spindle ÷ 10 | Spindle ÷ 30 |
+| Dataset | Spindle | Port, multi-threaded | Port, single-threaded | 10x target |
+|---|---|---|---|---|
+| D1 CSV (200k × 6) | 1.53 s | 0.19 s (8.0x) | 0.22 s | ≤ 0.153 s |
+| D1 Parquet | 1.42 s | 0.18 s (8.1x) | 0.23 s | ≤ 0.142 s |
+| D2 CSV (1M × 20) | 31.1 s | 1.82 s (17x) | 4.99 s | ≤ 3.11 s |
+| D2 Parquet | 26.5 s | 1.82 s (14.6x) | 4.83 s | ≤ 2.65 s |
+| D3 CSV (5M × 10) | 78.3 s | 5.57 s (14.1x) | 14.5 s | ≤ 7.83 s |
+| D3 Parquet | 47.9 s | 5.35 s (9.0x) | 13.7 s | ≤ 4.79 s |
+| D4 CSV (100k × 200) | 32.1 s | 5.5 s (5.8x) | 14.5 s | ≤ 3.21 s |
+| D4 Parquet, MT, EDGE | see `profile_bench.json` | | | Spindle ÷ 10 |
+
+Without Rust, the port passes 10x on D2 and D3 CSV. It misses on D1 (small data, where
+fixed overhead dominates), on D3 Parquet, and on D4 (wide data, where per-column
+overhead dominates). The fused Rust kernel (P1-06) targets exactly those cases.
 
 ### 3.4 Gates
 
-Every gate is a ratio against Spindle measured in the same job:
+Every gate is a ratio against Spindle, measured in the same job (T-19).
 
-| Gate | Workloads | Minimum | Stretch (tracked, not blocking) |
+| Gate | Workload (exact commands in `benchmarks/vs_spindle/run.py`) | Minimum | Stretch (tracked, not blocking) |
 |---|---|---|---|
-| PROF-IN | D1–D5, in-process | ≥10x each | ≥30x |
-| PROF-CLI | D2, D3 (≥1M rows), CLI end to end | ≥10x each | ≥30x |
-| GEN-IN | retail medium and large; later every domain at medium | ≥10x each | ≥30x |
-| GEN-CLI | retail medium and large, CLI end to end | ≥10x | ≥30x |
-| STREAM-EMIT | `shape stream` against `spindle stream --no-realtime` for the same table and count, file sink | ≥10x | ≥30x |
-| STREAM-PROF | stream profiling of a file replay at 64k-row micro-batches, against Shape batch profiling of the same file (no Spindle equivalent exists) | ≥80% of batch throughput | ≥95% |
-| START | `python -X importtime -c "import shape"` plus `shape --version` | ≤300 ms | ≤150 ms |
+| PROF-IN | D1–D4 (CSV and Parquet), MT; in-process; `exact=True` | ≥10x each | ≥30x |
+| PROF-CLI | D2 and D3, CSV. Spindle has no CLI command that runs `DataProfiler` alone (`profile capture` only records categorical distributions through `ProfileIO`), so the Spindle side is `"$SPINDLE_PY" benchmarks/vs_spindle/profile_1to1/spindle_cli_profile.py <file> -o <out>`: a thin script that imports `DataProfiler`, runs `from_csv` and dumps JSON, with start-up included. Shape: `shape profile <file> --spindle-compat -o <out>`. Outputs diffed under T-22 | ≥10x each | ≥30x |
+| LEARN-CLI | D2 CSV: `spindle learn <file> -o <out>.spindle.json` against `shape learn <file> --spindle-json -o <out>` (profile + schema build on both sides). Outputs compared per P4-08 | ≥10x | ≥30x |
+| GEN-IN | retail medium and large, then (from P6-01) every domain at medium; generate + write Parquet | ≥10x each | ≥30x |
+| GEN-CLI | retail medium and large: `spindle generate retail --scale S --format parquet -o D` against `shape generate retail --scale S --format parquet -o D` | ≥10x | ≥30x |
+| STREAM-EMIT | `retail --table order --scale medium --no-realtime --sink file`, same `--max-events` (default: all rows). Shape generates the full table and emits the same first N events ordered by `_spindle_event_time`. The event multiset must pass T-21 (b)–(e) before timing counts | ≥10x | ≥30x |
+| STREAM-PROF | stream profiling of a D2 replay in 64k-row micro-batches (bounded mode), against Shape batch profiling of D2 in bounded mode (no Spindle equivalent exists) | ≥80% of batch throughput | ≥95% |
+| START | median of 10 runs of `shape --version`, wall clock | ≤300 ms | ≤150 ms |
 
 ---
 
@@ -225,11 +306,11 @@ Every gate is a ratio against Spindle measured in the same job:
 └────────────────────────────────────────▲─────────────────────────────────────────────────┘
                                          │ shape.plugins.api.v1 (Protocols, batch-level)
 ┌──────────────────────────────────── shape (Python) ──────────────────────────────────────┐
-│ io · profile · spec/artifact · compare (diff, drift, quality, contracts, fidelity)        │
+│ io · profile · spec/artifact · diff · drift · quality · contracts · fidelity             │
 │ generation (schema, engine, strategies) · streaming (consume, emit) · privacy · registry │
 │ plugin host · cli                                                                        │
 └───────────────▲───────────────────────────────────────────────▲──────────────────────────┘
-                │ Arrow C Data Interface (zero-copy)             │
+                │ Arrow PyCapsule interface (zero-copy)          │
 ┌───────────────┴─────────────── shape._kernel (Rust) ──────────┴──────────────────────────┐
 │ fused profile pass · hash · HLL/KLL/SpaceSaving · patterns · temporal histograms          │
 │ Philox RNG · alias sampling · pool/string assembly · temporal/holiday sampler            │
@@ -240,46 +321,45 @@ Every gate is a ratio against Spindle measured in the same job:
 
 ### 4.2 Runtime split rules
 
-1. **Python never touches individual values on a hot path.** Every per-batch operation
+1. **Python never touches individual values on a hot path.** Each per-batch operation
    is one native call that covers every column.
-2. **Everything in Rust has a Python reference twin** (T-03), and differential tests
-   keep the two in agreement.
+2. **Every Rust function has a Python reference twin** (T-03), kept in agreement by
+   differential tests.
 3. **Plugin hooks take whole batches:** Arrow `RecordBatch` or arrays in and out, never
-   single values or rows. A plugin that needs speed may ship its own Rust extension
-   against the same Protocol.
-4. **Arrow is the only in-memory format.** Rows arriving as dicts or pandas frames are
-   converted at the edge.
+   single values or rows. A plugin that needs speed may ship its own Rust extension.
+4. **Arrow is the only in-memory format.** Dicts and DataFrames are converted at the
+   edge.
 5. **There is one profile schema** for batch, stream, merged and partitioned results.
 
 ### 4.3 Plugin API v1
 
-- **Discovery:** extension points are Python entry-point groups. Each group has a
-  `typing.Protocol` in `shape.plugins.api.v1`:
+- **Entry-point groups,** each with a Protocol in `shape.plugins.api.v1`:
 
   | Group | Protocol | Purpose |
   |---|---|---|
-  | `shape.sources` | `Source` | Yields `RecordBatch`es from a URI or scheme (`file`, `parquet`, `kafka`, `mssql`, `abfss`, …) |
-  | `shape.sinks` | `Sink` | Consumes `RecordBatch`es for a table (CSV, Parquet, Delta, SQL, Fabric, …) |
+  | `shape.sources` | `Source` | URI or scheme → `RecordBatch` iterator |
+  | `shape.sinks` | `Sink` | `RecordBatch`es for a table → a destination |
   | `shape.detectors` | `SemanticDetector` | Array → (label, confidence) |
-  | `shape.fitters` | `DistributionFitter` | Sample array → fitted family, parameters and KS |
-  | `shape.strategies` | `Strategy` | Column spec + generation context → Arrow array for a chunk |
+  | `shape.fitters` | `DistributionFitter` | Sample array → family, parameters, KS |
+  | `shape.strategies` | `Strategy` | Column spec + context → Arrow array for one chunk |
   | `shape.distributions` | `Distribution` | Parameters + RNG stream → array |
-  | `shape.calendars` | `Calendar` | Date range → event lifts |
-  | `shape.domains` | `Domain` | Named schema + reference data + profiles + scale presets |
+  | `shape.calendars` | `Calendar` | Date range → per-date lift factors |
+  | `shape.domains` | `Domain` | Schema + reference data + profiles + scale presets |
   | `shape.chaos` | `ChaosMutator` | Batch → mutated batch plus a report |
   | `shape.emitters` | `Emitter` | Event batches → an external stream |
   | `shape.stream_sources` | `StreamSource` | Offsets and batches from an external stream |
-  | `shape.transforms` | `Transform` | Tables → tables (star, CDM, mask, …) |
-  | `shape.commands` | `Command` | Adds `shape <name>` subcommands |
-  | `shape.reports` | `ReportFormat` | Fidelity or profile report → bytes (JSON, MD, HTML, …) |
+  | `shape.transforms` | `Transform` | Tables → tables |
+  | `shape.commands` | `Command` | `shape <name>` subcommands |
+  | `shape.reports` | `ReportFormat` | Report → bytes |
 
-- **Versioning:** every plugin declares `SHAPE_API = "1.x"`. The host rejects major
-  mismatches with a clear error. A plugin that fails to load never crashes core; the
-  failure is reported by `shape plugins doctor`.
-- **Loading:** plugins load lazily, on first use of their extension point.
-- **Built-ins:** core's own CSV, Parquet, JSONL and IPC sources and sinks, detectors,
-  fitters, strategies, distributions and the US calendars are registered through the
-  same entry points.
+- **Versioning and loading:** every plugin declares `SHAPE_API = "1.x"`, and the host
+  rejects major mismatches with a clear error. A plugin that fails to load never
+  crashes core; `shape plugins doctor` reports it. Plugins load lazily.
+- **Built-ins** are everything core ships in `src/shape/builtins/`: the CSV, Parquet,
+  JSONL and IPC sources and sinks, the detectors, fitters, strategies and
+  distributions, the US calendars and the address strategy. They register through the
+  same entry points as any plugin. An import-linter contract forbids importing
+  `shape.builtins` from anywhere except `shape.plugins.registry`.
 
 ---
 
@@ -287,306 +367,443 @@ Every gate is a ratio against Spindle measured in the same job:
 
 ```
 pyproject.toml                  maturin mixed project (core distribution)
+Makefile · CLAUDE.md · README.md · CHANGELOG.md · LICENSE · THIRD_PARTY_NOTICES.md
 rust/shape-kernel/              Cargo crate → shape._kernel
   src/{lib.rs, ffi.rs, hash.rs, profile/*.rs, sketch/{hll,kll,spacesaving}.rs,
        gen/{rng,alias,pool,string,temporal,sequential}.rs}
 src/shape/
   __init__.py  api.py  errors.py  types.py
-  kernel/         dispatch.py (auto|rust|python) · reference/ (pure-Python twins)
+  kernel/         dispatch.py · reference/
   io/             readers.py · writers.py · uri.py
+  builtins/       sources/ sinks/ detectors/ fitters/ strategies/ distributions/ calendars/
   profile/        engine.py · infer.py · fit.py · patterns.py · keys.py · temporal.py · merge.py
-  spec/           model.py (v2) · schema/shape-v2.schema.json · migrate.py · io.py
+  spec/           model.py · schema/shape-v2.schema.json · migrate.py · io.py
   artifact/       shape_file.py · io.py · canonical.py · sign.py
+  capture/        edge adapters only (rows/dicts/DataFrames → Arrow)
+  model/  types/  security/  validation/  location/  geospatial/
   diff/ drift/ quality/ contracts/ query/ registry/ relations/
-  generation/     schema.py · spindle_import.py · ddl.py · engine.py · rules.py · compute.py ·
-                  strategies/ · distributions/ · calendars/ · fidelity.py · report/
-  streaming/      consume/ (windows, keyed, checkpoint, runtime) · emit/ (runtime, rate, envelope)
+  generation/     schema.py · spindle_import.py · schema_builder.py · ddl.py · engine.py ·
+                  rules.py · compute.py · fidelity.py · report/
+  streaming/      consume/ (windows, keyed, checkpoint, runtime) · emit/ (runtime, rate, formats)
   privacy/        classification.py · release.py · safe_profile.py · kanon.py
   plugins/        api/v1.py · host.py · registry.py · kit.py
+  bridge/         JSON stdin/stdout bridge (Spindle mcp_bridge parity)
   cli/            main.py · commands/ · aliases.py
 plugins/
   shape-kafka/  shape-eventhubs/  shape-fabric/  shape-sqlserver/
   shape-domains/  shape-simulation/  shape-mcp/
-benchmarks/vs_spindle/
-  setup_spindle.sh · profile_1to1/ · domain_1to1/ (generalized retail_1to1) · stream_1to1/ ·
-  results.json · run.py
+benchmarks/
+  baselines/2026-09-29/         raw baseline JSON (committed, immutable)
+  vs_spindle/                   setup_spindle.sh · run.py · results.schema.json · dump_schema.py ·
+                                profile_1to1/ · domain_1to1/ · stream_1to1/
+ci/emulators/docker-compose.yml
 tests/  (mirrors src/shape and plugins/; property/, differential/, e2e/)
 docs/   (mkdocs site; specs/; plans/COMPLETION_PLAN.md)
 ```
 
+`connectors/` and `packs/` are folded into `io/`, `builtins/` and plugins by P2-04 and
+P6-01.
+
 ---
 
-## 6. Work packages and phase gates
+## 6. Execution rules
 
-Format: **ID — title** · Depends · Deliverables · Acceptance · Fixes (bug IDs from
-Appendix A).
+### 6.1 Order
+
+```
+P0 ─► P1 ─► P2 ─┬─► P3 ────────────┐
+          │     └─► P4 ─┬──────────┴─► P5 ─► P6 ─► P8
+          │             │                          ▲
+          └─► P7-01..03 └──────────────────────────┘
+                (after G1)        P7-04 after G5; G7 needed before P8
+```
+
+- Phases 0, 1 and 2 are sequential.
+- P3 and P4 start after G2, and may interleave.
+- P5 needs G3 and G4. P6 needs G4, and G5 where its `Depends` field says so.
+- P7-01 to P7-03 need only G1. P7-04 needs G5.
+- P8 needs G6 and G7.
+- Within a phase, follow each work package's `Depends` field. When several work
+  packages are available, take them in tracker order.
+
+### 6.2 Definition of done (per work package)
+
+1. Every acceptance criterion passes: locally where it can run, otherwise in CI
+   (emulator and live tests, and multi-platform wheels).
+2. Within T-27 scope: `ruff check`, `ruff format --check`, `mypy` (strict for every
+   module touched), `pytest -m "not emulator and not live"`, and the Rust `cargo fmt`,
+   `clippy` and `cargo test` once Rust exists.
+3. Every bug ID listed has a regression test that fails before the fix. For code that
+   is deleted, the regression test asserts that the import raises
+   `ModuleNotFoundError`.
+4. No tracked benchmark regresses by more than 10% (T-19). This applies from P0-07
+   onward.
+5. The docs affected by the change are updated in the same commit.
+6. The tracker row (§11) is set to `done`, with the commit hash.
+
+### 6.3 Branches, commits and PRs
+
+- Work on the branch assigned to your session.
+- Make one commit or more per work package, with each message starting with its ID,
+  for example `P1-03: sketches (HLL, KLL, SpaceSaving)`.
+- Push after every completed work package. Don't wait for merges: later work packages
+  build on the same branch.
+- Open a PR to `main` at each phase gate **only if the owner has asked for PRs**.
+  Otherwise push the branch and report.
+
+### 6.4 Rules that are never broken
+
+- **Equivalence before timing.** No performance number counts until that workload's
+  equivalence verifier passes on the timed output.
+- **Never lower a gate or loosen a tolerance** to get green.
+- **Never skip, disable, xfail or quarantine a test** to get green.
+- **Never fabricate evidence.** Never commit results that the harness in this repo did
+  not produce.
+- **No claim without enforcement.** No statement about performance, fidelity, privacy
+  or security may ship unless a test or benchmark enforces it.
+- **Never modify the Spindle checkout.**
+
+### 6.5 When a gate is missed
+
+1. Profile with T-28 tools, and list the top hotspots.
+2. Move per-value or per-row Python work into Rust (§4.2).
+3. Re-measure. Repeat steps 1–3 at most twice.
+4. If the gate is still missed, escalate (§0.4). The gate itself is not changed.
+
+---
+
+## 7. Work packages and phase gates
+
+Format: **ID — title** · Depends · Deliverables · Acceptance · Fixes. Bug IDs are in
+Appendix A.
 
 ### Phase 0 — Honest baseline
 
 **P0-01 — Registry security**
 - Depends: none.
-- Deliverables: `registry/local.py` validates names against `^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$`,
-  and resolves the final path under the root, rejecting anything outside it.
-  `checkout(name, ref)` only resolves refs and hashes that are recorded in that name's
-  log.
-- Acceptance: tests show that `commit("../x")`, absolute paths and symlink escapes
-  raise `RegistryError`, and that `checkout("public", <hash of secret>)` raises
-  `RegistryError`.
+- Deliverables: `registry/local.py` validates names against
+  `^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$`, and resolves paths under the root, rejecting
+  anything outside it. `checkout(name, ref)` resolves only refs and hashes recorded in
+  that name's log.
+- Acceptance: tests show that `commit("../x")`, absolute names and symlink escapes
+  raise `RegistryError`, and that `checkout("public", <content hash of "secret">)`
+  raises `RegistryError`.
 - Fixes: SEC4, SEC5.
 
 **P0-02 — Remove differential privacy (D-07)**
-- Depends: none.
-- Deliverables: delete `privacy/advanced.laplace` and every DP symbol and doc claim.
-  Move the non-DP tests out of `tests/test_future_roadmap.py`.
-- Acceptance: `grep -ri "differential privacy\|laplace\|epsilon" src docs README.md`
-  finds nothing outside the decision log.
+- Depends: P0-04.
+- Deliverables: delete `privacy/advanced.py`'s `laplace`, and every DP symbol and doc
+  claim. Move the non-DP cases from `tests/test_future_roadmap.py` into
+  `tests/privacy/`.
+- Acceptance:
+  `grep -rniE "differential privacy|laplace|epsilon" src docs README.md --exclude=COMPLETION_PLAN.md`
+  returns nothing, and `import shape.privacy.advanced` either has no `laplace` or
+  raises `ModuleNotFoundError`.
 - Fixes: SEC1.
 
 **P0-03 — Enforce release policy**
 - Depends: none.
-- Deliverables: `release_for` returns `allowed=False` when the classification exceeds
-  the target, or when a cohort is below the minimum. Redaction removes every
-  value-bearing key (`min`, `max`, `q*`, `topk`, `examples`, `quantiles`, `histogram`,
-  `enum_values`, `pattern_examples`) from sensitive columns.
-- Acceptance: a PII column released to PUBLIC contains no value-bearing key, and a
-  denied release returns `allowed=False` with a reason.
+- Deliverables:
+  - `release_for` returns `allowed=False`, with a reason, when the classification
+    exceeds the target or a cohort is below the minimum.
+  - Redaction removes every value-bearing key from sensitive columns: `min`, `max`,
+    `q25`, `q50`, `q75`, `quantiles`, `topk`, `examples`, `histogram`, `enum_values`,
+    `value_counts_ext`, `pattern_examples`, `distribution_params`.
+- Acceptance: a PII column released to PUBLIC contains none of those keys, and a
+  denied release returns `allowed=False`.
 - Fixes: SEC2.
 
-**P0-04 — Cut modules (§7)**
+**P0-04 — Delete the cut modules (§8.1)**
 - Depends: none.
-- Deliverables: delete the modules and tests listed in §7, and edit the mixed test files
-  as listed there.
-- Acceptance: `python -c "import shape, shape.cli.main"` succeeds; the full `pytest`
-  run is green; a check confirms that no removed module name is importable.
-- Fixes: SEC6, SEC7, SEC8, and B1–B11 (deleted code).
+- Deliverables:
+  - Delete the modules and the tests in §8.1, in the order given there.
+  - Rewrite `tests/torture/test_all_modules.py` to parametrize over
+    `pkgutil.walk_packages(shape.__path__, "shape.")`, instead of reading
+    `rq/torture_inventory.json`.
+- Acceptance:
+  - `python -c "import shape, shape.cli.main"` succeeds, and `pytest` is green.
+  - For each deleted module, a parametrized test asserts `ModuleNotFoundError`.
+- Fixes: SEC6, SEC7, SEC8, RM1–RM8.
 
 **P0-05 — Repo honesty**
 - Depends: P0-04.
 - Deliverables:
-  - Delete the root `*_MANIFEST.json`, `*_QUALIFICATION.json`, `GA_*`, `RC1_*`, `RQ*_*`,
-    `NAMING_MIGRATION.json`, `FINAL_*` and `REPOSITORY_MANIFEST.json` files.
-  - Delete `docs/` milestone files (`RQ*`, `VALIDATION_*`, `RC1_*`, `GA_*`, `*_COMPLETION*`,
-    `EXHAUSTION_REPORT`, `HOSTILE_REVIEW_*`, `PLATFORM*`, `FIVE_PLATFORM*`,
-    `THREE_CORE*`, `TORTURE*`, `FUTURE_ROADMAP*`, `AUTONOMOUS_BUILD_SYSTEM`,
-    `V0_1_BUILD_PLAN`, `IMPLEMENTATION_STATUS`, `LOCAL_COMPLETION`, `CLOSURE_MATRIX`),
-    plus `docs/qualification/`, `docs/plans/*` except this file, `rq/` and `GA_FINAL_TEST.txt`.
-  - Rewrite README and CHANGELOG to the truthful current state.
-  - Set the version to `0.9.0.dev0` (T-10).
-  - Remove `pydantic` and `typing-extensions`, and move `cryptography` to `[sign]`
-    (T-07).
-  - Replace `docs/SPINDLE_MIGRATION*.md` with a pointer to §9.
-- Acceptance: none of the deleted paths exist; `pip install .` works without
-  cryptography; README contains no GA, "certified" or isolation claims.
+  - Delete everything in §8.3.
+  - Rewrite README and CHANGELOG to the true current state: "pre-release, under
+    active rebuild; see `docs/plans/COMPLETION_PLAN.md`".
+  - Set the version to `0.9.0.dev0`.
+  - Apply T-07: remove `pydantic` and `typing-extensions`, add `[sign]`, make
+    `shape.security` import `crypto` lazily, and set the `pyarrow>=25,<26` pin.
+  - Update `[tool.hatch.build.targets.sdist] include` to drop deleted paths (`/rq`,
+    `/*.json`, `/GA_FINAL_TEST.txt`). hatch is replaced in P1-01a.
+  - Add `CLAUDE.md` if missing: a pointer to this plan and §0.
+- Acceptance:
+  - No path in §8.3 exists.
+  - In a fresh venv without `cryptography`, `python -c "import shape"` and
+    `pytest -m "not sign"` pass.
+  - `grep -rniE "\bGA\b|certified|production[- ]ready|isolat" README.md CHANGELOG.md docs --include=*.md --exclude=COMPLETION_PLAN.md`
+    returns nothing, apart from lines in `docs/specs/` that only describe format
+    rules.
 - Fixes: X3.
 
 **P0-06 — CI truthfulness**
 - Depends: P0-05.
 - Deliverables:
-  - CI runs ruff lint and format, mypy with the ratchet (T-12), pytest with coverage,
-    `compileall` and `pip-audit`, on the T-06 matrix.
+  - `.github/workflows/ci.yml` runs, on the T-06 matrix and with T-27 scope: ruff
+    lint and format check, mypy with the ratchet (T-12), pytest with coverage
+    (`--cov-fail-under` set to the current value, rounded down), `compileall` and
+    `pip-audit`.
+  - `.github/workflows/nightly.yml` is a placeholder until P0-07.
+  - `release.yml` and `security.yml` are updated to the new layout.
   - `make check` runs the same commands.
-  - The coverage floor is set to the current value and may only go up.
-- Acceptance: CI is green; `make check` exits 0 locally; the coverage report is
-  published, and the floor is enforced from then on.
-- Fixes: X1, X2 (continued by the regression-test rule in §1.2).
+  - Run `ruff format` once over T-27 scope.
+- Acceptance: CI is green on the session branch, and `make check` exits 0.
+- Fixes: X1, X2 (continued by §6.2(3)).
 
 **P0-07 — Benchmark harness**
 - Depends: P0-05.
 - Deliverables:
-  - Move `benchmarks/retail_1to1` to `benchmarks/vs_spindle/domain_1to1`, and generalize
-    it to take a domain name (it reads the Spindle domain from the pinned checkout).
-  - Move `benchmarks/profile_1to1` to `benchmarks/vs_spindle/profile_1to1`.
-  - Add `setup_spindle.sh` (T-20) and `run.py`, which runs every verifier and then
-    every benchmark, and writes `results.json` (schema in `results.schema.json`).
-  - Add a nightly workflow that runs everything, and PR smoke tests: D1, D2 and retail
-    medium.
-  - Delete `benchmarks/prototypes/` and the old `benchmarks/*.py`.
-- Acceptance: `python benchmarks/vs_spindle/run.py --quick` produces `results.json`
-  with Spindle and Shape numbers and verifier status for D1–D5 and retail medium, and
-  the CI job uploads it.
+  - `git mv benchmarks/retail_1to1 benchmarks/vs_spindle/domain_1to1`, generalized
+    with `--domain NAME`. Its `port.py` stays a *reference port* and is not Shape
+    product code.
+  - `git mv benchmarks/profile_1to1 benchmarks/vs_spindle/profile_1to1`.
+  - Every path comes from the §1 variables. D1 is always regenerated by `datasets.py`
+    with its fixed seed and never read from elsewhere.
+  - `setup_spindle.sh` (§1.2).
+  - `dump_schema.py`: runs in the Spindle venv and serializes each domain's
+    `SpindleSchema` (`Domain._build_schema()`) to `$BENCH_OUT_DIR/schemas/<domain>.json`.
+  - `run.py`, with `--quick` (D1, D2 and retail small and medium; 3 runs) and
+    `--full` (every workload in §3.4; 5 runs). It runs each verifier, then each
+    benchmark, and writes `results.json` against `results.schema.json`.
+  - Each verifier and bench script takes `--impl reference_port|shape`, where `shape`
+    means the product code in `src/shape`. `results.json` records both; `shape` stays
+    `null` until the product path exists.
+  - `nightly.yml` runs `--full`, and the PR job runs `--quick` on a 4-vCPU runner.
+  - `ci/emulators/docker-compose.yml` (T-26).
+  - Delete `benchmarks/prototypes/`, `benchmarks/benchmark_012.py` and
+    `benchmarks/benchmark_local.py`.
+- Acceptance:
+  - `grep -rnE '/tmp/|/home/' benchmarks/` returns nothing.
+  - On a fresh machine, following §1, then `python benchmarks/vs_spindle/run.py --quick`
+    produces a schema-valid `results.json`, with verifier status and the numbers for
+    Spindle, `reference_port` and `shape`.
 - Fixes: none.
 
 **Gate G0**
-- CI is green on the full matrix.
-- `results.json` records the baselines (with current Shape numbers, which may be below
-  the gates).
+- CI is green.
+- `run.py --quick` works from scratch.
 - SEC1, SEC2, SEC4 and SEC5 have regression tests.
+- `benchmarks/baselines/2026-09-29/` is present and unchanged.
 
 ### Phase 1 — Profiling engine
 
-**P1-01 — Rust build**
+**P1-01a — Rust build and FFI**
 - Depends: G0.
 - Deliverables:
-  - maturin mixed layout (T-05) and the `rust/shape-kernel` skeleton.
+  - maturin mixed layout (T-05, replacing hatch) and the `rust/shape-kernel` skeleton
+    (T-02 pins).
   - `shape._kernel.version()`.
-  - Arrow C Data Interface import and export for `RecordBatch`.
-  - `kernel/dispatch.py` implementing T-03.
-  - cibuildwheel workflow (T-04), with an sdist build test.
+  - Import and export of `RecordBatch` through the PyCapsule interface.
+  - `kernel/dispatch.py` (T-03).
 - Acceptance:
-  - Wheels are built and installed on every T-04 target in CI.
-  - A round trip of a 1M-row, 10-column batch through Rust is zero-copy: a
-    buffer-address test proves it.
-  - `SHAPE_KERNEL=python` runs the full test suite green.
+  - A 1M-row, 10-column batch round-trips through Rust with identical buffer
+    addresses (zero-copy).
+  - `SHAPE_KERNEL=python pytest` and `SHAPE_KERNEL=rust pytest` are both green.
+- Fixes: none.
+
+**P1-01b — Wheels in CI**
+- Depends: P1-01a.
+- Deliverables: a T-04 wheel workflow, and an sdist build job.
+- Acceptance: wheels for every T-04 target are built, installed and smoke-tested
+  (`import shape; shape._kernel.version()`) on 3.11 and 3.14.
 - Fixes: none.
 
 **P1-02 — Hash and canonicalization**
-- Depends: P1-01.
+- Depends: P1-01a.
 - Deliverables: T-13, in Rust and as a Python reference.
-- Acceptance: property tests on 10⁶ random values of every Arrow type show that Rust
-  equals the reference; `1` and `1.0` hash equal, and NaN is excluded; results are
+- Acceptance: property tests on 10⁶ values of every Arrow primitive type show that Rust
+  equals the reference; `1` and `1.0` hash equal; NaN and null are excluded; hashes are
   identical under `PYTHONHASHSEED` 0, 1 and random.
 - Fixes: P7, S1.
 
 **P1-03 — Sketches**
 - Depends: P1-02.
-- Deliverables: T-14 HLL, KLL and SpaceSaving in Rust with Python references;
-  serialization into the profile's `error_models`.
-- Acceptance (Hypothesis property tests):
-  - Merge is associative and commutative within the documented bound.
-  - Profiling in one batch equals profiling in N batches, within the bound.
-  - Memory is bounded: SpaceSaving state is at most its capacity after 10⁷ updates.
-  - HLL relative error ≤ 1.04/√m × 3 at the 99th percentile.
+- Deliverables: T-14 in Rust with Python references, serialized in `error_models`.
+- Acceptance (Hypothesis):
+  - Merges are associative and commutative. SpaceSaving results are within its error
+    bound, and HLL registers match exactly.
+  - Profiling 1 batch equals profiling N batches, within the bounds.
+  - SpaceSaving holds at most `capacity` entries after 10⁷ updates.
+  - HLL relative error ≤ 3 × 1.04/√2¹⁴ at the 99th percentile over 200 trials.
   - KLL rank error ≤ 1%.
 - Fixes: P5, P6, P9.
 
 **P1-04 — Readers**
-- Depends: P1-01.
+- Depends: P1-01a.
 - Deliverables:
-  - `io/readers.py`: CSV (pyarrow.csv with inference and schema overrides), Parquet
-    (row-group streaming), JSONL, IPC, `dict[str, array]`, pandas and polars (zero-copy
-    where possible), and row iterables (edge adapter).
+  - `io/readers.py`: CSV (pyarrow.csv, with inference and schema overrides), Parquet
+    (streamed by row group), JSONL, IPC, `dict[str, array]`, pandas and polars
+    (zero-copy where possible), and row iterables (edge adapter).
   - Glob and directory expansion.
-- Acceptance: every reader yields `RecordBatch`es with correct types on a golden test
-  set; the old `CSVSource` is removed.
+- Acceptance: a golden reader test set gives correct types, and
+  `connectors/files.py::CSVSource` is removed.
 - Fixes: P1.
 
 **P1-05 — Type inference**
-- Depends: P1-04, and the Spindle dtype vocabulary from `profile_1to1`.
+- Depends: P1-04.
 - Deliverables:
-  - Documented inference and demotion rules in `profile/infer.py`.
-  - The Spindle dtype classes map one-to-one, including date, datetime and boolean.
+  - Rules in `profile/infer.py` that reproduce Spindle's dtype classification (read
+    `inference/profiler.py` and `benchmarks/vs_spindle/profile_1to1/port.py`).
   - Demotion keeps all evidence gathered so far.
-- Acceptance: golden-file tests; `[1, 2, "x", 3]` gives count 4 with top-k containing
-  all four; `[None, 1, 2]` is integer; `np.int64` and `Decimal` are numeric.
+- Acceptance:
+  - The dtype of every column in every T-22 dataset matches Spindle.
+  - `[1, 2, "x", 3]` gives count 4, with all four values in the value counts.
+  - `[None, 1, 2]` is integer.
+  - `np.int64` and `Decimal` are numeric.
 - Fixes: P2, P3, P4.
 
 **P1-06 — Fused profile kernel**
 - Depends: P1-03, P1-05.
-- Deliverables: one Rust call per batch covering all columns: counts, nulls, NaN and
-  ±inf, min/max, moments, hash→HLL, KLL, SpaceSaving, string lengths, pattern classes
-  and temporal histograms, with rayon across columns.
+- Deliverables: one Rust call per batch, covering every column, in both modes (T-15).
+  - **Exact mode:** counts, nulls, NaN and ±inf, min/max, moments, exact distinct and
+    value counts, sort-based quantiles, string lengths, pattern classes and temporal
+    histograms.
+  - **Bounded mode:** the T-14 sketches replace the exact structures.
+  - rayon runs across columns and chunks.
 - Acceptance:
-  - Differential tests against the reference.
-  - `py-spy` shows under 5% of samples in Python frames on the D2 profile.
+  - Differential tests against the reference, in both modes.
+  - `py-spy` shows <5% of samples in Python frames when profiling D2 and D4.
 - Fixes: P10, P11, P13.
 
 **P1-07 — Profile engine**
 - Depends: P1-06.
-- Deliverables: `profile/engine.py`: the batch loop, merge, `exact="auto"` (T-15),
-  bounded mode, a thread-count option, and multi-input profiling in one process.
+- Deliverables: `profile/engine.py`: the batch loop, merge, T-15 modes,
+  `SHAPE_THREADS`, and multi-input profiling in one process.
+- Deliverables (additional): a `--rows N` option in `profile_1to1/datasets.py` for D3.
 - Acceptance:
-  - Peak RSS for D3 at 5M rows and at 50M rows differs by less than 10%.
-  - The exact and sketch paths produce identical output schemas.
+  - In bounded mode, peak RSS on D3 at 5M rows and at 50M rows (`datasets.py D3 --rows 50000000`)
+    differs by <10%.
+  - Exact and bounded output validate against the same JSON Schema.
 - Fixes: P12, P17.
 
 **P1-08 — Spindle profiler parity**
 - Depends: P1-07.
-- Deliverables: port `benchmarks/vs_spindle/profile_1to1/port.py` semantics into
-  `profile/`:
-  - distribution fitting: the same families, estimators and sampling rules as Spindle,
-    in numpy, with scipy optional;
+- Deliverables: port the semantics of `benchmarks/vs_spindle/profile_1to1/port.py`
+  into `profile/` as product code, on the Rust kernel:
+  - distribution fitting: Spindle's families, estimators and sampling rules, in numpy,
+    with `[scipy]` optional;
   - pattern detection;
   - enum detection with weights;
-  - PK detection, and FK detection across tables;
-  - outliers, quantiles (Spindle's interpolation), temporal histograms and string
-    lengths;
-  - every remaining `ColumnProfile` and `TableProfile` field.
-- Acceptance: `profile_1to1/verify.py` passes every field (T-22) on D1–D5 against the
-  pinned Spindle.
+  - PK detection, and FK detection across tables (MT);
+  - outliers and quantiles;
+  - every other `ColumnProfile` and `TableProfile` field.
+  - `--spindle-compat` output, in the same JSON shape as `spindle profile capture`.
+- Acceptance: `profile_1to1/verify.py` passes T-22 on D1–D4, MT and every EDGE
+  variant, with `src/shape` as the implementation under test.
 - Fixes: P16.
 
 **P1-09 — Model and artifact v2**
 - Depends: P1-07.
-- Deliverables: Shape model v2 and its JSON Schema; the v1→v2 migrator; `.shape` v2
-  with explicit NaN/inf encoding; all reader errors wrapped as `ArtifactError`; tuples
+- Deliverables: Shape model v2 and its JSON Schema; the v1→v2 migrator; `.shape` v2,
+  with explicit NaN/inf encoding; reader errors wrapped as `ArtifactError`; tuples
   round-trip.
 - Acceptance:
-  - Round-trip property tests.
+  - Hypothesis round-trip tests.
   - Every v1 fixture in `tests/` migrates.
-  - The artifact fuzz tests (existing) pass on v2.
+  - The existing artifact fuzz tests pass on v2.
 - Fixes: P8, P18, P20.
 
 **P1-10 — Downstream on v2**
 - Depends: P1-09.
 - Deliverables: port diff, drift, quality, contracts, query and relations to v2.
-  - `unique` uses the exact count, or else the HLL error bound.
+  - `unique` uses the exact distinct count in exact mode, and the HLL error bound in
+    bounded mode.
   - The null rate is correct when `rows = 0`.
-  - `relationship()` matching is exact.
-  - `shape conformance` runs the real spec suite from `docs/specs/`.
-- Acceptance: unit tests for each fix; the conformance suite covers every MUST in
-  `SHAPE_1_0_GA.md`, renamed to `SHAPE_2.md`.
+  - `relationship()` matches exactly.
+  - Rename `docs/specs/SHAPE_1_0_GA.md` to `docs/specs/SHAPE_2.md` and update it to v2.
+  - `shape conformance` runs a test for every MUST and MUST NOT statement in
+    `SHAPE_2.md`.
+- Acceptance:
+  - A test exists for each fix.
+  - A script counts the MUST and MUST NOT statements in `SHAPE_2.md` and asserts one
+    conformance test per statement.
 - Fixes: P14, P15, P21, X4.
 
-**P1-11 — CLI (profiling)**
+**P1-11 — Profiling CLI**
 - Depends: P1-10.
-- Deliverables: `profile`/`capture` (glob/dir), `diff`, `inspect`/`show`, `validate`
-  and `check`, with non-zero exit on failure; lazy imports; a start-up test in CI
-  (gate START).
-- Acceptance: CLI end-to-end tests; the START gate passes.
+- Deliverables:
+  - `shape profile` for files, globs and directories.
+  - `--spindle-compat`, which emits Spindle's `TableProfile` JSON as dumped by
+    `profile_1to1/spindle_dump.py`.
+  - `shape profile capture`, a port of Spindle's `profile capture`
+    (`inference/profile_io.py::ProfileIO.from_dataframe` plus `ExportedProfile`), with
+    the same output format.
+  - `shape profile diff` and `shape diff`; `inspect` (alias `show`); `validate`;
+    `check`, which exits non-zero on failure.
+  - Lazy imports.
+  - `benchmarks/vs_spindle/profile_1to1/spindle_cli_profile.py` (§3.4 PROF-CLI).
+- Acceptance:
+  - CLI e2e tests.
+  - `shape profile capture` output on D1 and D2 is JSON-equal to `spindle profile capture`.
+  - `shape profile diff` agrees with `spindle profile diff` on a pair of captures.
+  - START ≤300 ms; PROF-CLI ≥10x.
 - Fixes: none.
 
 **P1-12 — Remove legacy paths**
 - Depends: P1-11.
-- Deliverables: delete `capture/core.py:capture_rows` internals (rows now go through the
-  edge adapter), `capture/vectorized.py`, `profile/text_vectorized.py`, the old
-  `sketches.py`, the old `bounded_dependencies.py` and `kernel/batches.py`.
-- Acceptance: no dead code under `vulture --min-confidence 80`; the suite is green.
+- Deliverables: delete `capture/vectorized.py`, `profile/text_vectorized.py`,
+  `profile/sketches.py`, `profile/bounded_dependencies.py` and `kernel/batches.py`,
+  and the internals of `capture/core.py:capture_rows`, which becomes an edge adapter.
+- Acceptance: `vulture src/shape --min-confidence 80` reports nothing, and the suite
+  is green.
 - Fixes: none.
 
 **Gate G1**
-- PROF-IN ≥10x on D1–D5.
+- PROF-IN ≥10x on every workload.
 - PROF-CLI ≥10x on D2 and D3.
 - START ≤300 ms.
-- The P1-08 verifier is all green.
+- T-22 parity passes on every dataset.
 - Every P-bug has a regression test.
-- Profile modules are mypy strict.
+- The profile modules are mypy strict.
 
 ### Phase 2 — Plugin system
 
 **P2-01 — API v1 Protocols**
 - Depends: G1.
-- Deliverables: `plugins/api/v1.py` with every Protocol in §4.3, documented, and a
-  `SHAPE_API` constant.
-- Acceptance: mypy strict; docs page generated.
+- Deliverables: `plugins/api/v1.py` with every Protocol in §4.3, and `SHAPE_API = "1.0"`.
+- Acceptance: mypy strict; the generated docs page exists.
 - Fixes: none.
 
 **P2-02 — Plugin host**
 - Depends: P2-01.
-- Deliverables: entry-point discovery, version check, lazy loading, a registry, and
-  isolation of load failures.
-- Acceptance: a broken test plugin does not affect core commands, and is reported by
-  `shape plugins doctor`.
+- Deliverables: discovery, version check, lazy loading, the registry, and isolation of
+  load failures.
+- Acceptance: a deliberately broken test plugin doesn't affect `shape profile`, and
+  `shape plugins doctor` reports it.
 - Fixes: none.
 
 **P2-03 — Plugin CLI**
 - Depends: P2-02.
 - Deliverables: `shape plugins list|info|doctor`, and plugin-contributed subcommands.
-- Acceptance: e2e test with the example plugin.
+- Acceptance: e2e test with the P2-06 example plugin, which may be built in the same
+  commit.
 - Fixes: none.
 
 **P2-04 — Built-ins through the registry**
 - Depends: P2-02.
-- Deliverables: core sources, sinks, detectors, fitters and the address pack are
-  registered through the same entry points.
-- Acceptance: core has no direct imports of built-in implementations outside the
-  registry (import-linter contract).
+- Deliverables: move built-in implementations into `src/shape/builtins/` (§4.3),
+  registered through the entry points. Fold `connectors/` and `packs/address` in
+  here.
+- Acceptance: the import-linter contract (§4.3) passes, and `shape plugins list` shows
+  every built-in.
 - Fixes: G8.
 
 **P2-05 — Delete the sandbox (D-09)**
 - Depends: P2-02.
 - Deliverables: remove `plugins/core.py` and `plugins/runtime.py`; write
   `docs/plugins/trust-model.md`.
-- Acceptance: no capability or isolation wording remains.
+- Acceptance: `grep -rniE "sandbox|capabilit|isolat" src docs --exclude=COMPLETION_PLAN.md`
+  returns only the trust-model doc, which states that plugins are trusted.
 - Fixes: PL1, PL2, PL3, PL4.
 
 **P2-06 — Plugin kit and monorepo**
@@ -594,539 +811,632 @@ Appendix A).
 - Deliverables:
   - `shape.plugins.kit`: a conformance test kit per Protocol.
   - `examples/plugin/`: a source, a detector and a command.
-  - `plugins/` skeletons for every distribution in T-09, with packaging and CI.
+  - Skeletons under `plugins/` for every T-09 distribution, with packaging and CI.
   - The author guide.
-- Acceptance: the example plugin, installed out of tree, passes the kit; each skeleton
-  builds a wheel.
+- Acceptance: the example plugin, installed from outside the tree, passes the kit, and
+  each skeleton builds a wheel.
 - Fixes: none.
 
 **Gate G2**
-- An out-of-tree plugin adds a source, a detector and a command with no core change.
-- All built-ins load through the registry.
-- The Phase 1 gates still hold.
+- An out-of-tree plugin adds a source, a detector and a command without any core
+  change.
+- `shape plugins list` shows every built-in.
+- The G1 gates still pass.
 
 ### Phase 3 — Stream profiling
 
 **P3-01 — Stream runtime**
 - Depends: G2.
-- Deliverables: micro-batches go through the Phase 1 engine; tumbling, sliding and
-  session windows with `snapshot()` and `restore()`; watermarks and allowed lateness.
-- Acceptance:
-  - A window crash-and-restore test gives output identical to an uninterrupted run.
-  - Late-data cases behave as specified in `docs/specs/STREAMING_SEMANTICS.md`.
+- Deliverables: micro-batches go through the engine in bounded mode; tumbling, sliding
+  and session windows with `snapshot()` and `restore()`; watermarks and allowed
+  lateness, per `docs/specs/STREAMING_SEMANTICS.md`.
+- Acceptance: killing and restoring a window mid-stream gives output identical to an
+  uninterrupted run; late-data tests pass per the spec.
 - Fixes: S3.
 
 **P3-02 — Keyed state**
 - Depends: P3-01.
-- Deliverables: bounded keyed state (per-key sketches with LRU and TTL, and a hard
-  memory cap); vectorized dedupe.
-- Acceptance: RSS stays flat over 10⁸ events with 10⁶ keys; dedupe is correct against a
-  reference.
+- Deliverables: bounded keyed state (per-key sketches, LRU and TTL, a hard memory
+  cap); vectorized dedupe.
+- Acceptance: across 10⁸ events and 10⁶ keys, RSS grows ≤10% after the first 10⁷
+  events; dedupe matches a reference set implementation.
 - Fixes: S2, S5.
 
 **P3-03 — Checkpoints and offsets**
 - Depends: P3-01.
 - Deliverables: offset-committed checkpoints; reconnect resumes from the committed
   offset.
-- Acceptance: a fault-injection test shows no duplicated or lost batches across 100
-  forced reconnects.
+- Acceptance: across 100 forced reconnects, after dedupe on offset, the output equals
+  an uninterrupted run.
 - Fixes: S4.
 
 **P3-04 — Stream-source plugins**
 - Depends: P3-03, P2-06.
-- Deliverables: `shape-kafka` and `shape-eventhubs` consumers.
-- Acceptance: nightly e2e against the Kafka and Event Hubs emulator containers.
+- Deliverables: consumers in `shape-kafka` and `shape-eventhubs`.
+- Acceptance: contract tests on every PR, and emulator e2e nightly (T-26).
 - Fixes: none.
 
-**P3-05 — `shape stream-profile` CLI**
+**P3-05 — `shape stream-profile`**
 - Depends: P3-04.
 - Deliverables: the CLI command.
-- Acceptance: e2e test; the STREAM-PROF gate.
+- Acceptance: e2e test; STREAM-PROF ≥80%.
 - Fixes: none.
 
 **Gate G3**
 - STREAM-PROF ≥80%.
-- Stream-replay profile equals the batch profile within the error model.
-- Profiles are identical across processes.
+- A stream replay of D2 in bounded mode equals batch profiling of D2 in bounded mode,
+  within the T-14 bounds.
+- Results are identical across processes.
 - The S-bugs have regression tests.
 
 ### Phase 4 — Generation engine
 
-**P4-01 — Schema**
-- Depends: G2.
+**P4-01a — Schema and Spindle importer**
+- Depends: G2, P0-07.
 - Deliverables:
-  - The Shape generation schema, with its JSON Schema.
-  - A lossless `.spindle.json` importer covering every Spindle schema feature: model,
+  - The Shape generation schema and its JSON Schema.
+  - `generation/spindle_import.py`: imports the JSON produced by
+    `benchmarks/vs_spindle/dump_schema.py` (Spindle `SpindleSchema`), covering model,
     tables, columns, generators, relationships, business rules, scale presets and
     modes (3nf and star).
-  - `from-ddl` for the tsql, tsql-fabric-warehouse, postgres and mysql dialects.
-- Acceptance:
-  - Every domain schema in the pinned Spindle, and every `examples/*.spindle.json`
-    there, imports and re-exports losslessly.
-  - DDL golden tests.
+  - Re-export to the same JSON.
+- Acceptance: all 14 domain dumps import, and re-export to JSON that is equal (as
+  dicts) to the dump.
+- Fixes: none.
+
+**P4-01b — `from-ddl`**
+- Depends: P4-01a.
+- Deliverables: `shape from-ddl FILE` with Spindle's options `--output`, `--domain`,
+  `--scale`/`-s`, `--smart/--no-smart` and `--explain`, porting Spindle's DDL inference
+  (`schema/` and the `from-ddl` path in `cli.py:751-833`).
+- Acceptance: for each DDL fixture in Spindle's tests (or, if there are none, 5
+  fixtures written from Spindle's docs), Shape's schema equals Spindle's output.
 - Fixes: none.
 
 **P4-02 — Engine**
-- Depends: P4-01.
-- Deliverables: the dependency resolver (Spindle's ordering), row-count calculation
-  (presets, fixed, per_parent × ratio, per_year × years), column ordering, the compute
-  phase, the business-rules engine (validate and fix), chunked random access (T-16) and
-  `--dry-run`.
+- Depends: P4-01a.
+- Deliverables: dependency resolution (Spindle's Kahn order); row counts (presets,
+  fixed, per_parent × ratio, per_year × years); column ordering; the compute phase; the
+  business-rules engine (validate and fix); chunked random access (T-16); `--dry-run`.
 - Acceptance:
-  - Row counts equal Spindle's for every domain at every scale.
-  - Chunk-layout invariance: generating with chunk sizes 1k, 64k and 1M gives
-    identical output.
+  - **For retail:** row counts equal Spindle's at small, medium, large and xlarge
+    (checked with `dump_schema.py` plus Spindle's `calculate_row_counts`).
+  - Output is identical with chunk sizes of 1k, 64k and 1M.
 - Fixes: G2.
 
 **P4-03 — Rust generation kernel**
-- Depends: P4-02, P1-01.
-- Deliverables: Philox streams, alias sampling, pool and string assembly (templates,
-  case, joins), and temporal sampling (month, day-of-week, hour, bimodal), with
-  references.
-- Acceptance: differential tests; a single-threaded kernel benchmark reported in
-  `results.json`.
+- Depends: P4-02, P1-01a.
+- Deliverables: Philox4x64-10 (T-16), alias sampling, pool and string assembly
+  (templates, case, joins), and temporal sampling (month, day-of-week, hour including
+  bimodal), each with a reference twin.
+- Acceptance:
+  - Philox matches numpy's `Philox.random_raw()` known answers.
+  - Differential tests pass.
+  - Kernel microbenchmarks are recorded in `results.json`.
 - Fixes: G1.
 
-**P4-04 — Strategies**
-- Depends: P4-03.
-- Deliverables: every Spindle strategy as a `shape.strategies` built-in:
-  - `sequence`, `uuid`, `enum`/`weighted_enum`, `distribution`, `empirical`, `pattern`
-  - `faker`/`native` (Spindle's pools), `formula`, `computed`, `derived`
-  - `conditional`, `correlated`, `lookup`, `reference_data`, `temporal`
-  - `lifecycle`, `scd2`, `first_per_parent`, `foreign_key`, `composite_foreign_key`
-  - `self_referencing`/`self_ref_field`, `record_field`, `record_sample`
-
-  The row-sequential ones (`lifecycle`, `scd2`, `self_referencing`) run in Rust.
-- Acceptance: per-strategy statistical tests against Spindle's strategy on the same
-  config under T-21 column criteria.
-- Fixes: G7.
+**P4-04 — Strategies.** These are Spindle's 25 registered strategy names. Each group is
+its own work package. Every strategy gets a per-strategy statistical test against
+Spindle's strategy on the same config, under T-21 (b)–(e).
+- **P4-04a** (Depends: P4-03): `sequence`, `uuid`, `weighted_enum`, `distribution`,
+  `empirical`, `pattern`.
+- **P4-04b** (Depends: P4-04a): `faker` and `native` (Spindle's pools), `formula`,
+  `computed`, `derived`.
+- **P4-04c** (Depends: P4-04a): `conditional`, `correlated`, `lookup`,
+  `reference_data`, `temporal`, `record_field`, `record_sample`.
+- **P4-04d** (Depends: P4-04a): `foreign_key`, `composite_foreign_key`,
+  `composite_fk_field`, `first_per_parent`, `self_referencing`, `self_ref_field`,
+  `lifecycle`, `scd2`. The row-sequential ones run in Rust.
+- Acceptance for P4-04d as a whole: G7 has its regression test.
+- Fixes: G7 (in P4-04d).
 
 **P4-05 — Distributions and calendars (D-05, D-11)**
 - Depends: P4-03.
 - Deliverables:
-  - Families: Spindle's (uniform, normal, log_normal, pareto, zipf, geometric,
-    poisson), plus exponential, gamma, beta, weibull, triangular, negative binomial,
-    bernoulli, power law with cutoff, truncated versions of each, mixtures, and
-    empirical histograms.
-  - An 80/20 helper for FK fan-out.
-  - Calendars: rule engine (D-11 rules); US federal and US retail calendars; lift with
-    ramp and decay; negative lifts; custom events; payday, month-end and quarter-end
-    effects; trend with step and ramp regime changes.
-  - Profiler detection of seasonality, holiday lift and tails, added to `profile/temporal.py`.
-- Acceptance:
-  - For every family, fitting a 10⁶-sample draw recovers its parameters within 2%.
-  - A calendar test recovers the configured Black Friday, Cyber Monday and Christmas
-    lifts within 5%.
-  - The 80/20 helper yields the configured top-share within 1%.
-  - Profile → generate → profile reproduces the month, day-of-week and hour weights
-    with TVD ≤ 0.01.
+  - **Families:** Spindle's (uniform, normal, log_normal, pareto, zipf, geometric,
+    poisson, bernoulli), plus exponential, gamma, beta, weibull, triangular, negative
+    binomial, power law with exponential cutoff, truncation of any family, mixtures,
+    and empirical histograms.
+  - **An 80/20 helper** for FK fan-out.
+  - **Calendars:** the D-11 rule engine; US federal and US retail calendars; lift with
+    ramp-up and decay; negative lifts; custom events; payday effects (1st/15th and
+    biweekly); month-end and quarter-end effects; trend with step and ramp regime
+    changes.
+  - **Profiler detection** of month, day-of-week and hour profiles, holiday lift and
+    tail index, in `profile/temporal.py`.
+- Acceptance, using the parameter table in
+  `tests/generation/test_distribution_recovery.py`. The table is fixed in the test
+  itself:
+
+  | Family | Parameters |
+  |---|---|
+  | normal | (10, 2) |
+  | log_normal | (3, 0.5) |
+  | pareto | (α=1.5, xm=1) |
+  | zipf | (a=2) |
+  | geometric | (p=0.2) |
+  | poisson | (λ=4) |
+  | bernoulli | (p=0.3) |
+  | exponential | (λ=0.5) |
+  | gamma | (k=2, θ=3) |
+  | beta | (2, 5) |
+  | weibull | (k=1.5, λ=2) |
+  | triangular | (0, 3, 10) |
+  | negative binomial | (r=5, p=0.4) |
+  | power law with cutoff | (α=2, λ=0.01) |
+  | mixture | 0.6·N(0,1) + 0.4·N(8,1) |
+
+  - Fitting 10⁶ draws recovers every parameter within max(2%, 3 standard errors).
+  - Empirical draws have TVD ≤0.01 against the source histogram.
+  - The calendar test recovers the configured Black Friday, Cyber Monday and
+    Christmas lifts within 5%.
+  - The 80/20 helper's top-20% share is within 1% of the configuration.
+  - Profile → generate → profile gives month, day-of-week and hour TVD ≤0.01.
 - Fixes: none.
 
 **P4-06 — Writers**
 - Depends: P4-02.
 - Deliverables:
-  - Core writers: CSV, TSV, JSONL, SQL INSERT (dialects and the `--sql-ddl`,
-    `--sql-drop`, `--sql-go`, `--schema-name` options, as in Spindle) and Parquet (T-17:
-    parallel and pipelined).
-  - Plugin writers: Excel (`[excel]`) and Delta (`[delta]`, deltalake).
-- Acceptance: golden-output tests per format; Parquet written by Shape is readable by
-  Spindle's readers and by pandas.
-- Fixes: none.
-
-**P4-07 — Retail domain through the engine**
-- Depends: P4-04, P4-06.
-- Deliverables: retail as the first `shape.domains` entry, generated by the real engine
-  (not the benchmark port).
+  - **Core:** CSV, TSV, JSONL, SQL INSERT (dialects `tsql`, `tsql-fabric-warehouse`,
+    `postgres` and `mysql`; options `--sql-ddl`, `--sql-drop`, `--sql-go` and
+    `--schema-name`) and Parquet (T-17), plus `summary` output.
+  - **Plugins:** Excel (`[excel]`, openpyxl) and Delta (`[delta]`, deltalake).
 - Acceptance:
-  - `domain_1to1/verify.py --domain retail` passes 60/60 (T-21) at small, medium and
-    large.
-  - GEN-IN and GEN-CLI ≥10x for retail medium and large.
+  - Golden output per format.
+  - Shape's Parquet output reads back in pandas and in Spindle's readers.
+  - SQL output parses with `sqlglot` for each dialect (a dev dependency).
 - Fixes: none.
 
-**P4-08 — Profile → generate**
+**P4-07 — Retail through the engine**
+- Depends: P4-04a–d, P4-06.
+- Deliverables: retail as the first `shape.domains` entry, generated by the product
+  engine (not by the reference port).
+- Acceptance:
+  - `domain_1to1/verify.py --domain retail --impl shape` passes T-21 at small, medium
+    and large.
+  - GEN-IN and GEN-CLI ≥10x on retail medium and large.
+- Fixes: none.
+
+**P4-08 — Profile → generate, and `learn`**
 - Depends: P4-05, G1.
-- Deliverables: `shape generate --from x.shape` fits strategies from profile evidence:
-  marginals, a real Gaussian copula with marginal transforms, missingness and
-  seasonality. `plan` reports truthfully what will and won't be preserved.
-- Acceptance: round-trip tests (profile → generate → profile within T-22 tolerances
-  for the modelled fields); `plan` flags every unmodelled field.
+- Deliverables:
+  - `shape generate --from X.shape`: fits strategies from the profile (marginals, a
+    real Gaussian copula with marginal transforms, missingness, seasonality).
+  - `shape plan` reports truthfully what will and won't be preserved.
+  - A port of Spindle's `SchemaBuilder`: `shape learn` (alias) writes a generation
+    schema, and `--spindle-json` writes a `.spindle.json`.
+- Acceptance:
+  - Profile → generate → profile is within T-22 tolerances for the modelled fields.
+  - `plan` flags every field that isn't modelled.
+  - `shape learn --spindle-json` on D2 gives JSON equal to `spindle learn` on D2,
+    except for fields listed, with a reason, in the test.
+  - LEARN-CLI ≥10x.
 - Fixes: G5, G6.
 
 **P4-09 — Fidelity report**
 - Depends: P4-07.
-- Deliverables: `shape fidelity` (aliases `compare` and `verify`) with Spindle
-  `FidelityComparator`-equivalent scoring. Reports in JSON, MD and HTML through
-  `shape.reports`. Thresholds, and a non-zero exit on failure.
+- Deliverables: `shape fidelity` (alias `compare`), with scoring equivalent to Spindle's
+  `FidelityComparator` (`inference/comparator.py:365`); JSON, MD and HTML output via
+  `shape.reports`; thresholds; non-zero exit on failure.
 - Acceptance:
-  - The scores for retail (Spindle vs Spindle) match Spindle's comparator within 0.5
-    points.
+  - For retail, per table, the score is within 0.5 points of Spindle's comparator on
+    the same pair of datasets.
   - A missing column scores 0, and an empty reference fails.
 - Fixes: G3, G4.
 
 **P4-10 — Generation CLI**
 - Depends: P4-09.
-- Deliverables: `generate`, `describe`, `list`, `validate`, `from-ddl`, `presets`,
-  `composite`, and the `--mode 3nf|star`, `--scale`, `--format`, `--dry-run` and
-  `--seed` options (§9).
-- Acceptance: e2e tests per command.
+- Deliverables: `generate`, `describe`, `list`, `validate`, `presets` and `from-ddl`,
+  with `--mode 3nf|star`, `--scale`, `--seed`, `--format` (every P4-06 format) and
+  `--dry-run`.
+- Acceptance: e2e test per command, for retail. `composite` and the full preset
+  checks come in P6-01e.
 - Fixes: none.
 
 **Gate G4**
-- Retail passes 60/60 at every scale.
+- Retail passes T-21 at every scale.
 - GEN-IN and GEN-CLI ≥10x on retail medium and large.
-- Every strategy passes its statistical test.
+- LEARN-CLI ≥10x.
+- Every strategy's test passes.
 - The G-bugs have regression tests.
 
 ### Phase 5 — Streaming during generation
 
 **P5-01 — Emitter runtime**
 - Depends: G3, G4.
-- Deliverables: a token-bucket rate limiter (constant, burst `START:DURATION:MULT`,
-  diurnal); out-of-order fraction; anomaly fraction (through `shape.chaos`); the
-  Spindle envelope (D-12); backpressure; at-least-once delivery with idempotent keys;
-  and a checkpoint on shutdown.
-- Acceptance: the rate holds within ±5% over 10 minutes in CI and 1 hour nightly;
-  events are replayed exactly after a kill -9 and restart.
+- Deliverables:
+  - Rate modes: realtime, with `--rate` and burst specs `START:DURATION:MULT`; and
+    `--no-realtime`, which is the default, as in Spindle.
+  - `--out-of-order` fraction, and `--anomaly-fraction` through `shape.chaos`. Note
+    that Spindle's CLI ignores `--anomaly-fraction` (its `cli.py` passes `None` when
+    the value is non-zero); Shape must honor the flag.
+  - `--max-events` and `--duration`.
+  - D-12 formats, backpressure, at-least-once delivery with the D-12 idempotency key,
+    and a checkpoint on shutdown.
+- Acceptance:
+  - At 10,000 events/s, the realtime rate stays within ±5% over 10 minutes (CI), and
+    over 1 hour (nightly).
+  - After kill -9 and restart, then dedupe on the key, the output equals an
+    uninterrupted run.
 - Fixes: none.
 
 **P5-02 — Emitters**
 - Depends: P5-01.
 - Deliverables: console, file and JSONL (core); Kafka producer (`shape-kafka`); Event
-  Hubs producer (`shape-eventhubs`); Fabric Eventstream and Eventhouse
-  (`shape-fabric`).
-- Acceptance: contract tests plus nightly emulator e2e; live tests when secrets are
-  present (§8).
+  Hubs producer (`shape-eventhubs`); Fabric Eventstream and Eventhouse (`shape-fabric`).
+- Acceptance: contract tests; emulator e2e nightly; live tests when secrets exist.
 - Fixes: none.
 
 **P5-03 — Live fidelity**
 - Depends: P5-02, P3-05.
-- Deliverables: a tee from the emitted stream into the stream profiler, compared live
+- Deliverables: a tee from the emitted stream into the stream profiler, compared
   against the target shape, with drift alerts.
-- Acceptance: the live fidelity score equals the offline `shape fidelity` score on the
-  same events, within 0.5 points.
+- Acceptance: the live score is within 0.5 points of `shape fidelity` on the same
+  events.
 - Fixes: none.
 
-**P5-04 — `shape stream` CLI**
+**P5-04 — `shape stream`**
 - Depends: P5-03.
-- Deliverables: parity with every option of Spindle's `stream` (§9), plus Shape's sinks.
-- Acceptance: e2e test; the STREAM-EMIT gate.
+- Deliverables: every option of Spindle's `stream` (§10), plus Shape's sinks and
+  formats.
+- Acceptance: e2e test; STREAM-EMIT ≥10x, after the stream equivalence verifier in
+  `benchmarks/vs_spindle/stream_1to1/` passes.
 - Fixes: none.
 
 **Gate G5**
 - STREAM-EMIT ≥10x.
-- The rate is within ±5% for 1 hour (nightly).
-- Live fidelity equals offline fidelity.
+- The realtime rate holds within ±5% for 1 hour (nightly).
+- Live fidelity matches offline fidelity.
 
 ### Phase 6 — Spindle feature ports (plugins)
 
-**P6-01 — `shape-domains`**
-- Depends: G4.
-- Deliverables: every domain in Spindle's `domains/` at the pinned commit:
-  - capital_markets, education, financial, healthcare, hr, insurance, iot
-  - manufacturing, marketing, pulse, real_estate, retail, supply_chain, telecom
-
-  Plus presets and `composite`, and the reference data carried over with notices
-  (D-10).
-- Acceptance:
-  - `domain_1to1/verify.py --domain <each>` passes T-21 at small and medium.
-  - GEN-IN ≥10x for every domain at medium.
-- Fixes: none.
+**P6-01 — `shape-domains`.** Carry the reference data over with D-10 notices. For each
+domain, `domain_1to1/verify.py --domain D --impl shape` must pass T-21 at small and
+medium, and GEN-IN must be ≥10x at medium.
+- **P6-01a** (Depends: G4): capital_markets, education, financial.
+- **P6-01b** (Depends: P6-01a): healthcare, hr, insurance.
+- **P6-01c** (Depends: P6-01a): iot, manufacturing, marketing.
+- **P6-01d** (Depends: P6-01a): pulse, real_estate, supply_chain, telecom.
+- **P6-01e** (Depends: P6-01b–d):
+  - Row counts equal Spindle's for every domain at every scale.
+  - The 6 presets and `composite` work, each with an e2e parity test.
+  - The final retail move into the plugin.
 
 **P6-02 — Chaos engine**
 - Depends: G4.
-- Deliverables: a port of Spindle's `chaos/` as `shape.chaos` built-ins; this replaces
-  `scenarios/`.
-- Acceptance: parity tests per mutator against Spindle, measuring mutation rates and
-  types.
+- Deliverables: port Spindle's `chaos/` mutator categories (schema, value, file,
+  referential, temporal, and the rest in `chaos/categories.py`) as `shape.chaos`
+  built-ins. This replaces `scenarios/`.
+- Acceptance: per mutator, parity against Spindle on mutation rates and types.
 - Fixes: none.
 
 **P6-03 — `shape mask`**
 - Depends: G1, G4.
-- Deliverables: a port of Spindle's `masker.py` semantics, as a `shape.transforms`
-  built-in.
-- Acceptance: parity test against `spindle mask` on the D2 dataset: same masked
-  columns, same format preservation, and no original values remaining.
+- Deliverables: port `inference/masker.py` as a `shape.transforms` built-in.
+- Acceptance: parity against `spindle mask` on D2: the same masked columns, format
+  preserved, and no original value remaining.
 - Fixes: none.
 
 **P6-04 — `shape-simulation`**
 - Depends: G4, G5.
-- Deliverables: IoT, clickstream, finance, state-machine, file-drop and SCD2
-  simulations (Spindle's `simulation/`).
-- Acceptance: parity tests per simulator under T-21.
+- Deliverables: a port of every module in Spindle's `simulation/`: clickstream,
+  file_drop, financial, hybrid, iot, operational_log, pulse, scd2_file_drops,
+  state_machine and stream_emit.
+- Acceptance: a parity test per simulator under T-21.
 - Fixes: none.
 
 **P6-05 — Incremental**
 - Depends: G4.
 - Deliverables: `shape continue` and `shape time-travel` (Spindle's `incremental/`).
-- Acceptance: parity tests covering growth, churn, update fraction and seasonality.
+- Acceptance: parity tests for growth, churn, updates, deletes and seasonality.
 - Fixes: none.
 
 **P6-06 — Transforms**
 - Depends: G4.
-- Deliverables: `shape transform star` and `shape transform cdm` (aliases `to-star` and
-  `to-cdm`).
-- Acceptance: output schemas equal Spindle's; row-level parity on the same input.
+- Deliverables: `shape transform star|cdm` (aliases `to-star` and `to-cdm`).
+- Acceptance: output schemas equal Spindle's, and rows match on the same input.
 - Fixes: none.
 
-**P6-07 — `shape-fabric`**
-- Depends: G4, G5.
-- Deliverables: Lakehouse files, Warehouse bulk load (COPY INTO via staging), SQL
-  Database, Eventhouse, Semantic Model, OneLake paths, and the credential modes (cli,
-  msi, spn, sql, device-code). Also `publish`, `notebook`, `deploy-notebook` and
-  `setup-fabric`, plus the Lakehouse/Delta profiling source.
-- Acceptance: contract tests against recorded Fabric REST/ABFS/TDS interactions; live
-  e2e when secrets are present (§8).
-- Fixes: none.
+**P6-07 — `shape-fabric`.** Split into three work packages:
+- **P6-07a — Writers and sources** (Depends: G4, G5):
+  - Writers: Lakehouse files, Warehouse bulk (COPY INTO via `--staging-path`), SQL
+    Database (`--connection-string`, `--write-mode`, `--batch-size`), Eventhouse and
+    Eventstream.
+  - Source: Lakehouse/Delta profiling.
+  - OneLake paths.
+  - Acceptance: contract tests against recorded interactions.
+- **P6-07b — Auth** (Depends: P6-07a):
+  - `--auth cli|msi|spn|sql|device-code`, plus every mode in Spindle's
+    `fabric/credentials.py`.
+  - Acceptance: contract tests.
+- **P6-07c — Commands** (Depends: P6-07b):
+  - `shape fabric publish|notebook|deploy-notebook|setup`.
+  - `shape fabric export-model`: Power BI `.bim` semantic-model export, with
+    `--source-type` and `--source-name`.
+  - Acceptance: e2e with recorded interactions; live when secrets exist.
 
 **P6-08 — `shape-sqlserver`**
-- Depends: G1.
-- Deliverables: database profiling with a schema walk, pyodbc and Entra auth (Spindle's
-  `database_profiler`), plus the SQL Database writer helpers shared with `shape-fabric`.
-- Acceptance: nightly e2e against the SQL Server container; PROF-IN ≥10x against
-  Spindle's database profiler on the same database.
+- Depends: G2.
+- Deliverables: database profiling (Spindle's `database_profiler`: schema walk,
+  pyodbc, Entra auth, the same `sample_rows` default of 1000), plus SQL helpers shared
+  with `shape-fabric`.
+- Acceptance: nightly e2e against the SQL Server container, and T-22 parity with
+  Spindle's database profiler on the same database. Time is reported, not gated,
+  because it is dominated by the server.
 - Fixes: none.
 
-**P6-09 — Validation gates and quarantine**
+**P6-09 — Validation gates, quarantine and `verify`**
 - Depends: G1.
-- Deliverables: Spindle's `validation/` gates and quarantine, in core `quality` and
-  `contracts`.
-- Acceptance: parity tests.
+- Deliverables: Spindle's `validation/` gates and quarantine, in core quality and
+  contracts, plus `shape verify` (Spindle's `verify/` runner: schema, nulls, PK, FK, KS
+  and chi² checks, and its report).
+- Acceptance: parity tests against `spindle verify` on retail output.
 - Fixes: none.
 
 **P6-10 — Profile registry parity**
 - Depends: G1, G4.
 - Deliverables: `shape profile export|import|list|validate` and `shape registry
-  list|save|delete|tag|diff|reindex|validate` (§9).
-- Acceptance: e2e tests per subcommand.
+  list|save|delete|tag|diff|reindex|validate` (§10).
+- Acceptance: e2e test per subcommand.
 - Fixes: none.
 
-**P6-11 — `shape-mcp`**
-- Depends: G4.
-- Deliverables: an MCP server with the tools Spindle's `mcp_bridge` exposes, on the
-  `mcp` SDK.
-- Acceptance: an MCP client e2e test covering every tool.
+**P6-11 — JSON bridge and MCP**
+- Depends: G4, G5.
+- Deliverables:
+  - `shape bridge`: the JSON stdin/stdout protocol, in parity with Spindle's
+    `mcp_bridge.py`. Its 17 commands are `list`, `describe`, `generate`, `dry_run`,
+    `validate`, `preview`, `profile_info`, `demo_list`, `demo_run`, `demo_status`,
+    `demo_cleanup`, `scale_generate`, `stream`, `stream_status`, `stream_stop`,
+    `scale_status` and `scale_cancel`.
+  - `shape-mcp`: the same commands as MCP tools, on the `mcp` SDK.
+- Acceptance: bridge parity tests per command, and an MCP client e2e test.
 - Fixes: none.
 
 **P6-12 — `shape demo`**
-- Depends: P6-07.
-- Deliverables: `init`, `list`, `run`, `preflight`, `cleanup`, `status`, `notebook` and
-  `report` (Spindle's `demo/`).
-- Acceptance: e2e tests with the local sinks.
+- Depends: P6-07c.
+- Deliverables: `init`, `list`, `run`, `preflight`, `cleanup`, `status`, `notebook`
+  and `report`.
+- Acceptance: e2e with the local sinks.
 - Fixes: none.
 
 **Gate G6**
-- Every row of §9 has a passing e2e test.
-- Every domain passes T-21 and GEN-IN ≥10x at medium.
+- Every row of §10 has a passing e2e test.
+- Every domain passes T-21, with GEN-IN ≥10x at medium.
 
 ### Phase 7 — Privacy and trust
 
-**P7-01 — One classification taxonomy**
+**P7-01 — One taxonomy and safe profile**
 - Depends: G1.
-- Deliverables: a single taxonomy (merge `privacy/policy.py` and `classification.py`);
-  a safe-profile export and validator matching Spindle's `safe_profile*` and
-  `safe_validator` (the `--safe` flag on `profile validate`).
-- Acceptance: parity tests against Spindle's safe-profile output on D2.
+- Deliverables: merge `privacy/policy.py` and `classification.py`; add safe-profile
+  export and validation in parity with Spindle's `safe_profile*` and `safe_validator`
+  (`shape profile validate --safe`).
+- Acceptance: parity with Spindle's safe-profile output on D2.
 - Fixes: SEC3.
 
 **P7-02 — k-anonymity and suppression**
 - Depends: P7-01.
-- Deliverables: enforced minimum cohort, and suppression of small cells in top-k,
+- Deliverables: enforced minimum cohort; suppression of small cells in value counts,
   enums and histograms.
-- Acceptance: no released cell has a count below the minimum cohort (property test).
+- Acceptance: a property test shows no released cell below the minimum.
 - Fixes: none.
 
 **P7-03 — Signing**
 - Depends: P1-09.
-- Deliverables: Ed25519 signing through `[sign]`; `--sign` and `--verify` on write and
-  read; key-handling docs.
+- Deliverables: Ed25519 via `[sign]`; `--sign` and `--verify`; key-handling docs.
 - Acceptance: a forged artifact with rewritten hashes fails `--verify`.
 - Fixes: P19.
 
 **P7-04 — Security review**
 - Depends: P7-03, G5.
-- Deliverables: a refreshed threat model (plugin trust, emitter credentials, artifact
-  signing); the artifact fuzzer in nightly CI; a `bandit` clean run.
-- Acceptance: no high findings.
+- Deliverables: an updated threat model; the artifact fuzzer in nightly CI; `bandit -r src`.
+- Acceptance: no findings of high severity.
 - Fixes: none.
 
 **Gate G7**
 - SEC3 and P19 have regression tests.
-- Safe-profile parity holds.
-- The security review has no open high findings.
+- Safe-profile parity passes.
+- No high-severity findings are open.
 
 ### Phase 8 — Migration and release
 
 **P8-01 — Compatibility**
 - Depends: G6.
-- Deliverables: every Spindle command name is accepted as an alias (§9); Spindle
-  profile JSON and `.spindle.json` are read directly; a `docs/migration/from-spindle.md`
-  guide.
-- Acceptance: running each command from Spindle's README examples, with `spindle`
-  replaced by `shape`, succeeds and produces equivalent output.
+- Deliverables: every alias in §10; reading Spindle profile JSON and `.spindle.json`;
+  `docs/migration/from-spindle.md`.
+- Acceptance: each command example in Spindle's README, with `spindle` replaced by
+  `shape`, runs and produces equivalent output.
 - Fixes: none.
 
 **P8-02 — Nightly parity suite**
 - Depends: G6.
-- Deliverables: every domain and every profiling dataset against pinned Spindle, with
-  results published to `results.json` and to the docs performance page.
-- Acceptance: the nightly run is green for 7 consecutive days.
+- Deliverables: nightly `run.py --full` over every domain and every profiling dataset,
+  published to the docs performance page.
+- Acceptance: 7 consecutive green nightly runs.
 - Fixes: none.
 
 **P8-03 — Docs site**
 - Depends: G6.
-- Deliverables: mkdocs site (T-24): quickstart, tutorials, CLI reference (generated),
-  plugin author guide, architecture, spec, migration guide, and the performance page
-  (generated).
-- Acceptance: `mkdocs build --strict` passes, and a link check passes.
+- Deliverables: the T-24 site.
+- Acceptance: `mkdocs build --strict` and a link check pass.
 - Fixes: none.
 
 **P8-04 — Release engineering**
-- Depends: P8-01–P8-03, G7.
-- Deliverables: T-25; version 1.0.0 for core and every plugin; a TestPyPI dry run; a
-  release checklist.
-- Acceptance: TestPyPI install of `sqllocks-shape[all]` on each T-04 platform passes
-  the smoke suite.
+- Depends: P8-01, P8-03, G7.
+- Deliverables: T-25 workflows; version 1.0.0 for core and every plugin; a release
+  checklist.
+- Acceptance: wheels, sdists, SBOM and attestations are built in CI for every T-04
+  target. If O-01 is done, a TestPyPI install of `sqllocks-shape[all]` passes the
+  smoke suite on each platform.
 - Fixes: none.
 
 **P8-05 — Final hostile review**
 - Depends: P8-04.
-- Deliverables: a full independent code review of `src/`, `rust/` and `plugins/`, with
-  every finding fixed or recorded in §2.3 with owner sign-off.
-- Acceptance:
-  - No open bugs in Appendix A.
-  - Every gate G0–G7 is green on the release commit.
-  - mypy strict covers all of `src/shape` (T-12).
+- Deliverables: an independent review of `src/`, `rust/` and `plugins/`, with every
+  finding fixed or recorded in §2.3 with owner sign-off.
+- Acceptance: no open bugs in Appendix A; every gate G0–G7 is green on the release
+  commit; mypy strict covers all of `src/shape`.
 - Fixes: all.
 
-**Gate G8 (done)**
-- Every item above holds.
-- 1.0.0 is published to PyPI (owner action O-01).
+**Gate G8 (complete)**
+- Every item above holds, including the 7-night record from P8-02.
+- **Publishing to PyPI is an owner action (O-01)** and is not part of build
+  completion.
 
 ---
 
-## 7. Keep / cut
+## 8. Keep / cut / delete lists
 
-**Keep and rebuild:**
-- `artifact`, `capture` (edge adapter only), `profile`, `spec`, `model`, `types`,
-  `errors`, `api`, `cli`
-- `diff`, `drift`, `quality`, `contracts`, `query`, `registry`, `relations`
-- `streaming`, `connectors` (rebuilt as `io` plus plugins), `plugins` (rewritten)
-- `generation`, `packs` (becomes the domains and address strategy), `location`,
-  `geospatial`
-- `privacy`, `security`, `validation`
+### 8.1 Modules to delete (P0-04), in this order
 
-**Delete in P0-04.** Nothing in the core, CLI or `__init__` imports these, apart from
-the two edges noted.
+1. `integrations`
+2. `etl`
+3. `ci`, `distributed`
+4. `admin`, `ai`, `marketplace`, `federation`, `enterprise`, `governance`, `graph`,
+   `compiler`, `execution`, `reproducibility`
+5. `explain.py`, `policy` (top level)
+6. `history`, `lineage`, `observability`, `packages`, `reference`
+7. `scenarios`, `temporal`, `testing`, `transform`
+8. `hub`, `webapp`
 
-| Module | Reason |
-|---|---|
-| `admin`, `ai`, `marketplace`, `federation`, `enterprise`, `governance`, `graph`, `compiler`, `execution`, `reproducibility`, `integrations` | Stubs (12–97 lines); `enterprise` hard-codes an audit key (SEC8) |
-| `explain.py`, top-level `policy` | Unused; `explain` crashes (B11); `policy` duplicates `privacy.policy` |
-| `history`, `lineage`, `observability`, `packages`, `reference` | Unused; bugs B6–B8. Registry covers history; plugins replace packages |
-| `distributed`, `etl`, `ci` | Lossy merge (B4) and duplicate result types (B5). Replaced by core merge and `shape check` exit codes |
-| `scenarios`, `temporal`, `testing`, `transform` | Replaced by chaos, strategies, distributions/calendars and transforms (Phases 4 and 6) |
-| `hub`, `webapp` | D-08; SEC6 and SEC7 |
-
-**Order:** `integrations` → `etl` → `ci`/`distributed` → the rest.
+That is 27 in total, which is the hub, the web app and 25 others (D-08).
 
 **Tests:**
 - **Delete these files:**
-  - `tests/test_future_roadmap.py` (move its non-DP `privacy` cases first)
+  - `tests/test_future_roadmap.py` (after P0-02 moves its non-DP privacy cases)
   - `tests/compiler/test_compiler.py`
   - `tests/etl/test_etl.py`
-  - `tests/history/*`
+  - `tests/history/`
   - `tests/transform/test_transform.py`
   - `tests/platform12/test_integrations.py`
   - `tests/test_ci_gate.py`
   - `examples/ci_gate.py`
-- **Edit these files:**
-  - `tests/platform12/test_features_01_04.py`, `_05_08.py`, `_09_12.py`
+- **Edit these files** to remove the deleted-module cases:
+  - `tests/platform12/test_features_01_04.py`, `test_features_05_08.py`,
+    `test_features_09_12.py`
   - `tests/platform12/test_hardening.py`
   - `tests/torture/test_cross_feature_torture.py`
   - `tests/privacy/test_privacy.py`
-- **Import edges:** `webapp/core.py` imports `query` (goes with the webapp). `cli/main.py`
-  imports `registry`, `contracts` and `query` (all kept).
+  - `tests/torture/test_all_modules.py` (see P0-04)
+
+### 8.2 Kept (rebuilt by the phases)
+
+- `artifact`, `capture` (edge adapters), `profile`, `spec`, `model`, `types`, `errors`,
+  `api`, `cli`, `diff`, `drift`, `quality`, `contracts`, `query`, `registry`,
+  `relations`
+- `streaming`, `connectors` (folded into `io`, `builtins` and plugins), `plugins`
+  (rewritten)
+- `generation`, `packs` (folded into `builtins` and `shape-domains`), `location`,
+  `geospatial`
+- `privacy`, `security`, `validation`
+
+### 8.3 Files to delete (P0-05)
+
+- **Root:** every `*_MANIFEST.json`, every `*_QUALIFICATION.json`,
+  `CORE_REGRESSION_QUALIFICATION.json`, `FINAL_CREDENTIAL_PATTERN_SCAN.json`,
+  `GA_1_3_*.json`, `GA_GENERATION_QUALIFICATION.json`, `GA_FINAL_TEST.txt`,
+  `NAMING_MIGRATION.json`, `RC1_*.json`, `REPOSITORY_MANIFEST.json`.
+- **Directories:** `rq/`, `docs/qualification/`, `docs/audit/`.
+- **`docs/plans/`:** everything except `COMPLETION_PLAN.md`.
+- **`docs/` root:** delete everything **except** this keep-list: `INSTALL.md`,
+  `QUICKSTART.md`, `TUTORIAL.md`, `CONTRIBUTING.md`, `DETERMINISM.md`,
+  `LOCATION_AS_CODE.md`, `PRIVACY_MODEL.md`, `PRODUCT_ARCHITECTURE.md`,
+  `SECURITY_SPECIFICATION.md`, `THREAT_MODEL.md`, `SHAPE_MANIFESTO.md`, `BRANDING.md`,
+  `API_STABILITY.md`, `RELEASE_POLICY.md`, `EXTERNAL_REFERENCE_ASSETS.md`. Each kept
+  file must be edited to remove any statement the P0-05 grep flags, or any claim about
+  DP, isolation or performance.
+- **Workflows:** `.github/workflows/external-connectors.yml`, `ga.yml` and
+  `release-ga.yml`. P0-06 and P0-07 replace them.
+- **`docs/specs/`** is kept in full.
 
 ---
 
-## 8. Owner actions (external)
-
-These need the owner's accounts. None of them blocks a gate, because each has a fallback
-(T-26).
+## 9. Owner actions (external)
 
 | ID | Action | Needed by | Fallback until done |
 |---|---|---|---|
-| O-01 | Create the `sqllocks-shape` project and every `sqllocks-shape-*` plugin project on PyPI and TestPyPI, and configure trusted publishing for this repo | P8-04 | Release artifacts built and attested in CI, but not uploaded |
-| O-02 | Provide a Fabric workspace and a service principal as repo secrets (`FABRIC_*`) | P5-02, P6-07 live tests | Contract tests against recorded interactions |
-| O-03 | Provide an Azure Event Hubs namespace as secrets (`EVENTHUBS_*`) | P3-04, P5-02 live tests | Event Hubs emulator container |
-| O-04 | Enable branch protection on `main`, requiring the CI, gate and nightly-status checks | P0-06 | Gates enforced by CI only |
-| O-05 | After 1.0.0: add a deprecation notice to Spindle's README pointing to Shape | P8-04 | — |
+| O-01 | Create the PyPI and TestPyPI projects for `sqllocks-shape` and every `sqllocks-shape-*` plugin, and configure trusted publishing | publishing after G8 | Artifacts built and attested in CI, not uploaded |
+| O-02 | Fabric workspace and service principal as `FABRIC_*` secrets | live tests in P5-02 and P6-07 | Contract tests |
+| O-03 | Azure Event Hubs namespace as `EVENTHUBS_*` secrets | live tests in P3-04 and P5-02 | Emulator |
+| O-04 | Branch protection on `main` requiring CI | after P0-06 | CI only |
+| O-05 | If `sqllocks/shape` is private: a 4-vCPU larger runner (`ubuntu-latest-4-cores`) for benchmark jobs, since standard private runners have 2 vCPUs | P0-07 | Run gate benchmarks in a 4-core builder session and commit `results.json` with machine metadata |
+| O-06 | After 1.0.0: a deprecation notice in Spindle's README | after publishing | — |
 
 ---
 
-## 9. Spindle CLI parity map
+## 10. Spindle CLI parity map
 
-Spindle 3.0.1 commands, and their Shape equivalents. Every row needs an e2e test (G6).
+Spindle 3.0.1 commands and their Shape equivalents. Every row needs an e2e test by G6.
 
-| Spindle | Shape (aliases in brackets) | WP |
+| Spindle | Shape [aliases] | WP |
 |---|---|---|
-| `generate` | `shape generate` | P4-10 |
-| `describe`, `list`, `validate` | `shape describe`, `shape list` [`domains list`], `shape validate` | P4-10 |
-| `presets`, `composite` | `shape presets`, `shape composite` | P4-10, P6-01 |
-| `stream` | `shape stream` | P5-04 |
+| `generate` | `shape generate` (every `--format`: summary, csv, tsv, jsonl, parquet, excel, sql, delta; `sql-database` with `--auth`, `--connection-string`, `--write-mode`, `--batch-size`, `--staging-path` via `shape-fabric`) | P4-10, P4-06, P6-07a |
+| `describe`, `list`, `validate` | `shape describe`, `shape list`, `shape validate` | P4-10 |
+| `presets`, `composite` | `shape presets`, `shape composite` | P4-10, P6-01e |
+| `stream` | `shape stream` (`--table`, `--scale`, `--seed`, `--rate`, `--max-events`, `--duration`, `--out-of-order`, `--sink`, `--output`, `--mode`, `--realtime/--no-realtime`, `--burst`, `--anomaly-fraction`) | P5-04 |
 | `to-star`, `to-cdm` | `shape transform star\|cdm` [`to-star`, `to-cdm`] | P6-06 |
-| `learn`, `export-model` | `shape profile` + `shape generate --from` [`learn`, `export-model`] | P1-11, P4-08 |
-| `from-ddl` | `shape from-ddl` | P4-01 |
+| `learn` | `shape learn` (profile + SchemaBuilder) | P4-08 |
+| `export-model` | `shape fabric export-model` [`export-model`] (Power BI `.bim`) | P6-07c |
+| `from-ddl` | `shape from-ddl` (`--smart`, `--explain`, `-s`, `--domain`, `-o`) | P4-01b |
 | `continue`, `time-travel` | `shape continue`, `shape time-travel` | P6-05 |
-| `compare`, `verify` | `shape fidelity` [`compare`, `verify`] | P4-09 |
+| `compare` | `shape fidelity` [`compare`] | P4-09 |
+| `verify` | `shape verify` (gate runner) | P6-09 |
 | `mask` | `shape mask` | P6-03 |
-| `profile export\|import\|list\|validate\|capture\|diff` | `shape profile …` (same subcommands) | P1-11, P6-10 |
+| `profile capture\|diff` | `shape profile capture`, `shape profile diff` (Spindle `ExportedProfile` format) | P1-11 |
+| `profile export\|import\|list\|validate` | `shape profile export\|import\|list\|validate` | P6-10, P7-01 |
 | `profile registry list\|save\|delete\|tag\|diff\|reindex\|validate` | `shape registry …` [`profile registry …`] | P6-10 |
-| `publish`, `notebook`, `deploy-notebook`, `setup-fabric` | `shape fabric publish\|notebook\|deploy-notebook\|setup` [originals] | P6-07 |
+| `publish`, `notebook`, `deploy-notebook`, `setup-fabric` | `shape fabric publish\|notebook\|deploy-notebook\|setup` [originals] | P6-07c |
 | `demo init\|list\|run\|preflight\|cleanup\|status\|notebook\|report` | `shape demo …` | P6-12 |
-| *(new)* | `shape stream-profile`, `shape plugins`, `shape check`, `shape diff`, `shape inspect`, `shape conformance` | P1-11, P2-03, P3-05 |
+| `mcp_bridge` (JSON stdio, 17 commands) | `shape bridge`, plus the `shape-mcp` plugin | P6-11 |
+| *(new)* | `shape stream-profile`, `shape plugins`, `shape check`, `shape inspect`, `shape conformance`, `shape plan` | P1-11, P2-03, P3-05, P4-08 |
 
 ---
 
-## 10. Status tracker
+## 11. Status tracker
 
-Update this table in the same PR as the work. Status values: `todo`, `wip`, `done`.
+Update this table in the same commit as the work. Status values: `todo`, `wip`,
+`done`, `blocked` (blocked means an escalation has been logged in §2.3).
 
-| WP | Status | PR / commit | WP | Status | PR / commit |
+| WP | Status | Commit | WP | Status | Commit |
 |---|---|---|---|---|---|
-| P0-01 | todo | | P4-01 | todo | |
-| P0-02 | todo | | P4-02 | todo | |
-| P0-03 | todo | | P4-03 | todo | |
-| P0-04 | todo | | P4-04 | todo | |
-| P0-05 | todo | | P4-05 | todo | |
-| P0-06 | todo | | P4-06 | todo | |
-| P0-07 | todo | | P4-07 | todo | |
-| P1-01 | todo | | P4-08 | todo | |
-| P1-02 | todo | | P4-09 | todo | |
-| P1-03 | todo | | P4-10 | todo | |
-| P1-04 | todo | | P5-01 | todo | |
-| P1-05 | todo | | P5-02 | todo | |
-| P1-06 | todo | | P5-03 | todo | |
-| P1-07 | todo | | P5-04 | todo | |
-| P1-08 | todo | | P6-01 | todo | |
-| P1-09 | todo | | P6-02 | todo | |
-| P1-10 | todo | | P6-03 | todo | |
-| P1-11 | todo | | P6-04 | todo | |
-| P1-12 | todo | | P6-05 | todo | |
-| P2-01 | todo | | P6-06 | todo | |
-| P2-02 | todo | | P6-07 | todo | |
-| P2-03 | todo | | P6-08 | todo | |
-| P2-04 | todo | | P6-09 | todo | |
-| P2-05 | todo | | P6-10 | todo | |
-| P2-06 | todo | | P6-11 | todo | |
-| P3-01 | todo | | P6-12 | todo | |
-| P3-02 | todo | | P7-01 | todo | |
-| P3-03 | todo | | P7-02 | todo | |
-| P3-04 | todo | | P7-03 | todo | |
-| P3-05 | todo | | P7-04 | todo | |
-| P8-01 | todo | | P8-04 | todo | |
-| P8-02 | todo | | P8-05 | todo | |
-| P8-03 | todo | | | | |
+| P0-01 | todo | | P4-04c | todo | |
+| P0-02 | todo | | P4-04d | todo | |
+| P0-03 | todo | | P4-05 | todo | |
+| P0-04 | todo | | P4-06 | todo | |
+| P0-05 | todo | | P4-07 | todo | |
+| P0-06 | todo | | P4-08 | todo | |
+| P0-07 | todo | | P4-09 | todo | |
+| P1-01a | todo | | P4-10 | todo | |
+| P1-01b | todo | | P5-01 | todo | |
+| P1-02 | todo | | P5-02 | todo | |
+| P1-03 | todo | | P5-03 | todo | |
+| P1-04 | todo | | P5-04 | todo | |
+| P1-05 | todo | | P6-01a | todo | |
+| P1-06 | todo | | P6-01b | todo | |
+| P1-07 | todo | | P6-01c | todo | |
+| P1-08 | todo | | P6-01d | todo | |
+| P1-09 | todo | | P6-01e | todo | |
+| P1-10 | todo | | P6-02 | todo | |
+| P1-11 | todo | | P6-03 | todo | |
+| P1-12 | todo | | P6-04 | todo | |
+| P2-01 | todo | | P6-05 | todo | |
+| P2-02 | todo | | P6-06 | todo | |
+| P2-03 | todo | | P6-07a | todo | |
+| P2-04 | todo | | P6-07b | todo | |
+| P2-05 | todo | | P6-07c | todo | |
+| P2-06 | todo | | P6-08 | todo | |
+| P3-01 | todo | | P6-09 | todo | |
+| P3-02 | todo | | P6-10 | todo | |
+| P3-03 | todo | | P6-11 | todo | |
+| P3-04 | todo | | P6-12 | todo | |
+| P3-05 | todo | | P7-01 | todo | |
+| P4-01a | todo | | P7-02 | todo | |
+| P4-01b | todo | | P7-03 | todo | |
+| P4-02 | todo | | P7-04 | todo | |
+| P4-03 | todo | | P8-01 | todo | |
+| P4-04a | todo | | P8-02 | todo | |
+| P4-04b | todo | | P8-03 | todo | |
+| | | | P8-04 | todo | |
+| | | | P8-05 | todo | |
 
 | Gate | Status |
 |---|---|
@@ -1140,7 +1450,11 @@ Update this table in the same PR as the work. Status values: `todo`, `wip`, `don
 | G7 | todo |
 | G8 | todo |
 
+---
+
 ## Appendix A — Verified bug register
+
+Locations are given as `file::symbol (~line)`, verified on 2026-09-29. If lines drift, the symbol is authoritative. The last column is the phase that fixes the bug.
 
 Each entry names the file, the defect and the phase that fixes it. Every entry was
 reproduced by running code during the review.
@@ -1157,15 +1471,15 @@ reproduced by running code during the review.
 | P7 | `profile/numeric.py:30`, `sketches.py:13` | NaN fed to HLL/top-k; `1` and `1.0` hash differently | 1 |
 | P8 | artifact write | Any profile containing NaN cannot be saved (`SecurityError`) | 1 |
 | P9 | `profile/sketches.py:131-140` | KLL compaction of odd levels drifts total weight | 1 |
-| P10 | `capture/vectorized.py:21` | `null_count` hard-coded 0; Arrow nulls become NaN | 1 |
-| P11 | `profile/text_vectorized.py:10,38` | `None` becomes the string `'None'`; `null_count` 0 | 1 |
+| P10 | `capture/vectorized.py::_numeric` (~24) | `null_count` hard-coded 0; Arrow nulls become NaN | 1 |
+| P11 | `profile/text_vectorized.py::profile_text_semantic` (~10, ~34) | `None` becomes the string `'None'`; `null_count` 0 | 1 |
 | P12 | `capture/vectorized.py:52` | Fast and row paths emit different schemas (spurious drift) | 1 |
 | P13 | `capture/vectorized.py:79` | Text columns fall back to per-cell Python; vectorized text unused | 1 |
 | P14 | `contracts/core.py:66` | `unique` compares HLL estimate to exact rows (unique ids fail at 5k–30k rows) | 1 |
 | P15 | `contracts/core.py:35` | Null rate with `rows=0` divides by 1 | 1 |
 | P16 | `profile/bounded_dependencies.py:48` | Samples per row, not per group; inflates FD confidence | 1 |
 | P17 | `profile/dependencies.py`, `advanced.py`, `dependence.py` | Retain all rows despite "bounded" docstrings | 1 |
-| P18 | `artifact/shape_file.py:67`, `artifact/io.py:109` | Raw `KeyError`/zlib errors escape instead of `ArtifactError` | 1 |
+| P18 | `artifact/shape_file.py::read_shape` (~48–57), `artifact/io.py` (~109) | Raw `KeyError`/zlib errors escape instead of `ArtifactError` | 1 |
 | P19 | `artifact/*` | `.shape` authenticity is checksum-only; `secure.py` unused | 7 |
 | P20 | `api.py` | `load(save(x)) != x` (tuples → lists) | 1 |
 | P21 | `query/core.py:48` | `relationship("x","x")` matches any relationship containing `x` | 1 |
@@ -1174,10 +1488,10 @@ reproduced by running code during the review.
 | ID | Location | Defect | Phase |
 |---|---|---|---|
 | S1 | `streaming/platinum.py:198,332` | Python `hash()`: non-deterministic across processes; fast path bins differently | 3 |
-| S2 | `streaming/keyed.py:289-299` | "Bounded" state heap unbounded | 3 |
+| S2 | `streaming/keyed.py` (`_heap`, ~23–40) | "Bounded" state heap unbounded | 3 |
 | S3 | `streaming/windows.py:62` | `TumblingWindow` has `snapshot()` but no restore | 3 |
 | S4 | `connectors/qualification.py:61-70` | Reconnect replays already-yielded batches | 3 |
-| S5 | `streaming/vectorized.py:166` | `deduplicate_ids` loops per row | 3 |
+| S5 | `streaming/vectorized.py::deduplicate_ids` (~37) | `deduplicate_ids` loops per row | 3 |
 
 **Plugins**
 | ID | Location | Defect | Phase |
@@ -1190,24 +1504,24 @@ reproduced by running code during the review.
 **Generation**
 | ID | Location | Defect | Phase |
 |---|---|---|---|
-| G1 | `generation/address_vectorized.py:420`, `packs/address.py:152` | Seed added to row index (seed 1 = seed 0 shifted); negative seed overflows | 4 |
-| G2 | `generation/strategies.py:525-546` | `row_at` depends on call order with `FirstPerParent` | 4 |
-| G3 | `generation/certificate.py:224` | Missing column scores 1.0; empty reference passes | 4 |
+| G1 | `generation/address_vectorized.py::_u64` (~35–40), `packs/address.py::generate` (~64–68) | Seed added to row index (seed 1 = seed 0 shifted); negative seed overflows | 4 |
+| G2 | `generation/strategies.py::FirstPerParent.row_at` (~102–144) | `row_at` depends on call order with `FirstPerParent` | 4 |
+| G3 | `generation/certificate.py::_relative`, `certify` (~34–47, ~102) | Missing column scores 1.0; empty reference passes | 4 |
 | G4 | `cli/main.py:192` | `certify-shapes` always exits 0 | 4 |
 | G5 | `generation/future.py:11-14` | `missingness` never applied; `gaussian_copula` is plain MVN | 4 |
-| G6 | `generation/fidelity.py:365-378` | `plan_reconstruction` marks everything preserved without checking | 4 |
+| G6 | `generation/fidelity.py::plan_reconstruction` (~90–102) | `plan_reconstruction` marks everything preserved without checking | 4 |
 | G7 | `packs/address.py:71-76` | O(n × reference rows) generation | 4 |
-| G8 | `packs/domains.py:286` | Versions sorted as strings (1.9.0 > 1.10.0) | 2 |
+| G8 | `packs/domains.py` (registry `get`, ~49–58) | Versions sorted as strings (1.9.0 > 1.10.0) | 2 |
 
 **Privacy and security**
 | ID | Location | Defect | Phase |
 |---|---|---|---|
 | SEC1 | `privacy/advanced.py:5` | Laplace noise uses fixed `seed=0` | 0 |
-| SEC2 | `privacy/policy.py:84`, `privacy/release.py:37-40` | `release_for` always allows; min/max/quantiles of PII columns leak | 0 |
+| SEC2 | `privacy/policy.py::release_for` (~35), `privacy/release.py::redact_sensitive` (~38) | `release_for` always allows; min/max/quantiles of PII columns leak | 0 |
 | SEC3 | `privacy/policy.py:6` vs `privacy/classification.py:9` | Two inconsistent classification taxonomies | 7 |
 | SEC4 | `registry/local.py:45` | `checkout(name, hash)` returns objects belonging to other names | 0 |
 | SEC5 | `registry/local.py:26,32` | Name path traversal writes outside the registry root | 0 |
-| SEC6 | `hub/core.py:274-291,363` | Unencoded URL paths, no default auth, no body limit | 0 (cut) |
+| SEC6 | `hub/core.py` (URL building, ~118–137) | Unencoded URL paths, no default auth, no body limit | 0 (cut) |
 | SEC7 | `webapp/core.py:59` | Non-constant-time token compare, no default auth, exception text leaked | 0 (cut) |
 | SEC8 | `enterprise/core.py:44` | Hard-coded audit key | 0 (cut) |
 
@@ -1218,3 +1532,18 @@ reproduced by running code during the review.
 | X2 | Thin tests (301 asserts); no type-inference or boundedness tests | 0–1 |
 | X3 | Root qualification JSON files are captured sandbox output; docs overclaim; migration matrix is wrong | 0 |
 | X4 | `shape conformance` is three smoke tests (`validation/suite.py:14-36`) | 1 |
+
+**Removed with deleted modules (P0-04).** Each gets a regression test asserting
+`ModuleNotFoundError`.
+
+| ID | Location | Defect |
+|---|---|---|
+| RM1 | `distributed/core.py` | Merged `distinct_estimate` sums partition counts (15 instead of 3); crashes when `min` is missing; keeps the first `kind` when partitions disagree; drops quartiles and top-k |
+| RM2 | `etl/__init__.py` | Two different `ETLResult` classes; `isinstance` is False |
+| RM3 | `observability/core.py` | Prometheus label values are not escaped; duplicate `# TYPE` lines |
+| RM4 | `packages/core.py` | Version ordering is wrong; `TypeError` on mixed versions; no path-traversal check on names |
+| RM5 | `reference/core.py` | Object written before the immutability check, leaving orphans; no path-traversal check |
+| RM6 | `federation/core.py` | `TypeError` on a `None` mean; means weighted by counts that include nulls; `minimum_cohort` and `epsilon` never enforced |
+| RM7 | `execution/core.py` | Results returned in completion order, not input order |
+| RM8 | `explain.py` | `TypeError` when `distinct_estimate` is `None` |
+
