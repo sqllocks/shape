@@ -28,13 +28,13 @@ def timeline(versions: Any) -> Any:
 def view(shape: Any) -> Any:
     from shape.query import ShapeView
 
-    return ShapeView(shape)  # type: ignore[no-untyped-call]
+    return ShapeView(shape)
 
 
 def query(shape: Any, expression: Any) -> Any:
     from shape.query import query as _query
 
-    return _query(shape, expression)  # type: ignore[no-untyped-call]
+    return _query(shape, expression)
 
 
 def certify(target: Any, observed: Any, **kwargs: Any) -> Any:

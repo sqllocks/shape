@@ -38,7 +38,7 @@ def table_of(model: dict[str, Any], table: str | None = None) -> dict[str, Any]:
         return tables[table]  # type: ignore[no-any-return]
     if len(tables) != 1:
         raise ValueError(f"the model has {len(tables)} tables; name one of {sorted(tables)}")
-    return next(iter(tables.values()))  # type: ignore[no-any-return]
+    return next(iter(tables.values()))
 
 
 def columns_of(table: dict[str, Any]) -> dict[str, dict[str, Any]]:

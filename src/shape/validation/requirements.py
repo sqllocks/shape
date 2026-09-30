@@ -16,6 +16,7 @@ import re
 import tempfile
 import zipfile
 from collections.abc import Callable
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -129,8 +130,8 @@ def _model(columns: list[dict[str, Any]], rows: int) -> dict[str, Any]:
 
 
 def _engine_doc(mode: str, rows: int = 400, unique_text: bool = False) -> dict[str, Any]:
-    import pyarrow as pa
-    import pyarrow.parquet as pq
+    import pyarrow as pa  # type: ignore[import-untyped]
+    import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
     from shape.profile.engine import profile
 
@@ -321,7 +322,7 @@ def _sh2_011() -> None:
             with zipfile.ZipFile(_file(d), "w") as z:
                 z.writestr("manifest.json", '{"content_hashes":{}}')
                 z.writestr(name, b"x")
-            _raises(ArtifactError, lambda: read_artifact(_file(d)))
+            _raises(ArtifactError, lambda: read_artifact(_file(d)))  # type: ignore[no-untyped-call]
 
 
 @requirement("SH2-012")
@@ -410,17 +411,17 @@ def _sh2_016() -> None:
 def _sh2_017() -> None:
     from shape.spec import check_capabilities
 
-    verdict = check_capabilities({"mandatory_capabilities": ["core/1", "future/9"]})
+    verdict = check_capabilities({"mandatory_capabilities": ["core/1", "future/9"]})  # type: ignore[no-untyped-call]
     assert not verdict.compatible and verdict.unknown_mandatory == ("future/9",)
-    assert check_capabilities({"optional_capabilities": ["future/9"]}).compatible
+    assert check_capabilities({"optional_capabilities": ["future/9"]}).compatible  # type: ignore[no-untyped-call]
 
 
 @requirement("SH2-018")
 def _sh2_018() -> None:
     from shape.security import SecurityError, require_no_downgrade
 
-    _raises(SecurityError, lambda: require_no_downgrade("SENSITIVE", "PUBLIC"))
-    assert require_no_downgrade("PUBLIC", "SENSITIVE")
+    _raises(SecurityError, lambda: require_no_downgrade("SENSITIVE", "PUBLIC"))  # type: ignore[no-untyped-call]
+    assert require_no_downgrade("PUBLIC", "SENSITIVE")  # type: ignore[no-untyped-call]
 
 
 # ------------------------------------------------------------- contracts and compatibility
@@ -544,8 +545,9 @@ def _sh2_027() -> None:
 def _sh2_028() -> None:
     from shape.query import ShapeQueryError, query
 
+    model = _model([{"name": "x"}], 1)
     for text in ("nonsense", 'column("x").a-b', "rows; drop", 'relationship("a")', "column()"):
-        _raises(ShapeQueryError, lambda text=text: query(_model([{"name": "x"}], 1), text))
+        _raises(ShapeQueryError, partial(query, model, text))
 
 
 @requirement("SH2-029")
