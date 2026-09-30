@@ -1,11 +1,11 @@
 import importlib
-import json
-from pathlib import Path
+import pkgutil
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[2]
-MODS = json.loads((ROOT / "rq/torture_inventory.json").read_text())["modules"]
+import shape
+
+MODS = sorted(m.name for m in pkgutil.walk_packages(shape.__path__, "shape."))
 
 
 @pytest.mark.parametrize("name", MODS)
