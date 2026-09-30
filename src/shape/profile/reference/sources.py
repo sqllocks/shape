@@ -122,4 +122,7 @@ def _load_path(text: str, name: str | None, threads: int | None) -> tuple[str, l
 
 def _to_cols(kind: str, table: pa.Table) -> list[_Col]:
     # CSV keeps pandas.read_csv dtype semantics; everything else Table.to_pandas() semantics.
-    return _csv_cols(table) if kind == "csv" else _arrow_cols(table)
+    cols = _csv_cols(table) if kind == "csv" else _arrow_cols(table)
+    for c in cols:
+        c.strict = True
+    return cols

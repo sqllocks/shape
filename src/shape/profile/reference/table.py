@@ -215,7 +215,7 @@ def _sample_rows(
     if sample_rows is None or row_count <= sample_rows:
         return cols, row_count
     idx = pa.array(np.random.RandomState(42).choice(row_count, size=sample_rows, replace=False))
-    return [_Col(c.name, c.kind, c.arr.take(idx), c.tz) for c in cols], sample_rows
+    return [_Col(c.name, c.kind, c.arr.take(idx), c.tz, c.strict) for c in cols], sample_rows
 
 
 def _finish_table(

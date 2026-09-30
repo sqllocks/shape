@@ -103,8 +103,10 @@ rests on reasoning rather than on a test, or where the port is known to be narro
    uint64 up to 2**64-1, wider integers as Python-int object columns), and pandas' low-memory
    chunked inference is reproduced (chunks of the largest power of two below `2**20 // ncols`
    rows; a column whose chunks disagree becomes an object column of Python ints/floats/bools/
-   strings). `inf` in a float column makes Spindle raise `ValueError` (its whole-number test); so
-   does Shape, and the verifier checks the error category. EDGE: `x_csv_*`. Not modelled:
+   strings). `inf` in a float column makes Spindle raise `ValueError` (its whole-number test); Shape
+   raises the same for *file* sources, and the verifier checks the error category. In-memory
+   Arrow tables and DataFrames still profile such columns (std `NaN`, min `-inf`), which the
+   `.shape` artifact tests rely on. EDGE: `x_csv_*`. Not modelled:
    integers wider than 38 digits (`NotImplementedError`).
 3. **Parquet types: closed in P1-08.** Decimal, dictionary/categorical (unused categories and
    category order included), timezone-aware timestamps (wall-clock histograms, offset in

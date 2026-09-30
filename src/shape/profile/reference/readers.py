@@ -73,6 +73,8 @@ class _Col:
     kind: str
     arr: Any  # pa.ChunkedArray (or numpy for float)
     tz: str | None = None  # dt64 only: the Parquet column's time zone (arr holds UTC instants)
+    # file sources only: fail where Spindle's own profiler fails on the same file (P1-08)
+    strict: bool = False
 
 
 def _is_string_view(typ: pa.DataType) -> bool:

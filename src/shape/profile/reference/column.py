@@ -574,7 +574,7 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
         stype = "integer"
         numeric = np.array([float(int(v)) for v in non_null.to_pylist()], dtype=np.float64)
     elif kind == "float":
-        if n_nn:
+        if n_nn and c.strict:
             _require_finite(nn_np)
         if n_nn and np.all(nn_np == nn_np.astype(np.int64)):
             stype = "integer"
@@ -608,7 +608,8 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
                 ok = _try(lambda a: pc.cast(a, pa.float64()), uniq)
                 if ok:
                     u = pc.cast(uniq, pa.float64()).to_numpy()
-                    _require_finite(u)
+                    if c.strict:
+                        _require_finite(u)
                     stype = "integer" if np.all(u == u.astype(np.int64)) else "float"
                     numeric = pc.cast(non_null, pa.float64()).to_numpy()
                 else:
