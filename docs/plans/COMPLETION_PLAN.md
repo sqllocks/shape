@@ -1809,7 +1809,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 3 | P0-02 | done | c0c830d |
 | 4 | P0-03 | done | 519ab73 |
 | 5 | P0-04 | done (lead completed the deletions; builder was blocked by its permission guard) | be1c145 |
-| 6 | P0-05 | todo | |
+| 6 | P0-05 | done (builder c8aba56; lead finished the sign markers) | 692798e |
 | 7 | P0-06 | todo | |
 | 8 | P0-07 | todo | |
 | 9 | P1-01a | todo | |
