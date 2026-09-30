@@ -35,18 +35,12 @@ shape diff customers.shape customers_next.shape --fail-on-drift
 
 ```bash
 shape --version
-shape profile customers.csv --spindle-compat -o customers.profile.json   # Spindle's profile JSON
-shape profile capture data/ -o captured.json        # categorical shares only, no rows
-shape profile diff old.json new.json --threshold 0.2   # exit 1 when shape drift exceeds it
 shape inspect customers.shape                        # what a .shape file holds
 ```
 
-`shape profile capture` and `shape profile diff` write and print what `spindle profile
-capture` and `spindle profile diff` do, byte for byte, for CSV and Parquet input.
-
 ## What a `.shape` file contains
 
-A profile keeps real values from your data, as Spindle's profiler does: up to the 500
+A profile keeps real values from your data: up to the 500
 most frequent values per column with their counts, and each column's minimum and maximum.
 Treat a `.shape` file, its HTML report and its JSON summary as you would the source data,
 and don't share one from a sensitive table. A privacy-safe profile, with rare values

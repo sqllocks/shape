@@ -659,8 +659,8 @@ requirements:
   status: registered-not-independently-certified
 
 - id: SHAPE-COMPAT-001
-  title: "Every useful Spindle capability MUST receive a documented disposition: SUPPORTED, SUPERSEDED, PLANNED, or INTENTIONALLY-OMITTED."
-  text: "Every useful Spindle capability MUST receive a documented disposition: SUPPORTED, SUPERSEDED, PLANNED, or INTENTIONALLY-OMITTED."
+  title: "Every capability in the Shape capability map (PRODUCT_ARCHITECTURE section 21) MUST have a documented disposition: SUPPORTED, SUPERSEDED, PLANNED, or INTENTIONALLY-OMITTED."
+  text: "Every capability in the Shape capability map (PRODUCT_ARCHITECTURE section 21) MUST have a documented disposition: SUPPORTED, SUPERSEDED, PLANNED, or INTENTIONALLY-OMITTED."
   verify: [specification-review]
   status: registered-not-independently-certified
 
