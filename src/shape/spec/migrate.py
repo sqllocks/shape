@@ -103,7 +103,31 @@ def _column_from_v1(name: str, c: Any, rows: int) -> dict[str, Any]:
         out["quantiles"] = quant
     if isinstance(c.get("length"), Mapping):
         out["length"] = dict(c["length"])
+    if isinstance(c.get("classification"), str):
+        out["classification"] = c["classification"]
     out["error_models"] = _error_models(c.get("error_models"))
+    return out
+
+
+def _relationships_from_v1(raw: Any) -> list[dict[str, Any]]:
+    """v1 kept relationships as ``{kind: [{source, target, ...}]}``; v2 keeps a flat list whose
+    entries carry their ``kind``. Entries without a source and a target are dropped."""
+    if isinstance(raw, list):
+        items = [(str(x.get("kind", "relationship")), x) for x in raw if isinstance(x, Mapping)]
+    elif isinstance(raw, Mapping):
+        items = [
+            (str(kind), x)
+            for kind, group in raw.items()
+            if isinstance(group, (list, tuple))
+            for x in group
+            if isinstance(x, Mapping)
+        ]
+    else:
+        return []
+    out = []
+    for kind, x in items:
+        if isinstance(x.get("source"), str) and isinstance(x.get("target"), str):
+            out.append({**copy.deepcopy(dict(x)), "kind": kind})
     return out
 
 
@@ -132,6 +156,13 @@ def migrate_capture_v1(obj: Mapping[str, Any], name: str | None = None) -> dict[
         },
         "x_legacy": copy.deepcopy(dict(obj)),
     }
+    if relationships := _relationships_from_v1(obj.get("relationships")):
+        doc["relationships"] = relationships
+    raw_classes = obj.get("classifications")
+    if isinstance(raw_classes, Mapping):
+        classes = {str(k): v for k, v in raw_classes.items() if isinstance(v, str)}
+        if classes:
+            doc["classifications"] = classes
     return validate_model(doc)
 
 

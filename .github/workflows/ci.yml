@@ -30,6 +30,7 @@ jobs:
       - if: matrix.python == '3.11'
         run: mypy
       - run: python -m compileall -q src/shape
+      - run: python scripts/check_conformance_coverage.py
       # The Fabric demo tests need Java, PySpark and unixODBC, and the demo content tests need
       # the pinned Spindle checkout; both run in the fabric-demo job below.
       # --cov-fail-under is the measured coverage (86.55% on P0-06), rounded down.

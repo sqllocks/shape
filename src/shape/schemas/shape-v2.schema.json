@@ -13,7 +13,8 @@
     "mode": {"enum": ["exact", "bounded"]},
     "name": {"type": "string"},
     "tables": {"type": "object", "additionalProperties": {"$ref": "#/$defs/table"}},
-    "relationships": {"type": "array", "items": {"type": "object"}},
+    "relationships": {"type": "array", "items": {"$ref": "#/$defs/relationship"}},
+    "classifications": {"type": "object", "additionalProperties": {"type": "string"}},
     "metadata": {"type": "object"},
     "x_legacy": {"type": "object"}
   },
@@ -27,6 +28,15 @@
         "rows": {"type": "integer", "minimum": 0},
         "columns": {"type": "array", "items": {"$ref": "#/$defs/column"}},
         "primary_key": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "relationship": {
+      "type": "object",
+      "required": ["kind", "source", "target"],
+      "properties": {
+        "kind": {"type": "string", "minLength": 1},
+        "source": {"type": "string"},
+        "target": {"type": "string"}
       }
     },
     "count": {"type": "integer", "minimum": 0},
@@ -56,6 +66,7 @@
         "name": {"type": "string"},
         "arrow_type": {"type": "string"},
         "kind": {"enum": ["int", "float", "bool", "text", "temporal", "other"]},
+        "classification": {"type": "string"},
         "count": {"$ref": "#/$defs/count"},
         "null_count": {"$ref": "#/$defs/count"},
         "nan_count": {"$ref": "#/$defs/count"},

@@ -6,3 +6,47 @@ def test_drift():
     b = {"columns": {"x": {"kind": "numeric", "mean": 20, "null_count": 0}, "y": {"kind": "text"}}}
     d = compare(a, b)
     assert d[0].score == 1 and any(x.path == "columns.x.mean" for x in d)
+
+
+def _model(columns, rows=10, table="t"):
+    cols = [
+        {
+            "arrow_type": "x",
+            "kind": "float",
+            "count": rows,
+            "null_count": 0,
+            "error_models": {},
+            **c,
+        }
+        for c in columns
+    ]
+    return {
+        "schema_version": 2,
+        "engine": "t",
+        "mode": "exact",
+        "tables": {table: {"name": table, "rows": rows, "columns": cols}},
+    }
+
+
+def test_drift_reads_v2_models_with_the_v2_metric_names():
+    a = _model([{"name": "x", "mean": 10.0, "distinct": 100.0, "quantiles": {"0.5": 9.0}}])
+    b = _model([{"name": "x", "mean": 10.0, "distinct": 50.0, "quantiles": {"0.5": 18.0}}])
+    paths = {d.path: d.score for d in compare(a, b)}
+    assert paths == {"columns.x.distinct": 0.5, "columns.x.median": 0.5}
+
+
+def test_int_to_float_is_not_a_type_change_but_text_is():
+    a = _model([{"name": "x", "kind": "int"}])
+    assert compare(a, _model([{"name": "x", "kind": "float"}])) == []
+    changed = compare(a, _model([{"name": "x", "kind": "text"}]))
+    assert changed[0].path == "columns.x.kind" and changed[0].score == 1
+
+
+def test_drift_across_several_tables_prefixes_the_paths():
+    a = _model([{"name": "x", "mean": 1.0}])
+    b = _model([{"name": "x", "mean": 3.0}])
+    a["tables"]["u"] = {"name": "u", "rows": 1, "columns": []}
+    b["tables"]["v"] = {"name": "v", "rows": 1, "columns": []}
+    found = {d.path: d.reason for d in compare(a, b)}
+    assert found["tables.u"] == "table removed" and found["tables.v"] == "table added"
+    assert "tables.t.columns.x.mean" in found

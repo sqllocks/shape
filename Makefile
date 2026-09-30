@@ -10,6 +10,7 @@ check:
 	$(PYTHON) -m compileall -q src/shape
 	$(PYTHON) scripts/check_requirements.py
 	$(PYTHON) scripts/check_secrets.py
+	$(PYTHON) scripts/check_conformance_coverage.py
 	pytest -q -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric --ignore=tests/demo/content --cov=shape --cov-fail-under=86
 	pytest -q -m heavy tests/kernel tests/profile
 	SHAPE_KERNEL=python pytest -q tests/kernel

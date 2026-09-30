@@ -7,8 +7,10 @@ read through the migrator; nothing writes version 1 any more.
 
 ``write_model``/``read_model`` speak the v2 model. ``write_shape``/``read_shape`` are the
 entry points the v1 consumers still use: ``write_shape`` takes a v2 model or a v1 capture (it is
-migrated), ``read_shape`` returns the v1 document of a migrated capture (``legacy_view``). They
-go when those consumers move to v2 (P1-10).
+migrated), ``read_shape`` returns the v1 document of a migrated capture (``legacy_view``).
+Contracts, drift, diff, quality and query read the v2 model itself (P1-10); generation, privacy,
+streaming and the registry still read the v1 document, and these two names stay until they
+move.
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
 # Shape model v2 and the .shape format v2
 
-Status: P1-09. `docs/specs/SHAPE_1_0_GA.md` is renamed `SHAPE_2.md` and brought up to date in
-P1-10; this note is what that document will build on.
+Status: P1-09/P1-10. The normative statements are in `SHAPE_2.md`; this note describes the
+model and the file.
 
 ## The model
 
@@ -22,9 +22,14 @@ A column uses the profile engine's vocabulary: `kind` (`int float bool text temp
 `distinct_exact` and the error model say whether a figure is exact (exact mode) or bounded
 (sketches), which is what contract checks need (P14).
 
-`x_legacy` is the verbatim v1 document of a migrated capture. The v1 consumers (diff, drift,
-quality, contracts, query, relations, generation) still read that document; they move to the v2
-columns in P1-10, and `x_legacy` and `shape.spec.migrate.legacy_view` go with them.
+`x_legacy` is the verbatim v1 document of a migrated capture. Contracts, drift, diff, quality and
+query (and the relationship entries of `relations`) read the v2 columns, through
+`shape.spec.view` (P1-10); generation, privacy, streaming and the registry still read the v1
+document, so `x_legacy` and `shape.spec.migrate.legacy_view` stay until those move.
+
+`relationships` is a flat list of `{kind, source, target, ...}` entries (v1 grouped them by
+kind); `classifications` maps a field name to its level, and a column may carry its own
+`classification`.
 
 ## The file
 
