@@ -42,18 +42,47 @@ EDGE = [
     for v in ("", "_uuidpk")
     for ext in ("csv", "parquet")
 ]
-ALL = [
-    "d1.csv",
-    "d1.parquet",
-    "d2.csv",
-    "d2.parquet",
-    "d3.csv",
-    "d3.parquet",
-    "d4.csv",
-    "d4.parquet",
-    "mt",
-    "mt.parquet",
-] + EDGE
+# EDGE variants for the closed deviations 1-3 (datasets.py EDGE2; P1-08 acceptance)
+EDGE_DEVIATIONS = [
+    f"edge/x_{name}"
+    for name in (
+        "csv_inf.csv",
+        "csv_mixed_chunks.csv",
+        "csv_mixed_tail.csv",
+        "csv_nan_text.csv",
+        "csv_numbers.csv",
+        "dates_a.csv",
+        "dates_b.csv",
+        "dates_bad.csv",
+        "dates_c.csv",
+        "dates_d.csv",
+        "dates_mixed_fmt.csv",
+        "pq_duration.parquet",
+        "pq_list.parquet",
+        "pq_nested.parquet",
+        "pq_nulls.parquet",
+        "pq_types.parquet",
+        "pq_u64_big.parquet",
+        "time_ampm.csv",
+        "time_only.csv",
+    )
+]
+ALL = (
+    [
+        "d1.csv",
+        "d1.parquet",
+        "d2.csv",
+        "d2.parquet",
+        "d3.csv",
+        "d3.parquet",
+        "d4.csv",
+        "d4.parquet",
+        "mt",
+        "mt.parquet",
+    ]
+    + EDGE
+    + EDGE_DEVIATIONS
+)
 
 # field -> (rule, tolerance)
 RULES = {
