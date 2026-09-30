@@ -13,7 +13,8 @@ exists on October 3 (R1–R9 in `READINESS.md`). Don't show pre-made output for 
 don't type their planned commands on stage.
 
 **Stand-in data rule:** every "production" table here is synthetic retail data from the
-repo's stand-in generator (`STATUS.md`, "Demo data generator"). Say so on stage. No real
+repo's own generator, `demo/make_data.py`, built on Shape and reading nothing outside the
+repo (`STATUS.md`, "Demo data generator"). Say so on stage. No real
 production data.
 
 Every command here was run on 2026-09-30 through `verify_snippets.sh` (`STATUS.md`).
@@ -45,23 +46,20 @@ From the repo root, Python 3.11+, on `main` at or after `b2dd663` (slide 19's ex
 missing `.shape` needs it; the TestPyPI 0.9.0 wheel predates it):
 
 ```bash
-# Shape, and the prep tooling for the stand-in data (STATUS.md, "Demo data generator")
+# Shape
 python3 -m venv ~/.venvs/shape && ~/.venvs/shape/bin/pip install -e ".[dev]" deltalake
-source scripts/env.sh && bash benchmarks/*/setup_*.sh
 
-# Day-1/day-2 orders with documented drift (demo/DRIFT.md)
+# All demo data: day-1 and day-2 retail tables (documented drift, demo/DRIFT.md) and d2.
+# The day-1 customers, orders, products and returns tables are the "production" stand-in
+# (640,000 rows, 4 tables)
 source scripts/env.sh && ~/.venvs/shape/bin/python demo/make_data.py --out "$BENCH_DATA_DIR/demo"
-
-# The "production" stand-in: retail at medium scale (1,965,400 rows, 9 tables)
-source scripts/env.sh && ~/.venvs/shape/bin/python benchmarks/*/domain_1to1/generate.py \
-    --impl reference_port --domain retail --scale medium --seed 42
 
 # Every slide snippet still prints what the slides say; the delivery gate
 source scripts/env.sh && REQUIRE_READY=1 PY=~/.venvs/shape/bin/python bash docs/talks/shape-v1/verify_snippets.sh
 
 # Stage folder
 REPO=$PWD; mkdir -p ~/shape-demo/{prod,contracts,prerun} && cd ~/shape-demo
-cp "$HOME/bench-out/reference_port/retail/medium/seed42/"*.parquet prod/
+for t in customers orders products returns; do cp "$HOME/bench-data/demo/day1/$t.parquet" prod/; done
 cp "$HOME/bench-data/demo/day1/orders.parquet" orders_day1.parquet
 cp "$HOME/bench-data/demo/day2/orders.parquet" orders_day2.parquet
 cp "$HOME/bench-data/demo/day1/d2.parquet" d2.parquet   # C3: 1,000,000 rows x 20 columns
@@ -89,29 +87,34 @@ from the stand-in; it's synthetic, but handle it the way slide 20 says.
 In the REPL:
 
 ```python
-from pathlib import Path
-prod = {f.stem: str(f) for f in Path("prod").glob("*.parquet")}
+prod = {
+    "customer": "prod/customers.parquet",
+    "order": "prod/orders.parquet",
+    "product": "prod/products.parquet",
+    "return": "prod/returns.parquet",
+}
 p = shape.profile(prod, name="retail")
 shape.save(p, "retail_prod.shape")
 for r in p.summary()["relationships"]:
     print(r["child"], r["child_columns"], "->", r["parent"])
 ```
 
-Expect 8 lines, including `order ['customer_id'] -> customer` and
-`order_line ['product_id'] -> product`. Then:
+Expect 3 lines: `order ['customer_id'] -> customer`, `return ['order_id'] -> order` and
+`return ['product_id'] -> product`. Then:
 
 ```python
 open("retail_prod.html", "w").write(p.to_html())
 ```
 
 and open it in the browser (slide 11). Point at a fitted distribution, the `email` pattern
-on `customer.email`, the `loyalty_tier` enum, and the relationships. On `customer.email`,
-point at the top values: "real values; slide 20."
+on `customer.email`, the `segment` enum, and the relationships. On `customer.email`,
+point at the top values: "real-looking values; in production they'd be real; slide 20."
 
-**Say while it runs:** "Nine tables, just under two million rows. One call."
+**Say while it runs:** "Four tables, 640,000 rows. One call, and it finds three foreign keys."
 
-**Caveats:** `product.category_id` isn't linked to `product_category` (naming rule, slide 9).
-Don't quote the run time.
+**Caveats:** the dict names the tables `customer`, `order`, … because the rule (slide 9) links
+`customer_id` to a table called `customer`; with the plural file names it finds nothing.
+`product.category_id` has no parent table in the stand-in. Don't quote the run time.
 
 ## C2 — The production pipeline in Fabric (slides 16–19, ~3 min) — Path A only
 

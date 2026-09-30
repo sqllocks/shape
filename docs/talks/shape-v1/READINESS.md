@@ -20,9 +20,9 @@ no `TBD` or PENDING marker is left in the talk files and slide 22's live profile
 
 | Claim | Slides | How it's checked |
 |---|---|---|
-| Profile a whole schema (9 tables, 1,965,400 rows), 8 FKs detected; save/load round trip | 10 | asserted |
+| Profile a whole schema (4 tables, 640,000 rows), 3 FKs detected; save/load round trip | 10 | asserted |
 | Self-contained HTML report | 11 | no external URLs in `to_html()` |
-| A raw `.shape` holds real values | 20 | real customer emails found in `retail_prod.shape` |
+| A raw `.shape` holds real values | 20 | 502 synthetic customer emails found in `retail_prod.shape` |
 | README and Fabric runbook warn to treat `.shape` like the source data | 20 | the quoted sentences are grepped in `README.md` and `integrations/fabric/RUNBOOK.md` |
 | Contract check on day 2 fails with the two violations shown | 17 | asserted |
 | Diff: default threshold misses the +40% shift; 0.25 catches it | 18 | asserted |

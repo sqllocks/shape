@@ -11,13 +11,12 @@
 #           the talk still calls it planned: update the slides before claiming it.
 #
 #   source scripts/env.sh && python demo/make_data.py --out "$BENCH_DATA_DIR/demo"
-#   source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/*/domain_1to1/generate.py \
-#       --impl reference_port --domain retail --scale medium --seed 42
 #   PY=~/.venvs/shape/bin/python bash docs/talks/shape-v1/verify_snippets.sh
 #   REQUIRE_READY=1 PY=... bash docs/talks/shape-v1/verify_snippets.sh     # delivery gate
 #
 # Inputs: DEMO_DATA (default $BENCH_DATA_DIR/demo, from demo/make_data.py) and PROD_DATA
-# (default $BENCH_OUT_DIR/reference_port/retail/medium/seed42, the "production" stand-in).
+# (default $DEMO_DATA/day1: the four retail tables customers, orders, products, returns,
+# the "production" stand-in). All data is Shape-generated; nothing outside this repo is read.
 # Works in a scratch directory; writes nothing in the repo.
 set -euo pipefail
 
@@ -27,16 +26,18 @@ PY="${PY:-python}"
 BIN="$(dirname "$("$PY" -c 'import sys; print(sys.executable)')")"
 SHAPE="$BIN/shape"
 DEMO_DATA="${DEMO_DATA:-${BENCH_DATA_DIR:-$HOME/bench-data}/demo}"
-PROD_DATA="${PROD_DATA:-${BENCH_OUT_DIR:-$HOME/bench-out}/reference_port/retail/medium/seed42}"
+PROD_DATA="${PROD_DATA:-$DEMO_DATA/day1}"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
 test -f "$DEMO_DATA/day1/orders.parquet" || { echo "no demo data in $DEMO_DATA (run demo/make_data.py)"; exit 2; }
-test -f "$PROD_DATA/_SUCCESS" || { echo "no prod stand-in in $PROD_DATA (run generate.py, see header)"; exit 2; }
+for t in customers orders products returns; do
+    test -f "$PROD_DATA/$t.parquet" || { echo "no $t.parquet in $PROD_DATA (run demo/make_data.py)"; exit 2; }
+done
 cp "$DEMO_DATA/day1/orders.parquet" "$WORK/orders_day1.parquet"
 cp "$DEMO_DATA/day2/orders.parquet" "$WORK/orders_day2.parquet"
 mkdir -p "$WORK/contracts" "$WORK/prod" && cp "$REPO"/demo/contracts/*.json "$WORK/contracts/"
-cp "$PROD_DATA"/*.parquet "$WORK/prod/"
+for t in customers orders products returns; do cp "$PROD_DATA/$t.parquet" "$WORK/prod/"; done
 cd "$WORK"
 
 echo "== shape $("$PY" -c 'import shape; print(shape.__version__)') at $("$PY" -c 'import shape, os; print(os.path.dirname(shape.__file__))')"
@@ -48,22 +49,25 @@ echo "== slide 10: profile a whole schema; slide 11: the report; slide 20: raw p
 "$PY" - <<'EOF'
 # --- slide 10 ---------------------------------------------------------------
 import shape
-from pathlib import Path
-
-prod = {f.stem: str(f) for f in Path("prod").glob("*.parquet")}
+prod = {
+    "customer": "prod/customers.parquet",
+    "order": "prod/orders.parquet",
+    "product": "prod/products.parquet",
+    "return": "prod/returns.parquet",
+}
 p = shape.profile(prod, name="retail")
 shape.save(p, "retail_prod.shape")
 for r in p.summary()["relationships"]:
     print(r["child"], r["child_columns"], "->", r["parent"])
 
 rels = {(r["child"], r["child_columns"][0], r["parent"]) for r in p.summary()["relationships"]}
-assert ("order", "customer_id", "customer") in rels
-assert ("order_line", "order_id", "order") in rels
-assert ("order_line", "product_id", "product") in rels
-assert ("return", "order_id", "order") in rels
-assert len(p.summary()["tables"]) == 9
-assert sum(t["row_count"] for t in p.summary()["tables"].values()) == 1_965_400   # N-75
-assert len(rels) == 8   # NUMBERS.md N-76
+assert rels == {
+    ("order", "customer_id", "customer"),
+    ("return", "order_id", "order"),
+    ("return", "product_id", "product"),
+}   # N-76
+assert len(p.summary()["tables"]) == 4
+assert sum(t["row_count"] for t in p.summary()["tables"].values()) == 640_000   # N-75
 assert shape.load("retail_prod.shape").to_dict() == p.to_dict()
 
 # --- slide 11 ---------------------------------------------------------------
@@ -74,10 +78,10 @@ print("report ok")
 # --- slide 20: a raw profile contains real values ---------------------------
 import zipfile, pyarrow.parquet as pq
 raw = zipfile.ZipFile("retail_prod.shape").read("profile.json").decode()
-emails = [e for e in pq.read_table("prod/customer.parquet").column("email").to_pylist() if e]
-found = sum(1 for e in emails[:5000] if e in raw)
-print(f"raw .shape contains {found} of the first 5000 customer emails")
-assert found > 0, "slide 20 says raw profiles contain real values; update the slide"
+emails = [e for e in pq.read_table("prod/customers.parquet").column("email").to_pylist() if e]
+found = sum(1 for e in emails if e in raw)
+print(f"raw .shape contains {found} of {len(emails):,} customer email addresses")
+assert found == 502, "slide 20 quotes 502 (500 top values plus min and max); update the slide"
 EOF
 
 echo "== slide 20: the README and the Fabric runbook carry the warnings the slide quotes"

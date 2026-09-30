@@ -38,58 +38,33 @@ Run-to-run spread on this shared machine is real (D2 Parquet: 2.68 / 1.96 / 1.81
 talk quotes medians. To re-measure: `source scripts/env.sh && "$SHAPE_VENV/bin/python"
 benchmarks/measure_product.py`, then `python demo/build_benchmark_sheet.py`.
 
-## Checks run for this revision
+## Checks run for this revision (stand-in moved to Shape-generated data, 2026-09-30)
+
+Run with no external checkout on the machine and its environment variable unset.
 
 | Check | Result |
 |---|---|
-| the owner's case-insensitive `git grep` over `docs/talks` and the five demo-kit files | empty (output is in the final report) |
-| `pytest tests/demo/content/test_talk_kit.py` | see the final report |
-| New blocks of `verify_snippets.sh` (slide 22 profile, slide 13/21/23 numbers, sheet current), run against the real D2 file | pass |
-
-**Not re-run in this revision:** the full delivery gate and `pytest tests/demo/content/test_demo_data.py`.
-Both need the pinned external checkout and the stand-in data it produces, and that checkout
-isn't in this container (see the next section). Re-run them on the stage laptop.
+| `REQUIRE_READY=1 PY=~/.venvs/shape/bin/python bash docs/talks/shape-v1/verify_snippets.sh` | exit 0, "READY TO DELIVER" |
+| `pytest tests/demo/core tests/demo/content` | 133 passed |
+| the owner's case-insensitive `git grep` over `docs/talks` and `demo` | empty |
 
 ## Demo data generator
 
-`demo/make_data.py` generates the demo data (day-1 and day-2 retail tables, and the D2
-profiling file). Exactly what it depends on, and what a generator without that dependency
-would need:
+`demo/make_data.py` generates all demo data from Shape itself (numpy, pyarrow and Shape; nothing
+is read from outside the repo): day-1 and day-2 retail tables and the D2 profiling file
+(`demo/d2_table.py`). The "production" stand-in of slides 10 and 20 is its day-1
+`customers`, `orders`, `products` and `returns` tables (640,000 rows, `--scale medium`,
+seed 42; N-75). The slide-10 call names the tables `customer`, `order`, `product`, `return`,
+because the foreign-key rule links `customer_id` to a table called `customer`.
 
-**Depends on (run time, read only).** The pinned external checkout named in
-`scripts/env.sh` (the `SP…_ROOT` variable there, default a directory under `$HOME`; the
-script checks for its `sqllocks_*/` package directory). It loads
-`benchmarks/*/domain_1to1/port.py`, which does **not** hard-code the retail schema. From
-the checkout it reads:
+What changed on the talk with that data (all re-measured 2026-09-30, sources in `NUMBERS.md`):
 
-1. the retail domain source (`domains/retail/retail.py`) or the `retail_3nf.*.json` schema
-   next to it: tables, columns, dependency order, scales, weights, distribution
-   parameters, business rules; plus the `profiles/default.json` ratios;
-2. `domains/retail/reference_data/*.json` and `domains/_shared/reference_data`;
-3. the name pools in `engine/data/names.py` (first names, last names, street names, email
-   domains) and the city, state and street-suffix pools in `engine/strategies/native.py`.
-
-The generator also follows that checkout's generation logic (dependency order,
-per-strategy behaviour, null masking, business-rule fixing), so the demo data and the day-2
-drift are reproducible with seed 42.
-
-The D2 file does **not** depend on it: `benchmarks/*/profile_1to1/datasets.py` uses numpy and
-pyarrow only (used in this revision to measure).
-
-**What a checkout-free generator would take.**
-
-- Copy or re-author the inputs in items 1 to 3 into Shape: the retail schema as data, about
-  9 tables, and the pools and reference files. This needs a licence and provenance decision
-  from the owner, because it would copy another project's data into Shape.
-- Re-verify the output. Everything committed about the stand-in (1,965,400 rows, 9 tables,
-  8 FKs, the drift numbers N-70 to N-76, `tests/demo/content/test_demo_data.py`) would have
-  to be re-derived, because a different seed stream changes row-level values.
-- Alternatively, a smaller hand-written retail generator (9 tables, the 4 drifts) that
-  only needs to satisfy the talk's claims: row totals, 8 detected FKs, the day-2 violations.
-  That is a new build with its own tests. The talk doesn't need the identical data.
-
-Nothing was copied in this revision. `make_data.py`'s docstring and messages are shown
-nowhere on stage, so they're unchanged. **The lead decides.**
+| Was | Now |
+|---|---|
+| 9 tables, 1,965,400 rows, 8 foreign keys | 4 tables, 640,000 rows, 3 foreign keys (N-75, N-76) |
+| "real customer emails" in the `.shape` | 502 synthetic, email-shaped addresses (500 top values plus min and max) of 47,515 (N-77) |
+| `loyalty_tier` enum (slide 11, B5) | `segment` enum on `customer` |
+| `order_total` mean 110.93 → 155.30; shift 0.43 σ | mean 105.94 → 148.31; shift 0.39 σ (N-72, N-74) |
 
 ## ⚠️ Owner's to-do before October 3
 

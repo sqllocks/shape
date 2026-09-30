@@ -45,7 +45,7 @@ The pipeline on stage gates the `orders` table, so beat 6 shows the `orders` row
 `customers` and `products` rows only if you run those tables too.
 
 Caveat if you show `shape.diff` live: the default mean-shift threshold (0.5 standard
-deviations) does not flag the +40% `order_total` shift, which is 0.43 standard deviations.
+deviations) does not flag the +40% `order_total` shift, which is 0.39 standard deviations (0.3876).
 The demo diff uses `thresholds={"mean_shift_std": 0.25}`; the contract gate is unaffected.
 See `DRIFT.md`.
 

@@ -51,7 +51,7 @@ problem; fake data doesn't behave like production, so bugs escape.
 - 8: anatomy of a profile: column fields, table fields, dataset relationships (2 min).
 - 9: how the profiler decides: distribution fitting, pattern families, enums, PK/FK rules
   (2 min).
-- 10: **live C1**: profile all nine retail tables in one call; foreign keys detected
+- 10: **live C1**: profile all four retail tables in one call; foreign keys detected
   across tables (1 min + 2 min demo).
 - 11: reading the report, live in the browser (2 min).
 - 12: exact vs bounded, and canonical hashing; what's in the release and what's being
