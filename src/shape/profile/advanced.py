@@ -64,18 +64,22 @@ def infer_pattern(values, sample_limit=1000):
 
 
 def pearson(rows, left, right):
-    vals = [
-        (r.get(left), r.get(right))
-        for r in rows
-        if isinstance(r.get(left), (int, float)) and isinstance(r.get(right), (int, float))
-    ]
-    if len(vals) < 2:
+    """Pearson correlation of two numeric columns in one pass with O(1) memory (Welford-style
+    co-moments); the rows are never retained."""
+    n = 0
+    mx = my = sxx = syy = sxy = 0.0
+    for r in rows:
+        x, y = r.get(left), r.get(right)
+        if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+            continue
+        n += 1
+        dx = x - mx
+        mx += dx / n
+        dy = y - my
+        my += dy / n
+        sxx += dx * (x - mx)
+        syy += dy * (y - my)
+        sxy += dx * (y - my)
+    if n < 2:
         return 0.0
-    xs = [x for x, _ in vals]
-    ys = [y for _, y in vals]
-    mx = sum(xs) / len(xs)
-    my = sum(ys) / len(ys)
-    num = sum((x - mx) * (y - my) for x, y in vals)
-    dx = sum((x - mx) ** 2 for x in xs)
-    dy = sum((y - my) ** 2 for y in ys)
-    return num / sqrt(dx * dy) if dx and dy else 0.0
+    return sxy / sqrt(sxx * syy) if sxx and syy else 0.0

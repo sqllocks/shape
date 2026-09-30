@@ -209,14 +209,17 @@ def d2():
 
 
 D3_ROWS = 5_000_000
+D3_CHUNK = 1_000_000
 
 
-def d3(n: int | None = None):
-    n = n or D3_ROWS
-    rng = np.random.default_rng(3)
-    t = pa.table(
+def _d3_chunk(index: int, start: int, size: int) -> pa.Table:
+    """Rows ``start .. start + size`` of D3. Each chunk has its own fixed seed, so the file is
+    deterministic for any row count and is written without holding it whole in memory."""
+    n = size
+    rng = np.random.default_rng([3, index])
+    return pa.table(
         {
-            "event_id": pa.array(np.arange(n)),
+            "event_id": pa.array(np.arange(start, start + n)),
             "user_ref": pa.array(rng.integers(1, 200_000, n)),
             "latency_ms": pa.array(np.round(rng.normal(250, 40, n), 3)),
             "bytes": pa.array(np.round(rng.lognormal(8, 1.2, n), 1)),
@@ -233,7 +236,31 @@ def d3(n: int | None = None):
             "discount": _with_nulls(pa.array(np.round(rng.uniform(0, 0.5, n), 4)), rng, 0.3),
         }
     )
-    write(t, "d3")
+
+
+def d3(n: int | None = None):
+    n = n or D3_ROWS
+    OUT.mkdir(parents=True, exist_ok=True)
+    csv_writer = pq_writer = None
+    try:
+        for index, start in enumerate(range(0, n, D3_CHUNK)):
+            chunk = _d3_chunk(index, start, min(D3_CHUNK, n - start))
+            text = _csv_table(chunk)
+            if csv_writer is None:
+                csv_writer = pacsv.CSVWriter(
+                    OUT / "d3.csv",
+                    text.schema,
+                    write_options=pacsv.WriteOptions(quoting_style="none"),
+                )
+                pq_writer = pq.ParquetWriter(OUT / "d3.parquet", chunk.schema)
+            csv_writer.write_table(text)
+            pq_writer.write_table(chunk)
+    finally:
+        if csv_writer is not None:
+            csv_writer.close()
+        if pq_writer is not None:
+            pq_writer.close()
+    print(f"wrote d3: {n:,} x 10")
 
 
 def d4():

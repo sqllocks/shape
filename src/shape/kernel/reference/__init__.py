@@ -50,3 +50,8 @@ def buffer_addresses(batch: Any) -> list[int]:
 def num_rows(batch: Any) -> int:
     """Row count of a record batch."""
     return int(_as_batch(batch).num_rows)
+
+
+def set_threads(n: int = 0) -> int:
+    """The reference kernel is single-threaded; reports 1."""
+    return 1

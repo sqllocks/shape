@@ -50,6 +50,17 @@ fn hash_array(py: Python<'_>, array: PyArray, seed: u64) -> PyResult<pyo3_arrow:
     Ok(PyArray::from_array_ref(std::sync::Arc::new(out)))
 }
 
+/// Size the global rayon pool (first call wins; later calls only report). ``0`` means all
+/// cores. Returns the number of threads the kernel will use.
+#[pyfunction]
+#[pyo3(signature = (n = 0))]
+fn set_threads(n: usize) -> usize {
+    let _ = rayon::ThreadPoolBuilder::new()
+        .num_threads(n)
+        .build_global();
+    rayon::current_num_threads()
+}
+
 /// The kernel version (equal to the Python package version).
 #[pyfunction]
 fn version() -> &'static str {
@@ -85,6 +96,7 @@ fn _kernel(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(buffer_addresses, m)?)?;
     m.add_function(wrap_pyfunction!(num_rows, m)?)?;
     m.add_function(wrap_pyfunction!(hash_array, m)?)?;
+    m.add_function(wrap_pyfunction!(set_threads, m)?)?;
     Ok(())
 }
 

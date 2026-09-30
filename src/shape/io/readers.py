@@ -160,9 +160,9 @@ def _resolve_type(t: Any) -> Any:
     raise ReaderError(f"cannot use {t!r} as a column type")
 
 
-def _read_csv_table(
+def _csv_options(
     path: Path, opts: CsvOptions, columns: list[str] | None, schema: pa.Schema | None
-) -> pa.Table:
+) -> tuple[Any, Any, Any]:
     delimiter = opts.delimiter or ("\t" if _strip_compression(path) == ".tsv" else ",")
     ro = pacsv.ReadOptions(
         use_threads=opts.use_threads,
@@ -189,11 +189,29 @@ def _read_csv_table(
         kwargs["timestamp_parsers"] = ["@@never%Y"]
     if columns:
         kwargs["include_columns"] = columns
-    co = pacsv.ConvertOptions(**kwargs)
+    return ro, po, pacsv.ConvertOptions(**kwargs)
+
+
+def _csv_streams(path: Path, opts: CsvOptions) -> bool:
+    return bool(opts.stream or (opts.stream is None and path.stat().st_size > opts.stream_above))
+
+
+def _open_csv_stream(
+    path: Path, opts: CsvOptions, columns: list[str] | None, schema: pa.Schema | None
+) -> Any:
+    """A streaming CSV reader: types come from the first block, and memory stays bounded."""
+    ro, po, co = _csv_options(path, opts, columns, schema)
     try:
-        if opts.stream or (opts.stream is None and path.stat().st_size > opts.stream_above):
-            reader = pacsv.open_csv(path, read_options=ro, parse_options=po, convert_options=co)
-            return reader.read_all()
+        return pacsv.open_csv(path, read_options=ro, parse_options=po, convert_options=co)
+    except pa.ArrowInvalid as exc:
+        raise ReaderError(f"cannot parse {path} as CSV: {exc}") from exc
+
+
+def _read_csv_table(
+    path: Path, opts: CsvOptions, columns: list[str] | None, schema: pa.Schema | None
+) -> pa.Table:
+    ro, po, co = _csv_options(path, opts, columns, schema)
+    try:
         return pacsv.read_csv(path, read_options=ro, parse_options=po, convert_options=co)
     except pa.ArrowInvalid as exc:
         raise ReaderError(f"cannot parse {path} as CSV: {exc}") from exc
@@ -322,6 +340,8 @@ def _files_source(
         out_schema = _ipc_schema(paths[0])
         if columns:
             out_schema = pa.schema([out_schema.field(c) for c in columns])
+    elif kind == "csv" and _csv_streams(paths[0], csv):
+        out_schema = _open_csv_stream(paths[0], csv, columns, schema).schema
     else:
         first_table.append(whole(paths[0]))
         out_schema = first_table[0].schema
@@ -337,6 +357,9 @@ def _files_source(
                     for raw in _ipc_batches(p)
                     for b in _slice(raw.select(columns) if columns else raw, size)
                 )
+            elif kind == "csv" and _csv_streams(p, csv):
+                reader = _open_csv_stream(p, csv, columns, out_schema if i else schema)
+                stream = (b for raw in reader for b in _slice(raw, size))
             else:
                 table = first_table[0] if i == 0 and first_table else whole(p)
                 stream = _table_batches(table, size)
