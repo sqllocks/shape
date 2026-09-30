@@ -33,3 +33,11 @@ the demo CLI flag `--spindle-root` and its tests under `tests/demo/content`, whi
 (section 12.5) reserve; I did not touch them. Until these and the three docs files above are
 clean, `check_user_facing.py` (and therefore `make check` and the CI `test` job) exits 1 by
 design; the gate was not relaxed.
+
+## Unblocked (lead, 2026-09-30 7:20 PM EDT)
+- The lead made the refused edits (cd15b21: README, PRODUCT_ARCHITECTURE section 21,
+  SHAPE-COMPAT-001 reworded with its ID kept) and merged main (5520b8a), which brings the
+  Spindle-free demo generator (no `--spindle-root`, no SPINDLE_ROOT) and the reworked talk kit.
+- `python scripts/check_user_facing.py` prints "check_user_facing: clean" at 5520b8a; the suite
+  passes (1025). Close P1-14 against its §7 acceptance (verify.py --impl shape on the default
+  datasets, both kernel modes) and carry on to G1.
