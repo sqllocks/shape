@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "shape_gate_notebook"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "e8164126-042a-5277-8a40-030754e08d14"
+  }
+}

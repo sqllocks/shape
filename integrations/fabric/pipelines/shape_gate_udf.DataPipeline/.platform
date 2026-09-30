@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "shape_gate_udf"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "ef58271b-1473-5dab-9214-72b01b5fdb1d"
+  }
+}
