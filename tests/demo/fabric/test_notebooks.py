@@ -13,8 +13,15 @@ import pytest
 from conftest import CONTRACT, NOTEBOOKS, make_orders, run_notebook  # noqa: F401
 
 EXIT_KEYS = {
-    "table", "rows", "passed", "violations", "drifted", "changes", "artifactPath",
-    "sampled", "truncated",
+    "table",
+    "rows",
+    "passed",
+    "violations",
+    "drifted",
+    "changes",
+    "artifactPath",
+    "sampled",
+    "truncated",
 }
 NOTEBOOK_FILES = ["shape_setup.ipynb", "shape_profile.ipynb", "shape_profile_spark.ipynb"]
 PY_NB = NOTEBOOKS / "shape_profile.ipynb"
@@ -51,7 +58,9 @@ def _check_exit(raw: str | None, lakehouse: Path) -> dict:
 
 
 def test_generated_notebooks_are_current():
-    spec = importlib.util.spec_from_file_location("build_notebooks", NOTEBOOKS / "build_notebooks.py")
+    spec = importlib.util.spec_from_file_location(
+        "build_notebooks", NOTEBOOKS / "build_notebooks.py"
+    )
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     for name, nb in mod.build().items():
@@ -79,9 +88,14 @@ def test_parameters_cell_and_exit_placement(name):
     # exit: exactly once, in the last cell, at top level, never inside try/except
     calls = 0
     for c in code:
-        tree = ast.parse("\n".join(ln for ln in c.source.splitlines() if not ln.lstrip().startswith("%")))
+        tree = ast.parse(
+            "\n".join(ln for ln in c.source.splitlines() if not ln.lstrip().startswith("%"))
+        )
         for node in ast.walk(tree):
-            if isinstance(node, ast.Call) and ast.unparse(node.func) == "notebookutils.notebook.exit":
+            if (
+                isinstance(node, ast.Call)
+                and ast.unparse(node.func) == "notebookutils.notebook.exit"
+            ):
                 calls += 1
                 assert c is code[-1]
                 assert node in [getattr(s, "value", None) for s in tree.body]
@@ -145,15 +159,21 @@ def test_fail_on_drift_string_from_pipeline(lakehouse):
     raw, _ = run_notebook(PY_NB, lakehouse, _params("orders_day1", failOnDrift="true"))
     assert _check_exit(raw, lakehouse)["passed"] is True
     # no contract, only drift: fails only because failOnDrift is on
-    on, _ = run_notebook(PY_NB, lakehouse, _params("orders_day2", contractPath="", failOnDrift="True"))
-    off, _ = run_notebook(PY_NB, lakehouse, _params("orders_day2", contractPath="", failOnDrift="false"))
+    on, _ = run_notebook(
+        PY_NB, lakehouse, _params("orders_day2", contractPath="", failOnDrift="True")
+    )
+    off, _ = run_notebook(
+        PY_NB, lakehouse, _params("orders_day2", contractPath="", failOnDrift="false")
+    )
     on_out, off_out = _check_exit(on, lakehouse), _check_exit(off, lakehouse)
     assert on_out["passed"] is False and on_out["violations"][0]["rule"] == "drift"
     assert off_out["passed"] is True and off_out["drifted"] is True
 
 
 def test_no_contract_no_baseline(lakehouse):
-    raw, _ = run_notebook(PY_NB, lakehouse, _params("orders_day2", contractPath="", baselinePath=""))
+    raw, _ = run_notebook(
+        PY_NB, lakehouse, _params("orders_day2", contractPath="", baselinePath="")
+    )
     out = _check_exit(raw, lakehouse)
     assert out["passed"] is True and out["drifted"] is False and out["changes"] == []
 
@@ -193,7 +213,9 @@ def spark(tmp_path_factory):
         .appName("shape-l2-tests")
         .config("spark.sql.warehouse.dir", str(wh))
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-        .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+        .config(
+            "spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog"
+        )
         .config("spark.ui.enabled", "false")
         .config("spark.sql.shuffle.partitions", "2")
     )
@@ -228,8 +250,11 @@ def test_spark_notebook_matches_python_notebook(spark, spark_tables, table):
 def test_spark_notebook_samples_above_row_limit(spark, spark_tables):
     lh = spark_tables
     raw, ns = run_notebook(
-        SPARK_NB, lh, _params("orders_day1", contractPath="", baselinePath=""),
-        {"spark": spark}, {"DRIVER_ROW_LIMIT = 5_000_000": "DRIVER_ROW_LIMIT = 500"},
+        SPARK_NB,
+        lh,
+        _params("orders_day1", contractPath="", baselinePath=""),
+        {"spark": spark},
+        {"DRIVER_ROW_LIMIT = 5_000_000": "DRIVER_ROW_LIMIT = 500"},
     )
     out = _check_exit(raw, lh)
     assert out["sampled"] is True and out["rows"] == 2000  # rows = true row count

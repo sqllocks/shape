@@ -223,7 +223,9 @@ class DiffResult:
         return {"drifted": self.drifted, "changes": self.changes}
 
 
-def diff(baseline: Profile, current: Profile, *, thresholds: dict[str, Any] | None = None) -> DiffResult:
+def diff(
+    baseline: Profile, current: Profile, *, thresholds: dict[str, Any] | None = None
+) -> DiffResult:
     b, c = baseline._d["columns"], current._d["columns"]
     out: list[dict[str, Any]] = []
 

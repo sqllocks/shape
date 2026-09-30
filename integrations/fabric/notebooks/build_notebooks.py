@@ -16,7 +16,9 @@ WHEEL = "sqllocks_shape-0.9.0-py3-none-any.whl"
 # --------------------------------------------------------------------------- setup
 
 SETUP_CELLS = [
-    ("markdown", """# Shape demo: load the demo Parquet files into Delta tables
+    (
+        "markdown",
+        """# Shape demo: load the demo Parquet files into Delta tables
 
 Run once after uploading the demo data (produced by `demo/make_data.py`) to the
 lakehouse `Files/demo/` folder. Every `*.parquet` file (one folder level down is also
@@ -25,9 +27,11 @@ accepted) becomes a Delta table named after the file, for example
 `Files/demo/orders.parquet` becomes `orders`.
 
 Attach the default lakehouse before running. Uses the preinstalled `deltalake` package.
-"""),
-    ("code", """import os
-from pathlib import Path
+""",
+    ),
+    (
+        "code",
+        """from pathlib import Path
 
 import pyarrow.parquet as pq
 from deltalake import write_deltalake
@@ -35,9 +39,12 @@ from deltalake import write_deltalake
 LAKEHOUSE = "/lakehouse/default"
 DEMO_DIR = Path(LAKEHOUSE) / "Files" / "demo"
 TABLES_DIR = Path(LAKEHOUSE) / "Tables"
-"""),
-    ("code", """def table_name_for(parquet_file: Path) -> str:
-    \"\"\"Files/demo/<sub>/<name>.parquet -> <name>_<sub>; Files/demo/<name>.parquet -> <name>.\"\"\"
+""",
+    ),
+    (
+        "code",
+        """def table_name_for(parquet_file: Path) -> str:
+    \"\"\"<sub>/<n>.parquet -> <n>_<sub>;  <n>.parquet -> <n>.\"\"\"
     rel = parquet_file.relative_to(DEMO_DIR)
     parts = [p.lower().replace("-", "_").replace(" ", "_") for p in rel.parts]
     stem = Path(parts[-1]).stem
@@ -49,8 +56,11 @@ if not files:
     raise FileNotFoundError(
         f"No .parquet files under {DEMO_DIR}. Upload the demo data to Files/demo/ first."
     )
-"""),
-    ("code", """created = []
+""",
+    ),
+    (
+        "code",
+        """created = []
 for f in files:
     name = table_name_for(f)
     table = pq.read_table(f)
@@ -59,7 +69,8 @@ for f in files:
 
 for row in created:
     print(f"{row['table']:<32} {row['rows']:>10,} rows   <- {row['source']}")
-"""),
+""",
+    ),
 ]
 
 # --------------------------------------------------------------- shared profile cells
@@ -75,7 +86,7 @@ failOnDrift = False       # True: drift against the baseline also fails the gate
 
 HELPERS = """import json
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import shape
@@ -97,7 +108,7 @@ def _resolve(path: str) -> str:
 
 failOnDrift = _as_bool(failOnDrift)
 safe_name = str(tableName).replace(".", "_")
-stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
 out_rel = f"{outputDir.strip('/')}/{safe_name}/{stamp}"
 out_dir = Path(FILES) / out_rel
 MAX_LISTED = 100  # keep the exit value small (well under 1 MB)
@@ -164,7 +175,9 @@ notebookutils.notebook.exit(json.dumps(result, default=str))
 # ------------------------------------------------------------------ python notebook
 
 PYTHON_CELLS = [
-    ("markdown", """# Shape: profile, check and diff a lakehouse table (Python notebook)
+    (
+        "markdown",
+        """# Shape: profile, check and diff a lakehouse table (Python notebook)
 
 Kernel: **Python 3.11 or 3.12** (not PySpark). Reads the Delta table with `deltalake`,
 profiles it with Shape, checks it against a contract, optionally diffs it against a
@@ -174,15 +187,21 @@ HTML report, and returns a compact JSON result to the calling pipeline.
 The exit value is `{table, rows, passed, violations, drifted, changes, artifactPath}`
 (plus `sampled` and `truncated`). `notebookutils.notebook.exit` is the last statement
 and is deliberately outside any `try`/`except`.
-"""),
-    ("code", "%%configure\n{\"vCores\": 8}\n"),
-    ("code", f"""# Wheel uploaded to this notebook's built-in resources folder ("Resources" > "builtin").
+""",
+    ),
+    ("code", '%%configure\n{"vCores": 8}\n'),
+    (
+        "code",
+        f"""# Wheel uploaded to this notebook's built-in resources folder ("Resources" > "builtin").
 # Alternative once the package is on PyPI:  %pip install sqllocks-shape==0.9.0
 %pip install builtin/{WHEEL}
-"""),
+""",
+    ),
     ("code", PARAMETERS),
     ("code", HELPERS),
-    ("code", """from deltalake import DeltaTable
+    (
+        "code",
+        """from deltalake import DeltaTable
 
 delta_dir = f"{LAKEHOUSE}/Tables/{str(tableName).replace('.', '/')}"
 table = DeltaTable(delta_dir).to_pyarrow_table()
@@ -190,7 +209,8 @@ total_rows = table.num_rows
 sampled = False  # the Python notebook profiles every row
 profile = shape.profile(table, name=str(tableName))
 print(f"Profiled {total_rows:,} rows x {table.num_columns} columns from {delta_dir}")
-"""),
+""",
+    ),
     ("code", CHECK_AND_DIFF),
     ("code", WRITE_ARTIFACTS),
     ("code", DISPLAY),
@@ -201,7 +221,9 @@ print(f"Profiled {total_rows:,} rows x {table.num_columns} columns from {delta_d
 # -------------------------------------------------------------------- spark notebook
 
 SPARK_CELLS = [
-    ("markdown", """# Shape: profile, check and diff a lakehouse table (PySpark notebook)
+    (
+        "markdown",
+        """# Shape: profile, check and diff a lakehouse table (PySpark notebook)
 
 Attach the **Shape Environment** (Runtime 2.0, custom library `sqllocks_shape` wheel;
 see `integrations/fabric/environment/README.md`) and the default lakehouse. Nothing is
@@ -213,22 +235,32 @@ the next cells): above it, the table is sampled and the result carries `sampled:
 The distributed bounded mode arrives in PF-02.
 
 Same parameters, artifacts and exit value as `shape_profile.ipynb`.
-"""),
+""",
+    ),
     ("code", PARAMETERS),
-    ("code", """# Driver-side profiling limit. The Arrow copy of the table lives in driver memory
+    (
+        "code",
+        HELPERS.replace("import json\n", "import inspect\nimport json\n").replace(
+            "import shape\n", "import pyarrow as pa\n\nimport shape\n"
+        )
+        + """
+# Driver-side profiling limit. The Arrow copy of the table lives in driver memory
 # (roughly 100-200 bytes per cell for mixed types), so the default is 5,000,000 rows,
 # which is comfortable on a Medium (8 vCore / 64 GB) node. Lower it for wide tables.
 DRIVER_ROW_LIMIT = 5_000_000
 SAMPLE_SEED = 42
-""" + HELPERS.replace("import shape\n", "import inspect\n\nimport shape\nimport pyarrow as pa\n")),
-    ("code", """df = spark.read.table(str(tableName))
+""",
+    ),
+    (
+        "code",
+        """df = spark.read.table(str(tableName))  # noqa: F821 (`spark` is predefined in Fabric)
 total_rows = df.count()
 sampled = total_rows > DRIVER_ROW_LIMIT
 if sampled:
     df = df.sample(withReplacement=False, fraction=DRIVER_ROW_LIMIT / total_rows, seed=SAMPLE_SEED)
 
 # Spark 4 (Runtime 2.0) has DataFrame.toArrow(); Spark 3.5 (Runtime 1.3) goes through pandas.
-if int(spark.version.split(".")[0]) >= 4:
+if int(spark.version.split(".")[0]) >= 4:  # noqa: F821
     table = df.toArrow()
 else:
     table = pa.Table.from_pandas(df.toPandas(), preserve_index=False)
@@ -239,8 +271,10 @@ kwargs = {"name": str(tableName)}
 if "exact" in inspect.signature(shape.profile).parameters:
     kwargs["exact"] = True
 profile = shape.profile(table, **kwargs)
-print(f"Profiled {table.num_rows:,} of {total_rows:,} rows (sampled={sampled}); Spark {spark.version}")
-"""),
+print(f"Profiled {table.num_rows:,} of {total_rows:,} rows (sampled={sampled})")
+print(f"Spark {spark.version}")  # noqa: F821
+""",
+    ),
     ("code", CHECK_AND_DIFF),
     ("code", WRITE_ARTIFACTS),
     ("code", DISPLAY),
