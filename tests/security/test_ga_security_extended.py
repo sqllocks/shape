@@ -12,6 +12,8 @@ from shape.privacy import release_for
 from shape.security import SecurityError, scan_secrets, validate_structure
 from shape.security.crypto import generate_ed25519_keypair
 
+pytestmark = pytest.mark.sign  # needs the optional cryptography package ([sign])
+
 
 def _zip(path, members):
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
