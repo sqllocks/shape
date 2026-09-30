@@ -1808,7 +1808,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 2 | P0-01 | done | d627836 |
 | 3 | P0-02 | todo | |
 | 4 | P0-03 | done | 519ab73 |
-| 5 | P0-04 | todo | |
+| 5 | P0-04 | done (lead completed the deletions; builder was blocked by its permission guard) | PENDING |
 | 6 | P0-05 | todo | |
 | 7 | P0-06 | todo | |
 | 8 | P0-07 | todo | |
