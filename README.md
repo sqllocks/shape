@@ -33,9 +33,17 @@ shape check customers.shape contract.json          # exit code 1 if the contract
 shape diff customers.shape customers_next.shape --fail-on-drift
 ```
 
+## What's in early access
+
+Profiling, contracts (`check`) and drift (`diff`) are the supported surface, in Python
+and in the `shape` CLI. Generating data from a profile is planned but not in this release:
+`shape.generate()` raises `NotImplementedError` for a profile, and the legacy CLI commands
+`plan` and `query` exit 2 for one. Other legacy commands (such as `generate` and `fidelity`)
+are experimental and will change.
+
 ## What a `.shape` file contains
 
-A profile keeps real values from your data, as Spindle's profiler does: up to the 500
+A profile keeps real values from your data: up to the 500
 most frequent values per column with their counts, and each column's minimum and maximum.
 Treat a `.shape` file, its HTML report and its JSON summary as you would the source data,
 and don't share one from a sensitive table. A privacy-safe profile, with rare values
