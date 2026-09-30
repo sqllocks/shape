@@ -1723,7 +1723,7 @@ That is 27 in total, which is the hub, the web app and 25 others (D-08).
 
 | ID | Action | Needed by | Fallback until done |
 |---|---|---|---|
-| O-01 | Create the PyPI and TestPyPI projects for `sqllocks-shape` and every `sqllocks-shape-*` plugin, and configure trusted publishing | publishing after G8 | Artifacts built and attested in CI, not uploaded |
+| O-01 | PyPI trusted publishing for `sqllocks-shape`: on pypi.org (and optionally test.pypi.org), add a **pending publisher** with owner `sqllocks`, repository `shape`, workflow `publish.yml` and environment `pypi` (`testpypi` on TestPyPI); in GitHub, create the environments `pypi` and `testpypi` with the owner as required reviewer. Plugin projects are added the same way later. | DM-03b (early access); publishing after G8 | The demo uses the manual wheel upload (runbook) |
 | O-02 | Fabric workspace and service principal as `FABRIC_*` secrets | live tests in P5-02 and P6-07 | Contract tests |
 | O-03 | Azure Event Hubs namespace as `EVENTHUBS_*` secrets | live tests in P3-04 and P5-02 | Emulator |
 | O-04 | Branch protection on `main` requiring CI | after P0-06 | CI only |
@@ -2013,7 +2013,7 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
 
 | Lane | Owns |
 |---|---|
-| **L1 Core** | `src/shape/profile/reference/` (new), `benchmarks/profile_1to1/verify.py` (the `--impl shape` option only), `src/shape/api.py`, `src/shape/report/` (new), `src/shape/contracts/v1.py` (new), `src/shape/cli/main.py` (the three commands only), `tests/demo/core/`, `scripts/build_pure_wheel.py`, `pyproject.toml` (the version and `[project.optional-dependencies]` only) |
+| **L1 Core** | `src/shape/profile/reference/` (new), `benchmarks/profile_1to1/verify.py` (the `--impl shape` option only), `src/shape/api.py`, `src/shape/report/` (new), `src/shape/contracts/v1.py` (new), `src/shape/cli/main.py` (the three commands only), `tests/demo/core/`, `scripts/build_pure_wheel.py`, `.github/workflows/publish.yml` (new), `pyproject.toml` (the version and `[project.optional-dependencies]` only) |
 | **L2 Fabric** | `integrations/fabric/` (new): notebooks, UDF, pipeline definitions, runbook; `tests/demo/fabric/` |
 | **L3 Demo content** | `demo/` (new): data generation scripts, drift injection, contracts, talk notes, benchmark sheet; `tests/demo/content/` |
 
@@ -2082,6 +2082,30 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
   - In a fresh Python 3.11 venv with only numpy, pyarrow, pandas and deltalake, the
     following succeed: `pip install <wheel>`, `python -c "import shape"`, and the
     `tests/demo/core` suite run against the installed wheel.
+- Fixes: none.
+
+**DM-03b — PyPI early-access release (L1)**
+- Depends: DM-03, and §12.7 checks 1–3 passing on the merged branch.
+- Deliverables: `.github/workflows/publish.yml`. **The filename and environment name
+  must match exactly** what the owner registered as a PyPI trusted publisher (O-01).
+  It must:
+  - trigger on `workflow_dispatch` with an input `repository: testpypi|pypi`, and on
+    tags `v*`;
+  - run in the GitHub environment `pypi` (or `testpypi` for TestPyPI), with
+    `permissions: {id-token: write, contents: read}`;
+  - build the DM-03 pure wheel and an sdist;
+  - run `twine check`, and the `tests/demo/core` suite against the built wheel on
+    Python 3.11;
+  - publish with `pypa/gh-action-pypi-publish@release/v1`, with no API tokens and no
+    passwords.
+- Version `0.9.0`, **not a pre-release tag** (Fabric library pickers may hide
+  pre-releases). The README states: early access, profiling only.
+- Acceptance:
+  - A dry run against TestPyPI succeeds when O-01 is done for TestPyPI.
+  - `pip install sqllocks-shape==0.9.0` works in a clean Python 3.11 venv after the
+    real publish, which the owner triggers.
+  - If O-01 isn't done, the workflow is committed, and the runbook's manual
+    wheel-upload path remains the demo's route.
 - Fixes: none.
 
 **DM-04 — Demo data and drift (L3)**
@@ -2251,6 +2275,7 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
 | DM-01 | L1 | todo | |
 | DM-02 | L1 | todo | |
 | DM-03 | L1 | todo | |
+| DM-03b | L1 | todo | |
 | DM-04 | L3 | todo | |
 | DM-05 | L2 | todo | |
 | DM-05b | L2 | todo | |
