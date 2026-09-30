@@ -218,9 +218,7 @@ set +e; "$SHAPE" plan retail_prod.shape >/dev/null 2>&1; rc=$?; set -e
 planned R3 $([ $rc -eq 0 ] && echo 1 || echo 0) "shape plan, P4-08 (probe exit $rc)"
 planned R4 $("$SHAPE" generate --help 2>/dev/null | grep -q -- '--from' && echo 1 || echo 0) "generate from a shape, P4-08"
 planned R5 $("$SHAPE" fidelity --help 2>/dev/null | grep -qi 'tier\|threshold' && echo 1 || echo 0) "fidelity report, P4-09"
-set +e; BENCH_OUT_DIR="$WORK/gen" "$PY" "$REPO"/benchmarks/*/domain_1to1/generate.py \
-    --impl shape --domain retail --scale small --seed 1042 >/dev/null 2>&1; rc=$?; set -e
-planned R6 $([ $rc -eq 0 ] && echo 1 || echo 0) "retail through the product engine, P4-07 (probe exit $rc)"
+planned R6 0 "retail through the product engine, P4-07 (no probe until P4-07 ships a shape command)"
 planned R7 0 "engine and bounded-mode timings and memory, G1/G4 (none measured; slides 21 and 27 say so)"
 planned R8 $(grep -rqs mapInArrow "$REPO/integrations/fabric/notebooks/" && echo 1 || echo 0) "distributed Spark profiling, PF-02"
 planned R9 $(ls "$REPO"/integrations/fabric/pipelines/ | grep -qi gen && echo 1 || echo 0) "generation pipelines, PF-06"
