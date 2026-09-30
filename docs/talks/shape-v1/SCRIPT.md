@@ -126,7 +126,7 @@ file. You can commit it, diff it, and check new data against it."
 
 | Runs today (0.9.0, early access) | Being built (engine branch, not released) | Planned (work packages) |
 |---|---|---|
-| profile a table or a whole schema, FK detection across tables | Rust kernel: build and FFI, wheels, hashing, sketches, readers, type inference, fused profile kernel (P1-01a..P1-06) | profile engine on the kernel (P1-07), then product timings (G1) |
+| profile a table or a whole schema, FK detection across tables | Rust kernel: build and FFI, wheels, hashing, sketches, readers, type inference, fused profile kernel, profile engine (P1-01a..P1-07) | Spindle parity on the engine (P1-08), then product timings (G1) |
 | `.shape` save/load, HTML report | | safe profile, k-anonymity (P7-01, P7-02) |
 | `check` (contracts), `diff` (single and multi-table), CLI exit codes | | generate from a shape, `shape plan` (P4-08) |
 | Fabric: notebooks, Environment, UDF, pipeline gate | | fidelity report (P4-09); product generation engine (P4-07) |
@@ -136,8 +136,8 @@ file. You can commit it, diff it, and check new data against it."
 Shape is open source and built against a public plan with a status tracker, so you can
 check every line of this slide in the repo. Early access means early access."
 
-(Engine status is from the tracker on `build/main-plan` @ `bc40cc3`, 2026-09-30: P1-01a to
-P1-06 done there, P1-07 onward todo. That branch is not merged to `main` and not released.
+(Engine status is from the tracker on `build/main-plan` @ `fefe7a3`, 2026-09-30: P1-01a to
+P1-07 done there (lead-verified 2026-09-30 afternoon), P1-08 onward todo. That branch is not merged to `main` and not released.
 Re-check the tracker the day before and update this column only from it.)
 
 **Next:** "Let's go deep on profiling, because everything else is built on it."
@@ -150,7 +150,7 @@ Re-check the tracker the day before and update this column only from it.)
 
 - **Dataset:** tables, and relationships (foreign keys detected across tables).
 - **Table:** row count, primary key, detected FKs, correlation matrix.
-- **Column (34 fields in the parity check, N-02):** dtype · null count/rate · cardinality
+- **Column (27 of the 31 fields in the parity check, N-02):** dtype · null count/rate · cardinality
   and ratio · unique · enum flag and values · min/max/mean/std · quantiles · distribution
   family and parameters · fit score · pattern · outlier rate · string lengths · top-500 value
   counts · hour/day-of-week/temporal histograms · PK/FK flags.
@@ -250,8 +250,8 @@ right now, each with a Python twin that must agree with it. They're not in the r
 yet. Exact profiling, which you'll see live, is."
 
 (Status for Q&A: hashing (P1-02) and sketches (P1-03) are done on `build/main-plan`, not
-merged or released. The `exact=` switch arrives with the profile engine, P1-07, which is
-todo.)
+merged or released. The `exact=` switch arrives with the profile engine, P1-07, done on
+`build/main-plan` but not merged or released.)
 
 **Next:** "So how fast is profiling?"
 
@@ -306,12 +306,12 @@ exactly. If not, no Fabric timing at all.)
 ### Slide 15 — Every field, bitwise (20:00, 1 min 30 s)
 
 **On the slide:** the per-field matrix thumbnail from `DM-01_verify_output.txt`. **30/30
-datasets · 34 fields · every value bitwise-identical** to Spindle 3.0.1 (pinned `422e78d`)
+datasets · 31 fields · every value bitwise-identical** to Spindle 3.0.1 (pinned `422e78d`)
 (N-01, N-02). Tolerances allowed by the rules: 1e-9 relative (N-03); needed: none.
 
 **Say:** "We profiled 30 datasets with the retired Spindle and with Shape: wide, tall,
 multi-table, and 20 edge cases from three-row tables to every pattern family. We compared
-all 34 fields. The rules allowed a tiny tolerance; we didn't need it. Every value was
+all 31 fields. The rules allowed a tiny tolerance; we didn't need it. Every value was
 bitwise identical. So when I show you a profile, it's a profile you can check, not one you
 have to trust."
 

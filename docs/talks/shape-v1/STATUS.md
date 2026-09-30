@@ -135,11 +135,12 @@ promise. The v1 draft doesn't mention generation at scale, which C3 adds.
 
 - **F1: fixed** on `main` in `b2dd663`; `check`/`diff` with a missing first `.shape` exit 2.
   Asserted.
-- **F2: open.** `sqllocks-shape` is not on pypi.org (checked 2026-09-30 16:59 and 17:07 UTC);
-  TestPyPI has 0.9.0 only. Re-check October 2.
+- **F2: resolved.** The owner published sqllocks-shape 0.9.0 to pypi.org on 2026-09-30 at about
+  1:09 PM EDT (Publish run 36749097798, from `main` at `b2dd663`, so it includes the exit-2 fix).
+  The lead verified a clean install from pypi.org. Slide 30 keeps `pip install sqllocks-shape`.
 - **F3 / R11: open.** No live Fabric timings; `demo/LIVE_TIMINGS.md` is a placeholder.
 - **F4:** the stale-cache fix on slide 28 is commit `3b7c1f0`, on `build/main-plan` only.
-- **F5: unchanged, not on any slide.** `shape plan` on a 0.9.0 artifact still exits 1 (part 3
+- **F5: fixed on `main` in `1b4454d`** (after this list was written): `shape.generate` on a profile raises NotImplementedError; `shape plan`/`shape query` on a profile exit 2 with a message; README states the early-access scope. Earlier note: `shape plan` on a 0.9.0 artifact still exits 1 (part 3
   probe); `shape.generate(profile.to_dict())` returns placeholders; `shape generate` is a
   two-column toy. Don't demo any of them.
 - **F6: documented** on `main` (README "What a `.shape` file contains"; Fabric runbook

@@ -68,7 +68,7 @@ Deck slide *n* is `SCRIPT.md` slide *n*. Slide ids in the artifact are `s01`…`
 |---|---|---|
 | 2 | *Stop Borrowing Contoso* slide 2 content | That slide isn't in the repo. The three lines come from `SCRIPT.md`'s Say text ("25 years in data", "Lots of Fabric migrations", "I build Shape in the open") under the name line. Swap in the old slide's lines if you prefer. |
 | 11 | The live `retail_prod.html` screenshot | Not embedded: it's shown live in the browser (C1). The slide carries a "LIVE IN THE BROWSER" chip and the four callouts to point at, in order. |
-| 15 | The per-field matrix thumbnail from `DM-01_verify_output.txt` | Not drawn. That file's matrix has 31 field rows, but the slide says "34 fields" (N-02), and a thumbnail would show the mismatch on screen. The slide uses big numbers instead: 30/30 · 34 · every value bitwise-identical. Reconcile 31 vs 34 in `NUMBERS.md` before adding a thumbnail. |
+| 15 | The per-field matrix thumbnail from `DM-01_verify_output.txt` | Not drawn; the slide uses big numbers: 30/30 · 31 · every value bitwise-identical. Resolved by the lead: the matrix has 31 field rows (27 per column + 4 per table), so N-02, SCRIPT.md, OUTLINE.md and the deck now say 31 (was 34). A thumbnail can be added now without a mismatch. |
 | B3 | "50 extra rows" (DRIFT.md) | Said as "the duplicated-SKU rows", with 5,050 rows / 5,000 distinct (N-73) in the table, so every number comes from `NUMBERS.md`. |
 | B5 | `loyalty_tier` profile JSON | The slide has the call and a marked paste area. `SCRIPT.md` says to take the JSON from the rehearsal run, so paste it after the October 2 rehearsal, or hide the slide. |
 

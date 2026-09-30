@@ -60,7 +60,7 @@ problem; fake data doesn't behave like production, so bugs escape.
   10x target labelled as a target and the misses shown (1:30).
 - 14: profiling in Fabric today: the driver path, up to 5M rows, then `sampled: true`
   (1:30). Distributed profiling is one line: "planned, slide 27".
-- 15: bitwise parity with Spindle on 30 datasets and 34 fields (1:30).
+- 15: bitwise parity with Spindle on 30 datasets and 31 fields (1:30).
 
 ### 4. The production pipeline (21:30–31:30)
 
