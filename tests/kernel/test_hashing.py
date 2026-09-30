@@ -93,6 +93,7 @@ CASES = (
 )
 
 
+@pytest.mark.heavy
 @pytest.mark.parametrize("name", CASES)
 def test_rust_equals_reference_on_a_million_values(native, name):
     arr = _make(name)

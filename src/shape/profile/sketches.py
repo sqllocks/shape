@@ -105,8 +105,10 @@ class HyperLogLog:
 
 
 def _key_order(v: Any) -> tuple[int, Any]:
-    """Deterministic total order on keys (ints numerically, everything else by repr)."""
-    return (0, v) if isinstance(v, int) and not isinstance(v, bool) else (1, repr(v))
+    """Deterministic total order on keys (ints and tuples natively, everything else by repr)."""
+    if isinstance(v, tuple) or (isinstance(v, int) and not isinstance(v, bool)):
+        return (0, v)
+    return (1, repr(v))
 
 
 @dataclass

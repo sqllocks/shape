@@ -88,6 +88,7 @@ def test_hll_batches_equal_one_batch(native):
     assert one.registers() == many.registers()
 
 
+@pytest.mark.heavy
 def test_hll_relative_error_at_the_99th_percentile(native):
     """200 trials of 100k distinct values: error <= 3 x 1.04/sqrt(2^14) at p99."""
     n, errs = 100_000, []
@@ -157,6 +158,7 @@ def test_p9_total_weight_is_preserved_exactly():
         assert _weight(sk.levels) == sk.n == 5000 + k + 1234
 
 
+@pytest.mark.heavy
 def test_kll_rank_error_is_at_most_one_percent(native):
     rng = np.random.default_rng(5)
     n = 1_000_000
@@ -275,6 +277,7 @@ def test_space_saving_batches_equal_one_batch_within_bounds(native):
     _check_bounds(acc.top(), truth, len(keys), 64)
 
 
+@pytest.mark.heavy
 def test_p5_space_saving_holds_at_most_capacity_after_ten_million_updates(native):
     s = native.SpaceSaving(64)
     rng = np.random.default_rng(10)

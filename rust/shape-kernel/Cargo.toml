@@ -21,6 +21,8 @@ arrow-data = "59"
 arrow-schema = "59"
 rayon = "1.12"
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
+regex = "1"
+half = "2"
 
 [profile.release]
 lto = "thin"

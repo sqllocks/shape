@@ -1,6 +1,8 @@
 """Bounded single-pass capture."""
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from typing import Any
 
 from shape.profile.error import hll_error, kll_error
 from shape.profile.infer import TypeTracker, as_number, is_number
@@ -13,11 +15,11 @@ class CapturedShape:
     rows: int
     columns: dict
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return {"rows": self.rows, "columns": self.columns}
 
 
-def capture_rows(rows, batch_size=10000):
+def capture_rows(rows: Iterable[Mapping[str, Any]], batch_size: int = 10000) -> CapturedShape:
     """One bounded pass over row dicts. The type of a column is decided at the end, so a
     leading null (P3), numpy or Decimal numbers (P4) and a late text value (P2) cannot change
     or lose what was seen: every value is recorded as text, and as a number while the column

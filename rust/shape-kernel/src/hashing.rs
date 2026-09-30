@@ -36,7 +36,7 @@ const PAR_MIN: usize = 1 << 15;
 const CHUNK: usize = 1 << 13;
 
 #[inline]
-fn hash_tagged(tag: u8, payload: &[u8], seed: u64) -> u64 {
+pub fn hash_tagged(tag: u8, payload: &[u8], seed: u64) -> u64 {
     let mut buf = [0u8; 18];
     buf[0] = tag;
     buf[1..=payload.len()].copy_from_slice(payload);

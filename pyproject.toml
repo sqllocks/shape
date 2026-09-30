@@ -44,7 +44,7 @@ include=[
 [tool.pytest.ini_options]
 testpaths=["tests"]
 addopts="-ra --strict-markers --import-mode=importlib"
-markers=["conformance: normative conformance","security: security invariant","zero_network: network forbidden","sign: needs the cryptography extra","contract: contract test (no external service)","emulator: needs a Docker emulator (CI nightly only)","live: needs live cloud resources"]
+markers=["conformance: normative conformance","security: security invariant","zero_network: network forbidden","sign: needs the cryptography extra","contract: contract test (no external service)","emulator: needs a Docker emulator (CI nightly only)","live: needs live cloud resources","heavy: runs millions of values; CI runs these without coverage tracing"]
 
 [tool.ruff]
 target-version="py311"
@@ -68,7 +68,6 @@ module=[
     "shape.artifact.secure",
     "shape.artifact.shape_file",
     "shape.capture.core",
-    "shape.capture.vectorized",
     "shape.cli.main",
     "shape.connectors.dbapi",
     "shape.connectors.eventhubs",
@@ -119,14 +118,12 @@ module=[
     "shape.profile.datetime",
     "shape.profile.dependence",
     "shape.profile.dependencies",
-    "shape.profile.error",
     "shape.profile.numeric",
     "shape.profile.reference.column",
     "shape.profile.semantic_future",
     "shape.profile.sketches",
     "shape.profile.temporal",
     "shape.profile.text",
-    "shape.profile.text_vectorized",
     "shape.quality.core",
     "shape.quality.infer",
     "shape.quality.policy",

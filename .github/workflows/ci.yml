@@ -34,9 +34,11 @@ jobs:
       # the pinned Spindle checkout; both run in the fabric-demo job below.
       # --cov-fail-under is the measured coverage (86.55% on P0-06), rounded down.
       - run: >-
-          python -m pytest -q -m "not emulator and not live"
+          python -m pytest -q -m "not emulator and not live and not heavy"
           --ignore=tests/demo/fabric --ignore=tests/demo/content
           --cov=shape --cov-fail-under=86
+      # million-value differential and property tests: run without coverage tracing (10x faster)
+      - run: python -m pytest -q -m heavy tests/kernel
       # The pure-Python reference twin must pass on its own (SHAPE_KERNEL=python), and the
       # native kernel must be the one in use by default (SHAPE_KERNEL=rust fails loudly if not).
       - run: python -m pytest -q tests/kernel

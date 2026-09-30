@@ -205,27 +205,29 @@ impl KllCore {
 // -------------------------------------------------------------- SpaceSaving
 
 #[derive(Clone)]
-struct Entry {
-    key: u64,
+struct Entry<K> {
+    key: K,
     count: u64,
     err: u64,
     seq: u64,
 }
 
-pub struct SpaceSavingCore {
+/// SpaceSaving over any hashable, ordered key type (u64 hashes for the Python class; value
+/// keys for the profile kernel).
+pub struct SpaceSavingCore<K = u64> {
     pub capacity: usize,
-    entries: Vec<Entry>,
-    index: HashMap<u64, usize>,
+    entries: Vec<Entry<K>>,
+    index: HashMap<K, usize>,
     clock: u64,
     pub n: u64,
 }
 
-impl SpaceSavingCore {
+impl<K: Clone + Eq + std::hash::Hash + Ord> SpaceSavingCore<K> {
     pub fn new(capacity: usize) -> Self {
         SpaceSavingCore {
             capacity,
-            entries: Vec::with_capacity(capacity),
-            index: HashMap::with_capacity(capacity * 2),
+            entries: Vec::with_capacity(capacity.min(1 << 16)),
+            index: HashMap::with_capacity(capacity.min(1 << 16) * 2),
             clock: 0,
             n: 0,
         }
@@ -239,7 +241,7 @@ impl SpaceSavingCore {
         self.entries.is_empty()
     }
 
-    pub fn update(&mut self, key: u64, n: u64) {
+    pub fn update(&mut self, key: K, n: u64) {
         self.n += n;
         self.clock += 1;
         if let Some(&i) = self.index.get(&key) {
@@ -248,7 +250,7 @@ impl SpaceSavingCore {
             return;
         }
         if self.entries.len() < self.capacity {
-            self.index.insert(key, self.entries.len());
+            self.index.insert(key.clone(), self.entries.len());
             self.entries.push(Entry {
                 key,
                 count: n,
@@ -262,7 +264,7 @@ impl SpaceSavingCore {
             .expect("capacity > 0");
         let old = self.entries[victim].clone();
         self.index.remove(&old.key);
-        self.index.insert(key, victim);
+        self.index.insert(key.clone(), victim);
         self.entries[victim] = Entry {
             key,
             count: old.count + n,
@@ -279,36 +281,32 @@ impl SpaceSavingCore {
         }
     }
 
-    pub fn merge(&mut self, o: &SpaceSavingCore) {
+    pub fn merge(&mut self, o: &SpaceSavingCore<K>) {
         let (m1, m2) = (self.min_count(), o.min_count());
-        let mut merged: HashMap<u64, (u64, u64)> = HashMap::new();
-        for e in &self.entries {
-            merged.insert(e.key, (e.count, e.err));
-        }
+        let mut merged: HashMap<K, (u64, u64)> = HashMap::new();
         for e in &self.entries {
             let (c2, e2) = o
                 .index
                 .get(&e.key)
                 .map_or((m2, m2), |&i| (o.entries[i].count, o.entries[i].err));
-            let cur = merged.get_mut(&e.key).unwrap();
-            *cur = (cur.0 + c2, cur.1 + e2);
+            merged.insert(e.key.clone(), (e.count + c2, e.err + e2));
         }
         for e in &o.entries {
             if !self.index.contains_key(&e.key) {
-                merged.insert(e.key, (e.count + m1, e.err + m1));
+                merged.insert(e.key.clone(), (e.count + m1, e.err + m1));
             }
         }
-        let mut keys: Vec<u64> = merged.keys().copied().collect();
+        let mut keys: Vec<K> = merged.keys().cloned().collect();
         keys.sort_by(|a, b| merged[b].0.cmp(&merged[a].0).then(a.cmp(b)));
         keys.truncate(self.capacity);
-        keys.sort_unstable();
+        keys.sort();
         self.entries = keys
             .iter()
             .enumerate()
-            .map(|(i, &k)| Entry {
-                key: k,
-                count: merged[&k].0,
-                err: merged[&k].1,
+            .map(|(i, k)| Entry {
+                key: k.clone(),
+                count: merged[k].0,
+                err: merged[k].1,
                 seq: i as u64,
             })
             .collect();
@@ -316,18 +314,18 @@ impl SpaceSavingCore {
             .entries
             .iter()
             .enumerate()
-            .map(|(i, e)| (e.key, i))
+            .map(|(i, e)| (e.key.clone(), i))
             .collect();
         self.clock = self.entries.len() as u64;
         self.n += o.n;
     }
 
     /// (key, count, error), largest count first, ties by key.
-    pub fn top(&self) -> Vec<(u64, u64, u64)> {
-        let mut v: Vec<(u64, u64, u64)> = self
+    pub fn top(&self) -> Vec<(K, u64, u64)> {
+        let mut v: Vec<(K, u64, u64)> = self
             .entries
             .iter()
-            .map(|e| (e.key, e.count, e.err))
+            .map(|e| (e.key.clone(), e.count, e.err))
             .collect();
         v.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
         v
@@ -484,7 +482,7 @@ impl PyKll {
 
 #[pyclass(name = "SpaceSaving", module = "shape._kernel")]
 pub struct PySpaceSaving {
-    core: SpaceSavingCore,
+    core: SpaceSavingCore<u64>,
 }
 
 #[pymethods]
@@ -496,7 +494,7 @@ impl PySpaceSaving {
             return Err(PyValueError::new_err("capacity must be >= 1"));
         }
         Ok(PySpaceSaving {
-            core: SpaceSavingCore::new(capacity),
+            core: SpaceSavingCore::<u64>::new(capacity),
         })
     }
 
@@ -593,7 +591,7 @@ mod tests {
 
     #[test]
     fn space_saving_never_exceeds_capacity() {
-        let mut s = SpaceSavingCore::new(64);
+        let mut s = SpaceSavingCore::<u64>::new(64);
         for i in 0..200_000u64 {
             s.update(hashing::hash_u64(i, 1), 1);
         }
