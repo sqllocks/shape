@@ -4,8 +4,8 @@ bootstrap:
 	$(PYTHON) -m pip install -e ".[dev]"
 # Same commands as the `test` job in .github/workflows/ci.yml (T-27 scope: only paths that exist).
 check:
-	ruff check src tests
-	ruff format --check src tests
+	ruff check src tests benchmarks/vs_spindle
+	ruff format --check src tests benchmarks/vs_spindle
 	mypy
 	$(PYTHON) -m compileall -q src/shape
 	$(PYTHON) scripts/check_requirements.py

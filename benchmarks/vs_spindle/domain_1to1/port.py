@@ -29,6 +29,7 @@ import ast
 import hashlib
 import importlib.util
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -38,7 +39,7 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.compute as pc
 
-DEFAULT_SPINDLE_ROOT = "/home/user/sqllocks/spindle"
+DEFAULT_SPINDLE_ROOT = os.environ.get("SPINDLE_ROOT", str(Path.home() / "spindle"))
 
 NS_PER_DAY = 86_400 * 1_000_000_000
 US_PER_DAY = 86_400 * 1_000_000
@@ -49,6 +50,7 @@ _UNIT_TO_NS = {"ns": 1, "us": 1000}
 # ═══════════════════════════════════════════════════════════════════════════
 # Loading Spindle's config / pools / reference data (read-only)
 # ═══════════════════════════════════════════════════════════════════════════
+
 
 class _DomainStub:
     """Stands in for ``self`` inside RetailDomain._build_schema (Domain base)."""
@@ -64,8 +66,9 @@ class _DomainStub:
         return self._profile.get("ratios", {}).get(key, default)
 
 
-def load_schema(spindle_root: str | Path, profile: str = "default",
-                schema_mode: str = "3nf") -> dict:
+def load_schema(
+    spindle_root: str | Path, profile: str = "default", schema_mode: str = "3nf"
+) -> dict:
     pkg = Path(spindle_root) / "sqllocks_spindle"
     dom = pkg / "domains" / "retail"
     json_schema = dom / f"retail_{schema_mode}.spindle.json"
@@ -78,9 +81,12 @@ def load_schema(spindle_root: str | Path, profile: str = "default",
     for fn in ast.walk(tree):
         if isinstance(fn, ast.FunctionDef) and fn.name == "_build_schema":
             for st in ast.walk(fn):
-                if (isinstance(st, ast.Assign) and len(st.targets) == 1
-                        and isinstance(st.targets[0], ast.Name)
-                        and st.targets[0].id == "schema_dict"):
+                if (
+                    isinstance(st, ast.Assign)
+                    and len(st.targets) == 1
+                    and isinstance(st.targets[0], ast.Name)
+                    and st.targets[0].id == "schema_dict"
+                ):
                     node = st.value
     if node is None:
         raise RuntimeError("schema_dict not found in retail.py")
@@ -124,8 +130,9 @@ class Pools:
         self.last_names = list(names.LAST_NAMES)
         self.street_names = list(names.STREET_NAMES)
         self.email_domains = list(names.EMAIL_DOMAINS)
-        nat = _ast_constants(eng / "strategies" / "native.py",
-                             {"_US_STATES", "_US_CITIES", "_STREET_SUFFIXES"})
+        nat = _ast_constants(
+            eng / "strategies" / "native.py", {"_US_STATES", "_US_CITIES", "_STREET_SUFFIXES"}
+        )
         self.us_states = list(nat["_US_STATES"])
         self.us_cities = list(nat["_US_CITIES"])
         self.street_suffixes = list(nat["_STREET_SUFFIXES"])
@@ -143,9 +150,11 @@ class RefData:
     def load(self, name: str):
         if name in self._cache:
             return self._cache[name]
-        cands = [self.pkg / "domains" / self.domain / "reference_data" / f"{name}.json",
-                 self.pkg / "domains" / "_shared" / "reference_data" / f"{name}.json",
-                 self.pkg / "data" / f"{name}.json"]
+        cands = [
+            self.pkg / "domains" / self.domain / "reference_data" / f"{name}.json",
+            self.pkg / "domains" / "_shared" / "reference_data" / f"{name}.json",
+            self.pkg / "data" / f"{name}.json",
+        ]
         droot = self.pkg / "domains"
         for e in sorted(droot.iterdir()) if droot.exists() else []:
             if e.is_dir() and not e.name.startswith(("_", ".")):
@@ -178,6 +187,7 @@ class RefData:
 # Column container
 # ═══════════════════════════════════════════════════════════════════════════
 
+
 class Col:
     """A generated column: numpy array (numeric/bool/datetime64) or arrow string
     array, plus an optional null mask (True = null)."""
@@ -187,7 +197,7 @@ class Col:
     def __init__(self, v, mask=None, src_idx=None, src_pool=None):
         self.v = v
         self.mask = mask
-        self.src_idx = src_idx      # pool indices (for email reuse of first/last)
+        self.src_idx = src_idx  # pool indices (for email reuse of first/last)
         self.src_pool = src_pool
 
     def numeric(self) -> np.ndarray:
@@ -206,8 +216,11 @@ class Col:
             return v
         if np.issubdtype(v.dtype, np.datetime64):
             unit = np.datetime_data(v.dtype)[0]
-            return pa.array(v.view(np.int64), type=pa.timestamp(unit),
-                            mask=self.mask if self.mask is not None and self.mask.any() else None)
+            return pa.array(
+                v.view(np.int64),
+                type=pa.timestamp(unit),
+                mask=self.mask if self.mask is not None and self.mask.any() else None,
+            )
         m = self.mask if self.mask is not None and self.mask.any() else None
         return pa.array(v, mask=m)
 
@@ -281,13 +294,14 @@ def _dt_to_ns(v: np.ndarray) -> np.ndarray:
 # Engine
 # ═══════════════════════════════════════════════════════════════════════════
 
+
 class Ctx:
     def __init__(self, rng, table_name, n, engine):
         self.rng = rng
         self.table_name = table_name
         self.n = n
-        self.cur: dict[str, Col] = {}      # public columns, insertion ordered
-        self.hidden: dict[str, Col] = {}   # _rs_ / _sr_ stashes
+        self.cur: dict[str, Col] = {}  # public columns, insertion ordered
+        self.hidden: dict[str, Col] = {}  # _rs_ / _sr_ stashes
         self.engine = engine
 
 
@@ -298,7 +312,7 @@ class Engine:
         self.ref = ref
         self.seed = seed
         self.model = schema["model"]
-        self.rng = np.random.default_rng(seed)   # IDManager / rules RNG
+        self.rng = np.random.default_rng(seed)  # IDManager / rules RNG
         self.tables: dict[str, dict[str, Col]] = {}
         self._pk_pos_cache: dict[tuple, Any] = {}
         self._arrow_pools: dict[str, Any] = {}
@@ -317,7 +331,9 @@ class Engine:
                 if isinstance(d["fixed"], int):
                     counts[t] = d["fixed"]
             elif "per_parent" in d:
-                counts[t] = int(counts.get(d["per_parent"], 100) * d.get("ratio", d.get("mean", 1.0)))
+                counts[t] = int(
+                    counts.get(d["per_parent"], 100) * d.get("ratio", d.get("mean", 1.0))
+                )
             elif "per_year" in d:
                 dr = self.model.get("date_range")
                 if dr:
@@ -347,7 +363,11 @@ class Engine:
                     deps.add(r)
             graph[tn] = deps
         for rel in self.schema.get("relationships", []):
-            if rel["parent"] != rel["child"] and rel.get("type") != "self_referencing" and rel["child"] in graph:
+            if (
+                rel["parent"] != rel["child"]
+                and rel.get("type") != "self_referencing"
+                and rel["child"] in graph
+            ):
                 graph[rel["child"]].add(rel["parent"])
         indeg = {k: len(v) for k, v in graph.items()}
         queue = [k for k, d in indeg.items() if d == 0]
@@ -367,8 +387,11 @@ class Engine:
         """Spindle._group_by_dep_level flattened: the order tables are generated
         in and the insertion order of GenerationResult.tables."""
         tables = self.schema["tables"]
-        deps = {tn: {r for c in t["columns"].values() if (r := self._fk_ref_table(c)) and r != tn} & set(tables)
-                for tn, t in tables.items()}
+        deps = {
+            tn: {r for c in t["columns"].values() if (r := self._fk_ref_table(c)) and r != tn}
+            & set(tables)
+            for tn, t in tables.items()
+        }
         assigned: set[str] = set()
         out: list[str] = []
         remaining = [t for t in self.table_order() if t in tables]
@@ -390,9 +413,18 @@ class Engine:
                 pk_cols.append(cn)
             elif s in ("foreign_key", "composite_foreign_key"):
                 fk_cols.append(cn)
-            elif s in ("formula", "lookup", "derived", "computed", "first_per_parent",
-                       "record_field", "self_ref_field", "composite_fk_field",
-                       "correlated", "conditional"):
+            elif s in (
+                "formula",
+                "lookup",
+                "derived",
+                "computed",
+                "first_per_parent",
+                "record_field",
+                "self_ref_field",
+                "composite_fk_field",
+                "correlated",
+                "conditional",
+            ):
                 (comp if s == "computed" else dep).append(cn)
             else:
                 ind.append(cn)
@@ -453,7 +485,9 @@ class Engine:
             t0 = time.perf_counter()
             tdef = self.schema["tables"][tn]
             child_rng = np.random.default_rng(
-                self.seed ^ int.from_bytes(hashlib.sha256(tn.encode("utf-8")).digest()[:8], "little"))
+                self.seed
+                ^ int.from_bytes(hashlib.sha256(tn.encode("utf-8")).digest()[:8], "little")
+            )
             ctx = Ctx(child_rng, tn, counts.get(tn, 100), self)
             for cn in self.column_order(tdef):
                 cdef = tdef["columns"][cn]
@@ -550,38 +584,67 @@ class Engine:
                     c = cur[nm]
                     if c.src_pool is not None:
                         src = P.first_names if c.src_pool == "first_name" else P.last_names
-                        ml_src = self.schema["tables"][ctx.table_name]["columns"][nm].get("max_length")
+                        ml_src = self.schema["tables"][ctx.table_name]["columns"][nm].get(
+                            "max_length"
+                        )
                         # str(f).lower().replace(' ', '') computed once per pool entry
                         key = ("emailpart_" + c.src_pool, ml_src)
                         if key not in self._arrow_pools:
                             self._arrow_pools[key] = pa.array(
-                                [(str(v)[:ml_src] if ml_src else str(v)).lower().replace(" ", "") for v in src],
-                                pa.string())
+                                [
+                                    (str(v)[:ml_src] if ml_src else str(v)).lower().replace(" ", "")
+                                    for v in src
+                                ],
+                                pa.string(),
+                            )
                         parts.append(_take_str(self._arrow_pools[key], c.src_idx))
                     else:
                         parts.append(pc.replace_substring(pc.utf8_lower(c.v), " ", ""))
                 firsts, lasts = parts
             else:
-                firsts = _take_str(self._apool("emailpart_first", [s.lower().replace(" ", "") for s in P.first_names]),
-                                   rng.integers(0, len(P.first_names), size=n))
-                lasts = _take_str(self._apool("emailpart_last", [s.lower().replace(" ", "") for s in P.last_names]),
-                                  rng.integers(0, len(P.last_names), size=n))
-            doms = _take_str(self._apool("email_domains", P.email_domains),
-                             rng.integers(0, len(P.email_domains), size=n))
+                firsts = _take_str(
+                    self._apool(
+                        "emailpart_first", [s.lower().replace(" ", "") for s in P.first_names]
+                    ),
+                    rng.integers(0, len(P.first_names), size=n),
+                )
+                lasts = _take_str(
+                    self._apool(
+                        "emailpart_last", [s.lower().replace(" ", "") for s in P.last_names]
+                    ),
+                    rng.integers(0, len(P.last_names), size=n),
+                )
+            doms = _take_str(
+                self._apool("email_domains", P.email_domains),
+                rng.integers(0, len(P.email_domains), size=n),
+            )
             suffix = _int_to_str(rng.integers(1, 999, size=n))
             return Col(self._max_len(cdef, _join(firsts, ".", lasts, suffix, "@", doms)))
         if prov == "street_address":
             num = _int_to_str(rng.integers(100, 9999, size=n))
-            st = _take_str(self._apool("street_names", P.street_names), rng.integers(0, len(P.street_names), size=n))
-            sfx = _take_str(self._apool("street_suffixes", P.street_suffixes),
-                            rng.integers(0, len(P.street_suffixes), size=n))
+            st = _take_str(
+                self._apool("street_names", P.street_names),
+                rng.integers(0, len(P.street_names), size=n),
+            )
+            sfx = _take_str(
+                self._apool("street_suffixes", P.street_suffixes),
+                rng.integers(0, len(P.street_suffixes), size=n),
+            )
             return Col(self._max_len(cdef, pc.binary_join_element_wise(num, st, sfx, " ")))
         if prov == "city":
-            return Col(_take_str(self._apool("us_cities", P.us_cities, ml),
-                                 rng.integers(0, len(P.us_cities), size=n)))
+            return Col(
+                _take_str(
+                    self._apool("us_cities", P.us_cities, ml),
+                    rng.integers(0, len(P.us_cities), size=n),
+                )
+            )
         if prov == "state_abbr":
-            return Col(_take_str(self._apool("us_states", P.us_states, ml),
-                                 rng.integers(0, len(P.us_states), size=n)))
+            return Col(
+                _take_str(
+                    self._apool("us_states", P.us_states, ml),
+                    rng.integers(0, len(P.us_states), size=n),
+                )
+            )
         raise NotImplementedError(f"native provider {prov!r} not needed by retail")
 
     # temporal.TemporalStrategy
@@ -608,16 +671,36 @@ class Engine:
             profiles["month"] = g["month_weights"]
         if not profiles.get("day_of_week") and g.get("day_of_week_weights"):
             profiles["day_of_week"] = g["day_of_week_weights"]
-        mw, dw, hp = profiles.get("month", {}), profiles.get("day_of_week", {}), profiles.get("hour_of_day", {})
+        mw, dw, hp = (
+            profiles.get("month", {}),
+            profiles.get("day_of_week", {}),
+            profiles.get("hour_of_day", {}),
+        )
         n, rng = ctx.n, ctx.rng
         if not mw and not dw:
             us = self._uniform_ns(rng, s, e, n) // 1000
         else:
-            months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            months = [
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "Jun",
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec",
+            ]
             dows = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-            mp = np.array([mw.get(m, 1 / 12) for m in months]); mp /= mp.sum()
-            dp = np.array([dw.get(d, 1 / 7) for d in dows]); dp /= dp.sum()
-            comb = (mp[:, None] * dp[None, :]).ravel(); comb /= comb.sum()
+            mp = np.array([mw.get(m, 1 / 12) for m in months])
+            mp /= mp.sum()
+            dp = np.array([dw.get(d, 1 / 7) for d in dows])
+            dp /= dp.sum()
+            comb = (mp[:, None] * dp[None, :]).ravel()
+            comb /= comb.sum()
             # multinomial bucket counts + shuffle  ==  iid categorical bucket per row
             bucket = _categorical(rng, comb, n)
             days = np.arange(s.astype("M8[D]").view(np.int64), e.astype("M8[D]").view(np.int64) + 1)
@@ -640,7 +723,8 @@ class Engine:
                 us[empty] = self._uniform_ns(rng, s, e, int(empty.sum())) // 1000
         if hp:
             if hp.get("distribution") == "bimodal":
-                peaks = hp.get("peaks", [12, 18]); sd = hp.get("std_dev", 2)
+                peaks = hp.get("peaks", [12, 18])
+                sd = hp.get("std_dev", 2)
                 pk = rng.integers(0, len(peaks), size=n)
                 hours = rng.normal(np.asarray(peaks, float)[pk], sd)
                 hours = np.mod(np.floor(hours), 24).astype(np.int64)
@@ -648,7 +732,9 @@ class Engine:
                 hours = rng.integers(0, 24, size=n)
             minutes = rng.integers(0, 60, size=n)
             seconds = rng.integers(0, 60, size=n)
-            us = (us // US_PER_DAY) * US_PER_DAY + (hours * 3600 + minutes * 60 + seconds) * 1_000_000
+            us = (us // US_PER_DAY) * US_PER_DAY + (
+                hours * 3600 + minutes * 60 + seconds
+            ) * 1_000_000
         return Col(us.view("M8[us]"))
 
     # record_sample.RecordSampleStrategy / record_field.RecordFieldStrategy
@@ -673,10 +759,18 @@ class Engine:
         data = self.ref.load(g["dataset"])
         n, rng = ctx.n, ctx.rng
         if all(isinstance(x, str) for x in data):
-            return Col(_take_str(self._apool("ref_" + g["dataset"], data), rng.integers(0, len(data), size=n)))
+            return Col(
+                _take_str(
+                    self._apool("ref_" + g["dataset"], data), rng.integers(0, len(data), size=n)
+                )
+            )
         field = g.get("field")
         if field and field in data[0]:
-            return Col(_take_str(pa.array([d.get(field) for d in data]), rng.integers(0, len(data), size=n)))
+            return Col(
+                _take_str(
+                    pa.array([d.get(field) for d in data]), rng.integers(0, len(data), size=n)
+                )
+            )
         names = [d.get("name", d.get("value", "")) for d in data]
         w = np.array([d.get("weight", 1.0) for d in data], dtype=float)
         w = w / w.sum()
@@ -699,7 +793,7 @@ class Engine:
             cursor += rpl + (1 if lv - 2 < extra else 0)
         ends = starts[1:] + [n]
         lvl = np.zeros(n, dtype=np.int64)
-        for lv, (a, b) in enumerate(zip(starts, ends), start=1):
+        for lv, (a, b) in enumerate(zip(starts, ends, strict=False), start=1):
             lvl[a:b] = lv
         parent = np.zeros(n, dtype=np.int64)
         mask = np.zeros(n, dtype=bool)
@@ -708,7 +802,7 @@ class Engine:
             a, b = starts[lv - 1], ends[lv - 1]
             if b - a <= 0:
                 continue
-            pp = pks[starts[lv - 2]:ends[lv - 2]]
+            pp = pks[starts[lv - 2] : ends[lv - 2]]
             if len(pp) == 0:
                 pp = pks[:root_count]
             parent[a:b] = pp[ctx.rng.integers(0, len(pp), size=b - a)]
@@ -782,7 +876,9 @@ class Engine:
                 break
             cand = np.flatnonzero(over[idx])
             # sort by (parent, random key) in one int64 argsort
-            key = (idx[cand].astype(np.int64) << 32) | rng.integers(0, 1 << 32, size=len(cand), dtype=np.int64)
+            key = (idx[cand].astype(np.int64) << 32) | rng.integers(
+                0, 1 << 32, size=len(cand), dtype=np.int64
+            )
             o = np.argsort(key)
             grp = idx[cand][o]
             first = np.searchsorted(grp, grp, side="left")
@@ -885,14 +981,27 @@ class Engine:
         src = ctx.cur[g["source_column"]].numeric()
         n = len(src)
         if rule == "multiply":
-            r = src * ctx.rng.uniform(float(p.get("factor_min", p.get("min", 0.30))),
-                                      float(p.get("factor_max", p.get("max", 0.70))), size=n)
+            r = src * ctx.rng.uniform(
+                float(p.get("factor_min", p.get("min", 0.30))),
+                float(p.get("factor_max", p.get("max", 0.70))),
+                size=n,
+            )
         elif rule == "add":
-            r = src + ctx.rng.uniform(float(p.get("offset_min", p.get("min", 0.0))),
-                                      float(p.get("offset_max", p.get("max", 10.0))), size=n)
+            r = src + ctx.rng.uniform(
+                float(p.get("offset_min", p.get("min", 0.0))),
+                float(p.get("offset_max", p.get("max", 10.0))),
+                size=n,
+            )
         elif rule == "subtract":
-            r = np.maximum(0.0, src - ctx.rng.uniform(float(p.get("offset_min", p.get("min", 0.0))),
-                                                      float(p.get("offset_max", p.get("max", 10.0))), size=n))
+            r = np.maximum(
+                0.0,
+                src
+                - ctx.rng.uniform(
+                    float(p.get("offset_min", p.get("min", 0.0))),
+                    float(p.get("offset_max", p.get("max", 10.0))),
+                    size=n,
+                ),
+            )
         else:
             raise ValueError(rule)
         sc = cdef.get("scale") if cdef.get("scale") is not None else 2
@@ -903,11 +1012,12 @@ class Engine:
 
     def s_pattern(self, cn, cdef, g, ctx):
         import re
+
         fmt = g["format"]
         parts, last = [], 0
         for m in re.finditer(r"\{(\w+)(?::(\d+))?\}", fmt):
             if m.start() > last:
-                parts.append(fmt[last:m.start()])
+                parts.append(fmt[last : m.start()])
             tok, w = m.group(1), int(m.group(2)) if m.group(2) else 0
             if tok == "seq":
                 s = _int_to_str(np.arange(1, ctx.n + 1))
@@ -915,7 +1025,9 @@ class Engine:
             elif tok == "random":
                 L = w or 4
                 ch = self._CHARS[ctx.rng.integers(0, len(self._CHARS), size=(ctx.n, L))]
-                parts.append(pa.array(np.ascontiguousarray(ch).view(f"S{L}").ravel()).cast(pa.string()))
+                parts.append(
+                    pa.array(np.ascontiguousarray(ch).view(f"S{L}").ravel()).cast(pa.string())
+                )
             else:
                 raise NotImplementedError("column-reference pattern tokens not used by retail")
             last = m.end()
@@ -949,9 +1061,21 @@ class Engine:
         lo, hi = float(params.get("min", 1)), float(params.get("max", 30))
         n = len(src.v)
         if dist == "log_normal":
-            days = np.clip(ctx.rng.lognormal(float(params.get("mean", 2.0)), float(params.get("sigma", 0.8)), size=n), lo, hi)
+            days = np.clip(
+                ctx.rng.lognormal(
+                    float(params.get("mean", 2.0)), float(params.get("sigma", 0.8)), size=n
+                ),
+                lo,
+                hi,
+            )
         elif dist == "normal":
-            days = np.clip(ctx.rng.normal(float(params.get("mean", 10.0)), float(params.get("std_dev", 3.0)), size=n), lo, hi)
+            days = np.clip(
+                ctx.rng.normal(
+                    float(params.get("mean", 10.0)), float(params.get("std_dev", 3.0)), size=n
+                ),
+                lo,
+                hi,
+            )
         else:
             days = ctx.rng.uniform(lo, hi, size=n)
         days = np.round(days).astype(np.int64)
@@ -968,8 +1092,10 @@ class Engine:
     # conditional.ConditionalStrategy
     def _cond_mask(self, cond: str, ctx) -> np.ndarray:
         cu = cond.strip().upper()
+
         def find(up):
             return next((k for k in ctx.cur if k.upper() == up), up.lower())
+
         if "IS NOT NULL" in cu:
             c = ctx.cur.get(find(cu.replace("IS NOT NULL", "").strip()))
             if c is None:
@@ -1019,13 +1145,30 @@ class Engine:
 
     # formula.FormulaStrategy (same eval over whole-column numpy arrays)
     def s_formula(self, cn, cdef, g, ctx):
-        ns = {k: (c.numeric() if not isinstance(c.v, (pa.Array, pa.ChunkedArray))
-                  and np.asarray(c.v).dtype.kind in "iufb" else c.v) for k, c in ctx.cur.items()}
-        safe = {"__builtins__": {"abs": abs, "min": min, "max": max, "round": round},
-                "np_round": np.round, "np_clip": np.clip, "np_where": np.where,
-                "np_maximum": np.maximum, "np_minimum": np.minimum, "np_abs": np.abs,
-                "np_sqrt": np.sqrt, "np_log": np.log, "np_exp": np.exp,
-                "np_floor": np.floor, "np_ceil": np.ceil, "np_nan": np.nan}
+        ns = {
+            k: (
+                c.numeric()
+                if not isinstance(c.v, (pa.Array, pa.ChunkedArray))
+                and np.asarray(c.v).dtype.kind in "iufb"
+                else c.v
+            )
+            for k, c in ctx.cur.items()
+        }
+        safe = {
+            "__builtins__": {"abs": abs, "min": min, "max": max, "round": round},
+            "np_round": np.round,
+            "np_clip": np.clip,
+            "np_where": np.where,
+            "np_maximum": np.maximum,
+            "np_minimum": np.minimum,
+            "np_abs": np.abs,
+            "np_sqrt": np.sqrt,
+            "np_log": np.log,
+            "np_exp": np.exp,
+            "np_floor": np.floor,
+            "np_ceil": np.ceil,
+            "np_nan": np.nan,
+        }
         r = eval(g["expression"], safe, ns)
         r = np.full(ctx.n, r) if np.isscalar(r) else np.asarray(r)
         if cdef.get("scale") is not None:
@@ -1050,8 +1193,14 @@ class Engine:
                 if ct not in self.tables or not tdef.get("primary_key"):
                     continue
                 pk_col = tdef["primary_key"][0]
-                child_fk = next((c for c, d in self.schema["tables"][ct]["columns"].items()
-                                 if self._fk_ref_table(d) == tn), None)
+                child_fk = next(
+                    (
+                        c
+                        for c, d in self.schema["tables"][ct]["columns"].items()
+                        if self._fk_ref_table(d) == tn
+                    ),
+                    None,
+                )
                 if not child_fk:
                     continue
                 child = self.tables[ct]
@@ -1075,6 +1224,7 @@ class Engine:
     @staticmethod
     def _parse_cmp(rule: str):
         import re
+
         m = re.match(r"^(.+?)\s*(>=|<=|>|<|==)\s*(.+)$", rule.strip())
         return (m.group(1).strip(), m.group(2), m.group(3).strip()) if m else ("", "", "")
 
@@ -1097,32 +1247,34 @@ class Engine:
         else:
             out = c.numeric()
         if c.mask is not None:
-            out = out.copy(); out[c.mask] = np.nan
+            out = out.copy()
+            out[c.mask] = np.nan
         return out
 
     def validate_business_rules(self) -> dict[str, int]:
         """BusinessRulesEngine.validate: count remaining violations per rule."""
         out = {}
         for rule in self.schema.get("business_rules", []):
-            l, op, r = self._parse_cmp(rule["rule"])
+            lhs, op, r = self._parse_cmp(rule["rule"])
             if not op:
                 continue
             if rule["type"] == "cross_table":
                 via = rule.get("via")
-                if not via or "." not in l or "." not in r:
+                if not via or "." not in lhs or "." not in r:
                     continue
-                lt, lc = l.split(".", 1)
+                lt, lc = lhs.split(".", 1)
                 rt, rc = r.split(".", 1)
                 L = self.tables.get(lt)
                 if L is None or rt not in self.tables or via not in L or via not in self.tables[rt]:
                     continue
-                n = self._cmp_violations(self._as_cmp(L[lc]), op,
-                                         self._as_cmp(self.lookup(rt, via, rc, L[via])))
+                n = self._cmp_violations(
+                    self._as_cmp(L[lc]), op, self._as_cmp(self.lookup(rt, via, rc, L[via]))
+                )
             else:
                 T = self.tables.get(rule.get("table"))
-                if T is None or l not in T:
+                if T is None or lhs not in T:
                     continue
-                a = self._as_cmp(T[l])
+                a = self._as_cmp(T[lhs])
                 b = self._as_cmp(T[r]) if r in T else float(r)
                 n = self._cmp_violations(a, op, b)
             if n:
@@ -1131,10 +1283,10 @@ class Engine:
 
     def _fix_cross_table(self, rule):
         via = rule.get("via")
-        l, op, r = self._parse_cmp(rule["rule"])
-        if not via or "." not in l or "." not in r:
+        lhs, op, r = self._parse_cmp(rule["rule"])
+        if not via or "." not in lhs or "." not in r:
             return
-        lt, lc = l.split(".", 1)
+        lt, lc = lhs.split(".", 1)
         rt, rc = r.split(".", 1)
         if lt not in self.tables or rt not in self.tables:
             return
@@ -1187,16 +1339,18 @@ class Engine:
         if not tn or tn not in self.tables:
             return
         T = self.tables[tn]
-        l, op, r = self._parse_cmp(rule["rule"])
-        if l not in T or r not in T:
+        lhs, op, r = self._parse_cmp(rule["rule"])
+        if lhs not in T or r not in T:
             return
-        lv, rv = np.asarray(T[l].v), np.asarray(T[r].v)
+        lv, rv = np.asarray(T[lhs].v), np.asarray(T[r].v)
         if lv.dtype.kind == "M":
             a, b = _dt_to_ns(lv), _dt_to_ns(rv)
             if op == "<":
-                mask = a >= b; sign = -1
+                mask = a >= b
+                sign = -1
             elif op == ">":
-                mask = a <= b; sign = 1
+                mask = a <= b
+                sign = 1
             else:
                 return
             if mask.any():
@@ -1204,27 +1358,34 @@ class Engine:
                 off = self.rng.integers(1, 30, size=int(mask.sum())) * NS_PER_DAY
                 nv = lv.view(np.int64).copy()
                 nv[mask] = (b[mask] + sign * off) // _UNIT_TO_NS[unit]
-                T[l] = Col(nv.view(lv.dtype), T[l].mask)
+                T[lhs] = Col(nv.view(lv.dtype), T[lhs].mask)
         else:
-            a, b = T[l].numeric(), T[r].numeric()
+            a, b = T[lhs].numeric(), T[r].numeric()
             if op == "<":
-                mask = a >= b; lo, hi = 0.3, 0.95
+                mask = a >= b
+                lo, hi = 0.3, 0.95
             elif op == ">":
-                mask = a <= b; lo, hi = 1.05, 2.0
+                mask = a <= b
+                lo, hi = 1.05, 2.0
             else:
                 return
             if mask.any():
                 nv = a.copy()
                 nv[mask] = np.round(b[mask] * self.rng.uniform(lo, hi, size=int(mask.sum())), 2)
-                T[l] = Col(nv, T[l].mask)
+                T[lhs] = Col(nv, T[lhs].mask)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Public API
 # ═══════════════════════════════════════════════════════════════════════════
 
-def generate(scale: str = "medium", seed: int = 42, spindle_root: str | Path = DEFAULT_SPINDLE_ROOT,
-             return_engine: bool = False):
+
+def generate(
+    scale: str = "medium",
+    seed: int = 42,
+    spindle_root: str | Path = DEFAULT_SPINDLE_ROOT,
+    return_engine: bool = False,
+):
     """Generate the 9 retail tables as pyarrow Tables (loads Spindle config/pools/ref data)."""
     t0 = time.perf_counter()
     schema = load_schema(spindle_root)
@@ -1236,10 +1397,13 @@ def generate(scale: str = "medium", seed: int = 42, spindle_root: str | Path = D
     return (tables, eng) if return_engine else tables
 
 
-def write_parquet(tables: dict[str, pa.Table], out_dir: str | Path, compression: str = "snappy") -> list[Path]:
+def write_parquet(
+    tables: dict[str, pa.Table], out_dir: str | Path, compression: str = "snappy"
+) -> list[Path]:
     """Mirror of PandasWriter.to_parquet: one file per table, sequential, pandas'
     default (snappy) compression."""
     import pyarrow.parquet as pq
+
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     paths = []
@@ -1252,6 +1416,7 @@ def write_parquet(tables: dict[str, pa.Table], out_dir: str | Path, compression:
 
 if __name__ == "__main__":
     import argparse
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--scale", default="medium")
     ap.add_argument("--seed", type=int, default=42)

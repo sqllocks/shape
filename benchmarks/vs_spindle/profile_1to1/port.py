@@ -31,6 +31,7 @@ GIL).  PROFILE_THREADS=1 (or threads=1) forces a single thread everywhere
 OPENBLAS_NUM_THREADS=1 before import to make the BLAS in the correlation step
 single-threaded too (bench.py does this).
 """
+
 from __future__ import annotations
 
 import datetime as _dt
@@ -113,6 +114,7 @@ class Timestamp(_dt.datetime):
 # threading
 # ---------------------------------------------------------------------------
 
+
 def _n_threads(threads: int | None) -> int:
     if threads is None:
         threads = int(os.environ.get("PROFILE_THREADS", "0")) or (os.cpu_count() or 1)
@@ -135,8 +137,27 @@ def _n_threads(threads: int | None) -> int:
 # ---------------------------------------------------------------------------
 
 # pandas' default NA tokens (pandas._libs.parsers.STR_NA_VALUES)
-PANDAS_NA = ["", "#N/A", "#N/A N/A", "#NA", "-1.#IND", "-1.#QNAN", "-NaN", "-nan", "1.#IND",
-             "1.#QNAN", "<NA>", "N/A", "NA", "NULL", "NaN", "None", "n/a", "nan", "null"]
+PANDAS_NA = [
+    "",
+    "#N/A",
+    "#N/A N/A",
+    "#NA",
+    "-1.#IND",
+    "-1.#QNAN",
+    "-NaN",
+    "-nan",
+    "1.#IND",
+    "1.#QNAN",
+    "<NA>",
+    "N/A",
+    "NA",
+    "NULL",
+    "NaN",
+    "None",
+    "n/a",
+    "nan",
+    "null",
+]
 
 
 @dataclass
@@ -148,11 +169,16 @@ class _Col:
 
 def _csv_cols(t: pa.Table) -> list[_Col]:
     out = []
-    for name, col in zip(t.column_names, t.columns):
+    for name, col in zip(t.column_names, t.columns, strict=False):
         typ = col.type
         if pa.types.is_integer(typ):
-            out.append(_Col(name, "int" if col.null_count == 0 else "float",
-                            col if col.null_count == 0 else pc.cast(col, pa.float64())))
+            out.append(
+                _Col(
+                    name,
+                    "int" if col.null_count == 0 else "float",
+                    col if col.null_count == 0 else pc.cast(col, pa.float64()),
+                )
+            )
         elif pa.types.is_floating(typ):
             out.append(_Col(name, "float", pc.cast(col, pa.float64())))
         elif pa.types.is_boolean(typ):
@@ -171,7 +197,7 @@ def _csv_cols(t: pa.Table) -> list[_Col]:
 def _arrow_cols(t: pa.Table) -> list[_Col]:
     """pa.Table -> pandas semantics of Table.to_pandas() / pd.read_parquet()."""
     out = []
-    for name, col in zip(t.column_names, t.columns):
+    for name, col in zip(t.column_names, t.columns, strict=False):
         typ = col.type
         if pa.types.is_dictionary(typ):
             col = pc.cast(col, typ.value_type)
@@ -202,8 +228,11 @@ def read_csv(path, threads: int | None = None) -> pa.Table:
     n = _n_threads(threads)
     ro = pacsv.ReadOptions(use_threads=n != 1, block_size=1 << 24)
     co = pacsv.ConvertOptions(
-        null_values=PANDAS_NA, strings_can_be_null=True, quoted_strings_can_be_null=True,
-        true_values=["True", "TRUE", "true"], false_values=["False", "FALSE", "false"],
+        null_values=PANDAS_NA,
+        strings_can_be_null=True,
+        quoted_strings_can_be_null=True,
+        true_values=["True", "TRUE", "true"],
+        false_values=["False", "FALSE", "false"],
         timestamp_parsers=["@@never%Y"],  # pandas.read_csv does not parse datetimes
     )
     return pacsv.read_csv(path, read_options=ro, convert_options=co)
@@ -214,21 +243,70 @@ def read_csv(path, threads: int | None = None) -> pa.Table:
 # ---------------------------------------------------------------------------
 
 # --- special.ndtr (cephes ndtr.c coefficients) -----------------------------
-_P = np.array([2.46196981473530512524E-10, 5.64189564831068821977E-1, 7.46321056442269912687E0,
-               4.86371970985681366614E1, 1.96520832956077098242E2, 5.26445194995477358631E2,
-               9.34528527171957607540E2, 1.02755188689515710272E3, 5.57535335369399327526E2])
-_Q = np.array([1.32281951154744992508E1, 8.67072140885989742329E1, 3.54937778887819891062E2,
-               9.75708501743205489753E2, 1.82390916687909736289E3, 2.24633760818710981792E3,
-               1.65666309194161350182E3, 5.57535340817727675546E2])
-_R = np.array([5.64189583547755073984E-1, 1.27536670759978104416E0, 5.01905042251180477414E0,
-               6.16021097993053585195E0, 7.40974269950448939160E0, 2.97886665372100240670E0])
-_S = np.array([2.26052863220117276590E0, 9.39603524938001434673E0, 1.20489539808096656605E1,
-               1.70814450747565897222E1, 9.60896809063285878198E0, 3.36907645100081516050E0])
-_T = np.array([9.60497373987051638749E0, 9.00260197203842689217E1, 2.23200534594684319226E3,
-               7.00332514112805075473E3, 5.55923013010394962768E4])
-_U = np.array([3.35617141647503099647E1, 5.21357949780152679795E2, 4.59432382970980127987E3,
-               2.26290000613890934246E4, 4.92673942608635921086E4])
-_SQRTH = 7.07106781186547524401E-1
+_P = np.array(
+    [
+        2.46196981473530512524e-10,
+        5.64189564831068821977e-1,
+        7.46321056442269912687e0,
+        4.86371970985681366614e1,
+        1.96520832956077098242e2,
+        5.26445194995477358631e2,
+        9.34528527171957607540e2,
+        1.02755188689515710272e3,
+        5.57535335369399327526e2,
+    ]
+)
+_Q = np.array(
+    [
+        1.32281951154744992508e1,
+        8.67072140885989742329e1,
+        3.54937778887819891062e2,
+        9.75708501743205489753e2,
+        1.82390916687909736289e3,
+        2.24633760818710981792e3,
+        1.65666309194161350182e3,
+        5.57535340817727675546e2,
+    ]
+)
+_R = np.array(
+    [
+        5.64189583547755073984e-1,
+        1.27536670759978104416e0,
+        5.01905042251180477414e0,
+        6.16021097993053585195e0,
+        7.40974269950448939160e0,
+        2.97886665372100240670e0,
+    ]
+)
+_S = np.array(
+    [
+        2.26052863220117276590e0,
+        9.39603524938001434673e0,
+        1.20489539808096656605e1,
+        1.70814450747565897222e1,
+        9.60896809063285878198e0,
+        3.36907645100081516050e0,
+    ]
+)
+_T = np.array(
+    [
+        9.60497373987051638749e0,
+        9.00260197203842689217e1,
+        2.23200534594684319226e3,
+        7.00332514112805075473e3,
+        5.55923013010394962768e4,
+    ]
+)
+_U = np.array(
+    [
+        3.35617141647503099647e1,
+        5.21357949780152679795e2,
+        4.59432382970980127987e3,
+        2.26290000613890934246e4,
+        4.92673942608635921086e4,
+    ]
+)
+_SQRTH = 7.07106781186547524401e-1
 
 
 def _polevl(x, c):
@@ -281,6 +359,7 @@ def ndtr(a):
 
 # --- distributions: cdf (rv_continuous.cdf semantics) ----------------------
 
+
 def _cdf(name: str, x: np.ndarray, params: tuple) -> np.ndarray:
     if name == "lognormal":
         s, loc, scale = params
@@ -317,6 +396,7 @@ def _cdf(name: str, x: np.ndarray, params: tuple) -> np.ndarray:
 
 # --- KS ---------------------------------------------------------------------
 
+
 def _ks_stat_sorted(xs: np.ndarray, name: str, params: tuple) -> float:
     n = xs.shape[0]
     cdfvals = _cdf(name, xs, params)
@@ -332,12 +412,19 @@ _SQRT2PI = np.sqrt(2 * np.pi)
 _LOG_2PI = np.log(2 * np.pi)
 _MIN_LOG = -708
 _SQRT3 = np.sqrt(3)
-_PI_SQUARED = np.pi ** 2
-_PI_FOUR = np.pi ** 4
-_PI_SIX = np.pi ** 6
-_STIRLING = [-2.955065359477124183e-2, 6.4102564102564102564e-3, -1.9175269175269175269e-3,
-             8.4175084175084175084e-4, -5.952380952380952381e-4, 7.9365079365079365079e-4,
-             -2.7777777777777777778e-3, 8.3333333333333333333e-2]
+_PI_SQUARED = np.pi**2
+_PI_FOUR = np.pi**4
+_PI_SIX = np.pi**6
+_STIRLING = [
+    -2.955065359477124183e-2,
+    6.4102564102564102564e-3,
+    -1.9175269175269175269e-3,
+    8.4175084175084175084e-4,
+    -5.952380952380952381e-4,
+    7.9365079365079365079e-4,
+    -2.7777777777777777778e-3,
+    8.3333333333333333333e-2,
+]
 
 
 def _clip(p):
@@ -355,17 +442,17 @@ def _kolmogn_DMTW(n, d):
     m = 2 * k - 1
     H = np.zeros([m, m])
     intm = np.arange(1, m + 1)
-    v = 1.0 - h ** intm
+    v = 1.0 - h**intm
     w = np.empty(m)
     fac = 1.0
     for j in intm:
         w[j - 1] = fac
         fac /= j
         v[j - 1] *= fac
-    tt = max(2 * h - 1.0, 0) ** m - 2 * h ** m
+    tt = max(2 * h - 1.0, 0) ** m - 2 * h**m
     v[-1] = (1.0 + tt) * fac
     for i in range(1, m):
-        H[i - 1:, i] = w[:m - i + 1]
+        H[i - 1 :, i] = w[: m - i + 1]
     H[:, 0] = v
     H[-1, :] = np.flip(v, axis=0)
     Hpwr = np.eye(np.shape(H)[0])
@@ -443,10 +530,10 @@ def _kolmogn_Pomeranz(n, x):
             pwrs = twogpower if i % 2 else onem2gpower
         ln2 = j2 - k1 + 1
         if ln2 > 0:
-            conv = np.convolve(V0[k1 - V0s:k1 - V0s + ln2], pwrs[:ln2])
+            conv = np.convolve(V0[k1 - V0s : k1 - V0s + ln2], pwrs[:ln2])
             conv_start = j1 - k1
             conv_len = j2 - j1 + 1
-            V1[:conv_len] = conv[conv_start:conv_start + conv_len]
+            V1[:conv_len] = conv[conv_start : conv_start + conv_len]
             if 0 < np.max(V1) < _EM128:
                 V1 *= _EP128
                 expnt -= _E128
@@ -468,7 +555,7 @@ def _kolmogn_PelzGood(n, x):
     if x >= 1.0:
         return 1.0
     z = np.sqrt(n) * x
-    zsquared, zthree, zfour, zsix = z ** 2, z ** 3, z ** 4, z ** 6
+    zsquared, zthree, zfour, zsix = z**2, z**3, z**4, z**6
     qlog = -_PI_SQUARED / 8 / zsquared
     if qlog < _MIN_LOG:
         return 0.0
@@ -481,26 +568,32 @@ def _kolmogn_PelzGood(n, x):
     k3d = _PI_SIX * (5 - 30 * zsquared) / 64
     k3c = _PI_FOUR * (-60 * zsquared + 212 * zfour) / 16
     k3b = _PI_SQUARED * (135 * zfour - 96 * zsix) / 4
-    k3a = -30 * zsix - 90 * z ** 8
+    k3a = -30 * zsix - 90 * z**8
     K0to3 = np.zeros(4)
     maxk = int(np.ceil(16 * z / np.pi))
     for k in range(maxk, 0, -1):
         m = 2 * k - 1
-        msquared, mfour, msix = m ** 2, m ** 4, m ** 6
+        msquared, mfour, msix = m**2, m**4, m**6
         qpower = np.power(q, 8 * k)
-        coeffs = np.array([1.0, k1a + k1b * msquared, k2a + k2b * msquared + k2c * mfour,
-                           k3a + k3b * msquared + k3c * mfour + k3d * msix])
+        coeffs = np.array(
+            [
+                1.0,
+                k1a + k1b * msquared,
+                k2a + k2b * msquared + k2c * mfour,
+                k3a + k3b * msquared + k3c * mfour + k3d * msix,
+            ]
+        )
         K0to3 *= qpower
         K0to3 += coeffs
     K0to3 *= q
     K0to3 *= _SQRT2PI
-    K0to3 /= np.array([z, 6 * zfour, 72 * z ** 7, 6480 * z ** 10])
+    K0to3 /= np.array([z, 6 * zfour, 72 * z**7, 6480 * z**10])
     q = np.exp(-_PI_SQUARED / 2 / zsquared)
     ks = np.arange(maxk, 0, -1)
-    ksquared = ks ** 2
+    ksquared = ks**2
     sqrt3z = _SQRT3 * z
     kspi = np.pi * ks
-    qpwers = q ** ksquared
+    qpwers = q**ksquared
     k2extra = np.sum(ksquared * qpwers)
     k2extra *= _PI_SQUARED * _SQRT2PI / (-36 * zthree)
     K0to3[2] += k2extra
@@ -570,7 +663,7 @@ def kstwo_sf(d: float, n: int) -> float:
         return _clip(2 * _smirnov(n, x))
     if nxsquared >= 18.0:
         cdfprob = 1.0
-    elif n <= 100000 and n * x ** 1.5 <= 1.4:
+    elif n <= 100000 and n * x**1.5 <= 1.4:
         cdfprob = _kolmogn_DMTW(n, x)
     else:
         cdfprob = _kolmogn_PelzGood(n, x)
@@ -578,6 +671,7 @@ def kstwo_sf(d: float, n: int) -> float:
 
 
 # --- fits ------------------------------------------------------------------
+
 
 class _FitError(Exception):
     pass
@@ -588,7 +682,7 @@ _RTOL = 4 * np.finfo(float).eps
 
 
 def _lognorm_logpdf(x, s):
-    return -np.log(x) ** 2 / (2 * s ** 2) - np.log(s * x * np.sqrt(2 * np.pi))
+    return -(np.log(x) ** 2) / (2 * s**2) - np.log(s * x * np.sqrt(2 * np.pi))
 
 
 def _lognorm_nnlf(theta, data):
@@ -612,7 +706,7 @@ def _lognorm_logpdf_inplace(x, s):
     a = np.log(x)
     np.square(a, out=a)
     np.negative(a, out=a)
-    np.divide(a, 2 * s ** 2, out=a)
+    np.divide(a, 2 * s**2, out=a)
     b = np.multiply(s, x)
     np.multiply(b, _C_SQRT2PI, out=b)
     np.log(b, out=b)
@@ -689,8 +783,10 @@ def _nelder_mead(func, x0, data, xatol=1e-4, fatol=1e-4):
     iterations = 1
     while ncalls[0] < maxfun and iterations < maxiter:
         try:
-            if (np.max(np.ravel(np.abs(sim[1:] - sim[0]))) <= xatol and
-                    np.max(np.abs(fsim[0] - fsim[1:])) <= fatol):
+            if (
+                np.max(np.ravel(np.abs(sim[1:] - sim[0]))) <= xatol
+                and np.max(np.abs(fsim[0] - fsim[1:])) <= fatol
+            ):
                 break
             xbar = np.add.reduce(sim[:-1], 0) / N
             xr = (1 + rho) * xbar - rho * sim[-1]
@@ -773,6 +869,7 @@ def _lognorm_generic_fit(data):
 
 def _brentq(f, xa, xb, xtol=2e-12, rtol=_RTOL, maxiter=100):
     """scipy.optimize.brentq (zeros.c) incl. the NaN-raising wrapper."""
+
     def fw(x):
         fx = f(x)
         if np.isnan(fx):
@@ -845,7 +942,7 @@ def _lognorm_fit(data):
         shifted = np.subtract(data, loc, out=B1)
         t = np.divide(shifted, scale, out=B2)
         np.log(t, out=t)
-        np.divide(t, shape ** 2, out=t)
+        np.divide(t, shape**2, out=t)
         np.add(1, t, out=t)
         np.divide(t, shifted, out=t)
         return np.sum(t)
@@ -869,8 +966,11 @@ def _lognorm_fit(data):
         lbrack = np.minimum(np.nextafter(rbrack, -np.inf), rbrack - 1)
         dL_dLoc_lbrack = dL_dLoc(lbrack)
         delta = 2 * (rbrack - lbrack)
-        while (np.isfinite(lbrack) and np.isfinite(dL_dLoc_lbrack)
-               and np.sign(dL_dLoc_lbrack) == np.sign(dL_dLoc_rbrack)):
+        while (
+            np.isfinite(lbrack)
+            and np.isfinite(dL_dLoc_lbrack)
+            and np.sign(dL_dLoc_lbrack) == np.sign(dL_dLoc_rbrack)
+        ):
             lbrack = rbrack - delta
             dL_dLoc_lbrack = dL_dLoc(lbrack)
             delta *= 2
@@ -946,12 +1046,14 @@ _DATE_RE = r"^\d{4}[-/]\d{1,2}[-/]\d{1,2}$"
 _SSN_RE = r"^\d{3}-\d{2}-\d{4}$"
 _OCT = r"(?:25[0-5]|2[0-4]\d|[01]?\d\d?)"
 _IP_V4_RE = rf"^{_OCT}\.{_OCT}\.{_OCT}\.{_OCT}$"
-_IP_V6_RE = (r"^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$"
-             r"|^(?:[0-9a-fA-F]{1,4}:){1,7}:$"
-             r"|^:(?::[0-9a-fA-F]{1,4}){1,7}$"
-             r"|^(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$"
-             r"|^::(?:[fF]{4}:){0,1}\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$"
-             r"|^::$")
+_IP_V6_RE = (
+    r"^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$"
+    r"|^(?:[0-9a-fA-F]{1,4}:){1,7}:$"
+    r"|^:(?::[0-9a-fA-F]{1,4}){1,7}$"
+    r"|^(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$"
+    r"|^::(?:[fF]{4}:){0,1}\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$"
+    r"|^::$"
+)
 _MAC_RE = r"^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$|^([0-9a-fA-F]{2}-){5}[0-9a-fA-F]{2}$"
 _CURRENCY_CODE_RE = r"^[A-Z]{3}$"
 _LANGUAGE_CODE_RE = r"^[a-z]{2}(-[A-Z]{2})?$"
@@ -972,10 +1074,23 @@ def _pandas_fullmatch_pattern(pat: str) -> str:
     return f"^({pat})"
 
 
-_PATTERNS = {k: _pandas_fullmatch_pattern(v) for k, v in {
-    "email": _EMAIL_RE, "uuid": _UUID_RE, "ssn": _SSN_RE, "mac": _MAC_RE, "ipv4": _IP_V4_RE,
-    "ipv6": _IP_V6_RE, "iban": _IBAN_RE, "postal": _POSTAL_US_RE, "date": _DATE_RE,
-    "phone": _PHONE_RE, "currency": _CURRENCY_CODE_RE, "language": _LANGUAGE_CODE_RE}.items()}
+_PATTERNS = {
+    k: _pandas_fullmatch_pattern(v)
+    for k, v in {
+        "email": _EMAIL_RE,
+        "uuid": _UUID_RE,
+        "ssn": _SSN_RE,
+        "mac": _MAC_RE,
+        "ipv4": _IP_V4_RE,
+        "ipv6": _IP_V6_RE,
+        "iban": _IBAN_RE,
+        "postal": _POSTAL_US_RE,
+        "date": _DATE_RE,
+        "phone": _PHONE_RE,
+        "currency": _CURRENCY_CODE_RE,
+        "language": _LANGUAGE_CODE_RE,
+    }.items()
+}
 
 
 def detect_pattern(non_null: pa.Array, cardinality: int) -> str | None:
@@ -1058,7 +1173,9 @@ def _percentile_sorted(sorted_a: np.ndarray, qs) -> np.ndarray:
 _HASH_MAX_CARD = 50_000
 
 
-def _top_by_first_seen(values: np.ndarray, uniq: np.ndarray, counts: np.ndarray, need: int) -> np.ndarray:
+def _top_by_first_seen(
+    values: np.ndarray, uniq: np.ndarray, counts: np.ndarray, need: int
+) -> np.ndarray:
     """Indices into `uniq` of the first `need` keys in pandas' value_counts order
     (count desc, ties by first appearance in row order), without hashing every row:
     keys above the need-th count are always selected; ties at that count are resolved by
@@ -1072,7 +1189,7 @@ def _top_by_first_seen(values: np.ndarray, uniq: np.ndarray, counts: np.ndarray,
     found_above = found_ties = 0
     pos, chunk, n = 0, 1 << 14, len(values)
     while pos < n and (found_above < n_above or found_ties < want_ties):
-        ch = values[pos:pos + chunk]
+        ch = values[pos : pos + chunk]
         idx = np.searchsorted(uniq, ch)
         rows = np.flatnonzero(counts[idx] >= c_thr)
         if len(rows):
@@ -1105,9 +1222,11 @@ def _keys_py(values: pa.Array, kind: str) -> list[str]:
     if kind == "float":
         return [str(float(v)) for v in values.to_numpy(zero_copy_only=False).tolist()]
     if kind == "dt64":
-        return pc.strftime(pc.cast(values, pa.timestamp("s")), format="%Y-%m-%d %H:%M:%S").to_pylist() \
-            if _no_subsecond(values) \
+        return (
+            pc.strftime(pc.cast(values, pa.timestamp("s")), format="%Y-%m-%d %H:%M:%S").to_pylist()
+            if _no_subsecond(values)
             else [str(_to_timestamp(v)) for v in values.to_pylist()]
+        )
     if kind == "objdate":
         return pc.strftime(values, format="%Y-%m-%d").to_pylist()
     return values.to_pylist()
@@ -1137,14 +1256,21 @@ def _round6(arr: np.ndarray) -> list[float]:
 _ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _ISO_DT = re.compile(r"^\d{4}-\d{2}-\d{2}([ T])\d{2}:\d{2}:\d{2}$")
 _ISO_DT_FRAC = re.compile(r"^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}\.\d+$")
-_EXTRA_FORMATS = ["%Y/%m/%d", "%m/%d/%Y", "%Y/%m/%d %H:%M:%S", "%m/%d/%Y %H:%M:%S", "%d-%b-%Y",
-                  "%b %d %Y", "%d %b %Y"]
+_EXTRA_FORMATS = [
+    "%Y/%m/%d",
+    "%m/%d/%Y",
+    "%Y/%m/%d %H:%M:%S",
+    "%m/%d/%Y %H:%M:%S",
+    "%d-%b-%Y",
+    "%b %d %Y",
+    "%d %b %Y",
+]
 
 
 def _try(fn, arr) -> bool:
     """True if fn(arr) succeeds.  Probes the first element first so that a column that
     obviously does not parse fails fast (pandas also stops at the first failure)."""
-    for a in ((arr.slice(0, 1), arr) if len(arr) > 1 else (arr,)):
+    for a in (arr.slice(0, 1), arr) if len(arr) > 1 else (arr,):
         try:
             fn(a)
         except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
@@ -1159,7 +1285,7 @@ def _all_parse_datetime(uniques: pa.Array) -> bool:
     if _try(lambda a: pc.cast(a, pa.timestamp("ns")), uniques):
         return True
     for fmt in _EXTRA_FORMATS:
-        if _try(lambda a: pc.strptime(a, format=fmt, unit="ns"), uniques):
+        if _try(lambda a, fmt=fmt: pc.strptime(a, format=fmt, unit="ns"), uniques):
             return True
     return False
 
@@ -1174,17 +1300,20 @@ def _coerce_datetime_strings(arr: pa.Array, keep_nulls: bool = False):
     fmt = None
     if _ISO_DATE.match(first):
         fmt = "%Y-%m-%d"
-    elif (m := _ISO_DT.match(first)):
+    elif m := _ISO_DT.match(first):
         fmt = f"%Y-%m-%d{m.group(1)}%H:%M:%S"
     elif _ISO_DT_FRAC.match(first):
-        out = pc.cast(arr, pa.timestamp("ns"), safe=False) if _try(
-            lambda a: pc.cast(a, pa.timestamp("ns")), arr) else None
+        out = (
+            pc.cast(arr, pa.timestamp("ns"), safe=False)
+            if _try(lambda a: pc.cast(a, pa.timestamp("ns")), arr)
+            else None
+        )
         if out is None:
             return None if keep_nulls else pa.array([], pa.timestamp("ns"))
         return out if keep_nulls else pc.drop_null(out)
     else:
         for f in _EXTRA_FORMATS:
-            if _try(lambda a: pc.strptime(a, format=f, unit="ns"), pa.array([first])):
+            if _try(lambda a, f=f: pc.strptime(a, format=f, unit="ns"), pa.array([first])):
                 fmt = f
                 break
     if fmt is None:
@@ -1197,9 +1326,11 @@ def _coerce_datetime_strings(arr: pa.Array, keep_nulls: bool = False):
 # per-column profiling
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class _Work:
     """Intermediate per-column state kept for PK/FK/correlation."""
+
     col: _Col
     prof: ColumnProfile
     uniques: Any = None  # pa.Array of distinct non-null values
@@ -1267,7 +1398,9 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
     cardinality = len(uniq)
     cardinality_ratio = cardinality / row_count if row_count > 0 else 0.0
     is_unique = cardinality == row_count and null_count == 0
-    is_enum = (cardinality < 200 or (cardinality_ratio < 0.30 and cardinality < 50_000)) and cardinality > 0
+    is_enum = (
+        cardinality < 200 or (cardinality_ratio < 0.30 and cardinality < 50_000)
+    ) and cardinality > 0
 
     # ---- spindle type -------------------------------------------------------
     numeric = None  # float64 numpy array of numeric values (row order)
@@ -1286,7 +1419,9 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
     elif kind == "dt64":
         if n_nn:
             ints = pc.cast(non_null, pa.int64()).to_numpy()
-            per_day = {"s": 86400, "ms": 86400_000, "us": 86400_000_000, "ns": 86400_000_000_000}[non_null.type.unit]
+            per_day = {"s": 86400, "ms": 86400_000, "us": 86400_000_000, "ns": 86400_000_000_000}[
+                non_null.type.unit
+            ]
             stype = "date" if not np.any(ints % per_day) else "datetime"
         else:
             stype = "datetime"
@@ -1300,7 +1435,9 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
         stype = "string"
         if n_nn:
             lower = pc.utf8_lower(uniq)
-            if pc.all(pc.is_in(lower, value_set=pa.array(["true", "false", "0", "1", "yes", "no"]))).as_py():
+            if pc.all(
+                pc.is_in(lower, value_set=pa.array(["true", "false", "0", "1", "yes", "no"]))
+            ).as_py():
                 stype = "boolean"
             else:
                 ok = _try(lambda a: pc.cast(a, pa.float64()), uniq)
@@ -1318,8 +1455,11 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
                         dt_values = dt_try
                     elif _all_parse_datetime(uniq):
                         stype = "datetime"
-                        dt_values = pc.drop_null(dt_try) if dt_try is not None else \
-                            _coerce_datetime_strings(non_null)
+                        dt_values = (
+                            pc.drop_null(dt_try)
+                            if dt_try is not None
+                            else _coerce_datetime_strings(non_null)
+                        )
 
     # ---- enum + value_counts_ext ------------------------------------------
     enum_values = None
@@ -1341,8 +1481,8 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
         props = counts[top] / n_nn
         rounded = _round6(props)
         if is_enum:
-            enum_values = dict(zip(keys, rounded))
-        value_counts_ext = dict(zip(keys[:top_n], rounded[:top_n]))
+            enum_values = dict(zip(keys, rounded, strict=False))
+        value_counts_ext = dict(zip(keys[:top_n], rounded[:top_n], strict=False))
 
     # ---- min / max (pandas types) ------------------------------------------
     min_value = max_value = None
@@ -1380,7 +1520,7 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
             if xs is None:
                 xs = np.sort(numeric)
             vals = _percentile_sorted(xs, _PCTS + [0.5, 99.5])
-            quantiles = {f"p{p}": round(float(v), 6) for p, v in zip(_PCTS, vals[:9])}
+            quantiles = {f"p{p}": round(float(v), 6) for p, v in zip(_PCTS, vals[:9], strict=False)}
             quantiles["p0_5"] = round(float(vals[9]), 6)
             quantiles["p99_5"] = round(float(vals[10]), 6)
             q1, q3 = vals[3], vals[5]
@@ -1390,7 +1530,9 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
             else:
                 lo_f = q1 - iqr_factor * iqr
                 hi_f = q3 + iqr_factor * iqr
-                n_out = int(np.searchsorted(xs, lo_f, "left") + (cnt - np.searchsorted(xs, hi_f, "right")))
+                n_out = int(
+                    np.searchsorted(xs, lo_f, "left") + (cnt - np.searchsorted(xs, hi_f, "right"))
+                )
                 outlier_rate_val = round(n_out / cnt, 6)
         if dist_name is not None and cnt >= 20:
             try:
@@ -1443,19 +1585,39 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
             yr = np.bincount(np.clip(years - lo_year, 0, span - 1), minlength=span).astype(float)
             mc = np.bincount(months - 1, minlength=12).astype(float)
             temporal = {
-                "lo_year": lo_year, "hi_year": hi_year,
+                "lo_year": lo_year,
+                "hi_year": hi_year,
                 "year_weights": _round6(yr / yr.sum()),
                 "month_weights": _round6(mc / mc.sum()),
             } or None
 
     prof = ColumnProfile(
-        name=c.name, dtype=stype, null_count=null_count, null_rate=round(null_rate, 6),
-        cardinality=cardinality, cardinality_ratio=round(cardinality_ratio, 6), is_unique=is_unique,
-        is_enum=is_enum, enum_values=enum_values, min_value=min_value, max_value=max_value,
-        mean=mean_val, std=std_val, distribution=dist_name, distribution_params=dist_params,
-        pattern=pattern, is_primary_key=False, is_foreign_key=False, fk_ref_table=None,
-        quantiles=quantiles, hour_histogram=hour_h, dow_histogram=dow_h, temporal_histogram=temporal,
-        string_length=string_length, outlier_rate=outlier_rate_val, value_counts_ext=value_counts_ext,
+        name=c.name,
+        dtype=stype,
+        null_count=null_count,
+        null_rate=round(null_rate, 6),
+        cardinality=cardinality,
+        cardinality_ratio=round(cardinality_ratio, 6),
+        is_unique=is_unique,
+        is_enum=is_enum,
+        enum_values=enum_values,
+        min_value=min_value,
+        max_value=max_value,
+        mean=mean_val,
+        std=std_val,
+        distribution=dist_name,
+        distribution_params=dist_params,
+        pattern=pattern,
+        is_primary_key=False,
+        is_foreign_key=False,
+        fk_ref_table=None,
+        quantiles=quantiles,
+        hour_histogram=hour_h,
+        dow_histogram=dow_h,
+        temporal_histogram=temporal,
+        string_length=string_length,
+        outlier_rate=outlier_rate_val,
+        value_counts_ext=value_counts_ext,
         fit_score=fit_score_val,
     )
     return _Work(col=c, prof=prof, uniques=uniq)
@@ -1529,13 +1691,13 @@ def _correlation(works: list[_Work], row_count: int) -> dict:
     Sxy = X.T @ X
     colsum = X.sum(axis=0)
     N = np.full((k, k), float(n))
-    Sx = np.repeat(colsum[:, None], k, axis=1)   # Sx[a, b]: sum of x_a where a & b present
+    Sx = np.repeat(colsum[:, None], k, axis=1)  # Sx[a, b]: sum of x_a where a & b present
     if nulls:
         N[:, nulls] = cnt[nulls][None, :]
         N[nulls, :] = cnt[nulls][:, None]
         N[np.ix_(nulls, nulls)] = MB.T @ MB
         Sx[:, nulls] = X.T @ MB
-    np.square(X, out=X)                           # X no longer needed: reuse for x^2
+    np.square(X, out=X)  # X no longer needed: reuse for x^2
     colsq = X.sum(axis=0)
     Sxx = np.repeat(colsq[:, None], k, axis=1)
     if nulls:
@@ -1563,8 +1725,13 @@ def _fk_values(w: _Work) -> pa.Array:
     return u
 
 
-def _detect_fks(tname: str, works: list[_Work], all_works: dict[str, list[_Work]],
-                pks: dict[str, list[str]], threshold: float = 0.9) -> dict[str, str]:
+def _detect_fks(
+    tname: str,
+    works: list[_Work],
+    all_works: dict[str, list[_Work]],
+    pks: dict[str, list[str]],
+    threshold: float = 0.9,
+) -> dict[str, str]:
     if not all_works:
         return {}
     out = {}
@@ -1611,8 +1778,9 @@ def _fork_task(i: int):
     return i, w.prof, (w.uniques if keep else None)
 
 
-def _profile_cols(cols: list[_Col], row_count: int, threads: int | None,
-                  keep_uniques: bool = False) -> list[_Work]:
+def _profile_cols(
+    cols: list[_Col], row_count: int, threads: int | None, keep_uniques: bool = False
+) -> list[_Work]:
     """Profile every column.  threads == 1: sequential.  Otherwise columns are spread over
     a pool: PROFILE_POOL=process (fork, copy-on-write access to the Arrow data; avoids
     GIL contention in the Python-level optimisers), PROFILE_POOL=thread, or auto (default:
@@ -1626,12 +1794,15 @@ def _profile_cols(cols: list[_Col], row_count: int, threads: int | None,
         mode = "process" if len(cols) >= 3 * n else "thread"
     if mode == "process":
         import multiprocessing as mp
+
         _FORK_STATE["args"] = (cols, row_count, keep_uniques)
         try:
             ctx = mp.get_context("fork")
             out: list = [None] * len(cols)
             # most expensive columns first (numeric: distribution fitting; strings: hashing)
-            order = sorted(range(len(cols)), key=lambda i: cols[i].kind not in ("float", "int", "str"))
+            order = sorted(
+                range(len(cols)), key=lambda i: cols[i].kind not in ("float", "int", "str")
+            )
             with ctx.Pool(min(n, len(cols))) as pool:
                 for i, prof, uniq in pool.imap_unordered(_fork_task, order, chunksize=1):
                     out[i] = _Work(col=cols[i], prof=prof, uniques=uniq)
@@ -1649,8 +1820,9 @@ def _sample_rows(cols: list[_Col], row_count: int, sample_rows: int | None):
     return [_Col(c.name, c.kind, c.arr.take(idx)) for c in cols], sample_rows
 
 
-def _finish_table(name: str, works: list[_Work], row_count: int, pk: list[str],
-                  fks: dict[str, str]) -> TableProfile:
+def _finish_table(
+    name: str, works: list[_Work], row_count: int, pk: list[str], fks: dict[str, str]
+) -> TableProfile:
     columns = {}
     for w in works:
         p = w.prof
@@ -1659,8 +1831,14 @@ def _finish_table(name: str, works: list[_Work], row_count: int, pk: list[str],
         p.fk_ref_table = fks.get(p.name)
         columns[p.name] = p
     corr = _correlation(works, row_count)
-    return TableProfile(name=name, row_count=row_count, columns=columns, primary_key=pk,
-                        detected_fks=fks, correlation_matrix=corr if corr else None)
+    return TableProfile(
+        name=name,
+        row_count=row_count,
+        columns=columns,
+        primary_key=pk,
+        detected_fks=fks,
+        correlation_matrix=corr if corr else None,
+    )
 
 
 def _profile_cols_table(name, cols, row_count, threads, sample_rows=None) -> TableProfile:
@@ -1670,23 +1848,33 @@ def _profile_cols_table(name, cols, row_count, threads, sample_rows=None) -> Tab
     return _finish_table(name, works, row_count, pk, {})
 
 
-def profile_csv(path, table_name: str | None = None, threads: int | None = None,
-                sample_rows: int | None = None) -> TableProfile:
+def profile_csv(
+    path, table_name: str | None = None, threads: int | None = None, sample_rows: int | None = None
+) -> TableProfile:
     """Equivalent of DataProfiler.from_csv(path)."""
     t = read_csv(path, threads)
-    return _profile_cols_table(table_name or Path(path).stem, _csv_cols(t), t.num_rows, threads, sample_rows)
+    return _profile_cols_table(
+        table_name or Path(path).stem, _csv_cols(t), t.num_rows, threads, sample_rows
+    )
 
 
-def profile_parquet(path, table_name: str | None = None, threads: int | None = None,
-                    sample_rows: int | None = None) -> TableProfile:
+def profile_parquet(
+    path, table_name: str | None = None, threads: int | None = None, sample_rows: int | None = None
+) -> TableProfile:
     """Equivalent of DataProfiler().profile(pd.read_parquet(path), stem)."""
     n = _n_threads(threads)
     t = pq.read_table(path, use_threads=n != 1)
-    return _profile_cols_table(table_name or Path(path).stem, _arrow_cols(t), t.num_rows, threads, sample_rows)
+    return _profile_cols_table(
+        table_name or Path(path).stem, _arrow_cols(t), t.num_rows, threads, sample_rows
+    )
 
 
-def profile_table(table: pa.Table, table_name: str = "table", threads: int | None = None,
-                  sample_rows: int | None = None) -> TableProfile:
+def profile_table(
+    table: pa.Table,
+    table_name: str = "table",
+    threads: int | None = None,
+    sample_rows: int | None = None,
+) -> TableProfile:
     """Equivalent of DataProfiler().profile(table.to_pandas(), table_name)."""
     return _profile_cols_table(table_name, _arrow_cols(table), table.num_rows, threads, sample_rows)
 
@@ -1705,7 +1893,9 @@ def profile_dataset(tables: dict[str, Any], threads: int | None = None) -> Datas
                 cols_by_t[name] = (_arrow_cols(tt), tt.num_rows)
         else:
             cols_by_t[name] = (_arrow_cols(t), t.num_rows)
-    works = {n: _profile_cols(c, rc, threads, keep_uniques=True) for n, (c, rc) in cols_by_t.items()}
+    works = {
+        n: _profile_cols(c, rc, threads, keep_uniques=True) for n, (c, rc) in cols_by_t.items()
+    }
     pks = {n: _detect_primary_key(w, cols_by_t[n][1]) for n, w in works.items()}
     profiles = {}
     for n, w in works.items():
@@ -1714,7 +1904,14 @@ def profile_dataset(tables: dict[str, Any], threads: int | None = None) -> Datas
     rels = []
     for n, tp in profiles.items():
         for col, parent in tp.detected_fks.items():
-            rels.append({"name": f"fk_{n}_{col}", "parent": parent, "child": n,
-                         "parent_columns": profiles[parent].primary_key, "child_columns": [col],
-                         "type": "one_to_many"})
+            rels.append(
+                {
+                    "name": f"fk_{n}_{col}",
+                    "parent": parent,
+                    "child": n,
+                    "parent_columns": profiles[parent].primary_key,
+                    "child_columns": [col],
+                    "type": "one_to_many",
+                }
+            )
     return DatasetProfile(tables=profiles, relationships=rels)

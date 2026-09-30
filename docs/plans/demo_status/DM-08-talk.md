@@ -21,5 +21,5 @@
 - The §12.6 storyline begins "Spindle retired". The lane brief forbids public wording about
   Spindle's retirement or succession, so the storyline opens with the drift problem instead.
   Spindle appears only in the benchmark comparison.
-- Profiling timings are of the benchmark port (`benchmarks/profile_1to1/port.py`), not of
+- Profiling timings are of the benchmark port (`benchmarks/vs_spindle/profile_1to1/port.py`), not of
   `shape.profile`; the sheet says so. No `results.json` exists yet.

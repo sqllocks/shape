@@ -1,7 +1,7 @@
 """Run Spindle's DataProfiler on a file and dump a normalised JSON profile.
 
 Runs under the *Spindle* venv:
-    /tmp/claude-0/spindle-venv/bin/python spindle_dump.py <path|dir> <out.json>
+    source scripts/env.sh && "$SPINDLE_PY" spindle_dump.py <path|dir> <out.json>
 
 A directory means multi-table: every *.csv (or *.parquet with --parquet) is read
 and profiled with DataProfiler().profile_dataset({stem: df}) (Spindle's only
@@ -9,6 +9,7 @@ cross-table FK path).  CSV single files go through DataProfiler.from_csv;
 Parquet single files through pd.read_parquet + DataProfiler().profile(), which
 is how Spindle's own CLI/demo code profiles Parquet (it has no from_parquet).
 """
+
 from __future__ import annotations
 
 import datetime as _dt
@@ -17,7 +18,10 @@ import math
 import sys
 from pathlib import Path
 
-SPINDLE = "/home/user/sqllocks/spindle"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from paths import SPINDLE_ROOT  # noqa: E402
+
+SPINDLE = str(SPINDLE_ROOT)
 
 
 def norm_scalar(v):
@@ -43,10 +47,29 @@ def norm_scalar(v):
 
 
 COL_FIELDS = [
-    "name", "dtype", "null_count", "null_rate", "cardinality", "cardinality_ratio", "is_unique",
-    "is_enum", "mean", "std", "distribution", "distribution_params", "pattern", "is_primary_key",
-    "is_foreign_key", "fk_ref_table", "quantiles", "hour_histogram", "dow_histogram",
-    "temporal_histogram", "string_length", "outlier_rate", "fit_score",
+    "name",
+    "dtype",
+    "null_count",
+    "null_rate",
+    "cardinality",
+    "cardinality_ratio",
+    "is_unique",
+    "is_enum",
+    "mean",
+    "std",
+    "distribution",
+    "distribution_params",
+    "pattern",
+    "is_primary_key",
+    "is_foreign_key",
+    "fk_ref_table",
+    "quantiles",
+    "hour_histogram",
+    "dow_histogram",
+    "temporal_histogram",
+    "string_length",
+    "outlier_rate",
+    "fit_score",
 ]
 
 
@@ -85,8 +108,10 @@ def table_to_dict(tp) -> dict:
 
 
 def dataset_to_dict(dp) -> dict:
-    return {"tables": {n: table_to_dict(t) for n, t in dp.tables.items()},
-            "relationships": _clean(dp.relationships)}
+    return {
+        "tables": {n: table_to_dict(t) for n, t in dp.tables.items()},
+        "relationships": _clean(dp.relationships),
+    }
 
 
 def run(path: str, parquet_dir: bool = False):

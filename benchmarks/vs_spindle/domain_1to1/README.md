@@ -8,32 +8,43 @@ tools under the same conditions.
 
 | file | what it is |
 |---|---|
-| `port.py` | `generate(scale='medium', seed=42, spindle_root=...) -> dict[str, pyarrow.Table]` and `write_parquet(tables, dir)`. Uses only numpy, pyarrow and the standard library. |
-| `verify.py` | Equivalence verifier (Spindle venv: needs pandas, scipy and Spindle). Writes `verify_report.json` and `verify_summary.txt`. |
-| `bench.py` | Benchmark harness. Every run is a fresh process; the median of 3 runs is reported. Writes `bench_results.json`. |
-| `verify_report*.json`, `verify_summary*.txt`, `bench_results.json` | Results of the runs quoted below. |
+| `port.py` | `generate(scale='medium', seed=42, spindle_root=...) -> dict[str, pyarrow.Table]` and `write_parquet(tables, dir)`. Uses only numpy, pyarrow and the standard library. Retail only. |
+| `generate.py` | Writes one run of a domain as Parquet, for `--impl spindle\|reference_port\|shape`, into `$BENCH_OUT_DIR/<impl>/<domain>/<scale>/seed<N>/`. Each impl runs in its own venv. |
+| `verify.py` | Equivalence verifier (T-21 clauses (a)-(h)); reads Parquet only, in the Spindle venv. Tables, FKs and business rules come from `../dump_schema.py`. Exits 1 unless every clause holds, 2 if a required run directory is missing. |
+| `bench.py` | Benchmark harness: every run is a fresh process (median of `--runs`), timing generate + write through `generate.py`. |
+
+The recorded results quoted below (`verify_*` reports for small, medium and large, the
+benchmark JSON, and the seed study) are kept in `benchmarks/baselines/2026-09-29/`. New runs
+write to `$BENCH_OUT_DIR`, never into this directory.
 
 ## How to run
 
+Set up the pinned Spindle and the venvs once (`docs/plans/COMPLETION_PLAN.md` section 1), then
+run everything from the repository root:
+
 ```bash
-SPY=/tmp/claude-0/spindle-venv/bin/python     # Spindle's venv (pandas 3.0.6, numpy 2.4.6, pyarrow 25.0.1, scipy)
-cd /home/user/shape/benchmarks/retail_1to1
+source scripts/env.sh
 
-# port only (works in any env with numpy + pyarrow; e.g. /tmp/claude-0/venv)
-/tmp/claude-0/venv/bin/python port.py --scale medium
+# one run of one impl (port only: any env with numpy + pyarrow)
+"$SHAPE_VENV/bin/python" benchmarks/vs_spindle/domain_1to1/generate.py \
+    --impl reference_port --domain retail --scale medium --seed 1042
 
-# equivalence: Spindle(seed 42) vs port(seed 1042) vs Spindle seeds 43..46 (~3 min at medium)
-$SPY verify.py --scale medium
-# same-seed variant (shows which columns are bit-identical)
-$SPY verify.py --scale medium --port-seed 42 --baseline-seeds 43 --out verify_report_sameseed.json
+# equivalence: Spindle seed 42 vs the impl at seed 1042, with Spindle seeds 43-46 as the
+# self-baseline. Missing run directories are generated first (~3 min at medium).
+"$SPINDLE_PY" benchmarks/vs_spindle/domain_1to1/verify.py --domain retail --scale medium --impl reference_port
 
-# benchmark (exclusive lock shared with other benchmark jobs on this machine)
-flock /tmp/claude-0/bench.lock $SPY bench.py --scales medium,large --runs 3
+# benchmark (holds the exclusive lock $BENCH_OUT_DIR/bench.lock)
+"$SHAPE_VENV/bin/python" benchmarks/vs_spindle/domain_1to1/bench.py \
+    --impl reference_port --domain retail --scales medium,large --runs 3
+
+# everything, in order (verifiers, benchmarks, re-verification of the timed output)
+python benchmarks/vs_spindle/run.py --quick
 ```
 
-`spindle_root` defaults to `/home/user/sqllocks/spindle`. The port reads that checkout at
-runtime and never writes to it (bytecode writing is disabled while `names.py` is loaded).
-Nothing from Spindle is copied into this repo.
+The seed set is fixed by T-21 (Spindle 42 as the reference, 43-46 as the baseline, the impl at
+1042) and `verify.py` has no option to change it. `spindle_root` defaults to `$SPINDLE_ROOT`.
+The port reads that checkout at runtime and never writes to it (bytecode writing is disabled
+while `names.py` is loaded). Nothing from Spindle is copied into this repo.
 
 ## What the port reads from Spindle at runtime
 
@@ -68,7 +79,7 @@ Nothing from Spindle is copied into this repo.
   * `BusinessRulesEngine.fix_violations`, applied in schema order and on the same data
     Spindle applies it to.
 
-## Equivalence results (medium, `verify_summary.txt`)
+## Equivalence results (medium, `retail_verify_medium.txt` in the baselines)
 
 **Method.** Spindle (seed 42) is the reference. The port runs at seed **1042**, so no RNG
 stream is shared with Spindle. Four more Spindle seeds (43–46) measure how far Spindle
@@ -87,13 +98,17 @@ passes:
   example `first.lower + "." + last.lower + suffix(1..998) + "@" + EMAIL_DOMAINS`.
 
 **Result: 60 / 60 columns equivalent at medium.** No columns are flagged. Small is also
-60 / 60 (`verify_summary_small.txt`). {{LARGE_VERIFY}}
+60 / 60 (`retail_verify_small.txt`), and so is large (`retail_verify_large.txt`).
 Result files:
-* `verify_report_<scale>.json` and `verify_summary_<scale>.txt`: full statistics per
-  column, top-10 frequencies side by side, mean/std/min/max, FK, fan-out, coherence and
-  rule checks.
-* `verify_report_medium_sameseed.json`: the port at seed 42, which shows the
-  bit-identical columns.
+* `retail_verify_<scale>.json` and `.txt` in `benchmarks/baselines/2026-09-29/`: full statistics
+  per column, top-10 frequencies side by side, mean/std/min/max, FK, fan-out, coherence and
+  rule checks, from the earlier retail-specific verifier.
+* `retail_verify_medium_sameseed.json`: the port at seed 42, which shows the bit-identical
+  columns.
+* A current run of `verify.py` writes `$BENCH_OUT_DIR/verify/<impl>_<domain>_<scale>.json` and
+  `.txt`. It derives pools, component rules and cross-table checks from the dumped schema
+  instead of retail code, so its report has a few different sections (record coherence and
+  strategy semantics replace the retail-only rule checks; clause (h) is now asserted).
 
 **Structure.**
 * All 9 tables match Spindle: same names, same table order, same column names in the same
@@ -171,7 +186,7 @@ the fastest vectorized form: `rng.choice(pool)` is `rng.integers`, and
 
 KS and TVD values that are 0.0000 on PK sequences or fixed structures, such as
 `level`, are exact by construction. "bit-identical at same seed" refers to
-`verify_report_medium_sameseed.json`.
+`retail_verify_medium_sameseed.json` (baselines).
 
 | table.column | strategy | arrow type | port vs Spindle metric (baseline max / tol) | bit-identical at same seed | status |
 |---|---|---|---|---|---|
@@ -332,7 +347,7 @@ computes something differently is listed here.
 * Imports are outside the timed region for both. Parquet output is deleted between runs,
   outside the timed region. Parquet sizes match: 36 MB at medium and 375 MB at large for
   both tools.
-* Every benchmark invocation held `flock /tmp/claude-0/bench.lock`. Before each run the
+* Every benchmark invocation held the exclusive lock `$BENCH_OUT_DIR/bench.lock`. Before each run the
   harness waited until the 1-minute load average was below 1.5. It also measured the CPU
   used by *other* processes during the run (from `/proc/stat` minus the child's rusage).
   Runs where other processes averaged more than 0.75 cores were discarded and retried

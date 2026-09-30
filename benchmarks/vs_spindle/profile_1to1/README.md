@@ -7,7 +7,7 @@ computes every field Spindle computes, using Spindle's sampling rules, estimator
 thresholds and tie-breaks. `verify.py` checks the result field by field. On all 30 dataset
 variants tested, **every field of every column is bitwise-identical** to Spindle's output.
 
-Spindle source: `/home/user/sqllocks/spindle` @ `422e78d`, `inference/profiler.py` md5
+Spindle source: the pinned checkout in `$SPINDLE_ROOT` @ `422e78d`, `inference/profiler.py` md5
 `4b253e4f7ff20b5dacc80f02e76bf49c` (read only, not modified).
 Spindle venv: Python 3.11.15, pandas 3.0.6, numpy 2.4.6, scipy 1.17.1, pyarrow 25.0.1.
 Port venv: Python 3.11.15, numpy 2.4.6, pyarrow 23.0.1.
@@ -16,7 +16,7 @@ Port venv: Python 3.11.15, numpy 2.4.6, pyarrow 23.0.1.
 
 | file | purpose |
 |---|---|
-| `datasets.py` | Deterministic generator. Writes CSV and Parquet files to `/tmp/claude-0/profile_data/` (D1-D4, MT, EDGE) |
+| `datasets.py` | Deterministic generator. Writes CSV and Parquet files to `$BENCH_DATA_DIR/profile/` (D1-D4, MT, EDGE); `--rows N` sets the D3 row count |
 | `port.py` | The port: `profile_csv(path)`, `profile_parquet(path)`, `profile_table(pa.Table)`, `profile_dataset({name: table or path})` |
 | `spindle_dump.py` | Runs Spindle in its own venv and writes a normalised JSON profile. The same normaliser is used for the port |
 | `verify.py` | Field-by-field comparison and pass/fail matrix |
@@ -25,16 +25,23 @@ Port venv: Python 3.11.15, numpy 2.4.6, pyarrow 23.0.1.
 ## How to run
 
 ```bash
-cd /home/user/shape/benchmarks/profile_1to1
-/tmp/claude-0/venv/bin/python datasets.py              # ~35 s, ~1.3 GB of files; or: datasets.py D2 EDGE
-/tmp/claude-0/venv/bin/python verify.py --refresh      # ~12 min (Spindle is re-run on every dataset)
-flock /tmp/claude-0/bench.lock /tmp/claude-0/venv/bin/python bench.py        # ~45 min
-/tmp/claude-0/venv/bin/python bench.py --table         # reprint the results table
+source scripts/env.sh                                   # from the repository root
+P="$SHAPE_VENV/bin/python"
+"$P" benchmarks/vs_spindle/profile_1to1/datasets.py     # ~35 s, ~1.3 GB of files; or: datasets.py D2 EDGE
+"$P" benchmarks/vs_spindle/profile_1to1/verify.py --impl reference_port --refresh   # ~12 min (Spindle re-run on every dataset)
+"$P" benchmarks/vs_spindle/profile_1to1/bench.py --impl reference_port              # ~45 min, holds $BENCH_OUT_DIR/bench.lock
+"$P" benchmarks/vs_spindle/profile_1to1/bench.py --table "$BENCH_OUT_DIR/profile/bench_results.json"  # reprint the table
 ```
 
-The large generated files were deleted after the run. Regenerate them with `datasets.py`;
-the output is deterministic, with fixed seeds. D1 is copied from the scratch `c.csv` when
-that file exists, and otherwise regenerated with the same shape.
+`verify.py --impl X` exits 1 on any field outside T-22, and 2 if a dataset file is missing.
+`--impl shape` checks the product API (`shape.profile`). Spindle's normalised output is cached
+under `$BENCH_OUT_DIR/profile_cache/`.
+
+The large generated files are not in git. Regenerate them with `datasets.py`; the output is
+deterministic, with fixed seeds. Every dataset, D1 included, is always regenerated from its
+seed and never read from anywhere else. (The D1 numbers in the recorded results below were
+measured on a copy of an earlier 200k-row scratch file with the same schema; the harness now
+regenerates D1, and `results.json` supersedes those rows.)
 
 ## Datasets
 
@@ -121,12 +128,12 @@ rests on reasoning rather than on a test, or where the port is known to be narro
 ## Results
 
 Machine: 4 cores (Intel Xeon @ 2.10GHz, Linux 6.18). Run on 2026-09-29 under
-`flock /tmp/claude-0/bench.lock`, with runs interleaved. The 1-minute load average before
+the exclusive benchmark lock (`$BENCH_OUT_DIR/bench.lock`), with runs interleaved. The 1-minute load average before
 every run was between 1.00 and 1.50; about 1.0 of that is the previous benchmark process
 itself, and no run had to wait for the load gate. Each value is the median of 5 runs, each
 in a fresh process. The timed region is read + full profile; interpreter start-up and
 imports are excluded. Run-to-run spread is within about ±10% of the median (one port-1T D4 Parquet outlier:
-16.3 s against about 13.3 s). The raw runs are in `bench_results.json`.
+16.3 s against about 13.3 s). The raw runs are in `benchmarks/baselines/2026-09-29/profile_bench.json`.
 
 | dataset | Spindle s | port MT s | port 1T s | speedup MT | speedup 1T | peak RSS MB: Spindle / port MT (+largest fork child) / port 1T |
 |---|---:|---:|---:|---:|---:|---|
