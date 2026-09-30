@@ -1,91 +1,104 @@
-# Talk abstract: Shape 0.9.0 (early access)
+# Talk abstract: Ship the Shape, Not the Data
 
-Speaker: Jonathan Stewart (SQLLocks). Draft for the owner to edit; the assumptions and open
-questions at the end need answers before submission.
+Speaker: Jonathan Stewart (SQLLocks). Draft for the owner to edit.
+
+This talk is written for **the date when profile → generate and the safe profile have
+shipped** (owner decision, 2026-09-30). The dependency list is in `READINESS.md`. It is the
+follow-up to *Stop Borrowing Contoso*. That talk ended its realism spectrum at level 4,
+"production-mirrored: can't have it (PII)". This one is about getting level 4's
+**behaviour** without level 4's **rows**, and making data profiling the centre of the story.
 
 ## Title options
 
-1. **Green Pipelines, Changed Data: Shape as Code for Microsoft Fabric**
-2. **Equivalence Before Speed: Building Shape, a Data Profiler You Can Trust**
-3. **Your Data Has a Shape. Put It in Version Control.**
+1. **Ship the Shape, Not the Data: Production-Shaped Dev Environments Without Production Data**
+2. **Profile Prod, Rebuild Dev: Data Profiling at Scale with Shape**
+3. **Level 4 Without the PII: Profiling, Shape as Code, and Synthetic Dev Environments**
 
-Recommendation: option 1 for a Fabric or data-engineering venue, option 2 for an
-engineering or Python venue.
+Recommendation: option 1 for Fabric and data-platform venues. Option 3 if the audience saw
+*Stop Borrowing Contoso*.
 
-## Abstract (150 words)
+## Abstract, as delivered (150 words)
 
-Pipelines often succeed while the data inside them changes: null rates creep up, a new
-status value appears, an amount shifts by 40%. Row counts and schemas still look fine.
-Shape is an open-source (MIT) Python library, now in early access, that captures how data
-behaves as a portable, executable artifact: Shape as Code. You profile a table once, save a
-`.shape` file, check new data against a small JSON contract, and diff two profiles to see
-what drifted. The CLI returns exit codes a pipeline can gate on. This session shows Shape
-live in Microsoft Fabric notebooks, User Data Functions and pipeline quality gates. It also
-opens up how Shape is built: Arrow data, a pure-Python reference implementation, a Rust
-kernel in progress, and a benchmark harness that checks equivalence before it records any
-timing. Shape's profiler matches the retired Spindle profiler field for field, bitwise, on
-30 datasets. You'll leave knowing what ships today, what doesn't yet, and how to try it.
+Dev environments lie. Either they hold a copy of production, with the compliance risk that
+brings, or they hold fake data that doesn't behave like production, so bugs surface after
+release. Shape, an open-source Python library, takes a third route: profile production,
+save how the data behaves as a portable `.shape` artifact, and rebuild dev from that
+artifact. This session goes deep on profiling at scale: what a full statistical profile
+captures (types, distributions, patterns, keys and cross-table relationships), how it is
+verified field by field against a reference implementation, and how it runs in a Microsoft
+Fabric pipeline that profiles production, checks contracts, flags drift and publishes a
+privacy-safe shape. Then we generate a multi-table dev environment from that shape, at
+scale, and prove it matches by profiling the result. You'll see what's measured, what's
+preserved, and what isn't.
+
+## Submission-safe variant (150 words; use if you submit before R1–R6 are READY)
+
+Dev environments lie. Either they hold a copy of production, with the compliance risk that
+brings, or they hold fake data that doesn't behave like production. Shape, an open-source
+Python library in early access, takes a third route: profile production and save how the
+data behaves as a portable `.shape` artifact. This session goes deep on data profiling at
+scale: what a full statistical profile captures, how Shape's profiler is verified field by
+field against a reference implementation on 30 datasets, and how it runs in a Microsoft
+Fabric pipeline that profiles production data, checks contracts and flags drift. We'll also
+generate millions of rows of equivalence-verified synthetic data, and walk through the
+workflow Shape is building to rebuild dev environments from a production shape without
+moving production rows: what it must preserve, how privacy is enforced, and how we test
+that the result matches.
 
 ## Short abstract (50 words)
 
-Pipelines succeed while data quietly changes. Shape, an open-source Python library in early
-access, profiles data into a portable `.shape` artifact. You check it against contracts and
-diff it for drift. See it gate Microsoft Fabric pipelines live, and see how equivalence
-testing against Spindle keeps its profiler honest.
+Copying production into dev is risky; fake data lies. Shape profiles production into a
+portable, privacy-safe `.shape` artifact and rebuilds dev from it. See data profiling at
+scale, a Fabric pipeline that profiles prod and gates on drift, and multi-table data
+generated from the shape and proven to match.
 
 ## Audience
 
-Data engineers and analytics engineers who build or run pipelines, especially on Microsoft
-Fabric (lakehouses, notebooks, Data Factory pipelines). The architecture section also
-suits Python library authors curious about Arrow, Rust extensions and benchmarking
-discipline.
+Data engineers, analytics engineers and platform teams who own dev/test environments or
+pipelines, especially on Microsoft Fabric. Also useful for data governance people who get
+asked "can we copy prod to dev?".
 
 ## Level
 
-Intermediate (200–300). Attendees should know Python and have run a data pipeline. No Rust
-knowledge is needed.
+Intermediate (200–300). Python familiarity helps; no statistics background is needed.
 
 ## Key takeaways
 
-1. **A profile is more useful than a schema.** Null rates, value sets, ranges and
-   distributions catch changes that type checks and row counts miss.
-2. **Three verbs cover most of the job:** `profile`, `check` (against a JSON contract),
-   and `diff` (between two profiles). The CLI's exit codes (0 pass, 1 failed check or
-   drift, 2 input error) drop straight into a pipeline.
-3. **In Fabric today**, Shape runs in Python and PySpark notebooks, in a User Data Function,
-   and as a pipeline quality gate. Each surface has limits, and you'll see them.
-4. **Equivalence comes before timing.** Check that outputs match, field by field, before
-   recording any speed number. Shape's harness caught a bug in itself this way.
-5. **Early access means early access.** Profiling, contracts, diff, reports and the Fabric
-   integration work now. Generation, plugins, streaming and the Rust engine are in
-   progress, and the talk says which is which.
+1. **A profile is the most useful description of your data you're not keeping.** It
+   captures types, null rates, distributions, patterns, value sets, keys and foreign keys,
+   and it can be versioned, diffed and checked.
+2. **Profiling at scale is an engineering problem.** Exact vs bounded statistics, canonical
+   hashing, and one output schema whether the data is a file, a lakehouse table or a
+   partitioned Spark table.
+3. **Put profiling in the production pipeline.** Every run saves a timestamped shape,
+   checks a contract, diffs against the last run, and gates the load.
+4. **A raw profile is not safe to share.** It holds real top values by design. Only a safe
+   profile, with suppression and minimum cohorts, should leave production.
+5. **Dev can be rebuilt from the shape and proven.** Generate from the safe shape, profile
+   the result, and compare. Know exactly which properties are preserved (`shape plan`) and
+   which aren't.
 
-## Assumptions made for this draft (change any of them)
+## Assumptions (change any of them)
 
 | # | Assumption | Where it matters |
 |---|---|---|
-| A1 | **45 minutes** including ~4 minutes of Q&A | `OUTLINE.md` timings |
-| A2 | Audience: data and analytics engineers, **mostly Microsoft Fabric users** | Examples, depth of Fabric section |
-| A3 | **Live demo included**: a local CLI demo (~3 min) plus a Fabric demo (~7 min), each with a recorded or pre-run fallback | `DEMO.md` |
-| A4 | The owner's Fabric dry run (`integrations/fabric/RUNBOOK.md` §11) is done before the talk. Until it is, **no Fabric timing is quoted**, because `demo/LIVE_TIMINGS.md` is still empty | `NUMBERS.md`, slide 25 |
-| A5 | `sqllocks-shape` 0.9.0 is on **pypi.org** by the talk date. On 2026-09-30 it is only on TestPyPI (pypi.org returns 404) | Slides 8 and 32 |
-| A6 | The venue allows the speaker's own laptop, with a local fallback that needs no network | `DEMO.md` |
-| A7 | Spindle is mentioned only as the retired predecessor and the benchmark baseline, never as "the thing Shape succeeds" | Wording throughout |
-| A8 | The Rust kernel work on `build/main-plan` is shown as **in progress**, with no speed claims | Slides 15–20, 30 |
+| A1 | 45 minutes, including about 3 minutes of Q&A | `OUTLINE.md` |
+| A2 | Data and analytics engineers, Fabric-heavy room | Depth of the Fabric sections |
+| A3 | Live demos: profiling (local), the prod pipeline (Fabric), generation at scale (local), dev rebuild (local, **⟦PENDING R1–R5⟧**) | `DEMO.md` |
+| A4 | Delivered only when `REQUIRE_READY=1 verify_snippets.sh` exits 0 (`READINESS.md`) | Everything marked ⟦PENDING⟧ |
+| A5 | "Production" in the demos is a **stand-in**: retail data from the equivalence-verified reference generator. No real production data is used or shown | `DEMO.md`, slide 10 |
+| A6 | Until R6 is READY, the generation-at-scale demo uses the reference generator, labelled as not in the pip package (owner choice) | Slide 22 |
+| A7 | Spindle appears as the retired project and the benchmark baseline. *Stop Borrowing Contoso* is referenced as the speaker's previous talk | Slides 4, 15 |
+| A8 | No number from *Stop Borrowing Contoso* is reused. Its Spindle timings (for example "19.6M rows in ~42s") don't match the committed baselines (Spindle large: 102.64 s on the 4-core baseline machine), so the talk uses only `NUMBERS.md` | `NUMBERS.md` |
 
 ## Open questions for the owner
 
-1. **Length:** is it 45 minutes? `OUTLINE.md` has cut lines for 30 and 60 minutes.
-2. **Venue and audience:** which conference, and how Fabric-heavy is the room? If it is a
-   general Python venue, use title 2 and shorten the Fabric section (cut line in `OUTLINE.md`).
-3. **Live demo, yes or no?** If the venue network or Fabric capacity is doubtful, run the
-   local demo live and show the Fabric part from the pre-run artifacts (`DEMO.md`, plan B).
-4. **PyPI:** will the real publish (Morning summary, owner step 3) happen before the
-   abstract goes out? If not, the call to action says "install from the GitHub release wheel".
-5. **Live Fabric numbers:** after the dry run, do you want slide 25 to show the measured
-   `LIVE_TIMINGS.md` rows? They may only be shown as measured, with SKU and vCores.
-6. **Finding F1** (`STATUS.md`): `shape check` or `shape diff` with a missing first `.shape`
-   file exits 1 with a traceback instead of 2. It is not on the demo path, but in a pipeline it looks like a failed
-   contract. Fix before the talk (outside this branch's scope), or leave it as is?
-7. **Repo visibility:** the talk links to `github.com/sqllocks/shape`. Confirm it is public
-   on the day.
+1. **Delivery date:** which date, and does the tracker put G4 plus P7-01/P7-02 before it?
+2. **Submit which abstract?** The as-delivered one promises features that don't exist yet.
+   The submission-safe variant doesn't.
+3. **Venue and audience:** confirm Fabric-heavy. If not, `OUTLINE.md` has a cut line.
+4. **The dev-rebuild demo** depends on five pending items (R1–R5). If one slips, cut that
+   section to the "how it will work" slides, or move the talk?
+5. **Real production data:** should the talk ever show a real customer's profile? The
+   default is no: stand-in data only.
+6. **Findings F1 and F5** (`STATUS.md`): fix before the talk?

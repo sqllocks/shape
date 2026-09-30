@@ -1,163 +1,133 @@
-# Outline: Green Pipelines, Changed Data
+# Outline: Ship the Shape, Not the Data
 
-45 minutes (assumption A1 in `ABSTRACT.md`), 33 slides plus backups. Slide numbers match
-`SCRIPT.md`. Numbers cite `NUMBERS.md` IDs. Demo steps are in `DEMO.md`.
+45 minutes (A1), 33 slides plus backups. Slide numbers match `SCRIPT.md`; numbers cite
+`NUMBERS.md`; demos are in `DEMO.md`. Anything marked **⟦PENDING Rn⟧** waits on an item in
+`READINESS.md`.
+
+**Profiling is the centre:** sections 3 and 4 (slides 8–20) take about 20 of the 45
+minutes.
 
 ## The arc at a glance
 
-| # | Section | Slides | Time | Clock | Demo |
+| # | Section | Slides | Time | Clock | Live demo |
 |---|---|---|---:|---|---|
-| 1 | The problem: pipelines succeed while data silently changes | 1–4 | 4:00 | 0:00–4:00 | |
-| 2 | Shape as Code: a portable, executable description of how data behaves | 5–7 | 4:00 | 4:00–8:00 | |
-| 3 | profile / check / diff | 8–14 | 8:00 | 8:00–16:00 | **Live 1: local CLI, ~3 min** (slide 14) |
-| 4 | How it's built | 15–20 | 7:00 | 16:00–23:00 | |
-| 5 | How we know it's right | 21–25 | 7:00 | 23:00–30:00 | |
-| 6 | Fabric in practice | 26–29 | 8:00 | 30:00–38:00 | **Live 2: Fabric, ~6 min** (slides 27–28) |
-| 7 | Roadmap | 30–31 | 2:30 | 38:00–40:30 | |
-| 8 | Call to action | 32 | 1:00 | 40:30–41:30 | |
-| — | Q&A | 33 (+ backups B1–B4) | 3:30 | 41:30–45:00 | |
+| 1 | Dev is lying to you | 1–5 | 4:30 | 0:00–4:30 | |
+| 2 | Shape as Code | 6–7 | 2:30 | 4:30–7:00 | |
+| 3 | **Profiling, deep and at scale** | 8–15 | 12:00 | 7:00–19:00 | **C1** profile a whole schema (local, ~3 min) |
+| 4 | **The production pipeline**: profile, check, save the shape | 16–20 | 7:00 | 19:00–26:00 | **C2** Fabric notebook + pipeline gate (~4 min) |
+| 5 | Generation at scale | 21–24 | 5:00 | 26:00–31:00 | **C3** 1.97M rows, then profile them (~2 min) |
+| 6 | Rebuild dev from the shape ⟦PENDING R1–R5, R9⟧ | 25–29 | 7:30 | 31:00–38:30 | **D1–D3** safe shape → plan → generate → prove (~4 min) |
+| 7 | How we know it's right | 30 | 2:00 | 38:30–40:30 | |
+| 8 | Status, and three things for Monday | 31–32 | 2:00 | 40:30–42:30 | |
+| — | Q&A | 33 + backups | 2:30 | 42:30–45:00 | |
 
 ## Section by section
 
-### 1. The problem (0:00–4:00)
+### 1. Dev is lying to you (0:00–4:30)
 
-Point: a green pipeline run tells you the code ran. It doesn't tell you the data is the
-data you expected.
+Point: the two usual ways to fill dev both fail. A copy of production is a compliance
+problem; fake data doesn't behave like production, so bugs escape.
 
-- Slide 1: title and one-line promise.
-- Slide 2: the green run. A pipeline succeeded on day 2, yet four things changed in the data.
-- Slide 3: the four day-2 changes (N-70 to N-73): null rate 4.97% → 20%, new status `lost`,
-  amounts × 1.40, duplicate SKUs.
-- Slide 4: why the usual checks miss them. The schema, row count and types are unchanged,
-  so no error is thrown.
+- 1: title. 2: about me (20 s).
+- 3: the two bad options, side by side.
+- 4: callback to *Stop Borrowing Contoso*: the realism spectrum. Level 4, "production-
+  mirrored", was marked "can't have it (PII)". This talk: level 4's behaviour, without its
+  rows.
+- 5: the whole idea in one diagram: prod → profile → **safe** shape → generate → dev, with
+  a check on both ends. Each arrow carries a status chip.
 
-Transition: "What if the expected behaviour of the data were itself an artifact you could
-check in?"
+### 2. Shape as Code (4:30–7:00)
 
-### 2. Shape as Code (4:00–8:00)
+- 6: "You source-control your schema. You've never source-controlled the shape." A `.shape`
+  file is declared, versioned, diffable and executable.
+- 7: status on delivery day (from `READINESS.md`, filled in at delivery).
 
-Point: capture behaviour (distributions, value sets, keys, patterns), not only structure,
-as a portable, executable file.
+### 3. Profiling, deep and at scale (7:00–19:00) — the core
 
-- Slide 5: the definition, and how it relates to infrastructure as code: declared,
-  versioned, diffable, executable in CI and pipelines.
-- Slide 6: what a profile contains. Per column: dtype, null rate, cardinality, uniqueness,
-  PK/FK, distribution family and parameters, pattern, min/max/mean/std, quantiles, value
-  counts, temporal histograms. Across tables: foreign keys.
-- Slide 7: **the honesty slide.** Early access 0.9.0. What ships today and what is in
-  progress. No "GA", "production-ready" or "certified".
+Point: what a profile knows, how each part is computed, how we know it's right, and how it
+scales.
 
-Transition: "Three verbs cover most of it."
+- 8: anatomy of a profile: column fields, table fields, dataset relationships.
+- 9: how the profiler decides things: type inference, distribution fitting (sample, fit,
+  full-column refit for `fit_score`), pattern families, enum detection, PK and FK rules.
+- 10: **live C1**: profile all nine retail tables in one call; foreign keys detected
+  across tables.
+- 11: reading the report.
+- 12: exact vs bounded, and canonical hashing. How the same profile works on a file, a
+  stream and a partitioned table.
+- 13: profiling at scale, in numbers. Port numbers today (N-21..N-25, with their 10x
+  misses); product numbers **⟦PENDING R7⟧**; targets labelled.
+- 14: profiling at scale in Fabric: the driver path today (up to 5M rows, then `sampled`);
+  distributed per-partition profiles merged on the driver **⟦PENDING R8⟧**.
+- 15: bitwise parity with Spindle on 30 datasets and 34 fields. That's why you can trust
+  every field on slide 8.
 
-### 3. profile / check / diff (8:00–16:00)
+### 4. The production pipeline (19:00–26:00)
 
-Point: a small, stable API (plan §12.2, final for 1.0) and a CLI with exit codes made for
-pipelines.
+Point: profiling belongs in the prod pipeline. Every run leaves a shape behind.
 
-- Slide 8: install and the three verbs.
-- Slide 9: `shape.profile` → `shape.save` → `.shape`; `summary()`.
-- Slide 10: a contract (the real `demo/contracts/orders.json`); day 1 passes.
-- Slide 11: day 2 fails, and the result names the rule, expected and observed values.
-- Slide 12: `shape.diff`, including the `mean_shift_std` caveat (N-74). Say it out loud.
-- Slide 13: HTML report and the `.shape` artifact (self-contained, offline, fails closed on
-  unsafe containers).
-- Slide 14: the CLI and exit codes 0/1/2. **Live demo 1** (local, ~3 min, `DEMO.md` part A).
+- 16: the pipeline: read prod → profile → save a timestamped `.shape` → check contract →
+  diff vs last run → gate → publish the safe shape **⟦PENDING R1–R2⟧**. **Live C2** starts.
+- 17: day 2 fails the contract, and the result says why.
+- 18: diff against the last run, and the `mean_shift_std` caveat.
+- 19: CLI exit codes, which is how any orchestrator gates.
+- 20: **raw vs safe**: a raw profile contains real values (top 500 value counts, min/max)
+  by design. Only a safe profile leaves prod **⟦PENDING R1–R2⟧**.
 
-Transition: "That's the surface. Here's what's underneath, and what's changing underneath."
+### 5. Generation at scale (26:00–31:00)
 
-### 4. How it's built (16:00–23:00)
+- 21: generate a schema, not columns: parents before children; every FK points at a real
+  key.
+- 22: **live C3**: retail at medium scale, 1,965,400 rows across nine tables, with the
+  reference generator (labelled; product engine swap **⟦PENDING R6⟧**). Then profile it
+  with slide 10's call.
+- 23: generation at scale in numbers: N-40/N-41 (port, 4 cores, after T-21 passed);
+  product **⟦PENDING R7⟧**; targets.
+- 24: why generation equivalence is statistical: T-21, Spindle's own seed spread, fixed
+  seed set.
 
-Point: Arrow for data, Python for orchestration, a Rust kernel for the per-batch hot path,
-and a pure-Python twin for every kernel function as the correctness oracle.
+### 6. Rebuild dev from the shape (31:00–38:30) ⟦PENDING R1–R5, R9⟧
 
-- Slide 15: the layer diagram (plan §4.1). Say what ships in 0.9.0 (the pure-Python
-  profiler) and what is being built on `build/main-plan`.
-- Slide 16: the reference twin. The profiler in 0.9.0 **is** the reference implementation
-  (DM-1, T-03). `SHAPE_KERNEL=auto|rust|python`. Differential tests.
-- Slide 17: zero-copy FFI through the Arrow PyCapsule interface (pyo3 + pyo3-arrow); the
-  acceptance test compares buffer addresses (N-63).
-- Slide 18: canonical hashing: seeded XXH3-64, canonicalisation rules (N-62). Why never
-  Python `hash()`.
-- Slide 19: exact vs bounded. `exact=True` for files and tables, which parity and every
-  timing use. Bounded mode (HLL/KLL/SpaceSaving, N-60/N-61) is for streams and data larger
-  than RAM. One output schema; `error_models` records which mode ran.
-- Slide 20: runtime split rules: Python never touches individual values on a hot path; one
-  native call per batch covers every column; plugins take whole batches.
+- 25: the flow: safe shape → `shape plan` → `shape generate --from` → dev lakehouse →
+  profile → compare.
+- 26: `shape plan`: what will and won't be preserved. This is the honesty feature.
+- 27: **live D2**: generate the dev environment from the safe shape.
+- 28: **live D3**: prove the twin: profile dev and compare with the prod shape
+  (`shape fidelity`; P4-08's acceptance test is profile → generate → profile within T-22
+  tolerances for modelled fields).
+- 29: the dev-refresh pipeline: prod publishes the safe shape; dev regenerates on a
+  schedule (PF-06). Nothing sensitive moves.
 
-Transition: "A faster engine is worthless if it gives different answers. So how do we know
-it's right?"
+### 7. How we know it's right (38:30–40:30)
 
-### 5. How we know it's right (23:00–30:00)
+- 30: equivalence before timing, and the stale-cache bug the harness caught.
 
-Point: equivalence before timing. The harness is the product's conscience, and it caught
-the harness itself.
+### 8. Status and call to action (40:30–42:30)
 
-- Slide 21: the rule (plan §6.4): no timing counts until that workload's equivalence
-  verifier passes on the timed output. Never lower a gate, never fabricate.
-- Slide 22: bitwise parity with Spindle 3.0.1 (pinned, `422e78d`): 30/30 datasets, 34
-  fields each, bitwise (N-01, N-02).
-- Slide 23: two standards. T-22 for profiling is exact, with tolerances (N-03). T-21 for
-  generation is statistical, uses Spindle's own seed-to-seed spread, and fixes the seed set
-  (N-04 to N-06).
-- Slide 24: the stale-cache bug. The Spindle output cache was keyed by dataset name, D1 was
-  regenerated, and the result was 41 mismatches on each D1 file (N-07). The fix was to key
-  the cache by SHA-256 of the input. The lesson: a stale cache could equally have produced
-  a false pass.
-- Slide 25: the numbers we're allowed to say (N-21, with N-24/N-25 misses; targets N-50
-  labelled; "port, not product; 4 cores; not Fabric").
+- 31: what shipped and what's next (streaming, plugins, Synapse/ADF).
+- 32: three things for Monday.
 
-Transition: "Now let's run it where the data lives."
+### Q&A (42:30–45:00)
 
-### 6. Fabric in practice (30:00–38:00)
-
-Point: the same three verbs, in the four Fabric surfaces, with honest limits.
-
-- Slide 26: the four surfaces (Python notebook, Environment + PySpark notebook, User Data
-  Functions, pipelines) and the platform limits (N-80 to N-84).
-- Slide 27: notebook profiling a lakehouse Delta table. **Live demo 2** starts here
-  (`DEMO.md` part B).
-- Slide 28: the pipeline gate. Day 1 is green; day 2 fails at the gate with the reasons.
-- Slide 29: the UDF gate and its limits (240 s, 50 MB cap, pure wheel under 28.6 MB).
-  Anything larger goes through the notebook. If `LIVE_TIMINGS.md` has rows, show them here,
-  exactly as measured.
-
-Transition: "What's next, and what we won't claim until it's measured."
-
-### 7. Roadmap (38:00–40:30)
-
-- Slide 30: the phases. Profiling engine (Rust kernel, in progress: FFI, wheels, hashing,
-  sketches, readers and type inference done on `build/main-plan`; fused kernel, engine and
-  parity on Rust next); plugins (API v1, first-party features built the same way);
-  Fabric/Synapse/ADF pipeline integration; stream profiling; generation with realistic
-  distributions; streaming during generation.
-- Slide 31: the gates that decide "done" (targets N-50 to N-53), and what we won't say
-  until each gate is met.
-
-### 8. Call to action (40:30–41:30)
-
-- Slide 32: try it (`pip install sqllocks-shape`, once published; see A5), run the demo
-  locally, bring a table and a contract, open issues, and follow the build in public.
-
-### Q&A (41:30–45:00)
-
-- Slide 33, plus backups: B1 full profiling table (N-20 to N-25), B2 `results.json` run
-  (N-30 to N-35), B3 drift side effects from `DRIFT.md`, B4 Fabric fallbacks.
+- 33, plus backups: B1 full profiling table; B2 `results.json`; B3 drift side effects;
+  B4 Fabric fallbacks; B5 what a profile field list looks like in JSON.
 
 ## Cut lines
 
-- **30 minutes:** drop slides 6, 17, 20 and 31; shorten section 5 to slides 21, 22 and 24;
-  keep only one live demo (Fabric if it's a Fabric venue, else local).
-- **60 minutes:** add B1 as a main slide, show the PySpark notebook and the UDF path live
-  (`DEMO.md` B4–B5), and take 10 minutes of Q&A.
-- **Non-Fabric venue:** shrink section 6 to slides 26 and 28 (2 minutes) and give the time
-  to section 4 (the reference twin and hashing) and section 5.
+- **If R1–R5 aren't all READY by the date:** replace section 6 with slides 25 and 26 only,
+  shown as "how it will work", with no live demo and "planned" chips. Move 3 minutes to
+  section 3, and put the submission-safe abstract in the programme. Or move the talk.
+- **30 minutes:** drop 2, 9, 12, 14, 24 and 30; C1 only as a recording.
+- **60 minutes:** add B5 and a deeper walk through the report (slide 11), show the UDF gate,
+  and take 8 minutes of Q&A.
+- **Non-Fabric venue:** replace C2 with the local CLI (`DEMO.md` C2-local) and cut slide 14.
 
-## Timing checkpoints (glance at the clock)
+## Clock checkpoints
 
-| At slide | You should be at |
+| At slide | Be at |
 |---|---|
-| 8 | 8:00 |
-| 15 | 16:00 (if later, skip the report detail on 13 next time and do the local demo faster) |
-| 21 | 23:00 |
-| 26 | 30:00 (if later than 32:00, run plan B in `DEMO.md`: show the pre-run pipeline) |
-| 30 | 38:00 |
+| 8 | 7:00 |
+| 16 | 19:00 (if later, shorten C2 to the pipeline gate only) |
+| 21 | 26:00 |
+| 25 | 31:00 (if later than 33:00, skip D3's live run and show the pre-run comparison) |
+| 31 | 40:30 |
