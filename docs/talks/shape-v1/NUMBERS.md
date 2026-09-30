@@ -128,6 +128,19 @@ None of these has been met by the product yet, and the talk must not suggest oth
 | N-63 | Zero-copy acceptance: a 1M-row, 10-column batch round-trips through Rust with identical buffer addresses | P1-01a acceptance; `tests/kernel/test_native_kernel.py` on `build/main-plan` |
 | N-64 | Python → native call overhead ~7 µs; Parquet writing ~50% of vectorised generation time | Plan T-01 rationale ("Measured"). The plan does not name the machine for the 7 µs figure, so **keep it off the slides**; the ~50% figure matches N-42 (write 0.71 s of the port's 1.26 s total) |
 
+## Profiler rules (design parameters from the code, for slide 9)
+
+These are the reference profiler's rules, which match Spindle's `DataProfiler` (checked by
+N-01). Source: `src/shape/profile/reference/` on `main`.
+
+| ID | Rule | Source |
+|---|---|---|
+| N-65 | Distribution fitting: a sample of **2,000** values (seed 42); candidates **normal, uniform, exponential, lognormal**; the best KS statistic among fits with **p > 0.05**; none if fewer than **20** values | `numerics.py` (`detect_distribution`, `_CANDIDATES`) |
+| N-66 | Pattern detection: a sample of **1,000** strings (seed 42); **12** families: email, uuid, ssn, mac, ipv4, ipv6, iban, postal, date, phone, currency, language | `column.py` (`_PATTERNS`, `detect_pattern`) |
+| N-67 | Enum: cardinality **< 200**, or cardinality ratio **< 0.30** with cardinality **< 50,000** | `column.py` (`is_enum`) |
+| N-68 | Value counts kept: top **500** per column (`value_counts_ext`), with real values. That's why a raw profile isn't safe to share | `column.py` (`top_n = 500`); plan T-22 |
+| N-69 | PK: no nulls, cardinality = row count, integer or UUID-pattern string, id-like names preferred. FK across tables: a column named `<table>_id` matching that table's key | `table.py` (`_detect_primary_key`); `DM-01.md` notes |
+
 ## Demo data and drift (deterministic, seed 42, medium scale)
 
 Source: `demo/DRIFT.md`, verified by `tests/demo/content/` and in this session by
@@ -140,7 +153,8 @@ Source: `demo/DRIFT.md`, verified by `tests/demo/content/` and in this session b
 | N-72 | `orders.order_total` × **1.40**: mean **110.93 → 155.30**; max **5135.63 → 7189.882** (contract `max` 6000) | `DRIFT.md` |
 | N-73 | `products.sku`: **5,050 rows, 5,000 distinct** | `DRIFT.md` |
 | N-74 | The +40% shift is **0.43** baseline standard deviations; the default `mean_shift_std` threshold is **0.5**; the demo uses **0.25** | `DRIFT.md`; plan §12.3 |
-| N-75 | Retail medium: **1,965,400 rows, 9 tables** | Plan §3.2 |
+| N-75 | Retail medium: **1,965,400 rows, 9 tables** (the "production" stand-in and slide 22) | Plan §3.2; `results.json` → `generate:retail:medium.rows` |
+| N-76 | The multi-table profile of the stand-in finds **8** foreign keys (slide 10). This is live output of a deterministic run (seed 42), not a measurement | `verify_snippets.sh` part 1 (run 2026-09-30) |
 
 ## Fabric platform limits (Microsoft Learn, retrieved 2026-09-30; not measurements)
 
@@ -158,3 +172,31 @@ Source: plan §12.1.
 
 None. `demo/LIVE_TIMINGS.md` is a placeholder (every cell `TBD`). After the owner's dry run,
 add rows here as N-9x, copying the SKU, vCores, row counts and seconds exactly as recorded.
+
+## Numbers that don't exist yet (⟦PENDING⟧)
+
+Never show a TBD on stage. Fill these in from committed files at delivery, or delete the
+column or claim.
+
+| Placeholder | Needs | Where it will come from |
+|---|---|---|
+| Shape profiling timings (slide 13) | R7 / G1 | `benchmarks/vs_spindle/results.json` → `shape.workloads.profile:*`, verifier `pass` |
+| Shape generation timings (slide 23) | R7 / G4 | `results.json` → `shape.workloads.generate:retail:*`, verifier `pass` |
+| Safe `.shape` size ("kilobytes", slide 27) | R2 | measure the shipped safe export of the stand-in; record the file and the command here |
+| Fidelity scores (slide 28) | R5 | output of the shipped `shape fidelity` on the stand-in, pasted from a real run |
+| Distributed profiling in Fabric (slide 14) | R8, R11 | `demo/LIVE_TIMINGS.md` (or a later file), with SKU and vCores |
+
+## Numbers from *Stop Borrowing Contoso*: don't reuse
+
+The previous talk quoted Spindle timings that don't match the committed baselines, and they
+have no committed source in this repo:
+
+| Old talk said | Committed baseline (machine M1, 4 cores) |
+|---|---|
+| medium: "1.97M rows in ~2s" / "500k orders in about 2s" | Spindle medium: **5.29 s** (N-40); 5.79 s in `results.json` (N-35) |
+| large: "19.6M rows in ~42s" | Spindle large: **102.64 s** (N-41) |
+| small: "21.7k rows in 0.08s" | Spindle small: **0.25 s** (N-34, machine M2) |
+
+The machine behind the old numbers is unknown. Also don't reuse its distribution claims
+("top SKU is 39% of order lines", "top 10% of customers carry about 35% of revenue",
+"9% weekend dip"). None of them is in a committed file here.

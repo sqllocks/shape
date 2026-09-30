@@ -57,6 +57,7 @@ assert ("order_line", "order_id", "order") in rels
 assert ("order_line", "product_id", "product") in rels
 assert ("return", "order_id", "order") in rels
 assert len(p.summary()["tables"]) == 9
+assert len(rels) == 8   # NUMBERS.md N-76
 assert shape.load("retail_prod.shape").to_dict() == p.to_dict()
 
 # --- slide 11 ---------------------------------------------------------------
