@@ -57,6 +57,20 @@ def _check_exit(raw: str | None, lakehouse: Path) -> dict:
 # ------------------------------------------------------------ structure / generation
 
 
+def _normal(nb: dict) -> list:
+    """Cell content independent of formatting (ruff reformats .ipynb files)."""
+    out = []
+    for c in nb["cells"]:
+        src = "".join(c["source"])
+        if c["cell_type"] == "markdown":
+            out.append(("markdown", src.strip()))
+            continue
+        magic = any(ln.lstrip().startswith("%") for ln in src.splitlines())
+        body = src.strip() if magic else ast.dump(ast.parse(src))
+        out.append(("code", body, tuple(c["metadata"].get("tags", []))))
+    return out
+
+
 def test_generated_notebooks_are_current():
     spec = importlib.util.spec_from_file_location(
         "build_notebooks", NOTEBOOKS / "build_notebooks.py"
@@ -65,7 +79,8 @@ def test_generated_notebooks_are_current():
     spec.loader.exec_module(mod)
     for name, nb in mod.build().items():
         committed = json.loads((NOTEBOOKS / name).read_text(encoding="utf-8"))
-        assert committed == nb, f"{name} is stale: rerun build_notebooks.py"
+        assert _normal(committed) == _normal(nb), f"{name} is stale: rerun build_notebooks.py"
+        assert committed["metadata"] == nb["metadata"]
 
 
 @pytest.mark.parametrize("name", NOTEBOOK_FILES)
@@ -106,7 +121,9 @@ def test_parameters_cell_and_exit_placement(name):
 def test_python_notebook_configure_and_install_cells():
     src = [c.source for c in nbformat.read(PY_NB, as_version=4).cells if c.cell_type == "code"]
     assert src[0].startswith("%%configure") and '"vCores": 8' in src[0]
-    assert any("%pip install builtin/sqllocks_shape-" in s and s.endswith(".whl\n") for s in src)
+    assert any(
+        "%pip install builtin/sqllocks_shape-" in s and s.strip().endswith(".whl") for s in src
+    )
     nb = nbformat.read(PY_NB, as_version=4)
     assert nb.metadata["kernel_info"]["jupyter_kernel_name"] in ("python3.11", "python3.12")
 

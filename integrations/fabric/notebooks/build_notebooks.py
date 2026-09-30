@@ -1,6 +1,7 @@
 """Generate the Fabric notebooks (.ipynb) from readable cell sources.
 
-Run from the repo root:  python integrations/fabric/notebooks/build_notebooks.py
+Run from the repo root:
+    python integrations/fabric/notebooks/build_notebooks.py && ruff format integrations
 The generated files are committed; tests/demo/fabric/test_notebooks.py fails if they
 drift from this script.
 """
