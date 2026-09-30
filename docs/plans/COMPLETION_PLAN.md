@@ -2322,17 +2322,17 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
 
 | WP | Lane | Status | Commit |
 |---|---|---|---|
-| DM-00 | L3 | todo | |
-| DM-01 | L1 | todo | |
-| DM-02 | L1 | todo | |
-| DM-03 | L1 | todo | |
-| DM-03b | L1 | todo | |
-| DM-04 | L3 | todo | |
-| DM-05 | L2 | todo | |
-| DM-05b | L2 | todo | |
-| DM-06 | L2 | todo | |
-| DM-07 | L2 | todo | |
-| DM-08 | L2 + L3 | todo | |
+| DM-00 | L3 + lead | done | 8c95156 |
+| DM-01 | L1 | done (lead re-verified parity 30/30) | 831e804 |
+| DM-02 | L1 | done | 5d4f296 |
+| DM-03 | L1 | done (lead fixed license metadata e848348) | 92b4a5d |
+| DM-03b | L1 | done; TestPyPI dry run blocked by GitHub Actions billing (see MORNING_SUMMARY) | f17fd14 |
+| DM-04 | L3 | wip (lane L3b) |  |
+| DM-05 | L2 | done | 6217d6c |
+| DM-05b | L2 | done | 578e4f4 |
+| DM-06 | L2 | done | c113422 |
+| DM-07 | L2 | done | 4c8725c |
+| DM-08 | L2 + L3 | runbook done (4c8725c); talk kit wip (lane L3b) |  |
 
 ---
 
