@@ -215,7 +215,7 @@ instruction.
 | T-04 | **Wheels built with `PyO3/maturin-action`:** manylinux_2_28 and musllinux_1_2 for x86_64 (native) and aarch64 (native on `ubuntu-24.04-arm`); macOS arm64 and x86_64 (cross-compiled on `macos-14`); win_amd64. They are abi3 wheels, one per platform, test-installed on Python 3.11 and 3.14. The sdist builds with Rust ≥1.85. | Avoids redundant builds per Python version and slow QEMU emulation. |
 | T-05 | **Build backend:** maturin, with a mixed Python/Rust layout (`python-source = "src"`, `module-name = "shape._kernel"`). | Needed for T-02. |
 | T-06 | **Python 3.11–3.14.** Tests run on the full matrix on Linux, and on 3.11 plus 3.14 on macOS and Windows. | Current floor and current release. |
-| T-07 | **Core dependencies are `numpy>=2.0,<3` and `pyarrow>=25,<26`.** Remove `pydantic` (unused) and `typing-extensions`. Move `cryptography` to `[sign]`, and make `shape.security` import `crypto` lazily. Remove the `pyarrow<24` pin. The harness uses the same pyarrow version (25.0.1) in both venvs. | Import time, install size, and a fair Parquet comparison. |
+| T-07 | **Core dependencies are `numpy>=2.0,<3` and `pyarrow>=14.0.1` (no upper bound).** Remove `pydantic` (unused) and `typing-extensions`. Move `cryptography` to `[sign]`, and make `shape.security` import `crypto` lazily. Remove the `pyarrow<24` pin. The install range must admit the Fabric UDF SDK, which pins `pyarrow>=19.0.1,<20` (`fabric-user-data-functions` 1.0.x), and Fabric runtimes' preinstalled pyarrow; 14.0.1 is the first release without CVE-2023-47248. The benchmark harness still pins pyarrow 25.0.1 in both venvs (§1), so every performance number uses the same pyarrow. CI tests both the newest pyarrow (main matrix) and 19.x (the `fabric-demo` job). | Import time, install size, Fabric UDF compatibility, and a fair Parquet comparison. |
 | T-08 | **Extras:** `[sign]`, `[scipy]`, `[kafka]`, `[eventhubs]`, `[fabric]`, `[sqlserver]`, `[domains]`, `[simulation]`, `[mcp]`, `[excel]`, `[delta]` and `[all]`. Each plugin extra depends on the matching `sqllocks-shape-*` distribution. `[dev]` adds pytest, pytest-cov, hypothesis, ruff, mypy, pip-audit, build, maturin, xxhash, import-linter, vulture, bandit and py-spy. | Mirrors Spindle's extras. |
 | T-09 | **First-party plugins live under `plugins/<dist-name>/`,** each with its own `pyproject.toml`. Their versions are kept in lockstep with core, and they are released together. | One CI and atomic API changes. |
 | T-10 | **Package and version.** `sqllocks-shape` is not on PyPI (confirmed 404 on 2026-09-29). The version is `0.9.0.devN` during the build and becomes **1.0.0 at G8**. | Nothing published yet. |
@@ -245,6 +245,7 @@ instruction.
 |---|---|---|---|
 | 2026-09-29 | — | Plan v1 approved | — |
 | 2026-09-29 | — | Plan v2: adversarial-review fixes (Spindle stream format, CLI mapping, exact mode for parity and gates, crate pins, Philox implemented in-house, maturin-action, setup, builder guide, work-package splits, verified line references) | Red-team review |
+| 2026-09-30 | T-07 | Package pyarrow range `>=25,<26` replaced by `>=14.0.1`; the benchmark harness keeps pyarrow 25.0.1 in both venvs | CI: `fabric-user-data-functions` 1.0.0–1.0.142 requires `pyarrow>=19.0.1,<20`, so `>=25` made Shape uninstallable next to the UDF SDK (`ResolutionImpossible`) |
 | 2026-09-30 | D-15 | License: MIT (owner choice), replacing the inherited Apache-2.0 | Owner decision; matches Spindle |
 | 2026-09-30 | D-15 | Open source: public repo, PyPI release; DM-00 public-readiness cleanup moved ahead of the demo | Owner decision |
 | 2026-09-30 | D-14, T-29 | Plan v3.2: 48-hour Fabric demo track (§12: notebook, UDF, pipelines, 3 parallel lanes) and Phase F (Fabric, Synapse and ADF pipeline integration, prioritized after G2); pure-Python wheel as a first-class deliverable | Owner: Spindle retired; demo profiling in Fabric; pipelines for profiling and generation |
@@ -632,7 +633,7 @@ Appendix A.
   - Set the version to `0.9.0.dev0`, both in `pyproject.toml` and in the hard-coded
     version at `src/shape/__init__.py` (~line 62).
   - Apply T-07 and T-08:
-    - dependencies `numpy>=2.0,<3` and `pyarrow>=25,<26`;
+    - dependencies `numpy>=2.0,<3` and `pyarrow>=14.0.1` (T-07);
     - remove `pydantic` and `typing-extensions`;
     - add the `[sign]` extra, and make `shape.security` import `crypto` lazily;
     - extend `[dev]` with xxhash, maturin, import-linter, vulture, bandit, py-spy and
@@ -2122,9 +2123,9 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
     containing no compiled code.
   - `import shape` must not require `cryptography`: make `shape.security` import
     `crypto` lazily (this is P0-05's lazy-import item, done early).
-  - The wheel declares `numpy>=2.0,<3` and `pyarrow>=14` (the demo widens the pyarrow
-    pin so that Fabric's preinstalled pyarrow is accepted; T-07's `>=25` pin returns
-    in P0-05, and §12.1 is re-checked then).
+  - The wheel declares `numpy>=2.0,<3` and `pyarrow>=14.0.1`, the same range as T-07,
+    so that Fabric's preinstalled pyarrow and the UDF SDK's `pyarrow<20` pin are
+    accepted.
   - Version `0.9.0.dev1`.
 - Acceptance:
   - The wheel is under 28.6 MB and its tag is `py3-none-any` (checked by the
