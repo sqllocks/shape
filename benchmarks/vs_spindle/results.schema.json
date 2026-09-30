@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "benchmarks/vs_spindle/results.json",
+  "type": "object",
+  "required": ["schema_version", "mode", "runs", "generated_utc", "machine", "spindle_commit",
+               "shape_commit", "shape_tree_dirty", "spindle", "reference_port", "shape"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "mode": {"enum": ["quick", "full"]},
+    "runs": {"type": "integer", "minimum": 1},
+    "generated_utc": {"type": "string"},
+    "machine": {"type": "object"},
+    "spindle_commit": {"type": "string"},
+    "shape_commit": {"type": "string"},
+    "shape_tree_dirty": {"type": "boolean"},
+    "spindle": {"$ref": "#/$defs/tool"},
+    "reference_port": {"$ref": "#/$defs/tool"},
+    "shape": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/tool"}]}
+  },
+  "$defs": {
+    "tool": {
+      "type": "object",
+      "required": ["workloads"],
+      "additionalProperties": false,
+      "properties": {
+        "workloads": {"type": "object", "additionalProperties": {"$ref": "#/$defs/workload"}}
+      }
+    },
+    "verifier": {
+      "anyOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["status", "exit_code", "command"],
+          "properties": {
+            "status": {"enum": ["pass", "fail", "unavailable", "error"]},
+            "exit_code": {"type": "integer"},
+            "command": {"type": "string"},
+            "first_run": {"type": "object"}
+          }
+        }
+      ]
+    },
+    "workload": {
+      "type": "object",
+      "required": ["kind", "median_s", "runs_s", "verifier"],
+      "properties": {
+        "kind": {"enum": ["profile", "generate"]},
+        "dataset": {"type": "string"},
+        "domain": {"type": "string"},
+        "scale": {"type": "string"},
+        "median_s": {"anyOf": [{"type": "null"}, {"type": "number", "minimum": 0}]},
+        "median_s_1t": {"anyOf": [{"type": "null"}, {"type": "number", "minimum": 0}]},
+        "runs_s": {"type": "array", "items": {"type": "number", "minimum": 0}},
+        "speedup_vs_spindle": {"anyOf": [{"type": "null"}, {"type": "number", "minimum": 0}]},
+        "verifier": {"$ref": "#/$defs/verifier"}
+      }
+    }
+  }
+}

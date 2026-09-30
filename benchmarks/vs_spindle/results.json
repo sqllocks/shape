@@ -1,0 +1,241 @@
+{
+ "schema_version": 1,
+ "mode": "quick",
+ "runs": 3,
+ "generated_utc": "2026-09-30T13:39:09Z",
+ "machine": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "platform": "Linux-6.18.44-fc-v50-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-09-30 13:39:08",
+  "loadavg_start": 0.8515625,
+  "spindle_venv": {
+   "python": "3.11.15",
+   "pandas": "3.0.6",
+   "numpy": "2.4.6",
+   "pyarrow": "25.0.1"
+  },
+  "shape_venv": {
+   "python": "3.11.15",
+   "numpy": "2.4.6",
+   "pyarrow": "25.0.1"
+  }
+ },
+ "spindle_commit": "422e78df2267e73bb2fa976267e48cb437861e2f",
+ "shape_commit": "79b4250efba8ea5d191bc692eab32cba39bddc8b",
+ "shape_tree_dirty": false,
+ "spindle": {
+  "workloads": {
+   "profile:d1.csv": {
+    "kind": "profile",
+    "dataset": "d1.csv",
+    "median_s": 1.5453310889997738,
+    "runs_s": [
+     1.5082396220000192,
+     1.6056794769997396,
+     1.5453310889997738
+    ],
+    "verifier": null,
+    "peak_rss_mb": 342.109375
+   },
+   "profile:d1.parquet": {
+    "kind": "profile",
+    "dataset": "d1.parquet",
+    "median_s": 1.3279347910001889,
+    "runs_s": [
+     1.5328712010000345,
+     1.3095730190002541,
+     1.3279347910001889
+    ],
+    "verifier": null,
+    "peak_rss_mb": 377.81640625
+   },
+   "profile:d2.csv": {
+    "kind": "profile",
+    "dataset": "d2.csv",
+    "median_s": 31.729446144999656,
+    "runs_s": [
+     31.911229881000054,
+     31.206306796999797,
+     31.729446144999656
+    ],
+    "verifier": null,
+    "peak_rss_mb": 1222.1484375
+   },
+   "profile:d2.parquet": {
+    "kind": "profile",
+    "dataset": "d2.parquet",
+    "median_s": 26.29645397100012,
+    "runs_s": [
+     27.02959072299973,
+     25.700570208000045,
+     26.29645397100012
+    ],
+    "verifier": null,
+    "peak_rss_mb": 1050.9765625
+   },
+   "generate:retail:small": {
+    "kind": "generate",
+    "domain": "retail",
+    "scale": "small",
+    "median_s": 0.24506958599977224,
+    "runs_s": [
+     0.245,
+     0.299,
+     0.228
+    ],
+    "verifier": null,
+    "gen_s": 0.19644337399995493,
+    "write_s": 0.048626211999817315,
+    "rows": 21750,
+    "peak_rss_mb": 286.7265625
+   },
+   "generate:retail:medium": {
+    "kind": "generate",
+    "domain": "retail",
+    "scale": "medium",
+    "median_s": 5.786742598999808,
+    "runs_s": [
+     5.853,
+     5.489,
+     5.787
+    ],
+    "verifier": null,
+    "gen_s": 5.060142508999888,
+    "write_s": 0.6835051459997885,
+    "rows": 1965400,
+    "peak_rss_mb": 613.19140625
+   }
+  }
+ },
+ "reference_port": {
+  "workloads": {
+   "profile:d1.csv": {
+    "kind": "profile",
+    "dataset": "d1.csv",
+    "verifier": {
+     "status": "pass",
+     "exit_code": 0,
+     "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_spindle/profile_1to1/verify.py --impl reference_port d1.csv d1.parquet d2.csv d2.parquet"
+    },
+    "median_s": 0.32749910700022156,
+    "median_s_1t": 0.4036246549999305,
+    "runs_s": [
+     0.3010236430000077,
+     0.32749910700022156,
+     0.4116777809999803
+    ],
+    "speedup_vs_spindle": 4.718581076921008,
+    "peak_rss_mb": 247.546875
+   },
+   "profile:d1.parquet": {
+    "kind": "profile",
+    "dataset": "d1.parquet",
+    "verifier": {
+     "status": "pass",
+     "exit_code": 0,
+     "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_spindle/profile_1to1/verify.py --impl reference_port d1.csv d1.parquet d2.csv d2.parquet"
+    },
+    "median_s": 0.3440850529996169,
+    "median_s_1t": 0.3675548239998534,
+    "runs_s": [
+     0.3951971040000899,
+     0.3440850529996169,
+     0.3027661870000884
+    ],
+    "speedup_vs_spindle": 3.85932134925276,
+    "peak_rss_mb": 271.0
+   },
+   "profile:d2.csv": {
+    "kind": "profile",
+    "dataset": "d2.csv",
+    "verifier": {
+     "status": "pass",
+     "exit_code": 0,
+     "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_spindle/profile_1to1/verify.py --impl reference_port d1.csv d1.parquet d2.csv d2.parquet"
+    },
+    "median_s": 2.8563739730002453,
+    "median_s_1t": 6.134024993999901,
+    "runs_s": [
+     2.741169451999667,
+     3.2470371990002604,
+     2.8563739730002453
+    ],
+    "speedup_vs_spindle": 11.10829549804084,
+    "peak_rss_mb": 766.80859375
+   },
+   "profile:d2.parquet": {
+    "kind": "profile",
+    "dataset": "d2.parquet",
+    "verifier": {
+     "status": "pass",
+     "exit_code": 0,
+     "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_spindle/profile_1to1/verify.py --impl reference_port d1.csv d1.parquet d2.csv d2.parquet"
+    },
+    "median_s": 2.2664350540003397,
+    "median_s_1t": 5.043679761000021,
+    "runs_s": [
+     2.3082860280001114,
+     2.2664350540003397,
+     2.1239329230002113
+    ],
+    "speedup_vs_spindle": 11.602562325616137,
+    "peak_rss_mb": 667.4296875
+   },
+   "generate:retail:small": {
+    "kind": "generate",
+    "domain": "retail",
+    "scale": "small",
+    "verifier": {
+     "status": "pass",
+     "exit_code": 0,
+     "command": "$SPINDLE_PY $SHAPE_ROOT/benchmarks/vs_spindle/domain_1to1/verify.py --domain retail --scale small --impl reference_port --no-generate",
+     "first_run": {
+      "status": "pass",
+      "exit_code": 0,
+      "command": "$SPINDLE_PY $SHAPE_ROOT/benchmarks/vs_spindle/domain_1to1/verify.py --domain retail --scale small --impl reference_port"
+     }
+    },
+    "median_s": 0.12690795900016383,
+    "runs_s": [
+     0.106,
+     0.164,
+     0.127
+    ],
+    "speedup_vs_spindle": 1.9310812964808288,
+    "gen_s": 0.08563961500021833,
+    "write_s": 0.0412683439999455,
+    "rows": 21750,
+    "peak_rss_mb": 188.78125
+   },
+   "generate:retail:medium": {
+    "kind": "generate",
+    "domain": "retail",
+    "scale": "medium",
+    "verifier": {
+     "status": "pass",
+     "exit_code": 0,
+     "command": "$SPINDLE_PY $SHAPE_ROOT/benchmarks/vs_spindle/domain_1to1/verify.py --domain retail --scale medium --impl reference_port --no-generate",
+     "first_run": {
+      "status": "pass",
+      "exit_code": 0,
+      "command": "$SPINDLE_PY $SHAPE_ROOT/benchmarks/vs_spindle/domain_1to1/verify.py --domain retail --scale medium --impl reference_port"
+     }
+    },
+    "median_s": 0.9795445529998688,
+    "runs_s": [
+     0.958,
+     0.98,
+     1.051
+    ],
+    "speedup_vs_spindle": 5.907584888587078,
+    "gen_s": 0.518768528000237,
+    "write_s": 0.4884715929997583,
+    "rows": 1965400,
+    "peak_rss_mb": 430.30859375
+   }
+  }
+ },
+ "shape": null
+}

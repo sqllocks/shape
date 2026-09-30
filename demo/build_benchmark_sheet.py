@@ -56,7 +56,7 @@ def build() -> str:
         f"Python {env['python']}.",
         "- Each timing is the median of 5 runs (profiling) or 3 runs (retail), in a fresh process "
         "per run, runs interleaved between tools.",
-        "- The profiling numbers time the benchmark port `benchmarks/profile_1to1/port.py`, the "
+        "- The profiling numbers time the benchmark port `benchmarks/vs_spindle/profile_1to1/port.py`, the "
         "vectorised numpy + pyarrow profiler that `shape.profile` was ported from. They were "
         "**not** measured on `shape.profile` itself. In the profiling table, `port MT` is the "
         "port's default threading (4 cores) and `port 1T` is one thread.",

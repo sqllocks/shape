@@ -2,9 +2,6 @@ from .advanced import (
     k_anonymous as k_anonymous,
 )
 from .advanced import (
-    laplace as laplace,
-)
-from .advanced import (
     reidentification_risk as reidentification_risk,
 )
 from .classification import ClassificationTaxonomy as ClassificationTaxonomy
@@ -75,7 +72,6 @@ __all__ = [
     "LEVELS",
     "ReleaseDecision",
     "release_for",
-    "laplace",
     "k_anonymous",
     "reidentification_risk",
 ]

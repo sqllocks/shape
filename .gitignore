@@ -20,3 +20,6 @@ htmlcov/
 .DS_Store
 Thumbs.db
 *.swp
+
+# benchmark scratch output in CI
+/bench-out/

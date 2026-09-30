@@ -7,6 +7,8 @@ from shape.artifact.secure import SecureEnvelope, open_envelope, seal
 from shape.errors import ShapeSecurityError
 from shape.security.crypto import generate_ed25519_keypair
 
+pytestmark = pytest.mark.sign  # needs the optional cryptography package ([sign])
+
 
 def test_canonical_stable():
     assert canonical_json({"b": 2, "a": 1}) == b'{"a":1,"b":2}'
