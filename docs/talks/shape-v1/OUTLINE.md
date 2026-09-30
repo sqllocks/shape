@@ -8,7 +8,7 @@ will be ready, so everything that depended on them is now a short **"how it will
 section (slides 25–27), labelled *planned* or *being built*, with no output, numbers,
 timings or CLI transcripts. The talk leans on what runs today: **profiling, deep and at
 scale** (sections 3), and **the production pipeline that profiles prod, saves the shape and
-gates on check/diff** (section 4). Together they take 25 of the 45 minutes.
+gates on check/diff** (section 4). Together they take 25 of the 45 minutes. Section 5 gives Shape's own measured numbers.
 
 ## The arc at a glance
 
@@ -18,9 +18,9 @@ gates on check/diff** (section 4). Together they take 25 of the 45 minutes.
 | 2 | Shape as Code, and honest status | 6–7 | 2:30 | 4:00–6:30 | |
 | 3 | **Profiling, deep and at scale** | 8–15 | 15:00 | 6:30–21:30 | **C1** profile a whole schema, read the report (local, ~4 min) |
 | 4 | **The production pipeline**: profile, save the shape, check, diff, gate | 16–20 | 10:00 | 21:30–31:30 | **C2** Fabric notebook + pipeline gate (~4 min), or **C2-local** |
-| 5 | Generation at scale, with the reference benchmark generator | 21–24 | 4:30 | 31:30–36:00 | **C3** 1.97M rows, then profile them (~2 min) |
+| 5 | Shape's own numbers: memory, a live million-row profile, start-up | 21–24 | 4:30 | 31:30–36:00 | **C3** profile a 1M-row file, with a clock (~2 min) |
 | 6 | **How it will work** (planned; no demo) | 25–27 | 3:30 | 36:00–39:30 | none |
-| 7 | How we know it's right | 28 | 2:00 | 39:30–41:30 | |
+| 7 | Measure before you claim | 28 | 2:00 | 39:30–41:30 | |
 | 8 | Status, and three things for Monday | 29–30 | 1:30 | 41:30–43:00 | |
 | — | Q&A | 31 + backups | 2:00 | 43:00–45:00 | |
 
@@ -56,11 +56,12 @@ problem; fake data doesn't behave like production, so bugs escape.
 - 11: reading the report, live in the browser (2 min).
 - 12: exact vs bounded, and canonical hashing; what's in the release and what's being
   built (1:30).
-- 13: profiling at scale, in numbers: **port** numbers only (N-21, N-23, N-24), with the
-  10x target labelled as a target and the misses shown (1:30).
+- 13: profiling at scale, in numbers: wall-clock, rows per second and peak memory of
+  `shape.profile`, exact mode, 4 cores, not Fabric (N-20 to N-24) (1:30).
 - 14: profiling in Fabric today: the driver path, up to 5M rows, then `sampled: true`
   (1:30). Distributed profiling is one line: "planned, slide 27".
-- 15: bitwise parity with Spindle on 30 datasets and 31 fields (1:30).
+- 15: how the profile is checked: deterministic output, test count and coverage, the CI
+  matrix (1:30).
 
 ### 4. The production pipeline (21:30–31:30)
 
@@ -77,14 +78,14 @@ gate reads it.
   and the Fabric runbook now say to treat `.shape` files like the source data. A safe
   profile is planned (slide 25) (2:00).
 
-### 5. Generation at scale (31:30–36:00)
+### 5. Shape's own numbers (31:30–36:00)
 
-- 21: generate a schema, not columns: parents before children (0:30).
-- 22: **live C3**: retail at medium scale, 1,965,400 rows, nine tables, with the
-  **reference benchmark generator**: benchmark code, not the product, not in the pip
-  package. Then profile the output with slide 10's call (0:30 + 2 min demo).
-- 23: generation numbers: **port** only (N-40/N-41), target labelled (1:00).
-- 24: why generation equivalence is statistical: T-21 (0:30).
+- 21: memory: peak memory per dataset; exact mode grows with the data; bounded mode is
+  **being built and not measured** (1:00).
+- 22: **live C3**: profile the 1M-row, 20-column file with a clock, and compare it with
+  slide 13 (0:30 + 2 min demo).
+- 23: start-up: interpreter alone, `import shape`, `shape version` (1:00).
+- 24: how these were measured, and what isn't measured (0:30).
 
 ### 6. How it will work (36:00–39:30), planned, no demo
 
@@ -95,12 +96,12 @@ numbers, no timings. Command forms are shown only as "planned syntax (may change
   from the shape (P4-08) (1:30).
 - 26: proving the twin: P4-08's acceptance test and the fidelity report (P4-09) (1:00).
 - 27: the engine and Fabric at scale: §4 architecture (Rust kernel **being built**, no
-  speed claims; targets only as targets), distributed profiling (PF-02), generation
+  speed or memory claims), distributed profiling (PF-02), generation
   pipelines (PF-06) (1:00).
 
-### 7. How we know it's right (39:30–41:30)
+### 7. Measure before you claim (39:30–41:30)
 
-- 28: equivalence before timing, and the stale-cache bug the harness caught.
+- 28: measure before you claim: every number has a file, every snippet has a script.
 
 ### 8. Status and call to action (41:30–43:00)
 

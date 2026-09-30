@@ -5,16 +5,16 @@
 | **C1** Profile a whole schema, read the report | 10–11 | laptop | ~4 min | runs today (verified) |
 | **C2** The production pipeline | 16–19 | Fabric | ~3 min | verified locally; **Fabric only if the owner's dry run (R11) is done** |
 | **C2-local** The same pipeline on the laptop | 16–19 | laptop | ~3 min | runs today (verified); **the default if R11 isn't done** |
-| **C3** Generation at scale, then profile it | 22 | laptop | ~2 min | runs today, with the **reference benchmark generator** (benchmark code, not the product) |
+| **C3** Profile a 1M-row file, with a clock | 22 | laptop | ~2 min | runs today (verified) |
 
 There are **no** demos for section 6 ("how it will work"). The former D1–D4 (safe shape,
 generate from a shape, fidelity, dev-refresh pipeline) are cut: none of their features
 exists on October 3 (R1–R9 in `READINESS.md`). Don't show pre-made output for them, and
 don't type their planned commands on stage.
 
-**Stand-in data rule:** every "production" table here is synthetic retail from the
-equivalence-verified reference benchmark generator. Say so on stage. No real production
-data.
+**Stand-in data rule:** every "production" table here is synthetic retail data from the
+repo's stand-in generator (`STATUS.md`, "Demo data generator"). Say so on stage. No real
+production data.
 
 Every command here was run on 2026-09-30 through `verify_snippets.sh` (`STATUS.md`).
 
@@ -45,15 +45,15 @@ From the repo root, Python 3.11+, on `main` at or after `b2dd663` (slide 19's ex
 missing `.shape` needs it; the TestPyPI 0.9.0 wheel predates it):
 
 ```bash
-# Shape, the pinned Spindle checkout (the reference generator reads its retail schema)
+# Shape, and the prep tooling for the stand-in data (STATUS.md, "Demo data generator")
 python3 -m venv ~/.venvs/shape && ~/.venvs/shape/bin/pip install -e ".[dev]" deltalake
-source scripts/env.sh && bash benchmarks/vs_spindle/setup_spindle.sh
+source scripts/env.sh && bash benchmarks/*/setup_*.sh
 
 # Day-1/day-2 orders with documented drift (demo/DRIFT.md)
 source scripts/env.sh && ~/.venvs/shape/bin/python demo/make_data.py --out "$BENCH_DATA_DIR/demo"
 
 # The "production" stand-in: retail at medium scale (1,965,400 rows, 9 tables)
-source scripts/env.sh && ~/.venvs/shape/bin/python benchmarks/vs_spindle/domain_1to1/generate.py \
+source scripts/env.sh && ~/.venvs/shape/bin/python benchmarks/*/domain_1to1/generate.py \
     --impl reference_port --domain retail --scale medium --seed 42
 
 # Every slide snippet still prints what the slides say; the delivery gate
@@ -64,6 +64,7 @@ REPO=$PWD; mkdir -p ~/shape-demo/{prod,contracts,prerun} && cd ~/shape-demo
 cp "$HOME/bench-out/reference_port/retail/medium/seed42/"*.parquet prod/
 cp "$HOME/bench-data/demo/day1/orders.parquet" orders_day1.parquet
 cp "$HOME/bench-data/demo/day2/orders.parquet" orders_day2.parquet
+cp "$HOME/bench-data/demo/day1/d2.parquet" d2.parquet   # C3: 1,000,000 rows x 20 columns
 cp "$REPO"/demo/contracts/*.json contracts/
 ```
 
@@ -143,17 +144,16 @@ shift. For slide 18's threshold, use the REPL snippet on the slide.
 **Say:** "These are the same calls the Fabric notebook in the repo makes. Any orchestrator
 that reads exit codes can gate on them." Don't say it ran in Fabric.
 
-## C3 — Generation at scale, then profile it (slide 22, ~2 min)
+## C3 — Profile a 1M-row file, with a clock (slide 22, ~2 min)
 
 ```bash
-source scripts/env.sh   # run from the repo root, in a second terminal tab
-python benchmarks/vs_spindle/domain_1to1/generate.py --impl reference_port \
-    --domain retail --scale medium --seed 42 2>&1 | grep '^wrote'
+time shape profile d2.parquet -o d2.shape
 ```
 
-Expect `wrote …/reference_port/retail/medium/seed42 (1,965,400 rows, …s)`. Say "this is
-benchmark code, not the product", and "that's my laptop, not a benchmark", then show slide
-23. Optionally re-run C1's profiling call on the output directory to close the loop.
+Expect one JSON line, `{"shape_content_id": "…", "written": "d2.shape"}`, and the `time`
+output. Say "that's my laptop with a projector, not the benchmark machine", and compare with
+slide 13 (D2: 1.96 s on 4 cores, not Fabric) without claiming the two match. Don't quote the
+live time as a measurement.
 
 ## E — Fallbacks
 
@@ -162,5 +162,5 @@ benchmark code, not the product", and "that's my laptop, not a benchmark", then 
 | C1 slow or errors | Open `prerun/retail_prod.html`; print relationships from `shape.load("prerun/retail_prod.shape")` | Slide 10 shows verified output |
 | Fabric session cold or slow (Path A) | Open the saved report under `Files/shape/orders_day1/<timestamp>/`; run the notebook during Q&A | C2-local |
 | Pipeline queued (Path A) | Show the last completed runs | C2-local |
-| C3 fails (for example, no Spindle checkout on the laptop) | Show the `prerun/` generation screenshot | Slide 23 numbers |
+| C3 is slow or fails | Show the `prerun/` screenshot of the same command | Slide 13 numbers |
 | No network | Path B: C1, C2-local and C3 all run offline | — |

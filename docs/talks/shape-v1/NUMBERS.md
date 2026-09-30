@@ -5,122 +5,85 @@ file and, for any measurement, the machine it was measured on. `SCRIPT.md` cites
 (N-xx). If a number is not in this file, don't say it.
 
 This file holds **only committed numbers**. There are no placeholders and no to-be-filled
-values:
-the planned features in section 6 of the talk have no numbers, and the talk gives none.
+values: the planned features in section 6 of the talk have no numbers, and the talk gives none.
 
-## Rules (from plan §6.4 and decision DM-2)
+## Rules
 
 - Quote only numbers from committed files. Nothing is extrapolated, rounded up, or combined
-  into a new claim.
-- **Every timing below is from the benchmark ports, not the product.** "Port" means the
-  vectorised numpy + pyarrow reference port (`benchmarks/vs_spindle/profile_1to1/port.py`,
-  and the retail port for generation). `shape.profile` was ported from that code, but
-  `shape.profile` itself has **not** been timed against Spindle: `results.json` has
-  `"shape": null`.
-- **The Rust kernel is being built and has not been benchmarked.** No speed number for it
-  exists, and the talk gives none.
+  into a new claim. Every measured value below is **truncated**, never rounded up.
+- **Every timing and memory figure is `shape.profile` itself, released exact mode**, measured
+  by `benchmarks/measure_product.py` and committed in
+  `benchmarks/baselines/2026-09-30-product/product_bench.json`. Each run is a fresh process;
+  the talk quotes the median of 3 (7 for start-up). The output row count must match the file
+  and the profile output must be identical across the runs before a timing counts (it was,
+  for every row).
+- **The talk compares Shape with nothing.** No ratio against another tool, version or earlier
+  result is given in any form.
+- **Bounded mode and the Rust engine are being built and have not been measured.** No speed
+  or memory number for either exists, and the talk gives none. In particular there is **no
+  measurement of flat memory in bounded mode**.
 - **No Fabric timing exists yet.** `demo/LIVE_TIMINGS.md` is an empty placeholder until the
   owner's dry run (R11). Local timings must never be presented as Fabric timings. If the dry
   run doesn't happen before October 3, the talk quotes no Fabric timings at all.
-- Targets (10x minimum, 30x stretch) are shown only labelled as **targets**.
 
-## Machines
+## Machine
 
 | ID | Machine | Used for |
 |---|---|---|
-| M1 | 4 cores, Intel(R) Xeon(R) Processor @ 2.10GHz, `Linux-6.18.44-fc-v37-x86_64-with-glibc2.39`, Python 3.11.15; Spindle venv pandas 3.0.6 / numpy 2.4.6 / pyarrow 25.0.1; port venv pyarrow 25.0.1. Started 2026-09-29 22:22:57 | `benchmarks/baselines/2026-09-29/*` (plan §3, `demo/BENCHMARKS.md`) |
-| M2 | 4 cores, Intel(R) Xeon(R) Processor @ 2.10GHz, `Linux-6.18.44-fc-v50-x86_64-with-glibc2.39`, Python 3.11.15; both venvs numpy 2.4.6 / pyarrow 25.0.1. Started 2026-09-30 13:39:08 | `benchmarks/vs_spindle/results.json` (`--quick`, 3 runs) |
+| M1 | 4 cores, `Linux-6.18.44-fc-v50-x86_64-with-glibc2.39`, Python 3.11.15, pyarrow 25.0.1, numpy 2.4.6, shape 0.9.0. Started 2026-09-30 22:15:50 (this is the talk's machine for every number in N-20 to N-27) | `benchmarks/baselines/2026-09-30-product/product_bench.json` |
 
-Neither machine is Fabric. Both are shared 4-core builders; Gate G0 notes that ratios on them
-vary by about 10% (`docs/plans/demo_status/GATE-G0.md`).
+M1 is not Fabric. It is a shared 4-core builder, so run-to-run spread is real: D2 Parquet ran
+in 2.68 s, 1.96 s and 1.81 s (median 1.96 s). That's why the talk quotes medians and never a
+best run.
 
-Baseline under test: **Spindle 3.0.1, git `422e78df2267e73bb2fa976267e48cb437861e2f`**
-(plan T-20; `results.json` → `spindle_commit`).
-
-## Correctness and parity
+## Correctness and quality
 
 | ID | Number | Meaning | Source |
 |---|---|---|---|
-| N-01 | **30 / 30 datasets** | `shape.profile` vs Spindle's `DataProfiler`: every dataset PASS, every field bitwise-identical (every matrix cell `n/n*`), and nothing in the "within tolerance but not bitwise identical" section. Datasets: D1–D4 (CSV and Parquet), MT and MT Parquet, 20 EDGE variants | `docs/plans/demo_status/DM-01_verify_output.txt` (ends `EXIT=0`); `DM-01.md`; re-run by the lead, `MORNING_SUMMARY.md` |
-| N-02 | **31 fields** in the parity matrix: 27 per column plus 4 per table (row count, primary key, detected FKs, correlation matrix) (dtype, null_count, null_rate, cardinality, … quantiles, histograms, value_counts_ext, fit_score) | What "field by field" covers | Row labels of the per-field matrix in `DM-01_verify_output.txt` |
-| N-03 | **1e-9** relative (mean, std, quantiles, enum weights), **1e-6** relative (distribution parameters); exact match for dtype, null counts, cardinality, uniqueness, enums, top-500 value counts, PK/FK, pattern | T-22 profiling parity **tolerances** (the run in N-01 was tighter: bitwise) | Plan §2.2 T-22 |
-| N-04 | **60 / 60 columns** equivalent, at small, medium and large scale | Retail generation port vs Spindle under T-21 (statistical, not bitwise) | `benchmarks/baselines/2026-09-29/retail_verify_{small,medium,large}.txt`; plan §3.2 |
-| N-05 | Spindle's own seed-to-seed KS for `order.order_total` at large scale: **0.14–0.37** (seeds 43–47) | Why generation equivalence uses Spindle's own spread and a fixed seed set | Plan §2.2 T-21; `retail_large_seed_study.json` |
-| N-06 | Baseline seeds **exactly 43, 44, 45, 46**; reference seed 42; Shape seed 1042 | The fixed T-21 seed set (no seed shopping) | Plan §2.2 T-21 |
-| N-07 | **41 mismatches** on each of `d1.csv` and `d1.parquet`; `run.py` exit 1 | The stale Spindle-output cache bug, reproduced before the fix | Commit `3b7c1f0` message (branch `build/main-plan`), "P0-07 fix: key the Spindle profile cache by input content" |
-| N-08 | **277** Spindle files, all mapped to a work package | Coverage map is machine-checked | `GATE-G0.md` (`check_coverage.py`: OK); `docs/plans/spindle_coverage.tsv` |
-| N-09 | **12 / 12** CI jobs green on `b965672` (Linux 3.11–3.14, macOS and Windows 3.11/3.14, audit, build, fabric-demo, bench-quick) | Gate G0 | `GATE-G0.md` §1 |
-| N-10 | **699 tests**, coverage **86.55%** (floor 86%) in `make check` at G0 | Gate G0 | `GATE-G0.md` §2 |
+| N-02 | **31 fields** in a profile's per-field matrix: 27 per column plus 4 per table (row count, primary key, detected FKs, correlation matrix) | What one profile holds (slide 8) | Row labels of the per-field matrix in `docs/plans/demo_status/DM-01_verify_output.txt` |
+| N-03 | **1e-9** relative (mean, std, quantiles, enum weights), **1e-6** relative (distribution parameters); exact match for dtype, null counts, cardinality, uniqueness, enums, top-500 value counts, PK/FK, pattern | The profiling tolerances written into the plan (slide 26) | Plan §2.2 T-22 |
+| N-09 | **12 / 12** CI jobs green on `b965672` (Linux 3.11–3.14, macOS and Windows 3.11/3.14, audit, build, fabric-demo, bench-quick) | Gate G0 (a snapshot) | `docs/plans/demo_status/GATE-G0.md` §1 |
+| N-10 | **699 tests**, coverage **86.55%** (floor 86%) in `make check` at G0 | Gate G0 (a snapshot) | `GATE-G0.md` §2 |
+| N-26 | Profile output **identical across the 3 fresh-process runs**, on all 5 benchmark datasets (`output_identical_across_runs: true`) | Determinism (slide 15, 24) | `product_bench.json` |
 
-## Timings: profiling (port, not product)
+## Timings: profiling, `shape.profile` exact mode
 
-Source: `benchmarks/baselines/2026-09-29/profile_bench.json`, machine **M1**. Median of 5
-runs, fresh process per run. "MT" is the port's default threading on 4 cores; "1T" is one
-thread. Equivalence first: `profile_verify.txt`, every field bitwise-identical, 30/30 PASS.
-Also in `demo/BENCHMARKS.md` (generated from the same files).
+Source: `benchmarks/baselines/2026-09-30-product/product_bench.json`, machine **M1**. Median of
+3 runs, fresh process per run, wall-clock excluding `import shape`. Rows per second is rows
+divided by the median wall-clock. Also in `demo/BENCHMARKS.md` (generated from the same file).
 
-| ID | Dataset | Spindle 3.0.1 | Port MT | Port 1T | Speedup MT / 1T |
-|---|---|---:|---:|---:|---:|
-| N-20 | D1, 200k × 6, Parquet | 1.42 s | 0.18 s | 0.23 s | 8.1x / 6.3x |
-| **N-21** | **D2, 1M × 20, Parquet** | **26.51 s** | **1.82 s** | **4.83 s** | **14.6x / 5.5x** |
-| N-22 | D2, 1M × 20, CSV | 31.12 s | 1.82 s | 4.99 s | 17.1x / 6.2x |
-| N-23 | D3, 5M × 10, Parquet | 47.91 s | 5.35 s | 13.73 s | 9.0x / 3.5x |
-| N-24 | D4, 100k × 200, Parquet | 28.31 s | 4.23 s | 13.34 s | 6.7x / 2.1x |
-| N-25 | MT, 3 tables, FK detection | 2.01 s | 0.38 s | 0.36 s | 5.3x / 5.6x |
-
-Say it the way `demo/TALK.md` does: "On a 4-core machine, after the outputs were checked
-identical, profiling a 1M-row, 20-column Parquet file took 26.5 s with Spindle and 1.8 s
-with the vectorised port. These are timings of the port that `shape.profile` was built
-from, not of the library, and not measured in Fabric."
-
-N-24 and N-25 show that the port **misses** the 10x target on wide data and small
-multi-table data. Plan §3.3 says so, and the talk says so too.
-
-## Timings: harness run (`results.json`)
-
-Source: `benchmarks/vs_spindle/results.json`, machine **M2**, `mode: quick`, median of 3
-runs. Every row's verifier status is `pass` before its timing counts. `"shape": null`: the
-product itself is not yet in the harness.
-
-| ID | Workload | Spindle | Reference port | Ratio |
+| ID | Dataset | Wall-clock | Rows per second | Peak memory |
 |---|---|---:|---:|---:|
-| N-30 | profile D1 CSV | 1.55 s | 0.33 s | 4.7x |
-| N-31 | profile D1 Parquet | 1.33 s | 0.34 s | 3.9x |
-| N-32 | profile D2 CSV | 31.73 s | 2.86 s | 11.1x |
-| N-33 | profile D2 Parquet | 26.30 s | 2.27 s | 11.6x |
-| N-34 | retail small (21,750 rows) | 0.25 s | 0.13 s | 1.9x |
-| N-35 | retail medium (1,965,400 rows) | 5.79 s | 0.98 s | 5.9x |
+| N-20 | D1, 200k × 6, Parquet | 0.38 s | 519,131 | 224 MB |
+| **N-21** | **D2, 1M × 20, Parquet** | **1.96 s** | **509,495** | **638 MB** |
+| N-22 | D2, 1M × 20, CSV | 2.02 s | 494,842 | 733 MB |
+| N-23 | D3, 5M × 10, Parquet | 4.89 s | 1,021,983 | 2,107 MB |
+| N-24 | D4, 100k × 200, Parquet | 4.40 s | 22,704 | 508 MB |
 
-Use: the backup slide, and the point that two runs a day apart on similar machines give
-different ratios (D2 Parquet: 14.6x in N-21 on M1 with 5 runs, 11.6x in N-33 on M2 with 3
-runs). That is why the gates are same-job ratios (T-19), not absolute numbers.
+Say it the way `demo/TALK.md` does: "On a 4-core machine, profiling a 1M-row, 20-column
+Parquet file took 1.9 s and peaked at 638 MB. Five million rows by ten columns took 4.8 s and
+2,107 MB." Memory grows with the data in exact mode; slide 21 says so.
 
-## Timings: retail generation (port, not product)
+N-24 is the slowest per row: 200 columns. The talk says it's per-column work, not a claim
+about why beyond that.
 
-Source: `benchmarks/baselines/2026-09-29/retail_bench.json`, machine **M1**, seed 42, median
-of 3 runs, generate + write Parquet. Equivalence: N-04. Generation is **not** part of the
-early-access product; this port produces the demo data.
+Raw runs (seconds), for backup slide B2:
 
-| ID | Scale | Rows | Spindle 3.0.1 | Port | Speedup |
-|---|---|---:|---:|---:|---:|
-| N-40 | medium | 1,965,400 | 5.29 s | 1.26 s | 4.2x |
-| N-41 | large | 19,625,400 | 102.64 s | 14.89 s | 6.9x |
+| Dataset | Run 1 | Run 2 | Run 3 |
+|---|---:|---:|---:|
+| D1 Parquet | 0.37 | 0.38 | 0.40 |
+| D2 Parquet | 2.68 | 1.96 | 1.81 |
+| D2 CSV | 2.34 | 2.00 | 2.02 |
+| D3 Parquet | 5.09 | 4.63 | 4.89 |
+| D4 Parquet | 4.22 | 4.54 | 4.40 |
 
-Plan §3.2 point: at medium scale, vectorising gives about 8x on the generate step but only
-4.2x in total, because Parquet writing does not speed up (N-42: generate 4.65 s → 0.55 s,
-write 0.65 s → 0.71 s; `retail_bench.json` → `scales.medium.summary`). This is the case for
-the Rust kernel **and** pipelined writing (T-17). It is not a claim about Rust speed.
+## Start-up
 
-## Targets (label them as targets, every time)
+Source: `product_bench.json` → `startup`, machine **M1**, median of 7 fresh processes.
 
-| ID | Target | Source |
-|---|---|---|
-| N-50 | **≥10x** Spindle (minimum), **≥30x** (stretch), for profiling and generation, measured 1:1 on equivalent work | Plan D-04, §3.4 |
-| N-51 | Example: D2 Parquet 10x target ≤ 2.65 s (Spindle 26.5 s) | Plan §3.3 |
-| N-52 | CLI start-up ≤ 300 ms (stretch ≤ 150 ms) | Plan §3.4 START, T-18 |
-| N-53 | Stream profiling ≥ 80% of batch throughput | Plan §3.4 STREAM-PROF |
-
-None of these has been met by the product yet, and the talk must not suggest otherwise.
+| ID | What | Wall-clock |
+|---|---|---:|
+| N-27 | `python -c pass`: **11 ms**; `python -c "import shape"`: **239 ms**; `shape version`: **294 ms** | as listed |
 
 ## Design parameters (not measurements)
 
@@ -133,8 +96,7 @@ None of these has been met by the product yet, and the talk must not suggest oth
 
 ## Profiler rules (design parameters from the code, for slide 9)
 
-These are the reference profiler's rules, which match Spindle's `DataProfiler` (checked by
-N-01). Source: `src/shape/profile/reference/` on `main`.
+These are the profiler's rules. Source: `src/shape/profile/reference/` on `main`.
 
 | ID | Rule | Source |
 |---|---|---|
@@ -156,7 +118,7 @@ Source: `demo/DRIFT.md`, verified by `tests/demo/content/` and on 2026-09-30 by
 | N-72 | `orders.order_total` × **1.40**: mean **110.93 → 155.30**; max **5135.63 → 7189.882** (contract `max` 6000) | `DRIFT.md` |
 | N-73 | `products.sku`: **5,050 rows, 5,000 distinct** | `DRIFT.md` |
 | N-74 | The +40% shift is **0.43** baseline standard deviations; the default `mean_shift_std` threshold is **0.5**; the demo uses **0.25** | `DRIFT.md`; plan §12.3 |
-| N-75 | Retail medium: **1,965,400 rows, 9 tables** (the "production" stand-in and slide 22) | Plan §3.2; `results.json` → `generate:retail:medium.rows` |
+| N-75 | Retail medium: **1,965,400 rows, 9 tables** (the "production" stand-in, slide 10) | Plan §3.2; `verify_snippets.sh` part 1 asserts the total |
 | N-76 | The multi-table profile of the stand-in finds **8** foreign keys (slide 10). This is live output of a deterministic run (seed 42), not a measurement | `verify_snippets.sh` part 1 (run 2026-09-30) |
 
 ## Fabric platform limits (Microsoft Learn, retrieved 2026-09-30; not measurements)
@@ -178,14 +140,19 @@ the owner's dry run (R11), add rows here as N-9x, copying the SKU, vCores, runti
 counts and seconds exactly as recorded, and cite `demo/LIVE_TIMINGS.md` at its commit. Until
 then the talk quotes no Fabric timing (fallback path, `DEMO.md`).
 
-## Planned features: no numbers
+## Live Fabric timings
 
-The "how it will work" slides (25–27) carry no numbers: no product timings (G1/G4 not
-reached; `results.json` → `"shape": null`), no safe-profile sizes, no fidelity scores, no
-distributed-profiling or Rust-engine timings. Add a number here only when a committed file
-contains it, with its source and machine, after its equivalence verifier passes.
+None on 2026-09-30. `demo/LIVE_TIMINGS.md` is still a placeholder (no cell filled in). After
+the owner's dry run (R11), add rows here as N-9x, copying the SKU, vCores, runtime, row
+counts and seconds exactly as recorded, and cite `demo/LIVE_TIMINGS.md` at its commit. Until
+then the talk quotes no Fabric timing (fallback path, `DEMO.md`).
+
+## Planned and being-built features: no numbers
+
+The "how it will work" slides (25–27) carry no numbers: no engine timings, no bounded-mode
+memory, no safe-profile sizes, no fidelity scores, no distributed-profiling timings. Add a
+number here only when a committed file contains it, with its source and machine.
 
 ## Numbers from *Stop Borrowing Contoso*
 
-None is used. They have no committed source here, and some contradict the committed
-baselines. The list is in `STATUS.md`, finding F7.
+None is used. They have no committed source here. The list is in `STATUS.md`, finding F7.

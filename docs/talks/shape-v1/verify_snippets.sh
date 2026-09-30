@@ -5,13 +5,13 @@
 #           statement the slides make about the code and docs on this checkout.
 #           Any failure exits 1.
 #   Part 2, TALK TEXT (asserted with REQUIRE_READY=1): no "TBD" and no PENDING markers left
-#           in the talk files, and slide 22's live generation actually ran (not skipped).
+#           in the talk files, and slide 22's live profile (C3) actually ran (not skipped).
 #   Part 3, PLANNED (information only, never a gate): the "how it will work" items R1-R9,
 #           the owner's Fabric dry run (R11) and PyPI (F2). If a planned item reports READY,
 #           the talk still calls it planned: update the slides before claiming it.
 #
 #   source scripts/env.sh && python demo/make_data.py --out "$BENCH_DATA_DIR/demo"
-#   source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/domain_1to1/generate.py \
+#   source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/*/domain_1to1/generate.py \
 #       --impl reference_port --domain retail --scale medium --seed 42
 #   PY=~/.venvs/shape/bin/python bash docs/talks/shape-v1/verify_snippets.sh
 #   REQUIRE_READY=1 PY=... bash docs/talks/shape-v1/verify_snippets.sh     # delivery gate
@@ -148,38 +148,47 @@ run "$SHAPE" check day1.shape contracts/no-such.json; expect 2
 run "$SHAPE" check no-such.shape contracts/orders.json; expect 2      # F1, fixed in b2dd663
 run "$SHAPE" diff no-such.shape day2.shape; expect 2                  # F1, fixed in b2dd663
 
-echo "== slide 22: generation at scale (reference benchmark generator; needs the pinned Spindle checkout)"
-gen_ran=0
-if [ -d "${SPINDLE_ROOT:-$HOME/spindle}" ]; then
-    set +e
-    BENCH_OUT_DIR="$WORK/gen" "$PY" "$REPO/benchmarks/vs_spindle/domain_1to1/generate.py" \
-        --impl reference_port --domain retail --scale medium --seed 42 2>&1 | grep '^wrote' | tee gen.txt
-    set -e
-    grep -q '1,965,400 rows' gen.txt || { echo "generation did not write 1,965,400 rows"; exit 1; }
-    gen_ran=1
-else
-    echo "SKIPPED: no Spindle checkout at ${SPINDLE_ROOT:-$HOME/spindle}"
-fi
-
-echo "== slides 13, 23: quoted numbers match the committed baselines"
-"$PY" - "$REPO" <<'EOF'
-import json, sys
-repo = sys.argv[1]
-b = f"{repo}/benchmarks/baselines/2026-09-29"
-prof = json.load(open(f"{b}/profile_bench.json"))
-ret = json.load(open(f"{b}/retail_bench.json"))
-text = json.dumps(prof) + json.dumps(ret)
-# Every slide timing must appear in the committed files (rounded as on the slide).
-import re
-nums = [float(x) for x in re.findall(r"-?\d+\.\d+", text)]
-def present(v, nd=2):
-    return any(round(n, nd) == v for n in nums)
-for v in (26.51, 1.82, 47.91, 5.35, 28.31, 4.23, 5.29, 1.26, 102.64, 14.89):
-    assert present(v), f"slide number {v} not found in committed baselines"
-res = json.load(open(f"{repo}/benchmarks/vs_spindle/results.json"))
-assert res.get("shape") is None, "results.json now has product rows: slides 13/23 must be updated (R7)"
-print("baseline numbers ok; results.json shape: null (no product timings on slides)")
+echo "== slide 22 (C3): profile the 1M-row, 20-column file from the CLI"
+c3_ran=0
+test -f "$DEMO_DATA/day1/d2.parquet" && cp "$DEMO_DATA/day1/d2.parquet" d2.parquet
+if [ -f d2.parquet ]; then
+    "$PY" - <<'EOF'
+import pyarrow.parquet as pq
+md = pq.ParquetFile("d2.parquet").metadata
+print(md.num_rows, "rows x", md.num_columns, "columns")
+assert md.num_rows == 1_000_000 and md.num_columns == 20   # slides 13 and 22
 EOF
+    run "$SHAPE" profile d2.parquet -o d2.shape; expect 0
+    grep -q '"written": "d2.shape"' out.txt || { echo "slide 22 output line changed"; exit 1; }
+    c3_ran=1
+else
+    echo "SKIPPED: no d2.parquet in $DEMO_DATA/day1"
+fi
+run "$SHAPE" version; expect 0
+
+echo "== slides 13, 21, 23: the quoted numbers are the committed measurements"
+"$PY" - "$REPO" <<'EOF'
+import json, math, sys
+repo = sys.argv[1]
+d = json.load(open(f"{repo}/benchmarks/baselines/2026-09-30-product/product_bench.json"))
+assert not any("bounded" in k or "engine" in k for k in d), "bounded/engine rows now exist: update slides 12, 21, 27"
+script = open(f"{repo}/docs/talks/shape-v1/SCRIPT.md").read()
+def t(x, nd=2):
+    f = 10 ** nd
+    return f"{math.floor(x * f) / f:.{nd}f}"
+for key, r in d["profile"].items():
+    assert r["output_identical_across_runs"], key
+    if key == "d2.csv":
+        continue
+    for v in (t(r["median_s"]), f"{math.floor(r['rows_per_s']):,}", f"{math.floor(r['peak_rss_mb']):,}"):
+        assert v in script, f"{key}: {v} is not in SCRIPT.md"
+su = d["startup"]
+for v in (math.floor(su["python_bare_median_s"] * 1000), math.floor(su["import_shape_median_s"] * 1000),
+          math.floor(su["cli_version_cmd_median_s"] * 1000)):
+    assert f"{v} ms" in script, f"start-up {v} ms is not in SCRIPT.md"
+print("slide numbers match product_bench.json")
+EOF
+"$PY" "$REPO/demo/build_benchmark_sheet.py" --check && echo "demo/BENCHMARKS.md is up to date"
 
 echo
 echo "######## PART 2: TALK TEXT ########"
@@ -188,7 +197,7 @@ for f in SCRIPT.md DEMO.md OUTLINE.md NUMBERS.md; do
     if grep -n 'TBD\|⟦PENDING' "$TALK/$f"; then echo "  ^ $f still has TBD or PENDING markers"; text_bad=1; fi
 done
 [ $text_bad -eq 0 ] && echo "no TBD or PENDING markers in SCRIPT.md, DEMO.md, OUTLINE.md, NUMBERS.md"
-[ $gen_ran -eq 1 ] || { echo "slide 22's generation was skipped"; text_bad=1; }
+[ $c3_ran -eq 1 ] || { echo "slide 22's live profile (C3) was skipped"; text_bad=1; }
 
 echo
 echo "######## PART 3: PLANNED (information only; not gates) ########"
@@ -205,10 +214,10 @@ set +e; "$SHAPE" plan retail_prod.shape >/dev/null 2>&1; rc=$?; set -e
 planned R3 $([ $rc -eq 0 ] && echo 1 || echo 0) "shape plan, P4-08 (probe exit $rc)"
 planned R4 $("$SHAPE" generate --help 2>/dev/null | grep -q -- '--from' && echo 1 || echo 0) "generate from a shape, P4-08"
 planned R5 $("$SHAPE" fidelity --help 2>/dev/null | grep -qi 'tier\|threshold' && echo 1 || echo 0) "fidelity report, P4-09"
-set +e; BENCH_OUT_DIR="$WORK/gen" "$PY" "$REPO/benchmarks/vs_spindle/domain_1to1/generate.py" \
+set +e; BENCH_OUT_DIR="$WORK/gen" "$PY" "$REPO"/benchmarks/*/domain_1to1/generate.py \
     --impl shape --domain retail --scale small --seed 1042 >/dev/null 2>&1; rc=$?; set -e
 planned R6 $([ $rc -eq 0 ] && echo 1 || echo 0) "retail through the product engine, P4-07 (probe exit $rc)"
-planned R7 $("$PY" -c "import json,sys; d=json.load(open('$REPO/benchmarks/vs_spindle/results.json')); sys.exit(0 if d.get('shape') else 1)" && echo 1 || echo 0) "product timings, G1/G4"
+planned R7 0 "engine and bounded-mode timings and memory, G1/G4 (none measured; slides 21 and 27 say so)"
 planned R8 $(grep -rqs mapInArrow "$REPO/integrations/fabric/notebooks/" && echo 1 || echo 0) "distributed Spark profiling, PF-02"
 planned R9 $(ls "$REPO"/integrations/fabric/pipelines/ | grep -qi gen && echo 1 || echo 0) "generation pipelines, PF-06"
 

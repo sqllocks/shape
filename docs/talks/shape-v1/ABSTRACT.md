@@ -29,8 +29,8 @@ brings, or they hold fake data that doesn't behave like production, so bugs surf
 release. Shape, an open-source Python library, takes a third route: profile production,
 save how the data behaves as a portable `.shape` artifact, and rebuild dev from that
 artifact. This session goes deep on profiling at scale: what a full statistical profile
-captures (types, distributions, patterns, keys and cross-table relationships), how it is
-verified field by field against a reference implementation, and how it runs in a Microsoft
+captures (types, distributions, patterns, keys and cross-table relationships), how fast it is
+and how much memory it uses, and how it runs in a Microsoft
 Fabric pipeline that profiles production, checks contracts, flags drift and publishes a
 privacy-safe shape. Then we generate a multi-table dev environment from that shape, at
 scale, and prove it matches by profiling the result. You'll see what's measured, what's
@@ -42,11 +42,10 @@ Dev environments lie. Either they hold a copy of production, with the compliance
 brings, or they hold fake data that doesn't behave like production. Shape, an open-source
 Python library in early access, takes a third route: profile production and save how the
 data behaves as a portable `.shape` artifact. This session goes deep on data profiling at
-scale: what a full statistical profile captures, how Shape's profiler is verified field by
-field against a reference implementation on 30 datasets, and how it runs in a Microsoft
+scale: what a full statistical profile captures, how fast Shape's profiler runs and how much
+memory it uses, measured on five datasets up to five million rows, and how it runs in a Microsoft
 Fabric pipeline that profiles production data, checks contracts and flags drift. We'll also
-generate millions of rows of equivalence-verified synthetic data, and walk through the
-workflow Shape is building to rebuild dev environments from a production shape without
+walk through the workflow Shape is building to rebuild dev environments from a production shape without
 moving production rows: what it must preserve, how privacy is enforced, and how we test
 that the result matches.
 
@@ -91,10 +90,10 @@ Intermediate (200–300). Python familiarity helps; no statistics background is 
 | A2 | Data and analytics engineers, Fabric-heavy room | Depth of the Fabric sections |
 | A3 | Live demos: profiling (local), the prod pipeline (Fabric), generation at scale (local), dev rebuild (local, **⟦PENDING R1–R5⟧**) | `DEMO.md` |
 | A4 | Delivered only when `REQUIRE_READY=1 verify_snippets.sh` exits 0 (`READINESS.md`) | Everything marked ⟦PENDING⟧ |
-| A5 | "Production" in the demos is a **stand-in**: retail data from the equivalence-verified reference generator. No real production data is used or shown | `DEMO.md`, slide 10 |
-| A6 | Until R6 is READY, the generation-at-scale demo uses the reference generator, labelled as not in the pip package (owner choice) | Slide 22 |
-| A7 | Spindle appears as the retired project and the benchmark baseline. *Stop Borrowing Contoso* is referenced as the speaker's previous talk | Slides 4, 15 |
-| A8 | No number from *Stop Borrowing Contoso* is reused. Its Spindle timings (for example "19.6M rows in ~42s") don't match the committed baselines (Spindle large: 102.64 s on the 4-core baseline machine), so the talk uses only `NUMBERS.md` | `NUMBERS.md` |
+| A5 | "Production" in the demos is a **stand-in**: synthetic retail data from the repo's stand-in generator. No real production data is used or shown | `DEMO.md`, slide 10 |
+| A6 | Section 5 shows Shape's own measured numbers (wall-clock, rows per second, peak memory, start-up) and a live profile of a 1M-row file. No generation is demoed | Slides 13, 21–24 |
+| A7 | *Stop Borrowing Contoso* is referenced as the speaker's previous talk | Slide 4 |
+| A8 | No number from *Stop Borrowing Contoso* is reused. The talk uses only `NUMBERS.md`, which cites committed measurements | `NUMBERS.md` |
 
 ## Open questions for the owner
 

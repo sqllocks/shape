@@ -5,12 +5,13 @@
 
 ## Verification
 
-- Every runnable snippet on these slides was run on 2026-09-30 by
-  [`verify_snippets.sh`](verify_snippets.sh) (part 1, asserted) against `main` @ `b2dd663`
-  (Shape 0.9.0, Python 3.11.15, pyarrow 25.0.1): exit 0, and `REQUIRE_READY=1` exit 0.
-  Data came from `demo/make_data.py` and the reference benchmark generator
-  (`benchmarks/vs_spindle/domain_1to1/generate.py --impl reference_port`), using the pinned
-  Spindle checkout.
+- Every runnable snippet on these slides is run by [`verify_snippets.sh`](verify_snippets.sh)
+  (part 1, asserted) against `main` (Shape 0.9.0, Python 3.11.15, pyarrow 25.0.1). Data
+  comes from `demo/make_data.py` and the repo's retail stand-in generator. See `STATUS.md`,
+  "Demo data generator".
+- Every number on the measurement slides (13, 21, 23) comes from
+  `benchmarks/baselines/2026-09-30-product/product_bench.json`, written by
+  `benchmarks/measure_product.py`, and is generated into `demo/BENCHMARKS.md`.
 - Section 6 ("how it will work") has **no runnable snippets**. It describes the plan's
   design. The only command forms there are labelled "planned syntax (may change)" and come
   from the plan's work-package text. Nothing in that section is claimed to run.
@@ -18,18 +19,17 @@
 ## Wording rules
 
 - "Production" in every demo is a **stand-in**: synthetic retail data. Say so on slide 10.
-- Every timing is of the **port** (the vectorised reference code Shape's profiler was
-  ported from), on **4 cores**, **not Fabric**, after equivalence passed. Say all four each
-  time. No reference-port timing is ever presented as the product's speed.
-- The product itself has **no** timings against Spindle yet (`results.json` → `"shape":
-  null`). The Rust engine is **being built**: describe it, never give it a speed.
-- Targets (≥10x minimum, ≥30x stretch) are said only as **targets**.
+- Every timing is of `shape.profile` (released, exact mode) on **4 cores**, **not Fabric**,
+  as a median of 3 fresh-process runs. Say "4 cores, not Fabric" each time.
+- Shape's talk numbers are Shape's own: wall-clock, rows per second, peak memory, start-up.
+  **No comparison with any other tool, version or earlier result, in any form**: no "x times
+  faster", no "than before", no "the old way".
+- Bounded mode and the Rust engine are **being built**: describe them, never give them a
+  speed or a memory number (none exists).
 - A raw `.shape` holds real values. Never call it "safe" or "anonymised".
 - Section 6 is **planned**. Never say "shipped", "available", "you can" for anything there.
   Say "the plan is", "it will", "is being built".
-- Spindle is the retired project and the benchmark baseline. Don't call Shape its
-  "successor", and don't say "GA", "production-ready" or "certified". Shape is **early
-  access**.
+- Shape is **early access**. Don't say "GA", "production-ready" or "certified".
 - Don't reuse numbers from *Stop Borrowing Contoso* (`STATUS.md`, F7).
 - Fabric timings: only rows from `demo/LIVE_TIMINGS.md`, and only after the owner's dry run
   (R11). Until then, none.
@@ -126,11 +126,11 @@ file. You can commit it, diff it, and check new data against it."
 
 | Runs today (0.9.0, early access) | Being built (engine branch, not released) | Planned (work packages) |
 |---|---|---|
-| profile a table or a whole schema, FK detection across tables | Rust kernel: build and FFI, wheels, hashing, sketches, readers, type inference, fused profile kernel, profile engine (P1-01a..P1-07) | Spindle parity on the engine (P1-08), then product timings (G1) |
+| profile a table or a whole schema, FK detection across tables | Rust kernel: build and FFI, wheels, hashing, sketches, readers, type inference, fused profile kernel, profile engine (P1-01a..P1-07) | engine acceptance checks (P1-08), then engine timings (G1) |
 | `.shape` save/load, HTML report | | safe profile, k-anonymity (P7-01, P7-02) |
 | `check` (contracts), `diff` (single and multi-table), CLI exit codes | | generate from a shape, `shape plan` (P4-08) |
 | Fabric: notebooks, Environment, UDF, pipeline gate | | fidelity report (P4-09); product generation engine (P4-07) |
-| profiler bitwise-identical to Spindle's on 30 datasets | | distributed profiling in Spark (PF-02); generation pipelines (PF-06) |
+| measured: 5 datasets up to 5M rows, output identical across runs (slide 13) | | distributed profiling in Spark (PF-02); generation pipelines (PF-06) |
 
 **Say:** "Here's exactly what runs today, what's being built right now, and what's planned.
 Shape is open source and built against a public plan with a status tracker, so you can
@@ -150,7 +150,7 @@ Re-check the tracker the day before and update this column only from it.)
 
 - **Dataset:** tables, and relationships (foreign keys detected across tables).
 - **Table:** row count, primary key, detected FKs, correlation matrix.
-- **Column (27 of the 31 fields in the parity check, N-02):** dtype · null count/rate · cardinality
+- **Column (27 fields per column, N-02):** dtype · null count/rate · cardinality
   and ratio · unique · enum flag and values · min/max/mean/std · quantiles · distribution
   family and parameters · fit score · pattern · outlier rate · string lengths · top-500 value
   counts · hour/day-of-week/temporal histograms · PK/FK flags.
@@ -213,7 +213,7 @@ finds the foreign keys between them by itself. One file holds the whole schema's
 → **`DEMO.md` C1.**
 
 Notes: `product.category_id` → `product_category` is **not** detected. That's the naming
-rule (the column isn't called `product_category_id`), the same as Spindle's. If someone
+rule (the column isn't called `product_category_id`). If someone
 spots it, say so; it's slide 9's rule in action. Don't quote the demo's run time, because
 it isn't a benchmark.
 
@@ -236,7 +236,7 @@ columns with no fitted distribution, and relationships I didn't expect." Scroll 
 ### Slide 12 — Exact vs bounded, and canonical hashing (15:30, 1 min 30 s)
 
 **On the slide:** left, the exact vs bounded table (N-60): `exact` is what 0.9.0 does
-today, and what parity and every timing use. **Bounded** (being built) uses HLL (p=14), KLL
+today, and what every timing in this talk uses. **Bounded** (being built) uses HLL (p=14), KLL
 (k=200) and SpaceSaving (64); it's mergeable, for streams and partitioned or
 larger-than-memory data. One output schema. Right, hashing (N-62): seeded XXH3-64, never
 Python `hash()`; `1` ≡ `1.0`; NaN and null excluded; timestamps normalised to µs.
@@ -257,26 +257,25 @@ merged or released. The `exact=` switch arrives with the profile engine, P1-07, 
 
 ### Slide 13 — Profiling at scale, in numbers (17:00, 1 min 30 s)
 
-**On the slide:** header strip: "**Reference port**, not the product · 4 cores · Intel Xeon
-2.10 GHz · Linux · Python 3.11 · not Fabric · equivalence verified first".
+**On the slide:** header strip: "**`shape.profile`, exact mode** · 4 cores · Linux · Python
+3.11 · not Fabric · median of 3 runs".
 
-| Profile (Parquet) | Spindle 3.0.1 | Port, 4 threads | vs Spindle |
+| Profile (Parquet) | Wall-clock | Rows per second | Peak memory |
 |---|---:|---:|---:|
-| D2: 1M × 20 | 26.51 s | 1.82 s | 14.6x |
-| D3: 5M × 10 | 47.91 s | 5.35 s | 9.0x |
-| D4: 100k × 200 | 28.31 s | 4.23 s | 6.7x |
+| D1: 200k × 6 | 0.38 s | 519,131 | 224 MB |
+| D2: 1M × 20 | 1.96 s | 509,495 | 638 MB |
+| D3: 5M × 10 | 4.89 s | 1,021,983 | 2,107 MB |
+| D4: 100k × 200 | 4.40 s | 22,704 | 508 MB |
 
-Footer: "**Target** for the product: ≥10x per workload, ≥30x stretch (N-50). Not yet
-measured for the product."
+Footer: "Values truncated, never rounded up. Output identical across the 3 runs (N-20 to N-25)."
 
-**Say:** "These are timings of the port, the vectorised reference code that Shape's
-profiler was built from, not of the library. On a 4-core machine, after outputs were
-checked identical, a million rows by twenty columns took 26.5 seconds with the retired
-Spindle and 1.8 with the port. Notice the wide table: 6.7x, below our own 10x target. The
-product itself isn't in the benchmark yet, so I have no product number for you, and I
-won't make one up. Closing that gap is what the Rust engine is for."
+**Say:** "These are timings of the library you're looking at, on a 4-core machine, not Fabric.
+A million rows by twenty columns took 1.9 seconds. Five million rows by ten took 4.8.
+Notice the wide table: a hundred thousand rows but two hundred columns, and it's the slowest
+per row, because the work is per column. Every run's output was identical to the others. These
+are the numbers I'll hold the next version of the engine to."
 
-(Sources: N-21, N-23, N-24, N-50.)
+(Sources: N-20 to N-25, `demo/BENCHMARKS.md`.)
 
 **Next:** "And in Fabric?"
 
@@ -303,17 +302,24 @@ exactly. If not, no Fabric timing at all.)
 
 **Next:** "A profile is only useful if every one of those fields is right. How do we know?"
 
-### Slide 15 — Every field, bitwise (20:00, 1 min 30 s)
+### Slide 15 — How the profile is checked (20:00, 1 min 30 s)
 
-**On the slide:** the per-field matrix thumbnail from `DM-01_verify_output.txt`. **30/30
-datasets · 31 fields · every value bitwise-identical** to Spindle 3.0.1 (pinned `422e78d`)
-(N-01, N-02). Tolerances allowed by the rules: 1e-9 relative (N-03); needed: none.
+**On the slide:** three facts.
 
-**Say:** "We profiled 30 datasets with the retired Spindle and with Shape: wide, tall,
-multi-table, and 20 edge cases from three-row tables to every pattern family. We compared
-all 31 fields. The rules allowed a tiny tolerance; we didn't need it. Every value was
-bitwise identical. So when I show you a profile, it's a profile you can check, not one you
-have to trust."
+- **Deterministic:** fixed seeds; profiling the same file in 3 fresh processes gave
+  byte-identical output, for all 5 benchmark datasets (N-26).
+- **Tested:** 699 tests, 86.55% coverage (floor 86%) in `make check` (N-10).
+- **Built on every platform:** 12 of 12 CI jobs green at Gate G0: Linux 3.11–3.14, macOS and
+  Windows 3.11/3.14, audit, build, fabric-demo, bench-quick (N-09).
+
+**Say:** "A profile is only useful if you can trust it. Three things I can show you. The
+same file gives the same profile every time, because every seed is fixed, and I checked that
+across fresh processes. The test suite is 699 tests at 86.5 percent coverage. And CI builds
+and tests on Linux, macOS and Windows. None of that makes it perfect, but it makes it
+checkable."
+
+(Numbers as of Gate G0, `docs/plans/demo_status/GATE-G0.md`. They are a snapshot, not today's
+count. Say "at Gate G0".)
 
 **Next:** "Now put profiling where it belongs: in the production pipeline."
 
@@ -416,8 +422,8 @@ includes `b2dd663`: the TestPyPI 0.9.0 wheel predates it.)
 **On the slide:**
 
 - A `.shape` keeps **up to 500 real values per column** (the most frequent, with counts),
-  plus each column's **min and max**. That's by design: it's what makes the profiler
-  match Spindle's exactly.
+  plus each column's **min and max**. That's by design: value counts are part of the
+  profile.
 - In our stand-in, the saved `retail_prod.shape` contains real customer email addresses
   (asserted by `verify_snippets.sh`).
 - README: "**Treat a `.shape` file, its HTML report and its JSON summary as you would the
@@ -433,76 +439,77 @@ source data. Keep it in production, and grant access the same way. A safe profil
 that can leave production is planned; that's the first thing on the 'how it will work'
 slides."
 
-**Next:** "Before we get to that, let's look at generation, which runs today as benchmark
-code."
+**Next:** "Before we get to that, the numbers: how fast, and how much memory."
 
-## Section 5 — Generation at scale (31:30–36:00)
+## Section 5 — Shape's own numbers (31:30–36:00)
 
-### Slide 21 — Generate a schema, not columns (31:30, 30 s)
+### Slide 21 — Memory (31:30, 1 min)
 
-**On the slide:** the dependency order: store → customer → product → order → order_line
-(parents before children). "Every foreign key points at a real primary key."
+**On the slide:** header strip as slide 13. Peak memory for `shape.profile` in exact mode:
 
-**Say:** "Quick callback to the last talk. You generate a schema in dependency order, never
-column by column, so every order points at a real customer."
+| Profile (Parquet) | Rows | Peak memory |
+|---|---:|---:|
+| D1: 200k × 6 | 200,000 | 224 MB |
+| D2: 1M × 20 | 1,000,000 | 638 MB |
+| D3: 5M × 10 | 5,000,000 | 2,107 MB |
+| D4: 100k × 200 | 100,000 | 508 MB |
 
-**Next:** "At scale."
+Footer: "Exact mode: memory grows with the data. **Bounded mode (flat memory): BEING BUILT, not
+measured.**" (N-20 to N-25.)
 
-### Slide 22 — Two million rows → Live C3 (32:00, 30 s + demo ~2 min) — *verified*
+**Say:** "Memory, same machine. In exact mode, memory grows with the data: about 2 gigabytes
+for five million rows. That's the honest number for today, and it's why the Fabric slide has
+a five-million-row cap on the driver. The bounded mode from slide 12 is meant to keep memory
+flat. It's being built, and I have no measurement of it, so I'm not going to give you one."
+
+**Next:** "Let me profile a million-row file right now."
+
+### Slide 22 — A million rows → Live C3 (32:30, 30 s + demo ~2 min) — *verified*
 
 **On the slide:**
 
 ```bash
-python benchmarks/vs_spindle/domain_1to1/generate.py \
-    --impl reference_port --domain retail --scale medium --seed 42
-# wrote .../reference_port/retail/medium/seed42 (1,965,400 rows, …s)
+time shape profile d2.parquet -o d2.shape
+# {"shape_content_id": "…", "written": "d2.shape"}
 ```
 
-Label, large: "**Reference benchmark code, not the product.** Equivalence-verified against
-Spindle (T-21, 60/60 columns). Not in the pip package. The product's generation engine is
-planned (P4-07)."
+Label: "1,000,000 rows × 20 columns. Compare with slide 13: that's the same file."
 
-**Say:** "This is benchmark code from our test harness, not the product, and it's not in
-the pip package. It's the generator that made our 'production' stand-in, and it's been
-verified against Spindle's output. Nine tables, just under two million rows, fixed seed so
-rehearsal equals live. Then, the loop: I profile what I just generated with the same call
-as slide 10." → **`DEMO.md` C3.**
+**Say:** "Same file as slide 13: a million rows, twenty columns. I'll run it with a clock and
+you can compare. It won't match to the decimal: this is my laptop with a terminal and a
+projector, not the benchmark machine." → **`DEMO.md` C3.**
 
 Notes: the screen shows a live time. Say "that's my laptop, not a benchmark", and quote only
-slide 23.
+slide 13. The output line shows a content id that changes with the data, not with the run.
 
-**Next:** "The measured numbers."
+**Next:** "And how long before it starts?"
 
-### Slide 23 — Generation at scale, in numbers (34:30, 1 min)
+### Slide 23 — Start-up (34:30, 1 min)
 
-**On the slide:** "**Reference port**, not the product · 4 cores · not Fabric · equivalence
-verified first (60/60 columns, T-21)".
+**On the slide:** header strip as slide 13, "median of 7 fresh processes".
 
-| Retail | Rows | Spindle 3.0.1 | Port | vs Spindle |
-|---|---:|---:|---:|---:|
-| medium | 1,965,400 | 5.29 s | 1.26 s | 4.2x |
-| large | 19,625,400 | 102.64 s | 14.89 s | 6.9x |
+| What | Wall-clock |
+|---|---:|
+| `python -c pass` (the interpreter alone) | 11 ms |
+| `import shape` | 239 ms |
+| `shape version` (the CLI) | 294 ms |
 
-Footer: "**Target** ≥10x (N-50): not met by the port. Vectorising sped up the generate step
-about 8x, but Parquet writing didn't get faster (N-42)."
+**Say:** "Start-up matters when a pipeline calls the CLI many times. Python itself is 11
+milliseconds. `import shape` is 239, and running the CLI end to end is 294. That's a
+quarter of a second, every call, on this machine." (N-27.)
 
-**Say:** "Nineteen and a half million rows in under 15 seconds with the port, against 103
-for Spindle, on four cores, after the output passed the equivalence test. That's still
-under our 10x target, because writing Parquet became the bottleneck. That's a design input
-for the engine, not a claim about it."
+**Next:** "What these numbers are not."
 
-**Next:** "How do you test random data?"
+### Slide 24 — How these were measured, and what's missing (35:30, 30 s)
 
-### Slide 24 — Testing random data (35:30, 30 s)
+**On the slide:** method: `shape.profile` exact mode · fresh process per run · median of 3
+(7 for start-up) · 4 cores · not Fabric · outputs identical across runs · values truncated.
+Not measured: **bounded mode · the Rust engine · Fabric · other core counts**.
 
-**On the slide:** "Is the output as close to Spindle's as Spindle is to itself?" KS, TVD,
-null rates, vocabulary, FK integrity, business rules; tolerance scaled by Spindle's
-seed-to-seed spread (0.14–0.37 KS on one column, N-05); baseline seeds fixed at 43–46
-(N-06).
-
-**Say:** "You can't compare random data bitwise. So the test asks: is our output as close to
-the reference as the reference is to itself with a different seed? And the seeds are fixed
-in the rules, so nobody can shop for a lucky one."
+**Say:** "One line on method: fresh process each run, median of three, and I checked the
+output was identical each time. And what's not here: bounded mode, the Rust engine, Fabric,
+and other machine sizes. When I have those measured, they'll go in the repo the same way,
+with the file next to the claim."
 
 **Next:** "Now, where this is going."
 
@@ -517,8 +524,8 @@ in the rules, so nobody can shop for a lucky one."
 **On the slide:** slide 5's right half, as a flow, each box tagged with its work package
 and **PLANNED**:
 
-1. **Safe profile** (P7-01, P7-02): export and validate a safe profile, in parity with
-   Spindle's safe-profile output; an enforced minimum cohort; small cells suppressed in
+1. **Safe profile** (P7-01, P7-02): export and validate a safe profile, an enforced
+   minimum cohort; small cells suppressed in
    value counts, enums and histograms.
 2. **`shape plan`** (P4-08): reports what generation will and won't preserve, and flags
    every field that isn't modelled.
@@ -543,15 +550,14 @@ change."
 
 - **P4-08's acceptance test:** profile → generate → profile must land within the T-22
   profiling tolerances for every modelled field. The feature doesn't ship until it does.
-- **Fidelity report** (P4-09): per-table scores, scoring equivalent to Spindle's
-  `FidelityComparator` (acceptance: within 0.5 points of it on retail), thresholds, and a
-  non-zero exit code on failure.
+- **Fidelity report** (P4-09): per-table scores, thresholds, and a non-zero exit code
+  on failure.
 
 Callout: "`shape.diff` of two profiles runs **today** (slide 18)."
 
 **Say:** "Proof is built into the plan. The acceptance test for generating from a shape
 is: profile production, generate, profile the result, and the two profiles must agree
-within the same tolerances we use for profiler parity. And the fidelity report will score
+within the profiling tolerances written into the plan (N-03). And the fidelity report will score
 each table and fail a build under a threshold. The comparison half, diffing two profiles,
 you've already seen running."
 
@@ -577,12 +583,13 @@ Right side, **PLANNED**:
   and a pipeline that generates, then profiles, then checks the output against the
   contract.
 
-Footer: "**Targets**, not results: ≥10x Spindle, ≥30x stretch (N-50)."
+Footer: "No speed or memory claims for the engine: it hasn't been measured. Slide 13 is the
+baseline it will be measured against."
 
 **Say:** "Underneath, a Rust kernel is being built: one fused pass over each batch, the
 sketches and hashing from slide 12, and every Rust function has a Python twin that must
-agree with it. I'm not giving you a speed for it, because it hasn't been benchmarked. The
-targets are 10x Spindle, 30x as a stretch, and they're targets. On top of that come
+agree with it. I'm not giving you a speed for it, because it hasn't been benchmarked. When
+it's measured, the numbers go next to slide 13's. On top of that come
 distributed profiling in Spark and generation pipelines in Fabric. Put those together with
 the safe profile, and you get the full loop from slide 5: production publishes a safe
 shape, dev regenerates from it and checks it."
@@ -594,20 +601,19 @@ itself, as written, generates a named domain. Don't say it's a single planned de
 
 ## Section 7 — How we know it's right (39:30–41:30)
 
-### Slide 28 — Equivalence before timing, and the bug it caught (39:30, 2 min)
+### Slide 28 — Measure before you claim (39:30, 2 min)
 
-**On the slide:** top: "No number counts until that workload's equivalence check passes on
-the timed output." Bottom: the stale-cache story in four steps (N-07): cached Spindle output
-keyed by dataset name → D1 regenerated every run → 41 mismatches per D1 file → key the cache
-by SHA-256 of the input. "A stale cache can fail you, and it can just as easily pass you."
+**On the slide:** top: "No number on these slides without a file behind it." Below, three
+rows: **number → file** (every figure: `product_bench.json`, produced by
+`benchmarks/measure_product.py`) · **snippet → script** (every snippet: run by
+`verify_snippets.sh`) · **claim → status** (runs today / being built / planned, with work
+package IDs).
 
-**Say:** "Every number today came with an equivalence check on the same output. And the
-harness checks itself too. Once, a cached reference result went stale and 41 fields
-'mismatched'. The profiler was fine; the check was wrong. We fixed the cache key. The scary
-version is the one where the stale answer happens to agree, and you get a pass you didn't
-earn."
-
-(The fix is commit `3b7c1f0` on `build/main-plan`, finding F4.)
+**Say:** "Everything today had a file behind it. The numbers come from one JSON file in the
+repo, written by a script you can run. The code snippets are run by a script before I stand
+up here, and it fails if a slide and the code disagree. And everything that doesn't run yet
+says so, with a work package number you can look up. If you find a claim that doesn't
+have one of those, tell me."
 
 **Next:** "Where this leaves us."
 
@@ -658,10 +664,10 @@ shape against last week's: you'll learn something about your data."
   is planned (P7-01/P7-02); I'll talk about its guarantees when it ships."
 - *When does generate-from-shape ship?* "It's in the plan as P4-08, after the profile engine
   and the product generation engine. The tracker is public. I won't give a date on stage."
-- *How fast is Shape itself?* "The product isn't in the benchmark yet; the numbers I showed
-  are the reference port's. Product numbers come at gate G1, after equivalence passes."
-- *Differential privacy?* "Spindle had an experimental version; the plan ports it as
-  experimental (D-07). It isn't the default protection."
+- *How fast is Shape itself?* "Slide 13: a million rows by twenty columns in 1.96 seconds on
+  4 cores, not Fabric, exact mode. Bounded mode and the engine aren't measured yet."
+- *Differential privacy?* "It isn't part of the safe-profile design on slide 25, which uses
+  suppression and minimum group sizes. I won't claim more than that."
 - *How fast in Fabric?* Only `LIVE_TIMINGS.md` rows, with SKU and vCores. If R11 isn't done:
   "I haven't published Fabric timings yet; the platform limits are on slide 14."
 - *Great Expectations, Tonic, Gretel?* "Different starting points. Shape's is a
@@ -673,9 +679,10 @@ shape against last week's: you'll learn something about your data."
 
 ## Backup slides
 
-- **B1** Full profiling table: `demo/BENCHMARKS.md` profiling section (N-20 to N-25), with
-  "reference port, not the product" in the title.
-- **B2** `results.json` harness run (N-30 to N-35), showing `"shape": null` as it is.
+- **B1** Full profiling table: `demo/BENCHMARKS.md` profiling section (N-20 to N-25, with D2
+  as CSV too), titled "`shape.profile`, exact mode".
+- **B2** Raw runs and start-up: the three run times per dataset from `product_bench.json`,
+  and the start-up medians (N-26, N-27).
 - **B3** Drift side effects from `DRIFT.md`.
 - **B4** Fabric fallbacks (`DEMO.md` part E).
 - **B5** One column's profile JSON: `p.to_dict()["tables"]["customer"]["columns"]["loyalty_tier"]`,

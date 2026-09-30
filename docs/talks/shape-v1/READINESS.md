@@ -12,7 +12,7 @@ source scripts/env.sh && REQUIRE_READY=1 PY=~/.venvs/shape/bin/python bash docs/
 ```
 
 It asserts every claim the Oct 3 talk makes about code that runs today (part 1), and that
-no `TBD` or PENDING marker is left in the talk files and slide 22's generation really ran
+no `TBD` or PENDING marker is left in the talk files and slide 22's live profile (C3) really ran
 (part 2). Part 3 reports the planned items, the dry run and PyPI for information only.
 **On 2026-09-30 it exits 0** (`STATUS.md`).
 
@@ -28,8 +28,8 @@ no `TBD` or PENDING marker is left in the talk files and slide 22's generation r
 | Diff: default threshold misses the +40% shift; 0.25 catches it | 18 | asserted |
 | Profiling a Delta table directory (the notebook's path); the Fabric items named on slides exist | 14, 16 | asserted |
 | CLI exit codes 0 / 1 / 1 / 2, and **exit 2 for a missing `.shape`** in `check` and `diff` | 19, C2-local | asserted |
-| Reference benchmark generator writes 1,965,400 rows | 22 | asserted (not skipped under `REQUIRE_READY=1`) |
-| Every port timing on slides 13 and 23 is in the committed baselines; `results.json` still has `"shape": null` | 13, 23 | asserted |
+| `shape profile` on the 1M-row, 20-column file exits 0 and writes `d2.shape` | 22 | asserted (not skipped under `REQUIRE_READY=1`) |
+| Every timing, rows-per-second, memory and start-up figure in `SCRIPT.md` is in `product_bench.json` (truncated), its output was identical across runs, and `demo/BENCHMARKS.md` is current | 13, 21, 23 | asserted |
 
 ## Items
 
@@ -40,8 +40,8 @@ no `TBD` or PENDING marker is left in the talk files and slide 22's generation r
 | R3 | `shape plan` | P4-08 | **NOT READY** (planned) | slide 25 |
 | R4 | Generate from a `.shape` | P4-08 | **NOT READY** (planned) | slides 25, 26 |
 | R5 | Fidelity report | P4-09 | **NOT READY** (planned) | slide 26 |
-| R6 | Retail through the product engine | P4-07, P4-10 | **NOT READY** (planned) | slide 22 label: "reference benchmark code, not the product" |
-| R7 | Product timings | G1, G4 | **NOT READY** | slides 13, 23 show port numbers only, labelled |
+| R6 | Retail through the product engine | P4-07, P4-10 | **NOT READY** (planned) | not shown; no generation is demoed |
+| R7 | Engine and bounded-mode timings and memory | G1, G4 | **NOT READY**: none measured | slides 21, 27 say "being built, not measured". Slides 13, 21, 23 show `shape.profile` exact mode, which **is** measured |
 | R8 | Distributed Spark profiling | PF-02 | **NOT READY** (planned) | slide 14 one line; slide 27 |
 | R9 | Generation pipelines | PF-06 | **NOT READY** (planned) | slide 27 |
 | R10 | Missing `.shape` exits 2 (finding F1) | — | **READY**: fixed on `main` in `b2dd663`; asserted | slide 19 shows it |
