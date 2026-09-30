@@ -4,7 +4,7 @@ build-backend="hatchling.build"
 
 [project]
 name = "sqllocks-shape"
-version = "1.0.0"
+version = "0.9.0"
 description = "Shape by SQLLocks — an open Shape-as-Code specification and high-performance engine for capturing, governing, comparing, testing, and reconstructing how data behaves."
 readme="README.md"
 requires-python=">=3.11"
@@ -14,10 +14,12 @@ dependencies=["numpy>=1.26,<3","pyarrow>=23.0.1,<24","pydantic>=2.9,<3","typing-
 
 [project.optional-dependencies]
 yaml=["pyyaml>=6"]
+delta=["deltalake>=0.17"]
+pandas=["pandas>=2"]
 kafka=["confluent-kafka>=2.5,<4"]
 eventhubs=["azure-eventhub>=5.12,<6"]
 streaming=["confluent-kafka>=2.5,<4","azure-eventhub>=5.12,<6"]
-dev=["pytest>=8.3","pytest-cov>=6","hypothesis>=6.115","ruff>=0.8","mypy>=1.13","pip-audit>=2.7","build>=1.2","pyyaml>=6"]
+dev=["pytest>=8.3","pytest-cov>=6","hypothesis>=6.115","ruff>=0.8","mypy>=1.13","pip-audit>=2.7","build>=1.2","pyyaml>=6","pandas>=2","deltalake>=0.17","twine>=5"]
 
 [tool.hatch.build.targets.wheel]
 packages=["src/shape"]
