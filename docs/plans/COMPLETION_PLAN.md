@@ -1816,7 +1816,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 10 | P1-01b | done (Wheels run 36734127356: all T-04 targets built and smoke-tested on 3.11 and 3.14) | ed7187a, d51ae78 |
 | 11 | P1-02 | done | 3a3cc22 |
 | 12 | P1-03 | done | 2f05b17 |
-| 13 | P1-04 | todo | |
+| 13 | P1-04 | done | 79cbe66 |
 | 14 | P1-05 | todo | |
 | 15 | P1-06 | todo | |
 | 16 | P1-07 | todo | |
