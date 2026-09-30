@@ -12,6 +12,11 @@ Before doing anything in this repo:
 3. Build exactly that work package to its acceptance criteria in §7. Then update the
    tracker, commit with the work-package ID as the message prefix, and push.
 
+**48-hour Fabric demo lanes:** if your session prompt names a demo lane (L1, L2 or
+L3), follow §12 of the plan instead of step 2. Edit only the paths that §12.5 gives
+your lane, and record completion in `docs/plans/demo_status/<WP>.md`, never in the
+plan's tables.
+
 Rules that override everything else:
 
 - Every decision in §2 (D-xx and T-xx), every gate and every tolerance is fixed. Do

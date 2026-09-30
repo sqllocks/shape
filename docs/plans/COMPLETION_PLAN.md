@@ -1,6 +1,6 @@
 # Shape completion plan
 
-Status: **approved build specification, v3.1** (2026-09-29) · Supersedes
+Status: **approved build specification, v3.2** (2026-09-30) · Supersedes
 `docs/plans/REMAINING_WORK.md` and `docs/plans/NEXT_WORK_PACKETS.md`
 
 This document is the single source of truth for finishing Shape. Every product and
@@ -27,6 +27,7 @@ Contents:
 9. Owner actions (external)
 10. Spindle CLI parity map
 11. Status tracker
+12. Fabric demo track (48 hours)
 
 Appendix A: Verified bug register
 
@@ -38,6 +39,10 @@ This plan is designed to be executed by an AI coding agent working in fresh sess
 Follow this protocol exactly.
 
 ### 0.1 At the start of every session
+
+**If your session was started as a §12 demo lane (L1, L2 or L3), follow §12 instead
+of §11 when choosing work, and edit only your lane's paths (§12.5).** Everything else
+in §0 and §6 still applies.
 
 1. Read this section, §1 (Environment setup) and §6 (Execution rules) in full.
 2. Read §11 (Status tracker). The **next work package** is the first one, in tracker
@@ -196,6 +201,7 @@ instruction.
 | D-10 | **Copy Spindle's reference data** (name and street pools, ZIP locations, domain reference files) into `shape-domains`. Carry the GeoNames CC-BY-4.0 attribution into `THIRD_PARTY_NOTICES.md`. | Parity needs the same data. Spindle is MIT and has the same copyright holder. |
 | D-11 | **Holiday calendars are rule-based code:** fixed dates, the nth or last weekday of a month, Easter by computus, and observed-day shifts. US federal and US retail calendars ship in core, and other countries come as `shape.calendars` plugins. | Offline and deterministic. |
 | D-12 | **Stream output defaults to Spindle's flat-row format.** Each event is the row's columns plus `_spindle_table` and `_spindle_seq`, and `_spindle_event_time` when the table has a datetime column (Spindle `streaming/streamer.py:212-233`). `--envelope spindle` produces Spindle's `EventEnvelope` (as used by its Eventstream client), and `--envelope cloudevents` produces CloudEvents. The idempotency key is `(_spindle_table, _spindle_seq)`. | Drop-in for existing consumers; deterministic replay. |
+| D-14 | **Pipeline integration comes first after the plugin system.** Fabric first (Python and PySpark notebooks, User Data Functions, pipelines with Notebook and Functions activities), then Synapse and ADF. Phase F runs after G2, before Phases 3 and 4. A 48-hour Fabric demo track (§12) comes before everything. | Owner: Spindle is retired; profiling and generation must run inside ADF, Synapse and Fabric pipelines. |
 | D-13 | **No `spindle` executable is shipped.** `shape` accepts Spindle command names as aliases wherever the meaning matches (§10), and reads Spindle schemas and profiles. | Avoids clashing with an installed Spindle. |
 
 ### 2.2 Technical decisions
@@ -229,6 +235,7 @@ instruction.
 | T-25 | **Release:** GitHub Actions trusted publishing (TestPyPI, then PyPI), a CycloneDX SBOM, and Sigstore build attestations. | Supply-chain hygiene. |
 | T-26 | **External services are tested at three levels:**<br>(a) contract tests with recorded or mocked APIs (marker `contract`), on every PR;<br>(b) emulators (marker `emulator`), nightly in GitHub Actions: `confluentinc/cp-kafka`, `mcr.microsoft.com/azure-messaging/eventhubs-emulator` with an Azurite sidecar and a `Config.json` (amd64 only), and `mcr.microsoft.com/mssql/server:2022-latest` (`ACCEPT_EULA=Y`, with `msodbcsql18` installed) — all defined in `ci/emulators/docker-compose.yml`;<br>(c) live tests (marker `live`), run only when owner secrets exist (§9). | Completion never depends on credentials. |
 | T-27 | **Lint and format scope:** `src tests plugins benchmarks/vs_spindle rust` (plus `cargo fmt --check` and `cargo clippy -D warnings` for Rust). Run `ruff format` once, in P0-06. | `ruff check .` currently reports 762 errors, all in files that are being deleted or moved. |
+| T-29 | **Dual packaging.** Every release ships (a) platform wheels with the Rust kernel (T-04) and (b) a **pure-Python `py3-none-any` wheel** of the same version, built by `scripts/build_pure_wheel.py`, which uses the T-03 reference kernels. The pure wheel stays under 28.6 MB and needs only numpy, pyarrow and pandas from PyPI. pip prefers the platform wheel when one matches; Fabric UDF private libraries require the pure one. | Fabric UDF private libraries must be platform-independent and under 28.6 MB (§12.1). |
 | T-28 | **Profiling:** `py-spy record` for hotspots. Use `--native` or `perf` only where ptrace and `perf_event_paranoid` allow; otherwise fall back to `cProfile` plus Rust `tracing` spans. | Works in restricted containers. |
 
 ### 2.3 Decision log
@@ -237,6 +244,7 @@ instruction.
 |---|---|---|---|
 | 2026-09-29 | — | Plan v1 approved | — |
 | 2026-09-29 | — | Plan v2: adversarial-review fixes (Spindle stream format, CLI mapping, exact mode for parity and gates, crate pins, Philox implemented in-house, maturin-action, setup, builder guide, work-package splits, verified line references) | Red-team review |
+| 2026-09-30 | D-14, T-29 | Plan v3.2: 48-hour Fabric demo track (§12: notebook, UDF, pipelines, 3 parallel lanes) and Phase F (Fabric, Synapse and ADF pipeline integration, prioritized after G2); pure-Python wheel as a first-class deliverable | Owner: Spindle retired; demo profiling in Fabric; pipelines for profiling and generation |
 | 2026-09-29 | D-07 | Spindle does have experimental DP (`tier3_research.DifferentialPrivacy`). Under full parity (D-01) it is ported correctly in P4-11, and Shape's fake DP is still removed in P0-02 | Third red-team review; v1's rationale was false |
 | 2026-09-29 | — | Plan v3.1: tiers moved from P1-13 to P4-11 (they compare real against synthetic data); G6/P8-01 deadlock removed; seeded harness layout; P6-14 reference inputs corrected; scikit-learn and pyyaml in the Spindle venv | Third red-team review |
 | 2026-09-29 | — | Plan v3: second review (test ordering in P0-04, `scripts/env.sh`, harness contracts, CLI name collisions, release semantics, Rust 1.85); fitting moved into Rust; new P0-00, P1-13, P6-13 and P6-14; Spindle coverage map; baselines committed | Second red-team review, profiling hotspot analysis |
@@ -457,12 +465,17 @@ P6-01.
 ### 6.1 Order
 
 ```
-P0 ─► P1 ─► P2 ─┬─► P3 ────────────┐
-          │     └─► P4 ─┬──────────┴─► P5 ─► P6 ─► P8
-          │             │                          ▲
-          └─► P7-01..03 └──────────────────────────┘
-                (after G1)        P7-04 after G5; G7 needed before P8
+§12 demo track (before everything, parallel lanes)
+P0 ─► P1 ─► P2 ─┬─► PF (priority) ─────────────┐
+          │     ├─► P3 ────────────┐           │
+          │     └─► P4 ─┬──────────┴─► P5 ─► P6 ┴─► P8
+          │             └─► PF-06
+          └─► P7-01..03 (after G1)   P7-04 after G5; G7 and GF needed before P8-04
 ```
+
+- **Phase F has priority but does not block.** It sits before Phases 3 and 4 in the
+  tracker, so the builder picks it first. P3 and P4 do not depend on GF, because GF
+  includes an owner dry run (O-07).
 
 - Phases 0, 1 and 2 are sequential.
 - P3 and P4 start after G2, and may interleave.
@@ -974,6 +987,96 @@ Appendix A.
   change.
 - `shape plugins list` shows every built-in.
 - The G1 gates still pass.
+
+### Phase F — Fabric and Azure pipeline integration
+
+This phase productizes the §12 demo artifacts and extends them to Synapse and ADF. It
+runs after G2 and before Phases 3 and 4, because pipeline integration is the owner's
+primary use case (D-14).
+
+**PF-01 — Cloud sources**
+- Depends: G2.
+- Deliverables: `abfss://` sources for OneLake and ADLS Gen2, and Delta table
+  sources, as `shape.sources` built-ins behind the `[azure]` extra (`adlfs`,
+  `azure-identity`, `deltalake`).
+- Auth, in this order:
+  1. an explicit token or credential;
+  2. inside Fabric, `notebookutils.credentials.getToken("storage")`;
+  3. `DefaultAzureCredential`, which covers managed identity, a service principal
+     through environment variables, and the CLI.
+- Acceptance:
+  - Contract tests against recorded interactions.
+  - Nightly e2e against Azurite (`ci/emulators`) for blob/DFS paths.
+  - A Delta source test on local Delta tables written with `deltalake`.
+  - Live tests when O-02 secrets exist.
+- Fixes: none.
+
+**PF-02 — Fabric notebooks, productized**
+- Depends: PF-01, G1.
+- Deliverables:
+  - Promote the DM-05 notebooks into `integrations/fabric/notebooks/`, now running
+    on the Rust-kernel wheel when available.
+  - Add a **PySpark notebook** that profiles large tables in a distributed way:
+    per-partition bounded-mode profiles through `mapInArrow`, merged on the driver
+    (T-14/T-15 merge), with an `exact=True` driver-only option for tables that fit in
+    driver memory.
+- Acceptance:
+  - A local Spark (pyspark in `[dev]`) test shows that the distributed bounded
+    profile of D3 equals the single-process bounded profile within the T-14 bounds.
+  - The DM-05 notebook tests still pass.
+- Fixes: none.
+
+**PF-03 — UDF package, productized**
+- Depends: G1.
+- Deliverables:
+  - Promote DM-06 into `shape.integrations.fabric.udf` (importable helpers) plus the
+    `function_app.py` template.
+  - CI job `pure-wheel`: build the T-29 pure wheel, assert `py3-none-any` and a size
+    under 28.6 MB, install it on Python 3.11 with only PyPI numpy, pyarrow and
+    pandas, and run the UDF tests with `SHAPE_KERNEL=python`.
+- Acceptance: the `pure-wheel` job is green on every PR from this point on.
+- Fixes: none.
+
+**PF-04 — Pipeline templates**
+- Depends: PF-02, PF-03.
+- Deliverables: in `integrations/`:
+  - **Fabric:** the DM-07 pipelines, plus a **generation-then-profile** pipeline
+    added after G4 by PF-06.
+  - **Synapse:** a Synapse Spark notebook (the PF-02 PySpark variant, with Synapse
+    auth) and a pipeline using the Notebook activity and an If Condition.
+  - **ADF:** a pipeline running the Shape CLI in the PF-05 container through an
+    Azure Batch Custom activity. The exit code fails the activity, and the summary
+    JSON is written to ADLS and read back through a Lookup activity for branching.
+- Acceptance: a JSON-schema-level test of each pipeline definition, and a runbook
+  section per platform with a live dry-run checklist.
+- Fixes: none.
+
+**PF-05 — Container image**
+- Depends: PF-01.
+- Deliverables: `Dockerfile` (python:3.11-slim, the Shape wheel with `[azure]`,
+  non-root user); the image is built and published to GHCR by CI on tags.
+- Acceptance: CI builds the image; inside it, `docker run … shape profile` on D1
+  mounted from the host exits 0; image size under 500 MB.
+- Fixes: none.
+
+**PF-06 — Generation in pipelines**
+- Depends: G4, PF-04.
+- Deliverables:
+  - A Fabric notebook that generates a domain to lakehouse Delta tables.
+  - A UDF `generateSample(domain: str, table: str, rows: int = 10000, seed: int = 42) -> pd.DataFrame`
+    (rows are capped so the response stays under 30 MB).
+  - A pipeline that generates, then profiles, then checks the output against the
+    domain's contract.
+  - The Synapse and ADF equivalents.
+- Acceptance: local tests of each artifact, and generated output that passes T-21
+  for retail at small scale.
+- Fixes: none.
+
+**Gate GF**
+- PF-01 to PF-05 are done.
+- The `pure-wheel` CI job is green.
+- The owner's live dry run of the Fabric pipelines passes (runbook checklist).
+- PF-06 is required only for G8.
 
 ### Phase 3 — Stream profiling
 
@@ -1527,7 +1630,7 @@ medium, and GEN-IN must be ≥10x at medium.
 - Fixes: none.
 
 **P8-04 — Release engineering**
-- Depends: P8-01, P8-03, G7.
+- Depends: P8-01, P8-03, G7, GF, PF-06.
 - Deliverables: T-25 workflows; version 1.0.0 for core and every plugin; a release
   checklist.
 - Acceptance: wheels, sdists, SBOM and attestations are built in CI for every T-04
@@ -1626,6 +1729,7 @@ That is 27 in total, which is the hub, the web app and 25 others (D-08).
 | O-04 | Branch protection on `main` requiring CI | after P0-06 | CI only |
 | O-05 | If `sqllocks/shape` is private: a 4-vCPU larger runner (`ubuntu-latest-4-cores`) for benchmark jobs, since standard private runners have 2 vCPUs | P0-07 | Run gate benchmarks in a 4-core builder session and commit `results.json` with machine metadata |
 | O-06 | After 1.0.0: a deprecation notice in Spindle's README | after publishing | — |
+| O-07 | A Fabric workspace in a UDF-enabled region, with capacity, for the §12 live dry run and the talk: upload the wheel and data, and create the lakehouse, notebooks, UDF item and pipelines by following `integrations/fabric/RUNBOOK.md` | §12.7 check 4, GF | none (the live demo requires it) |
 
 ---
 
@@ -1694,71 +1798,429 @@ Work packages are listed in execution order. The next work package is the first 
 | 25 | P2-04 | todo | |
 | 26 | P2-05 | todo | |
 | 27 | P2-06 | todo | |
-| 28 | P3-01 | todo | |
-| 29 | P3-02 | todo | |
-| 30 | P3-03 | todo | |
-| 31 | P3-04 | todo | |
-| 32 | P3-05 | todo | |
-| 33 | P4-01a | todo | |
-| 34 | P4-01b | todo | |
-| 35 | P4-02 | todo | |
-| 36 | P4-03 | todo | |
-| 37 | P4-04a | todo | |
-| 38 | P4-04b | todo | |
-| 39 | P4-04c | todo | |
-| 40 | P4-04d | todo | |
-| 41 | P4-05 | todo | |
-| 42 | P4-06 | todo | |
-| 43 | P4-07 | todo | |
-| 44 | P4-08 | todo | |
-| 45 | P4-09 | todo | |
-| 46 | P4-10 | todo | |
-| 47 | P4-11 | todo | |
-| 48 | P5-01 | todo | |
-| 49 | P5-02 | todo | |
-| 50 | P5-03 | todo | |
-| 51 | P5-04 | todo | |
-| 52 | P6-01a | todo | |
-| 53 | P6-01b | todo | |
-| 54 | P6-01c | todo | |
-| 55 | P6-01d | todo | |
-| 56 | P6-01e | todo | |
-| 57 | P6-02 | todo | |
-| 58 | P6-03 | todo | |
-| 59 | P6-04 | todo | |
-| 60 | P6-05 | todo | |
-| 61 | P6-06 | todo | |
-| 62 | P6-07a | todo | |
-| 63 | P6-07b | todo | |
-| 64 | P6-07c | todo | |
-| 65 | P6-08 | todo | |
-| 66 | P6-09 | todo | |
-| 67 | P6-10 | todo | |
-| 68 | P6-11 | todo | |
-| 69 | P6-12 | todo | |
-| 70 | P6-13 | todo | |
-| 71 | P6-14 | todo | |
-| 72 | P7-01 | todo | |
-| 73 | P7-02 | todo | |
-| 74 | P7-03 | todo | |
-| 75 | P7-04 | todo | |
-| 76 | P8-01 | todo | |
-| 77 | P8-02 | todo | |
-| 78 | P8-03 | todo | |
-| 79 | P8-04 | todo | |
-| 80 | P8-05 | todo | |
+| 28 | PF-01 | todo | |
+| 29 | PF-02 | todo | |
+| 30 | PF-03 | todo | |
+| 31 | PF-04 | todo | |
+| 32 | PF-05 | todo | |
+| 33 | PF-06 | todo | |
+| 34 | P3-01 | todo | |
+| 35 | P3-02 | todo | |
+| 36 | P3-03 | todo | |
+| 37 | P3-04 | todo | |
+| 38 | P3-05 | todo | |
+| 39 | P4-01a | todo | |
+| 40 | P4-01b | todo | |
+| 41 | P4-02 | todo | |
+| 42 | P4-03 | todo | |
+| 43 | P4-04a | todo | |
+| 44 | P4-04b | todo | |
+| 45 | P4-04c | todo | |
+| 46 | P4-04d | todo | |
+| 47 | P4-05 | todo | |
+| 48 | P4-06 | todo | |
+| 49 | P4-07 | todo | |
+| 50 | P4-08 | todo | |
+| 51 | P4-09 | todo | |
+| 52 | P4-10 | todo | |
+| 53 | P4-11 | todo | |
+| 54 | P5-01 | todo | |
+| 55 | P5-02 | todo | |
+| 56 | P5-03 | todo | |
+| 57 | P5-04 | todo | |
+| 58 | P6-01a | todo | |
+| 59 | P6-01b | todo | |
+| 60 | P6-01c | todo | |
+| 61 | P6-01d | todo | |
+| 62 | P6-01e | todo | |
+| 63 | P6-02 | todo | |
+| 64 | P6-03 | todo | |
+| 65 | P6-04 | todo | |
+| 66 | P6-05 | todo | |
+| 67 | P6-06 | todo | |
+| 68 | P6-07a | todo | |
+| 69 | P6-07b | todo | |
+| 70 | P6-07c | todo | |
+| 71 | P6-08 | todo | |
+| 72 | P6-09 | todo | |
+| 73 | P6-10 | todo | |
+| 74 | P6-11 | todo | |
+| 75 | P6-12 | todo | |
+| 76 | P6-13 | todo | |
+| 77 | P6-14 | todo | |
+| 78 | P7-01 | todo | |
+| 79 | P7-02 | todo | |
+| 80 | P7-03 | todo | |
+| 81 | P7-04 | todo | |
+| 82 | P8-01 | todo | |
+| 83 | P8-02 | todo | |
+| 84 | P8-03 | todo | |
+| 85 | P8-04 | todo | |
+| 86 | P8-05 | todo | |
 
 | Gate | Status |
 |---|---|
 | G0 | todo |
 | G1 | todo |
 | G2 | todo |
+| GF | todo |
 | G3 | todo |
 | G4 | todo |
 | G5 | todo |
 | G6 | todo |
 | G7 | todo |
 | G8 | todo |
+
+---
+
+## 12. Fabric demo track (48 hours)
+
+**Purpose.** A live talk showing Shape profiling data **inside Microsoft Fabric**:
+- in a Python notebook;
+- in a Fabric User Data Function (UDF);
+- as a quality gate in a Fabric pipeline.
+
+Spindle is retired. The talk shows Shape replacing it.
+
+**Relation to the main plan.**
+- This track runs **before** Phase 0, on its own branches.
+- It builds the pure-Python profiler that T-03 requires as the reference twin, so
+  the work is not thrown away. Phase 1 later adds the Rust kernel underneath the same
+  API.
+- Nothing here changes a decision in §2. Where the demo takes a shortcut, this
+  section says so explicitly.
+
+**Execution.**
+- The track has three lanes, each designed for its own session.
+- Lanes touch **disjoint paths** and meet only through the fixed API contract in
+  §12.2, so they can run in parallel.
+- A lane session follows §0 and §6 like any builder session, but picks its work from
+  §12.6 instead of §11.
+
+### 12.1 Verified platform constraints (Microsoft Learn, retrieved 2026-09-30)
+
+| Surface | Constraint | Consequence for Shape |
+|---|---|---|
+| Python notebook | Kernels 3.10, 3.11 and 3.12 (default 3.12); 2 vCores / 16 GB by default, raised with `%%configure {"vCores": N}`; `deltalake` (delta-rs) and `duckdb` preinstalled; custom `.whl` installed with `%pip` from the notebook's built-in resources folder; Environment items not supported | Select kernel 3.11 or 3.12, and read Delta through `deltalake`. The default 2 vCores give less than the 4-core speedups in §3.3, so the demo runbook sets `vCores: 8`. |
+| Notebook → pipeline | `notebookutils.notebook.exit(str)` returns the exit value to the pipeline Notebook activity. It must **not** be called inside `try/except`. | The notebook builds its result, then calls `exit` at top level. |
+| User Data Functions | Python 3.11 at run time (3.12 when testing); 240 s execution limit (100 s through the public endpoint); 4 MB request; 30 MB response; **private libraries must be platform-independent `.whl` files under 28.6 MB**; public PyPI libraries allowed; parameter names must be camelCase; types are `str`, `int`, `float`, `bool`, `datetime`, `list`, `dict` and pandas `DataFrame`/`Series` (SDK ≥ 1.0.0); Lakehouse access through `@udf.connection` plus `fn.FabricLakehouseClient` (`connectToFiles`, `connectToSql`); no service principal or managed identity for those connections; `fn.UserThrownError` for handled errors | Shape must ship a **pure-Python wheel** (T-29). The UDF's numpy and pyarrow come from PyPI. UDF work is sized to finish well inside 240 s. |
+| Pipelines | The **Functions activity** invokes UDFs with static or dynamic parameters; the Notebook activity runs notebooks | Two gate patterns: notebook-based and UDF-based. |
+
+Sources:
+- `learn.microsoft.com/fabric/data-engineering/user-data-functions/user-data-functions-service-limits`
+- `…/how-to-manage-libraries`
+- `…/python-programming-model`
+- `learn.microsoft.com/fabric/data-factory/functions-activity`
+- `learn.microsoft.com/fabric/data-engineering/using-python-experience-on-notebook`
+
+If a lane finds a constraint that differs from this table, it fixes the table in a
+`plan-fix:` commit with the evidence (§0.3).
+
+### 12.2 Fixed API contract (all lanes build against this)
+
+```python
+import shape
+
+p = shape.profile(source, *, name=None)
+# source: str | Path (a .csv, .parquet or .jsonl file; a Delta table directory; a glob;
+#         or a directory of files), pyarrow.Table, pandas.DataFrame, or
+#         dict[str, <any of those>] for multi-table (FK detection).
+p.to_dict()    # full profile in Spindle's TableProfile / dataset JSON shape (T-22 parity)
+p.summary()    # small, JSON-safe dict (< 1 MB for 500 columns): name, row_count, and
+               # per column: dtype, null_rate, cardinality, is_unique, is_primary_key,
+               # is_foreign_key, fk_ref_table, distribution, pattern, min, max, mean, std
+p.to_html()    # self-contained HTML report (no external assets)
+
+shape.save(p, path)      # writes a .shape artifact
+shape.load(path)         # -> Profile
+
+r = shape.check(p, contract)   # contract: dict or path to JSON (format in §12.3)
+r.passed                       # bool
+r.violations                   # list[dict]: {column, rule, expected, observed}
+r.to_dict()
+
+d = shape.diff(baseline, current, *, thresholds=None)   # both are Profiles
+d.drifted                      # bool
+d.changes                      # list[dict]: {column, kind, baseline, current, severity}
+d.to_dict()
+```
+
+**CLI.** All commands exit 0 on success, 1 on a failed check or drift (only when
+`--fail-on-drift` is given), and 2 on a usage or input error.
+
+```
+shape profile SRC -o OUT.shape [--html REPORT.html] [--json SUMMARY.json] [--spindle-compat FULL.json]
+shape check PROFILE.shape CONTRACT.json [--json RESULT.json]
+shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
+```
+
+**Rules for the other main-plan work packages:**
+- This contract is final for 1.0.
+- P1-10 must keep the §12.3 contract format working.
+- P1-11 must keep these CLI forms.
+
+### 12.3 Contract format (v1)
+
+```json
+{
+  "row_count": {"min": 1000, "max": 5000000},
+  "columns": {
+    "customer_id": {"dtype": "integer", "nullable": false, "unique": true},
+    "email":       {"max_null_rate": 0.05, "pattern": "email"},
+    "status":      {"allowed_values": ["placed", "shipped", "returned"]},
+    "amount":      {"min": 0, "max": 100000, "distribution": "log_normal"}
+  },
+  "required_columns": ["customer_id", "order_date"],
+  "allow_extra_columns": true
+}
+```
+
+- Every rule is optional.
+- `dtype`, `pattern` and `distribution` use Spindle's vocabulary, as produced by the
+  profiler.
+- `unique` uses the exact distinct count (T-15).
+- `allowed_values` fails if the profile shows any value outside the set: the profile's
+  value counts must be a subset.
+
+**Diff defaults** (all overridable through `thresholds`):
+
+| Kind | Default threshold | Severity |
+|---|---|---|
+| Added or removed column | any | high |
+| dtype change | any | high |
+| Null-rate change | > 0.05 absolute | medium |
+| Cardinality change | ratio > 1.5 or < 0.67 | medium |
+| Mean shift | > 0.5 × baseline std | medium |
+| Distribution family change | any | low |
+| New categorical values | any | low |
+
+### 12.4 Decisions for this track
+
+| ID | Decision |
+|---|---|
+| DM-1 | The demo runs on the **pure-Python profiler**, no Rust. It is the T-03 reference implementation, ported from `benchmarks/profile_1to1/port.py`, which is bitwise-verified against Spindle on 30 datasets. |
+| DM-2 | **Parity first, speed claims only from committed evidence.** The talk may quote only numbers in `benchmarks/baselines/2026-09-29/` or `results.json`, and must say which machine and core count they were measured on. Live Fabric timings are shown as measured and are not extrapolated. |
+| DM-3 | **Where the demo data comes from:** generated locally with the committed retail reference port (`benchmarks/retail_1to1/port.py`, 60/60 equivalent) plus the profiling datasets, written as Parquet, uploaded to the lakehouse by the owner, and turned into Delta tables by a setup notebook. A second "day 2" copy has deliberate, documented drift, so the gate visibly fails. |
+| DM-4 | **Owner-operated live steps.** Builders cannot reach the owner's Fabric workspace. Lanes deliver importable artifacts plus local tests; the owner runs the live dry run from `integrations/fabric/RUNBOOK.md`. |
+| DM-5 | **The UDF only runs work that fits comfortably in 240 s.** It profiles lakehouse **files** up to a size cap (default 50 MB, a parameter). It rejects larger inputs with `fn.UserThrownError`, recommending the notebook path, and it checks and diffs saved `.shape` files, which is cheap. Heavy profiling belongs in notebooks. |
+| DM-6 | **Lakehouse tables in UDFs:** read through `connectToSql` with a `maxRows` cap (default 1,000,000) and the same size guard. The result carries `sampled: true` whenever the cap was hit. |
+
+### 12.5 Paths owned by each lane (never edit another lane's paths)
+
+| Lane | Owns |
+|---|---|
+| **L1 Core** | `src/shape/profile/reference/` (new), `benchmarks/profile_1to1/verify.py` (the `--impl shape` option only), `src/shape/api.py`, `src/shape/report/` (new), `src/shape/contracts/v1.py` (new), `src/shape/cli/main.py` (the three commands only), `tests/demo/core/`, `scripts/build_pure_wheel.py`, `pyproject.toml` (the version and `[project.optional-dependencies]` only) |
+| **L2 Fabric** | `integrations/fabric/` (new): notebooks, UDF, pipeline definitions, runbook; `tests/demo/fabric/` |
+| **L3 Demo content** | `demo/` (new): data generation scripts, drift injection, contracts, talk notes, benchmark sheet; `tests/demo/content/` |
+
+**Merge order into the integration branch:** L1, then L3, then L2.
+- L2 and L3 may build against a local stub of the §12.2 API until L1 lands. A stub
+  may never be committed outside `tests/`.
+- After merging, the lead session (or the owner) runs `pytest tests/demo` and the
+  §12.7 exit checks.
+
+### 12.6 Demo work packages
+
+**DM-01 — Pure-Python profiler (L1)**
+- Depends: none.
+- Deliverables:
+  - Port `benchmarks/profile_1to1/port.py` into `src/shape/profile/reference/` as
+    product code: typed, documented, no Spindle imports, no machine paths.
+  - Implement `shape.profile` and `Profile.to_dict()`/`summary()` per §12.2, for
+    every listed source type. Delta tables use `deltalake` when it's installed;
+    without it, the function raises a clear `ImportError` naming the package.
+  - Multi-table input runs FK detection.
+- Acceptance:
+  - Add `--impl shape` to `benchmarks/profile_1to1/verify.py` (P0-07's flag, done
+    early). It runs in the Spindle venv with Shape installed by
+    `"$SPINDLE_PY" -m pip install --no-deps -e .`; DM-03 widens the pyarrow pin so
+    the two coexist.
+  - `verify.py --impl shape` exits 0 on D1–D4, MT and every EDGE variant (T-22),
+    comparing `shape.profile(...).to_dict()` with Spindle.
+  - Unit tests cover each source type, including a Delta table written with
+    `deltalake`.
+  - `summary()` is under 1 MB on D4.
+- Fixes: P1, P2, P3, P4 (the new path; the old `capture_rows` path is left alone
+  until P1-12).
+
+**DM-02 — Artifact, contract, diff and report (L1)**
+- Depends: DM-01.
+- Deliverables:
+  - `shape.save`/`shape.load` for the new Profile, with NaN and ±inf encoded
+    explicitly (P8).
+  - `shape.check` with the §12.3 contract format.
+  - `shape.diff` with the §12.3 defaults.
+  - `Profile.to_html()`: self-contained, showing the per-column table, distributions,
+    patterns and keys, with no network assets.
+  - The three CLI commands with the §12.2 exit codes.
+- Acceptance:
+  - Tests for every contract rule and diff kind, with pass and fail cases.
+  - Round-trip `save`/`load` equality, including NaN.
+  - CLI e2e tests assert the exit codes 0, 1 and 2.
+  - The HTML file opens with no network access (the test asserts no `http` URLs in
+    `src`/`href` attributes).
+- Fixes: P8.
+
+**DM-03 — Pure-Python wheel (L1)**
+- Depends: DM-02.
+- Deliverables:
+  - `scripts/build_pure_wheel.py` builds `sqllocks_shape-<version>-py3-none-any.whl`
+    containing no compiled code.
+  - `import shape` must not require `cryptography`: make `shape.security` import
+    `crypto` lazily (this is P0-05's lazy-import item, done early).
+  - The wheel declares `numpy>=2.0,<3` and `pyarrow>=14` (the demo widens the pyarrow
+    pin so that Fabric's preinstalled pyarrow is accepted; T-07's `>=25` pin returns
+    in P0-05, and §12.1 is re-checked then).
+  - Version `0.9.0.dev1`.
+- Acceptance:
+  - The wheel is under 28.6 MB and its tag is `py3-none-any` (checked by the
+    script).
+  - In a fresh Python 3.11 venv with only numpy, pyarrow, pandas and deltalake, the
+    following succeed: `pip install <wheel>`, `python -c "import shape"`, and the
+    `tests/demo/core` suite run against the installed wheel.
+- Fixes: none.
+
+**DM-04 — Demo data and drift (L3)**
+- Depends: none. It uses the committed reference ports only.
+- Deliverables: `demo/make_data.py`, which needs the §1.2 Spindle checkout because
+  the retail port reads Spindle's schema at run time:
+  - retail at medium scale via `benchmarks/retail_1to1/port.py`, written as Parquet
+    per table, plus D2 via `profile_1to1/datasets.py`;
+  - a **day-2** copy with documented drift in `demo/DRIFT.md`: the `customer.email`
+    null rate rises from about 5% to 20%; `order.status` gains a new value
+    `lost`; `order.order_total` mean shifts by +40%; `product.sku` loses
+    uniqueness through 50 duplicate rows;
+  - `demo/contracts/*.json` in the §12.3 format, which day 1 passes and day 2 fails
+    on exactly the documented rules.
+- Acceptance:
+  - `make_data.py` runs from §1 setup and prints file sizes.
+  - With the core API, or the stub until L1 lands: day-1 contracts pass; day-2
+    contracts fail on exactly the rules in `DRIFT.md`; `diff(day1, day2)` reports
+    each documented change.
+- Fixes: none.
+
+**DM-05 — Fabric Python notebooks (L2)**
+- Depends: none; builds against the §12.2 stub.
+- Deliverables: in `integrations/fabric/notebooks/`:
+  - **`shape_setup.ipynb`:** loads the DM-04 Parquet files from `Files/demo/` into
+    Delta tables with `deltalake.write_deltalake`.
+  - **`shape_profile.ipynb`** (Python notebook, kernel 3.11 or 3.12):
+    - a `%%configure` cell setting `vCores: 8`;
+    - an install cell (`%pip install` of the wheel from `builtin/`);
+    - a **parameters cell** with `tableName`, `contractPath`, `baselinePath`,
+      `outputDir` and `failOnDrift`;
+    - reads `/lakehouse/default/Tables/<tableName>` with `deltalake`, then profiles,
+      checks and diffs;
+    - writes the `.shape`, the HTML report and the JSON summary to
+      `/lakehouse/default/Files/shape/<table>/<timestamp>/`;
+    - displays the report inline;
+    - ends with a top-level `notebookutils.notebook.exit(json.dumps(result))`, where
+      `result` = `{table, rows, passed, violations, drifted, changes, artifactPath}`
+      (compact, < 1 MB).
+  - Notebooks are stored in `.ipynb` form with the Fabric metadata needed for import.
+- Acceptance:
+  - `tests/demo/fabric/test_notebooks.py` runs each notebook's code cells locally
+    against a temp directory standing in for `/lakehouse/default`.
+    `notebookutils` is replaced by a stub that captures the exit value; magics are
+    skipped.
+  - It asserts the exit JSON schema, and a failing result on the day-2 data.
+- Fixes: none.
+
+**DM-06 — Fabric User Data Functions (L2)**
+- Depends: none; builds against the §12.2 stub.
+- Deliverables: `integrations/fabric/udf/function_app.py`, using the
+  `fabric-user-data-functions` SDK, with camelCase parameters and return type
+  `dict`:
+  - `profileLakehouseFile(lakehouse: fn.FabricLakehouseClient, filePath: str, outputPath: str = "", maxMegabytes: int = 50) -> dict`
+  - `profileLakehouseTable(lakehouse: fn.FabricLakehouseClient, tableName: str, maxRows: int = 1000000, outputPath: str = "") -> dict`
+    (through `connectToSql`; see DM-6)
+  - `checkProfile(lakehouse: fn.FabricLakehouseClient, profilePath: str, contract: dict, failOnViolation: bool = False) -> dict`
+  - `diffProfiles(lakehouse: fn.FabricLakehouseClient, baselinePath: str, currentPath: str, failOnDrift: bool = False) -> dict`
+  - `profileDataFrame(data: pd.DataFrame) -> dict` (inline data, ≤ 4 MB request)
+
+  Behaviour:
+  - Failures with `fail*=True` raise `fn.UserThrownError` carrying the violations,
+    so the pipeline activity fails.
+  - Size guards raise `fn.UserThrownError` with a message recommending the notebook.
+  - Every result is under 1 MB.
+
+  Also add `integrations/fabric/udf/requirements.md`: the library list to add in
+  Library Management (numpy, pyarrow, pandas from PyPI; the Shape wheel as a private
+  library).
+- Acceptance: `tests/demo/fabric/test_udf.py` installs the public
+  `fabric-user-data-functions` package from PyPI and calls each function directly.
+  Fake `FabricLakehouseClient` objects serve files from a temp directory and SQL rows
+  from an in-memory table. The tests cover pass, fail, size-guard and
+  UserThrownError paths, and check that the timings on DM-04 sample files are
+  logged.
+- Fixes: none.
+
+**DM-07 — Fabric pipeline definitions (L2)**
+- Depends: DM-05, DM-06.
+- Deliverables: in `integrations/fabric/pipelines/`:
+  - **(a) `shape_gate_notebook`:** a Notebook activity (`shape_profile`, with
+    parameters) → If Condition on
+    `@json(activity('ProfileTable').output.result.exitValue).passed` → on false, a
+    Fail activity whose message lists the violations.
+  - **(b) `shape_gate_udf`:** a Functions activity (UserDataFunctions connection)
+    calling `profileLakehouseFile`, then `checkProfile` with `failOnViolation: true`.
+
+  Each pipeline ships as its Fabric item definition JSON, plus a step-by-step build
+  guide in the runbook in case import isn't available.
+- Acceptance:
+  - A JSON-schema-level test asserts the activity graph and the expressions.
+  - The exact exit-value expression is flagged in the runbook as **verify in the
+    workspace on first run** (DM-4).
+- Fixes: none.
+
+**DM-08 — Runbook and talk kit (L2 writes the runbook; L3 writes the talk kit)**
+- Depends: DM-03, DM-04, DM-07.
+- Deliverables:
+  - **`integrations/fabric/RUNBOOK.md` (L2):** workspace prerequisites (a UDF-enabled
+    region; capacity); uploading the wheel and data; creating the lakehouse,
+    notebooks, UDF item (including Library Management steps) and pipelines;
+    parameters; the expected result of each step, pass and fail; troubleshooting,
+    including kernel choice, the `exit` placement rule and UDF size limits.
+  - **`demo/TALK.md` (L3):**
+    - the storyline: Spindle retired → Shape profile in a notebook → HTML report
+      → contract gate passes on day 1 → day-2 data fails the pipeline, with the
+      reason visible → the same check as a UDF → side-by-side benchmark;
+    - a benchmark sheet quoting only DM-2-compliant numbers;
+    - fallback steps if something is slow live.
+- Acceptance: a dry run of every local step in the runbook, and a checklist in the
+  runbook for the owner's live dry run.
+- Fixes: none.
+
+### 12.7 Demo exit checks (all must pass before the talk)
+
+1. `pytest tests/demo` is green on the merged branch.
+2. DM-01's parity run exits 0.
+3. The DM-03 wheel installs and tests pass in a clean Python 3.11 venv.
+4. **Owner dry run in Fabric (DM-4):**
+   - the notebook profiles the day-1 table and exits `passed: true`;
+   - the day-2 table makes pipeline (a) fail, with the violations shown;
+   - the UDF check makes pipeline (b) fail on day 2;
+   - the timings are recorded in `demo/LIVE_TIMINGS.md`.
+5. Every number in `demo/TALK.md` cites its source file.
+
+### 12.8 Demo tracker
+
+- **Lanes never edit this table.** When a lane completes a work package, it creates
+  `docs/plans/demo_status/<WP>.md` containing the commit hash, the acceptance
+  commands it ran, and their results. Each such file is owned by the lane that owns
+  the work package.
+- The lead session, or the owner, copies the status into this table after merging.
+
+| WP | Lane | Status | Commit |
+|---|---|---|---|
+| DM-01 | L1 | todo | |
+| DM-02 | L1 | todo | |
+| DM-03 | L1 | todo | |
+| DM-04 | L3 | todo | |
+| DM-05 | L2 | todo | |
+| DM-06 | L2 | todo | |
+| DM-07 | L2 | todo | |
+| DM-08 | L2 + L3 | todo | |
 
 ---
 
