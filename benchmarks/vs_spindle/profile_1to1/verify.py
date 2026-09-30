@@ -163,13 +163,18 @@ def _input_digest(ds: str) -> str:
     return h.hexdigest()
 
 
+# Spindle's output for these depends on the day it runs (time-only text is dated today by
+# dateutil), so a cached dump from another day would be stale: always re-run it.
+DATE_DEPENDENT = {"edge/x_time_only.csv", "edge/x_time_ampm.csv"}
+
+
 def spindle_profile(ds: str, refresh: bool):
     CACHE.mkdir(parents=True, exist_ok=True)
     out = CACHE / f"{ds.replace('/', '_')}.json"
     stamp = out.with_suffix(".sha256")
     digest = _input_digest(ds)
     stale = not stamp.exists() or stamp.read_text().strip() != digest
-    if refresh or stale or not out.exists():
+    if refresh or stale or not out.exists() or ds in DATE_DEPENDENT:
         if ds == "mt":
             args = [str(DATA / "mt")]
         elif ds == "mt.parquet":

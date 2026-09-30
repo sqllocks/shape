@@ -14,6 +14,7 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape.profile.fitting import detect_distribution as _kernel_detect_distribution
 
+from . import dtparse
 from .model import ColumnProfile, Timedelta, Timestamp
 from .readers import _Col
 
@@ -250,15 +251,6 @@ def _round6(arr: np.ndarray) -> list[float]:
 _ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _ISO_DT = re.compile(r"^\d{4}-\d{2}-\d{2}([ T])\d{2}:\d{2}:\d{2}$")
 _ISO_DT_FRAC = re.compile(r"^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}\.\d+$")
-_EXTRA_FORMATS = [
-    "%Y/%m/%d",
-    "%m/%d/%Y",
-    "%Y/%m/%d %H:%M:%S",
-    "%m/%d/%Y %H:%M:%S",
-    "%d-%b-%Y",
-    "%b %d %Y",
-    "%d %b %Y",
-]
 
 
 def _try(fn: Callable[..., Any], arr: Any) -> bool:
@@ -273,21 +265,19 @@ def _try(fn: Callable[..., Any], arr: Any) -> bool:
 
 
 def _all_parse_datetime(uniques: pa.Array) -> bool:
-    """Port of `pd.to_datetime(values, format="mixed")` succeeding.  Supported:
-    ISO-8601 (anything Arrow's string->timestamp cast accepts) plus a list of common
-    explicit formats.  dateutil-only spellings are NOT recognised (documented)."""
+    """Port of `pd.to_datetime(values, format="mixed")` succeeding on every value: what Arrow's
+    ISO-8601 cast accepts, else pandas' own readers and dateutil (``dtparse.parse_mixed``)."""
     if _try(lambda a: pc.cast(a, pa.timestamp("ns")), uniques):
         return True
-    for fmt in _EXTRA_FORMATS:
-        if _try(lambda a, fmt=fmt: pc.strptime(a, format=fmt, unit="ns"), uniques):
-            return True
-    return False
+    return all(dtparse.parse_mixed(u) is not None for u in uniques.to_pylist())
 
 
 def _coerce_datetime_strings(arr: Any, keep_nulls: bool = False) -> Any:
-    """pd.to_datetime(series, errors="coerce"): format guessed from the first element,
-    non-matching elements become NaT (dropped unless keep_nulls).  Returns None when the
-    first element matches no supported format (with keep_nulls) / an empty array."""
+    """pd.to_datetime(series, errors="coerce"): the format is guessed from the first element
+    and applied strictly (non-matching elements become NaT, dropped unless keep_nulls); with no
+    guessable format every element is parsed on its own. ISO-8601 text, the common case, takes
+    Arrow's vectorised parsers; everything else goes through ``dtparse`` once per distinct
+    value."""
     if len(arr) == 0:
         return pa.array([], pa.timestamp("ns"))
     first = arr[0].as_py()
@@ -306,14 +296,18 @@ def _coerce_datetime_strings(arr: Any, keep_nulls: bool = False) -> Any:
             return None if keep_nulls else pa.array([], pa.timestamp("ns"))
         return out if keep_nulls else pc.drop_null(out)
     else:
-        for f in _EXTRA_FORMATS:
-            if _try(lambda a, f=f: pc.strptime(a, format=f, unit="ns"), pa.array([first])):
-                fmt = f
-                break
-    if fmt is None:
-        return None if keep_nulls else pa.array([], pa.timestamp("ns"))
+        return _coerce_with_dtparse(arr, keep_nulls)
     out = pc.strptime(arr, format=fmt, unit="s", error_is_null=True)
     return out if keep_nulls else pc.drop_null(out)
+
+
+def _coerce_with_dtparse(arr: Any, keep_nulls: bool) -> Any:
+    enc = pc.dictionary_encode(arr)
+    if isinstance(enc, pa.ChunkedArray):
+        enc = enc.combine_chunks()
+    parsed = dtparse.coerce_column(enc.dictionary.to_pylist(), first=arr[0].as_py())
+    ts = pa.array(parsed, pa.timestamp("us")).take(enc.indices)
+    return ts if keep_nulls else pc.drop_null(ts)
 
 
 # ---------------------------------------------------------------------------
