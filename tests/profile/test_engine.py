@@ -234,21 +234,24 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
     for rows in (24_000_000, 48_000_000):
         rng = np.random.default_rng(1)
         p = tmp_path / f"r{rows}.csv"
-        writer = None
-        for start in range(0, rows, 1_000_000):
-            m = min(1_000_000, rows - start)
-            chunk = pa.table(
-                {
-                    "id": pa.array(np.arange(start, start + m)),
-                    "x": pa.array(rng.normal(size=m)),
-                    "name": pa.array([f"n{k}" for k in rng.integers(0, 5000, m)]),
-                }
-            )
-            if writer is None:
-                writer = pacsv.CSVWriter(p, chunk.schema)
-            writer.write_table(chunk)
-        assert writer is not None
-        writer.close()
+        # Open the file ourselves: CSVWriter.close() leaves a path it opened held until the
+        # writer is freed, and Windows cannot unlink a file that is still open.
+        with pa.OSFile(str(p), "wb") as sink:
+            writer = None
+            for start in range(0, rows, 1_000_000):
+                m = min(1_000_000, rows - start)
+                chunk = pa.table(
+                    {
+                        "id": pa.array(np.arange(start, start + m)),
+                        "x": pa.array(rng.normal(size=m)),
+                        "name": pa.array([f"n{k}" for k in rng.integers(0, 5000, m)]),
+                    }
+                )
+                if writer is None:
+                    writer = pacsv.CSVWriter(sink, chunk.schema)
+                writer.write_table(chunk)
+            assert writer is not None
+            writer.close()
         r = subprocess.run(
             [sys.executable, "-c", code, str(p)], capture_output=True, text=True, check=True
         )
