@@ -12,8 +12,9 @@ Order, per workload (equivalence before timing, section 6.4):
 A workload's numbers are recorded only when every verifier run for it exited 0; otherwise the
 record keeps the verifier status and ``median_s`` is ``null``. The result is written to
 ``benchmarks/vs_spindle/results.json`` (schema: ``results.schema.json``) with verifier status and
-numbers for ``spindle`` and ``reference_port``, and a ``shape`` key that stays ``null`` until the
-product path exists. The exit code is 1 if any verifier failed, else 0.
+numbers for ``spindle``, ``reference_port`` and ``shape`` (the product: ``shape.profile`` for the
+profiling workloads; the generation workloads stay reference_port only until P6). The exit code
+is 1 if any verifier failed, else 0.
 
 Everything runs under the exclusive benchmark lock (``$BENCH_OUT_DIR/bench.lock``).
 """
@@ -210,24 +211,27 @@ def py_version(py: Path, pkg: str) -> str | None:
     return r.stdout.strip() if r.returncode == 0 else None
 
 
-def profile_workloads(datasets: list[str], reps: int, out: dict) -> bool:
-    """Profiling workloads. Returns True if every verifier passed."""
+def profile_workloads(datasets: list[str], reps: int, out: dict, impl: str = IMPL) -> bool:
+    """Profiling workloads for ``impl`` (``reference_port`` or ``shape``). Returns True if every
+    verifier passed. Each implementation is timed against its own Spindle runs in the same job
+    (T-19); the ``spindle`` record is the first one written, and every implementation's record
+    also carries the Spindle median it was compared with."""
     ok = True
     dpy = str(SHAPE_PY)
     rc, _ = sh([dpy, str(PROFILE / "datasets.py"), *sorted({DATASET_IDS[d] for d in datasets})])
     if rc != 0:
         raise SystemExit(f"datasets.py failed ({rc})")
-    vcmd = [dpy, str(PROFILE / "verify.py"), "--impl", IMPL, *datasets]
-    rc, _ = sh(vcmd, BENCH_OUT_DIR / "verify" / "profile_reference_port.txt")
+    vcmd = [dpy, str(PROFILE / "verify.py"), "--impl", impl, *datasets]
+    rc, _ = sh(vcmd, BENCH_OUT_DIR / "verify" / f"profile_{impl}.txt")
     ver = verifier_record(vcmd, rc)
-    bench_json = BENCH_OUT_DIR / "profile" / "bench_results.json"
+    bench_json = BENCH_OUT_DIR / "profile" / f"bench_results_{impl}.json"
     numbers: dict[str, Any] = {}
     if rc == 0:
         bcmd = [
             dpy,
             str(PROFILE / "bench.py"),
             "--impl",
-            IMPL,
+            impl,
             "--reps",
             str(reps),
             "--out",
@@ -269,10 +273,11 @@ def profile_workloads(datasets: list[str], reps: int, out: dict) -> bool:
                 median_s_1t=n["impl_st"]["median_s"],
                 runs_s=n["impl_mt"]["runs"],
                 peak_rss_mb=n["impl_mt"]["peak_rss_mb"],
+                spindle_median_s=n["spindle"]["median_s"],
                 speedup_vs_spindle=n["spindle"]["median_s"] / n["impl_mt"]["median_s"],
             )
-        out["spindle"]["workloads"][f"profile:{ds}"] = rec_sp
-        out[IMPL]["workloads"][f"profile:{ds}"] = rec_im
+        out["spindle"]["workloads"].setdefault(f"profile:{ds}", rec_sp)
+        out[impl]["workloads"][f"profile:{ds}"] = rec_im
     return ok
 
 
@@ -438,6 +443,12 @@ def main(argv: list[str] | None = None) -> int:
     g.add_argument("--full", action="store_true", help="every workload in section 3.4; 5 runs")
     ap.add_argument("--out", default=str(DEFAULT_OUT), help="results JSON to write")
     ap.add_argument("--dry-run", action="store_true", help="print the workloads and exit")
+    ap.add_argument(
+        "--only",
+        choices=("all", "profile", "generate"),
+        default="all",
+        help="run one family of workloads (the gate for a phase needs only its own)",
+    )
     a = ap.parse_args(argv)
 
     mode = "quick" if a.quick else "full"
@@ -481,15 +492,18 @@ def main(argv: list[str] | None = None) -> int:
         "shape_tree_dirty": git_dirty(SHAPE_ROOT),
         "spindle": {"workloads": {}},
         IMPL: {"workloads": {}},
-        "shape": None,
+        "shape": {"workloads": {}},
     }
     ok = True
     with bench_lock():
-        ok &= profile_workloads(datasets, runs, out)
-        for dom, scales in domains:
-            ok &= domain_workloads(dom, scales, runs, out)
-        if a.full:
-            other_domain_baselines(runs, out)
+        if a.only in ("all", "profile"):
+            ok &= profile_workloads(datasets, runs, out, IMPL)
+            ok &= profile_workloads(datasets, runs, out, "shape")
+        if a.only in ("all", "generate"):
+            for dom, scales in domains:
+                ok &= domain_workloads(dom, scales, runs, out)
+            if a.full:
+                other_domain_baselines(runs, out)
     schema = json.loads(SCHEMA_FILE.read_text())
     errs = validate(out, schema)
     if errs:
@@ -500,14 +514,15 @@ def main(argv: list[str] | None = None) -> int:
         return 3
     Path(a.out).write_text(json.dumps(out, indent=1) + "\n")
     print(f"\nwrote {a.out}")
-    for wid, rec in out[IMPL]["workloads"].items():
-        sp = out["spindle"]["workloads"][wid]["median_s"]
-        print(
-            f"  {wid:28s} verifier={rec['verifier']['status']:11s} "
-            f"spindle={sp if sp is None else round(sp, 2)} "
-            f"impl={rec['median_s'] and round(rec['median_s'], 2)} "
-            f"speedup={rec['speedup_vs_spindle'] and round(rec['speedup_vs_spindle'], 2)}"
-        )
+    for impl in (IMPL, "shape"):
+        for wid, rec in out[impl]["workloads"].items():
+            sp = rec.get("spindle_median_s", out["spindle"]["workloads"][wid]["median_s"])
+            print(
+                f"  {impl:14s} {wid:26s} verifier={rec['verifier']['status']:11s} "
+                f"spindle={sp if sp is None else round(sp, 2)} "
+                f"impl={rec['median_s'] and round(rec['median_s'], 2)} "
+                f"speedup={rec['speedup_vs_spindle'] and round(rec['speedup_vs_spindle'], 2)}"
+            )
     if not ok:
         print(
             "FAIL: at least one verifier did not pass; its numbers are not recorded",
