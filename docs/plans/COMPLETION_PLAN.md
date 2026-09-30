@@ -1821,7 +1821,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 14 | P1-05 | done | d5ee068 |
 | 15 | P1-06 | done | 842ec00 |
 | 16 | P1-07 | done | f934e60 |
-| 17 | P1-08 | todo | |
+| 17 | P1-08 | done | 76cbdbc |
 | 18 | P1-09 | todo | |
 | 19 | P1-10 | todo | |
 | 20 | P1-11 | todo | |
