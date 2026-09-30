@@ -1,36 +1,7 @@
 """Bounded local file connectors."""
 
-import csv
 import json
 from pathlib import Path
-
-
-class CSVSource:
-    def __init__(self, path, batch_size=10000):
-        if batch_size < 1:
-            raise ValueError("batch_size must be positive")
-        self.path = Path(path)
-        self.batch_size = batch_size
-
-    def rows(self):
-        with self.path.open("r", encoding="utf-8", newline="") as f:
-            r = csv.DictReader(f)
-            batch = []
-            for row in r:
-                batch.append(dict(row))
-                if len(batch) >= self.batch_size:
-                    yield batch
-                    batch = []
-            if batch:
-                yield batch
-
-    def record_batches(self):
-        try:
-            import pyarrow as pa
-        except ImportError as e:
-            raise RuntimeError("pyarrow required for record_batches()") from e
-        for rows in self.rows():
-            yield pa.RecordBatch.from_pylist(rows)
 
 
 class JSONLSource:

@@ -1,7 +1,6 @@
 from .dbapi import DBAPISink as DBAPISink
 from .dbapi import DBAPISource as DBAPISource
 from .eventhubs import EventHubsBatchAdapter as EventHubsBatchAdapter
-from .files import CSVSource as CSVSource
 from .files import JSONLSink as JSONLSink
 from .files import JSONLSource as JSONLSource
 from .kafka import KafkaBatchAdapter as KafkaBatchAdapter
@@ -11,7 +10,6 @@ __all__ = [
     "ConnectorRegistry",
     "DBAPISource",
     "DBAPISink",
-    "CSVSource",
     "JSONLSource",
     "JSONLSink",
     "KafkaBatchAdapter",

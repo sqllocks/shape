@@ -9,11 +9,11 @@ from dataclasses import asdict
 
 from shape.artifact import read_shape, write_shape
 from shape.capture import capture_rows
-from shape.connectors import CSVSource
 from shape.contracts import compatibility, evaluate_contract
 from shape.drift import compare
 from shape.generation import Choice, GenerationPlan, SequenceStrategy, certify
 from shape.generation.fidelity import certify_shapes, plan_reconstruction
+from shape.io import iter_rows
 from shape.privacy.measure import k_anonymity
 from shape.profile.dependencies import candidate_key, functional_dependency
 from shape.quality import infer_rules, validate_rows
@@ -24,8 +24,8 @@ from shape.validation.suite import conformance
 
 
 def _rows(path):
-    for b in CSVSource(path).rows():
-        yield from b
+    """Typed rows of a CSV/Parquet/JSONL file (ints stay ints, not strings)."""
+    return iter_rows(path)
 
 
 def _dump(x):
