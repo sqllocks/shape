@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from shape.profile.error import hll_error, kll_error
+from shape.profile.infer import TypeTracker, as_number, is_number
 from shape.profile.numeric import NumericProfile
 from shape.profile.text import TextProfile
 
@@ -16,41 +17,31 @@ class CapturedShape:
         return {"rows": self.rows, "columns": self.columns}
 
 
-def _kind(v):
-    return "numeric" if isinstance(v, (int, float)) and not isinstance(v, bool) else "text"
-
-
 def capture_rows(rows, batch_size=10000):
+    """One bounded pass over row dicts. The type of a column is decided at the end, so a
+    leading null (P3), numpy or Decimal numbers (P4) and a late text value (P2) cannot change
+    or lose what was seen: every value is recorded as text, and as a number while the column
+    is still all-numeric."""
     if batch_size < 1:
         raise ValueError("batch_size must be positive")
-    profiles = {}
-    kinds = {}
+    numeric: dict[str, NumericProfile] = {}
+    text: dict[str, TextProfile] = {}
+    types: dict[str, TypeTracker] = {}
     count = 0
     for raw in rows:
         row = dict(raw)
         count += 1
-        for key, p in list(profiles.items()):
+        for key in types:
             if key not in row:
-                p.update_value(None)
+                _observe(key, None, numeric, text, types)
         for key, v in row.items():
-            if key not in profiles:
-                kinds[key] = _kind(v) if v is not None else "text"
-                profiles[key] = NumericProfile() if kinds[key] == "numeric" else TextProfile()
-                if count > 1:
-                    profiles[key].update([None] * (count - 1))
-            p = profiles[key]
-            if (
-                kinds[key] == "numeric"
-                and v is not None
-                and not (isinstance(v, (int, float)) and not isinstance(v, bool))
-            ):
-                old = p
-                np = TextProfile()
-                np.count = old.count - 1
-                np.null_count = old.null_count
-                profiles[key] = p = np
-                kinds[key] = "text"
-            p.update_value(v)
+            if key not in types:
+                numeric[key], text[key], types[key] = NumericProfile(), TextProfile(), TypeTracker()
+                for _ in range(count - 1):  # rows before the column first appeared
+                    _observe(key, None, numeric, text, types)
+            _observe(key, v, numeric, text, types)
+    profiles = {k: (numeric[k] if types[k].kind == "numeric" else text[k]) for k in types}
+    kinds = {k: types[k].kind for k in types}
     cols = {}
     for k, p in profiles.items():
         if kinds[k] == "numeric":
@@ -73,3 +64,14 @@ def capture_rows(rows, batch_size=10000):
                 "error_models": {"cardinality": hll_error(p.cardinality.p).to_dict()},
             }
     return CapturedShape(count, cols)
+
+
+def _observe(key, v, numeric, text, types):
+    types[key].observe(v)
+    text[key].update_value(v)
+    # The numeric side only matters while every value so far is a number or null; once a
+    # text value has been seen it is never used, so it is simply not fed any more.
+    if v is None:
+        numeric[key].update_value(None)
+    elif is_number(v):
+        numeric[key].update_value(as_number(v))
