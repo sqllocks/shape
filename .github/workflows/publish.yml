@@ -1,0 +1,80 @@
+# Early-access publish of the pure-Python wheel and an sdist (plan DM-03b).
+#
+# Trusted publishing only: no API tokens and no passwords. The PyPI (and TestPyPI) project
+# "sqllocks-shape" must have a trusted publisher registered for this repository, workflow file
+# "publish.yml" and environment "pypi" (TestPyPI: environment "testpypi").
+#
+# Owner triggers it: Actions > "Publish" > Run workflow, repository = testpypi first, then pypi.
+# Pushing a tag "v<version>" publishes to PyPI (the tag must equal the package version).
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: "Where to publish"
+        required: true
+        default: testpypi
+        type: choice
+        options:
+          - testpypi
+          - pypi
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and test the wheel and sdist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip build twine
+      - name: Tag must match the package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          version="$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")"
+          test "v${version}" = "${GITHUB_REF_NAME}" || {
+            echo "tag ${GITHUB_REF_NAME} does not match version ${version}"; exit 1; }
+      - name: README must say this is early access
+        run: grep -qi "early access" README.md
+      - name: Build the pure wheel, install it in a clean venv and run tests/demo/core
+        run: python scripts/build_pure_wheel.py --verify --python python3.11
+      - name: Build the sdist
+        run: python -m build --sdist
+      - name: twine check
+        run: python -m twine check dist/*
+      - run: ls -l dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    name: Publish to ${{ (github.event_name == 'workflow_dispatch' && inputs.repository == 'testpypi') && 'TestPyPI' || 'PyPI' }}
+    needs: build
+    runs-on: ubuntu-latest
+    environment: ${{ (github.event_name == 'workflow_dispatch' && inputs.repository == 'testpypi') && 'testpypi' || 'pypi' }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Publish to TestPyPI
+        if: github.event_name == 'workflow_dispatch' && inputs.repository == 'testpypi'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+      - name: Publish to PyPI
+        if: github.event_name != 'workflow_dispatch' || inputs.repository == 'pypi'
+        uses: pypa/gh-action-pypi-publish@release/v1

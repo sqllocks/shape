@@ -59,7 +59,7 @@ from .types import (
     schema_from_arrow as schema_from_arrow,
 )
 
-__version__ = "0.9.0.dev1"
+__version__ = "0.9.0"
 __all__ = [
     "Evidence",
     "FieldType",
