@@ -37,6 +37,22 @@ jobs:
           python -m pytest -q -m "not emulator and not live"
           --ignore=tests/demo/fabric --ignore=tests/demo/content
           --cov=shape --cov-fail-under=86
+      # The pure-Python reference twin must pass on its own (SHAPE_KERNEL=python), and the
+      # native kernel must be the one in use by default (SHAPE_KERNEL=rust fails loudly if not).
+      - run: python -m pytest -q tests/kernel
+        env: {SHAPE_KERNEL: python}
+      - run: python -m pytest -q tests/kernel
+        env: {SHAPE_KERNEL: rust}
+  rust:
+    # T-27: cargo fmt / clippy -D warnings / cargo test for rust/shape-kernel.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with: {workspaces: rust/shape-kernel}
+      - run: cargo fmt --manifest-path rust/shape-kernel/Cargo.toml --check
+      - run: cargo clippy --manifest-path rust/shape-kernel/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path rust/shape-kernel/Cargo.toml
   audit:
     runs-on: ubuntu-latest
     steps:

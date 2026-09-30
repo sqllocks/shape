@@ -13,5 +13,5 @@ A conforming implementation MUST:
 8. preserve provenance for externally sourced reference assets;
 9. version incompatible semantics rather than silently changing their meaning.
 
-The human-editable Shape-as-Code v1 document is defined by `shape-v1.schema.json`.
+The human-editable Shape-as-Code v1 document is defined by `src/shape/schemas/shape-v1.schema.json` (shipped in the wheel as `shape/schemas/`).
 Heavy sketches/evidence MAY reside in the packaged `.shape` artifact rather than the human document.

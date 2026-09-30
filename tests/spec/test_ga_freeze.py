@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_ga_schema_is_version_one_and_closed():
-    s = json.loads((ROOT / "docs/specs/shape-v1-ga.schema.json").read_text())
+    s = json.loads((ROOT / "src/shape/schemas/shape-v1-ga.schema.json").read_text())
     assert s["properties"]["version"]["const"] == 1 and s["additionalProperties"] is False
     assert "/1.0/" in s["$id"]
 

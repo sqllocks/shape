@@ -1,6 +1,6 @@
 [build-system]
-requires=["hatchling>=1.27"]
-build-backend="hatchling.build"
+requires=["maturin>=1.15,<2"]
+build-backend="maturin"
 
 [project]
 name = "sqllocks-shape"
@@ -22,14 +22,24 @@ eventhubs=["azure-eventhub>=5.12,<6"]
 streaming=["confluent-kafka>=2.5,<4","azure-eventhub>=5.12,<6"]
 dev=["pytest>=8.3","pytest-cov>=6","hypothesis>=6.115","ruff>=0.8","mypy>=1.13","pip-audit>=2.7","build>=1.2","pyyaml>=6","pandas>=2","deltalake>=0.17","twine>=5","cryptography>=50,<51","xxhash>=3.5","maturin>=1.15,<2","import-linter>=2","vulture>=2.11","bandit>=1.8","py-spy>=0.4","sqlglot>=25"]
 
-[tool.hatch.build.targets.wheel]
-packages=["src/shape"]
-
-[tool.hatch.build.targets.wheel.force-include]
-"docs/specs" = "shape/schemas"
-
-[tool.hatch.build.targets.sdist]
-include=["/src", "/tests", "/docs", "/scripts", "/.github", "/examples", "/benchmarks", "/security", "/.devcontainer", "/*.md", "/LICENSE", "/Makefile", "/CODEOWNERS", "/.gitignore", "/.env.example"]
+[tool.maturin]
+# T-05: mixed Python/Rust layout. The kernel is `shape._kernel`, built from rust/shape-kernel.
+python-source="src"
+module-name="shape._kernel"
+manifest-path="rust/shape-kernel/Cargo.toml"
+profile="release"
+include=[
+  {path="tests/**/*", format="sdist"},
+  {path="docs/**/*", format="sdist"},
+  {path="scripts/**/*", format="sdist"},
+  {path="examples/**/*", format="sdist"},
+  {path="benchmarks/**/*", format="sdist"},
+  {path="security/**/*", format="sdist"},
+  {path=".github/**/*", format="sdist"},
+  {path="*.md", format="sdist"},
+  {path="Makefile", format="sdist"},
+  {path="CODEOWNERS", format="sdist"},
+]
 
 [tool.pytest.ini_options]
 testpaths=["tests"]
