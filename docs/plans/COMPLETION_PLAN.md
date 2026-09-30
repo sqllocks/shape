@@ -1804,7 +1804,7 @@ Work packages are listed in execution order. The next work package is the first 
 
 | # | WP | Status | Commit |
 |---|---|---|---|
-| 1 | P0-00 | todo | |
+| 1 | P0-00 | done | 0a63302 |
 | 2 | P0-01 | todo | |
 | 3 | P0-02 | todo | |
 | 4 | P0-03 | todo | |
