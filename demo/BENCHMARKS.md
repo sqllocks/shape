@@ -8,7 +8,7 @@ Every number below comes from a committed file under `benchmarks/baselines/2026-
 
 - Machine: 4 cores, Intel(R) Xeon(R) Processor @ 2.10GHz, `Linux-6.18.44-fc-v37-x86_64-with-glibc2.39`, Python 3.11.15.
 - Each timing is the median of 5 runs (profiling) or 3 runs (retail), in a fresh process per run, runs interleaved between tools.
-- The profiling numbers time the benchmark port `benchmarks/profile_1to1/port.py`, the vectorised numpy + pyarrow profiler that `shape.profile` was ported from. They were **not** measured on `shape.profile` itself. In the profiling table, `port MT` is the port's default threading (4 cores) and `port 1T` is one thread.
+- The profiling numbers time the benchmark port `benchmarks/vs_spindle/profile_1to1/port.py`, the vectorised numpy + pyarrow profiler that `shape.profile` was ported from. They were **not** measured on `shape.profile` itself. In the profiling table, `port MT` is the port's default threading (4 cores) and `port 1T` is one thread.
 - Equivalence comes first: the same port output matches the reference profiler field by field on every dataset before its timing counts.
 
 ## Profiling: Spindle profiler vs vectorised port

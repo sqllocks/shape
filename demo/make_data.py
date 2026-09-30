@@ -62,7 +62,7 @@ def build_day1(
     spindle_root: Path, scale: str = "medium", seed: int = 42, d2_rows: int = 1_000_000
 ) -> dict[str, pa.Table]:
     """Day-1 tables keyed by file name (without ``.parquet``)."""
-    retail = _load("_demo_retail_port", REPO / "benchmarks" / "retail_1to1" / "port.py")
+    retail = _load("_demo_retail_port", REPO / "benchmarks" / "vs_spindle" / "domain_1to1" / "port.py")
     raw = retail.generate(scale, seed, str(spindle_root))
     tables = {FILE_NAMES.get(k, k): v for k, v in raw.items()}
     # The retail schema has no product SKU; the demo derives one (unique, stable per product).
@@ -73,7 +73,7 @@ def build_day1(
         "",
     )
     tables["products"] = products.append_column("sku", sku)
-    datasets = _load("_demo_profile_datasets", REPO / "benchmarks" / "profile_1to1" / "datasets.py")
+    datasets = _load("_demo_profile_datasets", REPO / "benchmarks" / "vs_spindle" / "profile_1to1" / "datasets.py")
     tables["d2"] = datasets._d2_table(d2_rows)
     return tables
 

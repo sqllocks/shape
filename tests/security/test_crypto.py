@@ -11,6 +11,8 @@ from shape.security.crypto import (
     verify_ed25519,
 )
 
+pytestmark = pytest.mark.sign  # needs the optional cryptography package ([sign])
+
 
 def test_crypto():
     k = os.urandom(32)

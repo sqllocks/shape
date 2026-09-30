@@ -1,0 +1,42 @@
+name: Nightly
+on:
+  schedule: [{cron: '17 3 * * *'}]
+  workflow_dispatch: {}
+permissions: {contents: read}
+jobs:
+  benchmarks-full:
+    # Every workload of plan section 3.4 (5 runs each): verifiers first, then timings.
+    # Timings are ratios measured in this one job (T-19). A public repository gets 4-vCPU
+    # standard runners; on a private repository use a 4-vCPU larger runner (O-05).
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env: {BENCH_OUT_DIR: "${{ github.workspace }}/bench-out"}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Pinned Spindle baseline and venv (plan section 1.2)
+        run: source scripts/env.sh && bash benchmarks/vs_spindle/setup_spindle.sh
+      - name: Shape venv (pyarrow pinned like the Spindle venv, so timings share one pyarrow)
+        run: |
+          source scripts/env.sh
+          python -m venv "$SHAPE_VENV"
+          "$SHAPE_VENV/bin/pip" install -U pip
+          "$SHAPE_VENV/bin/pip" install -e '.[dev]' 'pyarrow==25.0.1'
+      - run: source scripts/env.sh && python benchmarks/vs_spindle/check_coverage.py
+      - run: source scripts/env.sh && python benchmarks/vs_spindle/run.py --full
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-results-full
+          path: |
+            benchmarks/vs_spindle/results.json
+            ${{ github.workspace }}/bench-out/verify/
+            ${{ github.workspace }}/bench-out/spindle_freeze.txt
+  emulator-compose:
+    # The emulator-backed test jobs (Kafka, Event Hubs + Azurite, SQL Server) arrive with the
+    # work packages that own those connectors; until then, keep the compose file valid.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose -f ci/emulators/docker-compose.yml config --quiet
