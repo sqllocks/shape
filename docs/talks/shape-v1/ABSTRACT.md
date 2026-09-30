@@ -84,8 +84,8 @@ knowledge is needed.
    abstract goes out? If not, the call to action says "install from the GitHub release wheel".
 5. **Live Fabric numbers:** after the dry run, do you want slide 25 to show the measured
    `LIVE_TIMINGS.md` rows? They may only be shown as measured, with SKU and vCores.
-6. **Finding F1** (`STATUS.md`): `shape check` with a missing `.shape` file exits 1 with a
-   traceback instead of 2. It is not on the demo path, but in a pipeline it looks like a failed
+6. **Finding F1** (`STATUS.md`): `shape check` or `shape diff` with a missing first `.shape`
+   file exits 1 with a traceback instead of 2. It is not on the demo path, but in a pipeline it looks like a failed
    contract. Fix before the talk (outside this branch's scope), or leave it as is?
 7. **Repo visibility:** the talk links to `github.com/sqllocks/shape`. Confirm it is public
    on the day.
