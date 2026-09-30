@@ -6,6 +6,6 @@ Trust boundaries: input datasets; `.shape` artifacts; Packs/reference assets; pl
 
 Primary threats: raw-value leakage, re-identification, artifact traversal/bombs/corruption, malicious plugins, dependency compromise, secret exfiltration, tampered reference data, ambiguous geographic resolution, denial of service through cardinality/nesting, replay/checkpoint corruption, downgrade/format confusion and forged provenance.
 
-Controls implemented in the reference: bounded profiling paths, privacy measurements/detection, sensitivity taxonomy, authenticated encryption/signatures, artifact path/size/hash validation, checksummed reference assets, deny-by-default plugin capabilities, process isolation/timeouts, explicit connector registry, deterministic checkpoints, secret scanning and executable conformance.
+Controls implemented in the reference today: artifact path/size/hash validation (the `.shape` reader fails closed), authenticated encryption and signature primitives, sensitivity labels, and secret scanning. Plugins are **trusted, in-process code**; there is no plugin sandbox. Release-policy enforcement, bounded profiling and signing of artifacts by default are in progress (see `docs/plans/COMPLETION_PLAN.md`).
 
 Deployment controls still required: OS/container sandboxing, secret manager/KMS/HSM, egress policy, RBAC, audit logging, dependency provenance, backup/recovery, target-service authentication and independent assessment.

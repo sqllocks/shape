@@ -1,4 +1,4 @@
-# Shape by SQLLocks 1.0 GA — Frozen Normative Contract
+# Shape by SQLLocks — Normative Contract (draft)
 
 Status: **FROZEN for 1.x compatibility**.
 

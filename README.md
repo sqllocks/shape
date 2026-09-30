@@ -31,10 +31,9 @@ according to their sensitivity; they may contain value-bearing evidence.
 
 ## Design principles
 
-- bounded, mergeable profiling rather than full-data retention
 - evidence carries provenance and algorithm parameters
 - deterministic generation and replay
-- offline by default; network and plugin capabilities are deny-by-default
+- offline by default: no network access or cloud service is required
 - `.shape` readers fail closed on unsafe or corrupt containers
 
 See `docs/PRODUCT_ARCHITECTURE.md` and `docs/specs/`.

@@ -102,7 +102,7 @@ The architecture MUST expose hooks for:
 - source/destination trust
 - tenant/project boundaries
 
-Authorization is deny-by-default for protected operations.
+Authorization controls are in progress and are not yet enforced by the reference implementation.
 
 ## 9. Cryptography
 Sensitive deployment profiles MUST support:
