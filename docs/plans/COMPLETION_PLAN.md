@@ -2056,8 +2056,8 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
     - Update any README license badge or text.
     - Keep `THIRD_PARTY_NOTICES.md` and add the GeoNames CC-BY-4.0 attribution to it
       now (D-10).
-    - Acceptance addition: `grep -rn "Apache" --include=*.md --include=*.toml --include=LICENSE .`
-      returns nothing, except inside third-party notices.
+    - Acceptance addition: `grep -rn "Apache" --include=*.md --include=*.toml --include=LICENSE . --exclude-dir=docs/plans --exclude-dir=.git --exclude=THIRD_PARTY_NOTICES.md`
+      returns nothing.
   - Do **not** touch `src/`, `tests/` or `pyproject.toml`: P0-04 and P0-05 still own
     the module cuts and dependency changes.
   - Tests that read deleted files break when those files go. Only
