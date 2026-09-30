@@ -13,4 +13,5 @@ jobs:
       - run: pip-audit --skip-editable
       - run: bandit -q -r src -ll
       - run: python scripts/check_secrets.py
-      - run: pytest -m security
+      # The Fabric demo tests need extra packages and run in ci.yml's fabric-demo job.
+      - run: pytest -m security --ignore=tests/demo/fabric
