@@ -202,7 +202,7 @@ instruction.
 | D-11 | **Holiday calendars are rule-based code:** fixed dates, the nth or last weekday of a month, Easter by computus, and observed-day shifts. US federal and US retail calendars ship in core, and other countries come as `shape.calendars` plugins. | Offline and deterministic. |
 | D-12 | **Stream output defaults to Spindle's flat-row format.** Each event is the row's columns plus `_spindle_table` and `_spindle_seq`, and `_spindle_event_time` when the table has a datetime column (Spindle `streaming/streamer.py:212-233`). `--envelope spindle` produces Spindle's `EventEnvelope` (as used by its Eventstream client), and `--envelope cloudevents` produces CloudEvents. The idempotency key is `(_spindle_table, _spindle_seq)`. | Drop-in for existing consumers; deterministic replay. |
 | D-14 | **Pipeline integration comes first after the plugin system.** Fabric first (Python and PySpark notebooks, User Data Functions, pipelines with Notebook and Functions activities), then Synapse and ADF. Phase F runs after G2, before Phases 3 and 4. A 48-hour Fabric demo track (§12) comes before everything. | Owner: Spindle is retired; profiling and generation must run inside ADF, Synapse and Fabric pipelines. |
-| D-15 | **Shape is open source.** Apache-2.0 (the existing `LICENSE`); the `sqllocks/shape` repo goes public; releases go to PyPI as `sqllocks-shape`. The repo flips to public only after DM-00 has removed the false claims (§12). | Owner decision (2026-09-30). A full-history secret scan found only deliberate test fixtures. |
+| D-15 | **Shape is open source under the MIT license** (the same as Spindle), replacing the Apache-2.0 `LICENSE` inherited from the earlier build. The `sqllocks/shape` repo goes public; releases go to PyPI as `sqllocks-shape`. The repo flips to public only after DM-00 has removed the false claims (§12). | Owner decision (2026-09-30). A full-history secret scan found only deliberate test fixtures. |
 | D-13 | **No `spindle` executable is shipped.** `shape` accepts Spindle command names as aliases wherever the meaning matches (§10), and reads Spindle schemas and profiles. | Avoids clashing with an installed Spindle. |
 
 ### 2.2 Technical decisions
@@ -245,6 +245,7 @@ instruction.
 |---|---|---|---|
 | 2026-09-29 | — | Plan v1 approved | — |
 | 2026-09-29 | — | Plan v2: adversarial-review fixes (Spindle stream format, CLI mapping, exact mode for parity and gates, crate pins, Philox implemented in-house, maturin-action, setup, builder guide, work-package splits, verified line references) | Red-team review |
+| 2026-09-30 | D-15 | License: MIT (owner choice), replacing the inherited Apache-2.0 | Owner decision; matches Spindle |
 | 2026-09-30 | D-15 | Open source: public repo, PyPI release; DM-00 public-readiness cleanup moved ahead of the demo | Owner decision |
 | 2026-09-30 | D-14, T-29 | Plan v3.2: 48-hour Fabric demo track (§12: notebook, UDF, pipelines, 3 parallel lanes) and Phase F (Fabric, Synapse and ADF pipeline integration, prioritized after G2); pure-Python wheel as a first-class deliverable | Owner: Spindle retired; demo profiling in Fabric; pipelines for profiling and generation |
 | 2026-09-29 | D-07 | Spindle does have experimental DP (`tier3_research.DifferentialPrivacy`). Under full parity (D-01) it is ported correctly in P4-11, and Shape's fake DP is still removed in P0-02 | Third red-team review; v1's rationale was false |
@@ -2020,7 +2021,7 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
 |---|---|
 | **L1 Core** | `src/shape/profile/reference/` (new), `benchmarks/profile_1to1/verify.py` (the `--impl shape` option only), `src/shape/api.py`, `src/shape/report/` (new), `src/shape/contracts/v1.py` (new), `src/shape/cli/main.py` (the three commands only), `tests/demo/core/`, `scripts/build_pure_wheel.py`, `.github/workflows/publish.yml` (new), `pyproject.toml` (the version and `[project.optional-dependencies]` only) |
 | **L2 Fabric** | `integrations/fabric/` (new): notebooks, UDF, pipeline definitions, runbook; `tests/demo/fabric/` |
-| **L3 Demo content** | `demo/` (new): data generation scripts, drift injection, contracts, talk notes, benchmark sheet; `tests/demo/content/`. For DM-00 only: `README.md`, `CHANGELOG.md`, `SECURITY.md`, `tests/torture/test_all_modules.py`, and the files §8.3 deletes |
+| **L3 Demo content** | `demo/` (new): data generation scripts, drift injection, contracts, talk notes, benchmark sheet; `tests/demo/content/`. For DM-00 only: `README.md`, `CHANGELOG.md`, `SECURITY.md`, `LICENSE`, `THIRD_PARTY_NOTICES.md`, the `license`/`license-files` lines of `pyproject.toml`, `tests/torture/test_all_modules.py`, and the files §8.3 deletes |
 
 **Merge order into the integration branch:** L3's DM-00 first, then L1, then the rest of L3, then L2.
 - L2 and L3 may build against a local stub of the §12.2 API until L1 lands. A stub
@@ -2046,6 +2047,17 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
     Spindle's retirement. Mentioning Spindle is allowed only in the migration guide
     (P8-01) and in benchmark comparisons.
   - Add `SECURITY.md` contact details if missing.
+  - **License (D-15):**
+    - Replace `LICENSE` with the standard MIT text, with the copyright line
+      `Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart)` (the same holder line as
+      Spindle's `LICENSE`).
+    - In `pyproject.toml`, change only the license field, to
+      `license = "MIT"` (SPDX) with `license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]`.
+    - Update any README license badge or text.
+    - Keep `THIRD_PARTY_NOTICES.md` and add the GeoNames CC-BY-4.0 attribution to it
+      now (D-10).
+    - Acceptance addition: `grep -rn "Apache" --include=*.md --include=*.toml --include=LICENSE .`
+      returns nothing, except inside third-party notices.
   - Do **not** touch `src/`, `tests/` or `pyproject.toml`: P0-04 and P0-05 still own
     the module cuts and dependency changes.
   - Tests that read deleted files break when those files go. Only
