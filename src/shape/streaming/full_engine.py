@@ -76,29 +76,29 @@ def profile_text_semantic(values: Any) -> tuple[dict[str, Any], tuple[Any, ...]]
 
 
 class FullEvidenceEngine:
-    def __init__(self, workers=3):
+    def __init__(self, workers: int = 3) -> None:
         self._pool = ThreadPoolExecutor(max_workers=workers)
 
-    def close(self):
+    def close(self) -> None:
         self._pool.shutdown(wait=True)
 
     def process(
         self,
-        numeric_columns,
-        text_column,
+        numeric_columns: dict[str, Any],
+        text_column: Any,
         *,
-        fk_name="fk",
-        parent_count=None,
-        lat_name="latitude",
-        lon_name="longitude",
-        dependency=None,
-        time_name="id",
-    ):
+        fk_name: str = "fk",
+        parent_count: int | None = None,
+        lat_name: str = "latitude",
+        lon_name: str = "longitude",
+        dependency: tuple[str, str] | None = None,
+        time_name: str = "id",
+    ) -> dict[str, Any]:
         f_profile = self._pool.submit(capture_columns, numeric_columns)
         f_text = self._pool.submit(profile_text_semantic, text_column)
 
-        def relationships():
-            out = {}
+        def relationships() -> dict[str, Any]:
+            out: dict[str, Any] = {}
             list(numeric_columns)
             if "value" in numeric_columns and time_name in numeric_columns:
                 out["covariance"] = covariance_batch(

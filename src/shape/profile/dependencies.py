@@ -5,7 +5,10 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from shape.kernel.values import DistinctCounter
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,7 +38,7 @@ def functional_dependency(
         raise ValueError("determinant cannot be empty")
     if max_groups < 1:
         raise ValueError("max_groups must be positive")
-    groups = defaultdict(Counter)
+    groups: defaultdict[tuple[Any, ...], Counter[Any]] = defaultdict(Counter)
     n = untracked = 0
     for r in rows:
         n += 1
@@ -79,7 +82,7 @@ def candidate_key(
     if max_keys < 1:
         raise ValueError("max_keys must be positive")
     seen: set[tuple[Any, ...]] | None = set()
-    hll = None
+    hll: DistinctCounter | None = None
     n = nulls = 0
     for r in rows:
         n += 1
@@ -96,9 +99,11 @@ def candidate_key(
                     hll.update(repr(k))
                 seen = None
         else:
+            assert hll is not None
             hll.update(repr(key))
     if seen is not None:
         return CandidateKeyEvidence(
             fields, n, len(seen), nulls, n > 0 and len(seen) == n and nulls == 0
         )
+    assert hll is not None
     return CandidateKeyEvidence(fields, n, round(hll.estimate()), nulls, False, False)

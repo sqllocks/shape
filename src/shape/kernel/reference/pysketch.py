@@ -7,7 +7,7 @@ from __future__ import annotations
 import base64
 import math
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Self, cast
 
 from shape.kernel.hashing import hash_value
 
@@ -56,18 +56,18 @@ class HyperLogLog:
     p: int = 14
     registers: list[int] = field(default_factory=list)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not 4 <= self.p <= 18:
             raise ValueError("p must be 4..18")
         if not self.registers:
             self.registers = [0] * (1 << self.p)
 
-    def update(self, v: Any):
+    def update(self, v: Any) -> None:
         x = _h64(v)
         if x is not None:
             self.update_hashed(x)
 
-    def update_hashed(self, x: int):
+    def update_hashed(self, x: int) -> None:
         """Add an already-computed 64-bit hash."""
         idx = x >> (64 - self.p)
         rem = (x << self.p) & ((1 << 64) - 1)
@@ -76,7 +76,7 @@ class HyperLogLog:
         if rank > self.registers[idx]:
             self.registers[idx] = rank
 
-    def merge(self, o: HyperLogLog):
+    def merge(self, o: HyperLogLog) -> Self:
         if self.p != o.p:
             raise ValueError("incompatible HLL precision")
         self.registers = [max(a, b) for a, b in zip(self.registers, o.registers, strict=False)]
@@ -97,7 +97,7 @@ class HyperLogLog:
         z += m * _sigma(counts[0] / m)
         return _ALPHA_INF * m * m / z
 
-    def state(self):
+    def state(self) -> dict[str, Any]:
         return {
             "algorithm": "hll",
             "estimator": "ertl-improved",
@@ -131,7 +131,7 @@ class SpaceSaving:
     _clock: int = 0
     n: int = 0
 
-    def update(self, v: Any, n: int = 1):
+    def update(self, v: Any, n: int = 1) -> None:
         if _excluded(v):
             return
         self.n += n
@@ -155,7 +155,7 @@ class SpaceSaving:
         full = len(self.counts) >= self.capacity
         return min((c for c, _ in self.counts.values()), default=0) if full else 0
 
-    def merge(self, o: SpaceSaving):
+    def merge(self, o: SpaceSaving) -> Self:
         if self.capacity != o.capacity:
             raise ValueError("incompatible SpaceSaving capacity")
         m1, m2 = self._min_count(), o._min_count()
@@ -172,13 +172,13 @@ class SpaceSaving:
         self._clock = len(self._seq)
         return self
 
-    def top(self, k: int = 10):
+    def top(self, k: int = 10) -> list[tuple[Any, int, int]]:
         return sorted(
             ((v, c, e) for v, (c, e) in self.counts.items()),
             key=lambda x: (-x[1], _key_order(x[0])),
         )[:k]
 
-    def state(self):
+    def state(self) -> dict[str, Any]:
         return {
             "algorithm": "space-saving",
             "capacity": self.capacity,
@@ -193,7 +193,7 @@ def kll_capacity(k: int, level: int, levels: int) -> int:
     depth = levels - 1 - level
     if depth > 40:
         return 2
-    return max(2, (k << depth) // 3**depth)
+    return max(2, (k << depth) // cast(int, 3**depth))
 
 
 @dataclass
@@ -219,12 +219,12 @@ class KLL:
         h = len(self.levels)
         return sum(kll_capacity(self.k, i, h) for i in range(h))
 
-    def update(self, x: float):
+    def update(self, x: float) -> None:
         self.levels[0].append(float(x))
         self.n += 1
         self._compress()
 
-    def _compress(self):
+    def _compress(self) -> None:
         while self._size() > self._total_capacity():
             h = len(self.levels)
             for i in range(h):
@@ -232,7 +232,7 @@ class KLL:
                     self._compact(i)
                     break
 
-    def _compact(self, level: int):
+    def _compact(self, level: int) -> None:
         if level + 1 == len(self.levels):
             self.levels.append([])
         vals = sorted(self.levels[level])
@@ -242,7 +242,7 @@ class KLL:
         self.levels[level] = leftover
         self.levels[level + 1].extend(vals[parity::2])
 
-    def merge(self, o: KLL):
+    def merge(self, o: KLL) -> Self:
         if self.k != o.k:
             raise ValueError("incompatible KLL k")
         while len(self.levels) < len(o.levels):
@@ -253,10 +253,10 @@ class KLL:
         self._compress()
         return self
 
-    def quantile(self, q: float):
+    def quantile(self, q: float) -> float | None:
         if not 0 <= q <= 1:
             raise ValueError("q must be 0..1")
-        weighted = []
+        weighted: list[tuple[float, int]] = []
         for level, vals in enumerate(self.levels):
             weighted.extend((v, 1 << level) for v in vals)
         if not weighted:
@@ -271,5 +271,5 @@ class KLL:
             acc += w
         return weighted[-1][0]
 
-    def state(self):
+    def state(self) -> dict[str, Any]:
         return {"algorithm": "kll-v2", "k": self.k, "n": self.n, "levels": self.levels}

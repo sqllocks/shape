@@ -322,7 +322,7 @@ def _sh2_011() -> None:
             with zipfile.ZipFile(_file(d), "w") as z:
                 z.writestr("manifest.json", '{"content_hashes":{}}')
                 z.writestr(name, b"x")
-            _raises(ArtifactError, lambda: read_artifact(_file(d)))  # type: ignore[no-untyped-call]
+            _raises(ArtifactError, lambda: read_artifact(_file(d)))
 
 
 @requirement("SH2-012")

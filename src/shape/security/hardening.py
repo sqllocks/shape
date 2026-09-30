@@ -6,6 +6,7 @@ import json
 import math
 import re
 from dataclasses import dataclass
+from typing import Any
 
 from shape.privacy.policy import LEVELS
 
@@ -32,7 +33,7 @@ SECRET_PATTERNS = (
 )
 
 
-def validate_structure(obj, depth=0, *, allow_nonfinite=False):
+def validate_structure(obj: Any, depth: int = 0, *, allow_nonfinite: bool = False) -> Any:
     """Bounds the depth, sizes and types of an untrusted document. NaN and infinity are
     refused unless ``allow_nonfinite`` (the .shape writer encodes them explicitly, P8)."""
     if depth > MAX_DEPTH:
@@ -66,7 +67,7 @@ def scan_secrets(obj):
     return tuple(name for name, p in SECRET_PATTERNS if p.search(text))
 
 
-def enforce_no_secrets(obj):
+def enforce_no_secrets(obj: Any) -> Any:
     hits = scan_secrets(obj)
     if hits:
         raise SecurityError("credential material detected: " + ",".join(hits))
