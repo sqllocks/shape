@@ -160,6 +160,19 @@ def test_contracts_are_valid_json_and_named_after_tables():
         assert isinstance(json.loads(f.read_text()), dict)
 
 
+def test_talk_day2_numbers_match_real_results(profiles):
+    talk = (DEMO / "TALK.md").read_text()
+    o2 = shape.check(profiles["orders", "day2"], CONTRACTS / "orders.json")
+    top = next(v for v in o2.violations if v["rule"] == "max")["observed"]
+    assert f"{top:g}" in talk
+    p1 = profiles["orders", "day1"].summary()["columns"]
+    cols = p1 if isinstance(p1, dict) else {c["name"]: c for c in p1}
+    assert f"{cols['order_total']['max']:g}" in talk
+    c1 = profiles["customers", "day1"].summary()["columns"]
+    c1 = c1 if isinstance(c1, dict) else {c["name"]: c for c in c1}
+    assert f"{c1['email']['null_rate'] * 100:.2f}%" in talk
+
+
 def test_drift_doc_lists_every_drift():
     text = (DEMO / "DRIFT.md").read_text()
     for needle in (
