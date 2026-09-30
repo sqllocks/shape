@@ -6,6 +6,7 @@ import struct
 import zipfile
 import zlib
 from pathlib import PurePosixPath
+from typing import Any
 
 from shape.errors import ShapeError
 
@@ -19,7 +20,7 @@ class ArtifactFormatError(ArtifactError, zipfile.BadZipFile):
     """The file is not a readable zip archive (also a ``zipfile.BadZipFile``)."""
 
 
-def canonical_json(obj) -> bytes:
+def canonical_json(obj: Any) -> bytes:
     return json.dumps(
         obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False
     ).encode()
@@ -29,7 +30,7 @@ def sha256(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
 
 
-def _safe(n):
+def _safe(n: object) -> bool:
     if not isinstance(n, str) or not n or "\x00" in n or "\\" in n:
         return False
     p = PurePosixPath(n)
@@ -43,7 +44,9 @@ def _safe(n):
     return True
 
 
-def write_artifact(path, manifest: dict, components: dict[str, bytes]):
+def write_artifact(
+    path: Any, manifest: dict[str, Any], components: dict[str, bytes]
+) -> dict[str, Any]:
     if len(components) > 10000:
         raise ArtifactError("too many components")
     for k in components:
@@ -59,7 +62,7 @@ def write_artifact(path, manifest: dict, components: dict[str, bytes]):
     return m
 
 
-def read_artifact(path, *args, **kwargs):
+def read_artifact(path: Any, *args: Any, **kwargs: Any) -> tuple[dict[str, Any], dict[str, bytes]]:
     """Read a .shape archive: ``(manifest, {component: bytes})``. Every failure of a bad file is
     an ``ArtifactError`` (P18); a missing or unreadable path keeps its ``OSError``."""
     try:
@@ -73,12 +76,12 @@ def read_artifact(path, *args, **kwargs):
 
 
 def _read_artifact(
-    path,
-    max_member_bytes=512 * 1024 * 1024,
-    max_total_bytes=1024 * 1024 * 1024,
-    max_ratio=200,
-    max_members=10000,
-):
+    path: Any,
+    max_member_bytes: int = 512 * 1024 * 1024,
+    max_total_bytes: int = 1024 * 1024 * 1024,
+    max_ratio: int = 200,
+    max_members: int = 10000,
+) -> tuple[dict[str, Any], dict[str, bytes]]:
     with zipfile.ZipFile(path) as z:
         infos = z.infolist()
         names = [i.filename for i in infos]
@@ -115,7 +118,7 @@ def _read_artifact(
         if unexpected:
             raise ArtifactError(f"unexpected archive members: {sorted(unexpected)[:3]}")
         total = 0
-        out = {}
+        out: dict[str, bytes] = {}
         for n, h in hashes.items():
             if not _safe(n) or n not in names:
                 raise ArtifactError(f"missing/unsafe component {n}")
@@ -136,5 +139,5 @@ def _read_artifact(
         return m, out
 
 
-def re_full_sha(x):
+def re_full_sha(x: str) -> bool:
     return len(x) == 64 and all(c in "0123456789abcdef" for c in x.lower())

@@ -258,7 +258,7 @@ def save(p: Profile, path: str | Path) -> str:
 
 def load(path: str | Path) -> Profile:
     """Read a ``.shape`` artifact written by :func:`save`."""
-    manifest, parts = read_artifact(str(path))  # type: ignore[no-untyped-call]
+    manifest, parts = read_artifact(str(path))
     if manifest.get("format") != ARTIFACT_FORMAT or manifest.get("kind") != ARTIFACT_KIND:
         raise ArtifactError(f"{path} is not a Shape profile artifact")
     version = manifest.get("format_version")

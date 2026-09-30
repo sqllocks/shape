@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-def migrate_dict(obj, target=1):
+def migrate_dict(obj: Mapping[str, Any], target: int = 1) -> dict[str, Any]:
     current = int(obj.get("version", 1))
     if current > target:
         raise ValueError("downgrade is not supported")

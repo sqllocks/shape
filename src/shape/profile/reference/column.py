@@ -201,7 +201,7 @@ def _iso_strings(values: pa.Array, unit: str) -> list[str | None]:
     (pyarrow's strftime needs one even for naive timestamps, and Windows has none)."""
     arr = values.cast(pa.timestamp("s") if unit == "s" else pa.date32())
     np_vals = arr.to_numpy(zero_copy_only=False).astype(f"datetime64[{unit}]")
-    out = np.datetime_as_string(np_vals, unit=unit).tolist()
+    out = np.datetime_as_string(np_vals, unit=cast(Any, unit)).tolist()
     valid = arr.is_valid().to_pylist()
     return [s.replace("T", " ") if ok else None for s, ok in zip(out, valid, strict=True)]
 
@@ -216,7 +216,7 @@ def _keys_py(values: pa.Array, kind: str) -> list[str]:
         return [str(float(v)) for v in values.to_numpy(zero_copy_only=False).tolist()]
     if kind == "dt64":
         return (
-            _iso_strings(pc.cast(values, pa.timestamp("s")), "s")
+            cast(list[str], _iso_strings(pc.cast(values, pa.timestamp("s")), "s"))
             if _no_subsecond(values)
             else [str(_to_timestamp(v)) for v in values.to_pylist()]
         )

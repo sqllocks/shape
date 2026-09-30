@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
 from functools import cache
 from importlib import resources
@@ -29,7 +30,7 @@ class ShapeContract:
     fields: tuple[FieldContract, ...] = ()
     metadata: dict[str, Any] = field(default_factory=dict)
 
-    def validate(self):
+    def validate(self) -> ShapeContract:
         if self.version < 1:
             raise ValueError("version must be >=1")
         if self.fidelity not in {"bronze", "silver", "gold", "platinum"}:
@@ -41,14 +42,14 @@ class ShapeContract:
             raise ValueError("empty field name")
         return self
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
-    def to_json(self):
+    def to_json(self) -> str:
         return json.dumps(self.to_dict(), sort_keys=True, indent=2)
 
     @classmethod
-    def from_dict(cls, o):
+    def from_dict(cls, o: Mapping[str, Any]) -> ShapeContract:
         return cls(
             o["name"],
             int(o.get("version", 1)),
@@ -58,7 +59,7 @@ class ShapeContract:
         ).validate()
 
     @classmethod
-    def from_json(cls, s):
+    def from_json(cls, s: str) -> ShapeContract:
         return cls.from_dict(json.loads(s))
 
 

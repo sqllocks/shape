@@ -16,7 +16,7 @@ move.
 from __future__ import annotations
 
 import hashlib
-from typing import Any
+from typing import Any, cast
 
 from shape.privacy.policy import LEVELS
 from shape.security import SecurityError, enforce_no_secrets, validate_structure
@@ -40,7 +40,7 @@ def _classification(x: Any) -> str:
     x = str(x).upper()
     if x not in LEVELS:
         raise ValueError("unknown classification")
-    return x
+    return cast(str, x)
 
 
 def write_model(
