@@ -2037,10 +2037,14 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
     milestone files outside the keep-list, `docs/qualification/`, `docs/audit/`,
     `rq/`, and the workflows `external-connectors.yml`, `ga.yml` and
     `release-ga.yml`.
-  - Rewrite `README.md` and `CHANGELOG.md` to the true state: "Early access. Shape
-    is being rebuilt as the successor to Spindle; profiling is available now; see
-    `docs/plans/COMPLETION_PLAN.md`." No GA, certified, production-ready or isolation
-    claims.
+  - Rewrite `README.md` and `CHANGELOG.md` to the true state: "Early access:
+    profiling is available now; data generation and pipeline integration are in
+    progress; see `docs/plans/COMPLETION_PLAN.md`." No GA, certified,
+    production-ready or isolation claims.
+  - Public-facing text (the README, the changelog, docs outside `docs/plans/`) must
+    **not** describe Shape as a rebuild or successor of Spindle, and must not mention
+    Spindle's retirement. Mentioning Spindle is allowed only in the migration guide
+    (P8-01) and in benchmark comparisons.
   - Add `SECURITY.md` contact details if missing.
   - Do **not** touch `src/`, `tests/` or `pyproject.toml`: P0-04 and P0-05 still own
     the module cuts and dependency changes.
