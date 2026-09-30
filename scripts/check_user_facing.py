@@ -1,7 +1,7 @@
 """Exit 1 when the word "spindle" (any case) appears on Shape's user-facing surface (P1-14).
 
-Checked: ``src/``, ``rust/``, ``plugins/``, ``integrations/``, ``README.md``, ``pyproject.toml``
-and ``docs/`` outside ``docs/plans/`` and ``docs/talks/``; with ``--wheel PATH`` (repeatable) also
+Checked: ``src/``, ``rust/``, ``plugins/``, ``integrations/``, ``demo/``, ``README.md``,
+``pyproject.toml`` and ``docs/`` outside ``docs/plans/`` (the talk included, owner 2026-09-30); with ``--wheel PATH`` (repeatable) also
 every file inside a built wheel or sdist. ``THIRD_PARTY_NOTICES.md`` is not scanned: it carries
 the attribution the licence requires.
 """
@@ -15,9 +15,9 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-TREES = ("src", "rust", "plugins", "integrations")
+TREES = ("src", "rust", "plugins", "integrations", "demo")
 FILES = ("README.md", "pyproject.toml")
-SKIP_DOCS = {"plans", "talks"}
+SKIP_DOCS = {"plans"}
 SKIP_PARTS = {"__pycache__", "target", ".mypy_cache", ".pytest_cache"}
 NEEDLE = b"spindle"
 

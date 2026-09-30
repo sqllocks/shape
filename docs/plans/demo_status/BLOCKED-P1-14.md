@@ -24,3 +24,12 @@ Status: partly built; the documentation edits were refused by the permission gua
 Owner approval (or the edits made by the owner) for those three files. Once they are clean,
 `python scripts/check_user_facing.py` exits 0 and P1-14 can be closed and G1 finished.
 G1 is blocked on P1-14 (Depends).
+
+## Scope added by the Lead after this file was first written (plan commit ad61680)
+`demo/` and `docs/talks/` are now in P1-14's scope, and `scripts/check_user_facing.py` checks them
+(`demo/build_benchmark_sheet.py`, `demo/BENCHMARKS.md`, `demo/TALK.md`, `demo/make_data.py`;
+the talk is being reworked by a separate session). Renaming the baseline in the demo kit changes
+the demo CLI flag `--spindle-root` and its tests under `tests/demo/content`, which the lane rules
+(section 12.5) reserve; I did not touch them. Until these and the three docs files above are
+clean, `check_user_facing.py` (and therefore `make check` and the CI `test` job) exits 1 by
+design; the gate was not relaxed.
