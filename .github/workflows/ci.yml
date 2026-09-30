@@ -24,7 +24,11 @@ jobs:
       # T-27 scope: src tests plugins benchmarks/vs_spindle rust (only the paths that exist yet).
       - run: ruff check src tests benchmarks/vs_spindle
       - run: ruff format --check src tests benchmarks/vs_spindle
-      - run: mypy
+      # [tool.mypy] targets python_version 3.11. On 3.12+ legs pip installs a numpy whose
+      # stubs use 3.12-only syntax (`type` statements), which mypy rejects under a 3.11
+      # target, so the type check runs on the 3.11 legs (every OS).
+      - if: matrix.python == '3.11'
+        run: mypy
       - run: python -m compileall -q src/shape
       # The Fabric demo tests need Java, PySpark and unixODBC, and the demo content tests need
       # the pinned Spindle checkout; both run in the fabric-demo job below.
