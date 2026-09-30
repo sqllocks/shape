@@ -160,6 +160,12 @@ def _fork_task(i: int) -> tuple[int, ColumnProfile, Any]:
     return i, w.prof, (w.uniques if keep else None)
 
 
+def _can_fork() -> bool:
+    import multiprocessing as mp
+
+    return "fork" in mp.get_all_start_methods()
+
+
 def _profile_cols(
     cols: list[_Col], row_count: int, threads: int | None, keep_uniques: bool = False
 ) -> list[_Work]:
@@ -174,6 +180,8 @@ def _profile_cols(
     mode = os.environ.get("PROFILE_POOL", "auto")
     if mode == "auto":
         mode = "process" if len(cols) >= 3 * n else "thread"
+    if mode == "process" and not _can_fork():
+        mode = "thread"  # Windows has no fork; spawn would re-import and pickle the Arrow data
     if mode == "process":
         import multiprocessing as mp
 
