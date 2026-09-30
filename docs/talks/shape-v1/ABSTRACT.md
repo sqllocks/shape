@@ -1,5 +1,10 @@
 # Talk abstract: Ship the Shape, Not the Data
 
+> **Using the previous talk's abstract for Oct 3.** (Owner decision, 2026-09-30.) The drafts
+> below are kept for later and are **not** in use. Their "as delivered" version promises
+> features that won't exist on October 3. What the previous abstract can and can't be
+> backed by on Oct 3 is listed in `STATUS.md` ("The abstract in use").
+
 Speaker: Jonathan Stewart (SQLLocks). Draft for the owner to edit.
 
 This talk is written for **the date when profile → generate and the safe profile have
