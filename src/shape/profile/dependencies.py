@@ -89,9 +89,9 @@ def candidate_key(
         if seen is not None:
             seen.add(key)
             if len(seen) > max_keys:
-                from shape.profile.sketches import HyperLogLog
+                from shape.kernel.values import DistinctCounter
 
-                hll = HyperLogLog()
+                hll = DistinctCounter()
                 for k in seen:
                     hll.update(repr(k))
                 seen = None

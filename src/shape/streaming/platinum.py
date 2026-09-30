@@ -104,9 +104,9 @@ class TemporalEvidence:
 
     def __post_init__(self):
         if self.gaps is None:
-            from shape.profile.sketches import KLL
+            from shape.kernel.sketches import Kll
 
-            self.gaps = KLL()
+            self.gaps = Kll()
 
     def update(self, ts):
         if ts is None:

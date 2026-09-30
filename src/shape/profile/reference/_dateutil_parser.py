@@ -22,7 +22,7 @@ import re
 import string
 import time
 from calendar import monthrange
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from io import StringIO
 
 text_type = str

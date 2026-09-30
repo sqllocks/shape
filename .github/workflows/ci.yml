@@ -30,6 +30,7 @@ jobs:
       - if: matrix.python == '3.11'
         run: mypy
       - run: python -m compileall -q src/shape
+      - run: vulture src/shape --min-confidence 80
       - run: python scripts/check_conformance_coverage.py
       # The Fabric demo tests need Java, PySpark and unixODBC, and the demo content tests need
       # the pinned Spindle checkout; both run in the fabric-demo job below.

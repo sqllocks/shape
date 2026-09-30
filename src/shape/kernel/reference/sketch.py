@@ -1,6 +1,6 @@
 """Pure-Python twins of the native sketch classes ``shape._kernel.{Hll, Kll, SpaceSaving}``.
 
-They give the Python sketches in ``shape.profile.sketches`` (which define the exact
+They give the Python sketches of ``pysketch`` (which define the exact
 semantics) the same batch-oriented API as the Rust classes: ``update_array`` hashes an Arrow
 array with the canonical hash (T-13) and skips nulls and NaN.
 """
@@ -18,9 +18,9 @@ from .hashing import hash_array
 def _sk() -> Any:
     """The Python sketches define the semantics; imported lazily because they import the
     kernel's hashing at module level."""
-    from shape.profile import sketches
+    from . import pysketch
 
-    return sketches
+    return pysketch
 
 
 def _valid_hashes(array: Any) -> list[int]:

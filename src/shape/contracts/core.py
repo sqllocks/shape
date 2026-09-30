@@ -32,10 +32,10 @@ class ContractReport:
     violations: tuple[ContractViolation, ...]
 
     @property
-    def passed(self):
+    def passed(self) -> bool:
         return not any(x.severity == "error" for x in self.violations)
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return {"passed": self.passed, "violations": [asdict(x) for x in self.violations]}
 
 
@@ -141,10 +141,10 @@ class CompatibilityReport:
     issues: tuple[CompatibilityIssue, ...]
 
     @property
-    def compatible(self):
+    def compatible(self) -> bool:
         return not self.issues
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return {
             "mode": self.mode,
             "compatible": self.compatible,

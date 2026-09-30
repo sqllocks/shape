@@ -10,7 +10,7 @@ import pytest
 
 import shape.capture as capture_pkg
 from shape.capture import capture_columns, capture_rows
-from shape.profile.text_vectorized import profile_text_semantic
+from shape.streaming.full_engine import profile_text_semantic
 
 
 def _shape(d):

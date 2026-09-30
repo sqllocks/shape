@@ -78,9 +78,9 @@ def _key_hash(key: tuple[int, Any]) -> int:
 
 
 def _sketches() -> Any:
-    from shape.profile import sketches
+    from . import pysketch
 
-    return sketches
+    return pysketch
 
 
 class _Tracker:

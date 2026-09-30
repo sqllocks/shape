@@ -9,7 +9,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from shape.kernel import dispatch, reference
-from shape.profile.sketches import KLL, HyperLogLog, SpaceSaving
+from shape.kernel.values import DistinctCounter, TopValues
 
 
 @pytest.fixture(scope="module")
@@ -147,15 +147,15 @@ def test_kll_levels_and_quantiles_match_between_rust_and_python(native):
 def test_p9_total_weight_is_preserved_exactly():
     """Compacting an odd-sized level used to drop weight."""
     for k in (8, 50, 200):
-        sk = KLL(k)
+        sk = reference.Kll(k)
         for i in range(5000 + k):
             sk.update(float(i % 313))
-            assert _weight(sk.levels) == sk.n
-        other = KLL(k)
+            assert _weight(sk.levels()) == sk.n
+        other = reference.Kll(k)
         for i in range(1234):
             other.update(float(i))
         sk.merge(other)
-        assert _weight(sk.levels) == sk.n == 5000 + k + 1234
+        assert _weight(sk.levels()) == sk.n == 5000 + k + 1234
 
 
 @pytest.mark.heavy
@@ -286,19 +286,28 @@ def test_p5_space_saving_holds_at_most_capacity_after_ten_million_updates(native
     assert len(s) <= 64 and s.n == 10_000_000 and len(s.top()) == 64
 
 
-def test_p5_python_space_saving_does_not_grow():
+def test_p5_top_values_does_not_grow():
     """The heap was never pruned: 200k updates left 200k entries."""
-    s = SpaceSaving(64)
+    s = TopValues(64)
     for i in range(200_000):
         s.update(i)
-    assert len(s.counts) == 64 and len(s._seq) == 64
+    assert len(s._s) == 64 and len(s._values) <= 4 * 64
 
 
-def test_space_saving_python_api_still_works():
-    s = SpaceSaving(4)
+def test_top_values_reports_values_counts_and_errors():
+    s = TopValues(4)
     for x in ["a"] * 20 + ["b"] * 10 + ["c"] * 3:
         s.update(x)
-    assert s.top(1)[0][0] == "a" and s.n == 33 and s.state()["entries"][0][:2] == ["a", 20]
+    assert s.top(1) == [["a", 20, 0]] and s._s.n == 33
+    other = TopValues(4)
+    for x in ["c"] * 50:
+        other.update(x)
+    s.merge(other)
+    assert s.top(1)[0][0] == "c" and s.top(1)[0][1] >= 53
+    empty = TopValues()
+    empty.update(None)
+    empty.update(float("nan"))
+    assert empty.top() == []
 
 
 def test_space_saving_hashes_arrow_values(native):
@@ -310,9 +319,13 @@ def test_space_saving_hashes_arrow_values(native):
     assert a.top() == b.top()
 
 
-def test_python_hll_state_and_estimate():
-    h = HyperLogLog(14)
+def test_distinct_counter_estimates_and_merges():
+    h = DistinctCounter(14)
     for i in range(50_000):
         h.update(i)
     assert abs(h.estimate() - 50_000) / 50_000 < 0.03
-    assert h.state()["estimator"] == "ertl-improved" and isinstance(h.state()["registers"], str)
+    other = DistinctCounter(14)
+    for i in range(25_000, 75_000):
+        other.update(i)
+    h.merge(other)
+    assert abs(h.estimate() - 75_000) / 75_000 < 0.03

@@ -13,8 +13,8 @@ class Delta:
     magnitude: float | None = None
 
 
-def diff_mapping(a: dict, b: dict, prefix=""):
-    out = []
+def diff_mapping(a: dict[str, Any], b: dict[str, Any], prefix: str = "") -> list[Delta]:
+    out: list[Delta] = []
     for k in sorted(set(a) | set(b)):
         p = f"{prefix}.{k}" if prefix else k
         if k not in a:

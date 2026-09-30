@@ -1,4 +1,6 @@
-"""Bounded-memory mergeable sketches. Pure-Python reference implementations."""
+"""The pure-Python sketch algorithms behind the reference kernel twin (T-14): HyperLogLog
+(Ertl), KLL and SpaceSaving. ``sketch.py`` and ``profile.py`` in this package wrap them with the
+kernel's interface; the Rust kernel is checked against them."""
 
 from __future__ import annotations
 

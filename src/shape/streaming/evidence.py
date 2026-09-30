@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
-from shape.profile.sketches import KLL, HyperLogLog, SpaceSaving
+from shape.kernel.sketches import Kll
+from shape.kernel.values import DistinctCounter, TopValues
 
 
 @dataclass
@@ -16,8 +18,8 @@ class NumericEvidence:
     m2: float = 0.0
     minimum: float | None = None
     maximum: float | None = None
-    hll: HyperLogLog = field(default_factory=HyperLogLog)
-    kll: KLL = field(default_factory=KLL)
+    hll: DistinctCounter = field(default_factory=DistinctCounter)
+    kll: Any = field(default_factory=Kll)
 
     def update(self, v):
         self.count += 1
@@ -79,8 +81,8 @@ class TextEvidence:
     count: int = 0
     nulls: int = 0
     lengths: NumericEvidence = field(default_factory=NumericEvidence)
-    hll: HyperLogLog = field(default_factory=HyperLogLog)
-    topk: SpaceSaving = field(default_factory=SpaceSaving)
+    hll: DistinctCounter = field(default_factory=DistinctCounter)
+    topk: TopValues = field(default_factory=TopValues)
 
     def update(self, v):
         self.count += 1

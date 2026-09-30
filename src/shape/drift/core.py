@@ -18,15 +18,14 @@ class Drift:
     reason: str
 
 
-def _rel(a, b):
+def _rel(a: Any, b: Any) -> float:
     if a is None or b is None:
         return 1.0 if a != b else 0.0
     try:
-        a = float(a)
-        b = float(b)
-        if not (isfinite(a) and isfinite(b)):
-            return 0.0 if a == b else 1.0
-        return abs(b - a) / max(abs(a), abs(b), 1e-12)
+        x, y = float(a), float(b)
+        if not (isfinite(x) and isfinite(y)):
+            return 0.0 if x == y else 1.0
+        return abs(y - x) / max(abs(x), abs(y), 1e-12)
     except Exception:
         return 0.0 if a == b else 1.0
 

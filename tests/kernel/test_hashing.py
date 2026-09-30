@@ -242,16 +242,17 @@ def test_unsupported_types_raise_value_error(native):
 _HASHSEED_PROBE = """
 import pyarrow as pa
 from shape.kernel import hashing
-from shape.profile.sketches import HyperLogLog
+from shape.kernel.values import DistinctCounter
 from shape.streaming.platinum import HashedDependencyEvidence, hashed_dependency_batch
 import numpy as np
 print(hashing.hash_column(pa.array(["a", "bb"]), 7).to_pylist(),
       hashing.hash_column(pa.array([1, 2]), 7).to_pylist(),
       hashing.hash_value("x"), hashing.hash_value(2.5))
-hll = HyperLogLog()
+hll = DistinctCounter()
 for v in ["a", 1, 2.5, "zz", 1.0]:
     hll.update(v)
-print(sum(hll.registers), [i for i, r in enumerate(hll.registers) if r])
+regs = hll._h.registers()
+print(sum(regs), [i for i, r in enumerate(regs) if r])
 ev = HashedDependencyEvidence(64)
 ev.update("a", 1); ev.update("b", 2.5)
 print(sorted(ev.table.items()))
@@ -273,26 +274,25 @@ def test_hashes_are_identical_under_any_pythonhashseed():
 
 
 def test_p7_sketches_ignore_nan_and_treat_1_and_1_point_0_alike():
-    from shape.profile.numeric import NumericProfile
-    from shape.profile.sketches import HyperLogLog, SpaceSaving
+    from shape.capture import capture_columns
+    from shape.kernel.values import DistinctCounter, TopValues
 
-    a, b = HyperLogLog(), HyperLogLog()
+    a, b = DistinctCounter(), DistinctCounter()
     a.update(1)
     b.update(1.0)
-    assert a.registers == b.registers and any(a.registers)
-    n = HyperLogLog()
+    assert a._h.registers() == b._h.registers() and any(a._h.registers())
+    n = DistinctCounter()
     n.update(float("nan"))
     n.update(None)
-    assert not any(n.registers)
-    ss = SpaceSaving()
+    assert not any(n._h.registers())
+    ss = TopValues()
     for _ in range(3):
         ss.update(float("nan"))
-    assert ss.counts == {}
-    prof = NumericProfile()
-    prof.update([1, 1.0, float("nan"), float("nan"), 2])
-    assert prof.nan_count == 2
-    assert not any(k != k for k in prof.topk.counts)  # no NaN keys
-    assert prof.topk.counts[1][0] == 2  # 1 and 1.0 are one value
+    assert ss.top() == []
+    col = capture_columns({"x": [1, 1.0, float("nan"), float("nan"), 2]})["columns"]["x"]
+    assert col["nan_count"] == 2
+    assert col["topk"][0][:2] == [1, 2]  # 1 and 1.0 are one value; NaN is not a key
+    assert all(item[0] == item[0] for item in col["topk"])
 
 
 def test_s1_platinum_bins_use_the_stable_hash():
