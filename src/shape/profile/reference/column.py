@@ -272,6 +272,14 @@ def _all_parse_datetime(uniques: pa.Array) -> bool:
     return all(dtparse.parse_mixed(u) is not None for u in uniques.to_pylist())
 
 
+def _first_is_iso(arr: Any) -> bool:
+    """True when the first element is ISO-8601 text, the forms Arrow parses in bulk."""
+    if len(arr) == 0:
+        return False
+    first = arr[0].as_py()
+    return bool(_ISO_DATE.match(first) or _ISO_DT.match(first) or _ISO_DT_FRAC.match(first))
+
+
 def _coerce_datetime_strings(arr: Any, keep_nulls: bool = False) -> Any:
     """pd.to_datetime(series, errors="coerce"): the format is guessed from the first element
     and applied strictly (non-matching elements become NaT, dropped unless keep_nulls); with no
@@ -623,12 +631,22 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
                     # pandas: to_datetime(format="mixed") must accept every value.  If the
                     # strict guessed-format parse (needed later anyway) already accepts all
                     # rows, that implies it; otherwise check the distinct values.
-                    dt_try = _coerce_datetime_strings(non_null, keep_nulls=True)
+                    # ISO text (the common case) is parsed by Arrow in bulk; anything else is
+                    # checked on its distinct values first, stopping at the first that does not
+                    # parse, so a column of ordinary text costs one failed parse, not one per
+                    # distinct value.
+                    dt_try = (
+                        _coerce_datetime_strings(non_null, keep_nulls=True)
+                        if _first_is_iso(non_null)
+                        else None
+                    )
                     if dt_try is not None and dt_try.null_count == 0:
                         stype = "datetime"
                         dt_values = dt_try
                     elif _all_parse_datetime(uniq):
                         stype = "datetime"
+                        if dt_try is None:
+                            dt_try = _coerce_datetime_strings(non_null, keep_nulls=True)
                         dt_values = (
                             pc.drop_null(dt_try)
                             if dt_try is not None

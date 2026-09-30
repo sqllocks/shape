@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -186,17 +187,30 @@ def _chunk_rows(ncols: int) -> int:
 
 
 _BOOL_TOKENS = pa.array(["True", "False", "TRUE", "FALSE", "true", "false"])
+_BOOL_SET = frozenset(_BOOL_TOKENS.to_pylist())
+_NUMBER = re.compile(
+    r"^\s*[+-]?(?:(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?|inf(?:inity)?|nan)\s*$", re.IGNORECASE
+)
 _UNION_TYPES = {"i": 0, "f": 1, "b": 2, "s": 3}
 
 
 def _chunk_label(chunk: Any) -> str:
-    """The dtype pandas gives one chunk of a column read as text by Arrow."""
+    """The dtype pandas gives one chunk of a column read as text by Arrow. Ordinary text is
+    settled by the first token that is not a number (Arrow's parse stops there), so the integer
+    pattern is only matched on chunks that are all numbers."""
     nn = chunk.drop_null()
     if len(nn) == 0:
         return "nan"
     has_null = chunk.null_count > 0
+    for token in nn.slice(0, 8).to_pylist():
+        if token not in _BOOL_SET and not _NUMBER.match(token):
+            return "str"  # one token that is neither a number nor a bool makes the chunk text
     if pc.all(pc.is_in(nn, value_set=_BOOL_TOKENS)).as_py():
         return "objbool" if has_null else "bool"
+    try:
+        pc.cast(pc.utf8_trim_whitespace(nn), pa.float64())
+    except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
+        return "str"
     if pc.all(pc.match_substring_regex(nn, _INT_TEXT)).as_py():
         if has_null:
             return "float64"
@@ -204,11 +218,7 @@ def _chunk_label(chunk: Any) -> str:
         if min(ints) >= _I64[0] and max(ints) <= _I64[1]:
             return "int64"
         raise NotImplementedError("mixed-type chunk holding integers above int64")
-    try:
-        pc.cast(nn, pa.float64())
-        return "float64"
-    except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
-        return "str"
+    return "float64"
 
 
 def _mixed_chunk_columns(table: pa.Table) -> pa.Table:
@@ -296,7 +306,13 @@ def _refine_integers(path: str | Path, table: pa.Table, ro: Any, co: Any) -> pa.
     for name, col in zip(table.column_names, table.columns, strict=True):
         if pa.types.is_float64(col.type) and col.null_count == 0 and len(col):
             vals = col.to_numpy()
-            if np.isfinite(vals).all() and np.array_equal(vals, np.floor(vals)):
+            head = vals[:4096]  # most float columns are settled by their first values
+            if (
+                np.isfinite(head).all()
+                and np.array_equal(head, np.floor(head))
+                and np.isfinite(vals).all()
+                and np.array_equal(vals, np.floor(vals))
+            ):
                 cands.append(name)
     if not cands:
         return table

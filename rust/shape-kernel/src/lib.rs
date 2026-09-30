@@ -86,31 +86,37 @@ fn numpy_log(x: f64) -> f64 {
     call_numpy(&NP_LOG, x, f64::ln)
 }
 
+/// `numpy.log` of every element, in place and without copying: the slice is exposed to numpy as a
+/// writable buffer and `np.log(a, out=a)` runs on it (numpy's SIMD `log` is what the parity with
+/// scipy depends on, see `fit.rs`). Falls back to libm if numpy cannot be called.
 fn numpy_log_array(buf: &mut [f64]) {
-    use pyo3::types::PyBytes;
     let done = Python::attach(|py| -> Option<()> {
+        if buf.is_empty() {
+            return Some(());
+        }
         let np = py.import("numpy").ok()?;
-        let raw: Vec<u8> = buf.iter().flat_map(|v| v.to_le_bytes()).collect();
-        let arr = np
-            .call_method1("frombuffer", (PyBytes::new(py, &raw), "<f8"))
-            .ok()?;
+        // SAFETY: the memoryview (and the array built on it) are dropped before this function
+        // returns, while `buf` is still borrowed; nothing else touches `buf` meanwhile.
+        let view = unsafe {
+            let raw = pyo3::ffi::PyMemoryView_FromMemory(
+                buf.as_mut_ptr().cast::<std::os::raw::c_char>(),
+                std::mem::size_of_val(buf) as pyo3::ffi::Py_ssize_t,
+                pyo3::ffi::PyBUF_WRITE,
+            );
+            Bound::from_owned_ptr_or_opt(py, raw)?
+        };
+        let arr = np.call_method1("frombuffer", (view, "<f8")).ok()?;
         // NaN/-inf from log(<=0) are expected results here (scipy's fit runs under errstate).
         let kw = pyo3::types::PyDict::new(py);
         kw.set_item("all", "ignore").ok()?;
         let ctx = np.call_method("errstate", (), Some(&kw)).ok()?;
         ctx.call_method0("__enter__").ok()?;
-        let out = NP_LOG.get()?.call1(py, (arr,));
+        let out_kw = pyo3::types::PyDict::new(py);
+        out_kw.set_item("out", &arr).ok()?;
+        let res = NP_LOG.get()?.call(py, (&arr,), Some(&out_kw));
         ctx.call_method1("__exit__", (py.None(), py.None(), py.None()))
             .ok()?;
-        let out = out.ok()?;
-        let bytes: Vec<u8> = out.call_method0(py, "tobytes").ok()?.extract(py).ok()?;
-        if bytes.len() != buf.len() * 8 {
-            return None;
-        }
-        for (v, c) in buf.iter_mut().zip(bytes.chunks_exact(8)) {
-            *v = f64::from_le_bytes(c.try_into().ok()?);
-        }
-        Some(())
+        res.ok().map(|_| ())
     });
     if done.is_none() {
         buf.iter_mut().for_each(|v| *v = v.ln());
