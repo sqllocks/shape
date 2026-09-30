@@ -32,7 +32,9 @@ SECRET_PATTERNS = (
 )
 
 
-def validate_structure(obj, depth=0):
+def validate_structure(obj, depth=0, *, allow_nonfinite=False):
+    """Bounds the depth, sizes and types of an untrusted document. NaN and infinity are
+    refused unless ``allow_nonfinite`` (the .shape writer encodes them explicitly, P8)."""
     if depth > MAX_DEPTH:
         raise SecurityError("maximum object depth exceeded")
     if isinstance(obj, str):
@@ -44,15 +46,15 @@ def validate_structure(obj, depth=0):
         for k, v in obj.items():
             if not isinstance(k, str):
                 raise SecurityError("non-string mapping key")
-            validate_structure(k, depth + 1)
-            validate_structure(v, depth + 1)
+            validate_structure(k, depth + 1, allow_nonfinite=allow_nonfinite)
+            validate_structure(v, depth + 1, allow_nonfinite=allow_nonfinite)
     elif isinstance(obj, (list, tuple)):
         if len(obj) > MAX_CONTAINER:
             raise SecurityError("container too large")
         for x in obj:
-            validate_structure(x, depth + 1)
+            validate_structure(x, depth + 1, allow_nonfinite=allow_nonfinite)
     elif isinstance(obj, float):
-        if not math.isfinite(obj):
+        if not allow_nonfinite and not math.isfinite(obj):
             raise SecurityError("non-finite number")
     elif obj is not None and not isinstance(obj, (bool, int)):
         raise SecurityError(f"unsupported value type {type(obj).__name__}")

@@ -2,14 +2,21 @@ from __future__ import annotations
 
 import hashlib
 import json
+import struct
 import zipfile
+import zlib
 from pathlib import PurePosixPath
 
 from shape.errors import ShapeError
 
 
-class ArtifactError(ShapeError):
-    pass
+class ArtifactError(ShapeError, ValueError):
+    """A .shape artifact cannot be read or written. Also a ``ValueError``, as the reader's
+    earlier failures were."""
+
+
+class ArtifactFormatError(ArtifactError, zipfile.BadZipFile):
+    """The file is not a readable zip archive (also a ``zipfile.BadZipFile``)."""
 
 
 def canonical_json(obj) -> bytes:
@@ -52,7 +59,20 @@ def write_artifact(path, manifest: dict, components: dict[str, bytes]):
     return m
 
 
-def read_artifact(
+def read_artifact(path, *args, **kwargs):
+    """Read a .shape archive: ``(manifest, {component: bytes})``. Every failure of a bad file is
+    an ``ArtifactError`` (P18); a missing or unreadable path keeps its ``OSError``."""
+    try:
+        return _read_artifact(path, *args, **kwargs)
+    except ArtifactError:
+        raise
+    except zipfile.BadZipFile as e:
+        raise ArtifactFormatError(f"not a readable .shape archive: {e}") from e
+    except (zlib.error, EOFError, NotImplementedError, RuntimeError, KeyError, struct.error) as e:
+        raise ArtifactError(f"corrupt .shape archive: {type(e).__name__}: {e}") from e
+
+
+def _read_artifact(
     path,
     max_member_bytes=512 * 1024 * 1024,
     max_total_bytes=1024 * 1024 * 1024,

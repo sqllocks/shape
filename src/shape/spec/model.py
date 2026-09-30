@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass, field
+from functools import cache
+from importlib import resources
 from typing import Any
+
+from shape.schemacheck import validate as _validate_schema
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,3 +60,44 @@ class ShapeContract:
     @classmethod
     def from_json(cls, s):
         return cls.from_dict(json.loads(s))
+
+
+# ---------------------------------------------------------------------------------------------
+# The Shape model, version 2 (P1-09): one JSON Schema for every path that makes or reads one.
+# ---------------------------------------------------------------------------------------------
+
+MODEL_VERSION = 2
+
+
+class ModelError(ValueError):
+    """A document does not follow ``shape-v2.schema.json``."""
+
+
+@cache
+def model_schema() -> dict[str, Any]:
+    """The JSON Schema of the v2 model, as shipped in ``shape/schemas``."""
+    text = resources.files("shape").joinpath("schemas/shape-v2.schema.json").read_text("utf-8")
+    schema: dict[str, Any] = json.loads(text)
+    return schema
+
+
+def model_problems(doc: Any) -> list[str]:
+    """Every way ``doc`` departs from the v2 schema (empty when it conforms)."""
+    if not isinstance(doc, dict):
+        return [f"$: expected an object, got {type(doc).__name__}"]
+    return _validate_schema(doc, model_schema())
+
+
+def validate_model(doc: Any) -> dict[str, Any]:
+    """``doc`` if it is a valid v2 model, else ``ModelError`` listing the first problems."""
+    problems = model_problems(doc)
+    if problems:
+        more = f" (+{len(problems) - 5} more)" if len(problems) > 5 else ""
+        raise ModelError("; ".join(problems[:5]) + more)
+    assert isinstance(doc, dict)
+    return doc
+
+
+def is_model(doc: Any) -> bool:
+    """True for a dict that declares itself v2 (``schema_version == 2``)."""
+    return isinstance(doc, dict) and doc.get("schema_version") == MODEL_VERSION

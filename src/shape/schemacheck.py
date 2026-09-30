@@ -13,7 +13,7 @@ from typing import Any
 
 _TYPES: dict[str, Any] = {
     "object": dict,
-    "array": list,
+    "array": (list, tuple),
     "string": str,
     "boolean": bool,
     "null": type(None),

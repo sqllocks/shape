@@ -2,13 +2,24 @@ from .io import (
     ArtifactError as ArtifactError,
 )
 from .io import (
+    ArtifactFormatError as ArtifactFormatError,
+)
+from .io import (
     read_artifact as read_artifact,
 )
 from .io import (
     write_artifact as write_artifact,
 )
 
-__all__ = ["ArtifactError", "canonical_json", "read_artifact", "write_artifact"]
+__all__ = [
+    "ArtifactError",
+    "ArtifactFormatError",
+    "canonical_json",
+    "read_artifact",
+    "read_model",
+    "write_artifact",
+    "write_model",
+]
 from .canonical import canonical_json as canonical_json
 from .migrate import (
     MIGRATIONS as MIGRATIONS,
@@ -29,7 +40,13 @@ from .shape_file import (
     FORMAT_VERSION as FORMAT_VERSION,
 )
 from .shape_file import (
+    read_model as read_model,
+)
+from .shape_file import (
     read_shape as read_shape,
+)
+from .shape_file import (
+    write_model as write_model,
 )
 from .shape_file import (
     write_shape as write_shape,

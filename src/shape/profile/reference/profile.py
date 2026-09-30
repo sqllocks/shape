@@ -5,13 +5,13 @@ from __future__ import annotations
 import copy
 import datetime as _dt
 import hashlib
-import json
 import math
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 
+from shape.artifact import codec
 from shape.artifact.io import ArtifactError, read_artifact, write_artifact
 
 from .model import ColumnProfile, DatasetProfile, TableProfile
@@ -22,7 +22,6 @@ ARTIFACT_FORMAT = "shape"
 ARTIFACT_FORMAT_VERSION = 1
 ARTIFACT_KIND = "profile"
 PROFILE_COMPONENT = "profile.json"
-_FLOAT_TAG = "$float"
 
 _COLUMN_FIELDS = (
     "name",
@@ -235,35 +234,9 @@ def _profile(source: Any, name: str | None) -> Profile:
 # --- .shape artifact ---------------------------------------------------------------
 
 
-def _encode_value(v: Any) -> Any:
-    if isinstance(v, float):
-        if math.isnan(v):
-            return {_FLOAT_TAG: "nan"}
-        if math.isinf(v):
-            return {_FLOAT_TAG: "inf" if v > 0 else "-inf"}
-        return v
-    if isinstance(v, dict):
-        return {k: _encode_value(x) for k, x in v.items()}
-    if isinstance(v, list):
-        return [_encode_value(x) for x in v]
-    return v
-
-
-def _decode_value(v: Any) -> Any:
-    if isinstance(v, dict):
-        if len(v) == 1 and _FLOAT_TAG in v:
-            return float(v[_FLOAT_TAG])
-        return {k: _decode_value(x) for k, x in v.items()}
-    if isinstance(v, list):
-        return [_decode_value(x) for x in v]
-    return v
-
-
 def _encode(data: dict[str, Any]) -> bytes:
     # No sort_keys: the order of enum_values / value_counts_ext is meaningful.
-    return json.dumps(
-        _encode_value(data), separators=(",", ":"), ensure_ascii=False, allow_nan=False
-    ).encode("utf-8")
+    return codec.dumps(data, sort_keys=False)
 
 
 def save(p: Profile, path: str | Path) -> str:
@@ -296,5 +269,10 @@ def load(path: str | Path) -> Profile:
         raise ArtifactError("profile component missing")
     if hashlib.sha256(body).hexdigest() != manifest.get("shape_content_id"):
         raise ArtifactError("Shape content identity mismatch")
-    data = _decode_value(json.loads(body))
+    try:
+        data = codec.loads(body)
+    except (ValueError, TypeError, RecursionError) as e:
+        raise ArtifactError(f"invalid {PROFILE_COMPONENT}: {e}") from e
+    if not isinstance(data, dict):
+        raise ArtifactError(f"invalid {PROFILE_COMPONENT}: not an object")
     return Profile(data, name=str(manifest.get("name") or "") or None)

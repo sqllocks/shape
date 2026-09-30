@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shape-as-code.org/schema/2.0/shape-v2.json",
+  "title": "Shape model, version 2",
+  "description": "The statistical description of one or more tables that every Shape path produces and reads: the profile engine (exact and bounded mode emit the same layout), migrated v1 captures, and .shape files. Non-finite floats (NaN, inf) and tuples appear in memory as Python values; in a file they are the tagged objects of shape.artifact.codec. Temporal min/max are microseconds since the Unix epoch. `x_legacy` holds the verbatim v1 document of a migrated capture (read by the v1 consumers until they move to this model, P1-10).",
+  "type": "object",
+  "required": ["schema_version", "engine", "mode", "tables"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 2},
+    "engine": {"type": "string", "minLength": 1},
+    "shape_version": {"type": "string"},
+    "mode": {"enum": ["exact", "bounded"]},
+    "name": {"type": "string"},
+    "tables": {"type": "object", "additionalProperties": {"$ref": "#/$defs/table"}},
+    "relationships": {"type": "array", "items": {"type": "object"}},
+    "metadata": {"type": "object"},
+    "x_legacy": {"type": "object"}
+  },
+  "$defs": {
+    "table": {
+      "type": "object",
+      "required": ["name", "rows", "columns"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "rows": {"type": "integer", "minimum": 0},
+        "columns": {"type": "array", "items": {"$ref": "#/$defs/column"}},
+        "primary_key": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "count": {"type": "integer", "minimum": 0},
+    "optnumber": {"type": ["number", "null"]},
+    "top": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {"type": ["integer", "number", "string", "null"]}
+      }
+    },
+    "errormodel": {
+      "type": "object",
+      "required": ["algorithm", "exact"],
+      "properties": {
+        "algorithm": {"type": "string"},
+        "exact": {"type": "boolean"},
+        "confidence": {"type": ["number", "null"]},
+        "relative_error": {"type": ["number", "null"]},
+        "parameters": {"type": ["object", "null"]}
+      }
+    },
+    "column": {
+      "type": "object",
+      "required": ["name", "arrow_type", "kind", "count", "null_count", "error_models"],
+      "properties": {
+        "name": {"type": "string"},
+        "arrow_type": {"type": "string"},
+        "kind": {"enum": ["int", "float", "bool", "text", "temporal", "other"]},
+        "count": {"$ref": "#/$defs/count"},
+        "null_count": {"$ref": "#/$defs/count"},
+        "nan_count": {"$ref": "#/$defs/count"},
+        "pos_inf_count": {"$ref": "#/$defs/count"},
+        "neg_inf_count": {"$ref": "#/$defs/count"},
+        "finite_count": {"$ref": "#/$defs/count"},
+        "true_count": {"$ref": "#/$defs/count"},
+        "false_count": {"$ref": "#/$defs/count"},
+        "min": {"type": ["number", "string", "null"]},
+        "max": {"type": ["number", "string", "null"]},
+        "mean": {"$ref": "#/$defs/optnumber"},
+        "m2": {"$ref": "#/$defs/optnumber"},
+        "variance_population": {"$ref": "#/$defs/optnumber"},
+        "variance_sample": {"$ref": "#/$defs/optnumber"},
+        "distinct": {"type": "number", "minimum": 0},
+        "distinct_exact": {"type": "boolean"},
+        "top": {"$ref": "#/$defs/top"},
+        "quantiles": {"type": "object", "additionalProperties": {"type": "number"}},
+        "length": {"type": "object"},
+        "patterns": {"type": "object", "additionalProperties": {"$ref": "#/$defs/count"}},
+        "hour_hist": {"type": "array", "items": {"$ref": "#/$defs/count"}},
+        "dow_hist": {"type": "array", "items": {"$ref": "#/$defs/count"}},
+        "month_hist": {"type": "array", "items": {"$ref": "#/$defs/count"}},
+        "year_hist": {"type": "object", "additionalProperties": {"$ref": "#/$defs/count"}},
+        "error_models": {"type": "object", "additionalProperties": {"$ref": "#/$defs/errormodel"}}
+      }
+    }
+  }
+}
