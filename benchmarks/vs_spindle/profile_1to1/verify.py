@@ -259,8 +259,25 @@ def main():
     matrices, all_fails = {}, {}
     for ds in wanted:
         sp = spindle_profile(ds, refresh)
-        po = port_impl(ds)
         matrix, fails = {}, []
+        if "__error__" in sp:
+            # Spindle itself fails on this input: Shape must raise an error of the same category
+            want = sp["__error__"]["category"]
+            try:
+                port_impl(ds)
+                got = None
+            except Exception as exc:
+                got = sd.error_category(exc)
+            ok = got == want
+            matrix["dataset.error_category"] = [1, int(ok), int(ok)]
+            if not ok:
+                fails.append(
+                    f"{ds} error category: spindle={want} ({sp['__error__']['type']}) shape={got}"
+                )
+            matrices[ds], all_fails[ds] = matrix, fails
+            print(f"{ds}: {'PASS' if not fails else f'{len(fails)} mismatches'}", flush=True)
+            continue
+        po = port_impl(ds)
         if "tables" in sp:
             ok = sp["relationships"] == po["relationships"]
             matrix["dataset.relationships"] = [1, int(ok), int(ok)]
@@ -275,7 +292,11 @@ def main():
         matrices[ds], all_fails[ds] = matrix, fails
         print(f"{ds}: {'PASS' if not fails else f'{len(fails)} mismatches'}", flush=True)
 
-    fields = ["dataset.relationships"] + [f"table.{f}" for f in TABLE_RULES] + list(RULES)
+    fields = (
+        ["dataset.relationships", "dataset.error_category"]
+        + [f"table.{f}" for f in TABLE_RULES]
+        + list(RULES)
+    )
     print("\nPer-field matrix  (cell = pass/total within tolerance; '*' = all bitwise-identical)\n")
     hdr = f"{'field':26s}" + "".join(f"{d:>13s}" for d in wanted)
     print(hdr)

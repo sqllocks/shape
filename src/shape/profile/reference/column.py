@@ -14,7 +14,7 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape.profile.fitting import detect_distribution as _kernel_detect_distribution
 
-from .model import ColumnProfile, Timestamp
+from .model import ColumnProfile, Timedelta, Timestamp
 from .readers import _Col
 
 # ---------------------------------------------------------------------------
@@ -209,8 +209,8 @@ def _keys_py(values: pa.Array, kind: str) -> list[str]:
     """str(k) for the keys of pandas' value_counts index."""
     if kind in ("bool", "objbool"):
         return ["True" if v else "False" for v in values.to_pylist()]
-    if kind == "int":
-        return [str(v) for v in values.to_pylist()]
+    if kind in ("int", "uint64", "objint"):
+        return [str(int(v)) for v in values.to_pylist()]
     if kind == "float":
         return [str(float(v)) for v in values.to_numpy(zero_copy_only=False).tolist()]
     if kind == "dt64":
@@ -234,7 +234,9 @@ def _no_subsecond(ts: pa.Array) -> bool:
 
 
 def _to_timestamp(v: _dt.datetime) -> Timestamp:
-    return Timestamp(v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond)
+    return Timestamp(
+        v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond, tzinfo=v.tzinfo
+    )
 
 
 def _round6(arr: np.ndarray) -> list[float]:
@@ -334,9 +336,181 @@ def _combine(arr: Any) -> Any:
     return arr
 
 
+def _require_finite(values: np.ndarray) -> None:
+    """Spindle's whole-number test does ``series.astype(int)``, which pandas refuses for inf;
+    Shape fails on the same input with the same error category (ValueError)."""
+    if not np.isfinite(values).all():
+        raise ValueError("Cannot convert non-finite values (NA or inf) to integer")
+
+
+_BOOL_WORDS = {"true", "false", "0", "1", "yes", "no"}
+_OBJECT_KINDS = ("objdec", "objtime", "objbin", "objdur", "cat", "objmix")
+
+
+def _object_key(kind: str, v: Any) -> str:
+    """``str(k)`` of a value_counts index entry for the object-dtype columns."""
+    if kind == "objbin":
+        return repr(bytes(v))
+    if kind == "objdur":
+        return str(_timedelta(v))
+    return str(v)
+
+
+def _numeric_of_objects(values: list[Any]) -> np.ndarray | None:
+    """``pd.to_numeric(object_series, errors="coerce")`` as floats, or None when any value
+    would coerce to NaN (Spindle then does not call the column numeric)."""
+    out = np.empty(len(values), dtype=np.float64)
+    text_at = [i for i, v in enumerate(values) if isinstance(v, str)]
+    for i, v in enumerate(values):
+        if not isinstance(v, str):
+            out[i] = float(v)
+    if text_at:
+        try:
+            out[text_at] = pc.cast(pa.array([values[i] for i in text_at]), pa.float64()).to_numpy()
+        except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
+            return None
+    return out
+
+
+def _object_text(kind: str, v: Any) -> str:
+    """``Series.astype(str)`` of one value: bytes are decoded (strictly), the rest use str()."""
+    if kind == "objbin":
+        return bytes(v).decode("utf-8")
+    return _object_key(kind, v)
+
+
+def _timedelta(v: _dt.timedelta) -> Timedelta:
+    return Timedelta(days=v.days, seconds=v.seconds, microseconds=v.microseconds)
+
+
+def _profile_object_column(c: _Col, row_count: int, top_n: int = 500) -> _Work:
+    """Object-dtype pandas columns (decimal, time, bytes, timedelta) and categoricals.
+
+    Their values are handled as Python objects, like pandas does; such columns are rare and
+    small next to the numeric/text bulk, so this path is not vectorised."""
+    kind = c.kind
+    arr = _combine(c.arr)
+    n_total = len(arr)
+    null_count = arr.null_count
+    if kind == "cat":
+        cats = arr.dictionary.to_pylist()
+        codes = [v for v in arr.indices.to_pylist() if v is not None]
+        counts_by_cat = [0] * len(cats)
+        for code in codes:
+            counts_by_cat[code] += 1
+        values = [cats[code] for code in codes]
+        # value_counts(): categories in category order (unused ones included), count-descending
+        order = sorted(range(len(cats)), key=lambda i: -counts_by_cat[i])
+        entries = [(cats[i], counts_by_cat[i]) for i in order]
+        cardinality = sum(1 for n in counts_by_cat if n)
+    else:
+        values = [v for v in arr.to_pylist() if v is not None]
+        first: dict[Any, int] = {}
+        for v in values:
+            first[v] = first.get(v, 0) + 1
+        entries = sorted(first.items(), key=lambda kv: -kv[1])
+        cardinality = len(first)
+    n_nn = len(values)
+    null_count = n_total - n_nn  # (a union array has no validity bitmap of its own)
+    text = [_object_text(kind, v) for v in values]
+    ukeys = [_object_key(kind, v) for v, _ in entries]
+    row_count = row_count or 0
+    cardinality_ratio = cardinality / row_count if row_count else 0.0
+    is_enum = (
+        cardinality < 200 or (cardinality_ratio < 0.30 and cardinality < 50_000)
+    ) and cardinality > 0
+    enum_values = value_counts_ext = None
+    if n_nn:
+        props = [round(n / n_nn, 6) for _, n in entries]
+        if is_enum:
+            enum_values = dict(zip(ukeys, props, strict=True))
+        value_counts_ext = dict(zip(ukeys[:top_n], props[:top_n], strict=True))
+
+    # ---- spindle type, numeric stats ------------------------------------------------------
+    stype = "string"
+    base: ColumnProfile | None = None
+    numeric: np.ndarray | None = None
+    if kind != "cat" and n_nn:
+        lower = {t.lower() for t in {_object_key(kind, v) for v in set(values)}}
+        if lower <= _BOOL_WORDS:
+            stype = "boolean"
+        elif kind == "objdec":
+            numeric = np.array([float(v) for v in values], dtype=np.float64)
+        elif kind == "objbin":
+            try:
+                numeric = pc.cast(pa.array(text), pa.float64()).to_numpy()
+            except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
+                numeric = None
+        elif kind == "objmix":
+            numeric = _numeric_of_objects(values)
+    if numeric is not None:
+        base = _profile_column(
+            _Col(c.name, "float", pa.chunked_array([pa.array(numeric)])), len(numeric)
+        ).prof
+        stype = base.dtype
+    # ---- min / max ---------------------------------------------------------------------------
+    min_value = max_value = None
+    if n_nn and kind != "cat":
+        try:
+            lo, hi = min(values), max(values)
+        except TypeError:  # pandas: min() of mixed str/number raises, Spindle leaves None
+            lo = hi = None
+        if lo is not None:
+            min_value, max_value = (
+                (_timedelta(lo), _timedelta(hi)) if kind == "objdur" else (lo, hi)
+            )
+    pattern = string_length = None
+    if stype == "string" and n_nn:
+        pattern = detect_pattern(pa.array(text, pa.string()), cardinality)
+        lens = np.array([len(t) for t in text], dtype=np.float64)
+        string_length = {
+            "min": float(lens.min()),
+            "mean": round(float(lens.sum(dtype=np.float64) / len(lens)), 2),
+            "max": float(lens.max()),
+            "p95": float(np.percentile(lens, 95)),
+        }
+    null_rate = null_count / n_total if n_total and row_count else 0.0
+    prof = ColumnProfile(
+        name=c.name,
+        dtype=stype,
+        null_count=null_count,
+        null_rate=round(null_rate, 6),
+        cardinality=cardinality,
+        cardinality_ratio=round(cardinality_ratio, 6),
+        is_unique=cardinality == row_count and null_count == 0,
+        is_enum=is_enum,
+        enum_values=enum_values,
+        min_value=min_value,
+        max_value=max_value,
+        mean=base.mean if base else None,
+        std=base.std if base else None,
+        distribution=base.distribution if base else None,
+        distribution_params=base.distribution_params if base else None,
+        pattern=pattern,
+        is_primary_key=False,
+        is_foreign_key=False,
+        fk_ref_table=None,
+        quantiles=base.quantiles if base else None,
+        string_length=string_length,
+        outlier_rate=base.outlier_rate if base else None,
+        value_counts_ext=value_counts_ext,
+        fit_score=base.fit_score if base else None,
+    )
+    return _Work(col=c, prof=prof, uniques=pa.array(ukeys, pa.string()))
+
+
 def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float = 1.5) -> _Work:
     kind = c.kind
+    if kind in _OBJECT_KINDS:
+        return _profile_object_column(c, row_count, top_n)
     arr = c.arr
+    tzmap: dict[Any, Any] | None = None
+    if kind == "dt64" and c.tz:
+        # pandas' .dt.hour etc. use the wall clock of the column's zone; keys and min/max
+        # keep the zone (and its UTC offset) in their text
+        aware = _combine(arr)
+        arr = pc.local_timestamp(aware)
+        tzmap = dict(zip(_combine(arr).to_pylist(), aware.to_pylist(), strict=True))
 
     # ---- non-null values ---------------------------------------------------
     if kind == "float":
@@ -402,7 +576,12 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
     elif kind == "int":
         stype = "integer"
         numeric = non_null.to_numpy().astype(np.float64)
+    elif kind in ("uint64", "objint"):
+        stype = "integer"
+        numeric = np.array([float(int(v)) for v in non_null.to_pylist()], dtype=np.float64)
     elif kind == "float":
+        if n_nn:
+            _require_finite(nn_np)
         if n_nn and np.all(nn_np == nn_np.astype(np.int64)):
             stype = "integer"
         else:
@@ -435,6 +614,7 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
                 ok = _try(lambda a: pc.cast(a, pa.float64()), uniq)
                 if ok:
                     u = pc.cast(uniq, pa.float64()).to_numpy()
+                    _require_finite(u)
                     stype = "integer" if np.all(u == u.astype(np.int64)) else "float"
                     numeric = pc.cast(non_null, pa.float64()).to_numpy()
                 else:
@@ -467,6 +647,8 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
             tk = uniq_np[top]
             top_keys = pa.array(tk) if kind != "dt64" else pc.cast(pa.array(tk), non_null.type)
         keys = _keys_py(top_keys, kind)
+        if tzmap is not None:
+            keys = [str(tzmap[v]) for v in top_keys.to_pylist()]
         if kind == "float" and "0.0" in keys:
             zeros = np.flatnonzero(raw_nn == 0)
             if len(zeros) and np.signbit(raw_nn[zeros[0]]):
@@ -486,7 +668,12 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
             mm = pc.min_max(non_null)
             lo, hi = mm["min"].as_py(), mm["max"].as_py()
             if kind == "dt64":
-                lo, hi = _to_timestamp(lo), _to_timestamp(hi)
+                lo, hi = (
+                    _to_timestamp(tzmap[lo] if tzmap else lo),
+                    _to_timestamp(tzmap[hi] if tzmap else hi),
+                )
+            elif kind in ("uint64", "objint"):
+                lo, hi = int(lo), int(hi)
             min_value, max_value = lo, hi
 
     # ---- numeric stats / distribution / quantiles ---------------------------

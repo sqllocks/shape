@@ -62,8 +62,17 @@ def infer_spindle_type(array: Any, source: str = "arrow") -> str:
     n = len(non_null)
     if kind in ("bool", "objbool"):
         return "boolean"
-    if kind == "int":
+    if kind in ("int", "uint64", "objint"):
         return "integer"
+    if kind in ("cat", "objtime", "objbin", "objdur", "objmix"):
+        return "string"  # categoricals and object columns of times/bytes/timedeltas/mixed values
+    if kind == "objdec":
+        if not n:
+            return "string"
+        values = [float(v) for v in non_null.to_pylist()]
+        if {str(v).lower() for v in non_null.to_pylist()} <= set(_BOOL_WORDS):
+            return "boolean"
+        return "integer" if all(v == int(v) for v in values) else "float"
     if kind == "float":
         if n:
             vals = non_null.to_numpy()

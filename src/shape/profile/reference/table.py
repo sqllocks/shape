@@ -46,14 +46,20 @@ def _correlation(works: list[_Work], row_count: int) -> dict[str, dict[str, floa
     Pairwise-complete Pearson via BLAS: columns are centred on their global mean (to
     avoid cancellation), then per-pair sums over the rows where *both* are present are
     obtained as matrix products with the null masks of the columns that have nulls."""
-    cols = [w for w in works if w.col.kind in ("int", "float")]
+    # np.number in pandas 3 also covers timedelta64 (correlated through its integer nanoseconds)
+    cols = [w for w in works if w.col.kind in ("int", "uint64", "float", "objdur")]
     if len(cols) < 2:
         return {}
     k, n = len(cols), row_count
     X = np.empty((n, k), dtype=np.float64, order="F")  # column-contiguous fills / reductions
     for j, w in enumerate(cols):
-        X[:, j] = _combine(w.col.arr).to_numpy(zero_copy_only=False)
-    nulls = [j for j, w in enumerate(cols) if w.col.kind == "float" and w.prof.null_count]
+        a = _combine(w.col.arr)
+        if w.col.kind == "objdur":
+            a = pc.cast(pc.cast(a, pa.duration("ns")), pa.int64()).cast(pa.float64())
+        X[:, j] = a.to_numpy(zero_copy_only=False)
+    nulls = [
+        j for j, w in enumerate(cols) if w.col.kind in ("float", "objdur") and w.prof.null_count
+    ]
     cnt = np.full(k, float(n))
     masks = {}
     for j in nulls:
@@ -102,7 +108,7 @@ def _correlation(works: list[_Work], row_count: int) -> dict[str, dict[str, floa
 
 def _fk_values(w: _Work) -> pa.Array:
     u = w.uniques
-    if w.col.kind in ("int", "float", "bool", "objbool"):
+    if w.col.kind in ("int", "uint64", "float", "bool", "objbool"):
         return pc.cast(u, pa.float64())
     return u
 
@@ -209,7 +215,7 @@ def _sample_rows(
     if sample_rows is None or row_count <= sample_rows:
         return cols, row_count
     idx = pa.array(np.random.RandomState(42).choice(row_count, size=sample_rows, replace=False))
-    return [_Col(c.name, c.kind, c.arr.take(idx)) for c in cols], sample_rows
+    return [_Col(c.name, c.kind, c.arr.take(idx), c.tz) for c in cols], sample_rows
 
 
 def _finish_table(

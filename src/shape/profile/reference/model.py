@@ -60,6 +60,16 @@ class DatasetProfile:
     relationships: list[dict[str, Any]] = field(default_factory=list)
 
 
+class Timedelta(_dt.timedelta):
+    """Stand-in for pandas.Timedelta (same str()/type name) for min/max of duration columns."""
+
+    def __str__(self) -> str:  # pandas: '<days> days HH:MM:SS[.ffffff]', days may be negative
+        secs = self.seconds
+        sign = "+" if self.days < 0 else ""
+        text = f"{self.days} days {sign}{secs // 3600:02d}:{secs % 3600 // 60:02d}:{secs % 60:02d}"
+        return text + (f".{self.microseconds:06d}" if self.microseconds else "")
+
+
 class Timestamp(_dt.datetime):
     """Stand-in for pandas.Timestamp (same str()/type name) for min/max of datetime64 columns."""
 

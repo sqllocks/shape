@@ -131,8 +131,26 @@ def run(path: str, parquet_dir: bool = False):
     return "table", DataProfiler.from_csv(p)
 
 
+def error_category(exc: BaseException) -> str:
+    """The first builtin class in the exception's MRO that is more specific than Exception
+    (pandas' IntCastingNaNError and Arrow's ArrowInvalid are both ValueError)."""
+    for c in type(exc).__mro__:
+        if c.__module__ == "builtins" and c not in (Exception, BaseException, object):
+            return c.__name__
+    return type(exc).__name__
+
+
 if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    kind, prof = run(args[0], parquet_dir="--parquet" in sys.argv)
-    out = dataset_to_dict(prof) if kind == "dataset" else table_to_dict(prof)
+    try:
+        kind, prof = run(args[0], parquet_dir="--parquet" in sys.argv)
+        out = dataset_to_dict(prof) if kind == "dataset" else table_to_dict(prof)
+    except Exception as exc:  # recorded: the verifier requires Shape to fail the same way
+        out = {
+            "__error__": {
+                "category": error_category(exc),
+                "type": type(exc).__qualname__,
+                "message": str(exc)[:300],
+            }
+        }
     Path(args[1]).write_text(json.dumps(out, indent=1, default=str))
