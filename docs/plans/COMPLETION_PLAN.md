@@ -1710,7 +1710,11 @@ That is 27 in total, which is the hub, the web app and 25 others (D-08).
   `GA_1_3_*.json`, `GA_GENERATION_QUALIFICATION.json`, `GA_FINAL_TEST.txt`,
   `NAMING_MIGRATION.json`, `RC1_*.json`, `REPOSITORY_MANIFEST.json`.
 - **Directories:** `rq/`, `docs/qualification/`, `docs/audit/`.
-- **`docs/plans/`:** everything except `COMPLETION_PLAN.md`.
+- **`docs/plans/`:** delete exactly these legacy files: `REMAINING_WORK.md`,
+  `NEXT_WORK_PACKETS.md`, `M1-VALIDATION.txt`, `WP-0001-EVIDENCE.md`,
+  `WP-0101-EVIDENCE.md`, `WP-0102-EVIDENCE.md`, `WP-0103-EVIDENCE.md` and
+  `WP-0201.yaml`. **Keep** `COMPLETION_PLAN.md`, `spindle_coverage.tsv` (read by P0-07
+  and G6) and `demo_status/`.
 - **`docs/` root:** delete everything **except** this keep-list: `INSTALL.md`,
   `QUICKSTART.md`, `TUTORIAL.md`, `CONTRIBUTING.md`, `DETERMINISM.md`,
   `LOCATION_AS_CODE.md`, `PRIVACY_MODEL.md`, `PRODUCT_ARCHITECTURE.md`,
