@@ -8,6 +8,7 @@ import re
 import sys
 from pathlib import Path
 
+import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 import pytest
@@ -18,7 +19,7 @@ REPO = Path(__file__).resolve().parents[3]
 DEMO = REPO / "demo"
 CONTRACTS = DEMO / "contracts"
 
-# Mean shift is +40% = 0.43 baseline std, below the default 0.5 std threshold (section 12.3),
+# Mean shift is +40% = 0.39 baseline std, below the default 0.5 std threshold (section 12.3),
 # so the demo diff lowers it explicitly.
 DEMO_THRESHOLDS = {"mean_shift_std": 0.25}
 
@@ -38,7 +39,6 @@ EXPECTED_CHANGES = {
 # outside EXPECTED_CHANGES | KNOWN_SIDE_EFFECTS fails the test.
 KNOWN_SIDE_EFFECTS = {
     "orders": {("order_total", "new_categorical_values")},
-    "products": {("category_id", "distribution_change")},
 }
 
 
@@ -56,12 +56,9 @@ make_data = _load_make_data()
 
 @pytest.fixture(scope="module")
 def data(tmp_path_factory):
-    root = make_data.default_spindle_root()
-    if not (root / "sqllocks_spindle").is_dir():
-        pytest.fail(f"pinned Spindle checkout not found at {root} (plan section 1.2)")
     out = tmp_path_factory.mktemp("demo")
     # D2 is shortened to keep the suite fast; its contract needs at least 100,000 rows.
-    day1 = make_data.build_day1(root, "medium", 42, d2_rows=100_000)
+    day1 = make_data.build_day1("medium", 42, d2_rows=100_000)
     day2 = make_data.apply_day2(day1, 42)
     make_data.write_all(day1, day2, out)
     return out, day1, day2
@@ -86,6 +83,55 @@ def test_files_written(data):
     # "order" and "return" are SQL keywords: files use the plural names
     assert "orders" in day1 and "order" not in day1
     assert "sku" in day1["products"].column_names
+    assert sorted(day1) == ["customers", "d2", "orders", "products", "returns"]
+
+
+def test_medium_row_counts(data):
+    _, day1, day2 = data
+    assert {k: t.num_rows for k, t in day1.items()} == {
+        "customers": 50_000,
+        "orders": 500_000,
+        "products": 5_000,
+        "returns": 85_000,
+        "d2": 100_000,  # shortened by the fixture; the CLI default is 1,000,000
+    }
+    assert {k: t.num_rows for k, t in day2.items()} == {
+        "customers": 50_000,
+        "orders": 500_000,
+        "products": 5_050,
+    }
+
+
+def test_consumer_columns_and_dtypes(data):
+    """The columns and types that contracts, DRIFT.md and the talk rely on."""
+    _, day1, _ = data
+    want = {
+        "customers": {"customer_id": pa.int64(), "email": pa.string(), "signup_date": pa.date32()},
+        "orders": {
+            "order_id": pa.int64(),
+            "customer_id": pa.int64(),
+            "order_date": pa.date32(),
+            "status": pa.string(),
+            "order_total": pa.float64(),
+        },
+        "products": {"product_id": pa.int64(), "sku": pa.string(), "unit_price": pa.float64()},
+        "returns": {"return_id": pa.int64(), "order_id": pa.int64(), "product_id": pa.int64()},
+        "d2": {"customer_id": pa.int64(), "email": pa.string(), "status": pa.string()},
+    }
+    for table, cols in want.items():
+        for col, typ in cols.items():
+            assert day1[table].schema.field(col).type == typ, (table, col)
+    assert day1["d2"].num_columns == 20
+
+
+def test_foreign_keys_resolve(data):
+    _, day1, _ = data
+    cust = set(day1["customers"]["customer_id"].to_pylist())
+    assert set(day1["orders"]["customer_id"].to_pylist()) <= cust
+    orders = set(day1["orders"]["order_id"].to_pylist())
+    assert set(day1["returns"]["order_id"].to_pylist()) <= orders
+    prods = set(day1["products"]["product_id"].to_pylist())
+    assert set(day1["returns"]["product_id"].to_pylist()) <= prods
 
 
 def test_generation_is_deterministic(data):
@@ -95,9 +141,19 @@ def test_generation_is_deterministic(data):
         assert again[name].equals(day2[name])
 
 
+def test_build_day1_is_deterministic_per_seed():
+    a = make_data.build_day1("small", 7, d2_rows=1_000)
+    b = make_data.build_day1("small", 7, d2_rows=1_000)
+    c = make_data.build_day1("small", 8, d2_rows=1_000)
+    for name in a:
+        assert a[name].equals(b[name]), name
+    assert not a["orders"].equals(c["orders"])
+
+
 def test_documented_drift_in_the_data(data):
     _, day1, day2 = data
     c1, c2 = day1["customers"], day2["customers"]
+    assert c1["email"].null_count == 2485  # exactly 4.97%, the figure in TALK.md
     assert c1["email"].null_count / c1.num_rows == pytest.approx(0.05, abs=0.005)
     assert c2["email"].null_count / c2.num_rows == pytest.approx(0.20, abs=1e-9)
     assert c1.num_rows == c2.num_rows
@@ -105,6 +161,8 @@ def test_documented_drift_in_the_data(data):
     o1, o2 = day1["orders"], day2["orders"]
     assert "lost" not in set(o1["status"].to_pylist())
     assert "lost" in set(o2["status"].to_pylist())
+    assert o2["status"].to_pylist().count("lost") == round(0.02 * o2.num_rows)
+    assert pc.max(o1["order_total"]).as_py() == 5135.63  # the figure in TALK.md
     ratio = pc.mean(o2["order_total"]).as_py() / pc.mean(o1["order_total"]).as_py()
     assert ratio == pytest.approx(1.40, rel=1e-9)
 
@@ -143,7 +201,7 @@ def test_diff_reports_each_documented_change(profiles, table):
 
 
 def test_default_thresholds_miss_the_mean_shift(profiles):
-    """Documented: +40% is 0.43 std, so the demo must lower mean_shift_std."""
+    """Documented: +40% is 0.39 std, so the demo must lower mean_shift_std."""
     d = shape.diff(profiles["orders", "day1"], profiles["orders", "day2"])
     assert ("order_total", "mean_shift") not in {(c["column"], c["kind"]) for c in d.changes}
 
@@ -189,10 +247,30 @@ def test_drift_doc_lists_every_drift():
             assert re.search(rf"`{table}\.{col}`.*`{rule}`", text, re.S), (table, col, rule)
 
 
-def test_make_data_cli_reports_missing_spindle(tmp_path, capsys):
-    rc = make_data.main(["--out", str(tmp_path), "--spindle-root", str(tmp_path / "nope")])
-    assert rc == 2
-    assert "Spindle checkout not found" in capsys.readouterr().err
+def test_make_data_cli_writes_the_layout(tmp_path, capsys):
+    rc = make_data.main(["--out", str(tmp_path), "--scale", "small", "--seed", "3"])
+    assert rc == 0
+    assert sorted(p.name for p in (tmp_path / "day1").glob("*.parquet")) == [
+        "customers.parquet",
+        "d2.parquet",
+        "orders.parquet",
+        "products.parquet",
+        "returns.parquet",
+    ]
+    assert sorted(p.name for p in (tmp_path / "day2").glob("*.parquet")) == [
+        "customers.parquet",
+        "orders.parquet",
+        "products.parquet",
+    ]
+    assert "day1/orders.parquet" in capsys.readouterr().out
+
+
+def test_make_data_is_self_contained():
+    """The generator needs no external checkout and imports nothing from benchmarks/."""
+    text = (DEMO / "make_data.py").read_text() + (DEMO / "d2_table.py").read_text()
+    assert "benchmarks" not in text
+    assert ("spin" + "dle") not in text.lower()
+    assert "--" + "spin" not in text
 
 
 def test_no_large_files_committed():
