@@ -7,13 +7,6 @@ import json
 from dataclasses import dataclass
 
 from shape.artifact.canonical import canonical_json
-from shape.security.crypto import (
-    EncryptedPayload,
-    decrypt_aes_gcm,
-    encrypt_aes_gcm,
-    sign_ed25519,
-    verify_ed25519,
-)
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +40,8 @@ class SecureEnvelope:
 def seal(
     plaintext: bytes, encryption_key: bytes, signing_private_key: bytes, header: dict
 ) -> SecureEnvelope:
+    from shape.security.crypto import encrypt_aes_gcm, sign_ed25519
+
     h = canonical_json(header)
     p = encrypt_aes_gcm(plaintext, encryption_key, h)
     signed = h + p.nonce + p.ciphertext
@@ -56,6 +51,8 @@ def seal(
 
 
 def open_envelope(env: SecureEnvelope, encryption_key: bytes, signing_public_key: bytes) -> bytes:
+    from shape.security.crypto import EncryptedPayload, decrypt_aes_gcm, verify_ed25519
+
     h = canonical_json(env.header)
     verify_ed25519(h + env.nonce + env.ciphertext, env.signature, signing_public_key)
     return decrypt_aes_gcm(EncryptedPayload(env.nonce, env.ciphertext), encryption_key, h)
