@@ -135,3 +135,11 @@ def test_legacy_diff_and_check_still_work(tmp_path: Path, capsys):
     s.write_text(json.dumps({"rows": 1, "columns": {}}))
     assert main(["diff", str(s), str(s)]) == 0
     assert json.loads(capsys.readouterr().out) == []
+
+
+def test_missing_first_shape_exits_2(tmp_path: Path):
+    """Section 12.2: a missing .shape is an input error (exit 2), not a failed check (1)."""
+    contract = tmp_path / "c.json"
+    contract.write_text("{}", encoding="utf-8")
+    assert main(["check", str(tmp_path / "no-such.shape"), str(contract)]) == 2
+    assert main(["diff", str(tmp_path / "no-such.shape"), str(tmp_path / "b.shape")]) == 2
