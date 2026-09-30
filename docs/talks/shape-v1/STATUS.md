@@ -27,8 +27,10 @@ plan or CI files were touched.
    built" column. Change it only from the tracker.
 5. **One full rehearsal with a clock** (checkpoints in `OUTLINE.md`): 45 minutes, section
    6 no longer than 3:30.
-6. **Slides:** there's no deck yet. `SCRIPT.md` has the content of every slide. Section 6
-   slides need the large PLANNED / BEING BUILT chips.
+6. **Slides:** the deck is built: https://claude.ai/artifact/BizWK3bVD8chFsQBUK4oBd
+   (private until you share it from the page's Share menu). 31 slides + backups B1–B5,
+   mapped to `SCRIPT.md` in `DECK.md`. To do: review it, fill in B5 after the rehearsal,
+   and on October 2 confirm slide 30's install line (see `DECK.md`).
 7. **Abstract:** you're using the previous talk's abstract. Check its sentences against the
    list below, and paste its text into `ABSTRACT.md` if you'd like me to check it word by
    word.
