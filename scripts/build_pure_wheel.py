@@ -6,7 +6,7 @@ the form Fabric User Data Functions need for a private library (platform indepen
 
 The wheel is written directly (a wheel is a zip file plus ``*.dist-info``), so the build needs
 nothing but the standard library. Its metadata is generated here rather than taken from
-``pyproject.toml``: the demo wheel declares ``numpy>=2.0,<3`` and ``pyarrow>=14`` so that the
+``pyproject.toml``: the demo wheel declares ``numpy>=2.0,<3`` and ``pyarrow>=14.0.1`` so that the
 libraries preinstalled in Fabric are accepted, and it does not require ``cryptography``,
 ``pydantic`` or ``typing-extensions`` (``import shape`` does not use them). The stricter pins in
 ``pyproject.toml`` return with plan work package P0-05.
@@ -48,7 +48,7 @@ FORBIDDEN_SUFFIXES = {
     ".pyx",
     ".rs",
 }
-DEMO_REQUIRES = ["numpy>=2.0,<3", "pyarrow>=14"]
+DEMO_REQUIRES = ["numpy>=2.0,<3", "pyarrow>=14.0.1"]
 # packages the demo wheel is tested against in a clean environment (DM-03)
 VERIFY_PACKAGES = ["numpy", "pyarrow", "pandas", "deltalake", "pytest"]
 FIXED_TIME = (2026, 1, 1, 0, 0, 0)  # reproducible archives

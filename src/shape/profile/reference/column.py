@@ -194,6 +194,16 @@ def _top_by_first_seen(
 _PCTS = [1, 5, 10, 25, 50, 75, 90, 95, 99]
 
 
+def _iso_strings(values: pa.Array, unit: str) -> list[str | None]:
+    """Format each value as "YYYY-MM-DD[ HH:MM:SS]", like pc.strftime but without a tz database
+    (pyarrow's strftime needs one even for naive timestamps, and Windows has none)."""
+    arr = values.cast(pa.timestamp("s") if unit == "s" else pa.date32())
+    np_vals = arr.to_numpy(zero_copy_only=False).astype(f"datetime64[{unit}]")
+    out = np.datetime_as_string(np_vals, unit=unit).tolist()
+    valid = arr.is_valid().to_pylist()
+    return [s.replace("T", " ") if ok else None for s, ok in zip(out, valid, strict=True)]
+
+
 def _keys_py(values: pa.Array, kind: str) -> list[str]:
     """str(k) for the keys of pandas' value_counts index."""
     if kind in ("bool", "objbool"):
@@ -204,12 +214,12 @@ def _keys_py(values: pa.Array, kind: str) -> list[str]:
         return [str(float(v)) for v in values.to_numpy(zero_copy_only=False).tolist()]
     if kind == "dt64":
         return (
-            pc.strftime(pc.cast(values, pa.timestamp("s")), format="%Y-%m-%d %H:%M:%S").to_pylist()
+            _iso_strings(pc.cast(values, pa.timestamp("s")), "s")
             if _no_subsecond(values)
             else [str(_to_timestamp(v)) for v in values.to_pylist()]
         )
     if kind == "objdate":
-        return cast(list[str], pc.strftime(values, format="%Y-%m-%d").to_pylist())
+        return cast(list[str], _iso_strings(values, "D"))
     return cast(list[str], values.to_pylist())
 
 
