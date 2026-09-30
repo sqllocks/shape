@@ -2327,13 +2327,13 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
 | DM-01 | L1 | done (lead re-verified parity 30/30) | 831e804 |
 | DM-02 | L1 | done | 5d4f296 |
 | DM-03 | L1 | done (lead fixed license metadata e848348) | 92b4a5d |
-| DM-03b | L1 | done; TestPyPI dry run blocked by GitHub Actions billing (see MORNING_SUMMARY) | f17fd14 |
-| DM-04 | L3 | wip (lane L3b) |  |
+| DM-03b | L1 | done; TestPyPI dry run passed (Actions run 36665613888, install verified) | f17fd14 |
+| DM-04 | L3 | done (lead re-ran make_data and tests/demo/content; CI fetches pinned Spindle) | bd01f68 |
 | DM-05 | L2 | done | 6217d6c |
 | DM-05b | L2 | done | 578e4f4 |
 | DM-06 | L2 | done | c113422 |
 | DM-07 | L2 | done | 4c8725c |
-| DM-08 | L2 + L3 | runbook done (4c8725c); talk kit wip (lane L3b) |  |
+| DM-08 | L2 + L3 | done: runbook (4c8725c), talk kit (b211756); owner live dry run pending (DM-4) | b211756 |
 
 ---
 

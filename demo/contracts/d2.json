@@ -1,0 +1,11 @@
+{
+  "row_count": {"min": 100000, "max": 5000000},
+  "columns": {
+    "customer_id": {"dtype": "integer", "nullable": false, "unique": true},
+    "email": {"max_null_rate": 0.05, "pattern": "email"},
+    "status": {"allowed_values": ["active", "inactive", "pending", "suspended", "closed"]},
+    "order_value": {"min": 0, "max": 100000}
+  },
+  "required_columns": ["customer_id", "signup_date"],
+  "allow_extra_columns": true
+}

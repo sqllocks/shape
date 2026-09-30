@@ -1,0 +1,10 @@
+{
+  "row_count": {"min": 1000, "max": 100000},
+  "columns": {
+    "product_id": {"dtype": "integer", "nullable": false, "unique": true},
+    "sku": {"dtype": "string", "nullable": false, "unique": true},
+    "unit_price": {"dtype": "float", "nullable": false, "min": 0}
+  },
+  "required_columns": ["product_id", "sku", "unit_price"],
+  "allow_extra_columns": true
+}
