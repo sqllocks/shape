@@ -14,9 +14,7 @@ import fabric.functions as fn
 import numpy as np
 import pandas as pd
 import pytest
-from conftest import CONTRACT, UDF_DIR, make_orders
-
-import shape
+from fabric_helpers import CONTRACT, UDF_DIR, make_orders
 
 
 def _load_module():
@@ -26,7 +24,17 @@ def _load_module():
     return mod
 
 
-APP = _load_module()
+_APP = None
+
+
+def app():
+    """Load function_app lazily, inside the module's shape_api() context."""
+    global _APP
+    if _APP is None:
+        _APP = _load_module()
+    return _APP
+
+
 NAMES = [
     "profileLakehouseFile",
     "profileLakehouseTable",
@@ -38,7 +46,7 @@ NAMES = [
 
 def raw(name: str):
     """The user's function without the Fabric HTTP wrapper."""
-    return inspect.unwrap(getattr(APP, name)._function.get_user_function())
+    return inspect.unwrap(getattr(app(), name)._function.get_user_function())
 
 
 def ast_returns(name: str) -> str | None:
@@ -150,7 +158,7 @@ def lh(tmp_path: Path) -> FakeLakehouse:
 
 def test_all_functions_registered_with_camel_case_and_dict_return():
     for name in NAMES:
-        builder = getattr(APP, name)
+        builder = getattr(app(), name)
         assert type(builder).__name__ == "FunctionBuilder"
         params, _ = signature(name)
         assert ast_returns(name) == "dict"
@@ -206,6 +214,8 @@ def test_profile_file_writes_shape_artifact_and_accepts_files_prefix(lh):
         lakehouse=lh, filePath="/Files/demo/orders_day1.parquet", outputPath="shape/day1.shape"
     )
     assert out["outputPath"] == "shape/day1.shape"
+    import shape
+
     assert shape.load(str(lh.root / "shape" / "day1.shape")).summary()["row_count"] == 2000
 
 
@@ -373,13 +383,13 @@ def test_profile_data_frame(lh):
 
 
 def test_nan_and_numpy_values_are_json_safe():
-    out = APP._json_safe({"a": float("nan"), "b": np.int64(3), "c": [np.float64("inf"), 1.5]})
+    out = app()._json_safe({"a": float("nan"), "b": np.int64(3), "c": [np.float64("inf"), 1.5]})
     assert out == {"a": None, "b": 3, "c": [None, 1.5]}
     json.dumps(out, allow_nan=False)
 
 
 def test_oversized_result_drops_summary():
-    out = APP._bounded({"summary": {"x": "y" * 2_000_000}, "rows": 1})
+    out = app()._bounded({"summary": {"x": "y" * 2_000_000}, "rows": 1})
     assert out["summary"] is None and out["summaryOmitted"] is True
 
 

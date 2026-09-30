@@ -10,7 +10,7 @@ from pathlib import Path
 import nbformat
 import pandas as pd
 import pytest
-from conftest import CONTRACT, NOTEBOOKS, make_orders, run_notebook  # noqa: F401
+from fabric_helpers import CONTRACT, NOTEBOOKS, make_orders, run_notebook  # noqa: F401
 
 EXIT_KEYS = {
     "table",
