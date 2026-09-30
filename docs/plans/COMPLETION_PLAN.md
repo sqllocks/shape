@@ -245,6 +245,7 @@ instruction.
 |---|---|---|---|
 | 2026-09-29 | — | Plan v1 approved | — |
 | 2026-09-29 | — | Plan v2: adversarial-review fixes (Spindle stream format, CLI mapping, exact mode for parity and gates, crate pins, Philox implemented in-house, maturin-action, setup, builder guide, work-package splits, verified line references) | Red-team review |
+| 2026-09-30 | — | **sqllocks-shape 0.9.0 published to PyPI** from `main` at b2dd663 (Publish run 36749097798, approved by the owner). Verified by the lead: clean-venv `pip install sqllocks-shape==0.9.0` from pypi.org; pure `py3-none-any` wheel; `License-Expression: MIT`; requires numpy>=2.0,<3 and pyarrow>=14.0.1; profile, check and CLI exit codes work. **0.9.0 can never be re-uploaded: the next release must use a higher version.** | Owner release decision |
 | 2026-09-30 | — | Main plan reconciled with the shipped demo: P0-05 keeps version 0.9.0 and the DM-00 README; P0-04 names `src/shape/<m>` paths only; P0-06 keeps the demo CI jobs; P0-07 updates demo references to moved harness paths; §6.2(7) keeps `tests/demo` green | Demo track (§12) landed before Phase 0; 0.9.0 is published |
 | 2026-09-30 | T-07 | Package pyarrow range `>=25,<26` replaced by `>=14.0.1`; the benchmark harness keeps pyarrow 25.0.1 in both venvs | CI: `fabric-user-data-functions` 1.0.0–1.0.142 requires `pyarrow>=19.0.1,<20`, so `>=25` made Shape uninstallable next to the UDF SDK (`ResolutionImpossible`) |
 | 2026-09-30 | D-15 | License: MIT (owner choice), replacing the inherited Apache-2.0 | Owner decision; matches Spindle |
@@ -2349,7 +2350,7 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
 | DM-01 | L1 | done (lead re-verified parity 30/30) | 831e804 |
 | DM-02 | L1 | done | 5d4f296 |
 | DM-03 | L1 | done (lead fixed license metadata e848348) | 92b4a5d |
-| DM-03b | L1 | done; TestPyPI dry run passed (Actions run 36665613888, install verified) | f17fd14 |
+| DM-03b | L1 | done; TestPyPI dry run passed (run 36665613888); **published to PyPI 0.9.0** (run 36749097798, 2026-09-30) | f17fd14 |
 | DM-04 | L3 | done (lead re-ran make_data and tests/demo/content; CI fetches pinned Spindle) | bd01f68 |
 | DM-05 | L2 | done | 6217d6c |
 | DM-05b | L2 | done | 578e4f4 |
