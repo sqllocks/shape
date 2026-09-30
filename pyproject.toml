@@ -33,7 +33,7 @@ include=["/src", "/tests", "/rq", "/docs", "/scripts", "/.github", "/examples", 
 [tool.pytest.ini_options]
 testpaths=["tests"]
 addopts="-ra --strict-markers --import-mode=importlib"
-markers=["conformance: normative conformance","security: security invariant","zero_network: network forbidden"]
+markers=["conformance: normative conformance","security: security invariant","zero_network: network forbidden","sign: needs the cryptography extra","contract: contract test (no external service)","emulator: needs a Docker emulator (CI nightly only)","live: needs live cloud resources"]
 
 [tool.ruff]
 target-version="py311"
