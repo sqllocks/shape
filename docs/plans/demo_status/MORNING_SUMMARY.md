@@ -36,9 +36,14 @@ Totals on `main`: full `pytest` (all but Fabric) gives 835 passed; `pytest tests
 - `shape.diff` with **default** thresholds does not flag the +40% `order_total` shift (0.43 std, below the 0.5 default). The contract gate still fails on day 2 (on `order_total.max`). If you show diff live, pass `thresholds={"mean_shift_std": 0.25}`.
 - The diff also reports `order_total` "new categorical values" on day 2, because the profiler (like Spindle) keeps value lists for that float column. The severity is low, but a viewer may notice it.
 
+## Update, 2026-09-30 1:10 PM EDT
+
+- **sqllocks-shape 0.9.0 is on PyPI** (Publish run 36749097798 from `main` at b2dd663, approved by you). `pip install sqllocks-shape` works; verified by the lead in a clean environment. The next release must use a higher version.
+- Phase 0 of the main plan (P0-00..P0-07, gate G0) is merged into `main`. Phase 1 (Rust engine) is in progress on `build/main-plan`.
+- Fixed on `main` before the release: `shape check`/`diff` with a missing `.shape` now exit 2; the README and Fabric runbook warn that a `.shape` file holds real data values.
+
 ## Your steps, in order
 
 1. ~~Make the repo public~~, ~~confirm CI runs green~~, ~~TestPyPI dry run~~: all done.
-2. On pypi.org, add the **pending publisher** (environment `pypi`) if not done. In GitHub, add yourself as a **required reviewer** on the `pypi` environment (possible once the repo is public).
-3. **Real publish:** Actions → Publish → `repository: pypi`, then approve.
-4. **Live Fabric dry run:** follow `integrations/fabric/RUNBOOK.md`, and record timings in `demo/LIVE_TIMINGS.md`.
+2. ~~PyPI publisher, reviewer and real publish~~: done (0.9.0).
+3. **Live Fabric dry run (before the Oct 3 talk):** follow `integrations/fabric/RUNBOOK.md`, and record timings in `demo/LIVE_TIMINGS.md`.
