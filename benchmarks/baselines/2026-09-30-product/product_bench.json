@@ -1,0 +1,82 @@
+{
+ "_meta": {
+  "cores": 4,
+  "platform": "Linux-6.18.44-fc-v50-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-09-30 22:15:50",
+  "runs": 3
+ },
+ "profile": {
+  "d1.parquet": {
+   "rows": 200000,
+   "columns": 6,
+   "median_s": 0.3852584929999807,
+   "runs_s": [
+    0.3779630749999683,
+    0.3852584929999807,
+    0.4046918310000365
+   ],
+   "peak_rss_mb": 224.5546875,
+   "rows_per_s": 519131.9688830585,
+   "output_identical_across_runs": true
+  },
+  "d2.parquet": {
+   "rows": 1000000,
+   "columns": 20,
+   "median_s": 1.9627260569999976,
+   "runs_s": [
+    2.6821099630000163,
+    1.9627260569999976,
+    1.8152135949999888
+   ],
+   "peak_rss_mb": 638.62109375,
+   "rows_per_s": 509495.45222245005,
+   "output_identical_across_runs": true
+  },
+  "d2.csv": {
+   "rows": 1000000,
+   "columns": 20,
+   "median_s": 2.02084461000004,
+   "runs_s": [
+    2.343039200000021,
+    2.0036999040000296,
+    2.02084461000004
+   ],
+   "peak_rss_mb": 733.5859375,
+   "rows_per_s": 494842.5995009978,
+   "output_identical_across_runs": true
+  },
+  "d3.parquet": {
+   "rows": 5000000,
+   "columns": 10,
+   "median_s": 4.892445678999991,
+   "runs_s": [
+    5.09181959,
+    4.633900181000001,
+    4.892445678999991
+   ],
+   "peak_rss_mb": 2107.01953125,
+   "rows_per_s": 1021983.753741338,
+   "output_identical_across_runs": true
+  },
+  "d4.parquet": {
+   "rows": 100000,
+   "columns": 200,
+   "median_s": 4.404455380000002,
+   "runs_s": [
+    4.226200062999965,
+    4.548674392999999,
+    4.404455380000002
+   ],
+   "peak_rss_mb": 508.8046875,
+   "rows_per_s": 22704.282680234566,
+   "output_identical_across_runs": true
+  }
+ },
+ "startup": {
+  "runs": 7,
+  "import_shape_median_s": 0.23931487100003324,
+  "cli_version_cmd_median_s": 0.29493914100004304,
+  "python_bare_median_s": 0.011942622999981722
+ }
+}

@@ -287,6 +287,13 @@ def main(argv=None):
         cert = certify(ref, list(_rows(a.csv)), tolerance=a.tolerance)
         _dump(cert.to_dict())
         return 0 if cert.passed else 3
+    if a.cmd in ("query", "plan") and _artifact_kind(a.shape) == "profile":
+        print(
+            f"shape: error: `shape {a.cmd}` does not read profiles made by `shape profile` yet "
+            "(planned). Use `shape check` or `shape diff`.",
+            file=sys.stderr,
+        )
+        return 2
     if a.cmd in ("query", "check", "plan"):
         from shape.artifact import read_shape
 

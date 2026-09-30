@@ -2,14 +2,6 @@
 
 Shape is released under the MIT license (see `LICENSE`).
 
-## Spindle
-
-Parts of Shape's reference data and behaviour are derived from Spindle.
-
-Spindle: MIT, Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). Where code or
-data copied or substantially derived from Spindle is included, its MIT notice is
-retained.
-
 ## GeoNames
 
 Postal-code and place reference data is derived from GeoNames (https://www.geonames.org/).
