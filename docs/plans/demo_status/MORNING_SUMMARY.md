@@ -15,7 +15,7 @@ Last updated: see the git log for this file.
 | DM-08 (talk kit) | `demo/TALK.md`, generated `demo/BENCHMARKS.md`, `LIVE_TIMINGS.md` placeholder | Every number is generated from and cites `benchmarks/baselines/2026-09-29/`; table names and contract paths match L2's pipelines and runbook |
 | DM-05, DM-05b, DM-06, DM-07, DM-08 (runbook) | Fabric Python notebook, Environment + PySpark notebook, 5 UDFs, 3 pipelines, RUNBOOK.md | **159 demo tests pass against the real API**, including Spark vs Python notebook equivalence on local PySpark and the UDFs through Microsoft's SDK |
 
-Totals on `main`: full `pytest` (all but Fabric) gives 835 passed; `pytest tests/demo` gives 188 passed. **GitHub CI was green on all 11 jobs at 8fc8ef8** (Linux, macOS and Windows × Python 3.11–3.13, the Fabric demo job, and the build; run 36666589939). The L3b merge (dd6eab4) adds the demo content tests to the Fabric job; check the Actions tab for its run.
+Totals on `main`: full `pytest` (all but Fabric) gives 835 passed; `pytest tests/demo` gives 188 passed. **GitHub CI is green on all 11 jobs** (Linux, macOS and Windows × Python 3.11–3.13; the Fabric demo job, which also runs the demo content tests against pinned Spindle; and the build). Runs: 36666589939 (8fc8ef8), 36666928868 (dd6eab4, the L3b merge) and 36667088329 (410ecde).
 
 ## Fixes the lead made during integration
 
