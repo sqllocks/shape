@@ -65,6 +65,11 @@ python integrations/fabric/pipelines/build_pipelines.py
 
 ## 3. Lakehouse and data
 
+> **The saved profiles contain data values.** A `.shape` file keeps up to the 500 most
+> frequent values per column, and each column's minimum and maximum (see the README). The
+> notebooks write them under the lakehouse `Files/shape/` folder, so anyone who can read
+> that folder can read those values. Grant access as you would to the source tables.
+
 1. **New item > Lakehouse**, name it `shape_demo`.
 2. In the lakehouse **Files** area: create `demo/day1`, `demo/day2` and `contracts`, and
    upload the Parquet files and contract JSONs (Upload > Upload files/folder).
