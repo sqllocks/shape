@@ -1234,7 +1234,7 @@ pub fn fit_score(full: &[f64], d: Dist) -> Option<f64> {
     if stat.is_nan() {
         return None;
     }
-    Some(((1.0 - stat) * 1e4).round_ties_even() / 1e4)
+    format!("{:.4}", 1.0 - stat).parse::<f64>().ok()
 }
 
 pub fn dist_from_name(name: &str) -> Option<Dist> {

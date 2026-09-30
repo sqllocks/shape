@@ -41,7 +41,7 @@ def _compare(native, values, rel=1e-6):
     if want["fit_score"] is None:
         assert got["fit_score"] is None
     else:
-        assert got["fit_score"] == pytest.approx(want["fit_score"], abs=1e-4)
+        assert got["fit_score"] == pytest.approx(want["fit_score"], abs=1e-12)
     return got
 
 
@@ -95,7 +95,7 @@ def test_public_wrapper_samples_like_spindle():
     want = reference.fit_distribution(sample, v)
     assert out["distribution"] == want["distribution"]
     assert out["distribution_params"] == pytest.approx(want["distribution_params"], rel=1e-6)
-    assert out["fit_score"] == pytest.approx(want["fit_score"], abs=1e-4)
+    assert out["fit_score"] == pytest.approx(want["fit_score"], abs=1e-12)
     assert detect_distribution(v[:5]) == {
         "distribution": None,
         "distribution_params": None,
