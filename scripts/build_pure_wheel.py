@@ -75,15 +75,28 @@ def _source_files() -> list[tuple[str, Path]]:
     return files
 
 
+def _license_expression(project: dict) -> str:
+    """SPDX expression from pyproject (PEP 639); refuse to guess."""
+    lic = project.get("license")
+    if not isinstance(lic, str) or not lic.strip():
+        raise SystemExit("pyproject [project].license must be an SPDX string (PEP 639)")
+    return lic.strip()
+
+
+def _license_files(project: dict) -> list[str]:
+    return [f for f in project.get("license-files", ["LICENSE"]) if (ROOT / f).is_file()]
+
+
 def _metadata(project: dict, version: str) -> str:
     lines = [
-        "Metadata-Version: 2.1",
+        "Metadata-Version: 2.4",
         f"Name: {DIST_NAME}",
         f"Version: {version}",
         f"Summary: {project.get('description', '')}",
         f"Requires-Python: {project.get('requires-python', '>=3.11')}",
-        "License: Apache-2.0",
+        f"License-Expression: {_license_expression(project)}",
     ]
+    lines += [f"License-File: {name}" for name in _license_files(project)]
     for label, url in project.get("urls", {}).items():
         lines.append(f"Project-URL: {label}, {url}")
     lines += [f"Requires-Dist: {req}" for req in DEMO_REQUIRES]
@@ -92,7 +105,6 @@ def _metadata(project: dict, version: str) -> str:
             lines.append(f"Provides-Extra: {extra}")
             lines += [f"Requires-Dist: {req}; extra == '{extra}'" for req in reqs]
     lines.append("Classifier: Programming Language :: Python :: 3")
-    lines.append("Classifier: License :: OSI Approved :: Apache Software License")
     lines.append("Classifier: Operating System :: OS Independent")
     readme = ROOT / "README.md"
     body = ""
@@ -114,9 +126,8 @@ def build(out_dir: Path, version: str | None = None) -> Path:
     entries: list[tuple[str, bytes]] = []
     for arc, src in _source_files():
         entries.append((arc, src.read_bytes()))
-    licence = ROOT / "LICENSE"
-    if licence.is_file():
-        entries.append((f"{dist_info}/licenses/LICENSE", licence.read_bytes()))
+    for name in _license_files(project):
+        entries.append((f"{dist_info}/licenses/{name}", (ROOT / name).read_bytes()))
     entries.append((f"{dist_info}/METADATA", _metadata(project, version).encode("utf-8")))
     wheel_meta = (
         "Wheel-Version: 1.0\nGenerator: sqllocks-shape build_pure_wheel.py\n"

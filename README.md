@@ -16,18 +16,22 @@ command is `shape`, and artifacts use the `.shape` extension.
 ```python
 import shape
 
-s = shape.profile(rows)
-shape.save(s, "customer.shape", name="customer")
-again = shape.load("customer.shape")
+p = shape.profile("customers.csv")      # also: Parquet, JSONL, Delta tables, pandas, pyarrow
+shape.save(p, "customers.shape")
+print(p.summary())                      # small JSON-safe summary per column
+
+result = shape.check(p, {"columns": {"customer_id": {"unique": True, "nullable": False}}})
+print(result.passed, result.violations)
+
+drift = shape.diff(shape.load("customers.shape"), shape.profile("customers_next.csv"))
+print(drift.drifted, drift.changes)
 ```
 
 ```bash
-shape profile customers.csv -o customer.shape
-shape inspect customer.shape
+shape profile customers.csv -o customers.shape --html report.html --json summary.json
+shape check customers.shape contract.json          # exit code 1 if the contract fails
+shape diff customers.shape customers_next.shape --fail-on-drift
 ```
-
-`.shape` format v1 is a checksummed, content-addressed artifact. Treat artifacts
-according to their sensitivity; they may contain value-bearing evidence.
 
 ## Design principles
 
