@@ -1,0 +1,9 @@
+{
+  "row_count": {"min": 10000, "max": 5000000},
+  "columns": {
+    "customer_id": {"dtype": "integer", "nullable": false, "unique": true},
+    "email": {"dtype": "string", "max_null_rate": 0.08, "pattern": "email"}
+  },
+  "required_columns": ["customer_id", "email"],
+  "allow_extra_columns": true
+}
