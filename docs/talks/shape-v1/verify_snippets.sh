@@ -85,8 +85,9 @@ write_deltalake("Tables/orders_day1", pq.read_table("orders_day1.parquet"))
 # --- slide 27: what the Fabric notebook does with a lakehouse table ---------
 import shape
 p = shape.profile("Tables/orders_day1", name="orders_day1")
-print(p.summary()["name"], p.summary()["row_count"])
-assert p.summary()["columns"]["order_total"]["max"] == 5135.63
+r = shape.check(p, "contracts/orders.json")
+print(p.summary()["name"], p.summary()["row_count"], r.passed)
+assert p.summary()["columns"]["order_total"]["max"] == 5135.63 and r.passed
 EOF
 
 echo "== CLI snippets (slide 14)"
