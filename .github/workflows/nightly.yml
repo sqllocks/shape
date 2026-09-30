@@ -1,0 +1,12 @@
+name: Nightly
+on:
+  schedule: [{cron: '17 3 * * *'}]
+  workflow_dispatch: {}
+permissions: {contents: read}
+jobs:
+  placeholder:
+    # Placeholder until P0-07 adds the benchmark harness (`run.py --full`) and P1-xx adds
+    # the emulator-backed jobs (ci/emulators/docker-compose.yml).
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "nightly jobs are added by P0-07"
