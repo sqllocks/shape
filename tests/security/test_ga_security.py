@@ -47,10 +47,8 @@ def test_sanitized_derivative_provenance():
         "columns": {"email": {"kind": "text", "count": 100, "topk": [["person@example.com", 5]]}},
     }
     r = release_for(s, {"email": "PII"}, "PUBLIC", source_classification="TOP_SECRET")
-    assert (
-        "person@example.com" not in str(r.shape)
-        and r.shape["release_policy"]["sanitized_derivative"]
-    )
+    assert r.allowed is False and r.reason == "source_exceeds_target"
+    assert "person@example.com" not in str(r.shape)
 
 
 def test_query_injection_matrix():

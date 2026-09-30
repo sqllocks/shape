@@ -78,7 +78,10 @@ def test_generation_relations_location_temporal_scenario_privacy_artifact(seed, 
     ]
     s = capture_rows(rows).to_dict()
     m = apply_scenario(s, Scenario("stress", {"columns.x.mean": "+5%"}))
-    r = release_for(m, {"x": "SENSITIVE"}, "INTERNAL", source_classification="SENSITIVE")
+    denied = release_for(m, {"x": "SENSITIVE"}, "INTERNAL", source_classification="SENSITIVE")
+    assert denied.allowed is False and denied.reason == "source_exceeds_target"
+    r = release_for(m, {"x": "SENSITIVE"}, "INTERNAL", source_classification="INTERNAL")
+    assert r.allowed is True
     p = tmp_path / f"{seed}.shape"
     write_shape(p, r.shape, name="t", classification="INTERNAL")
     _, back = read_shape(p)

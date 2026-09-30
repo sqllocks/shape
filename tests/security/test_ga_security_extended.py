@@ -90,9 +90,12 @@ def test_release_downgrade_strips_tight_bounds_and_values():
         },
     }
     r = release_for(s, {"salary": "TOP_SECRET"}, "PUBLIC", source_classification="TOP_SECRET")
+    assert r.allowed is False and r.reason == "source_exceeds_target"
+    r = release_for(s, {"salary": "TOP_SECRET"}, "PUBLIC")
     x = r.shape["columns"]["salary"]
+    assert r.allowed is True
     assert all(k not in x for k in ("min", "max", "quantiles", "topk", "samples"))
-    assert x["value_evidence_redacted"] and r.shape["release_policy"]["sanitized_derivative"]
+    assert x["value_evidence_redacted"]
 
 
 def test_secure_envelope_tamper_header_ciphertext_signature():

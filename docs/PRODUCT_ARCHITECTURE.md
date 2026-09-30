@@ -192,7 +192,7 @@ A Shape is NOT assumed non-sensitive merely because it does not contain source r
 
 Security is an execution constraint across the Shape algebra:
 - labels propagate through operations
-- lower-trust release is gated by release policy (enforcement in progress)
+- lower-trust release is gated by release policy (enforced by `privacy.release_for`: source above target and cohorts below minimum are denied)
 - core operation supports offline/air-gapped deployment
 - no mandatory cloud, telemetry or LLM dependency
 - synthetic output is not automatically declassified
