@@ -15,7 +15,7 @@ import pytest
 import shape
 from shape.capture import capture_rows
 from shape.io import PANDAS_CSV, read_table
-from shape.profile.infer import TypeTracker, as_number, infer_spindle_type, is_number
+from shape.profile.infer import TypeTracker, as_number, infer_column_type, is_number
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -51,21 +51,21 @@ ROOT = Path(__file__).resolve().parents[2]
     ],
 )
 def test_arrow_type_rules(values, expected):
-    assert infer_spindle_type(values, source="arrow") == expected
+    assert infer_column_type(values, source="arrow") == expected
 
 
 def test_csv_source_keeps_dates_as_text_like_read_csv():
     text = pa.array(["2020-01-05", "2020-02-06"])
-    assert infer_spindle_type(text, source="csv") == "datetime"  # via string parsing
-    assert infer_spindle_type(pa.array([1, 2, None]), source="csv") == "integer"
-    assert infer_spindle_type(pa.array([True, None]), source="csv") == "boolean"
+    assert infer_column_type(text, source="csv") == "datetime"  # via string parsing
+    assert infer_column_type(pa.array([1, 2, None]), source="csv") == "integer"
+    assert infer_column_type(pa.array([True, None]), source="csv") == "boolean"
     with pytest.raises(ValueError, match="source"):
-        infer_spindle_type(pa.array([1]), source="xml")
+        infer_column_type(pa.array([1]), source="xml")
 
 
 def test_chunked_arrays_and_python_lists_are_accepted():
-    assert infer_spindle_type(pa.chunked_array([pa.array([1]), pa.array([2])])) == "integer"
-    assert infer_spindle_type([1.5, 2.5]) == "float"
+    assert infer_column_type(pa.chunked_array([pa.array([1]), pa.array([2])])) == "integer"
+    assert infer_column_type([1.5, 2.5]) == "float"
 
 
 # ------------------------------------------------ dtype parity on the T-22 datasets
@@ -104,7 +104,7 @@ def _files(root: Path) -> list[Path]:
 
 def test_dtype_of_every_column_matches_the_spindle_profiler(t22_data):
     """The reference profiler equals Spindle's DataProfiler field by field (verify.py, 30/30),
-    so its dtype is Spindle's dtype; infer_spindle_type must give the same for each column."""
+    so its dtype is Spindle's dtype; infer_column_type must give the same for each column."""
     files = _files(t22_data)
     assert len(files) >= 22
     checked = 0
@@ -117,7 +117,7 @@ def test_dtype_of_every_column_matches_the_spindle_profiler(t22_data):
             next(iter(want["tables"].values()))["columns"] if "tables" in want else want["columns"]
         )
         for name in table.column_names:
-            got = infer_spindle_type(table[name], source="csv" if csv else "arrow")
+            got = infer_column_type(table[name], source="csv" if csv else "arrow")
             assert got == cols[name]["dtype"], (path.name, name, got, cols[name]["dtype"])
             checked += 1
     assert checked > 300
@@ -129,7 +129,7 @@ def test_dtype_of_multi_table_dataset(t22_data):
         table = read_table(path, csv=PANDAS_CSV)
         want = shape.profile({name: str(path)}).to_dict()["tables"][name]["columns"]
         for col in table.column_names:
-            assert infer_spindle_type(table[col], source="csv") == want[col]["dtype"], (name, col)
+            assert infer_column_type(table[col], source="csv") == want[col]["dtype"], (name, col)
 
 
 # ------------------------------------------- capture path: P2, P3, P4 (evidence is kept)

@@ -60,7 +60,7 @@ regenerates D1, and `results.json` supersedes those rows.)
 |---|---|---|
 | `pd.read_csv` dtype inference (int with nulls -> float64, bool with nulls -> object, text dates stay text, pandas NA tokens, `True/TRUE/true` booleans) | `pyarrow.csv` with pandas' NA and bool token lists and timestamp inference disabled. Inferred date32/time32 columns are cast back to their exact canonical text. A per-column "pandas kind" is carried alongside the data | bitwise |
 | `pd.read_parquet` / `Table.to_pandas()` (int with nulls -> float, date32 -> object `datetime.date`, timestamp -> datetime64, bool with nulls -> object) | `_arrow_cols` kind mapping | bitwise |
-| `_infer_spindle_type`: bool dtype; int; float with the all-whole check; datetime with the all-midnight check; object/str: bool-like set, `to_numeric`, `to_datetime(format="mixed")` | Same decision tree. The bool-like set check and numeric cast run vectorised on the distinct values | bitwise |
+| `_infer_column_type`: bool dtype; int; float with the all-whole check; datetime with the all-midnight check; object/str: bool-like set, `to_numeric`, `to_datetime(format="mixed")` | Same decision tree. The bool-like set check and numeric cast run vectorised on the distinct values | bitwise |
 | null_count (NaN counts as null), null_rate, cardinality (`nunique`, -0.0 == 0.0), cardinality_ratio, is_unique, is_enum, all rounding | same | bitwise |
 | `enum_values` and `value_counts_ext` (top 500): pandas `value_counts` order (first appearance, then a *stable* descending sort) and `str(key)` formatting of int, float, bool, Timestamp and date keys, including which of `-0.0` or `0.0` is printed | Arrow hash counts for strings, bools and low-cardinality numerics. For numerics above 50k distinct values: sort-based counts plus a chunked first-appearance scan that reproduces pandas' tie order exactly | bitwise, including key order |
 | min/max with pandas' Python types (`int`, `float`, `str`, `bool`, `Timestamp`, `datetime.date`) | `pc.min_max` / numpy, converted to the same Python types (a `Timestamp` subclass of `datetime` stands in for pandas') | bitwise, including type |
@@ -125,7 +125,7 @@ rests on reasoning rather than on a test, or where the port is known to be narro
 6. `utf8_lower` (the bool-like check) differs from Python's `str.lower` only for special
    Unicode casing; this is irrelevant for the ASCII set being tested.
 7. **Redundant work is not replicated.** Spindle repeats work whose results are
-   identical: `_infer_spindle_type` and `_detect_pattern` run again for every unique column
+   identical: `_infer_column_type` and `_detect_pattern` run again for every unique column
    inside `_detect_primary_key`; `profile_dataset` re-detects every table's PK once per
    table; `value_counts` runs twice (enum and ext); `to_numeric` runs up to 4 times per
    column; `np.percentile` runs 3 times; `astype(str)` runs on the full column before
@@ -173,7 +173,7 @@ imports are excluded. Run-to-run spread is within about ±10% of the median (one
 ### Where the time goes (cProfile)
 
 **Spindle**
-- D2 (37 s under the profiler): `_infer_spindle_type` takes 21 s. Of that, about 10 s is
+- D2 (37 s under the profiler): `_infer_column_type` takes 21 s. Of that, about 10 s is
   the Python set comprehension `str(v).lower()` over every distinct value of every string
   column (7M calls); the rest is repeated `to_numeric` / `to_datetime`.
   `_detect_primary_key` takes 4.3 s, because it re-runs type inference and pattern

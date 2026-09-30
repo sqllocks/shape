@@ -62,10 +62,10 @@ fn set_threads(n: usize) -> usize {
     rayon::current_num_threads()
 }
 
-/// Distribution fitting as Spindle does it (see `fit.rs`): detect the best of normal, uniform,
+/// Distribution fitting as the reference does it (see `fit.rs`): detect the best of normal, uniform,
 /// exponential and lognormal on `sample` (already drawn: at most 2000 values), then score it by
 /// refitting on `full` (defaults to `sample`). Returns `{distribution, distribution_params,
-/// fit_score}` with `None` where Spindle reports nothing. NaN must already be removed.
+/// fit_score}` with `None` where the reference reports nothing. NaN must already be removed.
 static NP_EXP: std::sync::OnceLock<Py<PyAny>> = std::sync::OnceLock::new();
 static NP_LOG: std::sync::OnceLock<Py<PyAny>> = std::sync::OnceLock::new();
 

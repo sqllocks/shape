@@ -9,7 +9,7 @@ table whose schema is the first file's.
 
 CSV values are typed by inference, not left as strings (bug P1). ``CsvOptions`` covers schema
 overrides and null/boolean tokens; ``PANDAS_CSV`` reproduces ``pandas.read_csv`` token semantics
-(the Spindle-parity profile path).
+(the parity profile path).
 """
 
 from __future__ import annotations

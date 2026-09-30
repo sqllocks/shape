@@ -1,5 +1,5 @@
-//! Distribution fitting for the profiler (P1-08): a port of the scipy 1.17 routines Spindle's
-//! `DataProfiler._detect_distribution` relies on, candidate by candidate:
+//! Distribution fitting for the profiler (P1-08): a port of the scipy 1.17 routines the
+//! reference distribution detection relies on, candidate by candidate:
 //! `norm`, `uniform`, `expon` (closed-form MLE) and `lognorm` (scipy's `fit` override: the
 //! dL/dloc bracket search with `brentq`, falling back to the generic MLE with Nelder-Mead),
 //! each scored with the exact two-sided KS p-value (`kstwo.sf`: Durbin/Marsaglia-Tsang-Wang,
@@ -1223,7 +1223,7 @@ pub fn detect_distribution(values: &[f64]) -> Option<(Dist, Vec<f64>)> {
     best.map(|(d, _, p)| (d, p))
 }
 
-/// Spindle's `fit_score`: refit `d` on the full column and return `round(1 - D, 4)`.
+/// The `fit_score`: refit `d` on the full column and return `round(1 - D, 4)`.
 pub fn fit_score(full: &[f64], d: Dist) -> Option<f64> {
     if full.len() < 20 {
         return None;

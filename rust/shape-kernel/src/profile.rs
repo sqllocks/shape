@@ -1,7 +1,7 @@
 //! Fused profile kernel (P1-06): one call per record batch updates every column.
 //!
 //! Two modes (T-15). **Exact** keeps exact distinct values with counts and every finite numeric
-//! value (sort-based quantiles), as Spindle does. **Bounded** replaces those by the T-14
+//! value (sort-based quantiles). **Bounded** replaces those by the T-14
 //! sketches: HyperLogLog for distinct, SpaceSaving for top values, KLL for quantiles. Counts,
 //! min/max, moments, text lengths, pattern classes and temporal histograms are exact in both.
 //!

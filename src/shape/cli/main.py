@@ -71,35 +71,21 @@ def _run(fn, a):
 def _cmd_profile(a):
     import shape
 
-    bare = a.spindle_compat is True  # --spindle-compat with no path: -o is the Spindle JSON
-    if bare and not a.output:
-        raise ValueError("--spindle-compat without a path needs -o OUT.json")
-    if not bare and not a.output:
+    if not a.output:
         raise ValueError("profile needs -o OUT.shape")
     prof = shape.profile(a.src)
-    if bare:
-        _write_json(a.output, prof.to_dict())
-        if a.html:
-            with open(a.html, "w", encoding="utf-8") as fh:
-                fh.write(prof.to_html())
-        if a.json:
-            _write_json(a.json, prof.summary())
-        _dump({"written": a.output, "format": "spindle-compat"})
-        return 0
     content_id = shape.save(prof, a.output)
     if a.html:
         with open(a.html, "w", encoding="utf-8") as fh:
             fh.write(prof.to_html())
     if a.json:
         _write_json(a.json, prof.summary())
-    if a.spindle_compat:
-        _write_json(a.spindle_compat, prof.to_dict())
     _dump({"written": a.output, "shape_content_id": content_id})
     return 0
 
 
 def _cmd_inspect(a):
-    """Print what a .shape artifact holds: a profile (Spindle-shaped) or a Shape model."""
+    """Print what a .shape artifact holds: a profile or a Shape model."""
     if _artifact_kind(a.shape) == "profile":
         import shape
 
@@ -148,24 +134,11 @@ def _build_parser():
     c = sub.add_parser("capture")
     c.add_argument("csv")
     c.add_argument("-o", "--output")
-    pr = sub.add_parser(
-        "profile",
-        help="profile a file, glob, directory or Delta table "
-        "(also: profile capture DATA -o OUT.json, profile diff A.json B.json)",
-    )
+    pr = sub.add_parser("profile", help="profile a file, glob, directory or Delta table")
     pr.add_argument("src", metavar="SRC")
     pr.add_argument("-o", "--output", metavar="OUT")
     pr.add_argument("--html", metavar="REPORT.html")
     pr.add_argument("--json", metavar="SUMMARY.json")
-    pr.add_argument(
-        "--spindle-compat",
-        metavar="FULL.json",
-        nargs="?",
-        const=True,
-        default=None,
-        help="write Spindle's TableProfile JSON: to FULL.json alongside the .shape file, or, "
-        "given bare, to -o instead of a .shape file",
-    )
     d = sub.add_parser("diff", help="compare two profiles")
     d.add_argument("before", metavar="BASE.shape")
     d.add_argument("after", metavar="CURRENT.shape")
@@ -221,25 +194,6 @@ def _build_parser():
     return p
 
 
-def _profile_sub_parser():
-    """Parsers of ``shape profile capture`` and ``shape profile diff``, which share the word
-    ``profile`` with ``shape profile SRC``."""
-    p = argparse.ArgumentParser(prog="shape profile")
-    sub = p.add_subparsers(dest="sub", required=True)
-    cap = sub.add_parser("capture", help="capture the categorical shape of data, without rows")
-    cap.add_argument("data", metavar="DATA")
-    cap.add_argument("-o", "--output", required=True, metavar="OUT.json")
-    cap.add_argument("--format", dest="fmt", choices=("csv", "parquet", "jsonl"), default="csv")
-    cap.add_argument("--name", default="captured")
-    dif = sub.add_parser("diff", help="drift between two captured profiles")
-    dif.add_argument("a", metavar="A.json")
-    dif.add_argument("b", metavar="B.json")
-    dif.add_argument("--threshold", type=float, default=None)
-    dif.add_argument("--json", dest="as_json", action="store_true")
-    dif.add_argument("--min-drift", type=float, default=0.01)
-    return p
-
-
 def _version():
     from shape import __version__
 
@@ -251,10 +205,6 @@ def main(argv=None):
     if argv[:1] in (["--version"], ["-V"]):
         print(f"shape {_version()}")
         return 0
-    if argv[:1] == ["profile"] and argv[1:2] in (["capture"], ["diff"]):
-        from shape.cli import profile_cmds
-
-        return _run(profile_cmds.run, _profile_sub_parser().parse_args(argv[1:]))
     a = _build_parser().parse_args(argv)
     if a.version:
         print(f"shape {_version()}")

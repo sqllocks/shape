@@ -1,8 +1,8 @@
 """Distribution detection and fit score, on the native fitting kernel (P1-08).
 
-``detect_distribution`` is Spindle's ``_detect_distribution`` plus its ``fit_score``: the best of
+``detect_distribution`` picks the best of
 normal, uniform, exponential and lognormal by KS statistic among those whose exact KS p-value
-exceeds 0.05, on a 2000-value sample, then scored by refitting on the whole column.
+exceeds 0.05, on a 2000-value sample, then reports a ``fit_score`` from a full refit.
 """
 
 from __future__ import annotations

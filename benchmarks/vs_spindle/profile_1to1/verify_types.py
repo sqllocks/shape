@@ -1,10 +1,10 @@
-"""Check ``shape.profile.infer.infer_spindle_type`` against Spindle's own dtype (T-22 dtype rule).
+"""Check ``shape.profile.infer.infer_column_type`` against Spindle's own dtype (T-22 dtype rule).
 
     source scripts/env.sh && "$SHAPE_VENV/bin/python" \
         benchmarks/vs_spindle/profile_1to1/verify_types.py [dataset ...]
 
 For every column of every T-22 dataset (D1-D4, MT, EDGE; CSV and Parquet) the dtype from
-``infer_spindle_type`` is compared with the dtype in Spindle's cached ``DataProfiler`` output
+``infer_column_type`` is compared with the dtype in Spindle's cached ``DataProfiler`` output
 (``$BENCH_OUT_DIR/profile_cache/spindle_json``, filled by ``verify.py``). Exits 1 on any
 difference, 2 if a dataset or Spindle output is missing. Run ``verify.py --impl reference_port``
 first to fill the cache.
@@ -23,7 +23,7 @@ import verify  # noqa: E402  (dataset list and Spindle cache)
 from paths import BENCH_OUT_DIR  # noqa: E402
 
 from shape.io import PANDAS_CSV, read_table  # noqa: E402
-from shape.profile.infer import infer_spindle_type  # noqa: E402
+from shape.profile.infer import infer_column_type  # noqa: E402
 
 
 def _spindle_dtypes(ds: str) -> dict[str, dict[str, str]]:
@@ -65,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
             table = read_table(path, csv=PANDAS_CSV) if csv else read_table(path)
             want = spindle[name if name in spindle else next(iter(spindle))]
             for col in table.column_names:
-                got = infer_spindle_type(table[col], source="csv" if csv else "arrow")
+                got = infer_column_type(table[col], source="csv" if csv else "arrow")
                 checked += 1
                 if got != want[col]:
                     bad += 1

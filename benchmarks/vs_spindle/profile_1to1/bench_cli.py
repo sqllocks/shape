@@ -5,13 +5,13 @@
 
 * PROF-CLI, per CSV dataset (default d2.csv d3.csv): Spindle is
   ``spindle_cli_profile.py <file> -o <out>`` in the Spindle venv (Spindle has no command that
-  runs ``DataProfiler`` alone); Shape is ``shape profile <file> --spindle-compat -o <out>``.
+  runs ``DataProfiler`` alone); Shape is ``shape profile <file> -o <out>.shape``.
   Runs alternate between the two, fresh process each, median of ``--reps``; the gate is >= 10x.
 * START: median of 10 runs of ``shape --version``; the gate is <= 300 ms.
 
-Equivalence first: before any timing the two outputs are compared field by field under T-22
-(``verify_cli.py`` does the same for the command line's other outputs); a dataset whose outputs
-differ is reported and not timed. The run holds the exclusive benchmark lock. Results go to
+Equivalence first: before any timing the two outputs are compared field by field under T-22, Shape's
+through ``adapter.py`` (an adapter in ``benchmarks/``, never in ``src/``); a dataset whose
+outputs differ is reported and not timed. The run holds the exclusive benchmark lock. Results go to
 ``$BENCH_OUT_DIR/profile/cli_bench.json``.
 """
 
@@ -53,17 +53,18 @@ def spindle_cmd(src: Path, out: Path) -> list[object]:
 
 
 def shape_cmd(src: Path, out: Path) -> list[object]:
-    return [SHAPE_CLI, "profile", src, "--spindle-compat", "-o", out]
+    return [SHAPE_CLI, "profile", src, "-o", out]
 
 
 def equivalent(src: Path, work: Path) -> list[str]:
     import verify
+    from adapter import profile_json
 
-    a, b = work / "spindle.json", work / "shape.json"
+    a, b = work / "spindle.json", work / "shape.shape"
     timed(spindle_cmd(src, a))
     timed(shape_cmd(src, b))
     found: list[str] = []
-    verify.check_table(json.loads(a.read_text()), json.loads(b.read_text()), src.name, {}, found)
+    verify.check_table(json.loads(a.read_text()), profile_json(b), src.name, {}, found)
     return found
 
 
@@ -77,7 +78,7 @@ def prof_cli(name: str, reps: int) -> dict[str, object]:
         sp, sh = [], []
         for _ in range(reps):  # interleaved
             sp.append(timed(spindle_cmd(src, work / "s.json")))
-            sh.append(timed(shape_cmd(src, work / "h.json")))
+            sh.append(timed(shape_cmd(src, work / "h.shape")))
     ms, mh = statistics.median(sp), statistics.median(sh)
     return {
         "dataset": name,

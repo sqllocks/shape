@@ -1,7 +1,7 @@
 """Composable deterministic generation strategies.
 
-These cover the useful semantic surface identified in the Spindle audit while
-remaining independent of Spindle's API.
+These cover the useful semantic surface of a synthetic-data generator and stay independent
+of any other library's API.
 """
 
 from __future__ import annotations

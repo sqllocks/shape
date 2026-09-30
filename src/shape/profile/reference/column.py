@@ -339,7 +339,7 @@ def _combine(arr: Any) -> Any:
 
 
 def _require_finite(values: np.ndarray) -> None:
-    """Spindle's whole-number test does ``series.astype(int)``, which pandas refuses for inf;
+    """The whole-number test does ``series.astype(int)``, which pandas refuses for inf;
     Shape fails on the same input with the same error category (ValueError)."""
     if not np.isfinite(values).all():
         raise ValueError("Cannot convert non-finite values (NA or inf) to integer")
@@ -360,7 +360,7 @@ def _object_key(kind: str, v: Any) -> str:
 
 def _numeric_of_objects(values: list[Any]) -> np.ndarray | None:
     """``pd.to_numeric(object_series, errors="coerce")`` as floats, or None when any value
-    would coerce to NaN (Spindle then does not call the column numeric)."""
+    would coerce to NaN (the column is then not numeric)."""
     out = np.empty(len(values), dtype=np.float64)
     text_at = [i for i, v in enumerate(values) if isinstance(v, str)]
     for i, v in enumerate(values):
@@ -435,7 +435,7 @@ def _profile_object_column(c: _Col, row_count: int, top_n: int = 500) -> _Work:
             enum_values = dict(zip(ukeys, props, strict=True))
         value_counts_ext = dict(zip(ukeys[:top_n], props[:top_n], strict=True))
 
-    # ---- spindle type, numeric stats ------------------------------------------------------
+    # ---- column type, numeric stats ------------------------------------------------------
     stype = "string"
     base: ColumnProfile | None = None
     numeric: np.ndarray | None = None
@@ -462,7 +462,7 @@ def _profile_object_column(c: _Col, row_count: int, top_n: int = 500) -> _Work:
     if n_nn and kind != "cat":
         try:
             lo, hi = min(values), max(values)
-        except TypeError:  # pandas: min() of mixed str/number raises, Spindle leaves None
+        except TypeError:  # pandas: min() of mixed str/number raises, leave None
             lo = hi = None
         if lo is not None:
             min_value, max_value = (
@@ -577,7 +577,7 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
         cardinality < 200 or (cardinality_ratio < 0.30 and cardinality < 50_000)
     ) and cardinality > 0
 
-    # ---- spindle type -------------------------------------------------------
+    # ---- column type -------------------------------------------------------
     numeric = None  # float64 numpy array of numeric values (row order)
     dt_values = None  # pa timestamp array of parsed datetimes (row order, NaT dropped)
     if kind == "bool" or kind == "objbool":

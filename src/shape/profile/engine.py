@@ -4,7 +4,7 @@
 the kernel with one call, and returns a JSON-safe document that follows
 ``shape/schemas/profile-engine-v1.schema.json``. ``profile_many`` profiles several inputs in one
 process. Two modes (T-15): ``exact`` (the default: exact distinct counts, value counts and
-quantiles, as Spindle computes them) and ``bounded`` (sketches; memory does not grow with the
+quantiles, computed the reference way) and ``bounded`` (sketches; memory does not grow with the
 number of rows, and CSV files are streamed rather than read whole).
 
 Threads: ``SHAPE_THREADS`` (or ``EngineOptions.threads``) sizes the kernel's thread pool and

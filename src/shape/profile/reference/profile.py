@@ -97,7 +97,7 @@ def _column_dict(cp: ColumnProfile) -> dict[str, Any]:
 
 
 def table_to_dict(tp: TableProfile) -> dict[str, Any]:
-    """A table profile in Spindle's ``TableProfile`` JSON shape."""
+    """A table profile as a JSON-ready dict."""
     return {
         "name": tp.name,
         "row_count": tp.row_count,
@@ -109,7 +109,7 @@ def table_to_dict(tp: TableProfile) -> dict[str, Any]:
 
 
 def dataset_to_dict(dp: DatasetProfile) -> dict[str, Any]:
-    """A multi-table profile in Spindle's ``DatasetProfile`` JSON shape."""
+    """A multi-table profile as a JSON-ready dict."""
     return {
         "tables": {n: table_to_dict(t) for n, t in dp.tables.items()},
         "relationships": _clean(dp.relationships),
@@ -151,7 +151,7 @@ def _table_summary(table: dict[str, Any]) -> dict[str, Any]:
 
 
 class Profile:
-    """A data profile. ``to_dict()`` is the full Spindle-shaped profile."""
+    """A data profile. ``to_dict()`` is the full profile as JSON-ready dicts."""
 
     def __init__(self, data: dict[str, Any], *, name: str | None = None) -> None:
         if "tables" not in data and "columns" not in data:
@@ -172,7 +172,7 @@ class Profile:
         return {self._data["name"]: self._data}
 
     def to_dict(self) -> dict[str, Any]:
-        """The full profile in Spindle's TableProfile / dataset JSON shape."""
+        """The full profile as JSON-ready dicts."""
         return copy.deepcopy(self._data)
 
     def summary(self) -> dict[str, Any]:

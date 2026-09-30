@@ -1,10 +1,10 @@
-"""Type inference: Spindle's dtype classification, and the Python-value rules for capture.
+"""Type inference: the column type classification, and the Python-value rules for capture.
 
-``infer_spindle_type`` reproduces ``DataProfiler._infer_spindle_type`` (Spindle
-``inference/profiler.py``) on Arrow data, using the pandas dtype the value would have after
+``infer_column_type`` classifies an Arrow column, using the pandas dtype the value would have after
 ``pandas.read_csv`` / ``read_parquet`` (the same emulation as the reference profiler in
 ``shape.profile.reference``): ``boolean``, ``integer``, ``float``, ``date``, ``datetime`` or
-``string``. It is checked against Spindle's own output on every T-22 dataset.
+``string``. The internal parity harness checks it against the reference implementation on every
+T-22 dataset.
 
 ``TypeTracker`` decides the type of a stream of Python values without ever discarding
 evidence: it records every value as text and as a number side by side, so the final type can
@@ -45,8 +45,8 @@ def _try_cast(arr: Any, typ: Any) -> bool:
     return True
 
 
-def infer_spindle_type(array: Any, source: str = "arrow") -> str:
-    """Spindle's type name for one column.
+def infer_column_type(array: Any, source: str = "arrow") -> str:
+    """The type name of one column: boolean, integer, float, date, datetime or string.
 
     ``source`` is ``"csv"`` when the column was parsed from text without pandas's date
     parsing (dates stay text, as in ``pandas.read_csv``), else ``"arrow"`` (Parquet, IPC,

@@ -74,7 +74,7 @@ class _Col:
     kind: str
     arr: Any  # pa.ChunkedArray (or numpy for float)
     tz: str | None = None  # dt64 only: the Parquet column's time zone (arr holds UTC instants)
-    # file sources only: fail where Spindle's own profiler fails on the same file (P1-08)
+    # file sources only: fail where the reference profiler fails on the same file (P1-08)
     strict: bool = False
 
 
@@ -126,7 +126,7 @@ def _arrow_cols(t: pa.Table) -> list[_Col]:
             out.append(_Col(name, "cat", col.unify_dictionaries()))
             continue
         if pa.types.is_nested(typ):
-            # pandas holds dicts / ndarrays here; Spindle's value hashing then raises
+            # pandas holds dicts / ndarrays here; value hashing then raises
             raise TypeError(f"column {name}: unhashable type: nested Arrow column ({typ})")
         if pa.types.is_uint64(typ) and col.null_count == 0:
             out.append(_Col(name, "uint64", col))

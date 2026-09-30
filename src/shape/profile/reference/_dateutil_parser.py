@@ -1,7 +1,7 @@
 """Generic date/time string parser, a port of ``dateutil.parser`` (python-dateutil 2.9.0).
 
 pandas' ``to_datetime(..., format="mixed")`` falls back on dateutil for every string its own
-ISO-8601 and delimited-date readers do not take, and Spindle's type inference rests on that call.
+ISO-8601 and delimited-date readers do not take, and the profiler's type inference rests on that call.
 Shape reproduces that behaviour without depending on python-dateutil, so the tokenizer, the
 parser state machine and the day/month/year resolution below follow dateutil's
 (``dateutil/parser/_parser.py``) line by line. Time-zone handling is reduced to reporting that a

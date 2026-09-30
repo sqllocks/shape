@@ -1,4 +1,4 @@
-"""Result dataclasses of the reference profiler (Spindle TableProfile field names)."""
+"""Result dataclasses of the reference profiler (field names of the profile JSON)."""
 
 from __future__ import annotations
 
@@ -7,9 +7,8 @@ from dataclasses import dataclass, field
 from typing import Any
 
 # ---------------------------------------------------------------------------
-# Output dataclasses (same field names as Spindle; raw-bearing fields are
-# plain attributes here -- Spindle hides them behind InitVar/properties
-# (ADR-007) but exposes the same values through .enum_values/.min_value/...)
+# Output dataclasses (raw-bearing fields are plain attributes here and are read through
+# .enum_values/.min_value/...)
 # ---------------------------------------------------------------------------
 
 

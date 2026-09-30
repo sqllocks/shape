@@ -1,8 +1,8 @@
 """pandas' string-to-datetime semantics for text columns, without pandas or dateutil.
 
 ``parse_mixed`` is ``pd.to_datetime(s, format="mixed", dayfirst=False)`` for one string, the call
-Spindle's type inference uses. ``guess_format`` is ``pandas.tseries.api.guess_datetime_format``,
-which ``pd.to_datetime(series, errors="coerce")`` (the call behind Spindle's histograms) applies
+the type inference uses. ``guess_format`` is ``pandas.tseries.api.guess_datetime_format``,
+which ``pd.to_datetime(series, errors="coerce")`` (the call behind the date histograms) applies
 to the first element before parsing the rest strictly. Both sit on ``_dateutil_parser``.
 
 Zone-bearing text raises ``NotImplementedError`` (Shape does not model tz-aware text columns).
