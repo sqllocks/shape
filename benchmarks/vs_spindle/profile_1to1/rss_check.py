@@ -30,8 +30,13 @@ from shape.profile.engine import profile
 t0 = time.perf_counter()
 doc = profile(sys.argv[1], mode="bounded")
 t = next(iter(doc["tables"].values()))
+# VmHWM is this process's own peak; ru_maxrss survives exec on Linux, so it would include a
+# larger parent's peak (see tests/profile/test_engine.py).
+with open("/proc/self/status") as fh:
+    hwm_kib = next(int(line.split()[1]) for line in fh if line.startswith("VmHWM:"))
 print(json.dumps({"rows": t["rows"], "seconds": time.perf_counter() - t0,
-                  "peak_rss_mb": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024}))
+                  "peak_rss_mb": hwm_kib / 1024,
+                  "ru_maxrss_mb": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024}))
 """
 
 

@@ -208,11 +208,15 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
         "import sys\n"
         "from shape.profile.engine import profile\n"
         "profile(sys.argv[1], mode='bounded')\n"
-        "try:\n"
+        # Linux: VmHWM belongs to this process's address space. ru_maxrss survives exec on
+        # Linux, so in a child of pytest it reports the parent's (larger) peak for both sizes.
+        "if sys.platform.startswith('linux'):\n"
+        "    status = open('/proc/self/status').read().split('VmHWM:')[1]\n"
+        "    print(int(status.split()[0]) * 1024)\n"
+        "elif sys.platform == 'darwin':  # ru_maxrss is bytes on macOS\n"
         "    import resource\n"
-        "    scale = 1 if sys.platform == 'darwin' else 1024  # bytes on macOS, KiB on Linux\n"
-        "    print(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * scale)\n"
-        "except ImportError:  # Windows: the peak working set\n"
+        "    print(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)\n"
+        "else:  # Windows: the peak working set\n"
         "    import ctypes\n"
         "    from ctypes import wintypes as w\n"
         "    class Counters(ctypes.Structure):\n"
@@ -250,6 +254,7 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
         )
         peaks[rows] = int(r.stdout.split()[-1])
         p.unlink()
+    assert peaks[24_000_000] > 50 * 2**20, peaks  # a real measurement of the child
     assert abs(peaks[48_000_000] - peaks[24_000_000]) / peaks[24_000_000] < 0.10, peaks
 
 
