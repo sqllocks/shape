@@ -6,6 +6,10 @@ import math
 from collections import Counter
 from dataclasses import dataclass, field
 
+import pyarrow as pa  # type: ignore[import-untyped]
+
+from shape.kernel.hashing import hash_column, hash_value
+
 
 @dataclass
 class MissingnessPairEvidence:
@@ -195,12 +199,15 @@ class HashedDependencyEvidence:
     n: int = 0
 
     def _bin(self, v):
-        return hash((type(v).__name__, repr(v))) % self.bins
+        """Bin by the canonical XXH3 hash (T-13): identical in every process (S1)."""
+        h = hash_value(v)
+        return None if h is None else h % self.bins
 
     def update(self, a, b):
-        if a is None or b is None:
+        ba, bb = self._bin(a), self._bin(b)
+        if ba is None or bb is None:  # null and NaN are excluded
             return
-        k = (self._bin(a), self._bin(b))
+        k = (ba, bb)
         self.table[k] = self.table.get(k, 0) + 1
         self.n += 1
 
@@ -330,8 +337,9 @@ def hashed_dependency_batch(a, b, bins=64):
     s = HashedDependencyEvidence(bins)
     # Numeric/categorical integer fast path; arbitrary objects use bounded Python fallback.
     if x.dtype.kind in "iub" and y.dtype.kind in "iub":
-        xi = np.mod(x.astype(np.int64), bins)
-        yi = np.mod(y.astype(np.int64), bins)
+        # the same canonical hash as HashedDependencyEvidence._bin, computed in one native call
+        xi = (hash_column(pa.array(x)).to_numpy() % np.uint64(bins)).astype(np.int64)
+        yi = (hash_column(pa.array(y)).to_numpy() % np.uint64(bins)).astype(np.int64)
         code = xi * bins + yi
         counts = np.bincount(code, minlength=bins * bins)
         nz = np.flatnonzero(counts)

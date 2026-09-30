@@ -27,11 +27,11 @@ class NumericProfile:
         if x is None:
             self.null_count += 1
             return
-        self.cardinality.update(x)
-        self.topk.update(x)
         if isinstance(x, float) and math.isnan(x):
             self.nan_count += 1
-            return
+            return  # NaN never reaches the cardinality or top-k sketches (P7)
+        self.cardinality.update(x)
+        self.topk.update(x)
         if isinstance(x, float) and math.isinf(x):
             if x > 0:
                 self.pos_inf_count += 1

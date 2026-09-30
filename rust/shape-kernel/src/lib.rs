@@ -6,7 +6,9 @@
 
 use arrow_array::{Array, RecordBatch};
 use arrow_data::ArrayData;
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use pyo3_arrow::PyArray;
 use pyo3_arrow::PyRecordBatch;
 
 /// Address of the first byte of every data buffer of every column, in column order (nulls
@@ -30,6 +32,20 @@ fn collect_addresses(data: &ArrayData, out: &mut Vec<usize>) {
     for child in data.child_data() {
         collect_addresses(child, out);
     }
+}
+
+pub mod hashing;
+
+/// Canonical XXH3-64 hash of every element of an Arrow array (T-13). Null and NaN slots are
+/// null in the returned uint64 array.
+#[pyfunction]
+#[pyo3(signature = (array, seed = 0))]
+fn hash_array(py: Python<'_>, array: PyArray, seed: u64) -> PyResult<pyo3_arrow::PyArray> {
+    let (arr, _field) = array.into_inner();
+    let out = py
+        .detach(|| hashing::hash_array(&arr, seed))
+        .map_err(PyValueError::new_err)?;
+    Ok(PyArray::from_array_ref(std::sync::Arc::new(out)))
 }
 
 /// The kernel version (equal to the Python package version).
@@ -64,6 +80,7 @@ fn _kernel(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(roundtrip_batch, m)?)?;
     m.add_function(wrap_pyfunction!(buffer_addresses, m)?)?;
     m.add_function(wrap_pyfunction!(num_rows, m)?)?;
+    m.add_function(wrap_pyfunction!(hash_array, m)?)?;
     Ok(())
 }
 

@@ -11,6 +11,8 @@ from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
+from .hashing import hash_array as hash_array
+
 NAME = "python"
 
 

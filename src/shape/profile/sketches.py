@@ -2,26 +2,22 @@
 
 from __future__ import annotations
 
-import hashlib
 import heapq
 import math
 from dataclasses import dataclass, field
 from typing import Any
 
+from shape.kernel.hashing import hash_value
 
-def _h64(v: Any) -> int:
-    # Stable cross-process hash. Avoid repr(tuple(...)) allocations for common scalar types.
-    if isinstance(v, str):
-        b = b"s:" + v.encode("utf-8", "surrogatepass")
-    elif isinstance(v, int) and not isinstance(v, bool):
-        b = b"i:" + str(v).encode("ascii")
-    elif isinstance(v, float):
-        b = b"f:" + v.hex().encode("ascii")
-    elif v is None:
-        b = b"n:"
-    else:
-        b = (type(v).__name__ + ":" + repr(v)).encode("utf-8", "surrogatepass")
-    return int.from_bytes(hashlib.blake2b(b, digest_size=8, person=b"ShapeHLL").digest(), "big")
+
+def _h64(v: Any) -> int | None:
+    """Canonical seeded XXH3-64 (T-13): ``1`` and ``1.0`` agree; null and NaN give ``None``."""
+    return hash_value(v)
+
+
+def _excluded(v: Any) -> bool:
+    """Null and NaN are never counted by the sketches (T-13)."""
+    return v is None or (isinstance(v, float) and v != v)
 
 
 @dataclass
@@ -37,6 +33,8 @@ class HyperLogLog:
 
     def update(self, v: Any):
         x = _h64(v)
+        if x is None:
+            return
         idx = x >> (64 - self.p)
         rem = (x << self.p) & ((1 << 64) - 1)
         bits = 64 - self.p
@@ -77,6 +75,8 @@ class SpaceSaving:
         heapq.heappush(self._heap, (c, self._seq, v))
 
     def update(self, v: Any, n: int = 1):
+        if _excluded(v):
+            return
         cur = self.counts.get(v)
         if cur is not None:
             c, e = cur
