@@ -1104,7 +1104,7 @@ fn lognorm_fit(data: &[f64]) -> Result<[f64; 3], FitError> {
     let data_min = data.iter().cloned().fold(f64::INFINITY, f64::min);
     let lf = LogFit {
         data,
-        par: n >= 1 << 16,
+        par: n >= 1 << 16 && crate::can_par(),
         b1: std::cell::RefCell::new(vec![0.0; n]),
         b2: std::cell::RefCell::new(vec![0.0; n]),
     };
@@ -1155,7 +1155,7 @@ pub fn lognorm_probe(data: &[f64], loc: f64) -> (f64, f64, f64, f64) {
     let n = data.len();
     let lf = LogFit {
         data,
-        par: n >= 1 << 16,
+        par: n >= 1 << 16 && crate::can_par(),
         b1: std::cell::RefCell::new(vec![0.0; n]),
         b2: std::cell::RefCell::new(vec![0.0; n]),
     };
@@ -1195,7 +1195,12 @@ pub fn fit(d: Dist, data: &[f64]) -> Result<Vec<f64>, FitError> {
 
 fn sorted_copy(v: &[f64]) -> Vec<f64> {
     let mut xs = v.to_vec();
-    xs.par_sort_unstable_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let cmp = |a: &f64, b: &f64| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal);
+    if crate::can_par() {
+        xs.par_sort_unstable_by(cmp);
+    } else {
+        xs.sort_unstable_by(cmp);
+    }
     xs
 }
 

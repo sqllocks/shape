@@ -222,8 +222,18 @@ fn num_rows(batch: PyRecordBatch) -> usize {
     batch.as_ref().num_rows()
 }
 
+/// Process that imported the kernel. rayon's worker threads do not survive `fork()`, so a forked
+/// child (multiprocessing's fork pool) that enters the global pool would wait forever; it runs
+/// serially instead.
+static INIT_PID: std::sync::OnceLock<u32> = std::sync::OnceLock::new();
+
+pub(crate) fn can_par() -> bool {
+    INIT_PID.get().is_none_or(|p| *p == std::process::id())
+}
+
 #[pymodule]
 fn _kernel(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    let _ = INIT_PID.set(std::process::id());
     m.add("NAME", "rust")?;
     sketch::register(m)?;
     profile::register(m)?;

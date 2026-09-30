@@ -145,3 +145,19 @@ def test_numeric_columns_of_the_t22_datasets(native, tmp_path):
             _compare(native, vals)
             checked += 1
     assert checked > 100
+
+
+def test_fit_in_a_forked_child_after_the_parent_used_rayon(native):
+    """rayon's threads do not survive fork(); a forked child must not wait on the dead pool."""
+    import multiprocessing as mp
+
+    if "fork" not in mp.get_all_start_methods():
+        pytest.skip("no fork on this platform")
+    values = np.random.default_rng(9).lognormal(1.0, 0.5, 100_000)
+    parent = native.fit_distribution(pa.array(values[:2000]), pa.array(values))  # spins up rayon
+    ctx = mp.get_context("fork")
+    with ctx.Pool(1) as pool:
+        child = pool.apply_async(
+            native.fit_distribution, (pa.array(values[:2000]), pa.array(values))
+        ).get(timeout=60)
+    assert child == parent

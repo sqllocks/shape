@@ -144,7 +144,7 @@ where
             None => (0, false),
         }
     };
-    let pairs: Vec<(u64, bool)> = if len >= PAR_MIN {
+    let pairs: Vec<(u64, bool)> = if len >= PAR_MIN && crate::can_par() {
         (0..len.div_ceil(CHUNK))
             .into_par_iter()
             .flat_map_iter(|c| (c * CHUNK..((c + 1) * CHUNK).min(len)).map(one))

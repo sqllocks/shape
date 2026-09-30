@@ -704,10 +704,16 @@ impl TableProfile {
             return Err("batch schema differs from the profile schema".into());
         }
         let row0 = self.rows;
-        self.columns
-            .par_iter_mut()
-            .zip(batch.columns().par_iter())
-            .for_each(|(col, arr)| col.update(arr.as_ref(), row0));
+        if crate::can_par() {
+            self.columns
+                .par_iter_mut()
+                .zip(batch.columns().par_iter())
+                .for_each(|(col, arr)| col.update(arr.as_ref(), row0));
+        } else {
+            for (col, arr) in self.columns.iter_mut().zip(batch.columns()) {
+                col.update(arr.as_ref(), row0);
+            }
+        }
         self.rows += batch.num_rows() as u64;
         Ok(())
     }
