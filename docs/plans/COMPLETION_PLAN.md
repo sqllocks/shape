@@ -1904,6 +1904,8 @@ Spindle is retired. The talk shows Shape replacing it.
 | Python notebook | Kernels 3.10, 3.11 and 3.12 (default 3.12); 2 vCores / 16 GB by default, raised with `%%configure {"vCores": N}`; `deltalake` (delta-rs) and `duckdb` preinstalled; custom `.whl` installed with `%pip` from the notebook's built-in resources folder; Environment items not supported | Select kernel 3.11 or 3.12, and read Delta through `deltalake`. The default 2 vCores give less than the 4-core speedups in §3.3, so the demo runbook sets `vCores: 8`. |
 | Notebook → pipeline | `notebookutils.notebook.exit(str)` returns the exit value to the pipeline Notebook activity. It must **not** be called inside `try/except`. | The notebook builds its result, then calls `exit` at top level. |
 | User Data Functions | Python 3.11 at run time (3.12 when testing); 240 s execution limit (100 s through the public endpoint); 4 MB request; 30 MB response; **private libraries must be platform-independent `.whl` files under 28.6 MB**; public PyPI libraries allowed; parameter names must be camelCase; types are `str`, `int`, `float`, `bool`, `datetime`, `list`, `dict` and pandas `DataFrame`/`Series` (SDK ≥ 1.0.0); Lakehouse access through `@udf.connection` plus `fn.FabricLakehouseClient` (`connectToFiles`, `connectToSql`); no service principal or managed identity for those connections; `fn.UserThrownError` for handled errors | Shape must ship a **pure-Python wheel** (T-29). The UDF's numpy and pyarrow come from PyPI. UDF work is sized to finish well inside 240 s. |
+| Environment item | Attaches libraries to **Spark notebooks and Spark job definitions only** (not Python notebooks). Custom `.whl` upload has no platform-independence rule; Spark runs on Mariner Linux. Publish modes: **Full** takes 3–6 minutes to publish plus 1–3 minutes at session start, for pipelines and jobs; **Quick** takes about 5 seconds and installs at session start, for notebooks only. Outbound access protection blocks PyPI, so dependencies must then be uploaded as custom wheels. | The Spark path installs Shape once per environment. The demo uses Quick mode and the pipelines use Full mode. |
+| Spark runtimes | **1.3:** Spark 3.5.5, Python 3.11, end of support announced, still the default for new workspaces. **2.0:** Spark 4.1, Python 3.13, generally available. Spark 4 has `DataFrame.toArrow()`. | Target Runtime 2.0 in the demo Environment. On 1.3, fall back to `mapInArrow` or `toPandas()`. Shape supports both (T-06). |
 | Pipelines | The **Functions activity** invokes UDFs with static or dynamic parameters; the Notebook activity runs notebooks | Two gate patterns: notebook-based and UDF-based. |
 
 Sources:
@@ -1912,6 +1914,8 @@ Sources:
 - `…/python-programming-model`
 - `learn.microsoft.com/fabric/data-factory/functions-activity`
 - `learn.microsoft.com/fabric/data-engineering/using-python-experience-on-notebook`
+- `learn.microsoft.com/fabric/data-engineering/environment-manage-library`
+- `learn.microsoft.com/fabric/data-engineering/runtime`
 
 If a lane finds a constraint that differs from this table, it fixes the table in a
 `plan-fix:` commit with the evidence (§0.3).
@@ -2126,6 +2130,31 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
   - It asserts the exit JSON schema, and a failing result on the day-2 data.
 - Fixes: none.
 
+**DM-05b — Fabric Environment and PySpark notebook (L2)**
+- Depends: none; builds against the §12.2 stub.
+- Deliverables: in `integrations/fabric/`:
+  - **`environment/`:**
+    - `environment.yml`, which pins numpy, pyarrow and pandas only where Runtime 2.0's
+      built-ins are too old;
+    - `README.md` with upload steps: the Shape wheel as a custom library in Quick mode
+      for the demo, and Full mode for pipelines; runtime 2.0.
+  - **`notebooks/shape_profile_spark.ipynb`** (a PySpark notebook attached to the
+    Environment):
+    - the same parameters cell as `shape_profile.ipynb`;
+    - reads with `spark.read.table(tableName)`, then `.toArrow()` on Runtime 2.0, or
+      `toPandas()` on 1.3 (the notebook detects the Spark version);
+    - profiles with `exact=True` on the driver; the distributed bounded mode arrives
+      in PF-02;
+    - writes the same artifacts to `Files/shape/...`;
+    - the same top-level `notebookutils.notebook.exit` result JSON.
+  - A documented row limit for driver-side profiling (the default is based on driver
+    memory). Above it, the notebook uses `spark.read.table(...).sample(...)`, and the
+    result carries `sampled: true`.
+- Acceptance: `tests/demo/fabric/test_notebooks.py` runs the Spark notebook's code
+  cells with a local `pyspark` session (a `[dev]` dependency) against a local Delta
+  table, and asserts the same exit JSON as the Python notebook on the same data.
+- Fixes: none.
+
 **DM-06 — Fabric User Data Functions (L2)**
 - Depends: none; builds against the §12.2 stub.
 - Deliverables: `integrations/fabric/udf/function_app.py`, using the
@@ -2156,12 +2185,14 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
 - Fixes: none.
 
 **DM-07 — Fabric pipeline definitions (L2)**
-- Depends: DM-05, DM-06.
+- Depends: DM-05, DM-05b, DM-06.
 - Deliverables: in `integrations/fabric/pipelines/`:
   - **(a) `shape_gate_notebook`:** a Notebook activity (`shape_profile`, with
     parameters) → If Condition on
     `@json(activity('ProfileTable').output.result.exitValue).passed` → on false, a
     Fail activity whose message lists the violations.
+  - **(a2) `shape_gate_spark`:** the same shape as (a), using
+    `shape_profile_spark` with the Environment attached.
   - **(b) `shape_gate_udf`:** a Functions activity (UserDataFunctions connection)
     calling `profileLakehouseFile`, then `checkProfile` with `failOnViolation: true`.
 
@@ -2177,14 +2208,17 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
 - Depends: DM-03, DM-04, DM-07.
 - Deliverables:
   - **`integrations/fabric/RUNBOOK.md` (L2):** workspace prerequisites (a UDF-enabled
-    region; capacity); uploading the wheel and data; creating the lakehouse,
-    notebooks, UDF item (including Library Management steps) and pipelines;
+    region; capacity); uploading the wheel and data; creating the lakehouse, the
+    Environment (Runtime 2.0, Quick mode for the demo), the notebooks, the UDF item
+    (including Library Management steps) and the pipelines;
     parameters; the expected result of each step, pass and fail; troubleshooting,
     including kernel choice, the `exit` placement rule and UDF size limits.
   - **`demo/TALK.md` (L3):**
-    - the storyline: Spindle retired → Shape profile in a notebook → HTML report
-      → contract gate passes on day 1 → day-2 data fails the pipeline, with the
-      reason visible → the same check as a UDF → side-by-side benchmark;
+    - the storyline: Spindle retired → Shape profile in a Python notebook → HTML
+      report → install once through an Environment and run the same thing in a
+      PySpark notebook → contract gate passes on day 1 → day-2 data fails the
+      pipeline, with the reason visible → the same check as a UDF → side-by-side
+      benchmark;
     - a benchmark sheet quoting only DM-2-compliant numbers;
     - fallback steps if something is slow live.
 - Acceptance: a dry run of every local step in the runbook, and a checklist in the
@@ -2198,6 +2232,7 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
 3. The DM-03 wheel installs and tests pass in a clean Python 3.11 venv.
 4. **Owner dry run in Fabric (DM-4):**
    - the notebook profiles the day-1 table and exits `passed: true`;
+   - the Environment publishes, and the PySpark notebook gives the same result;
    - the day-2 table makes pipeline (a) fail, with the violations shown;
    - the UDF check makes pipeline (b) fail on day 2;
    - the timings are recorded in `demo/LIVE_TIMINGS.md`.
@@ -2218,6 +2253,7 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
 | DM-03 | L1 | todo | |
 | DM-04 | L3 | todo | |
 | DM-05 | L2 | todo | |
+| DM-05b | L2 | todo | |
 | DM-06 | L2 | todo | |
 | DM-07 | L2 | todo | |
 | DM-08 | L2 + L3 | todo | |
