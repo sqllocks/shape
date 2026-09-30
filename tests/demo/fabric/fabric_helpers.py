@@ -1,7 +1,7 @@
 """Shared helpers for the Fabric lane tests (imported by conftest and the test modules).
 
-* Uses the real ``shape`` API (section 12.2) when it is importable and conforms;
-  otherwise falls back to the test-only stub in ``stub_shape/``.
+* Always uses the real ``shape`` API (section 12.2); a non-conforming API fails loudly
+  (the stub used during parallel development was removed at integration).
 * Provides a ``notebookutils`` stub that captures the exit value.
 * Provides day-1 / day-2 fixture Delta tables standing in for the lane-L3 demo data.
 """
@@ -48,35 +48,21 @@ SHAPE_API = "unselected"
 
 @contextlib.contextmanager
 def shape_api() -> Iterator[str]:
-    """Use the real section 12.2 API if it conforms, else the test-only stub.
+    """Always the real section 12.2 API.
 
-    The stub replaces ``shape`` in ``sys.modules`` only while this context is active, so
-    other test modules in the same pytest session keep whatever ``shape`` they imported.
+    The test-only stub that let this lane develop in parallel with lane L1 was removed at
+    integration: the Fabric artifacts must be tested against the real ``shape`` package,
+    and a non-conforming API must fail loudly rather than fall back.
     """
     global SHAPE_API
-    saved_modules = {k: v for k, v in sys.modules.items() if _is_shape(k)}
-    saved_path = list(sys.path)
-    if _real_api_conforms():
-        SHAPE_API = "real"
-        yield SHAPE_API
-        return
-    for k in list(sys.modules):
-        if _is_shape(k):
-            del sys.modules[k]
-    sys.path.insert(0, str(HERE / "stub_shape"))
-    SHAPE_API = "stub"
-    try:
-        yield SHAPE_API
-    finally:
-        for k in list(sys.modules):
-            if _is_shape(k):
-                del sys.modules[k]
-        sys.modules.update(saved_modules)
-        sys.path[:] = saved_path
+    if not _real_api_conforms():
+        raise AssertionError("the installed shape package does not conform to the section 12.2 API")
+    SHAPE_API = "real"
+    yield SHAPE_API
 
 
 def report_header() -> str:
-    return "fabric lane: shape API = real if it conforms to section 12.2, else the test stub"
+    return "fabric lane: shape API = real (section 12.2)"
 
 
 # ------------------------------------------------------------------ notebookutils stub
