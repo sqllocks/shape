@@ -278,10 +278,22 @@ The 1:1 port meets T-21 with 60/60 columns equivalent.
 - **Large scale** (19,625,400 rows; `retail_bench.json` → `scales.large.summary`):
   Spindle 102.6 s (generate 96.6 s, write 6.0 s) against the port's 14.9 s
   (generate 10.7 s, write 4.3 s), which is 6.9x. The 10x minimum is ≤10.26 s.
-- **Equivalence evidence** (`retail_verify_small.txt`, `retail_verify_medium.txt`):
-  60/60 columns equivalent. Every table's `FidelityComparator` score satisfies T-21
-  (h); at medium, for example, `product_category` scores 85.60 against a floor of
-  84.25.
+- **Equivalence evidence** (`retail_verify_small.txt`, `retail_verify_medium.txt`,
+  `retail_verify_large.txt`): 60/60 columns equivalent at every scale, with the T-21
+  seed set. Every table's `FidelityComparator` score satisfies T-21 (h); at medium,
+  for example, `product_category` scores 85.60 against a floor of 84.25.
+- **Thin margins at large scale.**
+  - Clause (h) margins go as low as 0.21 points (`return` 94.87 against a floor of
+    94.66; `address` 88.56 against 88.30).
+  - `order.order_total` has KS 0.381 against a tolerance of 0.555, but Spindle's own
+    seed-to-seed KS for that column reaches 0.369 (`retail_large_seed_study.json`).
+  - So an implementation as faithful as the reference port can land just below a
+    floor by chance, at the one fixed seed.
+  - **If P4-07 fails only on clause (h), or only on a column listed in the seed
+    study, by a margin smaller than Spindle's own seed-to-seed spread:** do not
+    change seeds and do not tune for the seed. Escalate (§0.4), attaching the
+    verifier output and a seed study for Shape (seeds 1042–1046) like
+    `retail_large_seed_study.json`. Any other T-21 failure is a real defect.
 - The gates use same-job ratios (T-19), not these absolute numbers.
 
 ### 3.3 Profiling (in-process, `exact=True`)
