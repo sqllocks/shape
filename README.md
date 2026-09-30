@@ -1,60 +1,47 @@
 # Shape
 
-**Shape by SQLLocks** — Shape as Code.
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Install the distribution with `pip install sqllocks-shape`. Python imports remain
-`import shape`, the command is `shape`, and artifacts use `.shape`.
+**Shape by SQLLocks** — Shape as Code: a portable, executable description of how
+data behaves, not merely its schema.
 
-**Shape as Code** is a portable, executable description of how data behaves—not merely its schema.
+> **Early access.** Profiling is available now; data generation and pipeline
+> integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
-The reference implementation captures statistical and semantic evidence, compares change, evaluates quality and privacy, generates data with relational/geographic fidelity, maintains history, processes event-time streams, and packages evidence into governed `.shape` artifacts.
+Install with `pip install sqllocks-shape`. Python imports use `import shape`, the
+command is `shape`, and artifacts use the `.shape` extension.
 
-## Core workflow
-
-```bash
-shape doctor
-shape capture customers.csv -o customers.shape.json
-shape capture customers_next.csv -o customers_next.shape.json
-shape diff customers.shape.json customers_next.shape.json
-shape key customers.csv customer_id
-shape fd customers.csv --determinant zip --dependent state
-shape privacy-k customers.csv zip age
-shape conformance
-```
-
-## Design principles
-
-- bounded/mergeable profiling rather than full-data retention
-- evidence carries provenance and algorithm parameters
-- deterministic generation and replay
-- coherent multi-field domains such as addresses and relationships
-- offline-by-default reference assets with explicit licenses/checksums
-- sensitivity labels survive capture, history, diff and release
-- network/plugin capabilities are deny-by-default
-- `.shape` readers fail closed on unsafe or corrupt containers
-- external accreditation/certification is never fabricated
-
-See `docs/PRODUCT_ARCHITECTURE.md`, `docs/specs/`, `docs/CLOSURE_MATRIX.md`, and `docs/audit/SPINDLE_SOURCE_AUDIT.md`.
-
-## RC-1 quick start
+## Quick start
 
 ```python
 import shape
 
-s = shape.profile(rows)
-shape.save(s, "customer.shape", name="customer")
-again = shape.load("customer.shape")
+p = shape.profile("customers.csv")      # also: Parquet, JSONL, Delta tables, pandas, pyarrow
+shape.save(p, "customers.shape")
+print(p.summary())                      # small JSON-safe summary per column
+
+result = shape.check(p, {"columns": {"customer_id": {"unique": True, "nullable": False}}})
+print(result.passed, result.violations)
+
+drift = shape.diff(shape.load("customers.shape"), shape.profile("customers_next.csv"))
+print(drift.drifted, drift.changes)
 ```
 
 ```bash
-shape profile customers.csv -o customer.shape
-shape inspect customer.shape
+shape profile customers.csv -o customers.shape --html report.html --json summary.json
+shape check customers.shape contract.json          # exit code 1 if the contract fails
+shape diff customers.shape customers_next.shape --fail-on-drift
 ```
 
-`.shape` format v1 is a checksummed, content-addressed artifact. Treat sensitive Shapes according to their classification; use privacy release/redaction controls before distributing artifacts containing value-bearing evidence.
+## Design principles
 
-## Platform capabilities
+- evidence carries provenance and algorithm parameters
+- deterministic generation and replay
+- offline by default: no network access or cloud service is required
+- `.shape` readers fail closed on unsafe or corrupt containers
 
-The RC candidate also includes local-first implementations for Shape Hub/remote registry, domain packages, Shape-aware ETL, distributed profiling/merge, joint-distribution reconstruction, temporal modeling, reference assets, lineage/blast radius, data-test generation, scenarios, observability/alerts, and a web/API service.
+See `docs/PRODUCT_ARCHITECTURE.md` and `docs/specs/`.
 
-See `docs/PLATFORM_12.md` for architecture, API boundaries, performance qualification and the distinction between locally tested implementation and external-service qualification.
+## License
+
+MIT. See `LICENSE` and `THIRD_PARTY_NOTICES.md`.

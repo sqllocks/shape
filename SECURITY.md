@@ -1,5 +1,11 @@
 # Security Policy
 
-Report suspected vulnerabilities privately to the project maintainers rather than opening a public exploit issue. Do not include real secrets, PII, classified data or customer datasets in reports. Supported versions and a security contact should be set before public release.
+Report suspected vulnerabilities privately to the maintainer at
+**sqllocks@sqlbites.com**, or through GitHub's private vulnerability reporting on
+this repository, rather than opening a public issue. Do not include real secrets,
+PII or customer datasets in reports.
 
-Shape treats artifacts, Packs, plugins, connector responses and reference assets as untrusted inputs. See `docs/THREAT_MODEL.md`.
+Shape is in early access; only the latest release receives fixes.
+
+Shape treats artifacts, packs, plugins, connector responses and reference assets as
+untrusted inputs. See `docs/THREAT_MODEL.md`.

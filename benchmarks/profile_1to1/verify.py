@@ -128,6 +128,17 @@ def port_profile(ds: str):
     return json.loads(json.dumps(sd.table_to_dict(prof), default=str))
 
 
+def shape_profile(ds: str):
+    """`--impl shape`: the product API, `shape.profile(...).to_dict()`."""
+    import shape
+
+    if ds in ("mt", "mt.parquet"):
+        ext = ".parquet" if ds == "mt.parquet" else ".csv"
+        tables = {p.stem: str(p) for p in sorted((DATA / "mt").glob("*" + ext))}
+        return json.loads(json.dumps(shape.profile(tables).to_dict(), default=str))
+    return json.loads(json.dumps(shape.profile(str(DATA / ds)).to_dict(), default=str))
+
+
 def check_table(sp: dict, po: dict, prefix: str, matrix: dict, fails: list):
     for f in TABLE_RULES:
         key = f"table.{f}"
@@ -162,12 +173,21 @@ def check_table(sp: dict, po: dict, prefix: str, matrix: dict, fails: list):
 
 
 def main():
-    refresh = "--refresh" in sys.argv
-    wanted = [a for a in sys.argv[1:] if not a.startswith("--")] or ALL
+    argv = sys.argv[1:]
+    impl = "port"
+    if "--impl" in argv:
+        i = argv.index("--impl")
+        impl = argv[i + 1] if i + 1 < len(argv) else ""
+        del argv[i : i + 2]
+        if impl not in ("port", "shape"):
+            sys.exit("--impl must be 'port' or 'shape'")
+    refresh = "--refresh" in argv
+    wanted = [a for a in argv if not a.startswith("--")] or ALL
+    port_impl = shape_profile if impl == "shape" else port_profile
     matrices, all_fails = {}, {}
     for ds in wanted:
         sp = spindle_profile(ds, refresh)
-        po = port_profile(ds)
+        po = port_impl(ds)
         matrix, fails = {}, []
         if "tables" in sp:
             ok = sp["relationships"] == po["relationships"]

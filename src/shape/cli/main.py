@@ -32,6 +32,82 @@ def _dump(x):
     print(json.dumps(x, sort_keys=True, default=str))
 
 
+def _artifact_kind(path):
+    """The ``kind`` in a ``.shape`` manifest, or None when ``path`` is not a Shape artifact."""
+    import zipfile
+
+    try:
+        with zipfile.ZipFile(path) as z:
+            return json.loads(z.read("manifest.json")).get("kind")
+    except (OSError, ValueError, KeyError, zipfile.BadZipFile):
+        return None
+
+
+def _write_json(path, obj):
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(obj, fh, indent=2, allow_nan=False)
+        fh.write("\n")
+
+
+def _run(fn, a):
+    """Run a profile/check/diff command: 0 ok, 1 failed check or drift, 2 input error."""
+    import zipfile
+
+    from shape.errors import ShapeError
+
+    try:
+        return fn(a)
+    except (
+        OSError,
+        ValueError,
+        ImportError,
+        NotImplementedError,
+        KeyError,
+        ShapeError,
+        zipfile.BadZipFile,
+    ) as exc:
+        print(f"shape: error: {exc}", file=sys.stderr)
+        return 2
+
+
+def _cmd_profile(a):
+    import shape
+
+    prof = shape.profile(a.src)
+    content_id = shape.save(prof, a.output)
+    if a.html:
+        with open(a.html, "w", encoding="utf-8") as fh:
+            fh.write(prof.to_html())
+    if a.json:
+        _write_json(a.json, prof.summary())
+    if a.spindle_compat:
+        _write_json(a.spindle_compat, prof.to_dict())
+    _dump({"written": a.output, "shape_content_id": content_id})
+    return 0
+
+
+def _cmd_check(a):
+    import shape
+
+    result = shape.check(shape.load(a.shape), a.contract)
+    out = result.to_dict()
+    if a.json:
+        _write_json(a.json, out)
+    _dump(out)
+    return 0 if result.passed else 1
+
+
+def _cmd_diff(a):
+    import shape
+
+    result = shape.diff(shape.load(a.before), shape.load(a.after))
+    out = result.to_dict()
+    if a.json:
+        _write_json(a.json, out)
+    _dump(out)
+    return 1 if (a.fail_on_drift and result.drifted) else 0
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(prog="shape", description="Shape as Code")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -41,12 +117,17 @@ def main(argv=None):
     c = sub.add_parser("capture")
     c.add_argument("csv")
     c.add_argument("-o", "--output")
-    pr = sub.add_parser("profile")
-    pr.add_argument("csv")
-    pr.add_argument("-o", "--output", required=True)
-    d = sub.add_parser("diff")
-    d.add_argument("before")
-    d.add_argument("after")
+    pr = sub.add_parser("profile", help="profile a file, glob, directory or Delta table")
+    pr.add_argument("src", metavar="SRC")
+    pr.add_argument("-o", "--output", required=True, metavar="OUT.shape")
+    pr.add_argument("--html", metavar="REPORT.html")
+    pr.add_argument("--json", metavar="SUMMARY.json")
+    pr.add_argument("--spindle-compat", metavar="FULL.json")
+    d = sub.add_parser("diff", help="compare two profiles")
+    d.add_argument("before", metavar="BASE.shape")
+    d.add_argument("after", metavar="CURRENT.shape")
+    d.add_argument("--json", metavar="RESULT.json")
+    d.add_argument("--fail-on-drift", action="store_true")
     sh = sub.add_parser("show")
     sh.add_argument("shape")
     ins = sub.add_parser("inspect")
@@ -76,9 +157,10 @@ def main(argv=None):
     cq = sub.add_parser("query")
     cq.add_argument("shape")
     cq.add_argument("expression")
-    ck = sub.add_parser("check")
-    ck.add_argument("shape")
-    ck.add_argument("contract")
+    ck = sub.add_parser("check", help="check a profile against a contract")
+    ck.add_argument("shape", metavar="PROFILE.shape")
+    ck.add_argument("contract", metavar="CONTRACT.json")
+    ck.add_argument("--json", metavar="RESULT.json")
     co = sub.add_parser("compatibility")
     co.add_argument("before")
     co.add_argument("after")
@@ -95,6 +177,12 @@ def main(argv=None):
     rg.add_argument("arg1", nargs="?")
     rg.add_argument("arg2", nargs="?")
     a = p.parse_args(argv)
+    if a.cmd == "profile":
+        return _run(_cmd_profile, a)
+    if a.cmd == "check" and _artifact_kind(a.shape) == "profile":
+        return _run(_cmd_check, a)
+    if a.cmd == "diff" and _artifact_kind(a.before) == "profile":
+        return _run(_cmd_diff, a)
     if a.cmd == "version":
         from shape import __version__
 
@@ -113,7 +201,7 @@ def main(argv=None):
         r = conformance()
         _dump([asdict(x) for x in r])
         return 0 if all(x.passed for x in r) else 1
-    if a.cmd in ("capture", "profile"):
+    if a.cmd == "capture":
         obj = capture_rows(_rows(a.csv)).to_dict()
         if a.output and str(a.output).endswith(".shape"):
             cid = write_shape(a.output, obj, name=__import__("pathlib").Path(a.csv).stem)

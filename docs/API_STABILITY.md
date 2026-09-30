@@ -1,4 +1,4 @@
-# API Stability — Shape by SQLLocks 1.0 GA
+# API Stability — Shape by SQLLocks
 
 Shape 1.0 freezes the versioned specification and the public interfaces identified in `docs/specs/SHAPE_1_0_GA.md`.
 
