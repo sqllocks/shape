@@ -200,10 +200,10 @@ instruction.
 | D-09 | **Plugins are trusted, in-process code.** Delete the subprocess "capability sandbox" and its claims. | The sandbox is cosmetic (PL1–PL4). |
 | D-10 | **Copy Spindle's reference data** (name and street pools, ZIP locations, domain reference files) into `shape-domains`. Carry the GeoNames CC-BY-4.0 attribution into `THIRD_PARTY_NOTICES.md`. | Parity needs the same data. Spindle is MIT and has the same copyright holder. |
 | D-11 | **Holiday calendars are rule-based code:** fixed dates, the nth or last weekday of a month, Easter by computus, and observed-day shifts. US federal and US retail calendars ship in core, and other countries come as `shape.calendars` plugins. | Offline and deterministic. |
-| D-12 | **Stream output defaults to Spindle's flat-row format.** Each event is the row's columns plus `_spindle_table` and `_spindle_seq`, and `_spindle_event_time` when the table has a datetime column (Spindle `streaming/streamer.py:212-233`). `--envelope spindle` produces Spindle's `EventEnvelope` (as used by its Eventstream client), and `--envelope cloudevents` produces CloudEvents. The idempotency key is `(_spindle_table, _spindle_seq)`. | Drop-in for existing consumers; deterministic replay. |
+| D-12 | *(Revised 2026-09-30, §2.3: `_shape_*` field names, no `--envelope spindle`.)* **Stream output defaults to Spindle's flat-row format.** Each event is the row's columns plus `_spindle_table` and `_spindle_seq`, and `_spindle_event_time` when the table has a datetime column (Spindle `streaming/streamer.py:212-233`). `--envelope spindle` produces Spindle's `EventEnvelope` (as used by its Eventstream client), and `--envelope cloudevents` produces CloudEvents. The idempotency key is `(_spindle_table, _spindle_seq)`. | Drop-in for existing consumers; deterministic replay. |
 | D-14 | **Pipeline integration comes first after the plugin system.** Fabric first (Python and PySpark notebooks, User Data Functions, pipelines with Notebook and Functions activities), then Synapse and ADF. Phase F runs after G2, before Phases 3 and 4. A 48-hour Fabric demo track (§12) comes before everything. | Owner: Spindle is retired; profiling and generation must run inside ADF, Synapse and Fabric pipelines. |
 | D-15 | **Shape is open source under the MIT license** (the same as Spindle), replacing the Apache-2.0 `LICENSE` inherited from the earlier build. The `sqllocks/shape` repo goes public; releases go to PyPI as `sqllocks-shape`. The repo flips to public only after DM-00 has removed the false claims (§12). | Owner decision (2026-09-30). A full-history secret scan found only deliberate test fixtures. |
-| D-13 | **No `spindle` executable is shipped.** `shape` accepts Spindle command names as aliases wherever the meaning matches (§10), and reads Spindle schemas and profiles. | Avoids clashing with an installed Spindle. |
+| D-13 | *(Revised 2026-09-30, §2.3: no Spindle aliases and no Spindle schema or profile input.)* **No `spindle` executable is shipped.** `shape` accepts Spindle command names as aliases wherever the meaning matches (§10), and reads Spindle schemas and profiles. | Avoids clashing with an installed Spindle. |
 
 ### 2.2 Technical decisions
 
@@ -244,6 +244,7 @@ instruction.
 | Date | ID | Change | Reason |
 |---|---|---|---|
 | 2026-09-29 | — | Plan v1 approved | — |
+| 2026-09-30 | D-12, D-13, §10, P1-08, P1-11, G1 | **No Spindle on Shape's user-facing surface.** Nothing a user sees names Spindle: the package (`src/`, `rust/`, `plugins/`, `integrations/`), CLI flags, help and messages, `README.md`, `pyproject.toml` and `docs/` outside `docs/plans/` and `docs/talks/`. The Spindle-compatible outputs are removed: `--spindle-compat` (P1-08, P1-11) and the `shape profile capture` / `shape profile diff` ports of Spindle's `ExportedProfile` commands (P1-11). D-12: stream fields become `_shape_table`, `_shape_seq`, `_shape_event_time` (idempotency key `(_shape_table, _shape_seq)`), `--envelope spindle` is dropped, CloudEvents stays. D-13: Shape reads only its own formats (no Spindle schema or profile input) and has no Spindle command aliases; §10 is retired as a parity contract. §12.2 loses `--spindle-compat`. The internal parity and benchmark harness (`benchmarks/vs_spindle/`, T-20, T-22, the G-gates measured against the pinned Spindle) is kept, outside the package. New work package P1-14; G1 needs it. `THIRD_PARTY_NOTICES.md` keeps its Spindle attribution until the owner confirms they hold Spindle's copyright (§9). | Owner decision |
 | 2026-09-29 | — | Plan v2: adversarial-review fixes (Spindle stream format, CLI mapping, exact mode for parity and gates, crate pins, Philox implemented in-house, maturin-action, setup, builder guide, work-package splits, verified line references) | Red-team review |
 | 2026-09-30 | — | **sqllocks-shape 0.9.0 published to PyPI** from `main` at b2dd663 (Publish run 36749097798, approved by the owner). Verified by the lead: clean-venv `pip install sqllocks-shape==0.9.0` from pypi.org; pure `py3-none-any` wheel; `License-Expression: MIT`; requires numpy>=2.0,<3 and pyarrow>=14.0.1; profile, check and CLI exit codes work. **0.9.0 can never be re-uploaded: the next release must use a higher version.** | Owner release decision |
 | 2026-09-30 | — | Main plan reconciled with the shipped demo: P0-05 keeps version 0.9.0 and the DM-00 README; P0-04 names `src/shape/<m>` paths only; P0-06 keeps the demo CI jobs; P0-07 updates demo references to moved harness paths; §6.2(7) keeps `tests/demo` green | Demo track (§12) landed before Phase 0; 0.9.0 is published |
@@ -950,7 +951,37 @@ Appendix A.
   is green.
 - Fixes: none.
 
+**P1-14 — Spindle removed from the user-facing surface**
+- Depends: P1-12.
+- Owner decision 2026-09-30 (§2.3). It amends P1-08 (`--spindle-compat`) and P1-11
+  (`--spindle-compat`, the `profile capture` / `profile diff` ports and their Spindle
+  acceptance checks).
+- Deliverables:
+  - Remove `--spindle-compat`, `shape profile capture` and `shape profile diff`, with their
+    tests and documentation. `shape profile`, `shape diff`, `inspect` (`show`), `validate` and
+    `check` stay.
+  - No mention of Spindle (case-insensitive, identifiers such as `infer_spindle_type` and
+    `spindle_compat` included) in `src/`, `rust/`, `plugins/`, `integrations/`, `README.md`,
+    `pyproject.toml`, or `docs/` outside `docs/plans/` and `docs/talks/`. Rename identifiers
+    to neutral names; rewrite docstrings and comments to describe the behaviour on its own
+    terms. The one exception is the Spindle attribution in `THIRD_PARTY_NOTICES.md` (§2.3).
+  - The parity harness stays internal. `benchmarks/vs_spindle/` keeps T-22 verification and
+    the timings against the pinned Spindle, through an adapter in `benchmarks/` (never in
+    `src/`) that maps Shape's profile onto Spindle's `TableProfile` JSON. `bench_cli.py` times
+    `shape profile <file> -o <out>` against `spindle_cli_profile.py`, equivalence first
+    through the adapter. Remove `verify_cli.py`'s capture and diff checks.
+  - `scripts/check_user_facing.py`: exits 1 on any match in the paths above and in the files
+    of a built wheel. It runs in CI and in `make check`.
+- Acceptance:
+  - `scripts/check_user_facing.py` exits 0, in CI.
+  - `profile_1to1/verify.py --impl shape` exits 0 on all its default datasets.
+  - `pytest tests/demo` is green, and the §12.2 API is unchanged apart from the removal of
+    `--spindle-compat` (§2.3).
+  - The suite is green in both kernel modes.
+- Fixes: none.
+
 **Gate G1**
+- P1-14 is done (no Spindle on the user-facing surface).
 - PROF-IN ≥10x on every workload.
 - PROF-CLI ≥10x on D2 and D3.
 - START ≤300 ms.
@@ -1764,10 +1795,16 @@ That is 27 in total, which is the hub, the web app and 25 others (D-08).
 | O-06 | After 1.0.0: a deprecation notice in Spindle's README | after publishing | — |
 | O-08 | After DM-00 merges: make `sqllocks/shape` public (Settings → General → Danger Zone → Change visibility). Then add yourself as a **required reviewer** on the `pypi` environment, which becomes available once the repo is public. | before DM-03b's real publish | Publishing without a reviewer is still limited to `main` and `v*` tags |
 | O-07 | A Fabric workspace in a UDF-enabled region, with capacity, for the §12 live dry run and the talk: upload the wheel and data, and create the lakehouse, notebooks, UDF item and pipelines by following `integrations/fabric/RUNBOOK.md` | §12.7 check 4, GF | none (the live demo requires it) |
+| O-09 | Confirm whether you hold Spindle's copyright (`THIRD_PARTY_NOTICES.md` names "SQLLocks (Jonathan Stewart)"). If you do, the Spindle attribution can be removed; if not, MIT requires it to stay wherever Spindle-derived code ships. | P1-14 | The attribution stays |
 
 ---
 
 ## 10. Spindle CLI parity map
+
+**Retired as a parity contract (owner decision 2026-09-30, §2.3).** The Shape commands in the
+right-hand column are still delivered by the work packages named, under their Shape names only:
+the `[aliases]` in brackets are dropped, and the `profile capture|diff` row is removed. Nothing
+here may surface Spindle names to users.
 
 Spindle 3.0.1 commands and their Shape equivalents. Every row needs an e2e test by G6.
 
@@ -1826,6 +1863,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 19 | P1-10 | done | 9c797ea |
 | 20 | P1-11 | done | e72d596 |
 | 21 | P1-12 | done | 0087f7b |
+| 21a | P1-14 | todo | |
 | 22 | P2-01 | todo | |
 | 23 | P2-02 | todo | |
 | 24 | P2-03 | todo | |
@@ -1963,7 +2001,7 @@ p = shape.profile(source, *, name=None)
 # source: str | Path (a .csv, .parquet or .jsonl file; a Delta table directory; a glob;
 #         or a directory of files), pyarrow.Table, pandas.DataFrame, or
 #         dict[str, <any of those>] for multi-table (FK detection).
-p.to_dict()    # full profile in Spindle's TableProfile / dataset JSON shape (T-22 parity)
+p.to_dict()    # the full profile as JSON-ready dicts (T-22 parity is checked by the internal harness)
 p.summary()    # small, JSON-safe dict (< 1 MB for 500 columns): name, row_count, and
                # per column: dtype, null_rate, cardinality, is_unique, is_primary_key,
                # is_foreign_key, fk_ref_table, distribution, pattern, min, max, mean, std
@@ -1987,7 +2025,7 @@ d.to_dict()
 `--fail-on-drift` is given), and 2 on a usage or input error.
 
 ```
-shape profile SRC -o OUT.shape [--html REPORT.html] [--json SUMMARY.json] [--spindle-compat FULL.json]
+shape profile SRC -o OUT.shape [--html REPORT.html] [--json SUMMARY.json]
 shape check PROFILE.shape CONTRACT.json [--json RESULT.json]
 shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
 ```

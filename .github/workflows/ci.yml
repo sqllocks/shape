@@ -106,12 +106,6 @@ jobs:
           "$SHAPE_VENV/bin/pip" install -e '.[dev]' 'pyarrow==25.0.1'
       - run: source scripts/env.sh && python benchmarks/vs_spindle/check_coverage.py
       - run: source scripts/env.sh && python benchmarks/vs_spindle/run.py --quick --out "$BENCH_OUT_DIR/results.json"
-      # P1-11: the command line against Spindle's (profile capture, profile diff, --spindle-compat).
-      # Equivalence is enforced; the D1/D2 datasets come from run.py --quick above.
-      - run: source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/profile_1to1/verify_cli.py
-      # PROF-CLI and START are recorded, not enforced, on these runners (see the note above).
-      - run: source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/profile_1to1/bench_cli.py d2.csv
-        continue-on-error: true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -119,7 +113,6 @@ jobs:
           path: |
             ${{ github.workspace }}/bench-out/results.json
             ${{ github.workspace }}/bench-out/verify/
-            ${{ github.workspace }}/bench-out/profile/cli_bench.json
   build:
     runs-on: ubuntu-latest
     steps:
