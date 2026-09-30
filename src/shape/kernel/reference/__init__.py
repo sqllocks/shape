@@ -12,6 +12,9 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from .hashing import hash_array as hash_array
+from .sketch import Hll as Hll
+from .sketch import Kll as Kll
+from .sketch import SpaceSaving as SpaceSaving
 
 NAME = "python"
 

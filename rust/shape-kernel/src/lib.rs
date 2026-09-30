@@ -35,6 +35,7 @@ fn collect_addresses(data: &ArrayData, out: &mut Vec<usize>) {
 }
 
 pub mod hashing;
+pub mod sketch;
 
 /// Canonical XXH3-64 hash of every element of an Arrow array (T-13). Null and NaN slots are
 /// null in the returned uint64 array.
@@ -76,6 +77,7 @@ fn num_rows(batch: PyRecordBatch) -> usize {
 #[pymodule]
 fn _kernel(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("NAME", "rust")?;
+    sketch::register(m)?;
     m.add_function(wrap_pyfunction!(version, m)?)?;
     m.add_function(wrap_pyfunction!(roundtrip_batch, m)?)?;
     m.add_function(wrap_pyfunction!(buffer_addresses, m)?)?;
