@@ -43,7 +43,7 @@ are experimental and will change.
 
 ## What a `.shape` file contains
 
-A profile keeps real values from your data, as Spindle's profiler does: up to the 500
+A profile keeps real values from your data: up to the 500
 most frequent values per column with their counts, and each column's minimum and maximum.
 Treat a `.shape` file, its HTML report and its JSON summary as you would the source data,
 and don't share one from a sensitive table. A privacy-safe profile, with rare values
