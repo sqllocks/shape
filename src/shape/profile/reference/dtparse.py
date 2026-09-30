@@ -334,7 +334,7 @@ _UTC_NAMES = {"UTC", "GMT", "Z"}
 def _dateutil_parse(s: str, default: _dt.datetime) -> _dt.datetime:
     """pandas' ``dateutil_parse`` (parsing.pyx): dateutil's tokenizer and field resolution, then
     pandas' own assembly, which insists on at least one date/time field."""
-    res, _ = du.DEFAULTPARSER._parse(s, dayfirst=False, yearfirst=False)  # type: ignore[no-untyped-call]
+    res, _ = du.DEFAULTPARSER._parse(s, dayfirst=False, yearfirst=False)
     if res is None:
         raise ValueError(s)
     repl = {}
@@ -405,7 +405,7 @@ def guess_format(s: str, today: _dt.datetime | None = None) -> str | None:
         raise NotImplementedError(f"zone-bearing date text is not modelled: {s!r}") from exc
     except (ValueError, OverflowError):
         return None
-    tokens: list[str] = du._timelex.split(s)  # type: ignore[no-untyped-call]
+    tokens: list[str] = du._timelex.split(s)
     format_guess: list[str | None] = [None] * len(tokens)
     found: set[str] = set()
     for attrs, attr_format, padding in _ATTRS_TO_FORMAT:

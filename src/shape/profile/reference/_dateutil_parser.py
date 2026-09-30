@@ -13,7 +13,6 @@ under the BSD 3-clause license (and Apache 2.0 for later contributions); see
 THIRD_PARTY_NOTICES.md.
 """
 
-# mypy: ignore-errors
 # ruff: noqa
 from __future__ import annotations
 
@@ -21,6 +20,7 @@ import datetime
 import re
 import string
 import time
+from typing import Any, cast
 from calendar import monthrange
 from decimal import Decimal
 from io import StringIO
@@ -41,7 +41,7 @@ class _timelex(object):
     # Fractional seconds are sometimes split by a comma
     _split_decimal = re.compile("([.,])")
 
-    def __init__(self, instream):
+    def __init__(self, instream: Any) -> None:
         if isinstance(instream, (bytes, bytearray)):
             instream = instream.decode()
 
@@ -55,11 +55,11 @@ class _timelex(object):
             )
 
         self.instream = instream
-        self.charstack = []
-        self.tokenstack = []
+        self.charstack: list[str] = []
+        self.tokenstack: list[str] = []
         self.eof = False
 
-    def get_token(self):
+    def get_token(self) -> str | None:
         """
         This function breaks the time string into lexical units (tokens), which
         can be parsed by the parser. Lexical units are demarcated by changes in
@@ -77,8 +77,8 @@ class _timelex(object):
             return self.tokenstack.pop(0)
 
         seenletters = False
-        token = None
-        state = None
+        token: Any = None
+        state: str | None = None
 
         while not self.eof:
             # We only realize that we've reached the end of a token when we
@@ -165,58 +165,73 @@ class _timelex(object):
         if state == "0." and token.count(".") == 0:
             token = token.replace(",", ".")
 
-        return token
+        return cast("str | None", token)
 
-    def __iter__(self):
+    def __iter__(self) -> _timelex:
         return self
 
-    def __next__(self):
+    def __next__(self) -> str:
         token = self.get_token()
         if token is None:
             raise StopIteration
 
         return token
 
-    def next(self):
+    def next(self) -> str:
         return self.__next__()  # Python 2.x support
 
     @classmethod
-    def split(cls, s):
+    def split(cls, s: Any) -> list[str]:
         return list(cls(s))
 
     @classmethod
-    def isword(cls, nextchar):
+    def isword(cls, nextchar: str) -> bool:
         """Whether or not the next character is part of a word"""
         return nextchar.isalpha()
 
     @classmethod
-    def isnum(cls, nextchar):
+    def isnum(cls, nextchar: str) -> bool:
         """Whether the next character is part of a number"""
         return nextchar.isdigit()
 
     @classmethod
-    def isspace(cls, nextchar):
+    def isspace(cls, nextchar: str) -> bool:
         """Whether the next character is whitespace"""
         return nextchar.isspace()
 
 
 class _resultbase(object):
-    def __init__(self):
+    __slots__: list[str]
+    year: int | None
+    month: int | None
+    day: int | None
+    weekday: int | None
+    hour: int | None
+    minute: int | None
+    second: int | None
+    microsecond: int | None
+    tzname: str | None
+    tzoffset: int | None
+    ampm: int | None
+    any_unused_tokens: Any
+    century_specified: bool
+
+    def __init__(self) -> None:
         for attr in self.__slots__:
             setattr(self, attr, None)
 
-    def _repr(self, classname):
-        l = []
+    def _repr(self, classname: str) -> str:
+        l: list[str] = []
         for attr in self.__slots__:
             value = getattr(self, attr)
             if value is not None:
                 l.append("%s=%s" % (attr, repr(value)))
         return "%s(%s)" % (classname, ", ".join(l))
 
-    def __len__(self):
+    def __len__(self) -> int:
         return sum(getattr(self, attr) is not None for attr in self.__slots__)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self._repr(self.__class__.__name__)
 
 
@@ -239,7 +254,7 @@ class parserinfo(object):
     """
 
     # m from a.m/p.m, t from ISO T separator
-    JUMP = [
+    JUMP: list[str] = [
         " ",
         ".",
         ",",
@@ -260,7 +275,7 @@ class parserinfo(object):
         "th",
     ]
 
-    WEEKDAYS = [
+    WEEKDAYS: list[tuple[str, ...]] = [
         ("Mon", "Monday"),
         ("Tue", "Tuesday"),  # TODO: "Tues"
         ("Wed", "Wednesday"),
@@ -269,7 +284,7 @@ class parserinfo(object):
         ("Sat", "Saturday"),
         ("Sun", "Sunday"),
     ]
-    MONTHS = [
+    MONTHS: list[tuple[str, ...]] = [
         ("Jan", "January"),
         ("Feb", "February"),  # TODO: "Febr"
         ("Mar", "March"),
@@ -283,15 +298,19 @@ class parserinfo(object):
         ("Nov", "November"),
         ("Dec", "December"),
     ]
-    HMS = [("h", "hour", "hours"), ("m", "minute", "minutes"), ("s", "second", "seconds")]
-    AMPM = [("am", "a"), ("pm", "p")]
-    UTCZONE = ["UTC", "GMT", "Z", "z"]
-    PERTAIN = ["of"]
-    TZOFFSET = {}
+    HMS: list[tuple[str, ...]] = [
+        ("h", "hour", "hours"),
+        ("m", "minute", "minutes"),
+        ("s", "second", "seconds"),
+    ]
+    AMPM: list[tuple[str, ...]] = [("am", "a"), ("pm", "p")]
+    UTCZONE: list[str] = ["UTC", "GMT", "Z", "z"]
+    PERTAIN: list[str] = ["of"]
+    TZOFFSET: dict[str, int] = {}
     # TODO: ERA = ["AD", "BC", "CE", "BCE", "Stardate",
     #              "Anno Domini", "Year of Our Lord"]
 
-    def __init__(self, dayfirst=False, yearfirst=False):
+    def __init__(self, dayfirst: bool = False, yearfirst: bool = False) -> None:
         self._jump = self._convert(self.JUMP)
         self._weekdays = self._convert(self.WEEKDAYS)
         self._months = self._convert(self.MONTHS)
@@ -306,8 +325,8 @@ class parserinfo(object):
         self._year = time.localtime().tm_year
         self._century = self._year // 100 * 100
 
-    def _convert(self, lst):
-        dct = {}
+    def _convert(self, lst: list[Any]) -> dict[str, int]:
+        dct: dict[str, int] = {}
         for i, v in enumerate(lst):
             if isinstance(v, tuple):
                 for v in v:
@@ -316,48 +335,48 @@ class parserinfo(object):
                 dct[v.lower()] = i
         return dct
 
-    def jump(self, name):
+    def jump(self, name: str) -> bool:
         return name.lower() in self._jump
 
-    def weekday(self, name):
+    def weekday(self, name: str) -> int | None:
         try:
             return self._weekdays[name.lower()]
         except KeyError:
             pass
         return None
 
-    def month(self, name):
+    def month(self, name: str) -> int | None:
         try:
             return self._months[name.lower()] + 1
         except KeyError:
             pass
         return None
 
-    def hms(self, name):
+    def hms(self, name: str) -> int | None:
         try:
             return self._hms[name.lower()]
         except KeyError:
             return None
 
-    def ampm(self, name):
+    def ampm(self, name: str) -> int | None:
         try:
             return self._ampm[name.lower()]
         except KeyError:
             return None
 
-    def pertain(self, name):
+    def pertain(self, name: str) -> bool:
         return name.lower() in self._pertain
 
-    def utczone(self, name):
+    def utczone(self, name: str) -> bool:
         return name.lower() in self._utczone
 
-    def tzoffset(self, name):
+    def tzoffset(self, name: str) -> int | None:
         if name in self._utczone:
             return 0
 
         return self.TZOFFSET.get(name)
 
-    def convertyear(self, year, century_specified=False):
+    def convertyear(self, year: int, century_specified: bool = False) -> int:
         """
         Converts two-digit years to year within [-50, 49]
         range of self._year (current local time)
@@ -377,7 +396,7 @@ class parserinfo(object):
 
         return year
 
-    def validate(self, res):
+    def validate(self, res: parser._result) -> bool:
         # move to info
         if res.year is not None:
             res.year = self.convertyear(res.year, res.century_specified)
@@ -390,41 +409,41 @@ class parserinfo(object):
         return True
 
 
-class _ymd(list):
-    def __init__(self, *args, **kwargs):
+class _ymd(list[int]):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super(self.__class__, self).__init__(*args, **kwargs)
         self.century_specified = False
-        self.dstridx = None
-        self.mstridx = None
-        self.ystridx = None
+        self.dstridx: int | None = None
+        self.mstridx: int | None = None
+        self.ystridx: int | None = None
 
     @property
-    def has_year(self):
+    def has_year(self) -> bool:
         return self.ystridx is not None
 
     @property
-    def has_month(self):
+    def has_month(self) -> bool:
         return self.mstridx is not None
 
     @property
-    def has_day(self):
+    def has_day(self) -> bool:
         return self.dstridx is not None
 
-    def could_be_day(self, value):
+    def could_be_day(self, value: int | Decimal) -> bool:
         if self.has_day:
             return False
         elif not self.has_month:
             return 1 <= value <= 31
         elif not self.has_year:
             # Be permissive, assume leap year
-            month = self[self.mstridx]
+            month = self[cast(int, self.mstridx)]
             return 1 <= value <= monthrange(2000, month)[1]
         else:
-            month = self[self.mstridx]
-            year = self[self.ystridx]
+            month = self[cast(int, self.mstridx)]
+            year = self[cast(int, self.ystridx)]
             return 1 <= value <= monthrange(year, month)[1]
 
-    def append(self, val, label=None):
+    def append(self, val: Any, label: str | None = None) -> None:
         if hasattr(val, "__len__"):
             if val.isdigit() and len(val) > 2:
                 self.century_specified = True
@@ -452,7 +471,9 @@ class _ymd(list):
                 raise ValueError("Year is already set")
             self.ystridx = len(self) - 1
 
-    def _resolve_from_stridxs(self, strids):
+    def _resolve_from_stridxs(
+        self, strids: dict[str, int]
+    ) -> tuple[int | None, int | None, int | None]:
         """
         Try to resolve the identities of year/month/day elements using
         ystridx, mstridx, and dstridx, if enough of these are specified.
@@ -460,9 +481,9 @@ class _ymd(list):
         if len(self) == 3 and len(strids) == 2:
             # we can back out the remaining stridx value
             missing = [x for x in range(3) if x not in strids.values()]
-            key = [x for x in ["y", "m", "d"] if x not in strids]
-            assert len(missing) == len(key) == 1
-            key = key[0]
+            keys = [x for x in ["y", "m", "d"] if x not in strids]
+            assert len(missing) == len(keys) == 1
+            key = keys[0]
             val = missing[0]
             strids[key] = val
 
@@ -470,13 +491,18 @@ class _ymd(list):
         out = {key: self[strids[key]] for key in strids}
         return (out.get("y"), out.get("m"), out.get("d"))
 
-    def resolve_ymd(self, yearfirst, dayfirst):
+    def resolve_ymd(
+        self, yearfirst: bool, dayfirst: bool
+    ) -> tuple[int | None, int | None, int | None]:
         len_ymd = len(self)
+        year: int | None
+        month: int | None
+        day: int | None
         year, month, day = (None, None, None)
 
-        strids = (("y", self.ystridx), ("m", self.mstridx), ("d", self.dstridx))
+        strids_t = (("y", self.ystridx), ("m", self.mstridx), ("d", self.dstridx))
 
-        strids = {key: val for key, val in strids if val is not None}
+        strids = {key: val for key, val in strids_t if val is not None}
         if len(self) == len(strids) > 0 or (len(self) == 3 and len(strids) == 2):
             return self._resolve_from_stridxs(strids)
 
@@ -564,10 +590,16 @@ class _ymd(list):
 
 
 class parser(object):
-    def __init__(self, info=None):
+    def __init__(self, info: parserinfo | None = None) -> None:
         self.info = info or parserinfo()
 
-    def parse(self, timestr, default, dayfirst=None, yearfirst=None):
+    def parse(
+        self,
+        timestr: str,
+        default: datetime.datetime,
+        dayfirst: bool | None = None,
+        yearfirst: bool | None = None,
+    ) -> datetime.datetime:
         res, skipped_tokens = self._parse(timestr, dayfirst=dayfirst, yearfirst=yearfirst)
         if res is None:
             raise ParserError("Unknown string format: %s" % timestr)
@@ -597,7 +629,14 @@ class parser(object):
             "any_unused_tokens",
         ]
 
-    def _parse(self, timestr, dayfirst=None, yearfirst=None, fuzzy=False, fuzzy_with_tokens=False):
+    def _parse(
+        self,
+        timestr: str,
+        dayfirst: bool | None = None,
+        yearfirst: bool | None = None,
+        fuzzy: bool = False,
+        fuzzy_with_tokens: bool = False,
+    ) -> tuple[parser._result | None, tuple[str, ...] | None]:
         """
         Private method which performs the heavy lifting of parsing, called from
         ``parse()``, which passes on its ``kwargs`` to this function.
@@ -651,7 +690,8 @@ class parser(object):
         res = self._result()
         l = _timelex.split(timestr)  # Splits the timestr into tokens
 
-        skipped_idxs = []
+        skipped_idxs: list[int] = []
+        value: Any
 
         # year/month/day list
         ymd = _ymd()
@@ -702,8 +742,8 @@ class parser(object):
                             if l[i + 4].isdigit():
                                 # Convert it here to become unambiguous
                                 value = int(l[i + 4])
-                                year = str(info.convertyear(value))
-                                ymd.append(year, "Y")
+                                year_s = str(info.convertyear(value))
+                                ymd.append(year_s, "Y")
                             else:
                                 # Wrong guess
                                 pass
@@ -716,7 +756,7 @@ class parser(object):
                     val_is_ampm = self._ampm_valid(res.hour, res.ampm, fuzzy)
 
                     if val_is_ampm:
-                        res.hour = self._adjust_ampm(res.hour, value)
+                        res.hour = self._adjust_ampm(cast(int, res.hour), value)
                         res.ampm = value
 
                     elif fuzzy:
@@ -807,8 +847,17 @@ class parser(object):
         else:
             return res, None
 
-    def _parse_numeric_token(self, tokens, idx, info, ymd, res, fuzzy):
+    def _parse_numeric_token(
+        self,
+        tokens: list[str],
+        idx: int,
+        info: parserinfo,
+        ymd: _ymd,
+        res: parser._result,
+        fuzzy: bool,
+    ) -> int:
         # Token is a number
+        value: Any
         value_repr = tokens[idx]
         try:
             value = self._to_decimal(value_repr)
@@ -939,8 +988,11 @@ class parser(object):
 
         return idx
 
-    def _find_hms_idx(self, idx, tokens, info, allow_jump):
+    def _find_hms_idx(
+        self, idx: int, tokens: list[str], info: parserinfo, allow_jump: bool
+    ) -> int | None:
         len_l = len(tokens)
+        hms_idx: int | None
 
         if idx + 1 < len_l and info.hms(tokens[idx + 1]) is not None:
             # There is an "h", "m", or "s" label following this token.  We take
@@ -980,7 +1032,7 @@ class parser(object):
 
         return hms_idx
 
-    def _assign_hms(self, res, value_repr, hms):
+    def _assign_hms(self, res: parser._result, value_repr: str, hms: int) -> None:
         # See GH issue #427, fixing float rounding
         value = self._to_decimal(value_repr)
 
@@ -996,7 +1048,9 @@ class parser(object):
         elif hms == 2:
             (res.second, res.microsecond) = self._parsems(value_repr)
 
-    def _could_be_tzname(self, hour, tzname, tzoffset, token):
+    def _could_be_tzname(
+        self, hour: int | None, tzname: str | None, tzoffset: int | None, token: str
+    ) -> bool:
         return (
             hour is not None
             and tzname is None
@@ -1005,7 +1059,7 @@ class parser(object):
             and (all(x in string.ascii_uppercase for x in token) or token in self.info.UTCZONE)
         )
 
-    def _ampm_valid(self, hour, ampm, fuzzy):
+    def _ampm_valid(self, hour: int | None, ampm: int | None, fuzzy: bool) -> bool:
         """
         For fuzzy parsing, 'a' or 'am' (both valid English words)
         may erroneously trigger the AM/PM flag. Deal with that
@@ -1033,30 +1087,33 @@ class parser(object):
 
         return val_is_ampm
 
-    def _adjust_ampm(self, hour, ampm):
+    def _adjust_ampm(self, hour: int, ampm: int | None) -> int:
         if hour < 12 and ampm == 1:
             hour += 12
         elif hour == 12 and ampm == 0:
             hour = 0
         return hour
 
-    def _parse_min_sec(self, value):
+    def _parse_min_sec(self, value: Decimal) -> tuple[int, int | None]:
         # TODO: Every usage of this function sets res.second to the return
         # value. Are there any cases where second will be returned as None and
         # we *don't* want to set res.second = None?
         minute = int(value)
-        second = None
+        second: int | None = None
 
         sec_remainder = value % 1
         if sec_remainder:
             second = int(60 * sec_remainder)
         return (minute, second)
 
-    def _parse_hms(self, idx, tokens, info, hms_idx):
+    def _parse_hms(
+        self, idx: int, tokens: list[str], info: parserinfo, hms_idx: int | None
+    ) -> tuple[int, int | None]:
         # TODO: Is this going to admit a lot of false-positives for when we
         # just happen to have digits and "h", "m" or "s" characters in non-date
         # text?  I guess hex hashes won't have that problem, but there's plenty
         # of random junk out there.
+        hms: int | None
         if hms_idx is None:
             hms = None
             new_idx = idx
@@ -1065,7 +1122,7 @@ class parser(object):
             new_idx = hms_idx
         else:
             # Looking backwards, increment one.
-            hms = info.hms(tokens[hms_idx]) + 1
+            hms = cast(int, info.hms(tokens[hms_idx])) + 1
             new_idx = idx
 
         return (new_idx, hms)
@@ -1074,7 +1131,7 @@ class parser(object):
     # Handling for individual tokens.  These are kept as methods instead
     #  of functions for the sake of customizability via subclassing.
 
-    def _parsems(self, value):
+    def _parsems(self, value: str) -> tuple[int, int]:
         """Parse a I[.F] seconds value into (seconds, microseconds)."""
         if "." not in value:
             return int(value), 0
@@ -1082,7 +1139,7 @@ class parser(object):
             i, f = value.split(".")
             return int(i), int(f.ljust(6, "0")[:6])
 
-    def _to_decimal(self, val):
+    def _to_decimal(self, val: Any) -> Decimal:
         try:
             decimal_value = Decimal(val)
             # See GH 662, edge case, infinite value should not be converted
@@ -1100,8 +1157,8 @@ class parser(object):
     #  methods instead of functions for the sake of customizability via
     #  subclassing.
 
-    def _build_naive(self, res, default):
-        repl = {}
+    def _build_naive(self, res: parser._result, default: datetime.datetime) -> datetime.datetime:
+        repl: dict[str, Any] = {}
         for attr in ("year", "month", "day", "hour", "minute", "second", "microsecond"):
             value = getattr(res, attr)
             if value is not None:
@@ -1125,14 +1182,14 @@ class parser(object):
 
         return naive
 
-    def _recombine_skipped(self, tokens, skipped_idxs):
+    def _recombine_skipped(self, tokens: list[str], skipped_idxs: list[int]) -> list[str]:
         """
         >>> tokens = ["foo", " ", "bar", " ", "19June2000", "baz"]
         >>> skipped_idxs = [0, 1, 2, 5]
         >>> _recombine_skipped(tokens, skipped_idxs)
         ["foo bar", "baz"]
         """
-        skipped_tokens = []
+        skipped_tokens: list[str] = []
         for i, idx in enumerate(sorted(skipped_idxs)):
             if i > 0 and idx - 1 == skipped_idxs[i - 1]:
                 skipped_tokens[-1] = skipped_tokens[-1] + tokens[idx]
@@ -1145,7 +1202,9 @@ class parser(object):
 DEFAULTPARSER = parser()
 
 
-def parse(timestr, default, dayfirst=False, yearfirst=False):
+def parse(
+    timestr: str, default: datetime.datetime, dayfirst: bool = False, yearfirst: bool = False
+) -> datetime.datetime:
     """``dateutil.parser.parse(timestr, default=default, dayfirst=..., yearfirst=...)`` for
     zone-free text; raises ``ParsedTimeZone`` when the text names a zone and ``ParserError``
     (a ``ValueError``) when dateutil would not parse it."""
