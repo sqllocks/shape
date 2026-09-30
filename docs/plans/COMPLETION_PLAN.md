@@ -1893,7 +1893,7 @@ Work packages are listed in execution order. The next work package is the first 
 
 | Gate | Status |
 |---|---|
-| G0 | todo |
+| G0 | done b965672 |
 | G1 | todo |
 | G2 | todo |
 | GF | todo |
