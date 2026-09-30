@@ -189,6 +189,12 @@ class Profile:
             "relationships": copy.deepcopy(self._data["relationships"]),
         }
 
+    def to_html(self) -> str:
+        """A self-contained HTML report (no external assets)."""
+        from shape.report import render_html
+
+        return render_html(self)
+
     def __repr__(self) -> str:
         if self.is_dataset:
             return f"Profile(dataset, tables={list(self._data['tables'])})"
