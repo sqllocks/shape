@@ -377,33 +377,40 @@ def _timedelta(v: _dt.timedelta) -> Timedelta:
     return Timedelta(days=v.days, seconds=v.seconds, microseconds=v.microseconds)
 
 
-def _profile_object_column(c: _Col, row_count: int, top_n: int = 500) -> _Work:
-    """Object-dtype pandas columns (decimal, time, bytes, timedelta) and categoricals.
-
-    Their values are handled as Python objects, like pandas does; such columns are rare and
-    small next to the numeric/text bulk, so this path is not vectorised."""
-    kind = c.kind
+def object_entries(c: _Col) -> tuple[list[tuple[Any, int]], int, list[Any]]:
+    """``(entries, cardinality, values)`` of an object-dtype column, as pandas counts it:
+    ``entries`` is ``value_counts()`` (value, count) count-descending; for a categorical in
+    category order with unused categories last (count 0); ``cardinality`` is ``nunique()``;
+    ``values`` are the non-null values in row order."""
     arr = _combine(c.arr)
-    n_total = len(arr)
-    null_count = arr.null_count
-    if kind == "cat":
+    if c.kind == "cat":
         cats = arr.dictionary.to_pylist()
         codes = [v for v in arr.indices.to_pylist() if v is not None]
         counts_by_cat = [0] * len(cats)
         for code in codes:
             counts_by_cat[code] += 1
         values = [cats[code] for code in codes]
-        # value_counts(): categories in category order (unused ones included), count-descending
         order = sorted(range(len(cats)), key=lambda i: -counts_by_cat[i])
-        entries = [(cats[i], counts_by_cat[i]) for i in order]
-        cardinality = sum(1 for n in counts_by_cat if n)
-    else:
-        values = [v for v in arr.to_pylist() if v is not None]
-        first: dict[Any, int] = {}
-        for v in values:
-            first[v] = first.get(v, 0) + 1
-        entries = sorted(first.items(), key=lambda kv: -kv[1])
-        cardinality = len(first)
+        return (
+            [(cats[i], counts_by_cat[i]) for i in order],
+            sum(1 for n in counts_by_cat if n),
+            values,
+        )
+    values = [v for v in arr.to_pylist() if v is not None]
+    first: dict[Any, int] = {}
+    for v in values:
+        first[v] = first.get(v, 0) + 1
+    return sorted(first.items(), key=lambda kv: -kv[1]), len(first), values
+
+
+def _profile_object_column(c: _Col, row_count: int, top_n: int = 500) -> _Work:
+    """Object-dtype pandas columns (decimal, time, bytes, timedelta) and categoricals.
+
+    Their values are handled as Python objects, like pandas does; such columns are rare and
+    small next to the numeric/text bulk, so this path is not vectorised."""
+    kind = c.kind
+    n_total = len(_combine(c.arr))
+    entries, cardinality, values = object_entries(c)
     n_nn = len(values)
     null_count = n_total - n_nn  # (a union array has no validity bitmap of its own)
     text = [_object_text(kind, v) for v in values]

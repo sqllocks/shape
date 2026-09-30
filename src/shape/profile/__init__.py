@@ -6,6 +6,8 @@ from .sketches import SpaceSaving as SpaceSaving
 from .text import TextProfile as TextProfile
 
 __all__ = ["NumericProfile", "TextProfile", "DatetimeProfile", "KLL", "HyperLogLog", "SpaceSaving"]
+from shape._callable import make_callable  # noqa: E402
+
 from .advanced import (
     MissingnessEvidence as MissingnessEvidence,
 )
@@ -55,3 +57,5 @@ from .text_vectorized import (
 from .text_vectorized import (
     semantic_detect_array as semantic_detect_array,
 )
+
+make_callable(__name__, "profile")  # shape.profile(source) is also the public function

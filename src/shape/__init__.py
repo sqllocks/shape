@@ -1,65 +1,66 @@
-"""Shape: Shape as Code for data behavior."""
+"""Shape: Shape as Code for data behavior.
 
-from .api import (
-    certify as certify,
-)
-from .api import (
-    check as check,
-)
-from .api import (
-    diff as diff,
-)
-from .api import (
-    generate as generate,
-)
-from .api import (
-    load as load,
-)
-from .api import (
-    plan as plan,
-)
-from .api import (
-    profile as profile,
-)
-from .api import (
-    query as query,
-)
-from .api import (
-    save as save,
-)
-from .api import (
-    timeline as timeline,
-)
-from .api import (
-    view as view,
-)
-from .model import (
-    Evidence as Evidence,
-)
-from .model import (
-    Provenance as Provenance,
-)
-from .model import (
-    Shape as Shape,
-)
-from .model import (
-    ShapeBuilder as ShapeBuilder,
-)
-from .security import Sensitivity as Sensitivity
-from .types import (
-    FieldType as FieldType,
-)
-from .types import (
-    LogicalType as LogicalType,
-)
-from .types import (
-    from_arrow_type as from_arrow_type,
-)
-from .types import (
-    schema_from_arrow as schema_from_arrow,
-)
+Names are loaded on first use (PEP 562), so ``import shape`` costs almost nothing and
+``shape --version`` starts in a few milliseconds; ``shape.profile`` and the rest import their
+modules when they are first touched.
+"""
+
+from __future__ import annotations
+
+import importlib
+from typing import TYPE_CHECKING, Any
 
 __version__ = "0.9.0"
+
+if TYPE_CHECKING:
+    from .api import certify as certify
+    from .api import check as check
+    from .api import diff as diff
+    from .api import generate as generate
+    from .api import load as load
+    from .api import plan as plan
+    from .api import profile as profile
+    from .api import query as query
+    from .api import save as save
+    from .api import timeline as timeline
+    from .api import view as view
+    from .model import Evidence as Evidence
+    from .model import Provenance as Provenance
+    from .model import Shape as Shape
+    from .model import ShapeBuilder as ShapeBuilder
+    from .security import Sensitivity as Sensitivity
+    from .types import FieldType as FieldType
+    from .types import LogicalType as LogicalType
+    from .types import from_arrow_type as from_arrow_type
+    from .types import schema_from_arrow as schema_from_arrow
+
+_API = (
+    "certify",
+    "check",
+    "generate",
+    "load",
+    "plan",
+    "profile",
+    "query",
+    "save",
+    "timeline",
+    "view",
+)
+_LAZY: dict[str, tuple[str, str | None]] = {
+    **{name: ("shape.api", name) for name in _API},
+    "diff": ("shape.diff", None),  # the package, callable as shape.diff(before, after)
+    "Evidence": ("shape.model", "Evidence"),
+    "Provenance": ("shape.model", "Provenance"),
+    "Shape": ("shape.model", "Shape"),
+    "ShapeBuilder": ("shape.model", "ShapeBuilder"),
+    "Sensitivity": ("shape.security", "Sensitivity"),
+    "FieldType": ("shape.types", "FieldType"),
+    "LogicalType": ("shape.types", "LogicalType"),
+    "from_arrow_type": ("shape.types", "from_arrow_type"),
+    "schema_from_arrow": ("shape.types", "schema_from_arrow"),
+    "_kernel": ("shape._kernel", None),  # the native extension
+}
+
 __all__ = [
     "Evidence",
     "FieldType",
@@ -84,11 +85,16 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str) -> object:
-    """``shape._kernel`` is the native extension; import it on first access so that
-    ``import shape; shape._kernel.version()`` works without paying for it at import time."""
-    if name == "_kernel":
-        import importlib
+def __getattr__(name: str) -> Any:
+    target = _LAZY.get(name)
+    if target is None:
+        raise AttributeError(f"module 'shape' has no attribute {name!r}")
+    module_name, attr = target
+    module = importlib.import_module(module_name)
+    value = module if attr is None else getattr(module, attr)
+    globals()[name] = value
+    return value
 
-        return importlib.import_module("shape._kernel")
-    raise AttributeError(f"module 'shape' has no attribute {name!r}")
+
+def __dir__() -> list[str]:
+    return sorted({*globals(), *_LAZY})
