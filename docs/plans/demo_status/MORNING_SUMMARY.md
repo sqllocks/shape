@@ -10,10 +10,12 @@ Last updated: see the git log for this file.
 | DM-01 | `shape.profile`: the pure-Python profiler | **Spindle re-run fresh: 30/30 datasets PASS, every field bitwise identical**, with nothing in the "within tolerance but not identical" section |
 | DM-02 | save/load, check (contracts), diff, HTML report, CLI | Tests green; README quick start and every CLI exit code (0, 1, 2) executed by hand |
 | DM-03 | Pure-Python wheel `sqllocks_shape-0.9.0-py3-none-any.whl` (~185 KB) | Built; clean-venv install on Python 3.11 runs the core tests; `twine check` PASSED |
-| DM-03b | `.github/workflows/publish.yml` (trusted publishing) | Workflow reviewed: a TestPyPI dispatch cannot reach real PyPI |
+| DM-03b | `.github/workflows/publish.yml` (trusted publishing) | **TestPyPI dry run passed** (Actions run 36665613888). `pip install sqllocks-shape==0.9.0` from TestPyPI in a clean venv, then `shape.profile`, works |
+| DM-04 | Demo data (retail medium + D2) and documented day-2 drift, contracts (`demo/`) | Lead re-ran `make_data.py` (13 files, 168.6 MB, 9 s) and the content tests: day-1 contracts pass, day 2 fails on exactly the 4 documented rules |
+| DM-08 (talk kit) | `demo/TALK.md`, generated `demo/BENCHMARKS.md`, `LIVE_TIMINGS.md` placeholder | Every number is generated from and cites `benchmarks/baselines/2026-09-29/`; table names and contract paths match L2's pipelines and runbook |
 | DM-05, DM-05b, DM-06, DM-07, DM-08 (runbook) | Fabric Python notebook, Environment + PySpark notebook, 5 UDFs, 3 pipelines, RUNBOOK.md | **159 demo tests pass against the real API**, including Spark vs Python notebook equivalence on local PySpark and the UDFs through Microsoft's SDK |
 
-Totals on `main`: `pytest --ignore=tests/demo/fabric` gives 806 passed; `pytest tests/demo` gives 159 passed.
+Totals on `main`: full `pytest` (all but Fabric) gives 835 passed; `pytest tests/demo` gives 188 passed. **GitHub CI was green on all 11 jobs at 8fc8ef8** (Linux, macOS and Windows × Python 3.11–3.13, the Fabric demo job, and the build; run 36666589939). The L3b merge (dd6eab4) adds the demo content tests to the Fabric job; check the Actions tab for its run.
 
 ## Fixes the lead made during integration
 
@@ -24,23 +26,19 @@ Totals on `main`: `pytest --ignore=tests/demo/fabric` gives 806 passed; `pytest 
 - CI: the Fabric tests get their own Linux job (Java, unixODBC, PySpark), and `hatchling>=1.27` is required for the license metadata.
 - Plan fix: §8.3 would have deleted `spindle_coverage.tsv` and `demo_status/`. Lane L3 caught this.
 
-## Still in progress
+## Found by CI once Actions ran (fixed)
 
-- **DM-04** (demo data and day-2 drift) and the **talk kit** (DM-08): lane L3b is building them from `main`. The lead merges them after verifying.
+- **Windows was broken:** pyarrow's `strftime` needs a timezone database that Windows lacks, and the profiler used `fork` processes. Both are fixed, and parity with Spindle is unchanged (verified again: exit 0, all bitwise).
+- **Shape could not be installed next to the Fabric UDF SDK.** Microsoft's `fabric-user-data-functions` pins `pyarrow<20`, and Shape required `>=23`. Plan decision T-07 said `>=25`, which was wrong for the same reason. It is now `pyarrow>=14.0.1` (plan-fix commit 8fc8ef8, logged in §2.3). Benchmarks still pin 25.0.1 in both venvs.
 
-## Needs you: GitHub Actions is not running any jobs
+## Things to know for the talk (from DM-04)
 
-Every CI, Security and Publish run on this repo fails in about 2 seconds with **0 billable minutes and no logs**. The jobs never start. This predates tonight's merges. For a private repo that means the Actions minutes are exhausted, or billing or a spending limit is blocking runs. As a result:
-- **The TestPyPI dry run did not run.** The run exists (Publish #1), failed before starting, and nothing was uploaded.
-- CI results on `main` are not available yet. Everything above was verified locally by the lead instead.
-
-**Likely fix: make the repo public** (standard runners are free for public repos). Alternatively, check **Settings → Billing → Actions** on your GitHub account.
+- `shape.diff` with **default** thresholds does not flag the +40% `order_total` shift (0.43 std, below the 0.5 default). The contract gate still fails on day 2 (on `order_total.max`). If you show diff live, pass `thresholds={"mean_shift_std": 0.25}`.
+- The diff also reports `order_total` "new categorical values" on day 2, because the profiler (like Spindle) keeps value lists for that float column. The severity is low, but a viewer may notice it.
 
 ## Your steps, in order
 
-1. **Flip `sqllocks/shape` to public** (Settings → General → Danger Zone). DM-00 is on `main`, so the public repo shows the MIT license and no false claims.
-2. Confirm Actions now run: open the Actions tab and check that CI on `main` goes green. If jobs still fail instantly, check Billing.
-3. Re-run the **TestPyPI dry run**: Actions → Publish → Run workflow → `repository: testpypi`. The pending publisher you set up matches.
-4. On pypi.org, add the **pending publisher** (environment `pypi`) if not done. In GitHub, add yourself as a **required reviewer** on the `pypi` environment (possible once the repo is public).
-5. **Real publish:** Actions → Publish → `repository: pypi`, then approve.
-6. **Live Fabric dry run:** follow `integrations/fabric/RUNBOOK.md`, and record timings in `demo/LIVE_TIMINGS.md`.
+1. ~~Make the repo public~~, ~~confirm CI runs green~~, ~~TestPyPI dry run~~: all done.
+2. On pypi.org, add the **pending publisher** (environment `pypi`) if not done. In GitHub, add yourself as a **required reviewer** on the `pypi` environment (possible once the repo is public).
+3. **Real publish:** Actions → Publish → `repository: pypi`, then approve.
+4. **Live Fabric dry run:** follow `integrations/fabric/RUNBOOK.md`, and record timings in `demo/LIVE_TIMINGS.md`.
