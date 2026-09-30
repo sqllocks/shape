@@ -14,8 +14,9 @@ jobs:
         with: {python-version: '${{ matrix.python }}'}
       - run: python -m pip install -U pip
       - run: pip install -e '.[dev,streaming]'
-      # The Fabric demo tests need Java, PySpark and unixODBC; they run in the fabric-demo job below.
-      - run: python -m pytest -q --ignore=tests/demo/fabric
+      # The Fabric demo tests need Java, PySpark and unixODBC, and the demo content tests need
+      # the pinned Spindle checkout; both run in the fabric-demo job below.
+      - run: python -m pytest -q --ignore=tests/demo/fabric --ignore=tests/demo/content
       - run: python -m compileall -q src/shape
       - run: ruff check src tests
   fabric-demo:
@@ -29,7 +30,14 @@ jobs:
       - run: sudo apt-get update -q && sudo apt-get install -y -q unixodbc
       - run: python -m pip install -U pip
       - run: pip install -e '.[dev]' -r tests/demo/fabric/requirements.txt
-      - run: python -m pytest -q tests/demo/fabric
+      # demo/make_data.py reads Spindle's schema and reference data (plan section 1.2); read only.
+      - name: Pinned Spindle checkout
+        run: |
+          git init -q "$RUNNER_TEMP/spindle"
+          git -C "$RUNNER_TEMP/spindle" fetch -q --depth 1 https://github.com/sqllocks/spindle 422e78df2267e73bb2fa976267e48cb437861e2f
+          git -C "$RUNNER_TEMP/spindle" checkout -q FETCH_HEAD
+          echo "SPINDLE_ROOT=$RUNNER_TEMP/spindle" >> "$GITHUB_ENV"
+      - run: python -m pytest -q tests/demo/fabric tests/demo/content
   build:
     runs-on: ubuntu-latest
     steps:
