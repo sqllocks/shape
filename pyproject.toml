@@ -10,16 +10,17 @@ readme="README.md"
 requires-python=">=3.11"
 license = "MIT"
 license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
-dependencies=["numpy>=1.26,<3","pyarrow>=14.0.1","pydantic>=2.9,<3","typing-extensions>=4.12","cryptography>=50,<51"]
+dependencies=["numpy>=2.0,<3","pyarrow>=14.0.1"]
 
 [project.optional-dependencies]
 yaml=["pyyaml>=6"]
+sign=["cryptography>=50,<51"]
 delta=["deltalake>=0.17"]
 pandas=["pandas>=2"]
 kafka=["confluent-kafka>=2.5,<4"]
 eventhubs=["azure-eventhub>=5.12,<6"]
 streaming=["confluent-kafka>=2.5,<4","azure-eventhub>=5.12,<6"]
-dev=["pytest>=8.3","pytest-cov>=6","hypothesis>=6.115","ruff>=0.8","mypy>=1.13","pip-audit>=2.7","build>=1.2","pyyaml>=6","pandas>=2","deltalake>=0.17","twine>=5"]
+dev=["pytest>=8.3","pytest-cov>=6","hypothesis>=6.115","ruff>=0.8","mypy>=1.13","pip-audit>=2.7","build>=1.2","pyyaml>=6","pandas>=2","deltalake>=0.17","twine>=5","cryptography>=50,<51","xxhash>=3.5","maturin>=1.15,<2","import-linter>=2","vulture>=2.11","bandit>=1.8","py-spy>=0.4","sqlglot>=25"]
 
 [tool.hatch.build.targets.wheel]
 packages=["src/shape"]
@@ -28,7 +29,7 @@ packages=["src/shape"]
 "docs/specs" = "shape/schemas"
 
 [tool.hatch.build.targets.sdist]
-include=["/src", "/tests", "/rq", "/docs", "/scripts", "/.github", "/examples", "/benchmarks", "/security", "/.devcontainer", "/*.md", "/*.json", "/LICENSE", "/Makefile", "/CODEOWNERS", "/.gitignore", "/.env.example", "/GA_FINAL_TEST.txt"]
+include=["/src", "/tests", "/docs", "/scripts", "/.github", "/examples", "/benchmarks", "/security", "/.devcontainer", "/*.md", "/LICENSE", "/Makefile", "/CODEOWNERS", "/.gitignore", "/.env.example"]
 
 [tool.pytest.ini_options]
 testpaths=["tests"]
