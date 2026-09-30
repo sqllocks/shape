@@ -112,3 +112,10 @@ def test_rust_mode_fails_loudly_and_auto_falls_back_without_the_extension(monkey
     dispatch.reset()
     monkeypatch.setenv(dispatch.ENV_VAR, "auto")
     assert dispatch.get_kernel() is reference
+
+
+def test_kernel_is_reachable_as_an_attribute_of_the_package():
+    """The wheel smoke test is `import shape; shape._kernel.version()`."""
+    assert shape._kernel.version() == shape.__version__
+    with pytest.raises(AttributeError):
+        shape._not_a_thing  # noqa: B018

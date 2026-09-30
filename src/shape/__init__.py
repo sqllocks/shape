@@ -82,3 +82,13 @@ __all__ = [
     "plan",
     "check",
 ]
+
+
+def __getattr__(name: str) -> object:
+    """``shape._kernel`` is the native extension; import it on first access so that
+    ``import shape; shape._kernel.version()`` works without paying for it at import time."""
+    if name == "_kernel":
+        import importlib
+
+        return importlib.import_module("shape._kernel")
+    raise AttributeError(f"module 'shape' has no attribute {name!r}")
