@@ -13,13 +13,15 @@ Datasets (under $BENCH_DATA_DIR/profile, or $PROFILE_DATA_DIR):
     edge/*
 
 Spindle output is produced by spindle_dump.py in the Spindle venv (cached as JSON in
-$BENCH_OUT_DIR/profile_cache/spindle_json; --refresh re-runs Spindle).  The implementation
+$BENCH_OUT_DIR/profile_cache/spindle_json, keyed by the SHA-256 of the input files so a
+regenerated dataset is re-dumped; --refresh re-runs Spindle).  The implementation
 runs in-process.  Both are normalised with the same code (spindle_dump.table_to_dict).
 Prints a per-field pass/fail matrix, then every mismatch.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 import sys
@@ -144,10 +146,30 @@ def corr_compare(a, b):
     return worst <= 1e-4 + 1e-12, worst == 0.0, worst
 
 
+def _input_digest(ds: str) -> str:
+    """SHA-256 over the dataset's input file(s), so a regenerated dataset never reuses a
+    Spindle result computed from different data."""
+    if ds in ("mt", "mt.parquet"):
+        ext = ".parquet" if ds == "mt.parquet" else ".csv"
+        files = sorted((DATA / "mt").glob("*" + ext))
+    else:
+        files = [DATA / ds]
+    h = hashlib.sha256()
+    for f in files:
+        h.update(f.name.encode())
+        with open(f, "rb") as fh:
+            for block in iter(lambda: fh.read(1 << 20), b""):
+                h.update(block)
+    return h.hexdigest()
+
+
 def spindle_profile(ds: str, refresh: bool):
     CACHE.mkdir(parents=True, exist_ok=True)
     out = CACHE / f"{ds.replace('/', '_')}.json"
-    if refresh or not out.exists():
+    stamp = out.with_suffix(".sha256")
+    digest = _input_digest(ds)
+    stale = not stamp.exists() or stamp.read_text().strip() != digest
+    if refresh or stale or not out.exists():
         if ds == "mt":
             args = [str(DATA / "mt")]
         elif ds == "mt.parquet":
@@ -158,6 +180,7 @@ def spindle_profile(ds: str, refresh: bool):
             [str(SPINDLE_PY), str(HERE / "spindle_dump.py"), args[0], str(out), *args[1:]],
             check=True,
         )
+        stamp.write_text(digest + "\n")
     return json.loads(out.read_text())
 
 
