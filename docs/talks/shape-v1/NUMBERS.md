@@ -1,8 +1,12 @@
-# Numbers used in the talk
+# Numbers used in the talk (October 3, 2026)
 
 Every number that appears on a slide or in the speaker notes is listed here with its source
 file and, for any measurement, the machine it was measured on. `SCRIPT.md` cites these by ID
 (N-xx). If a number is not in this file, don't say it.
+
+This file holds **only committed numbers**. There are no placeholders and no to-be-filled
+values:
+the planned features in section 6 of the talk have no numbers, and the talk gives none.
 
 ## Rules (from plan §6.4 and decision DM-2)
 
@@ -13,10 +17,11 @@ file and, for any measurement, the machine it was measured on. `SCRIPT.md` cites
   and the retail port for generation). `shape.profile` was ported from that code, but
   `shape.profile` itself has **not** been timed against Spindle: `results.json` has
   `"shape": null`.
-- **The Rust kernel has not been benchmarked.** No speed number for it exists, and the talk
-  gives none.
+- **The Rust kernel is being built and has not been benchmarked.** No speed number for it
+  exists, and the talk gives none.
 - **No Fabric timing exists yet.** `demo/LIVE_TIMINGS.md` is an empty placeholder until the
-  owner's dry run. Local timings must never be presented as Fabric timings.
+  owner's dry run (R11). Local timings must never be presented as Fabric timings. If the dry
+  run doesn't happen before October 3, the talk quotes no Fabric timings at all.
 - Targets (10x minimum, 30x stretch) are shown only labelled as **targets**.
 
 ## Machines
@@ -46,7 +51,6 @@ Baseline under test: **Spindle 3.0.1, git `422e78df2267e73bb2fa976267e48cb437861
 | N-08 | **277** Spindle files, all mapped to a work package | Coverage map is machine-checked | `GATE-G0.md` (`check_coverage.py`: OK); `docs/plans/spindle_coverage.tsv` |
 | N-09 | **12 / 12** CI jobs green on `b965672` (Linux 3.11–3.14, macOS and Windows 3.11/3.14, audit, build, fabric-demo, bench-quick) | Gate G0 | `GATE-G0.md` §1 |
 | N-10 | **699 tests**, coverage **86.55%** (floor 86%) in `make check` at G0 | Gate G0 | `GATE-G0.md` §2 |
-| N-11 | **96 passed** in `tests/kernel`, under `SHAPE_KERNEL=rust` and again under `SHAPE_KERNEL=python` | Rust kernel and its Python twin agree (hashing, sketches, zero-copy) on `build/main-plan` @ `ef6a8cd` | Run in this session; see `STATUS.md`. Not a committed file: say "the kernel test suite passes in both modes", not the count, unless re-run |
 
 ## Timings: profiling (port, not product)
 
@@ -124,9 +128,8 @@ None of these has been met by the product yet, and the talk must not suggest oth
 |---|---|---|
 | N-60 | HLL p = 14; KLL k = 200; SpaceSaving capacity 64 | Plan T-14 |
 | N-61 | HLL relative error ≤ 3 × 1.04/√2¹⁴ at the 99th percentile over 200 trials; KLL rank error ≤ 1% | P1-03 acceptance criteria (plan §7), met per the `build/main-plan` tracker (P1-03 done, `2f05b17`) |
-| N-62 | Seeded XXH3-64; `1` and `1.0` hash equal; NaN and null excluded; strings as UTF-8; timestamps as int64 µs | Plan T-13; P1-02 acceptance; checked in this session (`STATUS.md`) |
+| N-62 | Seeded XXH3-64; `1` and `1.0` hash equal; NaN and null excluded; strings as UTF-8; timestamps as int64 µs | Plan T-13; P1-02 acceptance criteria (done on `build/main-plan`, `3a3cc22`) |
 | N-63 | Zero-copy acceptance: a 1M-row, 10-column batch round-trips through Rust with identical buffer addresses | P1-01a acceptance; `tests/kernel/test_native_kernel.py` on `build/main-plan` |
-| N-64 | Python → native call overhead ~7 µs; Parquet writing ~50% of vectorised generation time | Plan T-01 rationale ("Measured"). The plan does not name the machine for the 7 µs figure, so **keep it off the slides**; the ~50% figure matches N-42 (write 0.71 s of the port's 1.26 s total) |
 
 ## Profiler rules (design parameters from the code, for slide 9)
 
@@ -143,7 +146,7 @@ N-01). Source: `src/shape/profile/reference/` on `main`.
 
 ## Demo data and drift (deterministic, seed 42, medium scale)
 
-Source: `demo/DRIFT.md`, verified by `tests/demo/content/` and in this session by
+Source: `demo/DRIFT.md`, verified by `tests/demo/content/` and on 2026-09-30 by
 `verify_snippets.sh`.
 
 | ID | Number | Source |
@@ -170,33 +173,19 @@ Source: plan §12.1.
 
 ## Live Fabric timings
 
-None. `demo/LIVE_TIMINGS.md` is a placeholder (every cell `TBD`). After the owner's dry run,
-add rows here as N-9x, copying the SKU, vCores, row counts and seconds exactly as recorded.
+None on 2026-09-30. `demo/LIVE_TIMINGS.md` is still a placeholder (no cell filled in). After
+the owner's dry run (R11), add rows here as N-9x, copying the SKU, vCores, runtime, row
+counts and seconds exactly as recorded, and cite `demo/LIVE_TIMINGS.md` at its commit. Until
+then the talk quotes no Fabric timing (fallback path, `DEMO.md`).
 
-## Numbers that don't exist yet (⟦PENDING⟧)
+## Planned features: no numbers
 
-Never show a TBD on stage. Fill these in from committed files at delivery, or delete the
-column or claim.
+The "how it will work" slides (25–27) carry no numbers: no product timings (G1/G4 not
+reached; `results.json` → `"shape": null`), no safe-profile sizes, no fidelity scores, no
+distributed-profiling or Rust-engine timings. Add a number here only when a committed file
+contains it, with its source and machine, after its equivalence verifier passes.
 
-| Placeholder | Needs | Where it will come from |
-|---|---|---|
-| Shape profiling timings (slide 13) | R7 / G1 | `benchmarks/vs_spindle/results.json` → `shape.workloads.profile:*`, verifier `pass` |
-| Shape generation timings (slide 23) | R7 / G4 | `results.json` → `shape.workloads.generate:retail:*`, verifier `pass` |
-| Safe `.shape` size ("kilobytes", slide 27) | R2 | measure the shipped safe export of the stand-in; record the file and the command here |
-| Fidelity scores (slide 28) | R5 | output of the shipped `shape fidelity` on the stand-in, pasted from a real run |
-| Distributed profiling in Fabric (slide 14) | R8, R11 | `demo/LIVE_TIMINGS.md` (or a later file), with SKU and vCores |
+## Numbers from *Stop Borrowing Contoso*
 
-## Numbers from *Stop Borrowing Contoso*: don't reuse
-
-The previous talk quoted Spindle timings that don't match the committed baselines, and they
-have no committed source in this repo:
-
-| Old talk said | Committed baseline (machine M1, 4 cores) |
-|---|---|
-| medium: "1.97M rows in ~2s" / "500k orders in about 2s" | Spindle medium: **5.29 s** (N-40); 5.79 s in `results.json` (N-35) |
-| large: "19.6M rows in ~42s" | Spindle large: **102.64 s** (N-41) |
-| small: "21.7k rows in 0.08s" | Spindle small: **0.25 s** (N-34, machine M2) |
-
-The machine behind the old numbers is unknown. Also don't reuse its distribution claims
-("top SKU is 39% of order lines", "top 10% of customers carry about 35% of revenue",
-"9% weekend dip"). None of them is in a committed file here.
+None is used. They have no committed source here, and some contradict the committed
+baselines. The list is in `STATUS.md`, finding F7.
