@@ -125,7 +125,7 @@ def worker(tool: str, ds: str):
     dt = time.perf_counter() - t0
     self_kb, child_kb = _rss_kb()
     ncols = (
-        sum(len(t.columns) for t in prof.tables.values())
+        sum(len(t["columns"] if isinstance(t, dict) else t.columns) for t in prof.tables.values())
         if hasattr(prof, "tables")
         else len(prof.columns)
     )
