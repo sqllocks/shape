@@ -73,7 +73,7 @@ def _sample_results() -> dict:
 
 @pytest.fixture(scope="module")
 def schema() -> dict:
-    return json.loads((BENCH / "results.schema.json").read_text())
+    return json.loads((BENCH / "results.schema.json").read_text(encoding="utf-8"))
 
 
 def test_results_schema_accepts_sample_with_null_shape(schema):
@@ -115,14 +115,14 @@ def test_no_machine_paths_in_the_harness():
             continue
         if p.suffix not in {".py", ".md", ".sh", ".json", ".txt", ".yml"}:
             continue
-        for n, line in enumerate(p.read_text(errors="replace").splitlines(), 1):
+        for n, line in enumerate(p.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
             if re.search(r"/tmp/|/home/", line):
                 hits.append(f"{p.relative_to(ROOT)}:{n}")
     assert hits == []
 
 
 def test_env_file_is_the_section_1_block():
-    text = (ROOT / "scripts" / "env.sh").read_text()
+    text = (ROOT / "scripts" / "env.sh").read_text(encoding="utf-8")
     for var in (
         "SHAPE_ROOT",
         "SPINDLE_ROOT",
@@ -141,6 +141,6 @@ def test_paths_module_defaults_follow_env(monkeypatch):
     sys.modules.pop("paths", None)
     import paths
 
-    assert str(paths.SPINDLE_ROOT) == "/nonexistent/spindle"
-    assert str(paths.BENCH_OUT_DIR) == "/nonexistent/out"
+    assert paths.SPINDLE_ROOT == Path("/nonexistent/spindle")
+    assert paths.BENCH_OUT_DIR == Path("/nonexistent/out")
     sys.modules.pop("paths", None)

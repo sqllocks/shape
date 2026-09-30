@@ -26,7 +26,7 @@ TRACKER_ROW = re.compile(r"^\|\s*\d+\s*\|\s*(\S+)\s*\|")
 
 def load_globs(path: Path = TSV) -> list[tuple[str, str]]:
     rows = []
-    for line in path.read_text().splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         if not line.strip() or line.startswith("#"):
             continue
         cols = line.split("\t")
@@ -38,7 +38,7 @@ def load_globs(path: Path = TSV) -> list[tuple[str, str]]:
 
 def tracker_wps(plan: Path = PLAN) -> set[str]:
     """Work-package IDs in the section 11 status tracker."""
-    text = plan.read_text()
+    text = plan.read_text(encoding="utf-8")
     section = text[text.index("## 11. Status tracker") : text.index("## 12.")]
     return {m.group(1) for ln in section.splitlines() if (m := TRACKER_ROW.match(ln))}
 
