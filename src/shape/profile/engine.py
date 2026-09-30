@@ -125,8 +125,11 @@ def profile_table(
         csv = CsvOptions(stream=True, block_size=_BOUNDED_CSV_BLOCK)
     src = open_source(source, name=name, batch_size=opts.batch_size, csv=csv)
     state = get_kernel().ProfileState(src.schema, opts.mode)
-    for batch in src.batches():
+    pool = pa.default_memory_pool()
+    for i, batch in enumerate(src.batches()):
         state.update(batch)
+        if opts.mode == "bounded" and i % 16 == 15:
+            pool.release_unused()  # keep the allocator from holding on to freed read-ahead blocks
     result = state.finalize(opts.top_n)
     types = [str(f.type) for f in src.schema]
     return {

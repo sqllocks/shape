@@ -200,17 +200,31 @@ def test_python_kernel_gives_the_same_document(monkeypatch):
 @pytest.mark.heavy
 def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
     """The 5M vs 50M check is benchmarks/vs_spindle/profile_1to1/rss_check.py; this is its
-    small version: peak RSS of a CSV seven times larger is within 10%."""
+    small version: peak RSS of a CSV twice as large, both past the allocator ramp-up (about 20M rows), is within 10%."""
     import pyarrow.csv as pacsv
 
     code = (
-        "import resource, sys;"
-        "from shape.profile.engine import profile;"
-        "profile(sys.argv[1], mode='bounded');"
-        "print(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)"
+        "import sys\n"
+        "from shape.profile.engine import profile\n"
+        "profile(sys.argv[1], mode='bounded')\n"
+        "try:\n"
+        "    import resource\n"
+        "    scale = 1 if sys.platform == 'darwin' else 1024  # bytes on macOS, KiB on Linux\n"
+        "    print(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * scale)\n"
+        "except ImportError:  # Windows: the peak working set\n"
+        "    import ctypes\n"
+        "    from ctypes import wintypes as w\n"
+        "    class Counters(ctypes.Structure):\n"
+        "        _fields_ = [('cb', w.DWORD), ('faults', w.DWORD)] + [\n"
+        "            (n, ctypes.c_size_t) for n in ('peak', 'ws', 'a', 'b', 'c', 'd', 'pf', 'ppf')]\n"
+        "    c = Counters(); c.cb = ctypes.sizeof(c)\n"
+        "    k = ctypes.windll.kernel32; k.GetCurrentProcess.restype = w.HANDLE\n"
+        "    p = ctypes.windll.psapi; p.GetProcessMemoryInfo.argtypes = [w.HANDLE, ctypes.c_void_p, w.DWORD]\n"
+        "    assert p.GetProcessMemoryInfo(k.GetCurrentProcess(), ctypes.byref(c), c.cb)\n"
+        "    print(c.peak)\n"
     )
     peaks = {}
-    for rows in (3_000_000, 21_000_000):
+    for rows in (24_000_000, 48_000_000):
         rng = np.random.default_rng(1)
         p = tmp_path / f"r{rows}.csv"
         writer = None
@@ -233,7 +247,7 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
         )
         peaks[rows] = int(r.stdout.split()[-1])
         p.unlink()
-    assert abs(peaks[21_000_000] - peaks[3_000_000]) / peaks[3_000_000] < 0.10, peaks
+    assert abs(peaks[48_000_000] - peaks[24_000_000]) / peaks[24_000_000] < 0.10, peaks
 
 
 # ------------------------------------------------------------------ P17: bounded memory
