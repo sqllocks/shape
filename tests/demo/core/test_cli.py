@@ -143,3 +143,13 @@ def test_missing_first_shape_exits_2(tmp_path: Path):
     contract.write_text("{}", encoding="utf-8")
     assert main(["check", str(tmp_path / "no-such.shape"), str(contract)]) == 2
     assert main(["diff", str(tmp_path / "no-such.shape"), str(tmp_path / "b.shape")]) == 2
+
+
+def test_plan_and_query_on_a_profile_exit_2_with_a_message(tmp_path: Path, day1: Path, capsys):
+    """Legacy commands must not crash on a 0.9 profile: exit 2 and say it is not supported yet."""
+    out = tmp_path / "p.shape"
+    assert main(["profile", str(day1), "-o", str(out)]) == 0
+    capsys.readouterr()
+    assert main(["plan", str(out)]) == 2
+    assert "not read profiles" in capsys.readouterr().err
+    assert main(["query", str(out), "rows"]) == 2
