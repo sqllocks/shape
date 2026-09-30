@@ -1,0 +1,4665 @@
+{
+ "scale": "large",
+ "seed": 42,
+ "port_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44
+ ],
+ "tables": {
+  "customer": {
+   "rows": {
+    "spindle": 500000,
+    "port": 500000
+   },
+   "columns_spindle": [
+    "customer_id",
+    "first_name",
+    "last_name",
+    "email",
+    "gender",
+    "loyalty_tier",
+    "signup_date",
+    "is_active"
+   ],
+   "columns_port": [
+    "customer_id",
+    "first_name",
+    "last_name",
+    "email",
+    "gender",
+    "loyalty_tier",
+    "signup_date",
+    "is_active"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "customer_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "first_name": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "last_name": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "email": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "gender": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "loyalty_tier": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "signup_date": {
+     "spindle": "timestamp[ns]",
+     "port": "timestamp[ns]"
+    },
+    "is_active": {
+     "spindle": "string",
+     "port": "string"
+    }
+   },
+   "columns": {
+    "customer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 250000.5,
+       "port": 250000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 500000.0,
+       "port": 500000.0
+      },
+      "std": {
+       "spindle": 144337.56729711776,
+       "port": 144337.56729711776,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 500000,
+      "port": 500000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "first_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "spindle": 5000,
+      "port": 5000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Thon",
+       "spindle": 0.000274,
+       "port": 0.000188
+      },
+      {
+       "value": "Heesa",
+       "spindle": 0.000272,
+       "port": 0.000214
+      },
+      {
+       "value": "Nuasha",
+       "spindle": 0.000268,
+       "port": 0.000158
+      },
+      {
+       "value": "Adrienne",
+       "spindle": 0.000264,
+       "port": 0.00019
+      },
+      {
+       "value": "Jim",
+       "spindle": 0.000262,
+       "port": 0.000222
+      },
+      {
+       "value": "Tous",
+       "spindle": 0.000262,
+       "port": 0.000218
+      },
+      {
+       "value": "Then",
+       "spindle": 0.000262,
+       "port": 0.000164
+      },
+      {
+       "value": "Debra",
+       "spindle": 0.00026,
+       "port": 0.000194
+      },
+      {
+       "value": "Jion",
+       "spindle": 0.00026,
+       "port": 0.00017
+      },
+      {
+       "value": "Joya",
+       "spindle": 0.00026,
+       "port": 0.000226
+      },
+      {
+       "value": "Jie",
+       "spindle": 0.000162,
+       "port": 0.000278
+      },
+      {
+       "value": "Loo",
+       "spindle": 0.000216,
+       "port": 0.000272
+      },
+      {
+       "value": "Juene",
+       "spindle": 0.00019,
+       "port": 0.000272
+      },
+      {
+       "value": "Peiah",
+       "spindle": 0.000208,
+       "port": 0.00027
+      },
+      {
+       "value": "Pra",
+       "spindle": 0.0002,
+       "port": 0.000266
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool:first_names",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "spindle": 5000,
+      "port": 5000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Blacgate",
+       "spindle": 0.00027,
+       "port": 0.000196
+      },
+      {
+       "value": "Patrford",
+       "spindle": 0.000266,
+       "port": 0.000234
+      },
+      {
+       "value": "Bender",
+       "spindle": 0.000266,
+       "port": 0.000184
+      },
+      {
+       "value": "Simmons",
+       "spindle": 0.000264,
+       "port": 0.000184
+      },
+      {
+       "value": "Deckway",
+       "spindle": 0.000264,
+       "port": 0.000164
+      },
+      {
+       "value": "Hintstein",
+       "spindle": 0.000264,
+       "port": 0.000184
+      },
+      {
+       "value": "Kellford",
+       "spindle": 0.000262,
+       "port": 0.000194
+      },
+      {
+       "value": "Carney",
+       "spindle": 0.000262,
+       "port": 0.000178
+      },
+      {
+       "value": "Goldridge",
+       "spindle": 0.00026,
+       "port": 0.000244
+      },
+      {
+       "value": "Beaslwood",
+       "spindle": 0.000256,
+       "port": 0.000198
+      },
+      {
+       "value": "Mcneiway",
+       "spindle": 0.000182,
+       "port": 0.000278
+      },
+      {
+       "value": "Johton",
+       "spindle": 0.000214,
+       "port": 0.000278
+      },
+      {
+       "value": "Tanneberg",
+       "spindle": 0.00022,
+       "port": 0.000274
+      },
+      {
+       "value": "Mckay",
+       "spindle": 0.000204,
+       "port": 0.000272
+      },
+      {
+       "value": "Key",
+       "spindle": 0.00022,
+       "port": 0.00027
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool:last_names",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.050128,
+      "port": 0.04993,
+      "baseline_max_abs_diff": 0.0002020000000000008,
+      "tol": 0.0021820903651315633
+     },
+     "distinct": {
+      "spindle": 474936,
+      "port": 475035,
+      "ratio": 1.0002084491384102,
+      "baseline_max_ratio_dev": 0.00021476577896806237
+     },
+     "top10": [
+      {
+       "value": "krisa.wyatridge2@engineer.com",
+       "spindle": 2.1055468526285646e-06,
+       "port": 0.0
+      },
+      {
+       "value": "carlos.aguircroft905@mac.com",
+       "spindle": 2.1055468526285646e-06,
+       "port": 0.0
+      },
+      {
+       "value": "iris.gilstein476@outlook.com",
+       "spindle": 2.1055468526285646e-06,
+       "port": 0.0
+      },
+      {
+       "value": "hoea.trujillo418@accountant.com",
+       "spindle": 2.1055468526285646e-06,
+       "port": 0.0
+      },
+      {
+       "value": "brnor.archebrook390@frontier.com",
+       "spindle": 2.1055468526285646e-06,
+       "port": 0.0
+      },
+      {
+       "value": "sia.hancoberg254@workmail.com",
+       "spindle": 2.1055468526285646e-06,
+       "port": 0.0
+      },
+      {
+       "value": "debra.dadonald299@verizon.net",
+       "spindle": 2.1055468526285646e-06,
+       "port": 0.0
+      },
+      {
+       "value": "evea.gooridge571@charter.net",
+       "spindle": 2.1055468526285646e-06,
+       "port": 0.0
+      },
+      {
+       "value": "arion.livingston906@sbcglobal.net",
+       "spindle": 2.1055468526285646e-06,
+       "port": 0.0
+      },
+      {
+       "value": "daisha.halman751@comcast.net",
+       "spindle": 2.1055468526285646e-06,
+       "port": 0.0
+      },
+      {
+       "value": "chion.heathfield665@runbox.com",
+       "spindle": 0.0,
+       "port": 2.1051080446703926e-06
+      },
+      {
+       "value": "jien.dicormick874@tutanota.com",
+       "spindle": 0.0,
+       "port": 2.1051080446703926e-06
+      },
+      {
+       "value": "michelle.barrman240@zoho.com",
+       "spindle": 0.0,
+       "port": 2.1051080446703926e-06
+      },
+      {
+       "value": "roy.gonzwell822@seznam.cz",
+       "spindle": 0.0,
+       "port": 2.1051080446703926e-06
+      },
+      {
+       "value": "seas.mcgee337@consultant.com",
+       "spindle": 0.0,
+       "port": 2.1051080446703926e-06
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "gender": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "spindle": 2,
+      "port": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "F",
+       "spindle": 0.510762,
+       "port": 0.510182
+      },
+      {
+       "value": "M",
+       "spindle": 0.489238,
+       "port": 0.489818
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0005799999999999972,
+     "tvd_baseline": 0.00036600000000003297,
+     "tvd_tol": 0.004787307364817191,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "loyalty_tier": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "spindle": 4,
+      "port": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Basic",
+       "spindle": 0.549226,
+       "port": 0.550168
+      },
+      {
+       "value": "Silver",
+       "spindle": 0.250712,
+       "port": 0.2505
+      },
+      {
+       "value": "Gold",
+       "spindle": 0.12994,
+       "port": 0.129464
+      },
+      {
+       "value": "Platinum",
+       "spindle": 0.070122,
+       "port": 0.069868
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0009419999999999984,
+     "tvd_baseline": 0.0007699999999999582,
+     "tvd_tol": 0.006770275002573076,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "signup_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0020640000000000658,
+     "ks_baseline": 0.0015140000000000153,
+     "ks_tol": 0.004271000000000023,
+     "stats": {
+      "mean": {
+       "spindle": "2023-12-31 13:14:46.357949184",
+       "port": "2024-01-01 19:53:14.389255936"
+      },
+      "min": {
+       "spindle": "2022-01-01 00:09:25.267217664",
+       "port": "2022-01-01 00:03:39.990595072"
+      },
+      "max": {
+       "spindle": "2025-12-30 23:55:12.993826304",
+       "port": "2025-12-30 23:55:13.074507264"
+      },
+      "std": {
+       "spindle": 421.17634023922045,
+       "port": 421.6364821066947,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 500000,
+      "port": 500000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_active": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "spindle": 2,
+      "port": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "spindle": 0.850156,
+       "port": 0.85032
+      },
+      {
+       "value": "false",
+       "spindle": 0.149844,
+       "port": 0.14968
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.00016399999999996973,
+     "tvd_baseline": 0.0009020000000000278,
+     "tvd_tol": 0.004787307364817191,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "product_category": {
+   "rows": {
+    "spindle": 50,
+    "port": 50
+   },
+   "columns_spindle": [
+    "category_id",
+    "category_name",
+    "parent_category_id",
+    "level"
+   ],
+   "columns_port": [
+    "category_id",
+    "category_name",
+    "parent_category_id",
+    "level"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "category_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "category_name": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "parent_category_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "level": {
+     "spindle": "int64",
+     "port": "int64"
+    }
+   },
+   "columns": {
+    "category_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.38989492070408105,
+     "stats": {
+      "mean": {
+       "spindle": 25.5,
+       "port": 25.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 50.0,
+       "port": 50.0
+      },
+      "std": {
+       "spindle": 14.430869689661812,
+       "port": 14.430869689661812,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 50,
+      "port": 50
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "category_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "spindle": 34,
+      "port": 29,
+      "ratio": 0.8529411764705882,
+      "baseline_max_ratio_dev": 0.1470588235294118
+     },
+     "top10": [
+      {
+       "value": "Hair Care",
+       "spindle": 0.06,
+       "port": 0.0
+      },
+      {
+       "value": "Cameras & Photography",
+       "spindle": 0.06,
+       "port": 0.04
+      },
+      {
+       "value": "Smartphones & Tablets",
+       "spindle": 0.06,
+       "port": 0.06
+      },
+      {
+       "value": "Children's Clothing",
+       "spindle": 0.06,
+       "port": 0.0
+      },
+      {
+       "value": "Grocery & Gourmet",
+       "spindle": 0.06,
+       "port": 0.04
+      },
+      {
+       "value": "Bedding & Bath",
+       "spindle": 0.04,
+       "port": 0.04
+      },
+      {
+       "value": "Parts & Accessories",
+       "spindle": 0.04,
+       "port": 0.04
+      },
+      {
+       "value": "Kitchen & Dining",
+       "spindle": 0.04,
+       "port": 0.02
+      },
+      {
+       "value": "Shoes & Footwear",
+       "spindle": 0.04,
+       "port": 0.08
+      },
+      {
+       "value": "Toys & Games",
+       "spindle": 0.04,
+       "port": 0.0
+      },
+      {
+       "value": "Clothing",
+       "spindle": 0.02,
+       "port": 0.08
+      },
+      {
+       "value": "Home Decor",
+       "spindle": 0.02,
+       "port": 0.06
+      },
+      {
+       "value": "Women's Apparel",
+       "spindle": 0.0,
+       "port": 0.06
+      },
+      {
+       "value": "Automotive",
+       "spindle": 0.02,
+       "port": 0.04
+      },
+      {
+       "value": "Cat Supplies",
+       "spindle": 0.02,
+       "port": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool:categories",
+     "tvd": 0.44000000000000006,
+     "tvd_baseline": 0.5000000000000001,
+     "tvd_tol": 1.973857392743862,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "parent_category_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.16,
+      "port": 0.16,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3666060555964672
+     },
+     "ks": 0.19047619047619047,
+     "ks_baseline": 0.11904761904761896,
+     "ks_tol": 0.4254102350488705,
+     "stats": {
+      "mean": {
+       "spindle": 10.952380952380953,
+       "port": 13.166666666666666
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 29.0,
+       "port": 29.0
+      },
+      "std": {
+       "spindle": 7.751965590838362,
+       "port": 8.750283442121193,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 21,
+      "port": 21
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "level": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.38989492070408105,
+     "stats": {
+      "mean": {
+       "spindle": 2.26,
+       "port": 2.26
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 3.0,
+       "port": 3.0
+      },
+      "std": {
+       "spindle": 0.7158212067269312,
+       "port": 0.7158212067269312,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 3,
+      "port": 3
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "promotion": {
+   "rows": {
+    "spindle": 200,
+    "port": 200
+   },
+   "columns_spindle": [
+    "promotion_id",
+    "promo_name",
+    "promo_type",
+    "discount_pct",
+    "start_date",
+    "end_date"
+   ],
+   "columns_port": [
+    "promotion_id",
+    "promo_name",
+    "promo_type",
+    "discount_pct",
+    "start_date",
+    "end_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "promotion_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "promo_name": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "promo_type": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "discount_pct": {
+     "spindle": "double",
+     "port": "double"
+    },
+    "start_date": {
+     "spindle": "timestamp[ns]",
+     "port": "timestamp[ns]"
+    },
+    "end_date": {
+     "spindle": "timestamp[ns]",
+     "port": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "promotion_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.19494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 100.5,
+       "port": 100.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 200.0,
+       "port": 200.0
+      },
+      "std": {
+       "spindle": 57.73430522661548,
+       "port": 57.73430522661548,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "port": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "promo_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 49,
+      "port": 50,
+      "ratio": 1.0204081632653061,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "End of Season Clearance",
+       "spindle": 0.055,
+       "port": 0.02
+      },
+      {
+       "value": "Gift Card Bonus Event",
+       "spindle": 0.045,
+       "port": 0.02
+      },
+      {
+       "value": "Easter Weekend Sale",
+       "spindle": 0.035,
+       "port": 0.025
+      },
+      {
+       "value": "Last Chance Savings",
+       "spindle": 0.035,
+       "port": 0.025
+      },
+      {
+       "value": "Loyalty Rewards Bonus",
+       "spindle": 0.035,
+       "port": 0.03
+      },
+      {
+       "value": "Cyber Monday Deals",
+       "spindle": 0.035,
+       "port": 0.015
+      },
+      {
+       "value": "App-Only Discount",
+       "spindle": 0.03,
+       "port": 0.03
+      },
+      {
+       "value": "Welcome Offer",
+       "spindle": 0.03,
+       "port": 0.015
+      },
+      {
+       "value": "Warehouse Sale",
+       "spindle": 0.03,
+       "port": 0.02
+      },
+      {
+       "value": "First Purchase Discount",
+       "spindle": 0.025,
+       "port": 0.03
+      },
+      {
+       "value": "Seasonal Refresh Sale",
+       "spindle": 0.025,
+       "port": 0.04
+      },
+      {
+       "value": "Exclusive Online Offer",
+       "spindle": 0.02,
+       "port": 0.04
+      },
+      {
+       "value": "Limited Time Offer",
+       "spindle": 0.01,
+       "port": 0.035
+      },
+      {
+       "value": "Clearance Blitz",
+       "spindle": 0.005,
+       "port": 0.035
+      },
+      {
+       "value": "4th of July Blowout",
+       "spindle": 0.015,
+       "port": 0.035
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool:promo_names",
+     "tvd": 0.255,
+     "tvd_baseline": 0.28,
+     "tvd_tol": 1.1847981254502882,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "promo_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 5,
+      "port": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "percent_off",
+       "spindle": 0.42,
+       "port": 0.425
+      },
+      {
+       "value": "fixed_amount",
+       "spindle": 0.2,
+       "port": 0.195
+      },
+      {
+       "value": "bogo",
+       "spindle": 0.15,
+       "port": 0.115
+      },
+      {
+       "value": "bundle",
+       "spindle": 0.125,
+       "port": 0.09
+      },
+      {
+       "value": "free_shipping",
+       "spindle": 0.105,
+       "port": 0.175
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.075,
+     "tvd_baseline": 0.09999999999999998,
+     "tvd_tol": 0.37846987830302403,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "discount_pct": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.09499999999999997,
+     "ks_baseline": 0.07999999999999996,
+     "ks_tol": 0.19494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 22.9,
+       "port": 20.6
+      },
+      "min": {
+       "spindle": 5.0,
+       "port": 5.0
+      },
+      "max": {
+       "spindle": 50.0,
+       "port": 50.0
+      },
+      "std": {
+       "spindle": 14.511719401917885,
+       "port": 13.043772460450235,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 6,
+      "port": 6
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "start_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.07000000000000006,
+     "ks_baseline": 0.08000000000000007,
+     "ks_tol": 0.19494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": "2023-10-30 08:16:09.160264960",
+       "port": "2023-11-08 15:00:33.249133568"
+      },
+      "min": {
+       "spindle": "2022-01-08 09:31:57.626860544",
+       "port": "2022-01-07 18:54:56.036050688"
+      },
+      "max": {
+       "spindle": "2025-12-15 05:24:21.001927936",
+       "port": "2025-12-24 19:22:23.268577280"
+      },
+      "std": {
+       "spindle": 420.87272611257714,
+       "port": 440.3741612732782,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "port": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "end_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.07000000000000006,
+     "ks_baseline": 0.08000000000000007,
+     "ks_tol": 0.19494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": "2023-11-15 15:42:33.160264960",
+       "port": "2023-11-23 14:24:33.249133824"
+      },
+      "min": {
+       "spindle": "2022-01-19 20:09:35.196698368",
+       "port": "2022-01-12 18:54:56.036050688"
+      },
+      "max": {
+       "spindle": "2025-12-25 05:24:21.001927936",
+       "port": "2026-01-16 21:41:09.648316416"
+      },
+      "std": {
+       "spindle": 420.2386994172371,
+       "port": 441.5363099864596,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "port": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "store": {
+   "rows": {
+    "spindle": 150,
+    "port": 150
+   },
+   "columns_spindle": [
+    "store_id",
+    "store_name",
+    "store_type",
+    "city",
+    "state"
+   ],
+   "columns_port": [
+    "store_id",
+    "store_name",
+    "store_type",
+    "city",
+    "state"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "store_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "store_name": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "store_type": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "city": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "state": {
+     "spindle": "string",
+     "port": "string"
+    }
+   },
+   "columns": {
+    "store_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.22510593742416898,
+     "stats": {
+      "mean": {
+       "spindle": 75.5,
+       "port": 75.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 150.0,
+       "port": 150.0
+      },
+      "std": {
+       "spindle": 43.300307928081374,
+       "port": 43.300307928081374,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 150,
+      "port": 150
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "store_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "spindle": 150,
+      "port": 150,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Store #0001",
+       "spindle": 0.006666666666666667,
+       "port": 0.006666666666666667
+      },
+      {
+       "value": "Store #0002",
+       "spindle": 0.006666666666666667,
+       "port": 0.006666666666666667
+      },
+      {
+       "value": "Store #0003",
+       "spindle": 0.006666666666666667,
+       "port": 0.006666666666666667
+      },
+      {
+       "value": "Store #0004",
+       "spindle": 0.006666666666666667,
+       "port": 0.006666666666666667
+      },
+      {
+       "value": "Store #0005",
+       "spindle": 0.006666666666666667,
+       "port": 0.006666666666666667
+      },
+      {
+       "value": "Store #0006",
+       "spindle": 0.006666666666666667,
+       "port": 0.006666666666666667
+      },
+      {
+       "value": "Store #0007",
+       "spindle": 0.006666666666666667,
+       "port": 0.006666666666666667
+      },
+      {
+       "value": "Store #0008",
+       "spindle": 0.006666666666666667,
+       "port": 0.006666666666666667
+      },
+      {
+       "value": "Store #0009",
+       "spindle": 0.006666666666666667,
+       "port": 0.006666666666666667
+      },
+      {
+       "value": "Store #0010",
+       "spindle": 0.006666666666666667,
+       "port": 0.006666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "Store #{seq:4}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "store_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "spindle": 3,
+      "port": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "physical",
+       "spindle": 0.8333333333333334,
+       "port": 0.8266666666666667
+      },
+      {
+       "value": "online",
+       "spindle": 0.1,
+       "port": 0.11333333333333333
+      },
+      {
+       "value": "warehouse",
+       "spindle": 0.06666666666666667,
+       "port": 0.06
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.01333333333333335,
+     "tvd_baseline": 0.06666666666666665,
+     "tvd_tol": 0.3385137501286538,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "city": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "spindle": 78,
+      "port": 82,
+      "ratio": 1.0512820512820513,
+      "baseline_max_ratio_dev": 0.03846153846153855
+     },
+     "top10": [
+      {
+       "value": "Cincinnati",
+       "spindle": 0.04,
+       "port": 0.006666666666666667
+      },
+      {
+       "value": "Miami",
+       "spindle": 0.02666666666666667,
+       "port": 0.013333333333333334
+      },
+      {
+       "value": "Jacksonville",
+       "spindle": 0.02666666666666667,
+       "port": 0.0
+      },
+      {
+       "value": "Seattle",
+       "spindle": 0.02666666666666667,
+       "port": 0.02666666666666667
+      },
+      {
+       "value": "Nashville",
+       "spindle": 0.02666666666666667,
+       "port": 0.006666666666666667
+      },
+      {
+       "value": "Minneapolis",
+       "spindle": 0.02666666666666667,
+       "port": 0.013333333333333334
+      },
+      {
+       "value": "Pittsburgh",
+       "spindle": 0.02666666666666667,
+       "port": 0.02
+      },
+      {
+       "value": "Omaha",
+       "spindle": 0.02,
+       "port": 0.006666666666666667
+      },
+      {
+       "value": "Lexington",
+       "spindle": 0.02,
+       "port": 0.0
+      },
+      {
+       "value": "San Diego",
+       "spindle": 0.02,
+       "port": 0.006666666666666667
+      },
+      {
+       "value": "Chandler",
+       "spindle": 0.006666666666666667,
+       "port": 0.04
+      },
+      {
+       "value": "Riverside",
+       "spindle": 0.006666666666666667,
+       "port": 0.02666666666666667
+      },
+      {
+       "value": "Dallas",
+       "spindle": 0.02,
+       "port": 0.02666666666666667
+      },
+      {
+       "value": "Newark",
+       "spindle": 0.0,
+       "port": 0.02
+      },
+      {
+       "value": "Garland",
+       "spindle": 0.013333333333333334,
+       "port": 0.02
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool:us_cities",
+     "tvd": 0.3933333333333333,
+     "tvd_baseline": 0.4666666666666666,
+     "tvd_tol": 1.7260882175254777,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "state": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "spindle": 46,
+      "port": 46,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0652173913043479
+     },
+     "top10": [
+      {
+       "value": "AR",
+       "spindle": 0.04666666666666667,
+       "port": 0.02666666666666667
+      },
+      {
+       "value": "TX",
+       "spindle": 0.04,
+       "port": 0.013333333333333334
+      },
+      {
+       "value": "NY",
+       "spindle": 0.03333333333333333,
+       "port": 0.02
+      },
+      {
+       "value": "HI",
+       "spindle": 0.03333333333333333,
+       "port": 0.04
+      },
+      {
+       "value": "MD",
+       "spindle": 0.03333333333333333,
+       "port": 0.03333333333333333
+      },
+      {
+       "value": "NH",
+       "spindle": 0.03333333333333333,
+       "port": 0.02
+      },
+      {
+       "value": "MT",
+       "spindle": 0.03333333333333333,
+       "port": 0.013333333333333334
+      },
+      {
+       "value": "DE",
+       "spindle": 0.03333333333333333,
+       "port": 0.03333333333333333
+      },
+      {
+       "value": "WA",
+       "spindle": 0.03333333333333333,
+       "port": 0.04
+      },
+      {
+       "value": "CA",
+       "spindle": 0.02666666666666667,
+       "port": 0.04
+      },
+      {
+       "value": "VT",
+       "spindle": 0.02666666666666667,
+       "port": 0.05333333333333334
+      },
+      {
+       "value": "MO",
+       "spindle": 0.013333333333333334,
+       "port": 0.04
+      },
+      {
+       "value": "MA",
+       "spindle": 0.0,
+       "port": 0.04
+      },
+      {
+       "value": "TN",
+       "spindle": 0.013333333333333334,
+       "port": 0.03333333333333333
+      },
+      {
+       "value": "NV",
+       "spindle": 0.013333333333333334,
+       "port": 0.03333333333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool:us_states",
+     "tvd": 0.2866666666666666,
+     "tvd_baseline": 0.34666666666666673,
+     "tvd_tol": 1.3255453865237978,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "address": {
+   "rows": {
+    "spindle": 750000,
+    "port": 750000
+   },
+   "columns_spindle": [
+    "address_id",
+    "customer_id",
+    "address_type",
+    "street",
+    "city",
+    "state",
+    "zip_code",
+    "lat",
+    "lng",
+    "is_primary"
+   ],
+   "columns_port": [
+    "address_id",
+    "customer_id",
+    "address_type",
+    "street",
+    "city",
+    "state",
+    "zip_code",
+    "lat",
+    "lng",
+    "is_primary"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "address_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "customer_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "address_type": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "street": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "city": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "state": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "zip_code": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "lat": {
+     "spindle": "double",
+     "port": "double"
+    },
+    "lng": {
+     "spindle": "double",
+     "port": "double"
+    },
+    "is_primary": {
+     "spindle": "bool",
+     "port": "bool"
+    }
+   },
+   "columns": {
+    "address_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0031834786967596903,
+     "stats": {
+      "mean": {
+       "spindle": 375000.5,
+       "port": 375000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 750000.0,
+       "port": 750000.0
+      },
+      "std": {
+       "spindle": 216506.35094591722,
+       "port": 216506.35094591722,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 750000,
+      "port": 750000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "customer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "ks": 0.0009506666666666552,
+     "ks_baseline": 0.0015373333333333905,
+     "ks_tol": 0.004306000000000086,
+     "stats": {
+      "mean": {
+       "spindle": 249956.099444,
+       "port": 250043.07407466666
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 2.0
+      },
+      "max": {
+       "spindle": 500000.0,
+       "port": 500000.0
+      },
+      "std": {
+       "spindle": 144296.61693057453,
+       "port": 144306.7434912699,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 388660,
+      "port": 388289
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "address_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "distinct": {
+      "spindle": 3,
+      "port": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "billing",
+       "spindle": 0.50084,
+       "port": 0.500128
+      },
+      {
+       "value": "shipping",
+       "spindle": 0.399384,
+       "port": 0.40015066666666665
+      },
+      {
+       "value": "both",
+       "spindle": 0.099776,
+       "port": 0.09972133333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0007666666666666239,
+     "tvd_baseline": 0.0007933333333333056,
+     "tvd_tol": 0.004787307364817192,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "street": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "distinct": {
+      "spindle": 747070,
+      "port": 747169,
+      "ratio": 1.0001325177024911,
+      "baseline_max_ratio_dev": 0.00023558702665082976
+     },
+     "top10": [
+      {
+       "value": "8541 Lower Seventh Ave",
+       "spindle": 4e-06,
+       "port": 0.0
+      },
+      {
+       "value": "9981 Long Crystal Pl",
+       "spindle": 4e-06,
+       "port": 0.0
+      },
+      {
+       "value": "8043 Lower Owl Cir",
+       "spindle": 4e-06,
+       "port": 0.0
+      },
+      {
+       "value": "4767 New Hawk Dr",
+       "spindle": 4e-06,
+       "port": 0.0
+      },
+      {
+       "value": "2840 Short Walnut St",
+       "spindle": 4e-06,
+       "port": 0.0
+      },
+      {
+       "value": "3564 Jade Ln",
+       "spindle": 4e-06,
+       "port": 0.0
+      },
+      {
+       "value": "581 Short Lakewood Way",
+       "spindle": 4e-06,
+       "port": 0.0
+      },
+      {
+       "value": "1883 Little Sunset Dr",
+       "spindle": 4e-06,
+       "port": 0.0
+      },
+      {
+       "value": "6966 Upper Industrial Rd",
+       "spindle": 4e-06,
+       "port": 0.0
+      },
+      {
+       "value": "2535 Little Center Rd",
+       "spindle": 4e-06,
+       "port": 0.0
+      },
+      {
+       "value": "2149 Skyview Ave",
+       "spindle": 0.0,
+       "port": 4e-06
+      },
+      {
+       "value": "5496 Big Parkside Ave",
+       "spindle": 0.0,
+       "port": 4e-06
+      },
+      {
+       "value": "804 Old Dogwood Way",
+       "spindle": 0.0,
+       "port": 4e-06
+      },
+      {
+       "value": "9627 Silver Ave",
+       "spindle": 0.0,
+       "port": 4e-06
+      },
+      {
+       "value": "9541 Short Tenth Pl",
+       "spindle": 0.0,
+       "port": 4e-06
+      }
+     ],
+     "vocab_overlap": 0.007608,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "number(100..9998)+' '+STREET_NAMES+' '+_STREET_SUFFIXES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "city": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "distinct": {
+      "spindle": 18573,
+      "port": 18573,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Washington",
+       "spindle": 0.0072373333333333335,
+       "port": 0.006998666666666667
+      },
+      {
+       "value": "Houston",
+       "spindle": 0.004717333333333333,
+       "port": 0.004552
+      },
+      {
+       "value": "New York",
+       "spindle": 0.0036133333333333334,
+       "port": 0.0035613333333333335
+      },
+      {
+       "value": "El Paso",
+       "spindle": 0.003524,
+       "port": 0.003369333333333333
+      },
+      {
+       "value": "Dallas",
+       "spindle": 0.0027026666666666666,
+       "port": 0.002817333333333333
+      },
+      {
+       "value": "Miami",
+       "spindle": 0.002588,
+       "port": 0.002482666666666667
+      },
+      {
+       "value": "Atlanta",
+       "spindle": 0.002497333333333333,
+       "port": 0.002497333333333333
+      },
+      {
+       "value": "Springfield",
+       "spindle": 0.0024933333333333335,
+       "port": 0.002612
+      },
+      {
+       "value": "Sacramento",
+       "spindle": 0.0024786666666666668,
+       "port": 0.0025026666666666665
+      },
+      {
+       "value": "Philadelphia",
+       "spindle": 0.0022693333333333333,
+       "port": 0.002245333333333333
+      },
+      {
+       "value": "Los Angeles",
+       "spindle": 0.002245333333333333,
+       "port": 0.002392
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool:zip_cities",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "state": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "distinct": {
+      "spindle": 51,
+      "port": 51,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "TX",
+       "spindle": 0.06391066666666667,
+       "port": 0.06342666666666667
+      },
+      {
+       "value": "CA",
+       "spindle": 0.0631,
+       "port": 0.06343733333333333
+      },
+      {
+       "value": "PA",
+       "spindle": 0.05300266666666666,
+       "port": 0.05324266666666667
+      },
+      {
+       "value": "NY",
+       "spindle": 0.05256,
+       "port": 0.052508
+      },
+      {
+       "value": "IL",
+       "spindle": 0.03824266666666667,
+       "port": 0.038452
+      },
+      {
+       "value": "FL",
+       "spindle": 0.035888,
+       "port": 0.03604
+      },
+      {
+       "value": "OH",
+       "spindle": 0.034326666666666665,
+       "port": 0.03446
+      },
+      {
+       "value": "VA",
+       "spindle": 0.029958666666666668,
+       "port": 0.029934666666666665
+      },
+      {
+       "value": "MI",
+       "spindle": 0.028633333333333334,
+       "port": 0.028601333333333333
+      },
+      {
+       "value": "MO",
+       "spindle": 0.028022666666666668,
+       "port": 0.0287
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool:zip_states",
+     "tvd": 0.004301333333333329,
+     "tvd_baseline": 0.0038453333333333356,
+     "tvd_tol": 0.01973857392743862,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "zip_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "distinct": {
+      "spindle": 40977,
+      "port": 40977,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "99603",
+       "spindle": 6e-05,
+       "port": 2.6666666666666667e-05
+      },
+      {
+       "value": "99017",
+       "spindle": 5.2e-05,
+       "port": 2.4e-05
+      },
+      {
+       "value": "32443",
+       "spindle": 4.933333333333333e-05,
+       "port": 2.5333333333333334e-05
+      },
+      {
+       "value": "15078",
+       "spindle": 4.8e-05,
+       "port": 2.6666666666666667e-05
+      },
+      {
+       "value": "97536",
+       "spindle": 4.8e-05,
+       "port": 2.2666666666666668e-05
+      },
+      {
+       "value": "82005",
+       "spindle": 4.8e-05,
+       "port": 2.5333333333333334e-05
+      },
+      {
+       "value": "76020",
+       "spindle": 4.6666666666666665e-05,
+       "port": 1.4666666666666666e-05
+      },
+      {
+       "value": "31722",
+       "spindle": 4.6666666666666665e-05,
+       "port": 2.6666666666666667e-05
+      },
+      {
+       "value": "63852",
+       "spindle": 4.6666666666666665e-05,
+       "port": 2.4e-05
+      },
+      {
+       "value": "74084",
+       "spindle": 4.6666666666666665e-05,
+       "port": 2e-05
+      },
+      {
+       "value": "29842",
+       "spindle": 3.3333333333333335e-05,
+       "port": 5.6e-05
+      },
+      {
+       "value": "95321",
+       "spindle": 3.6e-05,
+       "port": 5.066666666666667e-05
+      },
+      {
+       "value": "49618",
+       "spindle": 3.066666666666667e-05,
+       "port": 5.066666666666667e-05
+      },
+      {
+       "value": "35006",
+       "spindle": 2.8e-05,
+       "port": 4.933333333333333e-05
+      },
+      {
+       "value": "92857",
+       "spindle": 2.4e-05,
+       "port": 4.8e-05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool:zip_zips",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lat": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "ks": 0.0009853333333332825,
+     "ks_baseline": 0.0020560000000000023,
+     "ks_tol": 0.0050840000000000034,
+     "stats": {
+      "mean": {
+       "spindle": 38.5949618304,
+       "port": 38.59975714746667
+      },
+      "min": {
+       "spindle": 19.0668,
+       "port": 19.0668
+      },
+      "max": {
+       "spindle": 71.2346,
+       "port": 71.2346
+      },
+      "std": {
+       "spindle": 5.236349786499112,
+       "port": 5.235562546397377,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 33296,
+      "port": 33296
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lng": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "ks": 0.001269333333333289,
+     "ks_baseline": 0.001990666666666696,
+     "ks_tol": 0.004986000000000044,
+     "stats": {
+      "mean": {
+       "spindle": -91.14408242999998,
+       "port": -91.13780887546666
+      },
+      "min": {
+       "spindle": -176.634,
+       "port": -176.634
+      },
+      "max": {
+       "spindle": 166.6419,
+       "port": 166.6419
+      },
+      "std": {
+       "spindle": 15.320582007156789,
+       "port": 15.354230702760404,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 35570,
+      "port": 35570
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_primary": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "distinct": {
+      "spindle": 2,
+      "port": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "True",
+       "spindle": 0.5182133333333333,
+       "port": 0.5177186666666667
+      },
+      {
+       "value": "False",
+       "spindle": 0.48178666666666664,
+       "port": 0.48228133333333334
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.000494666666666671,
+     "tvd_baseline": 0.00047999999999998044,
+     "tvd_tol": 0.003908820095223359,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "product": {
+   "rows": {
+    "spindle": 25000,
+    "port": 25000
+   },
+   "columns_spindle": [
+    "product_id",
+    "category_id",
+    "product_name",
+    "unit_price",
+    "product_status",
+    "cost"
+   ],
+   "columns_port": [
+    "product_id",
+    "category_id",
+    "product_name",
+    "unit_price",
+    "product_status",
+    "cost"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "product_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "category_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "product_name": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "unit_price": {
+     "spindle": "double",
+     "port": "double"
+    },
+    "product_status": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "cost": {
+     "spindle": "double",
+     "port": "double"
+    }
+   },
+   "columns": {
+    "product_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.01743663093552431,
+     "stats": {
+      "mean": {
+       "spindle": 12500.5,
+       "port": 12500.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 25000.0,
+       "port": 25000.0
+      },
+      "std": {
+       "spindle": 7216.87835909682,
+       "port": 7216.87835909682,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 25000,
+      "port": 25000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "category_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.007160000000000055,
+     "ks_baseline": 0.011120000000000019,
+     "ks_tol": 0.01868000000000003,
+     "stats": {
+      "mean": {
+       "spindle": 25.49344,
+       "port": 25.35736
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 50.0,
+       "port": 50.0
+      },
+      "std": {
+       "spindle": 14.440801811755467,
+       "port": 14.428864606420007,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 50,
+      "port": 50
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "product_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "distinct": {
+      "spindle": 114,
+      "port": 114,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Electric Kettle",
+       "spindle": 0.01052,
+       "port": 0.00872
+      },
+      {
+       "value": "Sleeping Bag 20\u00b0F",
+       "spindle": 0.01036,
+       "port": 0.0084
+      },
+      {
+       "value": "Dog Food Premium 30lb",
+       "spindle": 0.01016,
+       "port": 0.00916
+      },
+      {
+       "value": "Jump Rope Speed",
+       "spindle": 0.01016,
+       "port": 0.00832
+      },
+      {
+       "value": "Moisturizing Face Cream",
+       "spindle": 0.00996,
+       "port": 0.00948
+      },
+      {
+       "value": "Camping Tent 4-Person",
+       "spindle": 0.00984,
+       "port": 0.00896
+      },
+      {
+       "value": "Lip Balm SPF 15",
+       "spindle": 0.0098,
+       "port": 0.00964
+      },
+      {
+       "value": "LEGO Architecture Set",
+       "spindle": 0.00976,
+       "port": 0.0086
+      },
+      {
+       "value": "Phone Mount for Car",
+       "spindle": 0.00972,
+       "port": 0.00848
+      },
+      {
+       "value": "Outdoor Swing Set",
+       "spindle": 0.00972,
+       "port": 0.00948
+      },
+      {
+       "value": "Smart LED Desk Lamp",
+       "spindle": 0.00928,
+       "port": 0.0102
+      },
+      {
+       "value": "Batteries AA 24-Pack",
+       "spindle": 0.00864,
+       "port": 0.01004
+      },
+      {
+       "value": "Wine Glass Set of 4",
+       "spindle": 0.00772,
+       "port": 0.00992
+      },
+      {
+       "value": "Green Tea Sampler",
+       "spindle": 0.00868,
+       "port": 0.00988
+      },
+      {
+       "value": "27-inch Monitor",
+       "spindle": 0.00884,
+       "port": 0.00984
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool:product_names",
+     "tvd": 0.03955999999999999,
+     "tvd_baseline": 0.03596,
+     "tvd_tol": 0.1616381002671262,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "unit_price": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.009039999999999992,
+     "ks_baseline": 0.006920000000000037,
+     "ks_tol": 0.01743663093552431,
+     "stats": {
+      "mean": {
+       "spindle": 33.3360676,
+       "port": 32.624125199999995
+      },
+      "min": {
+       "spindle": 0.99,
+       "port": 0.99
+      },
+      "max": {
+       "spindle": 792.66,
+       "port": 792.27
+      },
+      "std": {
+       "spindle": 44.03123517073114,
+       "port": 41.35919017218211,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 8097,
+      "port": 8069
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "product_status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "distinct": {
+      "spindle": 3,
+      "port": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "active",
+       "spindle": 0.74968,
+       "port": 0.74352
+      },
+      {
+       "value": "discontinued",
+       "spindle": 0.14876,
+       "port": 0.15336
+      },
+      {
+       "value": "introduced",
+       "spindle": 0.10156,
+       "port": 0.10312
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0061600000000000266,
+     "tvd_baseline": 0.004840000000000025,
+     "tvd_tol": 0.026221162334209895,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "cost": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.010800000000000032,
+     "ks_baseline": 0.006199999999999983,
+     "ks_tol": 0.01743663093552431,
+     "stats": {
+      "mean": {
+       "spindle": 16.684726400000002,
+       "port": 16.32336
+      },
+      "min": {
+       "spindle": 0.3,
+       "port": 0.3
+      },
+      "max": {
+       "spindle": 513.16,
+       "port": 494.31
+      },
+      "std": {
+       "spindle": 23.12405108550712,
+       "port": 21.684030225915105,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5365,
+      "port": 5323
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "order": {
+   "rows": {
+    "spindle": 5000000,
+    "port": 5000000
+   },
+   "columns_spindle": [
+    "order_id",
+    "customer_id",
+    "store_id",
+    "shipping_address_id",
+    "promotion_id",
+    "order_date",
+    "status",
+    "order_total"
+   ],
+   "columns_port": [
+    "order_id",
+    "customer_id",
+    "store_id",
+    "shipping_address_id",
+    "promotion_id",
+    "order_date",
+    "status",
+    "order_total"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "order_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "customer_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "store_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "shipping_address_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "promotion_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "order_date": {
+     "spindle": "timestamp[us]",
+     "port": "timestamp[us]"
+    },
+    "status": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "order_total": {
+     "spindle": "double",
+     "port": "double"
+    }
+   },
+   "columns": {
+    "order_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142134209517316e-06
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.002,
+     "stats": {
+      "mean": {
+       "spindle": 2500000.5,
+       "port": 2500000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 5000000.0,
+       "port": 5000000.0
+      },
+      "std": {
+       "spindle": 1443375.6729740356,
+       "port": 1443375.6729740356,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5000000,
+      "port": 5000000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "customer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142134209517316e-06
+     },
+     "ks": 0.0021829999999999905,
+     "ks_baseline": 0.0017237999999999976,
+     "ks_tol": 0.004585699999999996,
+     "stats": {
+      "mean": {
+       "spindle": 179827.7758904,
+       "port": 180424.4184086
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 500000.0,
+       "port": 500000.0
+      },
+      "std": {
+       "spindle": 158301.45409781864,
+       "port": 158412.22836649755,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 499631,
+      "port": 499625
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "store_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142134209517316e-06
+     },
+     "ks": 0.0002685999999999522,
+     "ks_baseline": 0.0006372000000000044,
+     "ks_tol": 0.0029558000000000067,
+     "stats": {
+      "mean": {
+       "spindle": 14.6927596,
+       "port": 14.684581
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 150.0,
+       "port": 150.0
+      },
+      "std": {
+       "spindle": 26.711168183675678,
+       "port": 26.678386110378547,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 150,
+      "port": 150
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "shipping_address_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.2226184,
+      "port": 0.2238054,
+      "baseline_max_abs_diff": 0.0011734000000000189,
+      "tol": 0.0017601000000000283
+     },
+     "ks": 0.001064188685730938,
+     "ks_baseline": 0.0021269967535848533,
+     "ks_tol": 0.00519049513037728,
+     "stats": {
+      "mean": {
+       "spindle": 375066.32405089086,
+       "port": 375189.61372547556
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 750000.0,
+       "port": 749999.0
+      },
+      "std": {
+       "spindle": 216564.3729506464,
+       "port": 216517.0114996904,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 702822,
+      "port": 703343
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "promotion_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.6997706,
+      "port": 0.7004806,
+      "baseline_max_abs_diff": 0.0006739999999999524,
+      "tol": 0.0014494540605884685
+     },
+     "ks": 0.0007822082868297331,
+     "ks_baseline": 0.0009451221402988486,
+     "ks_tol": 0.003417683210448273,
+     "stats": {
+      "mean": {
+       "spindle": 100.47545376968411,
+       "port": 100.52586510256097
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 200.0,
+       "port": 200.0
+      },
+      "std": {
+       "spindle": 57.71625551903278,
+       "port": 57.73803054488852,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "port": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "order_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142134209517316e-06
+     },
+     "ks": 0.0020068000000000863,
+     "ks_baseline": 0.0014210000000000056,
+     "ks_tol": 0.004131500000000008,
+     "stats": {
+      "mean": {
+       "spindle": "2024-09-05 17:25:01.790797568",
+       "port": "2024-09-06 18:55:57.374030848"
+      },
+      "min": {
+       "spindle": "2022-01-01 17:27:48",
+       "port": "2022-01-01 05:10:39"
+      },
+      "max": {
+       "spindle": "2025-12-31 23:59:26",
+       "port": "2025-12-31 23:59:48"
+      },
+      "std": {
+       "spindle": 344.22636971464584,
+       "port": 344.03644722193354,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 2936050,
+      "port": 2928870
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142134209517316e-06
+     },
+     "distinct": {
+      "spindle": 5,
+      "port": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "completed",
+       "spindle": 0.7700676,
+       "port": 0.7701704
+      },
+      {
+       "value": "returned",
+       "spindle": 0.0898786,
+       "port": 0.0899998
+      },
+      {
+       "value": "shipped",
+       "spindle": 0.0801862,
+       "port": 0.0799146
+      },
+      {
+       "value": "cancelled",
+       "spindle": 0.0398314,
+       "port": 0.039898
+      },
+      {
+       "value": "processing",
+       "spindle": 0.0200362,
+       "port": 0.0200172
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.00029060000000003493,
+     "tvd_baseline": 0.0006176000000000063,
+     "tvd_tol": 0.0029264000000000095,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "order_total": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142134209517316e-06
+     },
+     "ks": 0.3809128,
+     "ks_baseline": 0.1924556,
+     "ks_tol": 0.29068340000000004,
+     "stats": {
+      "mean": {
+       "spindle": 152.455228548,
+       "port": 66.18776686
+      },
+      "min": {
+       "spindle": 0.0,
+       "port": 0.0
+      },
+      "max": {
+       "spindle": 6925.03,
+       "port": 3541.34
+      },
+      "std": {
+       "spindle": 134.86130622538477,
+       "port": 82.2351691516534,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 83915,
+      "port": 62488
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": false
+     },
+     "equivalent": false,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "order_line": {
+   "rows": {
+    "spindle": 12500000,
+    "port": 12500000
+   },
+   "columns_spindle": [
+    "order_line_id",
+    "order_id",
+    "product_id",
+    "quantity",
+    "promotion_id",
+    "unit_price",
+    "discount_percent",
+    "line_total"
+   ],
+   "columns_port": [
+    "order_line_id",
+    "order_id",
+    "product_id",
+    "quantity",
+    "promotion_id",
+    "unit_price",
+    "discount_percent",
+    "line_total"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "order_line_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "order_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "product_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "quantity": {
+     "spindle": "double",
+     "port": "double"
+    },
+    "promotion_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "unit_price": {
+     "spindle": "double",
+     "port": "double"
+    },
+    "discount_percent": {
+     "spindle": "double",
+     "port": "double"
+    },
+    "line_total": {
+     "spindle": "double",
+     "port": "double"
+    }
+   },
+   "columns": {
+    "order_line_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656854023218206e-07
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.002,
+     "stats": {
+      "mean": {
+       "spindle": 6250000.5,
+       "port": 6250000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 12500000.0,
+       "port": 12500000.0
+      },
+      "std": {
+       "spindle": 3608439.1824351493,
+       "port": 3608439.1824351493,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 12500000,
+      "port": 12500000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "order_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656854023218206e-07
+     },
+     "ks": 0.0003248000000000001,
+     "ks_baseline": 0.00029679999999998596,
+     "ks_tol": 0.002445199999999979,
+     "stats": {
+      "mean": {
+       "spindle": 2499588.25371864,
+       "port": 2499671.96409328
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 5000000.0,
+       "port": 5000000.0
+      },
+      "std": {
+       "spindle": 1443533.694943267,
+       "port": 1443020.7988899671,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4590253,
+      "port": 4588769
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "product_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656854023218206e-07
+     },
+     "ks": 0.0002851200000000276,
+     "ks_baseline": 0.00040968000000007887,
+     "ks_tol": 0.0026145200000001183,
+     "stats": {
+      "mean": {
+       "spindle": 120.78771088,
+       "port": 121.30258056
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 25000.0,
+       "port": 25000.0
+      },
+      "std": {
+       "spindle": 998.4181106363253,
+       "port": 1001.241222223758,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 22995,
+      "port": 23016
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "quantity": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656854023218206e-07
+     },
+     "ks": 0.00011031999999999709,
+     "ks_baseline": 0.00022839999999990646,
+     "ks_tol": 0.0023425999999998597,
+     "stats": {
+      "mean": {
+       "spindle": 1.66725696,
+       "port": 1.667096
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 16.0,
+       "port": 17.0
+      },
+      "std": {
+       "spindle": 1.0551441936207384,
+       "port": 1.054904984718529,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 16,
+      "port": 17
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "promotion_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.69957648,
+      "port": 0.70041792,
+      "baseline_max_abs_diff": 0.0006952000000000069,
+      "tol": 0.0010428000000000104
+     },
+     "ks": 0.0008480089482001407,
+     "ks_baseline": 0.0006477202315549047,
+     "ks_tol": 0.002971580347332357,
+     "stats": {
+      "mean": {
+       "spindle": 100.50870717445825,
+       "port": 100.54754757026855
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 200.0,
+       "port": 200.0
+      },
+      "std": {
+       "spindle": 57.71105284870073,
+       "port": 57.755849042313635,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "port": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "unit_price": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656854023218206e-07
+     },
+     "ks": 0.59295256,
+     "ks_baseline": 0.56504584,
+     "ks_tol": 0.84956876,
+     "stats": {
+      "mean": {
+       "spindle": 39.2831556304,
+       "port": 16.9216427056
+      },
+      "min": {
+       "spindle": 0.99,
+       "port": 0.99
+      },
+      "max": {
+       "spindle": 775.98,
+       "port": 734.59
+      },
+      "std": {
+       "spindle": 22.77141238361426,
+       "port": 21.9039114636501,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 7800,
+      "port": 7787
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "discount_percent": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656854023218206e-07
+     },
+     "ks": 0.02880184000000008,
+     "ks_baseline": 0.024323760000000028,
+     "ks_tol": 0.03848564000000004,
+     "stats": {
+      "mean": {
+       "spindle": 6.8801948,
+       "port": 6.1716356
+      },
+      "min": {
+       "spindle": 0.0,
+       "port": 0.0
+      },
+      "max": {
+       "spindle": 50.0,
+       "port": 50.0
+      },
+      "std": {
+       "spindle": 13.17022693479702,
+       "port": 11.835692967495085,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 7,
+      "port": 7
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "line_total": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656854023218206e-07
+     },
+     "ks": 0.5101308,
+     "ks_baseline": 0.36030744,
+     "ks_tol": 0.54246116,
+     "stats": {
+      "mean": {
+       "spindle": 60.9820914192,
+       "port": 26.475106743999998
+      },
+      "min": {
+       "spindle": 0.5,
+       "port": 0.5
+      },
+      "max": {
+       "spindle": 6791.67,
+       "port": 3534.16
+      },
+      "std": {
+       "spindle": 58.096094668757054,
+       "port": 44.42426251267762,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 23559,
+      "port": 23307
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "return": {
+   "rows": {
+    "spindle": 850000,
+    "port": 850000
+   },
+   "columns_spindle": [
+    "return_id",
+    "order_id",
+    "reason",
+    "refund_amount",
+    "return_date"
+   ],
+   "columns_port": [
+    "return_id",
+    "order_id",
+    "reason",
+    "refund_amount",
+    "return_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "return_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "order_id": {
+     "spindle": "int64",
+     "port": "int64"
+    },
+    "reason": {
+     "spindle": "string",
+     "port": "string"
+    },
+    "refund_amount": {
+     "spindle": "double",
+     "port": "double"
+    },
+    "return_date": {
+     "spindle": "timestamp[us]",
+     "port": "timestamp[us]"
+    }
+   },
+   "columns": {
+    "return_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.318898414603055e-06
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0029903575350945185,
+     "stats": {
+      "mean": {
+       "spindle": 425000.5,
+       "port": 425000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "port": 1.0
+      },
+      "max": {
+       "spindle": 850000.0,
+       "port": 850000.0
+      },
+      "std": {
+       "spindle": 245373.86440542113,
+       "port": 245373.86440542113,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 850000,
+      "port": 850000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "order_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.318898414603055e-06
+     },
+     "ks": 0.0008682352941176141,
+     "ks_baseline": 0.0017870588235293638,
+     "ks_tol": 0.004680588235294046,
+     "stats": {
+      "mean": {
+       "spindle": 2499070.3666341174,
+       "port": 2499315.726797647
+      },
+      "min": {
+       "spindle": 11.0,
+       "port": 4.0
+      },
+      "max": {
+       "spindle": 5000000.0,
+       "port": 4999990.0
+      },
+      "std": {
+       "spindle": 1443474.5845684288,
+       "port": 1443643.6771956289,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 781762,
+      "port": 781383
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "reason": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.318898414603055e-06
+     },
+     "distinct": {
+      "spindle": 7,
+      "port": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "wrong_size",
+       "spindle": 0.2507364705882353,
+       "port": 0.2504564705882353
+      },
+      {
+       "value": "changed_mind",
+       "spindle": 0.22091176470588236,
+       "port": 0.21957411764705884
+      },
+      {
+       "value": "not_as_described",
+       "spindle": 0.19898470588235295,
+       "port": 0.19996823529411764
+      },
+      {
+       "value": "defective",
+       "spindle": 0.1497294117647059,
+       "port": 0.15004117647058823
+      },
+      {
+       "value": "damaged_shipping",
+       "spindle": 0.10012235294117647,
+       "port": 0.09982941176470589
+      },
+      {
+       "value": "arrived_late",
+       "spindle": 0.04975529411764706,
+       "port": 0.05023176470588235
+      },
+      {
+       "value": "other",
+       "spindle": 0.02976,
+       "port": 0.029898823529411766
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0019105882352940997,
+     "tvd_baseline": 0.0023835294117646993,
+     "tvd_tol": 0.00686911636231393,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "refund_amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.318898414603055e-06
+     },
+     "ks": 0.1685329411764706,
+     "ks_baseline": 0.08326705882352942,
+     "ks_tol": 0.12690058823529413,
+     "stats": {
+      "mean": {
+       "spindle": 36.116849035294116,
+       "port": 23.47852690588235
+      },
+      "min": {
+       "spindle": 0.0,
+       "port": 0.0
+      },
+      "max": {
+       "spindle": 855.59,
+       "port": 940.19
+      },
+      "std": {
+       "spindle": 37.929494036083625,
+       "port": 25.54977532753974,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 23790,
+      "port": 17189
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": false
+     },
+     "equivalent": false,
+     "arrow_type_match": true
+    },
+    "return_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "port": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.318898414603055e-06
+     },
+     "ks": 0.003830588235294141,
+     "ks_baseline": 0.0020823529411764796,
+     "ks_tol": 0.0051235294117647195,
+     "stats": {
+      "mean": {
+       "spindle": "2024-09-11 04:16:54.343740416",
+       "port": "2024-09-12 19:47:21.417957376"
+      },
+      "min": {
+       "spindle": "2022-01-05 10:34:39",
+       "port": "2022-01-06 14:01:35"
+      },
+      "max": {
+       "spindle": "2026-03-26 21:59:03",
+       "port": "2026-03-25 02:49:39"
+      },
+      "std": {
+       "spindle": 344.3879378092861,
+       "port": 344.268332127953,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 649036,
+      "port": 649242
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "bit_identical_columns": [
+  "customer.customer_id",
+  "product_category.category_id",
+  "product_category.level",
+  "promotion.promotion_id",
+  "store.store_id",
+  "store.store_name",
+  "address.address_id",
+  "product.product_id",
+  "order.order_id",
+  "order_line.order_line_id",
+  "return.return_id"
+ ],
+ "table_order": {
+  "spindle": [
+   "customer",
+   "product_category",
+   "promotion",
+   "store",
+   "address",
+   "product",
+   "order",
+   "order_line",
+   "return"
+  ],
+  "port": [
+   "customer",
+   "product_category",
+   "promotion",
+   "store",
+   "address",
+   "product",
+   "order",
+   "order_line",
+   "return"
+  ]
+ },
+ "fk_integrity": {
+  "spindle": {
+   "address.customer_id->customer.customer_id": {
+    "integrity": 1.0,
+    "n": 750000
+   },
+   "product.category_id->product_category.category_id": {
+    "integrity": 1.0,
+    "n": 25000
+   },
+   "product_category.parent_category_id->product_category.category_id": {
+    "integrity": 1.0,
+    "n": 42
+   },
+   "order.customer_id->customer.customer_id": {
+    "integrity": 1.0,
+    "n": 5000000
+   },
+   "order.store_id->store.store_id": {
+    "integrity": 1.0,
+    "n": 5000000
+   },
+   "order.shipping_address_id->address.address_id": {
+    "integrity": 1.0,
+    "n": 3886908
+   },
+   "order.promotion_id->promotion.promotion_id": {
+    "integrity": 1.0,
+    "n": 1501147
+   },
+   "order_line.order_id->order.order_id": {
+    "integrity": 1.0,
+    "n": 12500000
+   },
+   "order_line.product_id->product.product_id": {
+    "integrity": 1.0,
+    "n": 12500000
+   },
+   "order_line.promotion_id->promotion.promotion_id": {
+    "integrity": 1.0,
+    "n": 3755294
+   },
+   "return.order_id->order.order_id": {
+    "integrity": 1.0,
+    "n": 850000
+   }
+  },
+  "port": {
+   "address.customer_id->customer.customer_id": {
+    "integrity": 1.0,
+    "n": 750000
+   },
+   "product.category_id->product_category.category_id": {
+    "integrity": 1.0,
+    "n": 25000
+   },
+   "product_category.parent_category_id->product_category.category_id": {
+    "integrity": 1.0,
+    "n": 42
+   },
+   "order.customer_id->customer.customer_id": {
+    "integrity": 1.0,
+    "n": 5000000
+   },
+   "order.store_id->store.store_id": {
+    "integrity": 1.0,
+    "n": 5000000
+   },
+   "order.shipping_address_id->address.address_id": {
+    "integrity": 1.0,
+    "n": 3880973
+   },
+   "order.promotion_id->promotion.promotion_id": {
+    "integrity": 1.0,
+    "n": 1497597
+   },
+   "order_line.order_id->order.order_id": {
+    "integrity": 1.0,
+    "n": 12500000
+   },
+   "order_line.product_id->product.product_id": {
+    "integrity": 1.0,
+    "n": 12500000
+   },
+   "order_line.promotion_id->promotion.promotion_id": {
+    "integrity": 1.0,
+    "n": 3744776
+   },
+   "return.order_id->order.order_id": {
+    "integrity": 1.0,
+    "n": 850000
+   }
+  }
+ },
+ "fanout": {
+  "customer->address.customer_id": {
+   "spindle": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 5.0,
+    "max": 10,
+    "mean": 1.5,
+    "zero_frac": 0.22268
+   },
+   "port": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 5.0,
+    "max": 10,
+    "mean": 1.5,
+    "zero_frac": 0.223422
+   },
+   "ks_counts": 0.0011320000000000219,
+   "ks_baseline_max": 0.0009000000000000119,
+   "ks_tol": 0.0038989492070408104,
+   "equivalent": true
+  },
+  "product_category->product.category_id": {
+   "spindle": {
+    "p50": 501.0,
+    "p90": 520.4,
+    "p99": 535.5699999999999,
+    "max": 539,
+    "mean": 500.0,
+    "zero_frac": 0.0
+   },
+   "port": {
+    "p50": 501.5,
+    "p90": 529.0,
+    "p99": 545.61,
+    "max": 551,
+    "mean": 500.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.16000000000000003,
+   "ks_baseline_max": 0.18000000000000002,
+   "ks_tol": 0.38989492070408105,
+   "equivalent": true
+  },
+  "customer->order.customer_id": {
+   "spindle": {
+    "p50": 8.0,
+    "p90": 15.0,
+    "p99": 50.0,
+    "max": 50,
+    "mean": 10.0,
+    "zero_frac": 0.000738
+   },
+   "port": {
+    "p50": 8.0,
+    "p90": 15.0,
+    "p99": 50.0,
+    "max": 50,
+    "mean": 10.0,
+    "zero_frac": 0.00075
+   },
+   "ks_counts": 0.002880000000000049,
+   "ks_baseline_max": 0.002616000000000007,
+   "ks_tol": 0.005924000000000011,
+   "equivalent": true
+  },
+  "store->order.store_id": {
+   "spindle": {
+    "p50": 5661.5,
+    "p90": 43117.79999999998,
+    "p99": 508685.3799999976,
+    "max": 1566160,
+    "mean": 33333.333333333336,
+    "zero_frac": 0.0
+   },
+   "port": {
+    "p50": 5679.5,
+    "p90": 43020.49999999998,
+    "p99": 508567.71999999764,
+    "max": 1566740,
+    "mean": 33333.333333333336,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.02666666666666667,
+   "ks_baseline_max": 0.03333333333333333,
+   "ks_tol": 0.22510593742416898,
+   "equivalent": true
+  },
+  "address->order.shipping_address_id": {
+   "spindle": {
+    "p50": 3.0,
+    "p90": 10.0,
+    "p99": 39.0,
+    "max": 50,
+    "mean": 5.182544,
+    "zero_frac": 0.062904
+   },
+   "port": {
+    "p50": 4.0,
+    "p90": 10.0,
+    "p99": 36.0,
+    "max": 50,
+    "mean": 5.174630666666666,
+    "zero_frac": 0.06220933333333333
+   },
+   "ks_counts": 0.0014626666666666677,
+   "ks_baseline_max": 0.0016519999999999313,
+   "ks_tol": 0.004477999999999897,
+   "equivalent": true
+  },
+  "promotion->order.promotion_id": {
+   "spindle": {
+    "p50": 7514.5,
+    "p90": 7613.2,
+    "p99": 7665.32,
+    "max": 7712,
+    "mean": 7505.735,
+    "zero_frac": 0.0
+   },
+   "port": {
+    "p50": 7494.5,
+    "p90": 7606.2,
+    "p99": 7662.08,
+    "max": 7691,
+    "mean": 7487.985,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.12,
+   "ks_baseline_max": 0.1150000000000001,
+   "ks_tol": 0.19494746035204052,
+   "equivalent": true
+  },
+  "order->order_line.order_id": {
+   "spindle": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 14,
+    "mean": 2.5,
+    "zero_frac": 0.0819494
+   },
+   "port": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 14,
+    "mean": 2.5,
+    "zero_frac": 0.0822462
+   },
+   "ks_counts": 0.0003301999999999472,
+   "ks_baseline_max": 0.00043839999999994994,
+   "ks_tol": 0.002657599999999925,
+   "equivalent": true
+  },
+  "product->order_line.product_id": {
+   "spindle": {
+    "p50": 4.0,
+    "p90": 39.0,
+    "p99": 1192.1699999999728,
+    "max": 4808473,
+    "mean": 500.0,
+    "zero_frac": 0.0802
+   },
+   "port": {
+    "p50": 4.0,
+    "p90": 39.0,
+    "p99": 1196.0099999999984,
+    "max": 4807627,
+    "mean": 500.0,
+    "zero_frac": 0.07936
+   },
+   "ks_counts": 0.0036400000000000043,
+   "ks_baseline_max": 0.005280000000000007,
+   "ks_tol": 0.01743663093552431,
+   "equivalent": true
+  },
+  "promotion->order_line.promotion_id": {
+   "spindle": {
+    "p50": 18779.0,
+    "p90": 19083.2,
+    "p99": 19266.32,
+    "max": 19380,
+    "mean": 18776.47,
+    "zero_frac": 0.0
+   },
+   "port": {
+    "p50": 18759.0,
+    "p90": 19033.0,
+    "p99": 19264.559999999998,
+    "max": 19390,
+    "mean": 18723.88,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.10499999999999998,
+   "ks_baseline_max": 0.135,
+   "ks_tol": 0.20450000000000002,
+   "equivalent": true
+  },
+  "order->return.order_id": {
+   "spindle": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 5,
+    "mean": 0.17,
+    "zero_frac": 0.8436476
+   },
+   "port": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 5,
+    "mean": 0.17,
+    "zero_frac": 0.8437234
+   },
+   "ks_counts": 7.579999999995923e-05,
+   "ks_baseline_max": 3.1199999999897976e-05,
+   "ks_tol": 0.002046799999999847,
+   "equivalent": true
+  }
+ },
+ "address_coherence": {
+  "spindle": {
+   "city_state_zip_in_reference": 1.0,
+   "lat_lng_match_zip_record": 1.0,
+   "state_tvd_vs_uniform_over_zip_records": 0.002647493667179149
+  },
+  "port": {
+   "city_state_zip_in_reference": 1.0,
+   "lat_lng_match_zip_record": 1.0,
+   "state_tvd_vs_uniform_over_zip_records": 0.0033916471191155983
+  }
+ },
+ "business_rules": {
+  "spindle": {
+   "spindle_BusinessRulesEngine_violations": {},
+   "order_total_eq_sum_lines": 1.0,
+   "orders_without_lines_frac": 0.0819494,
+   "order_total_zero_frac": 0.0819494,
+   "return_date_gt_order_date": 1.0,
+   "return_lag_days_quantiles": [
+    1.0,
+    1.5316819865104168,
+    15.0,
+    39.0
+   ],
+   "return_lag_eq_1day_frac": 0.49902823529411766,
+   "order_date_ge_signup": 1.0,
+   "order_date_eq_signup_plus_1d_frac": 0.4923626,
+   "refund_le_order_total": 1.0,
+   "refund_zero_frac": 0.08188823529411765,
+   "cost_lt_unit_price": 1.0,
+   "line_total_positive": 1.0,
+   "line_unit_price_eq_product": 1.0,
+   "line_promotion_eq_order_promotion": 1.0,
+   "discount_eq_promotion_pct_or_0": 1.0,
+   "line_total_formula": 1.0,
+   "promo_duration_days_in_3_30": 1.0,
+   "promo_duration_integral_days": 1.0,
+   "is_primary_eq_first_per_customer": 1.0,
+   "shipping_address_belongs_to_customer": 1.0,
+   "shipping_null_iff_customer_has_no_address": 1.0,
+   "category_parent_level_consistent": 1.0,
+   "category_level_counts": {
+    "1": 8,
+    "2": 21,
+    "3": 21
+   },
+   "email_built_from_row_first_last": 1.0,
+   "max_orders_per_customer": 50,
+   "order_hour_dist": [
+    0.0418,
+    0.0419,
+    0.0419,
+    0.0419,
+    0.0415,
+    0.0418,
+    0.0417,
+    0.0417,
+    0.0415,
+    0.0416,
+    0.0414,
+    0.042,
+    0.0412,
+    0.0416,
+    0.0417,
+    0.0416,
+    0.0413,
+    0.0419,
+    0.0419,
+    0.0415,
+    0.0413,
+    0.0418,
+    0.0417,
+    0.0417
+   ],
+   "order_dow_dist": [
+    0.1491,
+    0.1471,
+    0.1461,
+    0.1476,
+    0.1455,
+    0.1281,
+    0.1365
+   ],
+   "order_month_dist": [
+    0.0604,
+    0.0588,
+    0.0695,
+    0.0716,
+    0.0779,
+    0.0797,
+    0.0859,
+    0.0911,
+    0.0878,
+    0.0953,
+    0.1048,
+    0.1172
+   ]
+  },
+  "port": {
+   "spindle_BusinessRulesEngine_violations": {},
+   "order_total_eq_sum_lines": 1.0,
+   "orders_without_lines_frac": 0.0822462,
+   "order_total_zero_frac": 0.0822462,
+   "return_date_gt_order_date": 1.0,
+   "return_lag_days_quantiles": [
+    1.0,
+    1.2453822850752316,
+    15.0,
+    38.0
+   ],
+   "return_lag_eq_1day_frac": 0.49926,
+   "order_date_ge_signup": 1.0,
+   "order_date_eq_signup_plus_1d_frac": 0.494053,
+   "refund_le_order_total": 1.0,
+   "refund_zero_frac": 0.08196117647058823,
+   "cost_lt_unit_price": 1.0,
+   "line_total_positive": 1.0,
+   "line_unit_price_eq_product": 1.0,
+   "line_promotion_eq_order_promotion": 1.0,
+   "discount_eq_promotion_pct_or_0": 1.0,
+   "line_total_formula": 1.0,
+   "promo_duration_days_in_3_30": 1.0,
+   "promo_duration_integral_days": 1.0,
+   "is_primary_eq_first_per_customer": 1.0,
+   "shipping_address_belongs_to_customer": 1.0,
+   "shipping_null_iff_customer_has_no_address": 1.0,
+   "category_parent_level_consistent": 1.0,
+   "category_level_counts": {
+    "1": 8,
+    "2": 21,
+    "3": 21
+   },
+   "email_built_from_row_first_last": 1.0,
+   "max_orders_per_customer": 50,
+   "order_hour_dist": [
+    0.0422,
+    0.0415,
+    0.0415,
+    0.0418,
+    0.0415,
+    0.0419,
+    0.0415,
+    0.0417,
+    0.0418,
+    0.0416,
+    0.0418,
+    0.0417,
+    0.0413,
+    0.0417,
+    0.0418,
+    0.0418,
+    0.0419,
+    0.0415,
+    0.0417,
+    0.0418,
+    0.0416,
+    0.0415,
+    0.0418,
+    0.0413
+   ],
+   "order_dow_dist": [
+    0.1485,
+    0.1479,
+    0.1461,
+    0.1476,
+    0.1445,
+    0.1286,
+    0.1368
+   ],
+   "order_month_dist": [
+    0.0593,
+    0.0586,
+    0.0689,
+    0.0713,
+    0.0784,
+    0.0799,
+    0.0864,
+    0.091,
+    0.0886,
+    0.0956,
+    0.1047,
+    0.1173
+   ]
+  }
+ },
+ "spindle_fidelity_comparator": {
+  "overall_port": 90.51772759167949,
+  "overall_baseline_spindle_vs_spindle": [
+   91.74601195132665,
+   91.647277312021
+  ],
+  "tables": {
+   "address": {
+    "port": 88.56299768471966,
+    "baseline": [
+     88.80552276205759,
+     89.4100212037956
+    ],
+    "columns": {
+     "address_id": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     },
+     "address_type": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     },
+     "city": {
+      "port": 71.42857142857143,
+      "baseline_min": 71.42857142857143
+     },
+     "customer_id": {
+      "port": 99.95455850970036,
+      "baseline_min": 99.92503439097862
+     },
+     "is_primary": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     },
+     "lat": {
+      "port": 99.95761109915865,
+      "baseline_min": 99.86515802430624
+     },
+     "lng": {
+      "port": 99.93879128304786,
+      "baseline_min": 99.89920966824273
+     },
+     "state": {
+      "port": 71.42857142857143,
+      "baseline_min": 73.97366537831891
+     },
+     "street": {
+      "port": 42.964406642053305,
+      "baseline_min": 42.961888226980335
+     },
+     "zip_code": {
+      "port": 99.95746645609358,
+      "baseline_min": 99.93402069954489
+     }
+    }
+   },
+   "customer": {
+    "port": 85.69709720344038,
+    "baseline": [
+     85.70969828086209,
+     85.70546444816355
+    ],
+    "columns": {
+     "customer_id": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     },
+     "email": {
+      "port": 42.851336440879855,
+      "baseline_min": 42.851219142803224
+     },
+     "first_name": {
+      "port": 71.42857142857143,
+      "baseline_min": 71.42857142857143
+     },
+     "gender": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     },
+     "is_active": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     },
+     "last_name": {
+      "port": 71.42857142857143,
+      "baseline_min": 71.42857142857143
+     },
+     "loyalty_tier": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     },
+     "signup_date": {
+      "port": 99.86829832950023,
+      "baseline_min": 99.93535358536228
+     }
+    }
+   },
+   "order": {
+    "port": 95.8258614932468,
+    "baseline": [
+     97.60149295009256,
+     98.18501169176776
+    ],
+    "columns": {
+     "customer_id": {
+      "port": 99.8509595605007,
+      "baseline_min": 99.8849347688056
+     },
+     "order_date": {
+      "port": 99.84027142747976,
+      "baseline_min": 99.89334834375656
+     },
+     "order_id": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     },
+     "order_total": {
+      "port": 67.05958070536165,
+      "baseline_min": 87.40254923812087
+     },
+     "promotion_id": {
+      "port": 99.9483378081993,
+      "baseline_min": 99.9409645947302
+     },
+     "shipping_address_id": {
+      "port": 99.93786033960822,
+      "baseline_min": 99.8611468559225
+     },
+     "status": {
+      "port": 100.0,
+      "baseline_min": 93.75052239295661
+     },
+     "store_id": {
+      "port": 99.96988210482472,
+      "baseline_min": 99.96063170077377
+     }
+    }
+   },
+   "order_line": {
+    "port": 91.33631681270325,
+    "baseline": [
+     93.80366212001795,
+     93.8227887163604
+    ],
+    "columns": {
+     "discount_percent": {
+      "port": 96.60383433128838,
+      "baseline_min": 96.7597592002458
+     },
+     "line_total": {
+      "port": 72.22733562171726,
+      "baseline_min": 82.63173081700602
+     },
+     "order_id": {
+      "port": 99.98400886525027,
+      "baseline_min": 99.9803743994951
+     },
+     "order_line_id": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     },
+     "product_id": {
+      "port": 99.92775260920294,
+      "baseline_min": 99.87812356056305
+     },
+     "promotion_id": {
+      "port": 99.94554722853499,
+      "baseline_min": 99.96885061476353
+     },
+     "quantity": {
+      "port": 99.09796967086355,
+      "baseline_min": 97.2776026127536
+     },
+     "unit_price": {
+      "port": 62.90408617476846,
+      "baseline_min": 71.80882396070022
+     }
+    }
+   },
+   "product": {
+    "port": 94.6559291255215,
+    "baseline": [
+     94.93426937439712,
+     94.93834142382673
+    ],
+    "columns": {
+     "category_id": {
+      "port": 99.61667353763679,
+      "baseline_min": 99.47529549322613
+     },
+     "cost": {
+      "port": 98.3977683784799,
+      "baseline_min": 99.21432493056179
+     },
+     "product_id": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     },
+     "product_name": {
+      "port": 71.42857142857143,
+      "baseline_min": 71.42857142857143
+     },
+     "product_status": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     },
+     "unit_price": {
+      "port": 98.49256140844088,
+      "baseline_min": 99.18898036717431
+     }
+    }
+   },
+   "product_category": {
+    "port": 85.60443117683401,
+    "baseline": [
+     87.56220318832499,
+     87.73440233562891
+    ],
+    "columns": {
+     "category_id": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     },
+     "category_name": {
+      "port": 55.04201680672269,
+      "baseline_min": 54.29505135387489
+     },
+     "level": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     },
+     "parent_category_id": {
+      "port": 87.37570790061334,
+      "baseline_min": 95.20679594657726
+     }
+    }
+   },
+   "promotion": {
+    "port": 92.49819917148152,
+    "baseline": [
+     93.38416432592675,
+     91.81618927591192
+    ],
+    "columns": {
+     "discount_pct": {
+      "port": 92.68074732499402,
+      "baseline_min": 92.84342142552319
+     },
+     "end_date": {
+      "port": 97.73712928299567,
+      "baseline_min": 95.4789621147897
+     },
+     "promo_name": {
+      "port": 70.56559766763849,
+      "baseline_min": 70.28571428571428
+     },
+     "promo_type": {
+      "port": 96.29612244897959,
+      "baseline_min": 96.7791156462585
+     },
+     "promotion_id": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     },
+     "start_date": {
+      "port": 97.7095983042813,
+      "baseline_min": 95.50992218318586
+     }
+    }
+   },
+   "return": {
+    "port": 94.87285485130754,
+    "baseline": [
+     98.27117574398068,
+     97.19091646428686
+    ],
+    "columns": {
+     "order_id": {
+      "port": 99.9741408875134,
+      "baseline_min": 99.89822174334547
+     },
+     "reason": {
+      "port": 95.14522149281628,
+      "baseline_min": 92.82670776232736
+     },
+     "refund_amount": {
+      "port": 79.4456992348754,
+      "baseline_min": 91.46614835489004
+     },
+     "return_date": {
+      "port": 99.79921264133262,
+      "baseline_min": 99.85084790236752
+     },
+     "return_id": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     }
+    }
+   },
+   "store": {
+    "port": 85.6058608058608,
+    "baseline": [
+     85.64191881628008,
+     86.0223602484472
+    ],
+    "columns": {
+     "city": {
+      "port": 61.17216117216117,
+      "baseline_min": 60.56984252860541
+     },
+     "state": {
+      "port": 66.85714285714285,
+      "baseline_min": 67.37888198757764
+     },
+     "store_id": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     },
+     "store_name": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     },
+     "store_type": {
+      "port": 100.0,
+      "baseline_min": 100.0
+     }
+    }
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 60,
+  "columns_equivalent": 58,
+  "flagged": [
+   "order.order_total: failed ['ks']",
+   "return.refund_amount: failed ['ks']"
+  ]
+ }
+}

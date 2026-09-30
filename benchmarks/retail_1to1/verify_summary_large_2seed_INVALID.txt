@@ -1,0 +1,146 @@
+Spindle retail (seed 42) vs port (seed 1042) — scale=large  (baseline = max distance of Spindle seeds [43, 44] to Spindle seed 42)
+bit-identical columns: 11
+table order identical: True
+
+table.column                       kind        type         null s/p dist(port)  baseline     tol  vocab  verdict
+-- customer: rows 500,000 / 500,000  cols identical+ordered=True  types identical=True
+customer.customer_id               numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0039         EQUIVALENT
+customer.first_name                categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+customer.last_name                 categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+customer.email                     categorical ok    0.0501/0.0499 |dR-1|  0.0002    0.0002  0.0200 1.0000  EQUIVALENT
+customer.gender                    categorical ok    0.0000/0.0000 TVD  0.0006    0.0004  0.0048 1.0000  EQUIVALENT
+customer.loyalty_tier              categorical ok    0.0000/0.0000 TVD  0.0009    0.0008  0.0068 1.0000  EQUIVALENT
+customer.signup_date               datetime    ok    0.0000/0.0000  KS  0.0021    0.0015  0.0043         EQUIVALENT
+customer.is_active                 categorical ok    0.0000/0.0000 TVD  0.0002    0.0009  0.0048 1.0000  EQUIVALENT
+-- product_category: rows 50 / 50  cols identical+ordered=True  types identical=True
+product_category.category_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3899         EQUIVALENT
+product_category.category_name     categorical ok    0.0000/0.0000 TVD  0.4400    0.5000  1.9739 1.0000  EQUIVALENT
+product_category.parent_category_id numeric     ok    0.1600/0.1600  KS  0.1905    0.1190  0.4254         EQUIVALENT
+product_category.level             numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3899         EQUIVALENT
+-- promotion: rows 200 / 200  cols identical+ordered=True  types identical=True
+promotion.promotion_id             numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1949         EQUIVALENT
+promotion.promo_name               categorical ok    0.0000/0.0000 TVD  0.2550    0.2800  1.1848 1.0000  EQUIVALENT
+promotion.promo_type               categorical ok    0.0000/0.0000 TVD  0.0750    0.1000  0.3785 1.0000  EQUIVALENT
+promotion.discount_pct             numeric     ok    0.0000/0.0000  KS  0.0950    0.0800  0.1949         EQUIVALENT
+promotion.start_date               datetime    ok    0.0000/0.0000  KS  0.0700    0.0800  0.1949         EQUIVALENT
+promotion.end_date                 datetime    ok    0.0000/0.0000  KS  0.0700    0.0800  0.1949         EQUIVALENT
+-- store: rows 150 / 150  cols identical+ordered=True  types identical=True
+store.store_id                     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2251         EQUIVALENT
+store.store_name                   categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+store.store_type                   categorical ok    0.0000/0.0000 TVD  0.0133    0.0667  0.3385 1.0000  EQUIVALENT
+store.city                         categorical ok    0.0000/0.0000 TVD  0.3933    0.4667  1.7261 1.0000  EQUIVALENT
+store.state                        categorical ok    0.0000/0.0000 TVD  0.2867    0.3467  1.3255 1.0000  EQUIVALENT
+-- address: rows 750,000 / 750,000  cols identical+ordered=True  types identical=True
+address.address_id                 numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0032         EQUIVALENT
+address.customer_id                numeric     ok    0.0000/0.0000  KS  0.0010    0.0015  0.0043         EQUIVALENT
+address.address_type               categorical ok    0.0000/0.0000 TVD  0.0008    0.0008  0.0048 1.0000  EQUIVALENT
+address.street                     categorical ok    0.0000/0.0000 |dR-1|  0.0001    0.0002  0.0200 1.0000  EQUIVALENT
+address.city                       categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+address.state                      categorical ok    0.0000/0.0000 TVD  0.0043    0.0038  0.0197 1.0000  EQUIVALENT
+address.zip_code                   categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+address.lat                        numeric     ok    0.0000/0.0000  KS  0.0010    0.0021  0.0051         EQUIVALENT
+address.lng                        numeric     ok    0.0000/0.0000  KS  0.0013    0.0020  0.0050         EQUIVALENT
+address.is_primary                 categorical ok    0.0000/0.0000 TVD  0.0005    0.0005  0.0039 1.0000  EQUIVALENT
+-- product: rows 25,000 / 25,000  cols identical+ordered=True  types identical=True
+product.product_id                 numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0174         EQUIVALENT
+product.category_id                numeric     ok    0.0000/0.0000  KS  0.0072    0.0111  0.0187         EQUIVALENT
+product.product_name               categorical ok    0.0000/0.0000 TVD  0.0396    0.0360  0.1616 1.0000  EQUIVALENT
+product.unit_price                 numeric     ok    0.0000/0.0000  KS  0.0090    0.0069  0.0174         EQUIVALENT
+product.product_status             categorical ok    0.0000/0.0000 TVD  0.0062    0.0048  0.0262 1.0000  EQUIVALENT
+product.cost                       numeric     ok    0.0000/0.0000  KS  0.0108    0.0062  0.0174         EQUIVALENT
+-- order: rows 5,000,000 / 5,000,000  cols identical+ordered=True  types identical=True
+order.order_id                     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0020         EQUIVALENT
+order.customer_id                  numeric     ok    0.0000/0.0000  KS  0.0022    0.0017  0.0046         EQUIVALENT
+order.store_id                     numeric     ok    0.0000/0.0000  KS  0.0003    0.0006  0.0030         EQUIVALENT
+order.shipping_address_id          numeric     ok    0.2226/0.2238  KS  0.0011    0.0021  0.0052         EQUIVALENT
+order.promotion_id                 numeric     ok    0.6998/0.7005  KS  0.0008    0.0009  0.0034         EQUIVALENT
+order.order_date                   datetime    ok    0.0000/0.0000  KS  0.0020    0.0014  0.0041         EQUIVALENT
+order.status                       categorical ok    0.0000/0.0000 TVD  0.0003    0.0006  0.0029 1.0000  EQUIVALENT
+order.order_total                  numeric     ok    0.0000/0.0000  KS  0.3809    0.1925  0.2907         NOT EQUIVALENT
+-- order_line: rows 12,500,000 / 12,500,000  cols identical+ordered=True  types identical=True
+order_line.order_line_id           numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0020         EQUIVALENT
+order_line.order_id                numeric     ok    0.0000/0.0000  KS  0.0003    0.0003  0.0024         EQUIVALENT
+order_line.product_id              numeric     ok    0.0000/0.0000  KS  0.0003    0.0004  0.0026         EQUIVALENT
+order_line.quantity                numeric     ok    0.0000/0.0000  KS  0.0001    0.0002  0.0023         EQUIVALENT
+order_line.promotion_id            numeric     ok    0.6996/0.7004  KS  0.0008    0.0006  0.0030         EQUIVALENT
+order_line.unit_price              numeric     ok    0.0000/0.0000  KS  0.5930    0.5650  0.8496         EQUIVALENT
+order_line.discount_percent        numeric     ok    0.0000/0.0000  KS  0.0288    0.0243  0.0385         EQUIVALENT
+order_line.line_total              numeric     ok    0.0000/0.0000  KS  0.5101    0.3603  0.5425         EQUIVALENT
+-- return: rows 850,000 / 850,000  cols identical+ordered=True  types identical=True
+return.return_id                   numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0030         EQUIVALENT
+return.order_id                    numeric     ok    0.0000/0.0000  KS  0.0009    0.0018  0.0047         EQUIVALENT
+return.reason                      categorical ok    0.0000/0.0000 TVD  0.0019    0.0024  0.0069 1.0000  EQUIVALENT
+return.refund_amount               numeric     ok    0.0000/0.0000  KS  0.1685    0.0833  0.1269         NOT EQUIVALENT
+return.return_date                 datetime    ok    0.0000/0.0000  KS  0.0038    0.0021  0.0051         EQUIVALENT
+
+FK integrity (spindle / port):
+  address.customer_id->customer.customer_id               1.0000 / 1.0000
+  product.category_id->product_category.category_id       1.0000 / 1.0000
+  product_category.parent_category_id->product_category.category_id 1.0000 / 1.0000
+  order.customer_id->customer.customer_id                 1.0000 / 1.0000
+  order.store_id->store.store_id                          1.0000 / 1.0000
+  order.shipping_address_id->address.address_id           1.0000 / 1.0000
+  order.promotion_id->promotion.promotion_id              1.0000 / 1.0000
+  order_line.order_id->order.order_id                     1.0000 / 1.0000
+  order_line.product_id->product.product_id               1.0000 / 1.0000
+  order_line.promotion_id->promotion.promotion_id         1.0000 / 1.0000
+  return.order_id->order.order_id                         1.0000 / 1.0000
+FK fan-out (children per parent)  spindle p50/p90/p99/max/zero% | port | KS (baseline max, tol)
+  customer->address.customer_id            1/3/5/10/0.223 | 1/3/5/10/0.223 | 0.0011 (0.0009, 0.0039)
+  product_category->product.category_id    501/520/536/539/0.000 | 502/529/546/551/0.000 | 0.1600 (0.1800, 0.3899)
+  customer->order.customer_id              8/15/50/50/0.001 | 8/15/50/50/0.001 | 0.0029 (0.0026, 0.0059)
+  store->order.store_id                    5662/43118/508685/1566160/0.000 | 5680/43020/508568/1566740/0.000 | 0.0267 (0.0333, 0.2251)
+  address->order.shipping_address_id       3/10/39/50/0.063 | 4/10/36/50/0.062 | 0.0015 (0.0017, 0.0045)
+  promotion->order.promotion_id            7514/7613/7665/7712/0.000 | 7494/7606/7662/7691/0.000 | 0.1200 (0.1150, 0.1949)
+  order->order_line.order_id               2/5/7/14/0.082 | 2/5/7/14/0.082 | 0.0003 (0.0004, 0.0027)
+  product->order_line.product_id           4/39/1192/4808473/0.080 | 4/39/1196/4807627/0.079 | 0.0036 (0.0053, 0.0174)
+  promotion->order_line.promotion_id       18779/19083/19266/19380/0.000 | 18759/19033/19265/19390/0.000 | 0.1050 (0.1350, 0.2045)
+  order->return.order_id                   0/1/2/5/0.844 | 0/1/2/5/0.844 | 0.0001 (0.0000, 0.0020)
+Address coherence (spindle / port):
+  city_state_zip_in_reference                   1.0000 / 1.0000
+  lat_lng_match_zip_record                      1.0000 / 1.0000
+  state_tvd_vs_uniform_over_zip_records         0.0026 / 0.0034
+Business rules / cross-table semantics (spindle / port):
+  spindle_BusinessRulesEngine_violations        {} / {}
+  order_total_eq_sum_lines                      1.0 / 1.0
+  orders_without_lines_frac                     0.0819494 / 0.0822462
+  order_total_zero_frac                         0.0819494 / 0.0822462
+  return_date_gt_order_date                     1.0 / 1.0
+  return_lag_days_quantiles                     [1.0, 1.5316819865104168, 15.0, 39.0] / [1.0, 1.2453822850752316, 15.0, 38.0]
+  return_lag_eq_1day_frac                       0.49902823529411766 / 0.49926
+  order_date_ge_signup                          1.0 / 1.0
+  order_date_eq_signup_plus_1d_frac             0.4923626 / 0.494053
+  refund_le_order_total                         1.0 / 1.0
+  refund_zero_frac                              0.08188823529411765 / 0.08196117647058823
+  cost_lt_unit_price                            1.0 / 1.0
+  line_total_positive                           1.0 / 1.0
+  line_unit_price_eq_product                    1.0 / 1.0
+  line_promotion_eq_order_promotion             1.0 / 1.0
+  discount_eq_promotion_pct_or_0                1.0 / 1.0
+  line_total_formula                            1.0 / 1.0
+  promo_duration_days_in_3_30                   1.0 / 1.0
+  promo_duration_integral_days                  1.0 / 1.0
+  is_primary_eq_first_per_customer              1.0 / 1.0
+  shipping_address_belongs_to_customer          1.0 / 1.0
+  shipping_null_iff_customer_has_no_address     1.0 / 1.0
+  category_parent_level_consistent              1.0 / 1.0
+  category_level_counts                         {"1": 8, "2": 21, "3": 21} / {"1": 8, "2": 21, "3": 21}
+  email_built_from_row_first_last               1.0 / 1.0
+  max_orders_per_customer                       50 / 50
+  order_hour_dist                               [0.0418, 0.0419, 0.0419, 0.0419, 0.0415, 0.0418, 0.0417, 0.0417, 0.0415, 0.0416, 0.0414, 0.042, 0.0412, 0.0416, 0.0417, 0.0416, 0.0413, 0.0419, 0.0419, 0.0415, 0.0413, 0.0418, 0.0417, 0.0417] / [0.0422, 0.0415, 0.0415, 0.0418, 0.0415, 0.0419, 0.0415, 0.0417, 0.0418, 0.0416, 0.0418, 0.0417, 0.0413, 0.0417, 0.0418, 0.0418, 0.0419, 0.0415, 0.0417, 0.0418, 0.0416, 0.0415, 0.0418, 0.0413]
+  order_dow_dist                                [0.1491, 0.1471, 0.1461, 0.1476, 0.1455, 0.1281, 0.1365] / [0.1485, 0.1479, 0.1461, 0.1476, 0.1445, 0.1286, 0.1368]
+  order_month_dist                              [0.0604, 0.0588, 0.0695, 0.0716, 0.0779, 0.0797, 0.0859, 0.0911, 0.0878, 0.0953, 0.1048, 0.1172] / [0.0593, 0.0586, 0.0689, 0.0713, 0.0784, 0.0799, 0.0864, 0.091, 0.0886, 0.0956, 0.1047, 0.1173]
+Spindle FidelityComparator (real=Spindle seed 42, synthetic=port): overall port=90.52  Spindle-vs-Spindle baselines=[91.75, 91.65]
+  address            port  88.56   baselines [88.81, 89.41]
+  customer           port  85.70   baselines [85.71, 85.71]
+  order              port  95.83   baselines [97.6, 98.19]
+  order_line         port  91.34   baselines [93.8, 93.82]
+  product            port  94.66   baselines [94.93, 94.94]
+  product_category   port  85.60   baselines [87.56, 87.73]
+  promotion          port  92.50   baselines [93.38, 91.82]
+  return             port  94.87   baselines [98.27, 97.19]
+  store              port  85.61   baselines [85.64, 86.02]
+
+COLUMNS EQUIVALENT: 58/60
+  NOT EQUIVALENT: order.order_total: failed ['ks']
+  NOT EQUIVALENT: return.refund_amount: failed ['ks']
