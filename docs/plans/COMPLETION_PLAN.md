@@ -245,6 +245,7 @@ instruction.
 |---|---|---|---|
 | 2026-09-29 | — | Plan v1 approved | — |
 | 2026-09-29 | — | Plan v2: adversarial-review fixes (Spindle stream format, CLI mapping, exact mode for parity and gates, crate pins, Philox implemented in-house, maturin-action, setup, builder guide, work-package splits, verified line references) | Red-team review |
+| 2026-09-30 | — | Main plan reconciled with the shipped demo: P0-05 keeps version 0.9.0 and the DM-00 README; P0-04 names `src/shape/<m>` paths only; P0-06 keeps the demo CI jobs; P0-07 updates demo references to moved harness paths; §6.2(7) keeps `tests/demo` green | Demo track (§12) landed before Phase 0; 0.9.0 is published |
 | 2026-09-30 | T-07 | Package pyarrow range `>=25,<26` replaced by `>=14.0.1`; the benchmark harness keeps pyarrow 25.0.1 in both venvs | CI: `fabric-user-data-functions` 1.0.0–1.0.142 requires `pyarrow>=19.0.1,<20`, so `>=25` made Shape uninstallable next to the UDF SDK (`ResolutionImpossible`) |
 | 2026-09-30 | D-15 | License: MIT (owner choice), replacing the inherited Apache-2.0 | Owner decision; matches Spindle |
 | 2026-09-30 | D-15 | Open source: public repo, PyPI release; DM-00 public-readiness cleanup moved ahead of the demo | Owner decision |
@@ -508,6 +509,12 @@ P0 ─► P1 ─► P2 ─┬─► PF (priority) ──────────
    committed `benchmarks/vs_spindle/results.json`. This applies from P0-07 onward.
 5. The docs affected by the change are updated in the same commit.
 6. The tracker row (§11) is set to `done`, with the commit hash.
+7. **The shipped early-access product keeps working.** `pytest tests/demo` stays green
+   (the Fabric tests need `tests/demo/fabric/requirements.txt` and unixODBC; the content
+   tests need `$SPINDLE_ROOT`), and the §12.2 API and CLI stay as specified.
+   `src/shape/profile/reference/` is the pure-Python profiler behind `shape.profile`
+   and the pure wheel (T-29), so it is kept. When P1-07's engine takes over
+   `shape.profile`, DM-01's parity run (`verify.py --impl shape`) must still exit 0.
 
 ### 6.3 Branches, commits and PRs
 
@@ -610,13 +617,17 @@ Appendix A.
   - **First:** move `test_privacy` from `tests/test_future_roadmap.py` to
     `tests/privacy/test_advanced.py`, keeping only the `k_anonymous` and
     `reidentification_risk` assertions. Then delete `tests/test_future_roadmap.py`.
-  - Delete the modules and the tests in §8.1, in the order given there.
+  - Delete the modules and the tests in §8.1, in the order given there. Every module
+    name means `src/shape/<m>` only: `integrations` is `src/shape/integrations/`, not
+    the repo-root `integrations/fabric/` (the Fabric demo, kept); `reference` is
+    `src/shape/reference/`, not `src/shape/profile/reference/` (the shipped profiler,
+    kept).
   - For each module, run `git rm -r src/shape/<m>`, then `rm -rf src/shape/<m>`, and
     assert `test ! -e src/shape/<m>`. A leftover `__pycache__` directory would keep
     the module importable as a namespace package.
   - Rewrite `tests/torture/test_all_modules.py` to parametrize over
     `pkgutil.walk_packages(shape.__path__, "shape.")`, instead of reading
-    `rq/torture_inventory.json`.
+    `rq/torture_inventory.json`. (DM-00 already did this: verify it.)
 - Acceptance:
   - `python -c "import shape, shape.cli.main"` succeeds, and `pytest` is green.
   - For each deleted module, a parametrized test asserts `ModuleNotFoundError`.
@@ -628,10 +639,13 @@ Appendix A.
   verify them and do the rest.
 - Deliverables:
   - Delete everything in §8.3.
-  - Rewrite README and CHANGELOG to the true current state: "pre-release, under
-    active rebuild; see `docs/plans/COMPLETION_PLAN.md`".
-  - Set the version to `0.9.0.dev0`, both in `pyproject.toml` and in the hard-coded
-    version at `src/shape/__init__.py` (~line 62).
+  - README and CHANGELOG: keep DM-00's rewrite (early access; the §12.2 quick start,
+    whose every line is tested). Only remove claims that are still false. The README
+    must keep the words "early access": `publish.yml` checks for them.
+  - **Do not change the version.** It is `0.9.0` in `pyproject.toml` and
+    `src/shape/__init__.py`, and 0.9.0 is published (TestPyPI, and PyPI after the
+    owner's release). A lower version such as `0.9.0.dev0` would sort below it.
+    Versions change only when the owner releases (P8-04 or an owner request).
   - Apply T-07 and T-08:
     - dependencies `numpy>=2.0,<3` and `pyarrow>=14.0.1` (T-07);
     - remove `pydantic` and `typing-extensions`;
@@ -660,6 +674,9 @@ Appendix A.
     lint and format check, mypy with the ratchet (T-12), pytest with coverage
     (`--cov-fail-under` set to the current value, rounded down), `compileall` and
     `pip-audit`.
+  - Keep the existing `fabric-demo` job (Fabric tests on Python 3.11 with Java,
+    unixODBC and the pinned Spindle fetch for `tests/demo/content`) and the Windows
+    legs of the matrix.
   - `.github/workflows/nightly.yml` is a placeholder until P0-07.
   - `release.yml` and `security.yml` are updated to the new layout.
   - `make check` runs the same commands.
@@ -673,6 +690,11 @@ Appendix A.
   - Move the reference ports:
     - `git mv benchmarks/retail_1to1 benchmarks/vs_spindle/domain_1to1`
     - `git mv benchmarks/profile_1to1 benchmarks/vs_spindle/profile_1to1`
+
+    Update every reference to the old paths in the same commit: `demo/make_data.py`,
+    `demo/build_benchmark_sheet.py`, `tests/demo/`, `docs/plans/demo_status/`,
+    `integrations/fabric/` and `.github/workflows/`
+    (`git grep -n "retail_1to1\|profile_1to1"`). `pytest tests/demo` must stay green.
 
     Recorded outputs in those directories (`bench_results.json`, `verify_*.json`,
     `verify_*.txt`, `verify_output.txt`) are already preserved in
