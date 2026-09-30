@@ -71,7 +71,7 @@ jobs:
     # informational until the repository is public (O-05).
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    env: {BENCH_OUT_DIR: "${{ github.workspace }}/../bench-out"}
+    env: {BENCH_OUT_DIR: "${{ github.workspace }}/bench-out"}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -91,8 +91,8 @@ jobs:
         with:
           name: benchmark-results-quick
           path: |
-            ${{ github.workspace }}/../bench-out/results.json
-            ${{ github.workspace }}/../bench-out/verify/
+            ${{ github.workspace }}/bench-out/results.json
+            ${{ github.workspace }}/bench-out/verify/
   build:
     runs-on: ubuntu-latest
     steps:

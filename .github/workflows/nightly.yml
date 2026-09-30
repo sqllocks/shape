@@ -10,7 +10,7 @@ jobs:
     # standard runners; on a private repository use a 4-vCPU larger runner (O-05).
     runs-on: ubuntu-latest
     timeout-minutes: 360
-    env: {BENCH_OUT_DIR: "${{ github.workspace }}/../bench-out"}
+    env: {BENCH_OUT_DIR: "${{ github.workspace }}/bench-out"}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -31,8 +31,8 @@ jobs:
           name: benchmark-results-full
           path: |
             benchmarks/vs_spindle/results.json
-            ${{ github.workspace }}/../bench-out/verify/
-            ${{ github.workspace }}/../bench-out/spindle_freeze.txt
+            ${{ github.workspace }}/bench-out/verify/
+            ${{ github.workspace }}/bench-out/spindle_freeze.txt
   emulator-compose:
     # The emulator-backed test jobs (Kafka, Event Hubs + Azurite, SQL Server) arrive with the
     # work packages that own those connectors; until then, keep the compose file valid.
