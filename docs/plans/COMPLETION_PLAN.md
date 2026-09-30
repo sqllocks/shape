@@ -202,6 +202,7 @@ instruction.
 | D-11 | **Holiday calendars are rule-based code:** fixed dates, the nth or last weekday of a month, Easter by computus, and observed-day shifts. US federal and US retail calendars ship in core, and other countries come as `shape.calendars` plugins. | Offline and deterministic. |
 | D-12 | **Stream output defaults to Spindle's flat-row format.** Each event is the row's columns plus `_spindle_table` and `_spindle_seq`, and `_spindle_event_time` when the table has a datetime column (Spindle `streaming/streamer.py:212-233`). `--envelope spindle` produces Spindle's `EventEnvelope` (as used by its Eventstream client), and `--envelope cloudevents` produces CloudEvents. The idempotency key is `(_spindle_table, _spindle_seq)`. | Drop-in for existing consumers; deterministic replay. |
 | D-14 | **Pipeline integration comes first after the plugin system.** Fabric first (Python and PySpark notebooks, User Data Functions, pipelines with Notebook and Functions activities), then Synapse and ADF. Phase F runs after G2, before Phases 3 and 4. A 48-hour Fabric demo track (§12) comes before everything. | Owner: Spindle is retired; profiling and generation must run inside ADF, Synapse and Fabric pipelines. |
+| D-15 | **Shape is open source.** Apache-2.0 (the existing `LICENSE`); the `sqllocks/shape` repo goes public; releases go to PyPI as `sqllocks-shape`. The repo flips to public only after DM-00 has removed the false claims (§12). | Owner decision (2026-09-30). A full-history secret scan found only deliberate test fixtures. |
 | D-13 | **No `spindle` executable is shipped.** `shape` accepts Spindle command names as aliases wherever the meaning matches (§10), and reads Spindle schemas and profiles. | Avoids clashing with an installed Spindle. |
 
 ### 2.2 Technical decisions
@@ -244,6 +245,7 @@ instruction.
 |---|---|---|---|
 | 2026-09-29 | — | Plan v1 approved | — |
 | 2026-09-29 | — | Plan v2: adversarial-review fixes (Spindle stream format, CLI mapping, exact mode for parity and gates, crate pins, Philox implemented in-house, maturin-action, setup, builder guide, work-package splits, verified line references) | Red-team review |
+| 2026-09-30 | D-15 | Open source: public repo, PyPI release; DM-00 public-readiness cleanup moved ahead of the demo | Owner decision |
 | 2026-09-30 | D-14, T-29 | Plan v3.2: 48-hour Fabric demo track (§12: notebook, UDF, pipelines, 3 parallel lanes) and Phase F (Fabric, Synapse and ADF pipeline integration, prioritized after G2); pure-Python wheel as a first-class deliverable | Owner: Spindle retired; demo profiling in Fabric; pipelines for profiling and generation |
 | 2026-09-29 | D-07 | Spindle does have experimental DP (`tier3_research.DifferentialPrivacy`). Under full parity (D-01) it is ported correctly in P4-11, and Shape's fake DP is still removed in P0-02 | Third red-team review; v1's rationale was false |
 | 2026-09-29 | — | Plan v3.1: tiers moved from P1-13 to P4-11 (they compare real against synthetic data); G6/P8-01 deadlock removed; seeded harness layout; P6-14 reference inputs corrected; scikit-learn and pyyaml in the Spindle venv | Third red-team review |
@@ -620,6 +622,8 @@ Appendix A.
 
 **P0-05 — Repo honesty**
 - Depends: P0-04.
+- If DM-00 is done, its deletions and README/CHANGELOG rewrite are already in place:
+  verify them and do the rest.
 - Deliverables:
   - Delete everything in §8.3.
   - Rewrite README and CHANGELOG to the true current state: "pre-release, under
@@ -1727,8 +1731,9 @@ That is 27 in total, which is the hub, the web app and 25 others (D-08).
 | O-02 | Fabric workspace and service principal as `FABRIC_*` secrets | live tests in P5-02 and P6-07 | Contract tests |
 | O-03 | Azure Event Hubs namespace as `EVENTHUBS_*` secrets | live tests in P3-04 and P5-02 | Emulator |
 | O-04 | Branch protection on `main` requiring CI | after P0-06 | CI only |
-| O-05 | If `sqllocks/shape` is private: a 4-vCPU larger runner (`ubuntu-latest-4-cores`) for benchmark jobs, since standard private runners have 2 vCPUs | P0-07 | Run gate benchmarks in a 4-core builder session and commit `results.json` with machine metadata |
+| O-05 | **Obsolete once O-08 is done** (public repos get 4-vCPU standard runners). If `sqllocks/shape` is private: a 4-vCPU larger runner (`ubuntu-latest-4-cores`) for benchmark jobs, since standard private runners have 2 vCPUs | P0-07 | Run gate benchmarks in a 4-core builder session and commit `results.json` with machine metadata |
 | O-06 | After 1.0.0: a deprecation notice in Spindle's README | after publishing | — |
+| O-08 | After DM-00 merges: make `sqllocks/shape` public (Settings → General → Danger Zone → Change visibility). Then add yourself as a **required reviewer** on the `pypi` environment, which becomes available once the repo is public. | before DM-03b's real publish | Publishing without a reviewer is still limited to `main` and `v*` tags |
 | O-07 | A Fabric workspace in a UDF-enabled region, with capacity, for the §12 live dry run and the talk: upload the wheel and data, and create the lakehouse, notebooks, UDF item and pipelines by following `integrations/fabric/RUNBOOK.md` | §12.7 check 4, GF | none (the live demo requires it) |
 
 ---
@@ -2015,15 +2020,40 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
 |---|---|
 | **L1 Core** | `src/shape/profile/reference/` (new), `benchmarks/profile_1to1/verify.py` (the `--impl shape` option only), `src/shape/api.py`, `src/shape/report/` (new), `src/shape/contracts/v1.py` (new), `src/shape/cli/main.py` (the three commands only), `tests/demo/core/`, `scripts/build_pure_wheel.py`, `.github/workflows/publish.yml` (new), `pyproject.toml` (the version and `[project.optional-dependencies]` only) |
 | **L2 Fabric** | `integrations/fabric/` (new): notebooks, UDF, pipeline definitions, runbook; `tests/demo/fabric/` |
-| **L3 Demo content** | `demo/` (new): data generation scripts, drift injection, contracts, talk notes, benchmark sheet; `tests/demo/content/` |
+| **L3 Demo content** | `demo/` (new): data generation scripts, drift injection, contracts, talk notes, benchmark sheet; `tests/demo/content/`. For DM-00 only: `README.md`, `CHANGELOG.md`, `SECURITY.md`, `tests/torture/test_all_modules.py`, and the files §8.3 deletes |
 
-**Merge order into the integration branch:** L1, then L3, then L2.
+**Merge order into the integration branch:** L3's DM-00 first, then L1, then the rest of L3, then L2.
 - L2 and L3 may build against a local stub of the §12.2 API until L1 lands. A stub
   may never be committed outside `tests/`.
 - After merging, the lead session (or the owner) runs `pytest tests/demo` and the
   §12.7 exit checks.
 
 ### 12.6 Demo work packages
+
+**DM-00 — Public-readiness cleanup (L3; do this first, because the repo goes public, D-15)**
+- Depends: none.
+- Deliverables:
+  - Perform the **deletions** listed in §8.3: the root evidence files, the `docs/`
+    milestone files outside the keep-list, `docs/qualification/`, `docs/audit/`,
+    `rq/`, and the workflows `external-connectors.yml`, `ga.yml` and
+    `release-ga.yml`.
+  - Rewrite `README.md` and `CHANGELOG.md` to the true state: "Early access. Shape
+    is being rebuilt as the successor to Spindle; profiling is available now; see
+    `docs/plans/COMPLETION_PLAN.md`." No GA, certified, production-ready or isolation
+    claims.
+  - Add `SECURITY.md` contact details if missing.
+  - Do **not** touch `src/`, `tests/` or `pyproject.toml`: P0-04 and P0-05 still own
+    the module cuts and dependency changes.
+  - Tests that read deleted files break when those files go. Only
+    `tests/torture/test_all_modules.py` reads `rq/torture_inventory.json`; rewrite it
+    as P0-04 specifies (`pkgutil.walk_packages`), because that is the only test file
+    DM-00 may edit.
+- Acceptance:
+  - No path in §8.3 exists.
+  - The P0-05 claims grep returns nothing.
+  - `pytest` is green.
+  - The owner can flip the repo to public (O-08).
+- Fixes: X3.
 
 **DM-01 — Pure-Python profiler (L1)**
 - Depends: none.
@@ -2272,6 +2302,7 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
 
 | WP | Lane | Status | Commit |
 |---|---|---|---|
+| DM-00 | L3 | todo | |
 | DM-01 | L1 | todo | |
 | DM-02 | L1 | todo | |
 | DM-03 | L1 | todo | |
