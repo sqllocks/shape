@@ -11,6 +11,7 @@ from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
+from .fit import fit_distribution as fit_distribution
 from .hashing import hash_array as hash_array
 from .profile import ProfileState as ProfileState
 from .sketch import Hll as Hll

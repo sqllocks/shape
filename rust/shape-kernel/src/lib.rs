@@ -34,6 +34,7 @@ fn collect_addresses(data: &ArrayData, out: &mut Vec<usize>) {
     }
 }
 
+pub mod fit;
 pub mod hashing;
 pub mod profile;
 pub mod sketch;
@@ -59,6 +60,141 @@ fn set_threads(n: usize) -> usize {
         .num_threads(n)
         .build_global();
     rayon::current_num_threads()
+}
+
+/// Distribution fitting as Spindle does it (see `fit.rs`): detect the best of normal, uniform,
+/// exponential and lognormal on `sample` (already drawn: at most 2000 values), then score it by
+/// refitting on `full` (defaults to `sample`). Returns `{distribution, distribution_params,
+/// fit_score}` with `None` where Spindle reports nothing. NaN must already be removed.
+static NP_EXP: std::sync::OnceLock<Py<PyAny>> = std::sync::OnceLock::new();
+static NP_LOG: std::sync::OnceLock<Py<PyAny>> = std::sync::OnceLock::new();
+
+fn call_numpy(f: &'static std::sync::OnceLock<Py<PyAny>>, x: f64, fallback: fn(f64) -> f64) -> f64 {
+    Python::attach(|py| {
+        f.get()
+            .and_then(|func| func.call1(py, (x,)).ok())
+            .and_then(|r| r.extract::<f64>(py).ok())
+            .unwrap_or_else(|| fallback(x))
+    })
+}
+
+fn numpy_exp(x: f64) -> f64 {
+    call_numpy(&NP_EXP, x, f64::exp)
+}
+
+fn numpy_log(x: f64) -> f64 {
+    call_numpy(&NP_LOG, x, f64::ln)
+}
+
+fn numpy_log_array(buf: &mut [f64]) {
+    use pyo3::types::PyBytes;
+    let done = Python::attach(|py| -> Option<()> {
+        let np = py.import("numpy").ok()?;
+        let raw: Vec<u8> = buf.iter().flat_map(|v| v.to_le_bytes()).collect();
+        let arr = np
+            .call_method1("frombuffer", (PyBytes::new(py, &raw), "<f8"))
+            .ok()?;
+        // NaN/-inf from log(<=0) are expected results here (scipy's fit runs under errstate).
+        let kw = pyo3::types::PyDict::new(py);
+        kw.set_item("all", "ignore").ok()?;
+        let ctx = np.call_method("errstate", (), Some(&kw)).ok()?;
+        ctx.call_method0("__enter__").ok()?;
+        let out = NP_LOG.get()?.call1(py, (arr,));
+        ctx.call_method1("__exit__", (py.None(), py.None(), py.None()))
+            .ok()?;
+        let out = out.ok()?;
+        let bytes: Vec<u8> = out.call_method0(py, "tobytes").ok()?.extract(py).ok()?;
+        if bytes.len() != buf.len() * 8 {
+            return None;
+        }
+        for (v, c) in buf.iter_mut().zip(bytes.chunks_exact(8)) {
+            *v = f64::from_le_bytes(c.try_into().ok()?);
+        }
+        Some(())
+    });
+    if done.is_none() {
+        buf.iter_mut().for_each(|v| *v = v.ln());
+    }
+}
+
+/// Point the fitting code's scalar exp/ln at numpy's (see `fit::set_scalar_hooks`).
+fn install_numpy_hooks(py: Python<'_>) -> PyResult<()> {
+    if NP_EXP.get().is_none() {
+        let np = py.import("numpy")?;
+        let _ = NP_EXP.set(np.getattr("exp")?.unbind());
+        let _ = NP_LOG.set(np.getattr("log")?.unbind());
+        fit::set_scalar_hooks(numpy_exp, numpy_log, numpy_log_array);
+    }
+    Ok(())
+}
+
+#[pyfunction]
+#[pyo3(signature = (sample, full = None))]
+fn fit_distribution<'py>(
+    py: Python<'py>,
+    sample: PyArray,
+    full: Option<PyArray>,
+) -> PyResult<Bound<'py, pyo3::types::PyDict>> {
+    use arrow_array::cast::AsArray;
+    use arrow_array::types::Float64Type;
+    install_numpy_hooks(py)?;
+    let get = |a: PyArray| -> PyResult<Vec<f64>> {
+        let (arr, _) = a.into_inner();
+        let p = arr
+            .as_primitive_opt::<Float64Type>()
+            .ok_or_else(|| PyValueError::new_err("fit_distribution needs float64 arrays"))?;
+        if p.null_count() > 0 {
+            return Err(PyValueError::new_err(
+                "fit_distribution needs arrays without nulls",
+            ));
+        }
+        Ok(p.values().to_vec())
+    };
+    let sample = get(sample)?;
+    let full = match full {
+        Some(f) => get(f)?,
+        None => sample.clone(),
+    };
+    let (name, params, score) = py.detach(|| match fit::detect_distribution(&sample) {
+        Some((d, params)) => {
+            let score = fit::fit_score(&full, d);
+            (Some(d), Some(params), score)
+        }
+        None => (None, None, None),
+    });
+    let out = pyo3::types::PyDict::new(py);
+    out.set_item("distribution", name.map(|d| d.name()))?;
+    match (name, params) {
+        (Some(d), Some(p)) => {
+            let dict = pyo3::types::PyDict::new(py);
+            if d == fit::Dist::Lognormal {
+                dict.set_item("s", p[0])?;
+                dict.set_item("loc", p[1])?;
+                dict.set_item("scale", p[2])?;
+            } else {
+                dict.set_item("loc", p[0])?;
+                dict.set_item("scale", p[1])?;
+            }
+            out.set_item("distribution_params", dict)?;
+        }
+        _ => out.set_item("distribution_params", py.None())?,
+    }
+    out.set_item("fit_score", score)?;
+    Ok(out)
+}
+
+/// `(shape, scale, dL/dloc, loglik)` of the lognormal objective at `loc` (for differential
+/// tests of the fitting pieces).
+#[pyfunction]
+fn lognorm_probe(py: Python<'_>, data: PyArray, loc: f64) -> PyResult<(f64, f64, f64, f64)> {
+    use arrow_array::cast::AsArray;
+    use arrow_array::types::Float64Type;
+    install_numpy_hooks(py)?;
+    let (arr, _) = data.into_inner();
+    let p = arr
+        .as_primitive_opt::<Float64Type>()
+        .ok_or_else(|| PyValueError::new_err("lognorm_probe needs a float64 array"))?;
+    Ok(fit::lognorm_probe(p.values(), loc))
 }
 
 /// The kernel version (equal to the Python package version).
@@ -97,6 +233,8 @@ fn _kernel(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(num_rows, m)?)?;
     m.add_function(wrap_pyfunction!(hash_array, m)?)?;
     m.add_function(wrap_pyfunction!(set_threads, m)?)?;
+    m.add_function(wrap_pyfunction!(fit_distribution, m)?)?;
+    m.add_function(wrap_pyfunction!(lognorm_probe, m)?)?;
     Ok(())
 }
 

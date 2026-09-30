@@ -12,8 +12,9 @@ import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.profile.fitting import detect_distribution as _kernel_detect_distribution
+
 from .model import ColumnProfile, Timestamp
-from .numerics import _FitError, _ks_stat_sorted, detect_distribution, fit
 from .readers import _Col
 
 # ---------------------------------------------------------------------------
@@ -504,7 +505,9 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
             std_val = float(np.sqrt(((numeric - avg) ** 2).sum() / (cnt - 1)))
         else:
             std_val = float("nan")
-        dist_name, dist_params = detect_distribution(numeric)
+        fitted = _kernel_detect_distribution(numeric)
+        dist_name, dist_params = fitted["distribution"], fitted["distribution_params"]
+        fit_score_val = fitted["fit_score"]
         xs = None
         if xs_sorted is not None and kind in ("int", "float"):
             xs = xs_sorted.astype(np.float64, copy=False)
@@ -526,16 +529,6 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
                     np.searchsorted(xs, lo_f, "left") + (cnt - np.searchsorted(xs, hi_f, "right"))
                 )
                 outlier_rate_val = round(n_out / cnt, 6)
-        if dist_name is not None and cnt >= 20:
-            try:
-                with np.errstate(all="ignore"):
-                    params = fit(dist_name, numeric)
-                    if xs is None:
-                        xs = np.sort(numeric)
-                    d = _ks_stat_sorted(xs, dist_name, params)
-                fit_score_val = round(1.0 - d, 4)
-            except (_FitError, ValueError, FloatingPointError, ZeroDivisionError):
-                pass
 
     # ---- strings -------------------------------------------------------------
     pattern = None
