@@ -13,6 +13,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
+from ._blas import single_thread_blas
 from .column import _combine, _profile_column, _Work
 from .model import ColumnProfile, DatasetProfile, TableProfile
 from .readers import _arrow_cols, _Col, _csv_cols, _n_threads, read_csv
@@ -117,8 +118,9 @@ def _correlation(all_cols: list[_Col], row_count: int) -> dict[str, dict[str, fl
 
 
 def _quiet_correlation(cols: list[_Col], row_count: int) -> dict[str, dict[str, float]]:
-    """``_correlation`` with numpy's floating-point warnings off (errstate is per thread)."""
-    with np.errstate(all="ignore"):
+    """``_correlation`` with numpy's floating-point warnings off (errstate is per thread) and
+    BLAS on one thread, so its products do not spin the cores the column workers are using."""
+    with np.errstate(all="ignore"), single_thread_blas():
         return _correlation(cols, row_count)
 
 
@@ -215,6 +217,17 @@ def _col_cost(c: _Col) -> int:
     return 0 if c.kind == "float" else 1 if c.kind in ("int", "str") else 2
 
 
+# Relative cost of a row, by kind, for ordering columns of different tables in one pool: measured
+# on the multi-table benchmark (200k-row float, text and integer columns: about 0.4, 0.3 and
+# 0.1 microseconds per row). Only the order of work depends on it, never a result.
+_ROW_WEIGHT = {"float": 4, "str": 3, "dt64": 2}
+
+
+def _col_work(c: _Col, row_count: int) -> int:
+    """Estimated work of one column, to start the longest ones first."""
+    return row_count * _ROW_WEIGHT.get(c.kind, 1)
+
+
 def _profile_cols(
     cols: list[_Col],
     row_count: int,
@@ -294,7 +307,7 @@ def _profile_tables(
     for cb in on_ready:
         cb()
     tasks = [(t, i) for t, (c, _) in cols_by_t.items() for i in range(len(c))]
-    tasks.sort(key=lambda ti: _col_cost(cols_by_t[ti[0]][0][ti[1]]) * 10**9 - cols_by_t[ti[0]][1])
+    tasks.sort(key=lambda ti: -_col_work(cols_by_t[ti[0]][0][ti[1]], cols_by_t[ti[0]][1]))
     res: dict[str, list[_Work | None]] = {t: [None] * len(c) for t, (c, _) in cols_by_t.items()}
 
     def run(ti: tuple[str, int]) -> None:

@@ -1,0 +1,149 @@
+cores=4 cpu=Intel(R) Xeon(R) Processor @ 2.80GHz
+d1.csv      rep0 spindle      2.06s load=0.75 rss=291MB child=0MB
+d1.csv      rep0 impl_mt      0.20s load=0.77 rss=197MB child=0MB
+d1.csv      rep0 impl_st      0.22s load=0.77 rss=186MB child=0MB
+d1.csv      rep1 spindle      1.91s load=0.77 rss=291MB child=0MB
+d1.csv      rep1 impl_mt      0.23s load=0.79 rss=193MB child=0MB
+d1.csv      rep1 impl_st      0.19s load=0.79 rss=186MB child=0MB
+d1.csv      rep2 spindle      2.00s load=0.79 rss=291MB child=0MB
+d1.csv      rep2 impl_mt      0.12s load=0.81 rss=195MB child=0MB
+d1.csv      rep2 impl_st      0.19s load=0.81 rss=186MB child=0MB
+d1.csv      rep3 spindle      1.97s load=0.81 rss=291MB child=0MB
+d1.csv      rep3 impl_mt      0.13s load=0.83 rss=195MB child=0MB
+d1.csv      rep3 impl_st      0.23s load=0.83 rss=186MB child=0MB
+d1.csv      rep4 spindle      1.89s load=0.83 rss=291MB child=0MB
+d1.csv      rep4 impl_mt      0.14s load=0.84 rss=195MB child=0MB
+d1.csv      rep4 impl_st      0.34s load=0.84 rss=186MB child=0MB
+d1.parquet  rep0 spindle      1.77s load=0.84 rss=321MB child=0MB
+d1.parquet  rep0 impl_mt      0.13s load=0.85 rss=213MB child=0MB
+d1.parquet  rep0 impl_st      0.20s load=0.85 rss=189MB child=0MB
+d1.parquet  rep1 spindle      1.73s load=0.85 rss=324MB child=0MB
+d1.parquet  rep1 impl_mt      0.14s load=0.86 rss=216MB child=0MB
+d1.parquet  rep1 impl_st      0.27s load=0.86 rss=189MB child=0MB
+d1.parquet  rep2 spindle      1.98s load=0.86 rss=317MB child=0MB
+d1.parquet  rep2 impl_mt      0.11s load=1.20 rss=220MB child=0MB
+d1.parquet  rep2 impl_st      0.21s load=1.20 rss=189MB child=0MB
+d1.parquet  rep3 spindle      1.85s load=1.20 rss=321MB child=0MB
+d1.parquet  rep3 impl_mt      0.13s load=1.18 rss=217MB child=0MB
+d1.parquet  rep3 impl_st      0.23s load=1.18 rss=189MB child=0MB
+d1.parquet  rep4 spindle      1.76s load=1.18 rss=323MB child=0MB
+d1.parquet  rep4 impl_mt      0.16s load=1.17 rss=222MB child=0MB
+d1.parquet  rep4 impl_st      0.27s load=1.17 rss=189MB child=0MB
+d2.csv      rep0 spindle     39.04s load=1.17 rss=1178MB child=0MB
+d2.csv      rep0 impl_mt      2.21s load=1.08 rss=827MB child=772MB
+d2.csv      rep0 impl_st      6.69s load=1.08 rss=812MB child=0MB
+d2.csv      rep1 spindle     38.93s load=1.06 rss=1178MB child=0MB
+d2.csv      rep1 impl_mt      2.10s load=1.03 rss=869MB child=885MB
+d2.csv      rep1 impl_st      5.13s load=1.03 rss=804MB child=0MB
+d2.csv      rep2 spindle     39.05s load=1.03 rss=1179MB child=0MB
+d2.csv      rep2 impl_mt      3.23s load=1.01 rss=885MB child=878MB
+d2.csv      rep2 impl_st      5.61s load=1.01 rss=794MB child=0MB
+d2.csv      rep3 spindle     39.31s load=1.01 rss=1178MB child=0MB
+d2.csv      rep3 impl_mt      2.08s load=1.00 rss=868MB child=855MB
+d2.csv      rep3 impl_st      4.62s load=1.00 rss=783MB child=0MB
+d2.csv      rep4 spindle     39.41s load=1.00 rss=1165MB child=0MB
+d2.csv      rep4 impl_mt      1.99s load=1.00 rss=851MB child=794MB
+d2.csv      rep4 impl_st      5.50s load=1.00 rss=811MB child=0MB
+d2.parquet  rep0 spindle     33.00s load=1.00 rss=1010MB child=0MB
+d2.parquet  rep0 impl_mt      2.04s load=1.00 rss=731MB child=751MB
+d2.parquet  rep0 impl_st      4.08s load=1.00 rss=762MB child=0MB
+d2.parquet  rep1 spindle     32.68s load=1.00 rss=1003MB child=0MB
+d2.parquet  rep1 impl_mt      1.87s load=1.00 rss=723MB child=750MB
+d2.parquet  rep1 impl_st      4.08s load=1.00 rss=751MB child=0MB
+d2.parquet  rep2 spindle     34.35s load=1.00 rss=1012MB child=0MB
+d2.parquet  rep2 impl_mt      1.64s load=1.05 rss=698MB child=720MB
+d2.parquet  rep2 impl_st      5.98s load=1.25 rss=746MB child=0MB
+d2.parquet  rep3 spindle     32.11s load=1.23 rss=1019MB child=0MB
+d2.parquet  rep3 impl_mt      1.65s load=1.13 rss=722MB child=739MB
+d2.parquet  rep3 impl_st      3.72s load=1.13 rss=740MB child=0MB
+d2.parquet  rep4 spindle     32.51s load=1.12 rss=1018MB child=0MB
+d2.parquet  rep4 impl_mt      1.98s load=1.06 rss=724MB child=739MB
+d2.parquet  rep4 impl_st      5.44s load=1.06 rss=737MB child=0MB
+d3.csv      rep0 spindle    109.71s load=1.05 rss=2925MB child=0MB
+d3.csv      rep0 impl_mt      6.14s load=1.01 rss=2240MB child=0MB
+d3.csv      rep0 impl_st     15.98s load=1.22 rss=1632MB child=0MB
+d3.csv      rep1 spindle    109.83s load=1.38 rss=2925MB child=0MB
+d3.csv      rep1 impl_mt      6.47s load=1.06 rss=2512MB child=0MB
+d3.csv      rep1 impl_st     15.62s load=1.36 rss=1762MB child=0MB
+d3.csv      rep2 spindle    108.84s load=1.22 rss=2924MB child=0MB
+d3.csv      rep2 impl_mt      6.42s load=1.03 rss=2454MB child=0MB
+d3.csv      rep2 impl_st     16.30s load=1.31 rss=1518MB child=0MB
+d3.csv      rep3 spindle    109.13s load=1.41 rss=2801MB child=0MB
+d3.csv      rep3 impl_mt      5.56s load=1.10 rss=1920MB child=0MB
+d3.csv      rep3 impl_st     15.41s load=1.33 rss=1762MB child=0MB
+d3.csv      rep4 spindle    106.96s load=1.40 rss=2926MB child=0MB
+d3.csv      rep4 impl_mt      5.50s load=1.15 rss=1989MB child=0MB
+d3.csv      rep4 impl_st     14.83s load=1.38 rss=1763MB child=0MB
+d3.parquet  rep0 spindle     65.51s load=1.27 rss=2029MB child=0MB
+d3.parquet  rep0 impl_mt      3.60s load=1.09 rss=2047MB child=0MB
+d3.parquet  rep0 impl_st      8.54s load=1.40 rss=1313MB child=0MB
+d3.parquet  rep1 spindle     67.78s load=1.40 rss=2027MB child=0MB
+d3.parquet  rep1 impl_mt      3.83s load=1.12 rss=1941MB child=0MB
+d3.parquet  rep1 impl_st      8.70s load=1.12 rss=1356MB child=0MB
+d3.parquet  rep2 spindle     67.98s load=1.34 rss=2036MB child=0MB
+d3.parquet  rep2 impl_mt      3.88s load=1.10 rss=1981MB child=0MB
+d3.parquet  rep2 impl_st     11.35s load=1.42 rss=1315MB child=0MB
+d3.parquet  rep3 spindle     61.92s load=1.26 rss=2034MB child=0MB
+d3.parquet  rep3 impl_mt      4.36s load=1.09 rss=1977MB child=0MB
+d3.parquet  rep3 impl_st      8.81s load=1.41 rss=1330MB child=0MB
+d3.parquet  rep4 spindle     67.20s load=1.34 rss=2022MB child=0MB
+d3.parquet  rep4 impl_mt      4.31s load=1.10 rss=1900MB child=0MB
+d3.parquet  rep4 impl_st     11.17s load=1.23 rss=1311MB child=0MB
+d4.csv      rep0 spindle     39.94s load=1.27 rss=636MB child=0MB
+d4.csv      rep0 impl_mt      2.95s load=1.25 rss=590MB child=545MB
+d4.csv      rep0 impl_st     10.14s load=1.33 rss=559MB child=0MB
+d4.csv      rep1 spindle     41.44s load=1.28 rss=635MB child=0MB
+d4.csv      rep1 impl_mt      3.02s load=1.14 rss=587MB child=548MB
+d4.csv      rep1 impl_st     10.40s load=1.37 rss=575MB child=0MB
+d4.csv      rep2 spindle     39.91s load=1.31 rss=634MB child=0MB
+d4.csv      rep2 impl_mt      3.09s load=1.15 rss=583MB child=547MB
+d4.csv      rep2 impl_st      9.71s load=1.15 rss=592MB child=0MB
+d4.csv      rep3 spindle     39.30s load=1.12 rss=635MB child=0MB
+d4.csv      rep3 impl_mt      3.12s load=1.22 rss=590MB child=551MB
+d4.csv      rep3 impl_st      9.85s load=1.22 rss=593MB child=0MB
+d4.csv      rep4 spindle     39.92s load=1.19 rss=634MB child=0MB
+d4.csv      rep4 impl_mt      2.95s load=1.21 rss=575MB child=527MB
+d4.csv      rep4 impl_st     10.21s load=1.21 rss=571MB child=0MB
+d4.parquet  rep0 spindle     34.80s load=1.40 rss=616MB child=0MB
+d4.parquet  rep0 impl_mt      2.11s load=1.22 rss=605MB child=418MB
+d4.parquet  rep0 impl_st      6.98s load=1.22 rss=506MB child=0MB
+d4.parquet  rep1 spindle     34.19s load=1.19 rss=625MB child=0MB
+d4.parquet  rep1 impl_mt      2.41s load=1.10 rss=613MB child=426MB
+d4.parquet  rep1 impl_st      6.98s load=1.42 rss=505MB child=0MB
+d4.parquet  rep2 spindle     34.63s load=1.38 rss=634MB child=0MB
+d4.parquet  rep2 impl_mt      2.04s load=1.25 rss=607MB child=421MB
+d4.parquet  rep2 impl_st      7.10s load=1.25 rss=505MB child=0MB
+d4.parquet  rep3 spindle     35.98s load=1.44 rss=618MB child=0MB
+d4.parquet  rep3 impl_mt      2.20s load=1.25 rss=607MB child=421MB
+d4.parquet  rep3 impl_st      8.44s load=1.20 rss=505MB child=0MB
+d4.parquet  rep4 spindle     34.89s load=1.17 rss=622MB child=0MB
+d4.parquet  rep4 impl_mt      2.13s load=1.09 rss=613MB child=426MB
+d4.parquet  rep4 impl_st      7.25s load=1.09 rss=506MB child=0MB
+mt          rep0 spindle      2.60s load=1.08 rss=317MB child=0MB
+mt          rep0 impl_mt      0.27s load=1.07 rss=230MB child=0MB
+mt          rep0 impl_st      0.33s load=1.07 rss=213MB child=0MB
+mt          rep1 spindle      2.74s load=1.07 rss=316MB child=0MB
+mt          rep1 impl_mt      0.23s load=1.07 rss=230MB child=0MB
+mt          rep1 impl_st      0.34s load=1.07 rss=221MB child=0MB
+mt          rep2 spindle      2.72s load=1.07 rss=314MB child=0MB
+mt          rep2 impl_mt      0.20s load=1.06 rss=237MB child=0MB
+mt          rep2 impl_st      0.67s load=1.06 rss=219MB child=0MB
+mt          rep3 spindle      2.57s load=1.06 rss=317MB child=0MB
+mt          rep3 impl_mt      0.22s load=1.05 rss=230MB child=0MB
+mt          rep3 impl_st      0.38s load=1.05 rss=212MB child=0MB
+mt          rep4 spindle      2.67s load=1.05 rss=316MB child=0MB
+mt          rep4 impl_mt      0.16s load=1.05 rss=229MB child=0MB
+mt          rep4 impl_st      0.40s load=1.05 rss=214MB child=0MB
+
+| dataset | Spindle s | port MT s | port 1T s | speedup MT | speedup 1T | peak RSS Spindle / port MT (+child) / port 1T MB |
+|---|---:|---:|---:|---:|---:|---|
+| d1.csv | 1.97 | 0.14 | 0.22 | 14.0x | 8.8x | 291 / 197 (+0) / 186 |
+| d1.parquet | 1.77 | 0.13 | 0.23 | 13.4x | 7.6x | 324 / 222 (+0) / 189 |
+| d2.csv | 39.05 | 2.10 | 5.50 | 18.6x | 7.1x | 1179 / 885 (+885) / 812 |
+| d2.parquet | 32.68 | 1.87 | 4.08 | 17.4x | 8.0x | 1019 / 731 (+751) / 762 |
+| d3.csv | 109.13 | 6.14 | 15.62 | 17.8x | 7.0x | 2926 / 2512 (+0) / 1763 |
+| d3.parquet | 67.20 | 3.88 | 8.81 | 17.3x | 7.6x | 2036 / 2047 (+0) / 1356 |
+| d4.csv | 39.92 | 3.02 | 10.14 | 13.2x | 3.9x | 636 / 590 (+551) / 593 |
+| d4.parquet | 34.80 | 2.13 | 7.10 | 16.3x | 4.9x | 634 / 613 (+426) / 506 |
+| mt | 2.67 | 0.22 | 0.38 | 12.0x | 6.9x | 317 / 237 (+0) / 221 |
+exit 0
