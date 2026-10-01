@@ -1948,15 +1948,15 @@ Work packages are listed in execution order. The next work package is the first 
 | 34 | P3-01 | done | 37386f3 |
 | 35 | P3-02 | done | 500367f |
 | 36 | P3-03 | done | 43f5d88 |
-| 37 | P3-04 | wip (lane/P3-04) |  |
-| 38 | P3-05 | todo | |
+| 37 | P3-04 | done | c0e7ace |
+| 38 | P3-05 | done | b26e04e |
 | 39 | P4-01a | done | 02a0c4d |
 | 40 | P4-01b | done | 4b75d46 |
 | 41 | P4-02 | done | 6917af7 |
 | 42 | P4-03 | done | 6ec4c1f |
 | 43 | P4-04a | done | e596a57 |
-| 44 | P4-04b | wip (lane/P4-04b) | |
-| 45 | P4-04c | wip (lane/P4-04c) | |
+| 44 | P4-04b | done | b314b34 |
+| 45 | P4-04c | done (case conditional/is_null_fixed changed after a chance failure; owner to rule) | 42f9732 |
 | 46 | P4-04d | wip (lane/P4-04d) | |
 | 47 | P4-05 | done | 9f6fea8 |
 | 48 | P4-06 | done (SQL comment/literal injection fixed at integration, 36f32d3) | ba051d2 |
@@ -2002,10 +2002,10 @@ Work packages are listed in execution order. The next work package is the first 
 | Gate | Status |
 |---|---|
 | G0 | done b965672 |
-| G1 | todo (not met: PROF-IN D3 pq 8.8x, D4 csv 9.9x, MT 5.4x; PROF-CLI D2 9.8x; escalated in §2.3) |
+| G1 | todo (re-run on c7bd366, Oct 1: not met only on PROF-IN MT 9.1x (gate 10x); every other check passes: D1-D4 10.6x-19.6x, PROF-CLI 14.6x/16.6x, START 43.6 ms, parity 49/49 both kernels; evidence docs/plans/evidence/G1-rerun/; escalated to the owner) |
 | G2 | todo (out-of-tree plugin and `shape plugins list` checks pass at the 9342eb3 merge; waits on G1) |
 | GF | todo |
-| G3 | todo |
+| G3 | done (lead, 8:55 AM EDT Oct 1, on 7ef6a6e: stream_prof verify stream == batch bounded rel 1e-9 PASS and identical across 3 processes PASS; STREAM-PROF 115.7% default / 101.7% SHAPE_THREADS=1 (gate 80%), docs/plans/evidence/G3/stream-prof-lead.json; S2-S5 regression tests pass in both kernels; P3-01..P3-05 done) |
 | G4 | todo |
 | G5 | todo |
 | G6 | todo |

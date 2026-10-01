@@ -48,6 +48,7 @@ def fingerprint(values: Sequence[Any]) -> dict[str, Any]:
         ns = np.array([np.datetime64(v, "ns").astype(np.int64) for v in present], dtype=np.float64)
         fp.update(_numeric(ns, False))
         fp["kind"] = "datetime"
+        fp["calendar"] = _calendar(ns)
     else:
         arr = np.asarray(present, dtype=np.float64)
         integral = all(isinstance(v, int | np.integer) and not isinstance(v, bool) for v in present)
@@ -55,6 +56,23 @@ def fingerprint(values: Sequence[Any]) -> dict[str, Any]:
         if isinstance(first, bool | np.bool_):
             fp["dtype"] = "bool"
     return fp
+
+
+def _calendar(ns: np.ndarray[Any, Any]) -> dict[str, Any]:
+    """Counts of timestamps by month, weekday (Monday = 0) and hour of day, and the share that
+    falls on a whole second (a profile with an hour of day gives whole seconds)."""
+    t = ns.astype(np.int64).astype("datetime64[ns]")
+    days = t.astype("datetime64[D]")
+    month = days.astype("datetime64[M]").astype(np.int64) % 12
+    dow = (days.astype(np.int64) + 3) % 7
+    hour = (t - days).astype("timedelta64[h]").astype(np.int64)
+    whole = ((t - t.astype("datetime64[s]")).astype(np.int64) == 0).mean()
+    return {
+        "month": np.bincount(month, minlength=12).tolist(),
+        "dow": np.bincount(dow, minlength=7).tolist(),
+        "hour": np.bincount(hour, minlength=24).tolist(),
+        "whole_second_rate": float(whole),
+    }
 
 
 def _numeric(arr: np.ndarray[Any, Any], integral: bool) -> dict[str, Any]:

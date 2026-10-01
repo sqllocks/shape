@@ -1,0 +1,31 @@
+py-spy (500 Hz, 15 in-process MT profiles after 1st; all threads, idle included) total samples 2836
+
+Top self frames:
+   435  15.3%  process 9692:""
+   386  13.6%  _worker (concurrent/futures/thread.py:81)
+   245   8.6%  wrapper (pyarrow/compute.py:271)
+   136   4.8%  detect_distribution (shape/profile/fitting.py:26)
+   116   4.1%  _compile_bytecode (<frozen importlib._bootstrap_external>:729)
+   102   3.6%  read_csv (shape/profile/reference/readers.py:196)
+    94   3.3%  _profile_column (shape/profile/reference/column.py:529)
+    63   2.2%  _profile_column (shape/profile/reference/column.py:541)
+    63   2.2%  _clean (shape/profile/reference/profile.py:85)
+    61   2.2%  _profile_column (shape/profile/reference/column.py:728)
+    55   1.9%  _keys_py (shape/profile/reference/column.py:162)
+    50   1.8%  _call_with_frames_removed (<frozen importlib._bootstrap>:241)
+
+Top inclusive frames (project code):
+   845  29.8%  run (shape/profile/reference/table.py:303)
+   476  16.8%  <module> (shape/api.py:7)
+   450  15.9%  <module> (shape/contracts/v1.py:15)
+   445  15.7%  <module> (shape/profile/reference/__init__.py:10)
+   424  15.0%  __call__ (shape/_callable.py:21)
+   422  14.9%  profile (shape/profile/reference/profile.py:248)
+   405  14.3%  _profile (shape/profile/reference/profile.py:269)
+   325  11.5%  <module> (shape/profile/reference/profile.py:19)
+   295  10.4%  <module> (shape/profile/reference/sources.py:14)
+   262   9.2%  <module> (shape/profile/reference/readers.py:211)
+   167   5.9%  dataset_to_dict (shape/profile/reference/profile.py:145)
+   167   5.9%  <dictcomp> (shape/profile/reference/profile.py:145)
+   166   5.9%  table_to_dict (shape/profile/reference/profile.py:138)
+   166   5.9%  <dictcomp> (shape/profile/reference/profile.py:138)

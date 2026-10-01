@@ -15,6 +15,7 @@ Stable interface: :func:`apply_compute_phase`.
 
 from __future__ import annotations
 
+import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
@@ -30,7 +31,14 @@ AGGREGATES = {
 
 
 def _round_if_float(arr: pa.Array) -> pa.Array:
-    return pc.round(arr, 2) if pa.types.is_floating(arr.type) else arr
+    """Floats rounded to 2 places the way numpy does (``rint(x * 100) / 100``). Arrow's own
+    ``round`` leaves a sum such as 114.49000000000001 as it is, because ``x * 100`` is already a
+    whole number in floating point; the result would print with that noise."""
+    if not pa.types.is_floating(arr.type):
+        return arr
+    mask = arr.is_null().to_numpy(zero_copy_only=False) if arr.null_count else None
+    values = np.round(np.asarray(arr.fill_null(0).to_numpy(zero_copy_only=False)), 2)
+    return pa.array(values, type=arr.type, mask=mask)
 
 
 def _aggregate(

@@ -19,6 +19,7 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -33,9 +34,33 @@ FIXTURES = HERE.parent / "fixtures" / "strategies"
 BASELINE_SEEDS = (43, 44, 45, 46)
 
 
+class _DatasetDomain:
+    """Stands in for a baseline domain, so that its ``reference_data`` strategy finds the case's
+    datasets in ``<path>/reference_data/<name>.json`` (the baseline reads that directory from the
+    domain it is given and from nowhere a schema dict can reach)."""
+
+    def __init__(self, path: Path, raw: dict[str, Any]) -> None:
+        from sqllocks_spindle.schema.parser import SchemaParser
+
+        self.domain_path = path
+        self._schema = SchemaParser().parse_dict(raw)
+
+    def get_schema(self) -> Any:
+        return self._schema
+
+
 def column_values(spindle: Any, case: dict[str, Any], seed: int) -> list[Any]:
-    result = spindle.generate(schema=cases.schema_for(case), seed=seed)
-    return list(result[cases.TABLE][cases.TARGET].tolist())
+    raw = cases.schema_for(case)
+    if not case.get("datasets"):
+        result = spindle.generate(schema=raw, seed=seed)
+        return list(result[cases.TABLE][cases.TARGET].tolist())
+    with tempfile.TemporaryDirectory() as tmp:
+        data_dir = Path(tmp) / "reference_data"
+        data_dir.mkdir()
+        for name, rows in case["datasets"].items():
+            (data_dir / f"{name}.json").write_text(json.dumps(rows), encoding="utf-8")
+        result = spindle.generate(domain=_DatasetDomain(Path(tmp), raw), seed=seed)
+        return list(result[cases.TABLE][cases.TARGET].tolist())
 
 
 def build(only: str | None = None) -> dict[str, dict[str, Any]]:
