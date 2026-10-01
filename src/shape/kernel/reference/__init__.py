@@ -11,6 +11,11 @@ from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
+from .exact import count_numeric as count_numeric
+from .exact import numeric_stats as numeric_stats
+from .exact import temporal_counts as temporal_counts
+from .exact import top_indices as top_indices
+from .exact import value_counts_str as value_counts_str
 from .fit import fit_distribution as fit_distribution
 from .hashing import hash_array as hash_array
 from .profile import ProfileState as ProfileState

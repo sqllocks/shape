@@ -52,11 +52,18 @@ def _correlation(works: list[_Work], row_count: int) -> dict[str, dict[str, floa
         return {}
     k, n = len(cols), row_count
     X = np.empty((n, k), dtype=np.float64, order="F")  # column-contiguous fills / reductions
-    for j, w in enumerate(cols):
-        a = _combine(w.col.arr)
-        if w.col.kind == "objdur":
+    def fill(j: int) -> None:
+        a = _combine(cols[j].col.arr)
+        if cols[j].col.kind == "objdur":
             a = pc.cast(pc.cast(a, pa.duration("ns")), pa.int64()).cast(pa.float64())
         X[:, j] = a.to_numpy(zero_copy_only=False)
+
+    if n >= 100_000 and k > 1:  # numpy and Arrow release the GIL for these big copies
+        with ThreadPoolExecutor(max_workers=min(k, os.cpu_count() or 1)) as ex:
+            list(ex.map(fill, range(k)))
+    else:
+        for j in range(k):
+            fill(j)
     nulls = [
         j for j, w in enumerate(cols) if w.col.kind in ("float", "objdur") and w.prof.null_count
     ]
@@ -162,7 +169,7 @@ _FORK_STATE: dict[str, Any] = {}
 
 def _fork_task(i: int) -> tuple[int, ColumnProfile, Any]:
     cols, row_count, keep = _FORK_STATE["args"]
-    w = _profile_column(cols[i], row_count)
+    w = _profile_column(cols[i], row_count, keep_uniques=keep)
     return i, w.prof, (w.uniques if keep else None)
 
 
@@ -182,7 +189,7 @@ def _profile_cols(
     pool's start-up and result pickling only pays off when there are many columns)."""
     n = _n_threads(threads)
     if n == 1 or len(cols) == 1:
-        return [_profile_column(c, row_count) for c in cols]
+        return [_profile_column(c, row_count, keep_uniques=keep_uniques) for c in cols]
     mode = os.environ.get("PROFILE_POOL", "auto")
     if mode == "auto":
         mode = "process" if len(cols) >= 3 * n else "thread"
@@ -206,7 +213,7 @@ def _profile_cols(
         finally:
             _FORK_STATE.clear()
     with ThreadPoolExecutor(max_workers=n) as ex:
-        return list(ex.map(lambda c: _profile_column(c, row_count), cols))
+        return list(ex.map(lambda c: _profile_column(c, row_count, keep_uniques=keep_uniques), cols))
 
 
 def _sample_rows(
