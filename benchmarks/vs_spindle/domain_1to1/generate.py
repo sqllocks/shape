@@ -180,7 +180,7 @@ def _run_shape(domain: str, scale: str, seed: int, dest: Path) -> dict:
         "write_s": 0.0,
         "total_s": t1 - t0,
         "overlapped": True,
-        "rows": engine.row_counts,
+        "rows": {name: engine.row_counts[name] for level in engine.levels for name in level},
         "per_table_s": {"_construct_domain+Engine": t_setup - t0, "_generate+write": t1 - t_setup},
         "numpy": numpy.__version__,
         "pyarrow": pyarrow.__version__,
