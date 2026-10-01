@@ -93,6 +93,8 @@ def worker(tool: str, ds: str):
                 return DataProfiler.from_csv(path)
     elif tool == "shape":
         import shape
+        import shape.profile.reference.profile  # noqa: F401  (T-19: imports are not timed; the
+        # package imports this module lazily on the first call, as Spindle's are imported above)
 
         if ds == "mt":
 

@@ -1,14 +1,18 @@
+from __future__ import annotations
+
+from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
 class DatetimeProfile:
     count: int = 0
     null_count: int = 0
-    minimum: object = None
-    maximum: object = None
+    minimum: Any = None
+    maximum: Any = None
 
-    def update(self, values):
+    def update(self, values: Iterable[Any]) -> DatetimeProfile:
         for v in values:
             self.count += 1
             if v is None:
@@ -18,7 +22,7 @@ class DatetimeProfile:
             self.maximum = v if self.maximum is None or v > self.maximum else self.maximum
         return self
 
-    def merge(self, o):
+    def merge(self, o: DatetimeProfile) -> DatetimeProfile:
         self.count += o.count
         self.null_count += o.null_count
         if o.minimum is not None:

@@ -1,7 +1,12 @@
 """Temporal sequence evidence."""
 
+from __future__ import annotations
 
-def lag_autocorrelation(values, lag=1):
+from collections.abc import Iterable
+from typing import Any
+
+
+def lag_autocorrelation(values: Iterable[Any], lag: int = 1) -> float | None:
     xs = [float(x) for x in values if x is not None]
     if lag < 1 or len(xs) <= lag:
         return None
