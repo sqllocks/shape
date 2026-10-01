@@ -16,6 +16,8 @@ import pandas as pd
 import pytest
 from fabric_helpers import CONTRACT, UDF_DIR, make_orders
 
+from shape.integrations.fabric import udf as shape_udf
+
 
 def _load_module():
     spec = importlib.util.spec_from_file_location("function_app", UDF_DIR / "function_app.py")
@@ -383,13 +385,13 @@ def test_profile_data_frame(lh):
 
 
 def test_nan_and_numpy_values_are_json_safe():
-    out = app()._json_safe({"a": float("nan"), "b": np.int64(3), "c": [np.float64("inf"), 1.5]})
+    out = shape_udf.json_safe({"a": float("nan"), "b": np.int64(3), "c": [np.float64("inf"), 1.5]})
     assert out == {"a": None, "b": 3, "c": [None, 1.5]}
     json.dumps(out, allow_nan=False)
 
 
 def test_oversized_result_drops_summary():
-    out = app()._bounded({"summary": {"x": "y" * 2_000_000}, "rows": 1})
+    out = shape_udf.bounded({"summary": {"x": "y" * 2_000_000}, "rows": 1})
     assert out["summary"] is None and out["summaryOmitted"] is True
 
 
