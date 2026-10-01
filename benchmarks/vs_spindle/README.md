@@ -15,6 +15,7 @@ this directory hard-codes a machine path.
 | `results.json`, `results.schema.json` | The committed reference (section 6.2(4)) and its schema. `shape` is `null` until the product path exists |
 | `domain_1to1/` | Domain generation: `generate.py`, `verify.py` (T-21), `bench.py`, and the retail reference port |
 | `profile_1to1/` | Profiling: `datasets.py`, `verify.py` (T-22), `bench.py`, the reference port, `spindle_dump.py`, `spindle_cli_profile.py` |
+| `verify_1to1/` | `shape verify` (P6-09): `verify.py` runs both `verify` CLIs on mutated retail output and compares exit codes and, gate by gate, pass/fail, errors, warnings and details |
 | `dump_schema.py` | Serialize every Spindle domain schema (3nf, star) to `$BENCH_OUT_DIR/schemas/` |
 | `check_coverage.py` | Every Spindle file must be mapped to a work package in `docs/plans/spindle_coverage.tsv` |
 

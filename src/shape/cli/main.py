@@ -124,6 +124,48 @@ def _cmd_diff(a):
     return 1 if (a.fail_on_drift and result.drifted) else 0
 
 
+def _cmd_verify(a):
+    """Load tables, run the gates, print the gate table; 0 pass, 1 a gate failed (or a warning
+    under --strict), 2 input error."""
+    from shape.quality import VerifyReport, VerifyRunner, load_gate_schema, load_tables
+
+    tables = load_tables(a.data, a.format)
+    if not tables:
+        raise ValueError(f"no {a.format} data files found in {a.data}")
+    schema = load_gate_schema(a.schema) if a.schema else None
+    result = VerifyRunner(schema, a.statistical, a.data, a.schema).run(tables)
+    print(f"Shape {_version()} - Verify\n")
+    print(f"Data path:   {a.data}")
+    if a.schema:
+        print(f"Schema:      {a.schema}")
+    print(f"Statistical: {'yes' if a.statistical else 'no'}\n")
+    if result.gate_results:
+        print(f"{'Gate':<28} {'Status':<8} {'Errors':>6} {'Warnings':>8}")
+        print("-" * 55)
+        for g in result.gate_results:
+            status = "PASS" if g.passed else "FAIL"
+            print(f"{g.gate_name:<28} {status:<8} {len(g.errors):>6} {len(g.warnings):>8}")
+        print()
+    print("Row counts:")
+    for name, n in sorted(result.row_counts.items()):
+        print(f"  {name}: {n:,}")
+    print()
+    for g in result.gate_results:
+        for e in g.errors:
+            print(f"  ERROR [{g.gate_name}]: {e}", file=sys.stderr)
+        for w in g.warnings:
+            print(f"  WARN  [{g.gate_name}]: {w}")
+    print(f"\nResult: {'PASS' if result.passed else 'FAIL'}")
+    if a.output:
+        report = VerifyReport(result)
+        text = report.to_json() if str(a.output).endswith(".json") else report.to_markdown()
+        with open(a.output, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        print(f"Report written to {a.output}")
+    has_warnings = any(g.warnings for g in result.gate_results)
+    return 1 if (not result.passed or (a.strict and has_warnings)) else 0
+
+
 def _build_parser():
     p = argparse.ArgumentParser(prog="shape", description="Shape as Code")
     p.add_argument("--version", "-V", action="store_true", help="print the version and exit")
@@ -149,6 +191,13 @@ def _build_parser():
         sh.add_argument("shape")
     va = sub.add_parser("validate", help="validate a Shape-as-Code contract document")
     va.add_argument("contract")
+    vf = sub.add_parser("verify", help="run the validation gates over generated data")
+    vf.add_argument("data", metavar="DATA", help="a data file or a directory of data files")
+    vf.add_argument("--format", choices=("auto", "csv", "parquet", "jsonl"), default="auto")
+    vf.add_argument("--schema", metavar="GATES.json", help="gate schema (or Shape model v2)")
+    vf.add_argument("--statistical", action="store_true", help="add KS and chi-squared tests")
+    vf.add_argument("-o", "--output", metavar="REPORT", help="write a .json or .md report")
+    vf.add_argument("--strict", action="store_true", help="exit 1 on warnings too")
     qu = sub.add_parser("quality")
     qu.add_argument("csv")
     qu.add_argument("--reference")
@@ -211,6 +260,8 @@ def main(argv=None):
         return 0
     if a.cmd == "profile":
         return _run(_cmd_profile, a)
+    if a.cmd == "verify":
+        return _run(_cmd_verify, a)
     if a.cmd == "check" and _is_profile_or_missing(a.shape):
         return _run(_cmd_check, a)
     if a.cmd == "diff" and _is_profile_or_missing(a.before):
