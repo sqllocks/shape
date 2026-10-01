@@ -51,10 +51,14 @@ def _run(fn, a):
     """Run a profile/check/diff command: 0 ok, 1 failed check or drift, 2 input error."""
     import zipfile
 
+    from shape.artifact.io import ArtifactSignatureError
     from shape.errors import ShapeError
 
     try:
         return fn(a)
+    except ArtifactSignatureError as exc:
+        print(f"shape: signature check failed: {exc}", file=sys.stderr)
+        return 1
     except (
         OSError,
         ValueError,
@@ -68,6 +72,51 @@ def _run(fn, a):
         return 2
 
 
+def _sign_output(a, path):
+    """Sign the artifact just written when ``--sign KEY`` was given."""
+    if getattr(a, "sign", None):
+        from shape.artifact.signing import load_private_key, sign_artifact
+
+        return sign_artifact(path, load_private_key(a.sign))
+    return None
+
+
+def _verify_inputs(a):
+    """``--verify PUBKEY``: every .shape input must carry a valid signature by that key."""
+    from shape.artifact.signing import load_public_key, verify_artifact
+
+    key = load_public_key(a.verify)
+    for name in ("shape", "before", "after", "target", "observed"):
+        path = getattr(a, name, None)
+        if isinstance(path, str) and path.endswith(".shape"):
+            verify_artifact(path, key)
+
+
+def _cmd_keygen(a):
+    from shape.artifact.signing import key_id, load_public_key, write_keypair
+
+    priv, pub = write_keypair(a.prefix)
+    _dump(
+        {"private_key": str(priv), "public_key": str(pub), "key_id": key_id(load_public_key(pub))}
+    )
+    return 0
+
+
+def _cmd_sign(a):
+    from shape.artifact.signing import load_private_key, sign_artifact
+
+    kid = sign_artifact(a.shape, load_private_key(a.key), a.output)
+    _dump({"signed": a.output or a.shape, "key_id": kid})
+    return 0
+
+
+def _cmd_verify(a):
+    from shape.artifact.signing import load_public_key, verify_artifact
+
+    _dump({"artifact": a.shape, **verify_artifact(a.shape, load_public_key(a.key))})
+    return 0
+
+
 def _cmd_profile(a):
     import shape
 
@@ -75,12 +124,16 @@ def _cmd_profile(a):
         raise ValueError("profile needs -o OUT.shape")
     prof = shape.profile(a.src)
     content_id = shape.save(prof, a.output)
+    key_id = _sign_output(a, a.output)
     if a.html:
         with open(a.html, "w", encoding="utf-8") as fh:
             fh.write(prof.to_html())
     if a.json:
         _write_json(a.json, prof.summary())
-    _dump({"written": a.output, "shape_content_id": content_id})
+    out = {"written": a.output, "shape_content_id": content_id}
+    if key_id:
+        out["signed_by"] = key_id
+    _dump(out)
     return 0
 
 
@@ -124,6 +177,9 @@ def _cmd_diff(a):
     return 1 if (a.fail_on_drift and result.drifted) else 0
 
 
+_VERIFY_HELP = "require every .shape input to be signed by this public key (exit 1 if not)"
+
+
 def _build_parser():
     p = argparse.ArgumentParser(prog="shape", description="Shape as Code")
     p.add_argument("--version", "-V", action="store_true", help="print the version and exit")
@@ -134,9 +190,11 @@ def _build_parser():
     c = sub.add_parser("capture")
     c.add_argument("csv")
     c.add_argument("-o", "--output")
+    c.add_argument("--sign", metavar="KEY", help="sign the written .shape with this private key")
     pr = sub.add_parser("profile", help="profile a file, glob, directory or Delta table")
     pr.add_argument("src", metavar="SRC")
     pr.add_argument("-o", "--output", metavar="OUT")
+    pr.add_argument("--sign", metavar="KEY", help="sign the written .shape with this private key")
     pr.add_argument("--html", metavar="REPORT.html")
     pr.add_argument("--json", metavar="SUMMARY.json")
     d = sub.add_parser("diff", help="compare two profiles")
@@ -144,9 +202,20 @@ def _build_parser():
     d.add_argument("after", metavar="CURRENT.shape")
     d.add_argument("--json", metavar="RESULT.json")
     d.add_argument("--fail-on-drift", action="store_true")
+    d.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     for name in ("show", "inspect"):
         sh = sub.add_parser(name, help="print a .shape artifact's manifest and contents")
         sh.add_argument("shape")
+        sh.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
+    kg = sub.add_parser("keygen", help="generate an Ed25519 signing key pair")
+    kg.add_argument("prefix", help="writes PREFIX.key (private, mode 0600) and PREFIX.pub")
+    sg = sub.add_parser("sign", help="sign a .shape artifact")
+    sg.add_argument("shape", metavar="ARTIFACT.shape")
+    sg.add_argument("--key", required=True, metavar="PRIVATE.key")
+    sg.add_argument("-o", "--output", metavar="OUT.shape", help="default: sign in place")
+    vf = sub.add_parser("verify", help="verify a .shape artifact's signature (exit 1 if invalid)")
+    vf.add_argument("shape", metavar="ARTIFACT.shape")
+    vf.add_argument("--key", required=True, metavar="PUBLIC.pub")
     va = sub.add_parser("validate", help="validate a Shape-as-Code contract document")
     va.add_argument("contract")
     qu = sub.add_parser("quality")
@@ -172,16 +241,19 @@ def _build_parser():
     cq = sub.add_parser("query")
     cq.add_argument("shape")
     cq.add_argument("expression")
+    cq.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     ck = sub.add_parser("check", help="check a profile against a contract")
     ck.add_argument("shape", metavar="PROFILE.shape")
     ck.add_argument("contract", metavar="CONTRACT.json")
     ck.add_argument("--json", metavar="RESULT.json")
+    ck.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     co = sub.add_parser("compatibility")
     co.add_argument("before")
     co.add_argument("after")
     co.add_argument("--mode", choices=("backward", "forward", "full"), default="backward")
     gp = sub.add_parser("plan")
     gp.add_argument("shape")
+    gp.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     fc = sub.add_parser("certify-shapes")
     fc.add_argument("target")
     fc.add_argument("observed")
@@ -209,6 +281,12 @@ def main(argv=None):
     if a.version:
         print(f"shape {_version()}")
         return 0
+    if a.cmd in ("keygen", "sign", "verify"):
+        return _run({"keygen": _cmd_keygen, "sign": _cmd_sign, "verify": _cmd_verify}[a.cmd], a)
+    if getattr(a, "verify", None):
+        rc = _run(_verify_inputs, a)
+        if rc:
+            return rc
     if a.cmd == "profile":
         return _run(_cmd_profile, a)
     if a.cmd == "check" and _is_profile_or_missing(a.shape):
@@ -240,8 +318,14 @@ def main(argv=None):
         obj = capture_rows(_rows(a.csv)).to_dict()
         if a.output and str(a.output).endswith(".shape"):
             cid = write_shape(a.output, obj, name=__import__("pathlib").Path(a.csv).stem)
-            _dump({"written": a.output, "shape_content_id": cid})
+            out = {"written": a.output, "shape_content_id": cid}
+            kid = _sign_output(a, a.output)
+            if kid:
+                out["signed_by"] = kid
+            _dump(out)
             return 0
+        if getattr(a, "sign", None):
+            raise SystemExit("capture --sign needs -o OUT.shape")
         raw = json.dumps(obj, sort_keys=True, indent=2, default=str)
         if a.output:
             open(a.output, "w", encoding="utf-8").write(raw + "\n")
