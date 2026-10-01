@@ -133,17 +133,89 @@ class Bernoulli(FamilyDistribution):
     family = FAMILIES["bernoulli"]
 
 
+class Gamma(FamilyDistribution):
+    """Gamma with shape ``k`` and scale ``theta``."""
+
+    name = "gamma"
+    family = FAMILIES["gamma"]
+
+
+class Beta(FamilyDistribution):
+    """Beta with shape parameters ``a`` and ``b``."""
+
+    name = "beta"
+    family = FAMILIES["beta"]
+
+
+class Weibull(FamilyDistribution):
+    """Weibull with shape ``k`` and scale ``lam``."""
+
+    name = "weibull"
+    family = FAMILIES["weibull"]
+
+
+class Triangular(FamilyDistribution):
+    """Triangular on ``[low, high]`` with its peak at ``mode``."""
+
+    name = "triangular"
+    family = FAMILIES["triangular"]
+
+
+class NegativeBinomial(FamilyDistribution):
+    """Failures before the ``r``-th success, success probability ``p``."""
+
+    name = "negative_binomial"
+    family = FAMILIES["negative_binomial"]
+
+
+class PowerLawCutoff(FamilyDistribution):
+    """Density proportional to ``x ** -alpha * exp(-lam * x)`` for ``x >= xmin``."""
+
+    name = "power_law_cutoff"
+    family = FAMILIES["power_law_cutoff"]
+
+
+class Mixture(FamilyDistribution):
+    """A weighted mixture of other families (``components``)."""
+
+    name = "mixture"
+    family = FAMILIES["mixture"]
+
+
+class Truncated(FamilyDistribution):
+    """A family restricted to ``[low, high]`` (``base``, ``base_params``, ``low``, ``high``)."""
+
+    name = "truncated"
+    family = FAMILIES["truncated"]
+
+
+class Histogram(FamilyDistribution):
+    """An empirical histogram (``edges`` and ``weights``)."""
+
+    name = "histogram"
+    family = FAMILIES["histogram"]
+
+
 __all__ = [
     "SHAPE_API",
     "Bernoulli",
+    "Beta",
     "Exponential",
     "FamilyDistribution",
+    "Gamma",
     "Geometric",
+    "Histogram",
     "Lognormal",
     "LogNormalFamily",
+    "Mixture",
+    "NegativeBinomial",
     "Normal",
     "Pareto",
     "Poisson",
+    "PowerLawCutoff",
+    "Triangular",
+    "Truncated",
     "Uniform",
+    "Weibull",
     "Zipf",
 ]

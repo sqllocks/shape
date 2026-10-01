@@ -60,12 +60,19 @@ _MASK64 = (1 << 64) - 1
 class RowStream:
     """One keyed Philox stream, read by row."""
 
-    __slots__ = ("k0", "k1", "key")
+    __slots__ = ("column", "k0", "k1", "key", "label", "seed", "table")
 
     def __init__(self, seed: int, table: str, column: str, label: str = "") -> None:
+        self.seed, self.table, self.column, self.label = seed, table, column, label
         self.key = stream_key(seed, table, column, label)
         self.k0 = self.key & _MASK64
         self.k1 = self.key >> 64
+
+    def derive(self, suffix: str) -> RowStream:
+        """A separate stream for a sub-draw: same seed, table and column, label
+        ``"<label>/<suffix>"`` (a family that needs several independent draws per row, such as a
+        rejection attempt or a mixture component, takes one derived stream for each)."""
+        return RowStream(self.seed, self.table, self.column, f"{self.label}/{suffix}")
 
     @staticmethod
     def _check(row_start: int, n_rows: int, per_row: int = 1) -> None:

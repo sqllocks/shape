@@ -42,6 +42,15 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.distributions` | `geometric` | trials to the first success, probability `p` |
 | `shape.distributions` | `poisson` | Poisson with mean `lam` |
 | `shape.distributions` | `bernoulli` | 0 or 1 with `P(1) = p` |
+| `shape.distributions` | `gamma` | gamma with shape `k` and scale `theta` |
+| `shape.distributions` | `beta` | beta with `a` and `b` |
+| `shape.distributions` | `weibull` | Weibull with shape `k` and scale `lam` |
+| `shape.distributions` | `triangular` | triangular on `[low, high]` with peak `mode` |
+| `shape.distributions` | `negative_binomial` | failures before the `r`-th success, probability `p` |
+| `shape.distributions` | `power_law_cutoff` | density proportional to `x ** -alpha * exp(-lam * x)` for `x >= xmin` |
+| `shape.distributions` | `mixture` | a weighted mixture of other families |
+| `shape.distributions` | `truncated` | a family restricted to `[low, high]` |
+| `shape.distributions` | `histogram` | an empirical histogram (`edges`, `weights`) |
 | `shape.calendars` | `us_federal` | the eleven US federal holidays on their observed days |
 | `shape.calendars` | `us_retail` | Black Friday, Cyber Monday, Christmas Eve and the gift holidays |
 
