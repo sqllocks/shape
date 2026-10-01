@@ -94,3 +94,9 @@ qm.get_quarantine_report("quarantine/", "2026-10-01")
 Each artifact lands in `quarantine/<domain>/<run_id>/` next to a `.._quarantine_meta.json`
 (reason, gate, UTC time, original path). `domain`, `run_id` and table names are used as path
 components, so Shape refuses any that is not a plain name (letters, digits, `.`, `_`, `-`).
+
+## One command, two inputs
+
+`shape verify` also checks signatures (see `docs/SIGNING.md`): when its argument is a `.shape`
+file it verifies that artifact against `--key PUBLIC.pub`, and for any other path it runs the
+gates above.

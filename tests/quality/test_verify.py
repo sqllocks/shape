@@ -262,3 +262,14 @@ def test_cli_statistical_without_declarations_passes(tmp_path):
     data = write_data(tmp_path / "d")
     schema = write_schema(tmp_path)
     assert main(["verify", str(data), "--schema", str(schema), "--statistical"]) == 0
+
+
+def test_cli_verify_on_a_shape_artifact_checks_its_signature(tmp_path, capsys):
+    csv = tmp_path / "t.csv"
+    csv.write_text("id\n1\n")
+    art = tmp_path / "t.shape"
+    assert main(["profile", str(csv), "-o", str(art)]) == 0
+    capsys.readouterr()
+    # no key: this is the signature command, not the gates, and it needs a key
+    assert main(["verify", str(art)]) == 2
+    assert "needs --key" in capsys.readouterr().err

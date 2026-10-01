@@ -1978,7 +1978,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 77 | P6-14 | todo | |
 | 78 | P7-01 | wip (lane/P7-01) | |
 | 79 | P7-02 | todo | |
-| 80 | P7-03 | wip (lane/P7-03) | |
+| 80 | P7-03 | done | 06300e7 |
 | 81 | P7-04 | todo | |
 | 82 | P8-01 | todo | |
 | 83 | P8-02 | todo | |

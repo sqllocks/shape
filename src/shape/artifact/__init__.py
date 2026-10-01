@@ -5,6 +5,9 @@ from .io import (
     ArtifactFormatError as ArtifactFormatError,
 )
 from .io import (
+    ArtifactSignatureError as ArtifactSignatureError,
+)
+from .io import (
     read_artifact as read_artifact,
 )
 from .io import (
@@ -14,9 +17,12 @@ from .io import (
 __all__ = [
     "ArtifactError",
     "ArtifactFormatError",
+    "ArtifactSignatureError",
     "canonical_json",
     "read_artifact",
     "read_model",
+    "sign_artifact",
+    "verify_artifact",
     "write_artifact",
     "write_model",
 ]
@@ -51,3 +57,5 @@ from .shape_file import (
 from .shape_file import (
     write_shape as write_shape,
 )
+from .signing import sign_artifact as sign_artifact
+from .signing import verify_artifact as verify_artifact
