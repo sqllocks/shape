@@ -67,7 +67,7 @@ struct Counted<T> {
 
 fn count_sorted<T: Key>(values: &[T]) -> Counted<T> {
     let mut sorted = values.to_vec();
-    let par = crate::can_par() && sorted.len() > 50_000;
+    let par = crate::can_par() && sorted.len() > 1_000_000;
     T::sort(&mut sorted, par);
     let mut uniq: Vec<T> = Vec::new();
     let mut counts: Vec<u64> = Vec::new();
@@ -223,9 +223,8 @@ fn count_numeric<'py>(
     match arr.data_type() {
         DataType::Float64 => {
             let v = arr.as_primitive::<Float64Type>().values().clone();
-            let r = py.detach(|| {
-                count_numeric_impl::<f64>(&v, top_n, row_count, want_sorted, want_uniq)
-            });
+            let r = py
+                .detach(|| count_numeric_impl::<f64>(&v, top_n, row_count, want_sorted, want_uniq));
             out.set_item("cardinality", r.cardinality)?;
             out.set_item("all_whole", r.all_whole)?;
             out.set_item("keys", f64_array(r.keys))?;
@@ -235,7 +234,8 @@ fn count_numeric<'py>(
         }
         DataType::Int64 => {
             let v = arr.as_primitive::<Int64Type>().values().clone();
-            let r = py.detach(|| count_numeric_impl::<i64>(&v, top_n, row_count, want_sorted, want_uniq));
+            let r = py
+                .detach(|| count_numeric_impl::<i64>(&v, top_n, row_count, want_sorted, want_uniq));
             out.set_item("cardinality", r.cardinality)?;
             out.set_item("all_whole", r.all_whole)?;
             out.set_item(
@@ -303,7 +303,9 @@ fn percentile_sorted(sorted: &[f64], q_percent: f64) -> f64 {
     }
 }
 
-const PCTS: [f64; 11] = [1.0, 5.0, 10.0, 25.0, 50.0, 75.0, 90.0, 95.0, 99.0, 0.5, 99.5];
+const PCTS: [f64; 11] = [
+    1.0, 5.0, 10.0, 25.0, 50.0, 75.0, 90.0, 95.0, 99.0, 0.5, 99.5,
+];
 
 /// Mean, sample standard deviation, quantiles and outlier count of a float64 array without
 /// nulls, as numpy computes them. `sorted` (ascending) may be passed to skip the sort.
@@ -351,7 +353,7 @@ fn numeric_stats<'py>(
             Some(s) => s.values(),
             None => {
                 let mut t = v.to_vec();
-                if crate::can_par() && t.len() > 50_000 {
+                if crate::can_par() && t.len() > 1_000_000 {
                     t.par_sort_unstable_by(|a, b| a.total_cmp(b));
                 } else {
                     t.sort_unstable_by(|a, b| a.total_cmp(b));
@@ -441,7 +443,7 @@ impl Eq for HKey<'_> {}
 /// Distinct strings in first-appearance order, with their counts.
 fn count_strings<O: OffsetSizeTrait>(a: &GenericStringArray<O>) -> (Vec<usize>, Vec<u64>) {
     let n = a.len();
-    let par = crate::can_par() && n > 100_000;
+    let par = crate::can_par() && n > 1_000_000;
     let hashes: Vec<u64> = if par {
         (0..n)
             .into_par_iter()
@@ -459,12 +461,12 @@ fn count_strings<O: OffsetSizeTrait>(a: &GenericStringArray<O>) -> (Vec<usize>, 
     let one = |p: usize| -> Vec<(usize, u64)> {
         let mut map: HashMap<HKey, usize, BuildHasherDefault<IdHasher>> = HashMap::default();
         let mut entries: Vec<(usize, u64)> = Vec::new();
-        for i in 0..n {
-            if hashes[i] & mask != p as u64 {
+        for (i, &h) in hashes.iter().enumerate() {
+            if h & mask != p as u64 {
                 continue;
             }
             let key = HKey {
-                h: hashes[i],
+                h,
                 s: a.value(i).as_bytes(),
             };
             match map.get(&key) {
@@ -585,15 +587,21 @@ fn temporal_counts<'py>(py: Python<'py>, ts: PyArray) -> PyResult<Bound<'py, PyD
         ),
         DataType::Timestamp(TimeUnit::Millisecond, _) => (
             1_000,
-            arr.as_primitive::<TimestampMillisecondType>().values().to_vec(),
+            arr.as_primitive::<TimestampMillisecondType>()
+                .values()
+                .to_vec(),
         ),
         DataType::Timestamp(TimeUnit::Microsecond, _) => (
             1_000_000,
-            arr.as_primitive::<TimestampMicrosecondType>().values().to_vec(),
+            arr.as_primitive::<TimestampMicrosecondType>()
+                .values()
+                .to_vec(),
         ),
         DataType::Timestamp(TimeUnit::Nanosecond, _) => (
             1_000_000_000,
-            arr.as_primitive::<TimestampNanosecondType>().values().to_vec(),
+            arr.as_primitive::<TimestampNanosecondType>()
+                .values()
+                .to_vec(),
         ),
         t => {
             return Err(PyValueError::new_err(format!(
@@ -643,7 +651,7 @@ fn temporal_counts<'py>(py: Python<'py>, ts: PyArray) -> PyResult<Bound<'py, PyD
             }
             a
         };
-        if crate::can_par() && vals.len() > 100_000 {
+        if crate::can_par() && vals.len() > 1_000_000 {
             vals.par_chunks(65_536).map(one).reduce(fresh, merge)
         } else {
             one(&vals)
@@ -654,7 +662,9 @@ fn temporal_counts<'py>(py: Python<'py>, ts: PyArray) -> PyResult<Bound<'py, PyD
     out.set_item("dow", r.dow.to_vec())?;
     out.set_item("month", r.month.to_vec())?;
     if let (Some((&lo, _)), Some((&hi, _))) = (r.year.first_key_value(), r.year.last_key_value()) {
-        let years: Vec<u64> = (lo..=hi).map(|y| r.year.get(&y).copied().unwrap_or(0)).collect();
+        let years: Vec<u64> = (lo..=hi)
+            .map(|y| r.year.get(&y).copied().unwrap_or(0))
+            .collect();
         out.set_item("year0", lo)?;
         out.set_item("years", years)?;
     }

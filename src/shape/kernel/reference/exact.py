@@ -152,7 +152,9 @@ def numeric_stats(values: Any, sorted: Any = None) -> dict[str, Any]:  # noqa: A
     if iqr != 0:
         lo_f = q1 - 1.5 * iqr
         hi_f = q3 + 1.5 * iqr
-        outliers = int(np.searchsorted(xs, lo_f, "left") + (cnt - np.searchsorted(xs, hi_f, "right")))
+        outliers = int(
+            np.searchsorted(xs, lo_f, "left") + (cnt - np.searchsorted(xs, hi_f, "right"))
+        )
     return {
         "mean": mean,
         "std": std,

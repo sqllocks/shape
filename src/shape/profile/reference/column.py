@@ -130,8 +130,6 @@ def detect_pattern(non_null: pa.Array, cardinality: int) -> str | None:
     return None
 
 
-
-
 def _iso_strings(values: pa.Array, unit: str) -> list[str | None]:
     """Format each value as "YYYY-MM-DD[ HH:MM:SS]", like pc.strftime but without a tz database
     (pyarrow's strftime needs one even for naive timestamps, and Windows has none)."""
@@ -578,11 +576,15 @@ def _profile_column(
         stype = "string"
         if n_nn:
             # the six words have at most 62 spellings in all: more distinct values cannot match
-            if cardinality <= _MAX_BOOL_SPELLINGS and pc.all(
-                pc.is_in(
-                    pc.utf8_lower(uniq), value_set=pa.array(["true", "false", "0", "1", "yes", "no"])
-                )
-            ).as_py():
+            if (
+                cardinality <= _MAX_BOOL_SPELLINGS
+                and pc.all(
+                    pc.is_in(
+                        pc.utf8_lower(uniq),
+                        value_set=pa.array(["true", "false", "0", "1", "yes", "no"]),
+                    )
+                ).as_py()
+            ):
                 stype = "boolean"
             else:
                 ok = _try(lambda a: pc.cast(a, pa.float64()), uniq)
@@ -684,9 +686,7 @@ def _profile_column(
             quantiles = {f"p{p}": round(float(v), 6) for p, v in zip(_PCTS, vals[:9], strict=True)}
             quantiles["p0_5"] = round(float(vals[9]), 6)
             quantiles["p99_5"] = round(float(vals[10]), 6)
-            outlier_rate_val = (
-                0.0 if st["outliers"] is None else round(st["outliers"] / cnt, 6)
-            )
+            outlier_rate_val = 0.0 if st["outliers"] is None else round(st["outliers"] / cnt, 6)
 
     # ---- strings -------------------------------------------------------------
     pattern = None

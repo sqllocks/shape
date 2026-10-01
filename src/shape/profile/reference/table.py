@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import os
-from concurrent.futures import ThreadPoolExecutor
+from collections.abc import Callable
+from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
@@ -40,23 +41,27 @@ def _detect_primary_key(works: list[_Work], row_count: int) -> list[str]:
     return cands[:1]
 
 
-def _correlation(works: list[_Work], row_count: int) -> dict[str, dict[str, float]]:
+def _correlation(all_cols: list[_Col], row_count: int) -> dict[str, dict[str, float]]:
     """DataFrame.select_dtypes(np.number).corr('pearson') -> nested dict (round 4).
 
     Pairwise-complete Pearson via BLAS: columns are centred on their global mean (to
     avoid cancellation), then per-pair sums over the rows where *both* are present are
     obtained as matrix products with the null masks of the columns that have nulls."""
     # np.number in pandas 3 also covers timedelta64 (correlated through its integer nanoseconds)
-    cols = [w for w in works if w.col.kind in ("int", "uint64", "float", "objdur")]
+    cols = [c for c in all_cols if c.kind in ("int", "uint64", "float", "objdur")]
     if len(cols) < 2:
         return {}
     k, n = len(cols), row_count
     X = np.empty((n, k), dtype=np.float64, order="F")  # column-contiguous fills / reductions
+    has_nan = [False] * k  # a float column's nulls and NaNs are both "missing" (the null count)
+
     def fill(j: int) -> None:
-        a = _combine(cols[j].col.arr)
-        if cols[j].col.kind == "objdur":
+        a = _combine(cols[j].arr)
+        if cols[j].kind == "objdur":
             a = pc.cast(pc.cast(a, pa.duration("ns")), pa.int64()).cast(pa.float64())
         X[:, j] = a.to_numpy(zero_copy_only=False)
+        if cols[j].kind in ("float", "objdur"):
+            has_nan[j] = bool(np.isnan(X[:, j]).any())
 
     if n >= 100_000 and k > 1:  # numpy and Arrow release the GIL for these big copies
         with ThreadPoolExecutor(max_workers=min(k, os.cpu_count() or 1)) as ex:
@@ -64,9 +69,7 @@ def _correlation(works: list[_Work], row_count: int) -> dict[str, dict[str, floa
     else:
         for j in range(k):
             fill(j)
-    nulls = [
-        j for j, w in enumerate(cols) if w.col.kind in ("float", "objdur") and w.prof.null_count
-    ]
+    nulls = [j for j in range(k) if has_nan[j]]
     cnt = np.full(k, float(n))
     masks = {}
     for j in nulls:
@@ -102,7 +105,7 @@ def _correlation(works: list[_Work], row_count: int) -> dict[str, dict[str, floa
         va = np.maximum(Sxx - Sx * Sx / N, 0.0)
         div = np.sqrt(va * va.T)
         r = np.where((div != 0) & (N >= 1), cov / div, np.nan)
-    names = [w.col.name for w in cols]
+    names = [c.name for c in cols]
     out: dict[str, dict[str, float]] = {}
     for i, a in enumerate(names):
         for j, b in enumerate(names):
@@ -111,6 +114,34 @@ def _correlation(works: list[_Work], row_count: int) -> dict[str, dict[str, floa
                 if not np.isnan(v):
                     out.setdefault(a, {})[b] = round(float(v), 4)
     return out
+
+
+def _quiet_correlation(cols: list[_Col], row_count: int) -> dict[str, dict[str, float]]:
+    """``_correlation`` with numpy's floating-point warnings off (errstate is per thread)."""
+    with np.errstate(all="ignore"):
+        return _correlation(cols, row_count)
+
+
+def _spawn_correlation(
+    cols: list[_Col], row_count: int, threads: int | None
+) -> tuple[Callable[[], None], Callable[[], dict[str, dict[str, float]]]]:
+    """``(start, result)``: ``start()`` begins the table's correlation on its own thread (when
+    the table is large and the run is parallel), ``result()`` returns it, computing it inline
+    otherwise."""
+    box: list[Future[dict[str, dict[str, float]]]] = []
+    ex = ThreadPoolExecutor(max_workers=1)
+
+    def start() -> None:
+        if _n_threads(threads) != 1 and row_count >= 100_000:
+            box.append(ex.submit(_quiet_correlation, cols, row_count))
+
+    def result() -> dict[str, dict[str, float]]:
+        try:
+            return box[0].result() if box else _correlation(cols, row_count)
+        finally:
+            ex.shutdown(wait=False)
+
+    return start, result
 
 
 def _fk_values(w: _Work) -> pa.Array:
@@ -179,22 +210,37 @@ def _can_fork() -> bool:
     return "fork" in mp.get_all_start_methods()
 
 
+def _col_cost(c: _Col) -> int:
+    """Scheduling order, most expensive first: numeric columns run the distribution fit."""
+    return 0 if c.kind in ("float", "int") else 1 if c.kind == "str" else 2
+
+
 def _profile_cols(
-    cols: list[_Col], row_count: int, threads: int | None, keep_uniques: bool = False
+    cols: list[_Col],
+    row_count: int,
+    threads: int | None,
+    keep_uniques: bool = False,
+    on_ready: Callable[[], None] | None = None,
 ) -> list[_Work]:
     """Profile every column.  threads == 1: sequential.  Otherwise columns are spread over
     a pool: PROFILE_POOL=process (fork, copy-on-write access to the Arrow data; avoids
     GIL contention in the Python-level optimisers), PROFILE_POOL=thread, or auto (default:
     processes for wide tables with >= 3 columns per worker, threads otherwise -- a fork
-    pool's start-up and result pickling only pays off when there are many columns)."""
+    pool's start-up and result pickling only pays off when there are many columns).
+    ``on_ready`` runs once the workers exist and before the first column is profiled (used to
+    start the table's correlation on another thread so it overlaps the column work)."""
     n = _n_threads(threads)
     if n == 1 or len(cols) == 1:
+        if on_ready:
+            on_ready()
         return [_profile_column(c, row_count, keep_uniques=keep_uniques) for c in cols]
     mode = os.environ.get("PROFILE_POOL", "auto")
     if mode == "auto":
         mode = "process" if len(cols) >= 3 * n else "thread"
     if mode == "process" and not _can_fork():
         mode = "thread"  # Windows has no fork; spawn would re-import and pickle the Arrow data
+    # most expensive columns first
+    order = sorted(range(len(cols)), key=lambda i: _col_cost(cols[i]))
     if mode == "process":
         import multiprocessing as mp
 
@@ -202,18 +248,63 @@ def _profile_cols(
         try:
             ctx = mp.get_context("fork")
             out: list[Any] = [None] * len(cols)
-            # most expensive columns first (numeric: distribution fitting; strings: hashing)
-            order = sorted(
-                range(len(cols)), key=lambda i: cols[i].kind not in ("float", "int", "str")
-            )
             with ctx.Pool(min(n, len(cols))) as pool:
+                if on_ready:
+                    on_ready()
                 for i, prof, uniq in pool.imap_unordered(_fork_task, order, chunksize=1):
                     out[i] = _Work(col=cols[i], prof=prof, uniques=uniq)
             return out
         finally:
             _FORK_STATE.clear()
+    if on_ready:
+        on_ready()
+    res: list[Any] = [None] * len(cols)
+
+    def run(i: int) -> None:
+        res[i] = _profile_column(cols[i], row_count, keep_uniques=keep_uniques)
+
     with ThreadPoolExecutor(max_workers=n) as ex:
-        return list(ex.map(lambda c: _profile_column(c, row_count, keep_uniques=keep_uniques), cols))
+        list(ex.map(run, order))
+    return res
+
+
+def _profile_tables(
+    cols_by_t: dict[str, tuple[list[_Col], int]],
+    threads: int | None,
+    on_ready: list[Callable[[], None]],
+) -> dict[str, list[_Work]]:
+    """Profile the columns of several tables. When they all fit a thread pool, one pool works
+    through every column of every table, most expensive first, so small tables do not wait for
+    the largest one; otherwise table by table."""
+    n = _n_threads(threads)
+    mode = os.environ.get("PROFILE_POOL", "auto")
+    total = sum(len(c) for c, _ in cols_by_t.values())
+    one_pool = (
+        len(cols_by_t) > 1
+        and n != 1
+        and total > 1
+        and mode != "process"
+        and (mode == "thread" or all(len(c) < 3 * n for c, _ in cols_by_t.values()))
+    )
+    if not one_pool:
+        return {
+            t: _profile_cols(c, rc, threads, keep_uniques=True, on_ready=cb)
+            for (t, (c, rc)), cb in zip(cols_by_t.items(), on_ready, strict=True)
+        }
+    for cb in on_ready:
+        cb()
+    tasks = [(t, i) for t, (c, _) in cols_by_t.items() for i in range(len(c))]
+    tasks.sort(key=lambda ti: _col_cost(cols_by_t[ti[0]][0][ti[1]]) * 10**9 - cols_by_t[ti[0]][1])
+    res: dict[str, list[_Work | None]] = {t: [None] * len(c) for t, (c, _) in cols_by_t.items()}
+
+    def run(ti: tuple[str, int]) -> None:
+        t, i = ti
+        cols, rc = cols_by_t[t]
+        res[t][i] = _profile_column(cols[i], rc, keep_uniques=True)
+
+    with ThreadPoolExecutor(max_workers=n) as ex:
+        list(ex.map(run, tasks))
+    return {t: [w for w in ws if w is not None] for t, ws in res.items()}
 
 
 def _sample_rows(
@@ -226,7 +317,12 @@ def _sample_rows(
 
 
 def _finish_table(
-    name: str, works: list[_Work], row_count: int, pk: list[str], fks: dict[str, str]
+    name: str,
+    works: list[_Work],
+    pk: list[str],
+    fks: dict[str, str],
+    row_count: int,
+    corr: dict[str, dict[str, float]],
 ) -> TableProfile:
     columns = {}
     for w in works:
@@ -235,7 +331,6 @@ def _finish_table(
         p.is_foreign_key = p.name in fks
         p.fk_ref_table = fks.get(p.name)
         columns[p.name] = p
-    corr = _correlation(works, row_count)
     return TableProfile(
         name=name,
         row_count=row_count,
@@ -254,9 +349,10 @@ def _profile_cols_table(
     sample_rows: int | None = None,
 ) -> TableProfile:
     cols, row_count = _sample_rows(cols, row_count, sample_rows)
-    works = _profile_cols(cols, row_count, threads)
+    start, result = _spawn_correlation(cols, row_count, threads)
+    works = _profile_cols(cols, row_count, threads, on_ready=start)
     pk = _detect_primary_key(works, row_count)
-    return _finish_table(name, works, row_count, pk, {})
+    return _finish_table(name, works, pk, {}, row_count, result())
 
 
 def profile_csv(
@@ -317,14 +413,13 @@ def profile_dataset_columns(
     cols_by_t: dict[str, tuple[list[_Col], int]], threads: int | None = None
 ) -> DatasetProfile:
     """Multi-table profile (with FK detection) from already-read columns."""
-    works = {
-        n: _profile_cols(c, rc, threads, keep_uniques=True) for n, (c, rc) in cols_by_t.items()
-    }
+    corr = {n: _spawn_correlation(c, rc, threads) for n, (c, rc) in cols_by_t.items()}
+    works = _profile_tables(cols_by_t, threads, [corr[n][0] for n in cols_by_t])
     pks = {n: _detect_primary_key(w, cols_by_t[n][1]) for n, w in works.items()}
     profiles = {}
     for n, w in works.items():
         fks = _detect_fks(n, w, works, pks)
-        profiles[n] = _finish_table(n, w, cols_by_t[n][1], pks[n], fks)
+        profiles[n] = _finish_table(n, w, pks[n], fks, cols_by_t[n][1], corr[n][1]())
     rels = []
     for n, tp in profiles.items():
         for col, parent in tp.detected_fks.items():
