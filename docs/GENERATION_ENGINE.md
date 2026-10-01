@@ -84,6 +84,15 @@ arrays; names that are not columns of the table are internal: later strategies r
 keys: a `RangeKeys` (O(1) memory) for a sequence key, an `ArrayKeys` otherwise, both with
 `take(indices)`.
 
+Two more services serve strategies that need a whole column or a whole-table result:
+
+* `engine.generate_column(table, column, row_start, n_rows)` builds one column of a row range (the columns
+  before it in generation order, which are all it can depend on) and returns it with nulls applied, equal to the same column of
+  `generate_chunk`.
+* `engine.cached(key, build)` runs `build()` once per engine and `key`. Strategies keep results that are
+  computed from the schema and seed alone here (the first row of each parent, the versions of each business
+  key, a capped foreign key), so a chunk read in any order finds the same value.
+
 The engine applies `null_rate` itself, after the strategy, from the `null` stream. A column without
 a generator is all null; a `computed` column is a null placeholder until the compute phase.
 

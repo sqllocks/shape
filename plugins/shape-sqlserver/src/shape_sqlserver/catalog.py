@@ -58,6 +58,16 @@ def _execute(cursor: Any, sql: str, param: Any) -> list[dict[str, Any]]:
     return fetch_dicts(cursor)
 
 
+def table_stem(table: str) -> str:
+    """A table's name without a leading warehouse prefix (``dimcustomer`` -> ``customer``,
+    ``fact_sales`` -> ``sales``); ``dim``/``fact`` elsewhere in a name are left alone."""
+    low = table.lower()
+    for prefix in ("dim", "fact"):
+        if low.startswith(prefix) and len(low) > len(prefix):
+            return low[len(prefix) :].removeprefix("_")
+    return low
+
+
 def guess_primary_key(table: str, columns: Iterable[ColumnInfo]) -> list[str]:
     """A primary key for a table whose catalog declares none (a Fabric warehouse enforces
     no keys): the identity column, else a column named like the table or ``id``, else any
@@ -67,7 +77,7 @@ def guess_primary_key(table: str, columns: Iterable[ColumnInfo]) -> list[str]:
     identity = [c.name for c in cols if c.is_identity]
     if identity:
         return [identity[0]]
-    stem = table.lower().replace("dim", "").replace("fact", "")
+    stem = table_stem(table)
     wanted = (stem + "_id", stem + "id", stem + "_key", stem + "key", "id")
     for name in names:
         if name.lower() in wanted:

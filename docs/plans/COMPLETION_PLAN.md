@@ -243,6 +243,11 @@ instruction.
 
 | Date | ID | Change | Reason |
 |---|---|---|---|
+| 2026-10-01 | P1-18, T-22 | **Owner: fix the enum rule.** The profiler marks a column `is_enum` (and lists every value in `enum_values`) when it has fewer than 200 distinct values, or fewer than 50,000 at a cardinality ratio under 0.30, so every column of a table under 200 rows is an "enum", unique keys and free text included (the SQL Server plugin: at most 50 distinct). New work package **P1-18**: a column is an enum only if, in addition, its values repeat (distinct values at most half of the non-null values; a unique column is never an enum); both kernels and the SQL Server plugin. T-22 parity for `is_enum`, `enum_values` (and fields derived from them) becomes a narrow named allow-list; every other field still equal. | Owner, 2026-10-01: "We should probably fix that too right?" |
+| 2026-10-01 | P4-01c, P6-08b | **Owner: also fix the further copied baseline behaviours that harm user trust (round 2).** Lead's call on which: P4-01c F6 undeclared FK guesses point at the parent's primary key (never a missing column), F7 generated strings fit declared lengths (CHAR(2)/CHAR(3) codes), F8 `CustomerId`-style keys recognised; P6-08b FIX-4 deterministic spread sample instead of the first N rows, FIX-5 unsampled statistics are null not 0.0, FIX-6 null-aware `is_unique` with a minimum sample, FIX-7 undeclared columns still inferred beside declared keys (evidence marked), FIX-8 whole-word `id`/`key` name matching, FIX-9 a guessed primary key never picks a foreign-key column. Same acceptance as round 1 (test per fix, narrow named parity allow-list, everything else equal). Not changed: `is_enum` (<= 50 distinct), the core profiler's rule under T-22 parity (flagged to the owner). | Owner, 2026-10-01: "Fix those too if they harm user trust". |
+| 2026-10-01 | P4-01b, P6-08, T-22, P4-01c, P6-08b | **Owner decision: fix the baseline bugs that P4-01b and P6-08 reproduced for parity.** New work packages **P4-01c** (DDL import) and **P6-08b** (SQL Server profiling). Their acceptance replaces exact equality with the baseline, for these behaviours only, by: a test asserting the correct behaviour per bug, and the parity harness listing each one as an intentional, documented difference (every other field still equal). | Owner, 2026-10-01: "Fix the bugs. Those are not acceptable and would harm user trust in Shape." |
+| 2026-10-01 | P4-04c | **Owner accepted** the changed case `conditional/is_null_fixed` (null rate 0.4 -> 0.5 after a chance clause-(d) failure at seed 1042; the original passed at seeds 1043-1049). No seed or tolerance changed. | Owner, 2026-10-01: "Accept is fine". |
+| 2026-10-01 | G1 | **Owner decision on the second G1 miss (re-run on c7bd366: only PROF-IN MT 9.1x < 10x):** option (a), keep optimising; the gate is unchanged (10x, D-04). Lane `lane/G1-mt` (started 8:59 AM EDT) targets the MT path, equivalence first, with no other workload allowed below 10x. Nothing merges to main until G1 and G2 pass. | Owner, 2026-10-01: "A". Evidence: docs/plans/evidence/G1-rerun/. |
 | 2026-10-01 | G2, PF-01, P3-01, P4-01a, P6-08 | **Early start extended (lead, under the owner's 'run everything that can run in parallel', 2026-10-01).** G2's first two checks pass (an out-of-tree plugin adds a source, a detector and a command without core change; `shape plugins list` shows all 25 built-ins); its third check is 'the G1 gates still pass', so G2 waits on G1. The work packages that depend only on G2 (PF-01, P3-01, P4-01a, P6-08) start now as lanes, under the same rule as the G1 early start: they merge into `build/main-plan`, nothing merges to `main` until G1 and G2 pass. P1-17 left MT at 7.5x (D1 and D4 CSV above 10x on its VM); G1 is re-run after P1-16. | Owner instruction |
 | 2026-10-01 | G1, P1-15, P1-16, P2-01, P7-01, P6-09, PF-03 | **Owner decision on the G1 escalation:** options (a) and (b), in parallel; the gate is unchanged (10x, D-04). New work packages **P1-15** (exact-mode `shape.profile` on the fused Rust kernel, as P1-08 intended) and **P1-16** (bitwise-exact, cheaper likelihood evaluation); G1 is re-run after both merge. **Early start:** P2-01, P7-01, P6-09 and PF-03 may start before G1 is `done` (owner, 2026-10-01); they run as lanes and merge into `build/main-plan`, but nothing merges to `main` until G1 passes. | Owner decision |
 | 2026-10-01 | §6.1, §6.3 | **Parallel lanes (owner: run everything that can run in parallel).** Work packages whose `Depends` are met run concurrently, each in its own builder session on its own branch `lane/<WP>` cut from `build/main-plan`. A lane builder edits only its work package's paths, never the §11 tracker or §2.3, and records progress and evidence in `docs/plans/lane_status/<WP>.md`. The lead verifies each lane against §7, merges it into `build/main-plan` (merge commit) and updates §11. The tracker shows a lane's WP as `wip (lane/<WP>)`; a builder never picks a WP marked that way. Gates stay sequential, each measured in one dedicated run. | Owner decision |
@@ -1022,6 +1027,16 @@ Appendix A.
   green in both kernel modes; PROF-IN for MT, D1 and D4 CSV recorded per T-19.
 - Fixes: G1 escalation (§2.3).
 
+**P1-18 — Enum rule (owner, 2026-10-01)**
+- Depends: P1-17.
+- Deliverables: `is_enum` requires repetition: distinct values <= 0.5 x non-null values and not unique, on top of the
+  existing size limits; in the reference profiler (`profile/reference/column.py`, both paths), the kernel twin
+  (`kernel/reference/exact.py`) and Rust (`exact.rs`), bounded mode, and the SQL Server plugin; docs.
+- Acceptance: tests (a unique column, a tiny table, free text, a real low-cardinality category, the boundary);
+  `profile_1to1/verify.py --impl shape` exits 0 in both kernels with `is_enum`/`enum_values` (and only fields derived
+  from them) in a narrow named allow-list, failing if the fix is never exercised; G1 timings do not regress.
+- Fixes: none (owner decision, §2.3).
+
 **Gate G1**
 - P1-14 is done (no Spindle on the user-facing surface).
 - P1-15, P1-16 and P1-17 are done (owner decision 2026-10-01).
@@ -1273,6 +1288,19 @@ primary use case (D-14).
 - Acceptance: for each DDL fixture in Spindle's tests (or, if there are none, 5
   fixtures written from Spindle's docs), Shape's schema equals Spindle's output.
 - Fixes: none.
+
+**P4-01c — `from-ddl` bug fixes (owner, 2026-10-01)**
+- Depends: P4-01b.
+- Deliverables: fix the baseline behaviours P4-01b reproduced (lane_status/P4-01b.md): a column-level
+  `REFERENCES parent(col)` is read as a foreign key to that column; `VARBINARY(MAX)` (and other
+  `(MAX)` binary types) is binary and left out like other binary columns; name matching uses whole
+  words (`discount_pct` is a percentage, not a quantity; a `state` string column is a region, not a
+  status enum); `gender CHAR(1)` gets a value set, not a pattern; CR-08 (parent total summed over
+  children) is implemented.
+- Acceptance: a test per fix asserting the correct behaviour; `ddl_1to1/verify.py` lists each as an
+  intentional difference and every other field still equals the baseline; the `e2e_cli__inline`
+  schema validates.
+- Fixes: none (owner decision, §2.3).
 
 **P4-02 — Engine**
 - Depends: P4-01a.
@@ -1596,6 +1624,17 @@ medium, and GEN-IN must be ≥10x at medium.
   Spindle's database profiler on the same database. Time is reported, not gated,
   because it is dominated by the server.
 - Fixes: none.
+
+**P6-08b — `shape-sqlserver` bug fixes (owner, 2026-10-01)**
+- Depends: P6-08.
+- Deliverables: fix the baseline behaviours P6-08 reproduced (lane_status/P6-08.md): sample-based
+  `null_rate`, `cardinality_ratio` and `is_unique` divide by the sample size (so `is_unique` can be
+  true on tables larger than the sample, and is reported as sample-based); a relationship the sampled
+  data shows is reported when no FKs are declared; name-inferred FKs set the column's
+  `is_foreign_key`.
+- Acceptance: a test per fix (against the real-server harness and the stand-ins); the parity check
+  lists each as an intentional difference and every other field still equals the baseline.
+- Fixes: none (owner decision, §2.3).
 
 **P6-09 — Validation gates, quarantine and `verify`**
 - Depends: G1.
@@ -1933,6 +1972,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 21b | P1-15 | done | 04fe94c |
 | 21c | P1-16 | done | 7238901 |
 | 21d | P1-17 | done | 981bdd7 |
+| 21e | P1-18 | wip (lane/P1-18) | |
 | 22 | P2-01 | done | c3909e9 |
 | 23 | P2-02 | done | 84e8efb |
 | 24 | P2-03 | done | 687f568 |
@@ -1952,15 +1992,16 @@ Work packages are listed in execution order. The next work package is the first 
 | 38 | P3-05 | done | b26e04e |
 | 39 | P4-01a | done | 02a0c4d |
 | 40 | P4-01b | done | 4b75d46 |
+| 40a | P4-01c | wip (lane/P4-01c) | |
 | 41 | P4-02 | done | 6917af7 |
 | 42 | P4-03 | done | 6ec4c1f |
 | 43 | P4-04a | done | e596a57 |
 | 44 | P4-04b | done | b314b34 |
 | 45 | P4-04c | done (case conditional/is_null_fixed changed after a chance failure; owner to rule) | 42f9732 |
-| 46 | P4-04d | wip (lane/P4-04d) | |
+| 46 | P4-04d | done (G7 regression test; scd2 fixture regenerated at integration for the shared calendar fingerprint) | 71b2ebd |
 | 47 | P4-05 | done | 9f6fea8 |
 | 48 | P4-06 | done (SQL comment/literal injection fixed at integration, 36f32d3) | ba051d2 |
-| 49 | P4-07 | todo | |
+| 49 | P4-07 | wip (lane/P4-07) | |
 | 50 | P4-08 | todo | |
 | 51 | P4-09 | todo | |
 | 52 | P4-10 | todo | |
@@ -1983,7 +2024,8 @@ Work packages are listed in execution order. The next work package is the first 
 | 69 | P6-07b | todo | |
 | 70 | P6-07c | todo | |
 | 71 | P6-08 | done (nightly SQL Server e2e pending) | 29eac3e |
-| 72 | P6-09 | wip (merged; parity runs in CI bench-quick) | 3859a3c |
+| 71a | P6-08b | wip (lane/P6-08b) | |
+| 72 | P6-09 | done (CI bench-quick verify_1to1 green on c7bd366, run 36850390984) | 3859a3c |
 | 73 | P6-10 | todo | |
 | 74 | P6-11 | todo | |
 | 75 | P6-12 | todo | |
