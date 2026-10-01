@@ -1,0 +1,3523 @@
+{
+ "annotations": [
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as ENTITY",
+   "rule_id": "TC-ENTITY",
+   "table": "persons"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as LOOKUP",
+   "rule_id": "TC-LOOKUP",
+   "table": "addresses"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as BRIDGE",
+   "rule_id": "TC-BRIDGE",
+   "table": "person_addresses"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as HIERARCHY",
+   "rule_id": "TC-HIERARCHY",
+   "table": "product_categories"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as TRANSACTION",
+   "rule_id": "TC-TRANSACTION",
+   "table": "products"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as TRANSACTION",
+   "rule_id": "TC-TRANSACTION",
+   "table": "customers"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as TRANSACTION",
+   "rule_id": "TC-TRANSACTION",
+   "table": "sales_orders"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as TRANSACTION",
+   "rule_id": "TC-TRANSACTION",
+   "table": "order_details"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as TRANSACTION",
+   "rule_id": "TC-TRANSACTION",
+   "table": "product_reviews"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as LOG",
+   "rule_id": "TC-LOG",
+   "table": "inventory_log"
+  },
+  {
+   "column": "person_id",
+   "confidence": 0.8,
+   "description": "Bridge table first FK \u2014 zipf(alpha=1.3)",
+   "rule_id": "FK-06",
+   "table": "person_addresses"
+  },
+  {
+   "column": "address_id",
+   "confidence": 0.8,
+   "description": "FK to address/location table (addresses) \u2014 zipf(alpha=1.5)",
+   "rule_id": "FK-08",
+   "table": "person_addresses"
+  },
+  {
+   "column": "category_id",
+   "confidence": 0.9,
+   "description": "Nullable FK \u2014 added null_rate 0.15",
+   "rule_id": "FK-04",
+   "table": "products"
+  },
+  {
+   "column": "category_id",
+   "confidence": 0.8,
+   "description": "Default FK distribution \u2014 pareto(alpha=1.16)",
+   "rule_id": "FK-00",
+   "table": "products"
+  },
+  {
+   "column": "person_id",
+   "confidence": 0.8,
+   "description": "Entity (persons) -> transaction child \u2014 pareto(alpha=1.16)",
+   "rule_id": "FK-01",
+   "table": "customers"
+  },
+  {
+   "column": "customer_id",
+   "confidence": 0.8,
+   "description": "Default FK distribution \u2014 pareto(alpha=1.16)",
+   "rule_id": "FK-00",
+   "table": "sales_orders"
+  },
+  {
+   "column": "order_id",
+   "confidence": 0.8,
+   "description": "Default FK distribution \u2014 pareto(alpha=1.16)",
+   "rule_id": "FK-00",
+   "table": "order_details"
+  },
+  {
+   "column": "product_id",
+   "confidence": 0.8,
+   "description": "Default FK distribution \u2014 pareto(alpha=1.16)",
+   "rule_id": "FK-00",
+   "table": "order_details"
+  },
+  {
+   "column": "product_id",
+   "confidence": 0.8,
+   "description": "Default FK distribution \u2014 pareto(alpha=1.16)",
+   "rule_id": "FK-00",
+   "table": "product_reviews"
+  },
+  {
+   "column": "customer_id",
+   "confidence": 0.8,
+   "description": "Default FK distribution \u2014 pareto(alpha=1.16)",
+   "rule_id": "FK-00",
+   "table": "product_reviews"
+  },
+  {
+   "column": "product_id",
+   "confidence": 0.8,
+   "description": "Log/audit child \u2014 pareto(alpha=1.5)",
+   "rule_id": "FK-07",
+   "table": "inventory_log"
+  },
+  {
+   "column": null,
+   "confidence": 0.9,
+   "description": "Root table \u2014 scale presets set (1K / 50K / 500K)",
+   "rule_id": "CA-SCALE",
+   "table": "persons"
+  },
+  {
+   "column": null,
+   "confidence": 0.85,
+   "description": "Lookup/reference table \u2014 fixed 100 rows",
+   "rule_id": "CA-06",
+   "table": "addresses"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Bridge table \u2014 ratio 3.0 per parent (persons)",
+   "rule_id": "CA-08",
+   "table": "person_addresses"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Hierarchy table \u2014 fixed 50 rows",
+   "rule_id": "CA-07",
+   "table": "product_categories"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Default child ratio \u2014 3.0 per parent (product_categories)",
+   "rule_id": "CA-09",
+   "table": "products"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Entity (persons) -> transaction \u2014 ratio 5.0",
+   "rule_id": "CA-02",
+   "table": "customers"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Default child ratio \u2014 3.0 per parent (customers)",
+   "rule_id": "CA-09",
+   "table": "sales_orders"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Default child ratio \u2014 3.0 per parent (sales_orders)",
+   "rule_id": "CA-09",
+   "table": "order_details"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Default child ratio \u2014 3.0 per parent (products)",
+   "rule_id": "CA-09",
+   "table": "product_reviews"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Parent (products) -> log/event \u2014 ratio 10.0",
+   "rule_id": "CA-05",
+   "table": "inventory_log"
+  },
+  {
+   "column": "unit_price",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on MONETARY semantic",
+   "rule_id": "ND-MONETARY",
+   "table": "products"
+  },
+  {
+   "column": "unit_cost",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on MONETARY semantic",
+   "rule_id": "ND-MONETARY",
+   "table": "products"
+  },
+  {
+   "column": "weight_kg",
+   "confidence": 0.75,
+   "description": "Upgraded to normal distribution based on MEASUREMENT semantic",
+   "rule_id": "ND-MEASUREMENT",
+   "table": "products"
+  },
+  {
+   "column": "subtotal",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on MONETARY semantic",
+   "rule_id": "ND-MONETARY",
+   "table": "sales_orders"
+  },
+  {
+   "column": "tax_amount",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on MONETARY semantic",
+   "rule_id": "ND-MONETARY",
+   "table": "sales_orders"
+  },
+  {
+   "column": "freight",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on MONETARY semantic",
+   "rule_id": "ND-MONETARY",
+   "table": "sales_orders"
+  },
+  {
+   "column": "total_amount",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on MONETARY semantic",
+   "rule_id": "ND-MONETARY",
+   "table": "sales_orders"
+  },
+  {
+   "column": "quantity",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on QUANTITY semantic",
+   "rule_id": "ND-QUANTITY",
+   "table": "order_details"
+  },
+  {
+   "column": "unit_price",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on MONETARY semantic",
+   "rule_id": "ND-MONETARY",
+   "table": "order_details"
+  },
+  {
+   "column": "unit_cost",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on MONETARY semantic",
+   "rule_id": "ND-MONETARY",
+   "table": "order_details"
+  },
+  {
+   "column": "discount_pct",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on QUANTITY semantic",
+   "rule_id": "ND-QUANTITY",
+   "table": "order_details"
+  },
+  {
+   "column": "line_total",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on MONETARY semantic",
+   "rule_id": "ND-MONETARY",
+   "table": "order_details"
+  },
+  {
+   "column": "rating",
+   "confidence": 0.75,
+   "description": "Upgraded to normal distribution based on RATING semantic",
+   "rule_id": "ND-RATING",
+   "table": "product_reviews"
+  },
+  {
+   "column": "quantity_change",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on QUANTITY semantic",
+   "rule_id": "ND-QUANTITY",
+   "table": "inventory_log"
+  },
+  {
+   "column": "state",
+   "confidence": 0.7,
+   "description": "Upgraded to realistic weighted_enum (4 values) based on STATUS semantic / LOOKUP role",
+   "rule_id": "EN-STATUS",
+   "table": "addresses"
+  },
+  {
+   "column": "territory",
+   "confidence": 0.7,
+   "description": "Upgraded to realistic weighted_enum (5 values) based on CATEGORICAL semantic / TRANSACTION role",
+   "rule_id": "EN-CATEGORICAL",
+   "table": "customers"
+  },
+  {
+   "column": "payment_method",
+   "confidence": 0.7,
+   "description": "Upgraded to realistic weighted_enum (5 values) based on CATEGORICAL semantic / TRANSACTION role",
+   "rule_id": "EN-CATEGORICAL",
+   "table": "sales_orders"
+  },
+  {
+   "column": "territory",
+   "confidence": 0.7,
+   "description": "Upgraded to realistic weighted_enum (5 values) based on CATEGORICAL semantic / TRANSACTION role",
+   "rule_id": "EN-CATEGORICAL",
+   "table": "sales_orders"
+  },
+  {
+   "column": "reason",
+   "confidence": 0.7,
+   "description": "Upgraded to realistic weighted_enum (5 values) based on CATEGORICAL semantic / LOG role",
+   "rule_id": "EN-CATEGORICAL",
+   "table": "inventory_log"
+  },
+  {
+   "column": "birth_date",
+   "confidence": 0.75,
+   "description": "Upgraded temporal pattern to 'uniform' based on TEMPORAL_BIRTH semantic",
+   "rule_id": "TP-TEMPORAL_BIRTH",
+   "table": "persons"
+  },
+  {
+   "column": "sell_end_date",
+   "confidence": 0.75,
+   "description": "Upgraded temporal pattern to 'derived' based on TEMPORAL_END semantic",
+   "rule_id": "TP-TEMPORAL_END",
+   "table": "products"
+  },
+  {
+   "column": "order_date",
+   "confidence": 0.75,
+   "description": "Upgraded temporal pattern to 'seasonal' based on TEMPORAL_TRANSACTION semantic",
+   "rule_id": "TP-TEMPORAL_TRANSACTION",
+   "table": "sales_orders"
+  },
+  {
+   "column": "ship_date",
+   "confidence": 0.75,
+   "description": "Upgraded temporal pattern to 'seasonal' based on TEMPORAL_TRANSACTION semantic",
+   "rule_id": "TP-TEMPORAL_TRANSACTION",
+   "table": "sales_orders"
+  },
+  {
+   "column": "review_date",
+   "confidence": 0.75,
+   "description": "Upgraded temporal pattern to 'seasonal' based on TEMPORAL_TRANSACTION semantic",
+   "rule_id": "TP-TEMPORAL_TRANSACTION",
+   "table": "product_reviews"
+  },
+  {
+   "column": "unit_cost",
+   "confidence": 0.8,
+   "description": "Cost (unit_cost) correlated to price (unit_price) via multiply(0.30\u20130.70)",
+   "rule_id": "CR-01",
+   "table": "products"
+  },
+  {
+   "column": "tax_amount",
+   "confidence": 0.8,
+   "description": "Tax (tax_amount) correlated to (subtotal) via multiply(0.05\u20130.15)",
+   "rule_id": "CR-02",
+   "table": "sales_orders"
+  },
+  {
+   "column": "unit_cost",
+   "confidence": 0.8,
+   "description": "Cost (unit_cost) correlated to price (unit_price) via multiply(0.30\u20130.70)",
+   "rule_id": "CR-01",
+   "table": "order_details"
+  },
+  {
+   "column": "line_total",
+   "confidence": 0.8,
+   "description": "Total (line_total) = quantity * unit_price",
+   "rule_id": "CR-04",
+   "table": "order_details"
+  },
+  {
+   "column": "modified_at",
+   "confidence": 0.8,
+   "description": "modified_at >= created_at",
+   "rule_id": "BR-02",
+   "table": "persons"
+  },
+  {
+   "column": "parent_category_id",
+   "confidence": 0.8,
+   "description": "Monetary column parent_category_id >= 0",
+   "rule_id": "BR-05",
+   "table": "product_categories"
+  },
+  {
+   "column": "sell_end_date",
+   "confidence": 0.8,
+   "description": "sell_end_date >= sell_start_date",
+   "rule_id": "BR-01",
+   "table": "products"
+  },
+  {
+   "column": "modified_at",
+   "confidence": 0.8,
+   "description": "modified_at >= created_at",
+   "rule_id": "BR-02",
+   "table": "products"
+  },
+  {
+   "column": "unit_cost",
+   "confidence": 0.8,
+   "description": "unit_cost <= unit_price",
+   "rule_id": "BR-03",
+   "table": "products"
+  },
+  {
+   "column": "unit_price",
+   "confidence": 0.8,
+   "description": "Monetary column unit_price >= 0",
+   "rule_id": "BR-05",
+   "table": "products"
+  },
+  {
+   "column": "unit_cost",
+   "confidence": 0.8,
+   "description": "Monetary column unit_cost >= 0",
+   "rule_id": "BR-05",
+   "table": "products"
+  },
+  {
+   "column": "modified_at",
+   "confidence": 0.8,
+   "description": "modified_at >= created_at",
+   "rule_id": "BR-02",
+   "table": "sales_orders"
+  },
+  {
+   "column": "subtotal",
+   "confidence": 0.8,
+   "description": "Monetary column subtotal >= 0",
+   "rule_id": "BR-05",
+   "table": "sales_orders"
+  },
+  {
+   "column": "tax_amount",
+   "confidence": 0.8,
+   "description": "Monetary column tax_amount >= 0",
+   "rule_id": "BR-05",
+   "table": "sales_orders"
+  },
+  {
+   "column": "freight",
+   "confidence": 0.8,
+   "description": "Monetary column freight >= 0",
+   "rule_id": "BR-05",
+   "table": "sales_orders"
+  },
+  {
+   "column": "total_amount",
+   "confidence": 0.8,
+   "description": "Monetary column total_amount >= 0",
+   "rule_id": "BR-05",
+   "table": "sales_orders"
+  },
+  {
+   "column": "unit_cost",
+   "confidence": 0.8,
+   "description": "unit_cost <= unit_price",
+   "rule_id": "BR-03",
+   "table": "order_details"
+  },
+  {
+   "column": "unit_price",
+   "confidence": 0.8,
+   "description": "Monetary column unit_price >= 0",
+   "rule_id": "BR-05",
+   "table": "order_details"
+  },
+  {
+   "column": "unit_cost",
+   "confidence": 0.8,
+   "description": "Monetary column unit_cost >= 0",
+   "rule_id": "BR-05",
+   "table": "order_details"
+  },
+  {
+   "column": "line_total",
+   "confidence": 0.8,
+   "description": "Monetary column line_total >= 0",
+   "rule_id": "BR-05",
+   "table": "order_details"
+  },
+  {
+   "column": "quantity",
+   "confidence": 0.8,
+   "description": "Quantity column quantity >= 1",
+   "rule_id": "BR-06",
+   "table": "order_details"
+  },
+  {
+   "column": "discount_pct",
+   "confidence": 0.8,
+   "description": "Quantity column discount_pct >= 1",
+   "rule_id": "BR-06",
+   "table": "order_details"
+  },
+  {
+   "column": "rating",
+   "confidence": 0.8,
+   "description": "Rating column rating BETWEEN 1 AND 5",
+   "rule_id": "BR-08",
+   "table": "product_reviews"
+  },
+  {
+   "column": "quantity_change",
+   "confidence": 0.8,
+   "description": "Quantity column quantity_change >= 1",
+   "rule_id": "BR-06",
+   "table": "inventory_log"
+  }
+ ],
+ "explain": [
+  "  [TC-ENTITY] persons: Classified as ENTITY (confidence: 80%)",
+  "  [TC-LOOKUP] addresses: Classified as LOOKUP (confidence: 80%)",
+  "  [TC-BRIDGE] person_addresses: Classified as BRIDGE (confidence: 80%)",
+  "  [TC-HIERARCHY] product_categories: Classified as HIERARCHY (confidence: 80%)",
+  "  [TC-TRANSACTION] products: Classified as TRANSACTION (confidence: 80%)",
+  "  [TC-TRANSACTION] customers: Classified as TRANSACTION (confidence: 80%)",
+  "  [TC-TRANSACTION] sales_orders: Classified as TRANSACTION (confidence: 80%)",
+  "  [TC-TRANSACTION] order_details: Classified as TRANSACTION (confidence: 80%)",
+  "  [TC-TRANSACTION] product_reviews: Classified as TRANSACTION (confidence: 80%)",
+  "  [TC-LOG] inventory_log: Classified as LOG (confidence: 80%)",
+  "  [FK-06] person_addresses.person_id: Bridge table first FK \u2014 zipf(alpha=1.3) (confidence: 80%)",
+  "  [FK-08] person_addresses.address_id: FK to address/location table (addresses) \u2014 zipf(alpha=1.5) (confidence: 80%)",
+  "  [FK-04] products.category_id: Nullable FK \u2014 added null_rate 0.15 (confidence: 90%)",
+  "  [FK-00] products.category_id: Default FK distribution \u2014 pareto(alpha=1.16) (confidence: 80%)",
+  "  [FK-01] customers.person_id: Entity (persons) -> transaction child \u2014 pareto(alpha=1.16) (confidence: 80%)",
+  "  [FK-00] sales_orders.customer_id: Default FK distribution \u2014 pareto(alpha=1.16) (confidence: 80%)",
+  "  [FK-00] order_details.order_id: Default FK distribution \u2014 pareto(alpha=1.16) (confidence: 80%)",
+  "  [FK-00] order_details.product_id: Default FK distribution \u2014 pareto(alpha=1.16) (confidence: 80%)",
+  "  [FK-00] product_reviews.product_id: Default FK distribution \u2014 pareto(alpha=1.16) (confidence: 80%)",
+  "  [FK-00] product_reviews.customer_id: Default FK distribution \u2014 pareto(alpha=1.16) (confidence: 80%)",
+  "  [FK-07] inventory_log.product_id: Log/audit child \u2014 pareto(alpha=1.5) (confidence: 80%)",
+  "  [CA-SCALE] persons: Root table \u2014 scale presets set (1K / 50K / 500K) (confidence: 90%)",
+  "  [CA-06] addresses: Lookup/reference table \u2014 fixed 100 rows (confidence: 85%)",
+  "  [CA-08] person_addresses: Bridge table \u2014 ratio 3.0 per parent (persons) (confidence: 80%)",
+  "  [CA-07] product_categories: Hierarchy table \u2014 fixed 50 rows (confidence: 80%)",
+  "  [CA-09] products: Default child ratio \u2014 3.0 per parent (product_categories) (confidence: 80%)",
+  "  [CA-02] customers: Entity (persons) -> transaction \u2014 ratio 5.0 (confidence: 80%)",
+  "  [CA-09] sales_orders: Default child ratio \u2014 3.0 per parent (customers) (confidence: 80%)",
+  "  [CA-09] order_details: Default child ratio \u2014 3.0 per parent (sales_orders) (confidence: 80%)",
+  "  [CA-09] product_reviews: Default child ratio \u2014 3.0 per parent (products) (confidence: 80%)",
+  "  [CA-05] inventory_log: Parent (products) -> log/event \u2014 ratio 10.0 (confidence: 80%)",
+  "  [ND-MONETARY] products.unit_price: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)",
+  "  [ND-MONETARY] products.unit_cost: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)",
+  "  [ND-MEASUREMENT] products.weight_kg: Upgraded to normal distribution based on MEASUREMENT semantic (confidence: 75%)",
+  "  [ND-MONETARY] sales_orders.subtotal: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)",
+  "  [ND-MONETARY] sales_orders.tax_amount: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)",
+  "  [ND-MONETARY] sales_orders.freight: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)",
+  "  [ND-MONETARY] sales_orders.total_amount: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)",
+  "  [ND-QUANTITY] order_details.quantity: Upgraded to log_normal distribution based on QUANTITY semantic (confidence: 75%)",
+  "  [ND-MONETARY] order_details.unit_price: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)",
+  "  [ND-MONETARY] order_details.unit_cost: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)",
+  "  [ND-QUANTITY] order_details.discount_pct: Upgraded to log_normal distribution based on QUANTITY semantic (confidence: 75%)",
+  "  [ND-MONETARY] order_details.line_total: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)",
+  "  [ND-RATING] product_reviews.rating: Upgraded to normal distribution based on RATING semantic (confidence: 75%)",
+  "  [ND-QUANTITY] inventory_log.quantity_change: Upgraded to log_normal distribution based on QUANTITY semantic (confidence: 75%)",
+  "  [EN-STATUS] addresses.state: Upgraded to realistic weighted_enum (4 values) based on STATUS semantic / LOOKUP role (confidence: 70%)",
+  "  [EN-CATEGORICAL] customers.territory: Upgraded to realistic weighted_enum (5 values) based on CATEGORICAL semantic / TRANSACTION role (confidence: 70%)",
+  "  [EN-CATEGORICAL] sales_orders.payment_method: Upgraded to realistic weighted_enum (5 values) based on CATEGORICAL semantic / TRANSACTION role (confidence: 70%)",
+  "  [EN-CATEGORICAL] sales_orders.territory: Upgraded to realistic weighted_enum (5 values) based on CATEGORICAL semantic / TRANSACTION role (confidence: 70%)",
+  "  [EN-CATEGORICAL] inventory_log.reason: Upgraded to realistic weighted_enum (5 values) based on CATEGORICAL semantic / LOG role (confidence: 70%)",
+  "  [TP-TEMPORAL_BIRTH] persons.birth_date: Upgraded temporal pattern to 'uniform' based on TEMPORAL_BIRTH semantic (confidence: 75%)",
+  "  [TP-TEMPORAL_END] products.sell_end_date: Upgraded temporal pattern to 'derived' based on TEMPORAL_END semantic (confidence: 75%)",
+  "  [TP-TEMPORAL_TRANSACTION] sales_orders.order_date: Upgraded temporal pattern to 'seasonal' based on TEMPORAL_TRANSACTION semantic (confidence: 75%)",
+  "  [TP-TEMPORAL_TRANSACTION] sales_orders.ship_date: Upgraded temporal pattern to 'seasonal' based on TEMPORAL_TRANSACTION semantic (confidence: 75%)",
+  "  [TP-TEMPORAL_TRANSACTION] product_reviews.review_date: Upgraded temporal pattern to 'seasonal' based on TEMPORAL_TRANSACTION semantic (confidence: 75%)",
+  "  [CR-01] products.unit_cost: Cost (unit_cost) correlated to price (unit_price) via multiply(0.30\u20130.70) (confidence: 80%)",
+  "  [CR-02] sales_orders.tax_amount: Tax (tax_amount) correlated to (subtotal) via multiply(0.05\u20130.15) (confidence: 80%)",
+  "  [CR-01] order_details.unit_cost: Cost (unit_cost) correlated to price (unit_price) via multiply(0.30\u20130.70) (confidence: 80%)",
+  "  [CR-04] order_details.line_total: Total (line_total) = quantity * unit_price (confidence: 80%)",
+  "  [BR-02] persons.modified_at: modified_at >= created_at (confidence: 80%)",
+  "  [BR-05] product_categories.parent_category_id: Monetary column parent_category_id >= 0 (confidence: 80%)",
+  "  [BR-01] products.sell_end_date: sell_end_date >= sell_start_date (confidence: 80%)",
+  "  [BR-02] products.modified_at: modified_at >= created_at (confidence: 80%)",
+  "  [BR-03] products.unit_cost: unit_cost <= unit_price (confidence: 80%)",
+  "  [BR-05] products.unit_price: Monetary column unit_price >= 0 (confidence: 80%)",
+  "  [BR-05] products.unit_cost: Monetary column unit_cost >= 0 (confidence: 80%)",
+  "  [BR-02] sales_orders.modified_at: modified_at >= created_at (confidence: 80%)",
+  "  [BR-05] sales_orders.subtotal: Monetary column subtotal >= 0 (confidence: 80%)",
+  "  [BR-05] sales_orders.tax_amount: Monetary column tax_amount >= 0 (confidence: 80%)",
+  "  [BR-05] sales_orders.freight: Monetary column freight >= 0 (confidence: 80%)",
+  "  [BR-05] sales_orders.total_amount: Monetary column total_amount >= 0 (confidence: 80%)",
+  "  [BR-03] order_details.unit_cost: unit_cost <= unit_price (confidence: 80%)",
+  "  [BR-05] order_details.unit_price: Monetary column unit_price >= 0 (confidence: 80%)",
+  "  [BR-05] order_details.unit_cost: Monetary column unit_cost >= 0 (confidence: 80%)",
+  "  [BR-05] order_details.line_total: Monetary column line_total >= 0 (confidence: 80%)",
+  "  [BR-06] order_details.quantity: Quantity column quantity >= 1 (confidence: 80%)",
+  "  [BR-06] order_details.discount_pct: Quantity column discount_pct >= 1 (confidence: 80%)",
+  "  [BR-08] product_reviews.rating: Rating column rating BETWEEN 1 AND 5 (confidence: 80%)",
+  "  [BR-06] inventory_log.quantity_change: Quantity column quantity_change >= 1 (confidence: 80%)"
+ ],
+ "file": {
+  "business_rules": [],
+  "generation": {
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "addresses": 100000,
+     "customers": 250000,
+     "inventory_log": 250000,
+     "order_details": 250000,
+     "person_addresses": 250000,
+     "persons": 500000,
+     "product_categories": 100000,
+     "product_reviews": 250000,
+     "products": 250000,
+     "sales_orders": 250000
+    },
+    "medium": {
+     "addresses": 10000,
+     "customer": 7,
+     "customers": 25000,
+     "inventory_log": 25000,
+     "order": 21,
+     "order_details": 25000,
+     "orders": 21,
+     "person_addresses": 25000,
+     "persons": 50000,
+     "product_categories": 10000,
+     "product_reviews": 25000,
+     "products": 25000,
+     "sales_orders": 25000
+    },
+    "small": {
+     "addresses": 1000,
+     "customers": 2500,
+     "inventory_log": 2500,
+     "order_details": 2500,
+     "person_addresses": 2500,
+     "persons": 1000,
+     "product_categories": 1000,
+     "product_reviews": 2500,
+     "products": 2500,
+     "sales_orders": 2500
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "child": "person_addresses",
+    "child_columns": [
+     "person_id"
+    ],
+    "name": "fk_person_addresses_person_id",
+    "parent": "persons",
+    "parent_columns": [
+     "person_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "person_addresses",
+    "child_columns": [
+     "address_id"
+    ],
+    "name": "fk_person_addresses_address_id",
+    "parent": "addresses",
+    "parent_columns": [
+     "address_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "product_categories",
+    "child_columns": [
+     "parent_category_id"
+    ],
+    "name": "fk_product_categories_parent_category_id",
+    "parent": "product_categories",
+    "parent_columns": [
+     "category_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "products",
+    "child_columns": [
+     "category_id"
+    ],
+    "name": "fk_products_category_id",
+    "parent": "product_categories",
+    "parent_columns": [
+     "category_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "customers",
+    "child_columns": [
+     "person_id"
+    ],
+    "name": "fk_customers_person_id",
+    "parent": "persons",
+    "parent_columns": [
+     "person_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "sales_orders",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_sales_orders_customer_id",
+    "parent": "customers",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "order_details",
+    "child_columns": [
+     "order_id"
+    ],
+    "name": "fk_order_details_order_id",
+    "parent": "sales_orders",
+    "parent_columns": [
+     "order_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "order_details",
+    "child_columns": [
+     "product_id"
+    ],
+    "name": "fk_order_details_product_id",
+    "parent": "products",
+    "parent_columns": [
+     "product_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "product_reviews",
+    "child_columns": [
+     "product_id"
+    ],
+    "name": "fk_product_reviews_product_id",
+    "parent": "products",
+    "parent_columns": [
+     "product_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "product_reviews",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_product_reviews_customer_id",
+    "parent": "customers",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "inventory_log",
+    "child_columns": [
+     "product_id"
+    ],
+    "name": "fk_inventory_log_product_id",
+    "parent": "products",
+    "parent_columns": [
+     "product_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "addresses": {
+    "columns": {
+     "address_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "address_line1": {
+      "generator": {
+       "max_nb_chars": 100,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "type": "string"
+     },
+     "city": {
+      "generator": {
+       "provider": "city",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "type": "string"
+     },
+     "country": {
+      "generator": {
+       "provider": "country",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "type": "string"
+     },
+     "postal_code": {
+      "generator": {
+       "provider": "zipcode",
+       "strategy": "faker"
+      },
+      "max_length": 15,
+      "type": "string"
+     },
+     "state": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.82,
+        "closed": 0.03,
+        "inactive": 0.1,
+        "suspended": 0.05
+       }
+      },
+      "max_length": 50,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "address_id"
+    ]
+   },
+   "customers": {
+    "columns": {
+     "account_number": {
+      "generator": {
+       "max_nb_chars": 20,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 20,
+      "type": "string"
+     },
+     "created_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "type": "timestamp"
+     },
+     "customer_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "person_id": {
+      "generator": {
+       "distribution": "pareto",
+       "params": {
+        "alpha": 1.16,
+        "max_per_parent": 50
+       },
+       "ref": "persons.person_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 20,
+      "type": "string"
+     },
+     "territory": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "type_1": 0.35,
+        "type_2": 0.25,
+        "type_3": 0.2,
+        "type_4": 0.12,
+        "type_5": 0.08
+       }
+      },
+      "max_length": 50,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "customer_id"
+    ]
+   },
+   "inventory_log": {
+    "columns": {
+     "created_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "type": "timestamp"
+     },
+     "log_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "product_id": {
+      "generator": {
+       "distribution": "pareto",
+       "params": {
+        "alpha": 1.5
+       },
+       "ref": "products.product_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "quantity_change": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 1000,
+        "mean": 1.5,
+        "min": 1,
+        "sigma": 0.8
+       },
+       "strategy": "distribution"
+      },
+      "type": "integer"
+     },
+     "reason": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "type_1": 0.35,
+        "type_2": 0.25,
+        "type_3": 0.2,
+        "type_4": 0.12,
+        "type_5": 0.08
+       }
+      },
+      "max_length": 50,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "log_id"
+    ]
+   },
+   "order_details": {
+    "columns": {
+     "detail_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "discount_pct": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 1000,
+        "mean": 1.5,
+        "min": 1,
+        "sigma": 0.8
+       },
+       "strategy": "distribution"
+      },
+      "precision": 5,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "line_total": {
+      "generator": {
+       "expression": "quantity * unit_price",
+       "strategy": "formula"
+      },
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "order_id": {
+      "generator": {
+       "distribution": "pareto",
+       "params": {
+        "alpha": 1.16
+       },
+       "ref": "sales_orders.order_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "product_id": {
+      "generator": {
+       "distribution": "pareto",
+       "params": {
+        "alpha": 1.16
+       },
+       "ref": "products.product_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "quantity": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 1000,
+        "mean": 1.5,
+        "min": 1,
+        "sigma": 0.8
+       },
+       "strategy": "distribution"
+      },
+      "type": "integer"
+     },
+     "unit_cost": {
+      "generator": {
+       "params": {
+        "factor_max": 0.7,
+        "factor_min": 0.3
+       },
+       "rule": "multiply",
+       "source_column": "unit_price",
+       "strategy": "correlated"
+      },
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "unit_price": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "primary_key": [
+     "detail_id"
+    ]
+   },
+   "person_addresses": {
+    "columns": {
+     "address_id": {
+      "generator": {
+       "distribution": "zipf",
+       "params": {
+        "alpha": 1.5
+       },
+       "ref": "addresses.address_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "address_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "type_a": 0.5,
+        "type_b": 0.3,
+        "type_c": 0.2
+       }
+      },
+      "max_length": 20,
+      "type": "string"
+     },
+     "person_id": {
+      "generator": {
+       "distribution": "zipf",
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "persons.person_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "person_id",
+     "address_id"
+    ]
+   },
+   "persons": {
+    "columns": {
+     "birth_date": {
+      "generator": {
+       "date_range": {
+        "end": "2007-12-31",
+        "start": "1960-01-01"
+       },
+       "pattern": "uniform",
+       "strategy": "temporal"
+      },
+      "nullable": true,
+      "type": "date"
+     },
+     "created_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "type": "timestamp"
+     },
+     "email": {
+      "generator": {
+       "provider": "email",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "nullable": true,
+      "type": "string"
+     },
+     "first_name": {
+      "generator": {
+       "provider": "first_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "type": "string"
+     },
+     "gender": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 1,
+      "nullable": true,
+      "type": "string"
+     },
+     "last_name": {
+      "generator": {
+       "provider": "last_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "type": "string"
+     },
+     "modified_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "type": "timestamp"
+     },
+     "person_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "phone": {
+      "generator": {
+       "provider": "phone_number",
+       "strategy": "faker"
+      },
+      "max_length": 25,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "person_id"
+    ]
+   },
+   "product_categories": {
+    "columns": {
+     "category_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "name": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "type": "string"
+     },
+     "parent_category_id": {
+      "generator": {
+       "levels": 3,
+       "pk_column": "category_id",
+       "root_count": 8,
+       "strategy": "self_referencing"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "category_id"
+    ]
+   },
+   "product_reviews": {
+    "columns": {
+     "comment": {
+      "generator": {
+       "provider": "sentence",
+       "strategy": "faker"
+      },
+      "max_length": 1000,
+      "nullable": true,
+      "type": "string"
+     },
+     "created_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "type": "timestamp"
+     },
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "params": {
+        "alpha": 1.16
+       },
+       "ref": "customers.customer_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "product_id": {
+      "generator": {
+       "distribution": "pareto",
+       "params": {
+        "alpha": 1.16
+       },
+       "ref": "products.product_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "rating": {
+      "generator": {
+       "distribution": "normal",
+       "params": {
+        "max": 5,
+        "mean": 3.5,
+        "min": 1,
+        "std": 1.0
+       },
+       "strategy": "distribution"
+      },
+      "type": "integer"
+     },
+     "review_date": {
+      "generator": {
+       "pattern": "seasonal",
+       "profiles": {
+        "day_of_week": {
+         "Fri": 0.16,
+         "Mon": 0.165,
+         "Sat": 0.105,
+         "Sun": 0.1,
+         "Thu": 0.155,
+         "Tue": 0.16,
+         "Wed": 0.155
+        },
+        "month": {
+         "Apr": 0.082,
+         "Aug": 0.085,
+         "Dec": 0.106,
+         "Feb": 0.068,
+         "Jan": 0.071,
+         "Jul": 0.084,
+         "Jun": 0.083,
+         "Mar": 0.083,
+         "May": 0.085,
+         "Nov": 0.088,
+         "Oct": 0.084,
+         "Sep": 0.082
+        }
+       },
+       "strategy": "temporal"
+      },
+      "type": "date"
+     },
+     "review_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 20,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "review_id"
+    ]
+   },
+   "products": {
+    "columns": {
+     "category_id": {
+      "generator": {
+       "distribution": "pareto",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.16
+       },
+       "ref": "product_categories.category_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "color": {
+      "generator": {
+       "max_nb_chars": 15,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 15,
+      "nullable": true,
+      "type": "string"
+     },
+     "created_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "type": "timestamp"
+     },
+     "is_active": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "0": 0.15,
+        "1": 0.85
+       }
+      },
+      "type": "boolean"
+     },
+     "modified_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "type": "timestamp"
+     },
+     "name": {
+      "generator": {
+       "max_nb_chars": 100,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "type": "string"
+     },
+     "product_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "product_number": {
+      "generator": {
+       "max_nb_chars": 25,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 25,
+      "type": "string"
+     },
+     "sell_end_date": {
+      "generator": {
+       "params": {
+        "max": 365,
+        "min": 1
+       },
+       "rule": "add_days",
+       "source": "sell_start_date",
+       "strategy": "derived"
+      },
+      "nullable": true,
+      "type": "date"
+     },
+     "sell_start_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "type": "date"
+     },
+     "unit_cost": {
+      "generator": {
+       "params": {
+        "factor_max": 0.7,
+        "factor_min": 0.3
+       },
+       "rule": "multiply",
+       "source_column": "unit_price",
+       "strategy": "correlated"
+      },
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "unit_price": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "weight_kg": {
+      "generator": {
+       "distribution": "normal",
+       "params": {
+        "mean": 5.0,
+        "std": 3.0
+       },
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 8,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "primary_key": [
+     "product_id"
+    ]
+   },
+   "sales_orders": {
+    "columns": {
+     "created_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "type": "timestamp"
+     },
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "params": {
+        "alpha": 1.16
+       },
+       "ref": "customers.customer_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "due_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "nullable": true,
+      "type": "date"
+     },
+     "freight": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "modified_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "type": "timestamp"
+     },
+     "order_date": {
+      "generator": {
+       "pattern": "seasonal",
+       "profiles": {
+        "day_of_week": {
+         "Fri": 0.16,
+         "Mon": 0.165,
+         "Sat": 0.105,
+         "Sun": 0.1,
+         "Thu": 0.155,
+         "Tue": 0.16,
+         "Wed": 0.155
+        },
+        "month": {
+         "Apr": 0.082,
+         "Aug": 0.085,
+         "Dec": 0.106,
+         "Feb": 0.068,
+         "Jan": 0.071,
+         "Jul": 0.084,
+         "Jun": 0.083,
+         "Mar": 0.083,
+         "May": 0.085,
+         "Nov": 0.088,
+         "Oct": 0.084,
+         "Sep": 0.082
+        }
+       },
+       "strategy": "temporal"
+      },
+      "type": "date"
+     },
+     "order_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "payment_method": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "bank_transfer": 0.1,
+        "cash": 0.15,
+        "credit_card": 0.45,
+        "debit_card": 0.25,
+        "other": 0.05
+       }
+      },
+      "max_length": 30,
+      "nullable": true,
+      "type": "string"
+     },
+     "ship_date": {
+      "generator": {
+       "pattern": "seasonal",
+       "profiles": {
+        "day_of_week": {
+         "Fri": 0.16,
+         "Mon": 0.165,
+         "Sat": 0.105,
+         "Sun": 0.1,
+         "Thu": 0.155,
+         "Tue": 0.16,
+         "Wed": 0.155
+        },
+        "month": {
+         "Apr": 0.082,
+         "Aug": 0.085,
+         "Dec": 0.106,
+         "Feb": 0.068,
+         "Jan": 0.071,
+         "Jul": 0.084,
+         "Jun": 0.083,
+         "Mar": 0.083,
+         "May": 0.085,
+         "Nov": 0.088,
+         "Oct": 0.084,
+         "Sep": 0.082
+        }
+       },
+       "strategy": "temporal"
+      },
+      "nullable": true,
+      "type": "date"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 20,
+      "type": "string"
+     },
+     "subtotal": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "tax_amount": {
+      "generator": {
+       "params": {
+        "factor_max": 0.15,
+        "factor_min": 0.05
+       },
+       "rule": "multiply",
+       "source_column": "subtotal",
+       "strategy": "correlated"
+      },
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "territory": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "type_1": 0.35,
+        "type_2": 0.25,
+        "type_3": 0.2,
+        "type_4": 0.12,
+        "type_5": 0.08
+       }
+      },
+      "max_length": 50,
+      "nullable": true,
+      "type": "string"
+     },
+     "total_amount": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "primary_key": [
+     "order_id"
+    ]
+   }
+  }
+ },
+ "schema": {
+  "business_rules": [
+   {
+    "name": "persons_audit_date_order",
+    "rule": "modified_at >= created_at",
+    "table": "persons",
+    "type": "cross_column",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "product_categories_parent_category_id_positive",
+    "rule": "parent_category_id >= 0",
+    "table": "product_categories",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "products_date_order",
+    "rule": "sell_end_date >= sell_start_date",
+    "table": "products",
+    "type": "cross_column",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "products_audit_date_order",
+    "rule": "modified_at >= created_at",
+    "table": "products",
+    "type": "cross_column",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "products_cost_lt_price",
+    "rule": "unit_cost <= unit_price",
+    "table": "products",
+    "type": "cross_column",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "products_unit_price_positive",
+    "rule": "unit_price >= 0",
+    "table": "products",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "products_unit_cost_positive",
+    "rule": "unit_cost >= 0",
+    "table": "products",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "sales_orders_audit_date_order",
+    "rule": "modified_at >= created_at",
+    "table": "sales_orders",
+    "type": "cross_column",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "sales_orders_subtotal_positive",
+    "rule": "subtotal >= 0",
+    "table": "sales_orders",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "sales_orders_tax_amount_positive",
+    "rule": "tax_amount >= 0",
+    "table": "sales_orders",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "sales_orders_freight_positive",
+    "rule": "freight >= 0",
+    "table": "sales_orders",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "sales_orders_total_amount_positive",
+    "rule": "total_amount >= 0",
+    "table": "sales_orders",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "order_details_cost_lt_price",
+    "rule": "unit_cost <= unit_price",
+    "table": "order_details",
+    "type": "cross_column",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "order_details_unit_price_positive",
+    "rule": "unit_price >= 0",
+    "table": "order_details",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "order_details_unit_cost_positive",
+    "rule": "unit_cost >= 0",
+    "table": "order_details",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "order_details_line_total_positive",
+    "rule": "line_total >= 0",
+    "table": "order_details",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "order_details_quantity_positive",
+    "rule": "quantity >= 1",
+    "table": "order_details",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "order_details_discount_pct_positive",
+    "rule": "discount_pct >= 1",
+    "table": "order_details",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "product_reviews_rating_range",
+    "rule": "rating BETWEEN 1 AND 5",
+    "table": "product_reviews",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "inventory_log_quantity_change_positive",
+    "rule": "quantity_change >= 1",
+    "table": "inventory_log",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   }
+  ],
+  "correlated_columns": {},
+  "generation": {
+   "derived_counts": {
+    "addresses": {
+     "fixed": 100
+    },
+    "customers": {
+     "per_parent": "persons",
+     "ratio": 5.0
+    },
+    "inventory_log": {
+     "per_parent": "products",
+     "ratio": 10.0
+    },
+    "order_details": {
+     "per_parent": "sales_orders",
+     "ratio": 3.0
+    },
+    "person_addresses": {
+     "per_parent": "persons",
+     "ratio": 3.0
+    },
+    "product_categories": {
+     "fixed": 50
+    },
+    "product_reviews": {
+     "per_parent": "products",
+     "ratio": 3.0
+    },
+    "products": {
+     "per_parent": "product_categories",
+     "ratio": 3.0
+    },
+    "sales_orders": {
+     "per_parent": "customers",
+     "ratio": 3.0
+    }
+   },
+   "output": {},
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "addresses": 100000,
+     "customers": 250000,
+     "inventory_log": 250000,
+     "order_details": 250000,
+     "person_addresses": 250000,
+     "persons": 500000,
+     "product_categories": 100000,
+     "product_reviews": 250000,
+     "products": 250000,
+     "sales_orders": 250000
+    },
+    "medium": {
+     "addresses": 10000,
+     "customer": 7,
+     "customers": 25000,
+     "inventory_log": 25000,
+     "order": 21,
+     "order_details": 25000,
+     "orders": 21,
+     "person_addresses": 25000,
+     "persons": 50000,
+     "product_categories": 10000,
+     "product_reviews": 25000,
+     "products": 25000,
+     "sales_orders": 25000
+    },
+    "small": {
+     "addresses": 1000,
+     "customers": 2500,
+     "inventory_log": 2500,
+     "order_details": 2500,
+     "person_addresses": 2500,
+     "persons": 1000,
+     "product_categories": 1000,
+     "product_reviews": 2500,
+     "products": 2500,
+     "sales_orders": 2500
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "cardinality": {},
+    "child": "person_addresses",
+    "child_columns": [
+     "person_id"
+    ],
+    "name": "fk_person_addresses_person_id",
+    "optional": false,
+    "parent": "persons",
+    "parent_columns": [
+     "person_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "person_addresses",
+    "child_columns": [
+     "address_id"
+    ],
+    "name": "fk_person_addresses_address_id",
+    "optional": false,
+    "parent": "addresses",
+    "parent_columns": [
+     "address_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "product_categories",
+    "child_columns": [
+     "parent_category_id"
+    ],
+    "name": "fk_product_categories_parent_category_id",
+    "optional": false,
+    "parent": "product_categories",
+    "parent_columns": [
+     "category_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "products",
+    "child_columns": [
+     "category_id"
+    ],
+    "name": "fk_products_category_id",
+    "optional": false,
+    "parent": "product_categories",
+    "parent_columns": [
+     "category_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "customers",
+    "child_columns": [
+     "person_id"
+    ],
+    "name": "fk_customers_person_id",
+    "optional": false,
+    "parent": "persons",
+    "parent_columns": [
+     "person_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "sales_orders",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_sales_orders_customer_id",
+    "optional": false,
+    "parent": "customers",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "order_details",
+    "child_columns": [
+     "order_id"
+    ],
+    "name": "fk_order_details_order_id",
+    "optional": false,
+    "parent": "sales_orders",
+    "parent_columns": [
+     "order_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "order_details",
+    "child_columns": [
+     "product_id"
+    ],
+    "name": "fk_order_details_product_id",
+    "optional": false,
+    "parent": "products",
+    "parent_columns": [
+     "product_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "product_reviews",
+    "child_columns": [
+     "product_id"
+    ],
+    "name": "fk_product_reviews_product_id",
+    "optional": false,
+    "parent": "products",
+    "parent_columns": [
+     "product_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "product_reviews",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_product_reviews_customer_id",
+    "optional": false,
+    "parent": "customers",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "inventory_log",
+    "child_columns": [
+     "product_id"
+    ],
+    "name": "fk_inventory_log_product_id",
+    "optional": false,
+    "parent": "products",
+    "parent_columns": [
+     "product_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "addresses": {
+    "cdm_mapping": null,
+    "columns": {
+     "address_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "address_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "address_line1": {
+      "generator": {
+       "max_nb_chars": 100,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "name": "address_line1",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "city": {
+      "generator": {
+       "provider": "city",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "city",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "country": {
+      "generator": {
+       "provider": "country",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "country",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "postal_code": {
+      "generator": {
+       "provider": "zipcode",
+       "strategy": "faker"
+      },
+      "max_length": 15,
+      "name": "postal_code",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "state": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.82,
+        "closed": 0.03,
+        "inactive": 0.1,
+        "suspended": 0.05
+       }
+      },
+      "max_length": 50,
+      "name": "state",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "addresses",
+    "primary_key": [
+     "address_id"
+    ]
+   },
+   "customers": {
+    "cdm_mapping": null,
+    "columns": {
+     "account_number": {
+      "generator": {
+       "max_nb_chars": 20,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 20,
+      "name": "account_number",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "created_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "created_at",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "customer_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "person_id": {
+      "generator": {
+       "distribution": "pareto",
+       "params": {
+        "alpha": 1.16,
+        "max_per_parent": 50
+       },
+       "ref": "persons.person_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "person_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 20,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "territory": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "type_1": 0.35,
+        "type_2": 0.25,
+        "type_3": 0.2,
+        "type_4": 0.12,
+        "type_5": 0.08
+       }
+      },
+      "max_length": 50,
+      "name": "territory",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "customers",
+    "primary_key": [
+     "customer_id"
+    ]
+   },
+   "inventory_log": {
+    "cdm_mapping": null,
+    "columns": {
+     "created_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "created_at",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "log_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "log_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "product_id": {
+      "generator": {
+       "distribution": "pareto",
+       "params": {
+        "alpha": 1.5
+       },
+       "ref": "products.product_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "product_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "quantity_change": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 1000,
+        "mean": 1.5,
+        "min": 1,
+        "sigma": 0.8
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "quantity_change",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "reason": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "type_1": 0.35,
+        "type_2": 0.25,
+        "type_3": 0.2,
+        "type_4": 0.12,
+        "type_5": 0.08
+       }
+      },
+      "max_length": 50,
+      "name": "reason",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "inventory_log",
+    "primary_key": [
+     "log_id"
+    ]
+   },
+   "order_details": {
+    "cdm_mapping": null,
+    "columns": {
+     "detail_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "detail_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "discount_pct": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 1000,
+        "mean": 1.5,
+        "min": 1,
+        "sigma": 0.8
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "discount_pct",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 5,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "line_total": {
+      "generator": {
+       "expression": "quantity * unit_price",
+       "strategy": "formula"
+      },
+      "max_length": null,
+      "name": "line_total",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "order_id": {
+      "generator": {
+       "distribution": "pareto",
+       "params": {
+        "alpha": 1.16
+       },
+       "ref": "sales_orders.order_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "order_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "product_id": {
+      "generator": {
+       "distribution": "pareto",
+       "params": {
+        "alpha": 1.16
+       },
+       "ref": "products.product_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "product_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "quantity": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 1000,
+        "mean": 1.5,
+        "min": 1,
+        "sigma": 0.8
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "quantity",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "unit_cost": {
+      "generator": {
+       "params": {
+        "factor_max": 0.7,
+        "factor_min": 0.3
+       },
+       "rule": "multiply",
+       "source_column": "unit_price",
+       "strategy": "correlated"
+      },
+      "max_length": null,
+      "name": "unit_cost",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "unit_price": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "unit_price",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "description": "",
+    "name": "order_details",
+    "primary_key": [
+     "detail_id"
+    ]
+   },
+   "person_addresses": {
+    "cdm_mapping": null,
+    "columns": {
+     "address_id": {
+      "generator": {
+       "distribution": "zipf",
+       "params": {
+        "alpha": 1.5
+       },
+       "ref": "addresses.address_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "address_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "address_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "type_a": 0.5,
+        "type_b": 0.3,
+        "type_c": 0.2
+       }
+      },
+      "max_length": 20,
+      "name": "address_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "person_id": {
+      "generator": {
+       "distribution": "zipf",
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "persons.person_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "person_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "person_addresses",
+    "primary_key": [
+     "person_id",
+     "address_id"
+    ]
+   },
+   "persons": {
+    "cdm_mapping": null,
+    "columns": {
+     "birth_date": {
+      "generator": {
+       "date_range": {
+        "end": "2007-12-31",
+        "start": "1960-01-01"
+       },
+       "pattern": "uniform",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "birth_date",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "created_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "created_at",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "email": {
+      "generator": {
+       "provider": "email",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "name": "email",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "first_name": {
+      "generator": {
+       "provider": "first_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "first_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "gender": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 1,
+      "name": "gender",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "last_name": {
+      "generator": {
+       "provider": "last_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "last_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "modified_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "modified_at",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "person_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "person_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "phone": {
+      "generator": {
+       "provider": "phone_number",
+       "strategy": "faker"
+      },
+      "max_length": 25,
+      "name": "phone",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "persons",
+    "primary_key": [
+     "person_id"
+    ]
+   },
+   "product_categories": {
+    "cdm_mapping": null,
+    "columns": {
+     "category_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "category_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "name": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "parent_category_id": {
+      "generator": {
+       "levels": 3,
+       "pk_column": "category_id",
+       "root_count": 8,
+       "strategy": "self_referencing"
+      },
+      "max_length": null,
+      "name": "parent_category_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "product_categories",
+    "primary_key": [
+     "category_id"
+    ]
+   },
+   "product_reviews": {
+    "cdm_mapping": null,
+    "columns": {
+     "comment": {
+      "generator": {
+       "provider": "sentence",
+       "strategy": "faker"
+      },
+      "max_length": 1000,
+      "name": "comment",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "created_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "created_at",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "params": {
+        "alpha": 1.16
+       },
+       "ref": "customers.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "product_id": {
+      "generator": {
+       "distribution": "pareto",
+       "params": {
+        "alpha": 1.16
+       },
+       "ref": "products.product_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "product_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "rating": {
+      "generator": {
+       "distribution": "normal",
+       "params": {
+        "max": 5,
+        "mean": 3.5,
+        "min": 1,
+        "std": 1.0
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "rating",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "review_date": {
+      "generator": {
+       "pattern": "seasonal",
+       "profiles": {
+        "day_of_week": {
+         "Fri": 0.16,
+         "Mon": 0.165,
+         "Sat": 0.105,
+         "Sun": 0.1,
+         "Thu": 0.155,
+         "Tue": 0.16,
+         "Wed": 0.155
+        },
+        "month": {
+         "Apr": 0.082,
+         "Aug": 0.085,
+         "Dec": 0.106,
+         "Feb": 0.068,
+         "Jan": 0.071,
+         "Jul": 0.084,
+         "Jun": 0.083,
+         "Mar": 0.083,
+         "May": 0.085,
+         "Nov": 0.088,
+         "Oct": 0.084,
+         "Sep": 0.082
+        }
+       },
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "review_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "review_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "review_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 20,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "product_reviews",
+    "primary_key": [
+     "review_id"
+    ]
+   },
+   "products": {
+    "cdm_mapping": null,
+    "columns": {
+     "category_id": {
+      "generator": {
+       "distribution": "pareto",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.16
+       },
+       "ref": "product_categories.category_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "category_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "color": {
+      "generator": {
+       "max_nb_chars": 15,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 15,
+      "name": "color",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "created_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "created_at",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "is_active": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "0": 0.15,
+        "1": 0.85
+       }
+      },
+      "max_length": null,
+      "name": "is_active",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "modified_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "modified_at",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "name": {
+      "generator": {
+       "max_nb_chars": 100,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "name": "name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "product_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "product_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "product_number": {
+      "generator": {
+       "max_nb_chars": 25,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 25,
+      "name": "product_number",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "sell_end_date": {
+      "generator": {
+       "params": {
+        "max": 365,
+        "min": 1
+       },
+       "rule": "add_days",
+       "source": "sell_start_date",
+       "strategy": "derived"
+      },
+      "max_length": null,
+      "name": "sell_end_date",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "sell_start_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "sell_start_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "unit_cost": {
+      "generator": {
+       "params": {
+        "factor_max": 0.7,
+        "factor_min": 0.3
+       },
+       "rule": "multiply",
+       "source_column": "unit_price",
+       "strategy": "correlated"
+      },
+      "max_length": null,
+      "name": "unit_cost",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "unit_price": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "unit_price",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "weight_kg": {
+      "generator": {
+       "distribution": "normal",
+       "params": {
+        "mean": 5.0,
+        "std": 3.0
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "weight_kg",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 8,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "description": "",
+    "name": "products",
+    "primary_key": [
+     "product_id"
+    ]
+   },
+   "sales_orders": {
+    "cdm_mapping": null,
+    "columns": {
+     "created_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "created_at",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "params": {
+        "alpha": 1.16
+       },
+       "ref": "customers.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "due_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "due_date",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "freight": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "freight",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "modified_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "modified_at",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "order_date": {
+      "generator": {
+       "pattern": "seasonal",
+       "profiles": {
+        "day_of_week": {
+         "Fri": 0.16,
+         "Mon": 0.165,
+         "Sat": 0.105,
+         "Sun": 0.1,
+         "Thu": 0.155,
+         "Tue": 0.16,
+         "Wed": 0.155
+        },
+        "month": {
+         "Apr": 0.082,
+         "Aug": 0.085,
+         "Dec": 0.106,
+         "Feb": 0.068,
+         "Jan": 0.071,
+         "Jul": 0.084,
+         "Jun": 0.083,
+         "Mar": 0.083,
+         "May": 0.085,
+         "Nov": 0.088,
+         "Oct": 0.084,
+         "Sep": 0.082
+        }
+       },
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "order_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "order_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "order_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "payment_method": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "bank_transfer": 0.1,
+        "cash": 0.15,
+        "credit_card": 0.45,
+        "debit_card": 0.25,
+        "other": 0.05
+       }
+      },
+      "max_length": 30,
+      "name": "payment_method",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "ship_date": {
+      "generator": {
+       "pattern": "seasonal",
+       "profiles": {
+        "day_of_week": {
+         "Fri": 0.16,
+         "Mon": 0.165,
+         "Sat": 0.105,
+         "Sun": 0.1,
+         "Thu": 0.155,
+         "Tue": 0.16,
+         "Wed": 0.155
+        },
+        "month": {
+         "Apr": 0.082,
+         "Aug": 0.085,
+         "Dec": 0.106,
+         "Feb": 0.068,
+         "Jan": 0.071,
+         "Jul": 0.084,
+         "Jun": 0.083,
+         "Mar": 0.083,
+         "May": 0.085,
+         "Nov": 0.088,
+         "Oct": 0.084,
+         "Sep": 0.082
+        }
+       },
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "ship_date",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 20,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "subtotal": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "subtotal",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "tax_amount": {
+      "generator": {
+       "params": {
+        "factor_max": 0.15,
+        "factor_min": 0.05
+       },
+       "rule": "multiply",
+       "source_column": "subtotal",
+       "strategy": "correlated"
+      },
+      "max_length": null,
+      "name": "tax_amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "territory": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "type_1": 0.35,
+        "type_2": 0.25,
+        "type_3": 0.2,
+        "type_4": 0.12,
+        "type_5": 0.08
+       }
+      },
+      "max_length": 50,
+      "name": "territory",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "total_amount": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "total_amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "description": "",
+    "name": "sales_orders",
+    "primary_key": [
+     "order_id"
+    ]
+   }
+  }
+ }
+}

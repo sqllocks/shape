@@ -16,6 +16,7 @@ dependencies=["numpy>=2.0,<3","pyarrow>=14.0.1"]
 yaml=["pyyaml>=6"]
 sign=["cryptography>=50,<51"]
 delta=["deltalake>=0.17"]
+excel=["openpyxl>=3.1"]
 azure=["adlfs>=2024.4.1","azure-identity>=1.15","deltalake>=0.17"]
 pandas=["pandas>=2"]
 scipy=["scipy>=1.11"]
@@ -23,7 +24,7 @@ kafka=["confluent-kafka>=2.5,<4"]
 eventhubs=["azure-eventhub>=5.12,<6"]
 sqlserver=["sqllocks-shape-sqlserver==0.9.0"]
 streaming=["confluent-kafka>=2.5,<4","azure-eventhub>=5.12,<6"]
-dev=["pytest>=8.3","pytest-cov>=6","hypothesis>=6.115","ruff>=0.8","mypy>=1.13","pip-audit>=2.7","build>=1.2","pyyaml>=6","pandas>=2","deltalake>=0.17","twine>=5","cryptography>=50,<51","xxhash>=3.5","maturin>=1.15,<2","import-linter>=2","vulture>=2.11","bandit>=1.8","py-spy>=0.4","sqlglot>=25","scipy>=1.11"]
+dev=["pytest>=8.3","pytest-cov>=6","hypothesis>=6.115","ruff>=0.8","mypy>=1.13","pip-audit>=2.7","build>=1.2","pyyaml>=6","pandas>=2","deltalake>=0.17","twine>=5","cryptography>=50,<51","xxhash>=3.5","maturin>=1.15,<2","import-linter>=2","vulture>=2.11","bandit>=1.8","py-spy>=0.4","sqlglot>=25","openpyxl>=3.1","scipy>=1.11","pyspark>=4.0,<5"]
 
 [tool.maturin]
 # T-05: mixed Python/Rust layout. The kernel is `shape._kernel`, built from rust/shape-kernel.
@@ -64,7 +65,7 @@ packages=["shape"]
 # Optional cloud packages (extra [azure], and Fabric's own notebookutils): not installed in every
 # environment, so mypy must not depend on them being present.
 [[tool.mypy.overrides]]
-module=["adlfs","azure.*","deltalake","deltalake.*","notebookutils","mssparkutils"]
+module=["adlfs","azure.*","deltalake","deltalake.*","openpyxl","openpyxl.*","notebookutils","mssparkutils","pyspark","pyspark.*"]
 ignore_missing_imports=true
 
 # T-12 ratchet: modules not yet strict. A work package that creates or rewrites a module
@@ -145,6 +146,10 @@ csv = "shape.builtins.sinks:CsvSink"
 parquet = "shape.builtins.sinks:ParquetSink"
 jsonl = "shape.builtins.sinks:JsonlSink"
 ipc = "shape.builtins.sinks:IpcSink"
+tsv = "shape.builtins.sinks:TsvSink"
+sql = "shape.builtins.sinks:SqlSink"
+excel = "shape.builtins.sinks:ExcelSink"
+delta = "shape.builtins.sinks:DeltaSink"
 
 [project.entry-points."shape.detectors"]
 email = "shape.builtins.detectors:EmailDetector"

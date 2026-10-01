@@ -1,0 +1,15 @@
+Shape Generation Result
+========================================
+Schema: t
+Domain: 
+Mode:   3nf
+Seed:   5
+Time:   0.0s
+
+Table                             Rows  Columns
+---------------------------------------------
+customer                            40        3
+order                              120        5
+order_line                         300        3
+---------------------------------------------
+TOTAL                              460
