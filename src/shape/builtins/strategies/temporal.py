@@ -47,6 +47,9 @@ def _range(spec: Mapping[str, Any], ctx: GenerationContext) -> tuple[int, int]:
     return _microseconds(start, "start", ctx), _microseconds(end, "end", ctx)
 
 
+_UNITS = ("s", "ms", "us", "ns")
+
+
 def _uniform(start: int, end: int, ctx: GenerationContext) -> npt.NDArray[np.int64]:
     """Microsecond timestamps uniform on ``[start, end)``."""
     if end <= start:
@@ -88,7 +91,8 @@ def _day_weights(
 
 
 class Temporal:
-    """Timestamps (``timestamp[us]``).
+    """Timestamps (``timestamp[us]``, or the ``unit`` asked for: ``s``, ``ms``, ``us`` or ``ns``;
+    the values are the same instants whatever the unit).
 
     The range is ``date_range`` (or ``range``) ``{"start", "end"}``, or top-level ``start`` and
     ``end``, or ``range_ref: "model.date_range"``; the default is 2022-01-01 .. 2025-12-31.
@@ -105,6 +109,20 @@ class Temporal:
     name = "temporal"
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
+        values = self._microseconds(spec, ctx)
+        unit = str(spec.get("unit", "us"))
+        if unit == "us":
+            return values
+        if unit not in _UNITS:
+            raise StrategyError(
+                f"temporal 'unit' must be one of {', '.join(_UNITS)}, not {unit!r} ({where(ctx)})"
+            )
+        try:
+            return values.cast(pa.timestamp(unit))
+        except pa.ArrowInvalid as exc:
+            raise StrategyError(f"temporal values do not fit unit {unit!r} ({where(ctx)})") from exc
+
+    def _microseconds(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         start, end = _range(spec, ctx)
         if spec.get("pattern", "uniform") != "seasonal":
             return pa.array(

@@ -19,6 +19,8 @@ import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.kernel_relational import group_sums
+from shape.generation.keypos import dense_start, first_positions
 from shape.generation.schema import GenSchema
 
 AGGREGATES = {
@@ -41,9 +43,48 @@ def _round_if_float(arr: pa.Array) -> pa.Array:
     return pa.array(values, type=arr.type, mask=mask)
 
 
+def _bincount_aggregate(
+    parent: pa.Table, child: pa.Table, pk: str, fk: str, source: str, rule: str
+) -> pa.Array | None:
+    """``sum`` and ``count`` of a numeric child column in one pass over the child rows (a
+    row-ordered ``bincount`` per parent row, which adds in the same order as Arrow's grouped sum),
+    or ``None`` for anything else. Sums of integers stay exact (the guard keeps every partial sum
+    below 2**53)."""
+    values = child[source].combine_chunks()
+    t = values.type
+    if rule not in ("sum_children", "count_children"):
+        return None
+    if not (pa.types.is_floating(t) or pa.types.is_integer(t)):
+        return None
+    n = parent.num_rows
+    start = dense_start(parent[pk])
+    if start is not None and child[fk].type == pa.int64():
+        sums, counts = group_sums(child[fk].combine_chunks(), values.cast(t), start, n)
+        if rule == "count_children":
+            return counts
+        return _round_if_float(sums)
+    pos = first_positions(child[fk], parent[pk])
+    valid = pos >= 0
+    if values.null_count:
+        valid &= ~np.asarray(values.is_null().to_numpy(zero_copy_only=False), dtype=bool)
+    pos = pos[valid]
+    counts = np.bincount(pos, minlength=n)
+    if rule == "count_children":
+        return pa.array(counts.astype(np.int64))
+    flat = np.asarray(pc.fill_null(values, 0).to_numpy(zero_copy_only=False))[valid]
+    integral = pa.types.is_integer(t)
+    if integral and float(np.abs(flat.astype(np.float64)).sum()) >= 2.0**53:
+        return None
+    sums = np.bincount(pos, weights=flat.astype(np.float64), minlength=n)
+    return _round_if_float(pa.array(sums.astype(np.int64)) if integral else pa.array(sums))
+
+
 def _aggregate(
     parent: pa.Table, child: pa.Table, pk: str, fk: str, source: str, rule: str
 ) -> pa.Array:
+    fast = _bincount_aggregate(parent, child, pk, fk, source, rule)
+    if fast is not None:
+        return fast
     func = AGGREGATES[rule]
     grouped = child.group_by(fk).aggregate([(source, func)])
     keys, values = grouped[fk].combine_chunks(), grouped[f"{source}_{func}"].combine_chunks()

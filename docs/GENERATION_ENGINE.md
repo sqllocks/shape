@@ -172,6 +172,28 @@ order:
 `benchmarks/` checks the import against the reference implementation's on its own DDL fixtures and on
 cases that fire every rule: all equal, in every field.
 
+## Domains
+
+A domain is a `shape.domains` plugin: a `name` and `definition()`, which returns a
+`DomainDefinition` (a generation schema as a JSON-style mapping, reference data as Arrow tables,
+and scale presets). `shape.generation.domains.load_domain(name)` finds the plugin, registers its
+reference data as the datasets that `reference_data`, `record_sample` and `record_field` read, and
+returns a `LoadedDomain` (`name`, the parsed `schema`, the `definition`); `domain_names()` lists the
+installed ones; an unknown name raises `DomainNotFoundError`, which lists them.
+
+```python
+from shape.generation.domains import load_domain
+from shape.generation.engine import Engine
+
+result = Engine(load_domain("retail").schema, scale="medium", seed=1).generate()
+```
+
+The `sqllocks-shape-domains` package (`pip install sqllocks-shape[domains]`) ships `retail`: nine
+tables (customer, address, product_category, product, store, promotion, order, order_line, return),
+the row counts of the `small`, `medium`, `large` and `xlarge` presets, and its reference data. Its
+uniform dates are `timestamp[ns]` (`temporal` with `unit: "ns"`) and the seasonal ones
+`timestamp[us]`.
+
 ## Writers
 
 Every output format is a `shape.sinks` plugin (`write(uri, table, batches, **options) -> rows`).

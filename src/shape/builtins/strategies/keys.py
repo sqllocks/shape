@@ -12,6 +12,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import numpy as np
+import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
@@ -160,10 +161,7 @@ class ForeignKey:
             ("fk-groups", ref_table, constrained_by),
             lambda: _Groups.of(whole_column(ctx, ref_table, constrained_by, "foreign_key")),
         )
-        want = ctx.columns[constrained_by]
-        found = pc.index_in(want, value_set=groups.values.cast(want.type, safe=False))
-        match = np.asarray(pc.is_valid(found).to_numpy(zero_copy_only=False), dtype=np.bool_)
-        group = np.asarray(pc.fill_null(found, 0).to_numpy(zero_copy_only=False), dtype=np.int64)
+        match, group = groups.find(ctx.columns[constrained_by])
         u = stream(ctx, "pick").uniform(ctx.row_start, ctx.n_rows)
         size = groups.starts[group + 1] - groups.starts[group]
         within = np.minimum((u * np.maximum(size, 1)).astype(np.int64), np.maximum(size - 1, 0))
@@ -208,10 +206,34 @@ class ForeignKey:
 class _Groups:
     """The rows of a table grouped by the value of one column (nulls belong to no group)."""
 
-    __slots__ = ("rows", "starts", "values")
+    __slots__ = ("lowest", "rows", "slot", "starts", "values")
 
     def __init__(self, values: pa.Array, rows: Ints, starts: Ints) -> None:
         self.values, self.rows, self.starts = values, rows, starts
+        self.lowest = 0
+        self.slot: Ints | None = None
+        if pa.types.is_signed_integer(values.type) and len(values) and not values.null_count:
+            numbers = np.asarray(values.to_numpy(zero_copy_only=False), dtype=np.int64)
+            low, high = int(numbers.min()), int(numbers.max())
+            if high - low < max(4 * len(numbers), 1024):  # keys close together: a table lookup
+                self.lowest = low
+                self.slot = np.full(high - low + 1, -1, dtype=np.int64)
+                self.slot[numbers - low] = np.arange(len(numbers), dtype=np.int64)
+
+    def find(self, want: pa.Array) -> tuple[npt.NDArray[np.bool_], Ints]:
+        """For each value of ``want``: whether it is a group, and the group number (0 if not)."""
+        if self.slot is not None and pa.types.is_signed_integer(want.type):
+            null = np.asarray(want.is_null().to_numpy(zero_copy_only=False), dtype=np.bool_)
+            numbers = np.asarray(pc.fill_null(want, 0).to_numpy(zero_copy_only=False))
+            at = numbers.astype(np.int64) - self.lowest
+            inside = (at >= 0) & (at < len(self.slot)) & ~null
+            group = self.slot[np.where(inside, at, 0)]
+            match = inside & (group >= 0)
+            return match, np.where(match, group, 0)
+        found = pc.index_in(want, value_set=self.values.cast(want.type, safe=False))
+        match = np.asarray(pc.is_valid(found).to_numpy(zero_copy_only=False), dtype=np.bool_)
+        group = np.asarray(pc.fill_null(found, 0).to_numpy(zero_copy_only=False), dtype=np.int64)
+        return match, group
 
     @classmethod
     def of(cls, column: pa.Array) -> _Groups:

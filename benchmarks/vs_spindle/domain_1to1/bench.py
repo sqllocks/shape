@@ -109,13 +109,16 @@ def summarize(runs: list[dict]) -> dict:
     return s
 
 
-def bench(impl: str, domain: str, scales: list[str], runs: int, report: Path) -> dict:
+def bench(
+    impl: str, domain: str, scales: list[str], runs: int, report: Path, warmup: int = 0
+) -> dict:
     results: dict = {
         "meta": {
             **machine_meta(),
             "impl": impl,
             "domain": domain,
             "runs": runs,
+            "warmup": warmup,
             "ref_seed": REF_SEED,
             "impl_seed": IMPL_SEED,
             "loadavg_start": os.getloadavg()[0] if hasattr(os, "getloadavg") else 0.0,
@@ -126,6 +129,12 @@ def bench(impl: str, domain: str, scales: list[str], runs: int, report: Path) ->
     with bench_lock():
         for scale in scales:
             raw: dict[str, list] = {t: [] for t in tools}
+            for i in range(warmup):  # T-19: discarded warm-up runs, fresh processes like the rest
+                for t in tools:
+                    r = run_once(t, impl, domain, scale)
+                    print(
+                        f"[{scale}] {t:16s} warm-up {i + 1}: total {r['total_s']:.2f}s", flush=True
+                    )
             for i in range(runs):
                 for t in tools:  # interleave tools run-by-run
                     r = run_once(t, impl, domain, scale)
@@ -166,12 +175,14 @@ def print_table(results: dict) -> None:
             )
         impl = m["impl"]
         if "spindle" in S and impl in S:
-            print(
-                f"speedup ({impl} vs spindle): total "
-                f"{S['spindle']['total_s'] / S[impl]['total_s']:.2f}x, generate "
-                f"{S['spindle']['gen_s'] / S[impl]['gen_s']:.2f}x, write "
-                f"{S['spindle']['write_s'] / S[impl]['write_s']:.2f}x"
-            )
+            line = f"speedup ({impl} vs spindle): total "
+            line += f"{S['spindle']['total_s'] / S[impl]['total_s']:.2f}x"
+            if S[impl]["write_s"] > 0:  # an impl that overlaps generate and write reports no split
+                line += (
+                    f", generate {S['spindle']['gen_s'] / S[impl]['gen_s']:.2f}x, write "
+                    f"{S['spindle']['write_s'] / S[impl]['write_s']:.2f}x"
+                )
+            print(line)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -181,6 +192,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--scales", default="medium")
     ap.add_argument("--runs", type=int, default=3)
     ap.add_argument(
+        "--warmup", type=int, default=0, help="discarded runs per tool before the timed ones"
+    )
+    ap.add_argument(
         "--report",
         default=None,
         help="results JSON (default: $BENCH_OUT_DIR/bench/<impl>_<domain>.json)",
@@ -188,7 +202,7 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
     report = Path(a.report) if a.report else BENCH_OUT_DIR / "bench" / f"{a.impl}_{a.domain}.json"
     try:
-        bench(a.impl, a.domain, a.scales.split(","), a.runs, report)
+        bench(a.impl, a.domain, a.scales.split(","), a.runs, report, a.warmup)
     except generate.Unsupported as e:
         print(f"unsupported: {e}", file=sys.stderr)
         return 2

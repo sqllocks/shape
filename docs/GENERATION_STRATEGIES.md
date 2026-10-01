@@ -253,7 +253,9 @@ and the anchor's null rate does not touch the fields.
 * `profiles.hour_of_day` replaces the time of day by a whole second in an hour drawn uniformly, or
   from `{"distribution": "bimodal", "peaks": [12, 18], "std_dev": 2}`: equally likely Gaussian
   peaks, wrapped around midnight. Without it the time of day is uniform to the microsecond.
-* The column is `timestamp[us]`. Calendars, paydays and trends (`shape.calendars`) are separate.
+* The column is `timestamp[us]`, or the `unit` given (`s`, `ms`, `us` or `ns`): the same instants in
+  another Arrow unit, for output that must match a `timestamp[ns]` column type. Calendars, paydays
+  and trends (`shape.calendars`) are separate.
 
 ### Reference datasets (`shape.generation.reference`)
 `load_dataset(name)` finds a dataset in this order: datasets registered in the process

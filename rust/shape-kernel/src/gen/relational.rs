@@ -2,13 +2,19 @@
 //! column of a table, because the value of a row depends on the rows before it (the first row of
 //! each parent, the version of a row inside its business key, a parent that is full).
 //!
+//! `dense_rows` and `group_sums` are the single-pass versions of the key lookups and the compute
+//! phase's grouped sums that the post-passes use for a sequence key (P4-07).
+//!
 //! Each function is a function of its inputs and the stream key alone, never of threads or call
 //! order. Reference twin: `shape.kernel.reference.relational` (every result is an integer or a
 //! flag, so the twin agrees bit for bit).
 
 use std::sync::Arc;
 
-use arrow_array::{ArrayRef, BooleanArray, Int64Array};
+use arrow_array::cast::AsArray;
+use arrow_array::types::{Float64Type, Int64Type};
+use arrow_array::{Array, ArrayRef, BooleanArray, Float64Array, Int64Array};
+use arrow_buffer::{NullBuffer, ScalarBuffer};
 use pyo3::prelude::*;
 use pyo3_arrow::PyArray;
 
@@ -222,6 +228,59 @@ pub fn cap_per_parent(
     Ok(result)
 }
 
+/// Row of the sequence key `start, start + 1, ...` (`size` rows) that holds each key of `keys`; null
+/// where the key is null or outside the sequence.
+pub fn dense_rows(keys: &Int64Array, start: i64, size: i64) -> Int64Array {
+    let values = keys.values();
+    let mut rows = Vec::with_capacity(values.len());
+    let mut valid = Vec::with_capacity(values.len());
+    for &k in values.iter() {
+        let row = k.wrapping_sub(start);
+        let inside = k >= start && row < size;
+        rows.push(if inside { row } else { 0 });
+        valid.push(inside);
+    }
+    if let Some(nulls) = keys.nulls() {
+        for (i, v) in valid.iter_mut().enumerate() {
+            *v &= nulls.is_valid(i);
+        }
+    }
+    Int64Array::new(
+        ScalarBuffer::from(rows),
+        Some(NullBuffer::from(valid)).filter(|n| n.null_count() > 0),
+    )
+}
+
+/// Per parent row of a sequence key `start, start + 1, ...` (`size` rows): the sum and the count
+/// of the non-null `values` of the child rows whose key in `keys` is that parent's. Child rows are
+/// added in row order (the order of a grouped sum), a child with a null key or a key outside the
+/// sequence is skipped. Integer sums wrap on overflow, as Arrow's do.
+fn group_sums<T: Copy + Default>(
+    keys: &Int64Array,
+    values: &[T],
+    value_valid: Option<&NullBuffer>,
+    start: i64,
+    size: usize,
+    add: impl Fn(T, T) -> T,
+) -> (Vec<T>, Vec<i64>) {
+    let mut sums = vec![T::default(); size];
+    let mut counts = vec![0i64; size];
+    let key_valid = keys.nulls();
+    for (i, (&k, &v)) in keys.values().iter().zip(values).enumerate() {
+        let row = k.wrapping_sub(start);
+        if k < start || row >= size as i64 {
+            continue;
+        }
+        if key_valid.is_some_and(|n| n.is_null(i)) || value_valid.is_some_and(|n| n.is_null(i)) {
+            continue;
+        }
+        let r = row as usize;
+        sums[r] = add(sums[r], v);
+        counts[r] += 1;
+    }
+    (sums, counts)
+}
+
 fn values(a: PyArray, what: &str) -> PyResult<Vec<i64>> {
     Ok(i64_array(a, what)?.values().to_vec())
 }
@@ -289,7 +348,54 @@ fn cap_per_parent_py(
     Ok(int_out(v))
 }
 
+/// Rows of a sequence key for each key (see `dense_rows`); null for a key that is not in it.
+#[pyfunction]
+#[pyo3(name = "dense_rows")]
+fn dense_rows_py(py: Python<'_>, keys: PyArray, start: i64, size: i64) -> PyResult<PyArray> {
+    let keys = i64_array(keys, "keys")?;
+    let rows = py.detach(|| dense_rows(&keys, start, size));
+    Ok(out(Arc::new(rows) as ArrayRef))
+}
+
+/// `(sums, counts)` per parent row of a sequence key (see `group_sums`): `values` is int64 or
+/// float64 and the sums have its type.
+#[pyfunction]
+#[pyo3(name = "group_sums")]
+fn group_sums_py(
+    py: Python<'_>,
+    keys: PyArray,
+    values: PyArray,
+    start: i64,
+    size: i64,
+) -> PyResult<(PyArray, PyArray)> {
+    if size < 0 {
+        return Err(err("size must not be negative".into()));
+    }
+    let keys = i64_array(keys, "keys")?;
+    let (column, _) = values.into_inner();
+    if column.len() != keys.len() {
+        return Err(err("keys and values must have the same length".into()));
+    }
+    let size = size as usize;
+    if let Some(v) = column.as_primitive_opt::<Float64Type>() {
+        let (sums, counts) =
+            py.detach(|| group_sums(&keys, v.values(), v.nulls(), start, size, |a, b| a + b));
+        return Ok((
+            out(Arc::new(Float64Array::from(sums)) as ArrayRef),
+            int_out(counts),
+        ));
+    }
+    if let Some(v) = column.as_primitive_opt::<Int64Type>() {
+        let (sums, counts) =
+            py.detach(|| group_sums(&keys, v.values(), v.nulls(), start, size, i64::wrapping_add));
+        return Ok((int_out(sums), int_out(counts)));
+    }
+    Err(err("values must be an int64 or float64 array".into()))
+}
+
 pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(dense_rows_py, m)?)?;
+    m.add_function(wrap_pyfunction!(group_sums_py, m)?)?;
     m.add_function(wrap_pyfunction!(first_flags_py, m)?)?;
     m.add_function(wrap_pyfunction!(group_order_py, m)?)?;
     m.add_function(wrap_pyfunction!(scd2_offsets_py, m)?)?;
@@ -300,6 +406,40 @@ pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn dense_rows_finds_the_row_of_a_sequence_key() {
+        let keys = Int64Array::from(vec![Some(5), Some(7), None, Some(4), Some(9), Some(8)]);
+        let rows = dense_rows(&keys, 5, 4);
+        let got: Vec<Option<i64>> = rows.iter().collect();
+        assert_eq!(got, vec![Some(0), Some(2), None, None, None, Some(3)]);
+        assert_eq!(
+            dense_rows(&Int64Array::from(vec![1, 2]), 1, 2).null_count(),
+            0
+        );
+    }
+
+    #[test]
+    fn group_sums_adds_in_row_order_and_skips_nulls_and_strangers() {
+        let keys = Int64Array::from(vec![Some(1), Some(2), Some(1), None, Some(9), Some(2)]);
+        let values = [0.5, 1.0, 0.25, 7.0, 3.0, 2.0];
+        let (sums, counts) = group_sums(&keys, &values, None, 1, 3, |a, b| a + b);
+        assert_eq!(sums, vec![0.75, 3.0, 0.0]);
+        assert_eq!(counts, vec![2, 2, 0]);
+        let valid = NullBuffer::from(vec![true, true, false, true, true, true]);
+        let (sums, counts) = group_sums(&keys, &values, Some(&valid), 1, 3, |a, b| a + b);
+        assert_eq!(sums, vec![0.5, 3.0, 0.0]);
+        assert_eq!(counts, vec![1, 2, 0]);
+        let (isums, _) = group_sums(
+            &keys,
+            &[i64::MAX, 1, 1, 0, 0, 0],
+            None,
+            1,
+            2,
+            i64::wrapping_add,
+        );
+        assert_eq!(isums, vec![i64::MIN, 1]);
+    }
 
     #[test]
     fn first_flags_marks_the_first_row_of_each_group() {
