@@ -190,7 +190,7 @@ class KafkaStreamSource:
         ends: dict[str, int] = {}
         for p in ids:
             tp = self._partition_factory(topic, p, -1)
-            low, high = consumer.get_watermark_offsets(tp, timeout=_METADATA_TIMEOUT)
+            low, high = consumer.get_watermark_offsets(tp, timeout=_METADATA_TIMEOUT, cached=False)
             if str(p) in given:
                 # A checkpoint older than the broker's retention starts at what is left.
                 positions[str(p)] = min(max(given[str(p)], low), high)

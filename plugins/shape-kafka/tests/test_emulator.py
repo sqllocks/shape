@@ -29,7 +29,10 @@ pytestmark = pytest.mark.emulator
 SERVERS = os.environ.get("SHAPE_TEST_KAFKA", "localhost:9092")
 PARTITIONS = 3
 ROWS = 1500
-T0 = 1_700_000_000_000  # ms
+# Message times are recent and aligned to a minute: the broker's retention (7 days by default)
+# deletes data whose timestamp is older than that, which empties a topic of fixed old times
+# a few minutes after the next retention check.
+T0 = int(time.time()) // 60 * 60_000  # ms
 
 
 def _rows():

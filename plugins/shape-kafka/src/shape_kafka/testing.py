@@ -79,7 +79,9 @@ class FakeConsumer:
             return _Metadata({})
         return _Metadata({topic: _Topic(self.broker.topics[topic])})
 
-    def get_watermark_offsets(self, tp: Any, timeout: float = 0) -> tuple[int, int]:
+    def get_watermark_offsets(
+        self, tp: Any, timeout: float = 0, cached: bool = False
+    ) -> tuple[int, int]:
         return 0, len(self.broker.topics[tp.topic][tp.partition])
 
     def assign(self, tps: Sequence[Any]) -> None:
