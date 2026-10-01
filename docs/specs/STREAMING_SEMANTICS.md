@@ -2,7 +2,7 @@
 
 Shape distinguishes event time from processing time. Stateful operators declare windowing, allowed lateness and checkpoint semantics. Watermarks determine closable windows; events older than the watermark are handled by an explicit late-data policy. State MUST be bounded or externally checkpointed. Replay MUST be deterministic for deterministic sources/operators. Source delivery guarantees and sink commit guarantees are reported separately; Shape does not claim exactly-once when an underlying connector cannot provide it.
 
-This draft makes those rules precise for the stream runtime (`shape.streaming.runtime`). Section 1 to 4 are implemented by P3-01; keyed state and checkpoints are added by P3-02 and P3-03.
+This draft makes those rules precise for the stream runtime (`shape.streaming.runtime`). Sections 1 to 4 are implemented by P3-01, section 5 by P3-02; checkpoints are added by P3-03.
 
 ## 1. Events and time
 
@@ -35,3 +35,12 @@ A closed window yields a `WindowProfile`: its kind, bounds, row count and the pr
 - **Restore equivalence:** a profiler snapshotted after any batch and restored in a new process gives, for the rest of the stream, exactly the windows and counters of an uninterrupted run. Both kernels (Rust and the Python reference) read each other's snapshots.
 - Only bounded mode has a snapshot format.
 - **Determinism:** the same batches in the same order give byte-identical output across processes and `PYTHONHASHSEED` values (hashing is seeded XXH3, T-13).
+
+## 5. Keyed state and deduplication
+
+- **Per-key sketches** (`KeyedSketches`): one small sketch per key (event count; count, mean, variance, min and max of the finite values; first and last event time; optionally a HyperLogLog of an item column) in numpy arrays that are allocated once. `max_keys` is a hard cap, so memory is fixed (`nbytes`, plus about 120 bytes per live key for the index) whatever the number of events or distinct keys. Keys are identified by their canonical XXH3-64 hash (T-13).
+- **LRU:** a new key evicts the least recently updated keys once all slots are taken. A batch with more distinct keys than slots is processed in parts, so the newest keys survive.
+- **TTL:** a key whose last event time is `ttl` or more behind the newest event time seen is dropped (swept every `ttl / 16` of event time; reading a key is exact).
+- **Keyed values** (`KeyedState`, `PartitionedKeyedState`): one value per key, with the same TTL and cap; the expiry heap never holds more than `2 * max_keys + 64` entries.
+- **Deduplication** (`Deduplicator`): `filter(keys)` returns a keep-mask, `True` for a first sighting, over a window of the last `max_keys` distinct keys (and, with `ttl`, the keys seen within `ttl` of the newest event time of earlier batches). Of several equal keys in one batch the first is kept. Integer keys compare exactly; other keys by their 64-bit hash. Within its window it equals a plain set; once the window is full the keys first seen longest ago are forgotten, and a forgotten key is kept again when it returns. It costs a few array operations per batch.
+- Both `KeyedSketches` and `Deduplicator` have a JSON-safe `snapshot()` and a `restore()`, and a restored state continues exactly as an uninterrupted one.

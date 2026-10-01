@@ -16,7 +16,7 @@ check:
 	$(PYTHON) scripts/check_plugin_skeletons.py
 	$(PYTHON) scripts/check_conformance_coverage.py
 	pytest -q -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric --ignore=tests/demo/content --cov=shape --cov-fail-under=86
-	pytest -q -m heavy tests/kernel tests/profile
+	pytest -q -m heavy tests/kernel tests/profile tests/streaming
 	SHAPE_KERNEL=python pytest -q tests/kernel
 	cargo fmt --manifest-path rust/shape-kernel/Cargo.toml --check
 	cargo clippy --manifest-path rust/shape-kernel/Cargo.toml --all-targets -- -D warnings

@@ -45,6 +45,8 @@ __all__ = [
     "GlobalProfiler",
     "WindowProfile",
     "restore_profiler",
+    "KeyedSketches",
+    "Deduplicator",
 ]
 from .aggregate_windows import (
     AggregateTumblingWindow as AggregateTumblingWindow,
@@ -56,10 +58,12 @@ from .aggregate_windows import (
     NumericAggregate as NumericAggregate,
 )
 from .checkpoint import FileCheckpointStore as FileCheckpointStore
+from .dedupe import Deduplicator as Deduplicator
 from .evidence import NumericEvidence as NumericEvidence
 from .evidence import TextEvidence as TextEvidence
 from .failure import replay_with_failures as replay_with_failures
 from .full_engine import FullEvidenceEngine as FullEvidenceEngine
+from .keyed import KeyedSketches as KeyedSketches
 from .keyed import KeyedState as KeyedState
 from .keyed import PartitionedKeyedState as PartitionedKeyedState
 from .monitor import MonitorEvent as MonitorEvent
