@@ -1,0 +1,52 @@
+cores=4 cpu=Intel(R) Xeon(R) Processor @ 2.10GHz
+mt          rep0 spindle      2.33s load=1.25 rss=357MB child=0MB
+mt          rep0 impl_mt      0.37s load=1.23 rss=264MB child=0MB
+mt          rep0 impl_st      0.43s load=1.23 rss=256MB child=0MB
+mt          rep1 spindle      2.13s load=1.23 rss=358MB child=0MB
+mt          rep1 impl_mt      0.28s load=1.21 rss=269MB child=0MB
+mt          rep1 impl_st      0.28s load=1.21 rss=250MB child=0MB
+mt          rep2 spindle      2.22s load=1.21 rss=358MB child=0MB
+mt          rep2 impl_mt      0.25s load=1.20 rss=257MB child=0MB
+mt          rep2 impl_st      0.37s load=1.20 rss=255MB child=0MB
+mt          rep3 spindle      2.05s load=1.20 rss=357MB child=0MB
+mt          rep3 impl_mt      0.22s load=1.18 rss=263MB child=0MB
+mt          rep3 impl_st      0.30s load=1.18 rss=254MB child=0MB
+mt          rep4 spindle      1.98s load=1.18 rss=358MB child=0MB
+mt          rep4 impl_mt      0.30s load=1.17 rss=259MB child=0MB
+mt          rep4 impl_st      0.28s load=1.17 rss=254MB child=0MB
+d1.csv      rep0 spindle      1.50s load=1.17 rss=342MB child=0MB
+d1.csv      rep0 impl_mt      0.13s load=1.15 rss=235MB child=0MB
+d1.csv      rep0 impl_st      0.32s load=1.15 rss=221MB child=0MB
+d1.csv      rep1 spindle      1.78s load=1.15 rss=334MB child=0MB
+d1.csv      rep1 impl_mt      0.19s load=1.14 rss=226MB child=0MB
+d1.csv      rep1 impl_st      0.21s load=1.14 rss=220MB child=0MB
+d1.csv      rep2 spindle      1.45s load=1.14 rss=342MB child=0MB
+d1.csv      rep2 impl_mt      0.13s load=1.13 rss=227MB child=0MB
+d1.csv      rep2 impl_st      0.18s load=1.13 rss=220MB child=0MB
+d1.csv      rep3 spindle      1.66s load=1.13 rss=342MB child=0MB
+d1.csv      rep3 impl_mt      0.13s load=1.12 rss=234MB child=0MB
+d1.csv      rep3 impl_st      0.28s load=1.12 rss=221MB child=0MB
+d1.csv      rep4 spindle      1.57s load=1.12 rss=342MB child=0MB
+d1.csv      rep4 impl_mt      0.13s load=1.12 rss=229MB child=0MB
+d1.csv      rep4 impl_st      0.16s load=1.11 rss=220MB child=0MB
+d4.csv      rep0 spindle     32.44s load=1.11 rss=680MB child=0MB
+d4.csv      rep0 impl_mt      2.96s load=1.06 rss=676MB child=555MB
+d4.csv      rep0 impl_st      8.66s load=1.06 rss=629MB child=0MB
+d4.csv      rep1 spindle     32.32s load=1.13 rss=681MB child=0MB
+d4.csv      rep1 impl_mt      2.87s load=1.07 rss=647MB child=555MB
+d4.csv      rep1 impl_st      9.53s load=1.07 rss=616MB child=0MB
+d4.csv      rep2 spindle     33.29s load=1.06 rss=679MB child=0MB
+d4.csv      rep2 impl_mt      3.67s load=1.03 rss=664MB child=555MB
+d4.csv      rep2 impl_st      9.11s load=1.27 rss=629MB child=0MB
+d4.csv      rep3 spindle     32.96s load=1.31 rss=679MB child=0MB
+d4.csv      rep3 impl_mt      3.43s load=1.24 rss=626MB child=563MB
+d4.csv      rep3 impl_st      9.87s load=1.39 rss=628MB child=0MB
+d4.csv      rep4 spindle     33.13s load=1.33 rss=679MB child=0MB
+d4.csv      rep4 impl_mt      2.86s load=1.18 rss=688MB child=571MB
+d4.csv      rep4 impl_st      8.65s load=1.18 rss=628MB child=0MB
+
+| dataset | Spindle s | port MT s | port 1T s | speedup MT | speedup 1T | peak RSS Spindle / port MT (+child) / port 1T MB |
+|---|---:|---:|---:|---:|---:|---|
+| mt | 2.13 | 0.28 | 0.30 | 7.5x | 7.0x | 358 / 269 (+0) / 256 |
+| d1.csv | 1.57 | 0.13 | 0.21 | 12.1x | 7.6x | 342 / 235 (+0) / 221 |
+| d4.csv | 32.96 | 2.96 | 9.11 | 11.1x | 3.6x | 681 / 688 (+571) / 629 |
