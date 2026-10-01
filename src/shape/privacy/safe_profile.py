@@ -278,7 +278,7 @@ class SafeColumnProfile:
 
     name: str
     dtype: str
-    null_rate: float
+    null_rate: float | None  # None: unknown (no rows were read)
     cardinality: int
     mean: float | str | None = None
     std: float | str | None = None
@@ -369,7 +369,7 @@ class SafeColumnProfile:
         return cls(
             name=name,
             dtype=dtype,
-            null_rate=col.get("null_rate", 0.0),
+            null_rate=col.get("null_rate"),
             cardinality=cardinality,
             mean=col.get("mean"),
             std=col.get("std"),

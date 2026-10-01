@@ -106,10 +106,15 @@ def _quantile_strip(q: dict[str, Any], lo: float, hi: float, width: int = 300) -
     )
 
 
+def _pct(rate: float | None) -> str:
+    """A rate as a percentage; ``n/a`` when it is unknown (no rows were read)."""
+    return "n/a" if rate is None else f"{rate * 100:.2f}%"
+
+
 def _card(name: str, col: dict[str, Any]) -> str:
     facts = [
         f"{_e(col['dtype'])}",
-        f"nulls {col['null_rate'] * 100:.2f}%",
+        f"nulls {_pct(col['null_rate'])}",
         f"{col['cardinality']:,} distinct",
     ]
     if col.get("pattern"):
@@ -150,7 +155,7 @@ def _row(name: str, col: dict[str, Any]) -> str:
     cells = [
         f"<td>{_e(name)}</td>",
         f"<td>{_e(col['dtype'])}</td>",
-        f'<td class="num">{col["null_rate"] * 100:.2f}%</td>',
+        f'<td class="num">{_pct(col["null_rate"])}</td>',
         f'<td class="num">{col["cardinality"]:,}</td>',
         f"<td>{badges}</td>",
         f"<td>{_e(col.get('pattern') or '')}</td>",
