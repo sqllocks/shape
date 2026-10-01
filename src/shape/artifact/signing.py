@@ -181,10 +181,15 @@ def sign_artifact(
                     with src.open(info) as r, dst.open(zi, "w", force_zip64=True) as w:
                         shutil.copyfileobj(r, w)
                 dst.writestr(SIGNATURE_MEMBER, member)
-            os.replace(tmp_name, target)
         except BaseException:
             Path(tmp_name).unlink(missing_ok=True)
             raise
+    # Replace only after the source is closed: Windows cannot replace a file that is open.
+    try:
+        os.replace(tmp_name, target)
+    except BaseException:
+        Path(tmp_name).unlink(missing_ok=True)
+        raise
     return key_id(public_key)
 
 

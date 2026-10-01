@@ -137,7 +137,7 @@ jobs:
       - run: pip install .
       - run: python -m build
       - run: python -m twine check dist/*
-      - run: python scripts/check_user_facing.py --wheel dist/*
+      - run: python scripts/check_user_facing.py --wheel dist/*.whl
       - run: pip-audit
       - uses: actions/upload-artifact@v4
         with: {name: distributions, path: dist/*}
