@@ -1,0 +1,32 @@
+# multi-thread (default), 10 fresh processes, d1.csv; timed region user/sys CPU, stage seconds
+timed region user=0.154 sys=0.211 minflt=15620
+total 0.133 {'load': 0.058, 'corr': 0.011, 'cols_pool': 0.075, 'profile_tbl': 0.075, 'to_dict': 0.0} {'state': 0.035, 'amount': 0.041, 'id': 0.038, 'age': 0.02, 'email': 0.069, 'zip': 0.031}
+timed region user=0.137 sys=0.115 minflt=16562
+total 0.094 {'load': 0.028, 'corr': 0.038, 'cols_pool': 0.066, 'profile_tbl': 0.066, 'to_dict': 0.0} {'state': 0.025, 'id': 0.022, 'age': 0.012, 'zip': 0.023, 'amount': 0.05, 'email': 0.06}
+timed region user=0.167 sys=0.076 minflt=14782
+total 0.098 {'load': 0.016, 'corr': 0.05, 'cols_pool': 0.08, 'profile_tbl': 0.081, 'to_dict': 0.0} {'amount': 0.044, 'state': 0.044, 'id': 0.044, 'age': 0.019, 'email': 0.068, 'zip': 0.034}
+timed region user=0.140 sys=0.087 minflt=15838
+total 0.089 {'load': 0.03, 'corr': 0.018, 'cols_pool': 0.058, 'profile_tbl': 0.058, 'to_dict': 0.0} {'id': 0.021, 'state': 0.026, 'amount': 0.044, 'age': 0.022, 'zip': 0.025, 'email': 0.051}
+timed region user=0.140 sys=0.052 minflt=14655
+total 0.080 {'load': 0.019, 'corr': 0.01, 'cols_pool': 0.061, 'profile_tbl': 0.061, 'to_dict': 0.0} {'state': 0.018, 'id': 0.016, 'age': 0.011, 'zip': 0.018, 'amount': 0.049, 'email': 0.051}
+timed region user=0.129 sys=0.122 minflt=13401
+total 0.101 {'load': 0.037, 'corr': 0.011, 'cols_pool': 0.064, 'profile_tbl': 0.064, 'to_dict': 0.0} {'state': 0.035, 'id': 0.032, 'amount': 0.045, 'email': 0.044, 'age': 0.018, 'zip': 0.019}
+timed region user=0.169 sys=0.100 minflt=16555
+total 0.087 {'load': 0.031, 'corr': 0.022, 'cols_pool': 0.056, 'profile_tbl': 0.056, 'to_dict': 0.0} {'state': 0.02, 'id': 0.025, 'age': 0.02, 'amount': 0.049, 'zip': 0.019, 'email': 0.05}
+timed region user=0.142 sys=0.069 minflt=14775
+total 0.081 {'load': 0.023, 'corr': 0.019, 'cols_pool': 0.058, 'profile_tbl': 0.058, 'to_dict': 0.0} {'state': 0.028, 'id': 0.035, 'email': 0.042, 'age': 0.019, 'amount': 0.048, 'zip': 0.015}
+timed region user=0.147 sys=0.041 minflt=15031
+total 0.068 {'load': 0.014, 'corr': 0.013, 'cols_pool': 0.054, 'profile_tbl': 0.054, 'to_dict': 0.0} {'state': 0.027, 'id': 0.02, 'age': 0.011, 'zip': 0.014, 'amount': 0.05, 'email': 0.047}
+timed region user=0.128 sys=0.141 minflt=15825
+total 0.089 {'load': 0.037, 'corr': 0.024, 'cols_pool': 0.052, 'profile_tbl': 0.052, 'to_dict': 0.0} {'state': 0.017, 'id': 0.025, 'age': 0.017, 'zip': 0.015, 'amount': 0.046, 'email': 0.046}
+# single-thread (PROFILE_THREADS=1, OPENBLAS/OMP=1), 5 fresh processes
+timed region user=0.131 sys=0.144 minflt=13999
+total 0.262 {'load': 0.15, 'cols_pool': 0.107, 'corr': 0.004, 'profile_tbl': 0.111, 'to_dict': 0.0} {'id': 0.019, 'age': 0.01, 'zip': 0.016, 'state': 0.015, 'email': 0.028, 'amount': 0.019}
+timed region user=0.127 sys=0.164 minflt=13016
+total 0.278 {'load': 0.167, 'cols_pool': 0.107, 'corr': 0.004, 'profile_tbl': 0.111, 'to_dict': 0.0} {'id': 0.02, 'age': 0.01, 'zip': 0.015, 'state': 0.015, 'email': 0.028, 'amount': 0.019}
+timed region user=0.148 sys=0.106 minflt=13014
+total 0.240 {'load': 0.112, 'cols_pool': 0.124, 'corr': 0.004, 'profile_tbl': 0.128, 'to_dict': 0.0} {'id': 0.019, 'age': 0.01, 'zip': 0.016, 'state': 0.02, 'email': 0.035, 'amount': 0.025}
+timed region user=0.141 sys=0.148 minflt=13014
+total 0.276 {'load': 0.158, 'cols_pool': 0.112, 'corr': 0.006, 'profile_tbl': 0.117, 'to_dict': 0.0} {'id': 0.019, 'age': 0.01, 'zip': 0.016, 'state': 0.017, 'email': 0.029, 'amount': 0.02}
+timed region user=0.136 sys=0.028 minflt=13997
+total 0.151 {'load': 0.038, 'cols_pool': 0.108, 'corr': 0.004, 'profile_tbl': 0.113, 'to_dict': 0.0} {'id': 0.019, 'age': 0.01, 'zip': 0.015, 'state': 0.016, 'email': 0.029, 'amount': 0.019}

@@ -1,0 +1,8 @@
+fmt ok
+    Checking pyo3-arrow v0.19.0
+    Checking shape-kernel v0.9.0 (/home/user/shape/rust/shape-kernel)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 17.37s
+clippy ok
+test result: ok. 32 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 35.49s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+cargo exit=0
