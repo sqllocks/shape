@@ -1,0 +1,8 @@
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1343 passed, 40 deselected, 6 warnings in 226.47s (0:03:46)
+
+real	3m47.836s
+user	4m22.885s
+sys	0m32.952s
+EXIT=0

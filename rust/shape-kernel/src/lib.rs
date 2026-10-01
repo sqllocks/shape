@@ -37,6 +37,7 @@ fn collect_addresses(data: &ArrayData, out: &mut Vec<usize>) {
 pub mod exact;
 pub mod fit;
 pub mod hashing;
+pub mod numpy_loops;
 pub mod profile;
 pub mod sketch;
 
@@ -131,15 +132,64 @@ fn ignore_fp_errors<R>(py: Python<'_>, f: impl FnOnce() -> R) -> PyResult<R> {
     Ok(out)
 }
 
-/// Point the fitting code's scalar exp/ln at numpy's (see `fit::set_scalar_hooks`).
+/// numpy's own `log`/`exp` loops, when they can be called without the GIL (`numpy_loops`).
+static NATIVE_LOOPS: std::sync::OnceLock<Option<numpy_loops::NumpyLoops>> =
+    std::sync::OnceLock::new();
+
+fn native_loops() -> Option<&'static numpy_loops::NumpyLoops> {
+    NATIVE_LOOPS.get().and_then(Option::as_ref)
+}
+
+fn native_exp(x: f64) -> f64 {
+    native_loops().map_or_else(|| x.exp(), |n| n.exp.scalar(x))
+}
+
+fn native_log(x: f64) -> f64 {
+    native_loops().map_or_else(|| x.ln(), |n| n.log.scalar(x))
+}
+
+fn native_log_array(buf: &mut [f64]) {
+    match native_loops() {
+        Some(n) => n.log.apply(buf),
+        None => buf.iter_mut().for_each(|v| *v = v.ln()),
+    }
+}
+
+/// Point the fitting code's scalar exp/ln at numpy's (see `fit::set_scalar_hooks`): numpy's loops
+/// themselves when they validate, otherwise numpy called through Python.
+/// `SHAPE_NUMPY_LOOPS=python` forces the Python route.
 fn install_numpy_hooks(py: Python<'_>) -> PyResult<()> {
     if NP_EXP.get().is_none() {
         let np = py.import("numpy")?;
         let _ = NP_EXP.set(np.getattr("exp")?.unbind());
         let _ = NP_LOG.set(np.getattr("log")?.unbind());
-        fit::set_scalar_hooks(numpy_exp, numpy_log, numpy_log_array);
+        let force_python = std::env::var("SHAPE_NUMPY_LOOPS").is_ok_and(|v| v == "python");
+        let loops = NATIVE_LOOPS.get_or_init(|| {
+            if force_python {
+                None
+            } else {
+                numpy_loops::load(py)
+            }
+        });
+        if loops.is_some() {
+            fit::set_scalar_hooks(native_exp, native_log, native_log_array, true);
+        } else {
+            fit::set_scalar_hooks(numpy_exp, numpy_log, numpy_log_array, false);
+        }
     }
     Ok(())
+}
+
+/// How the fitting code evaluates numpy's `log`/`exp`: `"native"` (numpy's own loops, no GIL) or
+/// `"python"` (through the interpreter). Installed on the first fit.
+#[pyfunction]
+fn numpy_loops_mode(py: Python<'_>) -> PyResult<&'static str> {
+    install_numpy_hooks(py)?;
+    Ok(if native_loops().is_some() {
+        "native"
+    } else {
+        "python"
+    })
 }
 
 #[pyfunction]
@@ -210,7 +260,9 @@ fn lognorm_probe(py: Python<'_>, data: PyArray, loc: f64) -> PyResult<(f64, f64,
     let p = arr
         .as_primitive_opt::<Float64Type>()
         .ok_or_else(|| PyValueError::new_err("lognorm_probe needs a float64 array"))?;
-    ignore_fp_errors(py, || fit::lognorm_probe(p.values(), loc))
+    let values = p.values();
+    // detached: the parallel passes call numpy from rayon workers, which need the GIL
+    ignore_fp_errors(py, || py.detach(|| fit::lognorm_probe(values, loc)))
 }
 
 /// The kernel version (equal to the Python package version).
@@ -255,6 +307,7 @@ fn _kernel(m: &Bound<'_, PyModule>) -> PyResult<()> {
     profile::register(m)?;
     exact::register(m)?;
     m.add_function(wrap_pyfunction!(version, m)?)?;
+    m.add_function(wrap_pyfunction!(numpy_loops_mode, m)?)?;
     m.add_function(wrap_pyfunction!(roundtrip_batch, m)?)?;
     m.add_function(wrap_pyfunction!(buffer_addresses, m)?)?;
     m.add_function(wrap_pyfunction!(num_rows, m)?)?;

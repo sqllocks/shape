@@ -24,6 +24,9 @@ use rayon::prelude::*;
 
 const SQRTH: f64 = 7.071_067_811_865_475_244_01e-1;
 const SQRT2PI: f64 = 2.506_628_274_631_000_5;
+/// `np.sqrt(2 * np.pi)` as numpy evaluates it (one ulp below the correctly rounded `SQRT2PI`
+/// literal): the constant of the reference's lognormal log-density, `log(s * x * sqrt(2 pi))`.
+const NP_SQRT_2PI: f64 = 2.506_628_274_631_000_2;
 const LOG_2PI: f64 = 1.837_877_066_409_345_3;
 const E128: i32 = 128;
 const MIN_LOG: f64 = -708.0;
@@ -43,11 +46,16 @@ static LN_HOOK: std::sync::OnceLock<ScalarFn> = std::sync::OnceLock::new();
 pub type ArrayFn = fn(&mut [f64]);
 static LN_ARRAY_HOOK: std::sync::OnceLock<ArrayFn> = std::sync::OnceLock::new();
 
-pub fn set_scalar_hooks(exp: ScalarFn, ln: ScalarFn, ln_array: ArrayFn) {
+/// Set once with the hooks. `gil_free` says that they call numpy's loops directly: no GIL and no
+/// numpy error state is involved, so any pass may run on the pool (see `Eval::pass`).
+pub fn set_scalar_hooks(exp: ScalarFn, ln: ScalarFn, ln_array: ArrayFn, gil_free: bool) {
     let _ = EXP_HOOK.set(exp);
     let _ = LN_HOOK.set(ln);
     let _ = LN_ARRAY_HOOK.set(ln_array);
+    GIL_FREE_HOOKS.store(gil_free, std::sync::atomic::Ordering::Relaxed);
 }
+
+static GIL_FREE_HOOKS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// Natural log of every element in place: numpy's (SIMD) `log` when hooked, else libm.
 fn ln_inplace(a: &mut [f64]) {
@@ -100,6 +108,163 @@ pub fn pairwise_sum(a: &[f64]) -> f64 {
 
 fn mean(a: &[f64]) -> f64 {
     pairwise_sum(a) / a.len() as f64
+}
+
+// ------------------------------------------------------ pairwise_sum block tree
+
+/// Largest block `pairwise_sum` sums in one go (its unrolled eight-accumulator loop).
+const PW_BLOCK: usize = 128;
+
+/// Chunk size bounds, in leaves (a leaf is 64 to 128 elements): a chunk is big enough to amortise
+/// the call into numpy (and the hand-over of the GIL it needs), small enough that the data and
+/// both scratch buffers stay in cache between the passes over one chunk.
+const MIN_CHUNK_LEAVES: usize = 128;
+
+/// Below this many rows the passes stay on the calling thread: the evaluation is short enough
+/// that handing chunks to the pool (and each chunk's `log` through the GIL) costs more than it
+/// saves, and the profiler already spreads columns over threads (measured: break-even near
+/// 300k rows on 4 cores).
+const PAR_MIN_ROWS: usize = 1 << 18;
+const MAX_CHUNK_LEAVES: usize = 2048;
+
+/// How `pairwise_sum` splits `n > 128` elements: the left half, rounded down to a multiple of 8.
+fn pw_split(n: usize) -> usize {
+    let n2 = n / 2;
+    n2 - n2 % 8
+}
+
+fn pw_leaves(n: usize, off: usize, out: &mut Vec<usize>) {
+    if n <= PW_BLOCK {
+        out.push(off);
+    } else {
+        let n2 = pw_split(n);
+        pw_leaves(n2, off, out);
+        pw_leaves(n - n2, off + n2, out);
+    }
+}
+
+/// `pairwise_sum`'s additions above the leaves as a stack program: after pushing leaf `k`, add
+/// the top two entries `adds[k]` times (each add closes one node of the recursion).
+fn pw_adds(n: usize, adds: &mut Vec<u8>) {
+    if n <= PW_BLOCK {
+        adds.push(0);
+    } else {
+        let n2 = pw_split(n);
+        pw_adds(n2, adds);
+        pw_adds(n - n2, adds);
+        if let Some(last) = adds.last_mut() {
+            *last += 1;
+        }
+    }
+}
+
+/// Re-run `pairwise_sum`'s additions over precomputed leaf sums: the same tree, so the result is
+/// bit-for-bit what `pairwise_sum` returns on the whole array (each add is `left + right`, and
+/// IEEE addition is commutative).
+fn pw_combine(adds: &[u8], sums: &[f64]) -> f64 {
+    let mut stack = [0.0f64; 64];
+    let mut top = 0;
+    for (sum, &k) in sums.iter().zip(adds) {
+        stack[top] = *sum;
+        top += 1;
+        for _ in 0..k {
+            top -= 1;
+            stack[top - 1] += stack[top];
+        }
+    }
+    stack[0]
+}
+
+/// The leaves of `pairwise_sum`'s block tree over `n` elements. A leaf is summed on its own by
+/// `pairwise_sum` (at most 128 elements), so any work that is element-wise can be done leaf by
+/// leaf, in any order and on any thread, and combined afterwards with `pw_combine`.
+struct Plan {
+    n: usize,
+    /// Start offset of every leaf, then `n`.
+    starts: Vec<usize>,
+    /// The additions above the leaves (see `pw_adds`).
+    adds: Vec<u8>,
+    /// Leaves per chunk.
+    chunk_leaves: usize,
+}
+
+/// One chunk of whole leaves handed to a pass: the element range, the leaf starts (plus the next
+/// start), the slots for the leaf sums, and the chunk's slices of the two scratch buffers.
+struct Chunk<'a> {
+    lo: usize,
+    hi: usize,
+    starts: &'a [usize],
+    sums: &'a mut [f64],
+    b1: &'a mut [f64],
+    b2: &'a mut [f64],
+}
+
+/// `pairwise_sum` of every leaf of `vals` (the chunk starting at element `lo`).
+fn leaf_sums(vals: &[f64], starts: &[usize], lo: usize, sums: &mut [f64]) {
+    for (k, slot) in sums.iter_mut().enumerate() {
+        *slot = pairwise_sum(&vals[starts[k] - lo..starts[k + 1] - lo]);
+    }
+}
+
+impl Plan {
+    /// With `par`, aim for several chunks per rayon thread so that the work balances.
+    fn new(n: usize, par: bool) -> Plan {
+        let mut starts = Vec::with_capacity(n / 64 + 2);
+        pw_leaves(n, 0, &mut starts);
+        starts.push(n);
+        let mut adds = Vec::with_capacity(starts.len());
+        pw_adds(n, &mut adds);
+        let leaves = starts.len() - 1;
+        let chunk_leaves = if par {
+            leaves.div_ceil(4 * rayon::current_num_threads())
+        } else {
+            MAX_CHUNK_LEAVES / 4
+        }
+        .clamp(MIN_CHUNK_LEAVES, MAX_CHUNK_LEAVES);
+        Plan {
+            n,
+            starts,
+            adds,
+            chunk_leaves,
+        }
+    }
+
+    /// Run `pass` over every chunk (in parallel when `par`) and return the pairwise sum of what
+    /// the passes stored as leaf sums. `b1` and `b2` hold at least `n` elements.
+    fn run<F>(&self, par: bool, sums: &mut Vec<f64>, b1: &mut [f64], b2: &mut [f64], pass: F) -> f64
+    where
+        F: Fn(Chunk<'_>) + Sync + Send,
+    {
+        let leaves = self.starts.len() - 1;
+        sums.clear();
+        sums.resize(leaves, 0.0);
+        let mut tasks = Vec::with_capacity(leaves.div_ceil(self.chunk_leaves));
+        let (mut r1, mut r2, mut rs) = (&mut b1[..self.n], &mut b2[..self.n], &mut sums[..]);
+        let mut l0 = 0;
+        while l0 < leaves {
+            let l1 = (l0 + self.chunk_leaves).min(leaves);
+            let (lo, hi) = (self.starts[l0], self.starts[l1]);
+            let (a1, t1) = r1.split_at_mut(hi - lo);
+            let (a2, t2) = r2.split_at_mut(hi - lo);
+            let (as_, ts) = rs.split_at_mut(l1 - l0);
+            (r1, r2, rs) = (t1, t2, ts);
+            tasks.push(Chunk {
+                lo,
+                hi,
+                starts: &self.starts[l0..=l1],
+                sums: as_,
+                b1: a1,
+                b2: a2,
+            });
+            l0 = l1;
+        }
+        if par {
+            tasks.into_par_iter().for_each(&pass);
+        } else {
+            tasks.into_iter().for_each(&pass);
+        }
+        pw_combine(&self.adds, sums)
+    }
 }
 
 /// `np.spacing(x)`: distance to the adjacent float away from zero, signed like x.
@@ -297,14 +462,14 @@ fn cdf(d: Dist, x: f64, p: &[f64]) -> f64 {
     }
 }
 
-/// KS statistic of sorted data against a fitted candidate.
-fn ks_stat_sorted(xs: &[f64], d: Dist, p: &[f64]) -> f64 {
-    let n = xs.len() as f64;
+/// The running maxima of `ks_stat_sorted` over `xs[..]`, whose first element has rank `first`.
+fn ks_partial(xs: &[f64], first: usize, n: f64, d: Dist, p: &[f64]) -> (f64, f64) {
     let (mut dplus, mut dminus) = (f64::NEG_INFINITY, f64::NEG_INFINITY);
     for (i, x) in xs.iter().enumerate() {
+        let rank = (first + i) as f64;
         let c = cdf(d, *x, p);
-        let plus = (i as f64 + 1.0) / n - c;
-        let minus = c - i as f64 / n;
+        let plus = (rank + 1.0) / n - c;
+        let minus = c - rank / n;
         if plus.is_nan() || plus > dplus {
             dplus = plus;
         }
@@ -312,6 +477,30 @@ fn ks_stat_sorted(xs: &[f64], d: Dist, p: &[f64]) -> f64 {
             dminus = minus;
         }
     }
+    (dplus, dminus)
+}
+
+/// KS statistic of sorted data against a fitted candidate. A NaN anywhere makes the statistic
+/// NaN and otherwise it is the first maximum, so chunks of the array can be scanned in parallel
+/// and their maxima merged in order with the same update rule.
+fn ks_stat_sorted(xs: &[f64], d: Dist, p: &[f64]) -> f64 {
+    let n = xs.len() as f64;
+    const CHUNK: usize = 1 << 16;
+    let (dplus, dminus) = if xs.len() >= PAR_MIN_ROWS && crate::can_par() {
+        let parts: Vec<(f64, f64)> = xs
+            .par_chunks(CHUNK)
+            .enumerate()
+            .map(|(k, c)| ks_partial(c, k * CHUNK, n, d, p))
+            .collect();
+        let merge = |acc: f64, v: f64| if v.is_nan() || v > acc { v } else { acc };
+        parts
+            .iter()
+            .fold((f64::NEG_INFINITY, f64::NEG_INFINITY), |(a, b), (x, y)| {
+                (merge(a, *x), merge(b, *y))
+            })
+    } else {
+        ks_partial(xs, 0, n, d, p)
+    };
     if dplus > dminus {
         dplus
     } else {
@@ -730,7 +919,7 @@ thread_local! {
 /// (what scipy evaluates, and several times faster than libm per element).
 fn lognorm_logpdf_inplace(xs: &mut [f64], ts: &mut Vec<f64>, s: f64) {
     ts.clear();
-    ts.extend(xs.iter().map(|x| s * x * SQRT2PI));
+    ts.extend(xs.iter().map(|x| s * x * NP_SQRT_2PI));
     ln_inplace(xs);
     ln_inplace(ts);
     let two_s2 = 2.0 * s * s;
@@ -739,8 +928,10 @@ fn lognorm_logpdf_inplace(xs: &mut [f64], ts: &mut Vec<f64>, s: f64) {
     }
 }
 
-/// `rv_continuous.nnlf` for lognorm (not penalised).
-fn lognorm_nnlf(theta: &[f64; 3], data: &[f64]) -> f64 {
+/// `rv_continuous.nnlf` for lognorm (not penalised): the reference the chunked `Eval::nnlf` is
+/// tested against.
+#[cfg(test)]
+fn lognorm_nnlf_ref(theta: &[f64; 3], data: &[f64]) -> f64 {
     let (s, loc, scale) = (theta[0], theta[1], theta[2]);
     if !(s > 0.0) || scale <= 0.0 {
         return f64::INFINITY;
@@ -761,8 +952,10 @@ fn lognorm_nnlf(theta: &[f64; 3], data: &[f64]) -> f64 {
     })
 }
 
-/// `rv_continuous._penalized_nnlf` for lognorm.
-fn lognorm_penalized_nnlf(theta: &[f64; 3], data: &[f64]) -> f64 {
+/// `rv_continuous._penalized_nnlf` for lognorm over the whole array at once. `Eval::penalized_nnlf`
+/// takes over unless some value falls outside the support (the compacted array then has another
+/// block tree, so this is the only exact way to sum it).
+fn lognorm_penalized_nnlf_ref(theta: &[f64; 3], data: &[f64]) -> f64 {
     let (s, loc, scale) = (theta[0], theta[1], theta[2]);
     if !(s > 0.0) || scale <= 0.0 {
         return f64::INFINITY;
@@ -806,7 +999,7 @@ fn argsort(v: &[f64]) -> Vec<usize> {
 
 /// `scipy.optimize.fmin` (`_minimize_neldermead`, non-adaptive, no bounds) on the penalized
 /// lognorm nnlf.
-fn nelder_mead(x0: [f64; 3], data: &[f64]) -> [f64; 3] {
+fn nelder_mead<O: Fn(&[f64; 3]) -> f64>(x0: [f64; 3], objective: O) -> [f64; 3] {
     let (rho, chi, psi, sigma) = (1.0, 2.0, 0.5, 0.5);
     let (nonzdelt, zdelt) = (0.05, 0.000_25);
     let (xatol, fatol) = (1e-4, 1e-4);
@@ -830,7 +1023,7 @@ fn nelder_mead(x0: [f64; 3], data: &[f64]) -> [f64; 3] {
             return Err(MaxFun);
         }
         ncalls.set(ncalls.get() + 1);
-        Ok(lognorm_penalized_nnlf(x, data))
+        Ok(objective(x))
     };
     let mut fsim = [f64::INFINITY; N + 1];
     for k in 0..=N {
@@ -943,7 +1136,14 @@ fn nelder_mead(x0: [f64; 3], data: &[f64]) -> [f64; 3] {
 }
 
 /// `rv_continuous.fit` (MLE via fmin) for lognorm, including `_fitstart`.
-fn lognorm_generic_fit(data: &[f64]) -> Result<[f64; 3], FitError> {
+fn lognorm_generic_fit(ev: &Eval) -> Result<[f64; 3], FitError> {
+    lognorm_generic_fit_with(ev.data, |x| ev.penalized_nnlf(x))
+}
+
+fn lognorm_generic_fit_with<O: Fn(&[f64; 3]) -> f64>(
+    data: &[f64],
+    objective: O,
+) -> Result<[f64; 3], FitError> {
     let p = sc_exp(1.0);
     let (mu, mu2) = (p.sqrt(), p * (p - 1.0));
     let muhat = mean(data);
@@ -967,7 +1167,7 @@ fn lognorm_generic_fit(data: &[f64]) -> Result<[f64; 3], FitError> {
         loc_hat = (data_a - 0.0) - margin;
         scale_hat = 1.0;
     }
-    let vals = nelder_mead([1.0, loc_hat, scale_hat], data);
+    let vals = nelder_mead([1.0, loc_hat, scale_hat], objective);
     if !(vals[0] > 0.0 && vals[2] > 0.0) {
         return Err(FitError);
     }
@@ -1050,72 +1250,212 @@ fn brentq<F: FnMut(f64) -> f64>(mut f: F, xa: f64, xb: f64) -> Option<(f64, bool
     Some((xcur, false))
 }
 
-/// Scratch buffers and the three functions of scipy's lognorm `fit` override, all evaluated
-/// over one data array (two reusable buffers instead of fresh temporaries).
-struct LogFit<'a> {
+/// The likelihood functions of scipy's lognorm `fit` override and of the generic fit, evaluated
+/// over one data array. Every pass is element-wise work plus a `pairwise_sum`, so each runs
+/// chunk by chunk over `pairwise_sum`'s leaves (see `Plan`): in parallel, with the data, the two
+/// scratch buffers and numpy's `log` all hot in cache, and the leaf sums recombined in the
+/// reference's own order. The results equal the whole-array evaluation bit for bit.
+struct Eval<'a> {
     data: &'a [f64],
+    data_min: f64,
+    plan: Plan,
     par: bool,
+    /// `shape_scale` of the last `loc` (the search asks for `dl_dloc` and `ll` at the same point).
+    last: std::cell::Cell<Option<(f64, f64, f64)>>,
+    /// Every `dl_dloc` value computed so far, by the bits of `loc`: the root finder asks again
+    /// for the two ends of its bracket.
+    dl_seen: std::cell::RefCell<Vec<(u64, f64)>>,
+    sums: std::cell::RefCell<Vec<f64>>,
     b1: std::cell::RefCell<Vec<f64>>,
     b2: std::cell::RefCell<Vec<f64>>,
 }
 
-impl LogFit<'_> {
-    fn shape_scale(&self, loc: f64) -> (f64, f64) {
+/// Why `Eval::nnlf_chunked` did not produce a value.
+enum Unusable {
+    /// Some scaled value is not in (0, inf): the likelihood is +inf (or penalised).
+    OutOfSupport,
+    /// Some log-density is not finite (only reported when asked to).
+    NonFinite,
+}
+
+impl<'a> Eval<'a> {
+    fn new(data: &'a [f64]) -> Eval<'a> {
+        let n = data.len();
+        let par = n >= PAR_MIN_ROWS && crate::can_par();
+        Eval {
+            data,
+            data_min: data.iter().cloned().fold(f64::INFINITY, f64::min),
+            plan: Plan::new(n, par),
+            par,
+            last: std::cell::Cell::new(None),
+            dl_seen: std::cell::RefCell::new(Vec::new()),
+            sums: std::cell::RefCell::new(Vec::new()),
+            b1: std::cell::RefCell::new(vec![0.0; n]),
+            b2: std::cell::RefCell::new(vec![0.0; n]),
+        }
+    }
+
+    /// Run one pass over the data (see `Plan::run`), on the rayon pool if `par_ok`. When `log`
+    /// goes through Python, a pass that calls numpy's `log` on a value that is not positive makes
+    /// numpy raise a floating-point error flag, whose reporting is set up for the calling thread
+    /// only (`ignore_fp_errors`), so such a pass has to stay on the calling thread: the callers
+    /// say so with `par_ok`. With the GIL-free hooks there is no such state.
+    fn pass<F>(&self, par_ok: bool, f: F) -> f64
+    where
+        F: Fn(Chunk<'_>) + Sync + Send,
+    {
+        let mut sums = self.sums.borrow_mut();
         let mut b1 = self.b1.borrow_mut();
         let mut b2 = self.b2.borrow_mut();
-        if self.par {
-            b1.par_iter_mut()
-                .zip(self.data.par_iter())
-                .for_each(|(o, v)| *o = v - loc);
-        } else {
-            for (o, v) in b1.iter_mut().zip(self.data) {
+        self.plan
+            .run(self.par && par_ok, &mut sums, &mut b1, &mut b2, f)
+    }
+
+    /// `(shape, scale)` of the lognormal fitted at `loc`: `scale = exp(mean(log(x - loc)))`,
+    /// `shape = sqrt(mean((log(x - loc) - log(scale))^2))`.
+    fn shape_scale(&self, loc: f64) -> (f64, f64) {
+        if let Some((l, shape, scale)) = self.last.get() {
+            if l.to_bits() == loc.to_bits() {
+                return (shape, scale);
+            }
+        }
+        let data = self.data;
+        let n = data.len() as f64;
+        // every log input v - loc is positive iff the smallest is
+        let sum_log = self.pass(self.data_min - loc > 0.0, |c| {
+            for (o, v) in c.b1.iter_mut().zip(&data[c.lo..c.hi]) {
                 *o = v - loc;
             }
-        }
-        ln_inplace(&mut b1);
-        let scale = sc_exp(mean(&b1));
+            ln_inplace(c.b1);
+            leaf_sums(c.b1, c.starts, c.lo, c.sums);
+        });
+        let scale = sc_exp(sum_log / n);
         let ls = sc_ln(scale);
-        if self.par {
-            b2.par_iter_mut().zip(b1.par_iter()).for_each(|(o, l)| {
-                let d = l - ls;
-                *o = d * d;
-            });
-        } else {
-            for (o, l) in b2.iter_mut().zip(b1.iter()) {
-                let d = l - ls;
-                *o = d * d;
+        // the logs are still in `b1`; the squared deviations are summed leaf by leaf
+        let sum_sq = self.pass(true, |c| {
+            let mut sq = [0.0f64; PW_BLOCK];
+            for (k, slot) in c.sums.iter_mut().enumerate() {
+                let logs = &c.b1[c.starts[k] - c.lo..c.starts[k + 1] - c.lo];
+                for (o, l) in sq.iter_mut().zip(logs) {
+                    let d = l - ls;
+                    *o = d * d;
+                }
+                *slot = pairwise_sum(&sq[..logs.len()]);
             }
-        }
-        (mean(&b2).sqrt(), scale)
+        });
+        let shape = (sum_sq / n).sqrt();
+        self.last.set(Some((loc, shape, scale)));
+        (shape, scale)
     }
 
     fn dl_dloc(&self, loc: f64) -> f64 {
+        let key = loc.to_bits();
+        if let Some((_, d)) = self.dl_seen.borrow().iter().find(|(k, _)| *k == key) {
+            return *d;
+        }
+        let d = self.dl_dloc_uncached(loc);
+        let mut seen = self.dl_seen.borrow_mut();
+        if seen.len() < 256 {
+            seen.push((key, d));
+        }
+        d
+    }
+
+    fn dl_dloc_uncached(&self, loc: f64) -> f64 {
         let (shape, scale) = self.shape_scale(loc);
         let s2 = shape * shape;
-        let mut b1 = self.b1.borrow_mut();
-        for (o, v) in b1.iter_mut().zip(self.data) {
-            *o = (v - loc) / scale;
-        }
-        ln_inplace(&mut b1);
-        let one = |o: &mut f64, v: &f64| {
-            let shifted = v - loc;
-            *o = (1.0 + *o / s2) / shifted;
-        };
-        if self.par {
-            b1.par_iter_mut()
-                .zip(self.data.par_iter())
-                .for_each(|(o, v)| one(o, v));
-        } else {
-            for (o, v) in b1.iter_mut().zip(self.data) {
-                one(o, v);
+        let data = self.data;
+        // x = (v - loc) / scale is monotone in v, so its smallest value is the first to fail
+        let x_min = (self.data_min - loc) / scale;
+        self.pass(x_min > 0.0, |c| {
+            let d = &data[c.lo..c.hi];
+            for (o, v) in c.b1.iter_mut().zip(d) {
+                *o = (v - loc) / scale;
             }
-        }
-        pairwise_sum(&b1)
+            ln_inplace(c.b1);
+            for (o, v) in c.b1.iter_mut().zip(d) {
+                let shifted = v - loc;
+                *o = (1.0 + *o / s2) / shifted;
+            }
+            leaf_sums(c.b1, c.starts, c.lo, c.sums);
+        })
     }
 
     fn ll(&self, loc: f64) -> f64 {
         let (shape, scale) = self.shape_scale(loc);
-        -lognorm_nnlf(&[shape, loc, scale], self.data)
+        -self.nnlf(&[shape, loc, scale])
+    }
+
+    /// `sum(logpdf)` over every element, negated, plus `n log(scale)`; `None` if a scaled value
+    /// is outside the support, or (with `strict`) a log-density is not finite.
+    fn nnlf_chunked(&self, theta: &[f64; 3], strict: bool) -> Result<f64, Unusable> {
+        let (s, loc, scale) = (theta[0], theta[1], theta[2]);
+        // The smallest value alone decides: x = (v - loc) / scale is monotone in v, so unless
+        // the smallest x is in (0, inf) some element is out of the support (NaN fails too).
+        let x_min = (self.data_min - loc) / scale;
+        if !(0.0 < x_min && x_min < f64::INFINITY) {
+            return Err(Unusable::OutOfSupport);
+        }
+        // the densities' own log argument s * x is positive for every element iff for the smallest
+        let par_ok = s * x_min * NP_SQRT_2PI > 0.0;
+        let n_log_scale = self.data.len() as f64 * sc_ln(scale);
+        let two_s2 = 2.0 * s * s;
+        let data = self.data;
+        let unusable = std::sync::atomic::AtomicU8::new(0);
+        let relaxed = std::sync::atomic::Ordering::Relaxed;
+        let sum = self.pass(par_ok, |c| {
+            if unusable.load(relaxed) != 0 {
+                return;
+            }
+            // x, the log argument of the density and the support check in one sweep
+            let mut in_support = true;
+            for ((x, t), v) in c.b1.iter_mut().zip(c.b2.iter_mut()).zip(&data[c.lo..c.hi]) {
+                let xv = (v - loc) / scale;
+                *x = xv;
+                *t = s * xv * NP_SQRT_2PI;
+                in_support &= (0.0 < xv) & (xv < f64::INFINITY);
+            }
+            if !in_support {
+                unusable.store(1, relaxed);
+                return;
+            }
+            ln_inplace(c.b1);
+            ln_inplace(c.b2);
+            let mut finite = true;
+            for (l, t) in c.b1.iter_mut().zip(c.b2.iter()) {
+                *l = -(*l * *l) / two_s2 - t;
+                finite &= l.is_finite();
+            }
+            if strict && !finite {
+                unusable.store(2, relaxed);
+                return;
+            }
+            leaf_sums(c.b1, c.starts, c.lo, c.sums);
+        });
+        match unusable.load(relaxed) {
+            0 => Ok(-sum + n_log_scale),
+            1 => Err(Unusable::OutOfSupport),
+            _ => Err(Unusable::NonFinite),
+        }
+    }
+
+    /// `rv_continuous.nnlf` for lognorm (not penalised).
+    fn nnlf(&self, theta: &[f64; 3]) -> f64 {
+        if !(theta[0] > 0.0) || theta[2] <= 0.0 {
+            return f64::INFINITY;
+        }
+        self.nnlf_chunked(theta, false).unwrap_or(f64::INFINITY)
+    }
+
+    /// `rv_continuous._penalized_nnlf` for lognorm.
+    fn penalized_nnlf(&self, theta: &[f64; 3]) -> f64 {
+        if !(theta[0] > 0.0) || theta[2] <= 0.0 {
+            return f64::INFINITY;
+        }
+        match self.nnlf_chunked(theta, true) {
+            Ok(v) => v,
+            Err(_) => lognorm_penalized_nnlf_ref(theta, self.data),
+        }
     }
 }
 
@@ -1124,14 +1464,8 @@ fn lognorm_fit(data: &[f64]) -> Result<[f64; 3], FitError> {
     if !all_finite(data) {
         return Err(FitError);
     }
-    let n = data.len();
-    let data_min = data.iter().cloned().fold(f64::INFINITY, f64::min);
-    let lf = LogFit {
-        data,
-        par: n >= 1 << 16 && crate::can_par(),
-        b1: std::cell::RefCell::new(vec![0.0; n]),
-        b2: std::cell::RefCell::new(vec![0.0; n]),
-    };
+    let lf = Eval::new(data);
+    let data_min = lf.data_min;
     let spacing_v = spacing(data_min);
     let mut rbrack = data_min - spacing_v;
     let mut d_rbrack = lf.dl_dloc(rbrack);
@@ -1143,7 +1477,7 @@ fn lognorm_fit(data: &[f64]) -> Result<[f64; 3], FitError> {
         delta *= 2.0;
     }
     if !rbrack.is_finite() || !d_rbrack.is_finite() {
-        return lognorm_generic_fit(data);
+        return lognorm_generic_fit(&lf);
     }
     let mut lbrack = nextafter(rbrack, f64::NEG_INFINITY).min(rbrack - 1.0);
     let mut d_lbrack = lf.dl_dloc(lbrack);
@@ -1154,11 +1488,11 @@ fn lognorm_fit(data: &[f64]) -> Result<[f64; 3], FitError> {
         delta *= 2.0;
     }
     if !lbrack.is_finite() || !d_lbrack.is_finite() {
-        return lognorm_generic_fit(data);
+        return lognorm_generic_fit(&lf);
     }
     let root = match brentq(|x| lf.dl_dloc(x), lbrack, rbrack) {
         Some((r, true)) => r,
-        _ => return lognorm_generic_fit(data),
+        _ => return lognorm_generic_fit(&lf),
     };
     let ll_root = lf.ll(root);
     let loc = if ll_root > ll_rbrack {
@@ -1168,7 +1502,7 @@ fn lognorm_fit(data: &[f64]) -> Result<[f64; 3], FitError> {
     };
     let (shape, scale) = lf.shape_scale(loc);
     if !(shape > 0.0 && scale > 0.0) {
-        return lognorm_generic_fit(data);
+        return lognorm_generic_fit(&lf);
     }
     Ok([shape, loc, scale])
 }
@@ -1176,13 +1510,7 @@ fn lognorm_fit(data: &[f64]) -> Result<[f64; 3], FitError> {
 /// `(shape, scale, dL/dloc, log-likelihood)` of the lognormal objective at `loc`, for testing
 /// the pieces of the fit against numpy.
 pub fn lognorm_probe(data: &[f64], loc: f64) -> (f64, f64, f64, f64) {
-    let n = data.len();
-    let lf = LogFit {
-        data,
-        par: n >= 1 << 16 && crate::can_par(),
-        b1: std::cell::RefCell::new(vec![0.0; n]),
-        b2: std::cell::RefCell::new(vec![0.0; n]),
-    };
+    let lf = Eval::new(data);
     let (shape, scale) = lf.shape_scale(loc);
     (shape, scale, lf.dl_dloc(loc), lf.ll(loc))
 }
@@ -1311,5 +1639,350 @@ mod tests {
         let (d, p) = detect_distribution(&v).expect("fits");
         assert_eq!(d, Dist::Normal);
         assert!((p[0] - 50.0).abs() < 1.0 && (p[1] - 5.0).abs() < 1.0);
+    }
+
+    // ------------------------------------------------------------ P1-16 differential tests
+    //
+    // The chunked, parallel likelihood passes must equal the whole-array evaluation bit for bit.
+    // The references below are the previous implementation (one pass per array, serial
+    // `pairwise_sum`); `ln` is libm's in both, since no numpy hook is installed in unit tests.
+
+    struct Lcg(u64);
+
+    impl Lcg {
+        fn next(&mut self) -> f64 {
+            self.0 = self
+                .0
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            ((self.0 >> 11) as f64 + 0.5) / (1u64 << 53) as f64
+        }
+
+        fn normal(&mut self) -> f64 {
+            (-2.0 * self.next().ln()).sqrt() * (2.0 * PI * self.next()).cos()
+        }
+    }
+
+    fn same(a: f64, b: f64) -> bool {
+        a.to_bits() == b.to_bits() || (a.is_nan() && b.is_nan())
+    }
+
+    fn ref_shape_scale(data: &[f64], loc: f64) -> (f64, f64, Vec<f64>) {
+        let mut b1: Vec<f64> = data.iter().map(|v| v - loc).collect();
+        ln_inplace(&mut b1);
+        let scale = sc_exp(mean(&b1));
+        let ls = sc_ln(scale);
+        let b2: Vec<f64> = b1
+            .iter()
+            .map(|l| {
+                let d = l - ls;
+                d * d
+            })
+            .collect();
+        (mean(&b2).sqrt(), scale, b1)
+    }
+
+    fn ref_dl_dloc(data: &[f64], loc: f64) -> f64 {
+        let (shape, scale, _) = ref_shape_scale(data, loc);
+        let s2 = shape * shape;
+        let mut b1: Vec<f64> = data.iter().map(|v| (v - loc) / scale).collect();
+        ln_inplace(&mut b1);
+        for (o, v) in b1.iter_mut().zip(data) {
+            *o = (1.0 + *o / s2) / (v - loc);
+        }
+        pairwise_sum(&b1)
+    }
+
+    fn datasets(n: usize, rng: &mut Lcg) -> Vec<(&'static str, Vec<f64>)> {
+        vec![
+            (
+                "lognormal",
+                (0..n).map(|_| (1.0 + 0.5 * rng.normal()).exp()).collect(),
+            ),
+            (
+                "normal",
+                (0..n).map(|_| 250.0 + 40.0 * rng.normal()).collect(),
+            ),
+            (
+                "negative",
+                (0..n).map(|_| -3.0 + 0.7 * rng.normal()).collect(),
+            ),
+            (
+                "rounded",
+                (0..n).map(|_| (100.0 * rng.next()).round() / 4.0).collect(),
+            ),
+            (
+                "wide",
+                (0..n).map(|_| (12.0 * rng.normal()).exp()).collect(),
+            ),
+            ("constant", vec![3.25; n]),
+        ]
+    }
+
+    const SIZES: [usize; 14] = [
+        20, 127, 128, 129, 136, 257, 1000, 4097, 16_385, 40_000, 65_535, 65_536, 70_001, 150_011,
+    ];
+
+    #[test]
+    fn pw_combine_is_pairwise_sum() {
+        let mut rng = Lcg(7);
+        for n in (0..1300).chain([5000, 65_536, 100_003, 1_000_001]) {
+            let v: Vec<f64> = (0..n)
+                .map(|_| rng.normal() * (30.0 * rng.normal()).exp())
+                .collect();
+            let plan = Plan::new(n, true);
+            let sums: Vec<f64> = plan
+                .starts
+                .windows(2)
+                .map(|w| pairwise_sum(&v[w[0]..w[1]]))
+                .collect();
+            let got = pw_combine(&plan.adds, &sums);
+            assert!(same(got, pairwise_sum(&v)), "n={n}");
+            assert!(plan.starts.windows(2).all(|w| w[1] - w[0] <= PW_BLOCK));
+        }
+    }
+
+    #[test]
+    fn chunked_passes_equal_whole_array_passes() {
+        let mut rng = Lcg(11);
+        for (i, &n) in SIZES.iter().enumerate() {
+            for (name, data) in datasets(n, &mut rng) {
+                let mut ev = Eval::new(&data);
+                // vary the chunk size: one chunk per leaf, a few leaves, the default
+                match i % 3 {
+                    0 => ev.plan.chunk_leaves = 1,
+                    1 => ev.plan.chunk_leaves = 7,
+                    _ => {}
+                }
+                let mn = ev.data_min;
+                let spread = data.iter().cloned().fold(f64::NEG_INFINITY, f64::max) - mn;
+                for loc in [
+                    mn - 1e-9 * (1.0 + mn.abs()),
+                    mn - 0.3 * spread - 0.1,
+                    mn - 5.0 * spread - 1.0,
+                    mn - 1.0e6,
+                    mn,
+                    mn + 0.5,
+                ] {
+                    let ctx = format!("{name} n={n} loc={loc}");
+                    let (rs, rc, _) = ref_shape_scale(&data, loc);
+                    let (s, c) = ev.shape_scale(loc);
+                    assert!(same(s, rs) && same(c, rc), "shape_scale {ctx}");
+                    assert!(
+                        same(ev.dl_dloc(loc), ref_dl_dloc(&data, loc)),
+                        "dl_dloc {ctx}"
+                    );
+                    let ll_ref = -lognorm_nnlf_ref(&[rs, loc, rc], &data);
+                    assert!(same(ev.ll(loc), ll_ref), "ll {ctx}");
+                    for theta in [
+                        [rs, loc, rc],
+                        [0.9, loc, rc * 1.3 + 1e-3],
+                        [1.0, loc - 0.5, 2.0],
+                    ] {
+                        assert!(
+                            same(ev.nnlf(&theta), lognorm_nnlf_ref(&theta, &data)),
+                            "nnlf {ctx} {theta:?}"
+                        );
+                        assert!(
+                            same(
+                                ev.penalized_nnlf(&theta),
+                                lognorm_penalized_nnlf_ref(&theta, &data)
+                            ),
+                            "penalized {ctx} {theta:?}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn nonfinite_log_densities_and_invalid_parameters_match() {
+        let mut data: Vec<f64> = (1..=3000).map(|i| i as f64 * 0.01).collect();
+        data[1500] = f64::MIN_POSITIVE * 4.0; // x underflows for a large scale
+        let ev = Eval::new(&data);
+        for theta in [
+            [0.5, -1.0, 1e300],
+            [1e-200, 0.0, 1.0],
+            [f64::NAN, 0.0, 1.0],
+            [1.0, f64::NAN, 1.0],
+            [1.0, 0.0, f64::NAN],
+            [-1.0, 0.0, 1.0],
+            [1.0, 0.0, 0.0],
+            [1.0, -1e300, 1.0],
+            [f64::INFINITY, -2.0, 3.0],
+        ] {
+            assert!(
+                same(ev.nnlf(&theta), lognorm_nnlf_ref(&theta, &data)),
+                "nnlf {theta:?}"
+            );
+            assert!(
+                same(
+                    ev.penalized_nnlf(&theta),
+                    lognorm_penalized_nnlf_ref(&theta, &data)
+                ),
+                "penalized {theta:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn nelder_mead_fallback_follows_the_same_path() {
+        let mut rng = Lcg(23);
+        for &n in &[40usize, 500, 3000, 70_001] {
+            for (name, data) in datasets(n, &mut rng) {
+                let ev = Eval::new(&data);
+                let got = lognorm_generic_fit(&ev);
+                let want =
+                    lognorm_generic_fit_with(&data, |x| lognorm_penalized_nnlf_ref(x, &data));
+                match (got, want) {
+                    (Ok(a), Ok(b)) => {
+                        assert!(
+                            a.iter().zip(&b).all(|(x, y)| same(*x, *y)),
+                            "{name} n={n}: {a:?} {b:?}"
+                        )
+                    }
+                    (Err(_), Err(_)) => {}
+                    _ => panic!("{name} n={n}: one path failed"),
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn lognormal_fit_equals_the_whole_array_fit() {
+        // brentq's bracket search and root-finding go through `dl_dloc` hundreds of times: the
+        // fitted parameters must agree bit for bit
+        let mut rng = Lcg(31);
+        for &n in &[60usize, 2000, 20_000, 70_001, 150_011] {
+            for (name, data) in datasets(n, &mut rng) {
+                if n > 100_000 && !matches!(name, "lognormal" | "normal") {
+                    continue; // the big size is for the multi-chunk path; keep the debug run short
+                }
+                let got = lognorm_fit(&data);
+                let want = ref_lognorm_fit(&data);
+                match (got, want) {
+                    (Ok(a), Ok(b)) => {
+                        assert!(
+                            a.iter().zip(&b).all(|(x, y)| same(*x, *y)),
+                            "{name} n={n}: {a:?} {b:?}"
+                        )
+                    }
+                    (Err(_), Err(_)) => {}
+                    _ => panic!("{name} n={n}: one path failed"),
+                }
+            }
+        }
+    }
+
+    /// `ks_stat_sorted` as it was before the chunked scan: one running maximum over the array.
+    fn ref_ks_stat_sorted(xs: &[f64], d: Dist, p: &[f64]) -> f64 {
+        let n = xs.len() as f64;
+        let (mut dplus, mut dminus) = (f64::NEG_INFINITY, f64::NEG_INFINITY);
+        for (i, x) in xs.iter().enumerate() {
+            let c = cdf(d, *x, p);
+            let plus = (i as f64 + 1.0) / n - c;
+            let minus = c - i as f64 / n;
+            if plus.is_nan() || plus > dplus {
+                dplus = plus;
+            }
+            if minus.is_nan() || minus > dminus {
+                dminus = minus;
+            }
+        }
+        if dplus > dminus {
+            dplus
+        } else {
+            dminus
+        }
+    }
+
+    #[test]
+    fn chunked_ks_statistic_equals_the_serial_scan() {
+        let mut rng = Lcg(41);
+        for &n in &[
+            20usize,
+            1000,
+            65_536,
+            PAR_MIN_ROWS,
+            PAR_MIN_ROWS + 12_345,
+            700_001,
+        ] {
+            let mut xs: Vec<f64> = (0..n).map(|_| 10.0 + 3.0 * rng.normal()).collect();
+            xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            for (d, p) in [
+                (Dist::Normal, vec![10.1, 2.9]),
+                (Dist::Uniform, vec![xs[0], xs[n - 1] - xs[0]]),
+                (Dist::Exponential, vec![xs[0] - 0.1, 9.0]),
+                (Dist::Lognormal, vec![0.4, -5.0, 14.0]),
+                (Dist::Normal, vec![10.0, 0.0]), // scale 0: every cdf is NaN
+                (Dist::Lognormal, vec![0.4, 20.0, 14.0]), // all values below loc
+            ] {
+                assert!(
+                    same(ks_stat_sorted(&xs, d, &p), ref_ks_stat_sorted(&xs, d, &p)),
+                    "n={n} {d:?} {p:?}"
+                );
+            }
+            // a NaN in the middle poisons the statistic in both
+            let mut ys = xs.clone();
+            ys[n / 2] = f64::NAN;
+            let p = [10.0, 3.0];
+            assert!(same(
+                ks_stat_sorted(&ys, Dist::Normal, &p),
+                ref_ks_stat_sorted(&ys, Dist::Normal, &p)
+            ));
+        }
+    }
+
+    /// `lognorm_fit` as it was before P1-16: the same search over whole-array evaluations.
+    fn ref_lognorm_fit(data: &[f64]) -> Result<[f64; 3], FitError> {
+        if !all_finite(data) {
+            return Err(FitError);
+        }
+        let generic = || lognorm_generic_fit_with(data, |x| lognorm_penalized_nnlf_ref(x, data));
+        let dl = |loc: f64| ref_dl_dloc(data, loc);
+        let ll = |loc: f64| {
+            let (s, sc, _) = ref_shape_scale(data, loc);
+            -lognorm_nnlf_ref(&[s, loc, sc], data)
+        };
+        let data_min = data.iter().cloned().fold(f64::INFINITY, f64::min);
+        let spacing_v = spacing(data_min);
+        let mut rbrack = data_min - spacing_v;
+        let mut d_rbrack = dl(rbrack);
+        let ll_rbrack = ll(rbrack);
+        let mut delta = 2.0 * spacing_v;
+        while d_rbrack >= -1e-6 {
+            rbrack = data_min - delta;
+            d_rbrack = dl(rbrack);
+            delta *= 2.0;
+        }
+        if !rbrack.is_finite() || !d_rbrack.is_finite() {
+            return generic();
+        }
+        let mut lbrack = nextafter(rbrack, f64::NEG_INFINITY).min(rbrack - 1.0);
+        let mut d_lbrack = dl(lbrack);
+        let mut delta = 2.0 * (rbrack - lbrack);
+        while lbrack.is_finite() && d_lbrack.is_finite() && d_lbrack.signum() == d_rbrack.signum() {
+            lbrack = rbrack - delta;
+            d_lbrack = dl(lbrack);
+            delta *= 2.0;
+        }
+        if !lbrack.is_finite() || !d_lbrack.is_finite() {
+            return generic();
+        }
+        let root = match brentq(dl, lbrack, rbrack) {
+            Some((r, true)) => r,
+            _ => return generic(),
+        };
+        let loc = if ll(root) > ll_rbrack {
+            root
+        } else {
+            data_min - spacing_v
+        };
+        let (shape, scale, _) = ref_shape_scale(data, loc);
+        if !(shape > 0.0 && scale > 0.0) {
+            return generic();
+        }
+        Ok([shape, loc, scale])
     }
 }

@@ -1,0 +1,8 @@
+== heavy_rust: pytest -q -m heavy tests/kernel tests/profile -p no:cacheprovider
+........................................                                 [100%]
+40 passed, 207 deselected in 268.51s (0:04:28)
+
+real	4m29.303s
+user	5m56.869s
+sys	0m29.727s
+EXIT=0
