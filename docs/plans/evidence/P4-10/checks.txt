@@ -1,0 +1,18 @@
+E501 Line too long (112 > 100)
+ --> benchmarks/vs_spindle/domain_1to1/bench_cli.py:4:101
+  |
+3 |     source scripts/env.sh && "$SHAPE_VENV/bin/python" \\
+4 |         benchmarks/vs_spindle/domain_1to1/bench_cli.py --domain retail --scales medium,large --runs 5 --warmup 1
+  |                                                                                                     ^^^^^^^^^^^^
+5 |
+6 | Each timed run is a fresh process of
+  |
+
+Found 1 error.
+546 files already formatted
+Success: no issues found in 248 source files
+vulture=0
+
+Contracts: 1 kept, 0 broken.
+check_user_facing: clean
+bandit=0
