@@ -38,6 +38,13 @@ __all__ = [
     "GeoGridEvidence",
     "HashedDependencyEvidence",
     "FullEvidenceEngine",
+    "WindowedProfiler",
+    "TumblingProfiler",
+    "SlidingProfiler",
+    "SessionProfiler",
+    "GlobalProfiler",
+    "WindowProfile",
+    "restore_profiler",
 ]
 from .aggregate_windows import (
     AggregateTumblingWindow as AggregateTumblingWindow,
@@ -94,6 +101,13 @@ from .platinum import (
 from .platinum import (
     update_missingness_batch as update_missingness_batch,
 )
+from .runtime import GlobalProfiler as GlobalProfiler
+from .runtime import SessionProfiler as SessionProfiler
+from .runtime import SlidingProfiler as SlidingProfiler
+from .runtime import TumblingProfiler as TumblingProfiler
+from .runtime import WindowedProfiler as WindowedProfiler
+from .runtime import WindowProfile as WindowProfile
+from .runtime import restore_profiler as restore_profiler
 from .vectorized import (
     BatchCheckpoint as BatchCheckpoint,
 )

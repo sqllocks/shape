@@ -359,6 +359,76 @@ class _Column:
             for y, c in o.year.items():
                 self.year[y] = self.year.get(y, 0) + c
 
+    # ---------------------------------------------------------- snapshot
+    def write_snapshot(self, w: _Writer) -> None:
+        w.pack("BQQ", _KIND_CODE[self.kind], self.count, self.nulls)
+        k = self.kind
+        if k == "bool":
+            w.pack("QQ", self.true, self.false)
+        elif k in ("int", "float"):
+            w.pack("QQQQ", self.nan, self.pos_inf, self.neg_inf, self.finite)
+            w.pack("dd", self.mean, self.m2)
+            as_f = None if self.min is None else float(self.min)
+            w.opt(as_f, "d")
+            w.opt(None if self.max is None else float(self.max), "d")
+            w.opt(self.min if k == "int" else None, "i128")
+            w.opt(self.max if k == "int" else None, "i128")
+            if self.kll is None:
+                raise ValueError(_BOUNDED_ONLY)
+            _write_kll(w, self.kll)
+            _write_tracker(w, self.tracker)
+        elif k == "text":
+            w.opt_text(self.tmin)
+            w.opt_text(self.tmax)
+            w.pack("I", len(self.lengths))
+            for ln in sorted(self.lengths):
+                w.pack("QQ", ln, self.lengths[ln])
+            w.pack("12Q", *self.patterns.values())
+            _write_tracker(w, self.tracker)
+        elif k == "temporal":
+            w.opt(self.tmin_us, "q")
+            w.opt(self.tmax_us, "q")
+            w.pack("24Q7Q12Q", *self.hour, *self.dow, *self.month)
+            w.pack("I", len(self.year))
+            for y in sorted(self.year):
+                w.pack("qQ", y, self.year[y])
+            _write_tracker(w, self.tracker)
+
+    def read_snapshot(self, r: _Reader) -> None:
+        if r.unpack("B") != _KIND_CODE[self.kind]:
+            raise ValueError(f"snapshot column kind differs from the schema for {self.name!r}")
+        self.count, self.nulls = r.unpack("Q"), r.unpack("Q")
+        k = self.kind
+        if k == "bool":
+            self.true, self.false = r.unpack("Q"), r.unpack("Q")
+        elif k in ("int", "float"):
+            self.nan, self.pos_inf, self.neg_inf, self.finite = (r.unpack("Q") for _ in range(4))
+            self.mean, self.m2 = r.unpack("d"), r.unpack("d")
+            fmin, fmax = r.opt("d"), r.opt("d")
+            imin, imax = r.opt("i128"), r.opt("i128")
+            self.min, self.max = (imin, imax) if k == "int" else (fmin, fmax)
+            self.kll = _read_kll(r)
+            self.tracker = _read_tracker(r)
+        elif k == "text":
+            self.tmin, self.tmax = r.opt_text(), r.opt_text()
+            self.lengths = {}
+            for _ in range(r.unpack("I")):
+                ln = r.unpack("Q")
+                self.lengths[ln] = r.unpack("Q")
+            for name in self.patterns:
+                self.patterns[name] = r.unpack("Q")
+            self.tracker = _read_tracker(r)
+        elif k == "temporal":
+            self.tmin_us, self.tmax_us = r.opt("q"), r.opt("q")
+            for hist in (self.hour, self.dow, self.month):
+                for i in range(len(hist)):
+                    hist[i] = r.unpack("Q")
+            self.year = {}
+            for _ in range(r.unpack("I")):
+                y = r.unpack("q")
+                self.year[y] = r.unpack("Q")
+            self.tracker = _read_tracker(r)
+
     # ---------------------------------------------------------- finalize
     def finalize(self, top_n: int) -> dict[str, Any]:
         d: dict[str, Any] = {
@@ -420,6 +490,152 @@ class _Column:
         return d
 
 
+# ---------------------------------------------------------------- snapshot
+# Bounded-mode state as bytes, identical to the Rust kernel's format (see
+# ``rust/shape-kernel/src/profile.rs``): a restored state continues exactly as the original.
+
+_SNAP_MAGIC = b"SHPS"
+_SNAP_VERSION = 1
+_KIND_CODE = {"other": 0, "int": 1, "float": 2, "bool": 3, "text": 4, "temporal": 5}
+_BOUNDED_ONLY = "snapshots support bounded mode only"
+
+
+class _Writer:
+    def __init__(self) -> None:
+        self.buf = bytearray()
+
+    def pack(self, fmt: str, *v: Any) -> None:
+        self.buf += struct.pack("<" + fmt, *v)
+
+    def i128(self, v: int) -> None:
+        self.buf += int(v).to_bytes(16, "little", signed=True)
+
+    def text(self, v: str) -> None:
+        raw = v.encode("utf-8")
+        self.pack("I", len(raw))
+        self.buf += raw
+
+    def opt(self, v: Any, fmt: str) -> None:
+        self.pack("B", v is not None)
+        if fmt == "i128":
+            self.i128(0 if v is None else v)
+        else:
+            self.pack(fmt, 0 if v is None else v)
+
+    def opt_text(self, v: str | None) -> None:
+        self.pack("B", v is not None)
+        if v is not None:
+            self.text(v)
+
+
+class _Reader:
+    def __init__(self, data: bytes) -> None:
+        self.data, self.i = data, 0
+
+    def take(self, n: int) -> bytes:
+        if self.i + n > len(self.data):
+            raise ValueError("snapshot is truncated")
+        out = self.data[self.i : self.i + n]
+        self.i += n
+        return out
+
+    def unpack(self, fmt: str) -> Any:
+        return struct.unpack("<" + fmt, self.take(struct.calcsize("<" + fmt)))[0]
+
+    def i128(self) -> int:
+        return int.from_bytes(self.take(16), "little", signed=True)
+
+    def text(self) -> str:
+        try:
+            return self.take(self.unpack("I")).decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise ValueError("snapshot holds invalid UTF-8") from exc
+
+    def opt(self, fmt: str) -> Any:
+        flag = self.unpack("B")
+        v = self.i128() if fmt == "i128" else self.unpack(fmt)
+        return v if flag else None
+
+    def opt_text(self) -> str | None:
+        return self.text() if self.unpack("B") else None
+
+
+def _write_key(w: _Writer, key: tuple[int, Any]) -> None:
+    tag, v = key
+    w.pack("B", tag)
+    if tag == 0:
+        w.i128(v)
+    elif tag == 1:
+        w.pack("Q", v)
+    elif tag == 2:
+        w.pack("q", v)
+    else:
+        w.text(v)
+
+
+def _read_key(r: _Reader) -> tuple[int, Any]:
+    tag = r.unpack("B")
+    if tag == 0:
+        return (0, r.i128())
+    if tag == 1:
+        return (1, r.unpack("Q"))
+    if tag == 2:
+        return (2, r.unpack("q"))
+    if tag == 3:
+        return (3, r.text())
+    raise ValueError(f"snapshot holds an unknown key tag {tag}")
+
+
+def _write_tracker(w: _Writer, t: _Tracker) -> None:
+    if t.mode != "bounded":
+        raise ValueError(_BOUNDED_ONLY)
+    w.pack("B", t.hll.p)
+    w.buf += bytes(t.hll.registers)
+    ss = t.ss
+    w.pack("IQQI", ss.capacity, ss.n, ss._clock, len(ss.counts))
+    for key in sorted(ss.counts):
+        _write_key(w, key)
+        count, err = ss.counts[key]
+        w.pack("QQQ", count, err, ss._seq[key])
+
+
+def _read_tracker(r: _Reader) -> _Tracker:
+    sk = _sketches()
+    t = _Tracker("bounded")
+    p = r.unpack("B")
+    if not 4 <= p <= 18:
+        raise ValueError("snapshot holds an invalid HLL precision")
+    t.hll = sk.HyperLogLog(p, list(r.take(1 << p)))
+    capacity, n, clock, length = (r.unpack(f) for f in "IQQI")
+    if length > capacity:
+        raise ValueError("snapshot holds more SpaceSaving entries than its capacity")
+    ss = sk.SpaceSaving(capacity)
+    for _ in range(length):
+        key = _read_key(r)
+        count, err, seq = (r.unpack("Q") for _ in range(3))
+        ss.counts[key] = (count, err)
+        ss._seq[key] = seq
+    ss._clock, ss.n = clock, n
+    t.ss = ss
+    return t
+
+
+def _write_kll(w: _Writer, kll: Any) -> None:
+    w.pack("QQQI", kll.k, kll.n, kll._compactions, len(kll.levels))
+    for level in kll.levels:
+        w.pack("I", len(level))
+        w.pack(f"{len(level)}d", *level)
+
+
+def _read_kll(r: _Reader) -> Any:
+    k, n, compactions, nlevels = (r.unpack(f) for f in "QQQI")
+    levels = []
+    for _ in range(nlevels):
+        length = r.unpack("I")
+        levels.append(list(struct.unpack(f"<{length}d", r.take(8 * length))))
+    return _sketches().KLL(k, levels or [[]], n, compactions)
+
+
 class ProfileState:
     """Twin of ``shape._kernel.ProfileState``."""
 
@@ -460,3 +676,33 @@ class ProfileState:
             "mode": self._mode,
             "columns": [c.finalize(top_n) for c in self._cols],
         }
+
+    def snapshot(self) -> bytes:
+        """The bounded-mode state as bytes (the Rust kernel's format); see ``from_snapshot``."""
+        if self._mode != "bounded":
+            raise ValueError(_BOUNDED_ONLY)
+        w = _Writer()
+        w.buf += _SNAP_MAGIC
+        w.pack("BBQI", _SNAP_VERSION, 1, self._rows, len(self._cols))
+        for col in self._cols:
+            col.write_snapshot(w)
+        return bytes(w.buf)
+
+    @staticmethod
+    def from_snapshot(schema: Any, data: bytes) -> ProfileState:
+        r = _Reader(bytes(data))
+        if r.take(4) != _SNAP_MAGIC:
+            raise ValueError("not a profile snapshot")
+        if r.unpack("B") != _SNAP_VERSION:
+            raise ValueError("unsupported profile snapshot version")
+        if r.unpack("B") != 1:
+            raise ValueError(_BOUNDED_ONLY)
+        state = ProfileState(schema, "bounded")
+        state._rows = r.unpack("Q")
+        if r.unpack("I") != len(state._cols):
+            raise ValueError("snapshot column count differs from the schema")
+        for col in state._cols:
+            col.read_snapshot(r)
+        if r.i != len(r.data):
+            raise ValueError("snapshot has trailing bytes")
+        return state

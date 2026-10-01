@@ -17,7 +17,7 @@ use arrow_array::{Array, RecordBatch};
 use arrow_schema::{DataType, Schema, SchemaRef, TimeUnit};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList};
+use pyo3::types::{PyBytes, PyDict, PyList};
 use pyo3_arrow::{PyRecordBatch, PySchema};
 use rayon::prelude::*;
 use regex::RegexSet;
@@ -881,6 +881,414 @@ fn finalize_column<'py>(py: Python<'py>, c: &Column, top_n: usize) -> PyResult<B
     Ok(d)
 }
 
+// ---------------------------------------------------------------- snapshot
+
+// Serialized bounded-mode state (stream runtime, P3-01): a restored state continues exactly as
+// the original would have. Little-endian; sets and maps are written sorted so equal states give
+// equal bytes. The Python twin (`kernel/reference/profile.py`) writes and reads the same bytes.
+//
+//   "SHPS" u8 version(1) u8 mode(1 = bounded) u64 rows u32 ncols, then per column
+//   u8 kind (0 other, 1 int, 2 float, 3 bool, 4 text, 5 temporal) u64 count u64 nulls + body
+
+const SNAP_MAGIC: &[u8; 4] = b"SHPS";
+const SNAP_VERSION: u8 = 1;
+
+struct SnapWriter(Vec<u8>);
+
+impl SnapWriter {
+    fn u8(&mut self, v: u8) {
+        self.0.push(v);
+    }
+    fn u32(&mut self, v: u32) {
+        self.0.extend_from_slice(&v.to_le_bytes());
+    }
+    fn u64(&mut self, v: u64) {
+        self.0.extend_from_slice(&v.to_le_bytes());
+    }
+    fn i64(&mut self, v: i64) {
+        self.0.extend_from_slice(&v.to_le_bytes());
+    }
+    fn i128(&mut self, v: i128) {
+        self.0.extend_from_slice(&v.to_le_bytes());
+    }
+    fn f64(&mut self, v: f64) {
+        self.0.extend_from_slice(&v.to_bits().to_le_bytes());
+    }
+    fn str(&mut self, v: &str) {
+        self.u32(v.len() as u32);
+        self.0.extend_from_slice(v.as_bytes());
+    }
+    fn opt_f64(&mut self, v: Option<f64>) {
+        self.u8(v.is_some() as u8);
+        self.f64(v.unwrap_or(0.0));
+    }
+    fn opt_i64(&mut self, v: Option<i64>) {
+        self.u8(v.is_some() as u8);
+        self.i64(v.unwrap_or(0));
+    }
+    fn opt_i128(&mut self, v: Option<i128>) {
+        self.u8(v.is_some() as u8);
+        self.i128(v.unwrap_or(0));
+    }
+    fn opt_str(&mut self, v: &Option<String>) {
+        self.u8(v.is_some() as u8);
+        if let Some(s) = v {
+            self.str(s);
+        }
+    }
+}
+
+struct SnapReader<'a> {
+    b: &'a [u8],
+    i: usize,
+}
+
+impl<'a> SnapReader<'a> {
+    fn take(&mut self, n: usize) -> Result<&'a [u8], String> {
+        let end = self
+            .i
+            .checked_add(n)
+            .filter(|&e| e <= self.b.len())
+            .ok_or("snapshot is truncated")?;
+        let out = &self.b[self.i..end];
+        self.i = end;
+        Ok(out)
+    }
+    fn arr<const N: usize>(&mut self) -> Result<[u8; N], String> {
+        Ok(self.take(N)?.try_into().expect("length checked"))
+    }
+    fn u8(&mut self) -> Result<u8, String> {
+        Ok(self.arr::<1>()?[0])
+    }
+    fn u32(&mut self) -> Result<u32, String> {
+        Ok(u32::from_le_bytes(self.arr()?))
+    }
+    fn u64(&mut self) -> Result<u64, String> {
+        Ok(u64::from_le_bytes(self.arr()?))
+    }
+    fn i64(&mut self) -> Result<i64, String> {
+        Ok(i64::from_le_bytes(self.arr()?))
+    }
+    fn i128(&mut self) -> Result<i128, String> {
+        Ok(i128::from_le_bytes(self.arr()?))
+    }
+    fn f64(&mut self) -> Result<f64, String> {
+        Ok(f64::from_bits(u64::from_le_bytes(self.arr()?)))
+    }
+    fn str(&mut self) -> Result<String, String> {
+        let n = self.u32()? as usize;
+        String::from_utf8(self.take(n)?.to_vec()).map_err(|_| "snapshot holds invalid UTF-8".into())
+    }
+    fn opt_f64(&mut self) -> Result<Option<f64>, String> {
+        let (f, v) = (self.u8()?, self.f64()?);
+        Ok((f != 0).then_some(v))
+    }
+    fn opt_i64(&mut self) -> Result<Option<i64>, String> {
+        let (f, v) = (self.u8()?, self.i64()?);
+        Ok((f != 0).then_some(v))
+    }
+    fn opt_i128(&mut self) -> Result<Option<i128>, String> {
+        let (f, v) = (self.u8()?, self.i128()?);
+        Ok((f != 0).then_some(v))
+    }
+    fn opt_str(&mut self) -> Result<Option<String>, String> {
+        if self.u8()? != 0 {
+            Ok(Some(self.str()?))
+        } else {
+            Ok(None)
+        }
+    }
+}
+
+fn write_key(w: &mut SnapWriter, k: &Key) {
+    match k {
+        Key::I(v) => {
+            w.u8(0);
+            w.i128(*v);
+        }
+        Key::F(b) => {
+            w.u8(1);
+            w.u64(*b);
+        }
+        Key::T(v) => {
+            w.u8(2);
+            w.i64(*v);
+        }
+        Key::S(s) => {
+            w.u8(3);
+            w.str(s);
+        }
+    }
+}
+
+fn read_key(r: &mut SnapReader) -> Result<Key, String> {
+    Ok(match r.u8()? {
+        0 => Key::I(r.i128()?),
+        1 => Key::F(r.u64()?),
+        2 => Key::T(r.i64()?),
+        3 => Key::S(r.str()?),
+        t => return Err(format!("snapshot holds an unknown key tag {t}")),
+    })
+}
+
+fn write_tracker(w: &mut SnapWriter, t: &Tracker) -> Result<(), String> {
+    match t {
+        Tracker::Exact(_) => Err("snapshots support bounded mode only".into()),
+        Tracker::Bounded { hll, ss } => {
+            w.u8(hll.p as u8);
+            w.0.extend_from_slice(&hll.registers);
+            let (clock, n, entries) = ss.parts();
+            w.u32(ss.capacity as u32);
+            w.u64(n);
+            w.u64(clock);
+            w.u32(entries.len() as u32);
+            for (k, c, e, seq) in &entries {
+                write_key(w, k);
+                w.u64(*c);
+                w.u64(*e);
+                w.u64(*seq);
+            }
+            Ok(())
+        }
+    }
+}
+
+fn read_tracker(r: &mut SnapReader) -> Result<Tracker, String> {
+    let p = r.u8()? as u32;
+    if !(4..=18).contains(&p) {
+        return Err("snapshot holds an invalid HLL precision".into());
+    }
+    let mut hll = HllCore::new(p);
+    hll.registers.copy_from_slice(r.take(1usize << p)?);
+    let capacity = r.u32()? as usize;
+    let n = r.u64()?;
+    let clock = r.u64()?;
+    let len = r.u32()? as usize;
+    if len > capacity {
+        return Err("snapshot holds more SpaceSaving entries than its capacity".into());
+    }
+    let mut entries = Vec::with_capacity(len);
+    for _ in 0..len {
+        let k = read_key(r)?;
+        entries.push((k, r.u64()?, r.u64()?, r.u64()?));
+    }
+    Ok(Tracker::Bounded {
+        hll,
+        ss: SpaceSavingCore::from_parts(capacity, clock, n, entries),
+    })
+}
+
+fn write_kll(w: &mut SnapWriter, k: &KllCore) {
+    w.u64(k.k);
+    w.u64(k.n);
+    w.u64(k.compactions());
+    w.u32(k.levels.len() as u32);
+    for level in &k.levels {
+        w.u32(level.len() as u32);
+        for x in level {
+            w.f64(*x);
+        }
+    }
+}
+
+fn read_kll(r: &mut SnapReader) -> Result<KllCore, String> {
+    let (k, n, compactions) = (r.u64()?, r.u64()?, r.u64()?);
+    let nlevels = r.u32()? as usize;
+    let mut levels = Vec::with_capacity(nlevels.min(64));
+    for _ in 0..nlevels {
+        let len = r.u32()? as usize;
+        let mut level = Vec::with_capacity(len.min(1 << 16));
+        for _ in 0..len {
+            level.push(r.f64()?);
+        }
+        levels.push(level);
+    }
+    Ok(KllCore::from_parts(k, levels, n, compactions))
+}
+
+fn kind_code(acc: &Acc) -> u8 {
+    match acc {
+        Acc::Other => 0,
+        Acc::Num(n) if n.is_int => 1,
+        Acc::Num(_) => 2,
+        Acc::Bool { .. } => 3,
+        Acc::Text(_) => 4,
+        Acc::Temporal(_) => 5,
+    }
+}
+
+impl Column {
+    fn write_snapshot(&self, w: &mut SnapWriter) -> Result<(), String> {
+        w.u8(kind_code(&self.acc));
+        w.u64(self.count);
+        w.u64(self.nulls);
+        match &self.acc {
+            Acc::Other => {}
+            Acc::Bool { t, f } => {
+                w.u64(*t);
+                w.u64(*f);
+            }
+            Acc::Num(a) => {
+                for v in [a.nan, a.pos_inf, a.neg_inf, a.finite] {
+                    w.u64(v);
+                }
+                w.f64(a.mean);
+                w.f64(a.m2);
+                w.opt_f64(a.min);
+                w.opt_f64(a.max);
+                w.opt_i128(a.min_i);
+                w.opt_i128(a.max_i);
+                write_kll(
+                    w,
+                    a.kll
+                        .as_ref()
+                        .ok_or("snapshots support bounded mode only")?,
+                );
+                write_tracker(w, &a.tracker)?;
+            }
+            Acc::Text(a) => {
+                w.opt_str(&a.min);
+                w.opt_str(&a.max);
+                w.u32(a.lengths.len() as u32);
+                for (len, c) in &a.lengths {
+                    w.u64(*len);
+                    w.u64(*c);
+                }
+                for c in a.patterns {
+                    w.u64(c);
+                }
+                write_tracker(
+                    w,
+                    a.tracker.as_ref().ok_or("text column without a tracker")?,
+                )?;
+            }
+            Acc::Temporal(a) => {
+                w.opt_i64(a.min);
+                w.opt_i64(a.max);
+                for c in a.hour.iter().chain(&a.dow).chain(&a.month) {
+                    w.u64(*c);
+                }
+                w.u32(a.year.len() as u32);
+                for (y, c) in &a.year {
+                    w.i64(*y);
+                    w.u64(*c);
+                }
+                write_tracker(w, &a.tracker)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn read_snapshot(&mut self, r: &mut SnapReader) -> Result<(), String> {
+        if r.u8()? != kind_code(&self.acc) {
+            return Err(format!(
+                "snapshot column kind differs from the schema for {:?}",
+                self.name
+            ));
+        }
+        self.count = r.u64()?;
+        self.nulls = r.u64()?;
+        match &mut self.acc {
+            Acc::Other => {}
+            Acc::Bool { t, f } => {
+                *t = r.u64()?;
+                *f = r.u64()?;
+            }
+            Acc::Num(a) => {
+                a.nan = r.u64()?;
+                a.pos_inf = r.u64()?;
+                a.neg_inf = r.u64()?;
+                a.finite = r.u64()?;
+                a.mean = r.f64()?;
+                a.m2 = r.f64()?;
+                a.min = r.opt_f64()?;
+                a.max = r.opt_f64()?;
+                a.min_i = r.opt_i128()?;
+                a.max_i = r.opt_i128()?;
+                a.kll = Some(read_kll(r)?);
+                a.tracker = read_tracker(r)?;
+            }
+            Acc::Text(a) => {
+                a.min = r.opt_str()?;
+                a.max = r.opt_str()?;
+                a.lengths.clear();
+                for _ in 0..r.u32()? {
+                    let len = r.u64()?;
+                    a.lengths.insert(len, r.u64()?);
+                }
+                for c in a.patterns.iter_mut() {
+                    *c = r.u64()?;
+                }
+                a.tracker = Some(read_tracker(r)?);
+            }
+            Acc::Temporal(a) => {
+                a.min = r.opt_i64()?;
+                a.max = r.opt_i64()?;
+                for c in a
+                    .hour
+                    .iter_mut()
+                    .chain(a.dow.iter_mut())
+                    .chain(a.month.iter_mut())
+                {
+                    *c = r.u64()?;
+                }
+                a.year.clear();
+                for _ in 0..r.u32()? {
+                    let y = r.i64()?;
+                    a.year.insert(y, r.u64()?);
+                }
+                a.tracker = read_tracker(r)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl TableProfile {
+    /// Serialize the bounded-mode state (see the format above).
+    pub fn snapshot(&self) -> Result<Vec<u8>, String> {
+        if self.mode != Mode::Bounded {
+            return Err("snapshots support bounded mode only".into());
+        }
+        let mut w = SnapWriter(Vec::new());
+        w.0.extend_from_slice(SNAP_MAGIC);
+        w.u8(SNAP_VERSION);
+        w.u8(1);
+        w.u64(self.rows);
+        w.u32(self.columns.len() as u32);
+        for c in &self.columns {
+            c.write_snapshot(&mut w)?;
+        }
+        Ok(w.0)
+    }
+
+    /// Rebuild a bounded-mode state from `snapshot()` bytes and the schema it was taken with.
+    pub fn from_snapshot(schema: &Schema, data: &[u8]) -> Result<Self, String> {
+        let mut r = SnapReader { b: data, i: 0 };
+        if r.take(4)? != SNAP_MAGIC {
+            return Err("not a profile snapshot".into());
+        }
+        if r.u8()? != SNAP_VERSION {
+            return Err("unsupported profile snapshot version".into());
+        }
+        if r.u8()? != 1 {
+            return Err("snapshots support bounded mode only".into());
+        }
+        let mut t = TableProfile::new(schema, Mode::Bounded);
+        t.rows = r.u64()?;
+        if r.u32()? as usize != t.columns.len() {
+            return Err("snapshot column count differs from the schema".into());
+        }
+        for c in t.columns.iter_mut() {
+            c.read_snapshot(&mut r)?;
+        }
+        if r.i != data.len() {
+            return Err("snapshot has trailing bytes".into());
+        }
+        Ok(t)
+    }
+}
+
 // ----------------------------------------------------------------- Python
 
 fn parse_mode(mode: &str) -> PyResult<Mode> {
@@ -937,6 +1345,19 @@ impl PyProfileState {
     #[pyo3(signature = (top_n = 500))]
     fn finalize<'py>(&self, py: Python<'py>, top_n: usize) -> PyResult<Bound<'py, PyDict>> {
         self.core.finalize(py, top_n)
+    }
+
+    /// The bounded-mode state as bytes; `from_snapshot` restores it exactly.
+    fn snapshot<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyBytes>> {
+        let bytes = self.core.snapshot().map_err(PyValueError::new_err)?;
+        Ok(PyBytes::new(py, &bytes))
+    }
+
+    #[staticmethod]
+    fn from_snapshot(schema: PySchema, data: &[u8]) -> PyResult<Self> {
+        let core =
+            TableProfile::from_snapshot(schema.as_ref(), data).map_err(PyValueError::new_err)?;
+        Ok(PyProfileState { core })
     }
 }
 
