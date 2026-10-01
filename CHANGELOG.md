@@ -9,6 +9,12 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   table-level and `ALTER TABLE` foreign keys) into a generation schema, with smart inference of
   distributions, key patterns, row ratios, seasonality, correlations and business rules
   (`--smart`, the default; `--explain` prints each decision). See `docs/GENERATION_ENGINE.md`.
+  Fixes in the import: a column-level `REFERENCES parent(col)` is a foreign key to that column
+  (it was ignored, and the guessed key could name a column that does not exist); `VARBINARY(MAX)`,
+  `BINARY(MAX)` and the `BLOB` types are binary and left out; names match whole words
+  (`discount_pct` is a percentage, `state` is a state and not a status, `model` is not a category,
+  a `catalog` table is not a log); `gender CHAR(1)` and other one-character codes get a value set;
+  a parent's total is the sum of its child rows (CR-08).
 - Stream profiling runtime (`shape.streaming`): tumbling, sliding, session and global windows over
   Arrow micro-batches profiled in bounded mode, with watermarks, allowed lateness and a late-data
   policy; windows can be snapshotted and restored exactly. Bounded per-key sketches (LRU, TTL, a hard
