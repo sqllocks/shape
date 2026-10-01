@@ -10,7 +10,11 @@ warehouse_empty: PASS (310 comparisons)
 name_only: PASS (144 comparisons)
 id_named: PASS (144 comparisons)
 
-Intentional differences from the baseline, fields is_enum, enum_values (enum rule, P1-18): 29 columns no longer enums, 35 stay enums
+Intentional, documented differences from the baseline (fields changed):
+  FIX-1: cardinality_ratio=102, enum_values=7, is_enum=21, is_unique=34, null_rate=29
+  FIX-2: dataset.relationships=1, fk_ref_table=1, is_foreign_key=1, table.detected_fks=1
+  FIX-3: fk_ref_table=5, is_foreign_key=5
+  P1-18 enum rule (is_enum, enum_values): 10 columns no longer enums, 33 stay enums
 
 9/9 cases match (5634 field comparisons)
 exit=0

@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from shape.errors import ShapeError
+from shape.generation.ddl_names import words
 from shape.generation.schema import (
     Column,
     Generation,
@@ -33,7 +34,17 @@ from shape.generation.schema import (
 )
 
 # Binary types have no generator: the column is left out of the schema.
-_BINARY = ("varbinary", "binary", "image", "bytea")
+_BINARY = (
+    "varbinary",
+    "binary",
+    "binary varying",
+    "image",
+    "bytea",
+    "blob",
+    "tinyblob",
+    "mediumblob",
+    "longblob",
+)
 
 _UNIFORM_DATE: dict[str, Any] = {
     "strategy": "temporal",
@@ -96,10 +107,7 @@ TYPE_MAP: dict[str, dict[str, Any] | None] = {
     },
     "uniqueidentifier": {"strategy": "uuid"},
     "uuid": {"strategy": "uuid"},
-    "varbinary": None,
-    "binary": None,
-    "image": None,
-    "bytea": None,
+    **dict.fromkeys(_BINARY),
 }
 
 _STATUS_ENUM: dict[str, Any] = {
@@ -110,6 +118,9 @@ _STATUS_ENUM: dict[str, Any] = {
 
 def _faker(provider: str) -> dict[str, Any]:
     return {"strategy": "faker", "provider": provider}
+
+
+_GENDER_ENUM: dict[str, Any] = {"strategy": "weighted_enum", "values": {"M": 0.49, "F": 0.51}}
 
 
 # Column name -> generator for string types (exact, case-insensitive).
@@ -144,7 +155,21 @@ NAME_EXACT: dict[str, dict[str, Any]] = {
     "user_name": _faker("user_name"),
     "ip_address": _faker("ipv4"),
     "status": _STATUS_ENUM,
+    "gender": _GENDER_ENUM,
+    "sex": _GENDER_ENUM,
 }
+
+# Single-character string columns hold a code, so they get a short value set chosen by the name's
+# words (the first group with a word in the name wins).
+_CODE_SETS: tuple[tuple[frozenset[str], dict[str, float]], ...] = (
+    (frozenset({"gender", "sex"}), {"M": 0.49, "F": 0.51}),
+    (frozenset({"status", "state"}), {"A": 0.7, "I": 0.2, "P": 0.1}),
+    (
+        frozenset({"is", "has", "can", "flag", "ind", "indicator", "active", "enabled", "deleted"}),
+        {"Y": 0.85, "N": 0.15},
+    ),
+)
+_CODE_DEFAULT = {"A": 0.5, "B": 0.3, "C": 0.2}
 
 # Name suffix -> generator for string types, tried in this order.
 NAME_SUFFIX: dict[str, dict[str, Any] | str] = {
@@ -201,7 +226,12 @@ _TABLE_PK = re.compile(
     re.IGNORECASE,
 )
 _ASC_DESC = re.compile(r"\s+(?:ASC|DESC)\b", re.IGNORECASE)
-_TYPE_SPEC = re.compile(r"([\w\s]+?)\s*(?:\(\s*(\d+)\s*(?:,\s*(\d+)\s*)?\))?$")
+_TYPE_SPEC = re.compile(r"([\w\s]+?)\s*(?:\(\s*(\d+|max)\s*(?:,\s*(\d+)\s*)?\))?$", re.IGNORECASE)
+_REFERENCES = re.compile(
+    r"\bREFERENCES\s+(" + _NAME + r"+?)\s*\(\s*(" + _NAME + r"+)\s*\)", re.IGNORECASE
+)
+_REFERENCES_PK = re.compile(r"\bREFERENCES\s+([\w.\[\]\"`]+)", re.IGNORECASE)
+_STRING_LITERAL = re.compile(r"'(?:[^']|'')*'")
 _IDENTITY = re.compile(r"IDENTITY\s*(?:\(\s*\d+\s*,\s*\d+\s*\))?", re.IGNORECASE)
 
 
@@ -223,6 +253,7 @@ class _ParsedColumn:
     is_auto_increment: bool = False
     is_primary_key: bool = False
     default: str | None = None
+    references: tuple[str, str] | None = None  # (parent table, parent column or "" for its key)
 
 
 @dataclass
@@ -270,7 +301,8 @@ class DdlParser:
         parsed = self._extract_tables(sql)
         alter_fks = self._extract_alter_fks(sql)
         names = {t.name.lower(): t.name for t in parsed}
-        return self._build_schema(parsed, self._collect_fks(parsed, alter_fks), names)
+        fks = self._collect_fks(parsed, alter_fks)
+        return self._build_schema(parsed, self._resolve_key_references(parsed, fks), names)
 
     # ---- comments ---------------------------------------------------------------------
 
@@ -363,6 +395,14 @@ class DdlParser:
             col = self._parse_column(part)
             if col:
                 table.columns.append(col)
+                if col.references:
+                    table.foreign_keys.append(
+                        {
+                            "child_column": col.name,
+                            "parent_table": col.references[0],
+                            "parent_column": col.references[1],
+                        }
+                    )
                 if col.is_primary_key and not table.primary_key:
                     table.primary_key = [col.name]
         return table
@@ -400,6 +440,7 @@ class DdlParser:
             "NULL",
             "DEFAULT",
             "PRIMARY KEY",
+            "CONSTRAINT",
             "REFERENCES",
             "UNIQUE",
             "CHECK",
@@ -412,6 +453,7 @@ class DdlParser:
         type_part = type_part.strip().rstrip(",")
 
         base, max_length, precision, scale = self._parse_type(type_part)
+        references = self._column_references(rest)
         default = None
         m = re.search(r"DEFAULT\s+(\S+)", rest, re.IGNORECASE)
         if m:
@@ -429,7 +471,20 @@ class DdlParser:
             is_auto_increment=is_auto,
             is_primary_key="PRIMARY KEY" in upper,
             default=default,
+            references=references,
         )
+
+    @staticmethod
+    def _column_references(rest: str) -> tuple[str, str] | None:
+        """The parent of a column-level ``[CONSTRAINT name] REFERENCES parent(col)`` clause (any
+        ``ON DELETE ...`` after it is ignored); ``col`` is empty when the clause names only the
+        parent table, whose primary key it then means."""
+        text = _STRING_LITERAL.sub("''", rest)
+        match = _REFERENCES.search(text)
+        if match:
+            return _table_name(match.group(1)), _unquote(match.group(2))
+        match = _REFERENCES_PK.search(text)
+        return (_table_name(match.group(1)), "") if match else None
 
     @staticmethod
     def _parse_type(type_str: str) -> tuple[str, int | None, int | None, int | None]:
@@ -439,11 +494,13 @@ class DdlParser:
         if not match:
             return type_str.lower(), None, None, None
         base = match.group(1).strip().lower()
-        p1 = int(match.group(2)) if match.group(2) else None
+        p1 = (
+            int(match.group(2)) if match.group(2) and match.group(2).isdigit() else None
+        )  # MAX: none
         p2 = int(match.group(3)) if match.group(3) else None
         if base in ("decimal", "numeric"):
             return base, None, p1, p2
-        if base in _STRING_TYPES or base in ("varbinary", "binary"):
+        if base in _STRING_TYPES or base in _BINARY:
             return base, p1, None, None
         return base, p1, p2, None
 
@@ -487,6 +544,23 @@ class DdlParser:
             for fk in t.foreign_keys
         ]
         return fks + alter_fks
+
+    @staticmethod
+    def _resolve_key_references(
+        tables: list[_ParsedTable], fks: list[_ForeignKey]
+    ) -> list[_ForeignKey]:
+        """Foreign keys that name only the parent table (``REFERENCES parent``) point at its
+        single-column primary key; one the parent does not give is dropped."""
+        keys = {t.name.lower(): t.primary_key for t in tables}
+        out: list[_ForeignKey] = []
+        for fk in fks:
+            if not fk.parent_column:
+                key = keys.get(fk.parent_table.lower(), [])
+                if len(key) != 1:
+                    continue
+                fk = _ForeignKey(fk.child_table, fk.child_column, fk.parent_table, key[0])
+            out.append(fk)
+        return out
 
     # ---- schema -----------------------------------------------------------------------
 
@@ -580,6 +654,8 @@ class DdlParser:
         if base in _BINARY:
             return None
         if base in _STRING_TYPES:
+            if col.max_length == 1:
+                return self._code_generator(col)
             gen = self._string_heuristic(col)
             if gen:
                 return gen
@@ -611,6 +687,14 @@ class DdlParser:
         if candidate.endswith("s") and not candidate.endswith("ss") and candidate[:-1] in names:
             return names[candidate[:-1]]
         return None
+
+    @staticmethod
+    def _code_generator(col: _ParsedColumn) -> dict[str, Any]:
+        """A one-character string column holds a code (``gender CHAR(1)``): a short value set
+        chosen by the words of its name."""
+        found = set(words(col.name))
+        values = next((v for names, v in _CODE_SETS if names & found), _CODE_DEFAULT)
+        return {"strategy": "weighted_enum", "values": dict(values)}
 
     @staticmethod
     def _string_heuristic(col: _ParsedColumn) -> dict[str, Any] | None:

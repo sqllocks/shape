@@ -3,8 +3,10 @@ supplies distributions.
 
 The result is an ordinary Shape profile (a multi-table dataset profile), so everything that
 reads profiles reads it. Statistics describe the **sample** (``sample_rows`` rows per table,
-default 1000); the row count and the denominators of the ratios (``null_rate``,
-``cardinality_ratio``) are the table's catalog row count.
+default 1000): ``null_rate``, ``cardinality_ratio`` and ``is_unique`` divide by the number of
+rows actually sampled, and the profile records that number (``sampled_rows`` on every table,
+``sampling`` on the dataset) so a reader can tell them from whole-table figures. The table's
+``row_count`` is the catalog's.
 """
 
 from __future__ import annotations
@@ -16,7 +18,7 @@ from typing import Any
 import numpy as np
 
 from .auth import Credentials, connect
-from .catalog import Catalog, ColumnInfo, read_catalog
+from .catalog import Catalog, ColumnInfo, read_catalog, table_stem
 from .sql import (
     DEFAULT_SAMPLE_ROWS,
     DEFAULT_SCHEMA,
@@ -29,17 +31,13 @@ from .sql import (
 log = logging.getLogger("shape_sqlserver")
 
 # A column is an enumeration when it has at most this many distinct values in the sample, or
-# when distinct values are under 5% of the table's rows, and in either case its values repeat:
+# when distinct values are under 5% of the rows sampled, and in either case its values repeat:
 # distinct values are at most this fraction of the sample's non-null values (P1-18). A unique
 # column is never an enumeration.
 ENUM_MAX_CARDINALITY = 50
 ENUM_MAX_RATIO = 0.05
 ENUM_MAX_DISTINCT_PER_VALUE = 0.5
 UNIQUE_RATIO = 0.99
-
-
-def _stem(table: str) -> str:
-    return table.lower().replace("dim", "").replace("fact", "")
 
 
 def fetch_sample(cursor: Any, schema: str, table: str, rows: int) -> dict[str, list[Any]]:
@@ -76,8 +74,7 @@ def _sample_std(values: np.ndarray[Any, Any]) -> float:
 def _profile_column(
     info: ColumnInfo,
     values: list[Any] | None,
-    row_count: int,
-    sample_size: int | None,
+    sample_size: int,
     pk_cols: list[str],
     fks: dict[str, str],
 ) -> Any:
@@ -97,8 +94,7 @@ def _profile_column(
             min_val, max_val = float(nums.min()), float(nums.max())
             mean_val = float(nums.sum(dtype=np.float64) / len(nums))
             std_val = _sample_std(nums)
-    denominator = row_count or (sample_size if sample_size is not None else 1)
-    denominator = max(denominator, 1)
+    denominator = max(sample_size, 1)  # the rows actually sampled, not the table's row count
     ratio = cardinality / denominator
     is_unique = ratio > UNIQUE_RATIO if cardinality > 0 else False
     is_enum = (
@@ -150,24 +146,37 @@ def _arrow_table(sample: dict[str, list[Any]]) -> Any:
     return pa.table(dict(zip(sample.keys(), arrays, strict=True)))
 
 
-def _data_suggests_keys(samples: dict[str, dict[str, list[Any]] | None]) -> bool:
-    """True when profiling the sampled tables together finds a foreign key between them."""
+def _links_from_data(
+    samples: dict[str, dict[str, list[Any]] | None],
+) -> dict[str, dict[str, Any]]:
+    """Foreign keys that profiling the sampled tables together finds between them."""
     from shape.api import profile as shape_profile
 
     tables = {name: _arrow_table(s) for name, s in samples.items() if s is not None}
     if not tables:
-        return False
+        return {}
     found = shape_profile(tables).to_dict()
-    return any(t["detected_fks"] for t in found["tables"].values())
+    return {
+        rel["name"]: {
+            "child_table": rel["child"],
+            "parent_table": rel["parent"],
+            "child_columns": list(rel["child_columns"]),
+            "parent_columns": list(rel["parent_columns"]),
+        }
+        for rel in found["relationships"]
+    }
 
 
-def _infer_keys_from_names(
-    tables: dict[str, Any], relationships: dict[str, dict[str, Any]]
-) -> None:
-    """Link ``orders.customer_id`` to a table ``customer`` (or ``dimcustomer``) by name."""
+def _infer_keys_from_names(tables: dict[str, Any], links: dict[str, dict[str, Any]]) -> None:
+    """Link ``orders.customer_id`` to a table ``customer`` (or ``dimcustomer``) by name.
+
+    A column the data already links (``links``) keeps the data's parent."""
     by_lower = {t.lower(): t for t in tables}
+    linked = {(link["child_table"], c) for link in links.values() for c in link["child_columns"]}
     for tname, tp in tables.items():
         for col in tp.columns:
+            if (tname, col) in linked:
+                continue
             low = col.lower()
             candidate = None
             if low.endswith("_id"):
@@ -178,7 +187,7 @@ def _infer_keys_from_names(
                 candidate = low[:-3]
                 if candidate.endswith("_"):
                     candidate = candidate[:-1]
-            if not candidate or candidate == _stem(tname):
+            if not candidate or candidate == table_stem(tname):
                 continue
             for lookup in (
                 candidate,
@@ -188,8 +197,7 @@ def _infer_keys_from_names(
             ):
                 parent = by_lower.get(lookup.lower())
                 if parent is not None:
-                    tp.detected_fks[col] = parent
-                    relationships[f"fk_{tname}_{col}"] = {
+                    links[f"fk_{tname}_{col}"] = {
                         "child_table": tname,
                         "parent_table": parent,
                         "child_columns": [col],
@@ -198,7 +206,22 @@ def _infer_keys_from_names(
                     break
 
 
-def _profile_tables(cursor: Any, catalog: Catalog, sample_rows: int) -> Any:
+def _mark_foreign_keys(tables: dict[str, Any], links: dict[str, dict[str, Any]]) -> None:
+    """Record every link on its child table (``detected_fks``) and child columns
+    (``is_foreign_key``, ``fk_ref_table``)."""
+    for link in links.values():
+        child = tables.get(link["child_table"])
+        if child is None:
+            continue
+        for col in link["child_columns"]:
+            child.detected_fks[col] = link["parent_table"]
+            column = child.columns.get(col)
+            if column is not None:
+                column.is_foreign_key = True
+                column.fk_ref_table = link["parent_table"]
+
+
+def _profile_tables(cursor: Any, catalog: Catalog, sample_rows: int) -> tuple[Any, dict[str, int]]:
     from shape.profile.reference.model import DatasetProfile, TableProfile
 
     samples = _sample_all(cursor, catalog, sample_rows)
@@ -208,15 +231,16 @@ def _profile_tables(cursor: Any, catalog: Catalog, sample_rows: int) -> Any:
             declared.setdefault(fk.child_table, {})[col] = fk.parent_table
 
     profiles: dict[str, Any] = {}
+    sampled: dict[str, int] = {}
     for t in catalog.tables:
         sample = samples[t.name]
-        size = len(next(iter(sample.values()), [])) if sample is not None else None
+        size = len(next(iter(sample.values()), [])) if sample is not None else 0
+        sampled[t.name] = size
         fks = declared.get(t.name, {})
         columns = {
             c.name: _profile_column(
                 c,
                 sample.get(c.name) if sample is not None else None,
-                t.row_count,
                 size,
                 t.primary_key,
                 fks,
@@ -241,8 +265,12 @@ def _profile_tables(cursor: Any, catalog: Catalog, sample_rows: int) -> Any:
         }
         for name, fk in catalog.foreign_keys.items()
     }
-    if not links and not _data_suggests_keys(samples):
+    if not links:
+        # No declared keys: the sampled data decides first, then names fill the columns the
+        # data leaves unlinked.
+        links.update(_links_from_data(samples))
         _infer_keys_from_names(profiles, links)
+    _mark_foreign_keys(profiles, links)
 
     names = {t.name for t in catalog.tables}
     relationships = [
@@ -257,7 +285,7 @@ def _profile_tables(cursor: Any, catalog: Catalog, sample_rows: int) -> Any:
         for name, fk in links.items()
         if fk["child_table"] in names
     ]
-    return DatasetProfile(tables=profiles, relationships=relationships)
+    return DatasetProfile(tables=profiles, relationships=relationships), sampled
 
 
 def profile_database(
@@ -289,7 +317,7 @@ def profile_database(
     cursor = conn.cursor()
     try:
         catalog = read_catalog(cursor, schema, tables)
-        dataset = _profile_tables(cursor, catalog, sample_rows)
+        dataset, sampled = _profile_tables(cursor, catalog, sample_rows)
     finally:
         cursor.close()
         if connection is None:
@@ -297,7 +325,19 @@ def profile_database(
     from shape.profile.reference import Profile
     from shape.profile.reference.profile import dataset_to_dict
 
-    return Profile(dataset_to_dict(dataset), name=name or schema)
+    data = dataset_to_dict(dataset)
+    for table_name, rows in sampled.items():
+        data["tables"][table_name]["sampled_rows"] = rows
+    data["sampling"] = {
+        "method": "first rows (SELECT TOP n)",
+        "requested_rows": sample_rows,
+        "note": (
+            "null_count, cardinality, null_rate, cardinality_ratio, is_unique, is_enum, "
+            "enum_values, min_value, max_value, mean and std describe the sampled rows "
+            "(tables[...].sampled_rows), not the whole table; row_count is the catalog's."
+        ),
+    }
+    return Profile(data, name=name or schema)
 
 
 __all__ = ["fetch_sample", "profile_database"]

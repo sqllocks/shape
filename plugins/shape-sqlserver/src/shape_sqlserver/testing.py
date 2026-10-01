@@ -569,8 +569,8 @@ SCENARIOS: dict[str, Callable[[int, Rng], tuple[list[FakeTable], list[FakeForeig
 
 def scenario(name: str, scale: int = 1, seed: int = 7) -> FakeConnection:
     """A deterministic database: ``retail`` (declared keys, tables larger than a 1000-row
-    sample, an empty and a one-row table), ``warehouse`` (no keys, data shows the
-    relationships), ``warehouse_empty`` (no keys, no rows) or ``name_only`` (no keys; only
+    sample, an empty and a one-row table), ``warehouse`` (no keys; key columns named ``*_key``,
+    linked by name), ``warehouse_empty`` (no keys, no rows) or ``name_only`` (no keys; only
     column names suggest a relationship) or ``id_named`` (no keys; ``*_id`` columns whose
     values all exist in the parent table)."""
     tables, fks = SCENARIOS[name](scale, Rng(seed))

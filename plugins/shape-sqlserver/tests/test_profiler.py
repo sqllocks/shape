@@ -83,17 +83,65 @@ def test_statistics_describe_the_first_1000_rows(retail):
     nulls = sum(v is None for v in balance)
     b = prof["tables"]["customer"]["columns"]["balance"]
     assert b["null_count"] == nulls > 0
-    assert b["null_rate"] == nulls / 2500  # sample nulls over the table's row count
+    assert b["null_rate"] == nulls / 1000  # sample nulls over the rows sampled
 
 
-def test_ratios_use_the_table_row_count(retail):
+def test_ratios_divide_by_the_rows_sampled(retail):
     _, prof = retail
     cid = prof["tables"]["customer"]["columns"]["customer_id"]
+    assert prof["tables"]["customer"]["row_count"] == 2500
     assert cid["cardinality"] == 1000
-    assert cid["cardinality_ratio"] == 1000 / 2500
-    assert cid["is_unique"] is False  # 0.4 <= 0.99: the sample is smaller than the table
+    assert cid["cardinality_ratio"] == 1.0  # 1000 distinct values in 1000 sampled rows
+    assert cid["is_unique"] is True  # sample-based: true although the table is larger
     small = prof["tables"]["product"]["columns"]["product_id"]
     assert small["cardinality"] == 300 and small["is_unique"] is True
+    assert small["cardinality_ratio"] == 1.0
+
+
+def test_sample_based_statistics_are_labelled(retail):
+    _, prof = retail
+    assert prof["tables"]["customer"]["sampled_rows"] == 1000
+    assert prof["tables"]["product"]["sampled_rows"] == 300  # a table smaller than the sample
+    assert prof["tables"]["audit_log"]["sampled_rows"] == 0
+    sampling = prof["sampling"]
+    assert sampling["requested_rows"] == 1000 and "SELECT TOP" in sampling["method"]
+    assert "sampled rows" in sampling["note"]
+
+
+def test_a_duplicated_column_is_not_unique_and_ratios_follow_the_sample():
+    rows = [(i, i % 4, None if i % 5 == 0 else 1) for i in range(400)]
+    t = FakeTable(
+        "t",
+        [FakeColumn("a", "int"), FakeColumn("b", "int"), FakeColumn("c", "int")],
+        rows,
+    )
+    prof = profile_database(connection=FakeConnection([t]), sample_rows=100).to_dict()
+    cols = prof["tables"]["t"]["columns"]
+    assert prof["tables"]["t"]["sampled_rows"] == 100
+    assert cols["a"]["cardinality_ratio"] == 1.0 and cols["a"]["is_unique"] is True
+    assert cols["b"]["cardinality_ratio"] == 0.04 and cols["b"]["is_unique"] is False
+    assert cols["c"]["null_count"] == 20 and cols["c"]["null_rate"] == 0.2
+
+
+def test_sampled_rows_is_zero_without_a_sample():
+    prof = profile_database(connection=scenario("retail"), sample_rows=0).to_dict()
+    assert {t["sampled_rows"] for t in prof["tables"].values()} == {0}
+    assert prof["sampling"]["requested_rows"] == 0
+    conn = scenario("retail")
+    conn.fail_reads = {"product"}
+    prof = profile_database(connection=conn).to_dict()
+    assert prof["tables"]["product"]["sampled_rows"] == 0
+
+
+def test_the_labelled_profile_saves_loads_and_renders(tmp_path):
+    import shape
+
+    prof = profile_database(connection=scenario("retail"), tables=["orders", "customer"])
+    path = tmp_path / "db.shape"
+    shape.save(prof, path)
+    again = shape.load(path)
+    assert again == prof and again.to_dict()["sampling"]["requested_rows"] == 1000
+    assert "customer" in again.to_html() and again.summary()["tables"]["orders"]
 
 
 def test_enumerations_carry_observed_frequencies(retail):
@@ -199,6 +247,22 @@ def test_without_declared_foreign_keys_names_link_tables_that_the_data_does_not(
     assert prof["relationships"][0]["parent_columns"] == ["id"]  # guessed key of customer
 
 
+def test_name_inferred_keys_mark_the_column_as_a_foreign_key():
+    prof = profile_database(connection=scenario("name_only")).to_dict()
+    col = prof["tables"]["orders"]["columns"]["customer_id"]
+    assert col["is_foreign_key"] is True and col["fk_ref_table"] == "customer"
+    assert prof["tables"]["orders"]["columns"]["amount"]["is_foreign_key"] is False
+    assert prof["tables"]["customer"]["columns"]["id"]["is_foreign_key"] is False
+    wh = profile_database(connection=scenario("warehouse_empty")).to_dict()
+    fact = wh["tables"]["factsales"]
+    assert (
+        {c for c, v in fact["columns"].items() if v["is_foreign_key"]}
+        == set(fact["detected_fks"])
+        == {"customer_key", "product_key"}
+    )
+    assert fact["columns"]["product_key"]["fk_ref_table"] == "dimproduct"
+
+
 def test_name_inference_prefixes_dimension_tables():
     prof = profile_database(connection=scenario("warehouse_empty")).to_dict()
     assert prof["tables"]["factsales"]["detected_fks"] == {
@@ -207,12 +271,78 @@ def test_name_inference_prefixes_dimension_tables():
     }
 
 
-def test_when_the_data_already_shows_a_relationship_names_are_not_used():
-    # the sampled rows hold the keys of the parent table, so the data decides, and this
-    # profiler reports no inferred relationships for it
+def test_a_relationship_the_data_shows_is_reported_without_declared_keys():
+    # no declared keys: the sampled rows of orders.customer_id all exist in customer
     prof = profile_database(connection=scenario("id_named")).to_dict()
-    assert prof["relationships"] == []
-    assert prof["tables"]["orders"]["detected_fks"] == {}
+    assert prof["tables"]["orders"]["detected_fks"] == {"customer_id": "customer"}
+    assert [r["name"] for r in prof["relationships"]] == ["fk_orders_customer_id"]
+    rel = prof["relationships"][0]
+    assert (rel["parent"], rel["child"]) == ("customer", "orders")
+    assert (rel["parent_columns"], rel["child_columns"]) == (["customer_id"], ["customer_id"])
+    col = prof["tables"]["orders"]["columns"]["customer_id"]
+    assert col["is_foreign_key"] is True and col["fk_ref_table"] == "customer"
+    assert prof["tables"]["customer"]["columns"]["customer_id"]["is_foreign_key"] is False
+
+
+def test_data_evidence_wins_and_names_fill_the_remaining_columns():
+    # orders.customer_id holds customer keys (the data confirms the name); orders.product_key
+    # holds numbers no product has and has no `_id` form (only its name suggests the link);
+    # orders.region_id has no matching table
+    customer = FakeTable(
+        "customer",
+        [FakeColumn("id", "int", nullable=False), FakeColumn("label", "varchar")],
+        [(i, f"c{i}") for i in range(1, 51)],
+    )
+    product = FakeTable(
+        "product",
+        [FakeColumn("product_key", "int", nullable=False), FakeColumn("label", "varchar")],
+        [(i, f"p{i}") for i in range(1, 11)],
+    )
+    orders = FakeTable(
+        "orders",
+        [
+            FakeColumn("order_id", "int", nullable=False),
+            FakeColumn("customer_id", "int"),
+            FakeColumn("product_key", "int"),
+            FakeColumn("region_id", "int"),
+        ],
+        [(i, 1 + i % 50, 900 + i % 7, 5000 + i % 3) for i in range(1, 201)],
+    )
+    prof = profile_database(connection=FakeConnection([customer, product, orders])).to_dict()
+    assert prof["tables"]["orders"]["detected_fks"] == {
+        "customer_id": "customer",
+        "product_key": "product",
+    }
+    rels = {r["name"]: r for r in prof["relationships"]}
+    assert list(rels) == ["fk_orders_customer_id", "fk_orders_product_key"]  # data first
+    assert rels["fk_orders_customer_id"]["parent_columns"] == ["id"]
+    assert rels["fk_orders_product_key"]["parent_columns"] == ["product_key"]
+    cols = prof["tables"]["orders"]["columns"]
+    assert [c for c, v in cols.items() if v["is_foreign_key"]] == ["customer_id", "product_key"]
+    assert cols["product_key"]["fk_ref_table"] == "product"
+    assert not cols["region_id"]["is_foreign_key"]
+
+
+def test_a_column_the_data_links_is_not_linked_a_second_time_by_name():
+    prof = profile_database(connection=scenario("id_named")).to_dict()
+    assert len(prof["relationships"]) == 1
+
+
+def test_declared_keys_are_authoritative_and_nothing_is_inferred_beside_them():
+    prof = profile_database(connection=scenario("retail")).to_dict()
+    assert len(prof["relationships"]) == 3
+    assert prof["tables"]["orders"]["detected_fks"] == {"customer_id": "customer"}
+
+
+def test_dim_and_fact_inside_a_table_name_are_not_stripped():
+    from shape_sqlserver.catalog import table_stem
+
+    assert table_stem("dimcustomer") == "customer" and table_stem("Fact_Sales") == "sales"
+    assert table_stem("sandimas") == "sandimas" and table_stem("manufacturer") == "manufacturer"
+    assert table_stem("dim") == "dim"
+    t = FakeTable("sandimas", [FakeColumn("v", "int"), FakeColumn("sandimas_id", "int")], [(1, 1)])
+    prof = profile_database(connection=FakeConnection([t])).to_dict()
+    assert prof["tables"]["sandimas"]["primary_key"] == ["sandimas_id"]
 
 
 def test_a_passed_connection_is_reused_and_left_open():
