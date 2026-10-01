@@ -29,7 +29,8 @@ def test_runtime_image_is_python_311_slim():
 def test_runtime_installs_the_wheel_with_the_azure_extra():
     runtime = _stages()[-1]
     assert re.search(r"pip install .*sqllocks_shape-\*\.whl\)\[azure\]", runtime)
-    assert "COPY --from=build" in runtime
+    assert "--mount=type=bind,from=build,source=/dist" in runtime  # the wheel is not a layer
+    assert "import adlfs, azure.identity, deltalake" in runtime  # a broken trim fails the build
 
 
 def test_runtime_runs_as_a_non_root_user_and_ends_on_it():
