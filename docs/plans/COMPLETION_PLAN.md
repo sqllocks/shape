@@ -1940,9 +1940,9 @@ Work packages are listed in execution order. The next work package is the first 
 | 26 | P2-05 | done | 4c2fa6b |
 | 27 | P2-06 | done | 6adf820 |
 | 28 | PF-01 | done (nightly Azurite e2e pending) | c8d6acb |
-| 29 | PF-02 | wip (lane/PF-02) |  |
+| 29 | PF-02 | done (early start before G1, owner-approved) | 9d0b2f1 |
 | 30 | PF-03 | done | a726dd4 |
-| 31 | PF-04 | todo | |
+| 31 | PF-04 | done (fsspec test requirement fixed at integration, c033f48) | b98dbac |
 | 32 | PF-05 | wip (merged; CI image build and 500 MB check pending) | 6d2e22a |
 | 33 | PF-06 | todo | |
 | 34 | P3-01 | done | 37386f3 |
@@ -1951,15 +1951,15 @@ Work packages are listed in execution order. The next work package is the first 
 | 37 | P3-04 | wip (lane/P3-04) |  |
 | 38 | P3-05 | todo | |
 | 39 | P4-01a | done | 02a0c4d |
-| 40 | P4-01b | wip (lane/P4-01b) |  |
+| 40 | P4-01b | done | 4b75d46 |
 | 41 | P4-02 | done | 6917af7 |
 | 42 | P4-03 | wip (lane/P4-03) |  |
 | 43 | P4-04a | todo | |
-| 44 | P4-04b | todo | |
-| 45 | P4-04c | todo | |
-| 46 | P4-04d | todo | |
+| 44 | P4-04b | wip (lane/P4-04b) | |
+| 45 | P4-04c | wip (lane/P4-04c) | |
+| 46 | P4-04d | wip (lane/P4-04d) | |
 | 47 | P4-05 | todo | |
-| 48 | P4-06 | wip (lane/P4-06) |  |
+| 48 | P4-06 | done (SQL comment/literal injection fixed at integration, 36f32d3) | ba051d2 |
 | 49 | P4-07 | todo | |
 | 50 | P4-08 | todo | |
 | 51 | P4-09 | todo | |
