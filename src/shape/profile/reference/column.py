@@ -387,9 +387,14 @@ def _profile_object_column(c: _Col, row_count: int, top_n: int = 500) -> _Work:
     ukeys = [_object_key(kind, v) for v, _ in entries]
     row_count = row_count or 0
     cardinality_ratio = cardinality / row_count if row_count else 0.0
+    # enum rule (P1-18): the size limits, and the values repeat (distinct <= half the non-null
+    # values; a unique column never qualifies)
     is_enum = (
-        cardinality < 200 or (cardinality_ratio < 0.30 and cardinality < 50_000)
-    ) and cardinality > 0
+        (cardinality < 200 or (cardinality_ratio < 0.30 and cardinality < 50_000))
+        and cardinality > 0
+        and 2 * cardinality <= n_nn
+        and not (cardinality == row_count and null_count == 0)
+    )
     enum_values = value_counts_ext = None
     if n_nn:
         props = [round(n / n_nn, 6) for _, n in entries]
@@ -550,9 +555,14 @@ def _profile_column(
         cardinality = 0
     cardinality_ratio = cardinality / row_count if row_count > 0 else 0.0
     is_unique = cardinality == row_count and null_count == 0
+    # enum rule (P1-18): the size limits, and the values repeat (distinct <= half the non-null
+    # values; a unique column never qualifies)
     is_enum = (
-        cardinality < 200 or (cardinality_ratio < 0.30 and cardinality < 50_000)
-    ) and cardinality > 0
+        (cardinality < 200 or (cardinality_ratio < 0.30 and cardinality < 50_000))
+        and cardinality > 0
+        and 2 * cardinality <= n_nn
+        and not is_unique
+    )
 
     # ---- column type -------------------------------------------------------
     numeric = None  # float64 numpy array of numeric values (row order)
