@@ -1,0 +1,223 @@
+== small / shape1042_vs_spindle42   overall shape 90.21 baseline 90.21 diff +0.0000
+   address            baseline   85.458  shape   85.458  diff  -0.00000  worst column address_id 0.00000
+   customer           baseline   78.841  shape   78.841  diff  +0.00000  worst column customer_id 0.00000
+   order              baseline   97.135  shape   97.135  diff  +0.00000  worst column order_date 0.00000
+   order_line         baseline   95.657  shape   95.657  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   92.595  shape   92.595  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   86.498  shape   86.498  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   91.618  shape   91.618  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline   98.679  shape   98.679  diff  -0.00000  worst column return_date 0.00000
+   store              baseline   85.414  shape   85.414  diff  +0.00000  worst column city 0.00000
+== small / spindle43_vs_spindle42   overall shape 90.83 baseline 90.83 diff +0.0000
+   address            baseline   85.158  shape   85.158  diff  -0.00000  worst column address_id 0.00000
+   customer           baseline   78.841  shape   78.841  diff  +0.00000  worst column customer_id 0.00000
+   order              baseline   98.575  shape   98.575  diff  +0.00000  worst column order_date 0.00000
+   order_line         baseline   96.912  shape   96.912  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   93.953  shape   93.953  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   87.562  shape   87.562  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   93.384  shape   93.384  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline   97.465  shape   97.465  diff  +0.00000  worst column return_date 0.00000
+   store              baseline   85.642  shape   85.642  diff  +0.00000  worst column city 0.00000
+== small / spindle44_vs_spindle42   overall shape 89.51 baseline 89.51 diff +0.0000
+   address            baseline   85.979  shape   85.979  diff  -0.00000  worst column address_id 0.00000
+   customer           baseline   78.914  shape   78.914  diff  +0.00000  worst column customer_id 0.00000
+   order              baseline   95.294  shape   95.294  diff  +0.00000  worst column order_date 0.00000
+   order_line         baseline   92.574  shape   92.574  diff  -0.00000  worst column discount_percent 0.00000
+   product            baseline   92.661  shape   92.661  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   87.734  shape   87.734  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   91.816  shape   91.816  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline   94.554  shape   94.554  diff  +0.00000  worst column return_date 0.00000
+   store              baseline   86.022  shape   86.022  diff  +0.00000  worst column city 0.00000
+== small / spindle45_vs_spindle42   overall shape 90.11 baseline 90.11 diff -0.0000
+   address            baseline   88.000  shape   88.000  diff  -0.00000  worst column address_id 0.00000
+   customer           baseline   79.162  shape   79.162  diff  -0.00000  worst column customer_id 0.00000
+   order              baseline   96.103  shape   96.103  diff  -0.00000  worst column order_date 0.00000
+   order_line         baseline   94.585  shape   94.585  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   93.772  shape   93.772  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   84.746  shape   84.746  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   91.026  shape   91.026  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline   98.110  shape   98.110  diff  -0.00000  worst column return_date 0.00000
+   store              baseline   85.515  shape   85.515  diff  -0.00000  worst column city 0.00000
+== small / spindle46_vs_spindle42   overall shape 90.83 baseline 90.83 diff +0.0000
+   address            baseline   85.569  shape   85.569  diff  +0.00000  worst column state 0.00000
+   customer           baseline   79.046  shape   79.046  diff  +0.00000  worst column customer_id 0.00000
+   order              baseline   98.543  shape   98.543  diff  +0.00000  worst column order_date 0.00000
+   order_line         baseline   97.089  shape   97.089  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   93.866  shape   93.866  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   87.537  shape   87.537  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   92.012  shape   92.012  diff  +0.00000  worst column end_date 0.00000
+   return             baseline   98.422  shape   98.422  diff  -0.00000  worst column return_date 0.00000
+   store              baseline   85.382  shape   85.382  diff  +0.00000  worst column city 0.00000
+== small / same_units   overall shape 90.83 baseline 90.83 diff +0.0000
+   address            baseline   85.158  shape   85.158  diff  -0.00000  worst column address_id 0.00000
+   customer           baseline   78.841  shape   78.841  diff  +0.00000  worst column customer_id 0.00000
+   order              baseline   98.575  shape   98.575  diff  +0.00000  worst column order_date 0.00000
+   order_line         baseline   96.912  shape   96.912  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   93.953  shape   93.953  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   87.562  shape   87.562  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   93.384  shape   93.384  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline   97.465  shape   97.465  diff  +0.00000  worst column return_date 0.00000
+   store              baseline   85.642  shape   85.642  diff  +0.00000  worst column city 0.00000
+== small / missing_column   overall shape 90.24 baseline 91.41 diff -1.1671
+   address            baseline   85.158  shape   85.158  diff  -0.00000  worst column address_id 0.00000
+   customer           baseline   84.032  shape   73.528  diff -10.50398  worst column customer_id 0.00000
+   order              baseline   98.575  shape   98.575  diff  +0.00000  worst column order_date 0.00000
+   order_line         baseline   96.912  shape   96.912  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   93.953  shape   93.953  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   87.562  shape   87.562  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   93.384  shape   93.384  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline   97.465  shape   97.465  diff  +0.00000  worst column return_date 0.00000
+   store              baseline   85.642  shape   85.642  diff  +0.00000  worst column city 0.00000
+== small / missing_table   overall shape 80.00 baseline 90.00 diff -10.0004
+   address            baseline   85.158  shape   85.158  diff  -0.00000  worst column address_id 0.00000
+   customer           baseline   78.841  shape   78.841  diff  +0.00000  worst column customer_id 0.00000
+   order              baseline   98.575  shape   98.575  diff  +0.00000  worst column order_date 0.00000
+   order_line         baseline   96.912  shape   96.912  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   93.953  shape   93.953  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   87.562  shape   87.562  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   93.384  shape   93.384  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline    n/a    shape    0.000  diff    n/a
+   store              baseline   85.642  shape   85.642  diff  +0.00000  worst column city 0.00000
+== small / empty_reference   overall shape 0.00 baseline 37.85 diff -37.8524
+   address            baseline   38.571  shape    0.000  diff -38.57143  worst column address_id 0.00000
+   customer           baseline   40.970  shape    0.000  diff -40.96964  worst column customer_id 0.00000
+   order              baseline   34.962  shape    0.000  diff -34.96179  worst column customer_id 0.00000
+   order_line         baseline   34.478  shape    0.000  diff -34.47800  worst column discount_percent 0.00000
+   product            baseline   38.095  shape    0.000  diff -38.09524  worst column category_id 0.00000
+   product_category   baseline   36.929  shape    0.000  diff -36.92857  worst column category_id 0.00000
+   promotion          baseline   38.095  shape    0.000  diff -38.09524  worst column discount_pct 0.00000
+   return             baseline   37.143  shape    0.000  diff -37.14286  worst column order_id 0.00000
+   store              baseline   41.429  shape    0.000  diff -41.42857  worst column city 0.00000
+== small / type_mismatch   overall shape 89.86 baseline 89.86 diff +0.0000
+   address            baseline   85.158  shape   85.158  diff  -0.00000  worst column address_id 0.00000
+   customer           baseline   78.841  shape   78.841  diff  +0.00000  worst column customer_id 0.00000
+   order              baseline   98.575  shape   98.575  diff  +0.00000  worst column order_date 0.00000
+   order_line         baseline   88.123  shape   88.123  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   93.953  shape   93.953  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   87.562  shape   87.562  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   93.384  shape   93.384  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline   97.465  shape   97.465  diff  +0.00000  worst column return_date 0.00000
+   store              baseline   85.642  shape   85.642  diff  +0.00000  worst column city 0.00000
+== small / unit_mismatch   overall shape 90.83 baseline 90.06 diff +0.7770
+   address            baseline   85.158  shape   85.158  diff  -0.00000  worst column address_id 0.00000
+   customer           baseline   78.841  shape   78.841  diff  +0.00000  worst column customer_id 0.00000
+   order              baseline   91.582  shape   98.575  diff  +6.99342  worst column order_date 55.94736
+   order_line         baseline   96.912  shape   96.912  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   93.953  shape   93.953  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   87.562  shape   87.562  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   93.384  shape   93.384  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline   97.465  shape   97.465  diff  +0.00000  worst column return_date 0.00000
+   store              baseline   85.642  shape   85.642  diff  +0.00000  worst column city 0.00000
+== medium / shape1042_vs_spindle42   overall shape 92.10 baseline 92.10 diff -0.0000
+   address            baseline   88.427  shape   88.427  diff  +0.00000  worst column address_id 0.00000
+   customer           baseline   85.660  shape   85.660  diff  +0.00000  worst column customer_id 0.00000
+   order              baseline   99.436  shape   99.436  diff  -0.00000  worst column order_date 0.00000
+   order_line         baseline   97.595  shape   97.595  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   94.783  shape   94.783  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   86.498  shape   86.498  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   91.618  shape   91.618  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline   99.506  shape   99.506  diff  -0.00000  worst column return_date 0.00000
+   store              baseline   85.414  shape   85.414  diff  +0.00000  worst column city 0.00000
+== medium / spindle43_vs_spindle42   overall shape 91.56 baseline 91.56 diff +0.0000
+   address            baseline   88.217  shape   88.217  diff  +0.00000  worst column address_id 0.00000
+   customer           baseline   85.127  shape   85.127  diff  -0.00000  worst column customer_id 0.00000
+   order              baseline   97.096  shape   97.096  diff  +0.00000  worst column order_date 0.00000
+   order_line         baseline   93.781  shape   93.781  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   94.535  shape   94.535  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   87.562  shape   87.562  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   93.384  shape   93.384  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline   98.674  shape   98.674  diff  -0.00000  worst column return_date 0.00000
+   store              baseline   85.642  shape   85.642  diff  +0.00000  worst column city 0.00000
+== medium / spindle44_vs_spindle42   overall shape 91.89 baseline 91.89 diff +0.0000
+   address            baseline   88.065  shape   88.065  diff  +0.00000  worst column state 0.00000
+   customer           baseline   85.626  shape   85.626  diff  +0.00000  worst column customer_id 0.00000
+   order              baseline   98.840  shape   98.840  diff  +0.00000  worst column order_date 0.00000
+   order_line         baseline   95.603  shape   95.603  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   94.838  shape   94.838  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   87.734  shape   87.734  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   91.816  shape   91.816  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline   98.484  shape   98.484  diff  -0.00000  worst column return_date 0.00000
+   store              baseline   86.022  shape   86.022  diff  +0.00000  worst column city 0.00000
+== medium / spindle45_vs_spindle42   overall shape 89.08 baseline 89.08 diff +0.0000
+   address            baseline   87.866  shape   87.866  diff  +0.00000  worst column address_id 0.00000
+   customer           baseline   85.509  shape   85.509  diff  +0.00000  worst column customer_id 0.00000
+   order              baseline   91.226  shape   91.226  diff  +0.00000  worst column order_date 0.00000
+   order_line         baseline   86.634  shape   86.634  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   94.576  shape   94.576  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   84.746  shape   84.746  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   91.026  shape   91.026  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline   94.600  shape   94.600  diff  -0.00000  worst column return_date 0.00000
+   store              baseline   85.515  shape   85.515  diff  -0.00000  worst column city 0.00000
+== medium / spindle46_vs_spindle42   overall shape 92.43 baseline 92.43 diff +0.0000
+   address            baseline   90.752  shape   90.752  diff  -0.00000  worst column address_id 0.00000
+   customer           baseline   85.684  shape   85.684  diff  -0.00000  worst column customer_id 0.00000
+   order              baseline   99.169  shape   99.169  diff  +0.00000  worst column order_date 0.00000
+   order_line         baseline   97.604  shape   97.604  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   94.690  shape   94.690  diff  -0.00000  worst column category_id 0.00000
+   product_category   baseline   87.537  shape   87.537  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   92.012  shape   92.012  diff  +0.00000  worst column end_date 0.00000
+   return             baseline   99.082  shape   99.082  diff  -0.00000  worst column return_date 0.00000
+   store              baseline   85.382  shape   85.382  diff  +0.00000  worst column city 0.00000
+== medium / same_units   overall shape 91.56 baseline 91.56 diff +0.0000
+   address            baseline   88.217  shape   88.217  diff  +0.00000  worst column address_id 0.00000
+   customer           baseline   85.127  shape   85.127  diff  -0.00000  worst column customer_id 0.00000
+   order              baseline   97.096  shape   97.096  diff  +0.00000  worst column order_date 0.00000
+   order_line         baseline   93.781  shape   93.781  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   94.535  shape   94.535  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   87.562  shape   87.562  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   93.384  shape   93.384  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline   98.674  shape   98.674  diff  -0.00000  worst column return_date 0.00000
+   store              baseline   85.642  shape   85.642  diff  +0.00000  worst column city 0.00000
+== medium / missing_column   overall shape 90.96 baseline 92.23 diff -1.2663
+   address            baseline   88.217  shape   88.217  diff  +0.00000  worst column address_id 0.00000
+   customer           baseline   91.170  shape   79.774  diff -11.39625  worst column customer_id 0.00000
+   order              baseline   97.096  shape   97.096  diff  +0.00000  worst column order_date 0.00000
+   order_line         baseline   93.781  shape   93.781  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   94.535  shape   94.535  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   87.562  shape   87.562  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   93.384  shape   93.384  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline   98.674  shape   98.674  diff  -0.00000  worst column return_date 0.00000
+   store              baseline   85.642  shape   85.642  diff  +0.00000  worst column city 0.00000
+== medium / missing_table   overall shape 80.59 baseline 90.67 diff -10.0742
+   address            baseline   88.217  shape   88.217  diff  +0.00000  worst column address_id 0.00000
+   customer           baseline   85.127  shape   85.127  diff  -0.00000  worst column customer_id 0.00000
+   order              baseline   97.096  shape   97.096  diff  +0.00000  worst column order_date 0.00000
+   order_line         baseline   93.781  shape   93.781  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   94.535  shape   94.535  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   87.562  shape   87.562  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   93.384  shape   93.384  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline    n/a    shape    0.000  diff    n/a
+   store              baseline   85.642  shape   85.642  diff  +0.00000  worst column city 0.00000
+== medium / empty_reference   overall shape 0.00 baseline 37.85 diff -37.8515
+   address            baseline   38.571  shape    0.000  diff -38.57143  worst column address_id 0.00000
+   customer           baseline   40.981  shape    0.000  diff -40.98071  worst column customer_id 0.00000
+   order              baseline   34.956  shape    0.000  diff -34.95565  worst column customer_id 0.00000
+   order_line         baseline   34.465  shape    0.000  diff -34.46496  worst column discount_percent 0.00000
+   product            baseline   38.095  shape    0.000  diff -38.09524  worst column category_id 0.00000
+   product_category   baseline   36.929  shape    0.000  diff -36.92857  worst column category_id 0.00000
+   promotion          baseline   38.095  shape    0.000  diff -38.09524  worst column discount_pct 0.00000
+   return             baseline   37.143  shape    0.000  diff -37.14286  worst column order_id 0.00000
+   store              baseline   41.429  shape    0.000  diff -41.42857  worst column city 0.00000
+== medium / type_mismatch   overall shape 90.59 baseline 90.59 diff -0.0000
+   address            baseline   88.217  shape   88.217  diff  +0.00000  worst column address_id 0.00000
+   customer           baseline   85.127  shape   85.127  diff  -0.00000  worst column customer_id 0.00000
+   order              baseline   97.096  shape   97.096  diff  +0.00000  worst column order_date 0.00000
+   order_line         baseline   85.044  shape   85.044  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   94.535  shape   94.535  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   87.562  shape   87.562  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   93.384  shape   93.384  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline   98.674  shape   98.674  diff  -0.00000  worst column return_date 0.00000
+   store              baseline   85.642  shape   85.642  diff  +0.00000  worst column city 0.00000
+== medium / unit_mismatch   overall shape 91.56 baseline 90.77 diff +0.7913
+   address            baseline   88.217  shape   88.217  diff  +0.00000  worst column address_id 0.00000
+   customer           baseline   85.127  shape   85.127  diff  -0.00000  worst column customer_id 0.00000
+   order              baseline   89.974  shape   97.096  diff  +7.12188  worst column order_date 56.97508
+   order_line         baseline   93.781  shape   93.781  diff  +0.00000  worst column discount_percent 0.00000
+   product            baseline   94.535  shape   94.535  diff  +0.00000  worst column category_id 0.00000
+   product_category   baseline   87.562  shape   87.562  diff  +0.00000  worst column category_id 0.00000
+   promotion          baseline   93.384  shape   93.384  diff  +0.00000  worst column discount_pct 0.00000
+   return             baseline   98.674  shape   98.674  diff  -0.00000  worst column return_date 0.00000
+   store              baseline   85.642  shape   85.642  diff  +0.00000  worst column city 0.00000
+cli: {"retail_exit": 0, "files": {"json": 27639, "md": 5478, "html": 11393}, "json_overall": 90.21058771219802, "alias_exit": 0, "threshold_100_exit": 1, "empty_reference_exit": 1, "ok": true}
+max |table diff| over retail pairs: 0.00000
+RESULT: PASS

@@ -268,7 +268,7 @@ def cli_checks(pairs: list[tuple[str, Path, Path]], empty: tuple[Path, Path]) ->
     name, real, synth = pairs[0]
     rep = OUT / "cli"
     rep.mkdir(parents=True, exist_ok=True)
-    cmd = [shape, "fidelity", str(real), str(synth), "--min-score", "0"]
+    cmd = [shape, "fidelity", str(real), str(synth)]  # the default pass marks
     for ext in ("json", "md", "html"):
         cmd += ["-o", str(rep / f"{name}.{ext}")]
     r = subprocess.run(cmd, capture_output=True, text=True)
@@ -277,9 +277,7 @@ def cli_checks(pairs: list[tuple[str, Path, Path]], empty: tuple[Path, Path]) ->
     j = json.loads((rep / f"{name}.json").read_text())
     out["json_overall"] = j["overall_score"]
     alias = subprocess.run(
-        [shape, "compare", str(real), str(synth), "--min-score", "0"],
-        capture_output=True,
-        text=True,
+        [shape, "compare", str(real), str(synth)], capture_output=True, text=True
     )
     out["alias_exit"] = alias.returncode
     low = subprocess.run(

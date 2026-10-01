@@ -187,11 +187,7 @@ def _cmd_fidelity(a):
         raise ValueError(f"no data files found in {a.reference}")
     if len(real) == 1 and len(synth) == 1:  # two single files compare whatever they are called
         synth = {next(iter(real)): next(iter(synth.values()))}
-    marks = Thresholds(
-        a.min_score,
-        a.min_table_score if a.min_table_score is not None else a.min_score,
-        a.min_column_score,
-    )
+    marks = Thresholds(a.min_score, a.min_table_score, a.min_column_score)
     report = compare_tables(real, synth, marks).to_dict()
     ext = {".json": "json", ".md": "md", ".html": "html", ".htm": "html"}
     for out in a.output:
@@ -534,7 +530,7 @@ def _build_parser(plugin_commands=()):
     fi.add_argument("--input-format", default="auto", choices=("auto", "csv", "parquet", "jsonl"))
     fi.add_argument("--min-score", type=float, default=85.0, help="overall pass mark (default 85)")
     fi.add_argument(
-        "--min-table-score", type=float, help="per-table pass mark (default: --min-score)"
+        "--min-table-score", type=float, default=70.0, help="per-table pass mark (default 70)"
     )
     fi.add_argument("--min-column-score", type=float, help="per-column pass mark (default: none)")
     fi.add_argument(

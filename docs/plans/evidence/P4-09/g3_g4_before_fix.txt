@@ -1,0 +1,12 @@
+tests/regressions/test_g3_g4_fidelity_certificates.py:94: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{"degraded": [], "dimensions": [{"details": {}, "name": "schema", "score": 0.0, "weight": 2}], "score": 0.0, "unavailable": []}
+=========================== short test summary info ============================
+FAILED tests/regressions/test_g3_g4_fidelity_certificates.py::test_g3_missing_column_scores_zero
+FAILED tests/regressions/test_g3_g4_fidelity_certificates.py::test_g3_missing_column_lowers_the_overall_score
+FAILED tests/regressions/test_g3_g4_fidelity_certificates.py::test_g3_empty_reference_fails
+FAILED tests/regressions/test_g3_g4_fidelity_certificates.py::test_g3_reference_without_columns_key_fails
+FAILED tests/regressions/test_g3_g4_fidelity_certificates.py::test_g4_certify_shapes_exits_nonzero_below_the_threshold
+FAILED tests/regressions/test_g3_g4_fidelity_certificates.py::test_g4_threshold_option_decides_the_exit_code
+FAILED tests/regressions/test_g3_g4_fidelity_certificates.py::test_g4_certify_shapes_empty_target_fails
+7 failed, 3 passed in 0.73s

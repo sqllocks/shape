@@ -31,6 +31,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 DEFAULT_THRESHOLD = 85.0
+DEFAULT_TABLE_THRESHOLD = 70.0
 _STD_FLOOR = 1e-9
 _MIN_KS_SAMPLE = 5
 _DATE_LIKE_SHARE = 0.95
@@ -81,7 +82,7 @@ class Thresholds:
     """Pass marks, on the 0-100 scale. ``min_column`` None leaves single columns unjudged."""
 
     min_overall: float = DEFAULT_THRESHOLD
-    min_table: float = DEFAULT_THRESHOLD
+    min_table: float = DEFAULT_TABLE_THRESHOLD
     min_column: float | None = None
 
     def to_dict(self) -> dict[str, float | None]:

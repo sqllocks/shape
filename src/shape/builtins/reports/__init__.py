@@ -11,6 +11,8 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
+SHAPE_API = "1.0"
+
 GOOD = 85.0
 FAIR = 70.0
 _DASH = "-"
@@ -167,3 +169,6 @@ _CSS = (
     "@media (prefers-color-scheme:dark){body{background:#111;color:#e5e7eb}"
     "td{border-color:#333}tr.table td{background:#1c1c1c}}"
 )
+
+
+__all__ = ["SHAPE_API", "HtmlReport", "JsonReport", "MarkdownReport"]

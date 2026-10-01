@@ -250,3 +250,7 @@ def test_reports_never_name_the_reference_implementation():
 def test_compare_table_of_a_table_without_a_counterpart():
     tf = compare_table("t", _table(), None)
     assert tf.score == 0.0 and not tf.present and len(tf.missing_columns) == 4
+
+
+def test_default_pass_marks():
+    assert Thresholds() == Thresholds(min_overall=85.0, min_table=70.0, min_column=None)

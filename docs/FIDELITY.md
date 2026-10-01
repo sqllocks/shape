@@ -19,10 +19,13 @@ lacks scores 0 there too, and a profile that describes no columns fails.
 
 ## Pass marks
 
+The defaults pass the datasets the engine is held to: the baseline's own seeds score 89 to 92 overall
+and 78 to 99 per table on retail.
+
 | Option | Default | Fails when |
 |---|---|---|
 | `--min-score` | 85 | the overall score is below it |
-| `--min-table-score` | `--min-score` | any reference table scores below it |
+| `--min-table-score` | 70 | any reference table scores below it |
 | `--min-column-score` | none | any present column scores below it |
 
 Whatever the marks, these always fail: a reference table or column missing from the synthetic data,
