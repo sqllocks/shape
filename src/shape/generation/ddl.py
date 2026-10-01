@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from shape.errors import ShapeError
-from shape.generation.ddl_names import words
+from shape.generation.ddl_names import snake, words
 from shape.generation.schema import (
     Column,
     Generation,
@@ -170,6 +170,15 @@ _CODE_SETS: tuple[tuple[frozenset[str], dict[str, float]], ...] = (
     ),
 )
 _CODE_DEFAULT = {"A": 0.5, "B": 0.3, "C": 0.2}
+
+
+def _code_generator(name: str) -> dict[str, Any]:
+    """A one-character string column holds a code (``gender CHAR(1)``): a short value set chosen
+    by the words of its name."""
+    found = set(words(name))
+    values = next((v for names, v in _CODE_SETS if names & found), _CODE_DEFAULT)
+    return {"strategy": "weighted_enum", "values": dict(values)}
+
 
 # Name suffix -> generator for string types, tried in this order.
 NAME_SUFFIX: dict[str, dict[str, Any] | str] = {
@@ -571,12 +580,13 @@ class DdlParser:
         names: dict[str, str],
     ) -> GenSchema:
         fk_index = {(f.child_table.lower(), f.child_column.lower()): f for f in fks}
+        keys = {pt.name.lower(): pt.primary_key for pt in parsed}
         convention: list[_ForeignKey] = []
         tables: dict[str, Table] = {}
         for pt in parsed:
             columns: dict[str, Column] = {}
             for pc in pt.columns:
-                generator = self._resolve_generator(pc, pt, fk_index, names)
+                generator = self._resolve_generator(pc, pt, fk_index, names, keys)
                 if generator is None:
                     continue
                 if (
@@ -598,7 +608,7 @@ class DdlParser:
                 )
             tables[pt.name] = Table(name=pt.name, columns=columns, primary_key=pt.primary_key)
 
-        return GenSchema(
+        schema = GenSchema(
             model=Model(
                 name="ddl_import",
                 description="Imported from SQL DDL",
@@ -610,6 +620,8 @@ class DdlParser:
             relationships=self._relationships(fks + convention, tables),
             generation=self._generation(tables),
         )
+        fit_string_lengths(schema)
+        return schema
 
     def _resolve_generator(
         self,
@@ -617,6 +629,7 @@ class DdlParser:
         table: _ParsedTable,
         fk_index: dict[tuple[str, str], _ForeignKey],
         names: dict[str, str],
+        keys: dict[str, list[str]],
     ) -> dict[str, Any] | None:
         """The best first generator for a column, or ``None`` for a binary column."""
         if col.is_identity or col.is_serial or col.is_auto_increment:
@@ -637,15 +650,23 @@ class DdlParser:
                 "distribution": "pareto",
             }
 
-        lower = col.name.lower()
+        # A key the DDL does not declare, guessed by the ``<table>_id`` convention (also
+        # ``CustomerId``): it points at the parent's single-column primary key, and is not
+        # guessed when the parent has none (a reference to a column that does not exist).
+        lower = snake(col.name)
         if lower.endswith("_id") and lower != "id":
-            real = self._table_for_singular(lower[:-3], names)
+            candidate = lower[:-3]
+            real = self._table_for_singular(candidate, names) or self._table_for_singular(
+                candidate.replace("_", ""), names
+            )
             if real is not None and real.lower() != table.name.lower():
-                return {
-                    "strategy": "foreign_key",
-                    "ref": f"{real}.{col.name}",
-                    "distribution": "pareto",
-                }
+                key = keys.get(real.lower(), [])
+                if len(key) == 1:
+                    return {
+                        "strategy": "foreign_key",
+                        "ref": f"{real}.{key[0]}",
+                        "distribution": "pareto",
+                    }
 
         if col.name in table.primary_key and len(table.primary_key) == 1:
             return {"strategy": "sequence", "start": 1}
@@ -655,7 +676,7 @@ class DdlParser:
             return None
         if base in _STRING_TYPES:
             if col.max_length == 1:
-                return self._code_generator(col)
+                return _code_generator(col.name)
             gen = self._string_heuristic(col)
             if gen:
                 return gen
@@ -687,14 +708,6 @@ class DdlParser:
         if candidate.endswith("s") and not candidate.endswith("ss") and candidate[:-1] in names:
             return names[candidate[:-1]]
         return None
-
-    @staticmethod
-    def _code_generator(col: _ParsedColumn) -> dict[str, Any]:
-        """A one-character string column holds a code (``gender CHAR(1)``): a short value set
-        chosen by the words of its name."""
-        found = set(words(col.name))
-        values = next((v for names, v in _CODE_SETS if names & found), _CODE_DEFAULT)
-        return {"strategy": "weighted_enum", "values": dict(values)}
 
     @staticmethod
     def _string_heuristic(col: _ParsedColumn) -> dict[str, Any] | None:
@@ -761,6 +774,75 @@ class DdlParser:
         return Generation(scale="small", scales={"small": small, "medium": medium, "large": large})
 
 
+_PATTERN_TOKEN = re.compile(r"\{(\w+)(?::(\d+))?\}")
+
+
+def _max_rows(schema: GenSchema) -> dict[str, int]:
+    """The most rows each table gets in any scale preset (derived counts included)."""
+    from shape.generation.engine import calculate_row_counts
+
+    most: dict[str, int] = {}
+    chosen = schema.generation.scale
+    try:
+        for preset in schema.generation.scales:
+            schema.generation.scale = preset
+            for table, rows in calculate_row_counts(schema).items():
+                most[table] = max(most.get(table, 0), rows)
+    finally:
+        schema.generation.scale = chosen
+    return most
+
+
+def _pattern_length(fmt: str, rows: int) -> int:
+    """The longest value of a ``pattern`` format: literals, ``{seq:w}`` (``w`` digits, more when
+    the table has more rows) and ``{random:w}``; another column's value counts as ``w`` or 0."""
+    total = 0
+    last = 0
+    for m in _PATTERN_TOKEN.finditer(fmt):
+        total += m.start() - last
+        last = m.end()
+        token, width = m.group(1), int(m.group(2)) if m.group(2) else 0
+        if token == "seq":
+            total += max(width, len(str(rows)))
+        elif token == "random":
+            total += width or 4
+        else:
+            total += width
+    return total + len(fmt) - last
+
+
+def _fitted_generator(col: Column, table: str, rows: dict[str, int]) -> dict[str, Any]:
+    """``col``'s generator, changed only if it can make a value longer than the column."""
+    gen = col.generator
+    limit = col.max_length or 0
+    strategy = gen.get("strategy")
+    if strategy == "pattern" and isinstance(gen.get("format"), str):
+        if _pattern_length(gen["format"], rows.get(table, 0)) > limit:
+            return {"strategy": "pattern", "format": f"{{random:{limit}}}"}
+    elif strategy == "weighted_enum" and isinstance(gen.get("values"), dict):
+        fits = {k: v for k, v in gen["values"].items() if len(str(k)) <= limit}
+        if len(fits) == len(gen["values"]):
+            return gen
+        if len(fits) >= 2 and sum(fits.values()) > 0:
+            total = sum(fits.values())
+            return {**gen, "values": {k: v / total for k, v in fits.items()}}
+        return _code_generator(col.name)
+    return gen
+
+
+def fit_string_lengths(schema: GenSchema) -> None:
+    """Make every string column's generator fit its declared length. A fixed pattern, or a
+    value set, that can produce a value longer than ``CHAR(n)``/``VARCHAR(n)`` is replaced:
+    a pattern by ``n`` random characters, a value set by the values that fit (or, if fewer than
+    two do, a code set). Text from the faker and native providers is cut at the length by the
+    strategy itself. Idempotent."""
+    rows = _max_rows(schema)
+    for tname, table in schema.tables.items():
+        for col in table.columns.values():
+            if col.type == "string" and col.max_length:
+                col.generator = _fitted_generator(col, tname, rows)
+
+
 def apply_scale(schema: GenSchema, spec: str) -> None:
     """Apply a scale override such as ``small:customer=5000,order=25000``: select that preset
     and set the listed tables' row counts in it."""
@@ -777,6 +859,7 @@ def apply_scale(schema: GenSchema, spec: str) -> None:
             except ValueError:
                 raise DdlError(f"bad row count in scale override {pair!r}") from None
     schema.generation.scales[name] = preset
+    fit_string_lengths(schema)
 
 
 def from_ddl(
@@ -798,6 +881,7 @@ def from_ddl(
         from shape.generation.ddl_infer import SchemaInference
 
         annotations = SchemaInference().run(schema)
+        fit_string_lengths(schema)
     if scale:
         apply_scale(schema, scale)
     return schema, annotations

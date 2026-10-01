@@ -137,11 +137,16 @@ single-column primary keys, are sequences. A declared foreign key is a `foreign_
 relationship (a self-reference is `self_referencing`), whether it is a table-level constraint or a
 column-level clause such as `customer_id INT REFERENCES customer(id)` (with or without
 `CONSTRAINT name` and `ON DELETE ...`; `REFERENCES customer` alone means the parent's primary
-key). Column names ending `_id` that match a table by its singular or plural name (`order_id` to
-`order` or `orders`, `category_id` to `categories`) are foreign keys too: a key the DDL does not
-declare is guessed as `<table>.<the column's own name>`, so declare it when the parent's key has
-another name. Binary columns (`VARBINARY`, `BINARY`, `VARBINARY(MAX)`, `IMAGE`, `BYTEA`, and the
-`BLOB` types) are left out. `MAX` is a length like any other. Scale presets are 1k, 10k and 100k
+key). Column names ending `_id` or `Id` (`customer_id`, `CustomerId`, `CustomerID`) that match a
+table by its singular or plural name (`order_id` to `order` or `orders`, `category_id` to
+`categories`) are foreign keys too, when the DDL does not declare them: the key points at that
+table's primary key, whatever it is called, and is left out (the column stays a plain number) when
+the table has no single-column primary key. A name written without separators (`orderdate`) is one
+word and matches no rule. Binary columns (`VARBINARY`, `BINARY`, `VARBINARY(MAX)`, `IMAGE`, `BYTEA`,
+and the `BLOB` types) are left out. `MAX` is a length like any other. A generated string never
+exceeds its column: a code in `CHAR(2)` is two random characters (`A7`), and a value set keeps
+only the values that fit (a `status` in `VARCHAR(7)` is active or pending; in `CHAR(2)` a code set
+A, I or P); text from the name rules is cut at the length. Scale presets are 1k, 10k and 100k
 rows for tables with no parent, and 2.5k, 25k and 250k for the rest.
 
 **Smart inference** (`shape.generation.ddl_infer`) replaces only placeholder generators, in this
