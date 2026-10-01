@@ -117,3 +117,14 @@ zero-padded; `{random:4}`: that many characters from `A-Z0-9` (4 without a width
 `{column:3}`: the value of another column of the same row, zero-padded; text outside tokens is
 literal; a token naming no column stays as written. A null in a referenced column gives a null
 row.
+
+## Skewed fan-out
+
+`shape.generation.fanout.FanOut(n_parents, top_fraction=0.2, top_share=0.8, shape="power" |
+"two_tier", shuffle=True)` draws a parent index for each child row (`draw(stream, row_start,
+n_rows)`) so that the top `top_fraction` of parents hold `top_share` of the children (the 80/20
+rule). `concentration_weights(...)` gives the rank weights and `top_share_of(parents, n_parents,
+fraction)` measures a generated column. `FanOut.from_spec` reads `{"top_fraction", "top_share",
+"shape", "shuffle"}`; P4-04d's `foreign_key` uses it for a `fan_out` key.
+
+`kernel_ops.alias_table(weights)` returns an `AliasTable` (`size`, `prob`, `alias`), cached by the weights.

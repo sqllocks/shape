@@ -81,4 +81,4 @@ def test_dry_run_plans_retail_without_strategies():
     d = Engine(schema, scale="medium", strategies={}).dry_run()
     assert d.order == [t for level in PLAN["retail_3nf"]["levels"] for t in level]
     assert d.total_rows == sum(PLAN["retail_3nf"]["row_counts"]["medium"].values())
-    assert not d.ok and any("weighted_enum" in m for m in d.missing_strategies)
+    assert not d.ok and any("faker" in m for m in d.missing_strategies)
