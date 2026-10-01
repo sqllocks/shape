@@ -40,3 +40,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker compose -f ci/emulators/docker-compose.yml config --quiet
+  azurite-e2e:
+    # PF-01: the abfss:// source against Azurite (blob endpoint) with the real adlfs.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install -e '.[dev,azure]' azure-storage-blob
+      - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait azurite
+      - run: python -m pytest -q -m emulator tests/builtins/test_cloud_sources_azurite.py
+      - if: always()
+        run: docker compose -f ci/emulators/docker-compose.yml down -v

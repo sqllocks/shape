@@ -13,6 +13,8 @@ BUILTINS: tuple[tuple[str, str, str], ...] = (
     ("shape.sources", "parquet", "shape.builtins.sources:ParquetSource"),
     ("shape.sources", "jsonl", "shape.builtins.sources:JsonlSource"),
     ("shape.sources", "ipc", "shape.builtins.sources:IpcSource"),
+    ("shape.sources", "abfss", "shape.builtins.sources:AbfssSource"),
+    ("shape.sources", "delta", "shape.builtins.sources:DeltaSource"),
     ("shape.sinks", "csv", "shape.builtins.sinks:CsvSink"),
     ("shape.sinks", "parquet", "shape.builtins.sinks:ParquetSink"),
     ("shape.sinks", "jsonl", "shape.builtins.sinks:JsonlSink"),

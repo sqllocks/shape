@@ -95,7 +95,7 @@ def test_g2_plugin_adds_source_detector_command_next_to_every_builtin(outside):
     ):
         assert rows[key]["source"] == "shape-example-plugin"
     builtin = {(g, n) for g, n, _ in BUILTINS}
-    assert builtin <= set(rows) and len(builtin) == 25
+    assert builtin <= set(rows) and len(builtin) == len(BUILTINS)
     assert all(rows[k]["source"] != "shape-example-plugin" for k in builtin)
     hello = shape(outside, "hello", "--name", "Ada")
     assert hello.returncode == 0 and hello.stdout.strip() == "hello, Ada"

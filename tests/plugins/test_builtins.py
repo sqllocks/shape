@@ -46,7 +46,7 @@ def test_installed_metadata_carries_every_builtin():
 def test_every_builtin_is_registered_and_loads_as_its_protocol():
     host = _fresh_host()
     records = host.records()
-    assert len(records) == len(BUILTINS) == 25
+    assert len(records) == len(BUILTINS)
     for rec in host.load_all():
         assert rec.status == "ok", (rec.group, rec.name, rec.error)
         assert rec.api == v1.SHAPE_API
