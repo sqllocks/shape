@@ -110,9 +110,11 @@ def _cmd_sign(a):
     return 0
 
 
-def _cmd_verify(a):
+def _cmd_verify_signature(a):
     from shape.artifact.signing import load_public_key, verify_artifact
 
+    if not a.key:
+        raise ValueError("verifying a .shape artifact needs --key PUBLIC.pub")
     _dump({"artifact": a.shape, **verify_artifact(a.shape, load_public_key(a.key))})
     return 0
 
@@ -177,6 +179,56 @@ def _cmd_diff(a):
     return 1 if (a.fail_on_drift and result.drifted) else 0
 
 
+def _cmd_verify(a):
+    """``shape verify``: a ``.shape`` artifact is checked for its signature, anything else is
+    data for the validation gates."""
+    if str(a.shape).endswith(".shape"):
+        return _cmd_verify_signature(a)
+    return _cmd_verify_gates(a)
+
+
+def _cmd_verify_gates(a):
+    """Load tables, run the gates, print the gate table; 0 pass, 1 a gate failed (or a warning
+    under --strict), 2 input error."""
+    from shape.quality import VerifyReport, VerifyRunner, load_gate_schema, load_tables
+
+    tables = load_tables(a.shape, a.format)
+    if not tables:
+        raise ValueError(f"no {a.format} data files found in {a.shape}")
+    schema = load_gate_schema(a.schema) if a.schema else None
+    result = VerifyRunner(schema, a.statistical, a.shape, a.schema).run(tables)
+    print(f"Shape {_version()} - Verify\n")
+    print(f"Data path:   {a.shape}")
+    if a.schema:
+        print(f"Schema:      {a.schema}")
+    print(f"Statistical: {'yes' if a.statistical else 'no'}\n")
+    if result.gate_results:
+        print(f"{'Gate':<28} {'Status':<8} {'Errors':>6} {'Warnings':>8}")
+        print("-" * 55)
+        for g in result.gate_results:
+            status = "PASS" if g.passed else "FAIL"
+            print(f"{g.gate_name:<28} {status:<8} {len(g.errors):>6} {len(g.warnings):>8}")
+        print()
+    print("Row counts:")
+    for name, n in sorted(result.row_counts.items()):
+        print(f"  {name}: {n:,}")
+    print()
+    for g in result.gate_results:
+        for e in g.errors:
+            print(f"  ERROR [{g.gate_name}]: {e}", file=sys.stderr)
+        for w in g.warnings:
+            print(f"  WARN  [{g.gate_name}]: {w}")
+    print(f"\nResult: {'PASS' if result.passed else 'FAIL'}")
+    if a.output:
+        report = VerifyReport(result)
+        text = report.to_json() if str(a.output).endswith(".json") else report.to_markdown()
+        with open(a.output, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        print(f"Report written to {a.output}")
+    has_warnings = any(g.warnings for g in result.gate_results)
+    return 1 if (not result.passed or (a.strict and has_warnings)) else 0
+
+
 _VERIFY_HELP = "require every .shape input to be signed by this public key (exit 1 if not)"
 
 
@@ -235,11 +287,24 @@ def _build_parser():
     sg.add_argument("shape", metavar="ARTIFACT.shape")
     sg.add_argument("--key", required=True, metavar="PRIVATE.key")
     sg.add_argument("-o", "--output", metavar="OUT.shape", help="default: sign in place")
-    vf = sub.add_parser("verify", help="verify a .shape artifact's signature (exit 1 if invalid)")
-    vf.add_argument("shape", metavar="ARTIFACT.shape")
-    vf.add_argument("--key", required=True, metavar="PUBLIC.pub")
     va = sub.add_parser("validate", help="validate a Shape-as-Code contract document")
     va.add_argument("contract")
+    vf = sub.add_parser(
+        "verify",
+        help="run the validation gates over data, or check a .shape artifact's signature",
+    )
+    vf.add_argument(
+        "shape",
+        metavar="DATA|ARTIFACT.shape",
+        help="a data file or a directory of data files; a .shape file is checked for its "
+        "signature instead (exit 1 if invalid)",
+    )
+    vf.add_argument("--key", metavar="PUBLIC.pub", help="public key for a .shape artifact")
+    vf.add_argument("--format", choices=("auto", "csv", "parquet", "jsonl"), default="auto")
+    vf.add_argument("--schema", metavar="GATES.json", help="gate schema (or Shape model v2)")
+    vf.add_argument("--statistical", action="store_true", help="add KS and chi-squared tests")
+    vf.add_argument("-o", "--output", metavar="REPORT", help="write a .json or .md report")
+    vf.add_argument("--strict", action="store_true", help="exit 1 on warnings too")
     qu = sub.add_parser("quality")
     qu.add_argument("csv")
     qu.add_argument("--reference")
