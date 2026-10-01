@@ -11,9 +11,10 @@ from typing import Any
 import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 
-from shape.builtins._rng import chunk_generator
 from shape.builtins.distributions import Normal as _NormalDistribution
 from shape.builtins.distributions import Uniform as _UniformDistribution
+from shape.generation import kernel_ops
+from shape.generation.strategy_kit import stream
 from shape.location import location_from_spec, scope_from_specs
 from shape.plugins.api.v1 import GenerationContext
 
@@ -52,13 +53,18 @@ class Choice:
         if not values:
             raise ValueError("values cannot be empty")
         weights = spec.get("weights")
-        p = None
-        if weights is not None:
+        if weights is None:
+            w = np.ones(len(values), dtype=np.float64)
+        else:
             w = np.asarray(weights, dtype=np.float64)
             if len(w) != len(values) or (w < 0).any() or w.sum() <= 0:
                 raise ValueError("invalid weights")
-            p = w / w.sum()
-        picks = chunk_generator(ctx).choice(len(values), size=ctx.n_rows, p=p)
+        picks = kernel_ops.alias_draw(
+            kernel_ops.alias_table(w.tolist()),
+            stream(ctx, "v"),
+            ctx.row_start,
+            ctx.n_rows,
+        )
         return pa.array(values).take(pa.array(picks))
 
 

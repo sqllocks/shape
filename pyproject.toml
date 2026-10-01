@@ -162,12 +162,23 @@ choice = "shape.builtins.strategies:Choice"
 uniform = "shape.builtins.strategies:Uniform"
 normal = "shape.builtins.strategies:Normal"
 address = "shape.builtins.strategies:AddressStrategy"
+uuid = "shape.builtins.strategies.basic:Uuid"
+weighted_enum = "shape.builtins.strategies.basic:WeightedEnum"
+distribution = "shape.builtins.strategies.numeric:Distribution"
+empirical = "shape.builtins.strategies.numeric:Empirical"
+pattern = "shape.builtins.strategies.text:Pattern"
 
 [project.entry-points."shape.distributions"]
 normal = "shape.builtins.distributions:Normal"
 uniform = "shape.builtins.distributions:Uniform"
 exponential = "shape.builtins.distributions:Exponential"
 lognormal = "shape.builtins.distributions:Lognormal"
+log_normal = "shape.builtins.distributions:LogNormalFamily"
+pareto = "shape.builtins.distributions:Pareto"
+zipf = "shape.builtins.distributions:Zipf"
+geometric = "shape.builtins.distributions:Geometric"
+poisson = "shape.builtins.distributions:Poisson"
+bernoulli = "shape.builtins.distributions:Bernoulli"
 
 [project.entry-points."shape.calendars"]
 us_federal = "shape.builtins.calendars:UsFederalCalendar"

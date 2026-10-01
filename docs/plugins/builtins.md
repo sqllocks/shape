@@ -27,10 +27,21 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.strategies` | `uniform` | uniform on `[low, high)` |
 | `shape.strategies` | `normal` | normal with `mean` and `stddev` |
 | `shape.strategies` | `address` | coherent addresses from reference rows |
+| `shape.strategies` | `uuid` | version-4 UUID strings |
+| `shape.strategies` | `weighted_enum` | a value from a `{value: weight}` mapping (alias sampling) |
+| `shape.strategies` | `distribution` | values from a distribution family, clipped by `min`/`max` and rounded to the column's scale |
+| `shape.strategies` | `empirical` | inverse-transform sampling of a stored quantile fingerprint |
+| `shape.strategies` | `pattern` | strings from a format with `{seq:n}`, `{random:n}` and `{column}` tokens |
 | `shape.distributions` | `normal` | `loc + scale * N(0,1)` |
 | `shape.distributions` | `uniform` | uniform on `[loc, loc + scale)` |
 | `shape.distributions` | `exponential` | `loc + scale * Exp(1)` |
 | `shape.distributions` | `lognormal` | `loc + scale * exp(s * N(0,1))` |
+| `shape.distributions` | `log_normal` | `exp(mu + sigma * N(0,1))` |
+| `shape.distributions` | `pareto` | Type I Pareto with `alpha` and `xm` |
+| `shape.distributions` | `zipf` | Zipf on `1 .. max` with exponent `a` |
+| `shape.distributions` | `geometric` | trials to the first success, probability `p` |
+| `shape.distributions` | `poisson` | Poisson with mean `lam` |
+| `shape.distributions` | `bernoulli` | 0 or 1 with `P(1) = p` |
 | `shape.calendars` | `us_federal` | the eleven US federal holidays on their observed days |
 | `shape.calendars` | `us_retail` | Black Friday, Cyber Monday, Christmas Eve and the gift holidays |
 
@@ -43,7 +54,11 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
   `pyproject.toml`, run by `lint-imports` in `make check` and CI). Library code reaches a built-in
   with `default_host().get(group, name)`.
 - Plugins load lazily: listing or running `shape profile` imports none of them.
-- Fitters and distributions use scipy's parameter names (`loc`, `scale`, and `s` for lognormal).
+- The fitter and the distributions `normal`, `uniform`, `exponential` and `lognormal` use scipy's
+  parameter names (`loc`, `scale`, and `s` for lognormal); the other distributions take their own
+  (`mu`, `sigma`, `alpha`, `lam`, ...), see `docs/GENERATION_STRATEGIES.md`.
+- Every draw is addressed by row (`docs/GENERATION_KERNEL.md`): a column's values do not depend
+  on how the table is chunked.
 - The calendars' lift is neutral (1.0) unless `holiday_lift` is set; `holidays(start, end)`
   returns the rule-derived dates.
 - Not built-ins yet: the DB-API, Kafka and Event Hubs connectors (`shape.connectors`) need a live
