@@ -155,9 +155,10 @@ plugins/shape-kafka/
   tests/                   uses shape.plugins.kit
 ```
 
-Today each one is a **skeleton**: it builds and installs, declares `SHAPE_API` and registers
+Each one starts as a **skeleton**: it builds and installs, declares `SHAPE_API` and registers
 nothing. The work package that implements a plugin adds its entry points to `pyproject.toml`,
-its code under `src/`, and kit-based tests.
+its code under `src/`, and kit-based tests. `shape-sqlserver` is the first one implemented; its
+guide is [sqlserver.md](sqlserver.md).
 
 Rules that `python scripts/check_plugin_skeletons.py` enforces (and CI runs):
 
