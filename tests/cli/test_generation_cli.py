@@ -67,7 +67,16 @@ def test_describe_retail(capsys):
 
 def test_generate_dry_run_generates_nothing(capsys, tmp_path):
     code, out, _ = run(
-        capsys, "generate", "retail", "--scale", "small", "--dry-run", "-f", "parquet", "-o", tmp_path
+        capsys,
+        "generate",
+        "retail",
+        "--scale",
+        "small",
+        "--dry-run",
+        "-f",
+        "parquet",
+        "-o",
+        tmp_path,
     )
     assert code == 0
     assert "nothing was generated" in out
@@ -103,7 +112,17 @@ def test_generate_is_deterministic_and_seed_changes_it(capsys, tmp_path):
     a, b, c = tmp_path / "a", tmp_path / "b", tmp_path / "c"
     for d, seed in ((a, 5), (b, 5), (c, 6)):
         code, *_ = run(
-            capsys, "generate", "retail", "--scale", "small", "--seed", seed, "-f", "parquet", "-o", d
+            capsys,
+            "generate",
+            "retail",
+            "--scale",
+            "small",
+            "--seed",
+            seed,
+            "-f",
+            "parquet",
+            "-o",
+            d,
         )
         assert code == 0
     assert pq.read_table(a / "customer.parquet").equals(pq.read_table(b / "customer.parquet"))
@@ -143,9 +162,7 @@ def test_generate_excel(capsys, tmp_path):
 
 def test_generate_delta(capsys, tmp_path):
     deltalake = pytest.importorskip("deltalake")
-    code, *_ = run(
-        capsys, "generate", "retail", "--scale", "small", "-f", "delta", "-o", tmp_path
-    )
+    code, *_ = run(capsys, "generate", "retail", "--scale", "small", "-f", "delta", "-o", tmp_path)
     assert code == 0
     assert deltalake.DeltaTable(str(tmp_path / "customer")).to_pyarrow_table().num_rows == 1000
 
@@ -168,7 +185,17 @@ def test_star_mode(capsys, tmp_path):
     assert code == 0
     assert json.loads(out)["mode"] == "star"
     code, *_ = run(
-        capsys, "generate", "retail", "--mode", "star", "--scale", "small", "-f", "parquet", "-o", tmp_path
+        capsys,
+        "generate",
+        "retail",
+        "--mode",
+        "star",
+        "--scale",
+        "small",
+        "-f",
+        "parquet",
+        "-o",
+        tmp_path,
     )
     assert code == 0
     assert any(tmp_path.glob("*.parquet"))
@@ -235,3 +262,65 @@ def test_output_dir_is_created(capsys, tmp_path):
     out = Path(tmp_path) / "deep" / "er"
     assert run(capsys, "generate", "retail", "--scale", "small", "-f", "csv", "-o", out)[0] == 0
     assert out.is_dir()
+
+
+def test_validate_dispatches_on_content(capsys, tmp_path):
+    schema = tmp_path / "s.json"
+    from shape.cli.generation import load_target
+
+    schema.write_text(json.dumps(load_target("retail").to_dict()))
+    code, out, _ = run(capsys, "validate", schema)
+    assert code == 0
+    result = json.loads(out)
+    assert result["kind"] == "generation-schema" and result["valid"] and result["tables"] == 9
+
+    broken = json.loads(schema.read_text())
+    broken["tables"]["customer"]["primary_key"] = ["nope"]
+    bad = tmp_path / "bad.json"
+    bad.write_text(json.dumps(broken))
+    code, out, _ = run(capsys, "validate", bad)
+    assert code == 1
+    assert any("nope" in e for e in json.loads(out)["errors"])
+
+    code, out, _ = run(capsys, "validate", "examples/customer.shape.json")
+    assert code == 0 and json.loads(out)["kind"] == "contract"
+
+    other = tmp_path / "other.json"
+    other.write_text(json.dumps({"hello": "world"}))
+    code, _, err = run(capsys, "validate", other)
+    assert code == 2 and "neither" in err
+    # a schema without schema_version is not a Shape generation schema
+    legacy = {k: v for k, v in json.loads(schema.read_text()).items() if k != "schema_version"}
+    other.write_text(json.dumps(legacy))
+    assert run(capsys, "validate", other)[0] == 2
+    assert run(capsys, "validate", tmp_path / "missing.json")[0] == 2
+
+
+def test_log_json_and_metrics_for_any_command(capsys, tmp_path):
+    metrics = tmp_path / "m.json"
+    code = main(["--log-json", "--metrics", str(metrics), "generate", "retail", "--scale", "small"])
+    err = capsys.readouterr().err
+    assert code == 0
+    records = [json.loads(line) for line in err.splitlines()]
+    assert [r["message"] for r in records] == ["command started", "command finished"]
+    assert records[1]["exit_code"] == 0 and records[1]["level"] == "INFO"
+    summary = json.loads(metrics.read_text())
+    assert summary["command"] == "generate" and summary["exit_code"] == 0
+    assert summary["domain"] == "retail" and summary["rows"] > 0
+    # another command, a failing one
+    code = main(["--metrics", str(metrics), "list"])
+    assert code == 0 and json.loads(metrics.read_text())["command"] == "list"
+    code = main(["--metrics", str(metrics), "generate", "nope"])
+    assert code == 2 and json.loads(metrics.read_text())["exit_code"] == 2
+
+
+def test_run_metrics_collector():
+    from shape.observability import RunMetrics
+
+    m = RunMetrics("r1")
+    m.start_table("t")
+    m.end_table("t", rows=5, columns=2)
+    m.record_event("chaos_injected", count=3)
+    s = m.finish()
+    assert s["total_rows"] == 5 and s["tables"]["t"]["columns"] == 2
+    assert s["events"][0]["type"] == "chaos_injected"

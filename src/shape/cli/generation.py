@@ -25,7 +25,8 @@ SQL_DIALECTS = ("tsql", "tsql-fabric-warehouse", "postgres", "mysql")
 MODES = ("3nf", "star")
 
 _TARGET_HELP = (
-    "an installed domain (see `shape list`) or a generation schema file (`shape from-ddl` writes one)"
+    "an installed domain (see `shape list`) or a generation schema file "
+    "(`shape from-ddl` writes one)"
 )
 
 
@@ -71,14 +72,16 @@ def add_arguments(sub: Any) -> None:
         help="with no target: print N demo rows as JSON lines",
     )
     sql = ge.add_argument_group("sql output (--format sql)")
-    sql.add_argument(
-        "--sql-dialect", choices=SQL_DIALECTS, default="tsql", help="default: tsql"
-    )
+    sql.add_argument("--sql-dialect", choices=SQL_DIALECTS, default="tsql", help="default: tsql")
     sql.add_argument("--schema-name", metavar="NAME", help="qualify tables with this schema")
     sql.add_argument(
         "--batch-size", type=int, metavar="N", help="rows per INSERT (T-SQL: at most 1000)"
     )
-    for flag, what in (("sql-ddl", "CREATE TABLE"), ("sql-drop", "DROP TABLE IF EXISTS"), ("sql-go", "GO")):
+    for flag, what in (
+        ("sql-ddl", "CREATE TABLE"),
+        ("sql-drop", "DROP TABLE IF EXISTS"),
+        ("sql-go", "GO"),
+    ):
         sql.add_argument(
             f"--{flag}",
             action=argparse.BooleanOptionalAction,
@@ -368,9 +371,7 @@ def cmd_presets(a: argparse.Namespace) -> int:
     if a.target is None:
         from shape.generation.domains import domain_names, load_domain
 
-        every = {
-            n: list(load_domain(n).schema.generation.scales) for n in domain_names()
-        }
+        every = {n: list(load_domain(n).schema.generation.scales) for n in domain_names()}
         if a.json:
             _dump(every)
         else:
