@@ -7,6 +7,7 @@ deltalake
 nbformat
 ipython
 jsonschema
+fsspec
 pyspark>=4.0
 delta-spark>=4.0
 fabric-user-data-functions
