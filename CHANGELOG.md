@@ -5,6 +5,23 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Generation commands: `shape generate DOMAIN|SCHEMA.json` (`--mode 3nf|star`, `--scale`, `--seed`,
+  `--format summary|csv|tsv|jsonl|parquet|excel|sql|delta`, `-o DIR`, `--dry-run`, the SQL options
+  `--sql-dialect`, `--schema-name`, `--batch-size`, `--sql-ddl`, `--sql-drop`, `--sql-go`, and for
+  Delta `--delta-mode`, `--partition-by`), `shape describe`, `shape list` and `shape presets`.
+  `shape from-ddl` writes a schema file that `generate` and `describe` read. The retail domain has
+  a `star` schema next to `3nf`. `shape generate --rows N` with no target still prints demo rows;
+  `shape generate --from X.shape` is reserved (profile to generate). Python:
+  `shape.api.generate("retail", scale="medium", seed=42, mode="star")` returns the generated
+  Arrow tables (`result.tables`, `result["order"]`).
+- Run logging and metrics for every command: `shape --log-json --log-level LEVEL --metrics FILE
+  COMMAND ...` (or `SHAPE_LOG_JSON`, `SHAPE_LOG_LEVEL`, `SHAPE_METRICS`) logs JSON lines to stderr
+  and writes the run's metrics (command, exit code, seconds, rows, tables) to FILE. In Python:
+  `shape.observability` (`configure_logging`, `RunMetrics`).
+- `shape validate FILE` dispatches on what the file holds: a generation schema goes through the
+  schema validator (JSON Schema, then keys, relationships, rules, scale presets and strategy
+  keys; exit 1 when invalid), a contract through the contract validation, and any other document
+  exits 2. A contract that does not validate now exits 1 (it raised before).
 - `shape fidelity REFERENCE SYNTHETIC` (alias `compare`): scores synthetic tables against reference
   tables, per column, per table and overall, on a 0-100 scale, and writes JSON, Markdown or HTML
   reports (`-o`, repeatable; the `shape.reports` plugin group). Pass marks `--min-score`,

@@ -286,3 +286,53 @@ capped at 1,000 rows (the server's limit for one `VALUES` list) whatever `batch_
 `tsql-fabric-warehouse` uses `VARCHAR` and `DATETIME2(6)`, writes the primary key as a comment (the
 warehouse does not enforce it) and emits no `DISTRIBUTION` clause; `NaN` and infinities become
 `NULL`; MySQL string literals escape backslashes.
+
+## The command line
+
+```
+shape list                                   # installed domains and their modes
+shape presets retail                         # rows per table for every scale preset
+shape describe retail --mode star --scale medium
+shape generate retail --scale medium --seed 42 --format parquet -o out/
+shape generate retail --dry-run              # the plan: order, rows, memory; generates nothing
+shape from-ddl tables.sql -o shop.gen.json && shape generate shop.gen.json -f csv -o out/
+shape validate shop.gen.json                 # a schema file, or a contract; exit 0, 1 or 2
+```
+
+A target is an installed domain or the path of a generation schema file. `--mode star` picks a
+domain's star schema (a domain that has none exits 2; a schema file has the one mode it was
+written in). `--scale` must be one of the schema's presets (`shape presets`), `--seed` defaults to
+the schema's. `--format summary` (the default) prints the result and writes nothing; every other
+format needs `-o DIR` and is written by the writers above. `--json` prints the result, the plan or
+the description as JSON. Exit codes: 0 done, 1 a dry run found problems (or `validate` found the
+file invalid), 2 bad input.
+
+`shape generate --from X.shape` is reserved for generating from a profile and exits 2 for now.
+
+In Python, `shape.api.generate("retail", scale="medium", seed=42, mode="star")` returns the
+`GenerationResult`: `result.tables` maps names to Arrow tables (as does `result["order"]`).
+
+### Logging and metrics
+
+Every command can log JSON lines and write its metrics, with the options before the command or
+environment variables:
+
+```
+shape --log-json --metrics run.json generate retail --scale small
+```
+
+| Option | Variable | Meaning |
+|---|---|---|
+| `--log-json` | `SHAPE_LOG_JSON=1` | one JSON object per log line on stderr: `timestamp`, `level`, `logger`, `message`, extra fields |
+| `--log-level LEVEL` | `SHAPE_LOG_LEVEL` | default `INFO` |
+| `--metrics FILE` | `SHAPE_METRICS` | write the run's metrics as JSON: `run_id`, `command`, `exit_code`, `total_elapsed_seconds`, and for `generate` the domain, mode, scale, seed, format, rows and tables |
+
+`shape.observability` has the same pieces for library code: `configure_logging`, `RunMetrics` (with
+`start_table`, `end_table`, `record_event`, `finish`). Nothing is sent anywhere.
+
+### `shape validate`
+
+`shape validate FILE` reads the file and decides by its content: `schema_version`, `model` and
+`tables` make it a generation schema (checked against the JSON Schema, then by `GenSchema.validate`;
+errors exit 1, warnings are printed), `name` and `fields` make it a contract, and anything else,
+including a document in another tool's format, exits 2.

@@ -1,0 +1,47 @@
+{
+ "meta": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-10-01 22:32:31",
+  "domain": "retail",
+  "runs": 1,
+  "warmup": 0,
+  "shape_threads": null,
+  "loadavg_start": 0.33935546875
+ },
+ "scales": {
+  "medium": {
+   "spindle_median_s": 6.900892226999986,
+   "shape_median_s": 1.0127970250000544,
+   "ratio": 6.813697173922499,
+   "spindle_runs_s": [
+    6.901
+   ],
+   "shape_runs_s": [
+    1.013
+   ],
+   "raw": {
+    "spindle": [
+     {
+      "wall_s": 6.900892226999986,
+      "cpu_s": 7.756275,
+      "rows": 1965400,
+      "loadavg_before": 0.33935546875,
+      "cmd": "/root/.venvs/spindle/bin/spindle generate retail --scale medium --seed 42 --format parquet -o /root/bench-out/spindle/retail/medium/seed42.tmp4745"
+     }
+    ],
+    "shape": [
+     {
+      "wall_s": 1.0127970250000544,
+      "cpu_s": 1.961435999999999,
+      "rows": 1965400,
+      "loadavg_before": 0.44140625,
+      "cmd": "/root/.venvs/shape/bin/shape generate retail --scale medium --seed 1042 --format parquet -o /root/bench-out/shape/retail/medium/seed1042.tmp4745"
+     }
+    ]
+   }
+  }
+ }
+}
