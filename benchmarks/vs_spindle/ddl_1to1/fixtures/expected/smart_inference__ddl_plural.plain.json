@@ -1,0 +1,877 @@
+{
+ "annotations": [],
+ "explain": [],
+ "file": {
+  "business_rules": [],
+  "generation": {
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "categories": 100000,
+     "customers": 100000,
+     "order_lines": 250000,
+     "orders": 250000,
+     "products": 100000
+    },
+    "medium": {
+     "categories": 10000,
+     "customer": 7,
+     "customers": 10000,
+     "order": 21,
+     "order_lines": 25000,
+     "orders": 21,
+     "products": 10000
+    },
+    "small": {
+     "categories": 1000,
+     "customers": 1000,
+     "order_lines": 2500,
+     "orders": 2500,
+     "products": 1000
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "child": "orders",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_orders_customer_id",
+    "parent": "customers",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "order_lines",
+    "child_columns": [
+     "order_id"
+    ],
+    "name": "fk_order_lines_order_id",
+    "parent": "orders",
+    "parent_columns": [
+     "order_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "order_lines",
+    "child_columns": [
+     "product_id"
+    ],
+    "name": "fk_order_lines_product_id",
+    "parent": "products",
+    "parent_columns": [
+     "product_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "categories": {
+    "columns": {
+     "category_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "name": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "category_id"
+    ]
+   },
+   "customers": {
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "email": {
+      "generator": {
+       "provider": "email",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "nullable": true,
+      "type": "string"
+     },
+     "first_name": {
+      "generator": {
+       "provider": "first_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "nullable": true,
+      "type": "string"
+     },
+     "last_name": {
+      "generator": {
+       "provider": "last_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "nullable": true,
+      "type": "string"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 20,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "customer_id"
+    ]
+   },
+   "order_lines": {
+    "columns": {
+     "line_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "line_total": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "order_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "orders.order_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "product_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "products.product_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "quantity": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "type": "integer"
+     },
+     "unit_price": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "primary_key": [
+     "line_id"
+    ]
+   },
+   "orders": {
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "customers.customer_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "order_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "type": "date"
+     },
+     "order_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "payment_method": {
+      "generator": {
+       "max_nb_chars": 30,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 30,
+      "nullable": true,
+      "type": "string"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 20,
+      "nullable": true,
+      "type": "string"
+     },
+     "total_amount": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "primary_key": [
+     "order_id"
+    ]
+   },
+   "products": {
+    "columns": {
+     "category": {
+      "generator": {
+       "max_nb_chars": 30,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 30,
+      "nullable": true,
+      "type": "string"
+     },
+     "name": {
+      "generator": {
+       "max_nb_chars": 100,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "nullable": true,
+      "type": "string"
+     },
+     "product_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "unit_cost": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "unit_price": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "weight_kg": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 8,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "primary_key": [
+     "product_id"
+    ]
+   }
+  }
+ },
+ "schema": {
+  "business_rules": [],
+  "correlated_columns": {},
+  "generation": {
+   "derived_counts": {},
+   "output": {},
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "categories": 100000,
+     "customers": 100000,
+     "order_lines": 250000,
+     "orders": 250000,
+     "products": 100000
+    },
+    "medium": {
+     "categories": 10000,
+     "customer": 7,
+     "customers": 10000,
+     "order": 21,
+     "order_lines": 25000,
+     "orders": 21,
+     "products": 10000
+    },
+    "small": {
+     "categories": 1000,
+     "customers": 1000,
+     "order_lines": 2500,
+     "orders": 2500,
+     "products": 1000
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "cardinality": {},
+    "child": "orders",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_orders_customer_id",
+    "optional": false,
+    "parent": "customers",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "order_lines",
+    "child_columns": [
+     "order_id"
+    ],
+    "name": "fk_order_lines_order_id",
+    "optional": false,
+    "parent": "orders",
+    "parent_columns": [
+     "order_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "order_lines",
+    "child_columns": [
+     "product_id"
+    ],
+    "name": "fk_order_lines_product_id",
+    "optional": false,
+    "parent": "products",
+    "parent_columns": [
+     "product_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "categories": {
+    "cdm_mapping": null,
+    "columns": {
+     "category_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "category_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "name": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "name",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "categories",
+    "primary_key": [
+     "category_id"
+    ]
+   },
+   "customers": {
+    "cdm_mapping": null,
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "email": {
+      "generator": {
+       "provider": "email",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "name": "email",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "first_name": {
+      "generator": {
+       "provider": "first_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "first_name",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "last_name": {
+      "generator": {
+       "provider": "last_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "last_name",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 20,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "customers",
+    "primary_key": [
+     "customer_id"
+    ]
+   },
+   "order_lines": {
+    "cdm_mapping": null,
+    "columns": {
+     "line_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "line_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "line_total": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "line_total",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "order_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "orders.order_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "order_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "product_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "products.product_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "product_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "quantity": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "quantity",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "unit_price": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "unit_price",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "description": "",
+    "name": "order_lines",
+    "primary_key": [
+     "line_id"
+    ]
+   },
+   "orders": {
+    "cdm_mapping": null,
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "customers.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "order_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "order_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "order_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "order_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "payment_method": {
+      "generator": {
+       "max_nb_chars": 30,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 30,
+      "name": "payment_method",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 20,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "total_amount": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "total_amount",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "description": "",
+    "name": "orders",
+    "primary_key": [
+     "order_id"
+    ]
+   },
+   "products": {
+    "cdm_mapping": null,
+    "columns": {
+     "category": {
+      "generator": {
+       "max_nb_chars": 30,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 30,
+      "name": "category",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "name": {
+      "generator": {
+       "max_nb_chars": 100,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "name": "name",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "product_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "product_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "unit_cost": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "unit_cost",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "unit_price": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "unit_price",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 18,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "weight_kg": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "weight_kg",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 8,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "description": "",
+    "name": "products",
+    "primary_key": [
+     "product_id"
+    ]
+   }
+  }
+ }
+}

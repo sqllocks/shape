@@ -22,10 +22,17 @@ EXIT_KEYS = {
     "artifactPath",
     "sampled",
     "truncated",
+    "kernel",
 }
-NOTEBOOK_FILES = ["shape_setup.ipynb", "shape_profile.ipynb", "shape_profile_spark.ipynb"]
+NOTEBOOK_FILES = [
+    "shape_setup.ipynb",
+    "shape_profile.ipynb",
+    "shape_profile_spark.ipynb",
+    "shape_profile_distributed.ipynb",
+]
 PY_NB = NOTEBOOKS / "shape_profile.ipynb"
 SPARK_NB = NOTEBOOKS / "shape_profile_spark.ipynb"
+DIST_NB = NOTEBOOKS / "shape_profile_distributed.ipynb"
 
 
 def _params(table: str, **kw):
@@ -91,7 +98,9 @@ def test_valid_nbformat_with_fabric_metadata(name):
     assert "kernel_info" in nb.metadata and "dependencies" in nb.metadata
 
 
-@pytest.mark.parametrize("name", ["shape_profile.ipynb", "shape_profile_spark.ipynb"])
+@pytest.mark.parametrize(
+    "name", ["shape_profile.ipynb", "shape_profile_spark.ipynb", "shape_profile_distributed.ipynb"]
+)
 def test_parameters_cell_and_exit_placement(name):
     nb = nbformat.read(NOTEBOOKS / name, as_version=4)
     code = [c for c in nb.cells if c.cell_type == "code"]
@@ -121,9 +130,9 @@ def test_parameters_cell_and_exit_placement(name):
 def test_python_notebook_configure_and_install_cells():
     src = [c.source for c in nbformat.read(PY_NB, as_version=4).cells if c.cell_type == "code"]
     assert src[0].startswith("%%configure") and '"vCores": 8' in src[0]
-    assert any(
-        "%pip install builtin/sqllocks_shape-" in s and s.strip().endswith(".whl") for s in src
-    )
+    # PF-02: one cell installs the Rust-kernel platform wheel when builtin/ holds one that fits,
+    # else the pure-Python wheel (same version; pip prefers the platform wheel)
+    assert any("%pip install --find-links builtin" in s and "sqllocks-shape==" in s for s in src)
     nb = nbformat.read(PY_NB, as_version=4)
     assert nb.metadata["kernel_info"]["jupyter_kernel_name"] in ("python3.11", "python3.12")
 
@@ -222,8 +231,12 @@ def test_artifacts_can_be_the_next_baseline(lakehouse):
 @pytest.fixture(scope="module")
 def spark(tmp_path_factory):
     delta = pytest.importorskip("delta", reason="delta-spark is a [dev] dependency")
+    import os
+    import sys
+
     from pyspark.sql import SparkSession
 
+    os.environ["PYSPARK_PYTHON"] = sys.executable  # mapInArrow workers import the same shape
     wh = tmp_path_factory.mktemp("warehouse")
     builder = (
         SparkSession.builder.master("local[1]")
@@ -276,3 +289,105 @@ def test_spark_notebook_samples_above_row_limit(spark, spark_tables):
     out = _check_exit(raw, lh)
     assert out["sampled"] is True and out["rows"] == 2000  # rows = true row count
     assert 0 < ns["table"].num_rows < 2000
+
+
+# ----------------------------------------------- PF-02: distributed PySpark notebook
+
+
+def _dist_params(table: str, **kw):
+    return _params(table, contractPath="", baselinePath="", mode="distributed", partitions=0, **kw)
+
+
+def _strict_json(path: Path):
+    def _no_constant(name: str):
+        raise AssertionError(f"{path.name} contains the non-JSON constant {name}")
+
+    return json.loads(path.read_text(encoding="utf-8"), parse_constant=_no_constant)
+
+
+def test_distributed_notebook_profiles_on_executors_and_says_it_checked_nothing(
+    spark, spark_tables
+):
+    lh = spark_tables
+    raw, _ = run_notebook(DIST_NB, lh, _dist_params("orders_day1"), {"spark": spark})
+    assert raw is not None and len(raw.encode()) < 1_000_000
+    out = json.loads(raw)
+    assert EXIT_KEYS <= set(out)
+    assert out["mode"] == "bounded" and out["checked"] is False
+    assert out["rows"] == 2000 and out["sampled"] is False
+    assert out["passed"] is True and out["violations"] == [] and out["drifted"] is False
+    art = lh / "Files" / out["artifactPath"]
+    assert art.name == "orders_day1.profile.json"
+    doc = _strict_json(art)
+    assert doc["mode"] == "bounded" and doc["tables"]["orders_day1"]["rows"] == 2000
+    names = [c["name"] for c in doc["tables"]["orders_day1"]["columns"]]
+    assert names == ["customer_id", "email", "status", "amount"]
+    summary = _strict_json(art.with_name("orders_day1.summary.json"))
+    assert summary["rows"] == 2000 and set(summary["columns"]) == set(names)
+    assert summary["columns"]["customer_id"]["min"] == 1
+    assert summary["columns"]["customer_id"]["max"] == 2000
+    assert summary["columns"]["email"]["null_count"] > 0
+
+
+def test_distributed_notebook_statistics_agree_with_the_exact_notebook(spark, spark_tables):
+    lh = spark_tables
+    dist_raw, _ = run_notebook(DIST_NB, lh, _dist_params("orders_day2"), {"spark": spark})
+    exact_raw, _ = run_notebook(
+        SPARK_NB, lh, _params("orders_day2", contractPath="", baselinePath=""), {"spark": spark}
+    )
+    dist, exact = json.loads(dist_raw), json.loads(exact_raw)
+    assert dist["rows"] == exact["rows"]
+    bounded = {
+        c["name"]: c
+        for c in _strict_json(lh / "Files" / dist["artifactPath"])["tables"]["orders_day2"][
+            "columns"
+        ]
+    }
+    summary = json.loads(
+        (lh / "Files" / exact["artifactPath"]).with_suffix(".summary.json").read_text()
+    )
+    for name, col in summary["columns"].items():
+        assert bounded[name]["null_count"] == pytest.approx(col["null_rate"] * 2000, abs=0.5)
+        if col["cardinality"] is not None:
+            assert bounded[name]["distinct"] == pytest.approx(col["cardinality"], rel=0.03, abs=1)
+
+
+def test_distributed_notebook_exact_mode_equals_the_spark_notebook(spark, spark_tables):
+    lh = spark_tables
+    for table in ("orders_day1", "orders_day2"):
+        ex_raw, _ = run_notebook(
+            DIST_NB, lh, _params(table, mode="exact", partitions=0), {"spark": spark}
+        )
+        sp_raw, _ = run_notebook(SPARK_NB, lh, _params(table), {"spark": spark})
+        ex, sp = _check_exit(ex_raw, lh), _check_exit(sp_raw, lh)
+        assert ex.pop("mode") == "exact" and ex.pop("checked") is True
+        for out in (ex, sp):
+            out.pop("artifactPath")
+        assert ex == sp
+
+
+def test_distributed_notebook_refuses_a_contract_it_cannot_check(spark, spark_tables):
+    with pytest.raises(ValueError, match="mode = 'exact'"):
+        run_notebook(
+            DIST_NB,
+            spark_tables,
+            _params("orders_day1", mode="distributed", partitions=0),
+            {"spark": spark},
+        )
+
+
+def test_distributed_notebook_rejects_an_unknown_mode(spark, spark_tables):
+    with pytest.raises(ValueError, match="mode must be"):
+        run_notebook(
+            DIST_NB,
+            spark_tables,
+            _dist_params("orders_day1") | {"mode": "approximate"},
+            {"spark": spark},
+        )
+
+
+def test_distributed_notebook_repartitions(spark, spark_tables):
+    raw, _ = run_notebook(
+        DIST_NB, spark_tables, _dist_params("orders_day1") | {"partitions": 3}, {"spark": spark}
+    )
+    assert json.loads(raw)["rows"] == 2000

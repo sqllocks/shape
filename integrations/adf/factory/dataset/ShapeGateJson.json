@@ -1,0 +1,33 @@
+{
+  "name": "ShapeGateJson",
+  "properties": {
+    "linkedServiceName": {
+      "referenceName": "ShapeAdls",
+      "type": "LinkedServiceReference"
+    },
+    "parameters": {
+      "fileSystem": {
+        "type": "string"
+      },
+      "folderPath": {
+        "type": "string"
+      }
+    },
+    "annotations": [],
+    "type": "Json",
+    "typeProperties": {
+      "location": {
+        "type": "AzureBlobFSLocation",
+        "fileName": "gate.json",
+        "folderPath": {
+          "value": "@dataset().folderPath",
+          "type": "Expression"
+        },
+        "fileSystem": {
+          "value": "@dataset().fileSystem",
+          "type": "Expression"
+        }
+      }
+    }
+  }
+}
