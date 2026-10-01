@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import glob as _glob
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
+from urllib.parse import urlparse
 
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.json as pajson  # type: ignore[import-untyped]
@@ -92,7 +93,34 @@ def _is_pandas(obj: Any) -> bool:
     return mod.startswith("pandas") and hasattr(obj, "columns") and hasattr(obj, "dtypes")
 
 
+def _is_url(text: str) -> bool:
+    scheme, sep, _ = text.partition("://")
+    return bool(sep) and len(scheme) > 1 and scheme.lower() != "file"
+
+
+def _load_remote(text: str, name: str | None) -> tuple[str, list[_Col], int]:
+    """A URL source: the first installed ``shape.sources`` plugin that can open it (PF-01)."""
+    from shape.plugins.host import default_host
+
+    host = default_host()
+    for rec in host.records("shape.sources"):
+        source = host.try_get(rec.group, rec.name)
+        if source is None or not source.can_open(text):
+            continue
+        schema = source.schema(text)
+        table = pa.Table.from_batches(list(source.read(text)), schema=schema)
+        stem = PurePosixPath(urlparse(text).path).stem
+        return name or stem or "table", _to_cols("parquet", table), table.num_rows
+    raise SourceError(
+        f"no installed source plugin reads {text!r}; check the scheme, install the extra "
+        "(pip install 'sqllocks-shape[azure]' for abfss:// and Delta) and run "
+        "`shape plugins doctor`"
+    )
+
+
 def _load_path(text: str, name: str | None, threads: int | None) -> tuple[str, list[_Col], int]:
+    if _is_url(text):
+        return _load_remote(text, name)
     if any(ch in text for ch in "*?["):
         matches = sorted(Path(m) for m in _glob.glob(text, recursive=True) if Path(m).is_file())
         if not matches:

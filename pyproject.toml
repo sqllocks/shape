@@ -16,6 +16,7 @@ dependencies=["numpy>=2.0,<3","pyarrow>=14.0.1"]
 yaml=["pyyaml>=6"]
 sign=["cryptography>=50,<51"]
 delta=["deltalake>=0.17"]
+azure=["adlfs>=2024.4.1","azure-identity>=1.15","deltalake>=0.17"]
 pandas=["pandas>=2"]
 scipy=["scipy>=1.11"]
 kafka=["confluent-kafka>=2.5,<4"]
@@ -58,6 +59,12 @@ python_version="3.11"
 strict=true
 mypy_path="src"
 packages=["shape"]
+
+# Optional cloud packages (extra [azure], and Fabric's own notebookutils): not installed in every
+# environment, so mypy must not depend on them being present.
+[[tool.mypy.overrides]]
+module=["adlfs","azure.*","deltalake","deltalake.*","notebookutils","mssparkutils"]
+ignore_missing_imports=true
 
 # T-12 ratchet: modules not yet strict. A work package that creates or rewrites a module
 # removes it from this list; the list must be empty by G8.
@@ -134,6 +141,8 @@ csv = "shape.builtins.sources:CsvSource"
 parquet = "shape.builtins.sources:ParquetSource"
 jsonl = "shape.builtins.sources:JsonlSource"
 ipc = "shape.builtins.sources:IpcSource"
+abfss = "shape.builtins.sources:AbfssSource"
+delta = "shape.builtins.sources:DeltaSource"
 
 [project.entry-points."shape.sinks"]
 csv = "shape.builtins.sinks:CsvSink"
