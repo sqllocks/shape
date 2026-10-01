@@ -5,17 +5,25 @@
 3. names match whole words (``discount_pct``, ``state``, ``model``, ``catalog``, ...);
 4. ``gender CHAR(1)`` and other one-character codes get a value set;
 5. CR-08: a parent total is the sum over its children.
+
+Round 2 (the lead's decision, same day):
+
+6. F6: a key the DDL does not declare, guessed by name, points at the parent's primary key;
+7. F7: generated strings never exceed the declared length (``CHAR(2)`` codes included);
+8. F8: ``CustomerId``/``CustomerID`` is read like ``customer_id``.
 """
 
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 import numpy as np
 import pyarrow as pa
 import pytest
 from engine_fixtures import RowFK, Seq
 
+from shape.builtins.strategies import providers
 from shape.generation import ddl_infer
 from shape.generation.ddl import DdlParser, from_ddl
 from shape.generation.ddl_infer import ColumnSemantic as S
@@ -23,6 +31,7 @@ from shape.generation.ddl_infer import TableRole
 from shape.generation.ddl_names import snake, word_pattern, words
 from shape.generation.engine import Engine
 from shape.generation.schema import Column, GenSchema, Table
+from shape.plugins.host import default_host
 
 
 class Spread:
@@ -392,8 +401,8 @@ def test_gender_of_any_length_is_m_or_f(sql_type: str) -> None:
     assert set(column(schema, "p", "gender").generator["values"]) == {"M", "F"}
 
 
-def test_longer_codes_are_unchanged() -> None:
-    schema, _ = from_ddl("CREATE TABLE p (id INT PRIMARY KEY, currency CHAR(3), kind_x CHAR(2));")
+def test_a_longer_code_without_a_name_rule_keeps_its_pattern() -> None:
+    schema, _ = from_ddl("CREATE TABLE p (id INT PRIMARY KEY, currency CHAR(8));")
     assert column(schema, "p", "currency").generator == {"strategy": "pattern", "format": "{seq:6}"}
 
 
@@ -501,3 +510,248 @@ def test_cr08_needs_the_child_to_point_at_the_parents_key() -> None:
     schema, notes = from_ddl(sql)
     assert not any(n.rule_id == "CR-08" for n in notes)
     assert column(schema, "orders", "total").generator["strategy"] == "distribution"
+
+
+# ---- 6. a guessed key points at the parent's primary key --------------------------------------
+
+
+class LongText:
+    """The ``faker`` strategy's output is cut at the column length by the strategy itself
+    (``providers._truncate``); text longer than any column stands in for what Faker returns, so
+    the check does not need the optional ``faker`` package."""
+
+    name = "faker"
+
+    def generate(self, spec: object, ctx: object) -> pa.Array:
+        values = pa.array(["z" * 400] * ctx.n_rows)  # type: ignore[attr-defined]
+        return providers._truncate(values, ctx)
+
+
+class OwnParent:
+    """``self_referencing``: every row points at an earlier row's key (the keys are 1, 2, ...)."""
+
+    name = "self_referencing"
+
+    def generate(self, spec: object, ctx: object) -> pa.Array:
+        rows = np.arange(ctx.row_start, ctx.row_start + ctx.n_rows)  # type: ignore[attr-defined]
+        return pa.array(np.maximum(rows, 1))
+
+
+def real_generate(schema: GenSchema, seed: int = 1):  # noqa: ANN201
+    """Generation with the built-in strategies. The two key strategies the default registry does
+    not serve (``foreign_key``, ``self_referencing``) and ``faker`` are stood in for."""
+    host = default_host()
+    strategies = {
+        name: host.try_get("shape.strategies", name)
+        for name in {c.strategy for t in schema.tables.values() for c in t.columns.values()}
+    }
+    strategies.update({s.name: s for s in (RowFK(), OwnParent(), LongText())})
+    return Engine(schema, strategies=strategies, seed=seed).generate()
+
+
+@pytest.mark.parametrize("smart", [True, False], ids=["smart", "plain"])
+@pytest.mark.parametrize("parent", ["customer", "customers"])
+def test_a_guessed_key_points_at_the_parents_primary_key(parent: str, smart: bool) -> None:
+    sql = (
+        f"CREATE TABLE {parent} (id INT PRIMARY KEY, name VARCHAR(40));\n"
+        "CREATE TABLE orders (id INT PRIMARY KEY, customer_id INT NOT NULL);"
+    )
+    schema, _ = from_ddl(sql, smart=smart)
+    gen = column(schema, "orders", "customer_id").generator
+    assert gen["strategy"] == "foreign_key"
+    assert gen["ref"] == f"{parent}.id"
+    rel = next(r for r in schema.relationships if r.child == "orders")
+    assert (rel.parent, rel.parent_columns, rel.child_columns) == (parent, ["id"], ["customer_id"])
+    assert errors(schema) == []
+
+
+def test_a_guessed_key_names_the_primary_key_whatever_it_is_called() -> None:
+    sql = (
+        "CREATE TABLE customer (cust_no VARCHAR(10), PRIMARY KEY (cust_no));\n"
+        "CREATE TABLE orders (id INT PRIMARY KEY, customer_id VARCHAR(10));"
+    )
+    schema, _ = from_ddl(sql)
+    assert column(schema, "orders", "customer_id").generator["ref"] == "customer.cust_no"
+    assert errors(schema) == []
+
+
+@pytest.mark.parametrize(
+    "parent",
+    [
+        "CREATE TABLE customer (a INT, b INT, name VARCHAR(40), PRIMARY KEY (a, b));",
+        "CREATE TABLE customer (a INT, name VARCHAR(40));",
+    ],
+    ids=["composite key", "no key"],
+)
+@pytest.mark.parametrize("smart", [True, False], ids=["smart", "plain"])
+def test_a_guessed_key_is_not_made_when_the_parent_has_no_single_column_key(
+    parent: str, smart: bool
+) -> None:
+    sql = parent + "\nCREATE TABLE orders (id INT PRIMARY KEY, customer_id INT);"
+    schema, _ = from_ddl(sql, smart=smart)
+    assert column(schema, "orders", "customer_id").generator["strategy"] != "foreign_key"
+    assert [r for r in schema.relationships if r.child == "orders"] == []
+    assert errors(schema) == []
+
+
+def test_a_guessed_key_generates_only_parent_keys() -> None:
+    sql = (
+        "CREATE TABLE customer (id INT PRIMARY KEY, name VARCHAR(40));\n"
+        "CREATE TABLE orders (id INT PRIMARY KEY, customer_id INT NOT NULL);"
+    )
+    schema, _ = from_ddl(sql, scale="small:customer=30,orders=200")
+    result = real_generate(schema, 4)
+    parents = set(result["customer"]["id"].to_pylist())
+    children = set(result["orders"]["customer_id"].to_pylist())
+    assert children and children <= parents
+
+
+# ---- 8. CamelCase keys (F8) -------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("name", ["CustomerId", "CustomerID", "customerId", "Customer_Id"])
+@pytest.mark.parametrize("smart", [True, False], ids=["smart", "plain"])
+def test_a_camel_case_id_is_a_key_like_customer_id(name: str, smart: bool) -> None:
+    sql = (
+        "CREATE TABLE Customer (Id INT PRIMARY KEY, Name VARCHAR(40));\n"
+        f"CREATE TABLE Orders (OrderId INT PRIMARY KEY, {name} INT NOT NULL);"
+    )
+    schema, _ = from_ddl(sql, smart=smart)
+    gen = column(schema, "Orders", name).generator
+    assert (gen["strategy"], gen["ref"]) == ("foreign_key", "Customer.Id")
+    assert errors(schema) == []
+
+
+def test_a_camel_case_key_finds_a_camel_case_table_and_a_plural() -> None:
+    sql = (
+        "CREATE TABLE SalesOrders (Id INT PRIMARY KEY);\n"
+        "CREATE TABLE OrderItem (Id INT PRIMARY KEY);\n"
+        "CREATE TABLE Line (Id INT PRIMARY KEY, SalesOrderId INT, OrderItemID INT);"
+    )
+    schema, _ = from_ddl(sql)
+    assert column(schema, "Line", "SalesOrderId").generator["ref"] == "SalesOrders.Id"
+    assert column(schema, "Line", "OrderItemID").generator["ref"] == "OrderItem.Id"
+
+
+def test_a_camel_case_key_needs_a_single_column_parent_key() -> None:
+    sql = (
+        "CREATE TABLE Customer (A INT, B INT, PRIMARY KEY (A, B));\n"
+        "CREATE TABLE Orders (Id INT PRIMARY KEY, CustomerId INT);"
+    )
+    schema, _ = from_ddl(sql)
+    assert column(schema, "Orders", "CustomerId").generator["strategy"] != "foreign_key"
+    assert errors(schema) == []
+
+
+@pytest.mark.parametrize("name", ["Id", "ID", "id", "Idea", "Paid", "Valid", "orderdate"])
+def test_a_name_that_only_ends_in_id_is_not_a_key(name: str) -> None:
+    sql = (
+        "CREATE TABLE Customer (Id INT PRIMARY KEY);\n"
+        f"CREATE TABLE T (k INT PRIMARY KEY, {name} INT);"
+    )
+    schema, _ = from_ddl(sql)
+    assert column(schema, "T", name).generator["strategy"] != "foreign_key"
+
+
+# ---- 7. generated strings never exceed the declared length (F7) --------------------------------
+
+SHORT_STRINGS = [
+    "country_code CHAR(2)",
+    "currency_code CHAR(3)",
+    "code CHAR(3)",
+    "region_code NCHAR(2)",
+    "language_code VARCHAR(2)",
+    "currency CHAR(3)",
+    "product_code VARCHAR(5)",
+    "kind_type VARCHAR(4)",
+    "row_type VARCHAR(5)",
+    "order_status VARCHAR(3)",
+    "status VARCHAR(4)",
+    "status CHAR(2)",
+    "label CHAR(2)",
+    "note VARCHAR(3)",
+    "first_name VARCHAR(3)",
+    "email VARCHAR(6)",
+    "city VARCHAR(2)",
+    "phone CHAR(4)",
+    "zip CHAR(3)",
+    "state CHAR(2)",
+    "gender CHAR(2)",
+    "tier CHAR(2)",
+]
+
+
+def longest(values: pa.ChunkedArray) -> int:
+    return max((len(v) for v in values.to_pylist() if v is not None), default=0)
+
+
+@pytest.mark.parametrize("smart", [True, False], ids=["smart", "plain"])
+def test_short_fixed_length_columns_get_values_that_fit(smart: bool) -> None:
+    cols = ", ".join(SHORT_STRINGS)
+    schema, _ = from_ddl(
+        f"CREATE TABLE t (id INT PRIMARY KEY, {cols});", smart=smart, scale="small:t=2000"
+    )
+    table = real_generate(schema, 7)["t"]
+    for spec in SHORT_STRINGS:
+        name, _, sql_type = spec.partition(" ")
+        limit = int(re.search(r"\((\d+)\)", sql_type).group(1))  # type: ignore[union-attr]
+        assert 0 < longest(table[name]) <= limit, spec
+
+
+def test_a_two_character_code_is_two_characters() -> None:
+    schema, _ = from_ddl("CREATE TABLE p (id INT PRIMARY KEY, country_code CHAR(2));")
+    assert column(schema, "p", "country_code").generator == {
+        "strategy": "pattern",
+        "format": "{random:2}",
+    }
+
+
+def test_a_value_set_keeps_the_values_that_fit() -> None:
+    schema, _ = from_ddl("CREATE TABLE p (id INT PRIMARY KEY, status VARCHAR(7));")
+    assert set(column(schema, "p", "status").generator["values"]) == {"active", "pending"}
+
+
+def test_a_value_set_none_of_which_fits_becomes_a_code_set() -> None:
+    schema, _ = from_ddl("CREATE TABLE p (id INT PRIMARY KEY, status CHAR(2));")
+    assert set(column(schema, "p", "status").generator["values"]) == {"A", "I", "P"}
+
+
+def test_a_sequence_pattern_that_outgrows_the_column_is_random() -> None:
+    sql = "CREATE TABLE p (id INT PRIMARY KEY, code VARCHAR(6));"
+    schema, _ = from_ddl(sql, scale="small:p=999999")
+    assert column(schema, "p", "code").generator["format"] == "{seq:6}"
+    schema, _ = from_ddl(sql, scale="small:p=1000000")
+    assert column(schema, "p", "code").generator["format"] == "{random:6}"
+
+
+def test_columns_that_already_fit_are_unchanged() -> None:
+    sql = "CREATE TABLE p (id INT PRIMARY KEY, code VARCHAR(10), status VARCHAR(20));"
+    schema, _ = from_ddl(sql)
+    assert column(schema, "p", "code").generator == {"strategy": "pattern", "format": "{seq:6}"}
+    assert len(column(schema, "p", "status").generator["values"]) == 3
+
+
+def fixture_inputs() -> dict[str, str]:
+    root = Path(__file__).resolve().parents[2] / "benchmarks" / "vs_spindle" / "ddl_1to1"
+    paths = sorted(root.glob("fixtures/*.sql")) + sorted(root.glob("extra/*.sql"))
+    return {p.stem: p.read_text(encoding="utf-8") for p in paths}
+
+
+@pytest.mark.parametrize("smart", [True, False], ids=["smart", "plain"])
+@pytest.mark.parametrize("name", sorted(fixture_inputs()))
+def test_every_ddl_fixture_generates_data_that_fits_and_whose_keys_exist(
+    name: str, smart: bool
+) -> None:
+    schema, _ = from_ddl(fixture_inputs()[name], smart=smart)
+    assert errors(schema) == []
+    result = real_generate(schema, 11)
+    for tname, table in schema.tables.items():
+        data = result[tname]
+        for cname, col in table.columns.items():
+            if col.type == "string" and col.max_length:
+                assert longest(data[cname]) <= col.max_length, (tname, cname)
+    for rel in schema.relationships:
+        for pcol, ccol in zip(rel.parent_columns, rel.child_columns, strict=True):
+            parent_keys = set(result[rel.parent][pcol].to_pylist())
+            child_keys = {v for v in result[rel.child][ccol].to_pylist() if v is not None}
+            assert child_keys <= parent_keys, rel.name

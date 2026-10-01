@@ -66,13 +66,24 @@ def conn_str():
             cur.execute(stmt)
         for table in warehouse.tables:
             insert_rows(cur, table, "wh")
-        for schema_name, scenario_name in (("idn", "id_named"), ("nom", "name_only")):
+        for schema_name, scenario_name in (
+            ("idn", "id_named"),
+            ("nom", "name_only"),
+            ("mix", "mixed_keys"),
+            ("kn", "key_names"),
+        ):
             keyless = scenario(scenario_name)
             cur.execute(f"CREATE SCHEMA {schema_name}")
             for stmt in ddl(keyless, schema_name):
                 cur.execute(stmt)
             for table in keyless.tables:
                 insert_rows(cur, table, schema_name)
+        cur.execute("CREATE SCHEMA hp")  # a heap (no key) with a column CHECKSUM cannot hash
+        cur.execute("CREATE TABLE hp.events (a int, body xml, b varchar(10))")
+        cur.executemany(
+            "INSERT INTO hp.events VALUES (?, '<x/>', ?)",
+            [(i, f"v{i % 9}") for i in range(3000)],
+        )
         cur.execute("CREATE TABLE dbo.stamps (id int NOT NULL PRIMARY KEY, ts datetimeoffset(7))")
         cur.execute(
             "INSERT INTO dbo.stamps VALUES (1, '2024-03-05 10:30:15.1234567 +02:00'), "
@@ -104,19 +115,21 @@ def test_sampled_statistics_match_the_in_memory_server(conn_str):
     prof = _profile(conn_str)
     local = profile_database(connection=scenario("retail")).to_dict()
     for name, table in local["tables"].items():
+        whole = table["row_count"] <= 1000  # larger tables are sampled with the server's CHECKSUM
+        assert prof["tables"][name]["sample_method"] == ("all rows" if whole else "checksum spread")
         for col, want in table["columns"].items():
             got = prof["tables"][name]["columns"][col]
+            for field in ("dtype", "is_primary_key", "is_foreign_key", "fk_ref_table"):
+                assert got[field] == want[field], f"{name}.{col}.{field}"
+            if not whole:
+                continue
             for field in (
-                "dtype",
                 "null_count",
                 "null_rate",
                 "cardinality",
                 "cardinality_ratio",
                 "is_unique",
                 "is_enum",
-                "is_primary_key",
-                "is_foreign_key",
-                "fk_ref_table",
             ):
                 assert got[field] == want[field], f"{name}.{col}.{field}"
             if col != "rating":  # a real is a float32 on the server
@@ -132,13 +145,94 @@ def test_ratios_divide_by_the_rows_sampled_on_a_real_server(conn_str):
     ids = customer["columns"]["customer_id"]
     assert ids["cardinality"] == 1000
     assert ids["cardinality_ratio"] == 1.0 and ids["is_unique"] is True
-    rows = next(t for t in scenario("retail").tables if t.name == "customer").rows[:1000]
-    nulls = sum(r[4] is None for r in rows)  # balance
-    assert nulls > 0
     balance = customer["columns"]["balance"]
-    assert balance["null_count"] == nulls and balance["null_rate"] == nulls / 1000
+    assert 0 < balance["null_count"] < 1000  # nulls among the rows sampled
+    assert balance["null_rate"] == balance["null_count"] / 1000
     assert prof["tables"]["product"]["sampled_rows"] == 300
     assert _profile(conn_str, sample_rows=0)["tables"]["customer"]["sampled_rows"] == 0
+
+
+def test_the_sample_is_spread_and_repeatable_on_a_real_server(conn_str):
+    import pyodbc
+
+    first = _profile(conn_str)
+    again = _profile(conn_str)
+    assert first == again  # the same rows, run after run
+    customer = first["tables"]["customer"]
+    assert customer["sample_method"] == "checksum spread" and customer["sampled_rows"] == 1000
+    ids = customer["columns"]["customer_id"]
+    assert ids["max_value"][1] > 2000  # the first 1000 rows would stop at 1000
+    assert first["sampling"]["method"].startswith("spread over the table")
+    # the rows the server itself puts first by the scrambled CHECKSUM of the key are profiled
+    with contextlib.closing(pyodbc.connect(conn_str, autocommit=True)) as conn:
+        rows = conn.cursor().execute(
+            "SELECT TOP 1000 customer_id FROM dbo.customer "
+            "ORDER BY (CAST(CHECKSUM(customer_id) AS bigint) * 1327217885) % 2147483647, "
+            "customer_id"
+        )
+        picked = [r[0] for r in rows.fetchall()]
+    assert ids["min_value"][1] == min(picked) and ids["max_value"][1] == max(picked)
+    assert ids["mean"] == pytest.approx(sum(picked) / 1000)
+    assert first["tables"]["product"]["sample_method"] == "all rows"  # 300 rows, read whole
+
+
+def test_a_heap_with_an_unhashable_column_is_spread_on_a_real_server(conn_str):
+    prof = _profile(conn_str, schema="hp")["tables"]["events"]
+    assert prof["sample_method"] == "checksum spread" and prof["sampled_rows"] == 1000
+    assert prof["columns"]["a"]["max_value"][1] > 1500  # not the first 1000 rows
+    assert prof["primary_key"] == []  # a heap with no id-like column
+
+
+def test_no_sampled_rows_is_unknown_not_zero_on_a_real_server(conn_str):
+    prof = _profile(conn_str, sample_rows=0)
+    for col in prof["tables"]["customer"]["columns"].values():
+        assert (col["null_rate"], col["cardinality_ratio"], col["is_unique"]) == (None,) * 3
+    audit = _profile(conn_str)["tables"]["audit_log"]["columns"]["id"]  # an empty table
+    assert (audit["null_rate"], audit["cardinality_ratio"], audit["is_unique"]) == (None,) * 3
+
+
+def test_is_unique_is_null_aware_and_needs_two_values_on_a_real_server(conn_str):
+    import pyodbc
+
+    with contextlib.closing(pyodbc.connect(conn_str, autocommit=True)) as conn:
+        cur = conn.cursor()
+        cur.execute("DROP TABLE IF EXISTS hp.uniq")
+        cur.execute("CREATE TABLE hp.uniq (v int NULL, one int NULL)")
+        cur.executemany(
+            "INSERT INTO hp.uniq VALUES (?, ?)",
+            [(None if i % 5 == 0 else i, 7 if i == 0 else None) for i in range(100)],
+        )
+    cols = _profile(conn_str, schema="hp", tables=["uniq"])["tables"]["uniq"]["columns"]
+    assert cols["v"]["null_rate"] == 0.2 and cols["v"]["is_unique"] is True
+    assert cols["one"]["is_unique"] is None  # a single non-null value
+    one_row = _profile(conn_str, schema="hp", tables=["uniq"], sample_rows=1)
+    assert {c["is_unique"] for c in one_row["tables"]["uniq"]["columns"].values()} == {None}
+
+
+def test_undeclared_keys_are_inferred_beside_declared_ones_on_a_real_server(conn_str):
+    prof = _profile(conn_str, schema="mix")
+    assert [(r["name"], r["evidence"]) for r in prof["relationships"]] == [
+        ("fk_orders_customer", "declared"),
+        ("fk_orders_product_id", "data"),
+        ("fk_orders_region_key", "name"),
+    ]
+    cols = prof["tables"]["orders"]["columns"]
+    assert [cols[c]["fk_evidence"] for c in ("customer_id", "product_id", "region_key")] == [
+        "declared",
+        "data",
+        "name",
+    ]
+
+
+def test_paid_and_valid_are_not_keys_and_guessed_keys_skip_foreign_keys_on_a_real_server(
+    conn_str,
+):
+    prof = _profile(conn_str, schema="kn")
+    invoices = prof["tables"]["invoices"]
+    assert set(invoices["detected_fks"]) == {"customer_id"}  # not paid, not valid
+    assert invoices["primary_key"] == ["invoice_id"]
+    assert prof["tables"]["notes"]["primary_key"] == []
+    assert prof["tables"]["customer"]["primary_key"] == ["customer_id"]
 
 
 def test_a_relationship_the_data_shows_is_reported_on_a_real_server(conn_str):

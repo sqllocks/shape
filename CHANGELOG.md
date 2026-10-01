@@ -21,7 +21,11 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `BINARY(MAX)` and the `BLOB` types are binary and left out; names match whole words
   (`discount_pct` is a percentage, `state` is a state and not a status, `model` is not a category,
   a `catalog` table is not a log); `gender CHAR(1)` and other one-character codes get a value set;
-  a parent's total is the sum of its child rows (CR-08).
+  a parent's total is the sum of its child rows (CR-08); a key the DDL does not declare, guessed
+  by name (`customer_id`), points at the parent's primary key (it pointed at
+  `customer.customer_id`, which usually does not exist) and is not guessed when the parent has no
+  single-column key; `CustomerId` and `CustomerID` are read like `customer_id`; generated strings
+  never exceed the declared length (`country_code CHAR(2)` got six digits).
 - Stream profiling runtime (`shape.streaming`): tumbling, sliding, session and global windows over
   Arrow micro-batches profiled in bounded mode, with watermarks, allowed lateness and a late-data
   policy; windows can be snapshotted and restored exactly. Bounded per-key sketches (LRU, TTL, a hard

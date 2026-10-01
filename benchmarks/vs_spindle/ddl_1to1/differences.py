@@ -1,8 +1,9 @@
 """The intentional differences from the baseline's DDL import (P4-01c).
 
 P4-01b made Shape's ``from-ddl`` equal the baseline's in every field. The owner then decided
-(2026-10-01) to fix five behaviours that would harm users' trust. Each fix changes a known, small
-set of fields, listed here by input, mode and field. ``verify.py`` accepts a difference **only**
+(2026-10-01) to fix five behaviours that would harm users' trust (F1 to F5), and the lead three
+more (F6 to F8, round 2). Each fix changes a known, small set of fields, listed here by input,
+mode and field. ``verify.py`` accepts a difference **only**
 when it is listed: every other field must still equal the baseline, and an entry that no longer
 matches a difference fails the run (so the list cannot go stale).
 
@@ -47,6 +48,25 @@ FIXES: dict[str, str] = {
     "F5": (
         "CR-08: a parent's total column is the sum of the child rows' amount column (a computed "
         "column, filled after generation). The baseline skips the rule."
+    ),
+    "F6": (
+        "A foreign key the DDL does not declare, guessed by the <table>_id naming convention, "
+        "points at the parent's single-column primary key. The baseline points it at "
+        "<parent>.<the column's own name> (customer.customer_id), which does not exist when the "
+        "key is `id`, so the schema fails validation. A parent without a single-column primary "
+        "key is not guessed at all (no reference to a column that is not there)."
+    ),
+    "F7": (
+        "Generated strings fit the declared length. A six-digit pattern (country_code CHAR(2)) "
+        "or a value set whose values are longer than the column (type_a in VARCHAR(4); active, "
+        "inactive, pending in VARCHAR(5)) is replaced: a pattern by that many random "
+        "characters, a value set by the values that fit or, if fewer than two fit, a code set. "
+        "The baseline generates values the column cannot hold."
+    ),
+    "F8": (
+        "A CamelCase key (CustomerId, CustomerID: the SQL Server convention) is recognised like "
+        "customer_id, with the same rule for the parent key as F6, and so is a child in the "
+        "row-count and key-distribution rules. The baseline needs the underscore."
     ),
 }
 
@@ -114,6 +134,54 @@ def _was_money(case: str, table: str, column: str) -> list[Field | Note]:
 
 def _state(case: str, table: str, column: str = "state") -> list[Field | Note]:
     return [_gen("F3", case, table, column), Note("F3", case, "EN-STATUS", table, column)]
+
+
+def _notes(fix: str, case: str, *keys: tuple[str, str, str | None]) -> list[Field | Note]:
+    return [Note(fix, case, rule, table, column) for rule, table, column in keys]
+
+
+def _counts(
+    fix: str,
+    case: str,
+    presets: tuple[str, ...],
+    tables: tuple[str, ...],
+    derived: bool = False,
+    smart: bool = False,
+) -> list[Field | Note]:
+    """Row counts of ``tables`` that changed in the scale ``presets`` (and, with ``derived``, in
+    the derived-count rules, smart mode only), because a table became (or stopped being) a child.
+    ``smart`` limits the entries to smart mode (the rules that set them run only there)."""
+    modes = SMART if smart else BOTH
+    out: list[Field | Note] = [
+        Field(fix, case, f"generation.scales.{p}.{t}", modes) for t in tables for p in presets
+    ]
+    if derived:
+        out += [Field(fix, case, f"generation.derived_counts.{t}", SMART) for t in tables]
+    return out
+
+
+def _new_key(case: str, table: str, column: str) -> list[Field | Note]:
+    """``<table>.<column>`` (CamelCase) was a plain integer column and is now a foreign key."""
+    return [
+        _gen("F8", case, table, column, BOTH),
+        Field("F8", case, f"relationships.fk_{table}_{column}"),
+    ]
+
+
+def _retargeted(case: str, table: str, column: str) -> list[Field | Note]:
+    """A guessed key that pointed at <parent>.<column> now points at the parent's key."""
+    return [
+        _gen("F6", case, table, column, BOTH),
+        Field("F6", case, f"relationships.fk_{table}_{column}"),
+    ]
+
+
+def _dropped_key(case: str, table: str, column: str) -> list[Field | Note]:
+    """A guessed key to a parent without a single-column key is no longer guessed."""
+    return [
+        _gen("F6", case, table, column, BOTH),
+        Field("F6", case, f"relationships.fk_{table}_{column}"),
+    ]
 
 
 ALLOWED: list[Field | Note] = [
@@ -212,4 +280,85 @@ ALLOWED: list[Field | Note] = [
     *_total("smart_inference__ddl_plural", "orders", "total_amount"),
     *_total("smart_retail", "orders", "total"),
     *_total("fix_cases", "invoice", "total"),
+    # ---- F6: a guessed key points at the parent's primary key ------------------------------
+    *_retargeted("fix_cases_round2", "sale", "client_id"),
+    # a parent with a composite key: no key is guessed, so the child is a plain integer column
+    *_dropped_key("fix_cases_round2", "shipment", "region_id"),
+    Field("F6", "fix_cases_round2", "generation.derived_counts.shipment", SMART),
+    *_counts("F6", "fix_cases_round2", ("large", "medium"), ("region",), derived=True, smart=True),
+    *_counts("F6", "fix_cases_round2", ("large", "medium", "small"), ("shipment",)),
+    *_notes(
+        "F6",
+        "fix_cases_round2",
+        ("CA-06", "region", None),
+        ("CA-SCALE", "region", None),
+        ("CA-09", "shipment", None),
+        ("CA-SCALE", "shipment", None),
+        ("FK-02", "shipment", "region_id"),
+        ("FK-04", "shipment", "region_id"),
+        ("TC-LOOKUP", "region", None),
+        ("TC-UNKNOWN", "region", None),
+    ),
+    # ---- F7: strings fit the declared length ------------------------------------------------
+    *(
+        _gen("F7", case, table, column, BOTH)
+        for case, table, column in (
+            ("fix_cases_round2", "locale", "country_code"),
+            ("fix_cases_round2", "locale", "currency"),
+            ("fix_cases_round2", "locale", "currency_code"),
+            ("fix_cases_round2", "locale", "product_code"),
+            ("fix_cases_round2", "locale", "region_type"),
+            ("fix_cases_round2", "locale", "row_status"),
+            ("fix_cases_round2", "locale", "status"),
+            ("ddl_parser__comment_ddl", "dim_branch", "state_code"),
+        )
+    ),
+    # ---- F8: CamelCase keys -----------------------------------------------------------------
+    *_new_key("fix_cases_round2", "PurchaseOrder", "VendorId"),
+    *_new_key("fix_cases_round2", "Receipt", "VendorID"),
+    Field("F8", "fix_cases_round2", "generation.derived_counts.PurchaseOrder", SMART),
+    Field("F8", "fix_cases_round2", "generation.derived_counts.Receipt", SMART),
+    *_counts("F8", "fix_cases_round2", ("large", "medium", "small"), ("PurchaseOrder", "Receipt")),
+    *_counts("F8", "fix_cases_round2", ("large", "medium"), ("Vendor",), derived=True, smart=True),
+    *_notes(
+        "F8",
+        "fix_cases_round2",
+        ("CA-06", "Vendor", None),
+        ("CA-09", "PurchaseOrder", None),
+        ("CA-09", "Receipt", None),
+        ("CA-SCALE", "PurchaseOrder", None),
+        ("CA-SCALE", "Receipt", None),
+        ("CA-SCALE", "Vendor", None),
+        ("FK-02", "PurchaseOrder", "VendorId"),
+        ("FK-02", "Receipt", "VendorID"),
+        ("TC-LOOKUP", "Vendor", None),
+        ("TC-UNKNOWN", "Vendor", None),
+    ),
+    # quoted_and_exotic: Sales Order.CustomerID is a key now, and so a parent in the rules
+    *_new_key("quoted_and_exotic", "Sales Order", "CustomerID"),
+    *_counts("F8", "quoted_and_exotic", ("small", "medium", "large"), ("Sales Order",)),
+    *_counts("F8", "quoted_and_exotic", ("medium", "large"), ("Customer",), smart=True),
+    Field("F8", "quoted_and_exotic", "generation.derived_counts.Customer", SMART),
+    Field("F8", "quoted_and_exotic", "generation.derived_counts.Sales Order", SMART),
+    Field("F8", "quoted_and_exotic", "generation.derived_counts.line", SMART),
+    _gen("F8", "quoted_and_exotic", "line", "order_id"),
+    *_notes(
+        "F8",
+        "quoted_and_exotic",
+        ("CA-03", "line", None),
+        ("CA-06", "Customer", None),
+        ("CA-06", "Sales Order", None),
+        ("CA-09", "Sales Order", None),
+        ("CA-09", "line", None),
+        ("CA-SCALE", "Customer", None),
+        ("FK-02", "line", "order_id"),
+        ("FK-03", "line", "order_id"),
+        ("FK-10", "Sales Order", "CustomerID"),
+        ("TC-LOOKUP", "Customer", None),
+        ("TC-LOOKUP", "Sales Order", None),
+        ("TC-TRANSACTION", "Sales Order", None),
+        ("TC-TRANSACTION_DETAIL", "line", None),
+        ("TC-UNKNOWN", "Customer", None),
+        ("TC-UNKNOWN", "line", None),
+    ),
 ]
