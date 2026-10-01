@@ -66,7 +66,8 @@ them; the plugin loads only when `shape <name>` runs. A built-in command always 
 plugin command of the same name. A command that fails to load, or raises, prints one error
 line to stderr and exits 1; argument errors exit 2.
 
-A complete example (a source, a detector and a command) is in `examples/plugin/`.
+A complete example (a source, a detector and a command) is in `examples/plugin/`; how to
+write and test a plugin is in [authoring.md](authoring.md).
 
 `--json` on `doctor` prints the report from `plugins.doctor.diagnose`.
 
