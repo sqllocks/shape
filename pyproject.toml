@@ -167,6 +167,13 @@ weighted_enum = "shape.builtins.strategies.basic:WeightedEnum"
 distribution = "shape.builtins.strategies.numeric:Distribution"
 empirical = "shape.builtins.strategies.numeric:Empirical"
 pattern = "shape.builtins.strategies.text:Pattern"
+lookup = "shape.builtins.strategies.linked:Lookup"
+conditional = "shape.builtins.strategies.linked:Conditional"
+correlated = "shape.builtins.strategies.linked:Correlated"
+reference_data = "shape.builtins.strategies.reference_data:ReferenceData"
+record_sample = "shape.builtins.strategies.reference_data:RecordSample"
+record_field = "shape.builtins.strategies.reference_data:RecordField"
+temporal = "shape.builtins.strategies.temporal:Temporal"
 
 [project.entry-points."shape.distributions"]
 normal = "shape.builtins.distributions:Normal"

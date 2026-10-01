@@ -69,7 +69,7 @@ def test_fixtures_cover_every_case():
         assert cid in fx["cases"], cid
         assert fx["seeds"] == [43, 44, 45, 46] and fx["rows"] == cases_mod.ROWS
         assert len(fx["cases"][cid]["fingerprints"]) == 4
-    assert set(STRATEGIES) == set(cases_mod.strategies())
+    assert set(STRATEGIES) <= set(cases_mod.strategies())
 
 
 @pytest.mark.parametrize("case_id", sorted(CASES))

@@ -63,6 +63,8 @@ def check(shape: dict[str, Any], baseline: list[dict[str, Any]]) -> list[str]:
     fails += _null_rate(shape, baseline)
     if shape["kind"] in ("numeric", "datetime"):
         fails += _numeric(shape, baseline)
+        if shape["kind"] == "datetime":
+            fails += _calendar(shape, baseline)
     elif shape["kind"] == "string":
         fails += _string(shape, baseline)
     return fails
@@ -165,4 +167,21 @@ def _string(shape: dict[str, Any], baseline: list[dict[str, Any]]) -> list[str]:
         fails += _categorical(
             {"counts": shape["masks"]}, [{"counts": b["masks"]} for b in baseline], "mask"
         )
+    return fails
+
+
+def _calendar(shape: dict[str, Any], baseline: list[dict[str, Any]]) -> list[str]:
+    """Month, weekday and hour-of-day profiles of a datetime column (same tolerance as clause
+    (d)), and the share of whole-second values (within 0.01)."""
+    fails: list[str] = []
+    for part in ("month", "dow", "hour"):
+        as_counts = {"counts": {str(i): c for i, c in enumerate(shape["calendar"][part])}}
+        base = [
+            {"counts": {str(i): c for i, c in enumerate(b["calendar"][part])}} for b in baseline
+        ]
+        fails += _categorical(as_counts, base, part)
+    rates = [b["calendar"]["whole_second_rate"] for b in baseline]
+    got = shape["calendar"]["whole_second_rate"]
+    if abs(got - sum(rates) / len(rates)) > 0.01 + 1.5 * (max(rates) - min(rates)):
+        fails.append(f"whole-second share {got:.4f} vs {sum(rates) / len(rates):.4f}")
     return fails

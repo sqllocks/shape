@@ -117,3 +117,97 @@ zero-padded; `{random:4}`: that many characters from `A-Z0-9` (4 without a width
 `{column:3}`: the value of another column of the same row, zero-padded; text outside tokens is
 literal; a token naming no column stays as written. A null in a referenced column gives a null
 row.
+
+## Strategies of P4-04c
+
+These read other columns, other tables or reference datasets. All are row addressed.
+
+### `lookup`
+`{"source_table": "product", "source_column": "unit_price", "via": "product_id"}`: the
+`source_column` of the parent row whose key equals this row's `via` column (a column defined earlier
+in the table, usually a foreign key). The column has the source column's type. A null key, or a key
+with no parent row, gives null.
+
+The key column of the parent is `key` when the spec names one, else the parent column called
+`via`, else the column this table's foreign key `via` points at, else the parent's single-column
+primary key. Keys compare by value (an integer key matches the same number held as a float). When
+a key repeats in the parent, the first row wins. `shape.generation.lookup` is the helper:
+`lookup_values(ctx, source_table, source_column, via, key=None)` does the whole operation, and
+`key_index(engine, table, column)` returns the cached `KeyIndex` (built once per engine; its
+`positions(values)` gives the row of each key, `-1` for none). The parent table is generated in
+full once, the way `Engine.key_pool` does for a table that is not a sequence. A lookup that leads
+back to a table already being generated raises an error ("circular") instead of recursing.
+
+### `conditional`
+`{"condition": "promotion_id IS NOT NULL", "true_generator": {...}, "false_generator": {"fixed": 0.0}}`.
+
+* Conditions: `<column> IS NULL`, `<column> IS NOT NULL` (the column name matches without regard to
+  case), `<column> == <value>`, `<column> != <value>` (the value may be quoted; both sides compare
+  as numbers when both read as numbers, otherwise as text; a null equals nothing, so `!=` is true
+  for it).
+* Branches: `{"fixed": value}` or an inline `{"strategy": "lookup", ...}` (a null key gives 0;
+  a missing key gives null); `{}` gives 0.
+* The column is `float64`; a text branch makes it `string` (the other branch is converted).
+
+Where the baseline silently degrades, Shape raises a `StrategyError` that names the column: a
+condition that is none of the four forms, a column the condition names that is not generated
+before this one, and an inline strategy other than `fixed` and `lookup`.
+
+### `correlated`
+`{"source_column": "unit_price", "rule": "multiply", "params": {"factor_min": 0.3, "factor_max": 0.7}}`.
+`rule` (also spelled `operation`) is `multiply` (source times a uniform factor, default 0.30 to
+0.70), `add` (plus a uniform offset, `offset_min` and `offset_max`, default 0 to 10) or `subtract`
+(minus such an offset, never below 0). `params.min` and `params.max` stand for either pair. The
+result is rounded to the column's `scale` (2 without one). A null source gives null. `float64`.
+
+### `reference_data`
+`{"dataset": "colors"}` or `{"dataset": "products", "field": "category"}`. A dataset of strings is
+sampled uniformly; a dataset of records with `field` gives that field of a uniformly chosen record
+(so a value repeated in the dataset is more likely); records without `field` are read as `name`
+(or `value`) with a `weight`, and a name is drawn in proportion to its weight. The column has the
+type of the values (`string`, `int64`, `float64`; a field that mixes types becomes `string`).
+
+### `record_sample` and `record_field`
+`record_sample` (`{"dataset": "places", "field": "city"}`) is the anchor of a group of columns that
+share one randomly chosen record: this column is that record's `field`. `record_field`
+(`{"dataset": "places", "field": "zip"}`) columns of the same table and dataset give the other
+fields of the same record. `"unique": true` on the anchor gives every row a different record when
+the table has no more rows than the dataset (the records are a keyed permutation of the dataset,
+`shape.generation.permutation.permute`); with more rows it falls back to sampling with
+replacement, as the baseline does. With several `record_sample` columns for one dataset the last
+one defined decides the record.
+
+`record_field` does not read what the anchor made: it recomputes the record from the anchor's own
+stream, so the pair agrees for any chunking, the anchor may be defined before or after the field,
+and the anchor's null rate does not touch the fields.
+
+### `temporal`
+`{"pattern": "seasonal", "start": "2022-01-01", "end": "2025-12-31", "profiles": {...}}`.
+
+* Range: `date_range` (or `range`) `{"start", "end"}`, else top-level `start`/`end`, else
+  `range_ref: "model.date_range"` (the schema's own range), else 2022-01-01 to 2025-12-31.
+* `pattern: "uniform"` (the default, and what any other value means): uniform on `[start, end)`.
+* `pattern: "seasonal"`: `profiles.month` (`Jan`..`Dec`) and `profiles.day_of_week` (`Mon`..`Sun`)
+  weigh the days (a name left out weighs `1/12` or `1/7`; `month_weights` and
+  `day_of_week_weights` at the top level are accepted too). The probability of a (month, weekday)
+  bucket is the product of the two weights, shared equally by the days of the range in it; the
+  probability of a bucket with no day in the range is spread over the other days. The end date is a
+  possible day. Without a month or weekday profile the range is uniform.
+* `profiles.hour_of_day` replaces the time of day by a whole second in an hour drawn uniformly, or
+  from `{"distribution": "bimodal", "peaks": [12, 18], "std_dev": 2}`: equally likely Gaussian
+  peaks, wrapped around midnight. Without it the time of day is uniform to the microsecond.
+* The column is `timestamp[us]`. Calendars, paydays and trends (`shape.calendars`) are separate.
+
+### Reference datasets (`shape.generation.reference`)
+`load_dataset(name)` finds a dataset in this order: datasets registered in the process
+(`register_dataset(name, rows_or_table)`; a domain plugin registers the `reference_data` tables of
+its `DomainDefinition`), then `<name>.json` in each search directory (`add_search_path(dir)`, then
+the directories of the `SHAPE_REFERENCE_PATH` environment variable, named `REFERENCE_PATH_ENV`). A JSON dataset is a list of
+strings or a list of objects whose keys are the fields (the first object names them). `Dataset`
+holds Arrow columns; `unregister_dataset` and `clear_search_paths` undo the above;
+`DatasetNotFoundError` lists where it looked. Loaded files are cached by path and modification time.
+
+### Tests
+`tests/generation/test_strategies_p404c.py` follows the recipe above for these strategies; the
+cases are in `strategy_1to1/cases.py`. Datetime columns are compared on month, weekday and hour of
+day profiles (and the share of whole-second values) as well as KS.
