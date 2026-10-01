@@ -38,7 +38,7 @@
 ........................................................................ [ 76%]
 ........................................................................ [ 78%]
 ........................................................................ [ 80%]
-..................................................F..................... [ 82%]
+........................................................................ [ 82%]
 ........................................................................ [ 84%]
 ........................................................................ [ 86%]
 ........................................................................ [ 88%]
@@ -48,17 +48,6 @@
 ........................................................................ [ 96%]
 ........................................................................ [ 98%]
 .................................................                        [100%]
-=================================== FAILURES ===================================
-_____________ test_removed_module_is_not_importable[observability] _____________
-
-name = 'observability'
-
-    @pytest.mark.parametrize("name", [n for n in REMOVED if n != "integrations"])
-    def test_removed_module_is_not_importable(name):
->       with pytest.raises(ModuleNotFoundError):
-E       Failed: DID NOT RAISE ModuleNotFoundError
-
-tests/test_removed_modules.py:44: Failed
 =============================== warnings summary ===============================
 tests/artifact/test_hardening.py::test_duplicate_member_rejected
 tests/security/test_ga_security.py::test_archive_duplicate_member
@@ -96,6 +85,4 @@ tests/kernel/test_exact_kernel.py::test_numeric_stats_with_infinities
     np.subtract(b, diff * (1 - t), out=res, where=t >= 0.5, casting="unsafe", dtype=res.dtype)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-=========================== short test summary info ============================
-FAILED tests/test_removed_modules.py::test_removed_module_is_not_importable[observability]
-1 failed, 3576 passed, 45 deselected, 14 warnings in 421.17s (0:07:01)
+3577 passed, 45 deselected, 14 warnings in 393.83s (0:06:33)
