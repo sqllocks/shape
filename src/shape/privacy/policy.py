@@ -5,7 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-LEVELS = {"PUBLIC": 0, "INTERNAL": 1, "SENSITIVE": 2, "PII": 2, "SECRET": 3, "TOP_SECRET": 4}
+from .classification import LEVELS as LEVELS
+
 # Any evidence capable of carrying original values or tight value bounds is stripped on downgrade.
 VALUE_KEYS = frozenset(
     {

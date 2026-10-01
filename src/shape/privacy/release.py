@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from .classification import DEFAULT_TAXONOMY
+
 
 @dataclass(frozen=True, slots=True)
 class SuppressionPolicy:
@@ -40,11 +42,11 @@ def redact_sensitive(
 ):
     """Remove value-bearing evidence for classified columns before artifact release."""
     out = {"rows": shape.get("rows", 0), "columns": {}}
-    blocked = set(redact_at)
+    floor = min(DEFAULT_TAXONOMY.rank(x) for x in redact_at)
     for name, c in shape.get("columns", {}).items():
         x = dict(c)
         label = str(classifications.get(name, "PUBLIC")).upper()
-        if label in blocked:
+        if DEFAULT_TAXONOMY.rank(label) >= floor:
             x.pop("topk", None)
             x.pop("examples", None)
             x["value_evidence_redacted"] = True
