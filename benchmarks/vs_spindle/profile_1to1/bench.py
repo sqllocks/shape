@@ -96,6 +96,11 @@ def worker(tool: str, ds: str):
         import shape.profile.reference.profile  # noqa: F401  (T-19: imports are not timed; the
         # package imports this module lazily on the first call, as Spindle's are imported above)
 
+        # T-19: imports are excluded for both tools. Spindle's worker imports pandas and its
+        # profiler above; shape.profile imports its implementation (pandas included) on first
+        # call, so import that module here too. Nothing is run: no warm-up call.
+        import shape.profile.reference.profile  # noqa: F401
+
         if ds == "mt":
 
             def run():

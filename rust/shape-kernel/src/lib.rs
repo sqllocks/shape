@@ -106,21 +106,28 @@ fn numpy_log_array(buf: &mut [f64]) {
             Bound::from_owned_ptr_or_opt(py, raw)?
         };
         let arr = np.call_method1("frombuffer", (view, "<f8")).ok()?;
-        // NaN/-inf from log(<=0) are expected results here (scipy's fit runs under errstate).
-        let kw = pyo3::types::PyDict::new(py);
-        kw.set_item("all", "ignore").ok()?;
-        let ctx = np.call_method("errstate", (), Some(&kw)).ok()?;
-        ctx.call_method0("__enter__").ok()?;
+        // NaN/-inf from log(<=0) are expected results here: callers run under `ignore_fp_errors`.
         let out_kw = pyo3::types::PyDict::new(py);
         out_kw.set_item("out", &arr).ok()?;
         let res = NP_LOG.get()?.call(py, (&arr,), Some(&out_kw));
-        ctx.call_method1("__exit__", (py.None(), py.None(), py.None()))
-            .ok()?;
         res.ok().map(|_| ())
     });
     if done.is_none() {
         buf.iter_mut().for_each(|v| *v = v.ln());
     }
+}
+
+/// Run `f` with numpy's floating-point error reporting off (scipy's fit runs under `errstate`),
+/// entering and leaving that state once per fit rather than once per `log` pass.
+fn ignore_fp_errors<R>(py: Python<'_>, f: impl FnOnce() -> R) -> PyResult<R> {
+    let np = py.import("numpy")?;
+    let kw = pyo3::types::PyDict::new(py);
+    kw.set_item("all", "ignore")?;
+    let old = np.call_method("seterr", (), Some(&kw))?;
+    let out = f();
+    let restore: Bound<'_, pyo3::types::PyDict> = old.cast_into()?;
+    np.call_method("seterr", (), Some(&restore))?;
+    Ok(out)
 }
 
 /// Point the fitting code's scalar exp/ln at numpy's (see `fit::set_scalar_hooks`).
@@ -161,13 +168,15 @@ fn fit_distribution<'py>(
         Some(f) => get(f)?,
         None => sample.clone(),
     };
-    let (name, params, score) = py.detach(|| match fit::detect_distribution(&sample) {
-        Some((d, params)) => {
-            let score = fit::fit_score(&full, d);
-            (Some(d), Some(params), score)
-        }
-        None => (None, None, None),
-    });
+    let (name, params, score) = ignore_fp_errors(py, || {
+        py.detach(|| match fit::detect_distribution(&sample) {
+            Some((d, params)) => {
+                let score = fit::fit_score(&full, d);
+                (Some(d), Some(params), score)
+            }
+            None => (None, None, None),
+        })
+    })?;
     let out = pyo3::types::PyDict::new(py);
     out.set_item("distribution", name.map(|d| d.name()))?;
     match (name, params) {
@@ -200,7 +209,7 @@ fn lognorm_probe(py: Python<'_>, data: PyArray, loc: f64) -> PyResult<(f64, f64,
     let p = arr
         .as_primitive_opt::<Float64Type>()
         .ok_or_else(|| PyValueError::new_err("lognorm_probe needs a float64 array"))?;
-    Ok(fit::lognorm_probe(p.values(), loc))
+    ignore_fp_errors(py, || fit::lognorm_probe(p.values(), loc))
 }
 
 /// The kernel version (equal to the Python package version).

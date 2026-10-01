@@ -717,8 +717,26 @@ fn all_finite(d: &[f64]) -> bool {
     d.iter().all(|v| v.is_finite())
 }
 
-fn lognorm_logpdf(x: f64, s: f64) -> f64 {
-    -(x.ln().powi(2)) / (2.0 * s * s) - (s * x * SQRT2PI).ln()
+thread_local! {
+    /// Scratch for the lognormal likelihood: the Nelder-Mead search evaluates it hundreds of times
+    /// over the whole column, so the buffers are reused instead of allocated per evaluation.
+    static NNLF_SCRATCH: std::cell::RefCell<(Vec<f64>, Vec<f64>)> =
+        const { std::cell::RefCell::new((Vec::new(), Vec::new())) };
+}
+
+/// `lognorm._logpdf` over scaled values (all in (0, inf)), in place: `xs` holds them on entry and
+/// the log-densities on return; `ts` is scratch. The formula is scipy's, `-log(x)**2 / (2 s^2) -
+/// log(s x sqrt(2 pi))`, with both logs taken as array passes through numpy's `log` when hooked
+/// (what scipy evaluates, and several times faster than libm per element).
+fn lognorm_logpdf_inplace(xs: &mut [f64], ts: &mut Vec<f64>, s: f64) {
+    ts.clear();
+    ts.extend(xs.iter().map(|x| s * x * SQRT2PI));
+    ln_inplace(xs);
+    ln_inplace(ts);
+    let two_s2 = 2.0 * s * s;
+    for (l, t) in xs.iter_mut().zip(ts.iter()) {
+        *l = -(*l * *l) / two_s2 - t;
+    }
 }
 
 /// `rv_continuous.nnlf` for lognorm (not penalised).
@@ -727,16 +745,20 @@ fn lognorm_nnlf(theta: &[f64; 3], data: &[f64]) -> f64 {
     if !(s > 0.0) || scale <= 0.0 {
         return f64::INFINITY;
     }
-    let n_log_scale = data.len() as f64 * scale.ln();
-    let mut buf = Vec::with_capacity(data.len());
-    for v in data {
-        let x = (v - loc) / scale;
-        if !(0.0 < x && x < f64::INFINITY) {
-            return f64::INFINITY;
+    let n_log_scale = data.len() as f64 * sc_ln(scale);
+    NNLF_SCRATCH.with(|c| {
+        let (xs, ts) = &mut *c.borrow_mut();
+        xs.clear();
+        for v in data {
+            let x = (v - loc) / scale;
+            if !(0.0 < x && x < f64::INFINITY) {
+                return f64::INFINITY;
+            }
+            xs.push(x);
         }
-        buf.push(lognorm_logpdf(x, s));
-    }
-    -pairwise_sum(&buf) + n_log_scale
+        lognorm_logpdf_inplace(xs, ts, s);
+        -pairwise_sum(xs) + n_log_scale
+    })
 }
 
 /// `rv_continuous._penalized_nnlf` for lognorm.
@@ -745,25 +767,27 @@ fn lognorm_penalized_nnlf(theta: &[f64; 3], data: &[f64]) -> f64 {
     if !(s > 0.0) || scale <= 0.0 {
         return f64::INFINITY;
     }
-    let n_log_scale = data.len() as f64 * scale.ln();
-    let mut n_bad = 0usize;
-    let mut logff = Vec::with_capacity(data.len());
-    for v in data {
-        let x = (v - loc) / scale;
-        if 0.0 < x && x < f64::INFINITY {
-            logff.push(lognorm_logpdf(x, s));
-        } else {
-            n_bad += 1;
+    let n_log_scale = data.len() as f64 * sc_ln(scale);
+    NNLF_SCRATCH.with(|c| {
+        let (xs, ts) = &mut *c.borrow_mut();
+        xs.clear();
+        let mut n_bad = 0usize;
+        for v in data {
+            let x = (v - loc) / scale;
+            if 0.0 < x && x < f64::INFINITY {
+                xs.push(x);
+            } else {
+                n_bad += 1;
+            }
         }
-    }
-    let finite: Vec<f64> = logff.iter().copied().filter(|v| v.is_finite()).collect();
-    let nf = logff.len() - finite.len();
-    n_bad += nf;
-    if n_bad > 0 {
-        let tot = pairwise_sum(&finite);
-        return -tot + n_bad as f64 * f64::MAX.ln() * 100.0 + n_log_scale;
-    }
-    -pairwise_sum(&logff) + n_log_scale
+        lognorm_logpdf_inplace(xs, ts, s);
+        if n_bad == 0 && xs.iter().all(|v| v.is_finite()) {
+            return -pairwise_sum(xs) + n_log_scale;
+        }
+        let finite: Vec<f64> = xs.iter().copied().filter(|v| v.is_finite()).collect();
+        n_bad += xs.len() - finite.len();
+        -pairwise_sum(&finite) + n_bad as f64 * f64::MAX.ln() * 100.0 + n_log_scale
+    })
 }
 
 struct MaxFun;
