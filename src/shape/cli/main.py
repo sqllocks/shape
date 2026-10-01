@@ -180,6 +180,19 @@ def _cmd_diff(a):
 _VERIFY_HELP = "require every .shape input to be signed by this public key (exit 1 if not)"
 
 
+def _cmd_plugins(a):
+    """``shape plugins <sub>``: 0 when every plugin loads, 1 when any failed."""
+    from shape.plugins.doctor import diagnose, format_report
+    from shape.plugins.host import default_host
+
+    report = diagnose(default_host())
+    if a.json:
+        _dump(report)
+    else:
+        print(format_report(report))
+    return 0 if report["ok"] else 1
+
+
 def _build_parser():
     p = argparse.ArgumentParser(prog="shape", description="Shape as Code")
     p.add_argument("--version", "-V", action="store_true", help="print the version and exit")
@@ -187,6 +200,10 @@ def _build_parser():
     sub.add_parser("doctor")
     sub.add_parser("conformance")
     sub.add_parser("version")
+    pl = sub.add_parser("plugins", help="inspect installed plugins")
+    pls = pl.add_subparsers(dest="plugins_cmd", required=True)
+    pld = pls.add_parser("doctor", help="load every plugin and report failures")
+    pld.add_argument("--json", action="store_true", help="print the report as JSON")
     c = sub.add_parser("capture")
     c.add_argument("csv")
     c.add_argument("-o", "--output")
@@ -293,6 +310,8 @@ def main(argv=None):
         return _run(_cmd_check, a)
     if a.cmd == "diff" and _is_profile_or_missing(a.before):
         return _run(_cmd_diff, a)
+    if a.cmd == "plugins":
+        return _cmd_plugins(a)
     if a.cmd == "version":
         _dump({"shape": _version(), "specification": "2", "artifact_format": 2})
         return 0
