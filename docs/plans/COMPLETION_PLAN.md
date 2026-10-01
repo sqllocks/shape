@@ -1010,9 +1010,20 @@ Appendix A.
   equality against the reference on fuzzed inputs; D3 Parquet and D4 fit times recorded.
 - Fixes: G1 escalation (§2.3).
 
+**P1-17 — Small-input fixed costs and the CSV reader**
+- Depends: P1-15. Owner decision 2026-10-01 (§2.3, G1 option a, continued).
+- Deliverables: after P1-15 the remaining G1 misses outside fitting are the multi-table
+  workload (MT, 7.0x: per-call and per-column fixed costs, pool start-up on three small
+  tables) and D1 CSV (9.2x), plus the CSV reader's per-token pandas emulation (about 1.3 s
+  of D4 and 3 s of D2, single-threaded). Remove those fixed costs and move the CSV reader's
+  per-value work onto the kernel; output unchanged.
+- Acceptance: T-22 parity exits 0 on all default datasets in both kernel modes; the suite is
+  green in both kernel modes; PROF-IN for MT, D1 and D4 CSV recorded per T-19.
+- Fixes: G1 escalation (§2.3).
+
 **Gate G1**
 - P1-14 is done (no Spindle on the user-facing surface).
-- P1-15 and P1-16 are done (owner decision 2026-10-01).
+- P1-15, P1-16 and P1-17 are done (owner decision 2026-10-01).
 - PROF-IN ≥10x on every workload.
 - PROF-CLI ≥10x on D2 and D3.
 - START ≤300 ms.
@@ -1918,14 +1929,15 @@ Work packages are listed in execution order. The next work package is the first 
 | 20 | P1-11 | done | e72d596 |
 | 21 | P1-12 | done | 0087f7b |
 | 21a | P1-14 | done | 9c0f75b |
-| 21b | P1-15 | wip (lane/P1-15) | |
+| 21b | P1-15 | done | 04fe94c |
 | 21c | P1-16 | wip (lane/P1-16) | |
+| 21d | P1-17 | wip (lane/P1-17) | |
 | 22 | P2-01 | done | c3909e9 |
 | 23 | P2-02 | done | 84e8efb |
-| 24 | P2-03 | wip (lane/P2-03) | |
-| 25 | P2-04 | wip (lane/P2-04) | |
+| 24 | P2-03 | done | 687f568 |
+| 25 | P2-04 | done | 0ca6387 |
 | 26 | P2-05 | wip (lane/P2-05) | |
-| 27 | P2-06 | todo | |
+| 27 | P2-06 | wip (lane/P2-06) | |
 | 28 | PF-01 | todo | |
 | 29 | PF-02 | todo | |
 | 30 | PF-03 | done | a726dd4 |
