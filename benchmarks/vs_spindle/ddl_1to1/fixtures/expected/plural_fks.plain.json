@@ -1,0 +1,771 @@
+{
+ "annotations": [],
+ "explain": [],
+ "file": {
+  "business_rules": [],
+  "generation": {
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "boxes": 100000,
+     "bus": 100000,
+     "categories": 100000,
+     "companies": 100000,
+     "item": 250000,
+     "statuses": 100000
+    },
+    "medium": {
+     "boxes": 10000,
+     "bus": 10000,
+     "categories": 10000,
+     "companies": 10000,
+     "customer": 7,
+     "item": 25000,
+     "order": 21,
+     "orders": 21,
+     "statuses": 10000
+    },
+    "small": {
+     "boxes": 1000,
+     "bus": 1000,
+     "categories": 1000,
+     "companies": 1000,
+     "item": 2500,
+     "statuses": 1000
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "child": "item",
+    "child_columns": [
+     "category_id"
+    ],
+    "name": "fk_item_category_id",
+    "parent": "categories",
+    "parent_columns": [
+     "category_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "item",
+    "child_columns": [
+     "company_id"
+    ],
+    "name": "fk_item_company_id",
+    "parent": "companies",
+    "parent_columns": [
+     "company_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "item",
+    "child_columns": [
+     "box_id"
+    ],
+    "name": "fk_item_box_id",
+    "parent": "boxes",
+    "parent_columns": [
+     "box_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "item",
+    "child_columns": [
+     "bus_id"
+    ],
+    "name": "fk_item_bus_id",
+    "parent": "bus",
+    "parent_columns": [
+     "bus_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "item",
+    "child_columns": [
+     "status_id"
+    ],
+    "name": "fk_item_status_id",
+    "parent": "statuses",
+    "parent_columns": [
+     "status_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "boxes": {
+    "columns": {
+     "box_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "label": {
+      "generator": {
+       "max_nb_chars": 40,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "box_id"
+    ]
+   },
+   "bus": {
+    "columns": {
+     "bus_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "label": {
+      "generator": {
+       "max_nb_chars": 40,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "bus_id"
+    ]
+   },
+   "categories": {
+    "columns": {
+     "category_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "category_name": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "category_id"
+    ]
+   },
+   "companies": {
+    "columns": {
+     "company_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "company_name": {
+      "generator": {
+       "provider": "company",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "company_id"
+    ]
+   },
+   "item": {
+    "columns": {
+     "box_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "boxes.box_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "bus_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "bus.bus_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "category_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "categories.category_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "company_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "companies.company_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "item_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "other_id": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "parent_item_id": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "status_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "statuses.status_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "item_id"
+    ]
+   },
+   "statuses": {
+    "columns": {
+     "status_code": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 10,
+      "nullable": true,
+      "type": "string"
+     },
+     "status_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "status_id"
+    ]
+   }
+  }
+ },
+ "schema": {
+  "business_rules": [],
+  "correlated_columns": {},
+  "generation": {
+   "derived_counts": {},
+   "output": {},
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "boxes": 100000,
+     "bus": 100000,
+     "categories": 100000,
+     "companies": 100000,
+     "item": 250000,
+     "statuses": 100000
+    },
+    "medium": {
+     "boxes": 10000,
+     "bus": 10000,
+     "categories": 10000,
+     "companies": 10000,
+     "customer": 7,
+     "item": 25000,
+     "order": 21,
+     "orders": 21,
+     "statuses": 10000
+    },
+    "small": {
+     "boxes": 1000,
+     "bus": 1000,
+     "categories": 1000,
+     "companies": 1000,
+     "item": 2500,
+     "statuses": 1000
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "cardinality": {},
+    "child": "item",
+    "child_columns": [
+     "category_id"
+    ],
+    "name": "fk_item_category_id",
+    "optional": false,
+    "parent": "categories",
+    "parent_columns": [
+     "category_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "item",
+    "child_columns": [
+     "company_id"
+    ],
+    "name": "fk_item_company_id",
+    "optional": false,
+    "parent": "companies",
+    "parent_columns": [
+     "company_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "item",
+    "child_columns": [
+     "box_id"
+    ],
+    "name": "fk_item_box_id",
+    "optional": false,
+    "parent": "boxes",
+    "parent_columns": [
+     "box_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "item",
+    "child_columns": [
+     "bus_id"
+    ],
+    "name": "fk_item_bus_id",
+    "optional": false,
+    "parent": "bus",
+    "parent_columns": [
+     "bus_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "item",
+    "child_columns": [
+     "status_id"
+    ],
+    "name": "fk_item_status_id",
+    "optional": false,
+    "parent": "statuses",
+    "parent_columns": [
+     "status_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "boxes": {
+    "cdm_mapping": null,
+    "columns": {
+     "box_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "box_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "label": {
+      "generator": {
+       "max_nb_chars": 40,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "name": "label",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "boxes",
+    "primary_key": [
+     "box_id"
+    ]
+   },
+   "bus": {
+    "cdm_mapping": null,
+    "columns": {
+     "bus_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "bus_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "label": {
+      "generator": {
+       "max_nb_chars": 40,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "name": "label",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "bus",
+    "primary_key": [
+     "bus_id"
+    ]
+   },
+   "categories": {
+    "cdm_mapping": null,
+    "columns": {
+     "category_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "category_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "category_name": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "name": "category_name",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "categories",
+    "primary_key": [
+     "category_id"
+    ]
+   },
+   "companies": {
+    "cdm_mapping": null,
+    "columns": {
+     "company_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "company_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "company_name": {
+      "generator": {
+       "provider": "company",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "name": "company_name",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "companies",
+    "primary_key": [
+     "company_id"
+    ]
+   },
+   "item": {
+    "cdm_mapping": null,
+    "columns": {
+     "box_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "boxes.box_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "box_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "bus_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "bus.bus_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "bus_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "category_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "categories.category_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "category_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "company_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "companies.company_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "company_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "item_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "item_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "other_id": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "other_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "parent_item_id": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "parent_item_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "status_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "statuses.status_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "status_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "item",
+    "primary_key": [
+     "item_id"
+    ]
+   },
+   "statuses": {
+    "cdm_mapping": null,
+    "columns": {
+     "status_code": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 10,
+      "name": "status_code",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "status_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "status_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "statuses",
+    "primary_key": [
+     "status_id"
+    ]
+   }
+  }
+ }
+}

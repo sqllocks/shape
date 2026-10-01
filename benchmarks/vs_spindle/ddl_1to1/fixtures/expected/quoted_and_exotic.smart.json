@@ -1,0 +1,828 @@
+{
+ "annotations": [
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as LOOKUP",
+   "rule_id": "TC-LOOKUP",
+   "table": "Sales Order"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as UNKNOWN",
+   "rule_id": "TC-UNKNOWN",
+   "table": "Customer"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as UNKNOWN",
+   "rule_id": "TC-UNKNOWN",
+   "table": "line"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as UNKNOWN",
+   "rule_id": "TC-UNKNOWN",
+   "table": "empty_stuff"
+  },
+  {
+   "column": "order_id",
+   "confidence": 0.8,
+   "description": "Lookup/reference parent (Sales Order) -> child \u2014 zipf(alpha=1.3)",
+   "rule_id": "FK-02",
+   "table": "line"
+  },
+  {
+   "column": null,
+   "confidence": 0.85,
+   "description": "Lookup/reference table \u2014 fixed 100 rows",
+   "rule_id": "CA-06",
+   "table": "Sales Order"
+  },
+  {
+   "column": null,
+   "confidence": 0.9,
+   "description": "Root table \u2014 scale presets set (1K / 50K / 500K)",
+   "rule_id": "CA-SCALE",
+   "table": "Customer"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Default child ratio \u2014 3.0 per parent (Sales Order)",
+   "rule_id": "CA-09",
+   "table": "line"
+  },
+  {
+   "column": null,
+   "confidence": 0.9,
+   "description": "Root table \u2014 scale presets set (1K / 50K / 500K)",
+   "rule_id": "CA-SCALE",
+   "table": "empty_stuff"
+  },
+  {
+   "column": "TotalDue",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on MONETARY semantic",
+   "rule_id": "ND-MONETARY",
+   "table": "Sales Order"
+  },
+  {
+   "column": "qty",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on QUANTITY semantic",
+   "rule_id": "ND-QUANTITY",
+   "table": "line"
+  },
+  {
+   "column": "OrderDate",
+   "confidence": 0.75,
+   "description": "Upgraded temporal pattern to 'seasonal' based on TEMPORAL_TRANSACTION semantic",
+   "rule_id": "TP-TEMPORAL_TRANSACTION",
+   "table": "Sales Order"
+  },
+  {
+   "column": "TotalDue",
+   "confidence": 0.8,
+   "description": "Monetary column TotalDue >= 0",
+   "rule_id": "BR-05",
+   "table": "Sales Order"
+  },
+  {
+   "column": "qty",
+   "confidence": 0.8,
+   "description": "Quantity column qty >= 1",
+   "rule_id": "BR-06",
+   "table": "line"
+  }
+ ],
+ "explain": [
+  "  [TC-LOOKUP] Sales Order: Classified as LOOKUP (confidence: 80%)",
+  "  [TC-UNKNOWN] Customer: Classified as UNKNOWN (confidence: 80%)",
+  "  [TC-UNKNOWN] line: Classified as UNKNOWN (confidence: 80%)",
+  "  [TC-UNKNOWN] empty_stuff: Classified as UNKNOWN (confidence: 80%)",
+  "  [FK-02] line.order_id: Lookup/reference parent (Sales Order) -> child \u2014 zipf(alpha=1.3) (confidence: 80%)",
+  "  [CA-06] Sales Order: Lookup/reference table \u2014 fixed 100 rows (confidence: 85%)",
+  "  [CA-SCALE] Customer: Root table \u2014 scale presets set (1K / 50K / 500K) (confidence: 90%)",
+  "  [CA-09] line: Default child ratio \u2014 3.0 per parent (Sales Order) (confidence: 80%)",
+  "  [CA-SCALE] empty_stuff: Root table \u2014 scale presets set (1K / 50K / 500K) (confidence: 90%)",
+  "  [ND-MONETARY] Sales Order.TotalDue: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)",
+  "  [ND-QUANTITY] line.qty: Upgraded to log_normal distribution based on QUANTITY semantic (confidence: 75%)",
+  "  [TP-TEMPORAL_TRANSACTION] Sales Order.OrderDate: Upgraded temporal pattern to 'seasonal' based on TEMPORAL_TRANSACTION semantic (confidence: 75%)",
+  "  [BR-05] Sales Order.TotalDue: Monetary column TotalDue >= 0 (confidence: 80%)",
+  "  [BR-06] line.qty: Quantity column qty >= 1 (confidence: 80%)"
+ ],
+ "file": {
+  "business_rules": [],
+  "generation": {
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "Customer": 500000,
+     "Sales Order": 100000,
+     "empty_stuff": 500000,
+     "line": 250000
+    },
+    "medium": {
+     "Customer": 50000,
+     "Sales Order": 10000,
+     "customer": 7,
+     "empty_stuff": 50000,
+     "line": 25000,
+     "order": 21,
+     "orders": 21
+    },
+    "small": {
+     "Customer": 1000,
+     "Sales Order": 1000,
+     "empty_stuff": 1000,
+     "line": 2500
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "child": "line",
+    "child_columns": [
+     "order_id"
+    ],
+    "name": "fk_line_order_id",
+    "parent": "Sales Order",
+    "parent_columns": [
+     "SalesOrderID"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "Customer": {
+    "columns": {
+     "AccountNumber": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "type": "string"
+     },
+     "CustomerID": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "type": "integer"
+     },
+     "Flag": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     },
+     "ModifiedDate": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "type": "string"
+     },
+     "Rate": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     },
+     "Score": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "CustomerID"
+    ]
+   },
+   "Sales Order": {
+    "columns": {
+     "Comment": {
+      "generator": {
+       "provider": "sentence",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     },
+     "CustomerID": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "type": "integer"
+     },
+     "OrderDate": {
+      "generator": {
+       "pattern": "seasonal",
+       "profiles": {
+        "day_of_week": {
+         "Fri": 0.16,
+         "Mon": 0.165,
+         "Sat": 0.105,
+         "Sun": 0.1,
+         "Thu": 0.155,
+         "Tue": 0.16,
+         "Wed": 0.155
+        },
+        "month": {
+         "Apr": 0.082,
+         "Aug": 0.085,
+         "Dec": 0.106,
+         "Feb": 0.068,
+         "Jan": 0.071,
+         "Jul": 0.084,
+         "Jun": 0.083,
+         "Mar": 0.083,
+         "May": 0.085,
+         "Nov": 0.088,
+         "Oct": 0.084,
+         "Sep": 0.082
+        }
+       },
+       "strategy": "temporal"
+      },
+      "type": "timestamp"
+     },
+     "Payload": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     },
+     "RowGuid": {
+      "generator": {
+       "strategy": "uuid"
+      },
+      "nullable": true,
+      "type": "uuid"
+     },
+     "SalesOrderID": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "TotalDue": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "float"
+     }
+    },
+    "primary_key": [
+     "SalesOrderID"
+    ]
+   },
+   "empty_stuff": {
+    "columns": {
+     "id": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": []
+   },
+   "line": {
+    "columns": {
+     "line_no": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 1000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "type": "integer"
+     },
+     "long_text": {
+      "generator": {
+       "max_nb_chars": 200,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 2000,
+      "nullable": true,
+      "type": "string"
+     },
+     "note": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 8,
+      "nullable": true,
+      "type": "string"
+     },
+     "order_id": {
+      "generator": {
+       "distribution": "zipf",
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "Sales Order.SalesOrderID",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "qty": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 1000,
+        "mean": 1.5,
+        "min": 1,
+        "sigma": 0.8
+       },
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "order_id",
+     "line_no"
+    ]
+   }
+  }
+ },
+ "schema": {
+  "business_rules": [
+   {
+    "name": "Sales Order_TotalDue_positive",
+    "rule": "TotalDue >= 0",
+    "table": "Sales Order",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "line_qty_positive",
+    "rule": "qty >= 1",
+    "table": "line",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   }
+  ],
+  "correlated_columns": {},
+  "generation": {
+   "derived_counts": {
+    "Sales Order": {
+     "fixed": 100
+    },
+    "line": {
+     "per_parent": "Sales Order",
+     "ratio": 3.0
+    }
+   },
+   "output": {},
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "Customer": 500000,
+     "Sales Order": 100000,
+     "empty_stuff": 500000,
+     "line": 250000
+    },
+    "medium": {
+     "Customer": 50000,
+     "Sales Order": 10000,
+     "customer": 7,
+     "empty_stuff": 50000,
+     "line": 25000,
+     "order": 21,
+     "orders": 21
+    },
+    "small": {
+     "Customer": 1000,
+     "Sales Order": 1000,
+     "empty_stuff": 1000,
+     "line": 2500
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "cardinality": {},
+    "child": "line",
+    "child_columns": [
+     "order_id"
+    ],
+    "name": "fk_line_order_id",
+    "optional": false,
+    "parent": "Sales Order",
+    "parent_columns": [
+     "SalesOrderID"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "Customer": {
+    "cdm_mapping": null,
+    "columns": {
+     "AccountNumber": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "AccountNumber",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "CustomerID": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "CustomerID",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "Flag": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "Flag",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "ModifiedDate": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "ModifiedDate",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "Rate": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "Rate",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "Score": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "Score",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "Customer",
+    "primary_key": [
+     "CustomerID"
+    ]
+   },
+   "Sales Order": {
+    "cdm_mapping": null,
+    "columns": {
+     "Comment": {
+      "generator": {
+       "provider": "sentence",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "Comment",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "CustomerID": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "CustomerID",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "OrderDate": {
+      "generator": {
+       "pattern": "seasonal",
+       "profiles": {
+        "day_of_week": {
+         "Fri": 0.16,
+         "Mon": 0.165,
+         "Sat": 0.105,
+         "Sun": 0.1,
+         "Thu": 0.155,
+         "Tue": 0.16,
+         "Wed": 0.155
+        },
+        "month": {
+         "Apr": 0.082,
+         "Aug": 0.085,
+         "Dec": 0.106,
+         "Feb": 0.068,
+         "Jan": 0.071,
+         "Jul": 0.084,
+         "Jun": 0.083,
+         "Mar": 0.083,
+         "May": 0.085,
+         "Nov": 0.088,
+         "Oct": 0.084,
+         "Sep": 0.082
+        }
+       },
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "OrderDate",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "Payload": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "Payload",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "RowGuid": {
+      "generator": {
+       "strategy": "uuid"
+      },
+      "max_length": null,
+      "name": "RowGuid",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "uuid"
+     },
+     "SalesOrderID": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "SalesOrderID",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "TotalDue": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "TotalDue",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     }
+    },
+    "description": "",
+    "name": "Sales Order",
+    "primary_key": [
+     "SalesOrderID"
+    ]
+   },
+   "empty_stuff": {
+    "cdm_mapping": null,
+    "columns": {
+     "id": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "empty_stuff",
+    "primary_key": []
+   },
+   "line": {
+    "cdm_mapping": null,
+    "columns": {
+     "line_no": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 1000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "line_no",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "long_text": {
+      "generator": {
+       "max_nb_chars": 200,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 2000,
+      "name": "long_text",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "note": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 8,
+      "name": "note",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "order_id": {
+      "generator": {
+       "distribution": "zipf",
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "Sales Order.SalesOrderID",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "order_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "qty": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 1000,
+        "mean": 1.5,
+        "min": 1,
+        "sigma": 0.8
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "qty",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "line",
+    "primary_key": [
+     "order_id",
+     "line_no"
+    ]
+   }
+  }
+ }
+}
