@@ -19,3 +19,14 @@ A full profile holds value-bearing evidence (exact minimum and maximum, every en
 `--unsafe-full-fidelity` is the one opt-out: it turns the controls off and stamps the artifact `unsafe`.
 
 `shape profile validate --safe ARTIFACT [--json]` scans a serialized artifact (never the data) and exits 0 only when it is proven clean, 1 on any finding, 2 on a usage error. It denies by shape rather than name: lists of more than two raw strings, numeric min/max pairs outside the length aggregates, personal-data patterns anywhere in a value, a missing table `row_count`, a missing safe-profile marker, or an `unsafe` stamp. It is a leak scanner, not proof of anonymity.
+
+## Minimum cohort and small cells
+
+Every released cell must be absent or stand for at least the minimum cohort `k` (default 5). A *cell* is a category of a value count or enum, a bin of a histogram, or a top-value entry. `release_for`, `suppress_shape` and the safe profile enforce this on all of them:
+
+- a category below `k` rows folds into one `__OTHER__` bucket; if that bucket is itself below `k`, the smallest surviving categories join it until it reaches `k`, and a column with fewer than `k` rows releases nothing;
+- a histogram bin below `k` is zeroed and the proportions are renormalized; a histogram with no releasable bin is dropped;
+- proportions are turned back into counts with a conservative lower bound (they are stored to six decimals), over the column's non-null rows, so the released cell is never smaller than `k` rows however the proportion was rounded;
+- a value list that carries no counts cannot be checked, so it is removed.
+
+This limits what a single release shows. It does not stop differencing across releases (see `differencing_risk`) and is not an anonymity guarantee.

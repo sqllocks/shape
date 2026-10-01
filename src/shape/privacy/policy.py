@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from .cells import suppress_column_cells
 from .classification import LEVELS as LEVELS
 
 # Any evidence capable of carrying original values or tight value bounds is stripped on downgrade.
@@ -92,6 +93,9 @@ def release_for(
             }
             removed.extend(f"columns.{name}.{k}" for k in x if k not in keep)
             x = keep
+        else:
+            x, _, gone = suppress_column_cells(x, minimum_cohort, count)
+            removed.extend(f"columns.{name}.{k}" for k in gone)
         out["columns"][name] = x
     out["release_policy"] = {
         "target": target,

@@ -82,8 +82,9 @@ def test_rare_category_is_folded_into_other(profile):
     weights = cols["status"].categorical_weights
     assert weights is not None
     assert "vip" not in weights and sp.OTHER_BUCKET in weights
-    assert cols["status"].suppressed_category_count == 1
-    assert set(weights) == {"paid", "new", sp.OTHER_BUCKET}
+    # vip has 3 rows, so __OTHER__ alone would be below k=5: the smallest survivor joins it.
+    assert cols["status"].suppressed_category_count == 2
+    assert weights[sp.OTHER_BUCKET] * 397 >= 5
     assert sum(weights.values()) == pytest.approx(1.0, abs=1e-5)
 
 

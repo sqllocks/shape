@@ -104,7 +104,6 @@ module=[
     "shape.privacy.core",
     "shape.privacy.detect",
     "shape.privacy.propagate",
-    "shape.privacy.release",
     "shape.quality.core",
     "shape.quality.policy",
     "shape.relations.core",

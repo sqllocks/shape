@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Any
 
 from .cells import OTHER_BUCKET as OTHER_BUCKET
-from .cells import suppress_weights
+from .cells import non_null_base, suppress_bins, suppress_weights
 
 # Persisted schema version of the safe profile.
 SCHEMA_VERSION = 1
@@ -123,6 +123,10 @@ class SafeConfig:
     @property
     def gate_on(self) -> bool:
         return self.pii_gate and not self.unsafe_full_fidelity
+
+
+def _list_or_none(x: Any) -> list[float] | None:
+    return list(x) if isinstance(x, list) else None
 
 
 def _opt_dict(x: Any) -> dict[str, Any] | None:
@@ -291,6 +295,8 @@ class SafeColumnProfile:
     hour_histogram: list[float] | None = None
     dow_histogram: list[float] | None = None
     temporal_histogram: dict[str, Any] | None = None
+    # Cells withheld below the minimum cohort: folded categories plus zeroed histogram bins.
+    cells_suppressed: int = 0
 
     @classmethod
     def from_column(
@@ -304,14 +310,14 @@ class SafeColumnProfile:
         bounds = _winsorized_bounds(quantiles, cfg)
         cardinality = int(col.get("cardinality") or 0)
 
+        base = non_null_base(row_count, col.get("null_count"), col.get("null_rate") or 0.0)
+        k = cfg.column_k(name)
         weights: dict[str, float] | None = None
         suppressed: int | None = None
         if col.get("is_enum"):
             seed = col.get("enum_values") or col.get("value_counts_ext")
             if seed:
-                weights, suppressed = suppress_weights(
-                    seed, cfg.column_k(name), row_count, null_rate=None
-                )
+                weights, suppressed = suppress_weights(seed, k, base)
 
         pattern = col.get("pattern")
         string_length = _opt_dict(col.get("string_length"))
@@ -333,6 +339,33 @@ class SafeColumnProfile:
             bounds = None
             distribution_params = None
 
+        # Every other cell surface obeys the same minimum cohort: temporal histogram bins are
+        # zeroed when they stand for fewer than k rows.
+        cells = 0
+        hour = _list_or_none(col.get("hour_histogram"))
+        dow = _list_or_none(col.get("dow_histogram"))
+        if hour is not None:
+            hour, n = suppress_bins(hour, k, base)
+            cells += n
+        if dow is not None:
+            dow, n = suppress_bins(dow, k, base)
+            cells += n
+        temporal = _opt_dict(col.get("temporal_histogram"))
+        if temporal is not None:
+            for part in ("year_weights", "month_weights"):
+                w = _list_or_none(temporal.get(part))
+                if w is not None:
+                    released, n = suppress_bins(w, k, base)
+                    cells += n
+                    if released is None:
+                        del temporal[part]
+                    else:
+                        temporal[part] = released
+        if histogram is not None:
+            bins, n = suppress_bins(histogram["bins"], k, base)
+            cells += n
+            histogram["bins"] = bins if bins is not None else []
+
         return cls(
             name=name,
             dtype=dtype,
@@ -350,9 +383,10 @@ class SafeColumnProfile:
             pattern=pattern,
             length_dist=length_dist,
             string_length=string_length,
-            hour_histogram=col.get("hour_histogram"),
-            dow_histogram=col.get("dow_histogram"),
-            temporal_histogram=col.get("temporal_histogram"),
+            hour_histogram=hour,
+            dow_histogram=dow,
+            temporal_histogram=temporal,
+            cells_suppressed=(suppressed or 0) + cells,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -486,6 +520,7 @@ def build_redaction_manifest(
                 continue
             cols[cname] = {
                 "categories_dropped": int(safe_col.suppressed_category_count or 0),
+                "cells_suppressed": safe_col.cells_suppressed,
                 "bounds_winsorized": safe_col.bounds is not None,
                 "pattern_only": pii_gate_fires(
                     col.get("pattern"), int(col.get("cardinality") or 0), row_count, cfg

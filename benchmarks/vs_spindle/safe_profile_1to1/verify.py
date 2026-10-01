@@ -31,6 +31,9 @@ from paths import BENCH_OUT_DIR, PROFILE_DATA_DIR, SPINDLE_PY  # noqa: E402
 
 CACHE = BENCH_OUT_DIR / "safe_cache"
 REL = 1e-9
+# Keys the product adds to the baseline's format (P7-02: cells withheld by the minimum cohort).
+# Parity covers every baseline key; these are compared separately, by test.
+ADDED_KEYS = {"cells_suppressed"}
 
 
 def _configs() -> dict[str, tuple[Any, bool]]:
@@ -86,6 +89,14 @@ def _close(a: Any, b: Any, path: str, out: list[str]) -> None:
         out.append(f"{path}: {a!r} != {b!r}")
 
 
+def _strip_added(node: Any) -> Any:
+    if isinstance(node, dict):
+        return {k: _strip_added(v) for k, v in node.items() if k not in ADDED_KEYS}
+    if isinstance(node, list):
+        return [_strip_added(v) for v in node]
+    return node
+
+
 def _norm(doc: Any) -> Any:
     """JSON round trip, so NaN spellings and tuple/list differences cannot differ."""
     return json.loads(json.dumps(doc, default=str))
@@ -104,7 +115,7 @@ def verify(path: Path, refresh: bool) -> list[str]:
         doc = to_safe_profile(prof, cfg, unsafe_full_fidelity=unsafe).to_dict()
         mine[name] = _norm(doc)
         ref = dict(base["variants"][name])
-        got = dict(mine[name])
+        got = _strip_added(dict(mine[name]))
         ref.pop("schema_version", None)
         got.pop("schema_version", None)
         diffs: list[str] = []
