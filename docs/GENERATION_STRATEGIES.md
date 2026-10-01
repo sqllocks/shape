@@ -176,3 +176,13 @@ null placeholder and filled by the compute phase once every table exists
 numpy rounds, so a sum never prints as `114.49000000000001`) and `lookup_parent` (copy a column of
 the parent table through this table's foreign key). Sums and counts of integers stay integers.
 
+## Skewed fan-out
+
+`shape.generation.fanout.FanOut(n_parents, top_fraction=0.2, top_share=0.8, shape="power" |
+"two_tier", shuffle=True)` draws a parent index for each child row (`draw(stream, row_start,
+n_rows)`) so that the top `top_fraction` of parents hold `top_share` of the children (the 80/20
+rule). `concentration_weights(...)` gives the rank weights and `top_share_of(parents, n_parents,
+fraction)` measures a generated column. `FanOut.from_spec` reads `{"top_fraction", "top_share",
+"shape", "shuffle"}`; P4-04d's `foreign_key` uses it for a `fan_out` key.
+
+`kernel_ops.alias_table(weights)` returns an `AliasTable` (`size`, `prob`, `alias`), cached by the weights.
