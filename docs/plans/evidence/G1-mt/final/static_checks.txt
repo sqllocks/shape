@@ -1,0 +1,27 @@
+All checks passed!
+518 files already formatted
+Success: no issues found in 238 source files
+vulture clean
+
+╔══╗─────────▶╔╗ ╔╗      ╔╗◀───┐
+╚╣╠╝◀─────┐  ╔╝╚╗║║────▶╔╝╚╗   │
+ ║║   ╔══╦══╦╩╗╔╝║║  ╔╦═╩╗╔╝╔═╦══╗
+ ║║╔══╣╔╗║╔╗║╔╣║ ║║ ╔╬╣╔╗║║ ║│║╔═╝
+╔╣╠╣║║║╚╝║╚╝║║║╚╗║╚═╝║║║║║╚╗║═╣║
+╚══╩╩╩╣╔═╩══╩╝╚═╝╚═══╩╩╝╚╩═╩╩═╩╝
+  └──▶║║                    ▲ 
+      ╚╝────────────────────┘
+
+
+---------
+Contracts
+---------
+
+Analyzed 235 files, 446 dependencies.
+-------------------------------------
+
+Built-ins load only through the plugin registry (plan 4.3) KEPT (1 ignored import)
+
+Contracts: 1 kept, 0 broken.
+check_user_facing: clean
+0

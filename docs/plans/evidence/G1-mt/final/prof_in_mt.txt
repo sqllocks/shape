@@ -1,0 +1,20 @@
+cores=4 cpu=Intel(R) Xeon(R) Processor @ 2.80GHz
+mt          rep0 spindle      2.66s load=0.81 rss=316MB child=0MB
+mt          rep0 impl_mt      0.29s load=0.83 rss=228MB child=0MB
+mt          rep0 impl_st      0.35s load=0.83 rss=217MB child=0MB
+mt          rep1 spindle      2.61s load=0.83 rss=314MB child=0MB
+mt          rep1 impl_mt      0.24s load=0.84 rss=217MB child=0MB
+mt          rep1 impl_st      0.49s load=0.84 rss=216MB child=0MB
+mt          rep2 spindle      2.72s load=0.84 rss=314MB child=0MB
+mt          rep2 impl_mt      0.22s load=0.86 rss=227MB child=0MB
+mt          rep2 impl_st      0.34s load=1.11 rss=212MB child=0MB
+mt          rep3 spindle      2.56s load=1.11 rss=317MB child=0MB
+mt          rep3 impl_mt      0.19s load=1.10 rss=241MB child=0MB
+mt          rep3 impl_st      0.36s load=1.10 rss=219MB child=0MB
+mt          rep4 spindle      2.53s load=1.10 rss=314MB child=0MB
+mt          rep4 impl_mt      0.27s load=1.09 rss=233MB child=0MB
+mt          rep4 impl_st      0.32s load=1.09 rss=218MB child=0MB
+
+| dataset | Spindle s | port MT s | port 1T s | speedup MT | speedup 1T | peak RSS Spindle / port MT (+child) / port 1T MB |
+|---|---:|---:|---:|---:|---:|---|
+| mt | 2.61 | 0.24 | 0.35 | 11.0x | 7.5x | 317 / 241 (+0) / 219 |

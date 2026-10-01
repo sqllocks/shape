@@ -89,6 +89,23 @@ Raw: PROF-CLI d2 Spindle 41.108 41.706 40.705 40.086 41.306, Shape 2.938 2.898 2
 103.483 104.974 105.215 106.324, Shape 5.702 6.216 7.243 5.947 5.597; START runs (ms) 38.95 39.97 39.68 43.36 50.46 49.25
 38.42 40.26 39.25 37.98.
 
+## Final merge (second merge of `origin/build/main-plan`, 16 more upstream commits) and a second MT measurement
+No Rust changed; the only profile-path file is `reference/model.py` (type annotations only). Re-run on the final tree
+(`evidence/G1-mt/final/`), after the merge and before this note:
+- `verify.py --impl shape`: `SHAPE_KERNEL=rust` exit 0 (49/49), `SHAPE_KERNEL=python` exit 0 (49/49).
+- Suites `pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`: rust 3251 passed, python 3251
+  passed. `pytest -m heavy tests/kernel tests/profile tests/streaming` (rust): 41 passed.
+- ruff check / format --check, mypy (238 files), vulture, lint-imports, check_user_facing, bandit: all clean.
+- PROF-IN MT only, same harness, on this final tree (`final/prof_in_mt.json`): Spindle 2.660 2.609 2.724 2.564 2.530
+  (median 2.609); Shape 0.285 0.237 0.217 0.195 0.269 (median **0.237**); ratio **11.0x**; 1 thread 0.350 0.492 0.340
+  0.360 0.321. Load before the run 0.81.
+
+Both MT measurements are reported and neither was repeated: **12.0x (Shape median 0.222 s)** in the full PROF-IN run and
+**11.0x (0.237 s)** in the MT-only run on the final tree. Both clear the 10x gate; the margin is 10-20% and the gap
+between them is the run-to-run variation of this VM (system time of `read_csv`), not a code difference. Shape's median
+is below 0.25 s in both, but not "well below": runs reach 0.27-0.29 s. A further gain would have to come from the CSV read
+(pyarrow, a single 8.7 MB block) or the `amount` fit on the critical path, neither of which this lane changed.
+
 ## Notes for the lead
 - Both fixes are in the reference profiler shared by both kernels, so the `SHAPE_KERNEL=python` twin has the same
   speed-up and identical output.
