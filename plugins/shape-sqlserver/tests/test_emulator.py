@@ -66,6 +66,13 @@ def conn_str():
             cur.execute(stmt)
         for table in warehouse.tables:
             insert_rows(cur, table, "wh")
+        for schema_name, scenario_name in (("idn", "id_named"), ("nom", "name_only")):
+            keyless = scenario(scenario_name)
+            cur.execute(f"CREATE SCHEMA {schema_name}")
+            for stmt in ddl(keyless, schema_name):
+                cur.execute(stmt)
+            for table in keyless.tables:
+                insert_rows(cur, table, schema_name)
         cur.execute("CREATE TABLE dbo.stamps (id int NOT NULL PRIMARY KEY, ts datetimeoffset(7))")
         cur.execute(
             "INSERT INTO dbo.stamps VALUES (1, '2024-03-05 10:30:15.1234567 +02:00'), "
@@ -115,6 +122,42 @@ def test_sampled_statistics_match_the_in_memory_server(conn_str):
             if col != "rating":  # a real is a float32 on the server
                 assert got["min_value"] == want["min_value"], f"{name}.{col}"
                 assert got["mean"] == pytest.approx(want["mean"], rel=1e-9) or want["mean"] is None
+
+
+def test_ratios_divide_by_the_rows_sampled_on_a_real_server(conn_str):
+    prof = _profile(conn_str)
+    customer = prof["tables"]["customer"]
+    assert customer["row_count"] == 2500 and customer["sampled_rows"] == 1000
+    assert prof["sampling"]["requested_rows"] == 1000
+    ids = customer["columns"]["customer_id"]
+    assert ids["cardinality"] == 1000
+    assert ids["cardinality_ratio"] == 1.0 and ids["is_unique"] is True
+    rows = next(t for t in scenario("retail").tables if t.name == "customer").rows[:1000]
+    nulls = sum(r[4] is None for r in rows)  # balance
+    assert nulls > 0
+    balance = customer["columns"]["balance"]
+    assert balance["null_count"] == nulls and balance["null_rate"] == nulls / 1000
+    assert prof["tables"]["product"]["sampled_rows"] == 300
+    assert _profile(conn_str, sample_rows=0)["tables"]["customer"]["sampled_rows"] == 0
+
+
+def test_a_relationship_the_data_shows_is_reported_on_a_real_server(conn_str):
+    prof = _profile(conn_str, schema="idn")
+    assert prof["tables"]["orders"]["detected_fks"] == {"customer_id": "customer"}
+    assert [r["name"] for r in prof["relationships"]] == ["fk_orders_customer_id"]
+    col = prof["tables"]["orders"]["columns"]["customer_id"]
+    assert col["is_foreign_key"] is True and col["fk_ref_table"] == "customer"
+
+
+def test_name_inferred_keys_mark_the_column_on_a_real_server(conn_str):
+    prof = _profile(conn_str, schema="nom")
+    assert prof["tables"]["orders"]["detected_fks"] == {"customer_id": "customer"}
+    assert [r["name"] for r in prof["relationships"]] == ["fk_orders_customer_id"]
+    col = prof["tables"]["orders"]["columns"]["customer_id"]
+    assert col["is_foreign_key"] is True and col["fk_ref_table"] == "customer"
+    wh = _profile(conn_str, schema="wh")["tables"]["factsales"]
+    assert wh["columns"]["customer_key"]["is_foreign_key"] is True
+    assert wh["detected_fks"] == {"customer_key": "dimcustomer", "product_key": "dimproduct"}
 
 
 def test_datetimeoffset_is_profiled_not_dropped(conn_str):
