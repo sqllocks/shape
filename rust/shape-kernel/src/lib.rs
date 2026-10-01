@@ -209,7 +209,9 @@ fn lognorm_probe(py: Python<'_>, data: PyArray, loc: f64) -> PyResult<(f64, f64,
     let p = arr
         .as_primitive_opt::<Float64Type>()
         .ok_or_else(|| PyValueError::new_err("lognorm_probe needs a float64 array"))?;
-    ignore_fp_errors(py, || fit::lognorm_probe(p.values(), loc))
+    let values = p.values();
+    // detached: the parallel passes call numpy from rayon workers, which need the GIL
+    ignore_fp_errors(py, || py.detach(|| fit::lognorm_probe(values, loc)))
 }
 
 /// The kernel version (equal to the Python package version).
