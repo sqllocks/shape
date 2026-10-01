@@ -141,6 +141,27 @@ def _float_key(x: float) -> tuple[int, int]:
     return (1, struct.unpack("<Q", struct.pack("<d", x))[0])
 
 
+def _histogram_quantile(hist: dict[int, int], q: float) -> float:
+    """``np.quantile(np.repeat(values, counts), q, method="linear")`` without materialising one
+    element per row (memory must not grow with the row count): walk the sorted histogram to the
+    two neighbouring order statistics and interpolate the way numpy does."""
+    n = sum(hist.values())
+    pos = q * (n - 1)
+    lo = int(math.floor(pos))
+    frac = pos - lo
+    a = b = float(max(hist))
+    seen = 0
+    keys = sorted(hist)
+    for i, v in enumerate(keys):
+        seen += hist[v]
+        if seen > lo:
+            a = float(v)
+            b = a if seen > lo + 1 else float(keys[min(i + 1, len(keys) - 1)])
+            break
+    diff = b - a
+    return b - diff * (1.0 - frac) if frac >= 0.5 else a + diff * frac
+
+
 class _Column:
     def __init__(self, name: str, typ: Any, mode: str) -> None:
         self.name, self.typ, self.mode = name, typ, mode
@@ -378,15 +399,11 @@ class _Column:
             d["min"], d["max"] = self.tmin, self.tmax
             length: dict[str, Any] = {"count": nn}
             if nn:
-                lens = np.repeat(
-                    np.array(sorted(self.lengths), dtype=np.float64),
-                    [self.lengths[x] for x in sorted(self.lengths)],
-                )
                 length.update(
                     min=min(self.lengths),
                     max=max(self.lengths),
                     mean=sum(x * c for x, c in self.lengths.items()) / nn,
-                    p95=float(np.quantile(lens, 0.95, method="linear")),
+                    p95=_histogram_quantile(self.lengths, 0.95),
                     hist=dict(sorted(self.lengths.items())),
                 )
             d["length"] = length

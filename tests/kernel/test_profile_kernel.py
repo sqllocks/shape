@@ -252,3 +252,23 @@ def test_errors(native):
         st.merge(native.ProfileState(schema, "bounded"))
     assert st.rows == 0 and st.mode == "exact"
     assert st.finalize()["columns"][0]["count"] == 0
+
+
+def test_python_text_finalize_memory_does_not_scale_with_rows():
+    """Regression (P1-07, Python kernel): finalize expanded the length histogram to one float
+    per row (~8 bytes x rows), so bounded mode's peak RSS grew with the file. A histogram claiming
+    200M rows must finalize in a few MB, and give numpy's linear-interpolation p95."""
+    import tracemalloc
+
+    from shape.kernel.reference.profile import _Column
+
+    col = _Column("s", pa.string(), "bounded")
+    col.count = 200_000_000
+    col.lengths = {3: 120_000_000, 7: 70_000_000, 12: 10_000_000}
+    tracemalloc.start()
+    out = col.finalize(10)
+    _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    assert peak < 5 * 2**20, peak
+    assert out["length"]["p95"] == pytest.approx(7.25)  # 5% of the way from 7 to 12
+    assert out["length"]["max"] == 12
