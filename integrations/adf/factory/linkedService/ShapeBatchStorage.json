@@ -1,0 +1,10 @@
+{
+  "name": "ShapeBatchStorage",
+  "properties": {
+    "annotations": [],
+    "type": "AzureBlobStorage",
+    "typeProperties": {
+      "serviceEndpoint": "https://<<STORAGE_ACCOUNT>>.blob.core.windows.net"
+    }
+  }
+}

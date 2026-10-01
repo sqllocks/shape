@@ -1,0 +1,10 @@
+{
+  "name": "ShapeAdls",
+  "properties": {
+    "annotations": [],
+    "type": "AzureBlobFS",
+    "typeProperties": {
+      "url": "https://<<STORAGE_ACCOUNT>>.dfs.core.windows.net"
+    }
+  }
+}

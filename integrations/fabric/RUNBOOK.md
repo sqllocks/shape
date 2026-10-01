@@ -14,7 +14,8 @@ What you are building:
 | `shape_setup` | Python notebook | `integrations/fabric/notebooks/shape_setup.ipynb` |
 | `shape_profile` | Python notebook (kernel 3.11/3.12) | `notebooks/shape_profile.ipynb` |
 | `shape-env` | Environment (Runtime 2.0) | `environment/` |
-| `shape_profile_spark` | PySpark notebook | `notebooks/shape_profile_spark.ipynb` |
+| `shape_profile_spark` | PySpark notebook (driver-side exact profile) | `notebooks/shape_profile_spark.ipynb` |
+| `shape_profile_distributed` | PySpark notebook (per-partition profile on the executors; or driver-only exact) | `notebooks/shape_profile_distributed.ipynb` |
 | `shape_udf` | User Data Functions item | `udf/function_app.py` |
 | `shape_gate_notebook`, `shape_gate_spark`, `shape_gate_udf` | Data pipelines | `pipelines/` |
 
@@ -84,8 +85,14 @@ python integrations/fabric/pipelines/build_pipelines.py
 
 1. Import `shape_profile.ipynb`, attach `shape_demo` as the default lakehouse.
 2. Kernel: **Python 3.11** or **3.12** (bottom-left kernel picker, *not* PySpark).
-3. Open **Resources > builtin** in the notebook's left pane and upload the wheel.
-   The install cell runs `%pip install builtin/sqllocks_shape-0.9.0-py3-none-any.whl`. **[VERIFY]**
+3. Open **Resources > builtin** in the notebook's left pane and upload the wheel(s): the
+   pure-Python wheel `sqllocks_shape-0.9.0-py3-none-any.whl` and, to run on the Rust kernel,
+   the platform wheel for Linux x86_64 (an `abi3` `manylinux` x86_64 `.whl`,
+   from the release). The install cell runs `%pip install --find-links builtin
+   "sqllocks-shape==0.9.0"`: pip takes the platform wheel when `builtin/` holds one that fits,
+   and the pure wheel otherwise. The printed line `Shape 0.9.0, kernel: rust` (and the
+   `kernel` key of the exit value) says which one you got; `python` means the pure wheel.
+   Without outbound access to PyPI add `--no-index`; numpy and pyarrow come from the runtime. **[VERIFY]**
 4. The first cell, `%%configure {"vCores": 8}`, is a cell magic that must run before the
    session starts. The default is 2 vCores; Shape's parallel speed-ups need more. **[VERIFY]**
    If the session does not start with 8 vCores, run **Stop session**, then run the cell again
@@ -242,6 +249,35 @@ Environment must be published in **Full** mode)
 | `shape_gate_udf` | `filePath = demo/day1/orders.parquet` | Succeeded |
 | `shape_gate_udf` | `filePath = demo/day2/orders.parquet` | **Failed** at `CheckContract`; the message lists the violations |
 
+### 5.1 Distributed PySpark notebook: `shape_profile_distributed`
+
+For tables too large for the driver. Import `shape_profile_distributed.ipynb`, attach
+`shape_demo` and `shape-env` (Shape must be installed on the executors, which the Environment
+does; for the best speed upload the Linux x86_64 platform wheel to the Environment as well as
+the pure wheel, so executors run the Rust kernel).
+
+- `mode = "distributed"` (default): every partition is profiled on the executors in bounded mode
+  through `mapInArrow`; the driver receives the small partial profiles one partition at a time
+  and merges them. No rows reach the driver. The result is a **bounded** profile: counts, min,
+  max, mean, variance and null counts are exact; distinct counts (HyperLogLog, about 0.8%),
+  quantiles (KLL, rank error about 1%) and top values (SpaceSaving, 64 slots, with error terms)
+  are within the bounds recorded in the profile's `error_models`. `partitions` repartitions first.
+- `mode = "exact"`: the driver-only exact profile (the same as `shape_profile_spark`), for tables
+  that fit in driver memory, and the only mode that checks a contract or diffs a baseline.
+- The distributed mode **does not check contracts**: it raises if `contractPath` or `baselinePath`
+  is set, and its exit value carries `"checked": false`. Do not use it as a pipeline gate; use
+  `shape_profile_spark` or `mode = "exact"` for gates.
+- Artifacts (distributed): `<table>.profile.json` (the full bounded profile, strict JSON) and
+  `<table>.summary.json` (one line per column). The exit value has the keys of section 8 plus
+  `kernel`, `mode` (`bounded` or `exact`) and `checked`.
+- Each partition's partial profile is about 20 KB per column; merging is sequential on the driver.
+- Merge order is Spark's partition order, so a given partitioning always gives the same profile.
+
+Expected, on the day-1 table: `rows` equals the table's row count, `mode: "bounded"`,
+`checked: false`, and the column statistics agree with `shape_profile_spark`'s summary (null
+counts exactly, distinct counts within about 1%). **[VERIFY]** `df.rdd.getNumPartitions()`,
+`mapInArrow` and `toLocalIterator` on your Runtime, and that the executors can `import shape`.
+
 ## 8. Parameters reference
 
 | Parameter | Used by | Meaning |
@@ -251,19 +287,23 @@ Environment must be published in **Full** mode)
 | `baselinePath` | notebooks | earlier `.shape`, relative to `Files/`; empty means no diff |
 | `outputDir` | notebooks | artifacts go to `Files/<outputDir>/<table>/<timestamp>/` |
 | `failOnDrift` | notebooks | `true`/`True`/`1` make drift against the baseline fail the gate (strings from a pipeline are accepted) |
+| `mode`, `partitions` | `shape_profile_distributed` | `distributed` (default) or `exact`; repartition count for the distributed mode (0 keeps the table's own) |
 | `filePath`, `outputPath`, `maxMegabytes` | UDF | file relative to `Files/`; where to write the `.shape`; size cap in MB (default 50) |
 | `tableName`, `maxRows`, `outputPath` | UDF | table via the SQL endpoint; row cap (default 1,000,000, max 5,000,000) |
 | `profilePath`, `contract`, `failOnViolation` | UDF | saved `.shape`; contract dict; raise on violations |
 | `baselinePath`, `currentPath`, `failOnDrift` | UDF | two saved `.shape` files; raise on drift |
 
 Notebook exit value (compact, well under 1 MB):
-`{table, rows, passed, violations, drifted, changes, artifactPath, sampled, truncated}`.
+`{table, rows, passed, violations, drifted, changes, artifactPath, sampled, truncated, kernel}`
+(`shape_profile_distributed` adds `mode` and `checked`).
 `violations` and `changes` are capped at 100 entries each (`truncated: true` if cut).
 
 ## 9. Troubleshooting
 
 | Symptom | Cause and fix |
 |---|---|
+| Exit value says `"kernel": "python"` but you wanted Rust | the platform wheel is not in *Resources > builtin* (or does not match: Linux x86_64, Python 3.11+); upload it next to the pure wheel and rerun the install cell |
+| `ModuleNotFoundError: shape` in a Spark executor (distributed notebook) | Shape is not installed on the executors: attach the Environment and publish it; in Quick mode check the session started after the publish |
 | `ModuleNotFoundError: shape` in the Python notebook | the `%pip install` cell did not run or the wheel is not in *Resources > builtin*; kernel must be Python, not PySpark |
 | `pip` complains about `pyarrow`/`numpy` versions | Shape needs `numpy>=2,<3` and `pyarrow>=14`. In the Python notebook `%pip install "pyarrow>=14"` and restart the kernel; in the Environment see `environment.yml` |
 | Session has 2 vCores | the `%%configure` cell must run first in a fresh session; stop the session and rerun |
@@ -283,7 +323,8 @@ Notebook exit value (compact, well under 1 MB):
 Not checked live by the builder; each is a risk until you confirm it.
 
 1. `%%configure {"vCores": 8}` is accepted as the first cell of a Python notebook.
-2. `%pip install builtin/<wheel>` resolves the uploaded resource.
+2. `%pip install --find-links builtin "sqllocks-shape==<version>"` resolves the uploaded
+   resources, and picks the platform wheel (kernel `rust`) when it is uploaded.
 3. **The exit-value expression** `@json(activity('ProfileTable').output.result.exitValue).passed`
    evaluates in the If Condition (and the fallback with `@equals(...)`).
 4. The Fail activity's message expression and `errorCode` field.
@@ -292,7 +333,8 @@ Not checked live by the builder; each is a risk until you confirm it.
 6. Notebook base parameters: `failOnDrift` arriving as Bool or string (the notebook accepts both).
 7. Runtime 2.0's bundled numpy, pyarrow and pandas satisfy `numpy>=2,<3` and `pyarrow>=14`.
 8. Quick mode installs the wheel for interactive runs; Full mode for pipeline runs.
-9. `DataFrame.toArrow()` on Runtime 2.0; `df.count()` and the driver memory at your table size.
+9. `DataFrame.toArrow()` on Runtime 2.0; for `shape_profile_distributed`: `mapInArrow` and
+   `toLocalIterator` with Shape installed on the executors; `df.count()` and the driver memory at your table size.
 10. The UDF file/SQL client calls listed in section 6 and that `UserThrownError` messages
     and properties are shown to the pipeline.
 11. The real Shape API (lane L1) behaves like the stub the tests used: `shape.profile(table,
@@ -311,6 +353,9 @@ seconds); do not extrapolate.
 - [ ] `shape_profile` on `orders_day2` with the day-1 baseline: `passed: false`, expected violations, `drifted: true`
 - [ ] Environment `shape-env` published on Runtime 2.0 (Quick); version check ok
 - [ ] `shape_profile_spark` day 1 and day 2 give the same exit JSON as the Python notebook
+- [ ] `shape_profile` exit value reports `"kernel": "rust"` with the platform wheel uploaded (and `python` with only the pure wheel)
+- [ ] `shape_profile_distributed` (`distributed`) on a large table: finishes, `rows` equals the table's count, `checked: false`, `<table>.profile.json` written; with a contract set it fails with the explanatory error
+- [ ] `shape_profile_distributed` (`exact`) equals `shape_profile_spark` on day 1 and day 2
 - [ ] Environment re-published in **Full** mode before pipeline (a2)
 - [ ] `shape_udf` published; every function in the section 6 table returns as expected
 - [ ] Pipeline `shape_gate_notebook`: day 1 succeeds; day 2 fails with violations visible (exit-value expression **verified**)
