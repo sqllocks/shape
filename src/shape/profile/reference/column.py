@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as _dt
 import re
+import threading
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache
@@ -81,8 +82,17 @@ _PATTERNS = {
 }
 
 
-@lru_cache(maxsize=64)
+_PATTERN_SAMPLE_LOCK = threading.Lock()
+
+
 def _pattern_sample(n: int) -> np.ndarray:
+    """Cached draw (under a lock: concurrent columns of the same length draw it once)."""
+    with _PATTERN_SAMPLE_LOCK:
+        return _pattern_sample_cached(n)
+
+
+@lru_cache(maxsize=64)
+def _pattern_sample_cached(n: int) -> np.ndarray:
     """The 1000 row positions sampled for pattern detection (the same for every column of n rows:
     drawing them permutes all n positions, which costs more than the detection itself)."""
     idx: np.ndarray = np.random.RandomState(42).choice(n, size=1000, replace=False)
