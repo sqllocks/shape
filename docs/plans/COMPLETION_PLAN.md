@@ -245,6 +245,7 @@ instruction.
 |---|---|---|---|
 | 2026-09-30 | P1-07, P1-14 | **Resolved:** the Python-kernel bounded-mode growth was in `finalize`, not the batch loop (`np.repeat(lengths, counts)` made one float64 per row; RSS 231 -> 584 MB in the last second at 24M rows). `_histogram_quantile` computes p95 from the histogram with numpy's linear interpolation (0 mismatches on 60k random histograms); regression test `test_python_text_finalize_memory_does_not_scale_with_rows` fails on the old code. `test_bounded_mode_memory_does_not_grow_with_rows` (unchanged, 10% limit) passes with `SHAPE_KERNEL=python` (63 min) and with Rust (88 s); all 40 heavy kernel/profile tests pass on Rust. P1-14 acceptance, in this session: `check_user_facing` clean (CI runs it on the tree and the wheel); `profile_1to1/verify.py --impl shape` exit 0 on all default datasets against the pinned Spindle 3.0.1 (built here by `setup_spindle.sh`, checkout untouched); `pytest tests/demo` 201 passed (separate venv with pyarrow 19, as the `fabric-demo` job); the rest of the suite 1026 passed in both kernel modes. Not covered by CI: the heavy memory test on the Python kernel (about 1 h); a nightly job is suggested. | Finding FINDING-P1-07 |
 | 2026-09-29 | — | Plan v1 approved | — |
+| 2026-10-01 | G1, PROF-IN, PROF-CLI | **Escalation (builder): G1 is not met after both §6.5 rounds; the gate is unchanged.** Equivalence first: `profile_1to1/verify.py --impl shape` exits 0 (49/49 PASS, runs 1 and 2). Measured on the pinned baseline (§1.2), 4 vCPU Xeon 2.80 GHz, exclusive lock, 5 runs each in fresh processes. **Run 2 (final, 12:38 AM EDT 2026-10-01):** PROF-IN D1 csv 10.3x, D1 pq 10.9x, D2 csv 12.3x, D2 pq 12.5x, D3 csv 11.4x, **D3 pq 8.8x**, **D4 csv 9.9x**, D4 pq 10.8x, **MT 5.4x**; PROF-CLI **D2 9.8x**, D3 10.9x; START 43 ms. Evidence: `docs/plans/evidence/G1/`. Round 1 (previous builder, d651afe, 271a5d5): the lognormal likelihood reuses buffers and takes both logs through numpy's array log (D4 fit 13.0 s to 5.9 s). Round 2 (this builder): the top-value scan searches only keys with count at or above the threshold (D2 csv 3.4 s to 1.9 s), `_clean` fast path, and the bench worker pre-imports `shape.api` and the kernel (T-19: imports excluded; the first run's timed call included about 0.4 s of lazy imports). Not kept: chunked parallel numpy log in `fit.rs` (no gain; GIL contention and a deadlock risk). Remaining hotspots (py-spy): D3 pq: `latency_ms` full-column lognormal refit about 3.8 s, about 20 evaluations of 5M rows, each two numpy-SVML log passes plus a sequential `pairwise_sum`, and the numpy `partition`/sort calls in the Python profiler; D4: eight lognormal columns whose Nelder-Mead fallback runs about 600 evaluations over the full column; MT: three small tables, so thread and pool start-up and per-column Python dominate (0.26 to 0.55 s against 2.4 s). The product path for `shape.profile` is still the numpy reference profiler with only the fitting in Rust; P1-06's fused kernel (`profile/engine.py`) is not on that path, so P1-08's "on the Rust kernel" is not met. Options for the owner: (a) move the per-column work (sorting, first-seen top values, patterns, quantiles) onto the fused kernel behind the same T-22 output; (b) make the likelihood evaluation bitwise-exact but cheaper (parallel `pairwise_sum` over its fixed block tree, a Rust port of numpy's AVX-512 log); (c) accept different gates for D4 and MT, which only the owner may decide. G1 stays `todo`. | Builder, G1 |
 | 2026-09-30 | P1-07, P1-14 | **Escalation (lead):** `test_bounded_mode_memory_does_not_grow_with_rows` fails with `SHAPE_KERNEL=python` (24M 544 MB → 48M 913 MB, +68%); Rust passes. Measurements and leads in `docs/plans/demo_status/FINDING-P1-07-python-kernel-rss.md`. Must be fixed before P1-14 closes (suite green in both kernel modes) and G1; the test is not relaxed. | Lead verification of P1-08..P1-10 |
 | 2026-09-30 | P1-14 | The talk and the demo kit mention nothing about Spindle either: `docs/talks/` and `demo/` join P1-14's scope (the talk itself is reworked on the talk branch by a separate session). | Owner decision |
 | 2026-09-30 | D-12, D-13, §10, P1-08, P1-11, G1 | **No Spindle on Shape's user-facing surface.** Nothing a user sees names Spindle: the package (`src/`, `rust/`, `plugins/`, `integrations/`), CLI flags, help and messages, `README.md`, `pyproject.toml`, `demo/` and `docs/` outside `docs/plans/` (the talk included: owner, 2026-09-30). The Spindle-compatible outputs are removed: `--spindle-compat` (P1-08, P1-11) and the `shape profile capture` / `shape profile diff` ports of Spindle's `ExportedProfile` commands (P1-11). D-12: stream fields become `_shape_table`, `_shape_seq`, `_shape_event_time` (idempotency key `(_shape_table, _shape_seq)`), `--envelope spindle` is dropped, CloudEvents stays. D-13: Shape reads only its own formats (no Spindle schema or profile input) and has no Spindle command aliases; §10 is retired as a parity contract. §12.2 loses `--spindle-compat`. The internal parity and benchmark harness (`benchmarks/vs_spindle/`, T-20, T-22, the G-gates measured against the pinned Spindle) is kept, outside the package. New work package P1-14; G1 needs it. `THIRD_PARTY_NOTICES.md` keeps its Spindle attribution until the owner confirms they hold Spindle's copyright (§9). | Owner decision |
@@ -991,6 +992,29 @@ Appendix A.
 - T-22 parity passes on every dataset.
 - Every phase-1 P-bug has a regression test (P19 belongs to phase 7).
 - The profile modules are mypy strict.
+
+G1 evidence (2026-10-01; machine: 4 cores, Intel Xeon 2.80 GHz, Linux 6.18, Python 3.11.15; the pinned
+Spindle venv of §1.2, pyarrow 25.0.1 in both venvs; Shape kernel built with `maturin develop --release`):
+- Status: **not met** (PROF-IN D3 pq, D4 csv, MT; PROF-CLI D2). Escalated in §2.3.
+- Met: P1-14 (`scripts/check_user_facing.py` clean; suite 1026 passed, `-m "not emulator and not live and
+  not heavy" --ignore=tests/demo/fabric`); START 43 ms (gate 300); PROF-CLI D3 10.9x; PROF-IN on D1, D2,
+  D3 csv and D4 pq; the five remaining profile modules are mypy strict (`mypy` clean on 157 files, ratchet
+  list no longer names `shape.profile.*`); every phase-1 P-bug has a regression test
+  (`tests/regressions/test_phase1_bugs.py`, P19 excluded); T-22 parity passes on every dataset.
+- Commands: `source scripts/env.sh && python benchmarks/vs_spindle/profile_1to1/datasets.py`;
+  `... verify.py --impl shape --refresh` then `... verify.py --impl shape` (exit 0, 49/49 PASS);
+  `... bench.py --impl shape --out <json>` (in-process, equivalence verified first);
+  `... bench_cli.py` (adapter-based equivalence per dataset, then START and PROF-CLI).
+- Results: `docs/plans/evidence/G1/prof_in_run1.json`, `prof_cli_run1.json`, `verify_shape_run1.txt` (before
+  any optimisation, 8 of 9 PROF-IN workloads missed, PROF-CLI D2 8.7x, D3 10.5x); `prof_in_run2.json`,
+  `prof_cli_run2.json`, `verify_shape_run2.txt` (final). Run 2 medians (Spindle s, Shape MT s, ratio):
+  d1.csv 1.91/0.19 10.3x; d1.parquet 1.74/0.16 10.9x; d2.csv 34.80/2.84 12.3x; d2.parquet 30.53/2.45 12.5x;
+  d3.csv 99.61/8.76 11.4x; d3.parquet 57.98/6.55 8.8x; d4.csv 37.61/3.81 9.9x; d4.parquet 32.92/3.06
+  10.8x; mt 2.41/0.45 5.4x. `SHAPE_THREADS=1` ratios are in the same JSON (2x to 6x).
+  PROF-CLI: d2.csv 36.19/3.69 9.8x; d3.csv 99.67/9.18 10.9x.
+- Hygiene: load average 2.10 before run 2 started, and 1.0 to 1.3 between runs (about 1.0 of that is the
+  previous benchmark process, as in `profile_1to1/README.md`); the harness's own load gate (1.5) held for
+  every run. Spindle and Shape runs are interleaved.
 
 ### Phase 2 — Plugin system
 
@@ -1936,7 +1960,7 @@ Work packages are listed in execution order. The next work package is the first 
 | Gate | Status |
 |---|---|
 | G0 | done b965672 |
-| G1 | todo |
+| G1 | todo (not met: PROF-IN D3 pq 8.8x, D4 csv 9.9x, MT 5.4x; PROF-CLI D2 9.8x; escalated in §2.3) |
 | G2 | todo |
 | GF | todo |
 | G3 | todo |
