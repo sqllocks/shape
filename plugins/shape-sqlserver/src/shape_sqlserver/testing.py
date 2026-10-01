@@ -13,6 +13,7 @@ from __future__ import annotations
 import datetime as dt
 import re
 import uuid
+import zlib
 from collections import namedtuple
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
@@ -56,7 +57,26 @@ _TopRead = re.compile(
     r"(?:\s+ORDER\s+BY\s+(?P<order>.+?))?\s*$",
     re.IGNORECASE | re.DOTALL,
 )
+_SPREAD = re.compile(
+    r"^\s*\(CAST\(CHECKSUM\((?P<cols>[^)]*)\) AS bigint\) \* (?P<mul>\d+)\) % (?P<mod>\d+)",
+    re.IGNORECASE,
+)
 _Bracketed = re.compile(r"\[((?:[^\]]|\]\])+)\]")
+
+
+def checksum(values: tuple[Any, ...]) -> int:
+    """A stand-in for T-SQL ``CHECKSUM(a, b, ...)``: a signed 32-bit hash of the values. It is
+    deterministic, but it is not the server's function (which returns an integer unchanged):
+    tests that need the server's own order run against a real server."""
+    h = zlib.crc32(repr(values).encode())
+    return h - (1 << 32) if h >= 1 << 31 else h
+
+
+def spread_hash(values: tuple[Any, ...], mul: int = 1327217885, mod: int = 2147483647) -> int:
+    """``(CAST(CHECKSUM(values) AS bigint) * mul) % mod`` as T-SQL computes it: the remainder
+    takes the sign of the dividend."""
+    product = checksum(values) * mul
+    return product % mod if product >= 0 else -((-product) % mod)
 
 
 def _row_type(fields: str) -> Any:
@@ -222,8 +242,17 @@ class FakeConnection:
         wanted = list(index) if m["cols"].strip() == "*" else _names(m["cols"])
         rows = list(table.rows)
         if m["order"]:
-            for key in reversed(_names(m["order"])):
+            order = m["order"]
+            keys = _names(order)
+            hashed = _SPREAD.match(order)
+            if hashed:  # ORDER BY (CAST(CHECKSUM(a, b) AS bigint) * m) % p, c: hash, then columns
+                keys = keys[len(_names(hashed["cols"])) :]
+            for key in reversed(keys):
                 rows.sort(key=_sort_key(index[key]))
+            if hashed:
+                cols = [index[c] for c in _names(hashed["cols"])]
+                mul, mod = int(hashed["mul"]), int(hashed["mod"])
+                rows.sort(key=lambda r: spread_hash(tuple(r[i] for i in cols), mul, mod))
         if m["top"]:
             rows = rows[: int(m["top"])]
         pick = [index[c] for c in wanted]
@@ -541,6 +570,123 @@ def _id_named(scale: int, rng: Rng) -> list[FakeTable]:
     ]
 
 
+def _mixed_keys(scale: int, rng: Rng) -> tuple[list[FakeTable], list[FakeForeignKey]]:
+    """One declared foreign key (``orders.customer_id``) and two undeclared ones beside it:
+    ``orders.product_id`` (every value exists in ``product``: the data shows it) and
+    ``orders.region_key`` (numbers no region has; only the name suggests it)."""
+    n_r, n_c, n_p, n_o = 8, 60 * scale, 25 * scale, 240 * scale
+    region = [(i, f"region {i}") for i in range(1, n_r + 1)]
+    customer = [(i, f"c{i}") for i in range(1, n_c + 1)]
+    product = [(i, f"p{i}") for i in range(1, n_p + 1)]
+    orders = [
+        (i, 1 + rng.below(n_c), 1 + rng.below(n_p), 700 + rng.below(9)) for i in range(1, n_o + 1)
+    ]
+    tables = [
+        FakeTable(
+            "region",
+            [
+                _col("region_id", "int", nullable=False, precision=10),
+                _col("label", "varchar", max_length=20),
+            ],
+            region,
+            primary_key=("region_id",),
+        ),
+        FakeTable(
+            "customer",
+            [
+                _col("customer_id", "int", nullable=False, precision=10),
+                _col("label", "varchar", max_length=20),
+            ],
+            customer,
+            primary_key=("customer_id",),
+        ),
+        FakeTable(
+            "product",
+            [
+                _col("product_id", "int", nullable=False, precision=10),
+                _col("label", "varchar", max_length=20),
+            ],
+            product,
+            primary_key=("product_id",),
+        ),
+        FakeTable(
+            "orders",
+            [
+                _col("order_id", "int", nullable=False, precision=10),
+                _col("customer_id", "int", nullable=False, precision=10),
+                _col("product_id", "int", precision=10),
+                _col("region_key", "int", precision=10),
+            ],
+            orders,
+            primary_key=("order_id",),
+        ),
+    ]
+    fks = [
+        FakeForeignKey(
+            "fk_orders_customer", "orders", ("customer_id",), "customer", ("customer_id",)
+        )
+    ]
+    return tables, fks
+
+
+def _key_names(scale: int, rng: Rng) -> list[FakeTable]:
+    """No declared keys and data that shows no relationship (only names do). ``invoices.valid``
+    and ``invoices.paid`` end in ``id`` but are not ids (tables ``val`` and ``pa`` exist to be
+    matched wrongly); ``invoices.customer_id`` comes first but is a foreign key, so the key of
+    ``invoices`` is ``invoice_id``; ``notes`` has only a foreign key and a text column, so it
+    has no key at all."""
+    n_c, n_i, n_n = 40 * scale, 150 * scale, 30 * scale
+    customer = [(i, f"c{i}") for i in range(1, n_c + 1)]
+    invoices = [
+        (9000 + rng.below(n_c), i, rng.below(2), rng.below(2), f"inv {i}")
+        for i in range(1, n_i + 1)
+    ]
+    notes = [(f"note {i % 7}", 9000 + rng.below(n_c)) for i in range(n_n)]
+    flags = [(0, "no"), (1, "yes")]
+    return [
+        FakeTable(
+            "customer",
+            [
+                _col("customer_id", "int", nullable=False, precision=10),
+                _col("label", "varchar", max_length=20),
+            ],
+            customer,
+        ),
+        FakeTable(
+            "invoices",
+            [
+                _col("customer_id", "int", precision=10),
+                _col("invoice_id", "int", nullable=False, precision=10),
+                _col("valid", "int", precision=10),
+                _col("paid", "int", precision=10),
+                _col("memo", "varchar", max_length=20),
+            ],
+            invoices,
+        ),
+        FakeTable(
+            "notes",
+            [_col("note", "varchar", max_length=20), _col("customer_id", "int", precision=10)],
+            notes,
+        ),
+        FakeTable(
+            "pa",
+            [
+                _col("id", "int", nullable=False, precision=10),
+                _col("label", "varchar", max_length=5),
+            ],
+            flags,
+        ),
+        FakeTable(
+            "val",
+            [
+                _col("id", "int", nullable=False, precision=10),
+                _col("label", "varchar", max_length=5),
+            ],
+            flags,
+        ),
+    ]
+
+
 def _no_keys(
     build: Callable[[int, Rng], list[FakeTable]],
 ) -> Callable[[int, Rng], tuple[list[FakeTable], list[FakeForeignKey]]]:
@@ -564,15 +710,19 @@ SCENARIOS: dict[str, Callable[[int, Rng], tuple[list[FakeTable], list[FakeForeig
     "warehouse_empty": _no_keys(_warehouse_empty),
     "name_only": _no_keys(_name_only),
     "id_named": _no_keys(_id_named),
+    "mixed_keys": _mixed_keys,
+    "key_names": _no_keys(_key_names),
 }
 
 
 def scenario(name: str, scale: int = 1, seed: int = 7) -> FakeConnection:
     """A deterministic database: ``retail`` (declared keys, tables larger than a 1000-row
-    sample, an empty and a one-row table), ``warehouse`` (no keys, data shows the
-    relationships), ``warehouse_empty`` (no keys, no rows) or ``name_only`` (no keys; only
+    sample, an empty and a one-row table), ``warehouse`` (no keys; key columns named ``*_key``,
+    linked by name), ``warehouse_empty`` (no keys, no rows) or ``name_only`` (no keys; only
     column names suggest a relationship) or ``id_named`` (no keys; ``*_id`` columns whose
-    values all exist in the parent table)."""
+    values all exist in the parent table), ``mixed_keys`` (one declared foreign key, and
+    undeclared ones beside it) or ``key_names`` (no keys; ``paid``/``valid`` columns and tables
+    named like their stems, a foreign key first in its table, a table with no key column)."""
     tables, fks = SCENARIOS[name](scale, Rng(seed))
     return FakeConnection(tables, fks)
 
@@ -621,7 +771,8 @@ def insert_rows(cursor: Any, table: FakeTable, schema: str = "dbo", batch: int =
         return
     cols = ", ".join(f"[{c.name}]" for c in table.columns)
     marks = ", ".join("?" for _ in table.columns)
-    sql = f"INSERT INTO [{schema}].[{table.name}] ({cols}) VALUES ({marks})"
+    # a test helper: schema and table names come from the fixture, never from a user
+    sql = f"INSERT INTO [{schema}].[{table.name}] ({cols}) VALUES ({marks})"  # nosec B608
     identity = any(c.identity for c in table.columns)
     if identity:
         cursor.execute(f"SET IDENTITY_INSERT [{schema}].[{table.name}] ON")

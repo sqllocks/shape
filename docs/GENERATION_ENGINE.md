@@ -113,7 +113,9 @@ They need whole tables, so `generate()` runs them and `iter_chunks()` does not. 
 ## Reading SQL DDL
 
 `shape from-ddl FILE` turns `CREATE TABLE` statements (SQL Server, PostgreSQL, MySQL and ANSI SQL,
-plus `ALTER TABLE ... ADD CONSTRAINT ... FOREIGN KEY`) into a generation schema.
+plus `ALTER TABLE ... ADD CONSTRAINT ... FOREIGN KEY`) into a generation schema. Foreign keys are
+read wherever the dialect writes them: a table-level `FOREIGN KEY` constraint, an `ALTER TABLE`, or
+a column-level `REFERENCES` clause.
 
 ```
 shape from-ddl tables.sql                      # writes tables.gen.json
@@ -135,14 +137,26 @@ In Python: `shape.generation.ddl.from_ddl(sql, domain=, smart=, scale=)` returns
 
 **First generators.** Every column gets one from its type (integers a uniform range, decimals a
 normal, dates a uniform date in the model's range, `bit` a weighted enum, `uuid`) and, for strings,
-from its name (`email`, `first_name`, `city`, `status`, ... and the suffixes `_name`, `_code`,
-`_type`, `_status`, `_date`). Identity, serial and auto-increment columns, and single-column
-primary keys, are sequences. A declared foreign key is a `foreign_key` column and a relationship (a
-self-reference is `self_referencing`). Column names ending `_id` that match a table by its
-singular or plural name (`order_id` to `order` or `orders`, `category_id` to `categories`) are
-foreign keys too. Binary columns are left out. A column-level `REFERENCES` clause is not read:
-declare keys as `FOREIGN KEY (...)` constraints. Scale presets are 1k, 10k and 100k rows for
-tables with no parent, and 2.5k, 25k and 250k for the rest.
+from its name (`email`, `first_name`, `city`, `state`, `status`, ... and the suffixes `_name`,
+`_code`, `_type`, `_status`, `_date`). A one-character string column (`gender CHAR(1)`) holds a
+code, so it gets a short value set chosen by the words of its name (`gender` and `sex` M or F,
+status words A, I or P, flags such as `is_active` Y or N, any other code A, B or C); a `gender` or
+`sex` column of any length is M or F. Identity, serial and auto-increment columns, and
+single-column primary keys, are sequences. A declared foreign key is a `foreign_key` column and a
+relationship (a self-reference is `self_referencing`), whether it is a table-level constraint or a
+column-level clause such as `customer_id INT REFERENCES customer(id)` (with or without
+`CONSTRAINT name` and `ON DELETE ...`; `REFERENCES customer` alone means the parent's primary
+key). Column names ending `_id` or `Id` (`customer_id`, `CustomerId`, `CustomerID`) that match a
+table by its singular or plural name (`order_id` to `order` or `orders`, `category_id` to
+`categories`) are foreign keys too, when the DDL does not declare them: the key points at that
+table's primary key, whatever it is called, and is left out (the column stays a plain number) when
+the table has no single-column primary key. A name written without separators (`orderdate`) is one
+word and matches no rule. Binary columns (`VARBINARY`, `BINARY`, `VARBINARY(MAX)`, `IMAGE`, `BYTEA`,
+and the `BLOB` types) are left out. `MAX` is a length like any other. A generated string never
+exceeds its column: a code in `CHAR(2)` is two random characters (`A7`), and a value set keeps
+only the values that fit (a `status` in `VARCHAR(7)` is active or pending; in `CHAR(2)` a code set
+A, I or P); text from the name rules is cut at the length. Scale presets are 1k, 10k and 100k
+rows for tables with no parent, and 2.5k, 25k and 250k for the rest.
 
 **Smart inference** (`shape.generation.ddl_infer`) replaces only placeholder generators, in this
 order:
@@ -150,8 +164,11 @@ order:
 1. *Table roles*: entity, transaction, transaction detail, lookup, hierarchy, bridge, log, and
    `dim_`/`fact_` tables.
 2. *Column semantics*: money, quantity, percentage, measurement, rating, status, category, flags,
-   the kinds of date, contact fields, codes and text, from the name (CamelCase is read as words)
-   and the type.
+   the kinds of date, contact fields, codes and text, from the name and the type. Names are matched
+   by whole words, with CamelCase and snake_case split (and a plural matching its singular):
+   `discount_pct` is a percentage (not a quantity, though it contains "count"), `current_value` is
+   not money ("rent"), `model` is not a category ("mode"), a `catalog` table is not a log ("log"),
+   and a `state` column is a state, not a status. Table names are matched the same way.
 3. *Foreign-key distributions*: pareto, zipf or uniform by the roles at both ends, and
    `null_rate` 0.15 on a nullable key.
 4. *Row counts*: lookup and hierarchy tables get fixed counts (20 to 200, and 50); other tables
@@ -163,14 +180,21 @@ order:
 7. *Dates*: seasonal order dates (a Q4 lift, fewer weekends), an end date derived from the start
    date, birth dates 18 to 65 years before the model's end.
 8. *Correlations*: cost from price, tax from subtotal or amount, discount from price or total,
-   total as quantity times unit price, net as gross minus tax, margin as price minus cost.
+   total as quantity times unit price, net as gross minus tax, margin as price minus cost, and a
+   parent's total (`total`, `total_amount`, `order_total`, ...) as the sum of its child rows' amount
+   (`line_total`, `amount`, ...): a `computed` column that the compute phase fills once every
+   table exists. The rule applies when the child points at the parent through one key and both
+   columns are money.
 9. *Business rules*: end not before start, modified not before created, cost not above price, a
    child's transaction date not before its parent's, money not negative, quantities at least 1,
    percentages 0 to 100, ratings 1 to 5.
 
-`tests/generation/test_ddl.py` tests each step. The reference-comparison harness under
-`benchmarks/` checks the import against the reference implementation's on its own DDL fixtures and on
-cases that fire every rule: all equal, in every field.
+`tests/generation/test_ddl.py` and `tests/generation/test_ddl_fixes.py` test each step. The
+reference-comparison harness under `benchmarks/` checks the import against the reference
+implementation's on its own DDL fixtures and on cases that fire every rule: equal in every field
+except those that the five fixes above change (column-level keys, `MAX` binary types, whole-word
+names, one-character codes, parent totals), which the harness lists one by one as intentional
+differences.
 
 ## Writers
 

@@ -67,7 +67,47 @@ def top_query(schema: str, table: str, rows: int, columns: list[str] | None = No
     if isinstance(rows, bool) or not isinstance(rows, int) or rows < 1:
         raise SqlServerError(f"row limit must be a positive integer, got {rows!r}")
     cols = "*" if columns is None else ", ".join(quote_ident(c) for c in columns)
-    return f"SELECT TOP {rows} {cols} FROM {qualified_name(schema, table)}"
+    # rows is a checked int; every identifier went through quote_ident
+    return f"SELECT TOP {rows} {cols} FROM {qualified_name(schema, table)}"  # nosec B608
+
+
+# Types CHECKSUM cannot hash (SQL Server rejects them), so they never join a row hash.
+NOT_HASHABLE_TYPES = frozenset(
+    {"text", "ntext", "image", "xml", "geography", "geometry", "hierarchyid", "sql_variant"}
+)
+
+
+# ``CHECKSUM`` of an integer is the integer itself, so ordering by it alone would sample the
+# lowest keys. The hash is therefore scrambled: ``(CHECKSUM(key) * MULTIPLIER) % MODULUS``, with
+# the multiplier close to MODULUS times the golden ratio, so consecutive keys land far apart
+# and any run of keys is spread evenly over the order. The product stays inside ``bigint``
+# (|CHECKSUM| <= 2**31).
+SPREAD_MULTIPLIER = 1327217885
+SPREAD_MODULUS = 2147483647
+
+
+def spread_query(
+    schema: str,
+    table: str,
+    rows: int,
+    hash_columns: list[str],
+    tie_break: list[str] | None = None,
+) -> str:
+    """``SELECT TOP n * ... ORDER BY (CAST(CHECKSUM(<hash_columns>) AS bigint) * m) % p``: ``rows``
+    rows spread over the whole table, the same rows every time for the same data. The scrambled
+    hash makes the order unrelated to storage order or to the key's own order; ``tie_break``
+    (the key columns) settles hash collisions. The server reads the table once and keeps only
+    ``rows`` rows."""
+    if isinstance(rows, bool) or not isinstance(rows, int) or rows < 1:
+        raise SqlServerError(f"row limit must be a positive integer, got {rows!r}")
+    if not hash_columns:
+        raise SqlServerError("a spread sample needs at least one column to hash")
+    checksum = "CHECKSUM(" + ", ".join(quote_ident(c) for c in hash_columns) + ")"
+    order = f"(CAST({checksum} AS bigint) * {SPREAD_MULTIPLIER}) % {SPREAD_MODULUS}"
+    for c in tie_break or ():
+        order += ", " + quote_ident(c)
+    # rows is a checked int; every identifier went through quote_ident
+    return f"SELECT TOP {rows} * FROM {qualified_name(schema, table)} ORDER BY {order}"  # nosec B608
 
 
 # --- connection strings ------------------------------------------------------------------

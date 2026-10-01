@@ -3,8 +3,11 @@ supplies distributions.
 
 The result is an ordinary Shape profile (a multi-table dataset profile), so everything that
 reads profiles reads it. Statistics describe the **sample** (``sample_rows`` rows per table,
-default 1000); the row count and the denominators of the ratios (``null_rate``,
-``cardinality_ratio``) are the table's catalog row count.
+default 1000, spread over the whole table: see :func:`fetch_sample`): ``null_rate``,
+``cardinality_ratio`` and ``is_unique`` use the rows actually sampled, and the profile records
+that number (``sampled_rows`` on every table, ``sampling`` on the dataset) so a reader can tell
+them from whole-table figures. Where no row was sampled they are ``None`` (unknown). The table's
+``row_count`` is the catalog's.
 """
 
 from __future__ import annotations
@@ -16,12 +19,22 @@ from typing import Any
 import numpy as np
 
 from .auth import Credentials, connect
-from .catalog import Catalog, ColumnInfo, read_catalog
+from .catalog import (
+    Catalog,
+    ColumnInfo,
+    TableInfo,
+    guess_primary_key,
+    key_stem,
+    read_catalog,
+    table_stem,
+)
 from .sql import (
     DEFAULT_SAMPLE_ROWS,
     DEFAULT_SCHEMA,
+    NOT_HASHABLE_TYPES,
     SqlServerError,
     register_converters,
+    spread_query,
     sql_type_to_dtype,
     top_query,
 )
@@ -29,36 +42,89 @@ from .sql import (
 log = logging.getLogger("shape_sqlserver")
 
 # A column is an enumeration when it has at most this many distinct values in the sample, or
-# when distinct values are under 5% of the table's rows.
+# when distinct values are under 5% of the rows sampled.
 ENUM_MAX_CARDINALITY = 50
 ENUM_MAX_RATIO = 0.05
 UNIQUE_RATIO = 0.99
+# ``is_unique`` needs at least this many non-null sampled values: one value is trivially distinct.
+UNIQUE_MIN_VALUES = 2
+
+# How a table was sampled (``tables[...].sample_method`` in the profile).
+SAMPLE_ALL = "all rows"
+SAMPLE_SPREAD = "checksum spread"
+SAMPLE_FALLBACK = "first rows (fallback)"
+SAMPLE_NONE = "none"
+
+# Where a foreign key came from (``evidence`` of a relationship, ``fk_evidence`` of a column).
+DECLARED, DATA, NAME = "declared", "data", "name"
 
 
-def _stem(table: str) -> str:
-    return table.lower().replace("dim", "").replace("fact", "")
+def fetch_sample(
+    cursor: Any,
+    schema: str,
+    table: str,
+    rows: int,
+    *,
+    hash_columns: list[str] | None = None,
+    tie_break: list[str] | None = None,
+) -> dict[str, list[Any]]:
+    """``rows`` rows of a table as ``{column: values}`` (``None`` for NULL).
 
-
-def fetch_sample(cursor: Any, schema: str, table: str, rows: int) -> dict[str, list[Any]]:
-    """The first ``rows`` rows of a table as ``{column: values}`` (``None`` for NULL)."""
-    cursor.execute(top_query(schema, table, rows))
+    With ``hash_columns`` the rows are spread over the whole table and the same every time for
+    the same data: ``SELECT TOP n * ... ORDER BY CHECKSUM(hash_columns)`` (one scan of the
+    table; the server keeps only ``n`` rows). Without it, the first ``rows`` rows the server
+    returns."""
+    if hash_columns:
+        cursor.execute(spread_query(schema, table, rows, hash_columns, tie_break))
+    else:
+        cursor.execute(top_query(schema, table, rows))
     names = [str(d[0]) for d in cursor.description]
     data = cursor.fetchall()
     return {n: [row[i] for row in data] for i, n in enumerate(names)}
 
 
+def _read_sample(
+    cursor: Any, catalog: Catalog, t: TableInfo, sample_rows: int
+) -> tuple[dict[str, list[Any]], str]:
+    if t.row_count <= sample_rows:  # the whole table: no choice to make
+        return fetch_sample(cursor, catalog.schema, t.name, sample_rows), SAMPLE_ALL
+    # A declared key is unique, so it spreads the sample; without one (a heap, a Fabric
+    # warehouse) every column the server can hash is hashed, so duplicate keys do not cluster.
+    hashed = t.primary_key or [
+        c.name for c in t.columns if c.type_name.lower() not in NOT_HASHABLE_TYPES
+    ]
+    if hashed:
+        try:
+            sample = fetch_sample(
+                cursor,
+                catalog.schema,
+                t.name,
+                sample_rows,
+                hash_columns=hashed,
+                tie_break=t.primary_key,
+            )
+            return sample, SAMPLE_SPREAD
+        except Exception as exc:  # e.g. a server that cannot ORDER BY CHECKSUM
+            log.warning(
+                "Could not spread the sample of %s (%s); reading its first rows", t.name, exc
+            )
+    return fetch_sample(cursor, catalog.schema, t.name, sample_rows), SAMPLE_FALLBACK
+
+
 def _sample_all(
     cursor: Any, catalog: Catalog, sample_rows: int
-) -> dict[str, dict[str, list[Any]] | None]:
+) -> tuple[dict[str, dict[str, list[Any]] | None], dict[str, str]]:
     out: dict[str, dict[str, list[Any]] | None] = {}
+    methods: dict[str, str] = {}
     for t in catalog.tables:
         out[t.name] = None
+        methods[t.name] = SAMPLE_NONE
         if sample_rows > 0:
             try:
-                out[t.name] = fetch_sample(cursor, catalog.schema, t.name, sample_rows)
+                out[t.name], methods[t.name] = _read_sample(cursor, catalog, t, sample_rows)
             except Exception as exc:  # one unreadable table must not stop the walk
                 log.warning("Could not sample %s: %s", t.name, exc)
-    return out
+    return out, methods
 
 
 def _sample_std(values: np.ndarray[Any, Any]) -> float:
@@ -73,8 +139,7 @@ def _sample_std(values: np.ndarray[Any, Any]) -> float:
 def _profile_column(
     info: ColumnInfo,
     values: list[Any] | None,
-    row_count: int,
-    sample_size: int | None,
+    sample_size: int,
     pk_cols: list[str],
     fks: dict[str, str],
 ) -> Any:
@@ -94,10 +159,16 @@ def _profile_column(
             min_val, max_val = float(nums.min()), float(nums.max())
             mean_val = float(nums.sum(dtype=np.float64) / len(nums))
             std_val = _sample_std(nums)
-    denominator = row_count or (sample_size if sample_size is not None else 1)
-    denominator = max(denominator, 1)
+    denominator = max(sample_size, 1)  # the rows actually sampled, not the table's row count
     ratio = cardinality / denominator
     is_enum = cardinality > 0 and (cardinality <= ENUM_MAX_CARDINALITY or ratio < ENUM_MAX_RATIO)
+    # No sampled row: the rates are unknown, not zero. Unique among the non-null sampled values,
+    # and only claimed from at least UNIQUE_MIN_VALUES of them.
+    known = values is not None and sample_size > 0
+    non_null = len(present)
+    is_unique: bool | None = None
+    if known and non_null >= UNIQUE_MIN_VALUES:
+        is_unique = cardinality / non_null > UNIQUE_RATIO
     enum_values: dict[str, float] | None = None
     if is_enum and dtype in ("string", "boolean") and values is not None:
         counts = Counter(present)
@@ -110,10 +181,10 @@ def _profile_column(
         name=info.name,
         dtype=dtype,
         null_count=null_count,
-        null_rate=null_count / denominator,
+        null_rate=null_count / denominator if known else None,
         cardinality=cardinality,
-        cardinality_ratio=ratio,
-        is_unique=ratio > UNIQUE_RATIO if cardinality > 0 else False,
+        cardinality_ratio=ratio if known else None,
+        is_unique=is_unique,
         is_enum=is_enum,
         enum_values=enum_values,
         min_value=min_val,
@@ -141,75 +212,110 @@ def _arrow_table(sample: dict[str, list[Any]]) -> Any:
     return pa.table(dict(zip(sample.keys(), arrays, strict=True)))
 
 
-def _data_suggests_keys(samples: dict[str, dict[str, list[Any]] | None]) -> bool:
-    """True when profiling the sampled tables together finds a foreign key between them."""
+def _links_from_data(
+    samples: dict[str, dict[str, list[Any]] | None],
+) -> dict[str, dict[str, Any]]:
+    """Foreign keys that profiling the sampled tables together finds between them."""
     from shape.api import profile as shape_profile
 
     tables = {name: _arrow_table(s) for name, s in samples.items() if s is not None}
     if not tables:
-        return False
+        return {}
     found = shape_profile(tables).to_dict()
-    return any(t["detected_fks"] for t in found["tables"].values())
+    return {
+        rel["name"]: {
+            "child_table": rel["child"],
+            "parent_table": rel["parent"],
+            "child_columns": list(rel["child_columns"]),
+            "parent_columns": list(rel["parent_columns"]),
+        }
+        for rel in found["relationships"]
+    }
+
+
+def _norm(name: str) -> str:
+    return name.lower().replace("_", "")
 
 
 def _infer_keys_from_names(
-    tables: dict[str, Any], relationships: dict[str, dict[str, Any]]
+    catalog: Catalog, links: dict[str, dict[str, Any]], skip: set[tuple[str, str]]
 ) -> None:
-    """Link ``orders.customer_id`` to a table ``customer`` (or ``dimcustomer``) by name."""
-    by_lower = {t.lower(): t for t in tables}
-    for tname, tp in tables.items():
-        for col in tp.columns:
-            low = col.lower()
-            candidate = None
-            if low.endswith("_id"):
-                candidate = low.rsplit("_id", 1)[0]
-            elif low.endswith("id") and len(low) > 2:
-                candidate = low[:-2]
-            elif low.endswith("key") and len(low) > 3:
-                candidate = low[:-3]
-                if candidate.endswith("_"):
-                    candidate = candidate[:-1]
-            if not candidate or candidate == _stem(tname):
+    """Link ``orders.customer_id`` to a table ``customer`` (or ``dimcustomer``) by name.
+
+    Only a column that ends in a whole ``id`` or ``key`` word counts (``customer_id``,
+    ``CustomerId``, ``customerKey``; never ``paid`` or ``valid``). Columns in ``skip`` (already
+    linked by a declared key or by the data) are left alone, and so is a table's own
+    single-column declared key. The parent's columns are filled in later (``None`` here)."""
+    by_norm = {_norm(t.name): t.name for t in catalog.tables}
+    for t in catalog.tables:
+        own_key = t.primary_key if len(t.primary_key) == 1 else []
+        for c in t.columns:
+            col = c.name
+            if (t.name, col) in skip or col in own_key:
                 continue
-            for lookup in (
-                candidate,
-                "dim" + candidate,
-                candidate.capitalize(),
-                "Dim" + candidate.capitalize(),
-            ):
-                parent = by_lower.get(lookup.lower())
-                if parent is not None:
-                    tp.detected_fks[col] = parent
-                    relationships[f"fk_{tname}_{col}"] = {
-                        "child_table": tname,
-                        "parent_table": parent,
-                        "child_columns": [col],
-                        "parent_columns": tables[parent].primary_key[:1] or [col],
-                    }
-                    break
+            candidate = key_stem(col)
+            if candidate is None or _norm(candidate) == _norm(table_stem(t.name)):
+                continue
+            parent = by_norm.get(_norm(candidate)) or by_norm.get("dim" + _norm(candidate))
+            if parent is not None:
+                links[f"fk_{t.name}_{col}"] = {
+                    "child_table": t.name,
+                    "parent_table": parent,
+                    "child_columns": [col],
+                    "parent_columns": None,
+                    "evidence": NAME,
+                }
 
 
-def _profile_tables(cursor: Any, catalog: Catalog, sample_rows: int) -> Any:
+def _profile_tables(
+    cursor: Any, catalog: Catalog, sample_rows: int
+) -> tuple[Any, dict[str, int], dict[str, str], dict[tuple[str, str], str]]:
     from shape.profile.reference.model import DatasetProfile, TableProfile
 
-    samples = _sample_all(cursor, catalog, sample_rows)
-    declared: dict[str, dict[str, str]] = {}
-    for fk in catalog.foreign_keys.values():
-        for col in fk.child_columns:
-            declared.setdefault(fk.child_table, {})[col] = fk.parent_table
+    samples, methods = _sample_all(cursor, catalog, sample_rows)
+
+    # Foreign keys. Declared keys are authoritative for the columns they cover. Beside them
+    # (and when the schema declares none) the sampled data decides first, then names fill the
+    # columns the data left unlinked. Every link records where it came from.
+    links: dict[str, dict[str, Any]] = {
+        name: {
+            "child_table": fk.child_table,
+            "parent_table": fk.parent_table,
+            "child_columns": fk.child_columns,
+            "parent_columns": fk.parent_columns,
+            "evidence": DECLARED,
+        }
+        for name, fk in catalog.foreign_keys.items()
+    }
+    covered = {(lk["child_table"], c) for lk in links.values() for c in lk["child_columns"]}
+    for name, lk in _links_from_data(samples).items():
+        if any((lk["child_table"], c) in covered for c in lk["child_columns"]):
+            continue
+        links[name] = {**lk, "evidence": DATA}
+        covered.update((lk["child_table"], c) for c in lk["child_columns"])
+    _infer_keys_from_names(catalog, links, covered)
+
+    fk_columns: dict[str, dict[str, str]] = {}
+    evidence: dict[tuple[str, str], str] = {}
+    for lk in links.values():
+        for col in lk["child_columns"]:
+            fk_columns.setdefault(lk["child_table"], {})[col] = lk["parent_table"]
+            evidence[(lk["child_table"], col)] = lk["evidence"]
 
     profiles: dict[str, Any] = {}
+    sampled: dict[str, int] = {}
     for t in catalog.tables:
         sample = samples[t.name]
-        size = len(next(iter(sample.values()), [])) if sample is not None else None
-        fks = declared.get(t.name, {})
+        size = len(next(iter(sample.values()), [])) if sample is not None else 0
+        sampled[t.name] = size
+        fks = fk_columns.get(t.name, {})
+        pk = t.primary_key or guess_primary_key(t.name, t.columns, sample, fks)
         columns = {
             c.name: _profile_column(
                 c,
                 sample.get(c.name) if sample is not None else None,
-                t.row_count,
                 size,
-                t.primary_key,
+                pk,
                 fks,
             )
             for c in t.columns
@@ -218,37 +324,31 @@ def _profile_tables(cursor: Any, catalog: Catalog, sample_rows: int) -> Any:
             name=t.name,
             row_count=t.row_count,
             columns=columns,
-            primary_key=t.primary_key,
+            primary_key=pk,
             detected_fks=dict(fks),
         )
         log.info("Profiled %s: %d columns, %d rows", t.name, len(columns), t.row_count)
 
-    links: dict[str, dict[str, Any]] = {
-        name: {
-            "child_table": fk.child_table,
-            "parent_table": fk.parent_table,
-            "child_columns": fk.child_columns,
-            "parent_columns": fk.parent_columns,
-        }
-        for name, fk in catalog.foreign_keys.items()
-    }
-    if not links and not _data_suggests_keys(samples):
-        _infer_keys_from_names(profiles, links)
-
     names = {t.name for t in catalog.tables}
-    relationships = [
-        {
-            "name": name,
-            "parent": fk["parent_table"],
-            "child": fk["child_table"],
-            "parent_columns": fk["parent_columns"],
-            "child_columns": fk["child_columns"],
-            "type": "one_to_many",
-        }
-        for name, fk in links.items()
-        if fk["child_table"] in names
-    ]
-    return DatasetProfile(tables=profiles, relationships=relationships)
+    relationships = []
+    for name, lk in links.items():
+        if lk["child_table"] not in names:
+            continue
+        parent_columns = lk["parent_columns"]
+        if parent_columns is None:  # name-inferred: the parent's key, else the column's name
+            parent_columns = profiles[lk["parent_table"]].primary_key[:1] or lk["child_columns"]
+        relationships.append(
+            {
+                "name": name,
+                "parent": lk["parent_table"],
+                "child": lk["child_table"],
+                "parent_columns": parent_columns,
+                "child_columns": lk["child_columns"],
+                "type": "one_to_many",
+                "evidence": lk["evidence"],
+            }
+        )
+    return DatasetProfile(tables=profiles, relationships=relationships), sampled, methods, evidence
 
 
 def profile_database(
@@ -280,7 +380,7 @@ def profile_database(
     cursor = conn.cursor()
     try:
         catalog = read_catalog(cursor, schema, tables)
-        dataset = _profile_tables(cursor, catalog, sample_rows)
+        dataset, sampled, methods, evidence = _profile_tables(cursor, catalog, sample_rows)
     finally:
         cursor.close()
         if connection is None:
@@ -288,7 +388,30 @@ def profile_database(
     from shape.profile.reference import Profile
     from shape.profile.reference.profile import dataset_to_dict
 
-    return Profile(dataset_to_dict(dataset), name=name or schema)
+    data = dataset_to_dict(dataset)
+    for table_name, rows in sampled.items():
+        table = data["tables"][table_name]
+        table["sampled_rows"] = rows
+        table["sample_method"] = methods[table_name]
+        for col_name, column in table["columns"].items():
+            column["fk_evidence"] = evidence.get((table_name, col_name))
+    data["sampling"] = {
+        "method": (
+            "spread over the table: SELECT TOP n ... ORDER BY a scrambled CHECKSUM(primary key, "
+            "or every hashable column when there is no declared key); a table no larger than n "
+            "is read whole"
+        ),
+        "requested_rows": sample_rows,
+        "note": (
+            "null_count, cardinality, null_rate, cardinality_ratio, is_unique, is_enum, "
+            "enum_values, min_value, max_value, mean and std describe the sampled rows "
+            "(tables[...].sampled_rows), not the whole table; row_count is the catalog's. "
+            "null_rate, cardinality_ratio and is_unique are null where no row was sampled; "
+            "is_unique means unique among the non-null sampled values (null below 2 of them). "
+            "tables[...].sample_method says how each table was read."
+        ),
+    }
+    return Profile(data, name=name or schema)
 
 
 __all__ = ["fetch_sample", "profile_database"]

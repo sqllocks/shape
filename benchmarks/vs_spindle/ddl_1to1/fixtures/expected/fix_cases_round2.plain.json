@@ -1,0 +1,900 @@
+{
+ "annotations": [],
+ "explain": [],
+ "file": {
+  "business_rules": [],
+  "generation": {
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "PurchaseOrder": 100000,
+     "Receipt": 100000,
+     "Vendor": 100000,
+     "client": 100000,
+     "locale": 100000,
+     "region": 100000,
+     "sale": 250000,
+     "shipment": 250000
+    },
+    "medium": {
+     "PurchaseOrder": 10000,
+     "Receipt": 10000,
+     "Vendor": 10000,
+     "client": 10000,
+     "customer": 7,
+     "locale": 10000,
+     "order": 21,
+     "orders": 21,
+     "region": 10000,
+     "sale": 25000,
+     "shipment": 25000
+    },
+    "small": {
+     "PurchaseOrder": 1000,
+     "Receipt": 1000,
+     "Vendor": 1000,
+     "client": 1000,
+     "locale": 1000,
+     "region": 1000,
+     "sale": 2500,
+     "shipment": 2500
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "child": "sale",
+    "child_columns": [
+     "client_id"
+    ],
+    "name": "fk_sale_client_id",
+    "parent": "client",
+    "parent_columns": [
+     "client_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "shipment",
+    "child_columns": [
+     "region_id"
+    ],
+    "name": "fk_shipment_region_id",
+    "parent": "region",
+    "parent_columns": [
+     "region_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "PurchaseOrder": {
+    "columns": {
+     "Id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "VendorId": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "Id"
+    ]
+   },
+   "Receipt": {
+    "columns": {
+     "Id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "Memo": {
+      "generator": {
+       "max_nb_chars": 200,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 200,
+      "nullable": true,
+      "type": "string"
+     },
+     "VendorID": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "Id"
+    ]
+   },
+   "Vendor": {
+    "columns": {
+     "Id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "Name": {
+      "generator": {
+       "max_nb_chars": 100,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "Id"
+    ]
+   },
+   "client": {
+    "columns": {
+     "cid": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "name": {
+      "generator": {
+       "max_nb_chars": 60,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 60,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "cid"
+    ]
+   },
+   "locale": {
+    "columns": {
+     "country_code": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 2,
+      "nullable": true,
+      "type": "string"
+     },
+     "currency": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 3,
+      "nullable": true,
+      "type": "string"
+     },
+     "currency_code": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 3,
+      "nullable": true,
+      "type": "string"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "product_code": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 5,
+      "nullable": true,
+      "type": "string"
+     },
+     "region_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "type_a": 0.5,
+        "type_b": 0.3,
+        "type_c": 0.2
+       }
+      },
+      "max_length": 4,
+      "nullable": true,
+      "type": "string"
+     },
+     "row_status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 3,
+      "nullable": true,
+      "type": "string"
+     },
+     "sku_code": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 20,
+      "nullable": true,
+      "type": "string"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 5,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   },
+   "region": {
+    "columns": {
+     "area": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "type": "integer"
+     },
+     "country": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "country",
+     "area"
+    ]
+   },
+   "sale": {
+    "columns": {
+     "amount": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "client_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "client.client_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   },
+   "shipment": {
+    "columns": {
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "region_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "region.region_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   }
+  }
+ },
+ "schema": {
+  "business_rules": [],
+  "correlated_columns": {},
+  "generation": {
+   "derived_counts": {},
+   "output": {},
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "PurchaseOrder": 100000,
+     "Receipt": 100000,
+     "Vendor": 100000,
+     "client": 100000,
+     "locale": 100000,
+     "region": 100000,
+     "sale": 250000,
+     "shipment": 250000
+    },
+    "medium": {
+     "PurchaseOrder": 10000,
+     "Receipt": 10000,
+     "Vendor": 10000,
+     "client": 10000,
+     "customer": 7,
+     "locale": 10000,
+     "order": 21,
+     "orders": 21,
+     "region": 10000,
+     "sale": 25000,
+     "shipment": 25000
+    },
+    "small": {
+     "PurchaseOrder": 1000,
+     "Receipt": 1000,
+     "Vendor": 1000,
+     "client": 1000,
+     "locale": 1000,
+     "region": 1000,
+     "sale": 2500,
+     "shipment": 2500
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "cardinality": {},
+    "child": "sale",
+    "child_columns": [
+     "client_id"
+    ],
+    "name": "fk_sale_client_id",
+    "optional": false,
+    "parent": "client",
+    "parent_columns": [
+     "client_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "shipment",
+    "child_columns": [
+     "region_id"
+    ],
+    "name": "fk_shipment_region_id",
+    "optional": false,
+    "parent": "region",
+    "parent_columns": [
+     "region_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "PurchaseOrder": {
+    "cdm_mapping": null,
+    "columns": {
+     "Id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "Id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "VendorId": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "VendorId",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "PurchaseOrder",
+    "primary_key": [
+     "Id"
+    ]
+   },
+   "Receipt": {
+    "cdm_mapping": null,
+    "columns": {
+     "Id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "Id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "Memo": {
+      "generator": {
+       "max_nb_chars": 200,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 200,
+      "name": "Memo",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "VendorID": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "VendorID",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "Receipt",
+    "primary_key": [
+     "Id"
+    ]
+   },
+   "Vendor": {
+    "cdm_mapping": null,
+    "columns": {
+     "Id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "Id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "Name": {
+      "generator": {
+       "max_nb_chars": 100,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "name": "Name",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "Vendor",
+    "primary_key": [
+     "Id"
+    ]
+   },
+   "client": {
+    "cdm_mapping": null,
+    "columns": {
+     "cid": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "cid",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "name": {
+      "generator": {
+       "max_nb_chars": 60,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 60,
+      "name": "name",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "client",
+    "primary_key": [
+     "cid"
+    ]
+   },
+   "locale": {
+    "cdm_mapping": null,
+    "columns": {
+     "country_code": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 2,
+      "name": "country_code",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "currency": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 3,
+      "name": "currency",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "currency_code": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 3,
+      "name": "currency_code",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "product_code": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 5,
+      "name": "product_code",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "region_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "type_a": 0.5,
+        "type_b": 0.3,
+        "type_c": 0.2
+       }
+      },
+      "max_length": 4,
+      "name": "region_type",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "row_status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 3,
+      "name": "row_status",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "sku_code": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 20,
+      "name": "sku_code",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 5,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "locale",
+    "primary_key": [
+     "id"
+    ]
+   },
+   "region": {
+    "cdm_mapping": null,
+    "columns": {
+     "area": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "area",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "country": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "country",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "region",
+    "primary_key": [
+     "country",
+     "area"
+    ]
+   },
+   "sale": {
+    "cdm_mapping": null,
+    "columns": {
+     "amount": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "amount",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "client_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "client.client_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "client_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "sale",
+    "primary_key": [
+     "id"
+    ]
+   },
+   "shipment": {
+    "cdm_mapping": null,
+    "columns": {
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "region_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "region.region_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "region_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "shipment",
+    "primary_key": [
+     "id"
+    ]
+   }
+  }
+ }
+}
