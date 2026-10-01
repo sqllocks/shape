@@ -233,11 +233,17 @@ _VERIFY_HELP = "require every .shape input to be signed by this public key (exit
 
 
 def _cmd_plugins(a):
-    """``shape plugins <sub>``: 0 when every plugin loads, 1 when any failed."""
+    """``shape plugins <sub>``: list and info inspect; doctor exits 0 when every plugin loads."""
+    from shape.plugins import cli as plugin_cli
     from shape.plugins.doctor import diagnose, format_report
     from shape.plugins.host import default_host
 
-    report = diagnose(default_host())
+    host = default_host()
+    if a.plugins_cmd == "list":
+        return plugin_cli.cmd_list(host, a)
+    if a.plugins_cmd == "info":
+        return plugin_cli.cmd_info(host, a)
+    report = diagnose(host)
     if a.json:
         _dump(report)
     else:
@@ -245,7 +251,7 @@ def _cmd_plugins(a):
     return 0 if report["ok"] else 1
 
 
-def _build_parser():
+def _build_parser(plugin_commands=()):
     p = argparse.ArgumentParser(prog="shape", description="Shape as Code")
     p.add_argument("--version", "-V", action="store_true", help="print the version and exit")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -254,6 +260,12 @@ def _build_parser():
     sub.add_parser("version")
     pl = sub.add_parser("plugins", help="inspect installed plugins")
     pls = pl.add_subparsers(dest="plugins_cmd", required=True)
+    pll = pls.add_parser("list", help="list installed plugins (imports none of them)")
+    pll.add_argument("--group", metavar="GROUP", help="only this entry-point group")
+    pll.add_argument("--json", action="store_true", help="print the list as JSON")
+    pli = pls.add_parser("info", help="load one plugin and describe it")
+    pli.add_argument("plugin", metavar="[GROUP:]NAME")
+    pli.add_argument("--json", action="store_true", help="print the description as JSON")
     pld = pls.add_parser("doctor", help="load every plugin and report failures")
     pld.add_argument("--json", action="store_true", help="print the report as JSON")
     c = sub.add_parser("capture")
@@ -350,6 +362,8 @@ def _build_parser():
     rg.add_argument("name")
     rg.add_argument("arg1", nargs="?")
     rg.add_argument("arg2", nargs="?")
+    for rec in plugin_commands:  # listed in --help only; the plugin loads when it is run
+        sub.add_parser(rec.name, help=f"(plugin {rec.source})", add_help=False)
     return p
 
 
@@ -368,7 +382,25 @@ def main(argv=None):
         from shape.privacy.cli import main as privacy_main
 
         return privacy_main(argv[1:])
-    a = _build_parser().parse_args(argv)
+    builtin = {
+        n
+        for act in _build_parser()._actions
+        if isinstance(act, argparse._SubParsersAction)
+        for n in act.choices
+    }
+    first = next((x for x in argv if not x.startswith("-")), None)
+    plugin_cmds = {}
+    if first is None or first not in builtin or argv[:1] in (["-h"], ["--help"]):
+        from shape.plugins.cli import command_names
+        from shape.plugins.host import default_host
+
+        plugin_cmds = command_names(default_host(), builtin)
+    if argv[:1] and argv[0] in plugin_cmds:
+        from shape.plugins.cli import run_command
+        from shape.plugins.host import default_host
+
+        return run_command(default_host(), argv[0], argv[1:])
+    a = _build_parser(plugin_cmds.values()).parse_args(argv)
     if a.version:
         print(f"shape {_version()}")
         return 0

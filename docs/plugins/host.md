@@ -47,8 +47,25 @@ iban = "my_plugin.detectors:IbanDetector"
 | `PluginRecord` | `group`, `name`, `target`, `source`, `status` (`unloaded`, `ok`, `error`), `api`, `error`, `obj`; `as_dict()` is JSON-safe. |
 | `plugins.doctor.diagnose(host)`, `format_report(report)` | The report behind `shape plugins doctor`. |
 
-## `shape plugins doctor`
+## The `shape plugins` commands
 
-Loads every plugin and prints one line per plugin; `--json` prints the report. Exit code 0 when
-every plugin loads, 1 when any failed. `shape profile` and the other commands never load
-plugins they do not use.
+| Command | What it does | Exit |
+|---|---|---|
+| `shape plugins list [--group G] [--json]` | One line per registered plugin (group, name, status, distribution). Reads metadata only; imports no plugin. | 0 |
+| `shape plugins info [GROUP:]NAME [--json]` | Loads one plugin and prints its group, Protocol, distribution, target, declared API, error (if any) and docstring. A bare name that exists in several groups is ambiguous. | 0 ok, 1 failed to load, 2 unknown or ambiguous |
+| `shape plugins doctor [--json]` | Loads every plugin and prints one line per plugin. | 0 all load, 1 any failed |
+
+`shape profile` and the other commands never load plugins they do not use.
+
+## Plugin commands
+
+An entry point in `shape.commands` adds `shape <name>`. The object has `name`, `help`,
+`configure(parser)` (adds arguments to the command's own argparse parser) and `run(args)`
+(returns the exit code). `shape --help` lists installed commands by name without importing
+them; the plugin loads only when `shape <name>` runs. A built-in command always wins over a
+plugin command of the same name. A command that fails to load, or raises, prints one error
+line to stderr and exits 1; argument errors exit 2.
+
+A complete example (a source, a detector and a command) is in `examples/plugin/`.
+
+`--json` on `doctor` prints the report from `plugins.doctor.diagnose`.
