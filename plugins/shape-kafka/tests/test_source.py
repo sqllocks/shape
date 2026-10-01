@@ -11,7 +11,13 @@ import pyarrow as pa
 import pytest
 from shape_kafka import KafkaStreamSource
 from shape_kafka.source import parse_uri
-from shape_kafka.testing import FakeBroker, FakeMessage, FakeTopicPartition, json_messages
+from shape_kafka.testing import (
+    FakeBroker,
+    FakeError,
+    FakeMessage,
+    FakeTopicPartition,
+    json_messages,
+)
 
 from shape.plugins import kit
 from shape.plugins.api.v1 import StreamOffset
@@ -225,6 +231,34 @@ def test_a_transport_error_is_a_connection_error_and_another_error_is_not():
 
     with pytest.raises(StreamSourceError, match="bad credentials"):
         read(KafkaStreamSource(broken, FakeTopicPartition))
+
+
+def test_kafka_exceptions_from_the_client_are_mapped():
+    class KafkaException(Exception):  # the client's exception type, by name
+        pass
+
+    class Unreachable(FakeError):
+        def __str__(self):
+            return "Failed to get metadata: Broker transport failure"
+
+    def failing(error):
+        b = broker()
+
+        def make(config):
+            c = b.consumer(config)
+
+            def boom(topic, timeout=0):
+                raise KafkaException(error)
+
+            c.list_topics = boom
+            return c
+
+        return KafkaStreamSource(make, FakeTopicPartition)
+
+    with pytest.raises(ConnectionError, match="(?i)broker transport failure"):
+        read(failing(Unreachable("_TRANSPORT")))
+    with pytest.raises(StreamSourceError, match="kafka:"):
+        read(failing(FakeError("_AUTHENTICATION")))
 
 
 def test_a_missing_topic_and_bad_options_are_errors():

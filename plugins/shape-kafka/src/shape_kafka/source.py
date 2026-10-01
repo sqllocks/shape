@@ -158,6 +158,12 @@ class KafkaStreamSource:
                 schema=schema,
                 decode=decode,
             )
+        except Exception as exc:
+            # The client raises KafkaException (not a subclass of anything Shape handles) for
+            # metadata and connection failures; the KafkaError inside says which kind.
+            if type(exc).__name__ == "KafkaException" and exc.args:
+                self._raise(exc.args[0])
+            raise
         finally:
             consumer.close()
 

@@ -118,10 +118,9 @@ def test_a_missing_topic_is_a_clear_error():
 
 def test_an_unreachable_broker_is_a_connection_error_not_a_hang():
     started = time.monotonic()
-    with pytest.raises(Exception) as err:  # noqa: PT011 - the client raises KafkaException
+    with pytest.raises(ConnectionError, match="kafka:"):
         list(KafkaStreamSource().read("kafka://127.0.0.1:1/t"))
     assert time.monotonic() - started < 60
-    assert "timed out" in str(err.value).lower() or "transport" in str(err.value).lower()
 
 
 class Crashing(KafkaStreamSource):
