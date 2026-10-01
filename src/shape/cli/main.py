@@ -51,10 +51,14 @@ def _run(fn, a):
     """Run a profile/check/diff command: 0 ok, 1 failed check or drift, 2 input error."""
     import zipfile
 
+    from shape.artifact.io import ArtifactSignatureError
     from shape.errors import ShapeError
 
     try:
         return fn(a)
+    except ArtifactSignatureError as exc:
+        print(f"shape: signature check failed: {exc}", file=sys.stderr)
+        return 1
     except (
         OSError,
         ValueError,
@@ -68,6 +72,53 @@ def _run(fn, a):
         return 2
 
 
+def _sign_output(a, path):
+    """Sign the artifact just written when ``--sign KEY`` was given."""
+    if getattr(a, "sign", None):
+        from shape.artifact.signing import load_private_key, sign_artifact
+
+        return sign_artifact(path, load_private_key(a.sign))
+    return None
+
+
+def _verify_inputs(a):
+    """``--verify PUBKEY``: every .shape input must carry a valid signature by that key."""
+    from shape.artifact.signing import load_public_key, verify_artifact
+
+    key = load_public_key(a.verify)
+    for name in ("shape", "before", "after", "target", "observed"):
+        path = getattr(a, name, None)
+        if isinstance(path, str) and path.endswith(".shape"):
+            verify_artifact(path, key)
+
+
+def _cmd_keygen(a):
+    from shape.artifact.signing import key_id, load_public_key, write_keypair
+
+    priv, pub = write_keypair(a.prefix)
+    _dump(
+        {"private_key": str(priv), "public_key": str(pub), "key_id": key_id(load_public_key(pub))}
+    )
+    return 0
+
+
+def _cmd_sign(a):
+    from shape.artifact.signing import load_private_key, sign_artifact
+
+    kid = sign_artifact(a.shape, load_private_key(a.key), a.output)
+    _dump({"signed": a.output or a.shape, "key_id": kid})
+    return 0
+
+
+def _cmd_verify_signature(a):
+    from shape.artifact.signing import load_public_key, verify_artifact
+
+    if not a.key:
+        raise ValueError("verifying a .shape artifact needs --key PUBLIC.pub")
+    _dump({"artifact": a.shape, **verify_artifact(a.shape, load_public_key(a.key))})
+    return 0
+
+
 def _cmd_profile(a):
     import shape
 
@@ -75,12 +126,16 @@ def _cmd_profile(a):
         raise ValueError("profile needs -o OUT.shape")
     prof = shape.profile(a.src)
     content_id = shape.save(prof, a.output)
+    key_id = _sign_output(a, a.output)
     if a.html:
         with open(a.html, "w", encoding="utf-8") as fh:
             fh.write(prof.to_html())
     if a.json:
         _write_json(a.json, prof.summary())
-    _dump({"written": a.output, "shape_content_id": content_id})
+    out = {"written": a.output, "shape_content_id": content_id}
+    if key_id:
+        out["signed_by"] = key_id
+    _dump(out)
     return 0
 
 
@@ -124,19 +179,108 @@ def _cmd_diff(a):
     return 1 if (a.fail_on_drift and result.drifted) else 0
 
 
-def _build_parser():
+def _cmd_verify(a):
+    """``shape verify``: a ``.shape`` artifact is checked for its signature, anything else is
+    data for the validation gates."""
+    if str(a.shape).endswith(".shape"):
+        return _cmd_verify_signature(a)
+    return _cmd_verify_gates(a)
+
+
+def _cmd_verify_gates(a):
+    """Load tables, run the gates, print the gate table; 0 pass, 1 a gate failed (or a warning
+    under --strict), 2 input error."""
+    from shape.quality import VerifyReport, VerifyRunner, load_gate_schema, load_tables
+
+    tables = load_tables(a.shape, a.format)
+    if not tables:
+        raise ValueError(f"no {a.format} data files found in {a.shape}")
+    schema = load_gate_schema(a.schema) if a.schema else None
+    result = VerifyRunner(schema, a.statistical, a.shape, a.schema).run(tables)
+    print(f"Shape {_version()} - Verify\n")
+    print(f"Data path:   {a.shape}")
+    if a.schema:
+        print(f"Schema:      {a.schema}")
+    print(f"Statistical: {'yes' if a.statistical else 'no'}\n")
+    if result.gate_results:
+        print(f"{'Gate':<28} {'Status':<8} {'Errors':>6} {'Warnings':>8}")
+        print("-" * 55)
+        for g in result.gate_results:
+            status = "PASS" if g.passed else "FAIL"
+            print(f"{g.gate_name:<28} {status:<8} {len(g.errors):>6} {len(g.warnings):>8}")
+        print()
+    print("Row counts:")
+    for name, n in sorted(result.row_counts.items()):
+        print(f"  {name}: {n:,}")
+    print()
+    for g in result.gate_results:
+        for e in g.errors:
+            print(f"  ERROR [{g.gate_name}]: {e}", file=sys.stderr)
+        for w in g.warnings:
+            print(f"  WARN  [{g.gate_name}]: {w}")
+    print(f"\nResult: {'PASS' if result.passed else 'FAIL'}")
+    if a.output:
+        report = VerifyReport(result)
+        text = report.to_json() if str(a.output).endswith(".json") else report.to_markdown()
+        with open(a.output, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        print(f"Report written to {a.output}")
+    has_warnings = any(g.warnings for g in result.gate_results)
+    return 1 if (not result.passed or (a.strict and has_warnings)) else 0
+
+
+_VERIFY_HELP = "require every .shape input to be signed by this public key (exit 1 if not)"
+
+
+def _cmd_plugins(a):
+    """``shape plugins <sub>``: list and info inspect; doctor exits 0 when every plugin loads."""
+    from shape.plugins import cli as plugin_cli
+    from shape.plugins.doctor import diagnose, format_report
+    from shape.plugins.host import default_host
+
+    host = default_host()
+    if a.plugins_cmd == "list":
+        return plugin_cli.cmd_list(host, a)
+    if a.plugins_cmd == "info":
+        return plugin_cli.cmd_info(host, a)
+    report = diagnose(host)
+    if a.json:
+        _dump(report)
+    else:
+        print(format_report(report))
+    return 0 if report["ok"] else 1
+
+
+def _build_parser(plugin_commands=()):
     p = argparse.ArgumentParser(prog="shape", description="Shape as Code")
     p.add_argument("--version", "-V", action="store_true", help="print the version and exit")
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("doctor")
     sub.add_parser("conformance")
     sub.add_parser("version")
+    pl = sub.add_parser("plugins", help="inspect installed plugins")
+    pls = pl.add_subparsers(dest="plugins_cmd", required=True)
+    pll = pls.add_parser("list", help="list installed plugins (imports none of them)")
+    pll.add_argument("--group", metavar="GROUP", help="only this entry-point group")
+    pll.add_argument("--json", action="store_true", help="print the list as JSON")
+    pli = pls.add_parser("info", help="load one plugin and describe it")
+    pli.add_argument("plugin", metavar="[GROUP:]NAME")
+    pli.add_argument("--json", action="store_true", help="print the description as JSON")
+    pld = pls.add_parser("doctor", help="load every plugin and report failures")
+    pld.add_argument("--json", action="store_true", help="print the report as JSON")
     c = sub.add_parser("capture")
     c.add_argument("csv")
     c.add_argument("-o", "--output")
-    pr = sub.add_parser("profile", help="profile a file, glob, directory or Delta table")
+    c.add_argument("--sign", metavar="KEY", help="sign the written .shape with this private key")
+    pr = sub.add_parser(
+        "profile",
+        help="profile a file, glob, directory or Delta table",
+        epilog="also: `shape profile safe PROFILE.shape -o SAFE.json` writes the share-safe "
+        "form; `shape profile validate --safe ARTIFACT` scans it for leaks",
+    )
     pr.add_argument("src", metavar="SRC")
     pr.add_argument("-o", "--output", metavar="OUT")
+    pr.add_argument("--sign", metavar="KEY", help="sign the written .shape with this private key")
     pr.add_argument("--html", metavar="REPORT.html")
     pr.add_argument("--json", metavar="SUMMARY.json")
     d = sub.add_parser("diff", help="compare two profiles")
@@ -144,11 +288,35 @@ def _build_parser():
     d.add_argument("after", metavar="CURRENT.shape")
     d.add_argument("--json", metavar="RESULT.json")
     d.add_argument("--fail-on-drift", action="store_true")
+    d.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     for name in ("show", "inspect"):
         sh = sub.add_parser(name, help="print a .shape artifact's manifest and contents")
         sh.add_argument("shape")
+        sh.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
+    kg = sub.add_parser("keygen", help="generate an Ed25519 signing key pair")
+    kg.add_argument("prefix", help="writes PREFIX.key (private, mode 0600) and PREFIX.pub")
+    sg = sub.add_parser("sign", help="sign a .shape artifact")
+    sg.add_argument("shape", metavar="ARTIFACT.shape")
+    sg.add_argument("--key", required=True, metavar="PRIVATE.key")
+    sg.add_argument("-o", "--output", metavar="OUT.shape", help="default: sign in place")
     va = sub.add_parser("validate", help="validate a Shape-as-Code contract document")
     va.add_argument("contract")
+    vf = sub.add_parser(
+        "verify",
+        help="run the validation gates over data, or check a .shape artifact's signature",
+    )
+    vf.add_argument(
+        "shape",
+        metavar="DATA|ARTIFACT.shape",
+        help="a data file or a directory of data files; a .shape file is checked for its "
+        "signature instead (exit 1 if invalid)",
+    )
+    vf.add_argument("--key", metavar="PUBLIC.pub", help="public key for a .shape artifact")
+    vf.add_argument("--format", choices=("auto", "csv", "parquet", "jsonl"), default="auto")
+    vf.add_argument("--schema", metavar="GATES.json", help="gate schema (or Shape model v2)")
+    vf.add_argument("--statistical", action="store_true", help="add KS and chi-squared tests")
+    vf.add_argument("-o", "--output", metavar="REPORT", help="write a .json or .md report")
+    vf.add_argument("--strict", action="store_true", help="exit 1 on warnings too")
     qu = sub.add_parser("quality")
     qu.add_argument("csv")
     qu.add_argument("--reference")
@@ -172,16 +340,19 @@ def _build_parser():
     cq = sub.add_parser("query")
     cq.add_argument("shape")
     cq.add_argument("expression")
+    cq.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     ck = sub.add_parser("check", help="check a profile against a contract")
     ck.add_argument("shape", metavar="PROFILE.shape")
     ck.add_argument("contract", metavar="CONTRACT.json")
     ck.add_argument("--json", metavar="RESULT.json")
+    ck.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     co = sub.add_parser("compatibility")
     co.add_argument("before")
     co.add_argument("after")
     co.add_argument("--mode", choices=("backward", "forward", "full"), default="backward")
     gp = sub.add_parser("plan")
     gp.add_argument("shape")
+    gp.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     fc = sub.add_parser("certify-shapes")
     fc.add_argument("target")
     fc.add_argument("observed")
@@ -191,6 +362,8 @@ def _build_parser():
     rg.add_argument("name")
     rg.add_argument("arg1", nargs="?")
     rg.add_argument("arg2", nargs="?")
+    for rec in plugin_commands:  # listed in --help only; the plugin loads when it is run
+        sub.add_parser(rec.name, help=f"(plugin {rec.source})", add_help=False)
     return p
 
 
@@ -205,16 +378,46 @@ def main(argv=None):
     if argv[:1] in (["--version"], ["-V"]):
         print(f"shape {_version()}")
         return 0
-    a = _build_parser().parse_args(argv)
+    if argv[:1] == ["profile"] and argv[1:2] in (["safe"], ["validate"]):
+        from shape.privacy.cli import main as privacy_main
+
+        return privacy_main(argv[1:])
+    builtin = {
+        n
+        for act in _build_parser()._actions
+        if isinstance(act, argparse._SubParsersAction)
+        for n in act.choices
+    }
+    first = next((x for x in argv if not x.startswith("-")), None)
+    plugin_cmds = {}
+    if first is None or first not in builtin or argv[:1] in (["-h"], ["--help"]):
+        from shape.plugins.cli import command_names
+        from shape.plugins.host import default_host
+
+        plugin_cmds = command_names(default_host(), builtin)
+    if argv[:1] and argv[0] in plugin_cmds:
+        from shape.plugins.cli import run_command
+        from shape.plugins.host import default_host
+
+        return run_command(default_host(), argv[0], argv[1:])
+    a = _build_parser(plugin_cmds.values()).parse_args(argv)
     if a.version:
         print(f"shape {_version()}")
         return 0
+    if a.cmd in ("keygen", "sign", "verify"):
+        return _run({"keygen": _cmd_keygen, "sign": _cmd_sign, "verify": _cmd_verify}[a.cmd], a)
+    if getattr(a, "verify", None):
+        rc = _run(_verify_inputs, a)
+        if rc:
+            return rc
     if a.cmd == "profile":
         return _run(_cmd_profile, a)
     if a.cmd == "check" and _is_profile_or_missing(a.shape):
         return _run(_cmd_check, a)
     if a.cmd == "diff" and _is_profile_or_missing(a.before):
         return _run(_cmd_diff, a)
+    if a.cmd == "plugins":
+        return _cmd_plugins(a)
     if a.cmd == "version":
         _dump({"shape": _version(), "specification": "2", "artifact_format": 2})
         return 0
@@ -240,8 +443,14 @@ def main(argv=None):
         obj = capture_rows(_rows(a.csv)).to_dict()
         if a.output and str(a.output).endswith(".shape"):
             cid = write_shape(a.output, obj, name=__import__("pathlib").Path(a.csv).stem)
-            _dump({"written": a.output, "shape_content_id": cid})
+            out = {"written": a.output, "shape_content_id": cid}
+            kid = _sign_output(a, a.output)
+            if kid:
+                out["signed_by"] = kid
+            _dump(out)
             return 0
+        if getattr(a, "sign", None):
+            raise SystemExit("capture --sign needs -o OUT.shape")
         raw = json.dumps(obj, sort_keys=True, indent=2, default=str)
         if a.output:
             open(a.output, "w", encoding="utf-8").write(raw + "\n")

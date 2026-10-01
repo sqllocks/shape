@@ -34,6 +34,7 @@ fn collect_addresses(data: &ArrayData, out: &mut Vec<usize>) {
     }
 }
 
+pub mod exact;
 pub mod fit;
 pub mod hashing;
 pub mod numpy_loops;
@@ -304,6 +305,7 @@ fn _kernel(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("NAME", "rust")?;
     sketch::register(m)?;
     profile::register(m)?;
+    exact::register(m)?;
     m.add_function(wrap_pyfunction!(version, m)?)?;
     m.add_function(wrap_pyfunction!(numpy_loops_mode, m)?)?;
     m.add_function(wrap_pyfunction!(roundtrip_batch, m)?)?;

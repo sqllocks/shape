@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
@@ -19,11 +21,11 @@ _PHONE = re.compile(r"^\+?[\d(). -]{7,20}$")
 _IPV4 = re.compile(r"^(?:\d{1,3}\.){3}\d{1,3}$")
 
 
-def detect_value(value) -> tuple[Detection, ...]:
+def detect_value(value: Any) -> tuple[Detection, ...]:
     if value is None:
         return ()
     s = str(value).strip()
-    out = []
+    out: list[Detection] = []
     if _EMAIL.match(s):
         out.append(Detection("email", 0.98, "email syntax"))
     if _SSN.match(s):
@@ -39,8 +41,8 @@ def detect_value(value) -> tuple[Detection, ...]:
     return tuple(out)
 
 
-def detect_column(values, sample_limit=1000):
-    counts = {}
+def detect_column(values: Iterable[Any], sample_limit: int = 1000) -> tuple[Detection, ...]:
+    counts: dict[str, int] = {}
     n = 0
     for v in values:
         if n >= sample_limit:

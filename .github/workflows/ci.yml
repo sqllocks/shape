@@ -30,7 +30,8 @@ jobs:
       - if: matrix.python == '3.11'
         run: mypy
       - run: python -m compileall -q src/shape
-      - run: vulture src/shape --min-confidence 80
+      - run: vulture src/shape scripts/vulture_whitelist.py --min-confidence 80
+      - run: lint-imports
       - run: python scripts/check_conformance_coverage.py
       - run: python scripts/check_user_facing.py
       # The Fabric demo tests need Java, PySpark and unixODBC; they and the demo content tests
@@ -79,6 +80,17 @@ jobs:
       - run: python -m pip install -U pip
       - run: pip install -e '.[dev]' -r tests/demo/fabric/requirements.txt
       - run: python -m pytest -q tests/demo/fabric tests/demo/content
+  pure-wheel:
+    # PF-03: the T-29 pure wheel is py3-none-any and under 28.6 MB, and the UDF helpers and
+    # function_app.py pass on Python 3.11 with only PyPI numpy, pyarrow and pandas under them
+    # and SHAPE_KERNEL=python (no native kernel). Must be green on every PR.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: sudo apt-get update -q && sudo apt-get install -y -q unixodbc
+      - run: bash scripts/ci_pure_wheel.sh python
   bench-quick:
     # Verifiers, then the quick benchmark (D1, D2, retail small+medium; 3 runs) against the
     # pinned Spindle. On a private repository the standard runner has 2 vCPUs, so ratios are
@@ -100,6 +112,13 @@ jobs:
           "$SHAPE_VENV/bin/pip" install -e '.[dev]' 'pyarrow==25.0.1'
       - run: source scripts/env.sh && python benchmarks/vs_spindle/check_coverage.py
       - run: source scripts/env.sh && python benchmarks/vs_spindle/run.py --quick --out "$BENCH_OUT_DIR/results.json"
+      # P6-09: `shape verify` against the baseline's `verify` on retail small (internal harness).
+      - run: |
+          source scripts/env.sh
+          "$SPINDLE_PY" benchmarks/vs_spindle/dump_schema.py retail
+          "$SPINDLE_PY" benchmarks/vs_spindle/domain_1to1/generate.py --impl spindle --domain retail --scale small --seed 42
+          "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/domain_1to1/generate.py --impl reference_port --domain retail --scale small --seed 1042
+          "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/verify_1to1/verify.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -118,7 +137,7 @@ jobs:
       - run: pip install .
       - run: python -m build
       - run: python -m twine check dist/*
-      - run: python scripts/check_user_facing.py --wheel dist/*
+      - run: python scripts/check_user_facing.py --wheel dist/*.whl
       - run: pip-audit
       - uses: actions/upload-artifact@v4
         with: {name: distributions, path: dist/*}

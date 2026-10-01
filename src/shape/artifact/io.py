@@ -20,6 +20,14 @@ class ArtifactFormatError(ArtifactError, zipfile.BadZipFile):
     """The file is not a readable zip archive (also a ``zipfile.BadZipFile``)."""
 
 
+class ArtifactSignatureError(ArtifactError):
+    """The artifact is unsigned, or its signature does not verify under the trusted key (P19)."""
+
+
+SIGNATURE_MEMBER = "manifest.sig"
+_MAX_SIGNATURE_BYTES = 4096
+
+
 def canonical_json(obj: Any) -> bytes:
     return json.dumps(
         obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False
@@ -50,7 +58,7 @@ def write_artifact(
     if len(components) > 10000:
         raise ArtifactError("too many components")
     for k in components:
-        if not _safe(k) or k == "manifest.json":
+        if not _safe(k) or k in ("manifest.json", SIGNATURE_MEMBER):
             raise ArtifactError("unsafe/reserved component path")
     hashes = {k: sha256(v) for k, v in components.items()}
     m = dict(manifest)
@@ -81,6 +89,7 @@ def _read_artifact(
     max_total_bytes: int = 1024 * 1024 * 1024,
     max_ratio: int = 200,
     max_members: int = 10000,
+    verify_key: bytes | None = None,
 ) -> tuple[dict[str, Any], dict[str, bytes]]:
     with zipfile.ZipFile(path) as z:
         infos = z.infolist()
@@ -103,6 +112,13 @@ def _read_artifact(
             m = json.loads(rawm)
         except Exception as e:
             raise ArtifactError("invalid manifest") from e
+        if verify_key is not None:
+            # The signature covers the exact manifest bytes (which carry every content hash),
+            # so it is checked before anything in the manifest is trusted.
+            from .signing import verify_manifest_signature
+
+            sig = z.read(SIGNATURE_MEMBER) if SIGNATURE_MEMBER in names else None
+            verify_manifest_signature(rawm, sig, verify_key)
         if not isinstance(m, dict):
             raise ArtifactError("manifest must be object")
         hashes = m.get("content_hashes", {})
@@ -113,7 +129,12 @@ def _read_artifact(
             for k, v in hashes.items()
         ):
             raise ArtifactError("invalid content hash entry")
-        expected = {"manifest.json", *hashes.keys()}
+        expected = {"manifest.json", SIGNATURE_MEMBER, *hashes.keys()}
+        if (
+            SIGNATURE_MEMBER in names
+            and z.getinfo(SIGNATURE_MEMBER).file_size > _MAX_SIGNATURE_BYTES
+        ):
+            raise ArtifactError("signature too large")
         unexpected = set(names) - expected
         if unexpected:
             raise ArtifactError(f"unexpected archive members: {sorted(unexpected)[:3]}")

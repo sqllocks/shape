@@ -33,7 +33,7 @@ def decrypt_aes_gcm(payload, key, aad=b""):
         raise ShapeSecurityError("ciphertext authentication failed") from e
 
 
-def generate_ed25519_keypair():
+def generate_ed25519_keypair() -> tuple[bytes, bytes]:
     sk = Ed25519PrivateKey.generate()
     pk = sk.public_key()
     return (
@@ -46,12 +46,20 @@ def generate_ed25519_keypair():
     )
 
 
-def sign_ed25519(message, private_key):
+def sign_ed25519(message: bytes, private_key: bytes) -> bytes:
     return Ed25519PrivateKey.from_private_bytes(private_key).sign(message)
 
 
-def verify_ed25519(message, signature, public_key):
+def verify_ed25519(message: bytes, signature: bytes, public_key: bytes) -> None:
     try:
         Ed25519PublicKey.from_public_bytes(public_key).verify(signature, message)
     except Exception as e:
         raise ShapeSecurityError("signature verification failed") from e
+
+
+def public_key_from_private(private_key: bytes) -> bytes:
+    return (
+        Ed25519PrivateKey.from_private_bytes(private_key)
+        .public_key()
+        .public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+    )

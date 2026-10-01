@@ -15,8 +15,8 @@ CC-BY-4.0." Any distribution that includes this data must retain this attributio
 
 `src/shape/profile/reference/_dateutil_parser.py` is a port of the date/time string parser of
 python-dateutil 2.9.0 (`dateutil/parser/_parser.py`), kept so that Shape classifies and parses
-date text the way pandas (which falls back on dateutil) and therefore Spindle do, without
-depending on the package.
+date text the way pandas does (pandas falls back on dateutil), without depending on the
+package.
 
 python-dateutil is Copyright (c) 2003-2011 Gustavo Niemeyer, (c) 2012-2014 Tomi Pieviläinen,
 (c) 2014-2016 Yaron de Leeuw, (c) 2015- Paul Ganssle and the dateutil contributors, under the
