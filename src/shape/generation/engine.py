@@ -70,7 +70,10 @@ _T = TypeVar("_T")
 
 DEFAULT_CHUNK_ROWS = 65_536
 THREADS_ENV = "SHAPE_THREADS"
-_MIN_PARALLEL_CHUNK_ROWS = 8_192
+# Chunks of a level that runs on threads: about two per thread, but never below the first or above
+# the second (measured: smaller chunks pay the per-chunk cost of the strategies, larger ones lose
+# the overlap between threads and fall out of the cache). The tables are the same for any size.
+_PARALLEL_CHUNK_ROWS = (32_768, 131_072)
 DEFAULT_ROWS = 100  # a table no preset, count rule or override mentions
 
 _DEPENDENT = frozenset(
@@ -463,6 +466,7 @@ class Engine:
             self.schema.model.seed = int(seed)
         self.chunk_rows = chunk_rows
         self._strategies = dict(strategies or {})
+        self._chunk_rows_given = chunk_rows != DEFAULT_CHUNK_ROWS
         self._overrides = dict(row_counts or {})
         self._lock = threading.RLock()
         self._tables: dict[str, pa.Table] = {}
@@ -698,9 +702,10 @@ class Engine:
         jobs = []
         for name in todo:
             total = self.row_counts.get(name, DEFAULT_ROWS)
-            # Enough chunks to keep every thread busy, but not so small that the per-chunk cost
-            # of the strategies shows (the tables are the same for any chunk size).
-            size = min(self.chunk_rows, max(_MIN_PARALLEL_CHUNK_ROWS, -(-total // (workers * 3))))
+            low, high = _PARALLEL_CHUNK_ROWS
+            size = max(low, min(high, -(-total // (workers * 2))))
+            if self._chunk_rows_given:
+                size = min(size, self.chunk_rows)
             starts = range(0, total, size) if total else [0]
             jobs += [(name, i, start, min(size, total - start)) for i, start in enumerate(starts)]
         threads = min(workers, len(jobs))

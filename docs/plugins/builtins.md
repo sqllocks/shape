@@ -13,7 +13,7 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.sources` | `abfss` | CSV, Parquet, JSONL and IPC files in OneLake and ADLS Gen2, by `abfss://` URI (extra `[azure]`; see [cloud-sources.md](cloud-sources.md)) |
 | `shape.sources` | `delta` | Delta tables: a local directory, or `delta+abfss://` in OneLake and ADLS Gen2 (extra `[azure]` for cloud tables) |
 | `shape.sinks` | `csv` | CSV file |
-| `shape.sinks` | `parquet` | Parquet file (snappy, dictionary encoding on; T-17) |
+| `shape.sinks` | `parquet` | Parquet file (snappy, dictionary encoding on; T-17; row groups of up to 1,048,576 rows) |
 | `shape.sinks` | `jsonl` | JSON Lines file |
 | `shape.sinks` | `ipc` | Arrow IPC file |
 | `shape.sinks` | `tsv` | Tab-separated file |

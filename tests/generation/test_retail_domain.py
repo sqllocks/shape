@@ -201,3 +201,43 @@ def test_a_temporal_unit_changes_the_type_not_the_instants(retail):
 
     with pytest.raises(StrategyError, match="unit"):
         Temporal().generate({**spec, "unit": "fortnight"}, ctx)
+
+
+def test_threads_do_not_change_the_retail_tables(retail, small, monkeypatch):
+    monkeypatch.setenv("SHAPE_THREADS", "1")
+    one = Engine(retail.schema, scale="small", seed=1042).generate()
+    monkeypatch.setenv("SHAPE_THREADS", "4")
+    four = Engine(retail.schema, scale="small", seed=1042, chunk_rows=700).generate()
+    for name in TABLES:
+        assert one.tables[name].equals(small.tables[name]), name
+        assert four.tables[name].equals(small.tables[name]), name
+
+
+def test_written_parquet_equals_the_generated_tables(retail, small, tmp_path):
+    import pyarrow.parquet as pq
+
+    from shape.generation.output import write_engine
+
+    write_engine(Engine(retail.schema, scale="small", seed=1042), "parquet", tmp_path)
+    for name in TABLES:
+        assert pq.read_table(tmp_path / f"{name}.parquet").equals(small.tables[name]), name
+
+
+def test_tables_are_handed_to_the_writer_before_the_last_validation(retail, monkeypatch):
+    """``order`` is final once its computed total and its date repair are in; the validation that
+    follows (and the repairs of later rules) must not delay it."""
+    import shape.generation.engine as engine_module
+
+    events: list[str] = []
+    real = engine_module.validate_rules
+    monkeypatch.setattr(
+        engine_module,
+        "validate_rules",
+        lambda *a, **k: (events.append("validate"), real(*a, **k))[1],
+    )
+    Engine(retail.schema, scale="small", seed=1).generate(
+        on_table=lambda name, table: events.append(name)
+    )
+    assert events.index("order") < events.index("validate")
+    assert events.index("product") < events.index("validate")
+    assert sorted(e for e in events if e != "validate") == sorted(TABLES)
