@@ -171,10 +171,16 @@ def _top_by_first_seen(
     first = np.full(k, -1, dtype=np.int64)
     found_above = found_ties = 0
     pos, chunk, n = 0, 1 << 14, len(values)
+    # Only keys with count >= c_thr can be selected: search that (usually tiny, cache-resident)
+    # subset instead of every distinct key.
+    cand_idx = np.flatnonzero(counts >= c_thr)
+    cand = uniq[cand_idx]
+    last = len(cand) - 1
     while pos < n and (found_above < n_above or found_ties < want_ties):
         ch = values[pos : pos + chunk]
-        idx = np.searchsorted(uniq, ch)
-        rows = np.flatnonzero(counts[idx] >= c_thr)
+        cpos = np.minimum(np.searchsorted(cand, ch), last)
+        rows = np.flatnonzero(cand[cpos] == ch)
+        idx = cand_idx[cpos]
         if len(rows):
             u, fi = np.unique(idx[rows], return_index=True)
             new = first[u] < 0

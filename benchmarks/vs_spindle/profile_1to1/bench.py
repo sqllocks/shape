@@ -93,8 +93,15 @@ def worker(tool: str, ds: str):
                 return DataProfiler.from_csv(path)
     elif tool == "shape":
         import shape
-        import shape.profile.reference.profile  # noqa: F401  (T-19: imports are not timed; the
-        # package imports this module lazily on the first call, as Spindle's are imported above)
+        import shape.api  # noqa: F401  (what shape.profile resolves to on its first call)
+
+        # T-19: imports are excluded for both tools. Spindle's worker imports pandas and its
+        # profiler above; shape.profile imports its implementation (pandas included) on first
+        # call, so import that module here too. Nothing is run: no warm-up call.
+        import shape.profile.reference.profile  # noqa: F401
+        from shape.kernel.dispatch import get_kernel
+
+        get_kernel()  # loads the native extension: an import, not work
 
         if ds == "mt":
 
