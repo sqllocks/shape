@@ -1972,7 +1972,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 21b | P1-15 | done | 04fe94c |
 | 21c | P1-16 | done | 7238901 |
 | 21d | P1-17 | done | 981bdd7 |
-| 21e | P1-18 | wip (lane/P1-18) | |
+| 21e | P1-18 | done (279 baseline enums off, 430 kept; parity allow-list `is_enum`/`enum_values`) | d212635 |
 | 22 | P2-01 | done | c3909e9 |
 | 23 | P2-02 | done | 84e8efb |
 | 24 | P2-03 | done | 687f568 |

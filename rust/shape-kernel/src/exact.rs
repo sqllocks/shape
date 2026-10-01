@@ -139,14 +139,16 @@ fn top_by_first_seen<T: Key>(values: &[T], uniq: &[T], counts: &[u64], need: usi
     sel.into_iter().map(|(_, _, i)| i).collect()
 }
 
-/// pandas-profile rule: an enum keeps every key, anything else the first `top_n`.
-fn need_for(card: usize, top_n: usize, row_count: usize) -> usize {
+/// pandas-profile rule: an enum keeps every key, anything else the first `top_n`. An enum
+/// (P1-18) is within the size limits and its values repeat: distinct <= half the non-null
+/// values (`n_nn`), so a unique column never qualifies.
+fn need_for(card: usize, top_n: usize, row_count: usize, n_nn: usize) -> usize {
     let ratio = if row_count > 0 {
         card as f64 / row_count as f64
     } else {
         0.0
     };
-    let is_enum = (card < 200 || (ratio < 0.30 && card < 50_000)) && card > 0;
+    let is_enum = (card < 200 || (ratio < 0.30 && card < 50_000)) && card > 0 && 2 * card <= n_nn;
     if is_enum {
         card
     } else {
@@ -162,7 +164,7 @@ fn count_numeric_impl<T: Key>(
     want_uniq: bool,
 ) -> NumericCounts<T> {
     let c = count_sorted(values);
-    let need = need_for(c.uniq.len(), top_n, row_count);
+    let need = need_for(c.uniq.len(), top_n, row_count, values.len());
     let top = top_by_first_seen(values, &c.uniq, &c.counts, need);
     NumericCounts {
         cardinality: c.uniq.len(),

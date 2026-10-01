@@ -400,6 +400,61 @@ def test_nan_free_numbers_for_every_numeric_column(retail):
                 assert v is None or v == "NaN" or math.isfinite(v)
 
 
+# ---- P1-18: an enumeration has repeating values (distinct <= 0.5 x sampled non-null values) ----
+def _enum_profile(values, type_name="varchar", sample_rows=None, **kw):
+    t = FakeTable("t", [FakeColumn("c", type_name)], [(v,) for v in values])
+    if sample_rows is not None:
+        kw["sample_rows"] = sample_rows
+    return profile_database(connection=FakeConnection([t]), **kw).to_dict()["tables"]["t"][
+        "columns"
+    ]["c"]
+
+
+def test_a_unique_column_is_not_an_enumeration():
+    col = _enum_profile([f"user{i}" for i in range(40)])  # 40 <= 50 distinct, but all different
+    assert col["cardinality"] == 40
+    assert col["is_enum"] is False and col["enum_values"] is None
+
+
+def test_a_tiny_table_of_distinct_text_is_not_an_enumeration():
+    col = _enum_profile(list("abcdefghij"))
+    assert col["is_enum"] is False and col["enum_values"] is None
+
+
+def test_free_text_is_not_an_enumeration():
+    col = _enum_profile([f"note about order {i % 90}" for i in range(120)])  # 90 > 0.5 x 120
+    assert col["is_enum"] is False and col["enum_values"] is None
+
+
+def test_a_low_cardinality_category_stays_an_enumeration():
+    col = _enum_profile(["red", "green", "blue"] * 20)
+    assert col["is_enum"] is True
+    assert col["enum_values"] == {"red": 1 / 3, "green": 1 / 3, "blue": 1 / 3}
+
+
+@pytest.mark.parametrize("distinct,expected", [(4, True), (5, True), (6, False)])
+def test_the_half_boundary(distinct, expected):
+    values = [f"v{i % distinct}" for i in range(distinct)] + ["v0"] * (10 - distinct)
+    col = _enum_profile(values)
+    assert col["cardinality"] == distinct
+    assert col["is_enum"] is expected
+    assert (col["enum_values"] is not None) is expected
+
+
+def test_the_boundary_counts_sampled_non_null_values():
+    # 5 distinct among 8 non-null values (two nulls): more than half
+    assert _enum_profile(list("abcde") + list("abc") + [None, None])["is_enum"] is False
+    assert _enum_profile(list("abcd") * 2 + [None, None])["is_enum"] is True
+
+
+def test_all_null_and_one_value_columns():
+    nulls = _enum_profile([None] * 10)
+    assert nulls["is_enum"] is False and nulls["enum_values"] is None
+    same = _enum_profile(["x"] * 10)
+    assert same["is_enum"] is True and same["enum_values"] == {"x": 1.0}
+    assert _enum_profile(["x"])["is_enum"] is False  # one row: unique
+
+
 # --- FIX-4: a deterministic sample spread over the whole table ------------------------------
 
 

@@ -5,6 +5,13 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Enum rule: a profiled column is an enum (`is_enum`, with every value in `enum_values`) only if,
+  besides the existing size limits (fewer than 200 distinct values, or a distinct ratio under 0.30
+  with fewer than 50,000), its values repeat: distinct values are at most half of the non-null
+  values, and a unique column is never an enum. Before, every column of a table under 200 rows
+  was an enum, unique keys, e-mails and free text included, so generation from a profile
+  resampled only those exact values. Same rule in both kernels and in the SQL Server plugin's
+  sampled profile. `value_counts_ext` (the top 500 values) is unchanged.
 - `shape from-ddl FILE`: reads SQL `CREATE TABLE` DDL (SQL Server, PostgreSQL, MySQL, ANSI; inline,
   table-level and `ALTER TABLE` foreign keys) into a generation schema, with smart inference of
   distributions, key patterns, row ratios, seasonality, correlations and business rules
