@@ -36,6 +36,11 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.strategies` | `distribution` | values from a distribution family, clipped by `min`/`max` and rounded to the column's scale |
 | `shape.strategies` | `empirical` | inverse-transform sampling of a stored quantile fingerprint |
 | `shape.strategies` | `pattern` | strings from a format with `{seq:n}`, `{random:n}` and `{column}` tokens |
+| `shape.strategies` | `native` | text from the built-in pools (names, companies, streets, sentences, cities, states, e-mail addresses, phone numbers, SSNs, URIs) |
+| `shape.strategies` | `faker` | the `native` providers, and any provider of the optional `faker` package |
+| `shape.strategies` | `formula` | a column computed from other columns of the row by a checked expression (no `eval`) |
+| `shape.strategies` | `derived` | a column derived from another column of the row, or of a parent row, by `copy` or `add_days` |
+| `shape.strategies` | `computed` | a column back-filled from child rows (or the parent) by the compute phase |
 | `shape.distributions` | `normal` | `loc + scale * N(0,1)` |
 | `shape.distributions` | `uniform` | uniform on `[loc, loc + scale)` |
 | `shape.distributions` | `exponential` | `loc + scale * Exp(1)` |

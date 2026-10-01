@@ -78,7 +78,9 @@ def test_retail_row_counts_at_small_medium_large_xlarge(mode):
 
 def test_dry_run_plans_retail_without_strategies():
     schema = schema_import.import_dump(_load(FIXTURES / "schemas" / "retail_3nf.json"))
+    # A strategy no plugin provides (the built-ins grow with the work packages, so name none).
+    schema.tables["customer"].columns["first_name"].generator = {"strategy": "no_such_strategy"}
     d = Engine(schema, scale="medium", strategies={}).dry_run()
     assert d.order == [t for level in PLAN["retail_3nf"]["levels"] for t in level]
     assert d.total_rows == sum(PLAN["retail_3nf"]["row_counts"]["medium"].values())
-    assert not d.ok and any("faker" in m for m in d.missing_strategies)
+    assert not d.ok and any("no_such_strategy" in m for m in d.missing_strategies)
