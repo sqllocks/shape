@@ -1,13 +1,4 @@
-from .core import (
-    PluginCapabilities as PluginCapabilities,
-)
-from .core import (
-    PluginManifest as PluginManifest,
-)
-from .core import (
-    PluginPolicy as PluginPolicy,
-)
+"""Shape's plugin system: the API v1 Protocols (``shape.plugins.api``), the host
+(``shape.plugins.host``), built-in registration and ``shape plugins``.
 
-__all__ = ["PluginCapabilities", "PluginManifest", "PluginPolicy"]
-from .runtime import PluginResponse as PluginResponse
-from .runtime import invoke as invoke
+Plugins are trusted, in-process code (see ``docs/plugins/trust-model.md``)."""

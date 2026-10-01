@@ -22,7 +22,7 @@ iban = "my_plugin.detectors:IbanDetector"
    major version matches `shape.plugins.api.v1.SHAPE_API`, resolve the entry point, build the
    object (a class is instantiated; a callable is called; an object that already satisfies
    the Protocol is used as it is), and check it against the group's Protocol.
-3. **Failure isolation:** any exception (including `SystemExit`) raised while importing or
+3. **Failure containment:** any exception (including `SystemExit`) raised while importing or
    building a plugin is stored on its record (`status == "error"`, `error` text). It never
    escapes discovery, `names`, `records` or `load_all`. A failed plugin is not retried
    until `reload()`. Core features and other plugins are unaffected.

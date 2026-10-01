@@ -1,4 +1,4 @@
-"""Plugin host: discovery, API version check, lazy loading, registry, failure isolation.
+"""Plugin host: discovery, API version check, lazy loading, registry, failure containment.
 
 This is the stable surface that the plugin CLI (P2-03), the built-ins (P2-04) and the plugin
 kit (P2-06) build on. Everything is reachable from :class:`PluginHost`; most callers use the
@@ -11,7 +11,7 @@ Lifecycle of a plugin:
    imports the entry point's module, checks its ``SHAPE_API`` major version against
    :data:`shape.plugins.api.v1.SHAPE_API`, resolves the entry point to a factory, calls it,
    and checks that the result satisfies the group's Protocol.
-3. **Failure isolation:** any exception raised while importing or building a plugin is caught
+3. **Failure containment:** any exception raised while importing or building a plugin is caught
    and stored on its :class:`PluginRecord` (``status == "error"``). It never propagates out of
    discovery, ``names``, ``records`` or ``load_all``. :meth:`PluginHost.get` raises
    :class:`PluginLoadError` for that one plugin only; :meth:`PluginHost.try_get` returns

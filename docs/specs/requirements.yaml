@@ -270,11 +270,11 @@ requirements:
   verify: [unit]
   owner: streaming
 - id: SHAPE-PLUG-010
-  title: Isolated plugin execution
+  title: Trusted in-process plugins
   level: L2
   milestone: M8
   priority: MUST
-  text: Reference plugins execute out of process with authorization, timeouts and bounded messages.
+  text: Plugins are trusted in-process code loaded by the plugin host; a plugin that fails to load is contained and reported by `shape plugins doctor`, and the trust model is documented (docs/plugins/trust-model.md).
   verify: [unit, security]
   owner: plugins
 
