@@ -142,3 +142,45 @@ def cap_per_parent(indices: Any, pool: int, max_per_parent: int, k0: int, k1: in
             full += 1
         out[row] = chosen
     return pa.array(out)
+
+
+def _nullable_ints(a: Any, what: str) -> pa.Array:
+    arr = a if isinstance(a, pa.Array) else pa.array(a)
+    if not pa.types.is_int64(arr.type):
+        raise ValueError(f"{what} must be an int64 array")
+    return arr
+
+
+def dense_rows(keys: Any, start: int, size: int) -> pa.Array:
+    arr = _nullable_ints(keys, "keys")
+    values = np.asarray(arr.fill_null(0).to_numpy(zero_copy_only=False), dtype=np.int64)
+    valid = (values >= start) & (values - start < size)
+    if arr.null_count:
+        valid &= np.asarray(arr.is_valid().to_numpy(zero_copy_only=False), dtype=bool)
+    rows = np.where(valid, values - start, 0)
+    return pa.array(rows, mask=~valid, type=pa.int64())
+
+
+def group_sums(keys: Any, values: Any, start: int, size: int) -> tuple[pa.Array, pa.Array]:
+    if size < 0:
+        raise ValueError("size must not be negative")
+    k = _nullable_ints(keys, "keys")
+    v = values if isinstance(values, pa.Array) else pa.array(values)
+    if not (pa.types.is_int64(v.type) or pa.types.is_float64(v.type)):
+        raise ValueError("values must be an int64 or float64 array")
+    if len(v) != len(k):
+        raise ValueError("keys and values must have the same length")
+    key_values = np.asarray(k.fill_null(0).to_numpy(zero_copy_only=False), dtype=np.int64)
+    keep = (key_values >= start) & (key_values - start < size)
+    if k.null_count:
+        keep &= np.asarray(k.is_valid().to_numpy(zero_copy_only=False), dtype=bool)
+    if v.null_count:
+        keep &= np.asarray(v.is_valid().to_numpy(zero_copy_only=False), dtype=bool)
+    rows = key_values[keep] - start
+    amounts = np.asarray(v.fill_null(0).to_numpy(zero_copy_only=False))[keep]
+    sums = np.zeros(size, dtype=amounts.dtype)
+    counts = np.zeros(size, dtype=np.int64)
+    with np.errstate(over="ignore"):
+        np.add.at(sums, rows, amounts)  # unbuffered: adds in row order, like the native loop
+    np.add.at(counts, rows, 1)
+    return pa.array(sums), pa.array(counts)

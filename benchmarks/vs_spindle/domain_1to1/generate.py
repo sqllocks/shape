@@ -14,8 +14,8 @@ Each implementation runs in its own venv (Spindle's or Shape's). Output layout:
   ``spindle generate --format parquet`` path: pandas ``to_parquet``, snappy).
 * ``reference_port``: the numpy + pyarrow port in ``port.py``. Retail only: exits 2 for any
   other domain.
-* ``shape``: the product code in ``src/shape``. It has no domain generation yet; exits 2
-  until the product path exists (``results.json`` then records ``null``).
+* ``shape``: the product path: the ``shape.domains`` plugin, ``Engine.generate`` and the
+  product's Parquet writer. Exits 2 for a domain no installed plugin provides.
 
 Exit codes: 0 ok, 2 the implementation cannot generate this domain.
 The timed region (setup + generate + write, imports excluded) is reported on the last stdout
@@ -142,7 +142,50 @@ def _run_reference_port(domain: str, scale: str, seed: int, dest: Path) -> dict:
 
 
 def _run_shape(domain: str, scale: str, seed: int, dest: Path) -> dict:
-    raise Unsupported("impl 'shape' has no domain generation yet (product path not built)")
+    t_imp = time.perf_counter()
+    import numpy
+    import pyarrow
+
+    from shape.generation.domains import DomainNotFoundError, domain_names, load_domain
+    from shape.generation.engine import Engine
+    from shape.generation.output import write_engine
+    from shape.plugins.host import default_host
+
+    # Everything the timed region touches is imported before it (T-19: imports are excluded for
+    # both tools; the baseline's import loads every strategy and writer): the strategy and sink
+    # plugins are loaded and the domain entry points discovered. pyarrow lazily imports pandas on
+    # its first list array.
+    pyarrow.array(["warm"])
+    host = default_host()
+    host.load_all("shape.strategies")
+    host.load_all("shape.sinks")
+    known = domain_names()
+    import_s = time.perf_counter() - t_imp
+    if domain not in known:
+        raise Unsupported(f"impl 'shape' has no domain {domain!r} (installed: {known})")
+    ru0, t0 = _ru(), time.perf_counter()
+    try:
+        loaded = load_domain(domain)
+    except DomainNotFoundError as e:
+        raise Unsupported(str(e)) from e
+    engine = Engine(loaded.schema, scale=scale, seed=seed)
+    t_setup = time.perf_counter()
+    # The product path: tables are written (parallel, snappy Parquet, T-17) as soon as they are
+    # final, while the others are still being generated, so generate and write overlap.
+    write_engine(engine, "parquet", dest)
+    t1 = time.perf_counter()
+    return {
+        "import_s": import_s,
+        "gen_s": t1 - t0,
+        "write_s": 0.0,
+        "total_s": t1 - t0,
+        "overlapped": True,
+        "rows": {name: engine.row_counts[name] for level in engine.levels for name in level},
+        "per_table_s": {"_construct_domain+Engine": t_setup - t0, "_generate+write": t1 - t_setup},
+        "numpy": numpy.__version__,
+        "pyarrow": pyarrow.__version__,
+        "ru0": ru0,
+    }
 
 
 RUNNERS = {"spindle": _run_spindle, "reference_port": _run_reference_port, "shape": _run_shape}

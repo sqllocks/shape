@@ -18,7 +18,7 @@ from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
-from shape.generation.engine import Engine, GenerationResult
+from shape.generation.engine import Engine, GenerationResult, worker_threads
 from shape.generation.schema import GenSchema
 from shape.plugins.host import default_host
 
@@ -110,7 +110,7 @@ def write_result(
     fmt: str,
     output_dir: str | Path,
     *,
-    max_workers: int = 4,
+    max_workers: int | None = None,
     **options: Any,
 ) -> list[Path]:
     """Write every table of ``result`` as ``fmt``; return the files (or Delta directories)."""
@@ -129,8 +129,13 @@ def write_result(
             **_options(fmt, result.schema, name, options),
         )
 
-    _run_parallel(names, one, max_workers)
+    _run_parallel(names, one, _writers(max_workers))
     return _paths(fmt, out, names)
+
+
+def _writers(max_workers: int | None) -> int:
+    """Writer threads: ``max_workers``, else ``SHAPE_THREADS`` (every core when unset), up to 4."""
+    return max_workers if max_workers is not None else min(4, worker_threads())
 
 
 def _run_parallel(names: list[str], work: Callable[[str], None], max_workers: int) -> None:
@@ -191,19 +196,69 @@ def _prefetch(source: Iterator[pa.RecordBatch]) -> Iterator[pa.RecordBatch]:
         thread.join()
 
 
+def _write_overlapped(
+    engine: Engine, fmt: str, output_dir: str | Path, max_workers: int, options: Mapping[str, Any]
+) -> list[Path]:
+    """Generate the whole schema and write each table as soon as it is final: a table that no
+    post-pass changes is written chunk by chunk while it is generated (``Engine.generate``'s
+    ``on_batch``), and the others after the post-passes (``on_table``), so the writes overlap
+    the generation of the other tables and the post-passes."""
+    sink = _sink(fmt)
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    queues: dict[str, queue.Queue[pa.RecordBatch | None]] = {}
+
+    def write(name: str, batches: Iterator[pa.RecordBatch], schema: pa.Schema | None) -> None:
+        extra = {"schema": schema} if schema is not None else {}
+        sink.write(
+            str(_target(fmt, out, name)),
+            name,
+            batches,
+            **extra,
+            **_options(fmt, engine.schema, name, options),
+        )
+
+    def drain(pending: queue.Queue[pa.RecordBatch | None]) -> Iterator[pa.RecordBatch]:
+        while (batch := pending.get()) is not None:
+            yield batch
+
+    futures = []
+    with ThreadPoolExecutor(max_workers=max(1, max_workers)) as pool:
+
+        def on_batch(name: str, batch: pa.RecordBatch | None) -> None:
+            pending = queues.get(name)
+            if pending is None:
+                pending = queues[name] = queue.Queue()
+                futures.append(pool.submit(write, name, drain(pending), None))
+            pending.put(batch)
+
+        def on_table(name: str, table: pa.Table) -> None:
+            futures.append(pool.submit(write, name, iter(table.to_batches()), table.schema))
+
+        try:
+            result = engine.generate(on_table=on_table, on_batch=on_batch)
+        except BaseException:
+            for pending in queues.values():  # let the writers finish what they have
+                pending.put(None)
+            raise
+    for future in futures:
+        future.result()
+    return _paths(fmt, out, list(result.generation_order))
+
+
 def write_engine(
     engine: Engine,
     fmt: str,
     output_dir: str | Path,
     *,
     chunk_rows: int | None = None,
-    max_workers: int = 4,
+    max_workers: int | None = None,
     **options: Any,
 ) -> list[Path]:
     """Generate and write every table. A schema with no post-pass is streamed (generation of the
     next chunk overlaps the write of this one); otherwise the whole result is written."""
     if needs_post_pass(engine.schema):
-        return write_result(engine.generate(), fmt, output_dir, max_workers=max_workers, **options)
+        return _write_overlapped(engine, fmt, output_dir, _writers(max_workers), options)
     engine.schema.validate_or_raise()
     sink = _sink(fmt)
     out = Path(output_dir)
@@ -218,5 +273,5 @@ def write_engine(
             **_options(fmt, engine.schema, name, options),
         )
 
-    _run_parallel(names, one, max_workers)
+    _run_parallel(names, one, _writers(max_workers))
     return _paths(fmt, out, names)

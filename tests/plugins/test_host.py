@@ -49,8 +49,9 @@ def site(tmp_path, monkeypatch):
 
 
 def _third_party() -> PluginHost:
-    """Installed-package discovery without core's own built-ins (P2-04), so these tests see
-    only the plugins they install."""
+    """Installed-package discovery without core's own built-ins (P2-04) and without the
+    first-party ``sqllocks-shape-*`` plugin distributions (P4-07 installs one for the suite), so
+    these tests see only the plugins they install."""
     from importlib import metadata
 
     def eps():
@@ -59,6 +60,7 @@ def _third_party() -> PluginHost:
             for g in v1.GROUPS
             for ep in metadata.entry_points(group=g)
             if not ep.value.startswith("shape.builtins.")
+            and not (ep.dist is not None and ep.dist.name.startswith("sqllocks-shape-"))
         ]
 
     return PluginHost(entry_points=eps)

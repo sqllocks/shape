@@ -38,9 +38,11 @@ methods, ``EngineContext``, ``KeyPool`` (``RangeKeys``, ``ArrayKeys``), ``Genera
 from __future__ import annotations
 
 import copy
+import os
 import threading
 import time
-from collections.abc import Callable, Hashable, Iterator, Mapping
+from collections.abc import Callable, Collection, Hashable, Iterator, Mapping
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from typing import Any, TypeVar
 
@@ -53,13 +55,25 @@ from shape.errors import ShapeSchemaError
 from shape.generation.compute import apply_compute_phase
 from shape.generation.correlation import apply_copula
 from shape.generation.rng import RowStream
-from shape.generation.rules import RuleViolation, fix_rules, validate_rules
+from shape.generation.rules import (
+    RuleViolation,
+    fix_rule,
+    repair_target,
+    repaired_tables,
+    validate_rules,
+)
+from shape.generation.runtime import generation_memory
 from shape.generation.schema import Column, GenSchema, Issue, Table
 from shape.plugins.api.v1 import GenerationContext
 
 _T = TypeVar("_T")
 
 DEFAULT_CHUNK_ROWS = 65_536
+THREADS_ENV = "SHAPE_THREADS"
+# Chunks of a level that runs on threads: about two per thread, but never below the first or above
+# the second (measured: smaller chunks pay the per-chunk cost of the strategies, larger ones lose
+# the overlap between threads and fall out of the cache). The tables are the same for any size.
+_PARALLEL_CHUNK_ROWS = (32_768, 131_072)
 DEFAULT_ROWS = 100  # a table no preset, count rule or override mentions
 
 _DEPENDENT = frozenset(
@@ -94,6 +108,21 @@ _ARROW_TYPES: dict[str, pa.DataType] = {
     "timestamp": pa.timestamp("us"),
     "datetime": pa.timestamp("us"),
 }
+
+
+def worker_threads() -> int:
+    """Threads for generation: ``SHAPE_THREADS`` if set (``0`` or unset: every core)."""
+    raw = os.environ.get(THREADS_ENV, "").strip()
+    if raw:
+        try:
+            n = int(raw)
+        except ValueError as exc:
+            raise ValueError(f"{THREADS_ENV} must be a non-negative integer, got {raw!r}") from exc
+        if n < 0:
+            raise ValueError(f"{THREADS_ENV} must be a non-negative integer, got {raw!r}")
+        if n > 0:
+            return n
+    return os.cpu_count() or 1
 
 
 class CircularDependencyError(ShapeSchemaError):
@@ -437,6 +466,7 @@ class Engine:
             self.schema.model.seed = int(seed)
         self.chunk_rows = chunk_rows
         self._strategies = dict(strategies or {})
+        self._chunk_rows_given = chunk_rows != DEFAULT_CHUNK_ROWS
         self._overrides = dict(row_counts or {})
         self._lock = threading.RLock()
         self._tables: dict[str, pa.Table] = {}
@@ -655,6 +685,50 @@ class Engine:
                 self._tables[table] = built
         return built
 
+    def _generate_level(
+        self,
+        names: list[str],
+        on_batch: Callable[[str, pa.RecordBatch | None], None] | None = None,
+        streamed: Collection[str] = (),
+    ) -> set[str]:
+        """Generate every table of ``names`` that is not built yet, their chunks spread over
+        :func:`worker_threads` threads. A chunk depends only on its row range and on the tables of
+        earlier levels, so the tables are the same as when built one chunk after another.
+
+        ``on_batch`` receives each chunk of the tables in ``streamed``, in row order as soon as it
+        is ready, then ``None`` when the table is whole. Returns the tables it delivered."""
+        todo = [n for n in names if n not in self._tables]
+        workers = worker_threads()
+        jobs = []
+        for name in todo:
+            total = self.row_counts.get(name, DEFAULT_ROWS)
+            low, high = _PARALLEL_CHUNK_ROWS
+            size = max(low, min(high, -(-total // (workers * 2))))
+            if self._chunk_rows_given:
+                size = min(size, self.chunk_rows)
+            starts = range(0, total, size) if total else [0]
+            jobs += [(name, i, start, min(size, total - start)) for i, start in enumerate(starts)]
+        threads = min(workers, len(jobs))
+        if threads <= 1:
+            return set()
+        delivered: set[str] = set()
+        by_table: dict[str, list[pa.RecordBatch]] = {}
+        last = {job[0]: i for i, job in enumerate(jobs)}
+        with ThreadPoolExecutor(max_workers=threads, thread_name_prefix="shape-gen") as pool:
+            produced = pool.map(lambda j: self.generate_chunk(j[0], j[2], j[3], chunk=j[1]), jobs)
+            for i, (job, batch) in enumerate(zip(jobs, produced, strict=False)):
+                name = job[0]
+                by_table.setdefault(name, []).append(batch)
+                if on_batch is not None and name in streamed:
+                    on_batch(name, batch)
+                    if last[name] == i:
+                        on_batch(name, None)
+                        delivered.add(name)
+        with self._lock:
+            for name, parts in by_table.items():
+                self._tables.setdefault(name, pa.Table.from_batches(parts, schema=parts[0].schema))
+        return delivered
+
     # ---- services for strategies --------------------------------------------------------
 
     def key_pool(self, table: str) -> KeyPool:
@@ -686,21 +760,89 @@ class Engine:
 
     # ---- the run ------------------------------------------------------------------------
 
-    def generate(self) -> GenerationResult:
+    def _post_pass_tables(self) -> set[str]:
+        """The tables a post-pass can change: those with a ``computed`` column, those the rule
+        repair changes, and those with correlated columns."""
+        touched = {
+            name
+            for name, tdef in self.schema.tables.items()
+            if any(c.strategy == "computed" for c in tdef.columns.values())
+        }
+        touched |= repaired_tables(self.schema)
+        touched |= {name for name, pairs in self.schema.correlated_columns.items() if pairs}
+        return touched
+
+    def generate(
+        self,
+        on_table: Callable[[str, pa.Table], None] | None = None,
+        on_batch: Callable[[str, pa.RecordBatch | None], None] | None = None,
+    ) -> GenerationResult:
         """Validate, generate every table, then run the post-passes (compute, rule repair,
-        copula). The result does not depend on ``chunk_rows``."""
+        copula). The result does not depend on ``chunk_rows``.
+
+        A table is *final* once no post-pass can change it: right after its level for a table
+        without ``computed`` columns, rule repairs or correlated columns, after the post-passes for
+        the others. ``on_table(name, table)`` is called once for every table that is final only
+        after the post-passes, or for every table when there is no ``on_batch``. ``on_batch(name,
+        batch)`` receives the chunks of the tables that are final at generation, in row order as
+        they are made, then ``(name, None)`` when the table is whole. Both run on the calling
+        thread, so a slow callback delays generation; hand the data to a writer thread."""
+        with generation_memory():
+            return self._generate(on_table, on_batch)
+
+    def _generate(
+        self,
+        on_table: Callable[[str, pa.Table], None] | None,
+        on_batch: Callable[[str, pa.RecordBatch | None], None] | None,
+    ) -> GenerationResult:
         self.schema.validate_or_raise()
         started = time.perf_counter()
         order = self.order
-        flat = [n for level in dependency_levels(self.schema, order) for n in level]
+        levels = dependency_levels(self.schema, order)
+        flat = [n for level in levels for n in level]
+        touched = self._post_pass_tables()
+        final_early = [n for n in flat if n not in touched]
+        for level in levels:
+            delivered = self._generate_level(
+                level, on_batch, [n for n in level if n in final_early] if on_batch else ()
+            )
+            for name in level:
+                if name in touched or name in delivered:
+                    continue
+                table = self.generate_table(name)
+                if on_batch is not None:
+                    for batch in table.to_batches():
+                        on_batch(name, batch)
+                    on_batch(name, None)
+                elif on_table is not None:
+                    on_table(name, table)
         tables = {name: self.generate_table(name) for name in flat}
         tables = apply_compute_phase(tables, self.schema)
-        remaining: list[RuleViolation] = []
-        if self.schema.business_rules:
-            tables, remaining = fix_rules(tables, self.schema)
-        for tname, pairs in self.schema.correlated_columns.items():
-            if tname in tables and pairs:
-                tables[tname] = apply_copula(tables[tname], pairs, self.seed, tname)
+        rules = self.schema.business_rules
+        copula = {t for t, pairs in self.schema.correlated_columns.items() if t in tables and pairs}
+        emitted: set[str] = set()
+
+        def release(after_rule: int) -> None:
+            """Hand over the touched tables that no later rule repair or copula changes."""
+            if on_table is None:
+                return
+            later = {repair_target(r) for r in rules[after_rule + 1 :]} | copula
+            for name in flat:
+                if name in touched and name not in later and name not in emitted:
+                    emitted.add(name)
+                    on_table(name, tables[name])
+
+        release(-1)
+        for i, rule in enumerate(rules):
+            tables = fix_rule(rule, tables, self.seed)
+            release(i)
+        remaining = validate_rules(tables, self.schema) if rules else []
+        for tname in self.schema.correlated_columns:
+            if tname in copula:
+                tables[tname] = apply_copula(
+                    tables[tname], self.schema.correlated_columns[tname], self.seed, tname
+                )
+        release(len(rules))
         lineage = [
             ColumnLineage(name, cname, col.strategy, dict(col.generator))
             for name in flat

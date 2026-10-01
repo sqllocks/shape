@@ -75,18 +75,58 @@ class TsvSink(CsvSink):
         return super()._open(target, schema, {**options, "delimiter": "\t"})
 
 
+ROW_GROUP_ROWS = 1 << 20
+# Dictionary encoding stays on (T-17); a column whose dictionary outgrows this many bytes stops
+# using it, so a column of mostly distinct values (a key, an amount) is not hashed for a megabyte
+# of dictionary first. 128 KiB holds a dictionary of 16k distinct 8-byte values.
+DICTIONARY_PAGE_BYTES = 128 * 1024
+
+
+class _ParquetRowGroups:
+    """Writes the batches it is given in row groups of up to ``ROW_GROUP_ROWS`` rows: a batch of
+    64k rows per row group would repeat the dictionaries and the page headers sixteen times as
+    often and write a larger file."""
+
+    def __init__(self, writer: pq.ParquetWriter, row_group_rows: int) -> None:
+        self._writer = writer
+        self._limit = row_group_rows
+        self._pending: list[pa.RecordBatch] = []
+        self._rows = 0
+
+    def write_batch(self, batch: pa.RecordBatch) -> None:
+        self._pending.append(batch)
+        self._rows += batch.num_rows
+        if self._rows >= self._limit:
+            self._flush()
+
+    def _flush(self) -> None:
+        if self._pending:
+            self._writer.write_table(pa.Table.from_batches(self._pending))
+        self._pending, self._rows = [], 0
+
+    def close(self) -> None:
+        try:
+            self._flush()
+        finally:
+            self._writer.close()
+
+
 class ParquetSink(_FileSink):
     name = "parquet"
     extension = "parquet"
 
     def _open(self, target: Path, schema: pa.Schema, options: dict[str, Any]) -> Any:
         # T-17: snappy, dictionary encoding on.
-        return pq.ParquetWriter(
+        writer = pq.ParquetWriter(
             str(target),
             schema,
             compression=options.get("compression", "snappy"),
             use_dictionary=options.get("use_dictionary", True),
+            dictionary_pagesize_limit=int(
+                options.get("dictionary_page_bytes", DICTIONARY_PAGE_BYTES)
+            ),
         )
+        return _ParquetRowGroups(writer, int(options.get("row_group_rows", ROW_GROUP_ROWS)))
 
 
 class IpcSink(_FileSink):

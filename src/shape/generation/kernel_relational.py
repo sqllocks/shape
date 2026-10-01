@@ -7,7 +7,8 @@ once per table and keeps the result (``Engine.cached``); every chunk then reads 
 kernels are functions of their inputs and the stream key alone, so the result never depends on
 threads, chunking or call order. Native and twin results are equal (``docs/GENERATION_KERNEL.md``).
 
-Stable interface: ``first_flags``, ``group_order``, ``scd2_offsets`` and ``cap_per_parent``.
+Stable interface: ``first_flags``, ``group_order``, ``scd2_offsets``, ``cap_per_parent``,
+``dense_rows`` and ``group_sums``.
 """
 
 from __future__ import annotations
@@ -63,3 +64,21 @@ def cap_per_parent(indices: Ints, pool: int, max_per_parent: int, stream: RowStr
     whose parent is full moves to another parent with room, drawn from the stream."""
     out = get_kernel().cap_per_parent(_ints(indices), pool, max_per_parent, stream.k0, stream.k1)
     return _numpy(out)
+
+
+def dense_rows(keys: pa.Array, start: int, size: int) -> pa.Array:
+    """The row of the sequence key ``start, start + 1, ...`` (``size`` rows) that holds each key of
+    ``keys`` (int64, nulls allowed): an int64 array that is null for a null key or one outside the
+    sequence. Pass it to ``take`` to read the parent's column."""
+    out: pa.Array = pa.array(get_kernel().dense_rows(keys, start, size))
+    return out
+
+
+def group_sums(
+    keys: pa.Array, values: pa.Array, start: int, size: int
+) -> tuple[pa.Array, pa.Array]:
+    """``(sums, counts)`` per row of the sequence key ``start, start + 1, ...`` (``size`` rows):
+    the sum (the type of ``values``, int64 or float64) and the number of the non-null ``values`` of
+    the child rows whose key in ``keys`` is that row's, added in row order."""
+    sums, counts = get_kernel().group_sums(keys, values, start, size)
+    return pa.array(sums), pa.array(counts)

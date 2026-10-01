@@ -196,6 +196,28 @@ except those that the five fixes above change (column-level keys, `MAX` binary t
 names, one-character codes, parent totals), which the harness lists one by one as intentional
 differences.
 
+## Domains
+
+A domain is a `shape.domains` plugin: a `name` and `definition()`, which returns a
+`DomainDefinition` (a generation schema as a JSON-style mapping, reference data as Arrow tables,
+and scale presets). `shape.generation.domains.load_domain(name)` finds the plugin, registers its
+reference data as the datasets that `reference_data`, `record_sample` and `record_field` read, and
+returns a `LoadedDomain` (`name`, the parsed `schema`, the `definition`); `domain_names()` lists the
+installed ones; an unknown name raises `DomainNotFoundError`, which lists them.
+
+```python
+from shape.generation.domains import load_domain
+from shape.generation.engine import Engine
+
+result = Engine(load_domain("retail").schema, scale="medium", seed=1).generate()
+```
+
+The `sqllocks-shape-domains` package (`pip install sqllocks-shape[domains]`) ships `retail`: nine
+tables (customer, address, product_category, product, store, promotion, order, order_line, return),
+the row counts of the `small`, `medium`, `large` and `xlarge` presets, and its reference data. Its
+uniform dates are `timestamp[ns]` (`temporal` with `unit: "ns"`) and the seasonal ones
+`timestamp[us]`.
+
 ## Writers
 
 Every output format is a `shape.sinks` plugin (`write(uri, table, batches, **options) -> rows`).
@@ -213,14 +235,45 @@ print(format_summary(result))                                   # the `summary` 
 |---|---|---|
 | `csv`, `tsv` | `<table>.csv`, `<table>.tsv` | header row, nulls are empty fields |
 | `jsonl` | `<table>.jsonl` | dates and times ISO 8601; decimals are exact strings |
-| `parquet` | `<table>.parquet` | snappy, dictionary encoding on (T-17) |
+| `parquet` | `<table>.parquet` | snappy, dictionary encoding on (T-17); options `row_group_rows` (1,048,576) and `dictionary_page_bytes` (131,072: a column whose dictionary outgrows it stops using one) |
 | `sql` | `<table>.sql` | see below |
 | `excel` | `<table>.xlsx` | extra `[excel]`; refuses a table over 1,048,575 rows |
 | `delta` | `<dir>/<table>/` | extra `[delta]`; `mode` (`overwrite`, `append`), `partition_by` |
 
-`write_result` writes tables in parallel. `write_engine` overlaps generation of chunk *n* + 1 with the
+`write_result` writes tables in parallel (`max_workers`: up to 4 threads, fewer when `SHAPE_THREADS` is lower). `write_engine` overlaps generation of chunk *n* + 1 with the
 write of chunk *n* when the schema has no post-pass (`needs_post_pass`: computed columns, business
-rules or correlations need whole tables), and otherwise writes `engine.generate()`.
+rules or correlations need whole tables). With a post-pass it generates the whole schema and writes each
+table as soon as it is final (see "Threads and overlapped writing"), so the writes of the tables no
+post-pass changes run while the rest is still being generated.
+
+## Threads and overlapped writing
+
+`Engine.generate()` generates a dependency level at a time and spreads the chunks of the level's
+tables over `SHAPE_THREADS` threads (unset or `0`: every core; `1`: one). A chunk of rows depends on
+its row range and on earlier levels only, so the tables are the same for any thread count and any
+`chunk_rows`; chunks are about 32k to 131k rows unless `chunk_rows` is given. Numpy, Arrow and the
+native kernel release the interpreter lock, which is what the threads share.
+
+```python
+engine.generate(on_table=..., on_batch=...)
+```
+
+A table is *final* once no post-pass can change it. A table with no computed column, rule repair or
+correlated column is final as soon as it is generated; `on_batch(name, batch)` receives its chunks in
+row order as they are made and `on_batch(name, None)` when it is whole. Any other table is final after
+the last rule repair that can change it and the copula, and `on_table(name, table)` receives it then
+(and receives every table when there is no `on_batch`). Both callbacks run on the calling thread:
+hand the data to a writer. `write_engine` does exactly that.
+
+`generate()` runs with Arrow's system memory pool (`shape.generation.runtime.generation_memory`; set
+`SHAPE_MEMORY_POOL=default` to keep Arrow's default). The default pool maps fresh memory for each large
+array and returns it soon after, which on a virtual machine makes the page faults of short-lived arrays
+a large part of a run. Values are unaffected; arrays stay valid after the block.
+
+`shape.generation.keypos` finds the row of a key (`first_positions`, `first_rows`): for the primary key
+of a parent that is a sequence (`start`, `start + 1`, ...) the row is `key - start`, found by the native
+`dense_rows` kernel in one pass; any other key is found by binary search or Arrow's lookup. The compute
+phase's `sum_children` and `count_children` use the native `group_sums` kernel for such a parent.
 
 ### SQL options
 

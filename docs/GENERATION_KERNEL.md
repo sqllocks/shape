@@ -50,6 +50,8 @@ Conversions (shared by both implementations):
 | `temporal_sample(day_weights, hour_weights, start_day, k0, k1, row_start, n_rows, whole_seconds=False)` | 5 | `timestamp[us]`: a day, an hour, and an offset inside the hour; words 0-1 day, 2-3 hour, 4 offset |
 | `first_flags(codes)` | | `bool`: true on the first row of each non-negative group code (`0 <= code < len`); a negative code is never first |
 | `group_order(codes, keys)` | | `(rank, size, next)`, all int64: the 0-based place of each row in its group sorted by `keys` (ties keep row order), the group's size, and the row that follows it (-1 for the last); a negative code gives `(-1, 0, -1)` |
+| `dense_rows(keys, start, size)` | | `int64` row of the sequence key `start, start + 1, ...` (`size` rows) that holds each key; null for a null key or one outside the sequence |
+| `group_sums(keys, values, start, size)` | | `(sums, counts)`: per row of that sequence, the sum (the type of `values`, int64 or float64) and the count of the non-null `values` of the child rows whose key it is; added in row order (a float sum is the sequential one), a null or unknown key is skipped, an integer sum wraps |
 | `scd2_offsets(codes, total_days, min_gap, k0, k1)` | per group | int64 day offsets of SCD type 2 effective dates (see below); -1 for a negative code |
 | `cap_per_parent(indices, pool, max_per_parent, k0, k1)` | up to 64 per moved row | int64 parent indices with at most `max_per_parent` rows each (see below) |
 
@@ -88,3 +90,7 @@ They are functions of their inputs and the stream key alone: threads, chunking a
 The kernel benchmark script (`kernel_bench.py` in the benchmarks harness directory) times every function on 1,000,000 rows against
 its Python twin and, where there is one, the numpy or Arrow call that does the same job. It checks
 equivalence first and writes the `kernel_microbench` key of the harness's committed `results.json`.
+
+`dense_rows` and `group_sums` (same file and twin) are the single-pass key lookup and grouped sum that the post-passes
+(compute phase, business-rule repair) and `lookup` use when a parent's key is a sequence (`shape.generation.keypos`). A float
+sum is the plain left-to-right sum in row order, so native and twin are bit-equal.

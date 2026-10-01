@@ -1,7 +1,7 @@
 PYTHON ?= python
 .PHONY: bootstrap check test security
 bootstrap:
-	$(PYTHON) -m pip install -e ".[dev]"
+	$(PYTHON) -m pip install -e ".[dev]" -e plugins/shape-domains
 # Same commands as the `test` job in .github/workflows/ci.yml (T-27 scope: only paths that exist).
 check:
 	ruff check src tests plugins benchmarks/vs_spindle
