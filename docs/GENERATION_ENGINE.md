@@ -157,3 +157,41 @@ order:
 `tests/generation/test_ddl.py` tests each step. The reference-comparison harness under
 `benchmarks/` checks the import against the reference implementation's on its own DDL fixtures and on
 cases that fire every rule: all equal, in every field.
+
+## Writers
+
+Every output format is a `shape.sinks` plugin (`write(uri, table, batches, **options) -> rows`).
+`shape.generation.output` puts them behind the engine:
+
+```python
+from shape.generation.output import write_engine, write_result, format_summary
+
+write_result(result, "parquet", "out/")                         # a finished GenerationResult
+write_engine(engine, "csv", "out/", chunk_rows=65_536)          # streams when no post-pass is needed
+print(format_summary(result))                                   # the `summary` output
+```
+
+| Format | File | Notes |
+|---|---|---|
+| `csv`, `tsv` | `<table>.csv`, `<table>.tsv` | header row, nulls are empty fields |
+| `jsonl` | `<table>.jsonl` | dates and times ISO 8601; decimals are exact strings |
+| `parquet` | `<table>.parquet` | snappy, dictionary encoding on (T-17) |
+| `sql` | `<table>.sql` | see below |
+| `excel` | `<table>.xlsx` | extra `[excel]`; refuses a table over 1,048,575 rows |
+| `delta` | `<dir>/<table>/` | extra `[delta]`; `mode` (`overwrite`, `append`), `partition_by` |
+
+`write_result` writes tables in parallel. `write_engine` overlaps generation of chunk *n* + 1 with the
+write of chunk *n* when the schema has no post-pass (`needs_post_pass`: computed columns, business
+rules or correlations need whole tables), and otherwise writes `engine.generate()`.
+
+### SQL options
+
+`sql_dialect` (`tsql`, `tsql-fabric-warehouse`, `postgres`, `mysql`), `schema_name`, `batch_size`
+(rows per `INSERT`), `ddl`, `drop`, `go` (the `--sql-ddl`, `--sql-drop` and `--sql-go` switches).
+The generation schema supplies column types, nullability and the primary key
+(`sql_options(schema, table)`). The script has no timestamp, so equal input gives equal bytes.
+Choices that differ from a naive port: integers are `BIGINT` in every dialect; T-SQL batches are
+capped at 1,000 rows (the server's limit for one `VALUES` list) whatever `batch_size` says;
+`tsql-fabric-warehouse` uses `VARCHAR` and `DATETIME2(6)`, writes the primary key as a comment (the
+warehouse does not enforce it) and emits no `DISTRIBUTION` clause; `NaN` and infinities become
+`NULL`; MySQL string literals escape backslashes.

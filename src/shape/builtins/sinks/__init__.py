@@ -1,9 +1,23 @@
-"""Built-in sinks: CSV, Parquet, JSONL and Arrow IPC files (``shape.sinks``)."""
+"""Built-in sinks (``shape.sinks``): CSV, TSV, JSONL, Parquet and Arrow IPC files, SQL INSERT
+scripts, and, with their extras, Excel and Delta."""
 
 from __future__ import annotations
 
-from .files import CsvSink, IpcSink, JsonlSink, ParquetSink
+from .delta import DeltaSink
+from .excel import ExcelSink
+from .files import CsvSink, IpcSink, JsonlSink, ParquetSink, TsvSink
+from .sql import SqlSink
 
 SHAPE_API = "1.0"
 
-__all__ = ["SHAPE_API", "CsvSink", "IpcSink", "JsonlSink", "ParquetSink"]
+__all__ = [
+    "SHAPE_API",
+    "CsvSink",
+    "DeltaSink",
+    "ExcelSink",
+    "IpcSink",
+    "JsonlSink",
+    "ParquetSink",
+    "SqlSink",
+    "TsvSink",
+]
