@@ -1,17 +1,23 @@
-"""Built-in distributions (``shape.distributions``), in the parameters the fitter reports.
+"""Built-in distributions (``shape.distributions``).
 
-All use scipy's convention: ``loc`` and ``scale`` (and ``s`` for lognormal). Every draw comes
-from the chunk's keyed stream, so a context always yields the same array.
+``normal``, ``uniform``, ``exponential`` and ``lognormal`` take the parameters the fitter reports
+(scipy's ``loc`` and ``scale``, and ``s`` for lognormal). The other entries wrap the families of
+:mod:`shape.builtins.distributions.families` and take the family's own parameters (``mu``,
+``sigma``, ``alpha``, ...). Every draw comes from the column's Philox stream and is addressed by
+row, so a context yields the same values however the table is chunked (T-16).
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 
+import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 
-from shape.builtins._rng import chunk_generator
+from shape.generation.strategy_kit import stream
 from shape.plugins.api.v1 import GenerationContext
+
+from .families import FAMILIES, Family
 
 SHAPE_API = "1.0"
 
@@ -37,10 +43,8 @@ class Normal:
     name = "normal"
 
     def sample(self, params: Mapping[str, float], ctx: GenerationContext) -> pa.Array:
-        rng = chunk_generator(ctx)
-        return pa.array(
-            _param(params, "loc", 0.0) + _scale(params) * rng.standard_normal(ctx.n_rows)
-        )
+        z = stream(ctx, "dist").normal(ctx.row_start, ctx.n_rows)
+        return pa.array(_param(params, "loc", 0.0) + _scale(params) * z)
 
 
 class Uniform:
@@ -49,8 +53,8 @@ class Uniform:
     name = "uniform"
 
     def sample(self, params: Mapping[str, float], ctx: GenerationContext) -> pa.Array:
-        rng = chunk_generator(ctx)
-        return pa.array(_param(params, "loc", 0.0) + _scale(params) * rng.random(ctx.n_rows))
+        u = stream(ctx, "dist").uniform(ctx.row_start, ctx.n_rows)
+        return pa.array(_param(params, "loc", 0.0) + _scale(params) * u)
 
 
 class Exponential:
@@ -59,10 +63,8 @@ class Exponential:
     name = "exponential"
 
     def sample(self, params: Mapping[str, float], ctx: GenerationContext) -> pa.Array:
-        rng = chunk_generator(ctx)
-        return pa.array(
-            _param(params, "loc", 0.0) + _scale(params) * rng.standard_exponential(ctx.n_rows)
-        )
+        u = stream(ctx, "dist").uniform(ctx.row_start, ctx.n_rows)
+        return pa.array(_param(params, "loc", 0.0) + _scale(params) * -np.log1p(-u))
 
 
 class Lognormal:
@@ -71,14 +73,149 @@ class Lognormal:
     name = "lognormal"
 
     def sample(self, params: Mapping[str, float], ctx: GenerationContext) -> pa.Array:
-        import numpy as np
-
         s = _param(params, "s")
         if not s > 0:
             raise ValueError("s must be positive")
-        rng = chunk_generator(ctx)
-        draws = np.exp(s * rng.standard_normal(ctx.n_rows))
-        return pa.array(_param(params, "loc", 0.0) + _scale(params) * draws)
+        z = stream(ctx, "dist").normal(ctx.row_start, ctx.n_rows)
+        return pa.array(_param(params, "loc", 0.0) + _scale(params) * np.exp(s * z))
 
 
-__all__ = ["SHAPE_API", "Exponential", "Lognormal", "Normal", "Uniform"]
+class FamilyDistribution:
+    """A ``shape.distributions`` entry for one family; ``params`` are the family's own."""
+
+    name = ""
+    family: Family
+
+    def sample(self, params: Mapping[str, float], ctx: GenerationContext) -> pa.Array:
+        values = self.family.sample(stream(ctx, "dist"), ctx.row_start, ctx.n_rows, params)
+        return pa.array(values)
+
+
+class LogNormalFamily(FamilyDistribution):
+    """``exp(mu + sigma * N(0, 1))``."""
+
+    name = "log_normal"
+    family = FAMILIES["log_normal"]
+
+
+class Pareto(FamilyDistribution):
+    """Type I Pareto with shape ``alpha`` and minimum ``xm``."""
+
+    name = "pareto"
+    family = FAMILIES["pareto"]
+
+
+class Zipf(FamilyDistribution):
+    """Zipf on ``1 .. max`` with exponent ``a``."""
+
+    name = "zipf"
+    family = FAMILIES["zipf"]
+
+
+class Geometric(FamilyDistribution):
+    """Trials to the first success, success probability ``p``."""
+
+    name = "geometric"
+    family = FAMILIES["geometric"]
+
+
+class Poisson(FamilyDistribution):
+    """Poisson with mean ``lam``."""
+
+    name = "poisson"
+    family = FAMILIES["poisson"]
+
+
+class Bernoulli(FamilyDistribution):
+    """0 or 1, with ``P(1) = p``."""
+
+    name = "bernoulli"
+    family = FAMILIES["bernoulli"]
+
+
+class Gamma(FamilyDistribution):
+    """Gamma with shape ``k`` and scale ``theta``."""
+
+    name = "gamma"
+    family = FAMILIES["gamma"]
+
+
+class Beta(FamilyDistribution):
+    """Beta with shape parameters ``a`` and ``b``."""
+
+    name = "beta"
+    family = FAMILIES["beta"]
+
+
+class Weibull(FamilyDistribution):
+    """Weibull with shape ``k`` and scale ``lam``."""
+
+    name = "weibull"
+    family = FAMILIES["weibull"]
+
+
+class Triangular(FamilyDistribution):
+    """Triangular on ``[low, high]`` with its peak at ``mode``."""
+
+    name = "triangular"
+    family = FAMILIES["triangular"]
+
+
+class NegativeBinomial(FamilyDistribution):
+    """Failures before the ``r``-th success, success probability ``p``."""
+
+    name = "negative_binomial"
+    family = FAMILIES["negative_binomial"]
+
+
+class PowerLawCutoff(FamilyDistribution):
+    """Density proportional to ``x ** -alpha * exp(-lam * x)`` for ``x >= xmin``."""
+
+    name = "power_law_cutoff"
+    family = FAMILIES["power_law_cutoff"]
+
+
+class Mixture(FamilyDistribution):
+    """A weighted mixture of other families (``components``)."""
+
+    name = "mixture"
+    family = FAMILIES["mixture"]
+
+
+class Truncated(FamilyDistribution):
+    """A family restricted to ``[low, high]`` (``base``, ``base_params``, ``low``, ``high``)."""
+
+    name = "truncated"
+    family = FAMILIES["truncated"]
+
+
+class Histogram(FamilyDistribution):
+    """An empirical histogram (``edges`` and ``weights``)."""
+
+    name = "histogram"
+    family = FAMILIES["histogram"]
+
+
+__all__ = [
+    "SHAPE_API",
+    "Bernoulli",
+    "Beta",
+    "Exponential",
+    "FamilyDistribution",
+    "Gamma",
+    "Geometric",
+    "Histogram",
+    "Lognormal",
+    "LogNormalFamily",
+    "Mixture",
+    "NegativeBinomial",
+    "Normal",
+    "Pareto",
+    "Poisson",
+    "PowerLawCutoff",
+    "Triangular",
+    "Truncated",
+    "Uniform",
+    "Weibull",
+    "Zipf",
+]

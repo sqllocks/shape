@@ -111,7 +111,10 @@ def test_distribution_draws_are_deterministic_and_refit(host, name, params, fami
     dist = host.get("shape.distributions", name)
     a, b = dist.sample(params, ctx(5000)), dist.sample(params, ctx(5000))
     assert a == b and len(a) == 5000
-    assert dist.sample(params, ctx(5000, chunk=1)) != a  # chunks use separate streams
+    # draws are addressed by row (T-16): the chunk number does not matter, the rows do
+    assert dist.sample(params, ctx(5000, chunk=1)) == a
+    assert dist.sample(params, ctx(5000, row_start=5000)) != a
+    assert dist.sample(params, ctx(2500, row_start=2500)) == a.slice(2500)
     assert dist.sample(params, ctx(5000, column="d")) != a
     fit = host.get("shape.fitters", "auto").fit(a)
     assert fit is not None
