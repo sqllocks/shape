@@ -94,6 +94,11 @@ def worker(tool: str, ds: str):
     elif tool == "shape":
         import shape
 
+        # T-19: imports are excluded for both tools. Spindle's worker imports pandas and its
+        # profiler above; shape.profile imports its implementation (pandas included) on first
+        # call, so import that module here too. Nothing is run: no warm-up call.
+        import shape.profile.reference.profile  # noqa: F401
+
         if ds == "mt":
 
             def run():
