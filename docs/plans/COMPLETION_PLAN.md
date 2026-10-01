@@ -1931,7 +1931,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 21 | P1-12 | done | 0087f7b |
 | 21a | P1-14 | done | 9c0f75b |
 | 21b | P1-15 | done | 04fe94c |
-| 21c | P1-16 | wip (lane/P1-16) | |
+| 21c | P1-16 | done | 7238901 |
 | 21d | P1-17 | done | 981bdd7 |
 | 22 | P2-01 | done | c3909e9 |
 | 23 | P2-02 | done | 84e8efb |
@@ -1939,27 +1939,27 @@ Work packages are listed in execution order. The next work package is the first 
 | 25 | P2-04 | done | 0ca6387 |
 | 26 | P2-05 | done | 4c2fa6b |
 | 27 | P2-06 | done | 6adf820 |
-| 28 | PF-01 | wip (lane/PF-01) |  |
-| 29 | PF-02 | todo | |
+| 28 | PF-01 | done (nightly Azurite e2e pending) | c8d6acb |
+| 29 | PF-02 | wip (lane/PF-02) |  |
 | 30 | PF-03 | done | a726dd4 |
 | 31 | PF-04 | todo | |
-| 32 | PF-05 | todo | |
+| 32 | PF-05 | wip (merged; CI image build and 500 MB check pending) | 6d2e22a |
 | 33 | PF-06 | todo | |
-| 34 | P3-01 | wip (lane/P3-01) |  |
-| 35 | P3-02 | todo | |
-| 36 | P3-03 | todo | |
-| 37 | P3-04 | todo | |
+| 34 | P3-01 | done | 37386f3 |
+| 35 | P3-02 | done | 500367f |
+| 36 | P3-03 | done | 43f5d88 |
+| 37 | P3-04 | wip (lane/P3-04) |  |
 | 38 | P3-05 | todo | |
-| 39 | P4-01a | wip (lane/P4-01a) |  |
-| 40 | P4-01b | todo | |
-| 41 | P4-02 | todo | |
-| 42 | P4-03 | todo | |
+| 39 | P4-01a | done | 02a0c4d |
+| 40 | P4-01b | wip (lane/P4-01b) |  |
+| 41 | P4-02 | done | 6917af7 |
+| 42 | P4-03 | wip (lane/P4-03) |  |
 | 43 | P4-04a | todo | |
 | 44 | P4-04b | todo | |
 | 45 | P4-04c | todo | |
 | 46 | P4-04d | todo | |
 | 47 | P4-05 | todo | |
-| 48 | P4-06 | todo | |
+| 48 | P4-06 | wip (lane/P4-06) |  |
 | 49 | P4-07 | todo | |
 | 50 | P4-08 | todo | |
 | 51 | P4-09 | todo | |
@@ -1982,7 +1982,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 68 | P6-07a | todo | |
 | 69 | P6-07b | todo | |
 | 70 | P6-07c | todo | |
-| 71 | P6-08 | wip (lane/P6-08) |  |
+| 71 | P6-08 | done (nightly SQL Server e2e pending) | 29eac3e |
 | 72 | P6-09 | wip (merged; parity runs in CI bench-quick) | 3859a3c |
 | 73 | P6-10 | todo | |
 | 74 | P6-11 | todo | |
