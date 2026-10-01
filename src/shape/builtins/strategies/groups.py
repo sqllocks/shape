@@ -114,7 +114,8 @@ class Scd2:
         codes = engine.cached(
             ("scd2-codes", ctx.table, business_key),
             lambda: group_codes(
-                whole_column(ctx, ctx.table, business_key, "scd2"), nulls_are_a_group=False
+                whole_column(ctx, ctx.table, business_key, "scd2", keep=False),
+                nulls_are_a_group=False,
             ),
         )
         if role == "effective_date":
@@ -131,7 +132,7 @@ class Scd2:
         if eff_column in ctx.columns:
             keys = engine.cached(
                 ("scd2-eff", ctx.table, eff_column),
-                lambda: _micros(whole_column(ctx, ctx.table, eff_column, "scd2")),
+                lambda: _micros(whole_column(ctx, ctx.table, eff_column, "scd2", keep=False)),
             )
         if role == "end_date" and keys is None:
             raise StrategyError(
