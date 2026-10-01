@@ -34,3 +34,6 @@ What holds already-read batches in the bounded CSV path (`io/readers.py::open_ba
 held amount scales with file size (bursts at 24M/48M rows). Reproduce with a timeline probe
 at 12M and 24M rows before changing code; fix; then run the heavy test with
 `SHAPE_KERNEL=python` at both sizes.
+
+## Resolved (builder, 2026-09-30)
+Cause: `finalize` expanded the text-length histogram to one float per row. Fixed in 9c0f75b; the test passes with `SHAPE_KERNEL=python` unchanged. See the decision log (§2.3).

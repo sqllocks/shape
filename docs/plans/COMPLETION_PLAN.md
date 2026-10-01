@@ -243,6 +243,7 @@ instruction.
 
 | Date | ID | Change | Reason |
 |---|---|---|---|
+| 2026-09-30 | P1-07, P1-14 | **Resolved:** the Python-kernel bounded-mode growth was in `finalize`, not the batch loop (`np.repeat(lengths, counts)` made one float64 per row; RSS 231 -> 584 MB in the last second at 24M rows). `_histogram_quantile` computes p95 from the histogram with numpy's linear interpolation (0 mismatches on 60k random histograms); regression test `test_python_text_finalize_memory_does_not_scale_with_rows` fails on the old code. `test_bounded_mode_memory_does_not_grow_with_rows` (unchanged, 10% limit) passes with `SHAPE_KERNEL=python` (63 min) and with Rust (88 s); all 40 heavy kernel/profile tests pass on Rust. P1-14 acceptance, in this session: `check_user_facing` clean (CI runs it on the tree and the wheel); `profile_1to1/verify.py --impl shape` exit 0 on all default datasets against the pinned Spindle 3.0.1 (built here by `setup_spindle.sh`, checkout untouched); `pytest tests/demo` 201 passed (separate venv with pyarrow 19, as the `fabric-demo` job); the rest of the suite 1026 passed in both kernel modes. Not covered by CI: the heavy memory test on the Python kernel (about 1 h); a nightly job is suggested. | Finding FINDING-P1-07 |
 | 2026-09-29 | — | Plan v1 approved | — |
 | 2026-09-30 | P1-07, P1-14 | **Escalation (lead):** `test_bounded_mode_memory_does_not_grow_with_rows` fails with `SHAPE_KERNEL=python` (24M 544 MB → 48M 913 MB, +68%); Rust passes. Measurements and leads in `docs/plans/demo_status/FINDING-P1-07-python-kernel-rss.md`. Must be fixed before P1-14 closes (suite green in both kernel modes) and G1; the test is not relaxed. | Lead verification of P1-08..P1-10 |
 | 2026-09-30 | P1-14 | The talk and the demo kit mention nothing about Spindle either: `docs/talks/` and `demo/` join P1-14's scope (the talk itself is reworked on the talk branch by a separate session). | Owner decision |
@@ -1865,7 +1866,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 19 | P1-10 | done | 9c797ea |
 | 20 | P1-11 | done | e72d596 |
 | 21 | P1-12 | done | 0087f7b |
-| 21a | P1-14 | todo | |
+| 21a | P1-14 | done | 9c0f75b |
 | 22 | P2-01 | todo | |
 | 23 | P2-02 | todo | |
 | 24 | P2-03 | todo | |

@@ -41,3 +41,6 @@ design; the gate was not relaxed.
 - `python scripts/check_user_facing.py` prints "check_user_facing: clean" at 5520b8a; the suite
   passes (1025). Close P1-14 against its §7 acceptance (verify.py --impl shape on the default
   datasets, both kernel modes) and carry on to G1.
+
+## Closed (builder, 2026-09-30)
+All P1-14 acceptance checks pass; tracker row 21a is done. See the decision log (§2.3).
