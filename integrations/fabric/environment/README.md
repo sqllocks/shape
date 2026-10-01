@@ -5,6 +5,9 @@ run attached to it gets `import shape` with no `%pip` cell. Environments attach 
 Spark notebooks and Spark job definitions only. The Python notebook
 (`shape_profile.ipynb`) installs the wheel itself.
 
+The distributed notebook (`shape_profile_distributed.ipynb`) runs Shape **on the executors**, so
+the Environment, which installs Shape on every node, is required for it.
+
 ## Build steps
 
 1. In the workspace: **New item > Environment**, name it `shape-env`.
@@ -14,7 +17,11 @@ Spark notebooks and Spark job definitions only. The Python notebook
 3. **Libraries > Custom libraries > Upload**, and choose
    `sqllocks_shape-0.9.0-py3-none-any.whl` (built by DM-03, or downloaded from
    the GitHub release / PyPI). A custom `.whl` has no platform-independence rule in
-   Environments, and Shape's wheel is pure Python anyway.
+   Environments. To run on the Rust kernel, also upload the Linux x86_64 platform wheel
+   (an `abi3` `manylinux` x86_64 `.whl`); the pure wheel is the
+   fallback. Both wheels have one version, so keep exactly one of each. Which kernel ran is
+   reported by the notebooks (`kernel` in the exit value). **[VERIFY]** that an Environment
+   accepts two wheels with the same name and version and that pip prefers the platform one.
 4. Optional: **Libraries > External repositories / Add from YAML** with
    `environment.yml` from this folder (it is inactive by default; see its header).
    If outbound access protection is on, PyPI is blocked: upload every dependency as a
@@ -28,7 +35,7 @@ Spark notebooks and Spark job definitions only. The Python notebook
 
    Use **Quick** for the talk. Use **Full** before running `shape_gate_spark`
    from a pipeline, because pipelines do not honour Quick-mode installs.
-6. Attach `shape-env` to `shape_profile_spark` (notebook toolbar > **Environment**),
+6. Attach `shape-env` to `shape_profile_spark` and `shape_profile_distributed` (notebook toolbar > **Environment**),
    or set it as the workspace default (Workspace settings > Data Engineering > Environment).
 7. **Verify (in the workspace, on first run).** In a Spark notebook attached to the
    Environment run:
