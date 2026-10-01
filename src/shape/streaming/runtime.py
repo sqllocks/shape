@@ -1,0 +1,710 @@
+"""The stream runtime (P3-01): micro-batches go through the profile engine in bounded mode.
+
+A *windowed profiler* takes Arrow record batches that carry an event time, assigns every row to
+tumbling, sliding or session windows, profiles each window with the kernel's bounded-mode
+``ProfileState`` (the T-14 sketches: memory does not grow with the number of events), and emits a
+``WindowProfile`` when the watermark closes the window. The rules are in
+``docs/specs/STREAMING_SEMANTICS.md``; in short:
+
+* event time is the ``_shape_event_time`` column (``event_time=`` names another);
+* the watermark is the largest event time seen, minus ``allowed_lateness``, and it advances at
+  batch boundaries (a micro-batch is classified against the watermark it started with);
+* a window closes when the watermark reaches its end; a row is *late* when every window it
+  belongs to has already closed. Late rows are counted and either dropped or handed to
+  ``late_sink``;
+* ``snapshot()`` returns a JSON-safe dict and ``restore()`` rebuilds the profiler from it: a
+  profiler killed mid-stream and restored from its last snapshot gives the output of an
+  uninterrupted run, exactly.
+
+Windows are aligned to the epoch (plus ``offset``). A sliding window of ``size`` every ``slide``
+is assembled from panes of ``gcd(size, slide)`` that are profiled once and merged when a window
+closes; a pane is dropped when the last window containing it has closed.
+"""
+
+from __future__ import annotations
+
+import base64
+import math
+import zlib
+from collections.abc import Callable, Iterable, Iterator
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
+import numpy as np
+import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.compute as pc  # type: ignore[import-untyped]
+
+from shape.kernel.dispatch import get_kernel
+from shape.profile.engine import table_entry
+
+SNAPSHOT_FORMAT = "shape-stream-window-v1"
+EVENT_TIME = "_shape_event_time"
+_US = timedelta(microseconds=1)
+_DAY_US = 86_400_000_000
+
+LateSink = Callable[[pa.RecordBatch], None]
+Duration = timedelta | int
+
+
+def _micros(value: Duration, what: str, *, positive: bool) -> int:
+    """A duration as whole microseconds (an ``int`` already is)."""
+    us = value // _US if isinstance(value, timedelta) else int(value)
+    if us < 0 or (positive and us == 0):
+        raise ValueError(f"{what} must be {'positive' if positive else 'zero or more'}")
+    return us
+
+
+def _to_iso(us: int | None) -> str | None:
+    if us is None:
+        return None
+    return (datetime(1970, 1, 1, tzinfo=UTC) + timedelta(microseconds=us)).isoformat()
+
+
+@dataclass(frozen=True)
+class WindowProfile:
+    """The profile of one closed window.
+
+    ``start`` and ``end`` are microseconds since the epoch (``end`` is exclusive); a session
+    window ends one gap after its last event, and the global window has neither. ``profile`` is
+    the table entry the profile engine returns (``{name, rows, columns}``).
+    """
+
+    kind: str
+    start: int | None
+    end: int | None
+    rows: int
+    profile: dict[str, Any]
+
+    @property
+    def start_time(self) -> datetime | None:
+        return None if self.start is None else _datetime(self.start)
+
+    @property
+    def end_time(self) -> datetime | None:
+        return None if self.end is None else _datetime(self.end)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "kind": self.kind,
+            "start": _to_iso(self.start),
+            "end": _to_iso(self.end),
+            "start_us": self.start,
+            "end_us": self.end,
+            "rows": self.rows,
+            "profile": self.profile,
+        }
+
+
+def _datetime(us: int) -> datetime:
+    return datetime(1970, 1, 1, tzinfo=UTC) + timedelta(microseconds=us)
+
+
+def event_times(array: pa.Array) -> tuple[np.ndarray, np.ndarray]:
+    """Event times as int64 microseconds since the epoch, and a validity mask.
+
+    Timestamps are read as instants (the zone is ignored), dates as midnight UTC. Null event
+    times are marked invalid; their value is 0.
+    """
+    t = array.type
+    if pa.types.is_timestamp(t):
+        us = pc.cast(array, pa.timestamp("us"), safe=False)
+    elif pa.types.is_date32(t):
+        days = pc.cast(pc.cast(array, pa.int32()), pa.int64())
+        us = pc.multiply(days, pa.scalar(_DAY_US, pa.int64()))
+    elif pa.types.is_date64(t):
+        us = pc.multiply(pc.cast(array, pa.int64()), pa.scalar(1000, pa.int64()))
+    else:
+        raise TypeError(f"event time must be a timestamp or a date column, not {t}")
+    valid = np.asarray(array.is_valid())
+    values = us.cast(pa.int64()).fill_null(0).to_numpy(zero_copy_only=False)
+    return values.astype(np.int64, copy=False), valid
+
+
+def _encode_state(state: Any) -> str:
+    return base64.b64encode(zlib.compress(state.snapshot(), 6)).decode("ascii")
+
+
+def _decode_state(schema: pa.Schema, text: str) -> Any:
+    raw = zlib.decompress(base64.b64decode(text))
+    return get_kernel().ProfileState.from_snapshot(schema, raw)
+
+
+def _encode_schema(schema: pa.Schema) -> str:
+    return base64.b64encode(schema.serialize().to_pybytes()).decode("ascii")
+
+
+def _decode_schema(text: str) -> pa.Schema:
+    return pa.ipc.read_schema(pa.py_buffer(base64.b64decode(text)))
+
+
+class WindowedProfiler:
+    """Shared machinery: validation, watermark, late handling, counters, snapshots.
+
+    Subclasses decide how rows map to windows (``_route``), when windows close (``_close``) and
+    what their state is made of (``_dump_state`` / ``_load_state``).
+    """
+
+    kind = "window"
+
+    def __init__(
+        self,
+        schema: pa.Schema,
+        *,
+        event_time: str | None = EVENT_TIME,
+        allowed_lateness: Duration = 0,
+        late_sink: LateSink | None = None,
+        name: str = "stream",
+        top_n: int = 500,
+    ) -> None:
+        self.schema = pa.schema(schema)
+        self.event_time = event_time
+        self.allowed_lateness = _micros(allowed_lateness, "allowed_lateness", positive=False)
+        self.late_sink = late_sink
+        self.name = name
+        self.top_n = int(top_n)
+        if self.top_n < 1:
+            raise ValueError("top_n must be positive")
+        self._time_index: int | None = None
+        if event_time is not None:
+            self._time_index = self.schema.get_field_index(event_time)
+            if self._time_index < 0:
+                raise ValueError(f"the schema has no event-time column {event_time!r}")
+            t = self.schema.field(self._time_index).type
+            if not (pa.types.is_timestamp(t) or pa.types.is_date32(t) or pa.types.is_date64(t)):
+                raise TypeError(f"event-time column {event_time!r} must be a timestamp or a date")
+        self._max_event_time: int | None = None
+        self.batches = 0
+        self.rows_in = 0
+        self.late_events = 0
+        self.null_event_time = 0
+        self.windows_emitted = 0
+        self._finished = False
+
+    # ---------------------------------------------------------------- state
+    @property
+    def watermark(self) -> int | None:
+        """Microseconds since the epoch, or ``None`` before the first event."""
+        if self._max_event_time is None:
+            return None
+        return self._max_event_time - self.allowed_lateness
+
+    @property
+    def finished(self) -> bool:
+        return self._finished
+
+    def _new_state(self) -> Any:
+        return get_kernel().ProfileState(self.schema, "bounded")
+
+    def _emit(self, start: int | None, end: int | None, state: Any) -> WindowProfile:
+        self.windows_emitted += 1
+        entry = table_entry(state, self.name, self.schema, "bounded", self.top_n)
+        return WindowProfile(self.kind, start, end, int(state.rows), entry)
+
+    # ----------------------------------------------------------- processing
+    def process(self, batch: pa.RecordBatch | pa.Table) -> list[WindowProfile]:
+        """Take one micro-batch; return the windows it caused to close, oldest first."""
+        if self._finished:
+            raise RuntimeError("the stream has finished; no more batches can be processed")
+        if isinstance(batch, pa.Table):
+            out: list[WindowProfile] = []
+            for part in batch.to_batches():
+                out.extend(self.process(part))
+            return out
+        if not batch.schema.equals(self.schema, check_metadata=False):
+            raise ValueError("batch schema differs from the stream schema")
+        self.batches += 1
+        n = batch.num_rows
+        self.rows_in += n
+        if n == 0:
+            return []
+        ts, valid = self._times(batch)
+        self.null_event_time += int(n - np.count_nonzero(valid))
+        late = self._route(batch, ts, valid, self.watermark)
+        n_late = int(np.count_nonzero(late))
+        if n_late:
+            self.late_events += n_late
+            if self.late_sink is not None:
+                self.late_sink(batch.filter(pa.array(late)))
+        if self._time_index is not None and valid.any():
+            newest = int(ts[valid].max())
+            if self._max_event_time is None or newest > self._max_event_time:
+                self._max_event_time = newest
+        wm = self.watermark
+        return [] if wm is None else self._close(wm)
+
+    def finish(self) -> list[WindowProfile]:
+        """End of stream: close every open window, oldest first."""
+        if self._finished:
+            return []
+        out = self._close(None)
+        self._finished = True
+        return out
+
+    def run(self, batches: Iterable[pa.RecordBatch | pa.Table]) -> Iterator[WindowProfile]:
+        """Process every batch, then finish, yielding each window as it closes."""
+        for batch in batches:
+            yield from self.process(batch)
+        yield from self.finish()
+
+    def _times(self, batch: pa.RecordBatch) -> tuple[np.ndarray, np.ndarray]:
+        if self._time_index is None:
+            n = batch.num_rows
+            return np.zeros(n, dtype=np.int64), np.ones(n, dtype=bool)
+        return event_times(batch.column(self._time_index))
+
+    # ------------------------------------------------------- for subclasses
+    def _route(
+        self, batch: pa.RecordBatch, ts: np.ndarray, valid: np.ndarray, wm: int | None
+    ) -> np.ndarray:
+        """Profile the rows into their windows; return the mask of late rows."""
+        raise NotImplementedError
+
+    def _close(self, wm: int | None) -> list[WindowProfile]:
+        """Emit the windows that end at or before ``wm`` (all of them when ``wm`` is None)."""
+        raise NotImplementedError
+
+    def _config(self) -> dict[str, Any]:
+        return {}
+
+    def _dump_state(self) -> dict[str, Any]:
+        raise NotImplementedError
+
+    def _load_state(self, state: dict[str, Any]) -> None:
+        raise NotImplementedError
+
+    # ------------------------------------------------------------ snapshots
+    def snapshot(self) -> dict[str, Any]:
+        """Everything needed to resume: configuration, watermark, counters and window state."""
+        return {
+            "format": SNAPSHOT_FORMAT,
+            "kind": self.kind,
+            "name": self.name,
+            "schema": _encode_schema(self.schema),
+            "event_time": self.event_time,
+            "allowed_lateness_us": self.allowed_lateness,
+            "top_n": self.top_n,
+            "config": self._config(),
+            "max_event_time_us": self._max_event_time,
+            "finished": self._finished,
+            "counters": {
+                "batches": self.batches,
+                "rows_in": self.rows_in,
+                "late_events": self.late_events,
+                "null_event_time": self.null_event_time,
+                "windows_emitted": self.windows_emitted,
+            },
+            "state": self._dump_state(),
+        }
+
+    @classmethod
+    def restore(
+        cls, snapshot: dict[str, Any], *, late_sink: LateSink | None = None
+    ) -> WindowedProfiler:
+        """Rebuild a profiler from ``snapshot()``. ``late_sink`` is code, so it is not stored."""
+        if snapshot.get("format") != SNAPSHOT_FORMAT:
+            raise ValueError("not a stream window snapshot")
+        kind = snapshot["kind"]
+        target = _KINDS.get(kind)
+        if target is None or not issubclass(target, cls):
+            raise ValueError(f"cannot restore a {kind!r} snapshot as {cls.__name__}")
+        obj = target._from_snapshot(snapshot, late_sink)
+        counters = snapshot["counters"]
+        obj._max_event_time = snapshot["max_event_time_us"]
+        obj._finished = bool(snapshot["finished"])
+        obj.batches = int(counters["batches"])
+        obj.rows_in = int(counters["rows_in"])
+        obj.late_events = int(counters["late_events"])
+        obj.null_event_time = int(counters["null_event_time"])
+        obj.windows_emitted = int(counters["windows_emitted"])
+        obj._load_state(snapshot["state"])
+        return obj
+
+    @classmethod
+    def _from_snapshot(
+        cls, snapshot: dict[str, Any], late_sink: LateSink | None
+    ) -> WindowedProfiler:
+        raise NotImplementedError
+
+    @staticmethod
+    def _common(snapshot: dict[str, Any], late_sink: LateSink | None) -> dict[str, Any]:
+        return {
+            "event_time": snapshot["event_time"],
+            "allowed_lateness": snapshot["allowed_lateness_us"],
+            "late_sink": late_sink,
+            "name": snapshot["name"],
+            "top_n": snapshot["top_n"],
+        }
+
+
+# ------------------------------------------------------------ pane windows
+
+
+class SlidingProfiler(WindowedProfiler):
+    """Windows of ``size`` that start every ``slide`` (``slide <= size``), aligned to the epoch
+    plus ``offset``. ``TumblingProfiler`` is the case ``slide == size``."""
+
+    kind = "sliding"
+
+    def __init__(
+        self,
+        schema: pa.Schema,
+        size: Duration,
+        slide: Duration,
+        *,
+        offset: Duration = 0,
+        event_time: str | None = EVENT_TIME,
+        allowed_lateness: Duration = 0,
+        late_sink: LateSink | None = None,
+        name: str = "stream",
+        top_n: int = 500,
+    ) -> None:
+        if event_time is None:
+            raise ValueError("time windows need an event-time column")
+        super().__init__(
+            schema,
+            event_time=event_time,
+            allowed_lateness=allowed_lateness,
+            late_sink=late_sink,
+            name=name,
+            top_n=top_n,
+        )
+        self.size = _micros(size, "size", positive=True)
+        self.slide = _micros(slide, "slide", positive=True)
+        if self.slide > self.size:
+            raise ValueError("slide must not exceed size (rows would fall between windows)")
+        self.offset = _micros(offset, "offset", positive=False)
+        self.pane = math.gcd(self.size, self.slide)
+        self._panes: dict[int, Any] = {}
+        self._closed_to: int | None = None  # every window ending at or before this has closed
+
+    # ------------------------------------------------------------- geometry
+    def _last_end(self, pane_index: np.ndarray) -> np.ndarray:
+        """End of the newest window that contains each pane."""
+        start = pane_index * self.pane + self.offset
+        return ((start - self.offset) // self.slide) * self.slide + self.offset + self.size
+
+    def _windows_of(self, pane_index: int) -> range:
+        """Indices ``k`` of the windows ``[k*slide+offset, +size)`` that contain a pane."""
+        start = pane_index * self.pane  # relative to the offset
+        return range((start - self.size) // self.slide + 1, start // self.slide + 1)
+
+    def _window_bounds(self, k: int) -> tuple[int, int]:
+        start = k * self.slide + self.offset
+        return start, start + self.size
+
+    # ----------------------------------------------------------- processing
+    def _route(
+        self, batch: pa.RecordBatch, ts: np.ndarray, valid: np.ndarray, wm: int | None
+    ) -> np.ndarray:
+        pane_index = (ts - self.offset) // self.pane
+        late = np.zeros(len(ts), dtype=bool)
+        if wm is not None:
+            late = valid & (self._last_end(pane_index) <= wm)
+        take = valid & ~late
+        if not take.any():
+            return late
+        if take.all():
+            self._add(batch, pane_index)
+            return late
+        keep = np.flatnonzero(take)
+        self._add(batch.take(pa.array(keep)), pane_index[keep])
+        return late
+
+    def _add(self, batch: pa.RecordBatch, pane_index: np.ndarray) -> None:
+        first = int(pane_index[0])
+        if np.all(pane_index == first):
+            self._pane(first).update(batch)
+            return
+        order = np.argsort(pane_index, kind="stable")  # arrival order within a pane
+        sorted_panes = pane_index[order]
+        cuts = np.flatnonzero(np.diff(sorted_panes)) + 1
+        for rows in np.split(order, cuts):
+            self._pane(int(pane_index[rows[0]])).update(batch.take(pa.array(rows)))
+
+    def _pane(self, index: int) -> Any:
+        state = self._panes.get(index)
+        if state is None:
+            state = self._panes[index] = self._new_state()
+        return state
+
+    def _close(self, wm: int | None) -> list[WindowProfile]:
+        if not self._panes:
+            return []
+        ready: set[int] = set()
+        for index in self._panes:
+            for k in self._windows_of(index):
+                end = self._window_bounds(k)[1]
+                if (wm is None or end <= wm) and (self._closed_to is None or end > self._closed_to):
+                    ready.add(k)
+        out: list[WindowProfile] = []
+        per_window = self.size // self.pane
+        for k in sorted(ready):
+            start, end = self._window_bounds(k)
+            first = (start - self.offset) // self.pane
+            members = [self._panes[i] for i in range(first, first + per_window) if i in self._panes]
+            if len(members) == 1:
+                state = members[0]  # one pane is the window: no merge, same as a batch profile
+            else:
+                state = self._new_state()
+                for pane in members:
+                    state.merge(pane)
+            out.append(self._emit(start, end, state))
+        if wm is None:
+            self._panes.clear()
+            return out
+        self._closed_to = wm if self._closed_to is None else max(self._closed_to, wm)
+        # the oldest window still open starts here; older panes are in no open window
+        k_open = (wm - self.size - self.offset) // self.slide + 1
+        oldest_open = k_open * self.slide + self.offset
+        for index in [i for i in self._panes if (i + 1) * self.pane + self.offset <= oldest_open]:
+            del self._panes[index]
+        return out
+
+    # ------------------------------------------------------------ snapshots
+    def _config(self) -> dict[str, Any]:
+        return {"size_us": self.size, "slide_us": self.slide, "offset_us": self.offset}
+
+    def _dump_state(self) -> dict[str, Any]:
+        return {
+            "closed_to_us": self._closed_to,
+            "panes": [[i, _encode_state(s)] for i, s in sorted(self._panes.items())],
+        }
+
+    def _load_state(self, state: dict[str, Any]) -> None:
+        self._closed_to = state["closed_to_us"]
+        self._panes = {int(i): _decode_state(self.schema, s) for i, s in state["panes"]}
+
+    @classmethod
+    def _from_snapshot(
+        cls, snapshot: dict[str, Any], late_sink: LateSink | None
+    ) -> WindowedProfiler:
+        cfg = snapshot["config"]
+        return cls(
+            _decode_schema(snapshot["schema"]),
+            cfg["size_us"],
+            cfg["slide_us"],
+            offset=cfg["offset_us"],
+            **cls._common(snapshot, late_sink),
+        )
+
+
+class TumblingProfiler(SlidingProfiler):
+    """Fixed windows of ``size`` that do not overlap."""
+
+    kind = "tumbling"
+
+    def __init__(
+        self,
+        schema: pa.Schema,
+        size: Duration,
+        *,
+        offset: Duration = 0,
+        event_time: str | None = EVENT_TIME,
+        allowed_lateness: Duration = 0,
+        late_sink: LateSink | None = None,
+        name: str = "stream",
+        top_n: int = 500,
+    ) -> None:
+        super().__init__(
+            schema,
+            size,
+            size,
+            offset=offset,
+            event_time=event_time,
+            allowed_lateness=allowed_lateness,
+            late_sink=late_sink,
+            name=name,
+            top_n=top_n,
+        )
+
+    def _config(self) -> dict[str, Any]:
+        return {"size_us": self.size, "offset_us": self.offset}
+
+    @classmethod
+    def _from_snapshot(
+        cls, snapshot: dict[str, Any], late_sink: LateSink | None
+    ) -> WindowedProfiler:
+        cfg = snapshot["config"]
+        return cls(
+            _decode_schema(snapshot["schema"]),
+            cfg["size_us"],
+            offset=cfg["offset_us"],
+            **cls._common(snapshot, late_sink),
+        )
+
+
+# ----------------------------------------------------------------- sessions
+
+
+@dataclass
+class _Session:
+    start: int
+    end: int  # exclusive: the last event plus the gap
+    state: Any
+
+
+class SessionProfiler(WindowedProfiler):
+    """Sessions: a window extends while events keep arriving less than ``gap`` apart, and closes
+    when the watermark passes ``last event + gap``. Sessions that an event bridges are merged."""
+
+    kind = "session"
+
+    def __init__(
+        self,
+        schema: pa.Schema,
+        gap: Duration,
+        *,
+        event_time: str | None = EVENT_TIME,
+        allowed_lateness: Duration = 0,
+        late_sink: LateSink | None = None,
+        name: str = "stream",
+        top_n: int = 500,
+    ) -> None:
+        if event_time is None:
+            raise ValueError("session windows need an event-time column")
+        super().__init__(
+            schema,
+            event_time=event_time,
+            allowed_lateness=allowed_lateness,
+            late_sink=late_sink,
+            name=name,
+            top_n=top_n,
+        )
+        self.gap = _micros(gap, "gap", positive=True)
+        self._sessions: list[_Session] = []  # open sessions, ordered by start
+
+    def _route(
+        self, batch: pa.RecordBatch, ts: np.ndarray, valid: np.ndarray, wm: int | None
+    ) -> np.ndarray:
+        gap = self.gap
+        late = np.zeros(len(ts), dtype=bool)
+        if wm is not None:
+            behind = valid & (ts + gap <= wm)
+            if behind.any() and self._sessions:
+                starts = np.array([s.start for s in self._sessions], dtype=np.int64)
+                ends = np.array([s.end for s in self._sessions], dtype=np.int64)
+                inside = (
+                    (ts[:, None] < ends[None, :]) & (ts[:, None] + gap > starts[None, :])
+                ).any(axis=1)
+                behind &= ~inside
+            late = behind
+        rows = np.flatnonzero(valid & ~late)
+        if rows.size == 0:
+            return late
+        order = rows[np.argsort(ts[rows], kind="stable")]
+        sorted_ts = ts[order]
+        cuts = np.flatnonzero(np.diff(sorted_ts) >= gap) + 1
+        for run in np.split(order, cuts):
+            first, last = int(ts[run[0]]), int(ts[run[-1]])
+            self._add_run(batch, np.sort(run), first, last + gap)
+        return late
+
+    def _add_run(self, batch: pa.RecordBatch, rows: np.ndarray, start: int, end: int) -> None:
+        sub = batch if rows.size == batch.num_rows else batch.take(pa.array(rows))
+        hits = [s for s in self._sessions if s.start < end and start < s.end]
+        if not hits:
+            state = self._new_state()
+            state.update(sub)
+            self._sessions.append(_Session(start, end, state))
+        else:
+            head = hits[0]
+            for other in hits[1:]:
+                head.state.merge(other.state)
+                self._sessions.remove(other)
+            head.state.update(sub)
+            head.start = min(head.start, start, *(s.start for s in hits))
+            head.end = max(head.end, end, *(s.end for s in hits))
+        self._sessions.sort(key=lambda s: (s.start, s.end))
+
+    def _close(self, wm: int | None) -> list[WindowProfile]:
+        done = [s for s in self._sessions if wm is None or s.end <= wm]
+        if not done:
+            return []
+        self._sessions = [s for s in self._sessions if wm is not None and s.end > wm]
+        return [self._emit(s.start, s.end, s.state) for s in done]
+
+    def _config(self) -> dict[str, Any]:
+        return {"gap_us": self.gap}
+
+    def _dump_state(self) -> dict[str, Any]:
+        return {"sessions": [[s.start, s.end, _encode_state(s.state)] for s in self._sessions]}
+
+    def _load_state(self, state: dict[str, Any]) -> None:
+        self._sessions = [
+            _Session(int(a), int(b), _decode_state(self.schema, s)) for a, b, s in state["sessions"]
+        ]
+
+    @classmethod
+    def _from_snapshot(
+        cls, snapshot: dict[str, Any], late_sink: LateSink | None
+    ) -> WindowedProfiler:
+        return cls(
+            _decode_schema(snapshot["schema"]),
+            snapshot["config"]["gap_us"],
+            **cls._common(snapshot, late_sink),
+        )
+
+
+# ------------------------------------------------------------------- global
+
+
+class GlobalProfiler(WindowedProfiler):
+    """One window over the whole stream, emitted by ``finish()``. It needs no event time, so a
+    replayed file profiles exactly as the batch engine would in bounded mode."""
+
+    kind = "global"
+
+    def __init__(
+        self,
+        schema: pa.Schema,
+        *,
+        late_sink: LateSink | None = None,
+        name: str = "stream",
+        top_n: int = 500,
+    ) -> None:
+        super().__init__(
+            schema, event_time=None, allowed_lateness=0, late_sink=late_sink, name=name, top_n=top_n
+        )
+        self._state: Any = self._new_state()
+
+    def _route(
+        self, batch: pa.RecordBatch, ts: np.ndarray, valid: np.ndarray, wm: int | None
+    ) -> np.ndarray:
+        self._state.update(batch)
+        return np.zeros(batch.num_rows, dtype=bool)
+
+    def _close(self, wm: int | None) -> list[WindowProfile]:
+        return [self._emit(None, None, self._state)] if wm is None else []
+
+    def _dump_state(self) -> dict[str, Any]:
+        return {"state": _encode_state(self._state)}
+
+    def _load_state(self, state: dict[str, Any]) -> None:
+        self._state = _decode_state(self.schema, state["state"])
+
+    @classmethod
+    def _from_snapshot(
+        cls, snapshot: dict[str, Any], late_sink: LateSink | None
+    ) -> WindowedProfiler:
+        return cls(
+            _decode_schema(snapshot["schema"]),
+            late_sink=late_sink,
+            name=snapshot["name"],
+            top_n=snapshot["top_n"],
+        )
+
+
+_KINDS: dict[str, type[WindowedProfiler]] = {
+    "tumbling": TumblingProfiler,
+    "sliding": SlidingProfiler,
+    "session": SessionProfiler,
+    "global": GlobalProfiler,
+}
+
+
+def restore_profiler(
+    snapshot: dict[str, Any], *, late_sink: LateSink | None = None
+) -> WindowedProfiler:
+    """Restore whichever kind of profiler a snapshot holds."""
+    return WindowedProfiler.restore(snapshot, late_sink=late_sink)

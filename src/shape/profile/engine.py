@@ -130,14 +130,21 @@ def profile_table(
         state.update(batch)
         if opts.mode == "bounded" and i % 16 == 15:
             pool.release_unused()  # keep the allocator from holding on to freed read-ahead blocks
-    result = state.finalize(opts.top_n)
-    types = [str(f.type) for f in src.schema]
+    return table_entry(state, src.name, src.schema, opts.mode, opts.top_n)
+
+
+def table_entry(
+    state: Any, name: str, schema: pa.Schema, mode: str, top_n: int = 500
+) -> dict[str, Any]:
+    """The table entry (``{name, rows, columns}``) for a kernel ``ProfileState`` that has seen
+    every batch. The stream runtime (``shape.streaming``) closes its windows through this, so a
+    window's profile has the same layout as a batch profile."""
+    result = state.finalize(top_n)
+    types = [str(f.type) for f in schema]
     return {
-        "name": src.name,
+        "name": name,
         "rows": result["rows"],
-        "columns": [
-            _column_doc(c, t, opts.mode) for c, t in zip(result["columns"], types, strict=True)
-        ],
+        "columns": [_column_doc(c, t, mode) for c, t in zip(result["columns"], types, strict=True)],
     }
 
 

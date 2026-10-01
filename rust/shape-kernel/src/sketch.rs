@@ -137,6 +137,25 @@ impl KllCore {
         (0..h).map(|i| kll_capacity(self.k, i, h)).sum()
     }
 
+    /// Number of compactions so far (the parity of the next one).
+    pub fn compactions(&self) -> u64 {
+        self.compactions
+    }
+
+    /// Rebuild a sketch from its serialized state (snapshot restore).
+    pub fn from_parts(k: u64, levels: Vec<Vec<f64>>, n: u64, compactions: u64) -> Self {
+        KllCore {
+            k,
+            levels: if levels.is_empty() {
+                vec![Vec::new()]
+            } else {
+                levels
+            },
+            n,
+            compactions,
+        }
+    }
+
     pub fn update(&mut self, x: f64) {
         self.levels[0].push(x);
         self.n += 1;
@@ -203,6 +222,11 @@ impl KllCore {
 }
 
 // -------------------------------------------------------------- SpaceSaving
+
+/// One serialized SpaceSaving entry: (key, count, error, recency sequence).
+pub type SsEntry<K> = (K, u64, u64, u64);
+/// Serialized SpaceSaving state: (clock, n, entries).
+pub type SsParts<K> = (u64, u64, Vec<SsEntry<K>>);
 
 #[derive(Clone)]
 struct Entry<K> {
@@ -318,6 +342,43 @@ impl<K: Clone + Eq + std::hash::Hash + Ord> SpaceSavingCore<K> {
             .collect();
         self.clock = self.entries.len() as u64;
         self.n += o.n;
+    }
+
+    /// The serialized state: (clock, n, entries as (key, count, error, seq)), sorted by key so
+    /// that equal states give equal bytes whatever the slot order.
+    pub fn parts(&self) -> SsParts<K> {
+        let mut v: Vec<SsEntry<K>> = self
+            .entries
+            .iter()
+            .map(|e| (e.key.clone(), e.count, e.err, e.seq))
+            .collect();
+        v.sort_by(|a, b| a.0.cmp(&b.0));
+        (self.clock, self.n, v)
+    }
+
+    /// Rebuild a summary from its serialized state (snapshot restore).
+    pub fn from_parts(capacity: usize, clock: u64, n: u64, entries: Vec<SsEntry<K>>) -> Self {
+        let entries: Vec<Entry<K>> = entries
+            .into_iter()
+            .map(|(key, count, err, seq)| Entry {
+                key,
+                count,
+                err,
+                seq,
+            })
+            .collect();
+        let index = entries
+            .iter()
+            .enumerate()
+            .map(|(i, e)| (e.key.clone(), i))
+            .collect();
+        SpaceSavingCore {
+            capacity,
+            entries,
+            index,
+            clock,
+            n,
+        }
     }
 
     /// (key, count, error), largest count first, ties by key.
