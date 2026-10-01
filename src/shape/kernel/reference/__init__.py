@@ -12,7 +12,10 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from .exact import count_numeric as count_numeric
+from .exact import date_iso as date_iso
+from .exact import float_repr as float_repr
 from .exact import numeric_stats as numeric_stats
+from .exact import round6 as round6
 from .exact import temporal_counts as temporal_counts
 from .exact import top_indices as top_indices
 from .exact import value_counts_str as value_counts_str

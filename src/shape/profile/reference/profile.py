@@ -6,6 +6,7 @@ import copy
 import datetime as _dt
 import hashlib
 import math
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
@@ -54,6 +55,22 @@ _PLAIN = frozenset({str, int, bool, type(None)})  # leaves _clean returns unchan
 _STR_ONLY = frozenset({str})
 
 
+_NUMBERS = frozenset({int, float, bool})
+
+
+def _no_nan(values: Any) -> bool:
+    """True when every value is a leaf ``_clean`` returns unchanged: plain str/int/bool/None, or
+    numbers without NaN (a sum is NaN when any term is; an inf - inf false alarm only costs the
+    slow path)."""
+    types = set(map(type, values))
+    if _PLAIN.issuperset(types):
+        return True
+    if _NUMBERS.issuperset(types):
+        total = sum(values)
+        return bool(total == total)
+    return False
+
+
 def _clean(v: Any) -> Any:
     """NaN becomes the string ``"NaN"``; numpy scalars become Python scalars."""
     t = type(v)
@@ -65,11 +82,11 @@ def _clean(v: Any) -> Any:
         return "NaN"
     if isinstance(v, dict):
         # value counts: str keys over plain values need no per-entry work (types checked in C)
-        if _STR_ONLY.issuperset(map(type, v)) and _PLAIN.issuperset(map(type, v.values())):
+        if _STR_ONLY.issuperset(map(type, v)) and _no_nan(v.values()):
             return dict(v)
         return {str(k): _clean(x) for k, x in v.items()}
     if isinstance(v, (list, tuple)):
-        if _PLAIN.issuperset(map(type, v)):
+        if _no_nan(v):
             return list(v)
         return [_clean(x) for x in v]
     if hasattr(v, "item") and not isinstance(v, (str, bytes)):
@@ -231,14 +248,24 @@ def profile(source: Any, *, name: str | None = None) -> Profile:
         return _profile(source, name)
 
 
+def _load_tables(sources: dict[str, Any]) -> dict[str, tuple[list[Any], int]]:
+    """Read every table, concurrently when there are several (the readers release the GIL), so
+    the small tables' reads hide behind the largest one's. Errors surface in table order."""
+    if len(sources) == 1:
+        ((name, src),) = sources.items()
+        _, cols, rows = load_columns(src, name)
+        return {name: (cols, rows)}
+    with ThreadPoolExecutor(max_workers=len(sources)) as ex:
+        futures = [(n, ex.submit(load_columns, src, n)) for n, src in sources.items()]
+        loaded = [(n, f.result()) for n, f in futures]
+    return {n: (cols, rows) for n, (_, cols, rows) in loaded}
+
+
 def _profile(source: Any, name: str | None) -> Profile:
     if isinstance(source, dict):
         if not source:
             raise SourceError("an empty dict of tables cannot be profiled")
-        cols_by_t = {}
-        for table_name, src in source.items():
-            _, cols, rows = load_columns(src, str(table_name))
-            cols_by_t[str(table_name)] = (cols, rows)
+        cols_by_t = _load_tables({str(k): v for k, v in source.items()})
         return Profile(dataset_to_dict(profile_dataset_columns(cols_by_t)), name=name)
     table_name, cols, rows = load_columns(source, name)
     table = _profile_cols_table(table_name, cols, rows, None)

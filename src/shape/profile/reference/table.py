@@ -211,8 +211,8 @@ def _can_fork() -> bool:
 
 
 def _col_cost(c: _Col) -> int:
-    """Scheduling order, most expensive first: numeric columns run the distribution fit."""
-    return 0 if c.kind in ("float", "int") else 1 if c.kind == "str" else 2
+    """Scheduling order, most expensive first: float columns run the longest distribution fit."""
+    return 0 if c.kind == "float" else 1 if c.kind in ("int", "str") else 2
 
 
 def _profile_cols(

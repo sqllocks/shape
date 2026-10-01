@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import re
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,8 @@ import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 import pyarrow.csv as pacsv  # type: ignore[import-untyped]
+
+from shape.kernel.dispatch import get_kernel
 
 # threading
 # ---------------------------------------------------------------------------
@@ -84,6 +87,25 @@ def _is_string_view(typ: pa.DataType) -> bool:
     return bool(check(typ)) if check else False
 
 
+def _date_text(col: Any) -> Any:
+    """A ``date32`` column as text: formatted on the kernel (in parallel over the chunks),
+    falling back to Arrow's cast for anything else (times, years outside 0000-9999)."""
+    if not pa.types.is_date32(col.type):
+        return pc.cast(col, pa.string())
+    kernel = get_kernel()
+    chunks = col.chunks
+    if len(chunks) > 1 and len(col) >= 100_000:
+        with ThreadPoolExecutor(max_workers=min(len(chunks), os.cpu_count() or 1)) as ex:
+            parts = list(ex.map(kernel.date_iso, chunks))
+    else:
+        parts = [kernel.date_iso(c) for c in chunks]
+    if any(p is None for p in parts):
+        return pc.cast(col, pa.string())
+    return pa.chunked_array(
+        [pa.array(p) if not isinstance(p, pa.Array) else p for p in parts], pa.string()
+    )
+
+
 def _csv_cols(t: pa.Table) -> list[_Col]:
     out = []
     for name, col in zip(t.column_names, t.columns, strict=True):
@@ -111,7 +133,7 @@ def _csv_cols(t: pa.Table) -> list[_Col]:
         elif pa.types.is_date(typ) or pa.types.is_time(typ):
             # pandas keeps these as text; Arrow's inference only accepts the canonical
             # ISO forms, so casting back reproduces the original text exactly.
-            out.append(_Col(name, "str", pc.cast(col, pa.string())))
+            out.append(_Col(name, "str", _date_text(col)))
         else:
             out.append(_Col(name, "str", pc.cast(col, pa.string()) if typ != pa.string() else col))
     return out

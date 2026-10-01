@@ -143,3 +143,54 @@ def test_product_profile_uses_the_native_kernels_and_matches_the_reference(tmp_p
         docs.append(json.dumps(shape.profile(table).to_dict(), sort_keys=False))
     dispatch.reset()
     assert docs[0] == docs[1]
+
+
+# --- P1-17: per-value text and rounding work -------------------------------------------------
+
+
+def _fuzz_floats(seed: int, n: int) -> np.ndarray:
+    rng = np.random.default_rng(seed)
+    parts = [
+        rng.normal(0, 1, n) * 10.0 ** rng.integers(-30, 30, n),
+        rng.integers(-1000, 1000, n) / rng.choice([1, 2, 4, 8, 10, 1000, 1_000_000], n),
+        rng.random(n),
+        np.frombuffer(rng.bytes(8 * n), dtype=np.uint64).view(np.float64),  # any bit pattern
+        np.array([0.0, -0.0, 1e16, 1e15, 9.999999999999999e15, 1e-4, 1e-5, 0.5e-6, 2.5e-6, 1.5e-6]),
+        np.array([np.inf, -np.inf, np.nan, 5e-324, 1.7976931348623157e308, 123456789012345680.0]),
+    ]
+    return np.concatenate(parts)
+
+
+@pytest.mark.parametrize("seed", range(4))
+def test_float_repr_is_pythons_repr(native, seed):
+    vals = pa.array(_fuzz_floats(seed, 20_000))
+    got = _arr(native.float_repr(vals))
+    assert got.equals(reference.float_repr(vals))
+    assert got.to_pylist() == [str(v) for v in vals.to_pylist()]
+
+
+@pytest.mark.parametrize("seed", range(4))
+def test_round6_is_pythons_round(native, seed):
+    vals = pa.array(_fuzz_floats(seed, 20_000))
+    got = _arr(native.round6(vals)).to_numpy(zero_copy_only=False)
+    want = reference.round6(vals).to_numpy(zero_copy_only=False)
+    assert np.array_equal(got.view(np.uint64), want.view(np.uint64))  # bitwise, NaN and -0.0 too
+
+
+def test_round6_ties_and_half_values(native):
+    vals = pa.array([0.0000005, 0.0000015, 0.0000025, 2.5e-7, -2.5e-7, 0.1234565, 1234567.8912345])
+    got = _arr(native.round6(vals)).to_pylist()
+    assert got == [round(v, 6) for v in vals.to_pylist()]
+
+
+@pytest.mark.parametrize("seed", range(3))
+def test_date_iso_matches_arrow_cast(native, seed):
+    rng = np.random.default_rng(seed)
+    days = rng.integers(-719_162, 2_932_896, 50_000).astype(np.int32)  # 0001-01-01 .. 9999-12-31
+    mask = rng.random(len(days)) < 0.1
+    vals = pa.array(days, pa.date32(), mask=mask)
+    assert _arr(native.date_iso(vals)).equals(reference.date_iso(vals))
+
+
+def test_date_iso_declines_years_outside_four_digits(native):
+    assert native.date_iso(pa.array([3_000_000, 0], pa.date32())) is None
