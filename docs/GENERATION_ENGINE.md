@@ -109,3 +109,103 @@ They need whole tables, so `generate()` runs them and `iter_chunks()` does not. 
 3. **Correlation** (`correlation.py`): a Gaussian copula reorders the values of the numeric columns
    named in `correlated_columns` to match the target correlations, leaving every column's values
    unchanged. Key-like columns and columns with nulls are not reordered.
+
+## Reading SQL DDL
+
+`shape from-ddl FILE` turns `CREATE TABLE` statements (SQL Server, PostgreSQL, MySQL and ANSI SQL,
+plus `ALTER TABLE ... ADD CONSTRAINT ... FOREIGN KEY`) into a generation schema.
+
+```
+shape from-ddl tables.sql                      # writes tables.gen.json
+shape from-ddl tables.sql -o shop.gen.json --domain shop -s medium:customer=5000,order=25000
+shape from-ddl tables.sql --no-smart           # type and name heuristics only
+shape from-ddl tables.sql --explain            # print every inference decision
+```
+
+| Option | Meaning |
+|---|---|
+| `-o`, `--output` | where to write the schema (default: the input with the suffix `.gen.json`) |
+| `--domain` | the schema's domain; the model is named `<domain>_ddl_import` (default `custom`) |
+| `-s`, `--scale` | `preset:table=N,...`: select that scale preset and set those tables' row counts |
+| `--smart` / `--no-smart` | smart inference (the default), or keep the first generators |
+| `--explain` | print the inference report: rule, table and column, what changed, confidence |
+
+In Python: `shape.generation.ddl.from_ddl(sql, domain=, smart=, scale=)` returns
+`(GenSchema, annotations)`; `DdlParser` is the parser alone.
+
+**First generators.** Every column gets one from its type (integers a uniform range, decimals a
+normal, dates a uniform date in the model's range, `bit` a weighted enum, `uuid`) and, for strings,
+from its name (`email`, `first_name`, `city`, `status`, ... and the suffixes `_name`, `_code`,
+`_type`, `_status`, `_date`). Identity, serial and auto-increment columns, and single-column
+primary keys, are sequences. A declared foreign key is a `foreign_key` column and a relationship (a
+self-reference is `self_referencing`). Column names ending `_id` that match a table by its
+singular or plural name (`order_id` to `order` or `orders`, `category_id` to `categories`) are
+foreign keys too. Binary columns are left out. A column-level `REFERENCES` clause is not read:
+declare keys as `FOREIGN KEY (...)` constraints. Scale presets are 1k, 10k and 100k rows for
+tables with no parent, and 2.5k, 25k and 250k for the rest.
+
+**Smart inference** (`shape.generation.ddl_infer`) replaces only placeholder generators, in this
+order:
+
+1. *Table roles*: entity, transaction, transaction detail, lookup, hierarchy, bridge, log, and
+   `dim_`/`fact_` tables.
+2. *Column semantics*: money, quantity, percentage, measurement, rating, status, category, flags,
+   the kinds of date, contact fields, codes and text, from the name (CamelCase is read as words)
+   and the type.
+3. *Foreign-key distributions*: pareto, zipf or uniform by the roles at both ends, and
+   `null_rate` 0.15 on a nullable key.
+4. *Row counts*: lookup and hierarchy tables get fixed counts (20 to 200, and 50); other tables
+   a ratio per parent (bridge 3, address 1.5, detail 2.5, transaction 5, log 10, return 0.15);
+   root tables get 1k, 50k and 500k presets.
+5. *Numeric distributions*: log-normal money and quantities, a bounded normal for percentages and
+   ratings, a normal per kind of measurement.
+6. *Status and category value mixes*, by role and by name.
+7. *Dates*: seasonal order dates (a Q4 lift, fewer weekends), an end date derived from the start
+   date, birth dates 18 to 65 years before the model's end.
+8. *Correlations*: cost from price, tax from subtotal or amount, discount from price or total,
+   total as quantity times unit price, net as gross minus tax, margin as price minus cost.
+9. *Business rules*: end not before start, modified not before created, cost not above price, a
+   child's transaction date not before its parent's, money not negative, quantities at least 1,
+   percentages 0 to 100, ratings 1 to 5.
+
+`tests/generation/test_ddl.py` tests each step. The reference-comparison harness under
+`benchmarks/` checks the import against the reference implementation's on its own DDL fixtures and on
+cases that fire every rule: all equal, in every field.
+
+## Writers
+
+Every output format is a `shape.sinks` plugin (`write(uri, table, batches, **options) -> rows`).
+`shape.generation.output` puts them behind the engine:
+
+```python
+from shape.generation.output import write_engine, write_result, format_summary
+
+write_result(result, "parquet", "out/")                         # a finished GenerationResult
+write_engine(engine, "csv", "out/", chunk_rows=65_536)          # streams when no post-pass is needed
+print(format_summary(result))                                   # the `summary` output
+```
+
+| Format | File | Notes |
+|---|---|---|
+| `csv`, `tsv` | `<table>.csv`, `<table>.tsv` | header row, nulls are empty fields |
+| `jsonl` | `<table>.jsonl` | dates and times ISO 8601; decimals are exact strings |
+| `parquet` | `<table>.parquet` | snappy, dictionary encoding on (T-17) |
+| `sql` | `<table>.sql` | see below |
+| `excel` | `<table>.xlsx` | extra `[excel]`; refuses a table over 1,048,575 rows |
+| `delta` | `<dir>/<table>/` | extra `[delta]`; `mode` (`overwrite`, `append`), `partition_by` |
+
+`write_result` writes tables in parallel. `write_engine` overlaps generation of chunk *n* + 1 with the
+write of chunk *n* when the schema has no post-pass (`needs_post_pass`: computed columns, business
+rules or correlations need whole tables), and otherwise writes `engine.generate()`.
+
+### SQL options
+
+`sql_dialect` (`tsql`, `tsql-fabric-warehouse`, `postgres`, `mysql`), `schema_name`, `batch_size`
+(rows per `INSERT`), `ddl`, `drop`, `go` (the `--sql-ddl`, `--sql-drop` and `--sql-go` switches).
+The generation schema supplies column types, nullability and the primary key
+(`sql_options(schema, table)`). The script has no timestamp, so equal input gives equal bytes.
+Choices that differ from a naive port: integers are `BIGINT` in every dialect; T-SQL batches are
+capped at 1,000 rows (the server's limit for one `VALUES` list) whatever `batch_size` says;
+`tsql-fabric-warehouse` uses `VARCHAR` and `DATETIME2(6)`, writes the primary key as a comment (the
+warehouse does not enforce it) and emits no `DISTRIBUTION` clause; `NaN` and infinities become
+`NULL`; MySQL string literals escape backslashes.

@@ -13,9 +13,13 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.sources` | `abfss` | CSV, Parquet, JSONL and IPC files in OneLake and ADLS Gen2, by `abfss://` URI (extra `[azure]`; see [cloud-sources.md](cloud-sources.md)) |
 | `shape.sources` | `delta` | Delta tables: a local directory, or `delta+abfss://` in OneLake and ADLS Gen2 (extra `[azure]` for cloud tables) |
 | `shape.sinks` | `csv` | CSV file |
-| `shape.sinks` | `parquet` | Parquet file (zstd by default) |
+| `shape.sinks` | `parquet` | Parquet file (snappy, dictionary encoding on; T-17) |
 | `shape.sinks` | `jsonl` | JSON Lines file |
 | `shape.sinks` | `ipc` | Arrow IPC file |
+| `shape.sinks` | `tsv` | Tab-separated file |
+| `shape.sinks` | `sql` | SQL `INSERT` script, with optional DDL (`tsql`, `tsql-fabric-warehouse`, `postgres`, `mysql`) |
+| `shape.sinks` | `excel` | Excel workbook (`pip install 'sqllocks-shape[excel]'`, openpyxl) |
+| `shape.sinks` | `delta` | Delta table (`pip install 'sqllocks-shape[delta]'`, deltalake) |
 | `shape.detectors` | `email` | email syntax |
 | `shape.detectors` | `us_ssn` | US social security number syntax |
 | `shape.detectors` | `phone` | telephone-like syntax |
