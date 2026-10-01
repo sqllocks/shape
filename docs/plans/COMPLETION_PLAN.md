@@ -2002,7 +2002,7 @@ Work packages are listed in execution order. The next work package is the first 
 | Gate | Status |
 |---|---|
 | G0 | done b965672 |
-| G1 | todo (not met: PROF-IN D3 pq 8.8x, D4 csv 9.9x, MT 5.4x; PROF-CLI D2 9.8x; escalated in §2.3) |
+| G1 | todo (re-run on c7bd366, Oct 1: not met only on PROF-IN MT 9.1x (gate 10x); every other check passes: D1-D4 10.6x-19.6x, PROF-CLI 14.6x/16.6x, START 43.6 ms, parity 49/49 both kernels; evidence docs/plans/evidence/G1-rerun/; escalated to the owner) |
 | G2 | todo (out-of-tree plugin and `shape plugins list` checks pass at the 9342eb3 merge; waits on G1) |
 | GF | todo |
 | G3 | done (lead, 8:55 AM EDT Oct 1, on 7ef6a6e: stream_prof verify stream == batch bounded rel 1e-9 PASS and identical across 3 processes PASS; STREAM-PROF 115.7% default / 101.7% SHAPE_THREADS=1 (gate 80%), docs/plans/evidence/G3/stream-prof-lead.json; S2-S5 regression tests pass in both kernels; P3-01..P3-05 done) |
