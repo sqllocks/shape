@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any, Self
 
-from shape.profile.sketches import KLL, HyperLogLog, SpaceSaving
+from shape.kernel.sketches import Kll
+from shape.kernel.values import DistinctCounter, TopValues
 
 
 @dataclass
@@ -16,10 +18,10 @@ class NumericEvidence:
     m2: float = 0.0
     minimum: float | None = None
     maximum: float | None = None
-    hll: HyperLogLog = field(default_factory=HyperLogLog)
-    kll: KLL = field(default_factory=KLL)
+    hll: DistinctCounter = field(default_factory=DistinctCounter)
+    kll: Any = field(default_factory=Kll)
 
-    def update(self, v):
+    def update(self, v: Any) -> None:
         self.count += 1
         if v is None:
             self.nulls += 1
@@ -34,7 +36,7 @@ class NumericEvidence:
         self.hll.update(x)
         self.kll.update(x)
 
-    def merge(self, o):
+    def merge(self, o: NumericEvidence) -> Self:
         total = self.n + o.n
         if total:
             d = o.mean - self.mean
@@ -61,7 +63,7 @@ class NumericEvidence:
         self.kll.merge(o.kll)
         return self
 
-    def summary(self):
+    def summary(self) -> dict[str, Any]:
         return {
             "count": self.count,
             "null_count": self.nulls,
@@ -79,10 +81,10 @@ class TextEvidence:
     count: int = 0
     nulls: int = 0
     lengths: NumericEvidence = field(default_factory=NumericEvidence)
-    hll: HyperLogLog = field(default_factory=HyperLogLog)
-    topk: SpaceSaving = field(default_factory=SpaceSaving)
+    hll: DistinctCounter = field(default_factory=DistinctCounter)
+    topk: TopValues = field(default_factory=TopValues)
 
-    def update(self, v):
+    def update(self, v: Any) -> None:
         self.count += 1
         if v is None:
             self.nulls += 1
@@ -92,7 +94,7 @@ class TextEvidence:
         self.hll.update(s)
         self.topk.update(s)
 
-    def merge(self, o):
+    def merge(self, o: TextEvidence) -> Self:
         self.count += o.count
         self.nulls += o.nulls
         self.lengths.merge(o.lengths)
@@ -100,7 +102,7 @@ class TextEvidence:
         self.topk.merge(o.topk)
         return self
 
-    def summary(self):
+    def summary(self) -> dict[str, Any]:
         return {
             "count": self.count,
             "null_count": self.nulls,

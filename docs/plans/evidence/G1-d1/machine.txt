@@ -1,0 +1,7 @@
+ 17:55:15 up 50 min,  0 user,  load average: 2.04, 1.92, 1.44
+CPU(s):                                  4
+Model name:                              Intel(R) Xeon(R) Processor @ 2.10GHz
+Thread(s) per core:                      1
+Core(s) per socket:                      4
+Socket(s):                               1
+Python 3.11.15

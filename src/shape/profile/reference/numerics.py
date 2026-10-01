@@ -375,7 +375,7 @@ def _kolmogn_PelzGood(n: int, x: float) -> float:
 
 def _smirnov(n: int, d: float) -> float:
     """One-sided exact Smirnov sf (Birnbaum & Tingey sum, vectorised).  Only reached in
-    branches where the two-sided p-value is far below Spindle's 0.05 gate, so only its
+    branches where the two-sided p-value is far below the 0.05 gate, so only its
     magnitude matters (it is never reported)."""
     if d <= 0:
         return 1.0

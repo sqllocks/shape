@@ -1,0 +1,230 @@
+{
+ "annotations": [],
+ "explain": [],
+ "file": {
+  "business_rules": [],
+  "generation": {
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "customer": 100000,
+     "orders": 250000
+    },
+    "medium": {
+     "customer": 7,
+     "order": 21,
+     "orders": 21
+    },
+    "small": {
+     "customer": 1000,
+     "orders": 2500
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "child": "orders",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_orders_customer_id",
+    "parent": "customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "customer": {
+    "columns": {
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "name": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   },
+   "orders": {
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   }
+  }
+ },
+ "schema": {
+  "business_rules": [],
+  "correlated_columns": {},
+  "generation": {
+   "derived_counts": {},
+   "output": {},
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "customer": 100000,
+     "orders": 250000
+    },
+    "medium": {
+     "customer": 7,
+     "order": 21,
+     "orders": 21
+    },
+    "small": {
+     "customer": 1000,
+     "orders": 2500
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "cardinality": {},
+    "child": "orders",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_orders_customer_id",
+    "optional": false,
+    "parent": "customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "customer": {
+    "cdm_mapping": null,
+    "columns": {
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "name": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "name",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "customer",
+    "primary_key": [
+     "id"
+    ]
+   },
+   "orders": {
+    "cdm_mapping": null,
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "orders",
+    "primary_key": [
+     "id"
+    ]
+   }
+  }
+ }
+}

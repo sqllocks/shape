@@ -1,0 +1,1756 @@
+{
+ "annotations": [
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as LOOKUP",
+   "rule_id": "TC-LOOKUP",
+   "table": "customer"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as UNKNOWN",
+   "rule_id": "TC-UNKNOWN",
+   "table": "pg_order"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as UNKNOWN",
+   "rule_id": "TC-UNKNOWN",
+   "table": "ms_order"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as UNKNOWN",
+   "rule_id": "TC-UNKNOWN",
+   "table": "my_order"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as UNKNOWN",
+   "rule_id": "TC-UNKNOWN",
+   "table": "ansi_order"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as LOOKUP",
+   "rule_id": "TC-LOOKUP",
+   "table": "invoice"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as TRANSACTION",
+   "rule_id": "TC-TRANSACTION",
+   "table": "invoice_line"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as LOG",
+   "rule_id": "TC-LOG",
+   "table": "catalog_item"
+  },
+  {
+   "column": "customer_id",
+   "confidence": 0.8,
+   "description": "Lookup/reference parent (customer) -> child \u2014 zipf(alpha=1.3)",
+   "rule_id": "FK-02",
+   "table": "pg_order"
+  },
+  {
+   "column": "customer_id",
+   "confidence": 0.9,
+   "description": "Nullable FK \u2014 added null_rate 0.15",
+   "rule_id": "FK-04",
+   "table": "my_order"
+  },
+  {
+   "column": "customer_id",
+   "confidence": 0.8,
+   "description": "Lookup/reference parent (customer) -> child \u2014 zipf(alpha=1.3)",
+   "rule_id": "FK-02",
+   "table": "my_order"
+  },
+  {
+   "column": "customer_id",
+   "confidence": 0.9,
+   "description": "Nullable FK \u2014 added null_rate 0.15",
+   "rule_id": "FK-04",
+   "table": "ansi_order"
+  },
+  {
+   "column": "customer_id",
+   "confidence": 0.8,
+   "description": "Lookup/reference parent (customer) -> child \u2014 zipf(alpha=1.3)",
+   "rule_id": "FK-02",
+   "table": "ansi_order"
+  },
+  {
+   "column": "invoice_id",
+   "confidence": 0.8,
+   "description": "Transaction FK to lookup (invoice) \u2014 zipf(alpha=1.2)",
+   "rule_id": "FK-10",
+   "table": "invoice_line"
+  },
+  {
+   "column": "invoice_id",
+   "confidence": 0.9,
+   "description": "Nullable FK \u2014 added null_rate 0.15",
+   "rule_id": "FK-04",
+   "table": "catalog_item"
+  },
+  {
+   "column": "invoice_id",
+   "confidence": 0.8,
+   "description": "Log/audit child \u2014 pareto(alpha=1.5)",
+   "rule_id": "FK-07",
+   "table": "catalog_item"
+  },
+  {
+   "column": null,
+   "confidence": 0.85,
+   "description": "Lookup/reference table \u2014 fixed 100 rows",
+   "rule_id": "CA-06",
+   "table": "customer"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Default child ratio \u2014 3.0 per parent (customer)",
+   "rule_id": "CA-09",
+   "table": "pg_order"
+  },
+  {
+   "column": null,
+   "confidence": 0.9,
+   "description": "Root table \u2014 scale presets set (1K / 50K / 500K)",
+   "rule_id": "CA-SCALE",
+   "table": "ms_order"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Default child ratio \u2014 3.0 per parent (customer)",
+   "rule_id": "CA-09",
+   "table": "my_order"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Default child ratio \u2014 3.0 per parent (customer)",
+   "rule_id": "CA-09",
+   "table": "ansi_order"
+  },
+  {
+   "column": null,
+   "confidence": 0.85,
+   "description": "Lookup/reference table \u2014 fixed 200 rows",
+   "rule_id": "CA-06",
+   "table": "invoice"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Default child ratio \u2014 3.0 per parent (invoice)",
+   "rule_id": "CA-09",
+   "table": "invoice_line"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Parent (invoice) -> log/event \u2014 ratio 10.0",
+   "rule_id": "CA-05",
+   "table": "catalog_item"
+  },
+  {
+   "column": "total",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on MONETARY semantic",
+   "rule_id": "ND-MONETARY",
+   "table": "invoice"
+  },
+  {
+   "column": "discount_pct",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on QUANTITY semantic",
+   "rule_id": "ND-QUANTITY",
+   "table": "invoice"
+  },
+  {
+   "column": "margin_pct",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on MONETARY semantic",
+   "rule_id": "ND-MONETARY",
+   "table": "invoice"
+  },
+  {
+   "column": "tax_rate",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on MONETARY semantic",
+   "rule_id": "ND-MONETARY",
+   "table": "invoice"
+  },
+  {
+   "column": "feedback_score",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on MONETARY semantic",
+   "rule_id": "ND-MONETARY",
+   "table": "invoice"
+  },
+  {
+   "column": "current_value",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on MONETARY semantic",
+   "rule_id": "ND-MONETARY",
+   "table": "invoice"
+  },
+  {
+   "column": "line_total",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on MONETARY semantic",
+   "rule_id": "ND-MONETARY",
+   "table": "invoice_line"
+  },
+  {
+   "column": "state",
+   "confidence": 0.7,
+   "description": "Upgraded to realistic weighted_enum (4 values) based on STATUS semantic / LOOKUP role",
+   "rule_id": "EN-STATUS",
+   "table": "invoice"
+  },
+  {
+   "column": "model",
+   "confidence": 0.7,
+   "description": "Upgraded to realistic weighted_enum (5 values) based on CATEGORICAL semantic / LOOKUP role",
+   "rule_id": "EN-CATEGORICAL",
+   "table": "invoice"
+  },
+  {
+   "column": "invoice_date",
+   "confidence": 0.75,
+   "description": "Upgraded temporal pattern to 'seasonal' based on TEMPORAL_TRANSACTION semantic",
+   "rule_id": "TP-TEMPORAL_TRANSACTION",
+   "table": "invoice"
+  },
+  {
+   "column": "total",
+   "confidence": 0.8,
+   "description": "Monetary column total >= 0",
+   "rule_id": "BR-05",
+   "table": "invoice"
+  },
+  {
+   "column": "margin_pct",
+   "confidence": 0.8,
+   "description": "Monetary column margin_pct >= 0",
+   "rule_id": "BR-05",
+   "table": "invoice"
+  },
+  {
+   "column": "tax_rate",
+   "confidence": 0.8,
+   "description": "Monetary column tax_rate >= 0",
+   "rule_id": "BR-05",
+   "table": "invoice"
+  },
+  {
+   "column": "feedback_score",
+   "confidence": 0.8,
+   "description": "Monetary column feedback_score >= 0",
+   "rule_id": "BR-05",
+   "table": "invoice"
+  },
+  {
+   "column": "current_value",
+   "confidence": 0.8,
+   "description": "Monetary column current_value >= 0",
+   "rule_id": "BR-05",
+   "table": "invoice"
+  },
+  {
+   "column": "discount_pct",
+   "confidence": 0.8,
+   "description": "Quantity column discount_pct >= 1",
+   "rule_id": "BR-06",
+   "table": "invoice"
+  },
+  {
+   "column": "line_total",
+   "confidence": 0.8,
+   "description": "Monetary column line_total >= 0",
+   "rule_id": "BR-05",
+   "table": "invoice_line"
+  }
+ ],
+ "explain": [
+  "  [TC-LOOKUP] customer: Classified as LOOKUP (confidence: 80%)",
+  "  [TC-UNKNOWN] pg_order: Classified as UNKNOWN (confidence: 80%)",
+  "  [TC-UNKNOWN] ms_order: Classified as UNKNOWN (confidence: 80%)",
+  "  [TC-UNKNOWN] my_order: Classified as UNKNOWN (confidence: 80%)",
+  "  [TC-UNKNOWN] ansi_order: Classified as UNKNOWN (confidence: 80%)",
+  "  [TC-LOOKUP] invoice: Classified as LOOKUP (confidence: 80%)",
+  "  [TC-TRANSACTION] invoice_line: Classified as TRANSACTION (confidence: 80%)",
+  "  [TC-LOG] catalog_item: Classified as LOG (confidence: 80%)",
+  "  [FK-02] pg_order.customer_id: Lookup/reference parent (customer) -> child \u2014 zipf(alpha=1.3) (confidence: 80%)",
+  "  [FK-04] my_order.customer_id: Nullable FK \u2014 added null_rate 0.15 (confidence: 90%)",
+  "  [FK-02] my_order.customer_id: Lookup/reference parent (customer) -> child \u2014 zipf(alpha=1.3) (confidence: 80%)",
+  "  [FK-04] ansi_order.customer_id: Nullable FK \u2014 added null_rate 0.15 (confidence: 90%)",
+  "  [FK-02] ansi_order.customer_id: Lookup/reference parent (customer) -> child \u2014 zipf(alpha=1.3) (confidence: 80%)",
+  "  [FK-10] invoice_line.invoice_id: Transaction FK to lookup (invoice) \u2014 zipf(alpha=1.2) (confidence: 80%)",
+  "  [FK-04] catalog_item.invoice_id: Nullable FK \u2014 added null_rate 0.15 (confidence: 90%)",
+  "  [FK-07] catalog_item.invoice_id: Log/audit child \u2014 pareto(alpha=1.5) (confidence: 80%)",
+  "  [CA-06] customer: Lookup/reference table \u2014 fixed 100 rows (confidence: 85%)",
+  "  [CA-09] pg_order: Default child ratio \u2014 3.0 per parent (customer) (confidence: 80%)",
+  "  [CA-SCALE] ms_order: Root table \u2014 scale presets set (1K / 50K / 500K) (confidence: 90%)",
+  "  [CA-09] my_order: Default child ratio \u2014 3.0 per parent (customer) (confidence: 80%)",
+  "  [CA-09] ansi_order: Default child ratio \u2014 3.0 per parent (customer) (confidence: 80%)",
+  "  [CA-06] invoice: Lookup/reference table \u2014 fixed 200 rows (confidence: 85%)",
+  "  [CA-09] invoice_line: Default child ratio \u2014 3.0 per parent (invoice) (confidence: 80%)",
+  "  [CA-05] catalog_item: Parent (invoice) -> log/event \u2014 ratio 10.0 (confidence: 80%)",
+  "  [ND-MONETARY] invoice.total: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)",
+  "  [ND-QUANTITY] invoice.discount_pct: Upgraded to log_normal distribution based on QUANTITY semantic (confidence: 75%)",
+  "  [ND-MONETARY] invoice.margin_pct: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)",
+  "  [ND-MONETARY] invoice.tax_rate: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)",
+  "  [ND-MONETARY] invoice.feedback_score: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)",
+  "  [ND-MONETARY] invoice.current_value: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)",
+  "  [ND-MONETARY] invoice_line.line_total: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)",
+  "  [EN-STATUS] invoice.state: Upgraded to realistic weighted_enum (4 values) based on STATUS semantic / LOOKUP role (confidence: 70%)",
+  "  [EN-CATEGORICAL] invoice.model: Upgraded to realistic weighted_enum (5 values) based on CATEGORICAL semantic / LOOKUP role (confidence: 70%)",
+  "  [TP-TEMPORAL_TRANSACTION] invoice.invoice_date: Upgraded temporal pattern to 'seasonal' based on TEMPORAL_TRANSACTION semantic (confidence: 75%)",
+  "  [BR-05] invoice.total: Monetary column total >= 0 (confidence: 80%)",
+  "  [BR-05] invoice.margin_pct: Monetary column margin_pct >= 0 (confidence: 80%)",
+  "  [BR-05] invoice.tax_rate: Monetary column tax_rate >= 0 (confidence: 80%)",
+  "  [BR-05] invoice.feedback_score: Monetary column feedback_score >= 0 (confidence: 80%)",
+  "  [BR-05] invoice.current_value: Monetary column current_value >= 0 (confidence: 80%)",
+  "  [BR-06] invoice.discount_pct: Quantity column discount_pct >= 1 (confidence: 80%)",
+  "  [BR-05] invoice_line.line_total: Monetary column line_total >= 0 (confidence: 80%)"
+ ],
+ "file": {
+  "business_rules": [],
+  "generation": {
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "ansi_order": 250000,
+     "catalog_item": 250000,
+     "customer": 100000,
+     "invoice": 100000,
+     "invoice_line": 250000,
+     "ms_order": 500000,
+     "my_order": 250000,
+     "pg_order": 250000
+    },
+    "medium": {
+     "ansi_order": 25000,
+     "catalog_item": 25000,
+     "customer": 7,
+     "invoice": 10000,
+     "invoice_line": 25000,
+     "ms_order": 50000,
+     "my_order": 25000,
+     "order": 21,
+     "orders": 21,
+     "pg_order": 25000
+    },
+    "small": {
+     "ansi_order": 2500,
+     "catalog_item": 2500,
+     "customer": 1000,
+     "invoice": 1000,
+     "invoice_line": 2500,
+     "ms_order": 1000,
+     "my_order": 2500,
+     "pg_order": 2500
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "child": "pg_order",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_pg_order_customer_id",
+    "parent": "customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "my_order",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_my_order_customer_id",
+    "parent": "customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "ansi_order",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_ansi_order_customer_id",
+    "parent": "customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "invoice_line",
+    "child_columns": [
+     "invoice_id"
+    ],
+    "name": "fk_invoice_line_invoice_id",
+    "parent": "invoice",
+    "parent_columns": [
+     "invoice_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "catalog_item",
+    "child_columns": [
+     "invoice_id"
+    ],
+    "name": "fk_catalog_item_invoice_id",
+    "parent": "invoice",
+    "parent_columns": [
+     "invoice_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "ansi_order": {
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "distribution": "zipf",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   },
+   "catalog_item": {
+    "columns": {
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "invoice_id": {
+      "generator": {
+       "distribution": "pareto",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.5
+       },
+       "ref": "invoice.invoice_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "title": {
+      "generator": {
+       "max_nb_chars": 80,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 80,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   },
+   "customer": {
+    "columns": {
+     "email": {
+      "generator": {
+       "provider": "email",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "nullable": true,
+      "type": "string"
+     },
+     "gender": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 1,
+      "nullable": true,
+      "type": "string"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "is_vip": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 1,
+      "nullable": true,
+      "type": "string"
+     },
+     "marital_status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 1,
+      "nullable": true,
+      "type": "string"
+     },
+     "tier_label": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 1,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   },
+   "invoice": {
+    "columns": {
+     "current_value": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "discount_pct": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 1000,
+        "mean": 1.5,
+        "min": 1,
+        "sigma": 0.8
+       },
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 5,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "feedback_score": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 3,
+      "scale": 1,
+      "type": "decimal"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "invoice_date": {
+      "generator": {
+       "pattern": "seasonal",
+       "profiles": {
+        "day_of_week": {
+         "Fri": 0.16,
+         "Mon": 0.165,
+         "Sat": 0.105,
+         "Sun": 0.1,
+         "Thu": 0.155,
+         "Tue": 0.16,
+         "Wed": 0.155
+        },
+        "month": {
+         "Apr": 0.082,
+         "Aug": 0.085,
+         "Dec": 0.106,
+         "Feb": 0.068,
+         "Jan": 0.071,
+         "Jul": 0.084,
+         "Jun": 0.083,
+         "Mar": 0.083,
+         "May": 0.085,
+         "Nov": 0.088,
+         "Oct": 0.084,
+         "Sep": 0.082
+        }
+       },
+       "strategy": "temporal"
+      },
+      "nullable": true,
+      "type": "date"
+     },
+     "margin_pct": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 5,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "model": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "type_1": 0.35,
+        "type_2": 0.25,
+        "type_3": 0.2,
+        "type_4": 0.12,
+        "type_5": 0.08
+       }
+      },
+      "max_length": 40,
+      "nullable": true,
+      "type": "string"
+     },
+     "state": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.82,
+        "closed": 0.03,
+        "inactive": 0.1,
+        "suspended": 0.05
+       }
+      },
+      "max_length": 50,
+      "nullable": true,
+      "type": "string"
+     },
+     "tax_rate": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 5,
+      "scale": 4,
+      "type": "decimal"
+     },
+     "total": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   },
+   "invoice_line": {
+    "columns": {
+     "big_picture": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "invoice_id": {
+      "generator": {
+       "distribution": "zipf",
+       "params": {
+        "alpha": 1.2
+       },
+       "ref": "invoice.invoice_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "line_total": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "photo": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     },
+     "picture": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     },
+     "thumbnail": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   },
+   "ms_order": {
+    "columns": {
+     "CustomerId": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   },
+   "my_order": {
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "distribution": "zipf",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   },
+   "pg_order": {
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "distribution": "zipf",
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   }
+  }
+ },
+ "schema": {
+  "business_rules": [
+   {
+    "name": "invoice_total_positive",
+    "rule": "total >= 0",
+    "table": "invoice",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "invoice_margin_pct_positive",
+    "rule": "margin_pct >= 0",
+    "table": "invoice",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "invoice_tax_rate_positive",
+    "rule": "tax_rate >= 0",
+    "table": "invoice",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "invoice_feedback_score_positive",
+    "rule": "feedback_score >= 0",
+    "table": "invoice",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "invoice_current_value_positive",
+    "rule": "current_value >= 0",
+    "table": "invoice",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "invoice_discount_pct_positive",
+    "rule": "discount_pct >= 1",
+    "table": "invoice",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "invoice_line_line_total_positive",
+    "rule": "line_total >= 0",
+    "table": "invoice_line",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   }
+  ],
+  "correlated_columns": {},
+  "generation": {
+   "derived_counts": {
+    "ansi_order": {
+     "per_parent": "customer",
+     "ratio": 3.0
+    },
+    "catalog_item": {
+     "per_parent": "invoice",
+     "ratio": 10.0
+    },
+    "customer": {
+     "fixed": 100
+    },
+    "invoice": {
+     "fixed": 200
+    },
+    "invoice_line": {
+     "per_parent": "invoice",
+     "ratio": 3.0
+    },
+    "my_order": {
+     "per_parent": "customer",
+     "ratio": 3.0
+    },
+    "pg_order": {
+     "per_parent": "customer",
+     "ratio": 3.0
+    }
+   },
+   "output": {},
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "ansi_order": 250000,
+     "catalog_item": 250000,
+     "customer": 100000,
+     "invoice": 100000,
+     "invoice_line": 250000,
+     "ms_order": 500000,
+     "my_order": 250000,
+     "pg_order": 250000
+    },
+    "medium": {
+     "ansi_order": 25000,
+     "catalog_item": 25000,
+     "customer": 7,
+     "invoice": 10000,
+     "invoice_line": 25000,
+     "ms_order": 50000,
+     "my_order": 25000,
+     "order": 21,
+     "orders": 21,
+     "pg_order": 25000
+    },
+    "small": {
+     "ansi_order": 2500,
+     "catalog_item": 2500,
+     "customer": 1000,
+     "invoice": 1000,
+     "invoice_line": 2500,
+     "ms_order": 1000,
+     "my_order": 2500,
+     "pg_order": 2500
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "cardinality": {},
+    "child": "pg_order",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_pg_order_customer_id",
+    "optional": false,
+    "parent": "customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "my_order",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_my_order_customer_id",
+    "optional": false,
+    "parent": "customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "ansi_order",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_ansi_order_customer_id",
+    "optional": false,
+    "parent": "customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "invoice_line",
+    "child_columns": [
+     "invoice_id"
+    ],
+    "name": "fk_invoice_line_invoice_id",
+    "optional": false,
+    "parent": "invoice",
+    "parent_columns": [
+     "invoice_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "catalog_item",
+    "child_columns": [
+     "invoice_id"
+    ],
+    "name": "fk_catalog_item_invoice_id",
+    "optional": false,
+    "parent": "invoice",
+    "parent_columns": [
+     "invoice_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "ansi_order": {
+    "cdm_mapping": null,
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "distribution": "zipf",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "ansi_order",
+    "primary_key": [
+     "id"
+    ]
+   },
+   "catalog_item": {
+    "cdm_mapping": null,
+    "columns": {
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "invoice_id": {
+      "generator": {
+       "distribution": "pareto",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.5
+       },
+       "ref": "invoice.invoice_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "invoice_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "title": {
+      "generator": {
+       "max_nb_chars": 80,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 80,
+      "name": "title",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "catalog_item",
+    "primary_key": [
+     "id"
+    ]
+   },
+   "customer": {
+    "cdm_mapping": null,
+    "columns": {
+     "email": {
+      "generator": {
+       "provider": "email",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "name": "email",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "gender": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 1,
+      "name": "gender",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "is_vip": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 1,
+      "name": "is_vip",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "marital_status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 1,
+      "name": "marital_status",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "tier_label": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 1,
+      "name": "tier_label",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "customer",
+    "primary_key": [
+     "id"
+    ]
+   },
+   "invoice": {
+    "cdm_mapping": null,
+    "columns": {
+     "current_value": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "current_value",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "discount_pct": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 1000,
+        "mean": 1.5,
+        "min": 1,
+        "sigma": 0.8
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "discount_pct",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 5,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "feedback_score": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "feedback_score",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 3,
+      "scale": 1,
+      "type": "decimal"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "invoice_date": {
+      "generator": {
+       "pattern": "seasonal",
+       "profiles": {
+        "day_of_week": {
+         "Fri": 0.16,
+         "Mon": 0.165,
+         "Sat": 0.105,
+         "Sun": 0.1,
+         "Thu": 0.155,
+         "Tue": 0.16,
+         "Wed": 0.155
+        },
+        "month": {
+         "Apr": 0.082,
+         "Aug": 0.085,
+         "Dec": 0.106,
+         "Feb": 0.068,
+         "Jan": 0.071,
+         "Jul": 0.084,
+         "Jun": 0.083,
+         "Mar": 0.083,
+         "May": 0.085,
+         "Nov": 0.088,
+         "Oct": 0.084,
+         "Sep": 0.082
+        }
+       },
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "invoice_date",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "margin_pct": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "margin_pct",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 5,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "model": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "type_1": 0.35,
+        "type_2": 0.25,
+        "type_3": 0.2,
+        "type_4": 0.12,
+        "type_5": 0.08
+       }
+      },
+      "max_length": 40,
+      "name": "model",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "state": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.82,
+        "closed": 0.03,
+        "inactive": 0.1,
+        "suspended": 0.05
+       }
+      },
+      "max_length": 50,
+      "name": "state",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "tax_rate": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "tax_rate",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 5,
+      "scale": 4,
+      "type": "decimal"
+     },
+     "total": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "total",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "description": "",
+    "name": "invoice",
+    "primary_key": [
+     "id"
+    ]
+   },
+   "invoice_line": {
+    "cdm_mapping": null,
+    "columns": {
+     "big_picture": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "big_picture",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "invoice_id": {
+      "generator": {
+       "distribution": "zipf",
+       "params": {
+        "alpha": 1.2
+       },
+       "ref": "invoice.invoice_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "invoice_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "line_total": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "line_total",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "photo": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "photo",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "picture": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "picture",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "thumbnail": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "thumbnail",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "invoice_line",
+    "primary_key": [
+     "id"
+    ]
+   },
+   "ms_order": {
+    "cdm_mapping": null,
+    "columns": {
+     "CustomerId": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "CustomerId",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "ms_order",
+    "primary_key": [
+     "id"
+    ]
+   },
+   "my_order": {
+    "cdm_mapping": null,
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "distribution": "zipf",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "my_order",
+    "primary_key": [
+     "id"
+    ]
+   },
+   "pg_order": {
+    "cdm_mapping": null,
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "distribution": "zipf",
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "pg_order",
+    "primary_key": [
+     "id"
+    ]
+   }
+  }
+ }
+}

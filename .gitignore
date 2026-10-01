@@ -23,3 +23,9 @@ Thumbs.db
 
 # benchmark scratch output in CI
 /bench-out/
+
+# Rust / maturin build output
+target/
+*.so
+*.pyd
+*.dylib

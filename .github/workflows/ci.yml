@@ -22,21 +22,78 @@ jobs:
       - run: python -m pip install -U pip
       - run: pip install -e '.[dev,streaming]'
       # T-27 scope: src tests plugins benchmarks/vs_spindle rust (only the paths that exist yet).
-      - run: ruff check src tests benchmarks/vs_spindle
-      - run: ruff format --check src tests benchmarks/vs_spindle
+      - run: ruff check src tests plugins benchmarks/vs_spindle
+      - run: ruff format --check src tests plugins benchmarks/vs_spindle
       # [tool.mypy] targets python_version 3.11. On 3.12+ legs pip installs a numpy whose
       # stubs use 3.12-only syntax (`type` statements), which mypy rejects under a 3.11
       # target, so the type check runs on the 3.11 legs (every OS).
       - if: matrix.python == '3.11'
         run: mypy
       - run: python -m compileall -q src/shape
+      - run: vulture src/shape scripts/vulture_whitelist.py --min-confidence 80
+      - run: lint-imports
+      - run: python scripts/check_conformance_coverage.py
+      - run: python scripts/check_user_facing.py
+      - run: python scripts/check_plugin_skeletons.py
       # The Fabric demo tests need Java, PySpark and unixODBC; they and the demo content tests
       # run in the fabric-demo job below.
       # --cov-fail-under is the measured coverage (86.55% on P0-06), rounded down.
       - run: >-
-          python -m pytest -q -m "not emulator and not live"
+          python -m pytest -q -m "not emulator and not live and not heavy"
           --ignore=tests/demo/fabric --ignore=tests/demo/content
           --cov=shape --cov-fail-under=86
+      # million-value differential and property tests: run without coverage tracing (10x faster)
+      - run: python -m pytest -q -m heavy tests/kernel tests/profile tests/streaming
+      # The pure-Python reference twin must pass on its own (SHAPE_KERNEL=python), and the
+      # native kernel must be the one in use by default (SHAPE_KERNEL=rust fails loudly if not).
+      - run: python -m pytest -q tests/kernel
+        env: {SHAPE_KERNEL: python}
+      - run: python -m pytest -q tests/kernel
+        env: {SHAPE_KERNEL: rust}
+  plugin-skeletons:
+    # P2-06: every first-party plugin distribution builds a pure wheel, and the example plugin,
+    # installed from outside the tree, passes the conformance kit (G2) on every OS.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -U pip
+      - run: pip install -e '.[dev]'
+      - run: python scripts/check_plugin_skeletons.py --build "${{ runner.temp }}/skeleton-wheels"
+      - shell: bash
+        run: |
+          args=()
+          for w in "$RUNNER_TEMP"/skeleton-wheels/*.whl; do args+=(--wheel "$w"); done
+          python scripts/check_user_facing.py "${args[@]}"
+      - run: python -m pytest -q tests/plugins/test_kit.py tests/plugins/test_plugin_kit_install.py
+  stream-plugins:
+    # P3-04: the Kafka and Event Hubs stream sources, contract tests (in-memory broker and hub).
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -U pip
+      - run: pip install -e '.[dev]' -e plugins/shape-kafka -e plugins/shape-eventhubs
+      - run: python -m pytest -q -m "not emulator and not live" plugins/shape-kafka/tests plugins/shape-eventhubs/tests
+  rust:
+    # T-27: cargo fmt / clippy -D warnings / cargo test for rust/shape-kernel.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with: {workspaces: rust/shape-kernel}
+      - run: cargo fmt --manifest-path rust/shape-kernel/Cargo.toml --check
+      - run: cargo clippy --manifest-path rust/shape-kernel/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path rust/shape-kernel/Cargo.toml
   audit:
     runs-on: ubuntu-latest
     steps:
@@ -58,6 +115,17 @@ jobs:
       - run: python -m pip install -U pip
       - run: pip install -e '.[dev]' -r tests/demo/fabric/requirements.txt
       - run: python -m pytest -q tests/demo/fabric tests/demo/content
+  pure-wheel:
+    # PF-03: the T-29 pure wheel is py3-none-any and under 28.6 MB, and the UDF helpers and
+    # function_app.py pass on Python 3.11 with only PyPI numpy, pyarrow and pandas under them
+    # and SHAPE_KERNEL=python (no native kernel). Must be green on every PR.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: sudo apt-get update -q && sudo apt-get install -y -q unixodbc
+      - run: bash scripts/ci_pure_wheel.sh python
   bench-quick:
     # Verifiers, then the quick benchmark (D1, D2, retail small+medium; 3 runs) against the
     # pinned Spindle. On a private repository the standard runner has 2 vCPUs, so ratios are
@@ -79,6 +147,13 @@ jobs:
           "$SHAPE_VENV/bin/pip" install -e '.[dev]' 'pyarrow==25.0.1'
       - run: source scripts/env.sh && python benchmarks/vs_spindle/check_coverage.py
       - run: source scripts/env.sh && python benchmarks/vs_spindle/run.py --quick --out "$BENCH_OUT_DIR/results.json"
+      # P6-09: `shape verify` against the baseline's `verify` on retail small (internal harness).
+      - run: |
+          source scripts/env.sh
+          "$SPINDLE_PY" benchmarks/vs_spindle/dump_schema.py retail
+          "$SPINDLE_PY" benchmarks/vs_spindle/domain_1to1/generate.py --impl spindle --domain retail --scale small --seed 42
+          "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/domain_1to1/generate.py --impl reference_port --domain retail --scale small --seed 1042
+          "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/verify_1to1/verify.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -97,6 +172,7 @@ jobs:
       - run: pip install .
       - run: python -m build
       - run: python -m twine check dist/*
+      - run: python scripts/check_user_facing.py --wheel dist/*.whl
       - run: pip-audit
       - uses: actions/upload-artifact@v4
         with: {name: distributions, path: dist/*}

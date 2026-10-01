@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from math import log2, sqrt
+from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
@@ -16,7 +18,9 @@ class MissingnessEvidence:
     phi: float
 
 
-def missingness_dependency(rows, left, right):
+def missingness_dependency(
+    rows: Iterable[Mapping[str, Any]], left: str, right: str
+) -> MissingnessEvidence:
     a = b = c = d = 0
     for r in rows:
         x = r.get(left) is None
@@ -34,15 +38,15 @@ def missingness_dependency(rows, left, right):
     return MissingnessEvidence(left, right, n, a, ((a * d - b * c) / den if den else 0.0))
 
 
-def entropy(values):
+def entropy(values: Iterable[Any]) -> float:
     c = Counter(v for v in values if v is not None)
     n = sum(c.values())
     return 0.0 if not n else -sum((v / n) * log2(v / n) for v in c.values())
 
 
-def infer_pattern(values, sample_limit=1000):
-    def pat(s):
-        out = []
+def infer_pattern(values: Iterable[Any], sample_limit: int = 1000) -> list[tuple[str, int]]:
+    def pat(s: Any) -> str:
+        out: list[str] = []
         last = None
         for ch in str(s):
             k = "D" if ch.isdigit() else "A" if ch.isalpha() else ch
@@ -51,7 +55,7 @@ def infer_pattern(values, sample_limit=1000):
                 last = k
         return "".join(out)
 
-    c = Counter()
+    c: Counter[str] = Counter()
     n = 0
     for v in values:
         if v is None:
@@ -63,19 +67,23 @@ def infer_pattern(values, sample_limit=1000):
     return c.most_common(10)
 
 
-def pearson(rows, left, right):
-    vals = [
-        (r.get(left), r.get(right))
-        for r in rows
-        if isinstance(r.get(left), (int, float)) and isinstance(r.get(right), (int, float))
-    ]
-    if len(vals) < 2:
+def pearson(rows: Iterable[Mapping[str, Any]], left: str, right: str) -> float:
+    """Pearson correlation of two numeric columns in one pass with O(1) memory (Welford-style
+    co-moments); the rows are never retained."""
+    n = 0
+    mx = my = sxx = syy = sxy = 0.0
+    for r in rows:
+        x, y = r.get(left), r.get(right)
+        if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+            continue
+        n += 1
+        dx = x - mx
+        mx += dx / n
+        dy = y - my
+        my += dy / n
+        sxx += dx * (x - mx)
+        syy += dy * (y - my)
+        sxy += dx * (y - my)
+    if n < 2:
         return 0.0
-    xs = [x for x, _ in vals]
-    ys = [y for _, y in vals]
-    mx = sum(xs) / len(xs)
-    my = sum(ys) / len(ys)
-    num = sum((x - mx) * (y - my) for x, y in vals)
-    dx = sum((x - mx) ** 2 for x in xs)
-    dy = sum((y - my) ** 2 for y in ys)
-    return num / sqrt(dx * dy) if dx and dy else 0.0
+    return sxy / sqrt(sxx * syy) if sxx and syy else 0.0

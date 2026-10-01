@@ -37,7 +37,6 @@ def test_profile_writes_all_outputs(tmp_path: Path, day1: Path, capsys):
     out = tmp_path / "day1.shape"
     html = tmp_path / "r.html"
     js = tmp_path / "s.json"
-    full = tmp_path / "full.json"
     rc = main(
         [
             "profile",
@@ -48,8 +47,6 @@ def test_profile_writes_all_outputs(tmp_path: Path, day1: Path, capsys):
             str(html),
             "--json",
             str(js),
-            "--spindle-compat",
-            str(full),
         ]
     )
     assert rc == 0
@@ -58,7 +55,7 @@ def test_profile_writes_all_outputs(tmp_path: Path, day1: Path, capsys):
     assert p.to_dict()["row_count"] == 400
     assert "<html" in html.read_text()
     assert json.loads(js.read_text()) == p.summary()
-    assert json.loads(full.read_text())["columns"]["order_id"]["dtype"] == "integer"
+    assert p.to_dict()["columns"]["order_id"]["dtype"] == "integer"
 
 
 def test_check_exit_codes(tmp_path: Path, day1: Path, capsys):

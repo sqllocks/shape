@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import re
+from typing import Any
+
+from shape.spec.view import columns_of, model_of, table_of
 
 
 class ShapeQueryError(ValueError):
@@ -14,7 +17,39 @@ _TOKEN = re.compile(
 )
 
 
-def query(shape, expression):
+_SYMMETRIC = frozenset(
+    {"correlation", "correlations", "covariance", "association", "mutual_information"}
+)
+
+
+def _column(model: dict[str, Any], name: str) -> Any:
+    tables = model["tables"]
+    if len(tables) == 1:
+        table = next(iter(tables.values()))
+        return columns_of(table).get(name)
+    if "." in name:
+        tname, _, cname = name.partition(".")
+        if tname in tables:
+            return columns_of(tables[tname]).get(cname)
+    return None
+
+
+def _relationship(model: dict[str, Any], a: str, b: str) -> Any:
+    """The relationship between exactly ``a`` and ``b``: ``source == a`` and ``target == b``
+    (or the other way round for symmetric kinds such as correlations). One that merely
+    mentions ``a`` or ``b`` is not a match (P21)."""
+    for rel in model.get("relationships", ()):
+        ends = (rel["source"], rel["target"])
+        if ends == (a, b) or (rel["kind"] in _SYMMETRIC and ends == (b, a)):
+            return dict(rel)
+    return None
+
+
+def query(shape: Any, expression: str) -> Any:
+    """Evaluate a Shape Query over a v2 model (or a v1 capture, migrated).
+
+    Roots: ``rows`` (or ``rows("table")``), ``column("name")``, ``classification("name")`` and
+    ``relationship("a", "b")``, each followed by an optional ``.field.field`` path."""
     m = _TOKEN.match(expression.strip())
     if not m:
         raise ShapeQueryError("unsupported query syntax")
@@ -24,32 +59,27 @@ def query(shape, expression):
     root = m.group("root")
     a = m.group("arg")
     b = m.group("arg2")
+    model = model_of(shape)
+    obj: Any
     if root == "rows":
-        obj = shape.get("rows")
+        try:
+            obj = table_of(model, a)["rows"]
+        except (KeyError, ValueError) as e:
+            raise ShapeQueryError(str(e)) from e
     elif root == "column":
         if not a:
             raise ShapeQueryError("column requires a name")
-        obj = shape.get("columns", {}).get(a)
+        obj = _column(model, a)
     elif root == "classification":
         if not a:
             raise ShapeQueryError("classification requires a field")
-        obj = (shape.get("classifications") or {}).get(a) or (
-            shape.get("columns", {}).get(a) or {}
-        ).get("classification")
+        obj = (model.get("classifications") or {}).get(a)
+        if obj is None:
+            obj = (_column(model, a) or {}).get("classification")
     else:
         if not a or not b:
             raise ShapeQueryError("relationship requires two fields")
-        rel = shape.get("relationships", {})
-        obj = None
-        for kind, items in rel.items():
-            if isinstance(items, list):
-                for x in items:
-                    vals = set(str(v) for v in x.values()) if isinstance(x, dict) else set()
-                    if a in vals and b in vals:
-                        obj = {"kind": kind, **x}
-                        break
-            if obj:
-                break
+        obj = _relationship(model, a, b)
     for part in [x for x in m.group("path").split(".") if x]:
         if isinstance(obj, dict):
             obj = obj.get(part)
@@ -59,17 +89,17 @@ def query(shape, expression):
 
 
 class ShapeView:
-    def __init__(self, shape):
+    def __init__(self, shape: Any) -> None:
         self.shape = shape
 
-    def query(self, expression):
+    def query(self, expression: str) -> Any:
         return query(self.shape, expression)
 
-    def column(self, name):
-        return self.shape.get("columns", {}).get(name)
+    def column(self, name: str) -> Any:
+        return _column(model_of(self.shape), name)
 
-    def relationship(self, a, b):
+    def relationship(self, a: str, b: str) -> Any:
         return query(self.shape, f'relationship("{a}","{b}")')
 
-    def classification(self, name):
+    def classification(self, name: str) -> Any:
         return query(self.shape, f'classification("{name}")')

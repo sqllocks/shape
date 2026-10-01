@@ -1,0 +1,162 @@
+{
+  "name": "shape_gate_synapse",
+  "properties": {
+    "description": "Shape quality gate for ADLS Gen2 data: profile in a Synapse Spark notebook, check the contract, fail the pipeline when it does not hold.",
+    "activities": [
+      {
+        "name": "ProfileTable",
+        "type": "SynapseNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "notebook": {
+            "referenceName": "shape_profile_synapse",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "sourcePath": {
+              "value": {
+                "value": "@pipeline().parameters.sourcePath",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "sourceFormat": {
+              "value": {
+                "value": "@pipeline().parameters.sourceFormat",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "tableName": {
+              "value": {
+                "value": "@pipeline().parameters.tableName",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "contractPath": {
+              "value": {
+                "value": "@pipeline().parameters.contractPath",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "baselinePath": {
+              "value": {
+                "value": "@pipeline().parameters.baselinePath",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "outputPath": {
+              "value": {
+                "value": "@pipeline().parameters.outputPath",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "failOnDrift": {
+              "value": {
+                "value": "@pipeline().parameters.failOnDrift",
+                "type": "Expression"
+              },
+              "type": "bool"
+            },
+            "linkedServiceName": {
+              "value": {
+                "value": "@pipeline().parameters.linkedServiceName",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "snapshot": true,
+          "sparkPool": {
+            "referenceName": "<<SPARK_POOL>>",
+            "type": "BigDataPoolReference"
+          }
+        }
+      },
+      {
+        "name": "CheckGate",
+        "type": "IfCondition",
+        "dependsOn": [
+          {
+            "activity": "ProfileTable",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "userProperties": [],
+        "typeProperties": {
+          "expression": {
+            "value": "@json(activity('ProfileTable').output.status.Output.result.exitValue).passed",
+            "type": "Expression"
+          },
+          "ifTrueActivities": [],
+          "ifFalseActivities": [
+            {
+              "name": "FailGate",
+              "type": "Fail",
+              "dependsOn": [],
+              "userProperties": [],
+              "typeProperties": {
+                "message": {
+                  "value": "@concat('Shape gate failed for ', pipeline().parameters.sourcePath, ': ', string(json(activity('ProfileTable').output.status.Output.result.exitValue).violations))",
+                  "type": "Expression"
+                },
+                "errorCode": "ShapeGateFailed"
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "parameters": {
+      "sourcePath": {
+        "type": "string",
+        "defaultValue": "abfss://data@<<STORAGE_ACCOUNT>>.dfs.core.windows.net/tables/orders"
+      },
+      "sourceFormat": {
+        "type": "string",
+        "defaultValue": "delta"
+      },
+      "tableName": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "contractPath": {
+        "type": "string",
+        "defaultValue": "abfss://shape@<<STORAGE_ACCOUNT>>.dfs.core.windows.net/contracts/orders.json"
+      },
+      "baselinePath": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "outputPath": {
+        "type": "string",
+        "defaultValue": "abfss://shape@<<STORAGE_ACCOUNT>>.dfs.core.windows.net/shape"
+      },
+      "failOnDrift": {
+        "type": "bool",
+        "defaultValue": false
+      },
+      "linkedServiceName": {
+        "type": "string",
+        "defaultValue": ""
+      }
+    },
+    "annotations": [
+      "shape"
+    ]
+  }
+}

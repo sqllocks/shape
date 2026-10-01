@@ -1,4 +1,4 @@
-"""Built-in implementation conformance smoke suite."""
+"""Implementation conformance: a smoke suite, then one test per statement of SHAPE_2.md."""
 
 from __future__ import annotations
 
@@ -8,10 +8,11 @@ import tempfile
 from shape.artifact.io import read_artifact, write_artifact
 from shape.capture import capture_rows
 from shape.generation.strategies import GenerationPlan, SequenceStrategy
-from shape.validation.conformance import run
+from shape.validation.conformance import Check, run
+from shape.validation.requirements import run_requirements
 
 
-def conformance():
+def conformance() -> list[Check]:
     def artifact():
         fd, p = tempfile.mkstemp(suffix=".shape")
         os.close(fd)
@@ -33,4 +34,5 @@ def conformance():
             3,
         ]
 
-    return run({"artifact": artifact, "capture": capture, "generation": generation})
+    smoke = run({"artifact": artifact, "capture": capture, "generation": generation})
+    return [*smoke, *run_requirements()]

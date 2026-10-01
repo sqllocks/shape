@@ -209,14 +209,17 @@ def d2():
 
 
 D3_ROWS = 5_000_000
+D3_CHUNK = 1_000_000
 
 
-def d3(n: int | None = None):
-    n = n or D3_ROWS
-    rng = np.random.default_rng(3)
-    t = pa.table(
+def _d3_chunk(index: int, start: int, size: int) -> pa.Table:
+    """Rows ``start .. start + size`` of D3. Each chunk has its own fixed seed, so the file is
+    deterministic for any row count and is written without holding it whole in memory."""
+    n = size
+    rng = np.random.default_rng([3, index])
+    return pa.table(
         {
-            "event_id": pa.array(np.arange(n)),
+            "event_id": pa.array(np.arange(start, start + n)),
             "user_ref": pa.array(rng.integers(1, 200_000, n)),
             "latency_ms": pa.array(np.round(rng.normal(250, 40, n), 3)),
             "bytes": pa.array(np.round(rng.lognormal(8, 1.2, n), 1)),
@@ -233,7 +236,31 @@ def d3(n: int | None = None):
             "discount": _with_nulls(pa.array(np.round(rng.uniform(0, 0.5, n), 4)), rng, 0.3),
         }
     )
-    write(t, "d3")
+
+
+def d3(n: int | None = None):
+    n = n or D3_ROWS
+    OUT.mkdir(parents=True, exist_ok=True)
+    csv_writer = pq_writer = None
+    try:
+        for index, start in enumerate(range(0, n, D3_CHUNK)):
+            chunk = _d3_chunk(index, start, min(D3_CHUNK, n - start))
+            text = _csv_table(chunk)
+            if csv_writer is None:
+                csv_writer = pacsv.CSVWriter(
+                    OUT / "d3.csv",
+                    text.schema,
+                    write_options=pacsv.WriteOptions(quoting_style="none"),
+                )
+                pq_writer = pq.ParquetWriter(OUT / "d3.parquet", chunk.schema)
+            csv_writer.write_table(text)
+            pq_writer.write_table(chunk)
+    finally:
+        if csv_writer is not None:
+            csv_writer.close()
+        if pq_writer is not None:
+            pq_writer.close()
+    print(f"wrote d3: {n:,} x 10")
 
 
 def d4():
@@ -422,7 +449,202 @@ def edge():
     print("wrote edge/*")
 
 
-ALL = {"D1": d1, "D2": d2, "D3": d3, "D4": d4, "MT": mt, "EDGE": edge}
+def edge_deviations():
+    """EDGE variants that close deviations 1-3 of README.md: dateutil-only date/time text,
+    CSV spellings pandas parses differently from Arrow, and Parquet types beyond the plain
+    numeric/string/timestamp set. Files are written under ``edge/`` as ``x_*``."""
+    import datetime as dt
+    import decimal
+
+    sub = OUT / "edge"
+    sub.mkdir(parents=True, exist_ok=True)
+    n = 60
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+    def col(values):
+        return [values[i % len(values)] for i in range(n)]
+
+    def _q(v: str) -> str:
+        return f'"{v}"' if "," in v and not v.startswith('"') else v
+
+    def write_csv(stem: str, cols: dict[str, list[str]]):
+        body = ",".join(cols) + "\n"
+        for i in range(n):
+            body += ",".join(_q(cols[c][i]) for c in cols) + "\n"
+        (sub / f"{stem}.csv").write_text(body, encoding="utf-8", newline="")
+
+    # -- deviation 1: dateutil-only spellings -----------------------------------------------
+    write_csv(
+        "x_dates_a",
+        {
+            "id": [str(i) for i in range(n)],
+            "day_text": col([f"{months[i % 12]} {1 + i % 27}, 2021" for i in range(12)]),
+        },
+    )
+    write_csv(
+        "x_dates_b",
+        {
+            "id": [str(i) for i in range(n)],
+            "long_text": col([f"{1 + i % 27} {months[i % 12]} 2020" for i in range(12)]),
+        },
+    )
+    write_csv(
+        "x_dates_c",
+        {
+            "id": [str(i) for i in range(n)],
+            "ordinal": col([f"{d}th of May 2021" for d in (5, 6, 7)]),
+        },
+    )
+    write_csv(
+        "x_dates_d",
+        {
+            "id": [str(i) for i in range(n)],
+            "iso_t": col([f"2021-0{1 + i % 9}-1{i % 9}T10:{i % 60:02d}:00" for i in range(12)]),
+        },
+    )
+    write_csv(
+        "x_time_only",
+        {
+            "id": [str(i) for i in range(n)],
+            "t": col([f"{h:02d}:{m:02d}:00" for h in (9, 10, 13) for m in (0, 30)]),
+        },
+    )
+    write_csv(
+        "x_time_ampm",
+        {"id": [str(i) for i in range(n)], "t": col(["3pm", "10am", "11:45 PM", "7:05 am"])},
+    )
+    write_csv(
+        "x_dates_mixed_fmt",
+        {
+            "id": [str(i) for i in range(n)],
+            "m": col(["2021-03-04", "03/05/2021", "Mar 6 2021", "2021/03/07"]),
+        },
+    )
+    write_csv(
+        "x_dates_bad",
+        {"id": [str(i) for i in range(n)], "m": col(["2021-03-04", "not a date", "Mar 6 2021"])},
+    )
+
+    # -- deviation 2: CSV spellings ----------------------------------------------------------
+    write_csv(
+        "x_csv_numbers",
+        {
+            "id": [str(i) for i in range(n)],
+            "thousands_plain": col(['"1,000"', '"2,500"', '"12,345"']),
+            "quoted_int": col(['"10"', '"20"', '"30"']),
+            "quoted_float": col(['"1.5"', '"2.25"']),
+            "padded": col([" 1", "2 ", " 3 "]),
+            "big_int": col(["9223372036854775808", "18446744073709551615", "5"]),
+            "neg_big": col(["-9223372036854775809", "1", "2"]),
+            "exp": col(["1e3", "2.5E-2", "3"]),
+            "plus_sign": col(["+1", "+2", "3"]),
+            "leading_zero": col(["007", "010", "5"]),
+            "bool_words": col(["True", "False", "TRUE"]),
+            "na_words": col(["NA", "N/A", "null", "x"]),
+        },
+    )
+    # "inf" text is numeric to pandas; Spindle's whole-number check then raises (a documented
+    # failure that Shape must reproduce in kind)
+    write_csv("x_csv_inf", {"id": [str(i) for i in range(n)], "v": col(["inf", "-inf", "1.5"])})
+    write_csv("x_csv_nan_text", {"id": [str(i) for i in range(n)], "v": col(["NaN", "1.5", "2.5"])})
+    # pandas low_memory chunking: an int column with a late text value becomes a mixed object
+    # column; an early text value makes the whole column text.
+    mixed = [str(i) for i in range(n)]
+    mixed[n - 1] = "tail"
+    write_csv("x_csv_mixed_tail", {"id": [str(i) for i in range(n)], "v": mixed})
+
+    # pandas' chunked (low_memory) inference: rows are parsed in chunks of a power of two
+    # below 2**20 // ncols (131072 rows for 5 columns), each chunk typed on its own, and a column
+    # whose chunks disagree becomes an object column of Python ints / floats / bools / str.
+    big, cut = 140_000, 131_072
+    words = ["alpha", "beta", "gamma", "7", "delta"]
+    mix = {
+        "id": [str(i) for i in range(big)],
+        "ints_then_words": [str(i % 50) if i < cut else words[i % 5] for i in range(big)],
+        "words_then_ints": [words[i % 5] if i < cut else str(i % 50) for i in range(big)],
+        "floats_nulls_then_words": [
+            ("" if i % 9 == 0 else f"{i % 40}.5") if i < cut else words[i % 4] for i in range(big)
+        ],
+        "bool_then_ints": [["True", "False"][i % 2] if i < cut else str(i % 3) for i in range(big)],
+    }
+    body = (
+        ",".join(mix) + "\n" + "".join(",".join(mix[c][i] for c in mix) + "\n" for i in range(big))
+    )
+    (sub / "x_csv_mixed_chunks.csv").write_text(body, encoding="utf-8", newline="")
+
+    # -- deviation 3: Parquet types ---------------------------------------------------------
+    dec = pa.array([decimal.Decimal(f"{i}.25") for i in range(n)], pa.decimal128(12, 2))
+    cat = pa.array([["red", "green", "blue"][i % 3] for i in range(n)]).dictionary_encode()
+    tz = pa.array(
+        [dt.datetime(2021, 1, 1 + i % 28, 12, i % 60, tzinfo=dt.UTC) for i in range(n)],
+        pa.timestamp("us", tz="UTC"),
+    )
+    nested = pa.array([{"a": i, "b": str(i)} for i in range(n)])
+    lst = pa.array([[i, i + 1] for i in range(n)])
+    u64 = pa.array([2**63 + i for i in range(n)], pa.uint64())
+    u64_small = pa.array(np.arange(n, dtype=np.uint64))
+    t32 = pa.array([dt.time(i % 24, i % 60) for i in range(n)], pa.time32("s"))
+    dur = pa.array(np.arange(n).astype("timedelta64[s]"), pa.duration("s"))
+    small = {
+        "id": pa.array(np.arange(n)),
+        "dec": dec,
+        "cat": cat,
+        "tz": tz,
+        "u64_small": u64_small,
+        "t32": t32,
+        "cat2": pa.DictionaryArray.from_arrays(
+            pa.array([(0, 1, 2, 1, 0, 0)[i % 6] for i in range(n)], pa.int8()),
+            pa.array(["z", "a", "m", "unused"][:3] + ["unused"]),
+        ),
+        "tz_kolkata": pa.array(
+            [dt.datetime(2021, 3, 1 + i % 28, 18, i % 60, tzinfo=dt.UTC) for i in range(n)],
+            pa.timestamp("us", tz="Asia/Kolkata"),
+        ),
+        "tz_midnight": pa.array(
+            [dt.datetime(2021, 3, 1 + i % 28, 0, 0, tzinfo=dt.UTC) for i in range(n)],
+            pa.timestamp("us", tz="UTC"),
+        ),
+        "dec_int": pa.array([decimal.Decimal(i) for i in range(n)], pa.decimal128(10, 0)),
+        "dec_bool": pa.array([decimal.Decimal(i % 2) for i in range(n)], pa.decimal128(4, 0)),
+        "bin_digits": pa.array([str(i % 7).encode() for i in range(n)]),
+        "cat_int": pa.array([i % 4 for i in range(n)]).dictionary_encode(),
+        "i8": pa.array(np.arange(n).astype(np.int8)),
+        "bin": pa.array([bytes([i % 256]) * 3 for i in range(n)]),
+    }
+    pq.write_table(pa.table(small), sub / "x_pq_types.parquet")
+
+    def holes(values):
+        return [None if i % 5 == 2 else v for i, v in enumerate(values)]
+
+    nulls = {
+        "id": pa.array(np.arange(n)),
+        "dec_n": pa.array(
+            holes([decimal.Decimal(f"{i}.50") for i in range(n)]), pa.decimal128(12, 2)
+        ),
+        "cat_n": pa.array(
+            holes([["red", "green", "blue"][i % 3] for i in range(n)])
+        ).dictionary_encode(),
+        "tz_n": pa.array(
+            holes([dt.datetime(2021, 6, 1 + i % 28, 9, i % 60, tzinfo=dt.UTC) for i in range(n)]),
+            pa.timestamp("us", tz="Europe/Berlin"),
+        ),
+        "t_n": pa.array(holes([dt.time(i % 24, i % 60) for i in range(n)]), pa.time64("us")),
+        "bin_n": pa.array(holes([b"k%02d" % i for i in range(n)])),
+        "u64_n": pa.array(holes([2**63 + i for i in range(n)]), pa.uint64()),
+        "dur_n": pa.array(holes([dt.timedelta(minutes=i) for i in range(n)]), pa.duration("us")),
+    }
+    pq.write_table(pa.table(nulls), sub / "x_pq_nulls.parquet")
+    for stem, extra in (
+        ("x_pq_nested", {"id": pa.array(np.arange(n)), "nested": nested}),
+        ("x_pq_list", {"id": pa.array(np.arange(n)), "lst": lst}),
+        ("x_pq_u64_big", {"id": pa.array(np.arange(n)), "u": u64}),
+        ("x_pq_duration", {"id": pa.array(np.arange(n)), "d": dur}),
+    ):
+        pq.write_table(pa.table(extra), sub / f"{stem}.parquet")
+    print("wrote edge/x_*")
+
+
+ALL = {"D1": d1, "D2": d2, "D3": d3, "D4": d4, "MT": mt, "EDGE": edge, "EDGE2": edge_deviations}
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])

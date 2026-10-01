@@ -107,7 +107,8 @@ def _check_column(
         out.append(_violation(name, "dtype", rules["dtype"], col["dtype"]))
     if rules.get("nullable") is False and col["null_count"] > 0:
         out.append(_violation(name, "nullable", False, {"null_count": col["null_count"]}))
-    if rules.get("unique") is True and not col["is_unique"]:
+    # is_unique / null_rate are None when unknown (no rows were read): no evidence, no violation
+    if rules.get("unique") is True and col["is_unique"] is False:
         out.append(
             _violation(
                 name,
@@ -120,7 +121,11 @@ def _check_column(
                 },
             )
         )
-    if "max_null_rate" in rules and col["null_rate"] > rules["max_null_rate"]:
+    if (
+        "max_null_rate" in rules
+        and col["null_rate"] is not None
+        and col["null_rate"] > rules["max_null_rate"]
+    ):
         out.append(_violation(name, "max_null_rate", rules["max_null_rate"], col["null_rate"]))
     if "pattern" in rules and col["pattern"] != rules["pattern"]:
         out.append(_violation(name, "pattern", rules["pattern"], col["pattern"]))
@@ -270,7 +275,7 @@ def _diff_column(
     if base["dtype"] != cur["dtype"]:
         out.append(_change(name, "dtype_change", base["dtype"], cur["dtype"], "high"))
     b_null, c_null = base["null_rate"], cur["null_rate"]
-    if abs(c_null - b_null) > th["null_rate"]:
+    if b_null is not None and c_null is not None and abs(c_null - b_null) > th["null_rate"]:
         out.append(_change(name, "null_rate_change", b_null, c_null, "medium"))
     b_card, c_card = base["cardinality"], cur["cardinality"]
     if b_card > 0:

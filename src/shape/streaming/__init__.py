@@ -38,6 +38,17 @@ __all__ = [
     "GeoGridEvidence",
     "HashedDependencyEvidence",
     "FullEvidenceEngine",
+    "WindowedProfiler",
+    "TumblingProfiler",
+    "SlidingProfiler",
+    "SessionProfiler",
+    "GlobalProfiler",
+    "WindowProfile",
+    "restore_profiler",
+    "KeyedSketches",
+    "Deduplicator",
+    "StreamConsumer",
+    "CheckpointError",
 ]
 from .aggregate_windows import (
     AggregateTumblingWindow as AggregateTumblingWindow,
@@ -48,11 +59,15 @@ from .aggregate_windows import (
 from .aggregate_windows import (
     NumericAggregate as NumericAggregate,
 )
+from .checkpoint import CheckpointError as CheckpointError
 from .checkpoint import FileCheckpointStore as FileCheckpointStore
+from .consumer import StreamConsumer as StreamConsumer
+from .dedupe import Deduplicator as Deduplicator
 from .evidence import NumericEvidence as NumericEvidence
 from .evidence import TextEvidence as TextEvidence
 from .failure import replay_with_failures as replay_with_failures
 from .full_engine import FullEvidenceEngine as FullEvidenceEngine
+from .keyed import KeyedSketches as KeyedSketches
 from .keyed import KeyedState as KeyedState
 from .keyed import PartitionedKeyedState as PartitionedKeyedState
 from .monitor import MonitorEvent as MonitorEvent
@@ -94,6 +109,13 @@ from .platinum import (
 from .platinum import (
     update_missingness_batch as update_missingness_batch,
 )
+from .runtime import GlobalProfiler as GlobalProfiler
+from .runtime import SessionProfiler as SessionProfiler
+from .runtime import SlidingProfiler as SlidingProfiler
+from .runtime import TumblingProfiler as TumblingProfiler
+from .runtime import WindowedProfiler as WindowedProfiler
+from .runtime import WindowProfile as WindowProfile
+from .runtime import restore_profiler as restore_profiler
 from .vectorized import (
     BatchCheckpoint as BatchCheckpoint,
 )

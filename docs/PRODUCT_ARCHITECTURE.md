@@ -160,8 +160,8 @@ Shape may eventually inform partitioning, joins, sampling, capacity and cost est
 ## 20. Non-goals
 Shape is not a backup system, source-record recovery system, warehouse, catalog replacement, orchestration replacement, Kafka replacement, dbt replacement, BI tool, or general ML platform.
 
-## 21. Spindle compatibility requirement
-SHAPE-COMPAT-001: Every useful Spindle capability MUST receive a documented disposition: SUPPORTED, SUPERSEDED, PLANNED, or INTENTIONALLY-OMITTED.
+## 21. Capability coverage
+SHAPE-COMPAT-001: Every capability in the Shape capability map (PRODUCT_ARCHITECTURE section 21) MUST have a documented disposition: SUPPORTED, SUPERSEDED, PLANNED, or INTENTIONALLY-OMITTED.
 
 Explicitly retained/generalized:
 - calibrated domains -> Shape Packs

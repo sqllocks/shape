@@ -5,6 +5,11 @@ from __future__ import annotations
 import math
 from collections import Counter
 from dataclasses import dataclass, field
+from typing import Any, Self, cast
+
+import pyarrow as pa  # type: ignore[import-untyped]
+
+from shape.kernel.hashing import hash_column, hash_value
 
 
 @dataclass
@@ -14,7 +19,7 @@ class MissingnessPairEvidence:
     right_missing: int = 0
     both_missing: int = 0
 
-    def update(self, a, b):
+    def update(self, a: Any, b: Any) -> None:
         am = a is None
         bm = b is None
         if am and bm:
@@ -26,12 +31,12 @@ class MissingnessPairEvidence:
         else:
             self.both_present += 1
 
-    def merge(self, o):
+    def merge(self, o: MissingnessPairEvidence) -> Self:
         for k in ("both_present", "left_missing", "right_missing", "both_missing"):
             setattr(self, k, getattr(self, k) + getattr(o, k))
         return self
 
-    def summary(self):
+    def summary(self) -> dict[str, int]:
         return {
             k: getattr(self, k)
             for k in ("both_present", "left_missing", "right_missing", "both_missing")
@@ -47,7 +52,7 @@ class CovarianceEvidence:
     m2x: float = 0.0
     m2y: float = 0.0
 
-    def update(self, x, y):
+    def update(self, x: Any, y: Any) -> None:
         if x is None or y is None:
             return
         x = float(x)
@@ -61,7 +66,7 @@ class CovarianceEvidence:
         self.m2x += dx * (x - self.mx)
         self.m2y += dy * (y - self.my)
 
-    def merge(self, o):
+    def merge(self, o: CovarianceEvidence) -> Self:
         if not o.n:
             return self
         if not self.n:
@@ -85,7 +90,7 @@ class CovarianceEvidence:
         self.n = n
         return self
 
-    def summary(self):
+    def summary(self) -> dict[str, Any]:
         den = math.sqrt(self.m2x * self.m2y)
         return {"n": self.n, "correlation": None if not den else self.c / den}
 
@@ -96,15 +101,15 @@ class TemporalEvidence:
     first_ts: float | None = None
     last_ts: float | None = None
     out_of_order: int = 0
-    gaps: object = field(default=None)
+    gaps: Any = field(default=None)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.gaps is None:
-            from shape.profile.sketches import KLL
+            from shape.kernel.sketches import Kll
 
-            self.gaps = KLL()
+            self.gaps = Kll()
 
-    def update(self, ts):
+    def update(self, ts: Any) -> None:
         if ts is None:
             return
         x = float(ts)
@@ -117,7 +122,7 @@ class TemporalEvidence:
         self.last_ts = x
         self.n += 1
 
-    def summary(self):
+    def summary(self) -> dict[str, Any]:
         return {
             "n": self.n,
             "first": self.first_ts,
@@ -132,18 +137,18 @@ class RelationalEvidence:
     checked: int = 0
     orphans: int = 0
 
-    def update(self, fk, parent_exists: bool):
+    def update(self, fk: Any, parent_exists: bool) -> None:
         if fk is None:
             return
         self.checked += 1
         self.orphans += int(not parent_exists)
 
-    def merge(self, o):
+    def merge(self, o: RelationalEvidence) -> Self:
         self.checked += o.checked
         self.orphans += o.orphans
         return self
 
-    def summary(self):
+    def summary(self) -> dict[str, Any]:
         return {
             "checked": self.checked,
             "orphans": self.orphans,
@@ -157,10 +162,10 @@ class GeoGridEvidence:
 
     resolution: float = 0.1
     max_cells: int = 4096
-    cells: Counter = field(default_factory=Counter)
+    cells: Counter[tuple[int, int]] = field(default_factory=Counter)
     overflow: int = 0
 
-    def update(self, lat, lon):
+    def update(self, lat: Any, lon: Any) -> None:
         if lat is None or lon is None:
             return
         key = (round(float(lat) / self.resolution), round(float(lon) / self.resolution))
@@ -169,7 +174,7 @@ class GeoGridEvidence:
         else:
             self.overflow += 1
 
-    def merge(self, o):
+    def merge(self, o: GeoGridEvidence) -> Self:
         for k, v in o.cells.items():
             if k in self.cells or len(self.cells) < self.max_cells:
                 self.cells[k] += v
@@ -178,7 +183,7 @@ class GeoGridEvidence:
         self.overflow += o.overflow
         return self
 
-    def summary(self):
+    def summary(self) -> dict[str, Any]:
         return {
             "cells": len(self.cells),
             "overflow": self.overflow,
@@ -191,20 +196,23 @@ class HashedDependencyEvidence:
     """Fixed-memory contingency sketch for categorical/nonlinear dependency evidence."""
 
     bins: int = 64
-    table: dict = field(default_factory=dict)
+    table: dict[tuple[int, int], int] = field(default_factory=dict)
     n: int = 0
 
-    def _bin(self, v):
-        return hash((type(v).__name__, repr(v))) % self.bins
+    def _bin(self, v: Any) -> int | None:
+        """Bin by the canonical XXH3 hash (T-13): identical in every process (S1)."""
+        h = hash_value(v)
+        return None if h is None else h % self.bins
 
-    def update(self, a, b):
-        if a is None or b is None:
+    def update(self, a: Any, b: Any) -> None:
+        ba, bb = self._bin(a), self._bin(b)
+        if ba is None or bb is None:  # null and NaN are excluded
             return
-        k = (self._bin(a), self._bin(b))
+        k = (ba, bb)
         self.table[k] = self.table.get(k, 0) + 1
         self.n += 1
 
-    def merge(self, o):
+    def merge(self, o: HashedDependencyEvidence) -> Self:
         if self.bins != o.bins:
             raise ValueError("incompatible dependency sketches")
         for k, v in o.table.items():
@@ -212,13 +220,13 @@ class HashedDependencyEvidence:
         self.n += o.n
         return self
 
-    def summary(self):
+    def summary(self) -> dict[str, Any]:
         if not self.n:
             return {"n": 0, "mutual_information": None}
         import math
 
-        ra = {}
-        cb = {}
+        ra: dict[int, int] = {}
+        cb: dict[int, int] = {}
         for (i, j), v in self.table.items():
             ra[i] = ra.get(i, 0) + v
             cb[j] = cb.get(j, 0) + v
@@ -229,18 +237,20 @@ class HashedDependencyEvidence:
         return {"n": self.n, "mutual_information": mi, "bins": self.bins}
 
 
-def update_missingness_batch(state, a, b):
+def update_missingness_batch(
+    state: MissingnessPairEvidence, a: Any, b: Any
+) -> MissingnessPairEvidence:
     import numpy as np
 
     aa = np.asarray(a)
     bb = np.asarray(b)
 
-    def miss(x):
+    def miss(x: Any) -> Any:
         if x.dtype.kind == "f":
             return np.isnan(x)
         if x.dtype.kind in "iub":
             return np.zeros(x.shape, dtype=bool)
-        return np.equal(x, None)
+        return np.equal(x, cast(Any, None))
 
     am = miss(aa)
     bm = miss(bb)
@@ -251,7 +261,7 @@ def update_missingness_batch(state, a, b):
     return state
 
 
-def covariance_batch(x, y):
+def covariance_batch(x: Any, y: Any) -> CovarianceEvidence:
     import numpy as np
 
     a = np.asarray(x, dtype=np.float64)
@@ -272,7 +282,7 @@ def covariance_batch(x, y):
     return s
 
 
-def relational_batch(fk, parent_count):
+def relational_batch(fk: Any, parent_count: int) -> RelationalEvidence:
     import numpy as np
 
     a = np.asarray(fk)
@@ -280,7 +290,9 @@ def relational_batch(fk, parent_count):
     return RelationalEvidence(int(a.size), int(a.size - np.count_nonzero(valid)))
 
 
-def geo_grid_batch(lat, lon, resolution=0.1, max_cells=4096):
+def geo_grid_batch(
+    lat: Any, lon: Any, resolution: float = 0.1, max_cells: int = 4096
+) -> GeoGridEvidence:
     import numpy as np
 
     la = np.rint(np.asarray(lat, dtype=np.float64) / resolution).astype(np.int64)
@@ -306,7 +318,7 @@ def geo_grid_batch(lat, lon, resolution=0.1, max_cells=4096):
     return s
 
 
-def temporal_batch(ts):
+def temporal_batch(ts: Any) -> TemporalEvidence:
     import numpy as np
 
     a = np.asarray(ts, dtype=np.float64)
@@ -322,7 +334,7 @@ def temporal_batch(ts):
     return s
 
 
-def hashed_dependency_batch(a, b, bins=64):
+def hashed_dependency_batch(a: Any, b: Any, bins: int = 64) -> HashedDependencyEvidence:
     import numpy as np
 
     x = np.asarray(a)
@@ -330,8 +342,9 @@ def hashed_dependency_batch(a, b, bins=64):
     s = HashedDependencyEvidence(bins)
     # Numeric/categorical integer fast path; arbitrary objects use bounded Python fallback.
     if x.dtype.kind in "iub" and y.dtype.kind in "iub":
-        xi = np.mod(x.astype(np.int64), bins)
-        yi = np.mod(y.astype(np.int64), bins)
+        # the same canonical hash as HashedDependencyEvidence._bin, computed in one native call
+        xi = (hash_column(pa.array(x)).to_numpy() % np.uint64(bins)).astype(np.int64)
+        yi = (hash_column(pa.array(y)).to_numpy() % np.uint64(bins)).astype(np.int64)
         code = xi * bins + yi
         counts = np.bincount(code, minlength=bins * bins)
         nz = np.flatnonzero(counts)

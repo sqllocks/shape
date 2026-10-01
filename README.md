@@ -33,6 +33,11 @@ shape check customers.shape contract.json          # exit code 1 if the contract
 shape diff customers.shape customers_next.shape --fail-on-drift
 ```
 
+```bash
+shape --version
+shape inspect customers.shape                        # what a .shape file holds
+```
+
 ## What's in early access
 
 Profiling, contracts (`check`) and drift (`diff`) are the supported surface, in Python

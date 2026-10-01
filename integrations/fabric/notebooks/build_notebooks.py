@@ -12,7 +12,8 @@ import json
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-WHEEL = "sqllocks_shape-0.9.0-py3-none-any.whl"
+VERSION = "0.9.0"
+WHEEL = f"sqllocks_shape-{VERSION}-py3-none-any.whl"
 
 # --------------------------------------------------------------------------- setup
 
@@ -91,6 +92,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import shape
+from shape.kernel.dispatch import get_kernel
+
+KERNEL = get_kernel().NAME  # "rust" with a platform wheel, "python" with the pure-Python wheel
+print(f"Shape {shape.__version__}, kernel: {KERNEL}")
 
 LAKEHOUSE = "/lakehouse/default"
 FILES = f"{LAKEHOUSE}/Files"
@@ -163,6 +168,7 @@ BUILD_RESULT = """result = {
     "artifactPath": artifact_path,
     "sampled": sampled,
     "truncated": len(violations) > MAX_LISTED or len(changes) > MAX_LISTED,
+    "kernel": KERNEL,
 }
 print(json.dumps(result, indent=2, default=str)[:4000])
 """
@@ -193,9 +199,13 @@ and is deliberately outside any `try`/`except`.
     ("code", '%%configure\n{"vCores": 8}\n'),
     (
         "code",
-        f"""# Wheel uploaded to this notebook's built-in resources folder ("Resources" > "builtin").
-# Alternative once the package is on PyPI:  %pip install sqllocks-shape==0.9.0
-%pip install builtin/{WHEEL}
+        f"""# Upload the wheel(s) to this notebook's built-in resources folder (Resources > builtin)
+# Both wheels have the same version: the platform wheel (Rust kernel, manylinux x86_64) and
+# {WHEEL} (pure Python).
+# pip takes the platform wheel when builtin/ holds one that fits this kernel and falls back to
+# the pure-Python wheel otherwise, so one cell works either way. The exit value reports which.
+# Once the package is on PyPI the same line works without the upload.
+%pip install --find-links builtin "sqllocks-shape=={VERSION}"
 """,
     ),
     ("code", PARAMETERS),
@@ -233,7 +243,8 @@ installed in the notebook itself.
 The table is read with `spark.read.table(...)` and profiled on the **driver**
 (Shape's exact mode). Driver-side profiling is bounded by `DRIVER_ROW_LIMIT` rows (see
 the next cells): above it, the table is sampled and the result carries `sampled: true`.
-The distributed bounded mode arrives in PF-02.
+For tables too large for the driver use `shape_profile_distributed`, which profiles every
+partition on the executors instead.
 
 Same parameters, artifacts and exit value as `shape_profile.ipynb`.
 """,
@@ -280,6 +291,196 @@ print(f"Spark {spark.version}")  # noqa: F821
     ("code", WRITE_ARTIFACTS),
     ("code", DISPLAY),
     ("code", BUILD_RESULT),
+    ("code", EXIT),
+]
+
+
+# ------------------------------------------------------------- distributed spark notebook
+
+DISTRIBUTED_PARAMETERS = (
+    PARAMETERS
+    + """mode = "distributed"  # "distributed": bounded profile per partition, merged on the driver
+                         # "exact": driver-only exact profile (table must fit in driver memory)
+partitions = 0            # distributed only: repartition first (0 keeps the table's partitioning)
+"""
+)
+
+DISTRIBUTED_HELPERS = (
+    HELPERS.replace("import json\n", "import inspect\nimport json\nimport math\n", 1)
+    + """mode = str(mode).strip().lower()
+if mode not in ("distributed", "exact"):
+    raise ValueError(f"mode must be 'distributed' or 'exact', got {mode!r}")
+if mode == "distributed" and (contractPath or baselinePath):
+    raise ValueError(
+        "contractPath and baselinePath need the exact profile: the distributed mode builds a "
+        "bounded profile, which the contract check and the diff do not read. "
+        "Set mode = 'exact', or clear both parameters."
+    )
+
+
+def _json_safe(value):
+    \"\"\"NaN and infinities become null so the artifact is strict JSON.\"\"\"
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(v) for v in value]
+    return value
+
+
+# Exact mode only: the Arrow copy of the table lives in driver memory (see shape_profile_spark).
+DRIVER_ROW_LIMIT = 5_000_000
+SAMPLE_SEED = 42
+"""
+)
+
+DISTRIBUTED_PROFILE = """# `spark` is predefined in Fabric
+df = spark.read.table(str(tableName))  # noqa: F821
+print(f"Spark {spark.version}, {df.rdd.getNumPartitions()} partition(s)")  # noqa: F821
+
+if mode == "exact":
+    total_rows = df.count()
+    sampled = total_rows > DRIVER_ROW_LIMIT
+    if sampled:
+        df = df.sample(
+            withReplacement=False, fraction=DRIVER_ROW_LIMIT / total_rows, seed=SAMPLE_SEED
+        )
+    if int(spark.version.split(".")[0]) >= 4:  # noqa: F821
+        table = df.toArrow()
+    else:
+        table = pa.Table.from_pandas(df.toPandas(), preserve_index=False)
+    kwargs = {"name": str(tableName)}
+    if "exact" in inspect.signature(shape.profile).parameters:
+        kwargs["exact"] = True
+    profile = shape.profile(table, **kwargs)
+    print(f"Exact profile of {table.num_rows:,} of {total_rows:,} rows (sampled={sampled})")
+else:
+    from shape.integrations.fabric.spark import profile_distributed
+
+    doc = profile_distributed(
+        df, name=str(tableName), partitions=int(partitions) or None
+    )
+    entry = doc["tables"][str(tableName)]
+    total_rows = entry["rows"]
+    sampled = False  # every row of every partition is read
+    print(f"Bounded profile of {total_rows:,} rows x {len(entry['columns'])} columns")
+"""
+
+DISTRIBUTED_CHECK = """violations, changes, drifted = [], [], False
+
+if mode == "exact":
+    if contractPath:
+        violations = list(shape.check(profile, _resolve(contractPath)).violations)
+    if baselinePath:
+        diff_result = shape.diff(shape.load(_resolve(baselinePath)), profile)
+        drifted = bool(diff_result.drifted)
+        changes = list(diff_result.changes)
+        if drifted and failOnDrift:
+            violations.append(
+                {
+                    "column": "*",
+                    "rule": "drift",
+                    "expected": "no drift against baseline",
+                    "observed": f"{len(changes)} change(s)",
+                }
+            )
+
+passed = not violations
+"""
+
+DISTRIBUTED_ARTIFACTS = """SUMMARY_KEYS = (
+    "arrow_type", "kind", "count", "null_count", "distinct", "min", "max", "mean",
+)
+out_dir.mkdir(parents=True, exist_ok=True)
+if mode == "exact":
+    shape.save(profile, str(out_dir / f"{safe_name}.shape"))
+    (out_dir / f"{safe_name}.html").write_text(profile.to_html(), encoding="utf-8")
+    (out_dir / f"{safe_name}.summary.json").write_text(
+        json.dumps(profile.summary()), encoding="utf-8"
+    )
+    artifact_path = f"{out_rel}/{safe_name}.shape"
+else:
+    # the full bounded profile document, plus a one-line-per-column summary
+    (out_dir / f"{safe_name}.profile.json").write_text(
+        json.dumps(_json_safe(doc)), encoding="utf-8"
+    )
+    summary = {
+        "name": entry["name"],
+        "rows": entry["rows"],
+        "mode": "bounded",
+        "columns": {
+            c["name"]: {
+                k: c.get(k)
+                for k in SUMMARY_KEYS
+            }
+            for c in entry["columns"]
+        },
+    }
+    (out_dir / f"{safe_name}.summary.json").write_text(
+        json.dumps(_json_safe(summary)), encoding="utf-8"
+    )
+    artifact_path = f"{out_rel}/{safe_name}.profile.json"
+print("Artifacts written to", out_dir)
+"""
+
+DISTRIBUTED_DISPLAY = """if mode == "exact":
+    from IPython.display import HTML, display
+
+    display(HTML(profile.to_html()))
+else:
+    print(json.dumps(_json_safe(summary), indent=1)[:4000])
+"""
+
+DISTRIBUTED_RESULT = """result = {
+    "table": tableName,
+    "rows": total_rows,
+    "passed": passed,
+    "violations": violations[:MAX_LISTED],
+    "drifted": drifted,
+    "changes": changes[:MAX_LISTED],
+    "artifactPath": artifact_path,
+    "sampled": sampled,
+    "truncated": len(violations) > MAX_LISTED or len(changes) > MAX_LISTED,
+    "kernel": KERNEL,
+    "mode": "bounded" if mode == "distributed" else "exact",
+    "checked": mode == "exact",
+}
+print(json.dumps(result, indent=2, default=str)[:4000])
+"""
+
+DISTRIBUTED_CELLS = [
+    (
+        "markdown",
+        """# Shape: profile a large lakehouse table across the Spark cluster (PySpark notebook)
+
+Attach the **Shape Environment** (`integrations/fabric/environment/README.md`) and the default
+lakehouse; Shape must be installed on the executors, which the Environment does.
+
+`mode = "distributed"` (the default): every partition is profiled on the executors in Shape's
+bounded mode (sketches, memory independent of the partition's size) through `mapInArrow`, and the
+driver merges the partial profiles. No rows reach the driver. The result is a bounded profile:
+counts, min, max, mean, variance and null counts are exact; distinct counts, quantiles and top
+values carry the error bounds in the profile's `error_models`. The merge is in partition order.
+
+`mode = "exact"`: the driver-only exact profile of `shape_profile_spark`, for tables that fit in
+driver memory. Only this mode can check a contract or diff against a baseline.
+
+The exit value has the keys of `shape_profile.ipynb`, plus `mode` and `checked`.
+**`checked` is false for the distributed mode**: nothing was checked against a contract, so
+do not use it as a gate; use `mode = "exact"` for gates.
+""",
+    ),
+    ("code", DISTRIBUTED_PARAMETERS),
+    (
+        "code",
+        DISTRIBUTED_HELPERS.replace("import shape\n", "import pyarrow as pa\n\nimport shape\n", 1),
+    ),
+    ("code", DISTRIBUTED_PROFILE),
+    ("code", DISTRIBUTED_CHECK),
+    ("code", DISTRIBUTED_ARTIFACTS),
+    ("code", DISTRIBUTED_DISPLAY),
+    ("code", DISTRIBUTED_RESULT),
     ("code", EXIT),
 ]
 
@@ -330,6 +531,7 @@ def build() -> dict[str, dict]:
         "shape_setup.ipynb": _notebook(SETUP_CELLS, spark=False, tag_parameters=False),
         "shape_profile.ipynb": _notebook(PYTHON_CELLS, spark=False),
         "shape_profile_spark.ipynb": _notebook(SPARK_CELLS, spark=True),
+        "shape_profile_distributed.ipynb": _notebook(DISTRIBUTED_CELLS, spark=True),
     }
 
 

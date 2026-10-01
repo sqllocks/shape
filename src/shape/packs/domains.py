@@ -32,6 +32,14 @@ class DomainDefinition:
     description: str = ""
 
 
+def _version_key(version: str) -> tuple[tuple[int, int, str], ...]:
+    """Order dotted versions by number, not text: ``1.10.0`` is newer than ``1.9.0``. A part
+    that is not a number (``rc1``) sorts before any number in the same position."""
+    return tuple(
+        (1, int(p), "") if p.isdigit() else (0, 0, p) for p in version.replace("-", ".").split(".")
+    )
+
+
 class DomainRegistry:
     def __init__(self):
         self._domains = {}
@@ -55,7 +63,7 @@ class DomainRegistry:
         if not hits:
             raise KeyError(name)
         if version is None:
-            hits.sort(key=lambda x: x[0][1])
+            hits.sort(key=lambda x: _version_key(x[0][1]))
         return hits[-1][1]
 
     def generate(self, name, n, *, version=None, **kwargs):

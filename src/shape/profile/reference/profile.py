@@ -5,13 +5,14 @@ from __future__ import annotations
 import copy
 import datetime as _dt
 import hashlib
-import json
 import math
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 
+from shape.artifact import codec
 from shape.artifact.io import ArtifactError, read_artifact, write_artifact
 
 from .model import ColumnProfile, DatasetProfile, TableProfile
@@ -22,7 +23,6 @@ ARTIFACT_FORMAT = "shape"
 ARTIFACT_FORMAT_VERSION = 1
 ARTIFACT_KIND = "profile"
 PROFILE_COMPONENT = "profile.json"
-_FLOAT_TAG = "$float"
 
 _COLUMN_FIELDS = (
     "name",
@@ -51,13 +51,43 @@ _COLUMN_FIELDS = (
 )
 
 
+_PLAIN = frozenset({str, int, bool, type(None)})  # leaves _clean returns unchanged
+_STR_ONLY = frozenset({str})
+
+
+_NUMBERS = frozenset({int, float, bool})
+
+
+def _no_nan(values: Any) -> bool:
+    """True when every value is a leaf ``_clean`` returns unchanged: plain str/int/bool/None, or
+    numbers without NaN (a sum is NaN when any term is; an inf - inf false alarm only costs the
+    slow path)."""
+    types = set(map(type, values))
+    if _PLAIN.issuperset(types):
+        return True
+    if _NUMBERS.issuperset(types):
+        total = sum(values)
+        return bool(total == total)
+    return False
+
+
 def _clean(v: Any) -> Any:
     """NaN becomes the string ``"NaN"``; numpy scalars become Python scalars."""
+    t = type(v)
+    if t is str or t is int or t is bool or v is None:  # the common leaves, with no further checks
+        return v
+    if t is float:
+        return "NaN" if v != v else v
     if isinstance(v, float) and math.isnan(v):
         return "NaN"
     if isinstance(v, dict):
+        # value counts: str keys over plain values need no per-entry work (types checked in C)
+        if _STR_ONLY.issuperset(map(type, v)) and _no_nan(v.values()):
+            return dict(v)
         return {str(k): _clean(x) for k, x in v.items()}
     if isinstance(v, (list, tuple)):
+        if _no_nan(v):
+            return list(v)
         return [_clean(x) for x in v]
     if hasattr(v, "item") and not isinstance(v, (str, bytes)):
         return _clean(v.item())
@@ -98,7 +128,7 @@ def _column_dict(cp: ColumnProfile) -> dict[str, Any]:
 
 
 def table_to_dict(tp: TableProfile) -> dict[str, Any]:
-    """A table profile in Spindle's ``TableProfile`` JSON shape."""
+    """A table profile as a JSON-ready dict."""
     return {
         "name": tp.name,
         "row_count": tp.row_count,
@@ -110,7 +140,7 @@ def table_to_dict(tp: TableProfile) -> dict[str, Any]:
 
 
 def dataset_to_dict(dp: DatasetProfile) -> dict[str, Any]:
-    """A multi-table profile in Spindle's ``DatasetProfile`` JSON shape."""
+    """A multi-table profile as a JSON-ready dict."""
     return {
         "tables": {n: table_to_dict(t) for n, t in dp.tables.items()},
         "relationships": _clean(dp.relationships),
@@ -152,7 +182,7 @@ def _table_summary(table: dict[str, Any]) -> dict[str, Any]:
 
 
 class Profile:
-    """A data profile. ``to_dict()`` is the full Spindle-shaped profile."""
+    """A data profile. ``to_dict()`` is the full profile as JSON-ready dicts."""
 
     def __init__(self, data: dict[str, Any], *, name: str | None = None) -> None:
         if "tables" not in data and "columns" not in data:
@@ -173,7 +203,7 @@ class Profile:
         return {self._data["name"]: self._data}
 
     def to_dict(self) -> dict[str, Any]:
-        """The full profile in Spindle's TableProfile / dataset JSON shape."""
+        """The full profile as JSON-ready dicts."""
         return copy.deepcopy(self._data)
 
     def summary(self) -> dict[str, Any]:
@@ -218,14 +248,24 @@ def profile(source: Any, *, name: str | None = None) -> Profile:
         return _profile(source, name)
 
 
+def _load_tables(sources: dict[str, Any]) -> dict[str, tuple[list[Any], int]]:
+    """Read every table, concurrently when there are several (the readers release the GIL), so
+    the small tables' reads hide behind the largest one's. Errors surface in table order."""
+    if len(sources) == 1:
+        ((name, src),) = sources.items()
+        _, cols, rows = load_columns(src, name)
+        return {name: (cols, rows)}
+    with ThreadPoolExecutor(max_workers=len(sources)) as ex:
+        futures = [(n, ex.submit(load_columns, src, n)) for n, src in sources.items()]
+        loaded = [(n, f.result()) for n, f in futures]
+    return {n: (cols, rows) for n, (_, cols, rows) in loaded}
+
+
 def _profile(source: Any, name: str | None) -> Profile:
     if isinstance(source, dict):
         if not source:
             raise SourceError("an empty dict of tables cannot be profiled")
-        cols_by_t = {}
-        for table_name, src in source.items():
-            _, cols, rows = load_columns(src, str(table_name))
-            cols_by_t[str(table_name)] = (cols, rows)
+        cols_by_t = _load_tables({str(k): v for k, v in source.items()})
         return Profile(dataset_to_dict(profile_dataset_columns(cols_by_t)), name=name)
     table_name, cols, rows = load_columns(source, name)
     table = _profile_cols_table(table_name, cols, rows, None)
@@ -235,35 +275,9 @@ def _profile(source: Any, name: str | None) -> Profile:
 # --- .shape artifact ---------------------------------------------------------------
 
 
-def _encode_value(v: Any) -> Any:
-    if isinstance(v, float):
-        if math.isnan(v):
-            return {_FLOAT_TAG: "nan"}
-        if math.isinf(v):
-            return {_FLOAT_TAG: "inf" if v > 0 else "-inf"}
-        return v
-    if isinstance(v, dict):
-        return {k: _encode_value(x) for k, x in v.items()}
-    if isinstance(v, list):
-        return [_encode_value(x) for x in v]
-    return v
-
-
-def _decode_value(v: Any) -> Any:
-    if isinstance(v, dict):
-        if len(v) == 1 and _FLOAT_TAG in v:
-            return float(v[_FLOAT_TAG])
-        return {k: _decode_value(x) for k, x in v.items()}
-    if isinstance(v, list):
-        return [_decode_value(x) for x in v]
-    return v
-
-
 def _encode(data: dict[str, Any]) -> bytes:
     # No sort_keys: the order of enum_values / value_counts_ext is meaningful.
-    return json.dumps(
-        _encode_value(data), separators=(",", ":"), ensure_ascii=False, allow_nan=False
-    ).encode("utf-8")
+    return codec.dumps(data, sort_keys=False)
 
 
 def save(p: Profile, path: str | Path) -> str:
@@ -285,7 +299,7 @@ def save(p: Profile, path: str | Path) -> str:
 
 def load(path: str | Path) -> Profile:
     """Read a ``.shape`` artifact written by :func:`save`."""
-    manifest, parts = read_artifact(str(path))  # type: ignore[no-untyped-call]
+    manifest, parts = read_artifact(str(path))
     if manifest.get("format") != ARTIFACT_FORMAT or manifest.get("kind") != ARTIFACT_KIND:
         raise ArtifactError(f"{path} is not a Shape profile artifact")
     version = manifest.get("format_version")
@@ -296,5 +310,10 @@ def load(path: str | Path) -> Profile:
         raise ArtifactError("profile component missing")
     if hashlib.sha256(body).hexdigest() != manifest.get("shape_content_id"):
         raise ArtifactError("Shape content identity mismatch")
-    data = _decode_value(json.loads(body))
+    try:
+        data = codec.loads(body)
+    except (ValueError, TypeError, RecursionError) as e:
+        raise ArtifactError(f"invalid {PROFILE_COMPONENT}: {e}") from e
+    if not isinstance(data, dict):
+        raise ArtifactError(f"invalid {PROFILE_COMPONENT}: not an object")
     return Profile(data, name=str(manifest.get("name") or "") or None)

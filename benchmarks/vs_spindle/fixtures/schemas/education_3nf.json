@@ -1,0 +1,1299 @@
+{
+ "model": {
+  "name": "education_3nf",
+  "description": "Education domain \u2014 3nf schema",
+  "domain": "education",
+  "schema_mode": "3nf",
+  "locale": "en_US",
+  "seed": 42,
+  "date_range": {
+   "start": "2020-01-01",
+   "end": "2025-12-31"
+  }
+ },
+ "tables": {
+  "department": {
+   "name": "department",
+   "columns": {
+    "department_id": {
+     "name": "department_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "department_name": {
+     "name": "department_name",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "department_names"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "college": {
+     "name": "college",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Arts & Sciences": 0.3,
+       "Engineering": 0.2,
+       "Business": 0.18,
+       "Education": 0.12,
+       "Health Sciences": 0.12,
+       "Law": 0.08
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "budget": {
+     "name": "budget",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 13.5,
+      "sigma": 0.8,
+      "min": 500000.0,
+      "max": 20000000.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "department_id"
+   ],
+   "description": "Academic departments",
+   "cdm_mapping": null
+  },
+  "instructor": {
+   "name": "instructor",
+   "columns": {
+    "instructor_id": {
+     "name": "instructor_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "first_name": {
+     "name": "first_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "first_name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "last_name": {
+     "name": "last_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "last_name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "email": {
+     "name": "email",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "email"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 255,
+     "precision": null,
+     "scale": null
+    },
+    "department_id": {
+     "name": "department_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "department.department_id",
+      "distribution": "zipf",
+      "alpha": 1.2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "rank": {
+     "name": "rank",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Professor": 0.2,
+       "Associate Professor": 0.2,
+       "Assistant Professor": 0.25,
+       "Lecturer": 0.15,
+       "Adjunct": 0.2
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "tenure_status": {
+     "name": "tenure_status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Tenured": 0.35,
+       "Tenure-Track": 0.25,
+       "Non-Tenure": 0.4
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "hire_date": {
+     "name": "hire_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2000-01-01",
+      "end": "2025-06-30",
+      "pattern": "uniform"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "instructor_id"
+   ],
+   "description": "Faculty members",
+   "cdm_mapping": null
+  },
+  "course": {
+   "name": "course",
+   "columns": {
+    "course_id": {
+     "name": "course_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "course_code": {
+     "name": "course_code",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "CRS-{seq:4}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 10,
+     "precision": null,
+     "scale": null
+    },
+    "course_name": {
+     "name": "course_name",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "course_catalog"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 200,
+     "precision": null,
+     "scale": null
+    },
+    "department_id": {
+     "name": "department_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "department.department_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "credits": {
+     "name": "credits",
+     "type": "integer",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "1": 0.05,
+       "2": 0.1,
+       "3": 0.6,
+       "4": 0.25
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "level": {
+     "name": "level",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "100": 0.25,
+       "200": 0.22,
+       "300": 0.2,
+       "400": 0.15,
+       "500": 0.1,
+       "600": 0.08
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "course_id"
+   ],
+   "description": "Course catalog",
+   "cdm_mapping": null
+  },
+  "student": {
+   "name": "student",
+   "columns": {
+    "student_id": {
+     "name": "student_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "first_name": {
+     "name": "first_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "first_name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "last_name": {
+     "name": "last_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "last_name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "email": {
+     "name": "email",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "email"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 255,
+     "precision": null,
+     "scale": null
+    },
+    "date_of_birth": {
+     "name": "date_of_birth",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "1990-01-01",
+      "end": "2006-12-31",
+      "pattern": "uniform"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "enrollment_date": {
+     "name": "enrollment_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2018-08-01",
+      "end": "2025-08-31",
+      "pattern": "uniform"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "major_department_id": {
+     "name": "major_department_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "department.department_id",
+      "distribution": "zipf",
+      "alpha": 1.3
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "gpa": {
+     "name": "gpa",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "normal",
+      "mean": 3.0,
+      "sigma": 0.5,
+      "min": 0.0,
+      "max": 4.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "classification": {
+     "name": "classification",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Freshman": 0.22,
+       "Sophomore": 0.2,
+       "Junior": 0.2,
+       "Senior": 0.2,
+       "Graduate": 0.18
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "status": {
+     "name": "status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Active": 0.8,
+       "Graduated": 0.12,
+       "Withdrawn": 0.05,
+       "Suspended": 0.03
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "student_id"
+   ],
+   "description": "Enrolled students",
+   "cdm_mapping": null
+  },
+  "enrollment": {
+   "name": "enrollment",
+   "columns": {
+    "enrollment_id": {
+     "name": "enrollment_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "student_id": {
+     "name": "student_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "student.student_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "course_id": {
+     "name": "course_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "course.course_id",
+      "distribution": "zipf",
+      "alpha": 1.3
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "instructor_id": {
+     "name": "instructor_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "instructor.instructor_id",
+      "distribution": "zipf",
+      "alpha": 1.2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "semester": {
+     "name": "semester",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Fall 2023": 0.2,
+       "Spring 2024": 0.22,
+       "Summer 2024": 0.12,
+       "Fall 2024": 0.22,
+       "Spring 2025": 0.24
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "grade": {
+     "name": "grade",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "A": 0.18,
+       "A-": 0.1,
+       "B+": 0.12,
+       "B": 0.14,
+       "B-": 0.1,
+       "C+": 0.08,
+       "C": 0.08,
+       "C-": 0.05,
+       "D": 0.05,
+       "F": 0.04,
+       "W": 0.04,
+       "I": 0.02
+      }
+     },
+     "nullable": true,
+     "null_rate": 0.1,
+     "max_length": 2,
+     "precision": null,
+     "scale": null
+    },
+    "credits_attempted": {
+     "name": "credits_attempted",
+     "type": "integer",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "1": 0.05,
+       "2": 0.1,
+       "3": 0.6,
+       "4": 0.25
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "enrollment_id"
+   ],
+   "description": "Course enrollments linking students to courses",
+   "cdm_mapping": null
+  },
+  "financial_aid": {
+   "name": "financial_aid",
+   "columns": {
+    "aid_id": {
+     "name": "aid_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "student_id": {
+     "name": "student_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "student.student_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "aid_type": {
+     "name": "aid_type",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "aid_types"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "academic_year": {
+     "name": "academic_year",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "2021-2022": 0.12,
+       "2022-2023": 0.18,
+       "2023-2024": 0.25,
+       "2024-2025": 0.3,
+       "2025-2026": 0.15
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 9,
+     "precision": null,
+     "scale": null
+    },
+    "amount": {
+     "name": "amount",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 8.5,
+      "sigma": 0.8,
+      "min": 500.0,
+      "max": 50000.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "status": {
+     "name": "status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Awarded": 0.4,
+       "Disbursed": 0.38,
+       "Pending": 0.15,
+       "Cancelled": 0.07
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "award_date": {
+     "name": "award_date",
+     "type": "datetime",
+     "generator": {
+      "strategy": "temporal",
+      "pattern": "uniform",
+      "range_ref": "model.date_range"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "aid_id"
+   ],
+   "description": "Student financial aid awards",
+   "cdm_mapping": null
+  },
+  "course_section": {
+   "name": "course_section",
+   "columns": {
+    "section_id": {
+     "name": "section_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "course_id": {
+     "name": "course_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "course.course_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "instructor_id": {
+     "name": "instructor_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "instructor.instructor_id",
+      "distribution": "zipf",
+      "alpha": 1.2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "semester": {
+     "name": "semester",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Fall 2023": 0.2,
+       "Spring 2024": 0.22,
+       "Summer 2024": 0.12,
+       "Fall 2024": 0.22,
+       "Spring 2025": 0.24
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "room_number": {
+     "name": "room_number",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "RM-{seq:3}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 10,
+     "precision": null,
+     "scale": null
+    },
+    "capacity": {
+     "name": "capacity",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 20,
+      "max": 300
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "enrolled_count": {
+     "name": "enrolled_count",
+     "type": "integer",
+     "generator": {
+      "strategy": "correlated",
+      "source_column": "capacity",
+      "operation": "multiply",
+      "params": {
+       "factor_min": 0.5,
+       "factor_max": 0.95
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "section_id"
+   ],
+   "description": "Scheduled course sections",
+   "cdm_mapping": null
+  },
+  "grade_appeal": {
+   "name": "grade_appeal",
+   "columns": {
+    "appeal_id": {
+     "name": "appeal_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "enrollment_id": {
+     "name": "enrollment_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "enrollment.enrollment_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "filed_date": {
+     "name": "filed_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2023-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "reason": {
+     "name": "reason",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Calculation Error": 0.3,
+       "Grading Criteria": 0.25,
+       "Incomplete Grade": 0.2,
+       "Medical": 0.15,
+       "Other": 0.1
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "status": {
+     "name": "status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Pending": 0.2,
+       "Under Review": 0.25,
+       "Approved": 0.3,
+       "Denied": 0.25
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "resolution_date": {
+     "name": "resolution_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2023-02-01",
+      "end": "2025-12-31",
+      "pattern": "uniform"
+     },
+     "nullable": true,
+     "null_rate": 0.3,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "appeal_id"
+   ],
+   "description": "Grade appeals filed by students",
+   "cdm_mapping": null
+  },
+  "academic_standing": {
+   "name": "academic_standing",
+   "columns": {
+    "standing_id": {
+     "name": "standing_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "student_id": {
+     "name": "student_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "student.student_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "semester": {
+     "name": "semester",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Fall 2023": 0.2,
+       "Spring 2024": 0.22,
+       "Summer 2024": 0.12,
+       "Fall 2024": 0.22,
+       "Spring 2025": 0.24
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "standing": {
+     "name": "standing",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Good Standing": 0.7,
+       "Dean's List": 0.15,
+       "Probation": 0.1,
+       "Suspension": 0.05
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "cumulative_gpa": {
+     "name": "cumulative_gpa",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "normal",
+      "mean": 3.0,
+      "sigma": 0.5,
+      "min": 0.0,
+      "max": 4.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "semester_gpa": {
+     "name": "semester_gpa",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "normal",
+      "mean": 3.0,
+      "sigma": 0.6,
+      "min": 0.0,
+      "max": 4.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "standing_id"
+   ],
+   "description": "Student academic standing history",
+   "cdm_mapping": null
+  }
+ },
+ "relationships": [
+  {
+   "name": "instructor_department",
+   "parent": "department",
+   "child": "instructor",
+   "parent_columns": [
+    "department_id"
+   ],
+   "child_columns": [
+    "department_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "course_department",
+   "parent": "department",
+   "child": "course",
+   "parent_columns": [
+    "department_id"
+   ],
+   "child_columns": [
+    "department_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "student_major",
+   "parent": "department",
+   "child": "student",
+   "parent_columns": [
+    "department_id"
+   ],
+   "child_columns": [
+    "major_department_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "enrollment_student",
+   "parent": "student",
+   "child": "enrollment",
+   "parent_columns": [
+    "student_id"
+   ],
+   "child_columns": [
+    "student_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "enrollment_course",
+   "parent": "course",
+   "child": "enrollment",
+   "parent_columns": [
+    "course_id"
+   ],
+   "child_columns": [
+    "course_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "enrollment_instructor",
+   "parent": "instructor",
+   "child": "enrollment",
+   "parent_columns": [
+    "instructor_id"
+   ],
+   "child_columns": [
+    "instructor_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "financial_aid_student",
+   "parent": "student",
+   "child": "financial_aid",
+   "parent_columns": [
+    "student_id"
+   ],
+   "child_columns": [
+    "student_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "course_section_course",
+   "parent": "course",
+   "child": "course_section",
+   "parent_columns": [
+    "course_id"
+   ],
+   "child_columns": [
+    "course_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "course_section_instructor",
+   "parent": "instructor",
+   "child": "course_section",
+   "parent_columns": [
+    "instructor_id"
+   ],
+   "child_columns": [
+    "instructor_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "grade_appeal_enrollment",
+   "parent": "enrollment",
+   "child": "grade_appeal",
+   "parent_columns": [
+    "enrollment_id"
+   ],
+   "child_columns": [
+    "enrollment_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "academic_standing_student",
+   "parent": "student",
+   "child": "academic_standing",
+   "parent_columns": [
+    "student_id"
+   ],
+   "child_columns": [
+    "student_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  }
+ ],
+ "business_rules": [
+  {
+   "name": "gpa_range",
+   "type": "constraint",
+   "rule": "gpa >= 0.0 AND gpa <= 4.0",
+   "table": "student",
+   "via": null,
+   "when": null
+  },
+  {
+   "name": "aid_amount_positive",
+   "type": "constraint",
+   "rule": "amount > 0",
+   "table": "financial_aid",
+   "via": null,
+   "when": null
+  },
+  {
+   "name": "enrolled_leq_capacity",
+   "type": "column_comparison",
+   "rule": "",
+   "table": "course_section",
+   "via": null,
+   "when": null
+  }
+ ],
+ "generation": {
+  "scale": "small",
+  "scales": {
+   "fabric_demo": {
+    "student": 200
+   },
+   "small": {
+    "student": 2000
+   },
+   "medium": {
+    "student": 20000
+   },
+   "large": {
+    "student": 200000
+   },
+   "xlarge": {
+    "student": 5000000
+   },
+   "warehouse": {
+    "student": 2000000
+   },
+   "xxl": {
+    "student": 20000000
+   },
+   "xxxl": {
+    "student": 100000000
+   }
+  },
+  "derived_counts": {
+   "department": {
+    "fixed": 25
+   },
+   "instructor": {
+    "fixed": 150
+   },
+   "course": {
+    "fixed": 300
+   },
+   "enrollment": {
+    "per_parent": "student",
+    "ratio": 8.0
+   },
+   "financial_aid": {
+    "per_parent": "student",
+    "ratio": 0.7
+   },
+   "course_section": {
+    "per_parent": "course",
+    "ratio": 2.0
+   },
+   "grade_appeal": {
+    "per_parent": "enrollment",
+    "ratio": 0.02
+   },
+   "academic_standing": {
+    "per_parent": "student",
+    "ratio": 2.0
+   }
+  },
+  "output": {}
+ },
+ "correlated_columns": {}
+}

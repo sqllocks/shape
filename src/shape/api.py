@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import importlib
-import types
 from typing import Any
 
 from shape.contracts.v1 import check as check
@@ -47,13 +45,13 @@ def timeline(versions: Any) -> Any:
 def view(shape: Any) -> Any:
     from shape.query import ShapeView
 
-    return ShapeView(shape)  # type: ignore[no-untyped-call]
+    return ShapeView(shape)
 
 
 def query(shape: Any, expression: Any) -> Any:
     from shape.query import query as _query
 
-    return _query(shape, expression)  # type: ignore[no-untyped-call]
+    return _query(shape, expression)
 
 
 def certify(target: Any, observed: Any, **kwargs: Any) -> Any:
@@ -66,19 +64,3 @@ def plan(shape: Any) -> Any:
     from shape.generation.fidelity import plan_reconstruction
 
     return plan_reconstruction(shape)  # type: ignore[no-untyped-call]
-
-
-class _CallableModule(types.ModuleType):
-    """Makes the legacy ``shape.diff`` subpackage callable.
-
-    ``shape.diff`` is both this API function and an old subpackage. Importing the subpackage
-    (``import shape.diff``) rebinds the attribute ``shape.diff`` to the module, which would
-    break ``shape.diff(a, b)``. Giving that module a ``__call__`` keeps the call working
-    either way. The clash goes away when the legacy package is cut (plan P0-04).
-    """
-
-    def __call__(self, baseline: Any, current: Any, **kwargs: Any) -> Any:
-        return diff(baseline, current, **kwargs)
-
-
-importlib.import_module("shape.diff").__class__ = _CallableModule

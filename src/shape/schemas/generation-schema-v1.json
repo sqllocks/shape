@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shape-as-code.org/schema/1.0/generation-schema-v1.json",
+  "title": "Shape generation schema, version 1",
+  "description": "What the generation engine reads: a model (seed, locale, date range, mode), tables whose columns each carry a generator (a strategy name plus its keys), relationships, business rules, scale presets and derived row counts, and correlated column pairs. Strategy keys are open: each strategy defines its own.",
+  "type": "object",
+  "required": ["schema_version", "model", "tables"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "model": {"$ref": "#/$defs/model"},
+    "tables": {"type": "object", "additionalProperties": {"$ref": "#/$defs/table"}},
+    "relationships": {"type": "array", "items": {"$ref": "#/$defs/relationship"}},
+    "business_rules": {"type": "array", "items": {"$ref": "#/$defs/rule"}},
+    "generation": {"$ref": "#/$defs/generation"},
+    "correlated_columns": {
+      "type": "object",
+      "description": "table -> [column_a, column_b, r] triples for the Gaussian-copula post-pass.",
+      "additionalProperties": {"type": "array", "items": {"type": "array"}}
+    }
+  },
+  "$defs": {
+    "model": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "domain": {"type": "string"},
+        "schema_mode": {"enum": ["3nf", "star"]},
+        "locale": {"type": "string"},
+        "seed": {"type": "integer"},
+        "date_range": {"type": "object", "additionalProperties": {"type": "string"}}
+      }
+    },
+    "table": {
+      "type": "object",
+      "required": ["name", "columns"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "cdm_mapping": {"type": ["string", "null"]},
+        "primary_key": {"type": "array", "items": {"type": "string"}},
+        "columns": {"type": "object", "additionalProperties": {"$ref": "#/$defs/column"}}
+      }
+    },
+    "column": {
+      "type": "object",
+      "required": ["name", "type", "generator"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "type": {"type": "string"},
+        "generator": {"type": "object"},
+        "nullable": {"type": "boolean"},
+        "null_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "max_length": {"type": ["integer", "null"]},
+        "precision": {"type": ["integer", "null"]},
+        "scale": {"type": ["integer", "null"]}
+      }
+    },
+    "relationship": {
+      "type": "object",
+      "required": ["name", "parent", "child"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "parent": {"type": "string"},
+        "child": {"type": "string"},
+        "parent_columns": {"type": "array", "items": {"type": "string"}},
+        "child_columns": {"type": "array", "items": {"type": "string"}},
+        "type": {"enum": ["one_to_many", "one_to_one", "many_to_many", "self_referencing"]},
+        "cardinality": {"type": "object"},
+        "optional": {"type": "boolean"}
+      }
+    },
+    "rule": {
+      "type": "object",
+      "required": ["name", "type", "rule"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "type": {"type": "string"},
+        "rule": {"type": "string"},
+        "table": {"type": ["string", "null"]},
+        "via": {"type": ["string", "null"]},
+        "when": {"type": ["string", "null"]}
+      }
+    },
+    "generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scale": {"type": "string"},
+        "scales": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {"type": "integer", "minimum": 0}
+          }
+        },
+        "derived_counts": {"type": "object", "additionalProperties": {"type": "object"}},
+        "output": {"type": "object"}
+      }
+    }
+  }
+}

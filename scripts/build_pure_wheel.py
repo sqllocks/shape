@@ -66,12 +66,9 @@ def _source_files() -> list[tuple[str, Path]]:
     for path in sorted(pkg.rglob("*")):
         if not path.is_file() or "__pycache__" in path.parts or path.suffix == ".pyc":
             continue
+        if path.name.startswith("_kernel.") and path.suffix in FORBIDDEN_SUFFIXES:
+            continue  # the native extension of a local maturin build: never in the pure wheel
         files.append((path.relative_to(ROOT / "src").as_posix(), path))
-    specs = ROOT / "docs" / "specs"
-    if specs.is_dir():  # pyproject: force-include "docs/specs" -> "shape/schemas"
-        for path in sorted(specs.rglob("*")):
-            if path.is_file():
-                files.append(("shape/schemas/" + path.relative_to(specs).as_posix(), path))
     return files
 
 

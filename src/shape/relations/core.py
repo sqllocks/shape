@@ -60,3 +60,13 @@ class CovarianceProfile:
     def correlation(self):
         den = math.sqrt(self.m2x * self.m2y)
         return self.c / den if den else None
+
+    def to_relationship(self, source: str, target: str) -> dict:
+        """The v2 ``relationships`` entry (``kind: correlation``) for this accumulator."""
+        return {
+            "kind": "correlation",
+            "source": source,
+            "target": target,
+            "n": self.n,
+            "rho": self.correlation,
+        }

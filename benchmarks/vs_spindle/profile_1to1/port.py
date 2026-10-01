@@ -5,7 +5,7 @@ fields with the same semantics as Spindle, including:
 
 * pandas-equivalent reading semantics (read_csv / read_parquet dtype mapping,
   NA tokens, int-with-nulls -> float64, bool-with-nulls -> object, ...)
-* _infer_spindle_type (bool-like / numeric / datetime coercion of strings)
+* _infer_column_type (bool-like / numeric / datetime coercion of strings)
 * null/cardinality/uniqueness/enum rules, enum + top-500 value proportions
   with pandas' key formatting and stable-descending tie order
 * min/max with pandas' Python types

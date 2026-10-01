@@ -200,10 +200,10 @@ instruction.
 | D-09 | **Plugins are trusted, in-process code.** Delete the subprocess "capability sandbox" and its claims. | The sandbox is cosmetic (PL1–PL4). |
 | D-10 | **Copy Spindle's reference data** (name and street pools, ZIP locations, domain reference files) into `shape-domains`. Carry the GeoNames CC-BY-4.0 attribution into `THIRD_PARTY_NOTICES.md`. | Parity needs the same data. Spindle is MIT and has the same copyright holder. |
 | D-11 | **Holiday calendars are rule-based code:** fixed dates, the nth or last weekday of a month, Easter by computus, and observed-day shifts. US federal and US retail calendars ship in core, and other countries come as `shape.calendars` plugins. | Offline and deterministic. |
-| D-12 | **Stream output defaults to Spindle's flat-row format.** Each event is the row's columns plus `_spindle_table` and `_spindle_seq`, and `_spindle_event_time` when the table has a datetime column (Spindle `streaming/streamer.py:212-233`). `--envelope spindle` produces Spindle's `EventEnvelope` (as used by its Eventstream client), and `--envelope cloudevents` produces CloudEvents. The idempotency key is `(_spindle_table, _spindle_seq)`. | Drop-in for existing consumers; deterministic replay. |
+| D-12 | *(Revised 2026-09-30, §2.3: `_shape_*` field names, no `--envelope spindle`.)* **Stream output defaults to Spindle's flat-row format.** Each event is the row's columns plus `_spindle_table` and `_spindle_seq`, and `_spindle_event_time` when the table has a datetime column (Spindle `streaming/streamer.py:212-233`). `--envelope spindle` produces Spindle's `EventEnvelope` (as used by its Eventstream client), and `--envelope cloudevents` produces CloudEvents. The idempotency key is `(_spindle_table, _spindle_seq)`. | Drop-in for existing consumers; deterministic replay. |
 | D-14 | **Pipeline integration comes first after the plugin system.** Fabric first (Python and PySpark notebooks, User Data Functions, pipelines with Notebook and Functions activities), then Synapse and ADF. Phase F runs after G2, before Phases 3 and 4. A 48-hour Fabric demo track (§12) comes before everything. | Owner: Spindle is retired; profiling and generation must run inside ADF, Synapse and Fabric pipelines. |
 | D-15 | **Shape is open source under the MIT license** (the same as Spindle), replacing the Apache-2.0 `LICENSE` inherited from the earlier build. The `sqllocks/shape` repo goes public; releases go to PyPI as `sqllocks-shape`. The repo flips to public only after DM-00 has removed the false claims (§12). | Owner decision (2026-09-30). A full-history secret scan found only deliberate test fixtures. |
-| D-13 | **No `spindle` executable is shipped.** `shape` accepts Spindle command names as aliases wherever the meaning matches (§10), and reads Spindle schemas and profiles. | Avoids clashing with an installed Spindle. |
+| D-13 | *(Revised 2026-09-30, §2.3: no Spindle aliases and no Spindle schema or profile input.)* **No `spindle` executable is shipped.** `shape` accepts Spindle command names as aliases wherever the meaning matches (§10), and reads Spindle schemas and profiles. | Avoids clashing with an installed Spindle. |
 
 ### 2.2 Technical decisions
 
@@ -243,7 +243,21 @@ instruction.
 
 | Date | ID | Change | Reason |
 |---|---|---|---|
+| 2026-10-01 | P1-18, T-22 | **Owner: fix the enum rule.** The profiler marks a column `is_enum` (and lists every value in `enum_values`) when it has fewer than 200 distinct values, or fewer than 50,000 at a cardinality ratio under 0.30, so every column of a table under 200 rows is an "enum", unique keys and free text included (the SQL Server plugin: at most 50 distinct). New work package **P1-18**: a column is an enum only if, in addition, its values repeat (distinct values at most half of the non-null values; a unique column is never an enum); both kernels and the SQL Server plugin. T-22 parity for `is_enum`, `enum_values` (and fields derived from them) becomes a narrow named allow-list; every other field still equal. | Owner, 2026-10-01: "We should probably fix that too right?" |
+| 2026-10-01 | P4-01c, P6-08b | **Owner: also fix the further copied baseline behaviours that harm user trust (round 2).** Lead's call on which: P4-01c F6 undeclared FK guesses point at the parent's primary key (never a missing column), F7 generated strings fit declared lengths (CHAR(2)/CHAR(3) codes), F8 `CustomerId`-style keys recognised; P6-08b FIX-4 deterministic spread sample instead of the first N rows, FIX-5 unsampled statistics are null not 0.0, FIX-6 null-aware `is_unique` with a minimum sample, FIX-7 undeclared columns still inferred beside declared keys (evidence marked), FIX-8 whole-word `id`/`key` name matching, FIX-9 a guessed primary key never picks a foreign-key column. Same acceptance as round 1 (test per fix, narrow named parity allow-list, everything else equal). Not changed: `is_enum` (<= 50 distinct), the core profiler's rule under T-22 parity (flagged to the owner). | Owner, 2026-10-01: "Fix those too if they harm user trust". |
+| 2026-10-01 | P4-01b, P6-08, T-22, P4-01c, P6-08b | **Owner decision: fix the baseline bugs that P4-01b and P6-08 reproduced for parity.** New work packages **P4-01c** (DDL import) and **P6-08b** (SQL Server profiling). Their acceptance replaces exact equality with the baseline, for these behaviours only, by: a test asserting the correct behaviour per bug, and the parity harness listing each one as an intentional, documented difference (every other field still equal). | Owner, 2026-10-01: "Fix the bugs. Those are not acceptable and would harm user trust in Shape." |
+| 2026-10-01 | P4-04c | **Owner accepted** the changed case `conditional/is_null_fixed` (null rate 0.4 -> 0.5 after a chance clause-(d) failure at seed 1042; the original passed at seeds 1043-1049). No seed or tolerance changed. | Owner, 2026-10-01: "Accept is fine". |
+| 2026-10-01 | G1 | **Owner decision on the second G1 miss (re-run on c7bd366: only PROF-IN MT 9.1x < 10x):** option (a), keep optimising; the gate is unchanged (10x, D-04). Lane `lane/G1-mt` (started 8:59 AM EDT) targets the MT path, equivalence first, with no other workload allowed below 10x. Nothing merges to main until G1 and G2 pass. | Owner, 2026-10-01: "A". Evidence: docs/plans/evidence/G1-rerun/. |
+| 2026-10-01 | G2, PF-01, P3-01, P4-01a, P6-08 | **Early start extended (lead, under the owner's 'run everything that can run in parallel', 2026-10-01).** G2's first two checks pass (an out-of-tree plugin adds a source, a detector and a command without core change; `shape plugins list` shows all 25 built-ins); its third check is 'the G1 gates still pass', so G2 waits on G1. The work packages that depend only on G2 (PF-01, P3-01, P4-01a, P6-08) start now as lanes, under the same rule as the G1 early start: they merge into `build/main-plan`, nothing merges to `main` until G1 and G2 pass. P1-17 left MT at 7.5x (D1 and D4 CSV above 10x on its VM); G1 is re-run after P1-16. | Owner instruction |
+| 2026-10-01 | G1, P1-15, P1-16, P2-01, P7-01, P6-09, PF-03 | **Owner decision on the G1 escalation:** options (a) and (b), in parallel; the gate is unchanged (10x, D-04). New work packages **P1-15** (exact-mode `shape.profile` on the fused Rust kernel, as P1-08 intended) and **P1-16** (bitwise-exact, cheaper likelihood evaluation); G1 is re-run after both merge. **Early start:** P2-01, P7-01, P6-09 and PF-03 may start before G1 is `done` (owner, 2026-10-01); they run as lanes and merge into `build/main-plan`, but nothing merges to `main` until G1 passes. | Owner decision |
+| 2026-10-01 | §6.1, §6.3 | **Parallel lanes (owner: run everything that can run in parallel).** Work packages whose `Depends` are met run concurrently, each in its own builder session on its own branch `lane/<WP>` cut from `build/main-plan`. A lane builder edits only its work package's paths, never the §11 tracker or §2.3, and records progress and evidence in `docs/plans/lane_status/<WP>.md`. The lead verifies each lane against §7, merges it into `build/main-plan` (merge commit) and updates §11. The tracker shows a lane's WP as `wip (lane/<WP>)`; a builder never picks a WP marked that way. Gates stay sequential, each measured in one dedicated run. | Owner decision |
+| 2026-10-01 | G1, P1-08 | **Escalation (builder): the G1 speed gates are missed after §6.5 round 1.** Parity and START pass; PROF-IN is 6.5x-11.2x (d1.parquet 6.5x, d2.csv 9.6x, d3.parquet 6.7x, d4.csv 8.8x, d4.parquet 9.4x, mt 5.1x below 10x) and PROF-CLI D2 is 8.8x (D3 10.8x). Tables, hotspots and harness outputs: `docs/plans/demo_status/G1-evidence.md`. Round 1 moved the lognormal likelihood to reused buffers and numpy's array log (D4 fit 13.0 s -> 5.4 s, parity exit 0). One harness change, for the owner to confirm: `bench.py`'s Shape worker now imports `shape.profile`'s implementation before the timer (T-19: imports excluded for both tools; Spindle's worker already imports its profiler); without it every fresh-process run carried about 0.4 s of lazy imports (as-found column kept in the evidence). Finding: the product `shape.profile` is the numpy reference profiler with only fitting in Rust, so P1-08's "on the Rust kernel" was not realized; the fused engine is slower than it in exact mode. The remaining gap (D1, MT, D3 parquet, D4, D2 CLI) is not tuning-sized. Options for the owner: (a) a native exact-mode profile on the fused kernel as P1-08 intended (a new work package, then re-run G1), (b) a second tuning round on first-appearance ordering, value counts and correlation (unlikely to reach 10x on D1, MT and D3 parquet). Gate unchanged; G1 stays `todo`. | Builder, §6.5 round 1 |
+| 2026-09-30 | P1-07, P1-14 | **Resolved:** the Python-kernel bounded-mode growth was in `finalize`, not the batch loop (`np.repeat(lengths, counts)` made one float64 per row; RSS 231 -> 584 MB in the last second at 24M rows). `_histogram_quantile` computes p95 from the histogram with numpy's linear interpolation (0 mismatches on 60k random histograms); regression test `test_python_text_finalize_memory_does_not_scale_with_rows` fails on the old code. `test_bounded_mode_memory_does_not_grow_with_rows` (unchanged, 10% limit) passes with `SHAPE_KERNEL=python` (63 min) and with Rust (88 s); all 40 heavy kernel/profile tests pass on Rust. P1-14 acceptance, in this session: `check_user_facing` clean (CI runs it on the tree and the wheel); `profile_1to1/verify.py --impl shape` exit 0 on all default datasets against the pinned Spindle 3.0.1 (built here by `setup_spindle.sh`, checkout untouched); `pytest tests/demo` 201 passed (separate venv with pyarrow 19, as the `fabric-demo` job); the rest of the suite 1026 passed in both kernel modes. Not covered by CI: the heavy memory test on the Python kernel (about 1 h); a nightly job is suggested. | Finding FINDING-P1-07 |
 | 2026-09-29 | — | Plan v1 approved | — |
+| 2026-10-01 | G1, PROF-IN, PROF-CLI | **Escalation (builder): G1 is not met after both §6.5 rounds; the gate is unchanged.** Equivalence first: `profile_1to1/verify.py --impl shape` exits 0 (49/49 PASS, runs 1 and 2). Measured on the pinned baseline (§1.2), 4 vCPU Xeon 2.80 GHz, exclusive lock, 5 runs each in fresh processes. **Run 2 (final, 12:38 AM EDT 2026-10-01):** PROF-IN D1 csv 10.3x, D1 pq 10.9x, D2 csv 12.3x, D2 pq 12.5x, D3 csv 11.4x, **D3 pq 8.8x**, **D4 csv 9.9x**, D4 pq 10.8x, **MT 5.4x**; PROF-CLI **D2 9.8x**, D3 10.9x; START 43 ms. Evidence: `docs/plans/evidence/G1/`. Round 1 (previous builder, d651afe, 271a5d5): the lognormal likelihood reuses buffers and takes both logs through numpy's array log (D4 fit 13.0 s to 5.9 s). Round 2 (this builder): the top-value scan searches only keys with count at or above the threshold (D2 csv 3.4 s to 1.9 s), `_clean` fast path, and the bench worker pre-imports `shape.api` and the kernel (T-19: imports excluded; the first run's timed call included about 0.4 s of lazy imports). Not kept: chunked parallel numpy log in `fit.rs` (no gain; GIL contention and a deadlock risk). Remaining hotspots (py-spy): D3 pq: `latency_ms` full-column lognormal refit about 3.8 s, about 20 evaluations of 5M rows, each two numpy-SVML log passes plus a sequential `pairwise_sum`, and the numpy `partition`/sort calls in the Python profiler; D4: eight lognormal columns whose Nelder-Mead fallback runs about 600 evaluations over the full column; MT: three small tables, so thread and pool start-up and per-column Python dominate (0.26 to 0.55 s against 2.4 s). The product path for `shape.profile` is still the numpy reference profiler with only the fitting in Rust; P1-06's fused kernel (`profile/engine.py`) is not on that path, so P1-08's "on the Rust kernel" is not met. Options for the owner: (a) move the per-column work (sorting, first-seen top values, patterns, quantiles) onto the fused kernel behind the same T-22 output; (b) make the likelihood evaluation bitwise-exact but cheaper (parallel `pairwise_sum` over its fixed block tree, a Rust port of numpy's AVX-512 log); (c) accept different gates for D4 and MT, which only the owner may decide. G1 stays `todo`. This row supersedes the round-1 escalation row above (its numbers are the run before round 2; `docs/plans/demo_status/G1-evidence.md`). | Builder, G1 |
+| 2026-09-30 | P1-07, P1-14 | **Escalation (lead):** `test_bounded_mode_memory_does_not_grow_with_rows` fails with `SHAPE_KERNEL=python` (24M 544 MB → 48M 913 MB, +68%); Rust passes. Measurements and leads in `docs/plans/demo_status/FINDING-P1-07-python-kernel-rss.md`. Must be fixed before P1-14 closes (suite green in both kernel modes) and G1; the test is not relaxed. | Lead verification of P1-08..P1-10 |
+| 2026-09-30 | P1-14 | The talk and the demo kit mention nothing about Spindle either: `docs/talks/` and `demo/` join P1-14's scope (the talk itself is reworked on the talk branch by a separate session). | Owner decision |
+| 2026-09-30 | D-12, D-13, §10, P1-08, P1-11, G1 | **No Spindle on Shape's user-facing surface.** Nothing a user sees names Spindle: the package (`src/`, `rust/`, `plugins/`, `integrations/`), CLI flags, help and messages, `README.md`, `pyproject.toml`, `demo/` and `docs/` outside `docs/plans/` (the talk included: owner, 2026-09-30). The Spindle-compatible outputs are removed: `--spindle-compat` (P1-08, P1-11) and the `shape profile capture` / `shape profile diff` ports of Spindle's `ExportedProfile` commands (P1-11). D-12: stream fields become `_shape_table`, `_shape_seq`, `_shape_event_time` (idempotency key `(_shape_table, _shape_seq)`), `--envelope spindle` is dropped, CloudEvents stays. D-13: Shape reads only its own formats (no Spindle schema or profile input) and has no Spindle command aliases; §10 is retired as a parity contract. §12.2 loses `--spindle-compat`. The internal parity and benchmark harness (`benchmarks/vs_spindle/`, T-20, T-22, the G-gates measured against the pinned Spindle) is kept, outside the package. New work package P1-14; G1 needs it. `THIRD_PARTY_NOTICES.md` keeps its Spindle attribution until the owner confirms they hold Spindle's copyright (§9). | Owner decision |
 | 2026-09-29 | — | Plan v2: adversarial-review fixes (Spindle stream format, CLI mapping, exact mode for parity and gates, crate pins, Philox implemented in-house, maturin-action, setup, builder guide, work-package splits, verified line references) | Red-team review |
 | 2026-09-30 | — | **sqllocks-shape 0.9.0 published to PyPI** from `main` at b2dd663 (Publish run 36749097798, approved by the owner). Verified by the lead: clean-venv `pip install sqllocks-shape==0.9.0` from pypi.org; pure `py3-none-any` wheel; `License-Expression: MIT`; requires numpy>=2.0,<3 and pyarrow>=14.0.1; profile, check and CLI exit codes work. **0.9.0 can never be re-uploaded: the next release must use a higher version.** | Owner release decision |
 | 2026-09-30 | — | Main plan reconciled with the shipped demo: P0-05 keeps version 0.9.0 and the DM-00 README; P0-04 names `src/shape/<m>` paths only; P0-06 keeps the demo CI jobs; P0-07 updates demo references to moved harness paths; §6.2(7) keeps `tests/demo` green | Demo track (§12) landed before Phase 0; 0.9.0 is published |
@@ -344,7 +358,7 @@ Every gate is a ratio against Spindle, measured in the same job (T-19).
 | Gate | Workload (exact commands in `benchmarks/vs_spindle/run.py`) | Minimum | Stretch (tracked, not blocking) |
 |---|---|---|---|
 | PROF-IN | D1–D4 (CSV and Parquet), MT; in-process; `exact=True` | ≥10x each | ≥30x |
-| PROF-CLI | D2 and D3, CSV. Spindle has no CLI command that runs `DataProfiler` alone (`profile capture` only records categorical distributions through `ProfileIO`), so the Spindle side is `"$SPINDLE_PY" benchmarks/vs_spindle/profile_1to1/spindle_cli_profile.py <file> -o <out>`: a thin script that imports `DataProfiler`, runs `from_csv` and dumps JSON, with start-up included. Shape: `shape profile <file> --spindle-compat -o <out>`. Outputs diffed under T-22 | ≥10x each | ≥30x |
+| PROF-CLI | D2 and D3, CSV. Spindle has no CLI command that runs `DataProfiler` alone (`profile capture` only records categorical distributions through `ProfileIO`), so the Spindle side is `"$SPINDLE_PY" benchmarks/vs_spindle/profile_1to1/spindle_cli_profile.py <file> -o <out>`: a thin script that imports `DataProfiler`, runs `from_csv` and dumps JSON, with start-up included. Shape: `shape profile <file> -o <out>`, its profile mapped onto Spindle's `TableProfile` JSON by the harness adapter (`benchmarks/vs_spindle/profile_1to1/adapter.py`). Outputs diffed under T-22 | ≥10x each | ≥30x |
 | LEARN-CLI | D2 CSV: `"$SPINDLE_VENV/bin/spindle" learn <file> -o <out>.spindle.json` against `shape learn <file> --spindle-json -o <out>` (profile + schema build on both sides). Outputs compared per P4-08 | ≥10x | ≥30x |
 | GEN-IN | retail medium and large, then (from P6-01) every domain at medium; generate + write Parquet | ≥10x each | ≥30x |
 | GEN-CLI | retail medium and large: `"$SPINDLE_VENV/bin/spindle" generate retail --scale S --format parquet -o D` against `shape generate retail --scale S --format parquet -o D` | ≥10x | ≥30x |
@@ -950,13 +964,111 @@ Appendix A.
   is green.
 - Fixes: none.
 
+**P1-14 — Spindle removed from the user-facing surface**
+- Depends: P1-12.
+- Owner decision 2026-09-30 (§2.3). It amends P1-08 (`--spindle-compat`) and P1-11
+  (`--spindle-compat`, the `profile capture` / `profile diff` ports and their Spindle
+  acceptance checks).
+- Deliverables:
+  - Remove `--spindle-compat`, `shape profile capture` and `shape profile diff`, with their
+    tests and documentation. `shape profile`, `shape diff`, `inspect` (`show`), `validate` and
+    `check` stay.
+  - No mention of Spindle (case-insensitive, identifiers such as `infer_spindle_type` and
+    `spindle_compat` included) in `src/`, `rust/`, `plugins/`, `integrations/`, `README.md`,
+    `pyproject.toml`, `demo/`, or `docs/` outside `docs/plans/`. Rename identifiers
+    to neutral names; rewrite docstrings and comments to describe the behaviour on its own
+    terms. The one exception is the Spindle attribution in `THIRD_PARTY_NOTICES.md` (§2.3).
+  - The parity harness stays internal. `benchmarks/vs_spindle/` keeps T-22 verification and
+    the timings against the pinned Spindle, through an adapter in `benchmarks/` (never in
+    `src/`) that maps Shape's profile onto Spindle's `TableProfile` JSON. `bench_cli.py` times
+    `shape profile <file> -o <out>` against `spindle_cli_profile.py`, equivalence first
+    through the adapter. Remove `verify_cli.py`'s capture and diff checks.
+  - `scripts/check_user_facing.py`: exits 1 on any match in the paths above and in the files
+    of a built wheel. It runs in CI and in `make check`.
+- Acceptance:
+  - `scripts/check_user_facing.py` exits 0, in CI.
+  - `profile_1to1/verify.py --impl shape` exits 0 on all its default datasets.
+  - `pytest tests/demo` is green, and the §12.2 API is unchanged apart from the removal of
+    `--spindle-compat` (§2.3).
+  - The suite is green in both kernel modes.
+- Fixes: none.
+
+**P1-15 — Exact-mode profile on the fused kernel**
+- Depends: P1-14. Owner decision 2026-10-01 (§2.3, G1 option a).
+- Deliverables: `shape.profile` (the product path, exact mode) runs its per-column work on
+  the fused Rust kernel (P1-06): sorting and quantiles, first-seen top values and value
+  counts, pattern detection, enum and key detection, outliers, string lengths, temporal
+  histograms, correlation; Python keeps orchestration only (§4.2). The numpy reference
+  profiler stays as the reference twin (`SHAPE_KERNEL=python`). The output is unchanged.
+- Acceptance: `profile_1to1/verify.py --impl shape` exits 0 on all default datasets (T-22);
+  the suite is green in both kernel modes; py-spy shows no per-row Python on the profile
+  path; PROF-IN and PROF-CLI re-measured per T-19 and recorded (the G1 re-run decides).
+- Fixes: G1 escalation (§2.3).
+
+**P1-16 — Cheaper likelihood, bitwise-exact**
+- Depends: P1-14. Owner decision 2026-10-01 (§2.3, G1 option b).
+- Deliverables: the lognormal (and other) likelihood evaluations in `rust/shape-kernel/src/fit.rs`
+  stay bitwise-identical to the reference (numpy's `log` and `pairwise_sum` block tree) but
+  cost less: parallel `pairwise_sum` over its fixed block tree, a native port of numpy's
+  vectorised log with identical results, and fewer full-column passes in the Nelder-Mead
+  fallback where the result is provably identical.
+- Acceptance: T-22 parity exits 0 on all default datasets; differential tests show bitwise
+  equality against the reference on fuzzed inputs; D3 Parquet and D4 fit times recorded.
+- Fixes: G1 escalation (§2.3).
+
+**P1-17 — Small-input fixed costs and the CSV reader**
+- Depends: P1-15. Owner decision 2026-10-01 (§2.3, G1 option a, continued).
+- Deliverables: after P1-15 the remaining G1 misses outside fitting are the multi-table
+  workload (MT, 7.0x: per-call and per-column fixed costs, pool start-up on three small
+  tables) and D1 CSV (9.2x), plus the CSV reader's per-token pandas emulation (about 1.3 s
+  of D4 and 3 s of D2, single-threaded). Remove those fixed costs and move the CSV reader's
+  per-value work onto the kernel; output unchanged.
+- Acceptance: T-22 parity exits 0 on all default datasets in both kernel modes; the suite is
+  green in both kernel modes; PROF-IN for MT, D1 and D4 CSV recorded per T-19.
+- Fixes: G1 escalation (§2.3).
+
+**P1-18 — Enum rule (owner, 2026-10-01)**
+- Depends: P1-17.
+- Deliverables: `is_enum` requires repetition: distinct values <= 0.5 x non-null values and not unique, on top of the
+  existing size limits; in the reference profiler (`profile/reference/column.py`, both paths), the kernel twin
+  (`kernel/reference/exact.py`) and Rust (`exact.rs`), bounded mode, and the SQL Server plugin; docs.
+- Acceptance: tests (a unique column, a tiny table, free text, a real low-cardinality category, the boundary);
+  `profile_1to1/verify.py --impl shape` exits 0 in both kernels with `is_enum`/`enum_values` (and only fields derived
+  from them) in a narrow named allow-list, failing if the fix is never exercised; G1 timings do not regress.
+- Fixes: none (owner decision, §2.3).
+
 **Gate G1**
+- P1-14 is done (no Spindle on the user-facing surface).
+- P1-15, P1-16 and P1-17 are done (owner decision 2026-10-01).
 - PROF-IN ≥10x on every workload.
 - PROF-CLI ≥10x on D2 and D3.
 - START ≤300 ms.
 - T-22 parity passes on every dataset.
 - Every phase-1 P-bug has a regression test (P19 belongs to phase 7).
 - The profile modules are mypy strict.
+
+G1 evidence (2026-10-01; machine: 4 cores, Intel Xeon 2.80 GHz, Linux 6.18, Python 3.11.15; the pinned
+Spindle venv of §1.2, pyarrow 25.0.1 in both venvs; Shape kernel built with `maturin develop --release`):
+- Status: **not met** (PROF-IN D3 pq, D4 csv, MT; PROF-CLI D2). Escalated in §2.3.
+- Met: P1-14 (`scripts/check_user_facing.py` clean; suite 1026 passed, `-m "not emulator and not live and
+  not heavy" --ignore=tests/demo/fabric`); START 43 ms (gate 300); PROF-CLI D3 10.9x; PROF-IN on D1, D2,
+  D3 csv and D4 pq; the five remaining profile modules are mypy strict (`mypy` clean on 157 files, ratchet
+  list no longer names `shape.profile.*`); every phase-1 P-bug has a regression test
+  (`tests/regressions/test_phase1_bugs.py`, P19 excluded); T-22 parity passes on every dataset.
+- Commands: `source scripts/env.sh && python benchmarks/vs_spindle/profile_1to1/datasets.py`;
+  `... verify.py --impl shape --refresh` then `... verify.py --impl shape` (exit 0, 49/49 PASS);
+  `... bench.py --impl shape --out <json>` (in-process, equivalence verified first);
+  `... bench_cli.py` (adapter-based equivalence per dataset, then START and PROF-CLI).
+- Results: `docs/plans/evidence/G1/prof_in_run1.json`, `prof_cli_run1.json`, `verify_shape_run1.txt` (before
+  any optimisation, 8 of 9 PROF-IN workloads missed, PROF-CLI D2 8.7x, D3 10.5x); `prof_in_run2.json`,
+  `prof_cli_run2.json`, `verify_shape_run2.txt` (final). Run 2 medians (Spindle s, Shape MT s, ratio):
+  d1.csv 1.91/0.19 10.3x; d1.parquet 1.74/0.16 10.9x; d2.csv 34.80/2.84 12.3x; d2.parquet 30.53/2.45 12.5x;
+  d3.csv 99.61/8.76 11.4x; d3.parquet 57.98/6.55 8.8x; d4.csv 37.61/3.81 9.9x; d4.parquet 32.92/3.06
+  10.8x; mt 2.41/0.45 5.4x. `SHAPE_THREADS=1` ratios are in the same JSON (2x to 6x).
+  PROF-CLI: d2.csv 36.19/3.69 9.8x; d3.csv 99.67/9.18 10.9x.
+- Hygiene: load average 2.10 before run 2 started, and 1.0 to 1.3 between runs (about 1.0 of that is the
+  previous benchmark process, as in `profile_1to1/README.md`); the harness's own load gate (1.5) held for
+  every run. Spindle and Shape runs are interleaved.
 
 ### Phase 2 — Plugin system
 
@@ -1176,6 +1288,19 @@ primary use case (D-14).
 - Acceptance: for each DDL fixture in Spindle's tests (or, if there are none, 5
   fixtures written from Spindle's docs), Shape's schema equals Spindle's output.
 - Fixes: none.
+
+**P4-01c — `from-ddl` bug fixes (owner, 2026-10-01)**
+- Depends: P4-01b.
+- Deliverables: fix the baseline behaviours P4-01b reproduced (lane_status/P4-01b.md): a column-level
+  `REFERENCES parent(col)` is read as a foreign key to that column; `VARBINARY(MAX)` (and other
+  `(MAX)` binary types) is binary and left out like other binary columns; name matching uses whole
+  words (`discount_pct` is a percentage, not a quantity; a `state` string column is a region, not a
+  status enum); `gender CHAR(1)` gets a value set, not a pattern; CR-08 (parent total summed over
+  children) is implemented.
+- Acceptance: a test per fix asserting the correct behaviour; `ddl_1to1/verify.py` lists each as an
+  intentional difference and every other field still equals the baseline; the `e2e_cli__inline`
+  schema validates.
+- Fixes: none (owner decision, §2.3).
 
 **P4-02 — Engine**
 - Depends: P4-01a.
@@ -1500,6 +1625,17 @@ medium, and GEN-IN must be ≥10x at medium.
   because it is dominated by the server.
 - Fixes: none.
 
+**P6-08b — `shape-sqlserver` bug fixes (owner, 2026-10-01)**
+- Depends: P6-08.
+- Deliverables: fix the baseline behaviours P6-08 reproduced (lane_status/P6-08.md): sample-based
+  `null_rate`, `cardinality_ratio` and `is_unique` divide by the sample size (so `is_unique` can be
+  true on tables larger than the sample, and is reported as sample-based); a relationship the sampled
+  data shows is reported when no FKs are declared; name-inferred FKs set the column's
+  `is_foreign_key`.
+- Acceptance: a test per fix (against the real-server harness and the stand-ins); the parity check
+  lists each as an intentional difference and every other field still equals the baseline.
+- Fixes: none (owner decision, §2.3).
+
 **P6-09 — Validation gates, quarantine and `verify`**
 - Depends: G1.
 - Deliverables: Spindle's `validation/` gates and quarantine, in core quality and
@@ -1764,10 +1900,16 @@ That is 27 in total, which is the hub, the web app and 25 others (D-08).
 | O-06 | After 1.0.0: a deprecation notice in Spindle's README | after publishing | — |
 | O-08 | After DM-00 merges: make `sqllocks/shape` public (Settings → General → Danger Zone → Change visibility). Then add yourself as a **required reviewer** on the `pypi` environment, which becomes available once the repo is public. | before DM-03b's real publish | Publishing without a reviewer is still limited to `main` and `v*` tags |
 | O-07 | A Fabric workspace in a UDF-enabled region, with capacity, for the §12 live dry run and the talk: upload the wheel and data, and create the lakehouse, notebooks, UDF item and pipelines by following `integrations/fabric/RUNBOOK.md` | §12.7 check 4, GF | none (the live demo requires it) |
+| O-09 | Confirm whether you hold Spindle's copyright (`THIRD_PARTY_NOTICES.md` names "SQLLocks (Jonathan Stewart)"). If you do, the Spindle attribution can be removed; if not, MIT requires it to stay wherever Spindle-derived code ships. | P1-14 | The attribution stays |
 
 ---
 
 ## 10. Spindle CLI parity map
+
+**Retired as a parity contract (owner decision 2026-09-30, §2.3).** The Shape commands in the
+right-hand column are still delivered by the work packages named, under their Shape names only:
+the `[aliases]` in brackets are dropped, and the `profile capture|diff` row is removed. Nothing
+here may surface Spindle names to users.
 
 Spindle 3.0.1 commands and their Shape equivalents. Every row needs an e2e test by G6.
 
@@ -1813,47 +1955,53 @@ Work packages are listed in execution order. The next work package is the first 
 | 6 | P0-05 | done (builder c8aba56; lead finished the sign markers) | 692798e |
 | 7 | P0-06 | done | 87d0f4c |
 | 8 | P0-07 | done | 79b4250 |
-| 9 | P1-01a | todo | |
-| 10 | P1-01b | todo | |
-| 11 | P1-02 | todo | |
-| 12 | P1-03 | todo | |
-| 13 | P1-04 | todo | |
-| 14 | P1-05 | todo | |
-| 15 | P1-06 | todo | |
-| 16 | P1-07 | todo | |
-| 17 | P1-08 | todo | |
-| 18 | P1-09 | todo | |
-| 19 | P1-10 | todo | |
-| 20 | P1-11 | todo | |
-| 21 | P1-12 | todo | |
-| 22 | P2-01 | todo | |
-| 23 | P2-02 | todo | |
-| 24 | P2-03 | todo | |
-| 25 | P2-04 | todo | |
-| 26 | P2-05 | todo | |
-| 27 | P2-06 | todo | |
-| 28 | PF-01 | todo | |
-| 29 | PF-02 | todo | |
-| 30 | PF-03 | todo | |
-| 31 | PF-04 | todo | |
-| 32 | PF-05 | todo | |
+| 9 | P1-01a | done | 8661a10 |
+| 10 | P1-01b | done (Wheels run 36734127356: all T-04 targets built and smoke-tested on 3.11 and 3.14) | ed7187a, d51ae78 |
+| 11 | P1-02 | done | 3a3cc22 |
+| 12 | P1-03 | done | 2f05b17 |
+| 13 | P1-04 | done | 79cbe66 |
+| 14 | P1-05 | done | d5ee068 |
+| 15 | P1-06 | done | 842ec00 |
+| 16 | P1-07 | done | f934e60 |
+| 17 | P1-08 | done | 76cbdbc |
+| 18 | P1-09 | done | 5f57982 |
+| 19 | P1-10 | done | 9c797ea |
+| 20 | P1-11 | done | e72d596 |
+| 21 | P1-12 | done | 0087f7b |
+| 21a | P1-14 | done | 9c0f75b |
+| 21b | P1-15 | done | 04fe94c |
+| 21c | P1-16 | done | 7238901 |
+| 21d | P1-17 | done | 981bdd7 |
+| 21e | P1-18 | done (279 baseline enums off, 430 kept; parity allow-list `is_enum`/`enum_values`) | d212635 |
+| 22 | P2-01 | done | c3909e9 |
+| 23 | P2-02 | done | 84e8efb |
+| 24 | P2-03 | done | 687f568 |
+| 25 | P2-04 | done | 0ca6387 |
+| 26 | P2-05 | done | 4c2fa6b |
+| 27 | P2-06 | done | 6adf820 |
+| 28 | PF-01 | done (nightly Azurite e2e pending) | c8d6acb |
+| 29 | PF-02 | done (early start before G1, owner-approved) | 9d0b2f1 |
+| 30 | PF-03 | done | a726dd4 |
+| 31 | PF-04 | done (fsspec test requirement fixed at integration, c033f48) | b98dbac |
+| 32 | PF-05 | wip (merged; CI image build and 500 MB check pending) | 6d2e22a |
 | 33 | PF-06 | todo | |
-| 34 | P3-01 | todo | |
-| 35 | P3-02 | todo | |
-| 36 | P3-03 | todo | |
-| 37 | P3-04 | todo | |
-| 38 | P3-05 | todo | |
-| 39 | P4-01a | todo | |
-| 40 | P4-01b | todo | |
-| 41 | P4-02 | todo | |
-| 42 | P4-03 | todo | |
-| 43 | P4-04a | todo | |
-| 44 | P4-04b | todo | |
-| 45 | P4-04c | todo | |
-| 46 | P4-04d | todo | |
-| 47 | P4-05 | todo | |
-| 48 | P4-06 | todo | |
-| 49 | P4-07 | todo | |
+| 34 | P3-01 | done | 37386f3 |
+| 35 | P3-02 | done | 500367f |
+| 36 | P3-03 | done | 43f5d88 |
+| 37 | P3-04 | done | c0e7ace |
+| 38 | P3-05 | done | b26e04e |
+| 39 | P4-01a | done | 02a0c4d |
+| 40 | P4-01b | done | 4b75d46 |
+| 40a | P4-01c | done (rounds 1-2: F1-F8) | 14a8dd6 |
+| 41 | P4-02 | done | 6917af7 |
+| 42 | P4-03 | done | 6ec4c1f |
+| 43 | P4-04a | done | e596a57 |
+| 44 | P4-04b | done | b314b34 |
+| 45 | P4-04c | done (case conditional/is_null_fixed changed after a chance failure; owner to rule) | 42f9732 |
+| 46 | P4-04d | done (G7 regression test; scd2 fixture regenerated at integration for the shared calendar fingerprint) | 71b2ebd |
+| 47 | P4-05 | done | 9f6fea8 |
+| 48 | P4-06 | done (SQL comment/literal injection fixed at integration, 36f32d3) | ba051d2 |
+| 49 | P4-07 | wip (lane/P4-07) | |
 | 50 | P4-08 | todo | |
 | 51 | P4-09 | todo | |
 | 52 | P4-10 | todo | |
@@ -1875,16 +2023,17 @@ Work packages are listed in execution order. The next work package is the first 
 | 68 | P6-07a | todo | |
 | 69 | P6-07b | todo | |
 | 70 | P6-07c | todo | |
-| 71 | P6-08 | todo | |
-| 72 | P6-09 | todo | |
+| 71 | P6-08 | done (nightly SQL Server e2e pending) | 29eac3e |
+| 71a | P6-08b | done (rounds 1-2: FIX-1..FIX-9; real-server parity 11/11) | 515d26e |
+| 72 | P6-09 | done (CI bench-quick verify_1to1 green on c7bd366, run 36850390984) | 3859a3c |
 | 73 | P6-10 | todo | |
 | 74 | P6-11 | todo | |
 | 75 | P6-12 | todo | |
 | 76 | P6-13 | todo | |
 | 77 | P6-14 | todo | |
-| 78 | P7-01 | todo | |
-| 79 | P7-02 | todo | |
-| 80 | P7-03 | todo | |
+| 78 | P7-01 | done | b04bf32 |
+| 79 | P7-02 | done | d6e3a97 |
+| 80 | P7-03 | done | 06300e7 |
 | 81 | P7-04 | todo | |
 | 82 | P8-01 | todo | |
 | 83 | P8-02 | todo | |
@@ -1895,10 +2044,10 @@ Work packages are listed in execution order. The next work package is the first 
 | Gate | Status |
 |---|---|
 | G0 | done b965672 |
-| G1 | todo |
-| G2 | todo |
+| G1 | done (lead, 4:34 PM EDT Oct 1, on build/main-plan 2a5f94a + lane/G1-d1, 4 vCPU Xeon 2.10 GHz: 34 checks exit 0, equivalence 49/49 both kernels first; PROF-IN d1 17.6x/15.4x, d2 18.8x/21.2x, d3 20.2x/16.6x, d4 13.5x/15.6x, mt 15.2x; PROF-CLI d2 13.8x, d3 17.0x; START 44 ms; P-bug regressions and mypy strict in the suites; P1-14..P1-18 done; evidence docs/plans/evidence/G1-lead2/ (lanes: G1-mt, G1-d1)) |
+| G2 | done (lead, Oct 1: out-of-tree example plugin adds a source, a detector and a command with no core change, tests/plugins/test_plugin_kit_install.py 7 passed; `shape plugins list` shows all 72 built-ins; G1 gates pass, see G1) |
 | GF | todo |
-| G3 | todo |
+| G3 | done (lead, 8:55 AM EDT Oct 1, on 7ef6a6e: stream_prof verify stream == batch bounded rel 1e-9 PASS and identical across 3 processes PASS; STREAM-PROF 115.7% default / 101.7% SHAPE_THREADS=1 (gate 80%), docs/plans/evidence/G3/stream-prof-lead.json; S2-S5 regression tests pass in both kernels; P3-01..P3-05 done) |
 | G4 | todo |
 | G5 | todo |
 | G6 | todo |
@@ -1963,7 +2112,7 @@ p = shape.profile(source, *, name=None)
 # source: str | Path (a .csv, .parquet or .jsonl file; a Delta table directory; a glob;
 #         or a directory of files), pyarrow.Table, pandas.DataFrame, or
 #         dict[str, <any of those>] for multi-table (FK detection).
-p.to_dict()    # full profile in Spindle's TableProfile / dataset JSON shape (T-22 parity)
+p.to_dict()    # the full profile as JSON-ready dicts (T-22 parity is checked by the internal harness)
 p.summary()    # small, JSON-safe dict (< 1 MB for 500 columns): name, row_count, and
                # per column: dtype, null_rate, cardinality, is_unique, is_primary_key,
                # is_foreign_key, fk_ref_table, distribution, pattern, min, max, mean, std
@@ -1987,7 +2136,7 @@ d.to_dict()
 `--fail-on-drift` is given), and 2 on a usage or input error.
 
 ```
-shape profile SRC -o OUT.shape [--html REPORT.html] [--json SUMMARY.json] [--spindle-compat FULL.json]
+shape profile SRC -o OUT.shape [--html REPORT.html] [--json SUMMARY.json]
 shape check PROFILE.shape CONTRACT.json [--json RESULT.json]
 shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
 ```

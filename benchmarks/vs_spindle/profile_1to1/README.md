@@ -60,8 +60,8 @@ regenerates D1, and `results.json` supersedes those rows.)
 |---|---|---|
 | `pd.read_csv` dtype inference (int with nulls -> float64, bool with nulls -> object, text dates stay text, pandas NA tokens, `True/TRUE/true` booleans) | `pyarrow.csv` with pandas' NA and bool token lists and timestamp inference disabled. Inferred date32/time32 columns are cast back to their exact canonical text. A per-column "pandas kind" is carried alongside the data | bitwise |
 | `pd.read_parquet` / `Table.to_pandas()` (int with nulls -> float, date32 -> object `datetime.date`, timestamp -> datetime64, bool with nulls -> object) | `_arrow_cols` kind mapping | bitwise |
-| `_infer_spindle_type`: bool dtype; int; float with the all-whole check; datetime with the all-midnight check; object/str: bool-like set, `to_numeric`, `to_datetime(format="mixed")` | Same decision tree. The bool-like set check and numeric cast run vectorised on the distinct values | bitwise |
-| null_count (NaN counts as null), null_rate, cardinality (`nunique`, -0.0 == 0.0), cardinality_ratio, is_unique, is_enum, all rounding | same | bitwise |
+| `_infer_column_type`: bool dtype; int; float with the all-whole check; datetime with the all-midnight check; object/str: bool-like set, `to_numeric`, `to_datetime(format="mixed")` | Same decision tree. The bool-like set check and numeric cast run vectorised on the distinct values | bitwise |
+| null_count (NaN counts as null), null_rate, cardinality (`nunique`, -0.0 == 0.0), cardinality_ratio, is_unique, all rounding | same | bitwise |
 | `enum_values` and `value_counts_ext` (top 500): pandas `value_counts` order (first appearance, then a *stable* descending sort) and `str(key)` formatting of int, float, bool, Timestamp and date keys, including which of `-0.0` or `0.0` is printed | Arrow hash counts for strings, bools and low-cardinality numerics. For numerics above 50k distinct values: sort-based counts plus a chunked first-appearance scan that reproduces pandas' tie order exactly | bitwise, including key order |
 | min/max with pandas' Python types (`int`, `float`, `str`, `bool`, `Timestamp`, `datetime.date`) | `pc.min_max` / numpy, converted to the same Python types (a `Timestamp` subclass of `datetime` stands in for pandas') | bitwise, including type |
 | mean, std (ddof=1, pandas nanops summation) | the same numpy reductions | bitwise |
@@ -76,6 +76,18 @@ regenerates D1, and `results.json` supersedes those rows.)
 | `correlation_matrix` (`select_dtypes(number).corr()`, pairwise-complete Pearson, rounded to 4) | BLAS: columns centred on the global mean, and pairwise sums over the rows where both values are present computed as matrix products with the null masks | bitwise after rounding on all datasets (see deviations) |
 | `relationships` in `profile_dataset` | same | bitwise |
 
+### Intentional difference: the enum rule (P1-18)
+
+The baseline marks a column an enum when `cardinality < 200 or (ratio < 0.30 and cardinality < 50_000)`,
+so every column of a table under 200 rows is one, unique keys and free text included. Shape also
+requires that the values repeat: distinct values <= 0.5 x non-null values, and a unique column is
+never an enum. `verify.py` turns the baseline column into what that rule gives, from the baseline's
+own `cardinality`, `null_count` and `is_unique` (`enum_rule_baseline`), and Shape must equal it. The
+allow-list is exactly two fields, `is_enum` and `enum_values`; nothing else is derived from them
+(`value_counts_ext` keeps the first 500 values whether the column is an enum or not, and no other field
+reads `is_enum`). Every other field is compared with the baseline as it is. A full run fails if the rule
+never turned a baseline enum off, or never kept one.
+
 ### Verification result (`verify.py --refresh`, all 30 variants)
 
 Every cell is `n/n*`: all within tolerance and **all bitwise-identical**, for every field
@@ -89,22 +101,31 @@ proportions and histograms) were never needed.
 Nothing below was triggered by any dataset here. These are the places where equivalence
 rests on reasoning rather than on a test, or where the port is known to be narrower.
 
-1. **`to_datetime(format="mixed")` for text columns.** Spindle uses pandas/dateutil, which
-   accepts almost any date-like spelling ("May 5", "5th of May", "3pm"). The port accepts
-   what Arrow's ISO-8601 cast accepts, plus `%Y/%m/%d`, `%m/%d/%Y` (with or without time),
-   `%d-%b-%Y`, `%b %d %Y` and `%d %b %Y`. A text column that is dateutil-parsable but not
-   in these formats would be classified `string` by the port and `datetime` by Spindle.
-   Time-only strings ("10:00:00") are not supported. For the histograms, a column of mixed
-   formats is coerced with the format guessed from the first element, which follows pandas'
-   behaviour, but only ISO formats and the list above are recognised.
-2. **CSV parser.** pyarrow and the pandas C parser agree on everything in these datasets,
-   including float digits (mean, std and quantiles are bitwise-equal). The following are not
-   modelled: pandas' `low_memory` chunked inference producing mixed-type object columns,
-   whitespace-padded numbers, thousands separators, integers above int64, and quoted numeric
-   text (pandas parses it as a number; Arrow may keep it as text).
-3. **Parquet types** not handled: decimal, dictionary/categorical (pandas makes these
-   `category`), nested types, uint64 above int64, timezone-aware timestamps. `port.py`
-   raises `NotImplementedError` for types it does not map, and does not silently diverge.
+1. **`to_datetime(format="mixed")` for text columns: closed in P1-08.** `shape.profile` ports
+   pandas' string rules (`dtparse.py`: the ISO-8601 reader, delimited dates, year/quarter/month
+   abbreviations, `guess_datetime_format` and the strict parse that follows it) on a port of
+   dateutil's parser (`_dateutil_parser.py`). They were fuzzed against pandas 3.0.6 on 14,305
+   strings and 6,000 columns with 0 differences apart from the exceptions below; the golden
+   subset is in `tests/profile/data/`. EDGE variants: `x_dates_*`, `x_time_*`. Time-only text
+   is dated today by dateutil, so those two datasets are never served from the Spindle cache.
+   Remaining, stated exceptions: time-zone-bearing text raises `NotImplementedError` (pandas
+   returns tz-aware values); nanosecond fractions are cut to microseconds; year 0000; and the
+   literals "now"/"today" (time-dependent).
+2. **CSV parser: closed in P1-08.** Arrow's integers are corrected to pandas' rules (`+` sign,
+   uint64 up to 2**64-1, wider integers as Python-int object columns), and pandas' low-memory
+   chunked inference is reproduced (chunks of the largest power of two below `2**20 // ncols`
+   rows; a column whose chunks disagree becomes an object column of Python ints/floats/bools/
+   strings). `inf` in a float column makes Spindle raise `ValueError` (its whole-number test); Shape
+   raises the same for *file* sources, and the verifier checks the error category. In-memory
+   Arrow tables and DataFrames still profile such columns (std `NaN`, min `-inf`), which the
+   `.shape` artifact tests rely on. EDGE: `x_csv_*`. Not modelled:
+   integers wider than 38 digits (`NotImplementedError`).
+3. **Parquet types: closed in P1-08.** Decimal, dictionary/categorical (unused categories and
+   category order included), timezone-aware timestamps (wall-clock histograms, offset in
+   keys), time, binary, duration (also counted by `corr`, as in pandas 3) and uint64 are profiled
+   like pandas objects; nested types raise `TypeError` like Spindle. EDGE: `x_pq_*`. Not
+   modelled: float16 (pandas reduces in half precision) and two instants that share a wall-clock
+   time in one DST zone.
 4. **The correlation algorithm differs.** pandas uses Welford per pair; the port uses
    globally centred BLAS sums. Before rounding they differ by about 1e-15. The 4-decimal
    rounding makes a flip at a rounding boundary theoretically possible (probability around
@@ -116,7 +137,7 @@ rests on reasoning rather than on a test, or where the port is known to be narro
 6. `utf8_lower` (the bool-like check) differs from Python's `str.lower` only for special
    Unicode casing; this is irrelevant for the ASCII set being tested.
 7. **Redundant work is not replicated.** Spindle repeats work whose results are
-   identical: `_infer_spindle_type` and `_detect_pattern` run again for every unique column
+   identical: `_infer_column_type` and `_detect_pattern` run again for every unique column
    inside `_detect_primary_key`; `profile_dataset` re-detects every table's PK once per
    table; `value_counts` runs twice (enum and ext); `to_numeric` runs up to 4 times per
    column; `np.percentile` runs 3 times; `astype(str)` runs on the full column before
@@ -164,7 +185,7 @@ imports are excluded. Run-to-run spread is within about ±10% of the median (one
 ### Where the time goes (cProfile)
 
 **Spindle**
-- D2 (37 s under the profiler): `_infer_spindle_type` takes 21 s. Of that, about 10 s is
+- D2 (37 s under the profiler): `_infer_column_type` takes 21 s. Of that, about 10 s is
   the Python set comprehension `str(v).lower()` over every distinct value of every string
   column (7M calls); the rest is repeated `to_numeric` / `to_datetime`.
   `_detect_primary_key` takes 4.3 s, because it re-runs type inference and pattern

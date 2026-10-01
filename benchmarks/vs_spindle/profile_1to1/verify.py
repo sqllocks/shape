@@ -13,13 +13,15 @@ Datasets (under $BENCH_DATA_DIR/profile, or $PROFILE_DATA_DIR):
     edge/*
 
 Spindle output is produced by spindle_dump.py in the Spindle venv (cached as JSON in
-$BENCH_OUT_DIR/profile_cache/spindle_json; --refresh re-runs Spindle).  The implementation
+$BENCH_OUT_DIR/profile_cache/spindle_json, keyed by the SHA-256 of the input files so a
+regenerated dataset is re-dumped; --refresh re-runs Spindle).  The implementation
 runs in-process.  Both are normalised with the same code (spindle_dump.table_to_dict).
 Prints a per-field pass/fail matrix, then every mismatch.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 import sys
@@ -40,18 +42,47 @@ EDGE = [
     for v in ("", "_uuidpk")
     for ext in ("csv", "parquet")
 ]
-ALL = [
-    "d1.csv",
-    "d1.parquet",
-    "d2.csv",
-    "d2.parquet",
-    "d3.csv",
-    "d3.parquet",
-    "d4.csv",
-    "d4.parquet",
-    "mt",
-    "mt.parquet",
-] + EDGE
+# EDGE variants for the closed deviations 1-3 (datasets.py EDGE2; P1-08 acceptance)
+EDGE_DEVIATIONS = [
+    f"edge/x_{name}"
+    for name in (
+        "csv_inf.csv",
+        "csv_mixed_chunks.csv",
+        "csv_mixed_tail.csv",
+        "csv_nan_text.csv",
+        "csv_numbers.csv",
+        "dates_a.csv",
+        "dates_b.csv",
+        "dates_bad.csv",
+        "dates_c.csv",
+        "dates_d.csv",
+        "dates_mixed_fmt.csv",
+        "pq_duration.parquet",
+        "pq_list.parquet",
+        "pq_nested.parquet",
+        "pq_nulls.parquet",
+        "pq_types.parquet",
+        "pq_u64_big.parquet",
+        "time_ampm.csv",
+        "time_only.csv",
+    )
+]
+ALL = (
+    [
+        "d1.csv",
+        "d1.parquet",
+        "d2.csv",
+        "d2.parquet",
+        "d3.csv",
+        "d3.parquet",
+        "d4.csv",
+        "d4.parquet",
+        "mt",
+        "mt.parquet",
+    ]
+    + EDGE
+    + EDGE_DEVIATIONS
+)
 
 # field -> (rule, tolerance)
 RULES = {
@@ -84,6 +115,27 @@ RULES = {
     "fit_score": ("abs", 1e-9),
 }
 TABLE_RULES = ["row_count", "primary_key", "detected_fks", "correlation_matrix"]
+
+# Intentional difference from the baseline (owner decision of 2026-10-01, P1-18): a column is an
+# enum only if its values repeat (distinct <= 0.5 x non-null values; a unique column never is).
+# The baseline marks every column of a table under 200 rows as an enum. The baseline column is
+# turned into what the corrected rule gives, from its own cardinality, null count and
+# uniqueness, and Shape must equal that. Allow-list: exactly these two fields. Nothing else is
+# derived from them (value_counts_ext keeps the same first 500 values for an enum or not, and no
+# other field reads is_enum), and every other field is still compared with the baseline as it is.
+ENUM_RULE_FIELDS = ("is_enum", "enum_values")
+ENUM_TALLY = {"flipped": 0, "kept": 0}
+
+
+def enum_rule_baseline(scol: dict, n_nn: int) -> dict:
+    """The baseline column as the corrected enum rule defines it (counted in ENUM_TALLY)."""
+    if not scol["is_enum"]:
+        return scol
+    if 2 * scol["cardinality"] <= n_nn and not scol["is_unique"]:
+        ENUM_TALLY["kept"] += 1
+        return scol
+    ENUM_TALLY["flipped"] += 1
+    return {**scol, "is_enum": False, "enum_values": None}
 
 
 def _num_close(a, b, rule, tol):
@@ -144,10 +196,35 @@ def corr_compare(a, b):
     return worst <= 1e-4 + 1e-12, worst == 0.0, worst
 
 
+def _input_digest(ds: str) -> str:
+    """SHA-256 over the dataset's input file(s), so a regenerated dataset never reuses a
+    Spindle result computed from different data."""
+    if ds in ("mt", "mt.parquet"):
+        ext = ".parquet" if ds == "mt.parquet" else ".csv"
+        files = sorted((DATA / "mt").glob("*" + ext))
+    else:
+        files = [DATA / ds]
+    h = hashlib.sha256()
+    for f in files:
+        h.update(f.name.encode())
+        with open(f, "rb") as fh:
+            for block in iter(lambda: fh.read(1 << 20), b""):
+                h.update(block)
+    return h.hexdigest()
+
+
+# Spindle's output for these depends on the day it runs (time-only text is dated today by
+# dateutil), so a cached dump from another day would be stale: always re-run it.
+DATE_DEPENDENT = {"edge/x_time_only.csv", "edge/x_time_ampm.csv"}
+
+
 def spindle_profile(ds: str, refresh: bool):
     CACHE.mkdir(parents=True, exist_ok=True)
     out = CACHE / f"{ds.replace('/', '_')}.json"
-    if refresh or not out.exists():
+    stamp = out.with_suffix(".sha256")
+    digest = _input_digest(ds)
+    stale = not stamp.exists() or stamp.read_text().strip() != digest
+    if refresh or stale or not out.exists() or ds in DATE_DEPENDENT:
         if ds == "mt":
             args = [str(DATA / "mt")]
         elif ds == "mt.parquet":
@@ -158,6 +235,7 @@ def spindle_profile(ds: str, refresh: bool):
             [str(SPINDLE_PY), str(HERE / "spindle_dump.py"), args[0], str(out), *args[1:]],
             check=True,
         )
+        stamp.write_text(digest + "\n")
     return json.loads(out.read_text())
 
 
@@ -184,7 +262,9 @@ def shape_profile(ds: str):
     return json.loads(json.dumps(shape.profile(str(DATA / ds)).to_dict(), default=str))
 
 
-def check_table(sp: dict, po: dict, prefix: str, matrix: dict, fails: list):
+def check_table(sp: dict, po: dict, prefix: str, matrix: dict, fails: list, enum_nn=None):
+    """``enum_nn(table, column)``: the non-null values behind that column's enum decision
+    (default: the table's rows less the column's nulls)."""
     for f in TABLE_RULES:
         key = f"table.{f}"
         if f == "correlation_matrix":
@@ -202,6 +282,9 @@ def check_table(sp: dict, po: dict, prefix: str, matrix: dict, fails: list):
     if list(sp["columns"]) != list(po["columns"]):
         fails.append(f"{prefix} column list differs")
     for c, scol in sp["columns"].items():
+        scol = enum_rule_baseline(
+            scol, enum_nn(sp, scol) if enum_nn else sp["row_count"] - scol["null_count"]
+        )
         pcol = po["columns"].get(c)
         for f, (rule, tol) in RULES.items():
             m = matrix.setdefault(f, [0, 0, 0])
@@ -236,8 +319,25 @@ def main():
     matrices, all_fails = {}, {}
     for ds in wanted:
         sp = spindle_profile(ds, refresh)
-        po = port_impl(ds)
         matrix, fails = {}, []
+        if "__error__" in sp:
+            # Spindle itself fails on this input: Shape must raise an error of the same category
+            want = sp["__error__"]["category"]
+            try:
+                port_impl(ds)
+                got = None
+            except Exception as exc:
+                got = sd.error_category(exc)
+            ok = got == want
+            matrix["dataset.error_category"] = [1, int(ok), int(ok)]
+            if not ok:
+                fails.append(
+                    f"{ds} error category: spindle={want} ({sp['__error__']['type']}) shape={got}"
+                )
+            matrices[ds], all_fails[ds] = matrix, fails
+            print(f"{ds}: {'PASS' if not fails else f'{len(fails)} mismatches'}", flush=True)
+            continue
+        po = port_impl(ds)
         if "tables" in sp:
             ok = sp["relationships"] == po["relationships"]
             matrix["dataset.relationships"] = [1, int(ok), int(ok)]
@@ -252,7 +352,11 @@ def main():
         matrices[ds], all_fails[ds] = matrix, fails
         print(f"{ds}: {'PASS' if not fails else f'{len(fails)} mismatches'}", flush=True)
 
-    fields = ["dataset.relationships"] + [f"table.{f}" for f in TABLE_RULES] + list(RULES)
+    fields = (
+        ["dataset.relationships", "dataset.error_category"]
+        + [f"table.{f}" for f in TABLE_RULES]
+        + list(RULES)
+    )
     print("\nPer-field matrix  (cell = pass/total within tolerance; '*' = all bitwise-identical)\n")
     hdr = f"{'field':26s}" + "".join(f"{d:>13s}" for d in wanted)
     print(hdr)
@@ -276,13 +380,26 @@ def main():
     for d in wanted:
         for line in all_fails[d]:
             print("MISMATCH", line)
+    print(
+        "\nIntentional differences from the baseline, fields "
+        f"{', '.join(ENUM_RULE_FIELDS)} (enum rule, P1-18): "
+        f"{ENUM_TALLY['flipped']} columns no longer enums, {ENUM_TALLY['kept']} stay enums"
+    )
+    missed = False
+    if (
+        wanted == ALL
+    ):  # a full run must exercise the rule both ways, or the allow-list proves nothing
+        for k, what in (("flipped", "turned a baseline enum off"), ("kept", "kept an enum")):
+            if not ENUM_TALLY[k]:
+                print(f"MISMATCH the enum rule never {what}")
+                missed = True
     # non-exact-but-within-tolerance fields, for the README's honesty section
     print("\nWithin tolerance but not bitwise identical:")
     for d in wanted:
         for f, m in matrices[d].items():
             if m[1] == m[0] and m[2] != m[0]:
                 print(f"  {d:12s} {f:24s} {m[0] - m[2]} of {m[0]} not bitwise-equal")
-    sys.exit(1 if any(all_fails.values()) else 0)
+    sys.exit(1 if missed or any(all_fails.values()) else 0)
 
 
 if __name__ == "__main__":

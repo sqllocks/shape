@@ -1,0 +1,849 @@
+{
+ "model": {
+  "name": "pulse_3nf",
+  "description": "Pulse rideshare \u2014 3NF schema",
+  "domain": "pulse",
+  "schema_mode": "star",
+  "locale": "en_US",
+  "seed": 42,
+  "date_range": {
+   "start": "2024-06-01",
+   "end": "2026-06-01"
+  }
+ },
+ "tables": {
+  "rider": {
+   "name": "rider",
+   "columns": {
+    "rider_id": {
+     "name": "rider_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "full_name": {
+     "name": "full_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "email": {
+     "name": "email",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "email"
+     },
+     "nullable": true,
+     "null_rate": 0.03,
+     "max_length": 255,
+     "precision": null,
+     "scale": null
+    },
+    "phone": {
+     "name": "phone",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "phone_number"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    },
+    "home_city_id": {
+     "name": "home_city_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "1": 0.28,
+       "2": 0.22,
+       "3": 0.25,
+       "4": 0.25
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "rating": {
+     "name": "rating",
+     "type": "decimal",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "4.5": 0.1,
+       "4.6": 0.12,
+       "4.7": 0.18,
+       "4.8": 0.24,
+       "4.9": 0.22,
+       "5.0": 0.14
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": 2,
+     "scale": 1
+    },
+    "joined_at": {
+     "name": "joined_at",
+     "type": "timestamp",
+     "generator": {
+      "strategy": "temporal",
+      "pattern": "uniform",
+      "range_ref": "model.date_range"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "payment_default": {
+     "name": "payment_default",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "card": 0.68,
+       "wallet": 0.27,
+       "cash": 0.05
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 12,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "rider_id"
+   ],
+   "description": "Passengers (current state)",
+   "cdm_mapping": null
+  },
+  "driver": {
+   "name": "driver",
+   "columns": {
+    "driver_id": {
+     "name": "driver_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "full_name": {
+     "name": "full_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "email": {
+     "name": "email",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "email"
+     },
+     "nullable": true,
+     "null_rate": 0.02,
+     "max_length": 255,
+     "precision": null,
+     "scale": null
+    },
+    "phone": {
+     "name": "phone",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "phone_number"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    },
+    "home_city_id": {
+     "name": "home_city_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "1": 0.28,
+       "2": 0.22,
+       "3": 0.25,
+       "4": 0.25
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "rating": {
+     "name": "rating",
+     "type": "decimal",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "4.6": 0.08,
+       "4.7": 0.14,
+       "4.8": 0.26,
+       "4.9": 0.3,
+       "5.0": 0.22
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": 2,
+     "scale": 1
+    },
+    "status": {
+     "name": "status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "offline": 0.45,
+       "available": 0.3,
+       "enroute": 0.12,
+       "on_trip": 0.13
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 12,
+     "precision": null,
+     "scale": null
+    },
+    "onboarded_at": {
+     "name": "onboarded_at",
+     "type": "timestamp",
+     "generator": {
+      "strategy": "temporal",
+      "pattern": "uniform",
+      "range_ref": "model.date_range"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "is_active": {
+     "name": "is_active",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "true": 0.88,
+       "false": 0.12
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "driver_id"
+   ],
+   "description": "Drivers (current state)",
+   "cdm_mapping": null
+  },
+  "vehicle": {
+   "name": "vehicle",
+   "columns": {
+    "vehicle_id": {
+     "name": "vehicle_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "driver_id": {
+     "name": "driver_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "driver.driver_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "make": {
+     "name": "make",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Toyota": 0.22,
+       "Honda": 0.18,
+       "Ford": 0.12,
+       "Chevrolet": 0.1,
+       "Tesla": 0.1,
+       "Nissan": 0.1,
+       "Hyundai": 0.09,
+       "Kia": 0.09
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 30,
+     "precision": null,
+     "scale": null
+    },
+    "model": {
+     "name": "model",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Camry": 0.16,
+       "Civic": 0.14,
+       "Model 3": 0.12,
+       "Accord": 0.12,
+       "Corolla": 0.12,
+       "Altima": 0.1,
+       "Fusion": 0.12,
+       "Elantra": 0.12
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 30,
+     "precision": null,
+     "scale": null
+    },
+    "year": {
+     "name": "year",
+     "type": "integer",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "2017": 0.08,
+       "2018": 0.12,
+       "2019": 0.16,
+       "2020": 0.18,
+       "2021": 0.16,
+       "2022": 0.14,
+       "2023": 0.1,
+       "2024": 0.06
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "color": {
+     "name": "color",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "White": 0.26,
+       "Black": 0.22,
+       "Silver": 0.18,
+       "Gray": 0.14,
+       "Blue": 0.1,
+       "Red": 0.06,
+       "Other": 0.04
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    },
+    "license_plate": {
+     "name": "license_plate",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "{seq:6}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 10,
+     "precision": null,
+     "scale": null
+    },
+    "capacity": {
+     "name": "capacity",
+     "type": "integer",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "4": 0.82,
+       "6": 0.18
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "vehicle_class": {
+     "name": "vehicle_class",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "standard": 0.62,
+       "xl": 0.16,
+       "premium": 0.12,
+       "ev": 0.1
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 10,
+     "precision": null,
+     "scale": null
+    },
+    "city_id": {
+     "name": "city_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "lookup",
+      "source_table": "driver",
+      "source_column": "home_city_id",
+      "via": "driver_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "vehicle_id"
+   ],
+   "description": "One vehicle per driver",
+   "cdm_mapping": null
+  },
+  "trip": {
+   "name": "trip",
+   "columns": {
+    "trip_id": {
+     "name": "trip_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "rider_id": {
+     "name": "rider_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "rider.rider_id",
+      "distribution": "pareto",
+      "params": {
+       "alpha": 1.16,
+       "max_per_parent": 400
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "driver_id": {
+     "name": "driver_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "driver.driver_id",
+      "distribution": "zipf",
+      "params": {
+       "alpha": 1.2
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "city_id": {
+     "name": "city_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "lookup",
+      "source_table": "rider",
+      "source_column": "home_city_id",
+      "via": "rider_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "requested_at": {
+     "name": "requested_at",
+     "type": "timestamp",
+     "generator": {
+      "strategy": "temporal",
+      "pattern": "seasonal",
+      "range_ref": "model.date_range",
+      "profiles": {
+       "month": {
+        "Jan": 0.06,
+        "Feb": 0.06,
+        "Mar": 0.08,
+        "Apr": 0.08,
+        "May": 0.09,
+        "Jun": 0.1,
+        "Jul": 0.11,
+        "Aug": 0.1,
+        "Sep": 0.08,
+        "Oct": 0.08,
+        "Nov": 0.07,
+        "Dec": 0.09
+       },
+       "day_of_week": {
+        "Mon": 0.12,
+        "Tue": 0.12,
+        "Wed": 0.13,
+        "Thu": 0.14,
+        "Fri": 0.18,
+        "Sat": 0.19,
+        "Sun": 0.12
+       },
+       "hour_of_day": {
+        "distribution": "bimodal",
+        "peaks": [
+         8,
+         18
+        ],
+        "std_dev": 2
+       }
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "status": {
+     "name": "status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "completed": 0.86,
+       "cancelled": 0.1,
+       "no_driver": 0.04
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 12,
+     "precision": null,
+     "scale": null
+    },
+    "distance_mi": {
+     "name": "distance_mi",
+     "type": "decimal",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "params": {
+       "mean": 1.4,
+       "sigma": 0.7,
+       "min": 0.4,
+       "max": 60.0
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": 6,
+     "scale": 2
+    },
+    "duration_min": {
+     "name": "duration_min",
+     "type": "integer",
+     "generator": {
+      "strategy": "correlated",
+      "source_column": "distance_mi",
+      "rule": "multiply",
+      "params": {
+       "factor_min": 2.4,
+       "factor_max": 4.2
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "surge_mult": {
+     "name": "surge_mult",
+     "type": "decimal",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "1.0": 0.7,
+       "1.2": 0.12,
+       "1.5": 0.09,
+       "2.0": 0.06,
+       "2.5": 0.02,
+       "3.5": 0.01
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": 4,
+     "scale": 2
+    },
+    "fare": {
+     "name": "fare",
+     "type": "decimal",
+     "generator": {
+      "strategy": "formula",
+      "expression": "(2.5 + distance_mi * 1.75 + duration_min * 0.35) * surge_mult"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": 8,
+     "scale": 2
+    },
+    "tip": {
+     "name": "tip",
+     "type": "decimal",
+     "generator": {
+      "strategy": "correlated",
+      "source_column": "fare",
+      "rule": "multiply",
+      "params": {
+       "factor_min": 0.0,
+       "factor_max": 0.22
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": 8,
+     "scale": 2
+    },
+    "payment_type": {
+     "name": "payment_type",
+     "type": "string",
+     "generator": {
+      "strategy": "lookup",
+      "source_table": "rider",
+      "source_column": "payment_default",
+      "via": "rider_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 12,
+     "precision": null,
+     "scale": null
+    },
+    "rating_given": {
+     "name": "rating_given",
+     "type": "integer",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "5": 0.72,
+       "4": 0.16,
+       "3": 0.06,
+       "2": 0.03,
+       "1": 0.03
+      }
+     },
+     "nullable": true,
+     "null_rate": 0.18,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "trip_id"
+   ],
+   "description": "Trips \u2014 the seasonal fact (requested_at carries diurnal/weekly/annual pattern)",
+   "cdm_mapping": null
+  }
+ },
+ "relationships": [
+  {
+   "name": "driver_vehicle",
+   "parent": "driver",
+   "child": "vehicle",
+   "parent_columns": [
+    "driver_id"
+   ],
+   "child_columns": [
+    "driver_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "rider_trips",
+   "parent": "rider",
+   "child": "trip",
+   "parent_columns": [
+    "rider_id"
+   ],
+   "child_columns": [
+    "rider_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "driver_trips",
+   "parent": "driver",
+   "child": "trip",
+   "parent_columns": [
+    "driver_id"
+   ],
+   "child_columns": [
+    "driver_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  }
+ ],
+ "business_rules": [
+  {
+   "name": "trip_after_rider_join",
+   "type": "cross_table",
+   "rule": "trip.requested_at >= rider.joined_at",
+   "table": null,
+   "via": "rider_id",
+   "when": null
+  },
+  {
+   "name": "fare_positive",
+   "type": "constraint",
+   "rule": "fare > 0",
+   "table": "trip",
+   "via": null,
+   "when": null
+  }
+ ],
+ "generation": {
+  "scale": "small",
+  "scales": {
+   "fabric_demo": {
+    "rider": 500,
+    "driver": 100,
+    "vehicle": 100,
+    "trip": 5000
+   },
+   "small": {
+    "rider": 2000,
+    "driver": 300,
+    "vehicle": 300,
+    "trip": 20000
+   },
+   "medium": {
+    "rider": 50000,
+    "driver": 5000,
+    "vehicle": 5000,
+    "trip": 500000
+   },
+   "large": {
+    "rider": 50000,
+    "driver": 5000,
+    "vehicle": 5000,
+    "trip": 2000000
+   },
+   "xlarge": {
+    "rider": 200000,
+    "driver": 20000,
+    "vehicle": 20000,
+    "trip": 10000000
+   }
+  },
+  "derived_counts": {
+   "vehicle": {
+    "per_parent": "driver",
+    "ratio": 1.0
+   },
+   "trip": {
+    "per_parent": "rider",
+    "ratio": 10.0
+   }
+  },
+  "output": {
+   "format": "dataframe"
+  }
+ },
+ "correlated_columns": {}
+}

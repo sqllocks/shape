@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sqllocks-shape-sqlserver"
+# Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
+version = "0.9.0"
+description = "Shape plugin: SQL Server, Azure SQL and Fabric SQL database profiling and source"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = ["sqllocks-shape==0.9.0", "pyodbc>=5.0"]
+
+[project.optional-dependencies]
+# Microsoft Entra authentication (--auth cli | msi | spn).
+entra = ["azure-identity>=1.15"]
+
+[project.entry-points."shape.sources"]
+mssql = "shape_sqlserver:SqlServerSource"
+
+[project.entry-points."shape.commands"]
+profile-db = "shape_sqlserver:ProfileDbCommand"
+
+[tool.setuptools.packages.find]
+where = ["src"]

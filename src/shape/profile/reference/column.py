@@ -4,16 +4,24 @@ from __future__ import annotations
 
 import datetime as _dt
 import re
+import threading
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Any, cast
 
 import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
-from .model import ColumnProfile, Timestamp
-from .numerics import _FitError, _ks_stat_sorted, detect_distribution, fit
+from shape.kernel.dispatch import get_kernel
+from shape.kernel.reference.exact import PCTS as _PCTS
+from shape.kernel.reference.exact import lerp as _lerp
+from shape.kernel.reference.exact import linear_index as _linear_index
+from shape.profile.fitting import detect_distribution as _kernel_detect_distribution
+
+from . import dtparse
+from .model import ColumnProfile, Timedelta, Timestamp
 from .readers import _Col
 
 # ---------------------------------------------------------------------------
@@ -74,6 +82,24 @@ _PATTERNS = {
 }
 
 
+_PATTERN_SAMPLE_LOCK = threading.Lock()
+
+
+def _pattern_sample(n: int) -> np.ndarray:
+    """Cached draw (under a lock: concurrent columns of the same length draw it once)."""
+    with _PATTERN_SAMPLE_LOCK:
+        return _pattern_sample_cached(n)
+
+
+@lru_cache(maxsize=64)
+def _pattern_sample_cached(n: int) -> np.ndarray:
+    """The 1000 row positions sampled for pattern detection (the same for every column of n rows:
+    drawing them permutes all n positions, which costs more than the detection itself)."""
+    idx: np.ndarray = np.random.RandomState(42).choice(n, size=1000, replace=False)
+    idx.setflags(write=False)
+    return idx
+
+
 def detect_pattern(non_null: pa.Array, cardinality: int) -> str | None:
     """DataProfiler._detect_pattern on a non-null string array."""
     n = len(non_null)
@@ -81,8 +107,7 @@ def detect_pattern(non_null: pa.Array, cardinality: int) -> str | None:
         return None
     sample = non_null
     if n > 1000:
-        idx = np.random.RandomState(42).choice(n, size=1000, replace=False)
-        sample = non_null.take(pa.array(idx))
+        sample = non_null.take(pa.array(_pattern_sample(n)))
     total = len(sample)
     thr = 0.9
 
@@ -115,91 +140,12 @@ def detect_pattern(non_null: pa.Array, cardinality: int) -> str | None:
     return None
 
 
-def _np_percentile(a: np.ndarray, q: Any) -> Any:
-    return np.percentile(a, q)
-
-
-def _linear_index(n: int, qs: Any) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """numpy 'linear' method: virtual index (n-1)*q, _get_indexes bounds handling."""
-    q = np.true_divide(np.asarray(qs, dtype=np.float64), 100)
-    vi = (n - 1) * q
-    prev = np.floor(vi)
-    nxt = prev + 1
-    above = vi >= n - 1
-    prev[above] = -1
-    nxt[above] = -1
-    below = vi < 0
-    prev[below] = 0
-    nxt[below] = 0
-    prev = prev.astype(np.intp)
-    nxt = nxt.astype(np.intp)
-    gamma = np.asarray(vi - prev, dtype=vi.dtype)
-    return prev, nxt, gamma
-
-
-def _lerp(a: np.ndarray, b: np.ndarray, t: np.ndarray) -> np.ndarray:
-    diff = b - a
-    res: np.ndarray = np.add(a, diff * t)
-    np.subtract(b, diff * (1 - t), out=res, where=t >= 0.5, casting="unsafe", dtype=res.dtype)
-    return res
-
-
-def _percentile_sorted(sorted_a: np.ndarray, qs: Any) -> np.ndarray:
-    """np.percentile(data, qs) (linear) evaluated on the already-sorted data: identical
-    virtual indices, neighbours and _lerp, hence bitwise-identical results."""
-    prev, nxt, gamma = _linear_index(sorted_a.shape[0], qs)
-    return _lerp(sorted_a[prev], sorted_a[nxt], gamma)
-
-
-_HASH_MAX_CARD = 50_000
-
-
-def _top_by_first_seen(
-    values: np.ndarray, uniq: np.ndarray, counts: np.ndarray, need: int
-) -> np.ndarray:
-    """Indices into `uniq` of the first `need` keys in pandas' value_counts order
-    (count desc, ties by first appearance in row order), without hashing every row:
-    keys above the need-th count are always selected; ties at that count are resolved by
-    scanning rows in order (chunked, vectorised) until enough first appearances are seen."""
-    k = len(uniq)
-    need = min(need, k)
-    c_thr = np.partition(counts, k - need)[k - need]
-    n_above = int((counts > c_thr).sum())
-    want_ties = need - n_above
-    first = np.full(k, -1, dtype=np.int64)
-    found_above = found_ties = 0
-    pos, chunk, n = 0, 1 << 14, len(values)
-    while pos < n and (found_above < n_above or found_ties < want_ties):
-        ch = values[pos : pos + chunk]
-        idx = np.searchsorted(uniq, ch)
-        rows = np.flatnonzero(counts[idx] >= c_thr)
-        if len(rows):
-            u, fi = np.unique(idx[rows], return_index=True)
-            new = first[u] < 0
-            u, fi = u[new], fi[new]
-            first[u] = pos + rows[fi]
-            ca = counts[u]
-            found_above += int((ca > c_thr).sum())
-            found_ties += int((ca == c_thr).sum())
-        pos += chunk
-        chunk *= 2
-    above = np.flatnonzero(counts > c_thr)
-    ties = np.flatnonzero((counts == c_thr) & (first >= 0))
-    ties = ties[np.argsort(first[ties], kind="stable")][:want_ties]
-    sel = np.concatenate([above, ties])
-    order = np.lexsort((first[sel], -counts[sel]))
-    return sel[order]
-
-
-_PCTS = [1, 5, 10, 25, 50, 75, 90, 95, 99]
-
-
 def _iso_strings(values: pa.Array, unit: str) -> list[str | None]:
     """Format each value as "YYYY-MM-DD[ HH:MM:SS]", like pc.strftime but without a tz database
     (pyarrow's strftime needs one even for naive timestamps, and Windows has none)."""
     arr = values.cast(pa.timestamp("s") if unit == "s" else pa.date32())
     np_vals = arr.to_numpy(zero_copy_only=False).astype(f"datetime64[{unit}]")
-    out = np.datetime_as_string(np_vals, unit=unit).tolist()
+    out = np.datetime_as_string(np_vals, unit=cast(Any, unit)).tolist()
     valid = arr.is_valid().to_pylist()
     return [s.replace("T", " ") if ok else None for s, ok in zip(out, valid, strict=True)]
 
@@ -208,13 +154,17 @@ def _keys_py(values: pa.Array, kind: str) -> list[str]:
     """str(k) for the keys of pandas' value_counts index."""
     if kind in ("bool", "objbool"):
         return ["True" if v else "False" for v in values.to_pylist()]
-    if kind == "int":
-        return [str(v) for v in values.to_pylist()]
+    if kind in ("int", "uint64", "objint"):
+        return [str(int(v)) for v in values.to_pylist()]
     if kind == "float":
+        if values.null_count == 0:
+            return cast(
+                list[str], _pa(get_kernel().float_repr(pc.cast(values, pa.float64()))).to_pylist()
+            )
         return [str(float(v)) for v in values.to_numpy(zero_copy_only=False).tolist()]
     if kind == "dt64":
         return (
-            _iso_strings(pc.cast(values, pa.timestamp("s")), "s")
+            cast(list[str], _iso_strings(pc.cast(values, pa.timestamp("s")), "s"))
             if _no_subsecond(values)
             else [str(_to_timestamp(v)) for v in values.to_pylist()]
         )
@@ -233,11 +183,15 @@ def _no_subsecond(ts: pa.Array) -> bool:
 
 
 def _to_timestamp(v: _dt.datetime) -> Timestamp:
-    return Timestamp(v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond)
+    return Timestamp(
+        v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond, tzinfo=v.tzinfo
+    )
 
 
 def _round6(arr: np.ndarray) -> list[float]:
-    return [round(float(v), 6) for v in arr.tolist()]
+    """``round(v, 6)`` of each value, on the kernel."""
+    out = get_kernel().round6(pa.array(np.ascontiguousarray(arr, dtype=np.float64)))
+    return cast(list[float], _pa(out).to_pylist())
 
 
 # ---------------------------------------------------------------------------
@@ -247,15 +201,6 @@ def _round6(arr: np.ndarray) -> list[float]:
 _ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _ISO_DT = re.compile(r"^\d{4}-\d{2}-\d{2}([ T])\d{2}:\d{2}:\d{2}$")
 _ISO_DT_FRAC = re.compile(r"^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}\.\d+$")
-_EXTRA_FORMATS = [
-    "%Y/%m/%d",
-    "%m/%d/%Y",
-    "%Y/%m/%d %H:%M:%S",
-    "%m/%d/%Y %H:%M:%S",
-    "%d-%b-%Y",
-    "%b %d %Y",
-    "%d %b %Y",
-]
 
 
 def _try(fn: Callable[..., Any], arr: Any) -> bool:
@@ -269,22 +214,37 @@ def _try(fn: Callable[..., Any], arr: Any) -> bool:
     return True
 
 
+_PARSE_SLICE = 256
+
+
 def _all_parse_datetime(uniques: pa.Array) -> bool:
-    """Port of `pd.to_datetime(values, format="mixed")` succeeding.  Supported:
-    ISO-8601 (anything Arrow's string->timestamp cast accepts) plus a list of common
-    explicit formats.  dateutil-only spellings are NOT recognised (documented)."""
+    """Port of `pd.to_datetime(values, format="mixed")` succeeding on every value: what Arrow's
+    ISO-8601 cast accepts, else pandas' own readers and dateutil (``dtparse.parse_mixed``)."""
     if _try(lambda a: pc.cast(a, pa.timestamp("ns")), uniques):
         return True
-    for fmt in _EXTRA_FORMATS:
-        if _try(lambda a, fmt=fmt: pc.strptime(a, format=fmt, unit="ns"), uniques):
-            return True
-    return False
+    # ordinary text fails on its first value: convert the distinct values a slice at a time, not
+    # all of them (a column of 200k distinct strings would cost 10 ms before the first parse)
+    for start in range(0, len(uniques), _PARSE_SLICE):
+        for u in uniques.slice(start, _PARSE_SLICE).to_pylist():
+            if dtparse.parse_mixed(u) is None:
+                return False
+    return True
+
+
+def _first_is_iso(arr: Any) -> bool:
+    """True when the first element is ISO-8601 text, the forms Arrow parses in bulk."""
+    if len(arr) == 0:
+        return False
+    first = arr[0].as_py()
+    return bool(_ISO_DATE.match(first) or _ISO_DT.match(first) or _ISO_DT_FRAC.match(first))
 
 
 def _coerce_datetime_strings(arr: Any, keep_nulls: bool = False) -> Any:
-    """pd.to_datetime(series, errors="coerce"): format guessed from the first element,
-    non-matching elements become NaT (dropped unless keep_nulls).  Returns None when the
-    first element matches no supported format (with keep_nulls) / an empty array."""
+    """pd.to_datetime(series, errors="coerce"): the format is guessed from the first element
+    and applied strictly (non-matching elements become NaT, dropped unless keep_nulls); with no
+    guessable format every element is parsed on its own. ISO-8601 text, the common case, takes
+    Arrow's vectorised parsers; everything else goes through ``dtparse`` once per distinct
+    value."""
     if len(arr) == 0:
         return pa.array([], pa.timestamp("ns"))
     first = arr[0].as_py()
@@ -303,14 +263,18 @@ def _coerce_datetime_strings(arr: Any, keep_nulls: bool = False) -> Any:
             return None if keep_nulls else pa.array([], pa.timestamp("ns"))
         return out if keep_nulls else pc.drop_null(out)
     else:
-        for f in _EXTRA_FORMATS:
-            if _try(lambda a, f=f: pc.strptime(a, format=f, unit="ns"), pa.array([first])):
-                fmt = f
-                break
-    if fmt is None:
-        return None if keep_nulls else pa.array([], pa.timestamp("ns"))
+        return _coerce_with_dtparse(arr, keep_nulls)
     out = pc.strptime(arr, format=fmt, unit="s", error_is_null=True)
     return out if keep_nulls else pc.drop_null(out)
+
+
+def _coerce_with_dtparse(arr: Any, keep_nulls: bool) -> Any:
+    enc = pc.dictionary_encode(arr)
+    if isinstance(enc, pa.ChunkedArray):
+        enc = enc.combine_chunks()
+    parsed = dtparse.coerce_column(enc.dictionary.to_pylist(), first=arr[0].as_py())
+    ts = pa.array(parsed, pa.timestamp("us")).take(enc.indices)
+    return ts if keep_nulls else pc.drop_null(ts)
 
 
 # ---------------------------------------------------------------------------
@@ -327,15 +291,216 @@ class _Work:
     uniques: Any = None  # pa.Array of distinct non-null values
 
 
+def _reference_kernel() -> Any:
+    from shape.kernel import reference
+
+    return reference
+
+
+def _pa(x: Any) -> Any:
+    """A pyarrow array from a kernel result (the native kernel returns Arrow-capsule objects)."""
+    return x if isinstance(x, pa.Array) else pa.array(x)
+
+
 def _combine(arr: Any) -> Any:
     if isinstance(arr, pa.ChunkedArray):
         return arr.combine_chunks() if arr.num_chunks != 1 else arr.chunk(0)
     return arr
 
 
-def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float = 1.5) -> _Work:
+def _require_finite(values: np.ndarray) -> None:
+    """The whole-number test does ``series.astype(int)``, which pandas refuses for inf;
+    Shape fails on the same input with the same error category (ValueError)."""
+    if not np.isfinite(values).all():
+        raise ValueError("Cannot convert non-finite values (NA or inf) to integer")
+
+
+_MAX_BOOL_SPELLINGS = 62
+_BOOL_WORDS = {"true", "false", "0", "1", "yes", "no"}
+_OBJECT_KINDS = ("objdec", "objtime", "objbin", "objdur", "cat", "objmix")
+
+
+def _object_key(kind: str, v: Any) -> str:
+    """``str(k)`` of a value_counts index entry for the object-dtype columns."""
+    if kind == "objbin":
+        return repr(bytes(v))
+    if kind == "objdur":
+        return str(_timedelta(v))
+    return str(v)
+
+
+def _numeric_of_objects(values: list[Any]) -> np.ndarray | None:
+    """``pd.to_numeric(object_series, errors="coerce")`` as floats, or None when any value
+    would coerce to NaN (the column is then not numeric)."""
+    out = np.empty(len(values), dtype=np.float64)
+    text_at = [i for i, v in enumerate(values) if isinstance(v, str)]
+    for i, v in enumerate(values):
+        if not isinstance(v, str):
+            out[i] = float(v)
+    if text_at:
+        try:
+            out[text_at] = pc.cast(pa.array([values[i] for i in text_at]), pa.float64()).to_numpy()
+        except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
+            return None
+    return out
+
+
+def _object_text(kind: str, v: Any) -> str:
+    """``Series.astype(str)`` of one value: bytes are decoded (strictly), the rest use str()."""
+    if kind == "objbin":
+        return bytes(v).decode("utf-8")
+    return _object_key(kind, v)
+
+
+def _timedelta(v: _dt.timedelta) -> Timedelta:
+    return Timedelta(days=v.days, seconds=v.seconds, microseconds=v.microseconds)
+
+
+def object_entries(c: _Col) -> tuple[list[tuple[Any, int]], int, list[Any]]:
+    """``(entries, cardinality, values)`` of an object-dtype column, as pandas counts it:
+    ``entries`` is ``value_counts()`` (value, count) count-descending; for a categorical in
+    category order with unused categories last (count 0); ``cardinality`` is ``nunique()``;
+    ``values`` are the non-null values in row order."""
+    arr = _combine(c.arr)
+    if c.kind == "cat":
+        cats = arr.dictionary.to_pylist()
+        codes = [v for v in arr.indices.to_pylist() if v is not None]
+        counts_by_cat = [0] * len(cats)
+        for code in codes:
+            counts_by_cat[code] += 1
+        values = [cats[code] for code in codes]
+        order = sorted(range(len(cats)), key=lambda i: -counts_by_cat[i])
+        return (
+            [(cats[i], counts_by_cat[i]) for i in order],
+            sum(1 for n in counts_by_cat if n),
+            values,
+        )
+    values = [v for v in arr.to_pylist() if v is not None]
+    first: dict[Any, int] = {}
+    for v in values:
+        first[v] = first.get(v, 0) + 1
+    return sorted(first.items(), key=lambda kv: -kv[1]), len(first), values
+
+
+def _profile_object_column(c: _Col, row_count: int, top_n: int = 500) -> _Work:
+    """Object-dtype pandas columns (decimal, time, bytes, timedelta) and categoricals.
+
+    Their values are handled as Python objects, like pandas does; such columns are rare and
+    small next to the numeric/text bulk, so this path is not vectorised."""
     kind = c.kind
+    n_total = len(_combine(c.arr))
+    entries, cardinality, values = object_entries(c)
+    n_nn = len(values)
+    null_count = n_total - n_nn  # (a union array has no validity bitmap of its own)
+    text = [_object_text(kind, v) for v in values]
+    ukeys = [_object_key(kind, v) for v, _ in entries]
+    row_count = row_count or 0
+    cardinality_ratio = cardinality / row_count if row_count else 0.0
+    # enum rule (P1-18): the size limits, and the values repeat (distinct <= half the non-null
+    # values; a unique column never qualifies)
+    is_enum = (
+        (cardinality < 200 or (cardinality_ratio < 0.30 and cardinality < 50_000))
+        and cardinality > 0
+        and 2 * cardinality <= n_nn
+        and not (cardinality == row_count and null_count == 0)
+    )
+    enum_values = value_counts_ext = None
+    if n_nn:
+        props = [round(n / n_nn, 6) for _, n in entries]
+        if is_enum:
+            enum_values = dict(zip(ukeys, props, strict=True))
+        value_counts_ext = dict(zip(ukeys[:top_n], props[:top_n], strict=True))
+
+    # ---- column type, numeric stats ------------------------------------------------------
+    stype = "string"
+    base: ColumnProfile | None = None
+    numeric: np.ndarray | None = None
+    if kind != "cat" and n_nn:
+        lower = {t.lower() for t in {_object_key(kind, v) for v in set(values)}}
+        if lower <= _BOOL_WORDS:
+            stype = "boolean"
+        elif kind == "objdec":
+            numeric = np.array([float(v) for v in values], dtype=np.float64)
+        elif kind == "objbin":
+            try:
+                numeric = pc.cast(pa.array(text), pa.float64()).to_numpy()
+            except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
+                numeric = None
+        elif kind == "objmix":
+            numeric = _numeric_of_objects(values)
+    if numeric is not None:
+        base = _profile_column(
+            _Col(c.name, "float", pa.chunked_array([pa.array(numeric)])), len(numeric)
+        ).prof
+        stype = base.dtype
+    # ---- min / max ---------------------------------------------------------------------------
+    min_value = max_value = None
+    if n_nn and kind != "cat":
+        try:
+            lo, hi = min(values), max(values)
+        except TypeError:  # pandas: min() of mixed str/number raises, leave None
+            lo = hi = None
+        if lo is not None:
+            min_value, max_value = (
+                (_timedelta(lo), _timedelta(hi)) if kind == "objdur" else (lo, hi)
+            )
+    pattern = string_length = None
+    if stype == "string" and n_nn:
+        pattern = detect_pattern(pa.array(text, pa.string()), cardinality)
+        lens = np.array([len(t) for t in text], dtype=np.float64)
+        string_length = {
+            "min": float(lens.min()),
+            "mean": round(float(lens.sum(dtype=np.float64) / len(lens)), 2),
+            "max": float(lens.max()),
+            "p95": float(np.percentile(lens, 95)),
+        }
+    null_rate = null_count / n_total if n_total and row_count else 0.0
+    prof = ColumnProfile(
+        name=c.name,
+        dtype=stype,
+        null_count=null_count,
+        null_rate=round(null_rate, 6),
+        cardinality=cardinality,
+        cardinality_ratio=round(cardinality_ratio, 6),
+        is_unique=cardinality == row_count and null_count == 0,
+        is_enum=is_enum,
+        enum_values=enum_values,
+        min_value=min_value,
+        max_value=max_value,
+        mean=base.mean if base else None,
+        std=base.std if base else None,
+        distribution=base.distribution if base else None,
+        distribution_params=base.distribution_params if base else None,
+        pattern=pattern,
+        is_primary_key=False,
+        is_foreign_key=False,
+        fk_ref_table=None,
+        quantiles=base.quantiles if base else None,
+        string_length=string_length,
+        outlier_rate=base.outlier_rate if base else None,
+        value_counts_ext=value_counts_ext,
+        fit_score=base.fit_score if base else None,
+    )
+    return _Work(col=c, prof=prof, uniques=pa.array(ukeys, pa.string()))
+
+
+def _profile_column(
+    c: _Col,
+    row_count: int,
+    top_n: int = 500,
+    keep_uniques: bool = True,
+) -> _Work:
+    kind = c.kind
+    if kind in _OBJECT_KINDS:
+        return _profile_object_column(c, row_count, top_n)
     arr = c.arr
+    tzmap: dict[Any, Any] | None = None
+    if kind == "dt64" and c.tz:
+        # pandas' .dt.hour etc. use the wall clock of the column's zone; keys and min/max
+        # keep the zone (and its UTC offset) in their text
+        aware = _combine(arr)
+        arr = pc.local_timestamp(aware)
+        tzmap = dict(zip(_combine(arr).to_pylist(), aware.to_pylist(), strict=True))
 
     # ---- non-null values ---------------------------------------------------
     if kind == "float":
@@ -358,42 +523,57 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
     n_nn = len(non_null)
     null_rate = null_count / row_count if row_count > 0 else 0.0
 
-    # ---- value counts (pandas: hashtable in first-appearance order, stable desc sort)
-    # Numeric/timestamp columns: sort-based counting (the sort is reused for quantiles
-    # and KS); strings/bools: Arrow hash value_counts.  Both reproduce pandas' order.
+    # ---- value counts (pandas: hashtable in first-appearance order, stable desc sort).
+    # The kernel counts in pandas' order: numeric/timestamp columns by sorting (the sort is
+    # reused for quantiles), strings by hashing.
+    kernel = get_kernel()
     xs_sorted = None  # sorted non-null numeric values (reused below)
-    vc_mode = "hash"
-    num_key = None  # numpy row-order values used as hash keys for numeric kinds
+    num_top: dict[str, Any] | None = None  # kernel result for the numeric/timestamp kinds
+    counts = np.zeros(0, np.int64)
+    uniq: Any = non_null
     if kind == "float":
-        num_key = nn_np
+        key_arr = non_null
     elif kind == "int":
-        num_key = non_null.to_numpy()
+        key_arr = non_null
     elif kind == "dt64" and n_nn:
-        num_key = pc.cast(non_null, pa.int64()).to_numpy()
-    if n_nn and num_key is not None:
-        xs_sorted = np.sort(num_key)
-        starts = np.flatnonzero(np.concatenate(([True], xs_sorted[1:] != xs_sorted[:-1])))
-        if len(starts) > _HASH_MAX_CARD:
-            vc_mode = "sorted"
-            uniq_np = xs_sorted[starts]
-            counts = np.diff(np.append(starts, n_nn))
-            uniq = uniq_np
-    if vc_mode == "hash":
-        if n_nn:
+        key_arr = pc.cast(non_null, pa.int64())
+    else:
+        key_arr = None
+    if n_nn and key_arr is not None:
+        num_top = kernel.count_numeric(
+            key_arr, top_n, row_count, kind in ("int", "float"), keep_uniques
+        )
+        cardinality = int(num_top["cardinality"])
+        if num_top["sorted"] is not None:
+            xs_sorted = _pa(num_top["sorted"]).to_numpy(zero_copy_only=False)
+        if keep_uniques:
+            uniq = _pa(num_top["uniq"])
+            if kind == "dt64":
+                uniq = pc.cast(uniq, non_null.type)
+    elif n_nn:
+        if pa.types.is_string(non_null.type) or pa.types.is_large_string(non_null.type):
+            uniq, vcounts = kernel.value_counts_str(non_null)
+            uniq = _pa(uniq)
+            counts = _pa(vcounts).to_numpy(zero_copy_only=False)
+        else:
             vc = pc.value_counts(non_null)
             uniq = vc.field("values")
             counts = vc.field("counts").to_numpy()
-        else:
-            uniq = non_null
-            counts = np.zeros(0, np.int64)
-    cardinality = len(uniq)
+        cardinality = len(uniq)
+    else:
+        cardinality = 0
     cardinality_ratio = cardinality / row_count if row_count > 0 else 0.0
     is_unique = cardinality == row_count and null_count == 0
+    # enum rule (P1-18): the size limits, and the values repeat (distinct <= half the non-null
+    # values; a unique column never qualifies)
     is_enum = (
-        cardinality < 200 or (cardinality_ratio < 0.30 and cardinality < 50_000)
-    ) and cardinality > 0
+        (cardinality < 200 or (cardinality_ratio < 0.30 and cardinality < 50_000))
+        and cardinality > 0
+        and 2 * cardinality <= n_nn
+        and not is_unique
+    )
 
-    # ---- spindle type -------------------------------------------------------
+    # ---- column type -------------------------------------------------------
     numeric = None  # float64 numpy array of numeric values (row order)
     dt_values = None  # pa timestamp array of parsed datetimes (row order, NaT dropped)
     if kind == "bool" or kind == "objbool":
@@ -401,8 +581,13 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
     elif kind == "int":
         stype = "integer"
         numeric = non_null.to_numpy().astype(np.float64)
+    elif kind in ("uint64", "objint"):
+        stype = "integer"
+        numeric = np.array([float(int(v)) for v in non_null.to_pylist()], dtype=np.float64)
     elif kind == "float":
-        if n_nn and np.all(nn_np == nn_np.astype(np.int64)):
+        if n_nn and c.strict:
+            _require_finite(nn_np)
+        if n_nn and num_top is not None and num_top["all_whole"]:
             stype = "integer"
         else:
             stype = "float"
@@ -425,27 +610,45 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
     else:  # str
         stype = "string"
         if n_nn:
-            lower = pc.utf8_lower(uniq)
-            if pc.all(
-                pc.is_in(lower, value_set=pa.array(["true", "false", "0", "1", "yes", "no"]))
-            ).as_py():
+            # the six words have at most 62 spellings in all: more distinct values cannot match
+            if (
+                cardinality <= _MAX_BOOL_SPELLINGS
+                and pc.all(
+                    pc.is_in(
+                        pc.utf8_lower(uniq),
+                        value_set=pa.array(["true", "false", "0", "1", "yes", "no"]),
+                    )
+                ).as_py()
+            ):
                 stype = "boolean"
             else:
                 ok = _try(lambda a: pc.cast(a, pa.float64()), uniq)
                 if ok:
                     u = pc.cast(uniq, pa.float64()).to_numpy()
+                    if c.strict:
+                        _require_finite(u)
                     stype = "integer" if np.all(u == u.astype(np.int64)) else "float"
                     numeric = pc.cast(non_null, pa.float64()).to_numpy()
                 else:
                     # pandas: to_datetime(format="mixed") must accept every value.  If the
                     # strict guessed-format parse (needed later anyway) already accepts all
                     # rows, that implies it; otherwise check the distinct values.
-                    dt_try = _coerce_datetime_strings(non_null, keep_nulls=True)
+                    # ISO text (the common case) is parsed by Arrow in bulk; anything else is
+                    # checked on its distinct values first, stopping at the first that does not
+                    # parse, so a column of ordinary text costs one failed parse, not one per
+                    # distinct value.
+                    dt_try = (
+                        _coerce_datetime_strings(non_null, keep_nulls=True)
+                        if _first_is_iso(non_null)
+                        else None
+                    )
                     if dt_try is not None and dt_try.null_count == 0:
                         stype = "datetime"
                         dt_values = dt_try
                     elif _all_parse_datetime(uniq):
                         stype = "datetime"
+                        if dt_try is None:
+                            dt_try = _coerce_datetime_strings(non_null, keep_nulls=True)
                         dt_values = (
                             pc.drop_null(dt_try)
                             if dt_try is not None
@@ -456,21 +659,24 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
     enum_values = None
     value_counts_ext = None
     if n_nn:
-        need = cardinality if is_enum else min(top_n, cardinality)
-        if vc_mode == "hash":
-            top = np.argsort(-counts, kind="stable")[:need]
-            top_keys = uniq.take(pa.array(top))
+        if num_top is not None:
+            top_keys = _pa(num_top["keys"])
+            top_counts = _pa(num_top["counts"]).to_numpy(zero_copy_only=False)
+            if kind == "dt64":
+                top_keys = pc.cast(top_keys, non_null.type)
         else:
-            assert num_key is not None
-            top = _top_by_first_seen(num_key, uniq_np, counts, need)
-            tk = uniq_np[top]
-            top_keys = pa.array(tk) if kind != "dt64" else pc.cast(pa.array(tk), non_null.type)
+            need = cardinality if is_enum else min(top_n, cardinality)
+            top = _pa(kernel.top_indices(pa.array(counts), need)).to_numpy(zero_copy_only=False)
+            top_keys = uniq.take(pa.array(top))
+            top_counts = counts[top]
         keys = _keys_py(top_keys, kind)
+        if tzmap is not None:
+            keys = [str(tzmap[v]) for v in top_keys.to_pylist()]
         if kind == "float" and "0.0" in keys:
             zeros = np.flatnonzero(raw_nn == 0)
             if len(zeros) and np.signbit(raw_nn[zeros[0]]):
                 keys[keys.index("0.0")] = "-0.0"
-        props = counts[top] / n_nn
+        props = top_counts / n_nn
         rounded = _round6(props)
         if is_enum:
             enum_values = dict(zip(keys, rounded, strict=True))
@@ -485,7 +691,12 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
             mm = pc.min_max(non_null)
             lo, hi = mm["min"].as_py(), mm["max"].as_py()
             if kind == "dt64":
-                lo, hi = _to_timestamp(lo), _to_timestamp(hi)
+                lo, hi = (
+                    _to_timestamp(tzmap[lo] if tzmap else lo),
+                    _to_timestamp(tzmap[hi] if tzmap else hi),
+                )
+            elif kind in ("uint64", "objint"):
+                lo, hi = int(lo), int(hi)
             min_value, max_value = lo, hi
 
     # ---- numeric stats / distribution / quantiles ---------------------------
@@ -495,47 +706,22 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
     outlier_rate_val = None
     fit_score_val = None
     if stype in ("integer", "float") and numeric is not None and len(numeric) > 0:
-        numeric = numeric.astype(np.float64, copy=False)
+        numeric = np.ascontiguousarray(numeric, dtype=np.float64)
         cnt = len(numeric)
-        s = numeric.sum(dtype=np.float64)
-        mean_val = float(s / cnt)
-        if cnt > 1:
-            avg = s / cnt
-            std_val = float(np.sqrt(((numeric - avg) ** 2).sum() / (cnt - 1)))
-        else:
-            std_val = float("nan")
-        dist_name, dist_params = detect_distribution(numeric)
         xs = None
         if xs_sorted is not None and kind in ("int", "float"):
             xs = xs_sorted.astype(np.float64, copy=False)
-        if cnt >= 4:
-            if xs is None:
-                xs = np.sort(numeric)
-            vals = _percentile_sorted(xs, _PCTS + [0.5, 99.5])
+        st = kernel.numeric_stats(pa.array(numeric), pa.array(xs) if xs is not None else None)
+        mean_val, std_val = st["mean"], st["std"]
+        fitted = _kernel_detect_distribution(numeric)
+        dist_name, dist_params = fitted["distribution"], fitted["distribution_params"]
+        fit_score_val = fitted["fit_score"]
+        if st["has_quantiles"]:
+            vals = st["quantiles"]
             quantiles = {f"p{p}": round(float(v), 6) for p, v in zip(_PCTS, vals[:9], strict=True)}
             quantiles["p0_5"] = round(float(vals[9]), 6)
             quantiles["p99_5"] = round(float(vals[10]), 6)
-            q1, q3 = vals[3], vals[5]
-            iqr = q3 - q1
-            if iqr == 0:
-                outlier_rate_val = 0.0
-            else:
-                lo_f = q1 - iqr_factor * iqr
-                hi_f = q3 + iqr_factor * iqr
-                n_out = int(
-                    np.searchsorted(xs, lo_f, "left") + (cnt - np.searchsorted(xs, hi_f, "right"))
-                )
-                outlier_rate_val = round(n_out / cnt, 6)
-        if dist_name is not None and cnt >= 20:
-            try:
-                with np.errstate(all="ignore"):
-                    params = fit(dist_name, numeric)
-                    if xs is None:
-                        xs = np.sort(numeric)
-                    d = _ks_stat_sorted(xs, dist_name, params)
-                fit_score_val = round(1.0 - d, 4)
-            except (_FitError, ValueError, FloatingPointError, ZeroDivisionError):
-                pass
+            outlier_rate_val = 0.0 if st["outliers"] is None else round(st["outliers"] / cnt, 6)
 
     # ---- strings -------------------------------------------------------------
     pattern = None
@@ -558,24 +744,22 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
             hour_h = [1.0 / 24] * 24
             dow_h = [1.0 / 7] * 7
         else:
-            hours = pc.hour(ts).to_numpy()
-            hc = np.bincount(hours, minlength=24).astype(float)
+            tc = (kernel if ts.type.tz is None else _reference_kernel()).temporal_counts(ts)
+            hc = np.asarray(tc["hour"], dtype=float)
             hour_h = _round6(hc / hc.sum())
-            dows = pc.day_of_week(ts).to_numpy()
-            dc = np.bincount(dows, minlength=7).astype(float)
+            dc = np.asarray(tc["dow"], dtype=float)
             dow_h = _round6(dc / dc.sum())
-            years = pc.year(ts).to_numpy().astype(int)
-            months = pc.month(ts).to_numpy().astype(int)
             # np.percentile(years, [1, 99]) from the year histogram (exact same values)
-            y0 = years.min()
-            ycounts = np.bincount(years - y0)
+            y0 = int(tc["year0"])
+            ycounts = np.asarray(tc["years"], dtype=np.int64)
             lo_year = int(_pct_from_counts(ycounts, y0, 1))
             hi_year = int(_pct_from_counts(ycounts, y0, 99))
             if hi_year < lo_year:
                 hi_year = lo_year
             span = hi_year - lo_year + 1
-            yr = np.bincount(np.clip(years - lo_year, 0, span - 1), minlength=span).astype(float)
-            mc = np.bincount(months - 1, minlength=12).astype(float)
+            where = np.clip(np.arange(len(ycounts)) + y0 - lo_year, 0, span - 1)
+            yr = np.bincount(where, weights=ycounts, minlength=span)
+            mc = np.asarray(tc["month"], dtype=float)
             temporal = {
                 "lo_year": lo_year,
                 "hi_year": hi_year,
@@ -612,7 +796,7 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
         value_counts_ext=value_counts_ext,
         fit_score=fit_score_val,
     )
-    return _Work(col=c, prof=prof, uniques=uniq)
+    return _Work(col=c, prof=prof, uniques=uniq if (keep_uniques or num_top is None) else None)
 
 
 def _pct_from_counts(counts: np.ndarray, offset: int, q: float) -> float:
