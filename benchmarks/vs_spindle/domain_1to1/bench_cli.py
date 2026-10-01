@@ -1,7 +1,7 @@
 """GEN-CLI: the two command lines, end to end, start-up included (plan section 3.4, T-19 secondary).
 
-    source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/domain_1to1/bench_cli.py \\
-        --domain retail --scales medium,large --runs 5 --warmup 1
+    source scripts/env.sh && "$SHAPE_VENV/bin/python" \\
+        benchmarks/vs_spindle/domain_1to1/bench_cli.py --domain retail --scales medium,large --runs 5 --warmup 1
 
 Each timed run is a fresh process of
 
