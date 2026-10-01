@@ -1407,22 +1407,26 @@ impl<'a> Eval<'a> {
             if unusable.load(relaxed) != 0 {
                 return;
             }
-            for (o, v) in c.b1.iter_mut().zip(&data[c.lo..c.hi]) {
-                *o = (v - loc) / scale;
+            // x, the log argument of the density and the support check in one sweep
+            let mut in_support = true;
+            for ((x, t), v) in c.b1.iter_mut().zip(c.b2.iter_mut()).zip(&data[c.lo..c.hi]) {
+                let xv = (v - loc) / scale;
+                *x = xv;
+                *t = s * xv * NP_SQRT_2PI;
+                in_support &= (0.0 < xv) & (xv < f64::INFINITY);
             }
-            if !c.b1.iter().all(|x| 0.0 < *x && *x < f64::INFINITY) {
+            if !in_support {
                 unusable.store(1, relaxed);
                 return;
             }
-            for (t, x) in c.b2.iter_mut().zip(c.b1.iter()) {
-                *t = s * x * NP_SQRT_2PI;
-            }
             ln_inplace(c.b1);
             ln_inplace(c.b2);
+            let mut finite = true;
             for (l, t) in c.b1.iter_mut().zip(c.b2.iter()) {
                 *l = -(*l * *l) / two_s2 - t;
+                finite &= l.is_finite();
             }
-            if strict && !c.b1.iter().all(|v| v.is_finite()) {
+            if strict && !finite {
                 unusable.store(2, relaxed);
                 return;
             }
