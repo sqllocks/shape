@@ -157,6 +157,10 @@ def _keys_py(values: pa.Array, kind: str) -> list[str]:
     if kind in ("int", "uint64", "objint"):
         return [str(int(v)) for v in values.to_pylist()]
     if kind == "float":
+        if values.null_count == 0:
+            return cast(
+                list[str], _pa(get_kernel().float_repr(pc.cast(values, pa.float64()))).to_pylist()
+            )
         return [str(float(v)) for v in values.to_numpy(zero_copy_only=False).tolist()]
     if kind == "dt64":
         return (
@@ -185,7 +189,9 @@ def _to_timestamp(v: _dt.datetime) -> Timestamp:
 
 
 def _round6(arr: np.ndarray) -> list[float]:
-    return [round(float(v), 6) for v in arr.tolist()]
+    """``round(v, 6)`` of each value, on the kernel."""
+    out = get_kernel().round6(pa.array(np.ascontiguousarray(arr, dtype=np.float64)))
+    return cast(list[float], _pa(out).to_pylist())
 
 
 # ---------------------------------------------------------------------------

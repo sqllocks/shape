@@ -671,11 +671,151 @@ fn temporal_counts<'py>(py: Python<'py>, ts: PyArray) -> PyResult<Bound<'py, PyD
     Ok(out)
 }
 
+/// Python's `repr(float)` (the shortest round-trip digits; fixed notation for decimal exponents
+/// in (-4, 16], else `d.ddde+XX`), which is what `str(k)` of a pandas float index gives.
+fn py_float_repr(x: f64) -> String {
+    if x.is_nan() {
+        return "nan".to_string();
+    }
+    if x.is_infinite() {
+        return if x > 0.0 { "inf" } else { "-inf" }.to_string();
+    }
+    // The shortest digit count, then that many digits correctly rounded: the shortest-digits
+    // search breaks exact ties differently from Python's (closest, ties to even).
+    let shortest = format!("{:e}", x.abs());
+    let n_digits = shortest
+        .split_once('e')
+        .map_or(1, |(m, _)| m.len() - usize::from(m.contains('.')));
+    let sci = format!("{:.*e}", n_digits.saturating_sub(1), x.abs());
+    let (mant, exp) = sci.split_once('e').unwrap_or((sci.as_str(), "0"));
+    let exp: i32 = exp.parse().unwrap_or(0);
+    let digits: String = mant.chars().filter(|c| *c != '.').collect();
+    let n = digits.len() as i32;
+    let decpt = exp + 1;
+    let mut out = String::new();
+    if x.is_sign_negative() {
+        out.push('-');
+    }
+    if -4 < decpt && decpt <= 16 {
+        if decpt <= 0 {
+            out.push_str("0.");
+            out.push_str(&"0".repeat((-decpt) as usize));
+            out.push_str(&digits);
+        } else if decpt >= n {
+            out.push_str(&digits);
+            out.push_str(&"0".repeat((decpt - n) as usize));
+            out.push_str(".0");
+        } else {
+            out.push_str(&digits[..decpt as usize]);
+            out.push('.');
+            out.push_str(&digits[decpt as usize..]);
+        }
+    } else {
+        out.push_str(&digits[..1]);
+        if n > 1 {
+            out.push('.');
+            out.push_str(&digits[1..]);
+        }
+        let e = decpt - 1;
+        out.push('e');
+        out.push(if e < 0 { '-' } else { '+' });
+        out.push_str(&format!("{:02}", e.abs()));
+    }
+    out
+}
+
+/// Python's `round(x, 6)`: the correctly rounded 6-digit decimal (ties to even on the exact
+/// binary value), read back as the nearest double.
+fn round6_value(x: f64) -> f64 {
+    if !x.is_finite() {
+        return x;
+    }
+    format!("{x:.6}").parse::<f64>().unwrap_or(x)
+}
+
+fn float_values(arr: &ArrayRef, what: &str) -> PyResult<Float64Array> {
+    no_nulls(arr, what)?;
+    arr.as_primitive_opt::<Float64Type>()
+        .cloned()
+        .ok_or_else(|| PyValueError::new_err(format!("{what} needs a float64 array")))
+}
+
+/// `[str(float(v)) for v in values]` for a float64 array without nulls, as a string array.
+#[pyfunction]
+fn float_repr(py: Python<'_>, values: PyArray) -> PyResult<PyArray> {
+    let (arr, _) = values.into_inner();
+    let a = float_values(&arr, "float_repr")?;
+    let out = py.detach(|| {
+        GenericStringArray::<i32>::from_iter_values(a.values().iter().map(|&v| py_float_repr(v)))
+    });
+    Ok(PyArray::from_array_ref(Arc::new(out)))
+}
+
+/// `[round(float(v), 6) for v in values]` for a float64 array without nulls.
+#[pyfunction]
+fn round6(py: Python<'_>, values: PyArray) -> PyResult<PyArray> {
+    let (arr, _) = values.into_inner();
+    let a = float_values(&arr, "round6")?;
+    let out =
+        py.detach(|| Float64Array::from_iter_values(a.values().iter().map(|&v| round6_value(v))));
+    Ok(PyArray::from_array_ref(Arc::new(out)))
+}
+
+/// Days since 1970-01-01 as `YYYY-MM-DD` (proleptic Gregorian; years 0000-9999 only).
+fn civil_from_days(z: i64) -> (i64, u32, u32) {
+    let z = z + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z.rem_euclid(146_097);
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = (doy - (153 * mp + 2) / 5 + 1) as u32;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 } as u32;
+    let y = yoe + era * 400 + i64::from(m <= 2);
+    (y, m, d)
+}
+
+/// `date32` to text (`YYYY-MM-DD`), the cast pyarrow does for the CSV columns it parsed as
+/// dates. Nulls stay null. Returns `None` when a year falls outside 0000-9999 (the caller then
+/// uses pyarrow's own cast).
+#[pyfunction]
+fn date_iso(py: Python<'_>, values: PyArray) -> PyResult<Option<PyArray>> {
+    use arrow_array::types::Date32Type;
+    let (arr, _) = values.into_inner();
+    let a = arr
+        .as_primitive_opt::<Date32Type>()
+        .ok_or_else(|| PyValueError::new_err("date_iso needs a date32 array"))?
+        .clone();
+    let out = py.detach(|| {
+        let mut b = arrow_array::builder::StringBuilder::with_capacity(a.len(), a.len() * 10);
+        let mut buf = String::with_capacity(10);
+        for i in 0..a.len() {
+            if a.is_null(i) {
+                b.append_null();
+                continue;
+            }
+            let (y, m, d) = civil_from_days(i64::from(a.value(i)));
+            if !(0..=9999).contains(&y) {
+                return None;
+            }
+            buf.clear();
+            use std::fmt::Write;
+            let _ = write!(buf, "{y:04}-{m:02}-{d:02}");
+            b.append_value(&buf);
+        }
+        Some(b.finish())
+    });
+    Ok(out.map(|o| PyArray::from_array_ref(Arc::new(o))))
+}
+
 pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(count_numeric, m)?)?;
     m.add_function(wrap_pyfunction!(numeric_stats, m)?)?;
     m.add_function(wrap_pyfunction!(value_counts_str, m)?)?;
     m.add_function(wrap_pyfunction!(top_indices, m)?)?;
     m.add_function(wrap_pyfunction!(temporal_counts, m)?)?;
+    m.add_function(wrap_pyfunction!(float_repr, m)?)?;
+    m.add_function(wrap_pyfunction!(round6, m)?)?;
+    m.add_function(wrap_pyfunction!(date_iso, m)?)?;
     Ok(())
 }

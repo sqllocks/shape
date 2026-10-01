@@ -194,3 +194,23 @@ def temporal_counts(ts: Any) -> dict[str, Any]:
         out["year0"] = y0
         out["years"] = np.bincount(years - y0).tolist()
     return out
+
+
+def float_repr(values: Any) -> Any:
+    """``[str(float(v)) for v in values]`` (Python's shortest repr) of a float64 array without
+    nulls, as a string array."""
+    return pa.array(
+        [str(float(v)) for v in values.to_numpy(zero_copy_only=False).tolist()], pa.string()
+    )
+
+
+def round6(values: Any) -> Any:
+    """``[round(float(v), 6) for v in values]`` of a float64 array without nulls."""
+    return pa.array(
+        [round(float(v), 6) for v in values.to_numpy(zero_copy_only=False).tolist()], pa.float64()
+    )
+
+
+def date_iso(values: Any) -> Any:
+    """``date32`` as ``YYYY-MM-DD`` text (pyarrow's cast); nulls stay null."""
+    return pc.cast(values, pa.string())
