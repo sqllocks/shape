@@ -208,7 +208,12 @@ def _build_parser():
     c.add_argument("csv")
     c.add_argument("-o", "--output")
     c.add_argument("--sign", metavar="KEY", help="sign the written .shape with this private key")
-    pr = sub.add_parser("profile", help="profile a file, glob, directory or Delta table")
+    pr = sub.add_parser(
+        "profile",
+        help="profile a file, glob, directory or Delta table",
+        epilog="also: `shape profile safe PROFILE.shape -o SAFE.json` writes the share-safe "
+        "form; `shape profile validate --safe ARTIFACT` scans it for leaks",
+    )
     pr.add_argument("src", metavar="SRC")
     pr.add_argument("-o", "--output", metavar="OUT")
     pr.add_argument("--sign", metavar="KEY", help="sign the written .shape with this private key")
@@ -294,6 +299,10 @@ def main(argv=None):
     if argv[:1] in (["--version"], ["-V"]):
         print(f"shape {_version()}")
         return 0
+    if argv[:1] == ["profile"] and argv[1:2] in (["safe"], ["validate"]):
+        from shape.privacy.cli import main as privacy_main
+
+        return privacy_main(argv[1:])
     a = _build_parser().parse_args(argv)
     if a.version:
         print(f"shape {_version()}")
