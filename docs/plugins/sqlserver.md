@@ -60,12 +60,19 @@ the one a Fabric user data function hands you).
 - **Sampled:** per column, `null_count`, `cardinality`, the enumeration of low-cardinality text
   and boolean columns (with observed frequencies), and for numeric columns `min_value`,
   `max_value`, `mean` and `std`. The sample is the first `--sample-rows` rows the server
-  returns (`SELECT TOP n`).
-- **Ratios use the table's row count** as the denominator: `null_rate = sampled nulls / table
-  rows`, `cardinality_ratio = sampled distinct values / table rows`. For a table larger than the
-  sample both are therefore lower than the true rates, and `is_unique` (ratio above 0.99) is
-  only true for tables that fit in the sample. Raise `--sample-rows` to the table size to get
-  true rates.
+  returns (`SELECT TOP n`), so a table stored in an order (by date, say) is sampled from its
+  start.
+- **Ratios use the rows actually sampled** as the denominator: `null_rate = sampled nulls /
+  sampled rows`, `cardinality_ratio = sampled distinct values / sampled rows`, and `is_unique` is
+  true when that ratio is above 0.99. `is_enum` follows the same ratio (at most 50 distinct
+  values, or under 5% of the sampled rows). So all of these describe the sample: `is_unique`
+  can be true for a table larger than the sample, because the sampled rows were distinct, and it
+  says nothing about rows that were not read. Raise `--sample-rows` to the table size to cover
+  the whole table.
+- **The profile says so.** Every table has `sampled_rows` (the rows read: the smaller of
+  `--sample-rows` and the table, `0` for `--sample-rows 0` or a table that could not be read),
+  and the dataset has a `sampling` entry (`method`, `requested_rows` and a note naming the
+  fields that describe the sample). `row_count` stays the catalog's count of the whole table.
 - A table that cannot be read (no `SELECT` permission) still gets its catalog profile.
 - Distribution fitting, patterns and quantiles are not computed here (those fields are null).
 
@@ -73,10 +80,25 @@ the one a Fabric user data function hands you).
 
 A Fabric warehouse enforces no primary or foreign keys. When a table declares none, its key is
 the identity column, else a column named like `<table>_id`, `<table>_key` or `id`, else any
-column ending in `id` or `key`, else the first column. When no foreign key is declared in the
-schema and the sampled data suggests none, `*_id` and `*_key` columns are linked to a table of
-the matching name (`orders.customer_id` to `customer`, or to `dimcustomer`) and listed in
-`detected_fks` and `relationships`.
+column ending in `id` or `key`, else the first column. (`<table>` is the table's name without a
+leading `dim` or `fact`, so `dimcustomer` gives `customer`; `dim` or `fact` elsewhere in a name
+is part of the name.)
+
+Foreign keys declared in the schema are authoritative: when the schema declares any, those are
+the relationships and nothing is inferred beside them. When it declares none, foreign keys come
+from two kinds of evidence, in this order:
+
+1. **The sampled data.** Profiling the sampled tables together reports a `*_id` column whose
+   values (nearly) all exist in the key of the table it is named after
+   (`orders.customer_id` into `customer`).
+2. **Column names.** For every column the data did not link, a `*_id`, `*id` or `*_key` column is
+   linked to a table of the matching name (`orders.customer_id` to `customer`, or to
+   `dimcustomer`), even when the sample is empty or shows no match.
+
+A column the data links keeps the data's link; a name never replaces it. Every link, from
+either source, is listed in `relationships`, in the table's `detected_fks`, and marks its
+column with `is_foreign_key` and `fk_ref_table`, exactly as a declared key does. Data-based links
+come first in `relationships`.
 
 ## Read a table
 
