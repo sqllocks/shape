@@ -3,6 +3,7 @@
 //! `src/shape/kernel/reference/gen.py` (T-03); `docs/GENERATION_KERNEL.md` documents the contract.
 
 pub mod alias;
+pub mod relational;
 pub mod rng;
 pub mod strings;
 pub mod temporal;
@@ -357,5 +358,6 @@ pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(day_weights, m)?)?;
     m.add_function(wrap_pyfunction!(hour_weights_peaks, m)?)?;
     m.add_function(wrap_pyfunction!(temporal_sample, m)?)?;
+    relational::register(m)?;
     Ok(())
 }

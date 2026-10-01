@@ -48,6 +48,14 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.strategies` | `record_sample` | one field of a randomly chosen reference record (the anchor of a record group) |
 | `shape.strategies` | `record_field` | another field of the record the table's `record_sample` column chose |
 | `shape.strategies` | `temporal` | timestamps, uniform or with month, weekday and hour profiles |
+| `shape.strategies` | `foreign_key` | keys of a parent table: uniform, Zipf or Pareto (optionally capped per parent), constrained by another column, sampled, or self-referencing |
+| `shape.strategies` | `composite_foreign_key` | one parent row of a composite key, all its `ref_columns` |
+| `shape.strategies` | `composite_fk_field` | one column of the parent row `composite_foreign_key` drew |
+| `shape.strategies` | `first_per_parent` | `True` on the first row of each parent value |
+| `shape.strategies` | `self_referencing` | the parent key of a row of the same table, in a level hierarchy |
+| `shape.strategies` | `self_ref_field` | a field of that hierarchy (the level) |
+| `shape.strategies` | `lifecycle` | a phase label from weighted phases |
+| `shape.strategies` | `scd2` | effective date, end date, current flag or version of a type 2 slowly changing dimension |
 | `shape.distributions` | `normal` | `loc + scale * N(0,1)` |
 | `shape.distributions` | `uniform` | uniform on `[loc, loc + scale)` |
 | `shape.distributions` | `exponential` | `loc + scale * Exp(1)` |
