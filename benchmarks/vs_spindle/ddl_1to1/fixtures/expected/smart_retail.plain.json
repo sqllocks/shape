@@ -1,0 +1,2791 @@
+{
+ "annotations": [],
+ "explain": [],
+ "file": {
+  "business_rules": [],
+  "generation": {
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "addresses": 250000,
+     "audit_log": 250000,
+     "customers": 100000,
+     "dim_store": 100000,
+     "employees": 100000,
+     "fact_sales": 250000,
+     "order_items": 250000,
+     "order_returns": 250000,
+     "orders": 250000,
+     "product_tags": 250000,
+     "products": 100000,
+     "shipment_lines": 250000,
+     "tags": 100000
+    },
+    "medium": {
+     "addresses": 25000,
+     "audit_log": 25000,
+     "customer": 7,
+     "customers": 10000,
+     "dim_store": 10000,
+     "employees": 10000,
+     "fact_sales": 25000,
+     "order": 21,
+     "order_items": 25000,
+     "order_returns": 25000,
+     "orders": 21,
+     "product_tags": 25000,
+     "products": 10000,
+     "shipment_lines": 25000,
+     "tags": 10000
+    },
+    "small": {
+     "addresses": 2500,
+     "audit_log": 2500,
+     "customers": 1000,
+     "dim_store": 1000,
+     "employees": 1000,
+     "fact_sales": 2500,
+     "order_items": 2500,
+     "order_returns": 2500,
+     "orders": 2500,
+     "product_tags": 2500,
+     "products": 1000,
+     "shipment_lines": 2500,
+     "tags": 1000
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "child": "orders",
+    "child_columns": [
+     "approved_by"
+    ],
+    "name": "fk_orders_approved_by",
+    "parent": "employees",
+    "parent_columns": [
+     "employee_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "employees",
+    "child_columns": [
+     "manager_id"
+    ],
+    "name": "fk_employees_manager_id",
+    "parent": "employees",
+    "parent_columns": [
+     "employee_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "product_tags",
+    "child_columns": [
+     "product_id"
+    ],
+    "name": "fk_product_tags_product_id",
+    "parent": "products",
+    "parent_columns": [
+     "product_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "product_tags",
+    "child_columns": [
+     "tag_id"
+    ],
+    "name": "fk_product_tags_tag_id",
+    "parent": "tags",
+    "parent_columns": [
+     "tag_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "fact_sales",
+    "child_columns": [
+     "store_key"
+    ],
+    "name": "fk_fact_sales_store_key",
+    "parent": "dim_store",
+    "parent_columns": [
+     "store_key"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "orders",
+    "child_columns": [
+     "shipping_address_id"
+    ],
+    "name": "fk_orders_shipping_address_id",
+    "parent": "addresses",
+    "parent_columns": [
+     "address_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "addresses",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_addresses_customer_id",
+    "parent": "customers",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "orders",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_orders_customer_id",
+    "parent": "customers",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "order_items",
+    "child_columns": [
+     "order_id"
+    ],
+    "name": "fk_order_items_order_id",
+    "parent": "orders",
+    "parent_columns": [
+     "order_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "order_items",
+    "child_columns": [
+     "product_id"
+    ],
+    "name": "fk_order_items_product_id",
+    "parent": "products",
+    "parent_columns": [
+     "product_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "shipment_lines",
+    "child_columns": [
+     "order_id"
+    ],
+    "name": "fk_shipment_lines_order_id",
+    "parent": "orders",
+    "parent_columns": [
+     "order_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "order_returns",
+    "child_columns": [
+     "order_id"
+    ],
+    "name": "fk_order_returns_order_id",
+    "parent": "orders",
+    "parent_columns": [
+     "order_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "audit_log",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_audit_log_customer_id",
+    "parent": "customers",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "addresses": {
+    "columns": {
+     "address_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "city": {
+      "generator": {
+       "provider": "city",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "nullable": true,
+      "type": "string"
+     },
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "customers.customer_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "postal_code": {
+      "generator": {
+       "provider": "zipcode",
+       "strategy": "faker"
+      },
+      "max_length": 10,
+      "nullable": true,
+      "type": "string"
+     },
+     "state": {
+      "generator": {
+       "provider": "state_abbr",
+       "strategy": "faker"
+      },
+      "max_length": 2,
+      "nullable": true,
+      "type": "string"
+     },
+     "street": {
+      "generator": {
+       "max_nb_chars": 100,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "address_id"
+    ]
+   },
+   "audit_log": {
+    "columns": {
+     "action": {
+      "generator": {
+       "max_nb_chars": 30,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 30,
+      "nullable": true,
+      "type": "string"
+     },
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "customers.customer_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "log_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "logged_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "nullable": true,
+      "type": "timestamp"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 20,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "log_id"
+    ]
+   },
+   "customers": {
+    "columns": {
+     "country": {
+      "generator": {
+       "provider": "country",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "nullable": true,
+      "type": "string"
+     },
+     "created_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "nullable": true,
+      "type": "timestamp"
+     },
+     "customer_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "date_of_birth": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "nullable": true,
+      "type": "date"
+     },
+     "email": {
+      "generator": {
+       "provider": "email",
+       "strategy": "faker"
+      },
+      "max_length": 120,
+      "nullable": true,
+      "type": "string"
+     },
+     "first_name": {
+      "generator": {
+       "provider": "first_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "type": "string"
+     },
+     "gender": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 1,
+      "nullable": true,
+      "type": "string"
+     },
+     "last_name": {
+      "generator": {
+       "provider": "last_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "type": "string"
+     },
+     "loyalty_tier": {
+      "generator": {
+       "max_nb_chars": 20,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 20,
+      "nullable": true,
+      "type": "string"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 20,
+      "nullable": true,
+      "type": "string"
+     },
+     "updated_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "nullable": true,
+      "type": "timestamp"
+     }
+    },
+    "primary_key": [
+     "customer_id"
+    ]
+   },
+   "dim_store": {
+    "columns": {
+     "region": {
+      "generator": {
+       "max_nb_chars": 30,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 30,
+      "nullable": true,
+      "type": "string"
+     },
+     "store_key": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "store_name": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "store_key"
+    ]
+   },
+   "employees": {
+    "columns": {
+     "employee_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "employee_name": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 80,
+      "nullable": true,
+      "type": "string"
+     },
+     "hire_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "nullable": true,
+      "type": "date"
+     },
+     "manager_id": {
+      "generator": {
+       "levels": 3,
+       "pk_column": "employee_id",
+       "root_count": 8,
+       "strategy": "self_referencing"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "salary": {
+      "generator": {
+       "distribution": "log_normal",
+       "mean": 4.5,
+       "min": 0,
+       "sigma": 1.0,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "decimal"
+     },
+     "termination_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "nullable": true,
+      "type": "date"
+     }
+    },
+    "primary_key": [
+     "employee_id"
+    ]
+   },
+   "fact_sales": {
+    "columns": {
+     "amount": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 12,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "sale_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "nullable": true,
+      "type": "date"
+     },
+     "sale_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "store_key": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "dim_store.store_key",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "units": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "sale_id"
+    ]
+   },
+   "order_items": {
+    "columns": {
+     "item_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "line_total": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "order_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "nullable": true,
+      "type": "date"
+     },
+     "order_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "orders.order_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "product_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "products.product_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "quantity": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "unit_price": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "primary_key": [
+     "item_id"
+    ]
+   },
+   "order_returns": {
+    "columns": {
+     "order_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "orders.order_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "reason": {
+      "generator": {
+       "max_nb_chars": 200,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 200,
+      "nullable": true,
+      "type": "string"
+     },
+     "refund_amount": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "return_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "return_id"
+    ]
+   },
+   "orders": {
+    "columns": {
+     "approved_by": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "employees.employee_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "created_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "nullable": true,
+      "type": "timestamp"
+     },
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "customers.customer_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "defect_pct": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 5,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "discount": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "discount_pct": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 5,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "gross_amount": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "modified_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "nullable": true,
+      "type": "timestamp"
+     },
+     "net_amount": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "order_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "type": "date"
+     },
+     "order_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "payment_method": {
+      "generator": {
+       "max_nb_chars": 30,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 30,
+      "nullable": true,
+      "type": "string"
+     },
+     "priority": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 10,
+      "nullable": true,
+      "type": "string"
+     },
+     "ship_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "nullable": true,
+      "type": "date"
+     },
+     "shipping_address_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "addresses.address_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 20,
+      "nullable": true,
+      "type": "string"
+     },
+     "subtotal": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "tax": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "total": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "primary_key": [
+     "order_id"
+    ]
+   },
+   "product_tags": {
+    "columns": {
+     "product_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "products.product_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "tag_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "tags.tag_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "weight_score": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "product_id",
+     "tag_id"
+    ]
+   },
+   "products": {
+    "columns": {
+     "category": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "nullable": true,
+      "type": "string"
+     },
+     "cost": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "margin": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "photo": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     },
+     "price": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "product_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "product_name": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "type": "string"
+     },
+     "rating": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 3,
+      "scale": 1,
+      "type": "decimal"
+     },
+     "sku": {
+      "generator": {
+       "max_nb_chars": 20,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 20,
+      "nullable": true,
+      "type": "string"
+     },
+     "stock_quantity": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "weight": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 8,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "primary_key": [
+     "product_id"
+    ]
+   },
+   "shipment_lines": {
+    "columns": {
+     "amount": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "line_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "order_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "orders.order_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "quantity": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "line_id"
+    ]
+   },
+   "tags": {
+    "columns": {
+     "tag_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "tag_name": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "tag_id"
+    ]
+   }
+  }
+ },
+ "schema": {
+  "business_rules": [],
+  "correlated_columns": {},
+  "generation": {
+   "derived_counts": {},
+   "output": {},
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "addresses": 250000,
+     "audit_log": 250000,
+     "customers": 100000,
+     "dim_store": 100000,
+     "employees": 100000,
+     "fact_sales": 250000,
+     "order_items": 250000,
+     "order_returns": 250000,
+     "orders": 250000,
+     "product_tags": 250000,
+     "products": 100000,
+     "shipment_lines": 250000,
+     "tags": 100000
+    },
+    "medium": {
+     "addresses": 25000,
+     "audit_log": 25000,
+     "customer": 7,
+     "customers": 10000,
+     "dim_store": 10000,
+     "employees": 10000,
+     "fact_sales": 25000,
+     "order": 21,
+     "order_items": 25000,
+     "order_returns": 25000,
+     "orders": 21,
+     "product_tags": 25000,
+     "products": 10000,
+     "shipment_lines": 25000,
+     "tags": 10000
+    },
+    "small": {
+     "addresses": 2500,
+     "audit_log": 2500,
+     "customers": 1000,
+     "dim_store": 1000,
+     "employees": 1000,
+     "fact_sales": 2500,
+     "order_items": 2500,
+     "order_returns": 2500,
+     "orders": 2500,
+     "product_tags": 2500,
+     "products": 1000,
+     "shipment_lines": 2500,
+     "tags": 1000
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "cardinality": {},
+    "child": "orders",
+    "child_columns": [
+     "approved_by"
+    ],
+    "name": "fk_orders_approved_by",
+    "optional": false,
+    "parent": "employees",
+    "parent_columns": [
+     "employee_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "employees",
+    "child_columns": [
+     "manager_id"
+    ],
+    "name": "fk_employees_manager_id",
+    "optional": false,
+    "parent": "employees",
+    "parent_columns": [
+     "employee_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "product_tags",
+    "child_columns": [
+     "product_id"
+    ],
+    "name": "fk_product_tags_product_id",
+    "optional": false,
+    "parent": "products",
+    "parent_columns": [
+     "product_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "product_tags",
+    "child_columns": [
+     "tag_id"
+    ],
+    "name": "fk_product_tags_tag_id",
+    "optional": false,
+    "parent": "tags",
+    "parent_columns": [
+     "tag_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "fact_sales",
+    "child_columns": [
+     "store_key"
+    ],
+    "name": "fk_fact_sales_store_key",
+    "optional": false,
+    "parent": "dim_store",
+    "parent_columns": [
+     "store_key"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "orders",
+    "child_columns": [
+     "shipping_address_id"
+    ],
+    "name": "fk_orders_shipping_address_id",
+    "optional": false,
+    "parent": "addresses",
+    "parent_columns": [
+     "address_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "addresses",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_addresses_customer_id",
+    "optional": false,
+    "parent": "customers",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "orders",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_orders_customer_id",
+    "optional": false,
+    "parent": "customers",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "order_items",
+    "child_columns": [
+     "order_id"
+    ],
+    "name": "fk_order_items_order_id",
+    "optional": false,
+    "parent": "orders",
+    "parent_columns": [
+     "order_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "order_items",
+    "child_columns": [
+     "product_id"
+    ],
+    "name": "fk_order_items_product_id",
+    "optional": false,
+    "parent": "products",
+    "parent_columns": [
+     "product_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "shipment_lines",
+    "child_columns": [
+     "order_id"
+    ],
+    "name": "fk_shipment_lines_order_id",
+    "optional": false,
+    "parent": "orders",
+    "parent_columns": [
+     "order_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "order_returns",
+    "child_columns": [
+     "order_id"
+    ],
+    "name": "fk_order_returns_order_id",
+    "optional": false,
+    "parent": "orders",
+    "parent_columns": [
+     "order_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "audit_log",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_audit_log_customer_id",
+    "optional": false,
+    "parent": "customers",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "addresses": {
+    "cdm_mapping": null,
+    "columns": {
+     "address_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "address_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "city": {
+      "generator": {
+       "provider": "city",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "city",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "customers.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "postal_code": {
+      "generator": {
+       "provider": "zipcode",
+       "strategy": "faker"
+      },
+      "max_length": 10,
+      "name": "postal_code",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "state": {
+      "generator": {
+       "provider": "state_abbr",
+       "strategy": "faker"
+      },
+      "max_length": 2,
+      "name": "state",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "street": {
+      "generator": {
+       "max_nb_chars": 100,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "name": "street",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "addresses",
+    "primary_key": [
+     "address_id"
+    ]
+   },
+   "audit_log": {
+    "cdm_mapping": null,
+    "columns": {
+     "action": {
+      "generator": {
+       "max_nb_chars": 30,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 30,
+      "name": "action",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "customers.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "log_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "log_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "logged_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "logged_at",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 20,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "audit_log",
+    "primary_key": [
+     "log_id"
+    ]
+   },
+   "customers": {
+    "cdm_mapping": null,
+    "columns": {
+     "country": {
+      "generator": {
+       "provider": "country",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "name": "country",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "created_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "created_at",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "customer_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "date_of_birth": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "date_of_birth",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "email": {
+      "generator": {
+       "provider": "email",
+       "strategy": "faker"
+      },
+      "max_length": 120,
+      "name": "email",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "first_name": {
+      "generator": {
+       "provider": "first_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "first_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "gender": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 1,
+      "name": "gender",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "last_name": {
+      "generator": {
+       "provider": "last_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "last_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "loyalty_tier": {
+      "generator": {
+       "max_nb_chars": 20,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 20,
+      "name": "loyalty_tier",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 20,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "updated_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "updated_at",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     }
+    },
+    "description": "",
+    "name": "customers",
+    "primary_key": [
+     "customer_id"
+    ]
+   },
+   "dim_store": {
+    "cdm_mapping": null,
+    "columns": {
+     "region": {
+      "generator": {
+       "max_nb_chars": 30,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 30,
+      "name": "region",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "store_key": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "store_key",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "store_name": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "store_name",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "dim_store",
+    "primary_key": [
+     "store_key"
+    ]
+   },
+   "employees": {
+    "cdm_mapping": null,
+    "columns": {
+     "employee_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "employee_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "employee_name": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 80,
+      "name": "employee_name",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "hire_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "hire_date",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "manager_id": {
+      "generator": {
+       "levels": 3,
+       "pk_column": "employee_id",
+       "root_count": 8,
+       "strategy": "self_referencing"
+      },
+      "max_length": null,
+      "name": "manager_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "salary": {
+      "generator": {
+       "distribution": "log_normal",
+       "mean": 4.5,
+       "min": 0,
+       "sigma": 1.0,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "salary",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "decimal"
+     },
+     "termination_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "termination_date",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     }
+    },
+    "description": "",
+    "name": "employees",
+    "primary_key": [
+     "employee_id"
+    ]
+   },
+   "fact_sales": {
+    "cdm_mapping": null,
+    "columns": {
+     "amount": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "amount",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 12,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "sale_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "sale_date",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "sale_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "sale_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "store_key": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "dim_store.store_key",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "store_key",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "units": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "units",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "fact_sales",
+    "primary_key": [
+     "sale_id"
+    ]
+   },
+   "order_items": {
+    "cdm_mapping": null,
+    "columns": {
+     "item_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "item_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "line_total": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "line_total",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "order_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "order_date",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "order_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "orders.order_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "order_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "product_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "products.product_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "product_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "quantity": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "quantity",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "unit_price": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "unit_price",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "description": "",
+    "name": "order_items",
+    "primary_key": [
+     "item_id"
+    ]
+   },
+   "order_returns": {
+    "cdm_mapping": null,
+    "columns": {
+     "order_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "orders.order_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "order_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "reason": {
+      "generator": {
+       "max_nb_chars": 200,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 200,
+      "name": "reason",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "refund_amount": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "refund_amount",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "return_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "return_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "order_returns",
+    "primary_key": [
+     "return_id"
+    ]
+   },
+   "orders": {
+    "cdm_mapping": null,
+    "columns": {
+     "approved_by": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "employees.employee_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "approved_by",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "created_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "created_at",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "customers.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "defect_pct": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "defect_pct",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 5,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "discount": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "discount",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "discount_pct": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "discount_pct",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 5,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "gross_amount": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "gross_amount",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "modified_at": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "modified_at",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "net_amount": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "net_amount",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "order_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "order_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "order_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "order_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "payment_method": {
+      "generator": {
+       "max_nb_chars": 30,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 30,
+      "name": "payment_method",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "priority": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 10,
+      "name": "priority",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "ship_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "ship_date",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "shipping_address_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "addresses.address_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "shipping_address_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 20,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "subtotal": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "subtotal",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "tax": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "tax",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "total": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "total",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "description": "",
+    "name": "orders",
+    "primary_key": [
+     "order_id"
+    ]
+   },
+   "product_tags": {
+    "cdm_mapping": null,
+    "columns": {
+     "product_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "products.product_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "product_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "tag_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "tags.tag_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "tag_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "weight_score": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "weight_score",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "product_tags",
+    "primary_key": [
+     "product_id",
+     "tag_id"
+    ]
+   },
+   "products": {
+    "cdm_mapping": null,
+    "columns": {
+     "category": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "category",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "cost": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "cost",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "margin": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "margin",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "photo": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "photo",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "price": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "price",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "product_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "product_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "product_name": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "name": "product_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "rating": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "rating",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 3,
+      "scale": 1,
+      "type": "decimal"
+     },
+     "sku": {
+      "generator": {
+       "max_nb_chars": 20,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 20,
+      "name": "sku",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "stock_quantity": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "stock_quantity",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "weight": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "weight",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 8,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "description": "",
+    "name": "products",
+    "primary_key": [
+     "product_id"
+    ]
+   },
+   "shipment_lines": {
+    "cdm_mapping": null,
+    "columns": {
+     "amount": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "amount",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "line_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "line_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "order_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "orders.order_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "order_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "quantity": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "quantity",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "shipment_lines",
+    "primary_key": [
+     "line_id"
+    ]
+   },
+   "tags": {
+    "cdm_mapping": null,
+    "columns": {
+     "tag_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "tag_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "tag_name": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "name": "tag_name",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "tags",
+    "primary_key": [
+     "tag_id"
+    ]
+   }
+  }
+ }
+}

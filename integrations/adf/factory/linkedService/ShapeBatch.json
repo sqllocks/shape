@@ -1,0 +1,24 @@
+{
+  "name": "ShapeBatch",
+  "properties": {
+    "annotations": [],
+    "type": "AzureBatch",
+    "typeProperties": {
+      "accountName": "<<BATCH_ACCOUNT>>",
+      "accessKey": {
+        "type": "AzureKeyVaultSecret",
+        "store": {
+          "referenceName": "ShapeKeyVault",
+          "type": "LinkedServiceReference"
+        },
+        "secretName": "<<BATCH_KEY_SECRET_NAME>>"
+      },
+      "batchUri": "https://<<BATCH_ACCOUNT>>.<<BATCH_REGION>>.batch.azure.com",
+      "poolName": "<<BATCH_POOL>>",
+      "linkedServiceName": {
+        "referenceName": "ShapeBatchStorage",
+        "type": "LinkedServiceReference"
+      }
+    }
+  }
+}

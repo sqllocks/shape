@@ -132,6 +132,8 @@ def test_table_cap_sampled_and_unsafe_names(lh):
     assert lh.conn.closed
     with pytest.raises(udf.UserThrownError, match="tableName"):
         udf.profile_lakehouse_table(lh, "a; DROP TABLE b")
+    with pytest.raises(udf.UserThrownError, match="tableName"):
+        udf.profile_lakehouse_table(lh, "orders\n")
     with pytest.raises(udf.UserThrownError, match="maxRows"):
         udf.profile_lakehouse_table(lh, "orders", max_rows=0)
 

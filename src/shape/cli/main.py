@@ -238,6 +238,45 @@ def _cmd_verify_gates(a):
 _VERIFY_HELP = "require every .shape input to be signed by this public key (exit 1 if not)"
 
 
+def _cmd_from_ddl(a):
+    """``shape from-ddl FILE``: read ``CREATE TABLE`` DDL, write a generation schema."""
+    from pathlib import Path
+
+    from shape.generation.ddl import from_ddl
+
+    src = Path(a.input_file)
+    schema, notes = from_ddl(
+        src.read_text(encoding="utf-8"), domain=a.domain, smart=a.smart, scale=a.scale
+    )
+    out = Path(a.output) if a.output else src.with_suffix(".gen.json")
+    _write_json(out, schema.to_dict())
+    print(f"Shape DDL import{' (smart)' if a.smart else ''}")
+    print()
+    print(f"  Source: {src}")
+    print(f"  Output: {out}")
+    print(f"  Tables: {len(schema.tables)}")
+    print(f"  Relationships: {len(schema.relationships)}")
+    print(f"  Business rules: {len(schema.business_rules)}")
+    if a.smart:
+        print(f"  Inferences: {len(notes)}")
+    print()
+    for name, table in schema.tables.items():
+        pk = f" (PK: {', '.join(table.primary_key)})" if table.primary_key else ""
+        print(f"  {name}: {len(table.columns)} columns{pk}")
+    print()
+    print(f"Schema written to {out}")
+    if a.explain and notes:
+        print()
+        print("--- Inference Report ---")
+        print()
+        for n in notes:
+            col = f".{n.column}" if n.column else ""
+            print(
+                f"  [{n.rule_id}] {n.table}{col}: {n.description} (confidence: {n.confidence:.0%})"
+            )
+    return 0
+
+
 def _cmd_plugins(a):
     """``shape plugins <sub>``: list and info inspect; doctor exits 0 when every plugin loads."""
     from shape.plugins import cli as plugin_cli
@@ -398,6 +437,26 @@ def _build_parser(plugin_commands=()):
         sh = sub.add_parser(name, help="print a .shape artifact's manifest and contents")
         sh.add_argument("shape")
         sh.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
+    fd = sub.add_parser(
+        "from-ddl",
+        help="read SQL CREATE TABLE DDL into a generation schema",
+        description="Reads SQL Server, PostgreSQL, MySQL and ANSI CREATE TABLE statements "
+        "(and ALTER TABLE foreign keys). With --smart (the default) it infers realistic "
+        "distributions, foreign-key patterns, temporal seasonality and business rules from "
+        "the schema's structure.",
+    )
+    fd.add_argument("input_file", metavar="FILE", help="a .sql file")
+    fd.add_argument("-o", "--output", metavar="OUT", help="default: FILE with the suffix .gen.json")
+    fd.add_argument("--domain", default="custom", help="domain name for the schema")
+    fd.add_argument("-s", "--scale", metavar="SPEC", help="scale override: small:table1=N,table2=N")
+    fd.add_argument(
+        "--smart",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="infer distributions, key patterns and rules (default) or keep the first "
+        "generators (--no-smart)",
+    )
+    fd.add_argument("--explain", action="store_true", help="print the inference report")
     kg = sub.add_parser("keygen", help="generate an Ed25519 signing key pair")
     kg.add_argument("prefix", help="writes PREFIX.key (private, mode 0600) and PREFIX.pub")
     sg = sub.add_parser("sign", help="sign a .shape artifact")
@@ -515,6 +574,8 @@ def main(argv=None):
         rc = _run(_verify_inputs, a)
         if rc:
             return rc
+    if a.cmd == "from-ddl":
+        return _run(_cmd_from_ddl, a)
     if a.cmd == "profile":
         return _run(_cmd_profile, a)
     if a.cmd == "stream-profile":

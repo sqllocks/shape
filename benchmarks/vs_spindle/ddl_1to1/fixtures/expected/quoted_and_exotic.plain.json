@@ -1,0 +1,619 @@
+{
+ "annotations": [],
+ "explain": [],
+ "file": {
+  "business_rules": [],
+  "generation": {
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "Customer": 100000,
+     "Sales Order": 100000,
+     "empty_stuff": 100000,
+     "line": 250000
+    },
+    "medium": {
+     "Customer": 10000,
+     "Sales Order": 10000,
+     "customer": 7,
+     "empty_stuff": 10000,
+     "line": 25000,
+     "order": 21,
+     "orders": 21
+    },
+    "small": {
+     "Customer": 1000,
+     "Sales Order": 1000,
+     "empty_stuff": 1000,
+     "line": 2500
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "child": "line",
+    "child_columns": [
+     "order_id"
+    ],
+    "name": "fk_line_order_id",
+    "parent": "Sales Order",
+    "parent_columns": [
+     "SalesOrderID"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "Customer": {
+    "columns": {
+     "AccountNumber": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "type": "string"
+     },
+     "CustomerID": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "type": "integer"
+     },
+     "Flag": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     },
+     "ModifiedDate": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "type": "string"
+     },
+     "Rate": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     },
+     "Score": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "CustomerID"
+    ]
+   },
+   "Sales Order": {
+    "columns": {
+     "Comment": {
+      "generator": {
+       "provider": "sentence",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     },
+     "CustomerID": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "type": "integer"
+     },
+     "OrderDate": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "type": "timestamp"
+     },
+     "Payload": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     },
+     "RowGuid": {
+      "generator": {
+       "strategy": "uuid"
+      },
+      "nullable": true,
+      "type": "uuid"
+     },
+     "SalesOrderID": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "TotalDue": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 0,
+       "std_dev": 1,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "float"
+     }
+    },
+    "primary_key": [
+     "SalesOrderID"
+    ]
+   },
+   "empty_stuff": {
+    "columns": {
+     "id": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": []
+   },
+   "line": {
+    "columns": {
+     "line_no": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 1000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "type": "integer"
+     },
+     "long_text": {
+      "generator": {
+       "max_nb_chars": 200,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 2000,
+      "nullable": true,
+      "type": "string"
+     },
+     "note": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 8,
+      "nullable": true,
+      "type": "string"
+     },
+     "order_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "Sales Order.SalesOrderID",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "qty": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 255,
+       "min": 0,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "order_id",
+     "line_no"
+    ]
+   }
+  }
+ },
+ "schema": {
+  "business_rules": [],
+  "correlated_columns": {},
+  "generation": {
+   "derived_counts": {},
+   "output": {},
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "Customer": 100000,
+     "Sales Order": 100000,
+     "empty_stuff": 100000,
+     "line": 250000
+    },
+    "medium": {
+     "Customer": 10000,
+     "Sales Order": 10000,
+     "customer": 7,
+     "empty_stuff": 10000,
+     "line": 25000,
+     "order": 21,
+     "orders": 21
+    },
+    "small": {
+     "Customer": 1000,
+     "Sales Order": 1000,
+     "empty_stuff": 1000,
+     "line": 2500
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "cardinality": {},
+    "child": "line",
+    "child_columns": [
+     "order_id"
+    ],
+    "name": "fk_line_order_id",
+    "optional": false,
+    "parent": "Sales Order",
+    "parent_columns": [
+     "SalesOrderID"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "Customer": {
+    "cdm_mapping": null,
+    "columns": {
+     "AccountNumber": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "AccountNumber",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "CustomerID": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "CustomerID",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "Flag": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "Flag",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "ModifiedDate": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "ModifiedDate",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "Rate": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "Rate",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "Score": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "Score",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "Customer",
+    "primary_key": [
+     "CustomerID"
+    ]
+   },
+   "Sales Order": {
+    "cdm_mapping": null,
+    "columns": {
+     "Comment": {
+      "generator": {
+       "provider": "sentence",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "Comment",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "CustomerID": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "CustomerID",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "OrderDate": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "OrderDate",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "Payload": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "Payload",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "RowGuid": {
+      "generator": {
+       "strategy": "uuid"
+      },
+      "max_length": null,
+      "name": "RowGuid",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "uuid"
+     },
+     "SalesOrderID": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "SalesOrderID",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "TotalDue": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 0,
+       "std_dev": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "TotalDue",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     }
+    },
+    "description": "",
+    "name": "Sales Order",
+    "primary_key": [
+     "SalesOrderID"
+    ]
+   },
+   "empty_stuff": {
+    "cdm_mapping": null,
+    "columns": {
+     "id": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "empty_stuff",
+    "primary_key": []
+   },
+   "line": {
+    "cdm_mapping": null,
+    "columns": {
+     "line_no": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 1000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "line_no",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "long_text": {
+      "generator": {
+       "max_nb_chars": 200,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 2000,
+      "name": "long_text",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "note": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 8,
+      "name": "note",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "order_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "Sales Order.SalesOrderID",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "order_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "qty": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 255,
+       "min": 0,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "qty",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "line",
+    "primary_key": [
+     "order_id",
+     "line_no"
+    ]
+   }
+  }
+ }
+}

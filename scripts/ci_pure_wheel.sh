@@ -27,7 +27,10 @@ cd "$WORK"
 export SHAPE_KERNEL=python
 "$VPY" -c "from shape.kernel import kernel_name; assert kernel_name() == 'python', kernel_name()"
 
-# 1. the helpers, with no Fabric SDK present
+# 1. the helpers, with no Fabric SDK present. The distributed-profile tests (PF-02) also run
+# Spark executors on this wheel's pure-Python kernel, so they need pyspark (and Java, which the
+# runner has).
+"$VPY" -m pip install -q "pyspark>=4.0,<5"
 "$VPY" -m pytest -q -p no:cacheprovider --rootdir "$ROOT" "$ROOT/tests/integrations"
 
 # 2. the real function_app.py against the public SDK (needs unixODBC for pyodbc)

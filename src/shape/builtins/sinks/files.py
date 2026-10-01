@@ -6,6 +6,7 @@ separator) the file is ``<table>.<extension>`` inside it.
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 from collections.abc import Iterable
 from pathlib import Path
@@ -66,12 +67,26 @@ class CsvSink(_FileSink):
         )
 
 
+class TsvSink(CsvSink):
+    name = "tsv"
+    extension = "tsv"
+
+    def _open(self, target: Path, schema: pa.Schema, options: dict[str, Any]) -> Any:
+        return super()._open(target, schema, {**options, "delimiter": "\t"})
+
+
 class ParquetSink(_FileSink):
     name = "parquet"
     extension = "parquet"
 
     def _open(self, target: Path, schema: pa.Schema, options: dict[str, Any]) -> Any:
-        return pq.ParquetWriter(str(target), schema, compression=options.get("compression", "zstd"))
+        # T-17: snappy, dictionary encoding on.
+        return pq.ParquetWriter(
+            str(target),
+            schema,
+            compression=options.get("compression", "snappy"),
+            use_dictionary=options.get("use_dictionary", True),
+        )
 
 
 class IpcSink(_FileSink):
@@ -82,13 +97,22 @@ class IpcSink(_FileSink):
         return pa.ipc.new_file(str(target), schema)
 
 
+def _json_default(value: Any) -> str:
+    """Dates and times as ISO 8601; decimals as exact strings (a JSON number would round)."""
+    if isinstance(value, (dt.datetime, dt.date, dt.time)):
+        return value.isoformat()
+    return str(value)
+
+
 class _JsonlWriter:
     def __init__(self, target: Path) -> None:
         self._f = target.open("w", encoding="utf-8")
 
     def write_batch(self, batch: pa.RecordBatch) -> None:
         for row in batch.to_pylist():
-            self._f.write(json.dumps(row, separators=(",", ":"), ensure_ascii=False, default=str))
+            self._f.write(
+                json.dumps(row, separators=(",", ":"), ensure_ascii=False, default=_json_default)
+            )
             self._f.write("\n")
 
     def close(self) -> None:

@@ -1,0 +1,3 @@
+{"id":1,"name":"plain","price":"1.50","ratio":0.5,"active":true,"born":"2020-02-29","seen":"2025-01-02T03:04:05.678000"}
+{"id":2,"name":"O'Brien \\ é","price":"0.00","ratio":null,"active":false,"born":null,"seen":null}
+{"id":3,"name":null,"price":"12345.67","ratio":2.0,"active":true,"born":"1999-12-31","seen":"2025-12-31T23:59:59"}

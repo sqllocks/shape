@@ -64,7 +64,7 @@ NOTEBOOK_HINT = (
     "Use the Shape profile notebook (integrations/fabric/notebooks/shape_profile.ipynb) "
     "for inputs this large; User Data Functions stop at 240 seconds."
 )
-_TABLE_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$")
+_TABLE_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?")
 
 
 class _StandInError(Exception):
@@ -268,7 +268,7 @@ def profile_lakehouse_table(
     only the first ``max_rows`` rows the endpoint returned, not a random sample.
     """
     started = time.perf_counter()
-    if not _TABLE_NAME.match(table_name):
+    if not _TABLE_NAME.fullmatch(table_name):
         raise _fail("tableName must be 'table' or 'schema.table' (letters, digits, underscore)")
     if not 1 <= max_rows <= MAX_TABLE_ROWS_CAP:
         raise _fail(f"maxRows must be between 1 and {MAX_TABLE_ROWS_CAP:,}. {NOTEBOOK_HINT}")
@@ -276,7 +276,10 @@ def profile_lakehouse_table(
     conn = lakehouse.connectToSql()
     try:
         cursor = conn.cursor()
-        cursor.execute(f"SELECT TOP ({max_rows + 1}) * FROM {quoted}")
+        # Only identifiers that fully match _TABLE_NAME (letters, digits, underscore) reach here,
+        # each part bracket-quoted, and max_rows is a range-checked int: nothing user-written
+        # beyond those is in the statement. Endpoints take no parameters for identifiers.
+        cursor.execute(f"SELECT TOP ({max_rows + 1}) * FROM {quoted}")  # nosec B608
         columns = [d[0] for d in cursor.description]
         rows = [tuple(r) for r in cursor.fetchall()]
     except Exception as e:
