@@ -220,6 +220,11 @@ us_federal = "shape.builtins.calendars:UsFederalCalendar"
 us_retail = "shape.builtins.calendars:UsRetailCalendar"
 composite = "shape.builtins.calendars:CompositeCalendar"
 
+[project.entry-points."shape.reports"]
+json = "shape.builtins.reports:JsonReport"
+md = "shape.builtins.reports:MarkdownReport"
+html = "shape.builtins.reports:HtmlReport"
+
 [project.urls]
 Homepage = "https://github.com/sqllocks/shape"
 Repository = "https://github.com/sqllocks/shape"

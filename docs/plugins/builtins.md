@@ -78,6 +78,9 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.calendars` | `us_federal` | the eleven US federal holidays on their observed days |
 | `shape.calendars` | `us_retail` | Black Friday, Cyber Monday, Christmas Eve and the gift holidays |
 | `shape.calendars` | `composite` | any mix of holiday calendars, custom events, paydays, month-end and quarter-end effects and trends (`with_spec`) |
+| `shape.reports` | `json` | the fidelity report as indented JSON with sorted keys |
+| `shape.reports` | `md` | the fidelity report as Markdown |
+| `shape.reports` | `html` | the fidelity report as one self-contained HTML page (inline styles, no scripts) |
 
 ## Rules
 

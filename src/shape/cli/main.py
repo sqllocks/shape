@@ -174,6 +174,35 @@ def _cmd_check(a):
     return 0 if result.passed else 1
 
 
+def _cmd_fidelity(a):
+    """``shape fidelity REFERENCE SYNTHETIC``: 0 when every pass mark is met, 1 when not."""
+    from pathlib import Path
+
+    from shape.generation.report import Thresholds, compare_tables, render_report
+    from shape.quality import load_tables
+
+    real = load_tables(a.reference, a.input_format)
+    synth = load_tables(a.csv, a.input_format)
+    if not real:
+        raise ValueError(f"no data files found in {a.reference}")
+    if len(real) == 1 and len(synth) == 1:  # two single files compare whatever they are called
+        synth = {next(iter(real)): next(iter(synth.values()))}
+    marks = Thresholds(
+        a.min_score,
+        a.min_table_score if a.min_table_score is not None else a.min_score,
+        a.min_column_score,
+    )
+    report = compare_tables(real, synth, marks).to_dict()
+    ext = {".json": "json", ".md": "md", ".html": "html", ".htm": "html"}
+    for out in a.output:
+        fmt = ext.get(Path(out).suffix.lower())
+        if fmt is None:
+            raise ValueError(f"cannot tell the report format of {out}: use .json, .md or .html")
+        Path(out).write_bytes(render_report(report, fmt))
+    sys.stdout.write(render_report(report, a.format).decode())
+    return 0 if report["passed"] else 1
+
+
 def _cmd_diff(a):
     import shape
 
@@ -487,10 +516,40 @@ def _build_parser(plugin_commands=()):
     ge = sub.add_parser("generate")
     ge.add_argument("--rows", type=int, default=10)
     ge.add_argument("--seed", type=int, default=0)
-    fi = sub.add_parser("fidelity")
-    fi.add_argument("reference")
-    fi.add_argument("csv")
-    fi.add_argument("--tolerance", type=float, default=0.1)
+    fi = sub.add_parser(
+        "fidelity",
+        aliases=["compare"],
+        help="score synthetic data against reference data, per column and per table",
+        description=(
+            "Compare SYNTHETIC with REFERENCE (a file, or a directory of one file per table) and "
+            "score every column 0-100, then every table and the whole. Exit 0 when every pass "
+            "mark is met, 1 when not, 2 for bad input. Given a captured profile (REFERENCE.json) "
+            "and a CSV file it certifies the CSV against the profile instead (--tolerance; exit "
+            "3 on failure)."
+        ),
+    )
+    fi.add_argument("reference", metavar="REFERENCE")
+    fi.add_argument("csv", metavar="SYNTHETIC")
+    fi.add_argument("--tolerance", type=float, default=0.1, help="with a REFERENCE.json profile")
+    fi.add_argument("--input-format", default="auto", choices=("auto", "csv", "parquet", "jsonl"))
+    fi.add_argument("--min-score", type=float, default=85.0, help="overall pass mark (default 85)")
+    fi.add_argument(
+        "--min-table-score", type=float, help="per-table pass mark (default: --min-score)"
+    )
+    fi.add_argument("--min-column-score", type=float, help="per-column pass mark (default: none)")
+    fi.add_argument(
+        "-o",
+        "--output",
+        action="append",
+        default=[],
+        metavar="REPORT",
+        help="write a report; .json, .md or .html by extension (repeatable)",
+    )
+    fi.add_argument(
+        "--format",
+        default="json",
+        help="what to print: a shape.reports format such as json, md or html (default json)",
+    )
     k = sub.add_parser("key")
     k.add_argument("csv")
     k.add_argument("fields", nargs="+")
@@ -663,7 +722,9 @@ def main(argv=None):
         for row in plan.rows(a.rows):
             print(json.dumps(row, sort_keys=True))
         return 0
-    if a.cmd == "fidelity":
+    if a.cmd in ("fidelity", "compare") and not str(a.reference).endswith(".json"):
+        return _run(_cmd_fidelity, a)
+    if a.cmd in ("fidelity", "compare"):
         from shape.generation import certify
 
         ref = json.load(open(a.reference))
