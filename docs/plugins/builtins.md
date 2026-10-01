@@ -41,6 +41,13 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.strategies` | `formula` | a column computed from other columns of the row by a checked expression (no `eval`) |
 | `shape.strategies` | `derived` | a column derived from another column of the row, or of a parent row, by `copy` or `add_days` |
 | `shape.strategies` | `computed` | a column back-filled from child rows (or the parent) by the compute phase |
+| `shape.strategies` | `lookup` | a column of a parent table, by the key in this row |
+| `shape.strategies` | `conditional` | one of two values per row, chosen by a condition on another column |
+| `shape.strategies` | `correlated` | another column times a random factor, plus or minus a random offset |
+| `shape.strategies` | `reference_data` | a value or a weighted name from a named reference dataset |
+| `shape.strategies` | `record_sample` | one field of a randomly chosen reference record (the anchor of a record group) |
+| `shape.strategies` | `record_field` | another field of the record the table's `record_sample` column chose |
+| `shape.strategies` | `temporal` | timestamps, uniform or with month, weekday and hour profiles |
 | `shape.distributions` | `normal` | `loc + scale * N(0,1)` |
 | `shape.distributions` | `uniform` | uniform on `[loc, loc + scale)` |
 | `shape.distributions` | `exponential` | `loc + scale * Exp(1)` |
