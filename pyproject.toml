@@ -97,8 +97,6 @@ module=[
     "shape.packs.person",
     "shape.packs.sdk",
     "shape.packs.verify",
-    "shape.plugins.core",
-    "shape.plugins.runtime",
     "shape.privacy.advanced",
     "shape.privacy.core",
     "shape.privacy.propagate",

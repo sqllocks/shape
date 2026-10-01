@@ -243,6 +243,7 @@ instruction.
 
 | Date | ID | Change | Reason |
 |---|---|---|---|
+| 2026-10-01 | G2, PF-01, P3-01, P4-01a, P6-08 | **Early start extended (lead, under the owner's 'run everything that can run in parallel', 2026-10-01).** G2's first two checks pass (an out-of-tree plugin adds a source, a detector and a command without core change; `shape plugins list` shows all 25 built-ins); its third check is 'the G1 gates still pass', so G2 waits on G1. The work packages that depend only on G2 (PF-01, P3-01, P4-01a, P6-08) start now as lanes, under the same rule as the G1 early start: they merge into `build/main-plan`, nothing merges to `main` until G1 and G2 pass. P1-17 left MT at 7.5x (D1 and D4 CSV above 10x on its VM); G1 is re-run after P1-16. | Owner instruction |
 | 2026-10-01 | G1, P1-15, P1-16, P2-01, P7-01, P6-09, PF-03 | **Owner decision on the G1 escalation:** options (a) and (b), in parallel; the gate is unchanged (10x, D-04). New work packages **P1-15** (exact-mode `shape.profile` on the fused Rust kernel, as P1-08 intended) and **P1-16** (bitwise-exact, cheaper likelihood evaluation); G1 is re-run after both merge. **Early start:** P2-01, P7-01, P6-09 and PF-03 may start before G1 is `done` (owner, 2026-10-01); they run as lanes and merge into `build/main-plan`, but nothing merges to `main` until G1 passes. | Owner decision |
 | 2026-10-01 | §6.1, §6.3 | **Parallel lanes (owner: run everything that can run in parallel).** Work packages whose `Depends` are met run concurrently, each in its own builder session on its own branch `lane/<WP>` cut from `build/main-plan`. A lane builder edits only its work package's paths, never the §11 tracker or §2.3, and records progress and evidence in `docs/plans/lane_status/<WP>.md`. The lead verifies each lane against §7, merges it into `build/main-plan` (merge commit) and updates §11. The tracker shows a lane's WP as `wip (lane/<WP>)`; a builder never picks a WP marked that way. Gates stay sequential, each measured in one dedicated run. | Owner decision |
 | 2026-10-01 | G1, P1-08 | **Escalation (builder): the G1 speed gates are missed after §6.5 round 1.** Parity and START pass; PROF-IN is 6.5x-11.2x (d1.parquet 6.5x, d2.csv 9.6x, d3.parquet 6.7x, d4.csv 8.8x, d4.parquet 9.4x, mt 5.1x below 10x) and PROF-CLI D2 is 8.8x (D3 10.8x). Tables, hotspots and harness outputs: `docs/plans/demo_status/G1-evidence.md`. Round 1 moved the lognormal likelihood to reused buffers and numpy's array log (D4 fit 13.0 s -> 5.4 s, parity exit 0). One harness change, for the owner to confirm: `bench.py`'s Shape worker now imports `shape.profile`'s implementation before the timer (T-19: imports excluded for both tools; Spindle's worker already imports its profiler); without it every fresh-process run carried about 0.4 s of lazy imports (as-found column kept in the evidence). Finding: the product `shape.profile` is the numpy reference profiler with only fitting in Rust, so P1-08's "on the Rust kernel" was not realized; the fused engine is slower than it in exact mode. The remaining gap (D1, MT, D3 parquet, D4, D2 CLI) is not tuning-sized. Options for the owner: (a) a native exact-mode profile on the fused kernel as P1-08 intended (a new work package, then re-run G1), (b) a second tuning round on first-appearance ordering, value counts and correlation (unlikely to reach 10x on D1, MT and D3 parquet). Gate unchanged; G1 stays `todo`. | Builder, §6.5 round 1 |
@@ -1931,25 +1932,25 @@ Work packages are listed in execution order. The next work package is the first 
 | 21a | P1-14 | done | 9c0f75b |
 | 21b | P1-15 | done | 04fe94c |
 | 21c | P1-16 | wip (lane/P1-16) | |
-| 21d | P1-17 | wip (lane/P1-17) | |
+| 21d | P1-17 | done | 981bdd7 |
 | 22 | P2-01 | done | c3909e9 |
 | 23 | P2-02 | done | 84e8efb |
 | 24 | P2-03 | done | 687f568 |
 | 25 | P2-04 | done | 0ca6387 |
-| 26 | P2-05 | wip (lane/P2-05) | |
-| 27 | P2-06 | wip (lane/P2-06) | |
-| 28 | PF-01 | todo | |
+| 26 | P2-05 | done | 4c2fa6b |
+| 27 | P2-06 | done | 6adf820 |
+| 28 | PF-01 | wip (lane/PF-01) |  |
 | 29 | PF-02 | todo | |
 | 30 | PF-03 | done | a726dd4 |
 | 31 | PF-04 | todo | |
 | 32 | PF-05 | todo | |
 | 33 | PF-06 | todo | |
-| 34 | P3-01 | todo | |
+| 34 | P3-01 | wip (lane/P3-01) |  |
 | 35 | P3-02 | todo | |
 | 36 | P3-03 | todo | |
 | 37 | P3-04 | todo | |
 | 38 | P3-05 | todo | |
-| 39 | P4-01a | todo | |
+| 39 | P4-01a | wip (lane/P4-01a) |  |
 | 40 | P4-01b | todo | |
 | 41 | P4-02 | todo | |
 | 42 | P4-03 | todo | |
@@ -1981,7 +1982,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 68 | P6-07a | todo | |
 | 69 | P6-07b | todo | |
 | 70 | P6-07c | todo | |
-| 71 | P6-08 | todo | |
+| 71 | P6-08 | wip (lane/P6-08) |  |
 | 72 | P6-09 | wip (merged; parity runs in CI bench-quick) | 3859a3c |
 | 73 | P6-10 | todo | |
 | 74 | P6-11 | todo | |
@@ -2002,7 +2003,7 @@ Work packages are listed in execution order. The next work package is the first 
 |---|---|
 | G0 | done b965672 |
 | G1 | todo (not met: PROF-IN D3 pq 8.8x, D4 csv 9.9x, MT 5.4x; PROF-CLI D2 9.8x; escalated in §2.3) |
-| G2 | todo |
+| G2 | todo (out-of-tree plugin and `shape plugins list` checks pass at the 9342eb3 merge; waits on G1) |
 | GF | todo |
 | G3 | todo |
 | G4 | todo |
