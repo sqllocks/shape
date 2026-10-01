@@ -327,7 +327,7 @@ shape --log-json --metrics run.json generate retail --scale small
 | `--log-level LEVEL` | `SHAPE_LOG_LEVEL` | default `INFO` |
 | `--metrics FILE` | `SHAPE_METRICS` | write the run's metrics as JSON: `run_id`, `command`, `exit_code`, `total_elapsed_seconds`, and for `generate` the domain, mode, scale, seed, format, rows and tables |
 
-`shape.observability` has the same pieces for library code: `configure_logging`, `RunMetrics` (with
+`shape.runlog` has the same pieces for library code: `configure_logging`, `RunMetrics` (with
 `start_table`, `end_table`, `record_event`, `finish`). Nothing is sent anywhere.
 
 ### `shape validate`

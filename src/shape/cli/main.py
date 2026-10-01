@@ -646,14 +646,14 @@ def main(argv=None):
     import logging
     import time
 
-    from shape import observability
+    from shape import runlog
 
     if opts["log_json"]:
-        observability.configure_logging(level=opts["log_level"])
+        runlog.configure_logging(level=opts["log_level"])
     command = next((x for x in argv if not x.startswith("-")), "")
-    run = observability.begin(f"{time.strftime('%Y%m%dT%H%M%S')}_{command or 'shape'}")
+    run = runlog.begin(f"{time.strftime('%Y%m%dT%H%M%S')}_{command or 'shape'}")
     run.set(command=command)
-    log = logging.getLogger(observability.LOGGER)
+    log = logging.getLogger(runlog.LOGGER)
     log.info("command started", extra={"command": command})
     code = 1
     try:

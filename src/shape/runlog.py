@@ -5,7 +5,7 @@ options ``shape --log-json --metrics RUN.json COMMAND ...`` or the environment v
 ``SHAPE_LOG_JSON=1``, ``SHAPE_LOG_LEVEL`` and ``SHAPE_METRICS=FILE``; library code can use it
 directly::
 
-    from shape.observability import configure_logging, RunMetrics
+    from shape.runlog import configure_logging, RunMetrics
 
     configure_logging(level="INFO")
     metrics = RunMetrics("20240301_retail_small_s42")

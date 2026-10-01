@@ -17,7 +17,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Run logging and metrics for every command: `shape --log-json --log-level LEVEL --metrics FILE
   COMMAND ...` (or `SHAPE_LOG_JSON`, `SHAPE_LOG_LEVEL`, `SHAPE_METRICS`) logs JSON lines to stderr
   and writes the run's metrics (command, exit code, seconds, rows, tables) to FILE. In Python:
-  `shape.observability` (`configure_logging`, `RunMetrics`).
+  `shape.runlog` (`configure_logging`, `RunMetrics`).
 - `shape validate FILE` dispatches on what the file holds: a generation schema goes through the
   schema validator (JSON Schema, then keys, relationships, rules, scale presets and strategy
   keys; exit 1 when invalid), a contract through the contract validation, and any other document

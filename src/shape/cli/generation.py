@@ -203,7 +203,7 @@ def cmd_generate(a: argparse.Namespace) -> int:
     if a.rows is not None:
         raise ValueError("--rows prints demo rows and takes no target")
     from shape.generation.engine import Engine
-    from shape.observability import current
+    from shape.runlog import current
 
     run = current()
     schema = load_target(a.target, a.mode)
@@ -232,7 +232,7 @@ def cmd_generate(a: argparse.Namespace) -> int:
 
 def _generate(a: argparse.Namespace, engine: Any) -> int:
     from shape.generation.output import format_summary, write_engine
-    from shape.observability import current
+    from shape.runlog import current
 
     run = current()
     started = time.perf_counter()

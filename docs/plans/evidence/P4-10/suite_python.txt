@@ -98,4 +98,4 @@ tests/kernel/test_exact_kernel.py::test_numeric_stats_with_infinities
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 =========================== short test summary info ============================
 FAILED tests/test_removed_modules.py::test_removed_module_is_not_importable[observability]
-1 failed, 3576 passed, 45 deselected, 14 warnings in 210.50s (0:03:30)
+1 failed, 3576 passed, 45 deselected, 14 warnings in 421.17s (0:07:01)

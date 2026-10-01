@@ -251,7 +251,7 @@ def test_version_stays_light():
     """`shape version` must not import numpy, pyarrow or the engine (T-18)."""
     code = (
         "import sys; from shape.cli.main import main; main(['version']); "
-        "bad = [m for m in ('numpy', 'pyarrow', 'shape.generation', 'shape.observability') "
+        "bad = [m for m in ('numpy', 'pyarrow', 'shape.generation', 'shape.runlog') "
         "if m in sys.modules]; sys.exit(1 if bad else 0)"
     )
     done = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
@@ -315,7 +315,7 @@ def test_log_json_and_metrics_for_any_command(capsys, tmp_path):
 
 
 def test_run_metrics_collector():
-    from shape.observability import RunMetrics
+    from shape.runlog import RunMetrics
 
     m = RunMetrics("r1")
     m.start_table("t")
