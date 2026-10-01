@@ -103,14 +103,52 @@ pub fn for_row_chunks<T: Send>(
 mod tests {
     use super::*;
 
-    // numpy.random.Philox(key=0x0123456789abcdef_fedcba9876543210, counter=0).random_raw(4),
-    // recorded from numpy 2.x: the known answer of block 0.
+    // Known answers recorded from numpy (2.4): numpy.random.Philox(key=..., counter=c).random_raw(4).
     #[test]
-    fn counter_convention_matches_numpy() {
+    fn known_answers_from_numpy() {
         let key = [0xfedc_ba98_7654_3210, 0x0123_4567_89ab_cdef];
-        let b0 = block(key, 0);
-        let b1 = block(key, 1);
-        assert_ne!(b0, b1);
+        assert_eq!(
+            block(key, 0),
+            [
+                0x4a9f_6f3d_9755_7e44,
+                0xbb94_3154_03d0_0d3d,
+                0xab99_8127_789d_5219,
+                0x7937_1346_a2a0_df2a
+            ]
+        );
+        assert_eq!(
+            block(key, 1),
+            [
+                0x5ea3_8f21_5be0_c579,
+                0x8928_2f1b_1507_a0cb,
+                0x9d8b_89be_17df_772a,
+                0xfffb_c343_7a44_5afe
+            ]
+        );
+        assert_eq!(
+            block(key, 123_456),
+            [
+                0x7ed6_9861_abce_7bb2,
+                0x3a0d_6373_d789_3513,
+                0x3ae0_9d75_5156_a05d,
+                0xbfa6_c5e9_6652_18c7
+            ]
+        );
+        assert_eq!(
+            block([0, 0], 0),
+            [
+                0x02f4_ba64_08e4_d89b,
+                0x3dd6_2b0b_9ca8_c5b2,
+                0x1c86_67a5_5d90_2e79,
+                0x907d_7a05_2fd5_b4dc
+            ]
+        );
+    }
+
+    #[test]
+    fn words_continue_across_blocks() {
+        let key = [0xfedc_ba98_7654_3210, 0x0123_4567_89ab_cdef];
+        let (b0, b1) = (block(key, 0), block(key, 1));
         let mut w = [0u64; 6];
         fill_words(key, 2, &mut w);
         assert_eq!(&w[..2], &b0[2..]);

@@ -9,11 +9,12 @@ read in any order, or split across threads. ``label`` separates the streams one 
 engine's null mask, a strategy's value draw, a rule fix), so no two uses share numbers.
 
 The key is the first 16 bytes of ``blake2b(seed, table, column, label)`` read as two
-little-endian 64-bit words ``(k0, k1)``; ``numpy.random.Philox(key=k0 | k1 << 64)``. This module
-is the Python reference. The Rust twin (P4-03, ``gen/rng.rs``) receives ``(k0, k1)`` and must
-reproduce :meth:`RowStream.raw` word for word; the known-answer oracle is numpy itself.
+little-endian 64-bit words ``(k0, k1)``; ``numpy.random.Philox(key=k0 | k1 << 64)``. The native
+kernel (``gen/rng.rs``, P4-03) receives ``(k0, k1)`` and reproduces :meth:`RowStream.raw` word for
+word; the known-answer oracle is numpy itself.
 
-Stable interface: ``RowStream``, ``stream_key``, ``uniform_from_raw`` and ``normal_from_raw``.
+Stable interface: ``RowStream``, ``stream_key``,
+``uniform_from_raw`` and ``normal_from_raw``.
 
 ``RowStream`` reads its words and derived values through the selected kernel
 (:mod:`shape.kernel.dispatch`): the native one when it is built, else the Python reference. The
