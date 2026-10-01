@@ -192,3 +192,33 @@ def test_the_global_profile_of_the_topic_counts_every_row(topic):
         src, uri(topic), GlobalProfiler(schema), options={"batch_size": 250, "schema": schema}
     ).run()
     assert win.rows == ROWS
+
+
+def test_stream_profile_on_a_real_broker(topic, tmp_path, capsys):
+    """P3-05 end to end: the command, the real plugin, a real broker; the profile counts every
+    message once, a followed windowed run is resumable, and a rerun of the finished one is a
+    no-op."""
+    from shape.cli.main import main
+
+    out = tmp_path / "p.json"
+    ck = tmp_path / "ck.json"
+    argv = ["stream-profile", uri(topic), "-o", str(out), "--checkpoint", str(ck)]
+    assert main([*argv, "--batch-size", "200"]) == 0
+    summary = json.loads(capsys.readouterr().out.strip().splitlines()[-1])
+    assert summary["events"] == ROWS and summary["undecodable"] == 0 and summary["rejected"] == 0
+    doc = json.loads(out.read_text())
+    cols = {c["name"]: c for c in doc["tables"]["stream"]["columns"]}
+    assert doc["mode"] == "bounded" and doc["tables"]["stream"]["rows"] == ROWS
+    assert cols["id"]["count"] == ROWS and cols["id"]["min"] == 0 and cols["id"]["max"] == ROWS - 1
+    assert main(argv) == 0 and "finished run" in capsys.readouterr().out
+
+    windows = tmp_path / "w.jsonl"
+    code = main(
+        [
+            "stream-profile", uri(topic), "--window", "tumbling", "--size", "5s",
+            "--allowed-lateness", "1m", "--windows", str(windows), "--batch-size", "250",
+        ]
+    )  # fmt: skip
+    assert code == 0
+    lines = [json.loads(x) for x in windows.read_text().splitlines()]
+    assert sum(w["rows"] for w in lines) == ROWS and len(lines) == 3  # 15 s of event time

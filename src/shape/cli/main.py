@@ -139,6 +139,12 @@ def _cmd_profile(a):
     return 0
 
 
+def _cmd_stream_profile(a):
+    from shape.streaming.cli import run
+
+    return run(a)
+
+
 def _cmd_inspect(a):
     """Print what a .shape artifact holds: a profile or a Shape model."""
     if _artifact_kind(a.shape) == "profile":
@@ -251,6 +257,100 @@ def _cmd_plugins(a):
     return 0 if report["ok"] else 1
 
 
+def _stream_profile_arguments(parser):
+    """The ``stream-profile`` arguments; the command itself is ``shape.streaming.cli``."""
+    parser.add_argument(
+        "uri", metavar="URI", help="kafka://host:9092/TOPIC or eventhubs://NAMESPACE/HUB"
+    )
+    parser.add_argument("-o", "--output", metavar="OUT.json", help="the global profile")
+    parser.add_argument(
+        "--window",
+        choices=("global", "tumbling", "sliding", "session"),
+        default="global",
+        help="global: one profile of the whole stream (default); the others write --windows",
+    )
+    parser.add_argument("--windows", metavar="OUT.jsonl", help="closed windows, one per line")
+    parser.add_argument("--size", metavar="DURATION", help="tumbling or sliding window size")
+    parser.add_argument("--slide", metavar="DURATION", help="sliding window step (at most size)")
+    parser.add_argument("--gap", metavar="DURATION", help="session window inactivity gap")
+    parser.add_argument(
+        "--allowed-lateness",
+        default="0s",
+        metavar="DURATION",
+        help="how far behind the newest event time a row may arrive and still count (default: 0s)",
+    )
+    parser.add_argument(
+        "--event-time",
+        metavar="FIELD",
+        help="the payload field holding the event time (default _shape_event_time; "
+        "events without one use the broker's timestamp)",
+    )
+    parser.add_argument(
+        "--event-time-unit",
+        choices=("s", "ms", "us"),
+        default="ms",
+        help="unit of a numeric event time (default: ms)",
+    )
+    parser.add_argument(
+        "--start",
+        choices=("earliest", "latest"),
+        default="earliest",
+        help="where to begin when there is no checkpoint (default: earliest)",
+    )
+    parser.add_argument(
+        "--follow",
+        action="store_true",
+        help="keep reading as events arrive, instead of stopping at the end the stream had "
+        "when the run began",
+    )
+    parser.add_argument("--max-events", type=int, metavar="N", help="stop after N events")
+    parser.add_argument(
+        "--idle-timeout",
+        type=float,
+        metavar="SECONDS",
+        help="stop after this long without an event (with --follow)",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=65_536,
+        metavar="N",
+        help="events per micro-batch; the first batch fixes the schema (default: 65536)",
+    )
+    parser.add_argument(
+        "--checkpoint",
+        metavar="FILE",
+        help="commit the offsets and profile state here and resume from it when it exists",
+    )
+    parser.add_argument(
+        "--checkpoint-every",
+        type=int,
+        default=10,
+        metavar="N",
+        help="batches between checkpoints (default: 10)",
+    )
+    parser.add_argument(
+        "--max-reconnects",
+        type=int,
+        default=5,
+        metavar="N",
+        help="consecutive connections that bring nothing new before giving up (default: 5)",
+    )
+    parser.add_argument("--name", default="stream", help="table name in the profile")
+    parser.add_argument("--top-n", type=int, default=500, metavar="N", help="top values kept")
+    parser.add_argument(
+        "--option",
+        action="append",
+        metavar="KEY=VALUE",
+        help="a source option (JSON values allowed); repeatable",
+    )
+    parser.add_argument(
+        "--options-file",
+        metavar="FILE.json",
+        help="source options as a JSON object (keeps secrets out of the command line)",
+    )
+
+
 def _build_parser(plugin_commands=()):
     p = argparse.ArgumentParser(prog="shape", description="Shape as Code")
     p.add_argument("--version", "-V", action="store_true", help="print the version and exit")
@@ -283,6 +383,11 @@ def _build_parser(plugin_commands=()):
     pr.add_argument("--sign", metavar="KEY", help="sign the written .shape with this private key")
     pr.add_argument("--html", metavar="REPORT.html")
     pr.add_argument("--json", metavar="SUMMARY.json")
+    sp = sub.add_parser(
+        "stream-profile",
+        help="profile a Kafka topic or an Event Hubs hub (bounded mode, windows, checkpoints)",
+    )
+    _stream_profile_arguments(sp)
     d = sub.add_parser("diff", help="compare two profiles")
     d.add_argument("before", metavar="BASE.shape")
     d.add_argument("after", metavar="CURRENT.shape")
@@ -412,6 +517,8 @@ def main(argv=None):
             return rc
     if a.cmd == "profile":
         return _run(_cmd_profile, a)
+    if a.cmd == "stream-profile":
+        return _run(_cmd_stream_profile, a)
     if a.cmd == "check" and _is_profile_or_missing(a.shape):
         return _run(_cmd_check, a)
     if a.cmd == "diff" and _is_profile_or_missing(a.before):

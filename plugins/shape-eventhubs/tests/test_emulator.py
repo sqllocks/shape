@@ -230,3 +230,19 @@ def test_follow_mode_sees_events_sent_after_it_started(run_id):
         assert sorted(seen) == [1, 2]
     finally:
         producer.close()
+
+
+def test_stream_profile_on_the_emulator(run_id, tmp_path, capsys, monkeypatch):
+    """P3-05 end to end: the command, the real plugin, the emulator. The emulator keeps the
+    events of earlier runs, so this run's are counted by their ``run`` tag."""
+    from shape.cli.main import main
+
+    monkeypatch.setenv("SHAPE_EVENTHUBS_CONNECTION_STRING", CONNECTION)
+    out = tmp_path / "p.json"
+    assert main(["stream-profile", URI, "-o", str(out), "--batch-size", "500"]) == 0
+    summary = json.loads(capsys.readouterr().out.strip().splitlines()[-1])
+    assert summary["undecodable"] == 0 and summary["events"] >= ROWS
+    doc = json.loads(out.read_text())
+    cols = {c["name"]: c for c in doc["tables"]["stream"]["columns"]}
+    assert doc["mode"] == "bounded" and cols["run"]["count"] == summary["events"]
+    assert {t[0]: t[1] for t in cols["run"]["top"]}[run_id.tag] == ROWS
