@@ -8,6 +8,11 @@ order, so every value has to equal the reference bit for bit: not within a toler
 
 from __future__ import annotations
 
+import json
+import os
+import subprocess
+import sys
+
 import numpy as np
 import pyarrow as pa
 import pytest
@@ -131,3 +136,46 @@ def test_a_full_column_refit_on_the_pool_equals_the_reference(native):
     assert all(
         _same(got["distribution_params"][k], v) for k, v in want["distribution_params"].items()
     )
+
+
+_ROUTES_SCRIPT = """
+import json
+import numpy as np
+import pyarrow as pa
+from shape import _kernel
+from shape.kernel.reference.fit import sample_for_fitting
+
+rng = np.random.default_rng(11)
+columns = [
+    rng.lognormal(3.0, 0.6, 5000),
+    np.round(rng.normal(250, 40, 2000), 3),
+    np.round(rng.lognormal(1, 0.5, 100_000), 4),
+    np.round(rng.lognormal(3.5, 0.9, 300_000), 2),
+    np.round(rng.normal(0, 1, 100_000), 3),
+]
+out = []
+for values in columns:
+    sample = sample_for_fitting(values)
+    r = _kernel.fit_distribution(pa.array(sample), pa.array(values))
+    params = r["distribution_params"] or {}
+    out.append([r["distribution"], r["fit_score"], {k: v.hex() for k, v in params.items()}])
+print(json.dumps([_kernel.numpy_loops_mode(), out]))
+"""
+
+
+def _fit_in_subprocess(route):
+    env = {**os.environ, "SHAPE_NUMPY_LOOPS": route}
+    done = subprocess.run(
+        [sys.executable, "-c", _ROUTES_SCRIPT], env=env, capture_output=True, text=True, check=True
+    )
+    return json.loads(done.stdout.strip().splitlines()[-1])
+
+
+def test_numpy_loops_called_directly_equal_numpy_called_through_python():
+    """The kernel calls numpy's own float64 log/exp loops without the GIL when they validate
+    (``numpy_loops``) and ``numpy.log`` through the interpreter otherwise: same bits either way."""
+    mode_native, native_out = _fit_in_subprocess("auto")
+    mode_python, python_out = _fit_in_subprocess("python")
+    assert mode_python == "python"
+    assert mode_native in {"native", "python"}
+    assert native_out == python_out

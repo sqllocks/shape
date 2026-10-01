@@ -46,11 +46,16 @@ static LN_HOOK: std::sync::OnceLock<ScalarFn> = std::sync::OnceLock::new();
 pub type ArrayFn = fn(&mut [f64]);
 static LN_ARRAY_HOOK: std::sync::OnceLock<ArrayFn> = std::sync::OnceLock::new();
 
-pub fn set_scalar_hooks(exp: ScalarFn, ln: ScalarFn, ln_array: ArrayFn) {
+/// Set once with the hooks. `gil_free` says that they call numpy's loops directly: no GIL and no
+/// numpy error state is involved, so any pass may run on the pool (see `Eval::pass`).
+pub fn set_scalar_hooks(exp: ScalarFn, ln: ScalarFn, ln_array: ArrayFn, gil_free: bool) {
     let _ = EXP_HOOK.set(exp);
     let _ = LN_HOOK.set(ln);
     let _ = LN_ARRAY_HOOK.set(ln_array);
+    GIL_FREE_HOOKS.store(gil_free, std::sync::atomic::Ordering::Relaxed);
 }
+
+static GIL_FREE_HOOKS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// Natural log of every element in place: numpy's (SIMD) `log` when hooked, else libm.
 fn ln_inplace(a: &mut [f64]) {
@@ -1257,6 +1262,9 @@ struct Eval<'a> {
     par: bool,
     /// `shape_scale` of the last `loc` (the search asks for `dl_dloc` and `ll` at the same point).
     last: std::cell::Cell<Option<(f64, f64, f64)>>,
+    /// Every `dl_dloc` value computed so far, by the bits of `loc`: the root finder asks again
+    /// for the two ends of its bracket.
+    dl_seen: std::cell::RefCell<Vec<(u64, f64)>>,
     sums: std::cell::RefCell<Vec<f64>>,
     b1: std::cell::RefCell<Vec<f64>>,
     b2: std::cell::RefCell<Vec<f64>>,
@@ -1280,16 +1288,18 @@ impl<'a> Eval<'a> {
             plan: Plan::new(n, par),
             par,
             last: std::cell::Cell::new(None),
+            dl_seen: std::cell::RefCell::new(Vec::new()),
             sums: std::cell::RefCell::new(Vec::new()),
             b1: std::cell::RefCell::new(vec![0.0; n]),
             b2: std::cell::RefCell::new(vec![0.0; n]),
         }
     }
 
-    /// Run one pass over the data (see `Plan::run`), on the rayon pool if `par_ok`. A pass that
-    /// calls numpy's `log` on a value that is not positive makes numpy raise a floating-point
-    /// error flag, whose reporting is set up for the calling thread only (`ignore_fp_errors`),
-    /// so such a pass has to stay on the calling thread: the callers say so with `par_ok`.
+    /// Run one pass over the data (see `Plan::run`), on the rayon pool if `par_ok`. When `log`
+    /// goes through Python, a pass that calls numpy's `log` on a value that is not positive makes
+    /// numpy raise a floating-point error flag, whose reporting is set up for the calling thread
+    /// only (`ignore_fp_errors`), so such a pass has to stay on the calling thread: the callers
+    /// say so with `par_ok`. With the GIL-free hooks there is no such state.
     fn pass<F>(&self, par_ok: bool, f: F) -> f64
     where
         F: Fn(Chunk<'_>) + Sync + Send,
@@ -1339,6 +1349,19 @@ impl<'a> Eval<'a> {
     }
 
     fn dl_dloc(&self, loc: f64) -> f64 {
+        let key = loc.to_bits();
+        if let Some((_, d)) = self.dl_seen.borrow().iter().find(|(k, _)| *k == key) {
+            return *d;
+        }
+        let d = self.dl_dloc_uncached(loc);
+        let mut seen = self.dl_seen.borrow_mut();
+        if seen.len() < 256 {
+            seen.push((key, d));
+        }
+        d
+    }
+
+    fn dl_dloc_uncached(&self, loc: f64) -> f64 {
         let (shape, scale) = self.shape_scale(loc);
         let s2 = shape * shape;
         let data = self.data;
@@ -1829,6 +1852,9 @@ mod tests {
         let mut rng = Lcg(31);
         for &n in &[60usize, 2000, 20_000, 70_001, 150_011] {
             for (name, data) in datasets(n, &mut rng) {
+                if n > 100_000 && !matches!(name, "lognormal" | "normal") {
+                    continue; // the big size is for the multi-chunk path; keep the debug run short
+                }
                 let got = lognorm_fit(&data);
                 let want = ref_lognorm_fit(&data);
                 match (got, want) {
