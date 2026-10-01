@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import random
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 
@@ -100,45 +100,73 @@ class ForeignKey(Strategy):
 
 @dataclass(frozen=True, slots=True)
 class FirstPerParent(Strategy):
+    """``first`` for the first row of each ``parent_field`` value, ``subsequent`` for the rest.
+
+    "First" means no earlier row has the same parent value, so the label of row ``i`` is a
+    function of the plan and ``i`` alone: it does not depend on which rows were asked for before
+    (plan Appendix A, G2). The plan answers through ``ctx["__first_row__"]``.
+    """
+
     parent_field: str
     first: Any
     subsequent: Any
 
     def generate(self, row, ctx, rng):
-        seen = ctx.get("__seen_parents__")
-        if seen is None:
-            raise ValueError("FirstPerParent requires stateful plan context")
-        parent = ctx[self.parent_field]
-        if parent not in seen:
-            seen.add(parent)
-            return self.first
-        return self.subsequent
+        resolve = ctx.get("__first_row__")
+        if resolve is None:
+            raise ValueError("FirstPerParent must run inside a GenerationPlan")
+        return self.first if resolve(self, ctx[self.parent_field]) == row else self.subsequent
 
 
 @dataclass(frozen=True, slots=True)
 class GenerationPlan:
     fields: tuple[tuple[str, Strategy], ...]
     seed: int = 0
+    # Per FirstPerParent: parent value -> first row with it, and how many rows were scanned.
+    # A cache only: every entry is a function of (fields, seed), never of the order of calls.
+    _first_rows: dict[int, dict[Any, int]] = field(default_factory=dict, compare=False, repr=False)
+    _scanned: dict[int, int] = field(default_factory=dict, compare=False, repr=False)
 
-    def row_at(self, i: int, seen=None):
-        if i < 0:
-            raise ValueError("row index must be non-negative")
+    def _eval_row(self, i: int, stop_at: str | None = None) -> dict[str, Any]:
         rng = random.Random((self.seed << 64) ^ i)
-        state = set() if seen is None else seen
-        row = {"__seen_parents__": state}
+        row: dict[str, Any] = {"__first_row__": self._first_row_of(i)}
         for name, strategy in self.fields:
             row[name] = strategy.generate(i, row, rng)
-        row.pop("__seen_parents__", None)
+            if name == stop_at:
+                break
+        return row
+
+    def _first_row_of(self, i: int):
+        def first_row(strategy: FirstPerParent, parent: Any) -> int:
+            key = id(strategy)
+            firsts = self._first_rows.setdefault(key, {})
+            done = self._scanned.get(key, 0)
+            for j in range(done, i + 1):
+                # Rows before ``i`` are only read up to the parent field, which never needs
+                # this strategy's own answer for the same row.
+                firsts.setdefault(
+                    self._eval_row(j, strategy.parent_field)[strategy.parent_field], j
+                )
+            self._scanned[key] = max(done, i + 1)
+            return firsts[parent]
+
+        return first_row
+
+    def row_at(self, i: int, seen=None):
+        """Row ``i``. ``seen`` is accepted for compatibility and ignored: the answer never
+        depends on what was generated before."""
+        if i < 0:
+            raise ValueError("row index must be non-negative")
+        row = self._eval_row(i)
+        row.pop("__first_row__", None)
         return row
 
     def rows_at(self, indices):
-        seen = set()
         for i in indices:
-            yield self.row_at(int(i), seen)
+            yield self.row_at(int(i))
 
     def rows(self, count: int):
         if count < 0:
             raise ValueError("count must be non-negative")
-        seen = set()
         for i in range(count):
-            yield self.row_at(i, seen)
+            yield self.row_at(i)

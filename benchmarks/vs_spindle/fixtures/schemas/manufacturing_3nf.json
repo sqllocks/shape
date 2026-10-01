@@ -1,0 +1,1252 @@
+{
+ "model": {
+  "name": "manufacturing_3nf",
+  "description": "Manufacturing domain \u2014 3nf schema",
+  "domain": "manufacturing",
+  "schema_mode": "3nf",
+  "locale": "en_US",
+  "seed": 42,
+  "date_range": {
+   "start": "2022-01-01",
+   "end": "2025-12-31"
+  }
+ },
+ "tables": {
+  "production_line": {
+   "name": "production_line",
+   "columns": {
+    "line_id": {
+     "name": "line_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "line_name": {
+     "name": "line_name",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "LINE-{seq:3}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    },
+    "facility": {
+     "name": "facility",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Plant A": 0.3,
+       "Plant B": 0.28,
+       "Plant C": 0.22,
+       "Plant D": 0.2
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "line_type": {
+     "name": "line_type",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Assembly": 0.3,
+       "Machining": 0.25,
+       "Packaging": 0.2,
+       "Testing": 0.15,
+       "Finishing": 0.1
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "capacity_per_hour": {
+     "name": "capacity_per_hour",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 50,
+      "max": 500
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "is_active": {
+     "name": "is_active",
+     "type": "boolean",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "true": 0.9,
+       "false": 0.1
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "line_id"
+   ],
+   "description": "Manufacturing production lines",
+   "cdm_mapping": null
+  },
+  "product": {
+   "name": "product",
+   "columns": {
+    "product_id": {
+     "name": "product_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "product_name": {
+     "name": "product_name",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "PRD-{seq:5}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 30,
+     "precision": null,
+     "scale": null
+    },
+    "product_category": {
+     "name": "product_category",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "material_types"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "unit_cost": {
+     "name": "unit_cost",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 4.5,
+      "sigma": 1.2,
+      "min": 1.0,
+      "max": 10000.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "sell_price": {
+     "name": "sell_price",
+     "type": "float",
+     "generator": {
+      "strategy": "correlated",
+      "source_column": "unit_cost",
+      "operation": "multiply",
+      "params": {
+       "factor_min": 1.3,
+       "factor_max": 2.5
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "weight_kg": {
+     "name": "weight_kg",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 1.5,
+      "sigma": 1.0,
+      "min": 0.01,
+      "max": 500.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "product_id"
+   ],
+   "description": "Manufactured products",
+   "cdm_mapping": null
+  },
+  "bom": {
+   "name": "bom",
+   "columns": {
+    "bom_id": {
+     "name": "bom_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "product_id": {
+     "name": "product_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "product.product_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "component_name": {
+     "name": "component_name",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "CMP-{seq:5}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 30,
+     "precision": null,
+     "scale": null
+    },
+    "quantity_required": {
+     "name": "quantity_required",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 1,
+      "max": 50
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "unit_of_measure": {
+     "name": "unit_of_measure",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "EA": 0.4,
+       "KG": 0.2,
+       "LB": 0.15,
+       "M": 0.1,
+       "LT": 0.15
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 10,
+     "precision": null,
+     "scale": null
+    },
+    "unit_cost": {
+     "name": "unit_cost",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 3.0,
+      "sigma": 1.3,
+      "min": 0.01,
+      "max": 5000.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "is_critical": {
+     "name": "is_critical",
+     "type": "boolean",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "true": 0.25,
+       "false": 0.75
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "bom_id"
+   ],
+   "description": "Bill of materials \u2014 components per product",
+   "cdm_mapping": null
+  },
+  "work_order": {
+   "name": "work_order",
+   "columns": {
+    "wo_id": {
+     "name": "wo_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "work_order_number": {
+     "name": "work_order_number",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "WO-{seq:6}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 15,
+     "precision": null,
+     "scale": null
+    },
+    "product_id": {
+     "name": "product_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "product.product_id",
+      "distribution": "zipf",
+      "alpha": 1.3
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "production_line_id": {
+     "name": "production_line_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "production_line.line_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "quantity_planned": {
+     "name": "quantity_planned",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 5.0,
+      "sigma": 1.0,
+      "min": 1,
+      "max": 10000
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "quantity_produced": {
+     "name": "quantity_produced",
+     "type": "integer",
+     "generator": {
+      "strategy": "correlated",
+      "source_column": "quantity_planned",
+      "operation": "multiply",
+      "params": {
+       "factor_min": 0.85,
+       "factor_max": 1.0
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "start_date": {
+     "name": "start_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2022-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "end_date": {
+     "name": "end_date",
+     "type": "date",
+     "generator": {
+      "strategy": "derived",
+      "source": "start_date",
+      "operation": "add_days",
+      "days": 14
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "status": {
+     "name": "status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Open": 0.1,
+       "In Progress": 0.15,
+       "Completed": 0.55,
+       "On Hold": 0.1,
+       "Cancelled": 0.1
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "priority": {
+     "name": "priority",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "High": 0.2,
+       "Medium": 0.55,
+       "Low": 0.25
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "wo_id"
+   ],
+   "description": "Production work orders",
+   "cdm_mapping": null
+  },
+  "quality_check": {
+   "name": "quality_check",
+   "columns": {
+    "check_id": {
+     "name": "check_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "wo_id": {
+     "name": "wo_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "work_order.wo_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "check_date": {
+     "name": "check_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2022-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "check_type": {
+     "name": "check_type",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "operation_types"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "result": {
+     "name": "result",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Pass": 0.82,
+       "Fail": 0.08,
+       "Rework": 0.1
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "defect_count": {
+     "name": "defect_count",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 0.5,
+      "sigma": 0.8,
+      "min": 0,
+      "max": 50
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "inspector_name": {
+     "name": "inspector_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "check_id"
+   ],
+   "description": "Quality control inspections",
+   "cdm_mapping": null
+  },
+  "defect": {
+   "name": "defect",
+   "columns": {
+    "defect_id": {
+     "name": "defect_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "check_id": {
+     "name": "check_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "quality_check.check_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "defect_code": {
+     "name": "defect_code",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "defect_codes"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "severity": {
+     "name": "severity",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Critical": 0.05,
+       "Major": 0.15,
+       "Minor": 0.5,
+       "Cosmetic": 0.3
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "root_cause": {
+     "name": "root_cause",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Material": 0.25,
+       "Process": 0.25,
+       "Equipment": 0.2,
+       "Human": 0.2,
+       "Design": 0.1
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "disposition": {
+     "name": "disposition",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Scrap": 0.25,
+       "Rework": 0.35,
+       "Use As-Is": 0.25,
+       "Return to Supplier": 0.15
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "defect_id"
+   ],
+   "description": "Defect records from quality checks",
+   "cdm_mapping": null
+  },
+  "equipment": {
+   "name": "equipment",
+   "columns": {
+    "equipment_id": {
+     "name": "equipment_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "equipment_name": {
+     "name": "equipment_name",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "EQP-{seq:4}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    },
+    "equipment_type": {
+     "name": "equipment_type",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "CNC": 0.25,
+       "Press": 0.18,
+       "Conveyor": 0.15,
+       "Robot": 0.15,
+       "Oven": 0.12,
+       "Tester": 0.15
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "production_line_id": {
+     "name": "production_line_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "production_line.line_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "purchase_date": {
+     "name": "purchase_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2015-01-01",
+      "end": "2025-06-30",
+      "pattern": "uniform"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "status": {
+     "name": "status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Operational": 0.8,
+       "Under Maintenance": 0.15,
+       "Decommissioned": 0.05
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "last_maintenance_date": {
+     "name": "last_maintenance_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2023-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "equipment_id"
+   ],
+   "description": "Machines, tools, and equipment",
+   "cdm_mapping": null
+  },
+  "downtime_event": {
+   "name": "downtime_event",
+   "columns": {
+    "event_id": {
+     "name": "event_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "equipment_id": {
+     "name": "equipment_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "equipment.equipment_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "start_time": {
+     "name": "start_time",
+     "type": "datetime",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2022-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "duration_minutes": {
+     "name": "duration_minutes",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 3.5,
+      "sigma": 1.0,
+      "min": 5,
+      "max": 1440
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "cause": {
+     "name": "cause",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Breakdown": 0.25,
+       "Planned Maintenance": 0.25,
+       "Material Shortage": 0.15,
+       "Changeover": 0.15,
+       "Power Outage": 0.1,
+       "Quality Issue": 0.1
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "impact_level": {
+     "name": "impact_level",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "High": 0.2,
+       "Medium": 0.5,
+       "Low": 0.3
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "event_id"
+   ],
+   "description": "Equipment downtime tracking",
+   "cdm_mapping": null
+  },
+  "production_metric": {
+   "name": "production_metric",
+   "columns": {
+    "metric_id": {
+     "name": "metric_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "wo_id": {
+     "name": "wo_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "work_order.wo_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "metric_date": {
+     "name": "metric_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2022-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "oee_score": {
+     "name": "oee_score",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 0.5,
+      "max": 0.99,
+      "round": 3
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "yield_rate": {
+     "name": "yield_rate",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 0.85,
+      "max": 0.99,
+      "round": 3
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "cycle_time_seconds": {
+     "name": "cycle_time_seconds",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 4.0,
+      "sigma": 0.8,
+      "min": 5.0,
+      "max": 3600.0,
+      "round": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "scrap_rate": {
+     "name": "scrap_rate",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 0.001,
+      "max": 0.1,
+      "round": 4
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "metric_id"
+   ],
+   "description": "Production KPIs per work order",
+   "cdm_mapping": null
+  }
+ },
+ "relationships": [
+  {
+   "name": "bom_product",
+   "parent": "product",
+   "child": "bom",
+   "parent_columns": [
+    "product_id"
+   ],
+   "child_columns": [
+    "product_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "work_order_product",
+   "parent": "product",
+   "child": "work_order",
+   "parent_columns": [
+    "product_id"
+   ],
+   "child_columns": [
+    "product_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "work_order_production_line",
+   "parent": "production_line",
+   "child": "work_order",
+   "parent_columns": [
+    "line_id"
+   ],
+   "child_columns": [
+    "production_line_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "quality_check_work_order",
+   "parent": "work_order",
+   "child": "quality_check",
+   "parent_columns": [
+    "wo_id"
+   ],
+   "child_columns": [
+    "wo_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "defect_quality_check",
+   "parent": "quality_check",
+   "child": "defect",
+   "parent_columns": [
+    "check_id"
+   ],
+   "child_columns": [
+    "check_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "equipment_production_line",
+   "parent": "production_line",
+   "child": "equipment",
+   "parent_columns": [
+    "line_id"
+   ],
+   "child_columns": [
+    "production_line_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "downtime_event_equipment",
+   "parent": "equipment",
+   "child": "downtime_event",
+   "parent_columns": [
+    "equipment_id"
+   ],
+   "child_columns": [
+    "equipment_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "production_metric_work_order",
+   "parent": "work_order",
+   "child": "production_metric",
+   "parent_columns": [
+    "wo_id"
+   ],
+   "child_columns": [
+    "wo_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  }
+ ],
+ "business_rules": [
+  {
+   "name": "quantity_produced_leq_planned",
+   "type": "column_comparison",
+   "rule": "",
+   "table": "work_order",
+   "via": null,
+   "when": null
+  },
+  {
+   "name": "sell_price_gte_unit_cost",
+   "type": "column_comparison",
+   "rule": "",
+   "table": "product",
+   "via": null,
+   "when": null
+  }
+ ],
+ "generation": {
+  "scale": "small",
+  "scales": {
+   "fabric_demo": {
+    "work_order": 50
+   },
+   "small": {
+    "work_order": 500
+   },
+   "medium": {
+    "work_order": 5000
+   },
+   "large": {
+    "work_order": 50000
+   },
+   "xlarge": {
+    "work_order": 500000
+   },
+   "warehouse": {
+    "work_order": 5000000
+   },
+   "xxl": {
+    "work_order": 20000000
+   },
+   "xxxl": {
+    "work_order": 100000000
+   }
+  },
+  "derived_counts": {
+   "production_line": {
+    "fixed": 20
+   },
+   "product": {
+    "fixed": 100
+   },
+   "equipment": {
+    "fixed": 80
+   },
+   "bom": {
+    "per_parent": "product",
+    "ratio": 5.0
+   },
+   "quality_check": {
+    "per_parent": "work_order",
+    "ratio": 3.0
+   },
+   "defect": {
+    "per_parent": "quality_check",
+    "ratio": 0.3
+   },
+   "downtime_event": {
+    "per_parent": "equipment",
+    "ratio": 4.0
+   },
+   "production_metric": {
+    "per_parent": "work_order",
+    "ratio": 5.0
+   }
+  },
+  "output": {}
+ },
+ "correlated_columns": {}
+}

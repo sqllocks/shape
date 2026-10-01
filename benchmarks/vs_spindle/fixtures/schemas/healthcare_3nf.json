@@ -1,0 +1,1620 @@
+{
+ "model": {
+  "name": "healthcare_3nf",
+  "description": "Healthcare domain \u2014 3nf schema",
+  "domain": "healthcare",
+  "schema_mode": "3nf",
+  "locale": "en_US",
+  "seed": 42,
+  "date_range": {
+   "start": "2022-01-01",
+   "end": "2025-12-31"
+  }
+ },
+ "tables": {
+  "provider": {
+   "name": "provider",
+   "columns": {
+    "provider_id": {
+     "name": "provider_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "npi": {
+     "name": "npi",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "{seq:10}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 10,
+     "precision": null,
+     "scale": null
+    },
+    "first_name": {
+     "name": "first_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "first_name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "last_name": {
+     "name": "last_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "last_name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "credential": {
+     "name": "credential",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "MD": 0.55,
+       "DO": 0.11,
+       "NP": 0.2,
+       "PA": 0.1,
+       "RN": 0.04
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 10,
+     "precision": null,
+     "scale": null
+    },
+    "specialty": {
+     "name": "specialty",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "specialties",
+      "field": "name",
+      "weight_field": "weight"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "is_active": {
+     "name": "is_active",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "true": 0.9,
+       "false": 0.1
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "provider_id"
+   ],
+   "description": "Healthcare providers (doctors, nurses, etc.)",
+   "cdm_mapping": null
+  },
+  "facility": {
+   "name": "facility",
+   "columns": {
+    "facility_id": {
+     "name": "facility_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "facility_name": {
+     "name": "facility_name",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "Medical Center #{seq:4}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 150,
+     "precision": null,
+     "scale": null
+    },
+    "facility_type": {
+     "name": "facility_type",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Hospital": 0.25,
+       "Clinic": 0.35,
+       "Urgent Care": 0.15,
+       "Surgery Center": 0.1,
+       "Rehabilitation": 0.08,
+       "Psychiatric": 0.04,
+       "Long-Term Care": 0.03
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "bed_count": {
+     "name": "bed_count",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "params": {
+       "mean": 4.5,
+       "sigma": 1.0,
+       "min": 5,
+       "max": 1500
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "street": {
+     "name": "street",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "street_address"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 200,
+     "precision": null,
+     "scale": null
+    },
+    "city": {
+     "name": "city",
+     "type": "string",
+     "generator": {
+      "strategy": "record_sample",
+      "dataset": "us_zip_locations",
+      "field": "city"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "state": {
+     "name": "state",
+     "type": "string",
+     "generator": {
+      "strategy": "record_field",
+      "dataset": "us_zip_locations",
+      "field": "state"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 2,
+     "precision": null,
+     "scale": null
+    },
+    "zip_code": {
+     "name": "zip_code",
+     "type": "string",
+     "generator": {
+      "strategy": "record_field",
+      "dataset": "us_zip_locations",
+      "field": "zip"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 5,
+     "precision": null,
+     "scale": null
+    },
+    "lat": {
+     "name": "lat",
+     "type": "decimal",
+     "generator": {
+      "strategy": "record_field",
+      "dataset": "us_zip_locations",
+      "field": "lat"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "lng": {
+     "name": "lng",
+     "type": "decimal",
+     "generator": {
+      "strategy": "record_field",
+      "dataset": "us_zip_locations",
+      "field": "lng"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "phone": {
+     "name": "phone",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "phone_number"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 15,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "facility_id"
+   ],
+   "description": "Healthcare facilities (hospitals, clinics, etc.)",
+   "cdm_mapping": null
+  },
+  "patient": {
+   "name": "patient",
+   "columns": {
+    "patient_id": {
+     "name": "patient_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "mrn": {
+     "name": "mrn",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "MRN{seq:8}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 12,
+     "precision": null,
+     "scale": null
+    },
+    "first_name": {
+     "name": "first_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "first_name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "last_name": {
+     "name": "last_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "last_name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "date_of_birth": {
+     "name": "date_of_birth",
+     "type": "timestamp",
+     "generator": {
+      "strategy": "temporal",
+      "pattern": "uniform",
+      "range": {
+       "start": "1930-01-01",
+       "end": "2020-12-31"
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "gender": {
+     "name": "gender",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "M": 0.49,
+       "F": 0.5,
+       "NB": 0.01
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 5,
+     "precision": null,
+     "scale": null
+    },
+    "race": {
+     "name": "race",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "White": 0.578,
+       "Hispanic": 0.187,
+       "Black": 0.124,
+       "Asian": 0.06,
+       "Other": 0.051
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 30,
+     "precision": null,
+     "scale": null
+    },
+    "street": {
+     "name": "street",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "street_address"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 200,
+     "precision": null,
+     "scale": null
+    },
+    "city": {
+     "name": "city",
+     "type": "string",
+     "generator": {
+      "strategy": "record_sample",
+      "dataset": "us_zip_locations",
+      "field": "city"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "state": {
+     "name": "state",
+     "type": "string",
+     "generator": {
+      "strategy": "record_field",
+      "dataset": "us_zip_locations",
+      "field": "state"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 2,
+     "precision": null,
+     "scale": null
+    },
+    "zip_code": {
+     "name": "zip_code",
+     "type": "string",
+     "generator": {
+      "strategy": "record_field",
+      "dataset": "us_zip_locations",
+      "field": "zip"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 5,
+     "precision": null,
+     "scale": null
+    },
+    "phone": {
+     "name": "phone",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "phone_number"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 15,
+     "precision": null,
+     "scale": null
+    },
+    "email": {
+     "name": "email",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "email"
+     },
+     "nullable": true,
+     "null_rate": 0.15,
+     "max_length": 255,
+     "precision": null,
+     "scale": null
+    },
+    "insurance_plan": {
+     "name": "insurance_plan",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "insurance_plans",
+      "field": "name",
+      "weight_field": "weight"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "insurance_member_id": {
+     "name": "insurance_member_id",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "INS{seq:9}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    },
+    "registration_date": {
+     "name": "registration_date",
+     "type": "timestamp",
+     "generator": {
+      "strategy": "temporal",
+      "pattern": "uniform",
+      "range_ref": "model.date_range"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "is_active": {
+     "name": "is_active",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "true": 0.88,
+       "false": 0.12
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "patient_id"
+   ],
+   "description": "Patient demographics and insurance",
+   "cdm_mapping": null
+  },
+  "encounter": {
+   "name": "encounter",
+   "columns": {
+    "encounter_id": {
+     "name": "encounter_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "patient_id": {
+     "name": "patient_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "patient.patient_id",
+      "distribution": "pareto",
+      "params": {
+       "alpha": 1.05,
+       "max_per_parent": 80
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "provider_id": {
+     "name": "provider_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "provider.provider_id",
+      "distribution": "zipf",
+      "params": {
+       "alpha": 1.2
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "facility_id": {
+     "name": "facility_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "facility.facility_id",
+      "distribution": "zipf",
+      "params": {
+       "alpha": 1.4
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "encounter_type": {
+     "name": "encounter_type",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Outpatient": 0.7,
+       "Emergency": 0.1,
+       "Inpatient": 0.08,
+       "Telehealth": 0.08,
+       "Observation": 0.04
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 30,
+     "precision": null,
+     "scale": null
+    },
+    "encounter_date": {
+     "name": "encounter_date",
+     "type": "timestamp",
+     "generator": {
+      "strategy": "temporal",
+      "pattern": "seasonal",
+      "range_ref": "model.date_range",
+      "profiles": {
+       "month": {
+        "Jan": 0.096,
+        "Feb": 0.091,
+        "Mar": 0.087,
+        "Apr": 0.083,
+        "May": 0.079,
+        "Jun": 0.075,
+        "Jul": 0.075,
+        "Aug": 0.079,
+        "Sep": 0.083,
+        "Oct": 0.087,
+        "Nov": 0.079,
+        "Dec": 0.086
+       },
+       "day_of_week": {
+        "Mon": 0.195,
+        "Tue": 0.175,
+        "Wed": 0.175,
+        "Thu": 0.175,
+        "Fri": 0.165,
+        "Sat": 0.065,
+        "Sun": 0.05
+       },
+       "hour_of_day": {
+        "peaks": [
+         9,
+         14
+        ],
+        "std_dev": 2
+       }
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "status": {
+     "name": "status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Completed": 0.85,
+       "In Progress": 0.05,
+       "Cancelled": 0.05,
+       "No Show": 0.05
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "encounter_id"
+   ],
+   "description": "Patient visits and admissions",
+   "cdm_mapping": null
+  },
+  "diagnosis": {
+   "name": "diagnosis",
+   "columns": {
+    "diagnosis_id": {
+     "name": "diagnosis_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "encounter_id": {
+     "name": "encounter_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "encounter.encounter_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "icd10_code": {
+     "name": "icd10_code",
+     "type": "string",
+     "generator": {
+      "strategy": "record_sample",
+      "dataset": "icd10_codes",
+      "field": "code",
+      "weight_field": "weight"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 10,
+     "precision": null,
+     "scale": null
+    },
+    "description": {
+     "name": "description",
+     "type": "string",
+     "generator": {
+      "strategy": "record_field",
+      "dataset": "icd10_codes",
+      "field": "description"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 255,
+     "precision": null,
+     "scale": null
+    },
+    "diagnosis_type": {
+     "name": "diagnosis_type",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Primary": 0.35,
+       "Secondary": 0.4,
+       "Admitting": 0.15,
+       "External Cause": 0.1
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    },
+    "is_chronic": {
+     "name": "is_chronic",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "true": 0.3,
+       "false": 0.7
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "diagnosis_id"
+   ],
+   "description": "ICD-10 diagnoses linked to encounters",
+   "cdm_mapping": null
+  },
+  "procedure": {
+   "name": "procedure",
+   "columns": {
+    "procedure_id": {
+     "name": "procedure_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "encounter_id": {
+     "name": "encounter_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "encounter.encounter_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "cpt_code": {
+     "name": "cpt_code",
+     "type": "string",
+     "generator": {
+      "strategy": "record_sample",
+      "dataset": "cpt_codes",
+      "field": "code",
+      "weight_field": "weight"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 10,
+     "precision": null,
+     "scale": null
+    },
+    "cpt_description": {
+     "name": "cpt_description",
+     "type": "string",
+     "generator": {
+      "strategy": "record_field",
+      "dataset": "cpt_codes",
+      "field": "description"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 255,
+     "precision": null,
+     "scale": null
+    },
+    "standard_charge": {
+     "name": "standard_charge",
+     "type": "decimal",
+     "generator": {
+      "strategy": "record_field",
+      "dataset": "cpt_codes",
+      "field": "charge"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "performing_provider_id": {
+     "name": "performing_provider_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "provider.provider_id",
+      "distribution": "zipf",
+      "params": {
+       "alpha": 1.3
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "modifier": {
+     "name": "modifier",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "26": 0.3,
+       "TC": 0.25,
+       "59": 0.2,
+       "25": 0.15,
+       "76": 0.1
+      }
+     },
+     "nullable": true,
+     "null_rate": 0.7,
+     "max_length": 5,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "procedure_id"
+   ],
+   "description": "CPT procedures linked to encounters",
+   "cdm_mapping": null
+  },
+  "medication": {
+   "name": "medication",
+   "columns": {
+    "medication_id": {
+     "name": "medication_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "encounter_id": {
+     "name": "encounter_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "encounter.encounter_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "patient_id": {
+     "name": "patient_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "lookup",
+      "source_table": "encounter",
+      "source_column": "patient_id",
+      "via": "encounter_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "medication_name": {
+     "name": "medication_name",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "medication_names",
+      "field": "name",
+      "weight_field": "weight"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 150,
+     "precision": null,
+     "scale": null
+    },
+    "dosage": {
+     "name": "dosage",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "10mg": 0.2,
+       "20mg": 0.15,
+       "25mg": 0.12,
+       "50mg": 0.15,
+       "100mg": 0.12,
+       "250mg": 0.1,
+       "500mg": 0.1,
+       "1000mg": 0.06
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "frequency": {
+     "name": "frequency",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Once daily": 0.35,
+       "Twice daily": 0.25,
+       "Three times daily": 0.1,
+       "Four times daily": 0.05,
+       "As needed": 0.15,
+       "Weekly": 0.05,
+       "Monthly": 0.05
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 30,
+     "precision": null,
+     "scale": null
+    },
+    "days_supply": {
+     "name": "days_supply",
+     "type": "integer",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "30": 0.5,
+       "90": 0.25,
+       "14": 0.1,
+       "7": 0.08,
+       "60": 0.07
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "medication_id"
+   ],
+   "description": "Prescriptions linked to encounters",
+   "cdm_mapping": null
+  },
+  "claim": {
+   "name": "claim",
+   "columns": {
+    "claim_id": {
+     "name": "claim_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "encounter_id": {
+     "name": "encounter_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "encounter.encounter_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "patient_id": {
+     "name": "patient_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "lookup",
+      "source_table": "encounter",
+      "source_column": "patient_id",
+      "via": "encounter_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "claim_number": {
+     "name": "claim_number",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "CLM{seq:9}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 15,
+     "precision": null,
+     "scale": null
+    },
+    "claim_type": {
+     "name": "claim_type",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Professional": 0.55,
+       "Institutional": 0.3,
+       "Pharmacy": 0.15
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    },
+    "filing_date": {
+     "name": "filing_date",
+     "type": "timestamp",
+     "generator": {
+      "strategy": "derived",
+      "source": "encounter.encounter_date",
+      "via": "encounter_id",
+      "rule": "add_days",
+      "params": {
+       "distribution": "log_normal",
+       "mean": 1.5,
+       "sigma": 0.6,
+       "min": 0,
+       "max": 30
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "status": {
+     "name": "status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Paid": 0.72,
+       "Denied": 0.15,
+       "Pending": 0.05,
+       "Partially Paid": 0.05,
+       "Appealed": 0.03
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    },
+    "total_amount": {
+     "name": "total_amount",
+     "type": "decimal",
+     "generator": {
+      "strategy": "computed",
+      "rule": "sum_children",
+      "child_table": "claim_line",
+      "child_column": "charge_amount"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "allowed_amount": {
+     "name": "allowed_amount",
+     "type": "decimal",
+     "generator": {
+      "strategy": "computed",
+      "rule": "sum_children",
+      "child_table": "claim_line",
+      "child_column": "allowed_amount"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "paid_amount": {
+     "name": "paid_amount",
+     "type": "decimal",
+     "generator": {
+      "strategy": "computed",
+      "rule": "sum_children",
+      "child_table": "claim_line",
+      "child_column": "paid_amount"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "claim_id"
+   ],
+   "description": "Insurance claims linked to encounters",
+   "cdm_mapping": null
+  },
+  "claim_line": {
+   "name": "claim_line",
+   "columns": {
+    "claim_line_id": {
+     "name": "claim_line_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "claim_id": {
+     "name": "claim_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "claim.claim_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "procedure_id": {
+     "name": "procedure_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "procedure.procedure_id",
+      "distribution": "zipf",
+      "params": {
+       "alpha": 1.3
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "cpt_code": {
+     "name": "cpt_code",
+     "type": "string",
+     "generator": {
+      "strategy": "lookup",
+      "source_table": "procedure",
+      "source_column": "cpt_code",
+      "via": "procedure_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 10,
+     "precision": null,
+     "scale": null
+    },
+    "charge_amount": {
+     "name": "charge_amount",
+     "type": "decimal",
+     "generator": {
+      "strategy": "lookup",
+      "source_table": "procedure",
+      "source_column": "standard_charge",
+      "via": "procedure_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "allowed_amount": {
+     "name": "allowed_amount",
+     "type": "decimal",
+     "generator": {
+      "strategy": "correlated",
+      "source_column": "charge_amount",
+      "rule": "multiply",
+      "params": {
+       "factor_min": 0.55,
+       "factor_max": 0.9
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "paid_amount": {
+     "name": "paid_amount",
+     "type": "decimal",
+     "generator": {
+      "strategy": "correlated",
+      "source_column": "allowed_amount",
+      "rule": "multiply",
+      "params": {
+       "factor_min": 0.7,
+       "factor_max": 1.0
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "patient_copay": {
+     "name": "patient_copay",
+     "type": "decimal",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "0.00": 0.1,
+       "15.00": 0.15,
+       "25.00": 0.2,
+       "30.00": 0.15,
+       "40.00": 0.15,
+       "50.00": 0.1,
+       "75.00": 0.1,
+       "100.00": 0.05
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   },
+   "primary_key": [
+    "claim_line_id"
+   ],
+   "description": "Line items on insurance claims",
+   "cdm_mapping": null
+  }
+ },
+ "relationships": [
+  {
+   "name": "patient_encounters",
+   "parent": "patient",
+   "child": "encounter",
+   "parent_columns": [
+    "patient_id"
+   ],
+   "child_columns": [
+    "patient_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "provider_encounters",
+   "parent": "provider",
+   "child": "encounter",
+   "parent_columns": [
+    "provider_id"
+   ],
+   "child_columns": [
+    "provider_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "facility_encounters",
+   "parent": "facility",
+   "child": "encounter",
+   "parent_columns": [
+    "facility_id"
+   ],
+   "child_columns": [
+    "facility_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "encounter_diagnoses",
+   "parent": "encounter",
+   "child": "diagnosis",
+   "parent_columns": [
+    "encounter_id"
+   ],
+   "child_columns": [
+    "encounter_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "encounter_procedures",
+   "parent": "encounter",
+   "child": "procedure",
+   "parent_columns": [
+    "encounter_id"
+   ],
+   "child_columns": [
+    "encounter_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "encounter_medications",
+   "parent": "encounter",
+   "child": "medication",
+   "parent_columns": [
+    "encounter_id"
+   ],
+   "child_columns": [
+    "encounter_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "encounter_claims",
+   "parent": "encounter",
+   "child": "claim",
+   "parent_columns": [
+    "encounter_id"
+   ],
+   "child_columns": [
+    "encounter_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "claim_lines",
+   "parent": "claim",
+   "child": "claim_line",
+   "parent_columns": [
+    "claim_id"
+   ],
+   "child_columns": [
+    "claim_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "claim_line_procedures",
+   "parent": "procedure",
+   "child": "claim_line",
+   "parent_columns": [
+    "procedure_id"
+   ],
+   "child_columns": [
+    "procedure_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "provider_procedures",
+   "parent": "provider",
+   "child": "procedure",
+   "parent_columns": [
+    "provider_id"
+   ],
+   "child_columns": [
+    "performing_provider_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  }
+ ],
+ "business_rules": [
+  {
+   "name": "encounter_after_registration",
+   "type": "cross_table",
+   "rule": "encounter.encounter_date >= patient.registration_date",
+   "table": null,
+   "via": "patient_id",
+   "when": null
+  },
+  {
+   "name": "claim_filed_after_encounter",
+   "type": "cross_table",
+   "rule": "claim.filing_date >= encounter.encounter_date",
+   "table": null,
+   "via": "encounter_id",
+   "when": null
+  },
+  {
+   "name": "allowed_leq_charge",
+   "type": "cross_column",
+   "rule": "allowed_amount <= charge_amount",
+   "table": "claim_line",
+   "via": null,
+   "when": null
+  },
+  {
+   "name": "paid_leq_allowed",
+   "type": "cross_column",
+   "rule": "paid_amount <= allowed_amount",
+   "table": "claim_line",
+   "via": null,
+   "when": null
+  },
+  {
+   "name": "charge_amount_positive",
+   "type": "constraint",
+   "rule": "charge_amount > 0",
+   "table": "claim_line",
+   "via": null,
+   "when": null
+  }
+ ],
+ "generation": {
+  "scale": "small",
+  "scales": {
+   "fabric_demo": {
+    "patient": 100,
+    "provider": 20,
+    "encounter": 500
+   },
+   "small": {
+    "patient": 500,
+    "provider": 100,
+    "encounter": 2500
+   },
+   "medium": {
+    "patient": 25000,
+    "provider": 2000,
+    "encounter": 150000
+   },
+   "large": {
+    "patient": 250000,
+    "provider": 15000,
+    "encounter": 1500000
+   },
+   "xlarge": {
+    "patient": 2500000,
+    "provider": 100000,
+    "encounter": 20000000
+   },
+   "warehouse": {
+    "patient": 500000,
+    "provider": 30000,
+    "encounter": 5000000
+   },
+   "xxl": {
+    "patient": 10000000,
+    "provider": 200000,
+    "encounter": 100000000
+   },
+   "xxxl": {
+    "patient": 50000000,
+    "provider": 500000,
+    "encounter": 1000000000
+   }
+  },
+  "derived_counts": {
+   "facility": {
+    "fixed": 50
+   },
+   "diagnosis": {
+    "per_parent": "encounter",
+    "ratio": 1.8
+   },
+   "procedure": {
+    "per_parent": "encounter",
+    "ratio": 1.2
+   },
+   "medication": {
+    "per_parent": "encounter",
+    "ratio": 0.9
+   },
+   "claim": {
+    "per_parent": "encounter",
+    "ratio": 0.95
+   },
+   "claim_line": {
+    "per_parent": "claim",
+    "ratio": 2.5
+   }
+  },
+  "output": {
+   "format": "dataframe"
+  }
+ },
+ "correlated_columns": {}
+}
