@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import threading
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
@@ -14,7 +15,7 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from ._blas import single_thread_blas
-from .column import _combine, _profile_column, _Work
+from .column import _combine, _pattern_sample, _profile_column, _Work
 from .model import ColumnProfile, DatasetProfile, TableProfile
 from .readers import _arrow_cols, _Col, _csv_cols, _n_threads, read_csv
 
@@ -23,6 +24,10 @@ from .readers import _arrow_cols, _Col, _csv_cols, _n_threads, read_csv
 # ---------------------------------------------------------------------------
 
 _PK_NAMES = ("id", "_id", "pk", "key")
+
+# below this many rows a copy of one column is under a millisecond, which a thread pool costs more
+# than it saves (and its threads compete with the column workers)
+_FILL_POOL_ROWS = 1_000_000
 
 
 def _detect_primary_key(works: list[_Work], row_count: int) -> list[str]:
@@ -64,7 +69,7 @@ def _correlation(all_cols: list[_Col], row_count: int) -> dict[str, dict[str, fl
         if cols[j].kind in ("float", "objdur"):
             has_nan[j] = bool(np.isnan(X[:, j]).any())
 
-    if n >= 100_000 and k > 1:  # numpy and Arrow release the GIL for these big copies
+    if n >= _FILL_POOL_ROWS and k > 1:  # numpy and Arrow release the GIL for these big copies
         with ThreadPoolExecutor(max_workers=min(k, os.cpu_count() or 1)) as ex:
             list(ex.map(fill, range(k)))
     else:
@@ -254,6 +259,8 @@ def _profile_cols(
         mode = "thread"  # Windows has no fork; spawn would re-import and pickle the Arrow data
     # most expensive columns first
     order = sorted(range(len(cols)), key=lambda i: _col_cost(cols[i]))
+    if mode == "thread":  # few columns: the slowest one decides the finish, so it starts first
+        order = sorted(range(len(cols)), key=lambda i: -_col_work(cols[i], row_count))
     if mode == "process":
         import multiprocessing as mp
 
@@ -271,6 +278,10 @@ def _profile_cols(
             _FORK_STATE.clear()
     if on_ready:
         on_ready()
+    if row_count > 1000 and any(c.kind == "str" for c in cols):
+        # the pattern sample of a string column is drawn once per row count and every string
+        # column waits for it: start the draw now, beside the first columns, not 15 ms in
+        threading.Thread(target=_pattern_sample, args=(row_count,), daemon=True).start()
     res: list[Any] = [None] * len(cols)
 
     def run(i: int) -> None:

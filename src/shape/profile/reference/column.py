@@ -214,12 +214,21 @@ def _try(fn: Callable[..., Any], arr: Any) -> bool:
     return True
 
 
+_PARSE_SLICE = 256
+
+
 def _all_parse_datetime(uniques: pa.Array) -> bool:
     """Port of `pd.to_datetime(values, format="mixed")` succeeding on every value: what Arrow's
     ISO-8601 cast accepts, else pandas' own readers and dateutil (``dtparse.parse_mixed``)."""
     if _try(lambda a: pc.cast(a, pa.timestamp("ns")), uniques):
         return True
-    return all(dtparse.parse_mixed(u) is not None for u in uniques.to_pylist())
+    # ordinary text fails on its first value: convert the distinct values a slice at a time, not
+    # all of them (a column of 200k distinct strings would cost 10 ms before the first parse)
+    for start in range(0, len(uniques), _PARSE_SLICE):
+        for u in uniques.slice(start, _PARSE_SLICE).to_pylist():
+            if dtparse.parse_mixed(u) is None:
+                return False
+    return True
 
 
 def _first_is_iso(arr: Any) -> bool:

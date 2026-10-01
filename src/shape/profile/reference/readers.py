@@ -182,9 +182,29 @@ def _arrow_cols(t: pa.Table) -> list[_Col]:
     return out
 
 
+_MAX_BLOCK = 1 << 24
+_MIN_BLOCK = 1 << 20
+
+
+def _block_size(path: str | Path, n: int) -> int:
+    """Arrow's CSV block size. Arrow parses and converts one block per thread, so a file under
+    one big block is read by a single thread, with one large buffer allocation whose page-fault
+    cost on a virtual machine varies by several times from run to run. A small file is cut into
+    about two blocks per thread (at least 1 MiB); a file of 16 MiB per two threads or more keeps
+    the 16 MiB blocks, and so does a single-threaded read. Arrow gives the same column types for
+    any block size (a later block that does not fit widens the type of the whole column)."""
+    if n == 1:
+        return _MAX_BLOCK
+    try:
+        size = os.path.getsize(path)
+    except OSError:
+        return _MAX_BLOCK
+    return min(_MAX_BLOCK, max(_MIN_BLOCK, -(-size // (2 * n))))
+
+
 def read_csv(path: str | Path, threads: int | None = None) -> pa.Table:
     n = _n_threads(threads)
-    ro = pacsv.ReadOptions(use_threads=n != 1, block_size=1 << 24)
+    ro = pacsv.ReadOptions(use_threads=n != 1, block_size=_block_size(path, n))
     co = pacsv.ConvertOptions(
         null_values=PANDAS_NA,
         strings_can_be_null=True,
