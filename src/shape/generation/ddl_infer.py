@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Any
 
+from shape.generation.ddl_names import snake, word_pattern
 from shape.generation.schema import BusinessRule, Column, GenSchema, Table
 
 
@@ -117,7 +118,9 @@ class _Context:
 
 # ---- table roles ------------------------------------------------------------------------
 
-_LOG_PATTERNS = re.compile(r"(log|audit|history|event|tracking|changelog|activity)", re.IGNORECASE)
+_LOG_PATTERNS = word_pattern(
+    "log", "audit", "history", "event", "tracking", "changelog", "activity"
+)
 _DIM_PREFIX = re.compile(r"^(dim_|d_)", re.IGNORECASE)
 _FACT_PREFIX = re.compile(r"^(fact_|f_)", re.IGNORECASE)
 _ENTITY_COLUMNS = {
@@ -161,6 +164,11 @@ _DETAIL_HINTS = {
 }
 
 
+_DATE_WORD = word_pattern("date")
+_AMOUNT_WORDS = word_pattern("amount", "total", "subtotal", "price", "cost")
+_DATE_WORDS = word_pattern("date", "at")
+
+
 def _classify_table(name: str, table: Table, ctx: _Context) -> TableRole:
     cols = {c.lower() for c in table.column_names}
     children = ctx.children_of.get(name, [])
@@ -177,7 +185,7 @@ def _classify_table(name: str, table: Table, ctx: _Context) -> TableRole:
             return TableRole.HIERARCHY
         if col.generator.get("strategy") == "self_referencing":
             return TableRole.HIERARCHY
-    if _LOG_PATTERNS.search(name):
+    if _LOG_PATTERNS.search(snake(name)):
         return TableRole.LOG
     if fk_count >= 2 and non_pk <= 3:
         fk_cols = {c.name for c in table.columns.values() if c.is_foreign_key}
@@ -192,8 +200,8 @@ def _classify_table(name: str, table: Table, ctx: _Context) -> TableRole:
             cols & _DETAIL_HINTS
         ):
             return TableRole.TRANSACTION_DETAIL
-    has_amount = any("amount" in c or "total" in c or "price" in c or "cost" in c for c in cols)
-    has_date = any("date" in c or "_at" in c for c in cols)
+    has_amount = any(_AMOUNT_WORDS.search(snake(c)) for c in table.column_names)
+    has_date = any(_DATE_WORDS.search(snake(c)) for c in table.column_names)
     if fk_count >= 1 and (cols & _TRANSACTION_COLUMNS or (has_amount and has_date)):
         return TableRole.TRANSACTION
     if fk_count == 0 and child_count >= 1:
@@ -214,94 +222,86 @@ def _table_roles(ctx: _Context) -> None:
 
 # ---- column semantics -------------------------------------------------------------------
 
-_MONETARY = re.compile(
-    r"(price|cost|amount|total|subtotal|fee|charge|rate|salary|wage|pay|"
-    r"revenue|margin|balance|payment|premium|deductible|copay|refund|"
-    r"credit|debit|deposit|withdrawal|budget|spend|income|rent|"
-    r"commission|bonus|tax_amount|freight|shipping_cost)",
-    re.IGNORECASE,
+_MONETARY = word_pattern(
+    "price", "cost", "amount", "total", "subtotal", "fee", "charge", "rate", "salary", "wage",
+    "pay", "revenue", "margin", "balance", "payment", "premium", "deductible", "copay", "refund",
+    "credit", "debit", "deposit", "withdrawal", "budget", "spend", "income", "rent",
+    "commission", "bonus", "tax_amount", "freight", "shipping_cost",
+)  # fmt: skip
+_QUANTITY = word_pattern(
+    "quantity", "qty", "count", "units", "num_", "number_of_", "stock", "inventory",
+    "on_hand", "on_order", "allocated", "reserved", "capacity", "headcount",
+)  # fmt: skip
+# Checked before money and quantity: ``discount_pct`` and ``tax_rate`` are percentages.
+_PERCENTAGE = word_pattern(
+    "pct", "percent", "percentage", "ratio", "tax_rate", "completion_rate", "yield_rate",
+    "defect_rate", "churn_rate", "conversion_rate",
+)  # fmt: skip
+_MEASUREMENT = word_pattern(
+    "weight", "height", "width", "length", "depth", "size", "area", "volume", "sqft",
+    "square_feet", "lot_size", "distance", "duration", "temperature",
+)  # fmt: skip
+_RATING = word_pattern(
+    "rating", "score", "stars", "rank", "grade", "level", "tier", "priority", "severity"
 )
-_QUANTITY = re.compile(
-    r"(quantity|qty|count|units|num_|number_of_|stock|inventory|"
-    r"on_hand|on_order|allocated|reserved|capacity|headcount)",
-    re.IGNORECASE,
-)
-_PERCENTAGE = re.compile(
-    r"(_pct|_percent|_rate|_ratio|discount_pct|tax_rate|margin_pct|"
-    r"completion_rate|yield_rate|defect_rate|churn_rate|conversion_rate)",
-    re.IGNORECASE,
-)
-_MEASUREMENT = re.compile(
-    r"(weight|height|width|length|depth|size|area|volume|"
-    r"sqft|square_feet|lot_size|distance|duration|temperature)",
-    re.IGNORECASE,
-)
-_RATING = re.compile(r"(rating|score|stars|rank|grade|level|tier|priority|severity)", re.IGNORECASE)
+# ``state`` is a region (see ``_STATE``), not a status.
 _STATUS = re.compile(
-    r"^(status|state|order_status|payment_status|claim_status|"
+    r"^(status|order_status|payment_status|claim_status|"
     r"account_status|ticket_status|job_status|task_status)$",
     re.IGNORECASE,
 )
-_CATEGORICAL = re.compile(
-    r"(type|category|kind|class|group|segment|channel|method|mode|"
-    r"source|reason|department|division|region|territory|zone)",
-    re.IGNORECASE,
-)
+_CATEGORICAL = word_pattern(
+    "type", "category", "kind", "class", "group", "segment", "channel", "method", "mode",
+    "source", "reason", "department", "division", "region", "territory", "zone",
+)  # fmt: skip
 _BOOLEAN = re.compile(
-    r"^(is_|has_|can_|should_|was_|did_|flag|active|enabled|deleted|"
-    r"verified|approved|published|archived|locked|primary|default)",
+    r"^(?:(?:is|has|can|should|was|did)_|(?:flag|active|enabled|deleted|verified|approved|"
+    r"published|archived|locked|primary|default)s?(?![a-z0-9]))",
     re.IGNORECASE,
 )
-_TEMPORAL_TXN = re.compile(
-    r"(order_date|purchase_date|transaction_date|invoice_date|"
-    r"sale_date|claim_date|booking_date|payment_date|ship_date)",
+_TEMPORAL_TXN = word_pattern(
+    "order_date", "purchase_date", "transaction_date", "invoice_date",
+    "sale_date", "claim_date", "booking_date", "payment_date", "ship_date",
+)  # fmt: skip
+_TEMPORAL_AUDIT = word_pattern(
+    "created_at", "modified_at", "updated_at", "deleted_at", "created_date",
+    "modified_date", "updated_date", "last_modified", "last_updated",
+    "date_created", "date_modified",
+)  # fmt: skip
+_TEMPORAL_START = word_pattern(
+    "start_date", "begin_date", "effective_date", "hire_date", "open_date",
+    "enrollment_date", "signup_date", "registration_date", "issue_date",
+    "inception_date", "commencement",
+)  # fmt: skip
+_TEMPORAL_END = word_pattern(
+    "end_date", "expir*", "close_date", "due_date", "completion_date",
+    "termination_date", "cancellation_date", "maturity_date",
+    "discharge_date", "resolved_at", "closed_at",
+)  # fmt: skip
+_TEMPORAL_BIRTH = word_pattern("birth_date", "dob", "date_of_birth", "birthdate")
+# A code word after another word (``country_code``); the last three only as the last word.
+_CODE = re.compile(
+    r"(?<=[a-z0-9]_)(?:code|number|sku|upc|ean)(?:s|es)?(?![a-z0-9])"
+    r"|(?<=[a-z0-9]_)(?:no|num|ref|key|token)$",
     re.IGNORECASE,
 )
-_TEMPORAL_AUDIT = re.compile(
-    r"(created_at|modified_at|updated_at|deleted_at|created_date|"
-    r"modified_date|updated_date|last_modified|last_updated|"
-    r"date_created|date_modified)",
-    re.IGNORECASE,
-)
-_TEMPORAL_START = re.compile(
-    r"(start_date|begin_date|effective_date|hire_date|open_date|"
-    r"enrollment_date|signup_date|registration_date|issue_date|"
-    r"inception_date|commencement)",
-    re.IGNORECASE,
-)
-_TEMPORAL_END = re.compile(
-    r"(end_date|expir|close_date|due_date|completion_date|"
-    r"termination_date|cancellation_date|maturity_date|"
-    r"discharge_date|resolved_at|closed_at)",
-    re.IGNORECASE,
-)
-_TEMPORAL_BIRTH = re.compile(r"(birth_date|dob|date_of_birth|birthdate)", re.IGNORECASE)
-_CODE = re.compile(r"(_code|_number|_no$|_num$|_ref$|_key$|_token$|_sku|_upc|_ean)", re.IGNORECASE)
-_TEXT = re.compile(
-    r"(description|comment|note|remarks|reason|summary|detail|body|"
-    r"message|feedback|review|bio|abstract|memo)",
-    re.IGNORECASE,
-)
-_EMAIL = re.compile(r"(email|e_mail)", re.IGNORECASE)
-_PHONE = re.compile(r"(phone|fax|mobile|cell|tel)", re.IGNORECASE)
-_ADDRESS = re.compile(r"(address|addr|street|line1|line2|address_line)", re.IGNORECASE)
+_TEXT = word_pattern(
+    "description", "comment", "note", "remarks", "reason", "summary", "detail", "body",
+    "message", "feedback", "review", "bio", "abstract", "memo",
+)  # fmt: skip
+_EMAIL = word_pattern("email", "e_mail")
+_PHONE = word_pattern("phone", "fax", "mobile", "cell", "tel")
+_ADDRESS = word_pattern("address", "addr", "street", "line1", "line2", "address_line")
 _CITY = re.compile(r"^(city|town|municipality)$", re.IGNORECASE)
 _STATE = re.compile(r"^(state|province|region|state_code|state_province)$", re.IGNORECASE)
-_POSTAL = re.compile(r"(zip|postal|postcode|zip_code|postal_code)", re.IGNORECASE)
+_POSTAL = word_pattern("zip", "postal", "postcode", "zip_code", "postal_code")
 _COUNTRY = re.compile(r"^(country|country_code|country_name)$", re.IGNORECASE)
-_URL = re.compile(r"(url|website|homepage|link|uri)", re.IGNORECASE)
-_NAME = re.compile(r"(name|title|label)$", re.IGNORECASE)
-
-
-def _snake(name: str) -> str:
-    """``OrderDate`` -> ``order_date``, ``SalesOrderID`` -> ``sales_order_id``."""
-    s = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name)
-    s = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", s)
-    return s.lower()
+_URL = word_pattern("url", "website", "homepage", "link", "uri")
+_NAME = word_pattern("name", "title", "label")
 
 
 def _classify_column(name: str, col: Column, role: TableRole, table: Table) -> ColumnSemantic:
-    s = _snake(name) if name != name.lower() else name
+    s = snake(name)
     if name in table.primary_key:
         return ColumnSemantic.PRIMARY_KEY
     if col.is_foreign_key:
@@ -326,17 +326,17 @@ def _classify_column(name: str, col: Column, role: TableRole, table: Table) -> C
             return ColumnSemantic.TEMPORAL_START
         if _TEMPORAL_END.search(s):
             return ColumnSemantic.TEMPORAL_END
-        if role == TableRole.TRANSACTION and "date" in s:
+        if role == TableRole.TRANSACTION and _DATE_WORD.search(s):
             return ColumnSemantic.TEMPORAL_TRANSACTION
         return ColumnSemantic.TEMPORAL_GENERIC
+    if numeric and _PERCENTAGE.search(s):
+        return ColumnSemantic.PERCENTAGE
     if numeric and _MONETARY.search(s):
         return ColumnSemantic.MONETARY
     if ctype == "money":
         return ColumnSemantic.MONETARY
     if numeric and _QUANTITY.search(s):
         return ColumnSemantic.QUANTITY
-    if numeric and _PERCENTAGE.search(s):
-        return ColumnSemantic.PERCENTAGE
     if numeric and _MEASUREMENT.search(s):
         return ColumnSemantic.MEASUREMENT
     if numeric and _RATING.search(s):
@@ -380,12 +380,13 @@ def _column_semantics(ctx: _Context) -> None:
 
 # ---- foreign-key distributions ----------------------------------------------------------
 
-_ASSIGNED = re.compile(
-    r"(assigned_to|approved_by|created_by|reviewed_by|managed_by|owned_by|"
-    r"updated_by|modified_by|submitted_by|handled_by)",
-    re.IGNORECASE,
+_ASSIGNED = word_pattern(
+    "assigned_to", "approved_by", "created_by", "reviewed_by", "managed_by", "owned_by",
+    "updated_by", "modified_by", "submitted_by", "handled_by",
+)  # fmt: skip
+_ADDRESS_FK = word_pattern(
+    "address", "location", "site", "facility", "warehouse", "branch", "office"
 )
-_ADDRESS_FK = re.compile(r"(address|location|site|facility|warehouse|branch|office)", re.IGNORECASE)
 
 
 def _fk_distribution(
@@ -395,9 +396,9 @@ def _fk_distribution(
     role, parent_role = ctx.role(table_name), ctx.role(parent)
     if parent == table_name:
         return "self_referencing", {}, "FK-05", "Self-referencing FK — strategy unchanged"
-    if _ASSIGNED.search(col_name):
+    if _ASSIGNED.search(snake(col_name)):
         return "pareto", {"alpha": 2.0}, "FK-09", f"Agent FK ({col_name}) — pareto(alpha=2.0)"
-    if _ADDRESS_FK.search(parent):
+    if _ADDRESS_FK.search(snake(parent)):
         return (
             "zipf",
             {"alpha": 1.5},
@@ -464,10 +465,10 @@ def _fk_distributions(ctx: _Context) -> None:
 
 # ---- cardinality and scale --------------------------------------------------------------
 
-_ADDRESS_CONTACT = re.compile(r"(address|contact|phone|email|location|site)", re.IGNORECASE)
-_RETURN_REFUND = re.compile(r"(return|refund|reversal|chargeback|credit_memo|void)", re.IGNORECASE)
-_LOG_EVENT = re.compile(
-    r"(log|audit|history|event|tracking|changelog|activity|notification)", re.IGNORECASE
+_ADDRESS_CONTACT = word_pattern("address", "contact", "phone", "email", "location", "site")
+_RETURN_REFUND = word_pattern("return", "refund", "reversal", "chargeback", "credit_memo", "void")
+_LOG_EVENT = word_pattern(
+    "log", "audit", "history", "event", "tracking", "changelog", "activity", "notification"
 )
 
 
@@ -489,8 +490,9 @@ def _pick_primary_parent(parents: list[str], ctx: _Context) -> str:
 
 
 def _ratio(
-    name: str, role: TableRole, parent: str, parent_role: TableRole
+    table: str, role: TableRole, parent: str, parent_role: TableRole
 ) -> tuple[float, str, str]:
+    name = snake(table)
     if role == TableRole.BRIDGE:
         return 3.0, "CA-08", f"Bridge table — ratio 3.0 per parent ({parent})"
     if parent_role == TableRole.ENTITY and _ADDRESS_CONTACT.search(name):
@@ -594,10 +596,10 @@ def _numeric_generator(semantic: ColumnSemantic, col_name: str) -> dict[str, Any
             "params": {"mean": 10, "std": 5, "min": 0, "max": 100},
         }
     if semantic == ColumnSemantic.MEASUREMENT:
-        lower = col_name.lower()
+        lower = snake(col_name)
         mean, std = 50.0, 20.0
         for keyword, (m, s) in _MEASUREMENT_HINTS.items():
-            if keyword in lower:
+            if word_pattern(keyword).search(lower):
                 mean, std = m, s
                 break
         return {
@@ -660,15 +662,17 @@ _STATUS_BY_ROLE: dict[TableRole, dict[str, float]] = {
 }
 _CATEGORICAL_PROFILES: list[tuple[re.Pattern[str], dict[str, float]]] = [
     (
-        re.compile(r"priority", re.IGNORECASE),
+        word_pattern("priority"),
         {"low": 0.30, "medium": 0.45, "high": 0.20, "critical": 0.05},
     ),
     (
-        re.compile(r"severity", re.IGNORECASE),
+        word_pattern("severity"),
         {"info": 0.40, "warning": 0.30, "error": 0.20, "critical": 0.10},
     ),
     (
-        re.compile(r"payment.?method|pay.?type|payment.?type", re.IGNORECASE),
+        re.compile(
+            r"(?<![a-z0-9])(?:payment.?method|pay.?type|payment.?type)(?![a-z0-9])", re.IGNORECASE
+        ),
         {
             "credit_card": 0.45,
             "debit_card": 0.25,
@@ -683,7 +687,7 @@ _CATEGORICAL_PROFILES: list[tuple[re.Pattern[str], dict[str, float]]] = [
         {"US": 0.60, "UK": 0.10, "CA": 0.08, "DE": 0.07, "FR": 0.05, "AU": 0.05, "Other": 0.05},
     ),
     (
-        re.compile(r"(level|tier)$", re.IGNORECASE),
+        re.compile(r"(?<![a-z0-9])(?:level|tier)s?$", re.IGNORECASE),
         {"basic": 0.55, "silver": 0.25, "gold": 0.13, "platinum": 0.07},
     ),
 ]
@@ -731,7 +735,7 @@ def _enum_generator(
         }
     if semantic == ColumnSemantic.CATEGORICAL:
         for pattern, profile in _CATEGORICAL_PROFILES:
-            if pattern.search(col_name):
+            if pattern.search(snake(col_name)):
                 return {"strategy": "weighted_enum", "values": dict(profile)}
         return {"strategy": "weighted_enum", "values": dict(_GENERIC_TYPE_PROFILE)}
     return None
@@ -880,12 +884,9 @@ def _is_basic(col: Column) -> bool:
 
 
 def _find_col(columns: dict[str, Column], *patterns: str) -> str | None:
-    """The first column whose lower-cased name contains any pattern."""
-    for name in columns:
-        lower = name.lower()
-        if any(p in lower for p in patterns):
-            return name
-    return None
+    """The first column whose name has any of the terms as a whole word (or words)."""
+    pattern = word_pattern(*patterns)
+    return next((name for name in columns if pattern.search(snake(name))), None)
 
 
 def _correlated(source: str, lo: float, hi: float) -> dict[str, Any]:
@@ -973,11 +974,72 @@ def _correlations(ctx: _Context) -> None:
         ):
             cols[margin].generator = {"strategy": "formula", "expression": f"{price} - {cost}"}
             ctx.annotate(table, margin, "CR-09", f"Margin ({margin}) = {price} - {cost}")
-    # CR-06, CR-07 (date pairs) are the temporal pass's; CR-08 (a parent total summed over its
-    # children) cannot run during generation, because parents are generated before children.
+    # CR-06, CR-07 (date pairs) are the temporal pass's.
+    _parent_totals(ctx)
+
+
+_PARENT_TOTAL = ("total", "subtotal", "grand_total", "order_total", "total_amount")
+_CHILD_AMOUNT = ("line_total", "line_amount", "amount", "total", "subtotal", "extended_amount")
+
+
+def _parent_totals(ctx: _Context) -> None:
+    """CR-08: a parent's total column is the sum of the child rows' amount column. Parents are
+    generated before their children, so the column is a ``computed`` one that the compute phase
+    fills once every table exists. It applies to a monetary total with a basic generator in a
+    parent that has a single-column key, summed over one monetary amount column of a child that
+    points at that key through exactly one foreign key. A child column that is itself a total
+    (a chain of sums) is left alone, since the compute phase fills tables in schema order."""
+    schema = ctx.schema
+    money = ColumnSemantic.MONETARY
+
+    def first(
+        table: Table, semantics: dict[str, ColumnSemantic], terms: tuple[str, ...]
+    ) -> str | None:
+        return next(
+            (
+                c
+                for term in terms
+                for c in table.columns
+                if semantics.get(c) == money and word_pattern(term).search(snake(c))
+            ),
+            None,
+        )
+
+    found: list[tuple[str, str, str, str]] = []  # parent, total, child, amount
+    for rel in schema.relationships:
+        parent, child = schema.tables.get(rel.parent), schema.tables.get(rel.child)
+        if parent is None or child is None or parent is child:
+            continue
+        if parent.primary_key != rel.parent_columns or len(parent.primary_key) != 1:
+            continue
+        if [(r.parent, r.child) for r in schema.relationships].count((rel.parent, rel.child)) > 1:
+            continue
+        total = first(parent, ctx.semantics.get(rel.parent, {}), _PARENT_TOTAL)
+        amount = first(child, ctx.semantics.get(rel.child, {}), _CHILD_AMOUNT)
+        if total is not None and amount is not None and _is_basic(parent.columns[total]):
+            found.append((rel.parent, total, rel.child, amount))
+    totals = {(ptable, total) for ptable, total, _, _ in found}
+    for ptable, total, ctable, amount in found:
+        if (ctable, amount) in totals:
+            continue
+        schema.tables[ptable].columns[total].generator = {
+            "strategy": "computed",
+            "rule": "sum_children",
+            "child_table": ctable,
+            "child_column": amount,
+        }
+        ctx.annotate(
+            ptable, total, "CR-08", f"Total ({total}) = SUM({ctable}.{amount}) over the child rows"
+        )
 
 
 # ---- business rules ---------------------------------------------------------------------
+
+
+_CREATED = word_pattern("created")
+_MODIFIED = word_pattern("modified", "updated")
+_COST = word_pattern("cost")
+_PRICE = word_pattern("price")
 
 
 def _with(sem: dict[str, ColumnSemantic], *targets: ColumnSemantic) -> list[str]:
@@ -1016,10 +1078,10 @@ def _business_rules(ctx: _Context) -> None:
         if len(audit) >= 2:
             created = modified = None
             for c in audit:
-                lower = c.lower()
-                if "created" in lower:
+                lower = snake(c)
+                if _CREATED.search(lower):
                     created = c
-                elif "modified" in lower or "updated" in lower:
+                elif _MODIFIED.search(lower):
                     modified = c
             if created and modified:
                 add(
@@ -1037,10 +1099,10 @@ def _business_rules(ctx: _Context) -> None:
         # BR-03: cost <= price
         cost = price = None
         for c in _with(sem, S.MONETARY):
-            lower = c.lower()
-            if "cost" in lower and cost is None:
+            lower = snake(c)
+            if _COST.search(lower) and cost is None:
                 cost = c
-            if "price" in lower and price is None:
+            if _PRICE.search(lower) and price is None:
                 price = c
         if cost and price and cost != price:
             add(

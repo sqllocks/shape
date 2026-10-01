@@ -243,6 +243,8 @@ instruction.
 
 | Date | ID | Change | Reason |
 |---|---|---|---|
+| 2026-10-01 | P1-18, T-22 | **Owner: fix the enum rule.** The profiler marks a column `is_enum` (and lists every value in `enum_values`) when it has fewer than 200 distinct values, or fewer than 50,000 at a cardinality ratio under 0.30, so every column of a table under 200 rows is an "enum", unique keys and free text included (the SQL Server plugin: at most 50 distinct). New work package **P1-18**: a column is an enum only if, in addition, its values repeat (distinct values at most half of the non-null values; a unique column is never an enum); both kernels and the SQL Server plugin. T-22 parity for `is_enum`, `enum_values` (and fields derived from them) becomes a narrow named allow-list; every other field still equal. | Owner, 2026-10-01: "We should probably fix that too right?" |
+| 2026-10-01 | P4-01c, P6-08b | **Owner: also fix the further copied baseline behaviours that harm user trust (round 2).** Lead's call on which: P4-01c F6 undeclared FK guesses point at the parent's primary key (never a missing column), F7 generated strings fit declared lengths (CHAR(2)/CHAR(3) codes), F8 `CustomerId`-style keys recognised; P6-08b FIX-4 deterministic spread sample instead of the first N rows, FIX-5 unsampled statistics are null not 0.0, FIX-6 null-aware `is_unique` with a minimum sample, FIX-7 undeclared columns still inferred beside declared keys (evidence marked), FIX-8 whole-word `id`/`key` name matching, FIX-9 a guessed primary key never picks a foreign-key column. Same acceptance as round 1 (test per fix, narrow named parity allow-list, everything else equal). Not changed: `is_enum` (<= 50 distinct), the core profiler's rule under T-22 parity (flagged to the owner). | Owner, 2026-10-01: "Fix those too if they harm user trust". |
 | 2026-10-01 | P4-01b, P6-08, T-22, P4-01c, P6-08b | **Owner decision: fix the baseline bugs that P4-01b and P6-08 reproduced for parity.** New work packages **P4-01c** (DDL import) and **P6-08b** (SQL Server profiling). Their acceptance replaces exact equality with the baseline, for these behaviours only, by: a test asserting the correct behaviour per bug, and the parity harness listing each one as an intentional, documented difference (every other field still equal). | Owner, 2026-10-01: "Fix the bugs. Those are not acceptable and would harm user trust in Shape." |
 | 2026-10-01 | P4-04c | **Owner accepted** the changed case `conditional/is_null_fixed` (null rate 0.4 -> 0.5 after a chance clause-(d) failure at seed 1042; the original passed at seeds 1043-1049). No seed or tolerance changed. | Owner, 2026-10-01: "Accept is fine". |
 | 2026-10-01 | G1 | **Owner decision on the second G1 miss (re-run on c7bd366: only PROF-IN MT 9.1x < 10x):** option (a), keep optimising; the gate is unchanged (10x, D-04). Lane `lane/G1-mt` (started 8:59 AM EDT) targets the MT path, equivalence first, with no other workload allowed below 10x. Nothing merges to main until G1 and G2 pass. | Owner, 2026-10-01: "A". Evidence: docs/plans/evidence/G1-rerun/. |
@@ -1024,6 +1026,16 @@ Appendix A.
 - Acceptance: T-22 parity exits 0 on all default datasets in both kernel modes; the suite is
   green in both kernel modes; PROF-IN for MT, D1 and D4 CSV recorded per T-19.
 - Fixes: G1 escalation (§2.3).
+
+**P1-18 — Enum rule (owner, 2026-10-01)**
+- Depends: P1-17.
+- Deliverables: `is_enum` requires repetition: distinct values <= 0.5 x non-null values and not unique, on top of the
+  existing size limits; in the reference profiler (`profile/reference/column.py`, both paths), the kernel twin
+  (`kernel/reference/exact.py`) and Rust (`exact.rs`), bounded mode, and the SQL Server plugin; docs.
+- Acceptance: tests (a unique column, a tiny table, free text, a real low-cardinality category, the boundary);
+  `profile_1to1/verify.py --impl shape` exits 0 in both kernels with `is_enum`/`enum_values` (and only fields derived
+  from them) in a narrow named allow-list, failing if the fix is never exercised; G1 timings do not regress.
+- Fixes: none (owner decision, §2.3).
 
 **Gate G1**
 - P1-14 is done (no Spindle on the user-facing surface).
@@ -1960,6 +1972,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 21b | P1-15 | done | 04fe94c |
 | 21c | P1-16 | done | 7238901 |
 | 21d | P1-17 | done | 981bdd7 |
+| 21e | P1-18 | wip (lane/P1-18) | |
 | 22 | P2-01 | done | c3909e9 |
 | 23 | P2-02 | done | 84e8efb |
 | 24 | P2-03 | done | 687f568 |
@@ -1979,7 +1992,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 38 | P3-05 | done | b26e04e |
 | 39 | P4-01a | done | 02a0c4d |
 | 40 | P4-01b | done | 4b75d46 |
-| 40a | P4-01c | wip (lane/P4-01c) | |
+| 40a | P4-01c | done (rounds 1-2: F1-F8) | 14a8dd6 |
 | 41 | P4-02 | done | 6917af7 |
 | 42 | P4-03 | done | 6ec4c1f |
 | 43 | P4-04a | done | e596a57 |
@@ -1988,7 +2001,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 46 | P4-04d | done (G7 regression test; scd2 fixture regenerated at integration for the shared calendar fingerprint) | 71b2ebd |
 | 47 | P4-05 | done | 9f6fea8 |
 | 48 | P4-06 | done (SQL comment/literal injection fixed at integration, 36f32d3) | ba051d2 |
-| 49 | P4-07 | todo | |
+| 49 | P4-07 | wip (lane/P4-07) | |
 | 50 | P4-08 | todo | |
 | 51 | P4-09 | todo | |
 | 52 | P4-10 | todo | |
@@ -2011,8 +2024,8 @@ Work packages are listed in execution order. The next work package is the first 
 | 69 | P6-07b | todo | |
 | 70 | P6-07c | todo | |
 | 71 | P6-08 | done (nightly SQL Server e2e pending) | 29eac3e |
-| 71a | P6-08b | wip (lane/P6-08b) | |
-| 72 | P6-09 | wip (merged; parity runs in CI bench-quick) | 3859a3c |
+| 71a | P6-08b | done (rounds 1-2: FIX-1..FIX-9; real-server parity 11/11) | 515d26e |
+| 72 | P6-09 | done (CI bench-quick verify_1to1 green on c7bd366, run 36850390984) | 3859a3c |
 | 73 | P6-10 | todo | |
 | 74 | P6-11 | todo | |
 | 75 | P6-12 | todo | |

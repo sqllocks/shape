@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+import re
+from collections.abc import Collection, Iterable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -33,7 +34,7 @@ class TableInfo:
     name: str
     object_id: int
     columns: list[ColumnInfo]
-    primary_key: list[str]
+    primary_key: list[str]  # declared; empty when the catalog declares none
     row_count: int
 
 
@@ -58,30 +59,85 @@ def _execute(cursor: Any, sql: str, param: Any) -> list[dict[str, Any]]:
     return fetch_dicts(cursor)
 
 
-def guess_primary_key(table: str, columns: Iterable[ColumnInfo]) -> list[str]:
-    """A primary key for a table whose catalog declares none (a Fabric warehouse enforces
-    no keys): the identity column, else a column named like the table or ``id``, else any
-    column ending in ``id`` or ``key``, else the first column."""
-    cols = list(columns)
-    names = [c.name for c in cols]
-    identity = [c.name for c in cols if c.is_identity]
-    if identity:
-        return [identity[0]]
-    stem = table.lower().replace("dim", "").replace("fact", "")
-    wanted = (stem + "_id", stem + "id", stem + "_key", stem + "key", "id")
-    for name in names:
-        if name.lower() in wanted:
-            return [name]
-    for name in names:
-        low = name.lower()
-        if low.endswith(("id", "key")):
-            return [name]
-    return names[:1]
+def table_stem(table: str) -> str:
+    """A table's name without a leading warehouse prefix (``dimcustomer`` -> ``customer``,
+    ``fact_sales`` -> ``sales``); ``dim``/``fact`` elsewhere in a name are left alone."""
+    low = table.lower()
+    for prefix in ("dim", "fact"):
+        if low.startswith(prefix) and len(low) > len(prefix):
+            return low[len(prefix) :].removeprefix("_")
+    return low
+
+
+_WORDS = re.compile(r"[A-Z]+(?![a-z])|[A-Z]?[a-z]+|[0-9]+")
+
+
+def name_tokens(name: str) -> list[str]:
+    """A column name split into lower-case words, at ``_`` and at CamelCase boundaries
+    (``customer_id`` and ``CustomerId`` give ``customer, id``; ``customerID`` too;
+    ``paid`` is one word)."""
+    return [w.lower() for w in _WORDS.findall(name)]
+
+
+def key_stem(name: str) -> str | None:
+    """The words before a trailing ``id`` or ``key`` word (``customer_id`` and ``CustomerKey``
+    give ``customer``, ``sales_region_id`` gives ``sales_region``); ``None`` when the name does
+    not end in a whole ``id``/``key`` word or has nothing before it. ``paid``, ``valid`` and
+    ``monkey`` do not end in one."""
+    words = name_tokens(name)
+    if len(words) < 2 or words[-1] not in ("id", "key"):
+        return None
+    return "_".join(words[:-1])
+
+
+def _squash(name: str) -> str:
+    return "".join(name_tokens(name))
+
+
+def _violates_key(values: list[Any] | None) -> bool:
+    """A sample that shows a null or a repeated value rules a column out as a key. No rows
+    (``None`` or empty) rule nothing out."""
+    if not values:
+        return False
+    present = [v for v in values if v is not None]
+    return len(present) != len(values) or len(set(present)) != len(present)
+
+
+def guess_primary_key(
+    table: str,
+    columns: Iterable[ColumnInfo],
+    sample: dict[str, list[Any]] | None = None,
+    foreign_key_columns: Collection[str] = (),
+) -> list[str]:
+    """A primary key for a table whose catalog declares none (a Fabric warehouse enforces no
+    keys). Only a column that could be the key qualifies: it is not a foreign key (declared,
+    shown by the data or suggested by its name) and the sampled rows show no null or repeated
+    value in it (with no sampled rows nothing is ruled out). Of those, the identity column wins,
+    then a column named ``id`` or like the table: ``<table>_id``, ``<table>_key``, the same with
+    the table's singular (``orders`` gives ``order_id``). Otherwise the table is reported with no
+    primary key: guessing any other column would only look authoritative."""
+    stem = table_stem(table).replace("_", "")
+    stems = {stem, stem.removesuffix("s")} - {""}
+    wanted = {"id"} | {s + suffix for s in stems for suffix in ("id", "key")}
+    blocked = set(foreign_key_columns)
+    eligible = [
+        c
+        for c in columns
+        if c.name not in blocked and not _violates_key((sample or {}).get(c.name))
+    ]
+    for c in eligible:
+        if c.is_identity:
+            return [c.name]
+    for c in eligible:
+        if _squash(c.name) in wanted:
+            return [c.name]
+    return []
 
 
 def read_catalog(cursor: Any, schema: str, tables: Iterable[str] | None = None) -> Catalog:
-    """Walk ``schema``: its tables (optionally only ``tables``), their columns, primary keys
-    (guessed when the catalog has none), foreign keys and row counts."""
+    """Walk ``schema``: its tables (optionally only ``tables``), their columns, declared primary
+    keys (empty when the catalog has none: :func:`guess_primary_key` judges that from data),
+    declared foreign keys and row counts."""
     keep = set(tables) if tables else None
     table_rows = [
         r for r in _execute(cursor, TABLES_QUERY, schema) if keep is None or r["table_name"] in keep
@@ -114,8 +170,6 @@ def read_catalog(cursor: Any, schema: str, tables: Iterable[str] | None = None) 
             for c in _execute(cursor, COLUMNS_QUERY, object_id)
         ]
         pk = [r["column_name"] for r in _execute(cursor, PRIMARY_KEY_QUERY, object_id)]
-        if not pk:
-            pk = guess_primary_key(t["table_name"], columns)
         infos.append(
             TableInfo(
                 schema, t["table_name"], object_id, columns, pk, counts.get(t["table_name"], 0)
