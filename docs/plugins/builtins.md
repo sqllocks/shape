@@ -76,5 +76,6 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 - The calendars' lift is neutral (1.0) unless `holiday_lift` or `lifts` is set (ramp-up and decay
   optional, `docs/GENERATION_CALENDARS.md`); `holidays(start, end)`
   returns the rule-derived dates.
-- Not built-ins yet: the DB-API, Kafka and Event Hubs connectors (`shape.connectors`) need a live
-  connection object or a broker, not a URI; they move into plugins with the Phase 6 work.
+- Not built-ins: the Kafka and Event Hubs stream sources are the plugins `shape-kafka` and
+  `shape-eventhubs` (`docs/plugins/streaming.md`). The DB-API adapter (`shape.connectors`) needs a
+  live connection object, not a URI; it moves into a plugin with the Phase 6 work.

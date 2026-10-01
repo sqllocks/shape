@@ -2,7 +2,7 @@
 
 Shape distinguishes event time from processing time. Stateful operators declare windowing, allowed lateness and checkpoint semantics. Watermarks determine closable windows; events older than the watermark are handled by an explicit late-data policy. State MUST be bounded or externally checkpointed. Replay MUST be deterministic for deterministic sources/operators. Source delivery guarantees and sink commit guarantees are reported separately; Shape does not claim exactly-once when an underlying connector cannot provide it.
 
-This draft makes those rules precise for the stream runtime (`shape.streaming.runtime`). Sections 1 to 4 are implemented by P3-01, section 5 by P3-02 and section 6 by P3-03.
+This draft makes those rules precise for the stream runtime (`shape.streaming.runtime`). Sections 1 to 4 are implemented by P3-01, section 5 by P3-02, section 6 by P3-03 and section 7 by P3-04 and P3-05.
 
 ## 1. Events and time
 
@@ -52,3 +52,10 @@ A closed window yields a `WindowProfile`: its kind, bounds, row count and the pr
 - **Reconnect:** a dropped connection (`ConnectionError`, `TimeoutError`) reconnects from the offset after the last processed batch, never from the beginning (S4). Reconnecting is bounded by consecutive connections that bring nothing new (`max_attempts`).
 - **Deduplication on offset:** a source may deliver again what it has already delivered (at-least-once). With an integer offset column (and an optional partition column) every row at or past its partition's next expected offset is new, and the rest is dropped, so replays cut into different batches are exact. Without one, a source offset whose values are all integers is read as `{partition: next offset}`, and a batch that advances no partition is dropped (whole-batch replays only); any other offset is opaque and is only resumed from.
 - **Guarantees, reported separately:** the profile state is exact with respect to the source's offsets: after any number of reconnects or restarts, the windows equal those of an uninterrupted run. Delivery of the windows is at least once: a window is handed out before the checkpoint that covers it is committed, so a crash in between hands it out again after the restart; a window is identified by `(kind, start, end)`, and a sink that stores it by that key receives it once. Shape does not claim exactly-once delivery to a sink that cannot commit atomically with the checkpoint.
+
+## 7. Stream sources and the command
+
+- A **stream source** (`shape.stream_sources`) yields `(offset, batch)` pairs, the offset being the position just after the batch. Offsets are JSON values; a source that uses `{partition: next offset}` gets batch-level deduplication from the consumer (section 6). Reading from the offset after batch *k* yields exactly the batches after *k* (checked by `shape.plugins.kit.check_stream_source`).
+- A message body is a JSON object; its fields are columns and `_shape_event_time` is the event time (the body's, else the broker's timestamp, else null, section 1). A message that is not a JSON object is *undecodable* and a row that cannot take a column's type is *rejected*: both are counted, never coerced, and the offset moves past them.
+- A **bounded** read takes partitions one after the other in order, so it is deterministic; a **followed** read takes them together in arrival order, and event time is then only ordered within a partition (use allowed lateness).
+- `shape stream-profile` assembles source, profiler and consumer: the global window is written as the profile engine's document (`mode: "bounded"`), other windows as JSON lines keyed by `(kind, start, end)`. `docs/plugins/streaming.md` describes the options.
