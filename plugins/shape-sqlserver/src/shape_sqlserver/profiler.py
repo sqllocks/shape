@@ -29,9 +29,12 @@ from .sql import (
 log = logging.getLogger("shape_sqlserver")
 
 # A column is an enumeration when it has at most this many distinct values in the sample, or
-# when distinct values are under 5% of the table's rows.
+# when distinct values are under 5% of the table's rows, and in either case its values repeat:
+# distinct values are at most this fraction of the sample's non-null values (P1-18). A unique
+# column is never an enumeration.
 ENUM_MAX_CARDINALITY = 50
 ENUM_MAX_RATIO = 0.05
+ENUM_MAX_DISTINCT_PER_VALUE = 0.5
 UNIQUE_RATIO = 0.99
 
 
@@ -97,7 +100,13 @@ def _profile_column(
     denominator = row_count or (sample_size if sample_size is not None else 1)
     denominator = max(denominator, 1)
     ratio = cardinality / denominator
-    is_enum = cardinality > 0 and (cardinality <= ENUM_MAX_CARDINALITY or ratio < ENUM_MAX_RATIO)
+    is_unique = ratio > UNIQUE_RATIO if cardinality > 0 else False
+    is_enum = (
+        cardinality > 0
+        and (cardinality <= ENUM_MAX_CARDINALITY or ratio < ENUM_MAX_RATIO)
+        and cardinality <= ENUM_MAX_DISTINCT_PER_VALUE * len(present)
+        and not is_unique
+    )
     enum_values: dict[str, float] | None = None
     if is_enum and dtype in ("string", "boolean") and values is not None:
         counts = Counter(present)
@@ -113,7 +122,7 @@ def _profile_column(
         null_rate=null_count / denominator,
         cardinality=cardinality,
         cardinality_ratio=ratio,
-        is_unique=ratio > UNIQUE_RATIO if cardinality > 0 else False,
+        is_unique=is_unique,
         is_enum=is_enum,
         enum_values=enum_values,
         min_value=min_val,

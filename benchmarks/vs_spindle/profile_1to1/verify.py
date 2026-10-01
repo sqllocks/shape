@@ -116,6 +116,27 @@ RULES = {
 }
 TABLE_RULES = ["row_count", "primary_key", "detected_fks", "correlation_matrix"]
 
+# Intentional difference from the baseline (owner decision of 2026-10-01, P1-18): a column is an
+# enum only if its values repeat (distinct <= 0.5 x non-null values; a unique column never is).
+# The baseline marks every column of a table under 200 rows as an enum. The baseline column is
+# turned into what the corrected rule gives, from its own cardinality, null count and
+# uniqueness, and Shape must equal that. Allow-list: exactly these two fields. Nothing else is
+# derived from them (value_counts_ext keeps the same first 500 values for an enum or not, and no
+# other field reads is_enum), and every other field is still compared with the baseline as it is.
+ENUM_RULE_FIELDS = ("is_enum", "enum_values")
+ENUM_TALLY = {"flipped": 0, "kept": 0}
+
+
+def enum_rule_baseline(scol: dict, n_nn: int) -> dict:
+    """The baseline column as the corrected enum rule defines it (counted in ENUM_TALLY)."""
+    if not scol["is_enum"]:
+        return scol
+    if 2 * scol["cardinality"] <= n_nn and not scol["is_unique"]:
+        ENUM_TALLY["kept"] += 1
+        return scol
+    ENUM_TALLY["flipped"] += 1
+    return {**scol, "is_enum": False, "enum_values": None}
+
 
 def _num_close(a, b, rule, tol):
     if a is None or b is None:
@@ -241,7 +262,9 @@ def shape_profile(ds: str):
     return json.loads(json.dumps(shape.profile(str(DATA / ds)).to_dict(), default=str))
 
 
-def check_table(sp: dict, po: dict, prefix: str, matrix: dict, fails: list):
+def check_table(sp: dict, po: dict, prefix: str, matrix: dict, fails: list, enum_nn=None):
+    """``enum_nn(table, column)``: the non-null values behind that column's enum decision
+    (default: the table's rows less the column's nulls)."""
     for f in TABLE_RULES:
         key = f"table.{f}"
         if f == "correlation_matrix":
@@ -259,6 +282,9 @@ def check_table(sp: dict, po: dict, prefix: str, matrix: dict, fails: list):
     if list(sp["columns"]) != list(po["columns"]):
         fails.append(f"{prefix} column list differs")
     for c, scol in sp["columns"].items():
+        scol = enum_rule_baseline(
+            scol, enum_nn(sp, scol) if enum_nn else sp["row_count"] - scol["null_count"]
+        )
         pcol = po["columns"].get(c)
         for f, (rule, tol) in RULES.items():
             m = matrix.setdefault(f, [0, 0, 0])
@@ -354,13 +380,26 @@ def main():
     for d in wanted:
         for line in all_fails[d]:
             print("MISMATCH", line)
+    print(
+        "\nIntentional differences from the baseline, fields "
+        f"{', '.join(ENUM_RULE_FIELDS)} (enum rule, P1-18): "
+        f"{ENUM_TALLY['flipped']} columns no longer enums, {ENUM_TALLY['kept']} stay enums"
+    )
+    missed = False
+    if (
+        wanted == ALL
+    ):  # a full run must exercise the rule both ways, or the allow-list proves nothing
+        for k, what in (("flipped", "turned a baseline enum off"), ("kept", "kept an enum")):
+            if not ENUM_TALLY[k]:
+                print(f"MISMATCH the enum rule never {what}")
+                missed = True
     # non-exact-but-within-tolerance fields, for the README's honesty section
     print("\nWithin tolerance but not bitwise identical:")
     for d in wanted:
         for f, m in matrices[d].items():
             if m[1] == m[0] and m[2] != m[0]:
                 print(f"  {d:12s} {f:24s} {m[0] - m[2]} of {m[0]} not bitwise-equal")
-    sys.exit(1 if any(all_fails.values()) else 0)
+    sys.exit(1 if missed or any(all_fails.values()) else 0)
 
 
 if __name__ == "__main__":

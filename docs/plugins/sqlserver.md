@@ -61,6 +61,10 @@ the one a Fabric user data function hands you).
   and boolean columns (with observed frequencies), and for numeric columns `min_value`,
   `max_value`, `mean` and `std`. The sample is the first `--sample-rows` rows the server
   returns (`SELECT TOP n`).
+- **An enumeration** is a sampled column with at most 50 distinct values, or distinct values under
+  5% of the table's rows, whose values also repeat: distinct values are at most half of the
+  sample's non-null values. A unique column, a tiny table of distinct text and free text are
+  never enumerations.
 - **Ratios use the table's row count** as the denominator: `null_rate = sampled nulls / table
   rows`, `cardinality_ratio = sampled distinct values / table rows`. For a table larger than the
   sample both are therefore lower than the true rates, and `is_unique` (ratio above 0.99) is

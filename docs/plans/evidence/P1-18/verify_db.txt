@@ -1,0 +1,16 @@
+retail: PASS (1051 comparisons)
+retail_no_sample: PASS (1051 comparisons)
+retail_small_sample: PASS (1051 comparisons)
+retail_subset: PASS (522 comparisons)
+Could not sample product: The SELECT permission was denied on the object 'product'.
+Could not sample product: The SELECT permission was denied on the object 'product'.
+retail_unreadable: PASS (1051 comparisons)
+warehouse: PASS (310 comparisons)
+warehouse_empty: PASS (310 comparisons)
+name_only: PASS (144 comparisons)
+id_named: PASS (144 comparisons)
+
+Intentional differences from the baseline, fields is_enum, enum_values (enum rule, P1-18): 29 columns no longer enums, 35 stay enums
+
+9/9 cases match (5634 field comparisons)
+exit=0

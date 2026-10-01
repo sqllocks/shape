@@ -105,7 +105,9 @@ def drop_real(cur, fake, schema: str) -> None:
     cur.execute(f"IF SCHEMA_ID('{schema}') IS NOT NULL DROP SCHEMA [{schema}]")
 
 
-def compare_profiles(sp: dict, sh: dict, label: str, matrix: dict, fails: list) -> None:
+def compare_profiles(
+    sp: dict, sh: dict, label: str, matrix: dict, fails: list, sample_rows: int = 1000
+) -> None:
     ok = sp["relationships"] == sh["relationships"]
     matrix.setdefault("dataset.relationships", [0, 0, 0])
     matrix["dataset.relationships"][0] += 1
@@ -122,7 +124,13 @@ def compare_profiles(sp: dict, sh: dict, label: str, matrix: dict, fails: list) 
     for t in sp["tables"]:
         if t in sh["tables"]:
             profile_verify.check_table(
-                sp["tables"][t], sh["tables"][t], f"{label}:{t}", matrix, fails
+                sp["tables"][t],
+                sh["tables"][t],
+                f"{label}:{t}",
+                matrix,
+                fails,
+                # the enum rule (P1-18) counts the sample's non-null values
+                lambda tbl, col: min(tbl["row_count"], sample_rows) - col["null_count"],
             )
 
 
@@ -147,7 +155,7 @@ def main() -> int:
         sh = shape_side(scenario, scale, kw, fail, a.mssql)
         matrix: dict = {}
         fails: list = []
-        compare_profiles(sp, sh, case, matrix, fails)
+        compare_profiles(sp, sh, case, matrix, fails, kw.get("sample_rows", 1000))
         all_fails[case] = fails
         n = sum(m[0] for m in matrix.values())
         cells += n
@@ -160,6 +168,17 @@ def main() -> int:
         for line in fails:
             print("MISMATCH", line)
     bad = sum(bool(f) for f in all_fails.values())
+    tally = profile_verify.ENUM_TALLY
+    print(
+        f"\nIntentional differences from the baseline, fields "
+        f"{', '.join(profile_verify.ENUM_RULE_FIELDS)} (enum rule, P1-18): "
+        f"{tally['flipped']} columns no longer enums, {tally['kept']} stay enums"
+    )
+    if not a.case:  # a full run must exercise the rule both ways, or the allow-list proves nothing
+        for k, what in (("flipped", "turned a baseline enum off"), ("kept", "kept an enum")):
+            if not tally[k]:
+                print(f"MISMATCH the enum rule never {what}")
+                bad += 1
     print(f"\n{checked - bad}/{checked} cases match ({cells} field comparisons)")
     return 1 if bad else 0
 

@@ -102,7 +102,7 @@ These are the profiler's rules. Source: `src/shape/profile/reference/` on `main`
 |---|---|---|
 | N-65 | Distribution fitting: a sample of **2,000** values (seed 42); candidates **normal, uniform, exponential, lognormal**; the best KS statistic among fits with **p > 0.05**; none if fewer than **20** values | `numerics.py` (`detect_distribution`, `_CANDIDATES`) |
 | N-66 | Pattern detection: a sample of **1,000** strings (seed 42); **12** families: email, uuid, ssn, mac, ipv4, ipv6, iban, postal, date, phone, currency, language | `column.py` (`_PATTERNS`, `detect_pattern`) |
-| N-67 | Enum: cardinality **< 200**, or cardinality ratio **< 0.30** with cardinality **< 50,000** | `column.py` (`is_enum`) |
+| N-67 | Enum: cardinality **< 200**, or cardinality ratio **< 0.30** with cardinality **< 50,000**; and the values repeat: distinct values **<= 0.5 x** non-null values, so a unique column is never an enum | `column.py` (`is_enum`) |
 | N-68 | Value counts kept: top **500** per column (`value_counts_ext`), with real values. That's why a raw profile isn't safe to share | `column.py` (`top_n = 500`); plan T-22 |
 | N-69 | PK: no nulls, cardinality = row count, integer or UUID-pattern string, id-like names preferred. FK across tables: a column named `<table>_id` matching that table's key | `table.py` (`_detect_primary_key`); `DM-01.md` notes |
 
