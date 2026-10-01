@@ -2003,9 +2003,9 @@ Work packages are listed in execution order. The next work package is the first 
 | 48 | P4-06 | done (SQL comment/literal injection fixed at integration, 36f32d3) | ba051d2 |
 | 49 | P4-07 | done (retail T-21 PASS small/medium/large; lead GEN-IN on 2.10 GHz: medium 11.8x, large 17.9x; evidence P4-07-lead/) | b1e6530 |
 | 50 | P4-08 | todo | |
-| 51 | P4-09 | todo | |
-| 52 | P4-10 | todo | |
-| 53 | P4-11 | todo | |
+| 51 | P4-09 | done (retail per table equal to the baseline comparator, max diff 0.00000; G3, G4 fixed) | 9fd7caa |
+| 52 | P4-10 | wip (lane/P4-10) | |
+| 53 | P4-11 | wip (lane/P4-11) | |
 | 54 | P5-01 | todo | |
 | 55 | P5-02 | todo | |
 | 56 | P5-03 | todo | |
