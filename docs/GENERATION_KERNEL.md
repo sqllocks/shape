@@ -48,6 +48,10 @@ Conversions (shared by both implementations):
 | `day_weights(start_day, n_days, month_weights, dow_weights, per_bucket=True)` | | float64 per day: `month_w[m] * dow_w[d]`, divided (with `per_bucket`) by the number of days in the range with that month and weekday, so each (month, weekday) pair carries its own weight |
 | `hour_weights_peaks(peaks, std)` | | the 24 hour weights of equally likely Gaussian peaks, wrapped modulo 24 |
 | `temporal_sample(day_weights, hour_weights, start_day, k0, k1, row_start, n_rows, whole_seconds=False)` | 5 | `timestamp[us]`: a day, an hour, and an offset inside the hour; words 0-1 day, 2-3 hour, 4 offset |
+| `first_flags(codes)` | | `bool`: true on the first row of each non-negative group code (`0 <= code < len`); a negative code is never first |
+| `group_order(codes, keys)` | | `(rank, size, next)`, all int64: the 0-based place of each row in its group sorted by `keys` (ties keep row order), the group's size, and the row that follows it (-1 for the last); a negative code gives `(-1, 0, -1)` |
+| `scd2_offsets(codes, total_days, min_gap, k0, k1)` | per group | int64 day offsets of SCD type 2 effective dates (see below); -1 for a negative code |
+| `cap_per_parent(indices, pool, max_per_parent, k0, k1)` | up to 64 per moved row | int64 parent indices with at most `max_per_parent` rows each (see below) |
 
 Days are numbers of days since 1970-01-01 (a Thursday); weekdays count from Monday = 0.
 
@@ -58,6 +62,26 @@ left to right), indices below 1 go on the `small` stack and the others on `large
 `(small, large)` pops the stacks' last elements. The Python twin does the same operations in the
 same order, so the tables are equal. A draw takes word `slot` to pick column `i`, and word
 `slot + 1` to choose between `i` (if `unit < prob[i]`) and `alias[i]`.
+
+## Row-sequential kernels
+
+`first_flags`, `group_order`, `scd2_offsets` and `cap_per_parent` (`rust/shape-kernel/src/gen/relational.rs`,
+twin `shape.kernel.reference.relational`) are the passes where a row's value depends on the rows before it, so
+they read a whole column. Strategies call them once per table through `shape.generation.kernel_relational`
+and keep the result (`Engine.cached`). Every result is an integer or a flag, so native and twin are equal.
+They are functions of their inputs and the stream key alone: threads, chunking and call order never matter.
+
+* **Group codes** are dense (`pyarrow` dictionary codes, `0 <= code < len`); a negative code is "no group".
+* **`scd2_offsets`**: a group of `m` rows (equal codes, in row order) draws from its own stream, keyed by
+  the group's first row: `g0 = mix(k0 ^ mix(anchor))`, `g1 = mix(k1 ^ anchor * 0x9E3779B97F4A7C15 ^
+  0xD1B54A32D192ED03)` with `mix` the splitmix64 finalizer, words `0 .. m - 1` read as for any stream. With
+  `m = 1` the offset is `below(w0, max(total_days, 1))`. Otherwise `usable = max(total_days - min_gap * (m - 1), m)`;
+  the `m` values `below(w, usable)` are sorted ascending and the `v`-th row gets
+  `min(sorted[v] + min_gap * v, total_days)`.
+* **`cap_per_parent`**: rows are visited in order with a count per parent. A row whose parent is full draws
+  candidate parents from word `row * 64 + attempt` of the stream (`below(word, pool)`), takes the first with room,
+  and after 64 failed draws the first parent with room after its first draw; if every parent is full it takes its
+  first draw. A row whose parent has room keeps it.
 
 ## Microbenchmarks
 

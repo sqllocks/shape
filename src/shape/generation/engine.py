@@ -40,9 +40,9 @@ from __future__ import annotations
 import copy
 import threading
 import time
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Hashable, Iterator, Mapping
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -56,6 +56,8 @@ from shape.generation.rng import RowStream
 from shape.generation.rules import RuleViolation, fix_rules, validate_rules
 from shape.generation.schema import Column, GenSchema, Issue, Table
 from shape.plugins.api.v1 import GenerationContext
+
+_T = TypeVar("_T")
 
 DEFAULT_CHUNK_ROWS = 65_536
 DEFAULT_ROWS = 100  # a table no preset, count rule or override mentions
@@ -440,6 +442,7 @@ class Engine:
         self._tables: dict[str, pa.Table] = {}
         self._pools: dict[str, KeyPool] = {}
         self._building: set[str] = set()
+        self._memo: dict[Hashable, Any] = {}
         self.row_counts = calculate_row_counts(self.schema, self._overrides)
         self._order: list[str] | None = None
 
@@ -538,6 +541,47 @@ class Engine:
         # Output: the table's own columns in generation order (internal names are dropped).
         out_names = [c for c in order_columns(tdef) if c in built]
         return pa.RecordBatch.from_arrays([built[c] for c in out_names], names=out_names)
+
+    def generate_column(self, table: str, column: str, row_start: int, n_rows: int) -> pa.Array:
+        """One column of rows ``row_start .. row_start + n_rows - 1``, before the post-passes.
+
+        Runs the columns that come before ``column`` in generation order (they are all it can
+        depend on) and returns the column with its nulls applied, equal to the same column of
+        :meth:`generate_chunk`. Strategies that need a whole column of their own table (the
+        first row of each parent) use it."""
+        tdef = self.schema.tables[table]
+        if column not in tdef.columns:
+            raise KeyError(f"table '{table}' has no column '{column}'")
+        total = self.row_counts.get(table, DEFAULT_ROWS)
+        if row_start < 0 or n_rows < 0 or row_start + n_rows > total:
+            raise ValueError(f"rows {row_start}..{row_start + n_rows} outside table of {total}")
+        index = row_start // self.chunk_rows
+        built: dict[str, pa.Array] = {}
+        for cname in order_columns(tdef):
+            col = tdef.columns[cname]
+            produced = self._column(table, col, index, row_start, n_rows, built)
+            if isinstance(produced, Mapping):
+                for key, arr in produced.items():
+                    built[key] = self._as_array(arr, f"{table}.{cname}", n_rows)
+                built.setdefault(cname, built[next(iter(produced))])
+            else:
+                arr = self._as_array(produced, f"{table}.{cname}", n_rows)
+                if col.nullable and col.null_rate > 0:
+                    arr = self._mask_nulls(arr, table, col, row_start, n_rows)
+                built[cname] = arr
+            if cname == column:
+                return built[cname]
+        raise KeyError(f"column '{table}.{column}' is not generated")
+
+    def cached(self, key: Hashable, build: Callable[[], _T]) -> _T:
+        """``build()`` once per engine and ``key``: strategies keep whole-table results (the
+        first row of each parent, the versions of each business key) here, computed from the
+        schema and seed alone, so a chunk read in any order finds the same value."""
+        with self._lock:
+            if key not in self._memo:
+                self._memo[key] = build()
+            found: _T = self._memo[key]
+            return found
 
     def _column(
         self,
