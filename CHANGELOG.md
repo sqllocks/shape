@@ -5,6 +5,18 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `shape fidelity REFERENCE SYNTHETIC` (alias `compare`): scores synthetic tables against reference
+  tables, per column, per table and overall, on a 0-100 scale, and writes JSON, Markdown or HTML
+  reports (`-o`, repeatable; the `shape.reports` plugin group). Pass marks `--min-score`,
+  `--min-table-score` and `--min-column-score`; exit 0 on pass, 1 on failure, 2 for bad input. The
+  scoring equals the one the generation equivalence standard (plan T-21 clause h) asserts per
+  table, to within 1e-9, and a missing column or table scores 0 and an empty reference fails. See
+  `docs/FIDELITY.md`. `shape fidelity PROFILE.json DATA.csv` certifies as before.
+- Fixes: `certify` scored a column missing from the generated data 1.0 and passed a profile that
+  describes no columns (a missing column now scores 0; an empty profile fails); `shape
+  certify-shapes` always exited 0 (it now exits 3 when the score is below `--threshold`, default
+  0.9).
+
 - Enum rule: a profiled column is an enum (`is_enum`, with every value in `enum_values`) only if,
   besides the existing size limits (fewer than 200 distinct values, or a distinct ratio under 0.30
   with fewer than 50,000), its values repeat: distinct values are at most half of the non-null

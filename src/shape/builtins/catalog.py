@@ -89,4 +89,7 @@ BUILTINS: tuple[tuple[str, str, str], ...] = (
     ("shape.calendars", "us_federal", "shape.builtins.calendars:UsFederalCalendar"),
     ("shape.calendars", "us_retail", "shape.builtins.calendars:UsRetailCalendar"),
     ("shape.calendars", "composite", "shape.builtins.calendars:CompositeCalendar"),
+    ("shape.reports", "json", "shape.builtins.reports:JsonReport"),
+    ("shape.reports", "md", "shape.builtins.reports:MarkdownReport"),
+    ("shape.reports", "html", "shape.builtins.reports:HtmlReport"),
 )
