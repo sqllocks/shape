@@ -509,9 +509,9 @@ def _build_parser(plugin_commands=()):
     qu = sub.add_parser("quality")
     qu.add_argument("csv")
     qu.add_argument("--reference")
-    ge = sub.add_parser("generate")
-    ge.add_argument("--rows", type=int, default=10)
-    ge.add_argument("--seed", type=int, default=0)
+    from shape.cli.generation import add_arguments as add_generation_arguments
+
+    add_generation_arguments(sub)
     fi = sub.add_parser(
         "fidelity",
         aliases=["compare"],
@@ -635,6 +635,10 @@ def main(argv=None):
         rc = _run(_verify_inputs, a)
         if rc:
             return rc
+    if a.cmd in ("generate", "describe", "list", "presets"):
+        from shape.cli.generation import run as run_generation
+
+        return _run(run_generation, a)
     if a.cmd == "from-ddl":
         return _run(_cmd_from_ddl, a)
     if a.cmd == "profile":
@@ -708,16 +712,6 @@ def main(argv=None):
         result = validate_rows(rows, infer_rules(ref))
         _dump({"passed": result.passed, "violations": [asdict(v) for v in result.violations]})
         return 0 if result.passed else 2
-    if a.cmd == "generate":
-        from shape.generation import Choice, GenerationPlan, SequenceStrategy
-
-        plan = GenerationPlan(
-            (("id", SequenceStrategy()), ("segment", Choice(("A", "B", "C"), (0.7, 0.2, 0.1)))),
-            a.seed,
-        )
-        for row in plan.rows(a.rows):
-            print(json.dumps(row, sort_keys=True))
-        return 0
     if a.cmd in ("fidelity", "compare") and not str(a.reference).endswith(".json"):
         return _run(_cmd_fidelity, a)
     if a.cmd in ("fidelity", "compare"):
