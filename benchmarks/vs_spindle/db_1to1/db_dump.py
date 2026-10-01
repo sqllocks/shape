@@ -45,6 +45,11 @@ def main() -> int:
     ap.add_argument("--sample-rows", type=int, default=1000)
     ap.add_argument("--tables")
     ap.add_argument("--fail-reads", default="")
+    ap.add_argument(
+        "--rows-pickle",
+        help="a pickle {table: rows}: the scenario's tables are replaced by these rows, with the "
+        "row counts of the full tables (the baseline then reads exactly these rows)",
+    )
     a = ap.parse_args()
     sys.path.insert(0, str(SPINDLE_ROOT))
     from sqllocks_spindle.inference.database_profiler import DatabaseProfiler
@@ -54,6 +59,14 @@ def main() -> int:
         testing = load_testing()
         conn = testing.scenario(a.scenario, a.scale)
         conn.fail_reads = {t for t in a.fail_reads.split(",") if t}
+        if a.rows_pickle:
+            import pickle
+
+            replaced = pickle.loads(Path(a.rows_pickle).read_bytes())  # our own file
+            conn.row_counts = {t.name: len(t.rows) for t in conn.tables}
+            for t in conn.tables:
+                if t.name in replaced:
+                    t.rows = list(replaced[t.name])
         dp = DatabaseProfiler(connection=conn).profile(a.schema, a.sample_rows, tables)
     else:
         dp = DatabaseProfiler(connection_string=a.connection_string, auth_method="sql").profile(

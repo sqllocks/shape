@@ -17,10 +17,10 @@ class ColumnProfile:
     name: str
     dtype: str
     null_count: int
-    null_rate: float
+    null_rate: float | None  # None: unknown (no rows were read), never a made-up 0.0
     cardinality: int
-    cardinality_ratio: float
-    is_unique: bool
+    cardinality_ratio: float | None
+    is_unique: bool | None
     is_enum: bool
     enum_values: dict[str, float] | None
     min_value: Any
