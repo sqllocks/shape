@@ -1,8 +1,8 @@
 """P4-11: the fidelity tiers equal the baseline's, field by field.
 
 ``benchmarks/vs_spindle/fidelity_tiers_1to1/fixtures/expected_tiers.json`` holds what the
-baseline's tiers gave for the pairs of ``golden_data.py`` (``golden.py --check`` proves the file
-still matches them). Shape's output must equal it under the harness's rules
+baseline's tiers gave for the pairs of ``tiers_golden_data.py`` (``golden.py --check`` proves the
+file still matches them). Shape's output must equal it under the harness's rules
 (``tiers_common.compare``): integers, names and flags equal, floats within 1e-9 relative, and the
 adversarial AUC and accuracy and every mixture-fit field within 0.02. The pairs cover numbers with
 nulls, integers, a two-component mixture, booleans, categoricals with nulls, e-mails, ZIP codes
@@ -23,14 +23,14 @@ import pytest
 BENCH = Path(__file__).resolve().parents[2] / "benchmarks" / "vs_spindle" / "fidelity_tiers_1to1"
 sys.path.insert(0, str(BENCH))
 
-import golden_data  # noqa: E402
 import tiers_common  # noqa: E402
+import tiers_golden_data  # noqa: E402
 
 SEED, SMALL_ROWS = 7, 200
 _FIXTURE = json.loads((BENCH / "fixtures" / "expected_tiers.json").read_text())
 EXPECTED = _FIXTURE["tables"]
-SPREAD = {k: (v[0], v[1]) for k, v in _FIXTURE["spread"].items()}
-REAL, SYNTH = golden_data.tables()
+SPREAD = _FIXTURE["spread"]
+REAL, SYNTH = tiers_golden_data.tables()
 NAMES = sorted(EXPECTED)
 SKLEARN_KEYS = ("tier1", "tier1_single")
 
@@ -95,7 +95,7 @@ def test_tier_1_equals_the_baseline(with_tier1, name):
     )
     assert d.ok, d.mismatches[:5]
     # the mixture fits are within 0.02; the adversarial fields follow the baseline's hash seed, so
-    # they are within 0.02 or inside the range the baseline itself covers (SPREAD)
+    # they are within 0.02 of the baseline's output or of what it gives under another hash seed
     assert max((v for k, v in d.loose.items() if "/adversarial/" not in k), default=0) <= 0.02
 
 

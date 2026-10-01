@@ -12,8 +12,8 @@ output field is then compared (``tiers_common.compare``):
 
 * equal under T-22 tolerances (exact for counts, names and flags; 1e-9 relative for floats);
 * the adversarial AUC and accuracy and every mixture-fit field within 0.02 of the baseline's (the
-  classifier's feature importances too, or inside the range the baseline itself covers when it runs
-  under eight different ``PYTHONHASHSEED`` values: its feature order depends on that seed);
+  classifier's feature importances too, or within 0.02 of what the baseline itself gives under
+  one of eight different ``PYTHONHASHSEED`` values: its feature order depends on that seed);
 * the baseline's PSI of each numeric column, the bootstrap resample for a seed, and the
   differential-privacy noise for an explicit seed, equal;
 * 1000 differential-privacy calls without a seed give 1000 distinct noises.
@@ -97,16 +97,16 @@ HASH_SEEDS = range(8)
 
 def adversarial_spread(
     real: Path, synth: Path, out: Path, extra: list[str]
-) -> dict[str, tuple[float, float]]:
-    """The range the baseline's own adversarial test covers across ``PYTHONHASHSEED`` values, for
-    the AUC, the accuracy and every feature importance (a feature missing from a run's top 10
-    counts as 0): the fields that depend on the baseline's process."""
+) -> dict[str, list[float]]:
+    """What the baseline's own adversarial test gives under each ``PYTHONHASHSEED`` value, for the
+    AUC, the accuracy and every feature importance (a feature missing from a run's top 10 counts
+    as 0): the fields that depend on the baseline's process."""
     runs: list[dict[str, Any]] = []
     for seed in HASH_SEEDS:
         f = out.with_name(f"{out.stem}_hash{seed}.json")
         baseline(real, synth, f, extra + ["--adversarial-only"], {"PYTHONHASHSEED": str(seed)})
         runs.append(json.loads(f.read_text())["tables"])
-    spread: dict[str, tuple[float, float]] = {}
+    spread: dict[str, list[float]] = {}
     for table in runs[0]:
         advs = [r[table]["adversarial"] for r in runs if r[table]["adversarial"]]
         if not advs:
@@ -114,11 +114,11 @@ def adversarial_spread(
         base = f"/{table}/tier1/adversarial"
         for key in ("auc_roc", "accuracy"):
             vals = [a[key] for a in advs]
-            spread[f"{base}/{key}"] = (min(vals), max(vals))
+            spread[f"{base}/{key}"] = vals
         names = {n for a in advs for n, _ in a["top_features"]}
         for n in names:
             vals = [dict(map(tuple, a["top_features"])).get(n, 0.0) for a in advs]
-            spread[f"{base}/top_features/{n}"] = (min(vals), max(vals))
+            spread[f"{base}/top_features/{n}"] = vals
     return spread
 
 
@@ -165,14 +165,14 @@ def main(argv: list[str] | None = None) -> int:
     base = json.loads(base_file.read_text())
     base_psi = json.loads(psi_file.read_text())
     spread_file = OUT / f"baseline_spread_{a.scale}.json"
-    spread: dict[str, tuple[float, float]] = {}
+    spread: dict[str, list[float]] = {}
     if not a.no_tier1:
         if not (a.reuse and spread_file.exists()):
             t0 = time.perf_counter()
             found = adversarial_spread(real_dir, synth_dir, OUT / f"baseline_adv_{a.scale}", flags)
             spread_file.write_text(json.dumps(found), encoding="utf-8")
             print(f"baseline spread took {time.perf_counter() - t0:.0f} s", file=sys.stderr)
-        spread = {k: (v[0], v[1]) for k, v in json.loads(spread_file.read_text()).items()}
+        spread = json.loads(spread_file.read_text())
 
     import numpy as np
     import sklearn

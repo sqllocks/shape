@@ -11,7 +11,8 @@ Comparison rules (plan P4-11, T-22):
   every field of a mixture fit (weights absolute; means, spreads, BIC and AIC relative to the
   larger of the two and 1), and the importances of the adversarial test's features (the
   classifier is fitted on the baseline's feature order, which is hash-seed dependent: the
-  importances may also lie inside the range the baseline covers across hash seeds, ``spread``);
+  importances may also be within 0.02 of a value the baseline gives under another hash seed,
+  ``spread``);
 * ``top_features`` names are compared as sets when the importances differ (ties at zero);
 * keys Shape adds (``notes``, ``psi``, ``passing_rate``, ``distinguishability_score``) are ignored.
 """
@@ -120,13 +121,14 @@ def compare(
     base: Any,
     path: str = "",
     diff: Diff | None = None,
-    spread: dict[str, tuple[float, float]] | None = None,
+    spread: dict[str, list[float]] | None = None,
 ) -> Diff:
     """Compare Shape's output with the baseline's (see the module docstring); returns the Diff.
 
     ``spread`` maps the path of a field that depends on the baseline's process (the adversarial
-    test's, which follows ``PYTHONHASHSEED``) to the range the baseline itself covers across seeds:
-    Shape's value is accepted within 0.02 of the baseline's or inside that range."""
+    test's, which follows ``PYTHONHASHSEED``) to the values the baseline itself gives under several
+    seeds: Shape's value is accepted within 0.02 of the baseline's output or within 0.02 of one of
+    those."""
     d = diff if diff is not None else Diff()
     if isinstance(base, dict):
         if not isinstance(shape, dict):
@@ -184,12 +186,10 @@ def compare(
     return d
 
 
-def _inside(spread: dict[str, tuple[float, float]] | None, path: str, value: float) -> bool:
-    """``value`` lies in the baseline's own range for ``path`` (always false without one)."""
-    if not spread or path not in spread:
-        return False
-    lo, hi = spread[path]
-    return lo <= value <= hi
+def _inside(spread: dict[str, list[float]] | None, path: str, value: float) -> bool:
+    """``value`` is within ``LOOSE`` of a value the baseline gave for ``path`` under some hash seed
+    (always false without any)."""
+    return bool(spread) and any(abs(value - v) <= LOOSE for v in spread.get(path, ()))
 
 
 def _len(x: Any) -> Any:
@@ -201,7 +201,7 @@ def _top_features(
     base: list[Any],
     path: str,
     d: Diff,
-    spread: dict[str, tuple[float, float]] | None = None,
+    spread: dict[str, list[float]] | None = None,
 ) -> Diff:
     """Feature names as sets of the larger-than-noise entries, importances within LOOSE per name."""
     sm = {n: v for n, v in shape}

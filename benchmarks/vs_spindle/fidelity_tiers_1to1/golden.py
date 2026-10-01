@@ -1,4 +1,4 @@
-"""Record (or check) the baseline's tier outputs for ``golden_data.py``.
+"""Record (or check) the baseline's tier outputs for ``tiers_golden_data.py``.
 
     "$SPINDLE_PY" benchmarks/vs_spindle/fidelity_tiers_1to1/golden.py [--check]
 
@@ -6,8 +6,8 @@ Writes ``fixtures/expected_tiers.json``; ``--check`` recomputes it and exits 1 w
 file is not within the harness's own comparison rules of what the baseline gives now (the AUC and
 mixture fields and the classifier's importances may move within 0.02 between runs, because the
 baseline orders the classifier's features by Python ``set`` iteration; everything else must be
-equal). The fixture's ``spread`` is the range the baseline's own adversarial test covers across
-eight ``PYTHONHASHSEED`` values. The baseline sees the flag column under its own name. Run with
+equal). The fixture's ``spread`` is what the baseline's own adversarial test gives under eight
+``PYTHONHASHSEED`` values. The baseline sees the flag column under its own name. Run with
 ``$SPINDLE_PY``; the checkout is only read.
 """
 
@@ -33,7 +33,7 @@ BASELINE_FLAG = "_spindle_is_anomaly"
 def compute() -> dict[str, Any]:
     warnings.simplefilter("ignore")
     from baseline_tiers import tiers_for
-    from golden_data import tables
+    from tiers_golden_data import tables
 
     real, synth = tables()
     out: dict[str, Any] = {"tables": {}}
@@ -52,7 +52,7 @@ def adversarial_json() -> dict[str, Any]:
     """The baseline's adversarial test of every golden pair under this process's hash seed."""
     warnings.simplefilter("ignore")
     from baseline_tiers import adversarial_tables
-    from golden_data import tables
+    from tiers_golden_data import tables
 
     real, synth = tables()
     s = {
@@ -63,7 +63,7 @@ def adversarial_json() -> dict[str, Any]:
 
 
 def spread() -> dict[str, list[float]]:
-    """Per adversarial field, the (low, high) the baseline reaches across ``PYTHONHASHSEED`` 0-7."""
+    """Per adversarial field, the values the baseline gives under ``PYTHONHASHSEED`` 0 to 7."""
     runs = []
     for seed in range(8):
         env = {**os.environ, "PYTHONHASHSEED": str(seed)}
@@ -83,10 +83,10 @@ def spread() -> dict[str, list[float]]:
         base = f"/{table}/tier1/adversarial"
         for key in ("auc_roc", "accuracy"):
             vals = [a[key] for a in advs]
-            out[f"{base}/{key}"] = [min(vals), max(vals)]
+            out[f"{base}/{key}"] = vals
         for n in {n for a in advs for n, _ in a["top_features"]}:
             vals = [dict(map(tuple, a["top_features"])).get(n, 0.0) for a in advs]
-            out[f"{base}/top_features/{n}"] = [min(vals), max(vals)]
+            out[f"{base}/top_features/{n}"] = vals
     return out
 
 

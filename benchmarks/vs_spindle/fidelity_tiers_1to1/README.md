@@ -26,7 +26,7 @@ PYTHONHASHSEED=0 "$SPINDLE_PY" benchmarks/vs_spindle/fidelity_tiers_1to1/golden.
   with the baseline's, bit for bit: both draw from numpy's `default_rng(seed)` in the same order.
 * The baseline's PSI of each numeric column (`baseline_tiers.py --psi-only`) is compared with
   `shape.fidelity.tier3.psi_report`.
-* `golden_data.py` builds small deterministic tables that hit every branch (nulls, integers, a
+* `tiers_golden_data.py` builds small deterministic tables that hit every branch (nulls, integers, a
   two-component mixture, booleans, text formats, timestamps, dates and decimals, an all-null column,
   a 12-row table, a table above every sampling cap, an anomaly flag). `golden.py` records the
   baseline's outputs for them in `fixtures/expected_tiers.json`; `--check` fails if the file no
