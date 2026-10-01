@@ -76,11 +76,14 @@ def write_model(
     return content_id
 
 
-def read_model(path: Any) -> tuple[dict[str, Any], dict[str, Any]]:
+def read_model(
+    path: Any, *, verify_key: bytes | None = None
+) -> tuple[dict[str, Any], dict[str, Any]]:
     """``(manifest, model)`` of a .shape file; a version 1 file is migrated (its manifest then
     says ``format_version`` 2, with ``migrated_from`` and ``source_content_id``). Any defect of
-    the file is an ``ArtifactError``."""
-    m, parts = read_artifact(path)
+    the file is an ``ArtifactError``. With ``verify_key`` (a trusted Ed25519 public key) the file
+    must carry a valid signature, else ``ArtifactSignatureError``."""
+    m, parts = read_artifact(path, verify_key=verify_key)
     if m.get("format") != FORMAT:
         raise ArtifactError("not a Shape artifact")
     version = m.get("format_version")
@@ -131,8 +134,10 @@ def write_shape(
     )
 
 
-def read_shape(path: Any) -> tuple[dict[str, Any], dict[str, Any]]:
+def read_shape(
+    path: Any, *, verify_key: bytes | None = None
+) -> tuple[dict[str, Any], dict[str, Any]]:
     """``(manifest, shape)`` as the v1 consumers read it: the v1 document of a migrated capture,
     or the v2 model of a file that has none."""
-    m, model = read_model(path)
+    m, model = read_model(path, verify_key=verify_key)
     return m, legacy_view(model)
