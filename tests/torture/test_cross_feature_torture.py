@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from shape.artifact import read_shape, write_shape
+from shape.builtins.strategies.address import AddressReference, FastAddressPack
 from shape.capture import capture_rows
 from shape.connectors.qualification import ConnectorRecord, ExactlyOnceProjector
 from shape.contracts import compatibility
@@ -14,7 +15,6 @@ from shape.generation.relational import (
     materialize_composite_fks,
 )
 from shape.location import Location, LocationScope
-from shape.packs.address import AddressReference, FastAddressPack
 from shape.privacy import release_for
 from shape.query import query
 

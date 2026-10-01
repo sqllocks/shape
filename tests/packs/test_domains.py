@@ -1,5 +1,6 @@
+from shape.builtins.strategies.address import AddressPack, AddressReference
 from shape.location import scope_from_specs
-from shape.packs import US_ADDRESS, AddressPack, AddressReference, DomainRegistry
+from shape.packs import US_ADDRESS, DomainRegistry
 
 
 def test_domain_registry_and_location_specs():
@@ -27,3 +28,14 @@ def test_domain_registry_and_location_specs():
         -90 <= x.latitude <= 90 and -180 <= x.longitude <= 180 for x in rows
     )
     assert {x.state for x in rows} == {"OH"}
+
+
+def test_g8_latest_version_is_numeric_not_lexicographic():
+    """G8: 1.10.0 is newer than 1.9.0 (strings sorted the other way round)."""
+    from shape.packs import DomainDefinition
+
+    reg = DomainRegistry()
+    for v in ("1.9.0", "1.10.0", "1.2.0"):
+        reg.register(DomainDefinition(name="d", version=v, fields=()))
+    assert reg.get("d").version == "1.10.0"
+    assert reg.get("d", "1.9.0").version == "1.9.0"

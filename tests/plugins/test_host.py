@@ -48,6 +48,22 @@ def site(tmp_path, monkeypatch):
     return tmp_path
 
 
+def _third_party() -> PluginHost:
+    """Installed-package discovery without core's own built-ins (P2-04), so these tests see
+    only the plugins they install."""
+    from importlib import metadata
+
+    def eps():
+        return [
+            ep
+            for g in v1.GROUPS
+            for ep in metadata.entry_points(group=g)
+            if not ep.value.startswith("shape.builtins.")
+        ]
+
+    return PluginHost(entry_points=eps)
+
+
 def _all_plugins(site: Path) -> None:
     for mod in PLUGINS:
         _install(site, f"dist-{mod.replace('_', '-')}", mod, "shape.detectors", mod, "Det")
@@ -55,7 +71,7 @@ def _all_plugins(site: Path) -> None:
 
 def test_good_plugin_loads_lazily(site):
     _install(site, "dist-good", "good_plugin", "shape.detectors", "good", "Det")
-    host = PluginHost()
+    host = _third_party()
     (rec,) = host.records("shape.detectors")
     assert (
         rec.status == "unloaded" and "good_plugin" not in sys.modules
@@ -68,7 +84,7 @@ def test_good_plugin_loads_lazily(site):
 
 def test_every_failure_mode_is_isolated(site):
     _all_plugins(site)
-    host = PluginHost()
+    host = _third_party()
     recs = {r.name: r for r in host.load_all()}
     assert recs["good_plugin"].status == "ok"
     expected = {
@@ -87,7 +103,7 @@ def test_every_failure_mode_is_isolated(site):
 
 def test_get_raises_for_one_plugin_only(site):
     _all_plugins(site)
-    host = PluginHost()
+    host = _third_party()
     with pytest.raises(PluginLoadError, match="boom at import"):
         host.get("shape.detectors", "broken_import")
     assert host.try_get("shape.detectors", "broken_import") is None
@@ -106,7 +122,7 @@ def test_duplicate_names_report_the_loser(site):
     info.mkdir()
     (info / "METADATA").write_text("Metadata-Version: 2.1\nName: dist-b\nVersion: 1.0\n")
     (info / "entry_points.txt").write_text("[shape.detectors]\nsame = other_plugin:Det\n")
-    host = PluginHost()
+    host = _third_party()
     recs = host.records("shape.detectors")
     assert [r.status for r in recs].count("error") == 1
     assert host.names("shape.detectors") == ["same"]
@@ -115,7 +131,7 @@ def test_duplicate_names_report_the_loser(site):
 
 def test_unknown_groups_are_ignored(site):
     _install(site, "dist-x", "good_plugin", "shape.not_a_group", "x", "Det")
-    assert PluginHost().records() == []
+    assert _third_party().records() == []
 
 
 def test_register_and_protocol_check():
@@ -152,7 +168,7 @@ def test_broken_metadata_is_isolated():
 
 
 def test_reload_rediscovers(site):
-    host = PluginHost()
+    host = _third_party()
     assert host.records() == []
     _install(site, "dist-good", "good_plugin", "shape.detectors", "good", "Det")
     assert host.records() == []  # discovery is cached
@@ -170,7 +186,7 @@ def test_api_version_helpers():
 
 def test_doctor_report(site):
     _all_plugins(site)
-    report = doctor.diagnose(PluginHost())
+    report = doctor.diagnose(_third_party())
     assert report["ok"] is False and report["api"] == "1.0"
     json.dumps(report)  # JSON-safe: no live objects
     text = doctor.format_report(report)

@@ -69,3 +69,9 @@ line to stderr and exits 1; argument errors exit 2.
 A complete example (a source, a detector and a command) is in `examples/plugin/`.
 
 `--json` on `doctor` prints the report from `plugins.doctor.diagnose`.
+
+## Built-ins
+
+Core's own sources, sinks, detectors, fitters, strategies, distributions and calendars register
+through this host too; see [builtins.md](builtins.md). `default_host()` adds any of them that
+entry-point discovery did not find (`shape.plugins.registry.register_builtins`).

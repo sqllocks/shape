@@ -9,6 +9,7 @@ check:
 	mypy
 	$(PYTHON) -m compileall -q src/shape
 	vulture src/shape scripts/vulture_whitelist.py --min-confidence 80
+	lint-imports
 	$(PYTHON) scripts/check_requirements.py
 	$(PYTHON) scripts/check_secrets.py
 	$(PYTHON) scripts/check_user_facing.py

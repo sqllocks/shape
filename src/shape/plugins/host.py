@@ -301,7 +301,10 @@ def default_host() -> PluginHost:
     global _default
     with _default_lock:
         if _default is None:
+            from shape.plugins.registry import register_builtins
+
             _default = PluginHost()
+            register_builtins(_default)
         return _default
 
 

@@ -115,6 +115,12 @@ def _kind_of(path: Path) -> str:
     return kind
 
 
+def file_kind(path: str | Path) -> str | None:
+    """``"csv"``, ``"parquet"``, ``"jsonl"`` or ``"ipc"`` from the file name (compression
+    suffixes ignored), or ``None`` for any other file type."""
+    return _SUFFIX_KIND.get(_strip_compression(Path(path)))
+
+
 def expand_paths(spec: str | Path | Iterable[str | Path]) -> list[Path]:
     """Files named by ``spec``: a file, a glob, a directory (recursive, recognised suffixes,
     hidden and ``_``-prefixed files skipped) or a list of those. Sorted, de-duplicated."""

@@ -1,5 +1,5 @@
+from shape.builtins.strategies.address import AddressPack, AddressReference
 from shape.location import Location, LocationScope
-from shape.packs import AddressPack, AddressReference
 
 
 def test_address_geography_is_coherent_and_seeded():

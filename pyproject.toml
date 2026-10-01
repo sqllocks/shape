@@ -69,10 +69,9 @@ module=[
     "shape.cli.main",
     "shape.connectors.dbapi",
     "shape.connectors.eventhubs",
-    "shape.connectors.files",
     "shape.connectors.kafka",
     "shape.connectors.qualification",
-    "shape.connectors.registry",
+    "shape.builtins.strategies.address",
     "shape.drift.policy",
     "shape.generation.address_vectorized",
     "shape.generation.advanced",
@@ -94,7 +93,6 @@ module=[
     "shape.geospatial.core",
     "shape.location.core",
     "shape.location.reference",
-    "shape.packs.address",
     "shape.packs.domains",
     "shape.packs.person",
     "shape.packs.sdk",
@@ -103,7 +101,6 @@ module=[
     "shape.plugins.runtime",
     "shape.privacy.advanced",
     "shape.privacy.core",
-    "shape.privacy.detect",
     "shape.privacy.propagate",
     "shape.quality.core",
     "shape.quality.policy",
@@ -134,7 +131,94 @@ ignore_errors=true
 [project.scripts]
 shape = "shape.cli.main:main"
 
+[project.entry-points."shape.sources"]
+csv = "shape.builtins.sources:CsvSource"
+parquet = "shape.builtins.sources:ParquetSource"
+jsonl = "shape.builtins.sources:JsonlSource"
+ipc = "shape.builtins.sources:IpcSource"
+
+[project.entry-points."shape.sinks"]
+csv = "shape.builtins.sinks:CsvSink"
+parquet = "shape.builtins.sinks:ParquetSink"
+jsonl = "shape.builtins.sinks:JsonlSink"
+ipc = "shape.builtins.sinks:IpcSink"
+
+[project.entry-points."shape.detectors"]
+email = "shape.builtins.detectors:EmailDetector"
+us_ssn = "shape.builtins.detectors:UsSsnDetector"
+phone = "shape.builtins.detectors:PhoneDetector"
+ipv4 = "shape.builtins.detectors:Ipv4Detector"
+
+[project.entry-points."shape.fitters"]
+auto = "shape.builtins.fitters:AutoFitter"
+
+[project.entry-points."shape.strategies"]
+constant = "shape.builtins.strategies:Constant"
+sequence = "shape.builtins.strategies:Sequence"
+choice = "shape.builtins.strategies:Choice"
+uniform = "shape.builtins.strategies:Uniform"
+normal = "shape.builtins.strategies:Normal"
+address = "shape.builtins.strategies:AddressStrategy"
+
+[project.entry-points."shape.distributions"]
+normal = "shape.builtins.distributions:Normal"
+uniform = "shape.builtins.distributions:Uniform"
+exponential = "shape.builtins.distributions:Exponential"
+lognormal = "shape.builtins.distributions:Lognormal"
+
+[project.entry-points."shape.calendars"]
+us_federal = "shape.builtins.calendars:UsFederalCalendar"
+us_retail = "shape.builtins.calendars:UsRetailCalendar"
+
 [project.urls]
 Homepage = "https://github.com/sqllocks/shape"
 Repository = "https://github.com/sqllocks/shape"
 Issues = "https://github.com/sqllocks/shape/issues"
+
+[tool.importlinter]
+root_package = "shape"
+
+[[tool.importlinter.contracts]]
+name = "Built-ins load only through the plugin registry (plan 4.3)"
+type = "forbidden"
+# Every top-level module except shape.builtins (a test fails when one is missing here: naming
+# the root "shape" would make import-linter skip its own subpackages).
+source_modules = [
+    "shape._callable",
+    "shape.api",
+    "shape.artifact",
+    "shape.capture",
+    "shape.cli",
+    "shape.connectors",
+    "shape.contracts",
+    "shape.diff",
+    "shape.drift",
+    "shape.errors",
+    "shape.generation",
+    "shape.geospatial",
+    "shape.integrations",
+    "shape.io",
+    "shape.kernel",
+    "shape.location",
+    "shape.model",
+    "shape.packs",
+    "shape.plugins",
+    "shape.privacy",
+    "shape.profile",
+    "shape.quality",
+    "shape.query",
+    "shape.registry",
+    "shape.relations",
+    "shape.report",
+    "shape.schemacheck",
+    "shape.security",
+    "shape.spec",
+    "shape.streaming",
+    "shape.types",
+    "shape.validation",
+]
+forbidden_modules = ["shape.builtins"]
+allow_indirect_imports = true
+ignore_imports = [
+    "shape.plugins.registry -> shape.builtins.catalog",
+]
