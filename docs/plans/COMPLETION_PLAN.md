@@ -2044,8 +2044,8 @@ Work packages are listed in execution order. The next work package is the first 
 | Gate | Status |
 |---|---|
 | G0 | done b965672 |
-| G1 | todo (lane G1-mt on a 2.80 GHz 4-vCPU VM: every check passes, MT 12.0x; lead reproduction on a 2.10 GHz 4-vCPU VM, Oct 1 12:57 PM EDT, equivalence 49/49 both kernels first: every check passes except PROF-IN d1.csv 9.6x (Spindle 1.70 s, Shape 0.18 s median), MT 11.9x; evidence docs/plans/evidence/G1-mt/ and G1-lead/; escalated to the owner) |
-| G2 | todo (out-of-tree plugin and `shape plugins list` checks pass at the 9342eb3 merge; waits on G1) |
+| G1 | done (lead, 4:34 PM EDT Oct 1, on build/main-plan 2a5f94a + lane/G1-d1, 4 vCPU Xeon 2.10 GHz: 34 checks exit 0, equivalence 49/49 both kernels first; PROF-IN d1 17.6x/15.4x, d2 18.8x/21.2x, d3 20.2x/16.6x, d4 13.5x/15.6x, mt 15.2x; PROF-CLI d2 13.8x, d3 17.0x; START 44 ms; P-bug regressions and mypy strict in the suites; P1-14..P1-18 done; evidence docs/plans/evidence/G1-lead2/ (lanes: G1-mt, G1-d1)) |
+| G2 | done (lead, Oct 1: out-of-tree example plugin adds a source, a detector and a command with no core change, tests/plugins/test_plugin_kit_install.py 7 passed; `shape plugins list` shows all 72 built-ins; G1 gates pass, see G1) |
 | GF | todo |
 | G3 | done (lead, 8:55 AM EDT Oct 1, on 7ef6a6e: stream_prof verify stream == batch bounded rel 1e-9 PASS and identical across 3 processes PASS; STREAM-PROF 115.7% default / 101.7% SHAPE_THREADS=1 (gate 80%), docs/plans/evidence/G3/stream-prof-lead.json; S2-S5 regression tests pass in both kernels; P3-01..P3-05 done) |
 | G4 | todo |
