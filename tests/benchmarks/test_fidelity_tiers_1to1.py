@@ -27,7 +27,9 @@ import golden_data  # noqa: E402
 import tiers_common  # noqa: E402
 
 SEED, SMALL_ROWS = 7, 200
-EXPECTED = json.loads((BENCH / "fixtures" / "expected_tiers.json").read_text())["tables"]
+_FIXTURE = json.loads((BENCH / "fixtures" / "expected_tiers.json").read_text())
+EXPECTED = _FIXTURE["tables"]
+SPREAD = {k: (v[0], v[1]) for k, v in _FIXTURE["spread"].items()}
 REAL, SYNTH = golden_data.tables()
 NAMES = sorted(EXPECTED)
 SKLEARN_KEYS = ("tier1", "tier1_single")
@@ -89,9 +91,12 @@ def test_tier_1_equals_the_baseline(with_tier1, name):
         {k: with_tier1[name][k] for k in SKLEARN_KEYS if k in EXPECTED[name]},
         _expect(name, *SKLEARN_KEYS),
         f"/{name}",
+        spread=SPREAD,
     )
     assert d.ok, d.mismatches[:5]
-    assert d.max_loose <= tiers_common.LOOSE
+    # the mixture fits are within 0.02; the adversarial fields follow the baseline's hash seed, so
+    # they are within 0.02 or inside the range the baseline itself covers (SPREAD)
+    assert max((v for k, v in d.loose.items() if "/adversarial/" not in k), default=0) <= 0.02
 
 
 def test_the_mixture_fits_are_equal_not_merely_close(with_tier1):

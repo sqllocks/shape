@@ -82,6 +82,17 @@ def test_tree_uses_the_first_rows_and_handles_missing_values_and_timestamps():
     assert ChowLiuTree().fit(pa.table({"a": [1, 2, 3]})).edges == []
 
 
+def test_a_timestamp_with_a_missing_value_collapses_to_its_null_indicator():
+    from shape.fidelity.tier3 import ChowLiuTree as Tree
+
+    n = 300
+    ts = pa.array([None if i % 3 == 0 else i * 10**9 for i in range(n)], pa.timestamp("ns"))
+    indicator = pa.array([i % 3 == 0 for i in range(n)])
+    t = pa.table({"t": ts, "isnull": indicator, "noise": np.random.default_rng(0).normal(size=n)})
+    res = Tree().fit(t)
+    assert res.mutual_info_matrix["t"]["isnull"] > 0.6  # all the information is the null pattern
+
+
 def test_comparing_trees():
     a = ChowLiuTree().fit(_dependent(0))
     same = compare_trees(a, ChowLiuTree().fit(_dependent(1)))

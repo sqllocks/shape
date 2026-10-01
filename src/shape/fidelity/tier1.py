@@ -20,8 +20,6 @@ This is a port of the reference implementation's tier 1 (checked by the parity h
 * the adversarial features are the columns the two tables share *in reference order* (the
   reference takes them in the iteration order of a Python ``set``, which changes between
   processes);
-* a timestamp column with missing values is filled with its median before the adversarial test
-  (the reference's test fails on one and reports no adversarial result);
 * periodicity uses numpy's FFT, so it does not need SciPy;
 * every part left out says why in ``notes`` (the reference leaves it out silently).
 """
@@ -386,8 +384,9 @@ def _group_codes(col: Column) -> tuple[list[Any], npt.NDArray[np.intp]]:
 
 def _encode(col: Column) -> npt.NDArray[np.float64]:
     """A column as classifier features: numbers with missing values at the median, timestamps as
-    epoch seconds, anything else as the sorted-order code of its text (a missing value is the
-    text ``__NULL__``). Missing values left over become 0 downstream."""
+    epoch seconds (a missing one far below every real time), anything else as the sorted-order code
+    of its text (a missing value is the text ``__NULL__``). Missing values left over become 0
+    downstream."""
     if col.is_numeric:
         v = col.values.astype(np.float64)
         if not col.valid.all():
@@ -395,11 +394,10 @@ def _encode(col: Column) -> npt.NDArray[np.float64]:
             v = np.where(col.valid, v, np.median(ok) if ok.size else np.nan)
         return v
     if col.is_datetime:
-        secs = (col.values // 10**9).astype(np.float64)
-        if not col.valid.all():
-            ok = secs[col.valid]
-            secs = np.where(col.valid, secs, np.median(ok) if ok.size else 0.0)
-        return secs
+        # a missing timestamp is the smallest integer (a data frame's NaT as an int64), so it falls
+        # far below every real time: the classifier can see where a column is null
+        ns = np.where(col.valid, col.values, np.iinfo(np.int64).min)
+        return (ns // 10**9).astype(np.float64)
     return col.codes().astype(np.float64)
 
 

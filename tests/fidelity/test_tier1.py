@@ -159,17 +159,19 @@ class TestWithScikitLearn:
         assert d["adversarial"]["distinguishability_score"] is not None
 
 
-def test_timestamps_with_nulls_are_filled_before_the_adversarial_test(table):
+def test_a_missing_timestamp_is_a_very_small_number_the_classifier_can_see():
     pytest.importorskip("sklearn")
     import pyarrow as pa
 
-    with_nulls = table.set_column(
-        table.column_names.index("at"),
-        "at",
-        pa.array(
-            [None if i % 7 == 0 else v for i, v in enumerate(table["at"].to_pylist())],
-            type=pa.timestamp("ns"),
-        ),
+    n = 400
+    rng = np.random.default_rng(0)
+    real = pa.table(
+        {"x": rng.normal(size=n), "t": pa.array([1 + i for i in range(n)], pa.timestamp("s"))}
     )
-    p = Tier1Profiler().profile_pair(with_nulls, with_nulls)
-    assert p.adversarial is not None and p.adversarial.auc_roc == pytest.approx(0.5, abs=0.1)
+    nulls = pa.array([None if i % 2 else 1 + i for i in range(n)], pa.timestamp("s"))
+    synth = pa.table({"x": rng.normal(size=n), "t": nulls})
+    adv = Tier1Profiler().profile_pair(real, synth).adversarial
+    assert adv is not None and adv.auc_roc > 0.7 and adv.top_features[0][0] == "t"
+    same = pa.table({"x": rng.normal(size=n), "t": real["t"]})
+    fair = Tier1Profiler().profile_pair(real, same).adversarial
+    assert fair is not None and fair.auc_roc < 0.6

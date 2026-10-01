@@ -16,8 +16,6 @@ under ``benchmarks/`` in the repository). Differences, all on purpose:
   returns "no drift" for every column, which would hide real drift);
 * ``psi_report`` also scores timestamps and text columns of at most 50 distinct values (PSI over
   category shares), which the reference's PSI does not;
-* a timestamp column with missing values is filled with its median before binning (the reference
-  fails on one);
 * ``bootstrap_table(n_rows=0)`` returns no rows (the reference treats 0 as "same size").
 """
 
@@ -77,9 +75,10 @@ class ChowLiuTree:
     """Learn a tree structure over the columns with the Chow-Liu algorithm: the maximum spanning
     tree of the pairwise mutual information of the (binned) columns.
 
-    Numbers and timestamps are cut into ``n_bins`` equal-width bins (a missing value takes the
-    median first), anything else is coded by sorted value; the first ``sample_size`` rows are used.
-    """
+    Numbers are cut into ``n_bins`` equal-width bins (a missing value takes the median first),
+    timestamps likewise as integers (a missing one is the smallest integer, so a timestamp column
+    with any missing value collapses to its null indicator: kept as the reference does it),
+    anything else is coded by sorted value; the first ``sample_size`` rows are used."""
 
     def __init__(self, n_bins: int = 10, sample_size: int = 2000) -> None:
         self.n_bins = n_bins
@@ -99,7 +98,10 @@ class ChowLiuTree:
 
     def _encode(self, col: Column, head: int) -> npt.NDArray[np.int64]:
         sliced = Column(col.name, col.kind, col.values[:head], col.valid[:head])
-        if sliced.is_numeric or sliced.is_datetime:
+        if sliced.is_datetime:
+            v = np.where(sliced.valid, sliced.values, np.iinfo(np.int64).min).astype(np.float64)
+            return _cut(v, self.n_bins) if v.size else np.zeros(0, dtype=np.int64)
+        if sliced.is_numeric:
             v = sliced.values.astype(np.float64)
             if not sliced.valid.all():
                 ok = v[sliced.valid]
@@ -119,7 +121,9 @@ def _mutual_information(x: npt.NDArray[np.int64], y: npt.NDArray[np.int64]) -> f
     px, py = joint.sum(axis=1), joint.sum(axis=0)
     nz = joint > 0
     terms = joint[nz] * np.log(joint[nz] / (np.outer(px, py)[nz] + 1e-12) + 1e-12)
-    return float(max(0.0, terms.sum()))
+    # summed one cell after another, in row order (a cumulative sum, not numpy's pairwise sum):
+    # equal terms then give bit-equal totals, so equal dependencies tie exactly as the reference's
+    return float(max(0.0, np.cumsum(terms)[-1]))
 
 
 def _max_spanning_tree(

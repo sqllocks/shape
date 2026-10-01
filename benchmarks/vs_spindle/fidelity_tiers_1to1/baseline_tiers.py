@@ -83,6 +83,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--tables")
     ap.add_argument("--no-tier1", action="store_true")
     ap.add_argument("--psi-only", action="store_true", help="only the PSI of each numeric column")
+    ap.add_argument(
+        "--adversarial-only",
+        action="store_true",
+        help="only the adversarial test (its result depends on PYTHONHASHSEED)",
+    )
     ap.add_argument("--small-rows", type=int, default=5000)
     ap.add_argument("--seed", type=int, default=7)
     a = ap.parse_args(argv)
@@ -96,6 +101,8 @@ def main(argv: list[str] | None = None) -> int:
     out: dict[str, Any] = {"sklearn": sklearn.__version__, "numpy": np.__version__, "tables": {}}
     if a.psi_only:
         out["tables"] = psi_tables(real, synth)
+    elif a.adversarial_only:
+        out["tables"] = adversarial_tables(real, synth)
     else:
         for name, r in real.items():
             out["tables"][name] = tiers_for(
@@ -124,6 +131,19 @@ def psi_tables(real: dict[str, Any], synth: dict[str, Any]) -> dict[str, Any]:
             y = y.sample(5000, random_state=0) if len(y) > 5000 else y
             cols[c] = jsonable(psi(x, y))
         out[name] = {"psi": cols}
+    return out
+
+
+def adversarial_tables(real: dict[str, Any], synth: dict[str, Any]) -> dict[str, Any]:
+    """The baseline's adversarial test alone. It takes the classifier's features in the iteration
+    order of a ``set`` of column names, so its numbers depend on ``PYTHONHASHSEED``; ``run.py``
+    runs this under several seeds to measure the baseline's own spread."""
+    from sqllocks_spindle.inference.advanced_profiler import AdvancedProfiler
+
+    out: dict[str, Any] = {}
+    for name, r in real.items():
+        adv = AdvancedProfiler()._adversarial_test(r, synth[name])
+        out[name] = {"adversarial": jsonable(adv)}
     return out
 
 

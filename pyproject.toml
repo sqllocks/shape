@@ -255,6 +255,7 @@ source_modules = [
     "shape.diff",
     "shape.drift",
     "shape.errors",
+    "shape.fidelity",
     "shape.generation",
     "shape.geospatial",
     "shape.integrations",

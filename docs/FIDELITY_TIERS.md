@@ -44,7 +44,8 @@ Things to know:
   coded by sorted value *separately in each table*, so a category that the two tables code
   differently looks like a difference: the score is a distinguishability signal, not a proof of
   quality, and it is not comparable across tables of different vocabularies.
-* A timestamp column with missing values is filled with its median before the adversarial test.
+* A missing timestamp enters the adversarial test as the smallest integer, far below every real
+  time, so the classifier can tell where a column is null.
 
 ## Tier 2
 
@@ -62,8 +63,9 @@ pass. Columns that start with `_shape_` are internal and are not scored for card
 ## Tier 3 (experimental)
 
 * **Dependency tree** (`--tier 3`, `shape.fidelity.ChowLiuTree`): each column is binned (10
-  equal-width bins for numbers and timestamps, a missing value taking the median first) or coded
-  (text), and the tree is the maximum spanning tree of the pairwise mutual information, over the first
+  equal-width bins for numbers, a missing value taking the median first; timestamps likewise as
+  integers, but a missing timestamp is the smallest integer, so a timestamp column with any missing
+  value is reduced to its null indicator) or coded (text), and the tree is the maximum spanning tree of the pairwise mutual information, over the first
   2,000 rows. The report gives the tree of each side, and `compare_trees`: the Jaccard overlap of the
   edge sets (`--min-edge-overlap` gates it) and the mean and largest difference of mutual
   information. Mutual information of binned data depends on the bins; read it as relative.
