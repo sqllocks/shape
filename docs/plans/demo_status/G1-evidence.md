@@ -48,3 +48,11 @@ pass. D4 fit total 13.0 s -> 5.4 s.
 - The remaining per-value work (first-appearance ordering, value counts, correlation, CSV/Parquet
   decoding with pandas semantics) would need a native implementation of the exact-mode profile, which
   is a rewrite of the product profiler, not a tuning round.
+
+## Other G1 items (checked in this session after merging e12d632)
+- P1-14 done (8bac288); `check_user_facing.py` clean.
+- T-22 parity: `verify.py --impl shape` exit 0 (re-run after each kernel change).
+- Phase-1 P-bug regression gate (`tests/regressions/test_phase1_bugs.py`, with `tests/profile`): 84 passed.
+- Profile modules mypy strict: done in e12d632 (another session); `mypy` reports no issues in 157 files.
+- A second session's independent run 1 (`docs/plans/evidence/G1/`, before its pre-import change) agrees with the
+  as-found column above: PROF-IN misses on 8 of 9 workloads, PROF-CLI D2 8.7x, D3 10.5x, START 41 ms.
