@@ -52,6 +52,11 @@ _COLUMN_FIELDS = (
 
 def _clean(v: Any) -> Any:
     """NaN becomes the string ``"NaN"``; numpy scalars become Python scalars."""
+    t = type(v)
+    if t is str or t is int or t is bool or v is None:  # the common leaves, with no further checks
+        return v
+    if t is float:
+        return "NaN" if v != v else v
     if isinstance(v, float) and math.isnan(v):
         return "NaN"
     if isinstance(v, dict):
