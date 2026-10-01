@@ -1,12 +1,3 @@
-from .address import (
-    AddressPack as AddressPack,
-)
-from .address import (
-    AddressReference as AddressReference,
-)
-from .address import (
-    GeneratedAddress as GeneratedAddress,
-)
 from .base import (
     DomainPack as DomainPack,
 )
@@ -21,9 +12,6 @@ __all__ = [
     "DomainPack",
     "PackManifest",
     "ReferenceAsset",
-    "AddressPack",
-    "AddressReference",
-    "GeneratedAddress",
     "DomainField",
     "DomainRelationship",
     "DomainDefinition",

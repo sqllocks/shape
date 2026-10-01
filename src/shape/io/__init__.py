@@ -16,6 +16,9 @@ from .readers import (
     expand_paths as expand_paths,
 )
 from .readers import (
+    file_kind as file_kind,
+)
+from .readers import (
     iter_rows as iter_rows,
 )
 from .readers import (
@@ -34,6 +37,7 @@ __all__ = [
     "ReaderError",
     "Source",
     "expand_paths",
+    "file_kind",
     "iter_rows",
     "open_source",
     "read_batches",

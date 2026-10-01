@@ -31,6 +31,7 @@ jobs:
         run: mypy
       - run: python -m compileall -q src/shape
       - run: vulture src/shape scripts/vulture_whitelist.py --min-confidence 80
+      - run: lint-imports
       - run: python scripts/check_conformance_coverage.py
       - run: python scripts/check_user_facing.py
       # The Fabric demo tests need Java, PySpark and unixODBC; they and the demo content tests

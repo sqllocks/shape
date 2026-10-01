@@ -52,3 +52,9 @@ iban = "my_plugin.detectors:IbanDetector"
 Loads every plugin and prints one line per plugin; `--json` prints the report. Exit code 0 when
 every plugin loads, 1 when any failed. `shape profile` and the other commands never load
 plugins they do not use.
+
+## Built-ins
+
+Core's own sources, sinks, detectors, fitters, strategies, distributions and calendars register
+through this host too; see [builtins.md](builtins.md). `default_host()` adds any of them that
+entry-point discovery did not find (`shape.plugins.registry.register_builtins`).
