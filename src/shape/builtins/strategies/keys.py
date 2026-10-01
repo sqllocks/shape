@@ -15,6 +15,7 @@ import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.fanout import FanOut
 from shape.generation.kernel_relational import cap_per_parent
 from shape.generation.strategy_kit import StrategyError, require, stream, where
 from shape.plugins.api.v1 import GenerationContext
@@ -102,6 +103,15 @@ class ForeignKey:
         pool = parent_pool(ctx, ref_table, ref_column, "foreign_key")
         if len(pool) == 0:
             raise StrategyError(f"foreign_key on {where(ctx)}: table '{ref_table}' has no rows")
+        fan_out = spec.get("fan_out")
+        if fan_out is not None:
+            if not isinstance(fan_out, Mapping):
+                raise StrategyError(f"fan_out must be a mapping for {where(ctx)}")
+            fan = engine_of(ctx, "foreign_key").cached(
+                ("fk-fan-out", ctx.table, ctx.column, len(pool), tuple(sorted(fan_out.items()))),
+                lambda: FanOut.from_spec(len(pool), dict(fan_out)),
+            )
+            return pool.take(fan.draw(stream(ctx, "fan"), ctx.row_start, ctx.n_rows))
         distribution = "uniform" if ref_table == ctx.table else spec.get("distribution", "uniform")
         if distribution == "pareto" and params.get("max_per_parent") is not None:
             index = self._capped(distribution, params, len(pool), ctx)

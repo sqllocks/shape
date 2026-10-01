@@ -693,3 +693,29 @@ def test_stable_names_exist_and_are_documented():
     ):
         assert f"### `{strategy}`" in text or f"`{strategy}`" in text, strategy
         assert strategy in (docs / "plugins" / "builtins.md").read_text("utf-8")
+
+
+def test_foreign_key_fan_out_gives_the_configured_concentration():
+    from shape.generation.fanout import top_share_of
+
+    parent = _t(2_000, ["pid"], pid=_col("pid", "sequence"))
+    child = _t(
+        100_000,
+        ["id"],
+        id=_col("id", "sequence"),
+        x=_col("x", "foreign_key", ref="p.pid", fan_out={"top_fraction": 0.2, "top_share": 0.8}),
+    )
+    engine = _engine(_case({"p": parent, "c": child}))
+    column = np.asarray(engine.generate_table("c")["x"].to_pylist()) - 1
+    assert abs(top_share_of(column, 2_000, 0.2) - 0.8) < 0.01
+    again = _engine(_case({"p": parent, "c": child}))
+    assert (
+        again.generate_chunk("c", 70_000, 500)
+        .column("x")
+        .equals(engine.generate_table("c").column("x").slice(70_000, 500).combine_chunks())
+    )
+    bad = _t(
+        10, ["id"], id=_col("id", "sequence"), x=_col("x", "foreign_key", ref="p.pid", fan_out=3)
+    )
+    with pytest.raises(ValueError, match="fan_out must be a mapping"):
+        _engine(_case({"p": parent, "c": bad})).generate_table("c")

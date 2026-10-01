@@ -134,6 +134,7 @@ Their equivalence to the baseline is tested per strategy in `tests/generation/te
 | Key | Meaning |
 |---|---|
 | `distribution` | `uniform` (default), `zipf` (`alpha`, 1.5) or `pareto` (`alpha`, 1.2); anything else is uniform. `alpha` and `max_per_parent` may be at the top level or under `params` (`params` wins) |
+| `fan_out` | the 80/20 helper (`FanOut`, below): `{"top_fraction": 0.2, "top_share": 0.8, "shape": "power"}`; replaces `distribution` |
 | `max_per_parent` | with `pareto`: no parent gets more rows (a row-sequential pass over the table, kept in memory) |
 | `constrained_by` | a column of this table; the key is drawn from the parent rows whose column of the same name has the same value. No such parent: null when the column is nullable, else any parent |
 | `sample_rate`, `filter` | the rows take the parents of one random sample, without replacement, of `max(1, int(rows * sample_rate))` parent rows (those matching `"column = 'value'"`); a table with more rows than the sample wraps around it |
