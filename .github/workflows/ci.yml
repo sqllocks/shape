@@ -30,7 +30,7 @@ jobs:
       - if: matrix.python == '3.11'
         run: mypy
       - run: python -m compileall -q src/shape
-      - run: vulture src/shape --min-confidence 80
+      - run: vulture src/shape scripts/vulture_whitelist.py --min-confidence 80
       - run: python scripts/check_conformance_coverage.py
       - run: python scripts/check_user_facing.py
       # The Fabric demo tests need Java, PySpark and unixODBC; they and the demo content tests
@@ -111,6 +111,13 @@ jobs:
           "$SHAPE_VENV/bin/pip" install -e '.[dev]' 'pyarrow==25.0.1'
       - run: source scripts/env.sh && python benchmarks/vs_spindle/check_coverage.py
       - run: source scripts/env.sh && python benchmarks/vs_spindle/run.py --quick --out "$BENCH_OUT_DIR/results.json"
+      # P6-09: `shape verify` against the baseline's `verify` on retail small (internal harness).
+      - run: |
+          source scripts/env.sh
+          "$SPINDLE_PY" benchmarks/vs_spindle/dump_schema.py retail
+          "$SPINDLE_PY" benchmarks/vs_spindle/domain_1to1/generate.py --impl spindle --domain retail --scale small --seed 42
+          "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/domain_1to1/generate.py --impl reference_port --domain retail --scale small --seed 1042
+          "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/verify_1to1/verify.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
