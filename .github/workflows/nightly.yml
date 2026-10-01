@@ -52,6 +52,32 @@ jobs:
       - run: python -m pytest -q -m emulator tests/builtins/test_cloud_sources_azurite.py
       - if: always()
         run: docker compose -f ci/emulators/docker-compose.yml down -v
+  kafka-e2e:
+    # P3-04: shape-kafka against a real broker, then the stream-profile command (P3-05) on it.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait kafka
+      - run: pip install -e '.[dev]' -e plugins/shape-kafka
+      - run: python -m pytest -m emulator plugins/shape-kafka/tests -q
+      - if: always()
+        run: docker compose -f ci/emulators/docker-compose.yml down -v
+  eventhubs-e2e:
+    # P3-04: shape-eventhubs against the Event Hubs emulator (with its Azurite sidecar; amd64).
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait azurite eventhubs
+      - run: pip install -e '.[dev]' -e plugins/shape-eventhubs
+      - run: python -m pytest -m emulator plugins/shape-eventhubs/tests -q
+      - if: always()
+        run: docker compose -f ci/emulators/docker-compose.yml down -v
   sqlserver-e2e:
     # P6-08: shape-sqlserver against a real SQL Server 2022 (ci/emulators/docker-compose.yml),
     # then T-22 parity of the database profiler against the pinned baseline on the same data.

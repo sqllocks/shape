@@ -11,7 +11,7 @@ shape doctor
 shape conformance
 ```
 
-Optional streaming transports:
+Optional streaming transports (`shape stream-profile`, `docs/plugins/streaming.md`):
 
 ```bash
 pip install 'sqllocks-shape[kafka]'
