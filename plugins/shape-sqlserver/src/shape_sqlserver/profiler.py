@@ -42,9 +42,12 @@ from .sql import (
 log = logging.getLogger("shape_sqlserver")
 
 # A column is an enumeration when it has at most this many distinct values in the sample, or
-# when distinct values are under 5% of the rows sampled.
+# when distinct values are under 5% of the rows sampled, and in either case its values repeat:
+# distinct values are at most this fraction of the sample's non-null values (P1-18). A unique
+# column is never an enumeration.
 ENUM_MAX_CARDINALITY = 50
 ENUM_MAX_RATIO = 0.05
+ENUM_MAX_DISTINCT_PER_VALUE = 0.5
 UNIQUE_RATIO = 0.99
 # ``is_unique`` needs at least this many non-null sampled values: one value is trivially distinct.
 UNIQUE_MIN_VALUES = 2
@@ -161,7 +164,6 @@ def _profile_column(
             std_val = _sample_std(nums)
     denominator = max(sample_size, 1)  # the rows actually sampled, not the table's row count
     ratio = cardinality / denominator
-    is_enum = cardinality > 0 and (cardinality <= ENUM_MAX_CARDINALITY or ratio < ENUM_MAX_RATIO)
     # No sampled row: the rates are unknown, not zero. Unique among the non-null sampled values,
     # and only claimed from at least UNIQUE_MIN_VALUES of them.
     known = values is not None and sample_size > 0
@@ -169,6 +171,12 @@ def _profile_column(
     is_unique: bool | None = None
     if known and non_null >= UNIQUE_MIN_VALUES:
         is_unique = cardinality / non_null > UNIQUE_RATIO
+    is_enum = (
+        cardinality > 0
+        and (cardinality <= ENUM_MAX_CARDINALITY or ratio < ENUM_MAX_RATIO)
+        and cardinality <= ENUM_MAX_DISTINCT_PER_VALUE * non_null
+        and not is_unique
+    )
     enum_values: dict[str, float] | None = None
     if is_enum and dtype in ("string", "boolean") and values is not None:
         counts = Counter(present)

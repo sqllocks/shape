@@ -100,8 +100,12 @@ cannot be read (no `SELECT` permission) still gets its catalog profile.
 #### Ratios describe the sample, and may be unknown
 
 - `null_rate = sampled nulls / sampled rows`, `cardinality_ratio = sampled distinct values /
-  sampled rows`. `is_enum` follows the same ratio (at most 50 distinct values, or under 5% of
-  the sampled rows; the same rule as the core profiler).
+  sampled rows`.
+- **An enumeration** (`is_enum`, with `enum_values`) is a column with at most 50 distinct values,
+  or distinct values under 5% of the sampled rows, whose values also repeat: distinct values are
+  at most half of the sampled non-null values, and a unique column never is one. A tiny table of
+  distinct text, a key and free text are therefore not enumerations; the same rule as the core
+  profiler.
 - **No sampled rows means unknown, not zero.** For a column with no sampled row
   (`--sample-rows 0`, an empty table, a table that could not be read) `null_rate`,
   `cardinality_ratio` and `is_unique` are `null`, not `0.0`/`false`. Saving, loading, the HTML

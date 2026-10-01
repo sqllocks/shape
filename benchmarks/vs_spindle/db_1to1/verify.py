@@ -197,7 +197,9 @@ def drop_real(cur, fake, schema: str) -> None:
     cur.execute(f"IF SCHEMA_ID('{schema}') IS NOT NULL DROP SCHEMA [{schema}]")
 
 
-def compare_profiles(sp: dict, sh: dict, label: str, matrix: dict, fails: list) -> None:
+def compare_profiles(
+    sp: dict, sh: dict, label: str, matrix: dict, fails: list, sampled: dict[str, int] | None = None
+) -> None:
     ok = sp["relationships"] == sh["relationships"]
     matrix.setdefault("dataset.relationships", [0, 0, 0])
     matrix["dataset.relationships"][0] += 1
@@ -214,7 +216,13 @@ def compare_profiles(sp: dict, sh: dict, label: str, matrix: dict, fails: list) 
     for t in sp["tables"]:
         if t in sh["tables"]:
             profile_verify.check_table(
-                sp["tables"][t], sh["tables"][t], f"{label}:{t}", matrix, fails
+                sp["tables"][t],
+                sh["tables"][t],
+                f"{label}:{t}",
+                matrix,
+                fails,
+                # the enum rule (P1-18) counts the sample's non-null values
+                (lambda _tbl, col, n=sampled[t]: n - col["null_count"]) if sampled else None,
             )
 
 
@@ -273,7 +281,7 @@ def main() -> int:
                         f"{case}:{t}.{c} fk_evidence: expected={evidence[(t, c)]} "
                         f"shape={col.get('fk_evidence')}"
                     )
-        compare_profiles(want, sh, case, matrix, fails)
+        compare_profiles(want, sh, case, matrix, fails, sampled)
         all_fails[case] = fails
         n = sum(m[0] for m in matrix.values())
         cells += n
@@ -294,6 +302,16 @@ def main() -> int:
         for fix in FIXES:
             if not any(tally[k] for k in tally if k.startswith(fix)):
                 print(f"MISMATCH no {fix} difference was exercised")
+                bad += 1
+    enum = profile_verify.ENUM_TALLY
+    print(
+        f"  P1-18 enum rule ({', '.join(profile_verify.ENUM_RULE_FIELDS)}): "
+        f"{enum['flipped']} columns no longer enums, {enum['kept']} stay enums"
+    )
+    if not a.case:  # a full run must exercise the rule both ways, or the allow-list proves nothing
+        for k, what in (("flipped", "turned a baseline enum off"), ("kept", "kept an enum")):
+            if not enum[k]:
+                print(f"MISMATCH the enum rule never {what}")
                 bad += 1
     print(f"\n{checked - bad}/{checked} cases match ({cells} field comparisons)")
     return 1 if bad else 0

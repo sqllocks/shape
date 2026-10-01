@@ -93,9 +93,11 @@ def top_by_first_seen(
     return sel[order]
 
 
-def _need_for(card: int, top_n: int, row_count: int) -> int:
+def _need_for(card: int, top_n: int, row_count: int, n_nn: int) -> int:
     ratio = card / row_count if row_count > 0 else 0.0
-    is_enum = (card < 200 or (ratio < 0.30 and card < 50_000)) and card > 0
+    # enum rule (P1-18): the size limits, and the values repeat (distinct <= half the non-null
+    # values; a unique column never qualifies)
+    is_enum = (card < 200 or (ratio < 0.30 and card < 50_000)) and card > 0 and 2 * card <= n_nn
     return card if is_enum else min(top_n, card)
 
 
@@ -113,7 +115,7 @@ def count_numeric(
     starts = np.flatnonzero(np.concatenate(([True], xs[1:] != xs[:-1])))
     uniq = xs[starts]
     counts = np.diff(np.append(starts, len(xs)))
-    top = top_by_first_seen(row, uniq, counts, _need_for(len(uniq), top_n, row_count))
+    top = top_by_first_seen(row, uniq, counts, _need_for(len(uniq), top_n, row_count, len(row)))
     return {
         "cardinality": len(uniq),
         "keys": pa.array(uniq[top]),

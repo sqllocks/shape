@@ -1,0 +1,4 @@
+START: median 40 ms (gate 300)
+PROF-CLI d2.csv: spindle 41.11s, shape 2.86s, 14.4x (gate 10x)
+PROF-CLI d3.csv: spindle 104.97s, shape 5.95s, 17.7x (gate 10x)
+exit 0

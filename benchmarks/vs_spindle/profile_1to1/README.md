@@ -61,7 +61,7 @@ regenerates D1, and `results.json` supersedes those rows.)
 | `pd.read_csv` dtype inference (int with nulls -> float64, bool with nulls -> object, text dates stay text, pandas NA tokens, `True/TRUE/true` booleans) | `pyarrow.csv` with pandas' NA and bool token lists and timestamp inference disabled. Inferred date32/time32 columns are cast back to their exact canonical text. A per-column "pandas kind" is carried alongside the data | bitwise |
 | `pd.read_parquet` / `Table.to_pandas()` (int with nulls -> float, date32 -> object `datetime.date`, timestamp -> datetime64, bool with nulls -> object) | `_arrow_cols` kind mapping | bitwise |
 | `_infer_column_type`: bool dtype; int; float with the all-whole check; datetime with the all-midnight check; object/str: bool-like set, `to_numeric`, `to_datetime(format="mixed")` | Same decision tree. The bool-like set check and numeric cast run vectorised on the distinct values | bitwise |
-| null_count (NaN counts as null), null_rate, cardinality (`nunique`, -0.0 == 0.0), cardinality_ratio, is_unique, is_enum, all rounding | same | bitwise |
+| null_count (NaN counts as null), null_rate, cardinality (`nunique`, -0.0 == 0.0), cardinality_ratio, is_unique, all rounding | same | bitwise |
 | `enum_values` and `value_counts_ext` (top 500): pandas `value_counts` order (first appearance, then a *stable* descending sort) and `str(key)` formatting of int, float, bool, Timestamp and date keys, including which of `-0.0` or `0.0` is printed | Arrow hash counts for strings, bools and low-cardinality numerics. For numerics above 50k distinct values: sort-based counts plus a chunked first-appearance scan that reproduces pandas' tie order exactly | bitwise, including key order |
 | min/max with pandas' Python types (`int`, `float`, `str`, `bool`, `Timestamp`, `datetime.date`) | `pc.min_max` / numpy, converted to the same Python types (a `Timestamp` subclass of `datetime` stands in for pandas') | bitwise, including type |
 | mean, std (ddof=1, pandas nanops summation) | the same numpy reductions | bitwise |
@@ -75,6 +75,18 @@ regenerates D1, and `results.json` supersedes those rows.)
 | `_detect_foreign_keys` (`*_id` name -> table, parent PK, >= 0.9 overlap of distinct values; int == float equality) | same, with `pc.is_in` on distinct values cast to float64 | bitwise |
 | `correlation_matrix` (`select_dtypes(number).corr()`, pairwise-complete Pearson, rounded to 4) | BLAS: columns centred on the global mean, and pairwise sums over the rows where both values are present computed as matrix products with the null masks | bitwise after rounding on all datasets (see deviations) |
 | `relationships` in `profile_dataset` | same | bitwise |
+
+### Intentional difference: the enum rule (P1-18)
+
+The baseline marks a column an enum when `cardinality < 200 or (ratio < 0.30 and cardinality < 50_000)`,
+so every column of a table under 200 rows is one, unique keys and free text included. Shape also
+requires that the values repeat: distinct values <= 0.5 x non-null values, and a unique column is
+never an enum. `verify.py` turns the baseline column into what that rule gives, from the baseline's
+own `cardinality`, `null_count` and `is_unique` (`enum_rule_baseline`), and Shape must equal it. The
+allow-list is exactly two fields, `is_enum` and `enum_values`; nothing else is derived from them
+(`value_counts_ext` keeps the first 500 values whether the column is an enum or not, and no other field
+reads `is_enum`). Every other field is compared with the baseline as it is. A full run fails if the rule
+never turned a baseline enum off, or never kept one.
 
 ### Verification result (`verify.py --refresh`, all 30 variants)
 
