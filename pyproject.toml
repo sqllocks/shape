@@ -256,6 +256,7 @@ source_modules = [
     "shape.kernel",
     "shape.location",
     "shape.model",
+    "shape.observability",
     "shape.packs",
     "shape.plugins",
     "shape.privacy",

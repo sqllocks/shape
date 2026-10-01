@@ -103,8 +103,9 @@ EntryPointsFn = Callable[[], Iterable[metadata.EntryPoint]]
 
 
 def _installed_entry_points() -> Iterator[metadata.EntryPoint]:
+    installed = metadata.entry_points()  # one scan of the installed packages, not one per group
     for group in v1.GROUPS:
-        yield from metadata.entry_points(group=group)
+        yield from installed.select(group=group)
 
 
 class PluginHost:

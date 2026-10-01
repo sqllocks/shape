@@ -42,6 +42,37 @@
      }
     ]
    }
+  },
+  "large": {
+   "spindle_median_s": 100.97630207400005,
+   "shape_median_s": 7.78306793999991,
+   "ratio": 12.973843072221879,
+   "spindle_runs_s": [
+    100.976
+   ],
+   "shape_runs_s": [
+    7.783
+   ],
+   "raw": {
+    "spindle": [
+     {
+      "wall_s": 100.97630207400005,
+      "cpu_s": 102.361655,
+      "rows": 19625400,
+      "loadavg_before": 0.44140625,
+      "cmd": "/root/.venvs/spindle/bin/spindle generate retail --scale large --seed 42 --format parquet -o /root/bench-out/spindle/retail/large/seed42.tmp4745"
+     }
+    ],
+    "shape": [
+     {
+      "wall_s": 7.78306793999991,
+      "cpu_s": 17.881709999999998,
+      "rows": 19625400,
+      "loadavg_before": 1.287109375,
+      "cmd": "/root/.venvs/shape/bin/shape generate retail --scale large --seed 1042 --format parquet -o /root/bench-out/shape/retail/large/seed1042.tmp4745"
+     }
+    ]
+   }
   }
  }
 }
