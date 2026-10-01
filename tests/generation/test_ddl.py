@@ -341,10 +341,17 @@ class TestSmartInference:
         assert cols["rating"].generator["params"]["max"] == 5
 
     def test_a_placeholder_status_follows_the_table_role(self) -> None:
-        # `state` starts as a faker placeholder, so it is upgraded; a `status` column already has
-        # the parser's three-value enum, which is not a placeholder and stays.
-        schema, _ = smart(RETAIL)
-        assert schema.tables["orders"].columns["state"].generator["values"]["completed"] == 0.72
+        # A status column whose generator is still a placeholder is upgraded by the table's role.
+        # (The parser's own enum for `status` and `*_status` is not a placeholder and stays; a
+        # `state` column is a state value, not a status: see test_ddl_fixes.py.)
+        schema = parse(RETAIL.replace("state VARCHAR(20)", "order_status VARCHAR(20)"))
+        schema.tables["orders"].columns["order_status"].generator = {
+            "strategy": "faker",
+            "provider": "text",
+        }
+        SchemaInference().run(schema)
+        orders = schema.tables["orders"].columns["order_status"]
+        assert orders.generator["values"]["completed"] == 0.72
         assert schema.tables["customers"].columns["status"].generator["values"] == {
             "active": 0.7,
             "inactive": 0.2,

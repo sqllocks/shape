@@ -61,22 +61,32 @@ class AddressPack:
     def _candidates(self, loc: Location):
         return [r for r in self.rows if self._matches(r, loc)]
 
+    def _eligible(self, scope: LocationScope):
+        """The reference rows of every included location (minus the excluded ones), in scope order
+        with the scope's weights. Worked out once per call: a row only draws from them, so a run
+        costs rows + reference rows, not rows x reference rows (plan Appendix A, G7)."""
+        groups = []
+        for wl in scope.include:
+            candidates = [
+                r
+                for r in self._candidates(wl.location)
+                if not any(self._matches(r, x) for x in scope.exclude)
+            ]
+            if not candidates:
+                raise ValueError(f"No reference geography for {wl.location}")
+            groups.append(candidates)
+        return groups, list(scope.normalized_weights)
+
     def generate(
         self, n: int, scope: LocationScope, seed: int = 0, mode: str = "street_synthetic"
     ) -> list[GeneratedAddress]:
         if mode not in {"geographic", "street_synthetic", "reference", "exact_reference"}:
             raise ValueError("unsupported address mode")
         rng = random.Random(seed)
-        weights = scope.normalized_weights
+        groups, weights = self._eligible(scope)
         out = []
         for _ in range(n):
-            wl = rng.choices(scope.include, weights=weights, k=1)[0]
-            candidates = self._candidates(wl.location)
-            candidates = [
-                r for r in candidates if not any(self._matches(r, x) for x in scope.exclude)
-            ]
-            if not candidates:
-                raise ValueError(f"No reference geography for {wl.location}")
+            candidates = groups[rng.choices(range(len(groups)), weights=weights, k=1)[0]]
             ref = rng.choice(candidates)
             if mode in {"reference", "exact_reference"}:
                 street = ref.street
@@ -113,20 +123,6 @@ class AddressPack:
 
 class FastAddressPack(AddressPack):
     """High-throughput encoded columnar address generator."""
-
-    def _eligible(self, scope):
-        out = []
-        weights = []
-        for wl, w in zip(scope.include, scope.normalized_weights, strict=False):
-            candidates = self._candidates(wl.location)
-            candidates = [
-                r for r in candidates if not any(self._matches(r, x) for x in scope.exclude)
-            ]
-            if not candidates:
-                raise ValueError(f"No reference geography for {wl.location}")
-            out.append(candidates)
-            weights.append(w)
-        return out, weights
 
     def generate_columns(self, n, scope, seed=0, mode="street_synthetic", encoded=False):
         import numpy as np
