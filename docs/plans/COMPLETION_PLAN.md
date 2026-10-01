@@ -1953,12 +1953,12 @@ Work packages are listed in execution order. The next work package is the first 
 | 39 | P4-01a | done | 02a0c4d |
 | 40 | P4-01b | done | 4b75d46 |
 | 41 | P4-02 | done | 6917af7 |
-| 42 | P4-03 | wip (lane/P4-03) |  |
-| 43 | P4-04a | todo | |
+| 42 | P4-03 | done | 6ec4c1f |
+| 43 | P4-04a | done | e596a57 |
 | 44 | P4-04b | wip (lane/P4-04b) | |
 | 45 | P4-04c | wip (lane/P4-04c) | |
 | 46 | P4-04d | wip (lane/P4-04d) | |
-| 47 | P4-05 | todo | |
+| 47 | P4-05 | done | 9f6fea8 |
 | 48 | P4-06 | done (SQL comment/literal injection fixed at integration, 36f32d3) | ba051d2 |
 | 49 | P4-07 | todo | |
 | 50 | P4-08 | todo | |
