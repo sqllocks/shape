@@ -50,6 +50,10 @@ _COLUMN_FIELDS = (
 )
 
 
+_PLAIN = frozenset({str, int, bool, type(None)})  # leaves _clean returns unchanged
+_STR_ONLY = frozenset({str})
+
+
 def _clean(v: Any) -> Any:
     """NaN becomes the string ``"NaN"``; numpy scalars become Python scalars."""
     t = type(v)
@@ -60,8 +64,13 @@ def _clean(v: Any) -> Any:
     if isinstance(v, float) and math.isnan(v):
         return "NaN"
     if isinstance(v, dict):
+        # value counts: str keys over plain values need no per-entry work (types checked in C)
+        if _STR_ONLY.issuperset(map(type, v)) and _PLAIN.issuperset(map(type, v.values())):
+            return dict(v)
         return {str(k): _clean(x) for k, x in v.items()}
     if isinstance(v, (list, tuple)):
+        if _PLAIN.issuperset(map(type, v)):
+            return list(v)
         return [_clean(x) for x in v]
     if hasattr(v, "item") and not isinstance(v, (str, bytes)):
         return _clean(v.item())

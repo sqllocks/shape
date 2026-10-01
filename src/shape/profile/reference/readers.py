@@ -305,14 +305,11 @@ def _refine_integers(path: str | Path, table: pa.Table, ro: Any, co: Any) -> pa.
     cands = []
     for name, col in zip(table.column_names, table.columns, strict=True):
         if pa.types.is_float64(col.type) and col.null_count == 0 and len(col):
+            head = col.slice(0, 4096).to_numpy()  # most float columns are settled by their head
+            if not (np.isfinite(head).all() and np.array_equal(head, np.floor(head))):
+                continue
             vals = col.to_numpy()
-            head = vals[:4096]  # most float columns are settled by their first values
-            if (
-                np.isfinite(head).all()
-                and np.array_equal(head, np.floor(head))
-                and np.isfinite(vals).all()
-                and np.array_equal(vals, np.floor(vals))
-            ):
+            if np.isfinite(vals).all() and np.array_equal(vals, np.floor(vals)):
                 cands.append(name)
     if not cands:
         return table
