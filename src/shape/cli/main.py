@@ -520,6 +520,12 @@ def _build_parser(plugin_commands=()):
     fc = sub.add_parser("certify-shapes")
     fc.add_argument("target")
     fc.add_argument("observed")
+    fc.add_argument(
+        "--threshold",
+        type=float,
+        default=0.9,
+        help="minimum certificate score, 0 to 1 (default 0.9); below it the exit code is 3",
+    )
     rg = sub.add_parser("registry")
     rg.add_argument("root")
     rg.add_argument("action", choices=("commit", "checkout", "tag", "promote", "log"))
@@ -709,8 +715,9 @@ def main(argv=None):
             return 0 if r.compatible else 5
         from shape.generation.fidelity import certify_shapes
 
-        _dump(certify_shapes(LS(a.target), LS(a.observed)).to_dict())
-        return 0
+        cert = certify_shapes(LS(a.target), LS(a.observed))
+        _dump(cert.to_dict())
+        return 0 if cert.score >= a.threshold else 3
     if a.cmd == "registry":
         from shape.registry import LocalRegistry
 

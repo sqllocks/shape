@@ -55,7 +55,7 @@ def certify(reference_shape, generated_rows, level="gold", tolerance=0.10, corre
     for field, ref in sorted(reference_shape.get("columns", {}).items()):
         obs = observed.get("columns", {}).get(field)
         if obs is None:
-            metrics.append(MetricScore(f"columns.{field}", 1, tolerance, False, ref, None))
+            metrics.append(MetricScore(f"columns.{field}", 0.0, tolerance, False, ref, None))
             continue
         for m in ("null_count", "distinct_estimate", "mean", "min", "max", "q25", "q50", "q75"):
             if m in ref:
@@ -99,10 +99,14 @@ def certify(reference_shape, generated_rows, level="gold", tolerance=0.10, corre
                 f"correlation.{left}.{right}", max(0, 1 - e), tolerance, e <= tolerance, target, got
             )
         )
-    score = sum(x.score for x in metrics) / len(metrics) if metrics else 1.0
+    if not metrics:  # a reference that describes nothing certifies nothing
+        score, passed = 0.0, False
+    else:
+        score = sum(x.score for x in metrics) / len(metrics)
+        passed = all(x.passed for x in metrics)
     return FidelityCertificate(
         level,
-        all(x.passed for x in metrics),
+        passed,
         score,
         tuple(metrics),
         len(rows) if rows is not None else int(observed.get("rows", 0)),
