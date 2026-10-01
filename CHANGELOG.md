@@ -5,6 +5,10 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `shape from-ddl FILE`: reads SQL `CREATE TABLE` DDL (SQL Server, PostgreSQL, MySQL, ANSI; inline,
+  table-level and `ALTER TABLE` foreign keys) into a generation schema, with smart inference of
+  distributions, key patterns, row ratios, seasonality, correlations and business rules
+  (`--smart`, the default; `--explain` prints each decision). See `docs/GENERATION_ENGINE.md`.
 - Stream profiling runtime (`shape.streaming`): tumbling, sliding, session and global windows over
   Arrow micro-batches profiled in bounded mode, with watermarks, allowed lateness and a late-data
   policy; windows can be snapshotted and restored exactly. Bounded per-key sketches (LRU, TTL, a hard

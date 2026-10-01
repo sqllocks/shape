@@ -1,0 +1,267 @@
+{
+ "annotations": [],
+ "explain": [],
+ "file": {
+  "business_rules": [],
+  "generation": {
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "dim_branch": 100000,
+     "dim_product": 100000
+    },
+    "medium": {
+     "customer": 7,
+     "dim_branch": 10000,
+     "dim_product": 10000,
+     "order": 21,
+     "orders": 21
+    },
+    "small": {
+     "dim_branch": 1000,
+     "dim_product": 1000
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [],
+  "tables": {
+   "dim_branch": {
+    "columns": {
+     "branch_key": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "type": "integer"
+     },
+     "branch_name": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 20,
+      "type": "string"
+     },
+     "region": {
+      "generator": {
+       "max_nb_chars": 12,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 12,
+      "type": "string"
+     },
+     "state_code": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 2,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "branch_key"
+    ]
+   },
+   "dim_product": {
+    "columns": {
+     "default_note": {
+      "generator": {
+       "max_nb_chars": 20,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 20,
+      "nullable": true,
+      "type": "string"
+     },
+     "product_key": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "type": "integer"
+     },
+     "product_name": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 32,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "product_key"
+    ]
+   }
+  }
+ },
+ "schema": {
+  "business_rules": [],
+  "correlated_columns": {},
+  "generation": {
+   "derived_counts": {},
+   "output": {},
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "dim_branch": 100000,
+     "dim_product": 100000
+    },
+    "medium": {
+     "customer": 7,
+     "dim_branch": 10000,
+     "dim_product": 10000,
+     "order": 21,
+     "orders": 21
+    },
+    "small": {
+     "dim_branch": 1000,
+     "dim_product": 1000
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [],
+  "tables": {
+   "dim_branch": {
+    "cdm_mapping": null,
+    "columns": {
+     "branch_key": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "branch_key",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "branch_name": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 20,
+      "name": "branch_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "region": {
+      "generator": {
+       "max_nb_chars": 12,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 12,
+      "name": "region",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "state_code": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 2,
+      "name": "state_code",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "dim_branch",
+    "primary_key": [
+     "branch_key"
+    ]
+   },
+   "dim_product": {
+    "cdm_mapping": null,
+    "columns": {
+     "default_note": {
+      "generator": {
+       "max_nb_chars": 20,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 20,
+      "name": "default_note",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "product_key": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "product_key",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "product_name": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 32,
+      "name": "product_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "dim_product",
+    "primary_key": [
+     "product_key"
+    ]
+   }
+  }
+ }
+}

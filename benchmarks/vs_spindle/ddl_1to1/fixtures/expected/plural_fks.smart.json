@@ -1,0 +1,1061 @@
+{
+ "annotations": [
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as LOOKUP",
+   "rule_id": "TC-LOOKUP",
+   "table": "categories"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as ENTITY",
+   "rule_id": "TC-ENTITY",
+   "table": "companies"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as LOOKUP",
+   "rule_id": "TC-LOOKUP",
+   "table": "boxes"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as LOOKUP",
+   "rule_id": "TC-LOOKUP",
+   "table": "bus"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as LOOKUP",
+   "rule_id": "TC-LOOKUP",
+   "table": "statuses"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Classified as UNKNOWN",
+   "rule_id": "TC-UNKNOWN",
+   "table": "item"
+  },
+  {
+   "column": "category_id",
+   "confidence": 0.9,
+   "description": "Nullable FK \u2014 added null_rate 0.15",
+   "rule_id": "FK-04",
+   "table": "item"
+  },
+  {
+   "column": "category_id",
+   "confidence": 0.8,
+   "description": "Lookup/reference parent (categories) -> child \u2014 zipf(alpha=1.3)",
+   "rule_id": "FK-02",
+   "table": "item"
+  },
+  {
+   "column": "company_id",
+   "confidence": 0.9,
+   "description": "Nullable FK \u2014 added null_rate 0.15",
+   "rule_id": "FK-04",
+   "table": "item"
+  },
+  {
+   "column": "company_id",
+   "confidence": 0.8,
+   "description": "Entity (companies) -> child \u2014 pareto(alpha=1.16)",
+   "rule_id": "FK-01",
+   "table": "item"
+  },
+  {
+   "column": "box_id",
+   "confidence": 0.9,
+   "description": "Nullable FK \u2014 added null_rate 0.15",
+   "rule_id": "FK-04",
+   "table": "item"
+  },
+  {
+   "column": "box_id",
+   "confidence": 0.8,
+   "description": "Lookup/reference parent (boxes) -> child \u2014 zipf(alpha=1.3)",
+   "rule_id": "FK-02",
+   "table": "item"
+  },
+  {
+   "column": "bus_id",
+   "confidence": 0.9,
+   "description": "Nullable FK \u2014 added null_rate 0.15",
+   "rule_id": "FK-04",
+   "table": "item"
+  },
+  {
+   "column": "bus_id",
+   "confidence": 0.8,
+   "description": "Lookup/reference parent (bus) -> child \u2014 zipf(alpha=1.3)",
+   "rule_id": "FK-02",
+   "table": "item"
+  },
+  {
+   "column": "status_id",
+   "confidence": 0.9,
+   "description": "Nullable FK \u2014 added null_rate 0.15",
+   "rule_id": "FK-04",
+   "table": "item"
+  },
+  {
+   "column": "status_id",
+   "confidence": 0.8,
+   "description": "Lookup/reference parent (statuses) -> child \u2014 zipf(alpha=1.3)",
+   "rule_id": "FK-02",
+   "table": "item"
+  },
+  {
+   "column": null,
+   "confidence": 0.85,
+   "description": "Lookup/reference table \u2014 fixed 20 rows",
+   "rule_id": "CA-06",
+   "table": "categories"
+  },
+  {
+   "column": null,
+   "confidence": 0.9,
+   "description": "Root table \u2014 scale presets set (1K / 50K / 500K)",
+   "rule_id": "CA-SCALE",
+   "table": "companies"
+  },
+  {
+   "column": null,
+   "confidence": 0.85,
+   "description": "Lookup/reference table \u2014 fixed 20 rows",
+   "rule_id": "CA-06",
+   "table": "boxes"
+  },
+  {
+   "column": null,
+   "confidence": 0.85,
+   "description": "Lookup/reference table \u2014 fixed 20 rows",
+   "rule_id": "CA-06",
+   "table": "bus"
+  },
+  {
+   "column": null,
+   "confidence": 0.85,
+   "description": "Lookup/reference table \u2014 fixed 20 rows",
+   "rule_id": "CA-06",
+   "table": "statuses"
+  },
+  {
+   "column": null,
+   "confidence": 0.8,
+   "description": "Default child ratio \u2014 3.0 per parent (companies)",
+   "rule_id": "CA-09",
+   "table": "item"
+  },
+  {
+   "column": "parent_item_id",
+   "confidence": 0.75,
+   "description": "Upgraded to log_normal distribution based on MONETARY semantic",
+   "rule_id": "ND-MONETARY",
+   "table": "item"
+  },
+  {
+   "column": "category_name",
+   "confidence": 0.7,
+   "description": "Upgraded to realistic weighted_enum (5 values) based on CATEGORICAL semantic / LOOKUP role",
+   "rule_id": "EN-CATEGORICAL",
+   "table": "categories"
+  },
+  {
+   "column": "parent_item_id",
+   "confidence": 0.8,
+   "description": "Monetary column parent_item_id >= 0",
+   "rule_id": "BR-05",
+   "table": "item"
+  }
+ ],
+ "explain": [
+  "  [TC-LOOKUP] categories: Classified as LOOKUP (confidence: 80%)",
+  "  [TC-ENTITY] companies: Classified as ENTITY (confidence: 80%)",
+  "  [TC-LOOKUP] boxes: Classified as LOOKUP (confidence: 80%)",
+  "  [TC-LOOKUP] bus: Classified as LOOKUP (confidence: 80%)",
+  "  [TC-LOOKUP] statuses: Classified as LOOKUP (confidence: 80%)",
+  "  [TC-UNKNOWN] item: Classified as UNKNOWN (confidence: 80%)",
+  "  [FK-04] item.category_id: Nullable FK \u2014 added null_rate 0.15 (confidence: 90%)",
+  "  [FK-02] item.category_id: Lookup/reference parent (categories) -> child \u2014 zipf(alpha=1.3) (confidence: 80%)",
+  "  [FK-04] item.company_id: Nullable FK \u2014 added null_rate 0.15 (confidence: 90%)",
+  "  [FK-01] item.company_id: Entity (companies) -> child \u2014 pareto(alpha=1.16) (confidence: 80%)",
+  "  [FK-04] item.box_id: Nullable FK \u2014 added null_rate 0.15 (confidence: 90%)",
+  "  [FK-02] item.box_id: Lookup/reference parent (boxes) -> child \u2014 zipf(alpha=1.3) (confidence: 80%)",
+  "  [FK-04] item.bus_id: Nullable FK \u2014 added null_rate 0.15 (confidence: 90%)",
+  "  [FK-02] item.bus_id: Lookup/reference parent (bus) -> child \u2014 zipf(alpha=1.3) (confidence: 80%)",
+  "  [FK-04] item.status_id: Nullable FK \u2014 added null_rate 0.15 (confidence: 90%)",
+  "  [FK-02] item.status_id: Lookup/reference parent (statuses) -> child \u2014 zipf(alpha=1.3) (confidence: 80%)",
+  "  [CA-06] categories: Lookup/reference table \u2014 fixed 20 rows (confidence: 85%)",
+  "  [CA-SCALE] companies: Root table \u2014 scale presets set (1K / 50K / 500K) (confidence: 90%)",
+  "  [CA-06] boxes: Lookup/reference table \u2014 fixed 20 rows (confidence: 85%)",
+  "  [CA-06] bus: Lookup/reference table \u2014 fixed 20 rows (confidence: 85%)",
+  "  [CA-06] statuses: Lookup/reference table \u2014 fixed 20 rows (confidence: 85%)",
+  "  [CA-09] item: Default child ratio \u2014 3.0 per parent (companies) (confidence: 80%)",
+  "  [ND-MONETARY] item.parent_item_id: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)",
+  "  [EN-CATEGORICAL] categories.category_name: Upgraded to realistic weighted_enum (5 values) based on CATEGORICAL semantic / LOOKUP role (confidence: 70%)",
+  "  [BR-05] item.parent_item_id: Monetary column parent_item_id >= 0 (confidence: 80%)"
+ ],
+ "file": {
+  "business_rules": [],
+  "generation": {
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "boxes": 100000,
+     "bus": 100000,
+     "categories": 100000,
+     "companies": 500000,
+     "item": 250000,
+     "statuses": 100000
+    },
+    "medium": {
+     "boxes": 10000,
+     "bus": 10000,
+     "categories": 10000,
+     "companies": 50000,
+     "customer": 7,
+     "item": 25000,
+     "order": 21,
+     "orders": 21,
+     "statuses": 10000
+    },
+    "small": {
+     "boxes": 1000,
+     "bus": 1000,
+     "categories": 1000,
+     "companies": 1000,
+     "item": 2500,
+     "statuses": 1000
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "child": "item",
+    "child_columns": [
+     "category_id"
+    ],
+    "name": "fk_item_category_id",
+    "parent": "categories",
+    "parent_columns": [
+     "category_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "item",
+    "child_columns": [
+     "company_id"
+    ],
+    "name": "fk_item_company_id",
+    "parent": "companies",
+    "parent_columns": [
+     "company_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "item",
+    "child_columns": [
+     "box_id"
+    ],
+    "name": "fk_item_box_id",
+    "parent": "boxes",
+    "parent_columns": [
+     "box_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "item",
+    "child_columns": [
+     "bus_id"
+    ],
+    "name": "fk_item_bus_id",
+    "parent": "bus",
+    "parent_columns": [
+     "bus_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "item",
+    "child_columns": [
+     "status_id"
+    ],
+    "name": "fk_item_status_id",
+    "parent": "statuses",
+    "parent_columns": [
+     "status_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "boxes": {
+    "columns": {
+     "box_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "label": {
+      "generator": {
+       "max_nb_chars": 40,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "box_id"
+    ]
+   },
+   "bus": {
+    "columns": {
+     "bus_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "label": {
+      "generator": {
+       "max_nb_chars": 40,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "bus_id"
+    ]
+   },
+   "categories": {
+    "columns": {
+     "category_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "category_name": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "type_1": 0.35,
+        "type_2": 0.25,
+        "type_3": 0.2,
+        "type_4": 0.12,
+        "type_5": 0.08
+       }
+      },
+      "max_length": 40,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "category_id"
+    ]
+   },
+   "companies": {
+    "columns": {
+     "company_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "company_name": {
+      "generator": {
+       "provider": "company",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "company_id"
+    ]
+   },
+   "item": {
+    "columns": {
+     "box_id": {
+      "generator": {
+       "distribution": "zipf",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "boxes.box_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "bus_id": {
+      "generator": {
+       "distribution": "zipf",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "bus.bus_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "category_id": {
+      "generator": {
+       "distribution": "zipf",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "categories.category_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "company_id": {
+      "generator": {
+       "distribution": "pareto",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.16,
+        "max_per_parent": 50
+       },
+       "ref": "companies.company_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "item_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "other_id": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "parent_item_id": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "status_id": {
+      "generator": {
+       "distribution": "zipf",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "statuses.status_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "item_id"
+    ]
+   },
+   "statuses": {
+    "columns": {
+     "status_code": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 10,
+      "nullable": true,
+      "type": "string"
+     },
+     "status_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "status_id"
+    ]
+   }
+  }
+ },
+ "schema": {
+  "business_rules": [
+   {
+    "name": "item_parent_item_id_positive",
+    "rule": "parent_item_id >= 0",
+    "table": "item",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   }
+  ],
+  "correlated_columns": {},
+  "generation": {
+   "derived_counts": {
+    "boxes": {
+     "fixed": 20
+    },
+    "bus": {
+     "fixed": 20
+    },
+    "categories": {
+     "fixed": 20
+    },
+    "item": {
+     "per_parent": "companies",
+     "ratio": 3.0
+    },
+    "statuses": {
+     "fixed": 20
+    }
+   },
+   "output": {},
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "boxes": 100000,
+     "bus": 100000,
+     "categories": 100000,
+     "companies": 500000,
+     "item": 250000,
+     "statuses": 100000
+    },
+    "medium": {
+     "boxes": 10000,
+     "bus": 10000,
+     "categories": 10000,
+     "companies": 50000,
+     "customer": 7,
+     "item": 25000,
+     "order": 21,
+     "orders": 21,
+     "statuses": 10000
+    },
+    "small": {
+     "boxes": 1000,
+     "bus": 1000,
+     "categories": 1000,
+     "companies": 1000,
+     "item": 2500,
+     "statuses": 1000
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "cardinality": {},
+    "child": "item",
+    "child_columns": [
+     "category_id"
+    ],
+    "name": "fk_item_category_id",
+    "optional": false,
+    "parent": "categories",
+    "parent_columns": [
+     "category_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "item",
+    "child_columns": [
+     "company_id"
+    ],
+    "name": "fk_item_company_id",
+    "optional": false,
+    "parent": "companies",
+    "parent_columns": [
+     "company_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "item",
+    "child_columns": [
+     "box_id"
+    ],
+    "name": "fk_item_box_id",
+    "optional": false,
+    "parent": "boxes",
+    "parent_columns": [
+     "box_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "item",
+    "child_columns": [
+     "bus_id"
+    ],
+    "name": "fk_item_bus_id",
+    "optional": false,
+    "parent": "bus",
+    "parent_columns": [
+     "bus_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "item",
+    "child_columns": [
+     "status_id"
+    ],
+    "name": "fk_item_status_id",
+    "optional": false,
+    "parent": "statuses",
+    "parent_columns": [
+     "status_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "boxes": {
+    "cdm_mapping": null,
+    "columns": {
+     "box_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "box_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "label": {
+      "generator": {
+       "max_nb_chars": 40,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "name": "label",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "boxes",
+    "primary_key": [
+     "box_id"
+    ]
+   },
+   "bus": {
+    "cdm_mapping": null,
+    "columns": {
+     "bus_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "bus_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "label": {
+      "generator": {
+       "max_nb_chars": 40,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "name": "label",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "bus",
+    "primary_key": [
+     "bus_id"
+    ]
+   },
+   "categories": {
+    "cdm_mapping": null,
+    "columns": {
+     "category_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "category_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "category_name": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "type_1": 0.35,
+        "type_2": 0.25,
+        "type_3": 0.2,
+        "type_4": 0.12,
+        "type_5": 0.08
+       }
+      },
+      "max_length": 40,
+      "name": "category_name",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "categories",
+    "primary_key": [
+     "category_id"
+    ]
+   },
+   "companies": {
+    "cdm_mapping": null,
+    "columns": {
+     "company_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "company_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "company_name": {
+      "generator": {
+       "provider": "company",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "name": "company_name",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "companies",
+    "primary_key": [
+     "company_id"
+    ]
+   },
+   "item": {
+    "cdm_mapping": null,
+    "columns": {
+     "box_id": {
+      "generator": {
+       "distribution": "zipf",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "boxes.box_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "box_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "bus_id": {
+      "generator": {
+       "distribution": "zipf",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "bus.bus_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "bus_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "category_id": {
+      "generator": {
+       "distribution": "zipf",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "categories.category_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "category_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "company_id": {
+      "generator": {
+       "distribution": "pareto",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.16,
+        "max_per_parent": 50
+       },
+       "ref": "companies.company_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "company_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "item_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "item_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "other_id": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "other_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "parent_item_id": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 99999,
+        "mean": 4.0,
+        "min": 0.01,
+        "sigma": 1.2
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "parent_item_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "status_id": {
+      "generator": {
+       "distribution": "zipf",
+       "null_rate": 0.15,
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "statuses.status_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "status_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "item",
+    "primary_key": [
+     "item_id"
+    ]
+   },
+   "statuses": {
+    "cdm_mapping": null,
+    "columns": {
+     "status_code": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 10,
+      "name": "status_code",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "status_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "status_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "statuses",
+    "primary_key": [
+     "status_id"
+    ]
+   }
+  }
+ }
+}
