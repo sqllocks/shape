@@ -62,6 +62,11 @@ where `key` is the first 16 bytes of `blake2b(seed, table, column, label)` read 
 `(seed, table, column, label, row)` alone. Strategies draw from their own stream (`label` names the
 use); the engine uses the labels `null` (the null mask) and `fix:<rule>` (rule repairs).
 
+`RowStream` reads through the selected kernel (`docs/GENERATION_KERNEL.md`): `raw`, `uniform` and
+`normal` take `per_row` and `slot`, and `stream_key`, `uniform_from_raw` and `normal_from_raw` are the building blocks, and `derive(suffix)` gives a separate stream for a sub-draw
+(a rejection attempt, a mixture component). Strategies are written against
+`docs/GENERATION_STRATEGIES.md`, timestamps and calendars against `docs/GENERATION_CALENDARS.md`.
+
 A strategy that keys its randomness by row gives the same value for a row whatever the chunking.
 `tests/generation/test_gen_engine.py` shows that a strategy keyed by chunk does not.
 

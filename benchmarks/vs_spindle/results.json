@@ -237,5 +237,134 @@
    }
   }
  },
- "shape": null
+ "shape": null,
+ "kernel_microbench": {
+  "measured_utc": "2026-10-01T10:52:13Z",
+  "machine": {
+   "cores": 4,
+   "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+   "platform": "Linux-6.18.44-fc-v50-x86_64-with-glibc2.39",
+   "python": "3.11.15",
+   "started": "2026-10-01 10:52:13",
+   "loadavg_start": 0.33154296875,
+   "threads": 4
+  },
+  "rows": 1000000,
+  "runs": 5,
+  "kernels": {
+   "philox_words": {
+    "rows": 1000000,
+    "native_s": 0.001501067000049261,
+    "equivalent_to_reference": true,
+    "reference_s": 0.004719510000086302,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 3.14410349433531,
+    "baseline_s": 0.003982077999921785,
+    "speedup_vs_baseline": 2.6528316189691092,
+    "native_rows_per_s": 666192781.5128723
+   },
+   "philox_uniform": {
+    "rows": 1000000,
+    "native_s": 0.0016329830000358925,
+    "equivalent_to_reference": true,
+    "reference_s": 0.005562829999234964,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 3.406544954303073,
+    "baseline_s": 0.005152933999966081,
+    "speedup_vs_baseline": 3.1555343808556615,
+    "native_rows_per_s": 612376246.4018427
+   },
+   "philox_normal": {
+    "rows": 1000000,
+    "native_s": 0.009109141000067211,
+    "equivalent_to_reference": true,
+    "reference_s": 0.037101600000823964,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 4.073007542703556,
+    "baseline_s": 0.01347615500003485,
+    "speedup_vs_baseline": 1.479410078286791,
+    "native_rows_per_s": 109779835.44141227
+   },
+   "alias_sample": {
+    "rows": 1000000,
+    "native_s": 0.004125294999994367,
+    "equivalent_to_reference": true,
+    "reference_s": 0.023818900000378562,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 5.77386586908599,
+    "baseline_s": 0.051789551999945616,
+    "speedup_vs_baseline": 12.554145097506078,
+    "native_rows_per_s": 242406906.6579155
+   },
+   "pool_take": {
+    "rows": 1000000,
+    "native_s": 0.006898250999938682,
+    "equivalent_to_reference": true,
+    "reference_s": 0.09441082000080314,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 13.686196689804756,
+    "baseline_s": 0.005190530999925613,
+    "speedup_vs_baseline": 0.7524415971485745,
+    "native_rows_per_s": 144964281.52714202
+   },
+   "template_strings": {
+    "rows": 1000000,
+    "native_s": 0.023154087999955664,
+    "equivalent_to_reference": true,
+    "reference_s": 1.1898522500007402,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 51.38843084655369,
+    "native_rows_per_s": 43188917.654710256
+   },
+   "join_strings": {
+    "rows": 1000000,
+    "native_s": 0.013393235999956232,
+    "equivalent_to_reference": true,
+    "reference_s": 0.9179099499999664,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 68.53533753925983,
+    "baseline_s": 0.028057288000013614,
+    "speedup_vs_baseline": 2.0948849105701792,
+    "native_rows_per_s": 74664554.5559914
+   },
+   "string_case_title": {
+    "rows": 1000000,
+    "native_s": 0.011735714999986158,
+    "equivalent_to_reference": true,
+    "reference_s": 0.7443936200002099,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 63.42976290759344,
+    "baseline_s": 0.07923315600010028,
+    "speedup_vs_baseline": 6.751455365113564,
+    "native_rows_per_s": 85209976.55457546
+   },
+   "uuid4_strings": {
+    "rows": 1000000,
+    "native_s": 0.026720407999960116,
+    "equivalent_to_reference": true,
+    "reference_s": 0.5183293999994021,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 19.398259188264483,
+    "native_rows_per_s": 37424578.247513756
+   },
+   "random_strings_len6": {
+    "rows": 1000000,
+    "native_s": 0.012556294999967577,
+    "equivalent_to_reference": true,
+    "reference_s": 0.8252841199998785,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 65.72672273166643,
+    "native_rows_per_s": 79641327.318495
+   },
+   "temporal_sample": {
+    "rows": 1000000,
+    "native_s": 0.00798568699997304,
+    "equivalent_to_reference": true,
+    "reference_s": 0.07118308000030993,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 8.913832961465962,
+    "native_rows_per_s": 125224041.46360557
+   }
+  }
+ }
 }

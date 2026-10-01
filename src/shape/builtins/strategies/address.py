@@ -5,6 +5,7 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass
 
+from shape.generation.rng import RowStream
 from shape.location import Location, LocationScope
 
 
@@ -140,7 +141,8 @@ class FastAddressPack(AddressPack):
             group_codes.append(np.arange(off, off + len(g), dtype=np.int32))
             refs.extend(g)
             off += len(g)
-        rng = np.random.default_rng(seed)
+        # SeedSequence takes non-negative entropy only: keep the sign as a separate word
+        rng = np.random.default_rng([int(seed < 0), abs(int(seed))])
         # searchsorted avoids the relatively expensive general categorical sampler and scales
         # linearly.
         gi = np.searchsorted(
@@ -149,10 +151,9 @@ class FastAddressPack(AddressPack):
         # Select a reference within each scope without allocating flatnonzero position arrays.
         starts = np.asarray([c[0] for c in group_codes], dtype=np.int32)
         sizes = np.asarray([len(c) for c in group_codes], dtype=np.uint64)
-        h = np.arange(n, dtype=np.uint64) + np.uint64(seed) + np.uint64(0x9E3779B97F4A7C15)
-        h = (h ^ (h >> np.uint64(30))) * np.uint64(0xBF58476D1CE4E5B9)
-        h = (h ^ (h >> np.uint64(27))) * np.uint64(0x94D049BB133111EB)
-        h ^= h >> np.uint64(31)
+        # the reference pick: a Philox word per row, keyed by the seed (G1: the seed used to be
+        # added to the row index, so seed s + 1 was seed s shifted by a row)
+        h = RowStream(seed, "address", "", "pick").raw(0, n)[:, 0]
         refidx = starts[gi] + (h % sizes[gi]).astype(np.int32)
         latref = np.asarray([r.latitude for r in refs])
         lonref = np.asarray([r.longitude for r in refs])

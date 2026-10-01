@@ -22,6 +22,7 @@ Everything runs under the exclusive benchmark lock (``$BENCH_OUT_DIR/bench.lock`
 from __future__ import annotations
 
 import argparse
+import contextlib
 import datetime as dt
 import json
 import os
@@ -504,6 +505,9 @@ def main(argv: list[str] | None = None) -> int:
                 ok &= domain_workloads(dom, scales, runs, out)
             if a.full:
                 other_domain_baselines(runs, out)
+    # kernel_microbench is written by kernel_bench.py; a full run must not drop it
+    with contextlib.suppress(OSError, ValueError, KeyError):
+        out["kernel_microbench"] = json.loads(Path(a.out).read_text())["kernel_microbench"]
     schema = json.loads(SCHEMA_FILE.read_text())
     errs = validate(out, schema)
     if errs:

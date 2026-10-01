@@ -9,6 +9,7 @@ source, a detector and a command added with no change to core).
 
 from __future__ import annotations
 
+import importlib.metadata
 import importlib.util
 import json
 import os
@@ -25,9 +26,17 @@ ROOT = Path(__file__).resolve().parents[2]
 EXAMPLE = ROOT / "examples" / "plugin"
 
 
+# The skeletons' build-system needs setuptools>=77 (PEP 639 license strings); older ones fail.
+MIN_SETUPTOOLS = 77
+
+
 def _pip_args() -> list[str]:
-    # Without network, build with the setuptools already installed; otherwise pip's isolated build.
-    return ["--no-build-isolation"] if importlib.util.find_spec("setuptools") else []
+    # Without network, build with the setuptools already installed when it is new enough for the
+    # skeletons; otherwise pip's isolated build fetches the version the build-system asks for.
+    if importlib.util.find_spec("setuptools") is None:
+        return []
+    major = importlib.metadata.version("setuptools").split(".")[0]
+    return ["--no-build-isolation"] if major.isdigit() and int(major) >= MIN_SETUPTOOLS else []
 
 
 @pytest.fixture(scope="module")

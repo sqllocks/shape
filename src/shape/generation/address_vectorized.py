@@ -32,17 +32,15 @@ class CompiledAddressAsset:
         )
 
 
-def _u64(indices, seed, stream):
-    import numpy as np
+def _u64(start, n, seed, stream):
+    """``n`` 64-bit words for rows ``start ..`` of the address stream ``stream``.
 
-    x = (
-        indices.astype(np.uint64, copy=False)
-        + np.uint64(seed)
-        + np.uint64(stream) * np.uint64(0x9E3779B1)
-    )
-    x = (x ^ (x >> np.uint64(30))) * np.uint64(0xBF58476D1CE4E5B9)
-    x = (x ^ (x >> np.uint64(27))) * np.uint64(0x94D049BB133111EB)
-    return x ^ (x >> np.uint64(31))
+    The seed is part of the Philox key (G1): adding it to the row index made seed ``s + 1`` the
+    same stream as seed ``s`` shifted by one row, and overflowed for negative seeds.
+    """
+    from .rng import RowStream
+
+    return RowStream(seed, "address", "", f"stream{stream}").raw(start, n)[:, 0]
 
 
 def generate_addresses(asset: CompiledAddressAsset, n: int, seed: int = 0, start: int = 0):
@@ -52,8 +50,7 @@ def generate_addresses(asset: CompiledAddressAsset, n: int, seed: int = 0, start
         raise ValueError("n/start")
     if len(asset.city) == 0 or len(asset.street_names) == 0:
         raise ValueError("empty address asset")
-    idx = np.arange(start, start + n, dtype=np.uint64)
-    hgeo = _u64(idx, seed, 1)
+    hgeo = _u64(start, n, seed, 1)
     if asset.weights is None:
         geo_idx = (hgeo % np.uint64(len(asset.city))).astype(np.int64)
     else:
@@ -63,8 +60,8 @@ def generate_addresses(asset: CompiledAddressAsset, n: int, seed: int = 0, start
         c = np.cumsum(w / w.sum())
         u = hgeo.astype(np.float64) / float(2**64)
         geo_idx = np.searchsorted(c, u, side="right").clip(0, len(c) - 1)
-    street_idx = (_u64(idx, seed, 2) % np.uint64(len(asset.street_names))).astype(np.int64)
-    number = (_u64(idx, seed, 3) % np.uint64(9999) + 1).astype(np.int32)
+    street_idx = (_u64(start, n, seed, 2) % np.uint64(len(asset.street_names))).astype(np.int64)
+    number = (_u64(start, n, seed, 3) % np.uint64(9999) + 1).astype(np.int32)
     return {
         "street_number": number,
         "street_name": asset.street_names[street_idx],
