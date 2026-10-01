@@ -107,7 +107,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def psi_tables(real: dict[str, Any], synth: dict[str, Any]) -> dict[str, Any]:
-    """The baseline's PSI of each numeric column, on the same 5000-row samples its drift test takes."""
+    """The baseline's PSI of each numeric column, on the 5000-row samples its drift test takes."""
     import pandas as pd
     from sqllocks_spindle.inference.tier3_research import _population_stability_index as psi
 

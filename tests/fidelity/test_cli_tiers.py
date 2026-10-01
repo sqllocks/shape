@@ -35,7 +35,12 @@ def _run(argv, capsys):
 def test_tier_2_prints_json_per_table_and_exits_0_when_every_check_passes(dirs, capsys):
     rc, out, _ = _run(["fidelity", str(dirs[0]), str(dirs[1]), "--tier", "2"], capsys)
     rep = json.loads(out)
-    assert rc == 0 and rep["tier"] == 2 and rep["passed"] and set(rep["tables"]) == {"extras", "orders"}
+    assert (
+        rc == 0
+        and rep["tier"] == 2
+        and rep["passed"]
+        and set(rep["tables"]) == {"extras", "orders"}
+    )
     assert rep["tables"]["orders"]["format_preservation"]["email"]["passed"]
 
 
@@ -43,9 +48,13 @@ def test_tier_2_exits_1_below_the_pass_rate_and_text_format_prints_the_summary(t
     real, synth = tmp_path / "r.csv", tmp_path / "s.csv"
     pacsv.write_csv(pa.table({"e": [f"a{i}@b.co" for i in range(40)]}), real)
     pacsv.write_csv(pa.table({"e": [f"a{i}" for i in range(40)]}), synth)
-    rc, out, _ = _run(["fidelity", str(real), str(synth), "--tier", "2", "--format", "text"], capsys)
+    rc, out, _ = _run(
+        ["fidelity", str(real), str(synth), "--tier", "2", "--format", "text"], capsys
+    )
     assert rc == 1 and "Tier 2 fidelity report" in out and "[FAIL] e" in out
-    rc, _, _ = _run(["fidelity", str(real), str(synth), "--tier", "2", "--min-pass-rate", "0"], capsys)
+    rc, _, _ = _run(
+        ["fidelity", str(real), str(synth), "--tier", "2", "--min-pass-rate", "0"], capsys
+    )
     assert rc == 0
 
 
@@ -73,7 +82,9 @@ def test_tier_1_reports_every_part_and_gates_on_the_auc(dirs, tmp_path, capsys):
     assert rc == 0 and rep["passed"] and err == ""
     assert t["adversarial"]["auc_roc"] < 0.75 and t["gmm_fits"] and t["periodicity"]["wave"]
     assert json.loads(out_file.read_text()) == rep
-    rc, _, _ = _run(["fidelity", str(dirs[0]), str(dirs[1]), "--tier", "1", "--max-auc", "0.0"], capsys)
+    rc, _, _ = _run(
+        ["fidelity", str(dirs[0]), str(dirs[1]), "--tier", "1", "--max-auc", "0.0"], capsys
+    )
     assert rc == 1
 
 
@@ -88,9 +99,12 @@ def test_tier_3_compares_the_trees_and_can_gate(dirs, capsys):
     rc, out, _ = _run(["fidelity", str(dirs[0]), str(dirs[1]), "--tier", "3"], capsys)
     rep = json.loads(out)
     cmp = rep["tables"]["orders"]["comparison"]
-    assert rc == 0 and 0 <= cmp["edge_overlap"] <= 1 and rep["tables"]["orders"]["reference"]["edges"]
+    assert (
+        rc == 0 and 0 <= cmp["edge_overlap"] <= 1 and rep["tables"]["orders"]["reference"]["edges"]
+    )
     rc, _, _ = _run(
-        ["fidelity", str(dirs[0]), str(dirs[1]), "--tier", "3", "--min-edge-overlap", "1.01"], capsys
+        ["fidelity", str(dirs[0]), str(dirs[1]), "--tier", "3", "--min-edge-overlap", "1.01"],
+        capsys,
     )
     assert rc == 1
 
@@ -102,7 +116,9 @@ def test_a_missing_synthetic_table_fails_and_is_named(dirs, capsys):
 
 
 def test_tier_report_formats_and_bad_input(dirs, tmp_path, capsys):
-    rc, _, err = _run(["fidelity", str(dirs[0]), str(dirs[1]), "--tier", "2", "--format", "md"], capsys)
+    rc, _, err = _run(
+        ["fidelity", str(dirs[0]), str(dirs[1]), "--tier", "2", "--format", "md"], capsys
+    )
     assert rc == 2 and "json or text" in err
     rc, _, err = _run(["fidelity", str(tmp_path / "nope"), str(dirs[1]), "--tier", "2"], capsys)
     assert rc == 2 and "error" in err
@@ -126,7 +142,9 @@ def test_drift_psi_exit_codes(dirs, tmp_path, capsys):
     rep = json.loads(out)
     assert rc == 1 and rep["drifted"] and "amount" in rep["tables"]["orders"]["drifted_columns"]
     assert json.loads(out_file.read_text()) == rep
-    assert _run(["drift", str(dirs[0]), str(shifted), "--psi", "--threshold", "1e9"], capsys)[0] == 0
+    assert (
+        _run(["drift", str(dirs[0]), str(shifted), "--psi", "--threshold", "1e9"], capsys)[0] == 0
+    )
 
 
 def test_drift_full_monitor_and_missing_scipy(dirs, tmp_path, capsys):

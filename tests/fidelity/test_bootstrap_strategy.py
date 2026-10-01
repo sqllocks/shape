@@ -22,7 +22,11 @@ SOURCE = pa.table(
 
 
 def _col(name: str, **gen):
-    return {"name": name, "type": gen.pop("type", "float"), "generator": {"strategy": "bootstrap", **gen}}
+    return {
+        "name": name,
+        "type": gen.pop("type", "float"),
+        "generator": {"strategy": "bootstrap", **gen},
+    }
 
 
 def _engine(rows=500, seed=1, **overrides) -> Engine:
@@ -78,7 +82,9 @@ def test_jitter_is_a_fraction_of_the_source_spread_and_defaults_to_one_percent()
     one = _engine(
         rows=20000, jittered=_col("jittered", dataset="people", field="income")
     ).generate_table("t")
-    assert (np.array(one["jittered"].to_pylist()) - base).std() == pytest.approx(0.01 * std, rel=0.05)
+    assert (np.array(one["jittered"].to_pylist()) - base).std() == pytest.approx(
+        0.01 * std, rel=0.05
+    )
 
 
 def test_no_jitter_for_text_or_a_constant_column_and_integers_become_floats():

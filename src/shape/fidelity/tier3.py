@@ -9,8 +9,8 @@
 * :func:`bootstrap_table` resamples a table's rows with replacement and jitters its numbers (the
   library form of the ``bootstrap`` generation strategy).
 
-A port of the reference implementation's tier 3 (parity harness:
-``benchmarks/vs_spindle/fidelity_tiers_1to1``). Differences, all on purpose:
+A port of the reference implementation's tier 3 (checked by the parity harness
+under ``benchmarks/`` in the repository). Differences, all on purpose:
 
 * the KS test needs SciPy and raises an error naming the extra when it is missing (the reference
   returns "no drift" for every column, which would hide real drift);
@@ -317,9 +317,11 @@ class DriftMonitor:
 
 
 def _as_text(col: Column, picked: npt.NDArray[Any]) -> list[str]:
-    return [str(v) for v in picked.tolist()] if col.kind != "datetime" else [
-        str(int(v)) for v in picked.tolist()
-    ]
+    return (
+        [str(v) for v in picked.tolist()]
+        if col.kind != "datetime"
+        else [str(int(v)) for v in picked.tolist()]
+    )
 
 
 MAX_PSI_CATEGORIES = 50

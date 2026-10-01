@@ -11,11 +11,11 @@ For one table (or a reference/synthetic pair) :class:`Tier1Profiler` computes
 * **periodicity** of numeric columns (FFT, dominant period).
 
 Mixture fits and the adversarial score need scikit-learn (``pip install
-sqllocks-shape[advanced]``), and the gap distribution needs SciPy, which scikit-learn brings. Without
-them those parts are left out and named in ``notes``; the rest still runs.
+sqllocks-shape[advanced]``), and the gap distribution needs SciPy, which scikit-learn brings.
+Without them those parts are left out and named in ``notes``; the rest still runs.
 
-This is a port of the reference implementation's tier 1 (the parity harness is
-``benchmarks/vs_spindle/fidelity_tiers_1to1``). Differences, all on purpose:
+This is a port of the reference implementation's tier 1 (checked by the parity harness under
+``benchmarks/`` in the repository). Differences, all on purpose:
 
 * the adversarial features are the columns the two tables share *in reference order* (the
   reference takes them in the iteration order of a Python ``set``, which changes between
@@ -142,7 +142,9 @@ class Tier1Profile:
         """JSON-ready (NaN and infinity become ``None``)."""
         out = asdict(self)
         if self.adversarial is not None:
-            out["adversarial"]["distinguishability_score"] = self.adversarial.distinguishability_score
+            out["adversarial"]["distinguishability_score"] = (
+                self.adversarial.distinguishability_score
+            )
         return dict(clean(out))
 
 
@@ -198,7 +200,7 @@ class Tier1Profiler:
             return {}
         results: dict[str, GMMFit] = {}
         for col in frame.numbers:
-            values = col.floats()
+            values = col.present()  # integers stay integers: scikit-learn scores them differently
             if len(values) < 20:
                 continue
             x = values.reshape(-1, 1)
@@ -260,7 +262,9 @@ class Tier1Profiler:
         ens = _import("sklearn.ensemble")
         sel = _import("sklearn.model_selection")
         if ens is None or sel is None:
-            notes.append(f"adversarial test skipped: scikit-learn is not installed ({INSTALL_HINT})")
+            notes.append(
+                f"adversarial test skipped: scikit-learn is not installed ({INSTALL_HINT})"
+            )
             return None
         common = [n for n in real.names if n in synthetic]
         if not common:
@@ -291,7 +295,7 @@ class Tier1Profiler:
         except ValueError as exc:  # e.g. one class has fewer rows than folds
             notes.append(f"adversarial test failed: {exc}")
             return None
-        top = sorted(zip(common, importances), key=lambda t: t[1], reverse=True)[:10]
+        top = sorted(zip(common, importances, strict=True), key=lambda t: t[1], reverse=True)[:10]
         mean_auc = float(np.mean(auc))
         return AdversarialResult(
             auc_roc=mean_auc,
@@ -319,7 +323,9 @@ class Tier1Profiler:
             if len(gaps) >= 20:
                 if stats is None:
                     if not warned:
-                        notes.append(f"gap distributions skipped: SciPy is not installed ({INSTALL_HINT})")
+                        notes.append(
+                            f"gap distributions skipped: SciPy is not installed ({INSTALL_HINT})"
+                        )
                         warned = True
                 else:
                     gap_dist = _gap_distribution(stats, gaps)
@@ -348,9 +354,7 @@ class Tier1Profiler:
             if len(yf) == 0:
                 continue
             top = np.argsort(yf)[::-1][:5]
-            top_periods = [
-                (float(1.0 / xf[i]) if xf[i] > 0 else 0.0, float(yf[i])) for i in top
-            ]
+            top_periods = [(float(1.0 / xf[i]) if xf[i] > 0 else 0.0, float(yf[i])) for i in top]
             dom = top[0]
             freq = float(xf[dom])
             power = float(yf[dom])
@@ -416,7 +420,9 @@ def _gap_distribution(stats: Any, gaps: npt.NDArray[np.float64]) -> str | None:
             p_exp = stats.kstest(
                 positive, "expon", args=(float(positive.min()), float(positive.mean()))
             )[1]
-            p_norm = stats.kstest(gaps, "norm", args=(float(gaps.mean()), float(gaps.std(ddof=1))))[1]
+            p_norm = stats.kstest(gaps, "norm", args=(float(gaps.mean()), float(gaps.std(ddof=1))))[
+                1
+            ]
     except ValueError:
         return None
     return "exponential" if p_exp > p_norm else "normal"

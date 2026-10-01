@@ -5,7 +5,7 @@ boolean), *numeric* (a number or a boolean), *datetime* (a timestamp) and everyt
 (*text*: strings, dates, decimals, ...). A float ``NaN`` is a missing value, like a null; an
 integer column with nulls is read as floats, as a data frame does. Both are what the reference
 implementation sees when it reads the same Parquet file, which is what the parity harness
-checks (``benchmarks/vs_spindle/fidelity_tiers_1to1``).
+checks (the parity harness under ``benchmarks/`` in the repository).
 """
 
 from __future__ import annotations
@@ -65,7 +65,9 @@ class Column:
     def codes(self) -> npt.NDArray[np.int64]:
         """Each row's rank among the sorted distinct values of ``str(value)``, a missing value
         being the text ``__NULL__``: the integer encoding of a categorical column."""
-        strings = np.array([str(v) if ok else "__NULL__" for v, ok in zip(self.values, self.valid)])
+        strings = np.array(
+            [str(v) if ok else "__NULL__" for v, ok in zip(self.values, self.valid, strict=True)]
+        )
         return np.unique(strings, return_inverse=True)[1].astype(np.int64)
 
     def nunique(self) -> int:
@@ -109,7 +111,9 @@ class Frame:
 
     @classmethod
     def from_arrow(cls, table: pa.Table) -> Frame:
-        return cls([_column(name, table.column(name)) for name in table.column_names], table.num_rows)
+        return cls(
+            [_column(name, table.column(name)) for name in table.column_names], table.num_rows
+        )
 
 
 def as_frame(data: pa.Table | Frame) -> Frame:

@@ -5,6 +5,14 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Fidelity tiers 1 to 3 (`docs/FIDELITY_TIERS.md`): `shape fidelity REFERENCE SYNTHETIC --tier 1|2|3`
+  (tier 1: Gaussian-mixture fits, conditional profiles, adversarial AUC, temporal profiles and
+  periodicity; tier 2: format preservation, string similarity, cardinality and anomaly-rate checks;
+  tier 3, experimental: Chow-Liu dependency trees), `shape drift REFERENCE CURRENT [--psi]`, the
+  `bootstrap` generation strategy, `shape.privacy.dp.DifferentialPrivacy` (Laplace and Gaussian
+  noise from OS entropy unless a seed is passed), and `shape ctgan` with the `[ctgan]` extra. New
+  extra `[advanced]` (scikit-learn). Without scikit-learn, tier 1 still runs and names what it left
+  out.
 - `shape fidelity REFERENCE SYNTHETIC` (alias `compare`): scores synthetic tables against reference
   tables, per column, per table and overall, on a 0-100 scale, and writes JSON, Markdown or HTML
   reports (`-o`, repeatable; the `shape.reports` plugin group). Pass marks `--min-score`,

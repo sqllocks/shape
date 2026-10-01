@@ -78,7 +78,11 @@ def test_what_is_noised_what_is_not_and_nulls_stay_null():
     t = _table()
     out, res = DifferentialPrivacy().apply(t, seed=1)
     assert res.columns_noised == ["i", "f"]  # constant, boolean and text columns are not noised
-    assert out["const"].equals(t["const"]) and out["flag"].equals(t["flag"]) and out["s"].equals(t["s"])
+    assert (
+        out["const"].equals(t["const"])
+        and out["flag"].equals(t["flag"])
+        and out["s"].equals(t["s"])
+    )
     assert out["i"].type == pa.float64()  # integers become floats
     assert out["f"].null_count == t["f"].null_count
     assert out.column_names == t.column_names and out.num_rows == t.num_rows
@@ -109,7 +113,10 @@ def test_the_result_is_json_ready_and_the_empty_table_is_returned_unchanged():
     out, res = DifferentialPrivacy().apply(t, seed=0)
     assert out.equals(t) and res.columns_noised == [] and isinstance(res, DPResult)
     assert res.to_dict() == {
-        "epsilon": 1.0, "mechanism": "laplace", "columns_noised": [], "actual_sensitivity": {}
+        "epsilon": 1.0,
+        "mechanism": "laplace",
+        "columns_noised": [],
+        "actual_sensitivity": {},
     }
 
 

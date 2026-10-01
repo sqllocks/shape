@@ -37,8 +37,14 @@ def _dependent(seed=0, n=1500, noise=0.2):
 
 def test_cut_equals_pandas_cut():
     rng = np.random.default_rng(0)
-    for x in (rng.normal(size=500), rng.integers(0, 4, 300).astype(float), np.full(20, 7.0),
-              np.zeros(5), np.array([-3.0, 3.0]), rng.exponential(size=2000)):
+    for x in (
+        rng.normal(size=500),
+        rng.integers(0, 4, 300).astype(float),
+        np.full(20, 7.0),
+        np.zeros(5),
+        np.array([-3.0, 3.0]),
+        rng.exponential(size=2000),
+    ):
         want = pd.cut(pd.Series(x), bins=10, labels=False).to_numpy()
         assert _cut(x, 10).tolist() == want.tolist()
 
@@ -80,7 +86,9 @@ def test_comparing_trees():
     a = ChowLiuTree().fit(_dependent(0))
     same = compare_trees(a, ChowLiuTree().fit(_dependent(1)))
     assert same["edge_overlap"] >= 0.5 and same["columns_compared"] == 4
-    broken = _dependent(2, noise=0.2).set_column(1, "y", pa.array(np.random.default_rng(9).normal(size=1500)))
+    broken = _dependent(2, noise=0.2).set_column(
+        1, "y", pa.array(np.random.default_rng(9).normal(size=1500))
+    )
     worse = compare_trees(a, ChowLiuTree().fit(broken))
     assert worse["mutual_information_max_abs_diff"] > same["mutual_information_max_abs_diff"]
     assert compare_trees(a, a) == {
@@ -184,7 +192,10 @@ class TestDriftMonitor:
         big = pa.table({"n": rng.normal(size=20000), "_shape_i": rng.normal(size=20000)})
         rep = DriftMonitor().compare(big, big)
         assert list(rep.columns) == ["n"] and rep.drifted_columns == []
-        assert DriftMonitor().compare(pa.table({"n": [1.0] * 5}), pa.table({"n": [1.0] * 5})).columns == {}
+        assert (
+            DriftMonitor().compare(pa.table({"n": [1.0] * 5}), pa.table({"n": [1.0] * 5})).columns
+            == {}
+        )
 
     def test_type_mismatch_and_single_category_cases(self):
         r = DriftMonitor().compare(pa.table({"c": list(range(20))}), pa.table({"c": ["a"] * 20}))
@@ -237,7 +248,9 @@ class TestBootstrap:
         assert out["b"].type == pa.bool_() and out["s"].type == pa.string()
         assert out["i"].null_count == out["i"].to_pylist().count(None) > 0
         none, _ = bootstrap_table(src, 40, seed=1, add_jitter=False)
-        assert none["f"].type == pa.float64() and set(none["f"].to_pylist()) <= set(src["f"].to_pylist())
+        assert none["f"].type == pa.float64() and set(none["f"].to_pylist()) <= set(
+            src["f"].to_pylist()
+        )
 
     def test_default_size_zero_rows_and_empty_source(self):
         src = pa.table({"a": [1, 2, 3]})

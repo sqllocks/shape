@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import numpy as np
-import pandas as pd
 import pytest
 from fid_helpers import make_table
 
@@ -24,8 +23,11 @@ def test_conditional_profiles_equal_a_data_frame_groupby(table):
     # at most the first 5 low-cardinality text columns condition; booleans are numeric, dates text
     assert {c.conditioned_on for c in p.conditional_profiles} <= {"segment", "email", "day"}
     for (num, cond), prof in got.items():
-        assert list(prof.stats_by_value) == [str(k) for k in sorted(df[cond].dropna().unique())
-                                             if df[df[cond] == k][num].dropna().size >= 5]
+        assert list(prof.stats_by_value) == [
+            str(k)
+            for k in sorted(df[cond].dropna().unique())
+            if df[df[cond] == k][num].dropna().size >= 5
+        ]
         for key, st in prof.stats_by_value.items():
             g = df[df[cond].astype(str) == key][num].dropna()
             assert st["count"] == len(g)
@@ -122,9 +124,11 @@ class TestWithScikitLearn:
 
     def test_threshold_and_sample_cap(self):
         a, b = make_table(5, n=3000), make_table(6, n=3000)
-        adv = Tier1Profiler(adversarial_threshold=0.0, max_rows_adversarial=1000).profile_pair(
-            a, b
-        ).adversarial
+        adv = (
+            Tier1Profiler(adversarial_threshold=0.0, max_rows_adversarial=1000)
+            .profile_pair(a, b)
+            .adversarial
+        )
         assert adv is not None and adv.n_samples == 1000 and not adv.passed
 
     def test_features_are_the_shared_columns_in_reference_order(self, table, other):
@@ -162,8 +166,10 @@ def test_timestamps_with_nulls_are_filled_before_the_adversarial_test(table):
     with_nulls = table.set_column(
         table.column_names.index("at"),
         "at",
-        pa.array([None if i % 7 == 0 else v for i, v in enumerate(table["at"].to_pylist())],
-                 type=pa.timestamp("ns")),
+        pa.array(
+            [None if i % 7 == 0 else v for i, v in enumerate(table["at"].to_pylist())],
+            type=pa.timestamp("ns"),
+        ),
     )
     p = Tier1Profiler().profile_pair(with_nulls, with_nulls)
     assert p.adversarial is not None and p.adversarial.auc_roc == pytest.approx(0.5, abs=0.1)

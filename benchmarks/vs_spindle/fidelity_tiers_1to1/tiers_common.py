@@ -21,7 +21,6 @@ import math
 from dataclasses import dataclass, field
 from typing import Any
 
-import numpy as np
 import pyarrow as pa
 
 LOOSE = 0.02
@@ -89,6 +88,7 @@ class Diff:
     mismatches: list[str] = field(default_factory=list)
     compared: int = 0
     max_loose: float = 0.0  # largest |difference| seen on a loose field (the 0.02 rule)
+    loose: dict[str, float] = field(default_factory=dict)  # every loose field's difference
     max_tight: float = 0.0  # largest relative difference seen on an exact-rule float
 
     @property
@@ -146,11 +146,13 @@ def compare(shape: Any, base: Any, path: str = "", diff: Diff | None = None) -> 
     diff_abs = abs(s - b)
     if kind == "abs":
         d.max_loose = max(d.max_loose, diff_abs)
+        d.loose[path] = diff_abs
         if diff_abs > LOOSE:
             d.mismatches.append(f"{path}: {s!r} vs {b!r} (|diff| {diff_abs:.4g} > {LOOSE})")
     elif kind == "rel":
         rel = diff_abs / max(abs(s), abs(b), 1.0)
         d.max_loose = max(d.max_loose, rel)
+        d.loose[path] = rel
         if rel > LOOSE:
             d.mismatches.append(f"{path}: {s!r} vs {b!r} (relative {rel:.4g} > {LOOSE})")
     else:
@@ -177,10 +179,12 @@ def _top_features(shape: list[Any], base: list[Any], path: str, d: Diff) -> Diff
     for n in sorted(set(sm) & set(bm)):
         diff = abs(sm[n] - bm[n])
         d.max_loose = max(d.max_loose, diff)
+        d.loose[f"{path}/{n}"] = diff
         if diff > LOOSE:
             d.mismatches.append(f"{path}/{n}: importance {sm[n]!r} vs {bm[n]!r}")
-    only = (set(sm) ^ set(bm)) - {n for n in sm if sm[n] <= LOOSE} - {n for n in bm if bm[n] <= LOOSE}
+    only = (
+        (set(sm) ^ set(bm)) - {n for n in sm if sm[n] <= LOOSE} - {n for n in bm if bm[n] <= LOOSE}
+    )
     if only:
         d.mismatches.append(f"{path}: features differ beyond ties: {sorted(only)}")
-    _ = np
     return d

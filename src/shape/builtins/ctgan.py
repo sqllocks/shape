@@ -94,13 +94,15 @@ class CtganCommand:
             metavar="COLUMNS",
             help="comma-separated categorical columns (default: every non-numeric column)",
         )
-        parser.add_argument("--input-format", default="auto", choices=("auto", "csv", "parquet", "jsonl"))
+        parser.add_argument(
+            "--input-format", default="auto", choices=("auto", "csv", "parquet", "jsonl")
+        )
 
     def run(self, args: argparse.Namespace) -> int:
         if not CtganModel.is_available():
             print(f"shape: CTGAN needs the sdv library: {INSTALL_HINT}", file=sys.stderr)
             return 2
-        import pyarrow.parquet as pq  # noqa: PLC0415
+        import pyarrow.parquet as pq  # type: ignore[import-untyped]  # noqa: PLC0415
 
         from shape.quality import load_tables  # noqa: PLC0415
 

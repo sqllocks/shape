@@ -117,7 +117,11 @@ def run_fidelity(a: argparse.Namespace) -> int:
     report["passed"] = passed
     for note in report["notes"]:
         print(f"shape: note: {note}", file=sys.stderr)
-    _emit(report, a.output[0] if a.output else None, "\n".join(text) + "\n" if a.format == "text" else None)
+    _emit(
+        report,
+        a.output[0] if a.output else None,
+        "\n".join(text) + "\n" if a.format == "text" else None,
+    )
     return 0 if passed else 1
 
 

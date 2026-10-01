@@ -8,9 +8,9 @@
   reference (within 20%);
 * **anomaly rate**: whether the share of rows flagged in ``_shape_is_anomaly`` is the expected one.
 
-Pure numpy and pyarrow. A port of the reference implementation's tier 2 (parity harness:
-``benchmarks/vs_spindle/fidelity_tiers_1to1``); the flag column is Shape's own name, and a table
-that carries it is not scored on columns that start with ``_shape_``.
+Pure numpy and pyarrow. A port of the reference implementation's tier 2 (checked by the parity
+harness under ``benchmarks/`` in the repository); the flag column is Shape's own name, and a
+table that carries it is not scored on columns that start with ``_shape_``.
 """
 
 from __future__ import annotations
@@ -211,8 +211,10 @@ def check_anomaly_rates(
         return None
     col = frame[ANOMALY_COLUMN]
     row_count = len(frame)
-    flagged = int(np.sum(col.values[col.valid].astype(np.int64))) if col.is_numeric else int(
-        sum(1 for v in col.present() if v)
+    flagged = (
+        int(np.sum(col.values[col.valid].astype(np.int64)))
+        if col.is_numeric
+        else int(sum(1 for v in col.present() if v))
     )
     actual = flagged / row_count if row_count > 0 else 0.0
     expected = sum(expected_fractions.values()) if expected_fractions else 0.0

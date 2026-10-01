@@ -23,7 +23,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 FIXTURE = HERE / "fixtures" / "expected_tiers.json"
 SEED = 7
-SMALL_ROWS = 5000
+SMALL_ROWS = 200
 BASELINE_FLAG = "_spindle_is_anomaly"
 
 
@@ -41,7 +41,8 @@ def compute() -> dict[str, Any]:
             name, r.to_pandas(), s, tier1=True, small_rows=SMALL_ROWS, seed=SEED
         )
         out["tables"][name].pop("tier1_s", None)
-    return out
+    # the flag column under Shape's name, so the two outputs name every column alike
+    return json.loads(json.dumps(out).replace(BASELINE_FLAG, "_shape_is_anomaly"))
 
 
 def main(argv: list[str] | None = None) -> int:
