@@ -28,7 +28,7 @@ edge/e3000.csv: PASS
 edge/e3000.parquet: PASS
 edge/e3000_uuidpk.csv: PASS
 edge/e3000_uuidpk.parquet: PASS
-/home/user/shape/src/shape/kernel/reference/exact.py:123: RuntimeWarning: invalid value encountered in cast
+/home/user/shape/src/shape/kernel/reference/exact.py:125: RuntimeWarning: invalid value encountered in cast
   "all_whole": bool(np.all(uniq == uniq.astype(np.int64))),
 edge/x_csv_inf.csv: PASS
 edge/x_csv_mixed_chunks.csv: PASS
@@ -104,6 +104,8 @@ value_counts_ext                   6/6*         6/6*       20/20*       20/20*  
 value_counts_ext_order             6/6*         6/6*       20/20*       20/20*       10/10*       10/10*     200/200*     200/200*       15/15*       15/15*       24/24*       24/24*       23/23*       23/23*       24/24*       24/24*       23/23*       23/23*       24/24*       24/24*       23/23*       23/23*       24/24*       24/24*       23/23*       23/23*       24/24*       24/24*       23/23*       23/23*            -         5/5*         2/2*         2/2*       12/12*         2/2*         2/2*         2/2*         2/2*         2/2*         2/2*         2/2*            -            -         8/8*       15/15*         2/2*         2/2*         2/2*
 fit_score                          6/6*         6/6*       20/20*       20/20*       10/10*       10/10*     200/200*     200/200*       15/15*       15/15*       24/24*       24/24*       23/23*       23/23*       24/24*       24/24*       23/23*       23/23*       24/24*       24/24*       23/23*       23/23*       24/24*       24/24*       23/23*       23/23*       24/24*       24/24*       23/23*       23/23*            -         5/5*         2/2*         2/2*       12/12*         2/2*         2/2*         2/2*         2/2*         2/2*         2/2*         2/2*            -            -         8/8*       15/15*         2/2*         2/2*         2/2*
 
+
+Intentional differences from the baseline, fields is_enum, enum_values (enum rule, P1-18): 279 columns no longer enums, 430 stay enums
 
 Within tolerance but not bitwise identical:
 exit=0
