@@ -1,0 +1,85 @@
+........................................................................ [  2%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  8%]
+........................................................................ [ 11%]
+........................................................................ [ 13%]
+........................................................................ [ 15%]
+........................................................................ [ 17%]
+........................................................................ [ 19%]
+........................................................................ [ 22%]
+........................................................................ [ 24%]
+........................................................................ [ 26%]
+........................................................................ [ 28%]
+........................................................................ [ 30%]
+........................................................................ [ 33%]
+........................................................................ [ 35%]
+........................................................................ [ 37%]
+........................................................................ [ 39%]
+........................................................................ [ 41%]
+........................................................................ [ 44%]
+........................................................................ [ 46%]
+........................................................................ [ 48%]
+........................................................................ [ 50%]
+........................................................................ [ 52%]
+........................................................................ [ 55%]
+........................................................................ [ 57%]
+........................................................................ [ 59%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 66%]
+........................................................................ [ 68%]
+........................................................................ [ 70%]
+........................................................................ [ 72%]
+........................................................................ [ 75%]
+........................................................................ [ 77%]
+........................................................................ [ 79%]
+........................................................................ [ 81%]
+........................................................................ [ 83%]
+........................................................................ [ 86%]
+........................................................................ [ 88%]
+........................................................................ [ 90%]
+........................................................................ [ 92%]
+........................................................................ [ 94%]
+........................................................................ [ 97%]
+........................................................................ [ 99%]
+.....................                                                    [100%]
+=============================== warnings summary ===============================
+tests/artifact/test_hardening.py::test_duplicate_member_rejected
+tests/security/test_ga_security.py::test_archive_duplicate_member
+  /usr/lib/python3.11/zipfile.py:1580: UserWarning: Duplicate name: 'manifest.json'
+    return self._open_to_write(zinfo, force_zip64=force_zip64)
+
+tests/integrations/test_fabric_spark.py::test_document_layout_matches_the_single_process_engine
+  /root/.venvs/shape/lib/python3.11/site-packages/pyspark/testing/utils.py:127: FutureWarning: PySpark does not yet fully support pandas >= 3.0.0. Some features may not work correctly. It is recommended to use pandas < 3.0.0 for now.
+    require_minimum_pandas_version()
+
+tests/integrations/test_fabric_spark.py::test_document_layout_matches_the_single_process_engine
+tests/integrations/test_fabric_spark.py::test_result_is_deterministic_and_ordered_by_partition
+tests/integrations/test_fabric_spark.py::test_partitions_option_repartitions
+tests/integrations/test_fabric_spark.py::test_top_n_limits_the_listed_values
+tests/integrations/test_fabric_spark.py::test_nulls_and_an_all_null_partition
+tests/integrations/test_fabric_spark.py::test_empty_table_profiles_to_zero_rows
+tests/integrations/test_fabric_spark.py::test_executors_on_the_python_kernel_give_the_same_profile
+  /root/.venvs/shape/lib/python3.11/site-packages/pyspark/sql/pandas/functions.py:777: FutureWarning: PySpark does not yet fully support pandas >= 3.0.0. Some features may not work correctly. It is recommended to use pandas < 3.0.0 for now.
+    require_minimum_pandas_version()
+
+tests/kernel/test_exact_kernel.py::test_count_numeric_infinities_and_whole_numbers
+  /home/user/shape/src/shape/kernel/reference/exact.py:123: RuntimeWarning: invalid value encountered in cast
+    "all_whole": bool(np.all(uniq == uniq.astype(np.int64))),
+
+tests/kernel/test_exact_kernel.py::test_numeric_stats_with_infinities
+  /root/.venvs/shape/lib/python3.11/site-packages/numpy/_core/_methods.py:49: RuntimeWarning: invalid value encountered in reduce
+    return umr_sum(a, axis, dtype, out, keepdims, initial, where)
+
+tests/kernel/test_exact_kernel.py::test_numeric_stats_with_infinities
+  /home/user/shape/src/shape/kernel/reference/exact.py:41: RuntimeWarning: invalid value encountered in add
+    res: np.ndarray = np.add(a, diff * t)
+
+tests/kernel/test_exact_kernel.py::test_numeric_stats_with_infinities
+  /home/user/shape/src/shape/kernel/reference/exact.py:42: RuntimeWarning: invalid value encountered in subtract
+    np.subtract(b, diff * (1 - t), out=res, where=t >= 0.5, casting="unsafe", dtype=res.dtype)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+3261 passed, 45 deselected, 14 warnings in 409.91s (0:06:49)
+exit=0

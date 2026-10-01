@@ -1,0 +1,19 @@
+++ /root/.venvs/shape/bin/ruff check src tests plugins benchmarks/vs_spindle
+All checks passed!
+++ /root/.venvs/shape/bin/ruff format --check src tests plugins benchmarks/vs_spindle
+518 files already formatted
+++ /root/.venvs/shape/bin/mypy
+++ tail -3
+Success: no issues found in 238 source files
+++ /root/.venvs/shape/bin/vulture src/shape scripts/vulture_whitelist.py --min-confidence 80
+++ /root/.venvs/shape/bin/lint-imports
+++ tail -3
+Built-ins load only through the plugin registry (plan 4.3) KEPT (1 ignored import)
+
+Contracts: 1 kept, 0 broken.
+++ /root/.venvs/shape/bin/python scripts/check_user_facing.py
+check_user_facing: clean
+++ /root/.venvs/shape/bin/bandit -q -r src -ll
+[tester]	WARNING	nosec encountered (B608), but no failed test on file src/shape/builtins/sinks/sql.py:214
+[tester]	WARNING	nosec encountered (B608), but no failed test on file src/shape/builtins/sinks/sql.py:214
+[tester]	WARNING	nosec encountered (B608), but no failed test on file src/shape/integrations/fabric/udf.py:282
