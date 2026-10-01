@@ -18,7 +18,7 @@ from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
-from shape.generation.engine import Engine, GenerationResult
+from shape.generation.engine import Engine, GenerationResult, worker_threads
 from shape.generation.schema import GenSchema
 from shape.plugins.host import default_host
 
@@ -110,7 +110,7 @@ def write_result(
     fmt: str,
     output_dir: str | Path,
     *,
-    max_workers: int = 4,
+    max_workers: int | None = None,
     **options: Any,
 ) -> list[Path]:
     """Write every table of ``result`` as ``fmt``; return the files (or Delta directories)."""
@@ -129,8 +129,13 @@ def write_result(
             **_options(fmt, result.schema, name, options),
         )
 
-    _run_parallel(names, one, max_workers)
+    _run_parallel(names, one, _writers(max_workers))
     return _paths(fmt, out, names)
+
+
+def _writers(max_workers: int | None) -> int:
+    """Writer threads: ``max_workers``, else ``SHAPE_THREADS`` (every core when unset), up to 4."""
+    return max_workers if max_workers is not None else min(4, worker_threads())
 
 
 def _run_parallel(names: list[str], work: Callable[[str], None], max_workers: int) -> None:
@@ -247,13 +252,13 @@ def write_engine(
     output_dir: str | Path,
     *,
     chunk_rows: int | None = None,
-    max_workers: int = 4,
+    max_workers: int | None = None,
     **options: Any,
 ) -> list[Path]:
     """Generate and write every table. A schema with no post-pass is streamed (generation of the
     next chunk overlaps the write of this one); otherwise the whole result is written."""
     if needs_post_pass(engine.schema):
-        return _write_overlapped(engine, fmt, output_dir, max_workers, options)
+        return _write_overlapped(engine, fmt, output_dir, _writers(max_workers), options)
     engine.schema.validate_or_raise()
     sink = _sink(fmt)
     out = Path(output_dir)
@@ -268,5 +273,5 @@ def write_engine(
             **_options(fmt, engine.schema, name, options),
         )
 
-    _run_parallel(names, one, max_workers)
+    _run_parallel(names, one, _writers(max_workers))
     return _paths(fmt, out, names)

@@ -240,7 +240,7 @@ print(format_summary(result))                                   # the `summary` 
 | `excel` | `<table>.xlsx` | extra `[excel]`; refuses a table over 1,048,575 rows |
 | `delta` | `<dir>/<table>/` | extra `[delta]`; `mode` (`overwrite`, `append`), `partition_by` |
 
-`write_result` writes tables in parallel. `write_engine` overlaps generation of chunk *n* + 1 with the
+`write_result` writes tables in parallel (`max_workers`: up to 4 threads, fewer when `SHAPE_THREADS` is lower). `write_engine` overlaps generation of chunk *n* + 1 with the
 write of chunk *n* when the schema has no post-pass (`needs_post_pass`: computed columns, business
 rules or correlations need whole tables). With a post-pass it generates the whole schema and writes each
 table as soon as it is final (see "Threads and overlapped writing"), so the writes of the tables no
