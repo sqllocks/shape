@@ -53,6 +53,7 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.distributions` | `histogram` | an empirical histogram (`edges`, `weights`) |
 | `shape.calendars` | `us_federal` | the eleven US federal holidays on their observed days |
 | `shape.calendars` | `us_retail` | Black Friday, Cyber Monday, Christmas Eve and the gift holidays |
+| `shape.calendars` | `composite` | any mix of holiday calendars, custom events, paydays, month-end and quarter-end effects and trends (`with_spec`) |
 
 ## Rules
 
@@ -68,7 +69,8 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
   (`mu`, `sigma`, `alpha`, `lam`, ...), see `docs/GENERATION_STRATEGIES.md`.
 - Every draw is addressed by row (`docs/GENERATION_KERNEL.md`): a column's values do not depend
   on how the table is chunked.
-- The calendars' lift is neutral (1.0) unless `holiday_lift` is set; `holidays(start, end)`
+- The calendars' lift is neutral (1.0) unless `holiday_lift` or `lifts` is set (ramp-up and decay
+  optional, `docs/GENERATION_CALENDARS.md`); `holidays(start, end)`
   returns the rule-derived dates.
 - Not built-ins yet: the DB-API, Kafka and Event Hubs connectors (`shape.connectors`) need a live
   connection object or a broker, not a URI; they move into plugins with the Phase 6 work.
