@@ -198,6 +198,32 @@ def test_sql_parses_with_sqlglot_for_each_dialect(dialect, tmp_path):
     assert inserted == 3
 
 
+@pytest.mark.parametrize("dialect", DIALECTS)
+def test_sql_names_and_headers_cannot_add_statements(dialect, tmp_path):
+    # A line break in a name or header line would end a -- comment; a quote would end a literal.
+    hostile = "it'em]`\"\nDELETE FROM z; --\r\nDROP TABLE y; --"
+    target = tmp_path / "hostile.sql"
+    t = table()
+    SqlSink().write(
+        str(target),
+        hostile,
+        iter(t.to_batches()),
+        sql_dialect=dialect,
+        columns=COLUMNS,
+        primary_key=["id"],
+        header=["first\nDELETE FROM z;", "second\rDROP TABLE y;"],
+    )
+    text = target.read_text(encoding="utf-8")
+    parsed = []
+    for chunk in _statements(text):
+        parsed += sqlglot.parse(chunk, read=SQLGLOT[dialect], error_level=sqlglot.ErrorLevel.RAISE)
+    kinds = [type(p).__name__ for p in parsed if p is not None]
+    assert "Delete" not in kinds
+    assert kinds.count("Create") == 1 and kinds.count("Insert") == 1
+    assert kinds.count("Drop") <= 1
+    assert "-- first DELETE FROM z;\n-- second DROP TABLE y;\n" in text
+
+
 def test_sql_options_ddl_drop_go_and_schema_name(tmp_path):
     base = {"sql_dialect": "tsql", "columns": COLUMNS, "primary_key": ["id"]}
     text = _write("sql", tmp_path, "a.sql", **base, ddl=False).read_text("utf-8")
