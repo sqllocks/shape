@@ -243,6 +243,7 @@ instruction.
 
 | Date | ID | Change | Reason |
 |---|---|---|---|
+| 2026-10-01 | G1, P1-15, P1-16, P2-01, P7-01, P6-09, PF-03 | **Owner decision on the G1 escalation:** options (a) and (b), in parallel; the gate is unchanged (10x, D-04). New work packages **P1-15** (exact-mode `shape.profile` on the fused Rust kernel, as P1-08 intended) and **P1-16** (bitwise-exact, cheaper likelihood evaluation); G1 is re-run after both merge. **Early start:** P2-01, P7-01, P6-09 and PF-03 may start before G1 is `done` (owner, 2026-10-01); they run as lanes and merge into `build/main-plan`, but nothing merges to `main` until G1 passes. | Owner decision |
 | 2026-10-01 | §6.1, §6.3 | **Parallel lanes (owner: run everything that can run in parallel).** Work packages whose `Depends` are met run concurrently, each in its own builder session on its own branch `lane/<WP>` cut from `build/main-plan`. A lane builder edits only its work package's paths, never the §11 tracker or §2.3, and records progress and evidence in `docs/plans/lane_status/<WP>.md`. The lead verifies each lane against §7, merges it into `build/main-plan` (merge commit) and updates §11. The tracker shows a lane's WP as `wip (lane/<WP>)`; a builder never picks a WP marked that way. Gates stay sequential, each measured in one dedicated run. | Owner decision |
 | 2026-10-01 | G1, P1-08 | **Escalation (builder): the G1 speed gates are missed after §6.5 round 1.** Parity and START pass; PROF-IN is 6.5x-11.2x (d1.parquet 6.5x, d2.csv 9.6x, d3.parquet 6.7x, d4.csv 8.8x, d4.parquet 9.4x, mt 5.1x below 10x) and PROF-CLI D2 is 8.8x (D3 10.8x). Tables, hotspots and harness outputs: `docs/plans/demo_status/G1-evidence.md`. Round 1 moved the lognormal likelihood to reused buffers and numpy's array log (D4 fit 13.0 s -> 5.4 s, parity exit 0). One harness change, for the owner to confirm: `bench.py`'s Shape worker now imports `shape.profile`'s implementation before the timer (T-19: imports excluded for both tools; Spindle's worker already imports its profiler); without it every fresh-process run carried about 0.4 s of lazy imports (as-found column kept in the evidence). Finding: the product `shape.profile` is the numpy reference profiler with only fitting in Rust, so P1-08's "on the Rust kernel" was not realized; the fused engine is slower than it in exact mode. The remaining gap (D1, MT, D3 parquet, D4, D2 CLI) is not tuning-sized. Options for the owner: (a) a native exact-mode profile on the fused kernel as P1-08 intended (a new work package, then re-run G1), (b) a second tuning round on first-appearance ordering, value counts and correlation (unlikely to reach 10x on D1, MT and D3 parquet). Gate unchanged; G1 stays `todo`. | Builder, §6.5 round 1 |
 | 2026-09-30 | P1-07, P1-14 | **Resolved:** the Python-kernel bounded-mode growth was in `finalize`, not the batch loop (`np.repeat(lengths, counts)` made one float64 per row; RSS 231 -> 584 MB in the last second at 24M rows). `_histogram_quantile` computes p95 from the histogram with numpy's linear interpolation (0 mismatches on 60k random histograms); regression test `test_python_text_finalize_memory_does_not_scale_with_rows` fails on the old code. `test_bounded_mode_memory_does_not_grow_with_rows` (unchanged, 10% limit) passes with `SHAPE_KERNEL=python` (63 min) and with Rust (88 s); all 40 heavy kernel/profile tests pass on Rust. P1-14 acceptance, in this session: `check_user_facing` clean (CI runs it on the tree and the wheel); `profile_1to1/verify.py --impl shape` exit 0 on all default datasets against the pinned Spindle 3.0.1 (built here by `setup_spindle.sh`, checkout untouched); `pytest tests/demo` 201 passed (separate venv with pyarrow 19, as the `fabric-demo` job); the rest of the suite 1026 passed in both kernel modes. Not covered by CI: the heavy memory test on the Python kernel (about 1 h); a nightly job is suggested. | Finding FINDING-P1-07 |
@@ -986,8 +987,32 @@ Appendix A.
   - The suite is green in both kernel modes.
 - Fixes: none.
 
+**P1-15 — Exact-mode profile on the fused kernel**
+- Depends: P1-14. Owner decision 2026-10-01 (§2.3, G1 option a).
+- Deliverables: `shape.profile` (the product path, exact mode) runs its per-column work on
+  the fused Rust kernel (P1-06): sorting and quantiles, first-seen top values and value
+  counts, pattern detection, enum and key detection, outliers, string lengths, temporal
+  histograms, correlation; Python keeps orchestration only (§4.2). The numpy reference
+  profiler stays as the reference twin (`SHAPE_KERNEL=python`). The output is unchanged.
+- Acceptance: `profile_1to1/verify.py --impl shape` exits 0 on all default datasets (T-22);
+  the suite is green in both kernel modes; py-spy shows no per-row Python on the profile
+  path; PROF-IN and PROF-CLI re-measured per T-19 and recorded (the G1 re-run decides).
+- Fixes: G1 escalation (§2.3).
+
+**P1-16 — Cheaper likelihood, bitwise-exact**
+- Depends: P1-14. Owner decision 2026-10-01 (§2.3, G1 option b).
+- Deliverables: the lognormal (and other) likelihood evaluations in `rust/shape-kernel/src/fit.rs`
+  stay bitwise-identical to the reference (numpy's `log` and `pairwise_sum` block tree) but
+  cost less: parallel `pairwise_sum` over its fixed block tree, a native port of numpy's
+  vectorised log with identical results, and fewer full-column passes in the Nelder-Mead
+  fallback where the result is provably identical.
+- Acceptance: T-22 parity exits 0 on all default datasets; differential tests show bitwise
+  equality against the reference on fuzzed inputs; D3 Parquet and D4 fit times recorded.
+- Fixes: G1 escalation (§2.3).
+
 **Gate G1**
 - P1-14 is done (no Spindle on the user-facing surface).
+- P1-15 and P1-16 are done (owner decision 2026-10-01).
 - PROF-IN ≥10x on every workload.
 - PROF-CLI ≥10x on D2 and D3.
 - START ≤300 ms.
@@ -1893,7 +1918,9 @@ Work packages are listed in execution order. The next work package is the first 
 | 20 | P1-11 | done | e72d596 |
 | 21 | P1-12 | done | 0087f7b |
 | 21a | P1-14 | done | 9c0f75b |
-| 22 | P2-01 | todo | |
+| 21b | P1-15 | wip (lane/P1-15) | |
+| 21c | P1-16 | wip (lane/P1-16) | |
+| 22 | P2-01 | wip (lane/P2) | |
 | 23 | P2-02 | todo | |
 | 24 | P2-03 | todo | |
 | 25 | P2-04 | todo | |
@@ -1901,7 +1928,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 27 | P2-06 | todo | |
 | 28 | PF-01 | todo | |
 | 29 | PF-02 | todo | |
-| 30 | PF-03 | todo | |
+| 30 | PF-03 | wip (lane/PF-03) | |
 | 31 | PF-04 | todo | |
 | 32 | PF-05 | todo | |
 | 33 | PF-06 | todo | |
@@ -1943,13 +1970,13 @@ Work packages are listed in execution order. The next work package is the first 
 | 69 | P6-07b | todo | |
 | 70 | P6-07c | todo | |
 | 71 | P6-08 | todo | |
-| 72 | P6-09 | todo | |
+| 72 | P6-09 | wip (lane/P6-09) | |
 | 73 | P6-10 | todo | |
 | 74 | P6-11 | todo | |
 | 75 | P6-12 | todo | |
 | 76 | P6-13 | todo | |
 | 77 | P6-14 | todo | |
-| 78 | P7-01 | todo | |
+| 78 | P7-01 | wip (lane/P7-01) | |
 | 79 | P7-02 | todo | |
 | 80 | P7-03 | wip (lane/P7-03) | |
 | 81 | P7-04 | todo | |
