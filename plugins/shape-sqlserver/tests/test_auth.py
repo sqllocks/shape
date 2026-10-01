@@ -52,7 +52,7 @@ def test_sql_auth_passes_the_connection_string_through(monkeypatch):
     calls = []
     monkeypatch.setitem(sys.modules, "pyodbc", _fake_pyodbc(calls))
     assert auth.connect("Server=s;UID=u;PWD=p", Credentials("sql"), timeout=7) == "connection"
-    assert calls == [("Server=s;UID=u;PWD=p", {"timeout": 7})]
+    assert calls == [("Server=s;UID=u;PWD=p", {"timeout": 7, "autocommit": True})]
 
 
 def test_entra_auth_sends_the_token_as_a_connection_attribute(monkeypatch):

@@ -97,6 +97,9 @@ def token_struct(token: bytes) -> bytes:
 def connect(connection_string: str, creds: Credentials | None = None, *, timeout: int = 30) -> Any:
     """An open pyodbc connection.
 
+    The connection is in autocommit mode: Shape only reads, and an implicit transaction left
+    open on a pooled connection would block other sessions.
+
     With ``sql`` the connection string carries the login. With any other method an Entra
     token is fetched and passed to the driver; the connection string must then not hold a
     ``UID``, ``PWD`` or ``Authentication`` key.
@@ -112,11 +115,14 @@ def connect(connection_string: str, creds: Credentials | None = None, *, timeout
         ) from exc
     try:
         if creds.method == "sql":
-            conn = pyodbc.connect(connection_string, timeout=timeout)
+            conn = pyodbc.connect(connection_string, timeout=timeout, autocommit=True)
         else:
             token = token_struct(access_token(creds))
             conn = pyodbc.connect(
-                connection_string, attrs_before={ACCESS_TOKEN_ATTR: token}, timeout=timeout
+                connection_string,
+                attrs_before={ACCESS_TOKEN_ATTR: token},
+                timeout=timeout,
+                autocommit=True,
             )
     except pyodbc.Error as exc:
         raise SqlServerError(f"could not connect: {redact_connection_string(str(exc))}") from None

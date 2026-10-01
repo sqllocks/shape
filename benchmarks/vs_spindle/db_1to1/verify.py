@@ -80,6 +80,7 @@ def load_real(mssql: str, scenario: str, scale: int) -> None:
 
     import pyodbc
 
+    pyodbc.pooling = False  # a pooled session would keep its locks after close
     testing = load_testing()
     fake = testing.scenario(scenario, scale)
     schema = f"parity_{scenario}"
