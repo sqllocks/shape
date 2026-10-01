@@ -47,6 +47,8 @@ __all__ = [
     "restore_profiler",
     "KeyedSketches",
     "Deduplicator",
+    "StreamConsumer",
+    "CheckpointError",
 ]
 from .aggregate_windows import (
     AggregateTumblingWindow as AggregateTumblingWindow,
@@ -57,7 +59,9 @@ from .aggregate_windows import (
 from .aggregate_windows import (
     NumericAggregate as NumericAggregate,
 )
+from .checkpoint import CheckpointError as CheckpointError
 from .checkpoint import FileCheckpointStore as FileCheckpointStore
+from .consumer import StreamConsumer as StreamConsumer
 from .dedupe import Deduplicator as Deduplicator
 from .evidence import NumericEvidence as NumericEvidence
 from .evidence import TextEvidence as TextEvidence

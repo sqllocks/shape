@@ -2,7 +2,7 @@
 
 Shape distinguishes event time from processing time. Stateful operators declare windowing, allowed lateness and checkpoint semantics. Watermarks determine closable windows; events older than the watermark are handled by an explicit late-data policy. State MUST be bounded or externally checkpointed. Replay MUST be deterministic for deterministic sources/operators. Source delivery guarantees and sink commit guarantees are reported separately; Shape does not claim exactly-once when an underlying connector cannot provide it.
 
-This draft makes those rules precise for the stream runtime (`shape.streaming.runtime`). Sections 1 to 4 are implemented by P3-01, section 5 by P3-02; checkpoints are added by P3-03.
+This draft makes those rules precise for the stream runtime (`shape.streaming.runtime`). Sections 1 to 4 are implemented by P3-01, section 5 by P3-02 and section 6 by P3-03.
 
 ## 1. Events and time
 
@@ -44,3 +44,11 @@ A closed window yields a `WindowProfile`: its kind, bounds, row count and the pr
 - **Keyed values** (`KeyedState`, `PartitionedKeyedState`): one value per key, with the same TTL and cap; the expiry heap never holds more than `2 * max_keys + 64` entries.
 - **Deduplication** (`Deduplicator`): `filter(keys)` returns a keep-mask, `True` for a first sighting, over a window of the last `max_keys` distinct keys (and, with `ttl`, the keys seen within `ttl` of the newest event time of earlier batches). Of several equal keys in one batch the first is kept. Integer keys compare exactly; other keys by their 64-bit hash. Within its window it equals a plain set; once the window is full the keys first seen longest ago are forgotten, and a forgotten key is kept again when it returns. It costs a few array operations per batch.
 - Both `KeyedSketches` and `Deduplicator` have a JSON-safe `snapshot()` and a `restore()`, and a restored state continues exactly as an uninterrupted one.
+
+## 6. Checkpoints, offsets and delivery
+
+- A **checkpoint** is one atomically replaced JSON file: the source offset reached, the deduplication positions, the counters and the profiler's snapshot (section 4). It is written after every `checkpoint_every` processed batches and at the end of the stream.
+- **Resume:** a restarted consumer loads the checkpoint, restores the profiler, and reads the source from the checkpoint's offset. A checkpoint is refused (`CheckpointError`) when it belongs to another stream or was taken with a different profiler configuration.
+- **Reconnect:** a dropped connection (`ConnectionError`, `TimeoutError`) reconnects from the offset after the last processed batch, never from the beginning (S4). Reconnecting is bounded by consecutive connections that bring nothing new (`max_attempts`).
+- **Deduplication on offset:** a source may deliver again what it has already delivered (at-least-once). With an integer offset column (and an optional partition column) every row at or past its partition's next expected offset is new, and the rest is dropped, so replays cut into different batches are exact. Without one, a source offset whose values are all integers is read as `{partition: next offset}`, and a batch that advances no partition is dropped (whole-batch replays only); any other offset is opaque and is only resumed from.
+- **Guarantees, reported separately:** the profile state is exact with respect to the source's offsets: after any number of reconnects or restarts, the windows equal those of an uninterrupted run. Delivery of the windows is at least once: a window is handed out before the checkpoint that covers it is committed, so a crash in between hands it out again after the restart; a window is identified by `(kind, start, end)`, and a sink that stores it by that key receives it once. Shape does not claim exactly-once delivery to a sink that cannot commit atomically with the checkpoint.
