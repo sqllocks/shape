@@ -117,3 +117,62 @@ zero-padded; `{random:4}`: that many characters from `A-Z0-9` (4 without a width
 `{column:3}`: the value of another column of the same row, zero-padded; text outside tokens is
 literal; a token naming no column stays as written. A null in a referenced column gives a null
 row.
+
+## Strategies of P4-04d
+
+The relational strategies. All are row addressed (the parent or version of row `r` is a function of the
+seed, the table, the column and `r`), so a chunk read in any order gives the same values. The ones that look
+at a whole group of rows read the whole column once and keep the result with `Engine.cached`; the
+row-sequential passes run in the kernel (`shape.generation.kernel_relational`, `docs/GENERATION_KERNEL.md`).
+Their equivalence to the baseline is tested per strategy in `tests/generation/test_strategies_p404d.py`
+(cases in `strategy_1to1/relational_cases.py`).
+
+### `foreign_key`
+`{"ref": "parent.pk"}`: a value of the parent's key column. The parent comes from the engine's key pool
+(`ctx.engine.key_pool`); a `ref` to a column that is not the key uses that column's values.
+
+| Key | Meaning |
+|---|---|
+| `distribution` | `uniform` (default), `zipf` (`alpha`, 1.5) or `pareto` (`alpha`, 1.2); anything else is uniform. `alpha` and `max_per_parent` may be at the top level or under `params` (`params` wins) |
+| `max_per_parent` | with `pareto`: no parent gets more rows (a row-sequential pass over the table, kept in memory) |
+| `constrained_by` | a column of this table; the key is drawn from the parent rows whose column of the same name has the same value. No such parent: null when the column is nullable, else any parent |
+| `sample_rate`, `filter` | the rows take the parents of one random sample, without replacement, of `max(1, int(rows * sample_rate))` parent rows (those matching `"column = 'value'"`); a table with more rows than the sample wraps around it |
+
+A `ref` to the table's own key draws uniformly among all its rows (`distribution` does not apply); give the
+column `nullable` and a `null_rate` for roots.
+
+`zipf` is Zipf truncated to the parent rows, `P(k)` proportional to `k ** -alpha`. Ranks up to 2**20 are
+exact; a larger pool is drawn by inverting the integral of the same power law beyond that. `pareto` cuts a
+Lomax draw at its theoretical 99.5th percentile and scales it to the pool (the baseline cuts at the sample's
+percentile; the two agree for any realistic chunk).
+
+### `composite_foreign_key` and `composite_fk_field`
+`{"ref_table": "line", "ref_columns": ["order_no", "line_no"], "distribution": "uniform"}` draws one row of
+the parent table (`uniform`, or `zipf` with `params.alpha`; anything else is uniform) and hands every
+`ref_columns` value of it to the row: the column itself gets the first. `{"source_column": "order_no",
+"ref_column": "line_no"}` on another column reads one of them (the column must come after the
+`composite_foreign_key` column in the table). Only the table's own columns are output.
+
+### `first_per_parent`
+`{"parent_column": "customer_id", "default": true}`: `True` on the first row of each value of the parent
+column and `False` on the rest (`"default": false` swaps them). Nulls count as one value. Row-sequential:
+the parent column is generated for the whole table once.
+
+### `self_referencing` and `self_ref_field`
+`{"pk_column": "category_id", "levels": 3, "root_count": 8}` (`max_depth` is an alias of `levels`; `root_count`
+defaults to a tenth of the rows): the first `root_count` rows (at most `rows // levels`, at least 1) are level
+1 and have no parent; the rest share levels 2 .. `levels` evenly (the first levels take the remainder), and each
+takes a uniformly drawn row of the level above as its parent. `{"field": "level"}` on another column gives
+the 1-based level. The structure depends on the table's row count, not on the chunk.
+
+### `lifecycle`
+`{"phases": {"introduced": 0.1, "active": 0.75, "discontinued": 0.15}}` (or `"values"`): a label with
+probability proportional to its weight. Labels are always strings.
+
+### `scd2`
+`{"role": "effective_date", "business_key": "customer_id", "min_gap_days": 1}`. Roles: `effective_date` (the
+versions of a key get increasing dates in the model's `date_range`, at least `min_gap_days` apart, in row
+order; `timestamp[us]` at midnight), `end_date` (the next version's date minus `min_gap_days`; null for the
+latest; `effective_date_column` names the date column, default `effective_date`), `is_current` (the latest
+version) and `version` (1, 2, ... in date order; row order when there is no date column). Rows with a null
+business key get nulls.

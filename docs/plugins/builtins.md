@@ -32,6 +32,14 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.strategies` | `distribution` | values from a distribution family, clipped by `min`/`max` and rounded to the column's scale |
 | `shape.strategies` | `empirical` | inverse-transform sampling of a stored quantile fingerprint |
 | `shape.strategies` | `pattern` | strings from a format with `{seq:n}`, `{random:n}` and `{column}` tokens |
+| `shape.strategies` | `foreign_key` | keys of a parent table: uniform, Zipf or Pareto (optionally capped per parent), constrained by another column, sampled, or self-referencing |
+| `shape.strategies` | `composite_foreign_key` | one parent row of a composite key, all its `ref_columns` |
+| `shape.strategies` | `composite_fk_field` | one column of the parent row `composite_foreign_key` drew |
+| `shape.strategies` | `first_per_parent` | `True` on the first row of each parent value |
+| `shape.strategies` | `self_referencing` | the parent key of a row of the same table, in a level hierarchy |
+| `shape.strategies` | `self_ref_field` | a field of that hierarchy (the level) |
+| `shape.strategies` | `lifecycle` | a phase label from weighted phases |
+| `shape.strategies` | `scd2` | effective date, end date, current flag or version of a type 2 slowly changing dimension |
 | `shape.distributions` | `normal` | `loc + scale * N(0,1)` |
 | `shape.distributions` | `uniform` | uniform on `[loc, loc + scale)` |
 | `shape.distributions` | `exponential` | `loc + scale * Exp(1)` |
