@@ -1992,7 +1992,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 38 | P3-05 | done | b26e04e |
 | 39 | P4-01a | done | 02a0c4d |
 | 40 | P4-01b | done | 4b75d46 |
-| 40a | P4-01c | wip (lane/P4-01c) | |
+| 40a | P4-01c | done (rounds 1-2: F1-F8) | 14a8dd6 |
 | 41 | P4-02 | done | 6917af7 |
 | 42 | P4-03 | done | 6ec4c1f |
 | 43 | P4-04a | done | e596a57 |
@@ -2024,7 +2024,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 69 | P6-07b | todo | |
 | 70 | P6-07c | todo | |
 | 71 | P6-08 | done (nightly SQL Server e2e pending) | 29eac3e |
-| 71a | P6-08b | wip (lane/P6-08b) | |
+| 71a | P6-08b | done (rounds 1-2: FIX-1..FIX-9; real-server parity 11/11) | 515d26e |
 | 72 | P6-09 | done (CI bench-quick verify_1to1 green on c7bd366, run 36850390984) | 3859a3c |
 | 73 | P6-10 | todo | |
 | 74 | P6-11 | todo | |
