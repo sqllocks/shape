@@ -19,6 +19,10 @@ import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import fill_null as arrow_fill_null
+from shape.generation.arrowkit import scalar as arrow_scalar
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.generation.kernel_relational import group_sums
 from shape.generation.keypos import dense_start, first_positions
 from shape.generation.schema import GenSchema
@@ -38,9 +42,9 @@ def _round_if_float(arr: pa.Array) -> pa.Array:
     whole number in floating point; the result would print with that noise."""
     if not pa.types.is_floating(arr.type):
         return arr
-    mask = arr.is_null().to_numpy(zero_copy_only=False) if arr.null_count else None
-    values = np.round(np.asarray(arr.fill_null(0).to_numpy(zero_copy_only=False)), 2)
-    return pa.array(values, type=arr.type, mask=mask)
+    mask = arrow_numpy(arr.is_null()) if arr.null_count else None
+    values = np.round(np.asarray(arrow_numpy(arrow_fill_null(arr, 0))), 2)
+    return arrow_array(values, type=arr.type, mask=mask)
 
 
 def _bincount_aggregate(
@@ -66,17 +70,17 @@ def _bincount_aggregate(
     pos = first_positions(child[fk], parent[pk])
     valid = pos >= 0
     if values.null_count:
-        valid &= ~np.asarray(values.is_null().to_numpy(zero_copy_only=False), dtype=bool)
+        valid &= ~np.asarray(arrow_numpy(values.is_null()), dtype=bool)
     pos = pos[valid]
     counts = np.bincount(pos, minlength=n)
     if rule == "count_children":
-        return pa.array(counts.astype(np.int64))
-    flat = np.asarray(pc.fill_null(values, 0).to_numpy(zero_copy_only=False))[valid]
+        return arrow_array(counts.astype(np.int64))
+    flat = np.asarray(arrow_numpy(arrow_fill_null(values, 0)))[valid]
     integral = pa.types.is_integer(t)
     if integral and float(np.abs(flat.astype(np.float64)).sum()) >= 2.0**53:
         return None
     sums = np.bincount(pos, weights=flat.astype(np.float64), minlength=n)
-    return _round_if_float(pa.array(sums.astype(np.int64)) if integral else pa.array(sums))
+    return _round_if_float(arrow_array(sums.astype(np.int64)) if integral else arrow_array(sums))
 
 
 def _aggregate(
@@ -90,7 +94,7 @@ def _aggregate(
     keys, values = grouped[fk].combine_chunks(), grouped[f"{source}_{func}"].combine_chunks()
     pos = pc.index_in(parent[pk].combine_chunks(), value_set=keys)
     out = pc.take(values, pos)
-    return _round_if_float(pc.fill_null(out, pa.scalar(0, type=out.type)))
+    return _round_if_float(arrow_fill_null(out, arrow_scalar(0, type=out.type)))
 
 
 def _lookup_parent(table: pa.Table, parent: pa.Table, fk: str, pk: str, source: str) -> pa.Array:

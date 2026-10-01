@@ -21,6 +21,9 @@ from typing import Any
 import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import to_numpy as arrow_numpy
+
 from . import kernel_ops
 from .rng import RowStream
 
@@ -46,7 +49,7 @@ def _calendar_lift(calendar: Any, start: date, end: date) -> np.ndarray[Any, np.
         from shape.plugins.host import default_host
 
         calendar = default_host().get("shape.calendars", "composite").with_spec(calendar)
-    lift = np.asarray(calendar.lift(start, end).to_numpy(zero_copy_only=False), dtype=np.float64)
+    lift = np.asarray(arrow_numpy(calendar.lift(start, end)), dtype=np.float64)
     if len(lift) != (end - start).days + 1:
         raise ValueError("the calendar returned a lift for the wrong number of days")
     return lift
@@ -66,15 +69,17 @@ def day_probabilities(
         raise ValueError("end must not be before start")
     days = (end - start).days + 1
     base = np.asarray(
-        kernel_ops.day_weights(
-            (start - EPOCH).days,
-            days,
-            _weights(month, 12, "month"),
-            _weights(day_of_week, 7, "day_of_week"),
-            per_bucket,
-        ).to_numpy(zero_copy_only=False)
+        arrow_numpy(
+            kernel_ops.day_weights(
+                (start - EPOCH).days,
+                days,
+                _weights(month, 12, "month"),
+                _weights(day_of_week, 7, "day_of_week"),
+                per_bucket,
+            )
+        )
     )
-    return pa.array(base * _calendar_lift(calendar, start, end))
+    return arrow_array(base * _calendar_lift(calendar, start, end))
 
 
 def sample_timestamps(
@@ -106,12 +111,12 @@ def sample_timestamps(
     if hour_peaks is not None:
         hour_w = kernel_ops.hour_weights_peaks(list(hour_peaks[0]), float(hour_peaks[1]))
     else:
-        hour_w = pa.array(_weights(hour, 24, "hour"), type=pa.float64())
+        hour_w = arrow_array(_weights(hour, 24, "hour"), type=pa.float64())
     day_w = day_probabilities(
         start, end, month=month, day_of_week=day_of_week, calendar=calendar, per_bucket=per_bucket
     )
     if n_rows == 0:
-        return pa.array([], type=pa.timestamp("us"))
+        return arrow_array([], type=pa.timestamp("us"))
     return kernel_ops.temporal_sample(
         day_w, hour_w, (start - EPOCH).days, stream, row_start, n_rows, whole_seconds
     )

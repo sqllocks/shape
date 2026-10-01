@@ -16,6 +16,9 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import fill_null as arrow_fill_null
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.generation.fanout import FanOut
 from shape.generation.kernel_relational import cap_per_parent
 from shape.generation.strategy_kit import StrategyError, require, stream, where
@@ -189,9 +192,9 @@ class ForeignKey:
                 column, _, value = text.partition("=")
                 found = whole_column(ctx, ref_table, column.strip(), "foreign_key")
                 same = pc.equal(pc.cast(found, pa.string()), value.strip().strip("'\""))
-                rows = np.flatnonzero(
-                    np.asarray(pc.fill_null(same, False).to_numpy(zero_copy_only=False))
-                ).astype(np.int64)
+                rows = np.flatnonzero(np.asarray(arrow_numpy(arrow_fill_null(same, False)))).astype(
+                    np.int64
+                )
             if len(rows) == 0:
                 raise StrategyError(f"foreign_key on {where(ctx)}: no row of '{ref_table}' matches")
             take = max(1, int(len(rows) * rate))
@@ -213,7 +216,7 @@ class _Groups:
         self.lowest = 0
         self.slot: Ints | None = None
         if pa.types.is_signed_integer(values.type) and len(values) and not values.null_count:
-            numbers = np.asarray(values.to_numpy(zero_copy_only=False), dtype=np.int64)
+            numbers = np.asarray(arrow_numpy(values), dtype=np.int64)
             low, high = int(numbers.min()), int(numbers.max())
             if high - low < max(4 * len(numbers), 1024):  # keys close together: a table lookup
                 self.lowest = low
@@ -223,24 +226,22 @@ class _Groups:
     def find(self, want: pa.Array) -> tuple[npt.NDArray[np.bool_], Ints]:
         """For each value of ``want``: whether it is a group, and the group number (0 if not)."""
         if self.slot is not None and pa.types.is_signed_integer(want.type):
-            null = np.asarray(want.is_null().to_numpy(zero_copy_only=False), dtype=np.bool_)
-            numbers = np.asarray(pc.fill_null(want, 0).to_numpy(zero_copy_only=False))
+            null = np.asarray(arrow_numpy(want.is_null()), dtype=np.bool_)
+            numbers = np.asarray(arrow_numpy(arrow_fill_null(want, 0)))
             at = numbers.astype(np.int64) - self.lowest
             inside = (at >= 0) & (at < len(self.slot)) & ~null
             group = self.slot[np.where(inside, at, 0)]
             match = inside & (group >= 0)
             return match, np.where(match, group, 0)
         found = pc.index_in(want, value_set=self.values.cast(want.type, safe=False))
-        match = np.asarray(pc.is_valid(found).to_numpy(zero_copy_only=False), dtype=np.bool_)
-        group = np.asarray(pc.fill_null(found, 0).to_numpy(zero_copy_only=False), dtype=np.int64)
+        match = np.asarray(arrow_numpy(pc.is_valid(found)), dtype=np.bool_)
+        group = np.asarray(arrow_numpy(arrow_fill_null(found, 0)), dtype=np.int64)
         return match, group
 
     @classmethod
     def of(cls, column: pa.Array) -> _Groups:
         encoded = pc.dictionary_encode(column)
-        codes = np.asarray(
-            pc.fill_null(encoded.indices, -1).to_numpy(zero_copy_only=False), dtype=np.int64
-        )
+        codes = np.asarray(arrow_numpy(arrow_fill_null(encoded.indices, -1)), dtype=np.int64)
         n_groups = len(encoded.dictionary)
         valid = np.flatnonzero(codes >= 0)
         rows = valid[np.argsort(codes[valid], kind="stable")].astype(np.int64)
@@ -290,7 +291,7 @@ class CompositeForeignKey:
             ctx.n_rows,
             ctx,
         )
-        taken = pa.array(index)
+        taken = arrow_array(index)
         values = {name: pc.take(parent.column(name), taken) for name in ref_columns}
         out: dict[str, pa.Array] = {ctx.column: values[ref_columns[0]]}
         out.update({cfo_key(ctx.column, name): arr for name, arr in values.items()})

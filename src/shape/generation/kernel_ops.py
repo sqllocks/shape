@@ -21,18 +21,20 @@ import numpy as np
 import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.kernel.dispatch import get_kernel
 
 from .rng import RowStream
 
 
 def _arrow(value: Any) -> pa.Array:
-    return pa.array(value)
+    return arrow_array(value)
 
 
 def to_numpy(value: Any) -> npt.NDArray[Any]:
     """An Arrow array (or anything ``pyarrow.array`` accepts) as a numpy array."""
-    out: npt.NDArray[Any] = np.asarray(_arrow(value).to_numpy(zero_copy_only=False))
+    out: npt.NDArray[Any] = np.asarray(arrow_numpy(_arrow(value)))
     return out
 
 
@@ -47,7 +49,7 @@ class AliasTable:
 
 @lru_cache(maxsize=256)
 def _alias_cached(weights: tuple[float, ...]) -> AliasTable:
-    prob, alias = get_kernel().alias_build(pa.array(weights, type=pa.float64()))
+    prob, alias = get_kernel().alias_build(arrow_array(weights, type=pa.float64()))
     return AliasTable(len(weights), _arrow(prob), _arrow(alias))
 
 
@@ -71,7 +73,7 @@ def alias_draw(
 
 def pool_take(pool: pa.Array, indices: npt.NDArray[np.integer[Any]]) -> pa.Array:
     """``pool[indices]`` (a ``string`` array)."""
-    idx = pa.array(np.asarray(indices, dtype=np.int64), type=pa.int64())
+    idx = arrow_array(np.asarray(indices, dtype=np.int64), type=pa.int64())
     return _arrow(get_kernel().pool_take(pool, idx))
 
 

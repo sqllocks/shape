@@ -19,6 +19,8 @@ import numpy as np
 import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.kernel.dispatch import get_kernel
 
 from .rng import RowStream
@@ -27,11 +29,11 @@ Ints = npt.NDArray[np.int64]
 
 
 def _ints(values: Any) -> pa.Array:
-    return pa.array(np.ascontiguousarray(values, dtype=np.int64), type=pa.int64())
+    return arrow_array(np.ascontiguousarray(values, dtype=np.int64), type=pa.int64())
 
 
 def _numpy(array: Any) -> Ints:
-    out: Ints = np.asarray(pa.array(array).to_numpy(zero_copy_only=False), dtype=np.int64)
+    out: Ints = np.asarray(arrow_numpy(arrow_array(array)), dtype=np.int64)
     return out
 
 
@@ -39,8 +41,8 @@ def first_flags(codes: Ints) -> npt.NDArray[np.bool_]:
     """``True`` for the first row of each group. ``codes`` are dense group ids (``0 <= code <
     len(codes)``, as ``pyarrow`` dictionary codes are); a negative code is no group and is never
     first."""
-    flags = pa.array(get_kernel().first_flags(_ints(codes)))
-    return np.asarray(flags.to_numpy(zero_copy_only=False), dtype=np.bool_)
+    flags = arrow_array(get_kernel().first_flags(_ints(codes)))
+    return np.asarray(arrow_numpy(flags), dtype=np.bool_)
 
 
 def group_order(codes: Ints, keys: Ints) -> tuple[Ints, Ints, Ints]:
@@ -70,7 +72,7 @@ def dense_rows(keys: pa.Array, start: int, size: int) -> pa.Array:
     """The row of the sequence key ``start, start + 1, ...`` (``size`` rows) that holds each key of
     ``keys`` (int64, nulls allowed): an int64 array that is null for a null key or one outside the
     sequence. Pass it to ``take`` to read the parent's column."""
-    out: pa.Array = pa.array(get_kernel().dense_rows(keys, start, size))
+    out: pa.Array = arrow_array(get_kernel().dense_rows(keys, start, size))
     return out
 
 
@@ -81,4 +83,4 @@ def group_sums(
     the sum (the type of ``values``, int64 or float64) and the number of the non-null ``values`` of
     the child rows whose key in ``keys`` is that row's, added in row order."""
     sums, counts = get_kernel().group_sums(keys, values, start, size)
-    return pa.array(sums), pa.array(counts)
+    return arrow_array(sums), arrow_array(counts)

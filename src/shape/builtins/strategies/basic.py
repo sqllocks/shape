@@ -14,6 +14,7 @@ import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.generation import kernel_ops
+from shape.generation.arrowkit import array as arrow_array
 from shape.generation.strategy_kit import StrategyError, require, stream, where
 from shape.plugins.api.v1 import GenerationContext
 
@@ -38,7 +39,7 @@ def _labels(keys: tuple[str, ...]) -> tuple[np.ndarray[Any, Any] | None, pa.Arra
         numbers: np.ndarray[Any, Any] | None = np.array([float(k) for k in keys], dtype=np.float64)
     except (TypeError, ValueError):
         numbers = None
-    return numbers, pa.array([str(k) for k in keys], type=pa.string())
+    return numbers, arrow_array([str(k) for k in keys], type=pa.string())
 
 
 class WeightedEnum:
@@ -67,7 +68,7 @@ class WeightedEnum:
             kernel_ops.alias_table(weights), stream(ctx, "v"), ctx.row_start, ctx.n_rows
         )
         if numbers is not None:
-            return pa.array(numbers[index])
+            return arrow_array(numbers[index])
         return kernel_ops.pool_take(pool, index)
 
 

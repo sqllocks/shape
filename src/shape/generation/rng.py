@@ -28,8 +28,9 @@ import hashlib
 
 import numpy as np
 import numpy.typing as npt
-import pyarrow as pa  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.kernel.dispatch import get_kernel
 
 _TWO_NEG_53 = 2.0**-53
@@ -86,7 +87,7 @@ class RowStream:
         if n_rows == 0:
             return np.empty((0, per_row), dtype=np.uint64)
         words = get_kernel().philox_words(self.k0, self.k1, row_start, n_rows, per_row)
-        flat = np.asarray(pa.array(words).to_numpy(zero_copy_only=False), dtype=np.uint64)
+        flat = np.asarray(arrow_numpy(arrow_array(words)), dtype=np.uint64)
         return flat.reshape(n_rows, per_row)
 
     def uniform(
@@ -95,7 +96,7 @@ class RowStream:
         """One uniform in ``[0, 1)`` per row (word ``slot`` of the row's ``per_row`` words)."""
         self._check(row_start, n_rows, per_row)
         out = get_kernel().philox_uniform(self.k0, self.k1, row_start, n_rows, per_row, slot)
-        return np.asarray(pa.array(out).to_numpy(zero_copy_only=False), dtype=np.float64)
+        return np.asarray(arrow_numpy(arrow_array(out)), dtype=np.float64)
 
     def normal(
         self, row_start: int, n_rows: int, per_row: int = 2, slot: int = 0
@@ -103,4 +104,4 @@ class RowStream:
         """One standard normal per row (words ``slot`` and ``slot + 1`` of the row)."""
         self._check(row_start, n_rows, per_row)
         out = get_kernel().philox_normal(self.k0, self.k1, row_start, n_rows, per_row, slot)
-        return np.asarray(pa.array(out).to_numpy(zero_copy_only=False), dtype=np.float64)
+        return np.asarray(arrow_numpy(arrow_array(out)), dtype=np.float64)

@@ -22,6 +22,9 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import fill_null as arrow_fill_null
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.generation.engine import RangeKeys
 from shape.generation.strategy_kit import StrategyError, stream, where
 from shape.plugins.api.v1 import GenerationContext
@@ -80,9 +83,9 @@ def _add_days(values: pa.Array, days: npt.NDArray[np.int64]) -> pa.Array:
     else:
         unit_per_day = _SECONDS_PER_DAY * _TIMESTAMP_UNITS[t.unit]
         base = pc.cast(values, pa.int64())
-    mask = base.is_null().to_numpy(zero_copy_only=False) if base.null_count else None
-    shifted = np.asarray(base.fill_null(0).to_numpy(zero_copy_only=False)) + days * unit_per_day
-    out = pa.array(shifted, mask=mask)
+    mask = arrow_numpy(base.is_null()) if base.null_count else None
+    shifted = np.asarray(arrow_numpy(arrow_fill_null(base, 0))) + days * unit_per_day
+    out = arrow_array(shifted, mask=mask)
     return out.cast(pa.int32()).cast(t) if pa.types.is_date32(t) else out.cast(t)
 
 
@@ -160,10 +163,13 @@ class Derived:
         pool = engine.key_pool(parent_name) if tables[parent_name].primary_key == [key] else None
         if isinstance(pool, RangeKeys) and pool.step > 0 and pa.types.is_integer(wanted.type):
             # A sequence key is its own row index: no hash table over the parent's keys.
-            offset = np.asarray(pc.cast(wanted, pa.int64()).fill_null(-1).to_numpy()) - pool.start
+            offset = (
+                np.asarray(arrow_numpy(arrow_fill_null(pc.cast(wanted, pa.int64()), -1)))
+                - pool.start
+            )
             row = offset // pool.step
             ok = (offset >= 0) & (offset % pool.step == 0) & (row < pool.count)
-            position = pa.array(np.where(ok, row, 0), mask=~ok | wanted.is_null().to_numpy(False))
+            position = arrow_array(np.where(ok, row, 0), mask=~ok | arrow_numpy(wanted.is_null()))
         else:
             position = pc.index_in(wanted, value_set=parent.column(key).combine_chunks())
         return pc.take(parent.column(parent_column).combine_chunks(), position)

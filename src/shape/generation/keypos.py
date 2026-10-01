@@ -18,6 +18,9 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import fill_null as arrow_fill_null
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.generation.kernel_relational import dense_rows
 
 Int64s = npt.NDArray[np.int64]
@@ -30,10 +33,10 @@ def _flat(values: pa.Array | pa.ChunkedArray) -> pa.Array:
 def _integers(values: pa.Array) -> tuple[Int64s, npt.NDArray[np.bool_] | None]:
     """An integer Arrow array as int64 (nulls as 0) and its null mask (``None`` without nulls)."""
     if values.null_count == 0:
-        return np.asarray(values.to_numpy(zero_copy_only=False), dtype=np.int64), None
-    mask = np.asarray(values.is_null().to_numpy(zero_copy_only=False), dtype=bool)
-    filled = pc.fill_null(values, 0)
-    return np.asarray(filled.to_numpy(zero_copy_only=False), dtype=np.int64), mask
+        return np.asarray(arrow_numpy(values), dtype=np.int64), None
+    mask = np.asarray(arrow_numpy(values.is_null()), dtype=bool)
+    filled = arrow_fill_null(values, 0)
+    return np.asarray(arrow_numpy(filled), dtype=np.int64), mask
 
 
 def dense_start(keys: pa.Array | pa.ChunkedArray) -> int | None:
@@ -75,7 +78,7 @@ def first_rows(probe: pa.Array | pa.ChunkedArray, keys: pa.Array | pa.ChunkedArr
         return dense_row_array(probe, start, len(keys))
     pos = first_positions(probe, keys)
     miss = pos < 0
-    return pa.array(np.where(miss, 0, pos), mask=miss, type=pa.int64())
+    return arrow_array(np.where(miss, 0, pos), mask=miss, type=pa.int64())
 
 
 def first_positions(probe: pa.Array | pa.ChunkedArray, keys: pa.Array | pa.ChunkedArray) -> Int64s:
@@ -100,7 +103,7 @@ def first_positions(probe: pa.Array | pa.ChunkedArray, keys: pa.Array | pa.Chunk
             hit &= ~null
         return np.where(hit, order[clipped], -1).astype(np.int64)
     found = pc.index_in(probe, value_set=keys)
-    return np.asarray(pc.fill_null(found, -1).to_numpy(zero_copy_only=False), dtype=np.int64)
+    return np.asarray(arrow_numpy(arrow_fill_null(found, -1)), dtype=np.int64)
 
 
 def _sorted(keys: pa.Array) -> tuple[Int64s, Int64s]:
