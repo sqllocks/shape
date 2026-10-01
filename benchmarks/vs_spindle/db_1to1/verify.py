@@ -76,12 +76,14 @@ def shape_side(scenario: str, scale: int, kw: dict, fail: tuple, mssql: str | No
 
 
 def load_real(mssql: str, scenario: str, scale: int) -> None:
+    import contextlib
+
     import pyodbc
 
     testing = load_testing()
     fake = testing.scenario(scenario, scale)
     schema = f"parity_{scenario}"
-    with pyodbc.connect(mssql, autocommit=True) as conn:
+    with contextlib.closing(pyodbc.connect(mssql, autocommit=True)) as conn:
         cur = conn.cursor()
         drop_real(cur, fake, schema)
         cur.execute(f"CREATE SCHEMA [{schema}]")
@@ -129,6 +131,7 @@ def main() -> int:
     ap.add_argument("--mssql", metavar="CONNECTION_STRING")
     a = ap.parse_args()
     names = a.case or list(CASES)
+    loaded: set[str] = set()
     all_fails: dict[str, list] = {}
     cells = checked = 0
     for case in names:
@@ -136,7 +139,9 @@ def main() -> int:
         if a.mssql:
             if fail:
                 continue  # unreadable tables are simulated by the fake only
-            load_real(a.mssql, scenario, scale)
+            if scenario not in loaded:
+                load_real(a.mssql, scenario, scale)
+                loaded.add(scenario)
         sp = spindle_side(case, scenario, scale, kw, fail, a.mssql)
         sh = shape_side(scenario, scale, kw, fail, a.mssql)
         matrix: dict = {}
