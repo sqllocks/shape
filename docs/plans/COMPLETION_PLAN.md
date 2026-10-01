@@ -2001,7 +2001,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 46 | P4-04d | done (G7 regression test; scd2 fixture regenerated at integration for the shared calendar fingerprint) | 71b2ebd |
 | 47 | P4-05 | done | 9f6fea8 |
 | 48 | P4-06 | done (SQL comment/literal injection fixed at integration, 36f32d3) | ba051d2 |
-| 49 | P4-07 | wip (lane/P4-07) | |
+| 49 | P4-07 | done (retail T-21 PASS small/medium/large; lead GEN-IN on 2.10 GHz: medium 11.8x, large 17.9x; evidence P4-07-lead/) | b1e6530 |
 | 50 | P4-08 | todo | |
 | 51 | P4-09 | todo | |
 | 52 | P4-10 | todo | |
