@@ -256,8 +256,11 @@ def test_multi_column_strategy_and_internal_columns():
 
 
 def test_errors():
+    unknown = schema()
+    for col in unknown.tables["customer"].columns.values():
+        col.generator = {"strategy": "no_such_strategy"}
     with pytest.raises(ValueError, match="Unknown strategy"):
-        Engine(schema(), strategies={}).generate_chunk("customer", 0, 1)
+        Engine(unknown, strategies={}).generate_chunk("customer", 0, 1)
     with pytest.raises(ValueError, match="outside table"):
         engine().generate_chunk("customer", 30, 20)
     with pytest.raises(ValueError, match="chunk_rows"):
@@ -348,9 +351,10 @@ def test_dry_run_plans_without_generating():
 def test_dry_run_reports_unknown_strategies_and_schema_errors():
     s = schema()
     s.tables["order"].primary_key.append("missing")
+    s.tables["customer"].columns["score"].generator = {"strategy": "no_such_strategy"}
     d = Engine(s, strategies={"sequence": STRATEGIES["sequence"]}).dry_run()
     assert not d.ok
-    assert any("distribution" in m for m in d.missing_strategies)
+    assert any("no_such_strategy" in m for m in d.missing_strategies)
     assert any(i.level == "error" for i in d.issues)
     assert "not ok" in d.render()
 
