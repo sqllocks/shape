@@ -16,9 +16,34 @@
     "shape_tree_dirty": {"type": "boolean"},
     "spindle": {"$ref": "#/$defs/tool"},
     "reference_port": {"$ref": "#/$defs/tool"},
-    "shape": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/tool"}]}
+    "shape": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/tool"}]},
+    "kernel_microbench": {"$ref": "#/$defs/kernel_microbench"}
   },
   "$defs": {
+    "kernel_microbench": {
+      "type": "object",
+      "required": ["measured_utc", "machine", "rows", "runs", "kernels"],
+      "properties": {
+        "measured_utc": {"type": "string"},
+        "machine": {"type": "object"},
+        "rows": {"type": "integer", "minimum": 1},
+        "runs": {"type": "integer", "minimum": 1},
+        "kernels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["rows", "native_s", "reference_s", "equivalent_to_reference"],
+            "properties": {
+              "rows": {"type": "integer", "minimum": 1},
+              "native_s": {"type": "number", "minimum": 0},
+              "reference_s": {"type": "number", "minimum": 0},
+              "baseline_s": {"type": "number", "minimum": 0},
+              "equivalent_to_reference": {"const": true}
+            }
+          }
+        }
+      }
+    },
     "tool": {
       "type": "object",
       "required": ["workloads"],
