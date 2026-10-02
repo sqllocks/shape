@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime
+from functools import lru_cache
 from typing import Any
 
 import numpy as np
@@ -25,12 +26,21 @@ _MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
 _DOW = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
 
-def _microseconds(text: Any, what: str, ctx: GenerationContext) -> int:
+@lru_cache(maxsize=512)
+def _parse_micros(text: str) -> int | None:
+    """``text`` (ISO 8601) in microseconds since the epoch, or ``None`` when it is not a date."""
     try:
-        parsed = datetime.fromisoformat(str(text))
-    except ValueError as exc:
-        raise StrategyError(f"temporal {what} {text!r} is not an ISO date ({where(ctx)})") from exc
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
     return int(np.datetime64(parsed, "us").astype(np.int64))
+
+
+def _microseconds(text: Any, what: str, ctx: GenerationContext) -> int:
+    value = _parse_micros(str(text))
+    if value is None:
+        raise StrategyError(f"temporal {what} {text!r} is not an ISO date ({where(ctx)})")
+    return value
 
 
 def _range(spec: Mapping[str, Any], ctx: GenerationContext) -> tuple[int, int]:
@@ -50,6 +60,29 @@ def _range(spec: Mapping[str, Any], ctx: GenerationContext) -> tuple[int, int]:
 
 
 _UNITS = ("s", "ms", "us", "ns")
+
+
+def _timestamps(micros: npt.NDArray[np.int64]) -> pa.Array:
+    """``timestamp[us]`` over the int64 microseconds, without a copy or a pass over the values."""
+    return pa.Array.from_buffers(
+        pa.timestamp("us"), len(micros), [None, pa.py_buffer(np.ascontiguousarray(micros))]
+    )
+
+
+# The most microseconds whose nanoseconds still fit an int64 (what a checked cast allows).
+_NS_LIMIT = (2**63 - 1) // 1000
+
+
+def _as_nanoseconds(values: pa.Array) -> pa.Array | None:
+    """``values`` (``timestamp[us]``) as ``timestamp[ns]``, or ``None`` when pyarrow has to do it
+    (nulls, or a value whose nanoseconds do not fit: it then raises as a checked cast does)."""
+    n = len(values)
+    if values.null_count or n == 0:
+        return None
+    micros = np.frombuffer(values.buffers()[1], dtype=np.int64, count=n, offset=values.offset * 8)
+    if int(micros.max()) > _NS_LIMIT or int(micros.min()) < -_NS_LIMIT:
+        return None
+    return pa.Array.from_buffers(pa.timestamp("ns"), n, [None, pa.py_buffer(micros * 1000)])
 
 
 def _uniform(start: int, end: int, ctx: GenerationContext) -> npt.NDArray[np.int64]:
@@ -126,6 +159,10 @@ class Temporal:
         unit = str(spec.get("unit", "us"))
         if unit == "us":
             return values
+        if unit == "ns":
+            fast = _as_nanoseconds(values)
+            if fast is not None:
+                return fast
         if unit not in _UNITS:
             raise StrategyError(
                 f"temporal 'unit' must be one of {', '.join(_UNITS)}, not {unit!r} ({where(ctx)})"
@@ -138,9 +175,7 @@ class Temporal:
     def _microseconds(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         start, end = _range(spec, ctx)
         if spec.get("pattern", "uniform") != "seasonal":
-            return arrow_array(
-                _uniform(start, end, ctx).astype("datetime64[us]"), type=pa.timestamp("us")
-            )
+            return _timestamps(_uniform(start, end, ctx))
         profiles = dict(spec.get("profiles") or {})
         if not profiles.get("month") and spec.get("month_weights"):
             profiles["month"] = spec["month_weights"]
@@ -151,9 +186,7 @@ class Temporal:
         hours = self._hours(hour_profile, ctx)
         if not month_w and not dow_w:
             if not hour_profile:
-                return arrow_array(
-                    _uniform(start, end, ctx).astype("datetime64[us]"), type=pa.timestamp("us")
-                )
+                return _timestamps(_uniform(start, end, ctx))
             first = start // _DAY_US
             n_days = -(-end // _DAY_US) - first
             if n_days < 1:

@@ -541,6 +541,8 @@ class Engine:
         self.reserved_cores = 0
         self.row_counts = calculate_row_counts(self.schema, self._overrides)
         self._order: list[str] | None = None
+        self._column_orders: dict[str, list[str]] = {}  # table -> order_columns, made once
+        self._strategy_found: dict[str, Any] = {}  # strategy name -> object, looked up once
 
     # ---- plan ---------------------------------------------------------------------------
 
@@ -560,14 +562,26 @@ class Engine:
         return dependency_levels(self.schema, self.order)
 
     def column_order(self, table: str) -> list[str]:
-        return order_columns(self.schema.tables[table])
+        return list(self._columns_of(table))
+
+    def _columns_of(self, table: str) -> list[str]:
+        """The generation order of ``table``'s columns (:func:`order_columns`), worked out once
+        per engine: the engine's schema is its own copy and is not changed once it runs."""
+        order = self._column_orders.get(table)
+        if order is None:
+            order = self._column_orders[table] = order_columns(self.schema.tables[table])
+        return order
 
     def _strategy(self, name: str) -> Any:
-        found = self._strategies.get(name)
+        found = self._strategy_found.get(name)
         if found is None:
-            from shape.plugins.host import default_host
+            found = self._strategies.get(name)
+            if found is None:
+                from shape.plugins.host import default_host
 
-            found = default_host().try_get("shape.strategies", name)
+                found = default_host().try_get("shape.strategies", name)
+            if found is not None:
+                self._strategy_found[name] = found
         return found
 
     def dry_run(self) -> DryRun:
@@ -622,7 +636,8 @@ class Engine:
             raise ValueError(f"rows {row_start}..{row_start + n_rows} outside table of {total}")
         index = row_start // self.chunk_rows if chunk is None else chunk
         built: dict[str, pa.Array] = {}
-        for cname in order_columns(tdef):
+        order = self._columns_of(table)
+        for cname in order:
             col = tdef.columns[cname]
             produced = self._column(table, col, index, row_start, n_rows, built)
             if isinstance(produced, Mapping):
@@ -635,7 +650,7 @@ class Engine:
                 arr = self._mask_nulls(arr, table, col, row_start, n_rows)
             built[cname] = arr
         # Output: the table's own columns in generation order (internal names are dropped).
-        out_names = [c for c in order_columns(tdef) if c in built]
+        out_names = [c for c in order if c in built]
         return pa.RecordBatch.from_arrays([built[c] for c in out_names], names=out_names)
 
     def generate_column(self, table: str, column: str, row_start: int, n_rows: int) -> pa.Array:
@@ -653,7 +668,7 @@ class Engine:
             raise ValueError(f"rows {row_start}..{row_start + n_rows} outside table of {total}")
         index = row_start // self.chunk_rows
         built: dict[str, pa.Array] = {}
-        for cname in order_columns(tdef):
+        for cname in self._columns_of(table):
             col = tdef.columns[cname]
             produced = self._column(table, col, index, row_start, n_rows, built)
             if isinstance(produced, Mapping):

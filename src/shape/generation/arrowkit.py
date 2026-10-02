@@ -20,6 +20,9 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 __all__ = ["array", "fill_null", "raw_numpy", "scalar", "to_numpy"]
 
 _FIXED_KINDS = frozenset("biufM")
+# Arrow types of the dtypes that nearly every array the engine builds has (a plain int64 or float64
+# array with no mask and no type asked for goes straight to its buffer in :func:`array`).
+_PLAIN = {np.dtype(np.int64): pa.int64(), np.dtype(np.float64): pa.float64()}
 
 
 def _bitmap(flags: npt.NDArray[np.bool_]) -> Any:
@@ -103,6 +106,11 @@ def array(
     """``pyarrow.array(obj, type=type, mask=mask, from_pandas=from_pandas)``, without pandas for
     numpy arrays of a fixed-width dtype, Arrow arrays and lists of ``str``."""
     fast: pa.Array | None = None
+    if obj.__class__ is np.ndarray and mask is None and type is None and not from_pandas:
+        plain = _PLAIN.get(obj.dtype)
+        if plain is not None and obj.ndim == 1 and obj.flags.c_contiguous:
+            out: pa.Array = pa.Array.from_buffers(plain, len(obj), [None, pa.py_buffer(obj)])
+            return out
     if isinstance(obj, pa.Array):
         if mask is None and (type is None or type == obj.type):
             return obj

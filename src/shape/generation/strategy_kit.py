@@ -18,6 +18,7 @@ and ``StrategyError``.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import lru_cache
 from typing import Any
 
 import numpy as np
@@ -38,9 +39,16 @@ def where(ctx: GenerationContext) -> str:
     return f"{ctx.table}.{ctx.column}"
 
 
+@lru_cache(maxsize=16_384)
+def _stream(seed: int, table: str, column: str, label: str) -> RowStream:
+    return RowStream(seed, table, column, label)
+
+
 def stream(ctx: GenerationContext, label: str = "v") -> RowStream:
-    """The Philox stream of this column and ``label``, keyed ``(seed, table, column, label)``."""
-    return RowStream(ctx.seed, ctx.table, ctx.column, label)
+    """The Philox stream of this column and ``label``, keyed ``(seed, table, column, label)``.
+    A stream never changes, so the one made for a key (a hash of its names) is kept: every chunk
+    of a column asks for the same few."""
+    return _stream(ctx.seed, ctx.table, ctx.column, label)
 
 
 def require(spec: Mapping[str, Any], key: str, ctx: GenerationContext, strategy: str) -> Any:

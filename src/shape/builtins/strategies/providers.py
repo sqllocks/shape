@@ -354,7 +354,7 @@ def _longest_bytes(values: pa.Array) -> int:
         return 0
     offsets = np.frombuffer(values.buffers()[1], dtype=np.int32)
     window = offsets[values.offset : values.offset + len(values) + 1]
-    return int(np.diff(window).max())
+    return int((window[1:] - window[:-1]).max())
 
 
 def _provider(spec: Mapping[str, Any]) -> str:
