@@ -135,10 +135,10 @@ def _ssn(ctx: GenerationContext) -> pa.Array:
 def _ipv4(ctx: GenerationContext) -> pa.Array:
     # a.b.c.d with the first and last octet in 1..254
     parts = [
-        pa.array(_ints(ctx, "a", 1, 255)),
-        pa.array(_ints(ctx, "b", 0, 256)),
-        pa.array(_ints(ctx, "c", 0, 256)),
-        pa.array(_ints(ctx, "d", 1, 255)),
+        arrow_array(_ints(ctx, "a", 1, 255)),
+        arrow_array(_ints(ctx, "b", 0, 256)),
+        arrow_array(_ints(ctx, "c", 0, 256)),
+        arrow_array(_ints(ctx, "d", 1, 255)),
     ]
     return kernel_ops.template_strings(
         ["", ".", ".", ".", ""], [(0, 0), (1, 0), (2, 0), (3, 0)], parts, ctx.n_rows
@@ -148,7 +148,7 @@ def _ipv4(ctx: GenerationContext) -> pa.Array:
 def _postcode(ctx: GenerationContext) -> pa.Array:
     # five digits, zero padded
     return kernel_ops.template_strings(
-        ["", ""], [(0, 5)], [pa.array(_ints(ctx, "zip", 501, 99_951))], ctx.n_rows
+        ["", ""], [(0, 5)], [arrow_array(_ints(ctx, "zip", 501, 99_951))], ctx.n_rows
     )
 
 
@@ -157,7 +157,7 @@ def _zip_plus4(ctx: GenerationContext) -> pa.Array:
     return kernel_ops.template_strings(
         ["", "-", ""],
         [(0, 5), (1, 4)],
-        [pa.array(_ints(ctx, "zip", 501, 99_951)), pa.array(_ints(ctx, "plus4", 1, 10_000))],
+        [arrow_array(_ints(ctx, "zip", 501, 99_951)), arrow_array(_ints(ctx, "plus4", 1, 10_000))],
         ctx.n_rows,
     )
 

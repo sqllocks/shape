@@ -116,7 +116,7 @@ class Temporal:
         granularity = spec.get("granularity")
         if granularity == "day":
             micros = values.cast(pa.int64()).to_numpy(zero_copy_only=False)
-            values = pa.array((micros // _DAY_US) * _DAY_US, type=pa.int64()).cast(
+            values = arrow_array((micros // _DAY_US) * _DAY_US, type=pa.int64()).cast(
                 pa.timestamp("us")
             )
         elif granularity is not None:
