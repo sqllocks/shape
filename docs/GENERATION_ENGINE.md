@@ -326,6 +326,24 @@ leading business rules are repaired on a helper thread once the tables they name
 arrays and reads them back through `shape.generation.arrowkit`, which never imports pandas (pyarrow's
 own `array`, `to_numpy` and `scalar` do, about 0.16 s of start-up).
 
+Four scheduling rules keep the small and mid-size domains from paying for machinery they do not
+need (none changes a value; tests compare each with the plain order):
+
+* A level whose tables hold at most 300,000 values (rows times columns) is generated on the calling
+  thread, one chunk after another: starting threads costs more than it saves there (hr at the
+  medium preset, 78,000 rows, about 20% faster). `SHAPE_THREADS` and `chunk_rows` are used as given.
+* The tables of a level are made, and handed to the writers, heaviest first, so the file that
+  finishes last is a small one. The result lists the tables in level order as before.
+* A business rule whose comparison `fix_rule` never changes (`>=` or `<=` or `==` between two columns
+  of one table, `<` or `==` across tables) is only validated, so it does not hold its table back
+  for the post-passes (`can_repair`).
+* A table whose every rule is *row-local* is repaired chunk by chunk as the chunk is made, and is
+  final at generation (`plan_streamed_rules`): a rule reads the row it repairs and the row its `via`
+  key names in a table of an earlier level, and draws from a row-addressed stream. A table
+  qualifies when no `computed` or correlated column changes it later, the compute phase reads none
+  of the columns it rewrites, and no rule of another table reads a column it rewrites before it, or
+  rewrites a column it reads after it (those rules see the repaired values, as in the plain order).
+
 `import shape` sets Arrow's allocator for the whole process, in one place (`shape._process.configure`),
 so the command line and the Python API behave alike. Arrow's default pool (mimalloc) reserves a large
 arena with `MADV_HUGEPAGE` at its first allocation, which on a virtual machine with transparent huge
