@@ -37,13 +37,19 @@ from paths import SHAPE_ROOT, SPINDLE_ROOT  # noqa: E402
 DATA = SHAPE_ROOT / "plugins" / "shape-domains" / "src" / "shape_domains" / "data"
 FIXTURES = HERE.parent / "fixtures" / "schemas"
 SOURCE = SPINDLE_ROOT / "sqllocks_spindle" / "domains"
-# Reference datasets each domain ships (financial and healthcare also read retail's ``us_zip_locations``,
-# which is the same file in the baseline).
+# Reference datasets each domain ships (financial, healthcare and insurance also read retail's
+# ``us_zip_locations``, the same file as the baseline's shared one).
 DOMAINS: dict[str, tuple[str, ...]] = {
     "capital_markets": ("exchanges", "gics_sectors", "index_memberships", "sp500_constituents"),
     "education": ("aid_types", "course_catalog", "department_names"),
     "financial": ("branch_names", "merchant_names", "transaction_categories"),
-    "healthcare": ("cpt_codes", "icd10_codes", "insurance_plans", "medication_names", "specialties"),
+    "healthcare": (
+        "cpt_codes",
+        "icd10_codes",
+        "insurance_plans",
+        "medication_names",
+        "specialties",
+    ),
     "hr": ("department_names", "position_titles", "training_courses"),
     "insurance": ("claim_categories", "peril_types", "policy_types"),
 }

@@ -1,6 +1,6 @@
 """The hr domain: departments, positions, employees, compensation, performance reviews, time-off
-requests, training, training enrollments and terminations (9 tables), with the reference data it draws from (department names, position
-titles and training courses)."""
+requests, training, training enrollments and terminations (9 tables), with the reference data it
+draws from (department names, position titles and training courses)."""
 
 from __future__ import annotations
 

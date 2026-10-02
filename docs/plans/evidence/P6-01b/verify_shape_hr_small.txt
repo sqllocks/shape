@@ -1,3 +1,464 @@
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+loaded and baselined in 2.7s
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/spindle/sqllocks_spindle/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
 Spindle hr (seed 42) vs shape (seed 1042) - scale=small  (baseline = max distance of Spindle seeds [43, 44, 45, 46] to Spindle seed 42)
 table order identical: True
 
@@ -108,3 +569,4 @@ Spindle FidelityComparator (real=Spindle seed 42, synthetic=impl): overall impl=
 
 COLUMNS EQUIVALENT: 59/59
 VERDICT: PASS
+
