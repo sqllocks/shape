@@ -211,6 +211,40 @@ def test_contract_rules_are_data_not_code(retail):
     assert shape.check(shape.profile(dict(retail[0].tables), name=DOMAIN), contract).passed
 
 
+# --------------------------------------------------------------- profile of a folder
+
+
+def test_profile_tables_profiles_a_folder_as_a_dataset_the_contract_can_check(retail, tmp_path):
+    import pyarrow.parquet as pq
+
+    result, counts, contract = retail
+    for name, table in result.tables.items():
+        pq.write_table(table, tmp_path / f"{name}.parquet")
+    profile = generation.profile_tables(tmp_path, DOMAIN)
+    assert profile.is_dataset and set(profile.tables) == set(counts)
+    assert shape.check(profile, contract).passed
+    # a short table fails: the contract expects the planned rows
+    pq.write_table(result.tables["customer"].slice(0, 900), tmp_path / "customer.parquet")
+    failed = shape.check(generation.profile_tables(tmp_path, DOMAIN), contract)
+    assert "customer:row_count.min" in {v["rule"] for v in failed.violations}
+
+
+def test_profile_tables_refuses_a_folder_without_tables(tmp_path):
+    with pytest.raises(generation.GenerationRequestError, match="no Parquet files"):
+        generation.profile_tables(tmp_path)
+
+
+def test_the_contract_expects_the_planned_rows_not_the_written_ones():
+    planned = generation.plan_row_counts(DOMAIN, "small")
+    schema = generation.generate_domain(DOMAIN, row_counts={"customer": 1}).schema
+    contract = generation.domain_contract(schema, planned)
+    assert contract["tables"]["customer"]["row_count"] == {"min": 1000, "max": 1000}
+    short = generation.generate_domain(DOMAIN, scale="small", row_counts={"customer": 900})
+    checked = shape.check(shape.profile(dict(short.tables), name=DOMAIN), contract)
+    assert not checked.passed
+    assert "customer:row_count.min" in {v["rule"] for v in checked.violations}
+
+
 # ------------------------------------------------------------------ delta typing
 
 

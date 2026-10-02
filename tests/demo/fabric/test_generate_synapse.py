@@ -5,7 +5,8 @@ temporary directory, with ``mssparkutils`` replaced by a stub over the same dire
 pipeline definition is checked at schema level and its expressions are evaluated on the notebooks'
 real exit values. Not covered, because it needs a Synapse workspace: the notebook-activity
 exit-value path, its parameter encoding, ``mssparkutils`` behaviour, linked-service access and the
-Spark pool's Python version. Those are the live dry-run checklist in integrations/synapse/RUNBOOK.md.
+Spark pool's Python version. Those are the live dry-run checklist in
+integrations/synapse/RUNBOOK.md.
 """
 
 from __future__ import annotations

@@ -547,7 +547,9 @@ GENERATE_WRITE = """tables = generation.write_delta_tables(
 
 # The contract the domain's own schema implies for these tables: the pipeline checks the
 # profile of the Delta tables against it (shape_profile_domain.ipynb).
-contract = generation.domain_contract(result.schema, row_counts)
+# It expects the rows the schema and scale plan, so a short table fails it.
+planned = generation.plan_row_counts(str(domain), str(scale), str(mode) or None)
+contract = generation.domain_contract(result.schema, planned)
 contract_rel = f"{str(outputDir).strip('/')}/{domain}/contract.json"
 generation.write_contract(contract, Path(FILES) / contract_rel)
 manifest = {

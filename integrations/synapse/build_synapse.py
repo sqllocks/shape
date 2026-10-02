@@ -368,7 +368,7 @@ for name in result.generation_order:
 
 # The contract the domain's own schema implies for these tables; the profile notebook checks
 # the written tables against it.
-contract = generation.domain_contract(result.schema, row_counts)
+contract = generation.domain_contract(result.schema, planned)  # the planned rows, not the written
 mssparkutils.fs.put(contract_url, json.dumps(contract), True)  # noqa: F821
 print("Contract written to", contract_url)
 """

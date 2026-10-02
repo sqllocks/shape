@@ -30,6 +30,8 @@ from typing import TYPE_CHECKING, Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
+import shape
+
 if TYPE_CHECKING:
     from shape.generation.engine import GenerationResult
     from shape.generation.schema import GenSchema
@@ -46,6 +48,7 @@ __all__ = [
     "generate_domain",
     "generate_sample",
     "plan_row_counts",
+    "profile_tables",
     "sample_row_counts",
     "sample_to_pandas",
     "write_contract",
@@ -245,6 +248,16 @@ def contract_for_domain(
 ) -> dict[str, Any]:
     """:func:`domain_contract` for the schema of the installed domain ``domain``."""
     return domain_contract(_load(domain, mode).schema, row_counts)
+
+
+def profile_tables(folder: str | Path, name: str | None = None) -> Any:
+    """Profile the Parquet files of ``folder`` together, one table per file (named by the file),
+    as a dataset profile: what a multi-table contract is checked against. ``shape profile`` on a
+    folder would read it as a single table."""
+    files = sorted(Path(folder).glob("*.parquet"))
+    if not files:
+        raise GenerationRequestError(f"no Parquet files in {folder}")
+    return shape.profile({f.stem: str(f) for f in files}, name=name)
 
 
 def write_contract(contract: dict[str, Any], path: str | Path) -> Path:

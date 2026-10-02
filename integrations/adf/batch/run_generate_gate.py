@@ -4,9 +4,11 @@ Runs inside the Shape container image (PF-05) on an Azure Batch node, next to ``
 reuses that script's storage and settings code). It calls the Shape CLI:
 
     shape generate DOMAIN --scale S --seed N [--mode M] --format parquet -o data/
-    shape profile  data/ -o profile.shape --json summary.json
     shape check    profile.shape contract.json --json check.json
     shape diff     baseline.shape profile.shape --json diff.json      (when a baseline is given)
+
+and profiles the generated tables in process (``shape profile`` reads a folder as one table; a
+multi-table contract needs the tables profiled together as a dataset).
 
 ``contract.json`` is the contract the domain's own schema implies for the tables just generated
 (``shape.integrations.fabric.generation.contract_for_domain``: exact row counts, columns, types,
@@ -109,18 +111,28 @@ def evaluate(settings: dict[str, Any], work: Path, shape_cmd: list[str]) -> dict
     gate["tables"] = counts
     gate["rowCount"] = sum(counts.values())
 
+    # The contract expects the rows the schema and scale plan, not the rows that were written:
+    # a table that came out short must fail it.
     contract_file = work / CONTRACT_FILE
     try:
-        contract = generation.contract_for_domain(domain, counts, mode)
+        contract = generation.contract_for_domain(domain, planned, mode)
     except generation.GenerationRequestError as exc:
         raise GateError(str(exc)) from exc
     contract_file.write_text(json.dumps(contract), encoding="utf-8")
 
-    proc = run_gate._shape(
-        shape_cmd, ["profile", str(data_dir), "-o", str(profile), "--json", str(summary)], env
-    )
-    if proc.returncode != 0:
-        raise GateError(f"shape profile exited {proc.returncode}: {run_gate._tail(proc)}")
+    # `shape profile <folder>` reads a folder as ONE table, so the tables are profiled together in
+    # process (a dict of tables: keys and relationships between them are detected), and saved as a
+    # dataset profile, which is what a multi-table contract is checked against.
+    profile_tables = generation.profile_tables(data_dir, domain)
+    if not profile_tables.is_dataset or set(profile_tables.tables) != set(counts):
+        raise GateError("the profile does not hold the generated tables")  # never a vacuous check
+    try:
+        import shape
+
+        shape.save(profile_tables, str(profile))
+        summary.write_text(json.dumps(profile_tables.summary()), encoding="utf-8")
+    except Exception as exc:  # noqa: BLE001 - any failure here is an error gate
+        raise GateError(f"cannot write the profile: {type(exc).__name__}: {exc}") from exc
 
     check_file = work / "check.json"
     proc = run_gate._shape(
