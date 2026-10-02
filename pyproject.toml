@@ -152,6 +152,11 @@ sql = "shape.builtins.sinks:SqlSink"
 excel = "shape.builtins.sinks:ExcelSink"
 delta = "shape.builtins.sinks:DeltaSink"
 
+[project.entry-points."shape.emitters"]
+console = "shape.streaming.emit.emitters:ConsoleEmitter"
+file = "shape.streaming.emit.emitters:FileEmitter"
+jsonl = "shape.streaming.emit.emitters:JsonlEmitter"
+
 [project.entry-points."shape.detectors"]
 email = "shape.builtins.detectors:EmailDetector"
 us_ssn = "shape.builtins.detectors:UsSsnDetector"

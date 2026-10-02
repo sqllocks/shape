@@ -122,7 +122,7 @@ def _sink(a: argparse.Namespace, envelope: str, resuming: bool) -> Any:
     for name in host.names("shape.emitters"):
         emitter = host.try_get("shape.emitters", name)
         if emitter is not None and scheme and scheme in getattr(emitter, "schemes", ()):
-            return EmitterSink(emitter, a.sink)
+            return EmitterSink(emitter, a.sink, envelope=envelope, resuming=resuming)
     raise ShapeError(f"unknown sink {a.sink!r}: {SINKS_HELP}")
 
 
