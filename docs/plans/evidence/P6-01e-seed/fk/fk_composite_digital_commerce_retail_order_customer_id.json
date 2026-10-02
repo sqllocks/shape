@@ -1,0 +1,59 @@
+{
+ "args": {
+  "domain": "composite_digital_commerce",
+  "scale": "small",
+  "table": "retail_order",
+  "column": "customer_id",
+  "parent_table": "retail_customer",
+  "n": 30,
+  "out": "docs/plans/evidence/P6-01e-seed/fk/fk_composite_digital_commerce_retail_order_customer_id.json"
+ },
+ "pooled_chi2": {
+  "chi2": 933.5536648961715,
+  "dof": 999,
+  "p": 0.9308846532456209,
+  "bins": 1000
+ },
+ "per_run": {
+  "max_share": {
+   "spindle_mean": 0.010000000000000002,
+   "spindle_sd": 1.7643790169011568e-18,
+   "shape_mean": 0.010000000000000002,
+   "shape_sd": 1.7643790169011568e-18,
+   "p_mannwhitney": 1.0,
+   "p_ks": 1.0
+  },
+  "top10_share": {
+   "spindle_mean": 0.10000000000000003,
+   "spindle_sd": 2.823006427041851e-17,
+   "shape_mean": 0.10000000000000003,
+   "shape_sd": 2.823006427041851e-17,
+   "p_mannwhitney": 1.0,
+   "p_ks": 1.0
+  },
+  "distinct": {
+   "spindle_mean": 948.0666666666667,
+   "spindle_sd": 9.258484769652378,
+   "shape_mean": 949.3333333333334,
+   "shape_sd": 5.731542088534609,
+   "p_mannwhitney": 0.6730067357962637,
+   "p_ks": 0.5940706297759378
+  },
+  "mean_rank": {
+   "spindle_mean": 0.2913200333333333,
+   "spindle_sd": 0.013369507366993456,
+   "shape_mean": 0.29082003999999995,
+   "shape_sd": 0.0033162727621273277,
+   "p_mannwhitney": 0.4289633888604326,
+   "p_ks": 0.07088798787114439
+  },
+  "null_rate": {
+   "spindle_mean": 0.0,
+   "spindle_sd": 0.0,
+   "shape_mean": 0.0,
+   "shape_sd": 0.0,
+   "p_mannwhitney": 1.0,
+   "p_ks": 1.0
+  }
+ }
+}
