@@ -789,7 +789,7 @@ def _dispatch(argv):
         rc = _run(_verify_inputs, a)
         if rc:
             return rc
-    if a.cmd in ("generate", "describe", "list", "presets"):
+    if a.cmd in ("generate", "describe", "list", "presets", "composite"):
         from shape.cli.generation import run as run_generation
 
         return _run(run_generation, a)
