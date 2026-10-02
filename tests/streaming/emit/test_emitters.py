@@ -10,11 +10,11 @@ from typing import Any
 
 import pytest
 
+from shape.builtins.emitters import ConsoleEmitter, FileEmitter, JsonlEmitter, uri_path
 from shape.errors import ShapeError
 from shape.plugins import kit
 from shape.plugins.host import default_host
 from shape.streaming.emit import EmitConfig, EmitRunner, EventPlan, contract, read_events
-from shape.streaming.emit.emitters import ConsoleEmitter, FileEmitter, JsonlEmitter, uri_path
 from shape.streaming.emit.formats import encode_events
 
 from .conftest import make_engine

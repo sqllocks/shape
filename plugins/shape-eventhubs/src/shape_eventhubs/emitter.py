@@ -9,8 +9,8 @@ deduplicate: a consumer keeps the first message of each ``shape_key``.
 Delivery is at-least-once. ``emit`` returns after the service has accepted every batch it sent
 (``send_batch`` returns on the acknowledgement); a failed send raises ``ConnectionError``, which
 the runtime retries, so a repeated message is possible and a lost one is not. A throttled service
-(an ``EventHubError`` saying ``server-busy``) is waited for inside ``emit`` with a growing pause, so the generator, not the
-event hub, absorbs the slowdown.
+(an ``EventHubError`` saying ``server-busy``) is waited for inside ``emit`` with a growing pause,
+so the generator, not the event hub, absorbs the slowdown.
 
 Messages are packed into service batches by size. By default a batch carries one table, sent with
 that table as its *partition key*, so a table keeps its order on one partition; ``partition_key``

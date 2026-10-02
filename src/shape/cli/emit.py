@@ -19,7 +19,8 @@ from typing import Any
 
 SINKS_HELP = (
     "console (events on standard output, the default), file (JSON lines in --output), or the URI "
-    "of an installed emitter"
+    "of an emitter: file:///PATH, jsonl:///DIR, kafka://, eventhubs://, eventstream://, "
+    "eventhouse:// (the last four come with their plugins)"
 )
 
 

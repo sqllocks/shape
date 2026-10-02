@@ -1,5 +1,5 @@
-"""The core emitters (P5-02): ``console``, ``file`` and ``jsonl``, registered in
-``shape.emitters`` like the plugin emitters (Kafka, Event Hubs, Fabric).
+"""Built-in emitters (``shape.emitters``, P5-02): ``console``, ``file`` and ``jsonl``, registered
+like the plugin emitters (Kafka, Event Hubs, Fabric).
 
 An emitter is ``emit(uri, batches, **options) -> int``: it sends every batch, returns the number of
 events sent, and returns only once they are delivered (for a file: handed to the operating
@@ -25,7 +25,7 @@ from urllib.parse import unquote, urlsplit
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
-from shape.streaming.emit.formats import FIELD_TABLE, ENVELOPES, encode_batch
+from shape.streaming.emit.formats import ENVELOPES, FIELD_TABLE, encode_batch
 from shape.streaming.emit.sinks import repair_tail
 
 SHAPE_API = "1.0"

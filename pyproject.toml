@@ -153,9 +153,9 @@ excel = "shape.builtins.sinks:ExcelSink"
 delta = "shape.builtins.sinks:DeltaSink"
 
 [project.entry-points."shape.emitters"]
-console = "shape.streaming.emit.emitters:ConsoleEmitter"
-file = "shape.streaming.emit.emitters:FileEmitter"
-jsonl = "shape.streaming.emit.emitters:JsonlEmitter"
+console = "shape.builtins.emitters:ConsoleEmitter"
+file = "shape.builtins.emitters:FileEmitter"
+jsonl = "shape.builtins.emitters:JsonlEmitter"
 
 [project.entry-points."shape.detectors"]
 email = "shape.builtins.detectors:EmailDetector"

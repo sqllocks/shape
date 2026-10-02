@@ -29,7 +29,10 @@ An emitter's tests build a *harness* over a fake client (or a real service) and 
                         rejects the batch, or the connection drops);
 ``congest(n)``          the next ``n`` attempts find the destination full and clear only when the
                         emitter waits (polls, backs off); returns nothing;
-``congestion_hits()``   how many times the destination reported full.
+``congestion_hits()``   how many times the destination reported full;
+``ordered``             optional, default true: ``delivered()`` lists events in delivery order.
+                        A destination of several partitions has no total order; set it false and
+                        streams are compared in key order.
 
 The harness is new for every check (``new_harness()``).
 """
@@ -107,6 +110,18 @@ def first_per_key(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return out
 
 
+def same_stream(h: Harness, events: list[dict[str, Any]], ref: list[dict[str, Any]]) -> bool:
+    """``events`` equal the uninterrupted stream ``ref`` (in key order for an unordered
+    destination)."""
+    if getattr(h, "ordered", True):
+        return events == ref
+
+    def by_key(es: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return sorted(es, key=lambda e: (e[FIELD_TABLE], e[FIELD_SEQ]))
+
+    return by_key(events) == by_key(ref)
+
+
 def _require(ok: bool, message: str) -> None:
     if not ok:
         raise AssertionError(message)
@@ -131,10 +146,13 @@ def check_idempotency_key(
             h = new_harness()
             _run(h, plan(), envelope)
             runs.append(h.delivered())
+
         first, again = runs
         _require(len(first) == EVENTS, f"{envelope}: {len(first)} messages for {EVENTS} events")
         events = flat(first)
-        _require(events == ref, f"{envelope}: the bodies are not the runtime's flat events")
+        _require(
+            same_stream(h, events, ref), f"{envelope}: the bodies are not the runtime's flat events"
+        )
         for (wire, _), e in zip(first, events, strict=True):
             _require(
                 wire == f"{e[FIELD_TABLE]}/{e[FIELD_SEQ]}",
@@ -172,7 +190,7 @@ def check_at_least_once(
     _require(report.retries >= 1, "the injected failures never reached the runtime")
     _require(report.complete and report.events == EVENTS, "the run did not complete")
     _require(
-        first_per_key(flat(h.delivered())) == ref,
+        same_stream(h, first_per_key(flat(h.delivered())), ref),
         "after retries, the first event of each key is not the uninterrupted stream",
     )
     # a failure that outlasts the retries stops the run with an error, delivering nothing silently
@@ -203,7 +221,10 @@ def check_backpressure(
     h.congest(5)
     report = _run(h, plan(), retries=0)
     _require(report.retries == 0, "a busy destination was reported as a failure")
-    _require(first_per_key(flat(h.delivered())) == ref, "a busy destination changed the stream")
+    _require(
+        same_stream(h, first_per_key(flat(h.delivered())), ref),
+        "a busy destination changed the stream",
+    )
 
 
 def check_checkpoint(
@@ -228,7 +249,9 @@ def check_checkpoint(
     _run(h, plan(), checkpoint_path=str(ck), checkpoint_every=BATCH, fresh=True)
     doc = json.loads(ck.read_text())
     _require(doc["complete"] and doc["offset"] == EVENTS, "no checkpoint at the end of the run")
-    _require(flat(h.delivered()) == ref, "a clean run is not the uninterrupted stream")
+    _require(
+        same_stream(h, flat(h.delivered()), ref), "a clean run is not the uninterrupted stream"
+    )
     # a crash: the checkpoint is behind what was delivered, the restart sends repeats, and a
     # consumer that keeps the first event of each key sees the uninterrupted stream
     h = new_harness()
@@ -240,7 +263,9 @@ def check_checkpoint(
     _run(h, plan(), resuming=True, checkpoint_path=str(ck), checkpoint_every=BATCH)
     events = flat(h.delivered())
     _require(len(events) > EVENTS, "a stale checkpoint should have produced repeats")
-    _require(first_per_key(events) == ref, "restart + dedupe on the key is not the stream")
+    _require(
+        same_stream(h, first_per_key(events), ref), "restart + dedupe on the key is not the stream"
+    )
 
 
 def check_contract(

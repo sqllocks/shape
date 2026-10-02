@@ -65,7 +65,9 @@ def test_the_plugin_registers_as_an_emitter():
 
 
 def _events():
-    a = with_event_fields(pa.RecordBatch.from_pydict({"x": [1, 2, 3], "s": ["a", "b", None]}), "a", 0)
+    a = with_event_fields(
+        pa.RecordBatch.from_pydict({"x": [1, 2, 3], "s": ["a", "b", None]}), "a", 0
+    )
     b = with_event_fields(pa.RecordBatch.from_pydict({"y": [1.5, 2.5]}), "b", 10)
     return a, b
 
@@ -76,9 +78,10 @@ def test_each_shape_table_gets_a_kql_table_and_a_mapping_before_its_first_events
     e = h.make()
     assert e.emit(h.uri, [a, b, a]) == 8
     cmds = [c for _, c in h.kusto.commands]
-    assert len(cmds) == 4  # table and mapping for `a` and for `b`, once each
+    assert len(cmds) == 6  # table, mapping and policy for `a` and for `b`, once each
     assert cmds[0].startswith(".create-merge table ['a'] (['x']:long, ['s']:string,")
     assert "ingestion json mapping 'shape_json'" in cmds[1]
+    assert cmds[2] == ".alter table ['a'] policy streamingingestion enable"
     assert [t for t, _ in h.kusto.requests] == ["a", "b", "a"]
     assert all(d == "db1" for d, _ in h.kusto.commands)
 
@@ -117,7 +120,7 @@ def test_a_malformed_request_and_an_unauthorised_one_are_not_retried():
     for status, match in ((400, "refused"), (401, "not authorised"), (403, "not authorised")):
         calls = []
 
-        def transport(method, url, headers, body, timeout, status=status):
+        def transport(method, url, headers, body, timeout, status=status, calls=calls):
             calls.append(url)
             return status, {}, b"nope"
 
@@ -150,7 +153,16 @@ def test_dedupe_query_collapses_repeats_on_the_key():
 
 def test_type_mapping_and_commands_quote_names():
     schema = pa.schema(
-        [("a b", pa.int32()), ("c'd", pa.int64()), ("t", pa.timestamp("us", "UTC")), ("d", pa.decimal128(10, 2)), ("l", pa.list_(pa.int8())), ("f", pa.float32()), ("z", pa.bool_()), ("s", pa.dictionary(pa.int8(), pa.string()))]
+        [
+            ("a b", pa.int32()),
+            ("c'd", pa.int64()),
+            ("t", pa.timestamp("us", "UTC")),
+            ("d", pa.decimal128(10, 2)),
+            ("l", pa.list_(pa.int8())),
+            ("f", pa.float32()),
+            ("z", pa.bool_()),
+            ("s", pa.dictionary(pa.int8(), pa.string())),
+        ]
     )
     assert [kusto_type(f.type) for f in schema] == [
         "int", "long", "datetime", "decimal", "dynamic", "real", "bool", "string",
@@ -158,7 +170,12 @@ def test_type_mapping_and_commands_quote_names():
     cmd = create_table_command("t'x", schema)
     assert cmd.startswith(".create-merge table ['t\\'x'] (['a b']:int, ['c\\'d']:long,")
     mapping = create_mapping_command("t", schema)
-    assert json.loads(mapping.split("'shape_json' '", 1)[1].rsplit("'", 1)[0].replace("\\'", "'"))[1]["path"] == '$["c\'d"]'
+    assert (
+        json.loads(mapping.split("'shape_json' '", 1)[1].rsplit("'", 1)[0].replace("\\'", "'"))[1][
+            "path"
+        ]
+        == '$["c\'d"]'
+    )
 
 
 @pytest.mark.parametrize(
@@ -175,3 +192,25 @@ def test_options_are_checked():
         h.make().emit(h.uri, [], bogus=1)
     with pytest.raises(ShapeError, match="flat events"):
         h.make().emit(h.uri, [], envelope="cloudevents")
+
+
+def test_a_refused_streaming_policy_is_not_an_error_but_a_refused_table_is():
+    a, _ = _events()
+    seen = []
+
+    def transport(method, url, headers, body, timeout):
+        if url.endswith("/v1/rest/mgmt"):
+            csl = json.loads(body)["csl"]
+            seen.append(csl.split()[0] + " " + csl.split()[1])
+            if "streamingingestion" in csl:
+                return 403, {}, b"no policy rights"
+        return 200, {}, b"{}"
+
+    assert EventhouseEmitter(transport).emit("eventhouse://h/db?tls=false", [a]) == 3
+    assert seen == [".create-merge table", ".create-or-alter table", ".alter table"]
+
+    def refuse_table(method, url, headers, body, timeout):
+        return 403, {}, b"no rights"
+
+    with pytest.raises(ShapeError, match="not authorised"):
+        EventhouseEmitter(refuse_table).emit("eventhouse://h/db?tls=false", [a])

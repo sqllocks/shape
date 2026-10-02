@@ -25,7 +25,8 @@ Sign-in: ``token`` (a bearer token, or a function returning one), else the envir
 
 Options of :meth:`EventhouseEmitter.emit`: ``envelope`` (only ``"flat"``; a KQL table holds the
 flat event), ``token``, ``max_request_bytes`` (default 3,000,000; the service limit is 4 MB),
-``busy_retries`` (default 6), ``timeout`` (seconds per request, default 100), ``resuming`` (ignored).
+``busy_retries`` (default 6), ``timeout`` (seconds per request, default 100), ``resuming``
+(ignored).
 """
 
 from __future__ import annotations
@@ -116,6 +117,10 @@ def create_mapping_command(table: str, schema: pa.Schema) -> str:
         f".create-or-alter table {_q(table)} ingestion json mapping '{mapping_name(table)}' "
         f"'{body}'"
     )
+
+
+def streaming_policy_command(table: str) -> str:
+    return f".alter table {_q(table)} policy streamingingestion enable"
 
 
 def dedupe_query(table: str) -> str:
@@ -211,12 +216,19 @@ class EventhouseEmitter:
         mark = (target.base, target.database, table, schema.to_string())
         if mark in self._prepared:
             return
-        for command in (
-            create_table_command(table, schema),
-            create_mapping_command(table, schema),
+        for command, required in (
+            (create_table_command(table, schema), True),
+            (create_mapping_command(table, schema), True),
+            # Streaming ingestion is on by default in a Fabric Eventhouse; where it is not, this
+            # enables it. A principal that may ingest but not alter policies is not an error.
+            (streaming_policy_command(table), False),
         ):
             body = json.dumps({"db": target.database, "csl": command}).encode("utf-8")
-            self._call("POST", f"{target.base}/v1/rest/mgmt", headers, body, timeout, busy)
+            try:
+                self._call("POST", f"{target.base}/v1/rest/mgmt", headers, body, timeout, busy)
+            except ShapeError:
+                if required:
+                    raise
         self._prepared.add(mark)
 
     # ------------------------------------------------------------------ emit

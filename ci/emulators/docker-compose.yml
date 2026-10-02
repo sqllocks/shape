@@ -10,6 +10,9 @@
 #   Kafka                    localhost:9092
 #   Event Hubs emulator      Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
 #                            (AMQP 5672, management 5300; hub `eh1` from Config.json)
+#   Kusto emulator           http://localhost:8080 (database NetDefaultDB, no sign-in; amd64;
+#                            the Fabric Eventhouse emitter's streaming ingestion; no healthcheck:
+#                            the tests wait for it)
 #   SQL Server 2022          localhost,1433  user sa, password from MSSQL_SA_PASSWORD below
 #                            (tests need `msodbcsql18`, installed on the runner)
 name: shape-emulators
@@ -56,6 +59,14 @@ services:
     environment:
       BLOB_SERVER: azurite
       METADATA_SERVER: azurite
+      ACCEPT_EULA: "Y"
+
+  kusto:
+    # Kusto emulator (kustainer): streaming ingestion and the query API on 8080. amd64 only.
+    image: mcr.microsoft.com/azuredataexplorer/kustainer-linux:latest
+    platform: linux/amd64
+    ports: ["8080:8080"]
+    environment:
       ACCEPT_EULA: "Y"
 
   mssql:

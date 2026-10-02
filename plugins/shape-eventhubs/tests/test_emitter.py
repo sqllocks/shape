@@ -51,7 +51,9 @@ def test_messages_carry_the_key_properties_and_content_type():
     assert all(b.partition_key == "order_line" for b in h.hub.batches)
     h2 = EmitterHarness()
     h2.make().emit(h2.uri, [batch], envelope="cloudevents", partition_key="none")
-    assert all(e.content_type == "application/cloudevents+json" for b in h2.hub.batches for e in b.events)
+    assert all(
+        e.content_type == "application/cloudevents+json" for b in h2.hub.batches for e in b.events
+    )
     assert all(b.partition_key is None for b in h2.hub.batches)
 
 
@@ -96,7 +98,9 @@ def test_close_closes_the_clients():
     assert [c.closed for c in h.hub.clients] == [True]
 
 
-@pytest.mark.parametrize("uri", ["eventhubs:///h", "eventhubs://ns", "eventhubs://ns/a/b", "kafka://ns/h"])
+@pytest.mark.parametrize(
+    "uri", ["eventhubs:///h", "eventhubs://ns", "eventhubs://ns/a/b", "kafka://ns/h"]
+)
 def test_bad_uris_are_shape_errors(uri):
     with pytest.raises(ShapeError):
         parse_uri(uri)

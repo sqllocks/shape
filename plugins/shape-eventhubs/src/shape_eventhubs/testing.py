@@ -236,3 +236,145 @@ class EmitterHarness:
 
     def congestion_hits(self) -> int:
         return self.hub.hits
+
+
+# ---------------------------------------------------------------- a real hub (emulator or live)
+
+
+def hub_ends(connection_string: str, hub: str, group: str) -> dict[str, int]:
+    """``{partition: next sequence number}``: where each partition of the hub ends now."""
+    from azure.eventhub import EventHubConsumerClient
+
+    client = EventHubConsumerClient.from_connection_string(
+        connection_string, consumer_group=group, eventhub_name=hub
+    )
+    try:
+        out = {}
+        for p in client.get_partition_ids():
+            props = client.get_partition_properties(p)
+            out[p] = 0 if props["is_empty"] else props["last_enqueued_sequence_number"] + 1
+        return out
+    finally:
+        client.close()
+
+
+def read_raw(
+    connection_string: str,
+    hub: str,
+    group: str,
+    start: Mapping[str, int],
+    end: Mapping[str, int],
+    *,
+    timeout: float = 120.0,
+) -> list[tuple[dict[str, Any], bytes]]:
+    """The ``(properties, body)`` of every event between ``start`` and ``end`` (sequence numbers
+    per partition), partition by partition, in sequence order."""
+    from azure.eventhub import EventHubConsumerClient
+
+    want = {p: end[p] - start.get(p, 0) for p in end if end[p] > start.get(p, 0)}
+    got: dict[str, list[tuple[dict[str, Any], bytes]]] = {p: [] for p in want}
+    done = {p: threading.Event() for p in want}
+    client = EventHubConsumerClient.from_connection_string(
+        connection_string, consumer_group=group, eventhub_name=hub
+    )
+
+    def on_batch(ctx: Any, events: Any) -> None:
+        p = ctx.partition_id
+        if p not in got:
+            return
+        for e in events:
+            props = {
+                (k.decode() if isinstance(k, bytes) else k): v
+                for k, v in (e.properties or {}).items()
+            }
+            got[p].append((props, b"".join(e.body)))
+        if len(got[p]) >= want[p]:
+            done[p].set()
+
+    threads = [
+        threading.Thread(
+            target=client.receive_batch,
+            kwargs={
+                "on_event_batch": on_batch,
+                "partition_id": p,
+                "starting_position": start.get(p, 0),
+                "starting_position_inclusive": True,
+                "max_batch_size": 500,
+                "max_wait_time": 2,
+            },
+            daemon=True,
+        )
+        for p in want
+    ]
+    for t in threads:
+        t.start()
+    deadline = time.monotonic() + timeout
+    try:
+        for ev in done.values():
+            ev.wait(max(0.0, deadline - time.monotonic()))
+    finally:
+        client.close()
+        for t in threads:
+            t.join(10)
+    return [item for p in sorted(got) for item in got[p][: want[p]]]
+
+
+class HubHarness:
+    """The emitter contract's harness over a real hub (the Event Hubs emulator, or a live hub).
+
+    The hub keeps what earlier harnesses sent, so ``delivered`` reads only from where the hub
+    ended when this harness was made. ``inject_failures`` raises ``ConnectionError`` before the
+    next sends (a real service cannot be told to fail); the emitter's own handling of a failing
+    service is covered by the contract tests over the in-memory hub.
+    """
+
+    def __init__(
+        self,
+        emitter_factory: Callable[[], Any],
+        uri: str,
+        connection_string: str,
+        hub: str,
+        group: str = "$Default",
+    ) -> None:
+        self.factory = emitter_factory
+        self.uri = uri
+        self.connection_string = connection_string
+        self.hub = hub
+        self.group = group
+        self.start = hub_ends(connection_string, hub, group)
+        self.failures = 0
+
+    def make(self) -> Any:
+        harness = self
+        inner = self.factory()
+
+        class Connected:
+            def emit(self, uri: str, batches: Any, **options: Any) -> int:
+                if harness.failures > 0:
+                    harness.failures -= 1
+                    raise ConnectionError("injected transient failure")
+                return int(
+                    inner.emit(uri, batches, connection_string=harness.connection_string, **options)
+                )
+
+            def flush(self) -> None:
+                inner.flush()
+
+            def close(self) -> None:
+                inner.close()
+
+        return Connected()
+
+    def delivered(self) -> list[tuple[str, bytes]]:
+        end = hub_ends(self.connection_string, self.hub, self.group)
+        raw = read_raw(self.connection_string, self.hub, self.group, self.start, end)
+        return [(str(p["shape_key"]), body) for p, body in raw]
+
+    def inject_failures(self, n: int) -> None:
+        self.failures = n
+
+    def congest(self, n: int) -> None:
+        return None
+
+    def congestion_hits(self) -> int:
+        return 0
