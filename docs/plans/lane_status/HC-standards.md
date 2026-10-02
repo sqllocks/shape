@@ -64,4 +64,20 @@ default NCPDP output needs an owner licensing decision** (NCPDP membership or wr
 
 ## Checks run (this session, on the merged tree)
 
-See the final section appended below after the last run.
+Run on the merged tree (after merging `origin/build/main-plan`), Python 3.11, with the sibling
+plugins installed as CI does:
+
+- `ruff check` and `ruff format --check` (src tests plugins benchmarks/vs_spindle): clean.
+- `mypy` (project config, 347 files): clean. `mypy --strict` over the plugin source (27 files): clean.
+- `vulture src/shape scripts/vulture_whitelist.py --min-confidence 80`: clean. `lint-imports`: 1 kept, 0 broken.
+- `python scripts/check_user_facing.py`: clean; `--wheel` on the built plugin wheel: clean.
+- `bandit -q -r src -ll`: no findings (only existing nosec warnings); on the plugin source: no findings.
+- `scripts/check_plugin_skeletons.py`: OK; `python -m shape.plugins.kit sqllocks-shape-healthcare-standards`: 9 plugins conform.
+- START (`shape --version`, median of 10): 62 ms (limit 300 ms).
+- Plugin tests: 139 passed, including the official HL7 validator test (`SHAPE_FHIR_VALIDATOR_JAR` set, Java 21).
+- Suites `pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`: with
+  `SHAPE_KERNEL=rust` and with `SHAPE_KERNEL=python`, 5194 passed, 2 failed each. Both failures
+  were `tests/plugins/test_plugin_kit_install.py` (it hard-codes the six T-09 distributions);
+  that test now lists the seventh (`healthcare-standards`), and the file passes (7 passed). The
+  full suites were not re-run after that one-constant change.
+- Not run here: the heavy-marked suites, `tests/demo/fabric`, emulator and live tests.
