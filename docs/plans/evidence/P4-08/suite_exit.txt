@@ -1,0 +1,6 @@
+rust exit 0
+python exit 1
+domains exit 0
+learn verify exit 0
+fixture check exit 0
+done

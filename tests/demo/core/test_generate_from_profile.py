@@ -1,4 +1,4 @@
-"""``shape.generate`` on a profile generates data (P4-08; it raised ``NotImplementedError`` before)."""
+"""``shape.generate`` on a profile generates data (P4-08; before it raised NotImplementedError)."""
 
 import pandas as pd
 import pytest
