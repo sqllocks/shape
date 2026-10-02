@@ -1,0 +1,20 @@
+== tutorial_custom_pack.yaml (pack)
+== notebook_custom_pack.yaml (pack)
+== retail_basic.gsl.yaml (spec)
+== retail_chaos.gsl.yaml (spec)
+== retail_hybrid.gsl.yaml (spec)
+flagged: tutorial_custom_pack.yaml seed 42: Shape manifest lacks the baseline key lakehouse_id
+flagged: tutorial_custom_pack.yaml seed 42: manifest lakehouse_id baseline '' vs Shape None
+flagged: tutorial_custom_pack.yaml: T-21 (b-e) order.customer_id: failed ['ks']
+flagged: tutorial_custom_pack.yaml: T-21 (b-e) order.store_id: failed ['ks']
+flagged: tutorial_custom_pack.yaml: T-21 (b-e) order.shipping_address_id: failed ['ks']
+flagged: tutorial_custom_pack.yaml: T-21 (b-e) order.promotion_id: failed ['null_rate', 'ks']
+flagged: tutorial_custom_pack.yaml: T-21 (b-e) order.order_total: failed ['ks']
+flagged: tutorial_custom_pack.yaml: T-21 (f) FK integrity order.customer_id->customer.customer_id: 0.667000
+flagged: notebook_custom_pack.yaml seed 42: Shape manifest lacks the baseline key lakehouse_id
+flagged: notebook_custom_pack.yaml seed 42: manifest lakehouse_id baseline '' vs Shape None
+flagged: notebook_custom_pack.yaml: T-21 (b-e) order.customer_id: failed ['ks']
+flagged: notebook_custom_pack.yaml: T-21 (b-e) order.store_id: failed ['ks']
+35 problems flagged; by clause: {'(a)': False, '(b-e)': True, '(f)': True, 'manifest key': True}
+NEGATIVE CONTROL OK: the harness fails on tampered output
+rc=0

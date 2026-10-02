@@ -554,6 +554,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.incremental import add_arguments as add_incremental_arguments
 
     add_incremental_arguments(sub)
+    from shape.cli.pack import add_arguments as add_pack_arguments
+
+    add_pack_arguments(sub)
     from shape.cli.transform import add_arguments as add_transform_arguments
 
     add_transform_arguments(sub)
@@ -803,6 +806,10 @@ def _dispatch(argv):
         from shape.cli.incremental import run as run_incremental
 
         return _run(run_incremental, a)
+    if a.cmd == "pack":
+        from shape.cli.pack import run as run_pack
+
+        return _run(run_pack, a)
     if a.cmd == "learn":
         from shape.cli.learn import run as run_learn
 
