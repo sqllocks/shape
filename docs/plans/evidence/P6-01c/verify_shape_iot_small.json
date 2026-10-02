@@ -280,17 +280,17 @@
        "impl": 0.05
       }
      ],
-     "vocab_overlap": 0.0,
-     "vocab_source": "spindle_output",
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
      "tvd": 1.0,
      "tvd_baseline": 1.0,
      "tvd_tol": 2.3936536824085963,
      "checks": {
       "null_rate": true,
       "tvd": true,
-      "vocab": false
+      "vocab": true
      },
-     "equivalent": false,
+     "equivalent": true,
      "arrow_type_match": true
     },
     "category": {
@@ -335,7 +335,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.24999999999999994,
      "tvd_baseline": 0.35,
      "tvd_tol": 1.1968268412042982,
@@ -389,7 +389,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.2,
      "tvd_baseline": 0.39999999999999997,
      "tvd_tol": 1.1968268412042982,
@@ -629,7 +629,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.13999999999999999,
      "tvd_baseline": 0.10000000000000002,
      "tvd_tol": 0.5352372348458314,
@@ -1461,7 +1461,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.032,
      "tvd_baseline": 0.05,
      "tvd_tol": 0.21409489393833253,
@@ -1706,7 +1706,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.039200000000000006,
      "tvd_baseline": 0.05839999999999998,
      "tvd_tol": 0.19149229459268768,
@@ -1775,7 +1775,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.051199999999999996,
      "tvd_baseline": 0.05600000000000001,
      "tvd_tol": 0.19149229459268768,
@@ -2112,7 +2112,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.0018399999999999979,
      "tvd_baseline": 0.0030000000000000044,
      "tvd_tol": 0.026221162334209895,
@@ -2307,7 +2307,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.032000000000000015,
      "tvd_baseline": 0.10400000000000001,
      "tvd_tol": 0.3385137501286538,
@@ -2356,7 +2356,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.055999999999999994,
      "tvd_baseline": 0.044000000000000004,
      "tvd_tol": 0.30277590264241916,
@@ -2436,7 +2436,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.04799999999999996,
      "tvd_baseline": 0.03200000000000003,
      "tvd_tol": 0.2140948939383325,
@@ -2661,7 +2661,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.06399999999999999,
      "tvd_baseline": 0.061333333333333295,
      "tvd_tol": 0.17480774889473266,
@@ -2910,17 +2910,17 @@
        "impl": 0.005940594059405941
       }
      ],
-     "vocab_overlap": 0.25544554455445545,
-     "vocab_source": "spindle_output",
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.7825842158683955,
      "tvd_baseline": 0.8143133462282399,
      "tvd_tol": 1.8499913232899545,
      "checks": {
       "null_rate": true,
       "tvd": true,
-      "vocab": false
+      "vocab": true
      },
-     "equivalent": false,
+     "equivalent": true,
      "arrow_type_match": true
     }
    },
@@ -3100,7 +3100,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.021333333333333357,
      "tvd_baseline": 0.038000000000000034,
      "tvd_tol": 0.1381976597885342,
@@ -3190,7 +3190,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.003333333333333348,
      "tvd_baseline": 0.029333333333333315,
      "tvd_tol": 0.12360774464742066,
@@ -3683,12 +3683,9 @@
  },
  "summary": {
   "columns_total": 51,
-  "columns_equivalent": 49,
-  "flagged": [
-   "(b-e) device_type.manufacturer: failed ['vocab']",
-   "(b-e) maintenance_log.notes: failed ['vocab']"
-  ],
-  "passed": false,
-  "seconds": 13.69713568687439
+  "columns_equivalent": 51,
+  "flagged": [],
+  "passed": true,
+  "seconds": 4.626044750213623
  }
 }

@@ -218,7 +218,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.35,
      "tvd_baseline": 0.35000000000000003,
      "tvd_tol": 1.0704744696916628,
@@ -272,7 +272,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.25,
      "tvd_baseline": 0.25,
      "tvd_tol": 1.1968268412042982,
@@ -352,7 +352,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.15000000000000002,
      "tvd_baseline": 0.15000000000000002,
      "tvd_tol": 0.7569397566060481,
@@ -1054,7 +1054,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.018000000000000016,
      "tvd_baseline": 0.068,
      "tvd_tol": 0.2393653682408596,
@@ -1134,7 +1134,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.0020000000000000018,
      "tvd_baseline": 0.02200000000000002,
      "tvd_tol": 0.15138795132120958,
@@ -1550,7 +1550,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.010999999999999989,
      "tvd_baseline": 0.01639999999999997,
      "tvd_tol": 0.0756939756606048,
@@ -1594,7 +1594,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.008599999999999969,
      "tvd_baseline": 0.013000000000000012,
      "tvd_tol": 0.058632301428350395,
@@ -1981,7 +1981,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.0052666666666666695,
      "tvd_baseline": 0.005466666666666613,
      "tvd_tol": 0.03385137501286537,
@@ -2390,7 +2390,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.008888888888888866,
      "tvd_baseline": 0.018444444444444454,
      "tvd_tol": 0.07136496464611086,
@@ -2444,7 +2444,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.009777777777777809,
      "tvd_baseline": 0.012222222222222218,
      "tvd_tol": 0.07978845608028654,
@@ -2493,7 +2493,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.011333333333333334,
      "tvd_baseline": 0.023333333333333345,
      "tvd_tol": 0.07136496464611086,
@@ -2773,7 +2773,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.12500000000000003,
      "tvd_baseline": 0.2,
      "tvd_tol": 0.6555290583552474,
@@ -2858,7 +2858,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.01249999999999997,
      "tvd_baseline": 0.050000000000000024,
      "tvd_tol": 0.46352904242782744,
@@ -3175,7 +3175,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.09375000000000003,
      "tvd_baseline": 0.090625,
      "tvd_tol": 0.3277645291776237,
@@ -3219,7 +3219,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.012499999999999956,
      "tvd_baseline": 0.05624999999999995,
      "tvd_tol": 0.23176452121391372,
@@ -3977,6 +3977,6 @@
    "(h) fidelity production_line: 92.47 < floor 94.01"
   ],
   "passed": false,
-  "seconds": 18.373809576034546
+  "seconds": 9.656828165054321
  }
 }

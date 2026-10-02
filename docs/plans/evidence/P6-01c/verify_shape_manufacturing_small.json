@@ -218,7 +218,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.35,
      "tvd_baseline": 0.35000000000000003,
      "tvd_tol": 1.0704744696916628,
@@ -272,7 +272,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.25,
      "tvd_baseline": 0.25,
      "tvd_tol": 1.1968268412042982,
@@ -352,7 +352,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.15000000000000002,
      "tvd_baseline": 0.15000000000000002,
      "tvd_tol": 0.7569397566060481,
@@ -1054,7 +1054,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.018000000000000016,
      "tvd_baseline": 0.068,
      "tvd_tol": 0.2393653682408596,
@@ -1134,7 +1134,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.0020000000000000018,
      "tvd_baseline": 0.02200000000000002,
      "tvd_tol": 0.15138795132120958,
@@ -1550,7 +1550,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.054000000000000006,
      "tvd_baseline": 0.06200000000000001,
      "tvd_tol": 0.2393653682408596,
@@ -1594,7 +1594,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.01200000000000001,
      "tvd_baseline": 0.03800000000000002,
      "tvd_tol": 0.185411616971131,
@@ -1986,7 +1986,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.004666666666666687,
      "tvd_baseline": 0.012666666666666687,
      "tvd_tol": 0.10704744696916627,
@@ -2400,7 +2400,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.026666666666666637,
      "tvd_baseline": 0.04444444444444441,
      "tvd_tol": 0.22567583341910252,
@@ -2454,7 +2454,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.048888888888888885,
      "tvd_baseline": 0.06444444444444443,
      "tvd_tol": 0.25231325220201606,
@@ -2503,7 +2503,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.05777777777777776,
      "tvd_baseline": 0.04444444444444444,
      "tvd_tol": 0.22567583341910252,
@@ -2783,7 +2783,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.12500000000000003,
      "tvd_baseline": 0.2,
      "tvd_tol": 0.6555290583552474,
@@ -2868,7 +2868,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.01249999999999997,
      "tvd_baseline": 0.050000000000000024,
      "tvd_tol": 0.46352904242782744,
@@ -3185,7 +3185,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.09375000000000003,
      "tvd_baseline": 0.090625,
      "tvd_tol": 0.3277645291776237,
@@ -3229,7 +3229,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.012499999999999956,
      "tvd_baseline": 0.05624999999999995,
      "tvd_tol": 0.23176452121391372,
@@ -3988,6 +3988,6 @@
    "(h) fidelity work_order: 96.33 < floor 97.29"
   ],
   "passed": false,
-  "seconds": 11.189556121826172
+  "seconds": 2.668421745300293
  }
 }

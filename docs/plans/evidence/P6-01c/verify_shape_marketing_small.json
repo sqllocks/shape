@@ -214,17 +214,17 @@
        "impl": 0.13333333333333333
       }
      ],
-     "vocab_overlap": 0.6666666666666666,
-     "vocab_source": "spindle_output",
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.3333333333333333,
      "tvd_baseline": 0.4666666666666667,
      "tvd_tol": 1.2360774464742066,
      "checks": {
       "null_rate": true,
       "tvd": true,
-      "vocab": false
+      "vocab": true
      },
-     "equivalent": false,
+     "equivalent": true,
      "arrow_type_match": true
     },
     "avg_conversion_rate": {
@@ -495,7 +495,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.27999999999999997,
      "tvd_baseline": 0.28,
      "tvd_tol": 1.172646028567008,
@@ -847,7 +847,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.07999999999999999,
      "tvd_baseline": 0.135,
      "tvd_tol": 0.3385137501286538,
@@ -1113,7 +1113,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.24999999999999997,
      "tvd_baseline": 0.35,
      "tvd_tol": 1.0704744696916628,
@@ -1865,15 +1865,15 @@
        "impl": 0.0016
       }
      ],
-     "vocab_overlap": 0.9114,
-     "vocab_source": "spindle_output",
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
      "distinct_ratio_tol": 0.02,
      "checks": {
       "null_rate": true,
-      "vocab": false,
+      "vocab": true,
       "distinct_ratio": true
      },
-     "equivalent": false,
+     "equivalent": true,
      "arrow_type_match": true
     },
     "created_date": {
@@ -2176,7 +2176,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.036000000000000004,
      "tvd_baseline": 0.026499999999999996,
      "tvd_tol": 0.1196826841204298,
@@ -2497,7 +2497,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.042,
      "tvd_baseline": 0.042000000000000016,
      "tvd_tol": 0.185411616971131,
@@ -2882,7 +2882,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.0015999999999999626,
      "tvd_baseline": 0.007899999999999963,
      "tvd_tol": 0.03385137501286538,
@@ -2921,7 +2921,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.008900000000000012,
      "tvd_baseline": 0.0030999999999999986,
      "tvd_tol": 0.03385137501286538,
@@ -2960,7 +2960,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.004600000000000024,
      "tvd_baseline": 0.004800000000000014,
      "tvd_tol": 0.03385137501286538,
@@ -3247,13 +3247,16 @@
      ],
      "vocab_overlap": 0.74136,
      "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "'https://'+URI_DOMAINS+'/'+URI_PATHS",
      "distinct_ratio_tol": 0.02,
      "checks": {
       "null_rate": true,
-      "vocab": false,
+      "vocab": true,
       "distinct_ratio": true
      },
-     "equivalent": false,
+     "equivalent": true,
      "arrow_type_match": true
     },
     "referrer": {
@@ -3298,7 +3301,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.007440000000000009,
      "tvd_baseline": 0.0071199999999999805,
      "tvd_tol": 0.03385137501286537,
@@ -3646,7 +3649,7 @@
       }
      ],
      "vocab_overlap": 1.0,
-     "vocab_source": "spindle_output",
+     "vocab_source": "spindle_output+pool",
      "tvd": 0.060000000000000026,
      "tvd_baseline": 0.08500000000000003,
      "tvd_tol": 0.195441004761168,
@@ -4197,14 +4200,11 @@
  },
  "summary": {
   "columns_total": 60,
-  "columns_equivalent": 57,
+  "columns_equivalent": 60,
   "flagged": [
-   "(b-e) campaign_type.channel: failed ['vocab']",
-   "(b-e) contact.company: failed ['vocab']",
-   "(b-e) web_visit.page_url: failed ['vocab']",
    "(h) fidelity lead: 98.06 < floor 98.40"
   ],
   "passed": false,
-  "seconds": 26.223209619522095
+  "seconds": 18.35988736152649
  }
 }
