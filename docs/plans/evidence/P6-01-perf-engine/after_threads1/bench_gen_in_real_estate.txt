@@ -8,3 +8,11 @@
 [medium] shape            run 3: total 0.09s  gen 0.09s  write 0.00s  rss 140MB  load 1.27
 [medium] spindle          run 4: total 0.30s  gen 0.23s  write 0.08s  rss 281MB  load 1.27
 [medium] shape            run 4: total 0.09s  gen 0.09s  write 0.00s  rss 139MB  load 1.27
+[medium] spindle          run 5: total 0.33s  gen 0.24s  write 0.09s  rss 281MB  load 1.27
+[medium] shape            run 5: total 0.09s  gen 0.09s  write 0.00s  rss 139MB  load 1.27
+
+== real_estate medium: median of 5 fresh-process runs, 4 cores
+tool                     rows  total s   gen s  write s  rows/s total   rows/s gen  peak RSS MB
+spindle               140,650     0.32    0.23     0.08       443,218      605,427          281
+shape                 140,650     0.09    0.09     0.00     1,522,959    1,522,959          139
+speedup (shape vs spindle): total 3.44x
