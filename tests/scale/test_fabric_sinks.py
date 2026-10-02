@@ -75,9 +75,7 @@ def test_lakehouse_sink_on_a_local_path_writes_one_file_per_table(tmp_path):
 @pytest.mark.parametrize("fmt", ["csv", "tsv", "jsonl"])
 def test_lakehouse_sink_formats(tmp_path, fmt):
     run([LakehouseSink(str(tmp_path / "lh"), fmt)])
-    assert sorted(p.name for p in (tmp_path / "lh").iterdir()) == sorted(
-        f"{t}.{fmt}" for t in ROWS
-    )
+    assert sorted(p.name for p in (tmp_path / "lh").iterdir()) == sorted(f"{t}.{fmt}" for t in ROWS)
 
 
 def test_lakehouse_sink_on_onelake_uses_the_fabric_writer_with_the_format(writers):
@@ -121,7 +119,9 @@ def test_sql_database_sink_passes_mode_and_batch_size(writers):
 
 
 def test_kql_sink_passes_database_prefix_and_batch_size(writers):
-    sink = KqlSink("https://eh.z0.kusto.fabric.microsoft.com", "db1", table_prefix="gen_", batch_size=500)
+    sink = KqlSink(
+        "https://eh.z0.kusto.fabric.microsoft.com", "db1", table_prefix="gen_", batch_size=500
+    )
     run([sink])
     w = writers["eventhouse"]
     check_tables(w)

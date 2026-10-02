@@ -25,16 +25,17 @@ def add_arguments(sub: Any) -> None:
         description="The jobs of `shape generate --scale-mode` runs: list them, ask a job's "
         "status, cancel it, or resume a failed or cancelled one.",
     )
-    jb.add_argument("--jobs-dir", metavar="DIR", help="the job store (default ~/.shape/jobs)")
-    jb.add_argument("--json", action="store_true", help="print JSON")
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument("--jobs-dir", metavar="DIR", help="the job store (default ~/.shape/jobs)")
+    common.add_argument("--json", action="store_true", help="print JSON")
     js = jb.add_subparsers(dest="jobs_cmd", required=True)
-    js.add_parser("list", help="list the jobs")
+    js.add_parser("list", help="list the jobs", parents=[common])
     for name, text in (
         ("status", "show a job's status (asks Fabric for a fabric_spark job)"),
         ("cancel", "cancel a running job"),
         ("resume", "resume a failed or cancelled job"),
     ):
-        p = js.add_parser(name, help=text)
+        p = js.add_parser(name, help=text, parents=[common])
         p.add_argument("job_id", metavar="JOB")
     rs = js.choices["resume"]
     rs.add_argument(

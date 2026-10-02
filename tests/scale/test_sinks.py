@@ -133,7 +133,11 @@ def test_parquet_resume_skips_complete_parts_and_rewrites_bad_ones(tmp_path):
     (tmp_path / "t" / "part-000001.parquet").write_bytes(b"torn")  # a part cut short
     again = run(True)
     assert (again.parts_written, again.parts_skipped) == (1, 2)
-    ids = [i for p in sorted((tmp_path / "t").glob("part-*.parquet")) for i in pq.read_table(p)["id"].to_pylist()]
+    ids = [
+        i
+        for p in sorted((tmp_path / "t").glob("part-*.parquet"))
+        for i in pq.read_table(p)["id"].to_pylist()
+    ]
     assert ids == list(range(120))
 
 

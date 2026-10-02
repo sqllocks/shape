@@ -86,7 +86,9 @@ def test_parquet_parts_are_chunk_sized(tmp_path):
     sink = ParquetSink(tmp_path, chunk_rows=1000)
     run(plain_schema(ROWS), "local_mp", [sink], chunk_size=1000)
     sizes = {
-        t: [pq.ParquetFile(p).metadata.num_rows for p in sorted(glob.glob(f"{tmp_path}/{t}/part-*"))]
+        t: [
+            pq.ParquetFile(p).metadata.num_rows for p in sorted(glob.glob(f"{tmp_path}/{t}/part-*"))
+        ]
         for t in ROWS
     }
     assert sizes == {"customer": [40], "order": [1000, 200], "order_line": [1000, 1000, 1000, 100]}
@@ -183,7 +185,9 @@ def test_processes_resume_skips_finished_parts(tmp_path):
 
 def test_processes_fall_back_to_threads_with_a_post_pass(tmp_path, caplog):
     schema = computed_schema(ROWS)
-    _, stats = run(schema, "local_mp", [ParquetSink(tmp_path, chunk_rows=1000)], chunk_size=1000, processes=2)
+    _, stats = run(
+        schema, "local_mp", [ParquetSink(tmp_path, chunk_rows=1000)], chunk_size=1000, processes=2
+    )
     assert stats.processes == 0 and stats.tables == ROWS
     assert "post-pass" in caplog.text
 
@@ -193,9 +197,7 @@ def test_processes_need_the_parquet_sink_alone(tmp_path):
     with pytest.raises(ValueError, match="parquet sink alone"):
         ScaleRouter(engine, [MemorySink()], processes=2).run()
     with pytest.raises(ValueError, match="parquet sink alone"):
-        ScaleRouter(
-            engine, [ParquetSink(tmp_path), MemorySink()], processes=2
-        ).run()
+        ScaleRouter(engine, [ParquetSink(tmp_path), MemorySink()], processes=2).run()
 
 
 # ---- the chunked generator ------------------------------------------------------------------

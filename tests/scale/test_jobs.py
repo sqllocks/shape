@@ -19,8 +19,8 @@ from shape.scale.jobs import (
     FabricJobTracker,
     JobNotFoundError,
     JobRecord,
-    JobStateError,
     Jobs,
+    JobStateError,
     JobStore,
     StreamManager,
 )
@@ -135,7 +135,9 @@ def test_a_failed_job_records_the_error_and_resumes(store):
     ok = fake_run()
     again = jobs.start_local({}, ok, job_id=first["job_id"], wait=True)
     assert again["status"] == "succeeded" and again["attempts"] == 2 and again["error"] is None
-    assert ok.calls == [{"request": {"domain": "x"}, "resume": True}]  # the stored request, resume on
+    assert ok.calls == [
+        {"request": {"domain": "x"}, "resume": True}
+    ]  # the stored request, resume on
     with pytest.raises(JobStateError, match="only a failed or cancelled"):
         jobs.start_local({}, ok, job_id=first["job_id"])
 
@@ -161,7 +163,9 @@ def test_resume_refuses_a_job_of_another_kind(store):
 def test_resume_of_masked_settings_needs_them_again(store):
     store.put(
         JobRecord(
-            "local-m", "local", status="failed",
+            "local-m",
+            "local",
+            status="failed",
             request={"sink_config": {"warehouse": {"client_secret": "***"}}},
         )  # fmt: skip
     )
@@ -189,7 +193,11 @@ def real_params(tmp_path, out, **extra):
 
 def read_all(out):
     return {
-        d.name: sorted(i for p in sorted(d.glob("part-*.parquet")) for i in pq.read_table(p).column(0).to_pylist())
+        d.name: sorted(
+            i
+            for p in sorted(d.glob("part-*.parquet"))
+            for i in pq.read_table(p).column(0).to_pylist()
+        )
         for d in sorted(out.iterdir())
         if d.is_dir()
     }
@@ -214,7 +222,9 @@ def test_cancel_then_resume_gives_the_files_of_an_uninterrupted_run(store, tmp_p
     assert first["status"] == "cancelled" and first["resumable"]
     partial = {d.name for d in out.iterdir() if (d / "_COMPLETE").exists()}
     assert partial != {"customer", "order", "order_line"}  # it did not finish
-    done = jobs.start_local({}, lambda r, c, p, resume: run_local(r, c, p, resume), job_id=first["job_id"], wait=True)
+    done = jobs.start_local(
+        {}, lambda r, c, p, resume: run_local(r, c, p, resume), job_id=first["job_id"], wait=True
+    )
     assert done["status"] == "succeeded" and done["attempts"] == 2
     assert done["result"]["tables"] == {"customer": 40, "order": 1500, "order_line": 6000}
     reference = tmp_path / "ref"
@@ -254,8 +264,16 @@ def test_scale_generate_request_checks(tmp_path):
 def spark_job(store, status="submitted", **extra):
     return store.put(
         JobRecord(
-            "spark-t1", "fabric_spark", status=status, request={"domain": "retail"},
-            fabric={"workspace_id": WS, "lakehouse_id": LH, "notebook_item_id": NB, "fabric_run_id": RUN},
+            "spark-t1",
+            "fabric_spark",
+            status=status,
+            request={"domain": "retail"},
+            fabric={
+                "workspace_id": WS,
+                "lakehouse_id": LH,
+                "notebook_item_id": NB,
+                "fabric_run_id": RUN,
+            },
             **extra,
         )  # fmt: skip
     )
@@ -266,7 +284,8 @@ def test_tracker_maps_fabric_status_names_and_failure_reason():
     tracker = FabricJobTracker(TOKEN, fake)
     for raw, mapped in [
         ("NotStarted", "submitted"), ("InProgress", "running"), ("Deduplicating", "running"),
-        ("Completed", "succeeded"), ("Failed", "failed"), ("Cancelled", "cancelled"), ("Weird", "weird"),
+        ("Completed", "succeeded"), ("Failed", "failed"), ("Cancelled", "cancelled"),
+        ("Weird", "weird"),
     ]:  # fmt: skip
         fake.job_status = raw
         assert tracker.get_status(WS, NB, RUN)["status"] == mapped
@@ -354,7 +373,16 @@ def test_http_errors_and_retries():
 def test_job_describe_never_leaks_request_internals(store):
     spark_job(store)
     desc = Jobs.describe(store.get("spark-t1"))
-    assert set(desc) >= {"job_id", "kind", "status", "progress", "result", "error", "resumable", "fabric"}
+    assert set(desc) >= {
+        "job_id",
+        "kind",
+        "status",
+        "progress",
+        "result",
+        "error",
+        "resumable",
+        "fabric",
+    }
     assert "request" not in desc
 
 

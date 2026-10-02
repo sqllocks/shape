@@ -184,6 +184,7 @@ class ScaleRouter:
         finally:
             self._registry.close()
         elapsed = time.perf_counter() - started
+        skipped += sum(int(getattr(s, "parts_skipped", 0)) for s in self.sinks)
         rows = sum(self._tables.values())
         from shape.generation.engine import worker_threads
 

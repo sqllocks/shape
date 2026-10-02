@@ -64,6 +64,11 @@ def normalize(params: Mapping[str, Any]) -> dict[str, Any]:
         raise ValueError("sinks must be a non-empty list of sink names")
     if int(request["chunk_size"]) < 1:
         raise ValueError("chunk_size must be at least 1")
+    if request["scale_mode"] in LOCAL_MODES:
+        from shape.scale.sinks import build_sinks
+
+        # Building the sinks checks their names and settings now, before any job is made.
+        build_sinks(request["sinks"], request["sink_config"], chunk_rows=int(request["chunk_size"]))
     return request
 
 

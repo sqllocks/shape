@@ -35,7 +35,13 @@ class FakeFabric:
         self, method: str, url: str, headers: Any, body: bytes | None, timeout: float
     ) -> HttpResponse:
         self.calls.append(
-            {"method": method, "url": url, "headers": dict(headers), "body": body, "timeout": timeout}
+            {
+                "method": method,
+                "url": url,
+                "headers": dict(headers),
+                "body": body,
+                "timeout": timeout,
+            }
         )
         if self.queued_errors:
             return HttpResponse(self.queued_errors.pop(0), b'{"error":"busy"}')
@@ -58,10 +64,10 @@ class FakeFabric:
             return self._json({"status": "Succeeded"})
         if method == "POST" and rest == f"/workspaces/{WS}/items/{NB}/jobs/instances":
             self.runs += 1
-            return HttpResponse(
-                202, b"", {"location": f"{FABRIC_API}{rest}/{RUN[:-1]}{self.runs}"}
-            )
-        match = re.fullmatch(rf"/workspaces/{WS}/items/{NB}/jobs/instances/([0-9a-f-]+)(/cancel)?", rest)
+            return HttpResponse(202, b"", {"location": f"{FABRIC_API}{rest}/{RUN[:-1]}{self.runs}"})
+        match = re.fullmatch(
+            rf"/workspaces/{WS}/items/{NB}/jobs/instances/([0-9a-f-]+)(/cancel)?", rest
+        )
         if match and method == "GET":
             doc: dict[str, Any] = {"status": self.job_status}
             if self.failure:

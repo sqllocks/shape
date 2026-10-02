@@ -26,7 +26,9 @@ def plain_doc(rows: dict[str, int] | None = None, seed: int = 5) -> dict[str, An
             "primary_key": ["customer_id"],
             "columns": {
                 "customer_id": _col("customer_id", "sequence", start=1000),
-                "name": _col("name", "weighted_enum", "string", values={"a": 4, "b": 3, "c": 2, "d": 1}),
+                "name": _col(
+                    "name", "weighted_enum", "string", values={"a": 4, "b": 3, "c": 2, "d": 1}
+                ),
                 "score": _col("score", "distribution", "float", low=0.0, high=100.0),
             },
         },

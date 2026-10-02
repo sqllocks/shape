@@ -169,7 +169,9 @@ def _tamper(run_dir: Path, how: str) -> None:
         p = run_dir / "order_line.parquet"
         t = pq.read_table(p)
         col = "unit_price" if "unit_price" in t.column_names else next(
-            n for n, ty in zip(t.column_names, t.schema.types, strict=True) if pa.types.is_floating(ty)
+            n
+            for n, ty in zip(t.column_names, t.schema.types, strict=True)
+            if pa.types.is_floating(ty)
         )  # fmt: skip
         t = t.set_column(t.column_names.index(col), col, pc.multiply(t[col], 1.5))
         pq.write_table(t, p)
@@ -177,7 +179,9 @@ def _tamper(run_dir: Path, how: str) -> None:
         p = run_dir / "order.parquet"
         t = pq.read_table(p)
         col = "status" if "status" in t.column_names else next(
-            n for n, ty in zip(t.column_names, t.schema.types, strict=True) if pa.types.is_string(ty)
+            n
+            for n, ty in zip(t.column_names, t.schema.types, strict=True)
+            if pa.types.is_string(ty)
         )  # fmt: skip
         t = t.set_column(t.column_names.index(col), col, pa.array(["X"] * t.num_rows, t[col].type))
         pq.write_table(t, p)
@@ -207,7 +211,10 @@ def negative_controls(good: Path, scale: str) -> list[tuple[str, bool]]:
         shutil.copytree(good / "shape", root / "shape")
         _tamper(out_dir(root), how)
         code, _ = compare(root, scale, f"neg_{how}")
-        print(f"  negative control {how}: comparison exit {code} ({'flagged' if code == 1 else 'MISSED'})")
+        print(
+            f"  negative control {how}: comparison exit {code} "
+            f"({'flagged' if code == 1 else 'MISSED'})"
+        )
         outcomes.append((how, code == 1))
     outcomes.append(("baseline_local_mp", baseline_mp_control(scale)))
     return outcomes
@@ -220,7 +227,10 @@ def baseline_mp_control(scale: str) -> bool:
     shutil.rmtree(parts, ignore_errors=True)
     worker = HERE / "baseline_mp_worker.py"
     r = subprocess.run(
-        [str(SPINDLE_PY), str(worker), "--scale", scale, "--seed", str(IMPL_SEED), "--out", str(parts)],
+        [
+            str(SPINDLE_PY), str(worker), "--scale", scale,
+            "--seed", str(IMPL_SEED), "--out", str(parts),
+        ],  # fmt: skip
         capture_output=True, text=True,
     )  # fmt: skip
     if r.returncode != 0:
@@ -230,7 +240,9 @@ def baseline_mp_control(scale: str) -> bool:
     want = preset_rows(scale)
     wrong = {t: (want[t], n) for t, n in produced["rows"].items() if want[t] != n}
     code, _ = compare(root, scale, "neg_baseline_local_mp")
-    print(f"  negative control baseline_local_mp: rows differing from the preset {wrong}; exit {code}")
+    print(
+        f"  negative control baseline_local_mp: rows differing from the preset {wrong}; exit {code}"
+    )
     return code == 1 and bool(wrong)
 
 
@@ -280,7 +292,9 @@ def main(argv: list[str] | None = None) -> int:
     if failed:
         print("FAIL:\n  " + "\n  ".join(failed))
         return 1
-    print("PASS: " + ", ".join(modes) + (" (negative controls flagged)" if a.negative_control else ""))
+    print(
+        "PASS: " + ", ".join(modes) + (" (negative controls flagged)" if a.negative_control else "")
+    )
     return 0
 
 

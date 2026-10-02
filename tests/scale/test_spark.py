@@ -39,8 +39,13 @@ def router(fake, **kw):
 def test_submit_uploads_the_spec_finds_the_notebook_and_starts_the_run():
     fake = FakeFabric()
     run = router(fake, table_prefix="demo_").submit(SPEC)
-    steps = [(m, u.replace(WS, "WS").replace(LH, "LH").replace(NB, "NB")) for m, u in fake.methods()]
-    assert steps[0] == ("PUT", f"https://onelake.dfs.fabric.microsoft.com/WS/LH/Files/shape_jobs/{run.run_id}.json")
+    steps = [
+        (m, u.replace(WS, "WS").replace(LH, "LH").replace(NB, "NB")) for m, u in fake.methods()
+    ]
+    assert steps[0] == (
+        "PUT",
+        f"https://onelake.dfs.fabric.microsoft.com/WS/LH/Files/shape_jobs/{run.run_id}.json",
+    )
     assert [m for m, _ in steps] == ["PUT", "PATCH", "PATCH", "GET", "POST"]
     assert steps[3][1].endswith("/workspaces/WS/notebooks")
     assert steps[4][1].endswith("/workspaces/WS/items/NB/jobs/instances")
@@ -80,7 +85,9 @@ def test_a_missing_notebook_is_created_from_the_bundled_template():
     assert r.get_or_create_notebook() == NB
     body = fake.created
     assert body["displayName"] == "my_worker" and body["type"] == "Notebook"
-    parts = {p["path"]: base64.b64decode(p["payload"]).decode() for p in body["definition"]["parts"]}
+    parts = {
+        p["path"]: base64.b64decode(p["payload"]).decode() for p in body["definition"]["parts"]
+    }
     assert set(parts) == {"notebook-content.ipynb", ".platform"}
     nb = json.loads(parts["notebook-content.ipynb"])
     text = json.dumps(nb)
@@ -115,7 +122,9 @@ def test_an_existing_notebook_is_reused():
 def test_router_rejects_bad_settings(kwargs, text):
     args = {"workspace_id": WS, "lakehouse_id": LH, "token": TOKEN, **kwargs}
     with pytest.raises(ValueError, match=text):
-        FabricSparkRouter(args.pop("workspace_id"), args.pop("lakehouse_id"), args.pop("token"), **args)
+        FabricSparkRouter(
+            args.pop("workspace_id"), args.pop("lakehouse_id"), args.pop("token"), **args
+        )
 
 
 def test_default_requirements_pin_this_version():
@@ -147,9 +156,7 @@ def test_submit_spark_end_to_end_registers_a_job_without_secrets(tmp_path):
         "sink_config": {"lakehouse": {"base_path": "x", "client_secret": "s3"}}, "chunk_size": 500,
         "fabric": {"workspace_id": WS, "lakehouse_id": LH, "table_prefix": "t_"},
     }  # fmt: skip
-    out = submit_spark(
-        request, TOKEN, jobs=Jobs(store), storage_token=STORAGE, transport=fake
-    )
+    out = submit_spark(request, TOKEN, jobs=Jobs(store), storage_token=STORAGE, transport=fake)
     assert out["status"] == "submitted" and out["total_rows_queued"] == 21750
     assert out["fabric"]["notebook_item_id"] == NB and out["spec_path"].startswith("shape_jobs/")
     saved = (tmp_path / "jobs" / f"{out['job_id']}.json").read_text()
@@ -167,7 +174,17 @@ def test_submit_spark_end_to_end_registers_a_job_without_secrets(tmp_path):
 
 def test_submit_spark_needs_ids_and_a_token():
     with pytest.raises(ValueError, match="needs fabric.workspace_id"):
-        submit_spark({"domain": "retail", "scale_mode": "fabric_spark", "chunk_size": 5, "sinks": ["lakehouse"], "sink_config": {}}, TOKEN, jobs=None)
+        submit_spark(
+            {
+                "domain": "retail",
+                "scale_mode": "fabric_spark",
+                "chunk_size": 5,
+                "sinks": ["lakehouse"],
+                "sink_config": {},
+            },
+            TOKEN,
+            jobs=None,
+        )
 
 
 # ---- the notebook ---------------------------------------------------------------------------
@@ -177,7 +194,11 @@ def test_the_notebook_is_valid_nbformat_with_the_placeholders_the_router_fills()
     nb = worker_notebook()
     assert nb["nbformat"] == 4 and len(nb["cells"]) == 5
     text = json.dumps(nb)
-    for placeholder in ("__SHAPE_WORKSPACE_ID__", "__SHAPE_LAKEHOUSE_ID__", "__SHAPE_REQUIREMENTS__"):
+    for placeholder in (
+        "__SHAPE_WORKSPACE_ID__",
+        "__SHAPE_LAKEHOUSE_ID__",
+        "__SHAPE_REQUIREMENTS__",
+    ):
         assert placeholder in text
     assert "spindle" not in text.lower()
     for cell in nb["cells"]:
@@ -322,7 +343,8 @@ def test_arrow_to_ddl_maps_the_engine_types_and_refuses_others():
          ("e", pa.date32()), ("f", pa.timestamp("us")), ("g", pa.decimal128(10, 2))]
     )  # fmt: skip
     assert spark_worker.arrow_to_ddl(schema) == (
-        "`a` bigint, `b` double, `c` string, `d` boolean, `e` date, `f` timestamp, `g` decimal(10,2)"
+        "`a` bigint, `b` double, `c` string, `d` boolean, `e` date, `f` timestamp, "
+        "`g` decimal(10,2)"
     )
     with pytest.raises(TypeError, match="no Spark type"):
         spark_worker.arrow_to_ddl(pa.schema([("x", pa.list_(pa.int64()))]))
