@@ -634,11 +634,11 @@ def _joint_tables(
     items: list[PlanItem] = []
     chosen: dict[tuple[str, str], dict[str, Any]] = {}
     for cond in joint.get("conditionals", ()):
-        key = tuple(sorted((cond["given"], cond["target"])))
-        best = chosen.get(key)  # type: ignore[arg-type]
+        key = (min(cond["given"], cond["target"]), max(cond["given"], cond["target"]))
+        best = chosen.get(key)
         # the column with more values is the given one: it is the one that fixes the other
         if best is None or len(cond["table"]) > len(best["table"]):
-            chosen[key] = cond  # type: ignore[index]
+            chosen[key] = cond
     parent: dict[str, str] = {}
     for cond in chosen.values():
         given, target = cond["given"], cond["target"]

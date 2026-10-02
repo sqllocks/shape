@@ -1,7 +1,8 @@
 """Joint (multi-column) analysis of one table, bounded (#47).
 
-``analyze_table`` reads a deterministic row sample of at most ``SAMPLE_ROWS`` rows and at most
-``MAX_COLUMNS`` columns of each role, so its cost does not grow with the table: approximate
+``analyze_table`` reads a deterministic row sample (a :class:`Budget`: at most 20,000 rows for a
+table that small, 8,000 for a larger one) and a bounded number of columns of each role, so its cost
+does not grow with the table: approximate
 functional dependencies and candidate keys, association measures for every type pair, conditional
 probability tables for strongly associated categorical pairs, and the share of rows that break a
 strong dependency (the table's ``implausible_rate``). The result is JSON-safe and additive: it is
@@ -10,6 +11,7 @@ the ``joint`` entry of a table profile.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -20,11 +22,7 @@ from . import measures as M
 from .placeholders import detect_placeholders
 
 JOINT_VERSION = 1
-SAMPLE_ROWS = 20_000  # rows analysed (a deterministic sample beyond this)
-MAX_COLUMNS = 16  # columns analysed per role (categorical, numeric)
-MAX_LEVELS = SAMPLE_ROWS  # distinct values up to this many make a categorical view
 NUMERIC_AS_CATEGORY = 50  # a float column is also a categorical view up to this many values
-MAX_FD_PAIRS = 240
 MIN_FD_CONFIDENCE = 0.8
 MIN_FD_LIFT = 0.3  # (confidence - baseline) / (1 - baseline): beats guessing the dependent's mode
 MIN_REPEAT_GROUPS = 5  # determinant values seen twice or more, below which a dependency is vacuous
@@ -32,14 +30,43 @@ IMPLAUSIBLE_FD_CONFIDENCE = (
     0.95  # a dependency this strong (and not exact) makes its exceptions implausible
 )
 MAX_DEPENDENCIES = 40
-MAX_KEY_PAIRS = 120
 MAX_ASSOCIATIONS = 60
+KENDALL_PAIRS = 8  # Kendall's tau (quadratic) for this many of the strongest numeric pairs
+KENDALL_MIN_SPEARMAN = 0.3
 MIN_ASSOCIATION = 0.1
 MAX_CONDITIONALS = 10
 CONDITIONAL_MIN_V = 0.25
 CONDITIONAL_MAX_LEVELS = 30
 CONDITIONAL_TOP = 8
 MAX_VIOLATIONS = 3
+
+
+@dataclass(frozen=True)
+class Budget:
+    """How much a table's joint analysis may read and compute. A table of at most
+    ``sample_rows`` rows is analysed whole; a larger one on a deterministic sample, with fewer
+    columns and pairs, so the cost stays a small, fixed share of profiling it."""
+
+    sample_rows: int
+    max_columns: int  # columns analysed per role (categorical, numeric)
+    max_fd_pairs: int
+    max_key_pairs: int
+    assoc_columns: int  # columns per role in the association pairs
+
+
+SMALL = Budget(
+    sample_rows=20_000, max_columns=16, max_fd_pairs=240, max_key_pairs=120, assoc_columns=12
+)
+LARGE = Budget(
+    sample_rows=8_000, max_columns=12, max_fd_pairs=60, max_key_pairs=30, assoc_columns=8
+)
+MAX_LEVELS = SMALL.sample_rows  # distinct values up to this many make a categorical view
+
+
+def budget_for(row_count: int) -> Budget:
+    return SMALL if row_count <= SMALL.sample_rows else LARGE
+
+
 _NUMERIC_KINDS = ("int", "uint64", "float", "dt64")
 _CATEGORY_KINDS = ("int", "uint64", "float", "str", "bool")
 
@@ -47,39 +74,65 @@ _CATEGORY_KINDS = ("int", "uint64", "float", "str", "bool")
 class _View:
     """One column of the sample: its categorical view (codes, labels) and/or numeric view."""
 
-    __slots__ = ("_labels", "codes", "dictionary", "name", "nn", "values")
+    __slots__ = ("_qcodes", "_ranks", "codes", "dictionary", "name", "nn", "values")
 
     def __init__(self, name: str) -> None:
         self.name = name
         self.codes: np.ndarray | None = None
         self.dictionary: Any = None
-        self._labels: list[str] | None = None
         self.values: np.ndarray | None = None
         self.nn = 0
+        self._ranks: np.ndarray | None = None
+        self._qcodes: tuple[np.ndarray, int] | None = None
 
     @property
     def k(self) -> int:
         return 0 if self.dictionary is None else len(self.dictionary)
 
+    def label(self, i: int) -> str:
+        """The ``i``-th distinct value as text (decoded when asked: most are never needed)."""
+        return str(self.dictionary[i].as_py())
+
     @property
-    def labels(self) -> list[str]:
-        """The distinct values as text, decoded on first use (most columns never need them)."""
-        if self._labels is None:
-            self._labels = [_label(x) for x in self.dictionary.to_pylist()]
-        return self._labels
+    def ranks(self) -> np.ndarray:
+        """The numeric view's ranks (average ranks of the non-missing values, NaN elsewhere)."""
+        if self._ranks is None:
+            assert self.values is not None
+            ok = ~np.isnan(self.values)
+            r = np.full(len(self.values), np.nan)
+            r[ok] = M.ranks(self.values[ok])
+            self._ranks = r
+        return self._ranks
+
+    @property
+    def qcodes(self) -> tuple[np.ndarray, int]:
+        """The numeric view as quantile-bin codes and the bin count."""
+        if self._qcodes is None:
+            assert self.values is not None
+            self._qcodes = M.quantile_codes(self.values)
+        return self._qcodes
 
 
 def _take(arr: Any, idx: np.ndarray | None) -> Any:
     if isinstance(arr, np.ndarray):
         a = arr if idx is None else arr[idx]
         return pa.array(a, from_pandas=True)
-    if isinstance(arr, pa.ChunkedArray):
-        arr = arr.combine_chunks()
-    return arr if idx is None else arr.take(pa.array(idx))
-
-
-def _label(v: Any) -> str:
-    return str(v)
+    if idx is None:
+        return arr.combine_chunks() if isinstance(arr, pa.ChunkedArray) else arr
+    if not isinstance(arr, pa.ChunkedArray):
+        return arr.take(pa.array(idx))
+    # ``idx`` is sorted: take from each chunk its own rows, so nothing is concatenated first and
+    # no index is resolved against a chunk list (both cost more than the analysis on a big table)
+    parts: list[Any] = []
+    start = 0
+    for chunk in arr.chunks:
+        lo, hi = np.searchsorted(idx, [start, start + len(chunk)])
+        if hi > lo:
+            parts.append(chunk.take(pa.array(idx[lo:hi] - start)))
+        start += len(chunk)
+    if not parts:
+        return arr.slice(0, 0)
+    return pa.concat_arrays(parts) if len(parts) > 1 else parts[0]
 
 
 def _build_view(name: str, kind: str, arr: Any, idx: np.ndarray | None) -> _View | None:
@@ -112,10 +165,16 @@ def _build_view(name: str, kind: str, arr: Any, idx: np.ndarray | None) -> _View
     return v
 
 
-def _sample_index(row_count: int) -> np.ndarray | None:
-    if row_count <= SAMPLE_ROWS:
+def _sample_index(row_count: int, budget: Budget) -> np.ndarray | None:
+    if row_count <= budget.sample_rows:
         return None
-    return np.sort(np.random.RandomState(7).choice(row_count, size=SAMPLE_ROWS, replace=False))
+    # evenly spread rows with a fixed random offset inside each stride: deterministic, ordered,
+    # and linear in the sample (a permutation of the whole table would cost more than the analysis)
+    stride = row_count / budget.sample_rows
+    jitter = np.random.RandomState(7).random_sample(budget.sample_rows)
+    return np.minimum(
+        ((np.arange(budget.sample_rows) + jitter) * stride).astype(np.int64), row_count - 1
+    )
 
 
 def _round(x: float | None, digits: int = 4) -> float | None:
@@ -137,10 +196,10 @@ def _violations(
         top = np.argsort(-counts, kind="stable")[:3]
         out.append(
             {
-                "determinant_value": va.labels[g],
+                "determinant_value": va.label(g),
                 "rows": int(tot[pos]),
                 "distinct_dependents": int(distinct[pos]),
-                "dependent_values": {vb.labels[int(vals[i])]: int(counts[i]) for i in top},
+                "dependent_values": {vb.label(int(vals[i])): int(counts[i]) for i in top},
             }
         )
     return out
@@ -155,7 +214,7 @@ def _placeholder_rows(cats: list[_View], n_rows: int) -> np.ndarray:
         order = np.argsort(-counts, kind="stable")[:500]
         top = {int(i): counts[i] / v.nn for i in order if counts[i] > 0}
         labels = v.dictionary.take(pa.array(list(top))).to_pylist()
-        shares = {_label(x): s for x, s in zip(labels, top.values(), strict=True)}
+        shares = {str(x): s for x, s in zip(labels, top.values(), strict=True)}
         found = detect_placeholders(
             shares, null_rate=1.0 - v.nn / n_rows, cardinality=v.k, row_count=n_rows
         )
@@ -165,7 +224,9 @@ def _placeholder_rows(cats: list[_View], n_rows: int) -> np.ndarray:
     return rows
 
 
-def _dependencies(cats: list[_View], n_rows: int) -> tuple[list[dict[str, Any]], np.ndarray, int]:
+def _dependencies(
+    cats: list[_View], n_rows: int, budget: Budget
+) -> tuple[list[dict[str, Any]], np.ndarray, int]:
     """Approximate functional dependencies ``a -> b`` among the categorical views, and the rows
     that are in the minority of a strong one."""
     found: list[dict[str, Any]] = []
@@ -176,7 +237,7 @@ def _dependencies(cats: list[_View], n_rows: int) -> tuple[list[dict[str, Any]],
         if va.k >= va.nn:  # every value different: a key, which determines everything vacuously
             continue
         for vb in cats:
-            if vb is va or evaluated >= MAX_FD_PAIRS:
+            if vb is va or evaluated >= budget.max_fd_pairs:
                 continue
             assert vb.codes is not None
             evaluated += 1
@@ -214,14 +275,14 @@ def _dependencies(cats: list[_View], n_rows: int) -> tuple[list[dict[str, Any]],
     return found[:MAX_DEPENDENCIES], flagged, evaluated
 
 
-def _keys(cats: list[_View], n_rows: int, sampled: bool) -> list[dict[str, Any]]:
+def _keys(cats: list[_View], n_rows: int, sampled: bool, budget: Budget) -> list[dict[str, Any]]:
     """Two-column candidate keys: unique together, neither unique alone."""
     out: list[dict[str, Any]] = []
     pairs = 0
     singles = {v.name for v in cats if v.k >= v.nn}
     for i, va in enumerate(cats):
         for vb in cats[i + 1 :]:
-            if va.name in singles or vb.name in singles or pairs >= MAX_KEY_PAIRS:
+            if va.name in singles or vb.name in singles or pairs >= budget.max_key_pairs:
                 continue
             assert va.codes is not None and vb.codes is not None
             if va.k * vb.k < n_rows:  # fewer combinations than rows: cannot be unique
@@ -251,11 +312,12 @@ def _binned(v: _View) -> tuple[np.ndarray, int]:
 
 
 def _associations(
-    cats: list[_View], nums: list[_View], n_rows: int
+    cats: list[_View], nums: list[_View], n_rows: int, budget: Budget
 ) -> tuple[list[dict[str, Any]], dict[tuple[str, str], np.ndarray]]:
     out: list[dict[str, Any]] = []
     tables: dict[tuple[str, str], np.ndarray] = {}
-    small = [v for v in cats if v.k <= 200]
+    small = [v for v in cats if v.k <= 200][: budget.assoc_columns]
+    nums = nums[: budget.assoc_columns]
     for i, va in enumerate(small):
         for vb in small[i + 1 :]:
             assert va.codes is not None and vb.codes is not None
@@ -290,31 +352,39 @@ def _associations(
                 }
             )
             tables[(va.name, vb.name)] = t
+    numeric: list[tuple[float, dict[str, Any], _View, _View]] = []
     for i, va in enumerate(nums):
         assert va.values is not None
         for vb in nums[i + 1 :]:
             assert vb.values is not None
+            both = ~(np.isnan(va.values) | np.isnan(vb.values))
             p = M.pearson(va.values, vb.values)
-            s = M.spearman(va.values, vb.values)
-            strength = max(abs(p or 0.0), abs(s or 0.0))
+            ra, rb = va.ranks, vb.ranks
+            s_ = M.pearson(ra, rb) if both.all() else M.spearman(va.values, vb.values)
+            strength = max(abs(p or 0.0), abs(s_ or 0.0))
             if strength < MIN_ASSOCIATION:
                 continue
-            ca, ka = M.quantile_codes(va.values)
-            cb, kb = M.quantile_codes(vb.values)
+            ca, ka = va.qcodes
+            cb, kb = vb.qcodes
             mi = M.mutual_information(M.contingency(ca, cb, max(ka, 1), max(kb, 1)))
-            out.append(
-                {
-                    "a": va.name,
-                    "b": vb.name,
-                    "kind": "numeric",
-                    "rows": int((~(np.isnan(va.values) | np.isnan(vb.values))).sum()),
-                    "pearson": _round(p),
-                    "spearman": _round(s),
-                    "kendall": _round(M.kendall_tau(va.values, vb.values)),
-                    "mutual_information": _round(mi),
-                    "_strength": strength,
-                }
-            )
+            entry = {
+                "a": va.name,
+                "b": vb.name,
+                "kind": "numeric",
+                "rows": int(both.sum()),
+                "pearson": _round(p),
+                "spearman": _round(s_),
+                "kendall": None,
+                "mutual_information": _round(mi),
+                "_strength": strength,
+            }
+            numeric.append((abs(s_ or 0.0), entry, va, vb))
+    numeric.sort(key=lambda t: -t[0])
+    for rank, (sp, entry, va, vb) in enumerate(numeric):
+        if rank < KENDALL_PAIRS and sp >= KENDALL_MIN_SPEARMAN:
+            assert va.values is not None and vb.values is not None
+            entry["kendall"] = _round(M.kendall_tau(va.values, vb.values))
+        out.append(entry)
     for vc in small:
         assert vc.codes is not None
         for vn in nums:
@@ -324,7 +394,7 @@ def _associations(
             eta = M.correlation_ratio(vc.codes, vn.values, vc.k)
             if eta < MIN_ASSOCIATION:
                 continue
-            cn, kn = M.quantile_codes(vn.values)
+            cn, kn = vn.qcodes
             mi = M.mutual_information(M.contingency(vc.codes, cn, vc.k, max(kn, 1)))
             out.append(
                 {
@@ -365,10 +435,10 @@ def _conditionals(
                 if total == 0:
                     continue
                 order = np.argsort(-tab[gi], kind="stable")[:CONDITIONAL_TOP]
-                rows[given.labels[int(gi)]] = {
+                rows[given.label(int(gi))] = {
                     "n": total,
                     "p": {
-                        target.labels[int(j)]: _round(tab[gi, j] / total, 4)
+                        target.label(int(j)): _round(tab[gi, j] / total, 4)
                         for j in order
                         if tab[gi, j] > 0
                     },
@@ -389,7 +459,8 @@ def analyze_table(cols: list[Any], row_count: int) -> dict[str, Any] | None:
     for a joint analysis. ``cols`` are the reader's column objects (``name``, ``kind``, ``arr``)."""
     if len(cols) < 2 or row_count < 10:
         return None
-    idx = _sample_index(row_count)
+    budget = budget_for(row_count)
+    idx = _sample_index(row_count, budget)
     n_rows = row_count if idx is None else len(idx)
     views: dict[str, _View] = {}
     cats: list[_View] = []
@@ -397,27 +468,27 @@ def analyze_table(cols: list[Any], row_count: int) -> dict[str, Any] | None:
     for c in cols:
         if c.kind not in set(_NUMERIC_KINDS) | set(_CATEGORY_KINDS):
             continue
-        if len(cats) >= MAX_COLUMNS and len(nums) >= MAX_COLUMNS:
+        if len(cats) >= budget.max_columns and len(nums) >= budget.max_columns:
             break
         v = _build_view(c.name, c.kind, c.arr, idx)
         if v is None:
             continue
         # a unique key (every value different) joins no association; it stays a determinant
         views[c.name] = v
-        if v.codes is not None and len(cats) < MAX_COLUMNS:
+        if v.codes is not None and len(cats) < budget.max_columns:
             cats.append(v)
-        if v.values is not None and v.k != v.nn and len(nums) < MAX_COLUMNS and v.nn < n_rows * 2:
+        if v.values is not None and v.k != v.nn and len(nums) < budget.max_columns:
             nums.append(v)
     if len(cats) + len(nums) < 2:
         return None
     sampled = idx is not None
-    deps, by_dependency, evaluated = _dependencies(cats, n_rows)
+    deps, by_dependency, evaluated = _dependencies(cats, n_rows, budget)
     by_placeholder = _placeholder_rows(cats, n_rows)
     flagged = by_dependency | by_placeholder
-    keys = _keys(cats, n_rows, sampled)
+    keys = _keys(cats, n_rows, sampled, budget)
     assoc_cats = [v for v in cats if v.k < v.nn]
     assoc_nums = [v for v in nums if v.values is not None and np.isfinite(v.values).sum() > 10]
-    assoc, tables = _associations(assoc_cats, assoc_nums, n_rows)
+    assoc, tables = _associations(assoc_cats, assoc_nums, n_rows, budget)
     conds = _conditionals(assoc, tables, views)
     for e in assoc:
         e.pop("_strength", None)

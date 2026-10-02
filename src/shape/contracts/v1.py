@@ -154,7 +154,7 @@ def _validate_reference_pair(contract: dict[str, Any]) -> None:
                 "reference_pair: 'columns' is a list of column names, 'reference' the name the "
                 "profile gave the reference"
             )
-        rate = rule.get("min_match_rate")
+        rate: Any = rule.get("min_match_rate")
         if not (_is_number(rate) and 0 < rate <= 1):
             raise ContractError("reference_pair needs 'min_match_rate' above 0 and up to 1")
 

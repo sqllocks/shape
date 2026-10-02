@@ -156,9 +156,11 @@ def test_the_cost_does_not_grow_with_the_table() -> None:
     t0 = time.perf_counter()
     j = analyze.analyze_table(_cols(wide), 40_000)
     elapsed = time.perf_counter() - t0
-    assert j is not None and j["sampled"] is True and j["rows_analyzed"] == analyze.SAMPLE_ROWS
-    assert len(j["columns"]) <= 2 * analyze.MAX_COLUMNS
-    assert j["dependency_pairs_evaluated"] <= analyze.MAX_FD_PAIRS
+    budget = analyze.budget_for(40_000)
+    assert budget is analyze.LARGE
+    assert j is not None and j["sampled"] is True and j["rows_analyzed"] == budget.sample_rows
+    assert len(j["columns"]) <= 2 * budget.max_columns
+    assert j["dependency_pairs_evaluated"] <= budget.max_fd_pairs
     assert len(j["associations"]) <= analyze.MAX_ASSOCIATIONS
     assert len(j["conditionals"]) <= analyze.MAX_CONDITIONALS
     assert elapsed < 10.0

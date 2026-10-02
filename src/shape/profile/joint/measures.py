@@ -13,7 +13,7 @@ from dataclasses import dataclass
 import numpy as np
 import numpy.typing as npt
 
-DENSE_CELLS = 1 << 21  # a contingency table of more cells than this is counted by sorting
+DENSE_CELLS = 1 << 18  # a contingency table of more cells than this is counted by sorting
 
 
 def contingency(a: np.ndarray, b: np.ndarray, ka: int, kb: int) -> np.ndarray:
