@@ -475,7 +475,7 @@ class SafeProfile:
         )
 
     def to_json(self) -> str:
-        return json.dumps(self.to_dict(), indent=2, allow_nan=False) + "\n"
+        return json.dumps(self.to_dict(), indent=2, sort_keys=True, allow_nan=False) + "\n"
 
     def save(self, path: str | Path) -> Path:
         out = Path(path)

@@ -52,6 +52,39 @@ def _safe(n: object) -> bool:
     return True
 
 
+# Container reproducibility (SAC-01). The signed manifest bytes never depend on the container, but
+# the .shape file itself is committed to git, so identical content must give identical bytes:
+# a fixed member timestamp, a fixed member order (manifest, components sorted by name, then the
+# signature), a fixed creator system and permissions, and no compression. Deflate output depends
+# on the zlib build (zlib, zlib-ng, ...), so only ``ZIP_STORED`` is identical across machines;
+# git compresses and delta-packs the bytes itself. Readers accept every method.
+_FIXED_DATE_TIME = (1980, 1, 1, 0, 0, 0)
+_FIXED_CREATOR_SYSTEM = 3  # Unix, whatever OS wrote the file
+_FIXED_EXTERNAL_ATTR = 0o100644 << 16
+
+
+def write_zip_member(z: zipfile.ZipFile, name: str, data: bytes) -> None:
+    """Add one member with every volatile field fixed."""
+    zi = zipfile.ZipInfo(name, _FIXED_DATE_TIME)
+    zi.compress_type = zipfile.ZIP_STORED
+    zi.create_system = _FIXED_CREATOR_SYSTEM
+    zi.external_attr = _FIXED_EXTERNAL_ATTR
+    z.writestr(zi, data)
+
+
+def write_container(
+    path: Any, manifest_bytes: bytes, components: dict[str, bytes], signature: bytes | None = None
+) -> None:
+    """Write the zip container: manifest, components sorted by name, then the optional
+    signature. The same inputs always give the same bytes."""
+    with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_STORED, allowZip64=True) as z:
+        write_zip_member(z, "manifest.json", manifest_bytes)
+        for k, v in sorted(components.items()):
+            write_zip_member(z, k, v)
+        if signature is not None:
+            write_zip_member(z, SIGNATURE_MEMBER, signature)
+
+
 def write_artifact(
     path: Any, manifest: dict[str, Any], components: dict[str, bytes]
 ) -> dict[str, Any]:
@@ -63,10 +96,7 @@ def write_artifact(
     hashes = {k: sha256(v) for k, v in components.items()}
     m = dict(manifest)
     m["content_hashes"] = hashes
-    with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED, allowZip64=True) as z:
-        z.writestr("manifest.json", canonical_json(m))
-        for k, v in sorted(components.items()):
-            z.writestr(k, v)
+    write_container(path, canonical_json(m), components)
     return m
 
 

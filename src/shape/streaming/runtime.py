@@ -674,6 +674,12 @@ class GlobalProfiler(WindowedProfiler):
         self._state.update(batch)
         return np.zeros(batch.num_rows, dtype=bool)
 
+    def peek(self) -> WindowProfile:
+        """The profile of everything seen so far, without closing the window: the stream goes on
+        (``finish()`` still emits the final one). Used for live reading of a running stream."""
+        entry = table_entry(self._state, self.name, self.schema, "bounded", self.top_n)
+        return WindowProfile(self.kind, None, None, int(self._state.rows), entry)
+
     def _close(self, wm: int | None) -> list[WindowProfile]:
         return [self._emit(None, None, self._state)] if wm is None else []
 

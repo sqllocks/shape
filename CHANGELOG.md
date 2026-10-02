@@ -15,6 +15,21 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   Zipf foreign keys are drawn in one native pass (`zipf_guide`, `zipf_draw`: the rows of
   `searchsorted`, found through a guide table). The first generation in a process raises glibc's allocation thresholds (`mallopt`, Linux; left
   alone when `MALLOC_*` or `GLIBC_TUNABLES` is set; `SHAPE_MEMORY_POOL=default` turns it off).
+- `shape stream` (`docs/EMIT.md`): one table's rows as events in event-time order, on the `shape emit`
+  runtime (same options, sinks, formats and delivery guarantees; `--table` required, `-t -s -m`,
+  `--rate` 10, `--max-events` is the earliest N events). The flat-event encoder is vectorised
+  (Arrow kernels, several threads for large batches) with byte-identical output. Harness:
+  `benchmarks/vs_spindle/stream_1to1/` (equivalence verifier, bench, negative control; wired into
+  `run.py --only stream`).
+- Live fidelity (`shape emit --live-target`, `docs/EMIT.md`): the emitted events are teed into the
+  stream profiler and scored against a target as they go, with the score of `shape fidelity`
+  (`score_prepared` is now its single scoring function), drift alerts (`score-low`, `score-drop`,
+  `column-low`, `live-error`; stderr, a JSON-lines file and the report), `--live-fail` exit code 1.
+  `GlobalProfiler.peek()` reads a running profile. Harness: `benchmarks/live_fidelity/run.py`.
+- `shape emit --realtime`: a full garbage collection (cost grows with the host process's heap) and
+  a slow checkpoint `fsync` no longer stall the pacing, which showed up as a late batch and a short
+  second. Realtime runs freeze the existing objects while pacing and write checkpoints on a writer
+  thread; the checkpoint still never passes an undelivered event.
 - Emitters (`shape.emitters`): `console`, `file` and `jsonl` in core; `kafka` (`sqllocks-shape-kafka`),
   `eventhubs` (`sqllocks-shape-eventhubs`), `eventstream` and `eventhouse` (`sqllocks-shape-fabric`).
   Every message carries the idempotency key `<table>/<seq>`; delivery is at-least-once with

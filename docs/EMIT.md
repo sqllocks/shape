@@ -12,6 +12,38 @@ shape emit retail --realtime --rate 500 --burst 30:10:4 --out-of-order 0.05 \
       --anomaly-fraction 0.01 --sink file -o events.jsonl
 ```
 
+## `shape stream`: one table in event-time order
+
+`shape stream` is `shape emit` for **one table, earliest event first**. It is the same command
+underneath (`shape.cli.emit`, one runtime): the same options, sinks, envelopes, delivery guarantees,
+checkpoint and live fidelity; `shape stream` differs only in the shape of the stream.
+
+| | `shape emit` | `shape stream` |
+|---|---|---|
+| tables | every table of the schema, one after another in dependency order (`--table`, repeatable, selects) | exactly one: `--table NAME` is required |
+| order | row order within a table | **event-time order**: the table is generated whole and stably sorted by `_shape_event_time` (a null time first; equal times in row order); a table with no date or timestamp column stays in row order |
+| `--max-events N` | the first N events of the sequence (the first tables' rows) | the **N earliest events** |
+| `--out-of-order` | window positions in row order | window positions in the time-ordered sequence |
+| memory | bounded by a block (except a table a post-pass changes) | the whole table, as events |
+| `--rate` default | 100 | 10 |
+| short flags | none | `-t` (`--table`), `-s` (`--scale`), `-m` (`--mode`) |
+| delivery batch (not paced) | 1,000 events | 32,768 events |
+
+```bash
+shape stream retail --table order --scale medium --no-realtime --sink file -o orders.jsonl
+shape stream retail -t order -s small --max-events 1000          # the 1,000 earliest orders
+shape stream retail -t order --realtime --rate 500 --burst 30:10:4 --sink file -o orders.jsonl
+```
+
+`_shape_seq` is still the row's position in the table (so the idempotency key is the same as in
+`shape emit`), which makes the sequence of `_shape_seq` values of a time-ordered stream a permutation
+of the table's rows. A checkpoint of a `shape stream` run is not accepted by `shape emit` or the
+other way round (the order is part of the stream's identity).
+
+The events are written by an encoder that builds the JSON text of a batch column by column with
+Arrow kernels (on several threads for a batch of 16,384 events or more); its output is
+byte-identical to the row-by-row encoder it replaces (`tests/streaming/emit/test_stream.py`).
+
 ## Events
 
 A flat event (the default) is the row's columns plus:
@@ -39,6 +71,10 @@ whole once, so its rows equal `shape generate`'s; the others are read chunk by c
 * `--realtime --rate N`: N events per second (default 100). Each batch is sent at its absolute due
   time, so the long-run rate equals N whatever the sleep overshoot. A sink that is too slow makes
   the run fall behind its schedule; no event is dropped, and the report shows the worst lag.
+  Housekeeping stays off the pacing path: a realtime run freezes the objects the process already
+  holds (so a garbage collection cannot stall the pacing for the cost of a large host heap) and
+  writes its checkpoints on a writer thread (so a slow `fsync` cannot delay a batch). The writer
+  only persists offsets that were delivered and flushed; the final checkpoint is synchronous.
 * `--burst START:DURATION:MULT` (repeatable, needs `--realtime`): from START seconds for DURATION
   seconds the rate is MULT times `--rate`. Bursts may not overlap.
 * `--max-events N`: stop when N events have been delivered *in all* (a position in the stream, so a
@@ -117,8 +153,90 @@ Options of an emitter (a Kafka `config`, a connection string, a token) are keywo
 `emit`; see each plugin's README. Sign-in material belongs in environment variables or an options
 file, never in the URI.
 
+## Live fidelity
+
+`shape emit --live-target TARGET` scores the events against a target *while they are delivered*,
+and raises an alert when the score drifts. The score is the one `shape fidelity` gives
+(`docs/FIDELITY.md`): at any moment the live score is `shape fidelity` of the target against the
+events delivered so far, computed without keeping the events.
+
+```bash
+shape emit retail --scale medium --sink file -o events.jsonl \
+      --live-target retail --live-alerts alerts.jsonl --live-report live.json
+shape emit retail --scale medium --anomaly-fraction 0.05 --live-target retail --live-fail --sink file -o e.jsonl
+```
+
+What it is made of: a tee (`shape.streaming.emit.live.TeeSink`) sits in front of the sink. An event
+reaches the tee only after the sink's `send` returned, so a batch the runtime retries is counted
+once. A worker thread feeds each table's events to the stream profiler (`shape.streaming.runtime`,
+bounded mode: the same profiler as `shape stream-profile`) and to the score accumulators, and
+compares them with the target. Nothing the live side does can fail or slow a delivery beyond the
+overhead below: a failure inside it switches it off and raises a `live-error` alert.
+
+**The target** (`--live-target`) is reference data: a file or a directory of one file per table
+(Parquet, CSV or JSONL, read as `shape fidelity` reads them), or a domain or schema file, from which
+the reference is generated (`--live-target-seed`, default the stream's seed plus 1;
+`--live-target-scale`, default the stream's). Only the tables the stream emits are compared. A
+`.shape` profile is not a target: the score needs the reference's distributions (the
+Kolmogorov-Smirnov statistic, value overlap), which a profile does not hold.
+
+**Exact and bounded.** Per column the live side keeps running moments (mean, spread, null rate:
+exact), the values for the Kolmogorov-Smirnov statistic (all of them up to `--live-sample`, 100,000
+per numeric column; then a uniform reservoir sample), the distinct values (exact up to
+`--live-key-cap`, 250,000; then the profiler's HyperLogLog, about 0.8% error) and the value counts of
+categorical columns (exact up to `--live-key-cap` distinct values; then the profiler's top-500
+table, which can move the overlap and chi-squared points of a column with more categories than
+that). Columns that used a bound are listed under `approximate` in the report. Text whose every
+value is a number, or 95% of whose values are ISO dates, is scored as numbers or dates, as the
+comparator does. A live run that resumed from a checkpoint scores only the events *it* delivered.
+
+### Alerts
+
+Alerts go to standard error as one line each, to the `--live-alerts FILE` as JSON lines (appended),
+and are in the report. An alert is raised when its condition becomes true and a `recovered` alert
+when it stops being true; a condition that stays true is not repeated.
+
+```json
+{"format":"shape-live-alert-v1","kind":"score-low","level":"error","table":"order_line","column":null,
+ "score":58.54,"threshold":70.0,"events":14400,"time":"2026-10-02T10:18:22+00:00",
+ "message":"table order_line: live score 58.54 < 70 after 14,400 events"}
+```
+
+| kind | level | raised when |
+|---|---|---|
+| `score-low` | error | a table's live score is below `--live-min-table-score` (70), or the overall score is below `--live-min-score` (85); the overall is judged once every table is |
+| `score-drop` | warning | a table's (or the overall) score is `--live-drop` points (5) or more below the best it had reached |
+| `column-low` | warning | a column's score is below `--live-min-column-score` (off unless given) |
+| `live-error` | error | the live side failed and was switched off (the stream goes on) |
+| `recovered` | info | an earlier alert's condition no longer holds (`table` and `column` name it) |
+
+The defaults are the `shape fidelity` pass marks. The alerts judge a table only once
+`--live-min-events` (1,000) of its events were seen (or all of a smaller table) and
+`--live-min-progress` (0.5) of the target table's rows: a table that is half emitted scores lower
+than the finished one (distinct counts grow with the rows), and that is not drift. The score in the
+report is never gated. Scores are computed every `--live-interval` events (50,000) and at least
+`--live-interval-seconds` (2) apart, and once more at the end.
+
+Exit codes: `shape emit` exits **0** when the run completed, whatever alerts were raised; with
+`--live-fail` it exits **1** when the run ends with a live pass mark missed (the final overall or
+a table below its mark, over the tables that were emitted) or an error alert other than `score-low`
+still active (`live-error`); **2** is bad input (an unknown target, `--live-profile` with
+`--no-live-profile`, a threshold out of range), as everywhere else in `shape emit`.
+
+Outputs: `--live-report FILE` (`.json`: the live summary with the alerts and the score trajectory
+and the fidelity report; `.md` or `.html`: the fidelity report), `--live-profile FILE` (the stream
+profiler's bounded profile of each table, JSON). `--json` adds a `live` object to the run report.
+
+### Overhead
+
+The tee costs CPU on the thread that feeds it and on the stream profiler. `--no-live-profile` leaves
+the profiler out. The measured events per second with and without the tee are in
+`docs/plans/evidence/P5-03/live_fidelity.json` (`benchmarks/live_fidelity/run.py`, section
+`overhead`); the numbers are summarised in `docs/plans/lane_status/P5-03.md`.
+
 ## Limits
 
 * The first block of a table with post-passes waits for the whole schema to generate.
 * Event order across tables is fixed (table by table); there is no interleaving.
 * Rate accuracy depends on the sink keeping up; `max_lag` in the report says whether it did.
+* Live fidelity compares what *this run* delivered with the target, and the target must be data (see above).

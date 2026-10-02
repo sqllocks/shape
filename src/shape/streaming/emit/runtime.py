@@ -22,14 +22,25 @@
 * **Checkpoint.** An atomic JSON document (offset, plan fingerprint, completion) written every
   ``checkpoint_every`` events or ``checkpoint_seconds``, and always on shutdown (end of the data,
   a limit, a stop request, or an error).
+* **Pacing is never blocked by housekeeping (realtime).** Two things used to be able to stall the
+  pacing thread for tens of milliseconds, which shows up as lag and as a short second: a full
+  garbage collection (its cost grows with every object the process holds, so a long-lived host
+  such as a test run or a notebook pays far more than a fresh ``shape emit``), and the checkpoint
+  write (an ``fsync``). A realtime run therefore freezes the objects that exist when it starts
+  (``gc.freeze``: a collection then scans only what the run itself allocates) and writes
+  checkpoints on a writer thread. The writer only ever persists an offset the pacing thread has
+  already delivered *and flushed*, so the at-least-once guarantee is unchanged; the final
+  checkpoint is still written synchronously before ``run`` returns.
 """
 
 from __future__ import annotations
 
+import gc
 import queue
 import threading
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -43,6 +54,79 @@ from shape.streaming.emit.source import EventPlan
 
 CHECKPOINT_FORMAT = "shape-emit-v1"
 _END = object()
+
+_gc_lock = threading.Lock()
+_gc_holders = 0
+_gc_owned = False
+
+
+@contextmanager
+def _gc_frozen() -> Iterator[None]:
+    """Keep full garbage collections cheap while a realtime run is pacing.
+
+    Freezes the objects that exist now (they stay alive and are scanned again only after
+    ``gc.unfreeze``); runs may overlap, and a freeze the caller made itself is left alone."""
+    global _gc_holders, _gc_owned
+    with _gc_lock:
+        if _gc_holders == 0:
+            _gc_owned = gc.get_freeze_count() == 0
+            if _gc_owned:
+                gc.freeze()
+        _gc_holders += 1
+    try:
+        yield
+    finally:
+        with _gc_lock:
+            _gc_holders -= 1
+            if _gc_holders == 0 and _gc_owned:
+                gc.unfreeze()
+                _gc_owned = False
+
+
+class _CheckpointWriter:
+    """Persists the newest submitted offset on its own thread (latest wins), so a slow ``fsync``
+    delays the writer and never the pacing. A failed write is raised by the next ``submit`` or by
+    ``close``."""
+
+    def __init__(self, write: Callable[[int], None]) -> None:
+        self._write = write
+        self._cond = threading.Condition()
+        self._pending: int | None = None
+        self._closed = False
+        self._error: BaseException | None = None
+        self._thread = threading.Thread(target=self._loop, name="shape-emit-ckpt", daemon=True)
+        self._thread.start()
+
+    def submit(self, offset: int) -> None:
+        with self._cond:
+            if self._error is not None:
+                raise self._error
+            self._pending = offset
+            self._cond.notify()
+
+    def close(self) -> None:
+        with self._cond:
+            self._closed = True
+            self._cond.notify()
+        self._thread.join()
+        if self._error is not None:
+            raise self._error
+
+    def _loop(self) -> None:
+        while True:
+            with self._cond:
+                while self._pending is None and not self._closed:
+                    self._cond.wait()
+                offset, self._pending = self._pending, None
+                if offset is None:
+                    return
+            try:
+                self._write(offset)
+            except BaseException as exc:
+                with self._cond:
+                    self._error = exc
+                    self._pending = None
+                return
 
 
 @dataclass
@@ -227,6 +311,12 @@ class EmitRunner:
                 time.sleep(cfg.retry_backoff * (2 ** (attempt - 1)))
 
     def run(self) -> EmitReport:
+        if self.schedule is None:
+            return self._run()
+        with _gc_frozen():
+            return self._run()
+
+    def _run(self) -> EmitReport:
         cfg = self.config
         report = EmitReport(total_events=self.plan.total_events)
         offset, was_complete = self.load_offset()
@@ -246,6 +336,9 @@ class EmitRunner:
 
         q: queue.Queue[Any] = queue.Queue(maxsize=cfg.effective_queue())
         errors: list[BaseException] = []
+        writer: _CheckpointWriter | None = None
+        if self._store is not None and self.schedule is not None:
+            writer = _CheckpointWriter(lambda off: self._save(off, False, report))
         producer = threading.Thread(
             target=self._producer, args=(q, offset, errors), name="shape-emit-gen", daemon=True
         )
@@ -308,7 +401,10 @@ class EmitRunner:
                     or now - checkpoint_time >= cfg.checkpoint_seconds
                 ):
                     self.sink.flush()
-                    self._save(delivered, False, report)
+                    if writer is not None:
+                        writer.submit(delivered)
+                    else:
+                        self._save(delivered, False, report)
                     since_checkpoint = 0
                     checkpoint_time = now
         except BaseException as exc:
@@ -322,6 +418,12 @@ class EmitRunner:
                 except queue.Empty:
                     pass
             producer.join()
+            try:
+                if writer is not None:
+                    writer.close()
+            except BaseException as exc:
+                failure = failure or exc
+                stopped_by = "error"
             try:
                 self.sink.flush()
             except BaseException as exc:
