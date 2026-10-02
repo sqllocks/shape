@@ -1,0 +1,88 @@
+{
+  "channel": "odbc",
+  "format": 1,
+  "result": {
+    "value": 3
+  },
+  "scenario": "sql_wide_string_after_a_short_first_row",
+  "source": "in-repo fake service",
+  "steps": [
+    {
+      "request": {
+        "op": "execute",
+        "params": [
+          "dbo",
+          "t"
+        ],
+        "sql": "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "fetchone"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [],
+        "sql": "CREATE TABLE [dbo].[t] (\n    [s] NVARCHAR(MAX) NULL\n)"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "commit"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "name": "fast_executemany",
+        "op": "set",
+        "value": false
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "executemany",
+        "rows": [
+          [
+            "a"
+          ],
+          [
+            "a longer string"
+          ],
+          [
+            "mid"
+          ]
+        ],
+        "sql": "INSERT INTO [dbo].[t] ([s]) VALUES (?)"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "commit"
+      },
+      "response": {
+        "value": null
+      }
+    }
+  ]
+}

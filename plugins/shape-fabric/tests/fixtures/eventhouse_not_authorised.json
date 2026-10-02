@@ -1,0 +1,29 @@
+{
+  "channel": "http",
+  "format": 1,
+  "result": {
+    "error": "WriteError",
+    "message": "writing KQL table 'customer' failed after 0 accepted request(s): eventhouse: not authorised (403): Forbidden: principal has no ingestor role"
+  },
+  "scenario": "eventhouse_not_authorised",
+  "source": "in-repo fake service",
+  "steps": [
+    {
+      "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".show tables | where TableName == 'customer' | count\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "Forbidden: principal has no ingestor role",
+        "headers": {},
+        "status": 403
+      }
+    }
+  ]
+}

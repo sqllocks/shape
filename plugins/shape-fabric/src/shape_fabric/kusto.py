@@ -1,0 +1,278 @@
+"""The Kusto (Eventhouse) transport shared by the ``eventhouse://`` emitter and the batch writer.
+
+One client: management commands (``/v1/rest/mgmt``), queries (``/v1/rest/query``) and streaming
+ingestion (``/v1/rest/ingest``), with the same retry rules for both callers:
+
+* HTTP 429 and 503 are waited for (``Retry-After`` honoured, doubling pause), up to
+  ``busy_retries`` times, then ``ConnectionError``;
+* 5xx, 408 and a dropped connection raise ``ConnectionError`` (the caller may retry);
+* 400 and the other 4xx raise :class:`ShapeError`; 401 and 403 raise :class:`AuthError`.
+
+Every name that reaches a command is quoted (``['...']``, ``\\`` and ``'`` escaped) and checked,
+and the mapping document is a proper KQL string literal, so a column called ``a'b`` or ``a"b``
+cannot change the command.
+"""
+
+from __future__ import annotations
+
+import json
+import time
+from collections.abc import Callable
+from typing import Any, NamedTuple
+from urllib import error as urlerror
+from urllib import request as urlrequest
+from urllib.parse import quote
+
+import pyarrow as pa  # type: ignore[import-untyped]
+
+from shape.errors import ShapeError
+
+from .errors import AuthError
+
+# transport(method, url, headers, body, timeout) -> (status, response headers, response body)
+Transport = Callable[[str, str, dict[str, str], bytes, float], tuple[int, dict[str, str], bytes]]
+MAPPING_NAME = "shape_json"
+_BUSY_PAUSE = 0.5
+_MAX_NAME = 1024
+
+
+class KustoTarget(NamedTuple):
+    host: str
+    database: str
+    tls: bool = True
+
+    @property
+    def base(self) -> str:
+        return f"{'https' if self.tls else 'http'}://{self.host}"
+
+
+def urllib_transport(
+    method: str, url: str, headers: dict[str, str], body: bytes, timeout: float
+) -> tuple[int, dict[str, str], bytes]:
+    req = urlrequest.Request(url, data=body, headers=headers, method=method)  # noqa: S310
+    try:
+        with urlrequest.urlopen(req, timeout=timeout) as resp:  # noqa: S310  # nosec B310
+            return resp.status, dict(resp.headers), resp.read()
+    except urlerror.HTTPError as exc:
+        return exc.code, dict(exc.headers or {}), exc.read()
+    except (urlerror.URLError, TimeoutError) as exc:
+        raise ConnectionError(f"eventhouse: {exc}") from exc
+
+
+# --- commands ----------------------------------------------------------------------------
+
+
+def check_name(name: str) -> str:
+    if not isinstance(name, str) or not name or len(name) > _MAX_NAME:
+        raise ShapeError(f"not a usable KQL name: {name!r}")
+    if any(ord(ch) < 32 for ch in name):
+        raise ShapeError("a KQL name cannot contain control characters")
+    return name
+
+
+def q(name: str) -> str:
+    """``name`` as a quoted KQL identifier: ``['name']``."""
+    check_name(name)
+    return "['" + name.replace("\\", "\\\\").replace("'", "\\'") + "']"
+
+
+def string_literal(text: str) -> str:
+    """``text`` as a single-quoted KQL string literal."""
+    return "'" + text.replace("\\", "\\\\").replace("'", "\\'") + "'"
+
+
+def kusto_type(t: pa.DataType) -> str:
+    if pa.types.is_dictionary(t):
+        return kusto_type(t.value_type)
+    if pa.types.is_boolean(t):
+        return "bool"
+    if pa.types.is_integer(t):
+        return "int" if t.bit_width <= 32 and pa.types.is_signed_integer(t) else "long"
+    if pa.types.is_floating(t):
+        return "real"
+    if pa.types.is_decimal(t):
+        return "decimal"
+    if pa.types.is_timestamp(t) or pa.types.is_date(t):
+        return "datetime"
+    if pa.types.is_list(t) or pa.types.is_large_list(t) or pa.types.is_struct(t):
+        return "dynamic"
+    return "string"  # strings, time of day, binary (base64)
+
+
+def create_table_command(table: str, schema: pa.Schema) -> str:
+    cols = ", ".join(f"{q(f.name)}:{kusto_type(f.type)}" for f in schema)
+    return f".create-merge table {q(table)} ({cols})"
+
+
+def create_strict_table_command(table: str, schema: pa.Schema) -> str:
+    cols = ", ".join(f"{q(f.name)}:{kusto_type(f.type)}" for f in schema)
+    return f".create table {q(table)} ({cols})"
+
+
+def mapping_name(table: str) -> str:
+    return MAPPING_NAME
+
+
+def create_mapping_command(table: str, schema: pa.Schema) -> str:
+    cols = [
+        {"column": f.name, "path": "$[" + json.dumps(f.name) + "]", "datatype": kusto_type(f.type)}
+        for f in schema
+    ]
+    return (
+        f".create-or-alter table {q(table)} ingestion json mapping "
+        f"'{mapping_name(table)}' {string_literal(json.dumps(cols))}"
+    )
+
+
+def streaming_policy_command(table: str) -> str:
+    return f".alter table {q(table)} policy streamingingestion enable"
+
+
+def drop_table_command(table: str) -> str:
+    return f".drop table {q(table)} ifexists"
+
+
+def show_table_command(table: str) -> str:
+    # a literal, not an identifier: .show tables | where TableName == '<name>'
+    return f".show tables | where TableName == {string_literal(check_name(table))} | count"
+
+
+def dedupe_query(table: str) -> str:
+    """The KQL that reads ``table`` with at-least-once repeats collapsed to one row per key."""
+    return f"{q(table)} | summarize take_any(*) by _shape_table, _shape_seq"
+
+
+# --- client ------------------------------------------------------------------------------
+
+
+class KustoClient:
+    """Calls to one Kusto database.
+
+    ``token`` is a function returning the bearer token for each request (``None`` when the
+    service wants none, as an emulator over plain HTTP). ``transport`` stands in for HTTP.
+    """
+
+    def __init__(
+        self,
+        target: KustoTarget,
+        token: Callable[[], str | None] | None = None,
+        *,
+        transport: Transport | None = None,
+        busy_pause: float = _BUSY_PAUSE,
+        busy_retries: int = 6,
+        timeout: float = 100.0,
+    ) -> None:
+        self.target = target
+        self._token = token
+        self._transport = transport or urllib_transport
+        self._busy_pause = busy_pause
+        self.busy_retries = busy_retries
+        self.timeout = timeout
+        self._prepared: set[tuple[str, str]] = set()
+        self.accepted = 0  # ingestion requests the service has accepted, over the client's life
+
+    def _headers(self, content_type: str = "application/json") -> dict[str, str]:
+        headers = {"Content-Type": content_type, "Accept": "application/json"}
+        bearer = self._token() if self._token else None
+        if bearer:
+            headers["Authorization"] = f"Bearer {bearer}"
+        return headers
+
+    def _call(self, method: str, url: str, content_type: str, body: bytes) -> bytes:
+        pause = self._busy_pause
+        attempt = 0
+        while True:
+            status, resp_headers, data = self._transport(
+                method, url, self._headers(content_type), body, self.timeout
+            )
+            if status < 300:
+                return data
+            text = data[:500].decode("utf-8", "replace")
+            if status in (429, 503):
+                attempt += 1
+                if attempt > self.busy_retries:
+                    raise ConnectionError(f"eventhouse: the service stayed busy ({status})")
+                retry_after = {k.lower(): v for k, v in resp_headers.items()}.get("retry-after")
+                time.sleep(float(retry_after) if retry_after and retry_after.isdigit() else pause)
+                pause *= 2
+            elif status in (401, 403):
+                raise AuthError(f"eventhouse: not authorised ({status}): {text}")
+            elif status >= 500 or status == 408:
+                raise ConnectionError(f"eventhouse: the service failed ({status}): {text}")
+            else:
+                raise ShapeError(f"eventhouse: request refused ({status}): {text}")
+
+    def _json_call(self, path: str, csl: str) -> Any:
+        body = json.dumps({"db": self.target.database, "csl": csl}).encode("utf-8")
+        data = self._call("POST", f"{self.target.base}{path}", "application/json", body)
+        try:
+            return json.loads(data or b"{}")
+        except ValueError:
+            return {}
+
+    def mgmt(self, csl: str) -> Any:
+        """Run a management command (``.create table ...``)."""
+        return self._json_call("/v1/rest/mgmt", csl)
+
+    def query(self, csl: str) -> list[list[Any]]:
+        """The rows of the first table of a query's answer."""
+        doc = self._json_call("/v1/rest/query", csl)
+        tables = doc.get("Tables") or []
+        return list(tables[0].get("Rows") or []) if tables else []
+
+    def table_exists(self, table: str) -> bool:
+        doc = self.mgmt(show_table_command(table))
+        tables = doc.get("Tables") or []
+        rows = tables[0].get("Rows") if tables else None
+        return bool(rows and rows[0] and int(rows[0][0]) > 0)
+
+    def prepare(self, table: str, schema: pa.Schema, *, create: str = "merge") -> None:
+        """Create (``create="merge"``: or extend) the table, its JSON mapping and its streaming
+        policy, once per client for one schema. ``create="strict"`` fails if the table exists."""
+        mark = (table, schema.to_string())
+        if mark in self._prepared:
+            return
+        first = (
+            create_strict_table_command(table, schema)
+            if create == "strict"
+            else create_table_command(table, schema)
+        )
+        self.mgmt(first)
+        self.mgmt(create_mapping_command(table, schema))
+        try:
+            # Streaming ingestion is on by default in a Fabric Eventhouse; where it is not, this
+            # enables it. A principal that may ingest but not alter policies is not an error.
+            self.mgmt(streaming_policy_command(table))
+        except (ShapeError, AuthError):
+            pass
+        self._prepared.add(mark)
+
+    def forget(self, table: str) -> None:
+        self._prepared = {m for m in self._prepared if m[0] != table}
+
+    def ingest(self, table: str, body: bytes) -> None:
+        """One streaming-ingestion request: JSON lines for ``table`` (at most 4 MB)."""
+        url = (
+            f"{self.target.base}/v1/rest/ingest/{quote(self.target.database, safe='')}/"
+            f"{quote(table, safe='')}?streamFormat=JSON&mappingName={mapping_name(table)}"
+        )
+        self._call("POST", url, "application/json; charset=utf-8", body)
+        self.accepted += 1
+
+    def ingest_lines(self, table: str, lines: Any, max_bytes: int) -> int:
+        """Send JSON ``lines`` (bytes each) in requests of at most ``max_bytes``; the number of
+        requests made. A single line above the limit goes alone (the service decides)."""
+        requests = 0
+        chunk: list[bytes] = []
+        size = 0
+        for line in lines:
+            if chunk and size + len(line) + 1 > max_bytes:
+                self.ingest(table, b"\n".join(chunk) + b"\n")
+                requests += 1
+                chunk, size = [], 0
+            chunk.append(line)
+            size += len(line) + 1
+        if chunk:
+            self.ingest(table, b"\n".join(chunk) + b"\n")
+            requests += 1
+        return requests
