@@ -484,6 +484,242 @@ do not use it as a gate; use `mode = "exact"` for gates.
     ("code", EXIT),
 ]
 
+# ------------------------------------------------------------ generation notebooks (PF-06)
+
+INSTALL_CELL = (
+    "code",
+    f"""# Upload the wheel(s) to this notebook's built-in resources folder (Resources > builtin):
+# the platform wheel (Rust kernel), {WHEEL} (pure Python) and, for a domain,
+# sqllocks_shape_domains-{VERSION}-py3-none-any.whl. pip takes the platform wheel when one
+# fits and falls back to the pure wheel; the exit value reports the kernel.
+# Once the packages are on PyPI the same line works without the upload.
+%pip install --find-links builtin "sqllocks-shape=={VERSION}" "sqllocks-shape-domains=={VERSION}"
+""",
+)
+
+GENERATE_PARAMETERS = """# Parameters cell (toggle "parameter cell" in Fabric). A pipeline overrides these.
+domain = "retail"         # an installed domain (`shape list`)
+scale = "small"           # a scale preset of the domain (`shape presets`)
+seed = 42                 # the same seed always generates the same rows
+mode = ""                 # "3nf" or "star"; empty keeps the domain's default schema
+tablePrefix = ""          # Delta tables are named <tablePrefix><table>, e.g. "retail_"
+writeMode = "overwrite"   # "overwrite" or "append" for the Delta tables
+outputDir = "shape"       # the contract and manifest go to Files/<outputDir>/<domain>/
+"""
+
+GENERATE_HELPERS = """import json
+from pathlib import Path
+
+import shape
+from shape.integrations.fabric import generation
+from shape.kernel.dispatch import get_kernel
+
+KERNEL = get_kernel().NAME  # "rust" with a platform wheel, "python" with the pure-Python wheel
+print(f"Shape {shape.__version__}, kernel: {KERNEL}")
+
+LAKEHOUSE = "/lakehouse/default"
+FILES = f"{LAKEHOUSE}/Files"
+TABLES = f"{LAKEHOUSE}/Tables"
+MAX_LISTED = 100
+
+# Names reach paths and table names: only identifiers are accepted.
+for _label, _value in (("domain", domain), ("scale", scale), ("outputDir", outputDir)):
+    generation.check_name(str(_value).strip("/"), _label)
+if tablePrefix:
+    generation.check_name(str(tablePrefix), "tablePrefix")
+"""
+
+GENERATE_RUN = """result = generation.generate_domain(
+    str(domain),
+    scale=str(scale),
+    seed=int(seed),
+    mode=str(mode) or None,
+)
+row_counts = {name: table.num_rows for name, table in result.tables.items()}
+print(f"Generated {sum(row_counts.values()):,} rows in {len(row_counts)} tables")
+for name in result.generation_order:
+    print(f"  {name:<24} {row_counts[name]:>10,} rows")
+"""
+
+GENERATE_WRITE = """tables = generation.write_delta_tables(
+    result, TABLES, prefix=str(tablePrefix), mode=str(writeMode)
+)
+
+# The contract the domain's own schema implies for these tables: the pipeline checks the
+# profile of the Delta tables against it (shape_profile_domain.ipynb).
+contract = generation.domain_contract(result.schema, row_counts)
+contract_rel = f"{str(outputDir).strip('/')}/{domain}/contract.json"
+generation.write_contract(contract, Path(FILES) / contract_rel)
+manifest = {
+    "domain": domain,
+    "scale": scale,
+    "seed": int(seed),
+    "mode": str(mode) or "default",
+    "tablePrefix": str(tablePrefix),
+    "tables": tables,
+}
+(Path(FILES) / contract_rel).with_name("generation.json").write_text(
+    json.dumps(manifest, indent=1), encoding="utf-8"
+)
+print("Delta tables written under", TABLES)
+print("Contract written to", Path(FILES) / contract_rel)
+"""
+
+GENERATE_RESULT = """result_value = {
+    "domain": domain,
+    "scale": scale,
+    "seed": int(seed),
+    "mode": str(mode) or "default",
+    "tablePrefix": str(tablePrefix),
+    "tables": tables[:MAX_LISTED],
+    "totalRows": sum(t["rows"] for t in tables),
+    "contractPath": contract_rel,
+    "kernel": KERNEL,
+}
+print(json.dumps(result_value, indent=2)[:4000])
+"""
+
+GENERATE_EXIT = """import notebookutils
+
+notebookutils.notebook.exit(json.dumps(result_value))
+"""
+
+GENERATE_CELLS = [
+    (
+        "markdown",
+        """# Shape: generate a domain into lakehouse Delta tables (Python notebook)
+
+Kernel: **Python 3.11 or 3.12** (not PySpark). Generates every table of an installed domain at a
+scale preset with a seed, and writes each as a Delta table `Tables/<tablePrefix><table>` in the
+default lakehouse. The same seed always generates the same rows.
+
+Next to the tables it writes `Files/<outputDir>/<domain>/contract.json`, the contract that the
+domain's own schema implies for these tables (row counts, columns, types, nullability, primary
+keys, enumerated values), and `generation.json`. `shape_profile_domain.ipynb` profiles the
+tables and checks them against that contract; `shape_generate_gate` runs both from a pipeline.
+
+The exit value is `{domain, scale, seed, mode, tablePrefix, tables, totalRows, contractPath,
+kernel}`. `notebookutils.notebook.exit` is the last statement, outside any `try`/`except`.
+""",
+    ),
+    ("code", '%%configure\n{"vCores": 8}\n'),
+    INSTALL_CELL,
+    ("code", GENERATE_PARAMETERS),
+    ("code", GENERATE_HELPERS),
+    ("code", GENERATE_RUN),
+    ("code", GENERATE_WRITE),
+    ("code", GENERATE_RESULT),
+    ("code", GENERATE_EXIT),
+]
+
+PROFILE_DOMAIN_PARAMETERS = """# Parameters cell (toggle "parameter cell" in Fabric). A pipeline overrides these.
+# Paths are relative to the lakehouse Files/ folder, or absolute.
+domain = "retail"         # labels the artifacts: Files/<outputDir>/<domain>/<timestamp>/
+contractPath = "shape/retail/contract.json"  # the multi-table contract shape_generate wrote
+tablePrefix = ""          # the Delta tables are <tablePrefix><table>, as shape_generate named them
+baselinePath = ""         # optional earlier .shape artifact to diff against
+outputDir = "shape"
+failOnDrift = False       # True: drift against the baseline also fails the gate
+"""
+
+PROFILE_DOMAIN_HELPERS = """import json
+import os
+from datetime import UTC, datetime
+from pathlib import Path
+
+import shape
+from shape.integrations.fabric import generation
+from shape.kernel.dispatch import get_kernel
+
+KERNEL = get_kernel().NAME
+print(f"Shape {shape.__version__}, kernel: {KERNEL}")
+
+LAKEHOUSE = "/lakehouse/default"
+FILES = f"{LAKEHOUSE}/Files"
+MAX_LISTED = 100
+
+
+def _as_bool(value) -> bool:
+    \"\"\"Pipeline parameters may arrive as strings.\"\"\"
+    if isinstance(value, str):
+        return value.strip().lower() in ("1", "true", "yes", "y")
+    return bool(value)
+
+
+def _resolve(path: str) -> str:
+    return path if os.path.isabs(path) else f"{FILES}/{path}"
+
+
+failOnDrift = _as_bool(failOnDrift)
+generation.check_name(str(domain), "domain")
+if tablePrefix:
+    generation.check_name(str(tablePrefix), "tablePrefix")
+safe_name = str(domain)
+stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+out_rel = f"{outputDir.strip('/')}/{safe_name}/{stamp}"
+out_dir = Path(FILES) / out_rel
+"""
+
+PROFILE_DOMAIN_PROFILE = """from deltalake import DeltaTable
+
+# The contract names the tables: every one of them is read and profiled.
+with open(_resolve(contractPath), encoding="utf-8") as fh:
+    contract_tables = list(json.load(fh)["tables"])
+
+sources = {}
+for name in contract_tables:
+    generation.check_name(name, "table")
+    delta_dir = f"{LAKEHOUSE}/Tables/{tablePrefix}{name}"
+    sources[name] = DeltaTable(delta_dir).to_pyarrow_table()
+total_rows = sum(t.num_rows for t in sources.values())
+profile = shape.profile(sources, name=str(domain))
+print(f"Profiled {total_rows:,} rows in {len(sources)} tables")
+"""
+
+PROFILE_DOMAIN_RESULT = """result = {
+    "domain": domain,
+    "tables": {name: t.num_rows for name, t in sources.items()},
+    "rows": total_rows,
+    "passed": passed,
+    "violations": violations[:MAX_LISTED],
+    "drifted": drifted,
+    "changes": changes[:MAX_LISTED],
+    "artifactPath": artifact_path,
+    "truncated": len(violations) > MAX_LISTED or len(changes) > MAX_LISTED,
+    "kernel": KERNEL,
+}
+print(json.dumps(result, indent=2, default=str)[:4000])
+"""
+
+PROFILE_DOMAIN_CELLS = [
+    (
+        "markdown",
+        """# Shape: profile a generated domain and check it against its contract (Python notebook)
+
+Run after `shape_generate.ipynb`. Reads every Delta table named in the domain's contract,
+profiles them together (so keys and foreign keys between tables are detected), checks the profile
+against the contract, optionally diffs it against a baseline, writes the artifacts to
+`Files/<outputDir>/<domain>/<timestamp>/`, shows the HTML report and returns a compact JSON
+result to the calling pipeline.
+
+The exit value is `{domain, tables, rows, passed, violations, drifted, changes, artifactPath,
+truncated, kernel}`. `passed` is false when any table breaks the contract: a row count that is not
+the generated one, a missing or extra column, a null in a column the schema says is never null, a
+value outside an enumerated set, a duplicated primary key.
+""",
+    ),
+    ("code", '%%configure\n{"vCores": 8}\n'),
+    INSTALL_CELL,
+    ("code", PROFILE_DOMAIN_PARAMETERS),
+    ("code", PROFILE_DOMAIN_HELPERS),
+    ("code", PROFILE_DOMAIN_PROFILE),
+    ("code", CHECK_AND_DIFF),
+    ("code", WRITE_ARTIFACTS),
+    ("code", DISPLAY),
+    ("code", PROFILE_DOMAIN_RESULT),
+    ("code", EXIT),
+]
+
 # --------------------------------------------------------------------------- output
 
 
@@ -532,6 +768,8 @@ def build() -> dict[str, dict]:
         "shape_profile.ipynb": _notebook(PYTHON_CELLS, spark=False),
         "shape_profile_spark.ipynb": _notebook(SPARK_CELLS, spark=True),
         "shape_profile_distributed.ipynb": _notebook(DISTRIBUTED_CELLS, spark=True),
+        "shape_generate.ipynb": _notebook(GENERATE_CELLS, spark=False),
+        "shape_profile_domain.ipynb": _notebook(PROFILE_DOMAIN_CELLS, spark=False),
     }
 
 

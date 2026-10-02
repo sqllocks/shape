@@ -39,11 +39,13 @@ __all__ = [
     "MAX_SAMPLE_ROWS",
     "GenerationRequestError",
     "check_name",
+    "contract_for_domain",
     "delta_ready",
     "domain_contract",
     "fit_rows",
     "generate_domain",
     "generate_sample",
+    "plan_row_counts",
     "sample_row_counts",
     "sample_to_pandas",
     "write_contract",
@@ -99,19 +101,9 @@ def generate_domain(
     schema's and ``mode`` (``3nf`` or ``star``) picks the schema of a domain that offers both.
     ``row_counts`` overrides single tables. Unknown names raise :class:`GenerationRequestError`.
     """
-    from shape.generation.domains import DomainModeError, domain_names, load_domain
     from shape.generation.engine import Engine
 
-    check_name(domain, "domain")
-    if domain not in domain_names():
-        known = ", ".join(domain_names()) or "none installed"
-        raise GenerationRequestError(f"no domain named {domain!r} (installed: {known})")
-    if mode is not None and mode not in ("3nf", "star"):
-        raise GenerationRequestError(f"mode must be '3nf' or 'star', got {mode!r}")
-    try:
-        loaded = load_domain(domain, mode=mode)
-    except DomainModeError as exc:
-        raise GenerationRequestError(str(exc)) from exc
+    loaded = _load(domain, mode)
     if scale is not None:
         check_name(scale, "scale")
         presets = loaded.schema.generation.scales
@@ -155,9 +147,7 @@ def _enum_values(generator: dict[str, Any]) -> list[Any] | None:
     return None
 
 
-def _column_rules(
-    column: Any, rows: int, primary_key: list[str]
-) -> dict[str, Any]:
+def _column_rules(column: Any, rows: int, primary_key: list[str]) -> dict[str, Any]:
     rules: dict[str, Any] = {}
     values = _enum_values(column.generator) if column.strategy == "weighted_enum" else None
     dtype = _DTYPE.get(str(column.type))
@@ -214,6 +204,47 @@ def domain_contract(schema: GenSchema, row_counts: dict[str, int]) -> dict[str, 
             "columns": columns,
         }
     return {"tables": tables}
+
+
+def _load(domain: str, mode: str | None) -> Any:
+    from shape.generation.domains import DomainModeError, domain_names, load_domain
+
+    check_name(domain, "domain")
+    if domain not in domain_names():
+        known = ", ".join(domain_names()) or "none installed"
+        raise GenerationRequestError(f"no domain named {domain!r} (installed: {known})")
+    if mode is not None and mode not in ("3nf", "star"):
+        raise GenerationRequestError(f"mode must be '3nf' or 'star', got {mode!r}")
+    try:
+        return load_domain(domain, mode=mode)
+    except DomainModeError as exc:
+        raise GenerationRequestError(str(exc)) from exc
+
+
+def plan_row_counts(
+    domain: str, scale: str | None = None, mode: str | None = None
+) -> dict[str, int]:
+    """Rows per table that :func:`generate_domain` would generate, without generating: for
+    refusing a run that is too large for the machine before it starts."""
+    from shape.generation.engine import calculate_row_counts
+
+    schema = _load(domain, mode).schema
+    if scale is not None:
+        check_name(scale, "scale")
+        if scale not in schema.generation.scales:
+            raise GenerationRequestError(
+                f"domain {domain!r} has no scale preset {scale!r} "
+                f"(presets: {', '.join(schema.generation.scales)})"
+            )
+        schema.generation.scale = scale
+    return calculate_row_counts(schema)
+
+
+def contract_for_domain(
+    domain: str, row_counts: dict[str, int], mode: str | None = None
+) -> dict[str, Any]:
+    """:func:`domain_contract` for the schema of the installed domain ``domain``."""
+    return domain_contract(_load(domain, mode).schema, row_counts)
 
 
 def write_contract(contract: dict[str, Any], path: str | Path) -> Path:
@@ -310,9 +341,7 @@ def generate_sample(domain: str, table: str, rows: int = 10_000, seed: int = 42)
             f"domain {domain!r} has no table {table!r} (tables: {', '.join(schema.tables)})"
         )
     wanted = min(rows, MAX_SAMPLE_ROWS)
-    result = generate_domain(
-        domain, seed=seed, row_counts=sample_row_counts(schema, table, wanted)
-    )
+    result = generate_domain(domain, seed=seed, row_counts=sample_row_counts(schema, table, wanted))
     out: pa.Table = result.tables[table]
     return out
 
