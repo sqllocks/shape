@@ -232,7 +232,7 @@ def numbers(col: pa.ChunkedArray, origin_us: int = 0) -> np.ndarray:
     are dropped."""
     t = col.type
     if pa.types.is_timestamp(t):
-        arr = pc.cast(col, pa.timestamp("us", t.tz)).cast(pa.int64())
+        arr = pc.cast(col, pa.timestamp("us", t.tz), safe=False).cast(pa.int64())  # ns -> us truncates
         x = arr.to_numpy(zero_copy_only=False).astype(np.float64)
         x = x[~np.isnan(x)] if arr.null_count else x
         return (x - origin_us) / 1e6
@@ -288,7 +288,8 @@ class Col:
     otherwise categorical: TVD), ``num``, ``time``, ``enum``, ``id`` (unique, ``regex``),
     ``pattern`` (every value matches one of ``regexes``), ``vocab`` (values from ``vocab``),
     ``exact`` (equal to the baseline's, row by row, within ``tol``), ``const`` (every value equals
-    ``value``) and ``skip`` (checked by the case itself)."""
+    ``value``) and ``skip`` (checked by the case itself). For ``enum``, ``vocab`` adds a declared value set to
+    the values the reference run happened to draw (a rare flag may not occur in one seed)."""
 
     kind: str = "auto"
     regex: str | None = None
@@ -476,7 +477,8 @@ def _compare_column(
     d = tvd(fs, fr)
     tol = max(3 * tvd_noise(len(fr), len(vs_), len(vr)), 1.5 * drift + 0.002)
     rep.add(f"{label}:tvd", d <= tol, tvd=d, tol=tol, baseline_spread=drift, distinct=len(fr))
-    overlap = sum(1 for v in vs_ if v in fr) / len(vs_) if vs_ else 1.0
+    known = set(fr) | {str(v) for v in (col.vocab or ())}  # a declared value set counts as known
+    overlap = sum(1 for v in vs_ if v in known) / len(vs_) if vs_ else 1.0
     rep.add(f"{label}:vocab_overlap", overlap >= VOCAB_MIN, overlap=overlap)
 
 
@@ -561,6 +563,45 @@ def baseline_once(
 # ---- cases ----------------------------------------------------------------------------------
 
 
+def mutations(run: Run) -> dict[str, Run]:
+    """Deliberate defects in Shape's output (negative controls of the comparison itself): a
+    renamed column, a scaled column, extra nulls, a changed category, dropped rows."""
+    out: dict[str, Run] = {}
+    tables = {k: v for k, v in run.tables.items() if v.num_rows > 20}
+
+    def variant(table_name: str, table: pa.Table) -> Run:
+        return Run({**run.tables, table_name: table}, run.stats)
+
+    for tname, t in tables.items():
+        floats = [f.name for f in t.schema if pa.types.is_floating(f.type)]
+        text = [f.name for f in t.schema if pa.types.is_string(f.type) and 1 < len(set(t.column(f.name).drop_null().to_pylist())) <= 20]
+        if "rename" not in out and t.num_columns > 1:
+            names_ = list(t.column_names)
+            names_[1] = names_[1] + "_x"
+            out["rename a column"] = variant(tname, t.rename_columns(names_))
+        if floats and "scale" not in out:
+            i = t.column_names.index(floats[0])
+            col = pc.multiply(t.column(floats[0]), 1.1)
+            out["scale a numeric column by 1.1"] = variant(tname, t.set_column(i, floats[0], col))
+        if floats and "nulls" not in out:
+            i = t.column_names.index(floats[0])
+            keep = pa.array(np.arange(t.num_rows) % 10 != 0)
+            col = pc.if_else(keep, t.column(floats[0]), pa.scalar(None, t.schema.field(floats[0]).type))
+            out["null 10% of a numeric column"] = variant(tname, t.set_column(i, floats[0], col))
+        if text and "category" not in out:
+            i = t.column_names.index(text[0])
+            vals = t.column(text[0]).drop_null().to_pylist()
+            top = max(set(vals), key=vals.count)
+            swap = pa.array(np.arange(t.num_rows) % 5 == 0)
+            col = pc.if_else(pc.and_(swap, pc.equal(t.column(text[0]), top)), pa.scalar("zzz-new-category"), t.column(text[0]))
+            out["relabel a fifth of a category"] = variant(tname, t.set_column(i, text[0], col))
+    biggest = max(tables, key=lambda k: tables[k].num_rows, default=None)
+    if biggest:
+        t = tables[biggest]
+        out["drop 30% of the rows"] = variant(biggest, t.filter(pa.array(np.arange(t.num_rows) % 10 >= 3)))
+    return out
+
+
 def run_case(module: Any, ctx: Context) -> tuple[list[Report], list[dict[str, Any]], list[Report]]:
     """Run one case module: its configurations against the baseline, its negative controls and
     its allow-list probes. Returns ``(reports, controls, probes)``."""
@@ -586,6 +627,16 @@ def run_case(module: Any, ctx: Context) -> tuple[list[Report], list[dict[str, An
             rep = Report(f"{module.NAME}[{cid}] control {cname}")
             module.compare(rep, run, baselines[cid], configs[cid], inputs, ctx.quick)
             controls.append({"control": f"{module.NAME}:{cname}", "detected": bool(rep.failed), "failed_checks": [c.name for c in rep.failed][:6]})
+    if not ctx.skip_controls:
+        first = next(iter(configs))
+        for what, run in mutations(shape_runs[first]).items():
+            rep = Report(f"{module.NAME}[{first}] output control {what}")
+            try:
+                module.compare(rep, run, baselines[first], configs[first], inputs, ctx.quick)
+            except (TypeError, ValueError, KeyError, IndexError, ZeroDivisionError) as exc:
+                # a comparison that cannot even read the damaged output has not accepted it
+                rep.add("comparison could not read the output", False, error=f"{type(exc).__name__}: {exc}")
+            controls.append({"control": f"{module.NAME}:output: {what}", "detected": bool(rep.failed), "failed_checks": [c.name for c in rep.failed][:6]})
     if hasattr(module, "probes") and not ctx.only_controls:
         probes = module.probes(ctx)
     return reports, controls, probes

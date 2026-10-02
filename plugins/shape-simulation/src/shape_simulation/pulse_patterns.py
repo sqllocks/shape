@@ -25,6 +25,7 @@ The same configuration (seed included) gives the same tables.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -108,9 +109,19 @@ class PulseSimResult(TablesResult):
         return "PulseSimResult(" + ", ".join(f"{k}={v.num_rows}" for k, v in self.tables.items()) + ")"
 
 
-def _sorted_ts(table: pa.Table, column: str) -> pa.Table:
-    order = pc.sort_indices(table, sort_keys=[(column, "ascending")])
-    return table.take(order)  # type: ignore[no-any-return]
+def _exact_sums(column: pa.ChunkedArray) -> np.ndarray:
+    """The sum of each group's values (a column of lists), correctly rounded and ignoring
+    nulls, so that a rounded total never depends on the order the values were added in."""
+    return np.array([math.fsum(v for v in values if v is not None) for values in column.to_pylist()])
+
+
+def _exact_means(column: pa.ChunkedArray) -> np.ndarray:
+    """The mean of each group's values (a column of lists); NaN where a group has none."""
+    out = []
+    for values in column.to_pylist():
+        kept = [v for v in values if v is not None]
+        out.append(math.fsum(kept) / len(kept) if kept else math.nan)
+    return np.array(out)
 
 
 class PulseDemandSimulator:
@@ -470,38 +481,49 @@ class PulseDemandSimulator:
         done_groups = done.group_by(keys, use_threads=False).aggregate(
             [
                 ("trip_id", "count"),
-                ("fare", "sum", zero_ok),
-                ("surge_fare", "sum", zero_ok),
-                ("fare", "mean"),
-                ("surge_mult", "mean"),
+                ("fare", "list"),
+                ("surge_fare", "list"),
+                ("surge_mult", "list"),
                 ("rider_id", "count_distinct"),
                 ("driver_id", "count_distinct"),
             ]
         )
-        joined = all_groups.join(done_groups, keys=keys, join_type="left outer", right_suffix="_done")
+        done_exact = pa.table(
+            {
+                "date_key": done_groups.column("date_key"),
+                "city_id": done_groups.column("city_id"),
+                "completed_trips": done_groups.column("trip_id_count"),
+                "fare_sum": pa.array(_exact_sums(done_groups.column("fare_list"))),
+                "surge_fare_sum": pa.array(_exact_sums(done_groups.column("surge_fare_list"))),
+                "fare_mean": pa.array(_exact_means(done_groups.column("fare_list"))),
+                "surge_mult_mean": pa.array(_exact_means(done_groups.column("surge_mult_list"))),
+                "unique_riders": done_groups.column("rider_id_count_distinct"),
+                "unique_drivers": done_groups.column("driver_id_count_distinct"),
+            }
+        )
+        joined = all_groups.join(done_exact, keys=keys, join_type="left outer")
         joined = joined.sort_by([("date_key", "ascending"), ("city_id", "ascending")])
 
         def num(name: str, integer: bool = False) -> np.ndarray:
-            col = joined.column(name).to_numpy()
-            col = np.nan_to_num(col.astype(np.float64), nan=0.0)
-            return col.astype(np.int64) if integer else col
+            col = np.nan_to_num(joined.column(name).to_numpy().astype(np.float64), nan=0.0)
+            return col.astype(np.int64) if integer else col  # a day with no completed trip is 0
 
-        gross = np.round(num("fare_sum"), 2)
+        fare_sum = num("fare_sum")
         n = joined.num_rows
         return pa.table(
             {
                 "date_key": joined.column("date_key"),
                 "city_id": joined.column("city_id"),
-                "completed_trips": pa.array(num("trip_id_count_done", True), pa.int64()),
-                "gross_revenue": float_array(gross),
+                "completed_trips": pa.array(num("completed_trips", True), pa.int64()),
+                "gross_revenue": float_array(np.round(fare_sum, 2)),
                 "surge_revenue": float_array(np.round(num("surge_fare_sum"), 2)),
                 "avg_fare": float_array(np.round(num("fare_mean"), 2)),
                 "avg_surge_mult": float_array(np.round(num("surge_mult_mean"), 2)),
-                "unique_riders": pa.array(num("rider_id_count_distinct", True), pa.int64()),
-                "unique_drivers": pa.array(num("driver_id_count_distinct", True), pa.int64()),
+                "unique_riders": pa.array(num("unique_riders", True), pa.int64()),
+                "unique_drivers": pa.array(num("unique_drivers", True), pa.int64()),
                 "trips": pa.array(num("trip_id_count", True), pa.int64()),
                 "cancelled_trips": pa.array(num("cancelled_sum", True), pa.int64()),
-                "net_revenue": float_array(np.round(num("fare_sum") * (1 - _PLATFORM_FEE), 2)),
+                "net_revenue": float_array(np.round(fare_sum * (1 - _PLATFORM_FEE), 2)),
                 "source_store": pa.array(np.full(n, "Warehouse", dtype=object), pa.string()),
             }
         )
@@ -530,20 +552,19 @@ class PulseDemandSimulator:
             [
                 ("city_id", "first"),
                 ("trip_id", "count"),
-                ("fare", "sum", zero_ok),
-                ("tip", "sum", zero_ok),
-                ("duration_min", "sum", zero_ok),
-                ("rating_given", "mean"),
+                ("fare", "list"),
+                ("tip", "list"),
+                ("duration_min", "list"),
+                ("rating_given", "list"),
             ]
         )
         groups = groups.sort_by([("date_key", "ascending"), ("driver_id", "ascending")])
 
-        def num(name: str) -> np.ndarray:
-            return np.nan_to_num(groups.column(name).to_numpy().astype(np.float64), nan=0.0)
-
-        gross, tips = num("fare_sum"), num("tip_sum")
-        hours = np.round(num("duration_min_sum") / 60.0, 2)
-        rating = groups.column("rating_given_mean").to_numpy().astype(np.float64)
+        gross = np.nan_to_num(_exact_sums(groups.column("fare_list")))
+        tips = np.nan_to_num(_exact_sums(groups.column("tip_list")))
+        minutes = _exact_sums(groups.column("duration_min_list"))
+        hours = np.array([round(float(m) / 60.0, 2) for m in minutes])  # decimal rounding
+        rating = _exact_means(groups.column("rating_given_list"))
         n = groups.num_rows
         return pa.table(
             {
