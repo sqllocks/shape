@@ -41,7 +41,7 @@
 ........................................................................ [ 62%]
 ........................................................................ [ 63%]
 ........................................................................ [ 65%]
-........................................................................ [ 66%]
+....................................................................F... [ 66%]
 ........................................................................ [ 68%]
 ........................................................................ [ 70%]
 ........................................................................ [ 71%]
@@ -64,6 +64,23 @@
 ........................................................................ [ 97%]
 ........................................................................ [ 98%]
 ..................................................                       [100%]
+=================================== FAILURES ===================================
+___________________ test_every_skeleton_builds_a_pure_wheel ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-14/test_every_skeleton_builds_a_p0')
+
+    def test_every_skeleton_builds_a_pure_wheel(tmp_path):
+        script = _script()
+        assert script.build_wheels(tmp_path, isolated=not _pip_args()) == []
+        assert len(list(tmp_path.glob("*.whl"))) == 7
+>       assert not list((ROOT / "plugins").rglob("build")), "build left files in the source tree"
+E       AssertionError: build left files in the source tree
+E       assert not [PosixPath('/home/user/shape/plugins/shape-domains/build')]
+E        +  where [PosixPath('/home/user/shape/plugins/shape-domains/build')] = list(<generator object Path.rglob at 0x7f53a6ad7670>)
+E        +    where <generator object Path.rglob at 0x7f53a6ad7670> = rglob('build')
+E        +      where rglob = (PosixPath('/home/user/shape') / 'plugins').rglob
+
+tests/plugins/test_plugin_kit_install.py:159: AssertionError
 =============================== warnings summary ===============================
 tests/artifact/test_hardening.py::test_duplicate_member_rejected
 tests/security/test_ga_security.py::test_archive_duplicate_member
@@ -101,5 +118,7 @@ tests/kernel/test_exact_kernel.py::test_numeric_stats_with_infinities
     np.subtract(b, diff * (1 - t), out=res, where=t >= 0.5, casting="unsafe", dtype=res.dtype)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-4730 passed, 46 deselected, 14 warnings in 417.27s (0:06:57)
-exit=0
+=========================== short test summary info ============================
+FAILED tests/plugins/test_plugin_kit_install.py::test_every_skeleton_builds_a_pure_wheel
+1 failed, 4729 passed, 46 deselected, 14 warnings in 816.80s (0:13:36)
+exit=1
