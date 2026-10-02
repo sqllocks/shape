@@ -621,6 +621,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.transform import add_arguments as add_transform_arguments
 
     add_transform_arguments(sub)
+    from shape.cli.jobs import add_arguments as add_jobs_arguments
+
+    add_jobs_arguments(sub)
     fi = sub.add_parser(
         "fidelity",
         aliases=["compare"],
@@ -883,6 +886,10 @@ def _dispatch(argv):
         from shape.cli.mask import run as run_mask
 
         return _run(run_mask, a)
+    if a.cmd == "jobs":
+        from shape.cli.jobs import run as run_jobs
+
+        return _run(run_jobs, a)
     if a.cmd == "transform":
         from shape.cli.transform import run as run_transform
 
