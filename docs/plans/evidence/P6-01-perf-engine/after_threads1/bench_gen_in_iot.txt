@@ -1,0 +1,18 @@
+[medium] spindle          warm-up 1: total 0.64s
+[medium] shape            warm-up 1: total 0.09s
+[medium] spindle          run 1: total 0.62s  gen 0.34s  write 0.28s  rss 311MB  load 1.22
+[medium] shape            run 1: total 0.10s  gen 0.10s  write 0.00s  rss 139MB  load 1.22
+[medium] spindle          run 2: total 0.52s  gen 0.38s  write 0.14s  rss 311MB  load 1.22
+[medium] shape            run 2: total 0.09s  gen 0.09s  write 0.00s  rss 139MB  load 1.20
+[medium] spindle          run 3: total 0.42s  gen 0.32s  write 0.10s  rss 311MB  load 1.20
+[medium] shape            run 3: total 0.09s  gen 0.09s  write 0.00s  rss 139MB  load 1.20
+[medium] spindle          run 4: total 0.66s  gen 0.38s  write 0.27s  rss 311MB  load 1.20
+[medium] shape            run 4: total 0.09s  gen 0.09s  write 0.00s  rss 139MB  load 1.18
+[medium] spindle          run 5: total 0.45s  gen 0.32s  write 0.13s  rss 311MB  load 1.18
+[medium] shape            run 5: total 0.09s  gen 0.09s  write 0.00s  rss 139MB  load 1.18
+
+== iot medium: median of 5 fresh-process runs, 4 cores
+tool                     rows  total s   gen s  write s  rows/s total   rows/s gen  peak RSS MB
+spindle               292,620     0.52    0.34     0.14       563,406      849,348          311
+shape                 292,620     0.09    0.09     0.00     3,188,427    3,188,427          139
+speedup (shape vs spindle): total 5.66x
