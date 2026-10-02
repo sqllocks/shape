@@ -1,29 +1,12 @@
 == ruff check src tests plugins benchmarks/vs_spindle
 All checks passed!
 == ruff format --check
-551 files already formatted
+577 files already formatted
 == mypy
-Success: no issues found in 251 source files
+Success: no issues found in 260 source files
 == vulture
 exit 0
 == lint-imports
-
-╔══╗─────────▶╔╗ ╔╗      ╔╗◀───┐
-╚╣╠╝◀─────┐  ╔╝╚╗║║────▶╔╝╚╗   │
- ║║   ╔══╦══╦╩╗╔╝║║  ╔╦═╩╗╔╝╔═╦══╗
- ║║╔══╣╔╗║╔╗║╔╣║ ║║ ╔╬╣╔╗║║ ║│║╔═╝
-╔╣╠╣║║║╚╝║╚╝║║║╚╗║╚═╝║║║║║╚╗║═╣║
-╚══╩╩╩╣╔═╩══╩╝╚═╝╚═══╩╩╝╚╩═╩╩═╩╝
-  └──▶║║                    ▲ 
-      ╚╝────────────────────┘
-
-
----------
-Contracts
----------
-
-Analyzed 248 files, 509 dependencies.
--------------------------------------
 
 Built-ins load only through the plugin registry (plan 4.3) KEPT (1 ignored import)
 
