@@ -1,7 +1,7 @@
 # sqllocks-shape-fabric
 
-Shape plugin: Microsoft Fabric. Today it holds the two event emitters of `shape emit`
-(`shape.emitters`); Fabric, Synapse and Azure Data Factory pipeline integration is added by its own
+Shape plugin: Microsoft Fabric. It holds the two event emitters of `shape emit`
+(`shape.emitters`), the `sqlserver` and `warehouse` sinks (`shape.sinks`) and the writers; Fabric, Synapse and Azure Data Factory pipeline integration is added by its own
 work packages.
 
 ```
@@ -71,11 +71,49 @@ OneLake paths.
 Profile a lakehouse straight from OneLake: `shape profile onelake://<workspace>/<lakehouse>/Tables/<table>`
 (Delta) or `.../Files/<path>`; authentication and `adlfs` handling are core's `abfss://` source.
 
+## `mssql://`: a live SQL Server, Azure SQL or Fabric SQL sink
+
+`shape-fabric` registers two `shape.sinks` entries: `sqlserver` (URI schemes `mssql` and
+`sqlserver`, bulk insert into a live database) and `warehouse` (`warehouse://`, `COPY INTO`). The
+`sql` sink of core is different: it writes a script file and never connects.
+
+```python
+from shape.plugins.host import PluginHost
+
+sink = PluginHost().get("shape.sinks", "sqlserver")
+sink.write(
+    "mssql://myserver.database.windows.net/shop?schema=dbo&write_mode=append",
+    "customer",
+    batches,  # batches: an iterable of Arrow RecordBatch
+    credential=my_credential,  # get_token(scope) or scope -> token (Entra)
+    commit_rows=50_000,  # optional: commit every 50,000 rows
+)
+```
+
+| URI part or option | meaning |
+|---|---|
+| `mssql://[user[:password]@]host[:port]/database` | the server and database (`sqlserver://` is the same) |
+| `?schema=`, `schema_name=` | SQL schema (default `dbo`; created when missing) |
+| `?write_mode=`, `write_mode=` | `create` (default; an existing table is an error), `append`, `truncate`, `replace` |
+| `?batch_size=`, `batch_size=` | rows per round trip (default 5,000) |
+| `?commit_rows=`, `commit_rows=` | commit every N rows while the batches are consumed, so readers see rows as they arrive; the default is one transaction per call (a failure rolls everything back). With `commit_rows` a failure rolls back only the open chunk and keeps what was committed |
+| `credential=` | Microsoft Entra sign-in; without it the login is `user` and `password` |
+| `connection_string=`, `connection=` | an ODBC/ADO.NET connection string, or an open DB-API connection (never closed by the sink), instead of the URI's host and database |
+| `driver`, `encrypt`, `trust_server_certificate`, `timeout` | connection settings (query or option) |
+
+Each call writes one table and is safe to call again for each micro-batch of a stream with
+`write_mode=append`. The batches are consumed one at a time; nothing is held back until the end.
+A password is accepted as an option or in the URI's user information, never in the query string; no
+password, token or connection string appears in an exception message or a log record, and none
+should go on a command line (use an environment variable and pass it as an option). The `--auth`
+modes and `env://`, `kv://` and `file://` credential references are added to these writers by the
+sign-in work package and will apply here without a change to the sink.
+
 ## Tests
 
 Contract tests replay recorded interactions (`tests/fixtures/*.json`, made by `python -m
 shape_fabric.scenarios record <dir>`; secrets are scrubbed, and a test fails if a tape holds one).
-Emulator tests: `test_sql_emulator.py` (SQL Server), `test_kusto_emulator.py`. Live tests
+Emulator tests: `test_sql_emulator.py` and `test_sqlserver_sink_emulator.py` (SQL Server), `test_kusto_emulator.py`. Live tests
 (`test_live_writers.py`, nightly `fabric-live` job) need the `FABRIC_*` secrets listed in the file.
 
 Contract tests run on every PR against in-memory fakes (`shape_fabric.testing`; the emitter
