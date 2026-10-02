@@ -311,7 +311,9 @@ class GenSchema:
         tables: dict[str, Table] = {}
         for tname, t in doc["tables"].items():
             if not is_safe_name(tname):
-                raise GenSchemaError(f"tables.{tname!r}: a table name must be a plain name, not a path")
+                raise GenSchemaError(
+                    f"tables.{tname!r}: a table name must be a plain name, not a path"
+                )
             columns = {
                 cname: Column(
                     name=cname,

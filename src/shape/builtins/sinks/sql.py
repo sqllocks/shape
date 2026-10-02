@@ -116,7 +116,12 @@ def _quote(name: str, dialect: str) -> str:
 
 def _dimension(value: Any, what: str) -> int:
     """A length, precision or scale goes into DDL text: it must be a non-negative integer."""
-    if isinstance(value, bool) or not isinstance(value, int | float) or value != int(value) or value < 0:
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int | float)
+        or value != int(value)
+        or value < 0
+    ):
         raise ValueError(f"column {what} must be a non-negative integer, got {value!r}")
     return int(value)
 

@@ -81,11 +81,14 @@ class _Timeout(BaseException):
 @contextlib.contextmanager
 def _time_limit(seconds: float) -> Iterator[None]:
     # SIGALRM works only on the main thread of a POSIX process; elsewhere the limit is not enforced.
-    if not hasattr(signal, "setitimer") or threading.current_thread() is not threading.main_thread():
+    if (
+        not hasattr(signal, "setitimer")
+        or threading.current_thread() is not threading.main_thread()
+    ):
         yield
         return
 
-    def _fire(signum: int, frame: Any) -> None:
+    def _fire(_signum: int, _frame: Any) -> None:
         raise _Timeout(f"no result after {seconds}s")
 
     old = signal.signal(signal.SIGALRM, _fire)
@@ -188,7 +191,9 @@ def _dump_json(rng: random.Random, obj: Any) -> bytes:
     except (ValueError, TypeError, RecursionError):
         return b"{"
     if rng.random() < 0.1:
-        text = text.replace("0", "NaN", 1) if rng.random() < 0.5 else text.replace("1", "Infinity", 1)
+        text = (
+            text.replace("0", "NaN", 1) if rng.random() < 0.5 else text.replace("1", "Infinity", 1)
+        )
     return text.encode("utf-8", "surrogatepass")
 
 
@@ -212,7 +217,9 @@ def _rewrap(
                         m["shape_content_id"] = hashlib.sha256(members[comp]).hexdigest()
                 members["manifest.json"] = json.dumps(m, sort_keys=True).encode()
     out = io.BytesIO()
-    compression = rng.choice((zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED)) if method is None else method
+    compression = (
+        rng.choice((zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED)) if method is None else method
+    )
     with zipfile.ZipFile(out, "w", compression) as z:
         for name, data in members.items():
             z.writestr(name, data)
@@ -434,7 +441,9 @@ def _g_container(rng: random.Random, s: Seeds) -> bytes:
         members["shape.json"] = _dump_json(rng, mutate_json(rng, body))
         return _rewrap(members, rng, rehash=True)
     if mode == 3:  # member set changed: extra, renamed, duplicate-looking, unsafe names
-        name = rng.choice(("../x", "/abs", "a\\b", "x\x00y", "C:evil", "./x", "a//b", "extra", ""))
+        name = rng.choice(
+            ("../x", "/abs", "a\\b", "x\x00y", "C:evil", "./x", "a//b", "extra", "dir/")
+        )
         members[name] = rng.randbytes(rng.randint(0, 32))
         return _rewrap(members, rng, rehash=rng.random() < 0.5)
     members["shape.json"] = mutate_bytes(rng, members["shape.json"])  # raw model bytes damaged
@@ -478,12 +487,9 @@ def _g_json(seed_key: str) -> Gen:
 
 
 def _g_yaml(seed_key: str) -> Gen:
-    alias_bomb = (
-        "a: &a [x, x, x, x, x, x, x, x, x]\n"
-        + "".join(
-            f"{chr(98 + i)}: &{chr(98 + i)} [" + ", ".join([f"*{chr(97 + i)}"] * 9) + "]\n"
-            for i in range(8)
-        )
+    alias_bomb = "a: &a [x, x, x, x, x, x, x, x, x]\n" + "".join(
+        f"{chr(98 + i)}: &{chr(98 + i)} [" + ", ".join([f"*{chr(97 + i)}"] * 9) + "]\n"
+        for i in range(8)
     )
 
     def gen(rng: random.Random, s: Seeds) -> bytes:
@@ -517,7 +523,9 @@ def _g_yaml(seed_key: str) -> Gen:
             return (text + "\n" + text).encode()
         if mode == 4:
             return ("[" * rng.choice((100, 1_200, 10_000))).encode()
-        return text.replace(":", rng.choice((": []", ": {}", ": null", ": 1", ": [[1]]")), 1).encode()
+        return text.replace(
+            ":", rng.choice((": []", ": {}", ": null", ": 1", ": [[1]]")), 1
+        ).encode()
 
     return gen
 

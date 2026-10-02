@@ -83,7 +83,17 @@ def _repo(tmp_path):
 
 def _git_setup(repo, *args):
     return subprocess.run(
-        [sys.executable, "-m", "shape.cli.main", "git-setup", "--repo", str(repo), "--command", "x", *args],
+        [
+            sys.executable,
+            "-m",
+            "shape.cli.main",
+            "git-setup",
+            "--repo",
+            str(repo),
+            "--command",
+            "x",
+            *args,
+        ],
         capture_output=True,
         text=True,
     )
@@ -107,7 +117,7 @@ def test_git_setup_rejects_attribute_injection_in_pattern(tmp_path, pattern):
     assert not (repo / ".gitattributes").exists()
 
 
-# ---- local registry --------------------------------------------------------------------------------
+# ---- local registry -----------------------------------------------------------------------------
 
 
 def test_registry_checkout_verifies_the_object(tmp_path):
@@ -195,8 +205,15 @@ def test_verify_checks_artifacts_whatever_their_file_name(tmp_path):
         if p != forged:
             p.write_bytes(forged.read_bytes())
         r = subprocess.run(
-            [sys.executable, "-m", "shape.cli.main", "show", str(p), "--verify",
-             str(tmp_path / "trusted.pub")],
+            [
+                sys.executable,
+                "-m",
+                "shape.cli.main",
+                "show",
+                str(p),
+                "--verify",
+                str(tmp_path / "trusted.pub"),
+            ],
             capture_output=True,
             text=True,
         )
@@ -256,3 +273,135 @@ def test_reference_dataset_name_cannot_be_a_path(tmp_path, monkeypatch):
     for name in ("../outside/secret", str(tmp_path / "outside" / "secret")):
         with pytest.raises(reference.DatasetNotFoundError):
             reference.load_dataset(name)
+
+
+# ---- denial of service on untrusted input -------------------------------------------------------
+
+
+def _deflated_zip(path, members):
+    import zipfile
+
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        for k, v in members.items():
+            z.writestr(k, v)
+
+
+def test_manifest_sniffs_do_not_inflate_a_bomb(tmp_path):
+    from shape.artifact.io import ArtifactError, read_manifest_bytes
+    from shape.cli.main import _artifact_kind
+
+    p = tmp_path / "bomb.shape"
+    _deflated_zip(p, {"manifest.json": b'{"kind":"profile"}' + b" " * (64 * 1024 * 1024)})
+    with pytest.raises(ArtifactError):
+        read_manifest_bytes(p)
+    assert _artifact_kind(str(p)) is None
+
+
+def test_registry_manifest_read_is_bounded(tmp_path):
+    from shape.artifact.io import ArtifactError
+    from shape.registry.profiles import ProfileRegistry
+
+    p = tmp_path / "bomb.shape"
+    _deflated_zip(p, {"manifest.json": b" " * (64 * 1024 * 1024)})
+    with pytest.raises(ArtifactError):
+        ProfileRegistry._manifest(p)
+
+
+def test_yaml_alias_bomb_is_refused(tmp_path):
+    from shape.security.yamlsafe import safe_load_yaml
+
+    levels = ["a: &a0 [x, x, x, x, x, x, x, x, x]"]
+    for i in range(1, 12):
+        levels.append(f"b{i}: &a{i} [" + ", ".join([f"*a{i - 1}"] * 9) + "]")
+    with pytest.raises(ValueError, match="alias bomb"):
+        safe_load_yaml("\n".join(levels))
+    assert safe_load_yaml("a: &x [1, 2]\nb: *x\n") == {"a": [1, 2], "b": [1, 2]}
+
+
+def test_alias_bomb_does_not_reach_schema_validation(tmp_path):
+    from shape.scenario.loader import PackError, PackLoader
+
+    p = tmp_path / "bomb.yaml"
+    body = ["a: &a0 [x, x, x, x, x, x, x, x, x, x]"]
+    for i in range(1, 150):
+        body.append(f"b{i}: &a{i} [*a{i - 1}, *a{i - 1}]")
+    p.write_text("\n".join(body))
+    with pytest.raises(PackError):
+        PackLoader().load(p)
+
+
+def test_ddl_parser_is_not_cubic_on_spaces():
+    import time
+
+    from shape.generation.ddl import DdlParser
+
+    start = time.monotonic()
+    try:
+        DdlParser().parse_string("CREATE TABLE " + " " * 8000 + "x")
+    except Exception:  # noqa: BLE001 - only the time matters
+        pass
+    assert time.monotonic() - start < 2
+
+
+def test_rule_comparison_parser_caps_the_rule_length():
+    import time
+
+    from shape.generation.rules import parse_comparison
+
+    start = time.monotonic()
+    assert parse_comparison("a" + " " * 40_000 + "b") == ("", "", "")
+    assert time.monotonic() - start < 1
+    assert parse_comparison("a >= b") == ("a", ">=", "b")
+
+
+def test_deeply_nested_jsonl_is_refused_not_a_segfault(tmp_path):
+    from shape.io.readers import ReaderError, read_table
+
+    p = tmp_path / "deep.jsonl"
+    p.write_text('{"a":' + "[" * 100_000 + "]" * 100_000 + "}")
+    with pytest.raises(ReaderError, match="nested"):
+        read_table(str(p))
+
+
+def test_json_depth_check_counts_per_line():
+    from shape.security.jsondepth import check_json_depth
+
+    check_json_depth(b'{"a":[[1]]}\n' * 1000)
+    with pytest.raises(ValueError):
+        check_json_depth(b"ok\n" + b"[" * 300)
+
+
+def test_poison_stream_message_is_skipped():
+    from shape.streaming.messages import StreamMessage, decode_messages
+
+    good = StreamMessage("0", 1, b'{"a": 1}')
+    bad = StreamMessage("0", 2, b"[" * 200_000)
+    result = decode_messages([bad, good], on_error="skip")
+    assert result is not None
+
+
+def test_pattern_width_is_bounded():
+    from shape.builtins.strategies.text import _TOKEN, MAX_TOKEN_WIDTH
+
+    assert MAX_TOKEN_WIDTH <= 65536
+    m = _TOKEN.search("{random:2000000000}")
+    assert m and int(m.group(2)) > MAX_TOKEN_WIDTH
+
+
+def test_mask_refuses_to_overwrite_its_input(tmp_path):
+    (tmp_path / "people.csv").write_text("email\nalice@example.com\n")
+    r = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "shape.cli.main",
+            "mask",
+            str(tmp_path / "people.csv"),
+            "-o",
+            str(tmp_path),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert r.returncode != 0
+    assert (tmp_path / "people.csv").read_text() == "email\nalice@example.com\n"

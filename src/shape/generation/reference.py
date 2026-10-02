@@ -30,8 +30,8 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
-from shape.security.names import is_safe_name
 from shape.generation.arrowkit import array as arrow_array
+from shape.security.names import is_safe_name
 
 REFERENCE_PATH_ENV = "SHAPE_REFERENCE_PATH"
 

@@ -176,3 +176,20 @@ jobs:
         run: source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/db_1to1/verify.py --mssql "$SHAPE_TEST_MSSQL;Database=tempdb"
       - if: always()
         run: docker compose -f ci/emulators/docker-compose.yml down -v
+  artifact-fuzz:
+    # P7-04: the artifact fuzzer (.shape containers, signatures, manifests, profile JSON,
+    # contracts, pack and GSL YAML) with a fresh seed. A finding prints its seed and iteration and
+    # uploads the offending input; replay with `scripts/fuzz_artifacts.py --seed N --iterations M`.
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install -e '.[dev]'
+      - run: python scripts/fuzz_artifacts.py --seed "$(date +%s)" --iterations 3000 --out fuzz-findings
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: fuzz-findings
+          path: fuzz-findings/

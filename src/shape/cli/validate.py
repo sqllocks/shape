@@ -21,10 +21,12 @@ def _load(path: Path) -> Any:
     text = path.read_text(encoding="utf-8")
     if path.suffix.lower() in (".yaml", ".yml"):
         try:
-            import yaml  # type: ignore[import-untyped]
+            import yaml  # type: ignore[import-untyped]  # noqa: F401
         except ImportError as exc:
             raise ImportError("reading YAML needs PyYAML: pip install pyyaml") from exc
-        return yaml.safe_load(text)
+        from shape.security.yamlsafe import safe_load_yaml
+
+        return safe_load_yaml(text)
     return json.loads(text)
 
 

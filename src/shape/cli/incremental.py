@@ -123,6 +123,9 @@ def read_tables(directory: str | Path) -> dict[str, pa.Table]:
             else:
                 import pyarrow.json as pajson  # type: ignore[import-untyped]
 
+                from shape.security.jsondepth import check_json_file
+
+                check_json_file(file)
                 tables[file.stem] = pajson.read_json(file)
     if not tables:
         raise ValueError(f"no CSV, Parquet or JSON Lines files found in {directory}")
