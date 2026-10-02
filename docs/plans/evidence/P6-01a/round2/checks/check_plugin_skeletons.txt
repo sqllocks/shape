@@ -1,0 +1,1 @@
+plugin skeletons OK (7 distributions, version 0.9.0)

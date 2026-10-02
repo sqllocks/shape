@@ -39,12 +39,12 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
 WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
 WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-## Domain reference data (Spindle)
+## Domain reference data (SQLLocks)
 
 The reference data of the `capital_markets`, `education`, `financial` and `retail` domains in
 `plugins/shape-domains` (names, catalogs, exchange and sector lists, index memberships, constituents)
-is copied from the reference data of Spindle 3.0.1 (https://github.com/sqllocks/spindle,
-commit 422e78df2267e73bb2fa976267e48cb437861e2f), which is released under the MIT license with the
+is copied from the reference data of release 3.0.1 (commit 422e78df2267e73bb2fa976267e48cb437861e2f)
+of an earlier SQLLocks data-generation library, which is released under the MIT license with the
 same copyright holder as Shape:
 
 MIT License. Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). Permission is hereby granted, free
