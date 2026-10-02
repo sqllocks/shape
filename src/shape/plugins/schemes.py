@@ -139,8 +139,9 @@ def require_scheme(sink: Any, uri: str, *, host: Any | None = None) -> None:
         sql_note = " (the sql sink writes INSERT scripts to a file that you can run against it)"
     raise UnsupportedSchemeError(
         f"the {name} sink writes only to {_describe(schemes)}; got {redact(uri)} "
-        f"({_unavailable(scheme, table.get(scheme, ()))}{sql_note}). Sinks by scheme: {listing}. A plugin adds a scheme "
-        "by registering a shape.sinks sink that declares it (see `shape plugins list`)."
+        f"({_unavailable(scheme, table.get(scheme, ()))}{sql_note}). Sinks by scheme: {listing}. "
+        "A plugin adds a scheme by registering a shape.sinks sink that declares it "
+        "(see `shape plugins list`)."
     )
 
 
