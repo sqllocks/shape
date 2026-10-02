@@ -72,3 +72,40 @@ def test_uniform_timestamps_do_not_depend_on_chunking() -> None:
     parts = [T.Temporal().generate(spec, _ctx(100, s)) for s in (0, 100, 200)]
     assert pa.concat_arrays(parts).equals(whole)
     assert len(T.Temporal().generate(spec, _ctx(0, 0))) == 0
+
+
+@pytest.mark.parametrize("unit", ["us", "ns"])
+@pytest.mark.parametrize("n", [0, 1, 777, 40_000])
+@pytest.mark.parametrize(
+    "spec",
+    [
+        {"start": "2015-01-01", "end": "2025-12-31"},
+        {"start": "1970-01-01", "end": "1970-01-01T00:00:01"},
+        {"range": {"start": "2020-02-29", "end": "2020-03-01"}},
+        {"start": "1700-01-01", "end": "2250-01-01"},
+        {"start": "1500-01-01", "end": "2500-01-01", "pattern": "uniform"},  # beyond nanoseconds
+    ],
+)
+def test_the_fused_uniform_column_equals_the_stepwise_one(spec, n, unit, monkeypatch):
+    spec = {"pattern": "uniform", **spec, "unit": unit}
+    ctx = _ctx(n, start=5)
+    try:
+        fused = T.Temporal().generate(spec, ctx)
+    except StrategyError:
+        fused = "error"
+    with monkeypatch.context() as m:
+        m.setattr(T.Temporal, "_uniform_fused", staticmethod(lambda *a, **k: None))
+        try:
+            plain = T.Temporal().generate(spec, ctx)
+        except StrategyError:
+            plain = "error"
+    if isinstance(plain, str) or isinstance(fused, str):
+        assert fused == plain == "error"  # a range that does not fit is an error either way
+    else:
+        assert fused.type == plain.type == pa.timestamp(unit)
+        assert fused.equals(plain)
+
+
+def test_a_range_that_ends_before_it_starts_is_an_error() -> None:
+    with pytest.raises(StrategyError, match="must end after"):
+        T.Temporal().generate({"start": "2020-01-02", "end": "2020-01-01"}, _ctx())

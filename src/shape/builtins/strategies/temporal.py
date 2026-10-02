@@ -145,6 +145,9 @@ class Temporal:
     name = "temporal"
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
+        fused = self._uniform_fused(spec, ctx)
+        if fused is not None:
+            return fused
         values = self._microseconds(spec, ctx)
         granularity = spec.get("granularity")
         if granularity == "day":
@@ -171,6 +174,27 @@ class Temporal:
             return values.cast(pa.timestamp(unit))
         except pa.ArrowInvalid as exc:
             raise StrategyError(f"temporal values do not fit unit {unit!r} ({where(ctx)})") from exc
+
+    @staticmethod
+    def _uniform_fused(spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array | None:
+        """A uniform column in microseconds or nanoseconds from one native call (the index draw
+        and ``start + index * step`` together), else ``None``: another pattern, a granularity, any
+        other unit, or nanoseconds that might not fit (the checked route then decides)."""
+        if spec.get("pattern", "uniform") == "seasonal" or spec.get("granularity") is not None:
+            return None
+        unit = spec.get("unit", "us")
+        if unit not in ("us", "ns"):
+            return None
+        start, end = _range(spec, ctx)
+        if end <= start:
+            raise StrategyError(f"temporal range must end after it starts ({where(ctx)})")
+        scale = 1 if unit == "us" else 1000
+        if scale != 1 and max(abs(start), abs(end)) > _NS_LIMIT:
+            return None
+        keys = kernel_ops.uniform_keys(
+            stream(ctx, "v"), ctx.row_start, ctx.n_rows, end - start, start * scale, scale
+        )
+        return keys.view(pa.timestamp(str(unit)))
 
     def _microseconds(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         start, end = _range(spec, ctx)
