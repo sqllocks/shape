@@ -282,6 +282,8 @@ def mask_tables(
             elif kind == "temporal":
                 new_col = _mask_temporal(column, _seed_for(cfg.seed, label))
             else:
+                if kind_name not in maps:  # no values at all (an empty or all-null column)
+                    continue
                 originals_arr, new_arr = maps[kind_name]
                 idx = pc.index_in(column.cast(pa.string()), value_set=originals_arr)
                 new_col = pc.take(new_arr, idx)

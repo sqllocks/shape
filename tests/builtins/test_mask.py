@@ -317,3 +317,12 @@ def test_cli_exclude_and_pii(tmp_path, capsys):
     assert code == 0
     text = (tmp_path / "o" / "p.csv").read_text(encoding="utf-8")
     assert "a@x.com" in text and "AB-12" not in text
+
+
+def test_empty_and_all_null_columns_are_left_alone():
+    t = pa.table({"email": pa.array([None, None], pa.string()), "id": [1, 2]})
+    res = mask_tables({"t": t})
+    assert res.columns_masked["t"] == []
+    assert res.tables["t"].equals(t)
+    empty = pa.table({"email": pa.array([], pa.string())})
+    assert mask_tables({"t": empty}).tables["t"].num_rows == 0
