@@ -317,7 +317,10 @@ def test_baseline_drift_is_reported_and_fails_only_with_fail_on_drift(lh):
     _generate(lh, tablePrefix="a_")
     base = _check(lh, tablePrefix="a_", contractPath="shape/retail/contract.json")
     assert base["passed"] is True
-    baseline = base["artifactPath"]
+    # artifact folders are named by the second: keep the baseline apart from later runs' output
+    baseline = "baselines/retail_base.shape"
+    (lh / "Files" / "baselines").mkdir()
+    (lh / "Files" / baseline).write_bytes((lh / "Files" / base["artifactPath"]).read_bytes())
     same = _check(lh, tablePrefix="a_", baselinePath=baseline, failOnDrift="true")
     assert same["passed"] is True and same["drifted"] is False
     # another seed's tables give a different profile: reported as drift, a failure only on request
@@ -529,7 +532,9 @@ def test_bind_replaces_every_placeholder_of_the_new_pipeline(tmp_path):
         ],
         check=True, capture_output=True,
     )  # fmt: skip
-    bound = json.loads((out / "shape_generate_gate.DataPipeline" / "pipeline-content.json").read_text())
+    bound = json.loads(
+        (out / "shape_generate_gate.DataPipeline" / "pipeline-content.json").read_text()
+    )
     assert "<<" not in json.dumps(bound)
     ids = {a["typeProperties"].get("notebookId") for a in bound["properties"]["activities"]}
     assert "22222222-2222-2222-2222-222222222222" in ids
@@ -579,7 +584,9 @@ def test_generate_sample_is_registered_with_the_planned_signature(app):
     assert names == ("domain", "table", "rows", "seed")
     assert f.__defaults__ == (10000, 42)
     tree = ast.parse((UDF_DIR / "function_app.py").read_text())
-    node = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "generateSample")
+    node = next(
+        n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "generateSample"
+    )
     assert ast.unparse(node.returns) == "pd.DataFrame"
     assert [ast.unparse(a.annotation) for a in node.args.args] == ["str", "str", "int", "int"]
     assert not any("lakehouse" in ast.unparse(d) for d in node.decorator_list)
@@ -596,7 +603,13 @@ def test_generate_sample_through_the_function(app):
 
 
 @pytest.mark.parametrize(
-    "args", [("../x", "customer"), ("retail", "customer; --"), ("retail", "nope"), ("retail", "customer", 0)]
+    "args",
+    [
+        ("../x", "customer"),
+        ("retail", "customer; --"),
+        ("retail", "nope"),
+        ("retail", "customer", 0),
+    ],
 )
 def test_generate_sample_errors_reach_the_caller_as_user_thrown_errors(app, args):
     import fabric.functions as fn
