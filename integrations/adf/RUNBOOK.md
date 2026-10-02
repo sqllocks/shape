@@ -158,10 +158,20 @@ Custom activity fails exactly when the gate does. It writes `data/<table>.parque
 gate failed (an error gate has only `gate.json`). `gate.json` has the keys of section "How the gate
 works" plus `domain`, `tables` (rows per table) and `contractUrl`.
 
-1. The image must carry the domain: the Shape image (PF-05) installs `sqllocks-shape`; add
-   `sqllocks-shape-domains` to it (`pip install sqllocks-shape-domains`), or the script exits 2 with
-   `no domain named 'retail' (installed: none installed)`. **[VERIFY]** how the PF-05 image gets its
-   extras.
+1. The image must carry the domain. The PF-05 image installs `sqllocks-shape` only, and a domain is a
+   plugin (`sqllocks-shape-domains`), so without it the script exits 2 with `no domain named 'retail'
+   (installed: none installed)`. Build a derived image and use it as the `image` parameter:
+
+   ```dockerfile
+   FROM ghcr.io/sqllocks/shape:0.9.0
+   USER root
+   RUN pip install --no-cache-dir "sqllocks-shape-domains==0.9.0"
+   USER shape
+   ```
+
+   (Before the domains package is on PyPI, `pip install` the wheel built with `pip wheel --no-deps
+   plugins/shape-domains` instead.) **[VERIFY]** that the derived image runs `shape generate retail` as the
+   non-root user, and the image size stays reasonable (the plugin is about 2 MB).
 2. Parameters: `domain`, `scale`, `seed`, `mode` (`3nf`, `star` or empty), `baselineUrl`, `failOnDrift`,
    `storageAccount`, `outputFileSystem`, `outputFolder`, `image`, `scriptsFolder`,
    `managedIdentityClientId`. Settings travel in `activity.json`, so nothing user-supplied is spliced
@@ -188,7 +198,7 @@ works" plus `domain`, `tables` (rows per table) and `contractUrl`.
 
 ### 8.2 Live dry-run checklist (PF-06)
 
-- [ ] `run_generate_gate.py` and `run_gate.py` uploaded to `shape-batch`; the image has `sqllocks-shape-domains`
+- [ ] `run_generate_gate.py` and `run_gate.py` uploaded to `shape-batch`; the derived image (step 1) has `sqllocks-shape-domains`
 - [ ] Defaults: pipeline Succeeded; nine Parquet tables, `contract.json`, `profile.shape`, `summary.json`, `gate.json` in ADLS; a second run with the same seed writes the same tables
 - [ ] A bad domain (`nope`): exit 2, `gate.json.error` names it, the pipeline fails with that message
 - [ ] A broken table (edit one Parquet file and rerun the check, or use a test image): exit 1, `FailGate` shows the violations
