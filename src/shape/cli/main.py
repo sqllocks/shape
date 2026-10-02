@@ -729,18 +729,23 @@ _GLOBAL_VALUE_OPTIONS = ("--log-level", "--metrics")
 
 
 def _split_global(argv):
-    """Take the global options (``--log-json``, ``--log-level L``, ``--metrics FILE``) off the
-    front of ``argv``; they may also come from SHAPE_LOG_JSON, SHAPE_LOG_LEVEL, SHAPE_METRICS."""
+    """Take the global options (``--log-json``, ``--log-level L``, ``--metrics FILE``, ``--debug``)
+    off the front of ``argv``; they may also come from SHAPE_LOG_JSON, SHAPE_LOG_LEVEL,
+    SHAPE_METRICS, SHAPE_DEBUG."""
     opts = {
         "log_json": os.environ.get("SHAPE_LOG_JSON", "") not in ("", "0"),
         "log_level": os.environ.get("SHAPE_LOG_LEVEL", "INFO"),
         "metrics": os.environ.get("SHAPE_METRICS") or None,
+        "debug": os.environ.get("SHAPE_DEBUG", "") not in ("", "0"),
     }
     rest = list(argv)
     while rest and rest[0].startswith("--"):
         name, eq, value = rest[0].partition("=")
         if name == "--log-json":
             opts["log_json"] = True
+            rest.pop(0)
+        elif name == "--debug":
+            opts["debug"] = True
             rest.pop(0)
         elif name in _GLOBAL_VALUE_OPTIONS:
             if not eq:
@@ -772,6 +777,22 @@ def main(argv=None):
 
 def _main(argv):
     opts, argv = _split_global(sys.argv[1:] if argv is None else argv)
+    if opts["debug"]:
+        return _main_logged(opts, argv)
+    try:
+        return _main_logged(opts, argv)
+    except Exception as exc:  # noqa: BLE001 - the one place that turns a crash into a message
+        # An unexpected failure is a one-line error and exit 2, never a traceback; `--debug`
+        # (or SHAPE_DEBUG=1) lets it propagate.
+        detail = str(exc) or "no detail"
+        print(
+            f"shape: error: {type(exc).__name__}: {detail} (run with --debug for the traceback)",
+            file=sys.stderr,
+        )
+        return 2
+
+
+def _main_logged(opts, argv):
     if not (opts["log_json"] or opts["metrics"]):
         return _dispatch(argv)
     from shape.cli import lifecycle
@@ -806,6 +827,48 @@ def _main(argv):
         if opts["metrics"]:
             with open(opts["metrics"], "w", encoding="utf-8") as fh:
                 fh.write(run.to_json() + "\n")
+
+
+def _is_generation_schema(doc):
+    """Whether ``doc`` is a generation schema (what ``shape from-ddl`` writes), not evidence."""
+    return (
+        isinstance(doc, dict)
+        and "schema_version" in doc
+        and isinstance(doc.get("tables"), dict)
+        and isinstance(doc.get("relationships"), list)
+    )
+
+
+def _cmd_evidence(a):
+    """``shape query|check|plan`` on an evidence document (JSON or ``.shape``). ``plan`` also
+    takes a generation schema and then prints the plan of its run, as ``generate --dry-run``."""
+    from shape.artifact import read_shape
+
+    _, s = (
+        read_shape(a.shape) if str(a.shape).endswith(".shape") else ({}, json.load(open(a.shape)))
+    )
+    if a.cmd == "query":
+        from shape.query import query as shape_query
+
+        _dump({"result": shape_query(s, a.expression)})
+        return 0
+    if a.cmd == "plan":
+        if _is_generation_schema(s):
+            from shape.generation.engine import Engine
+            from shape.generation.schema import GenSchema
+
+            _dump(Engine(GenSchema.from_dict(s)).dry_run().to_dict())
+            return 0
+        from shape.generation.fidelity import plan_reconstruction
+
+        _dump(plan_reconstruction(s).to_dict())
+        return 0
+    from shape.contracts import evaluate_contract
+
+    contract = json.load(open(a.contract))
+    r = evaluate_contract(s, contract)
+    _dump(r.to_dict())
+    return 0 if r.passed else 4
 
 
 def _dispatch(argv):
@@ -983,29 +1046,7 @@ def _dispatch(argv):
         )
         return 2
     if a.cmd in ("query", "check", "plan"):
-        from shape.artifact import read_shape
-
-        _, s = (
-            read_shape(a.shape)
-            if str(a.shape).endswith(".shape")
-            else ({}, json.load(open(a.shape)))
-        )
-        if a.cmd == "query":
-            from shape.query import query as shape_query
-
-            _dump({"result": shape_query(s, a.expression)})
-            return 0
-        if a.cmd == "plan":
-            from shape.generation.fidelity import plan_reconstruction
-
-            _dump(plan_reconstruction(s).to_dict())
-            return 0
-        from shape.contracts import evaluate_contract
-
-        contract = json.load(open(a.contract))
-        r = evaluate_contract(s, contract)
-        _dump(r.to_dict())
-        return 0 if r.passed else 4
+        return _run(_cmd_evidence, a)
     if a.cmd in ("compatibility", "certify-shapes"):
         from shape.artifact import read_shape
 
