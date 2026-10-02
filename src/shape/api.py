@@ -47,11 +47,12 @@ def generate(
     from shape.generation.schema import GenSchema
 
     if _is_profile(shape):
-        raise NotImplementedError(
-            "generating data from a shape.profile() result is not available yet in this "
-            "early-access release; profiling, check and diff are. It is planned (profile to "
-            "generate)."
-        )
+        from shape.generation.engine import Engine
+        from shape.generation.fit import PRESET, fit_schema
+
+        rows = None if n is None else int(n)
+        fitted = fit_schema(shape, rows=rows)
+        return Engine(fitted.schema, scale=scale or PRESET, seed=seed).generate()
     if isinstance(shape, str):
         from shape.generation.domains import load_domain
         from shape.generation.engine import Engine
@@ -88,10 +89,10 @@ def query(shape: Any, expression: Any) -> Any:
 def certify(target: Any, observed: Any, **kwargs: Any) -> Any:
     from shape.generation.fidelity import certify_shapes
 
-    return certify_shapes(target, observed, **kwargs)  # type: ignore[no-untyped-call]
+    return certify_shapes(target, observed, **kwargs)
 
 
 def plan(shape: Any) -> Any:
     from shape.generation.fidelity import plan_reconstruction
 
-    return plan_reconstruction(shape)  # type: ignore[no-untyped-call]
+    return plan_reconstruction(shape)

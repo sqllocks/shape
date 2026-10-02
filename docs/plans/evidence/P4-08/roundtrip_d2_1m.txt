@@ -1,0 +1,22 @@
+session_uuid: string
+ip_address: string
+customer_id OK
+age [('dist', None, 'uniform')]
+income OK
+balance OK
+phone OK
+email OK
+zip4 OK
+status OK
+currency OK
+signup_date [('dtype', 'datetime', 'date')]
+last_login OK
+is_active OK
+has_promo OK
+order_value OK
+store_id OK
+score OK
+wait_time OK
+qty OK
+session_uuid OK
+ip_address OK

@@ -13,18 +13,36 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   noise from OS entropy unless a seed is passed), and `shape ctgan` with the `[ctgan]` extra. New
   extra `[advanced]` (scikit-learn). Without scikit-learn, tier 1 still runs and names what it left
   out.
+- Profile to generation: `shape generate --from X.shape` fits a generation schema to a profile and
+  generates it at the profile's row counts (`--rows N` for a one-table profile; `--scale`, `--seed`,
+  `--format`, `-o` and `--dry-run` work as for a domain). It rebuilds each column's marginal
+  (exact value weights for enums, the fitted family or the quantiles for numbers, types kept),
+  missing values, a Gaussian copula over the numeric columns (the profile's Pearson correlations,
+  corrected for the marginals' shapes) and the month, weekday and hour profile of timestamps.
+  `shape plan X.shape` lists every field of the profile as `preserved`, `approximate` or
+  `not_modelled`, with the reason (`--status`, `--rows`); it no longer rejects profiles. Python:
+  `shape.generate(profile)` and `shape.plan(profile)`; `shape.generation.fit.fit_schema`.
+- `shape learn PATH [-o SCHEMA.json] [--format csv|parquet|jsonl] [--domain NAME]` profiles data
+  files (a directory is one table per file) and writes the generation schema that reproduces them
+  (`shape.generation.learn.SchemaBuilder`).
+- Fixes: `missingness` and `gaussian_copula` (`shape.generation.future`) now apply the missing
+  values and the marginal distributions (G5); `plan_reconstruction` checks each item instead of
+  reporting everything as preserved (G6).
+- Generation: a generator may set `output_type` (`int64`, `float64`, `bool`, `string`); `temporal`
+  takes `granularity: "day"` and one weight per hour in `hour_of_day`; the `ipv4`, `postcode` and
+  `zip_plus4` providers are built in; the copula's `generation.output.copula_nulls` and
+  `copula_threshold` options.
 - `shape generate` starts faster and ends sooner: the generation path never imports pandas
   (`shape.generation.arrowkit`), sinks and sources load on first use, Parquet row groups are 256k
   rows (were 1M), one core is left to the writer threads, and two passes run while tables are still
   being made (summed children, leading business rules). The data is unchanged.
-
 - Generation commands: `shape generate DOMAIN|SCHEMA.json` (`--mode 3nf|star`, `--scale`, `--seed`,
   `--format summary|csv|tsv|jsonl|parquet|excel|sql|delta`, `-o DIR`, `--dry-run`, the SQL options
   `--sql-dialect`, `--schema-name`, `--batch-size`, `--sql-ddl`, `--sql-drop`, `--sql-go`, and for
   Delta `--delta-mode`, `--partition-by`), `shape describe`, `shape list` and `shape presets`.
   `shape from-ddl` writes a schema file that `generate` and `describe` read. The retail domain has
   a `star` schema next to `3nf`. `shape generate --rows N` with no target still prints demo rows;
-  `shape generate --from X.shape` is reserved (profile to generate). Python:
+  Python:
   `shape.api.generate("retail", scale="medium", seed=42, mode="star")` returns the generated
   Arrow tables (`result.tables`, `result["order"]`).
 - Run logging and metrics for every command: `shape --log-json --log-level LEVEL --metrics FILE

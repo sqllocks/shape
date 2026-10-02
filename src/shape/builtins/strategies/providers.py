@@ -132,6 +132,36 @@ def _ssn(ctx: GenerationContext) -> pa.Array:
     )
 
 
+def _ipv4(ctx: GenerationContext) -> pa.Array:
+    # a.b.c.d with the first and last octet in 1..254
+    parts = [
+        arrow_array(_ints(ctx, "a", 1, 255)),
+        arrow_array(_ints(ctx, "b", 0, 256)),
+        arrow_array(_ints(ctx, "c", 0, 256)),
+        arrow_array(_ints(ctx, "d", 1, 255)),
+    ]
+    return kernel_ops.template_strings(
+        ["", ".", ".", ".", ""], [(0, 0), (1, 0), (2, 0), (3, 0)], parts, ctx.n_rows
+    )
+
+
+def _postcode(ctx: GenerationContext) -> pa.Array:
+    # five digits, zero padded
+    return kernel_ops.template_strings(
+        ["", ""], [(0, 5)], [arrow_array(_ints(ctx, "zip", 501, 99_951))], ctx.n_rows
+    )
+
+
+def _zip_plus4(ctx: GenerationContext) -> pa.Array:
+    # NNNNN-NNNN, zero padded
+    return kernel_ops.template_strings(
+        ["", "-", ""],
+        [(0, 5), (1, 4)],
+        [arrow_array(_ints(ctx, "zip", 501, 99_951)), arrow_array(_ints(ctx, "plus4", 1, 10_000))],
+        ctx.n_rows,
+    )
+
+
 def _company(ctx: GenerationContext) -> pa.Array:
     return _from_pool(ctx, "company", "company_names")
 
@@ -205,6 +235,9 @@ PROVIDERS: dict[str, Callable[[GenerationContext], pa.Array]] = {
     "state_abbr": _state_abbr,
     "uri": _uri,
     "company_email": _company_email,
+    "ipv4": _ipv4,
+    "postcode": _postcode,
+    "zip_plus4": _zip_plus4,
     "pystr": _word,
     "word": _word,
 }
@@ -225,7 +258,9 @@ def _provider(spec: Mapping[str, Any]) -> str:
 class Native:
     """Text from the built-in pools: ``spec['provider']`` is one of ``first_name``, ``last_name``,
     ``name``, ``email``, ``phone_number``, ``ssn``, ``company``, ``street_address``, ``sentence``,
-    ``city``, ``state_abbr``, ``uri``, ``company_email``, ``pystr`` or ``word`` (the default).
+    ``city``, ``state_abbr``, ``uri``, ``company_email``, ``ipv4``, ``postcode``, ``zip_plus4``,
+    ``pystr`` or
+    ``word`` (the default).
     The column's ``max_length`` truncates."""
 
     name = "native"

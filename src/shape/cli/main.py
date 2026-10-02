@@ -141,6 +141,19 @@ def _cmd_profile(a):
     return 0
 
 
+def _cmd_plan_profile(a):
+    """``shape plan PROFILE.shape``: the fitted schema's plan."""
+    import shape
+    from shape.generation.fit import fit_schema
+
+    plan = fit_schema(shape.load(a.shape), rows=a.rows).plan
+    out = plan.to_dict()
+    if a.status:
+        out["items"] = [x for x in out["items"] if x["status"] in a.status]
+    _dump(out)
+    return 0
+
+
 def _cmd_stream_profile(a):
     from shape.streaming.cli import run
 
@@ -527,6 +540,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.generation import add_arguments as add_generation_arguments
 
     add_generation_arguments(sub)
+    from shape.cli.learn import add_arguments as add_learn_arguments
+
+    add_learn_arguments(sub)
     fi = sub.add_parser(
         "fidelity",
         aliases=["compare"],
@@ -584,8 +600,22 @@ def _build_parser(plugin_commands=()):
     co.add_argument("before")
     co.add_argument("after")
     co.add_argument("--mode", choices=("backward", "forward", "full"), default="backward")
-    gp = sub.add_parser("plan")
-    gp.add_argument("shape")
+    gp = sub.add_parser(
+        "plan",
+        help="what generating from a profile preserves, and what it does not",
+        description="Fit the generation schema of a profile (`shape generate --from`) and list, "
+        "for every field of the profile, whether generated data keeps it: preserved, "
+        "approximate, or not_modelled (with the reason). Evidence documents are checked "
+        "against what the generator can build from them.",
+    )
+    gp.add_argument("shape", metavar="PROFILE.shape")
+    gp.add_argument(
+        "--status",
+        choices=("preserved", "approximate", "not_modelled", "unavailable"),
+        action="append",
+        help="list only items with this status (repeatable)",
+    )
+    gp.add_argument("--rows", type=int, metavar="N", help="plan for N rows (a one-table profile)")
     gp.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     fc = sub.add_parser("certify-shapes")
     fc.add_argument("target")
@@ -743,6 +773,10 @@ def _dispatch(argv):
         return _run(run_generation, a)
     if a.cmd == "from-ddl":
         return _run(_cmd_from_ddl, a)
+    if a.cmd == "learn":
+        from shape.cli.learn import run as run_learn
+
+        return _run(run_learn, a)
     if a.cmd == "profile":
         return _run(_cmd_profile, a)
     if a.cmd == "stream-profile":
@@ -825,10 +859,12 @@ def _dispatch(argv):
         cert = certify(ref, list(_rows(a.csv)), tolerance=a.tolerance)
         _dump(cert.to_dict())
         return 0 if cert.passed else 3
-    if a.cmd in ("query", "plan") and _artifact_kind(a.shape) == "profile":
+    if a.cmd == "plan" and _artifact_kind(a.shape) == "profile":
+        return _run(_cmd_plan_profile, a)
+    if a.cmd == "query" and _artifact_kind(a.shape) == "profile":
         print(
-            f"shape: error: `shape {a.cmd}` does not read profiles made by `shape profile` yet "
-            "(planned). Use `shape check` or `shape diff`.",
+            "shape: error: `shape query` does not read profiles made by `shape profile` yet "
+            "(planned). Use `shape check`, `shape diff` or `shape plan`.",
             file=sys.stderr,
         )
         return 2

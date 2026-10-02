@@ -59,7 +59,7 @@ from shape.generation.compute import (
     apply_compute_phase,
     plan_streamed_aggregates,
 )
-from shape.generation.correlation import apply_copula
+from shape.generation.correlation import THRESHOLD, apply_copula
 from shape.generation.early_rules import EarlyRules
 from shape.generation.rng import RowStream
 from shape.generation.rules import (
@@ -249,6 +249,31 @@ def order_columns(table: Table) -> list[str]:
     ]
     # A key column of another strategy is listed twice above; it is generated once, first.
     return list(dict.fromkeys(pk_cols + fk_cols + independent + dependent + computed))
+
+
+_OUTPUT_TYPES: dict[str, pa.DataType] = {
+    "int64": pa.int64(),
+    "float64": pa.float64(),
+    "bool": pa.bool_(),
+    "string": pa.string(),
+}
+
+
+def cast_output(value: Any, name: str, where: str) -> pa.Array:
+    """A strategy's output as the Arrow type its generator's ``output_type`` names (``int64``,
+    ``float64``, ``bool`` or ``string``); floats are rounded before they become
+    integers."""
+    target = _OUTPUT_TYPES.get(name)
+    if target is None:
+        raise ValueError(
+            f"{where}: output_type must be one of {', '.join(_OUTPUT_TYPES)}, not {name!r}"
+        )
+    arr = value.combine_chunks() if isinstance(value, pa.ChunkedArray) else value
+    if not isinstance(arr, pa.Array):
+        arr = pa.array(arr)
+    if pa.types.is_floating(arr.type) and pa.types.is_integer(target):
+        arr = pc.round(arr)
+    return arr.cast(target, safe=False)
 
 
 def arrow_type(col: Column) -> pa.DataType:
@@ -654,7 +679,11 @@ class Engine:
             engine=self,
             column_def=col,
         )
-        return impl.generate(col.generator, ctx)
+        produced = impl.generate(col.generator, ctx)
+        output_type = col.generator.get("output_type")
+        if output_type is None or isinstance(produced, Mapping):
+            return produced
+        return cast_output(produced, str(output_type), f"{table}.{col.name}")
 
     @staticmethod
     def _as_array(value: Any, where: str, n_rows: int) -> pa.Array:
@@ -892,7 +921,14 @@ class Engine:
         for tname in self.schema.correlated_columns:
             if tname in copula:
                 tables[tname] = apply_copula(
-                    tables[tname], self.schema.correlated_columns[tname], self.seed, tname
+                    tables[tname],
+                    self.schema.correlated_columns[tname],
+                    self.seed,
+                    tname,
+                    threshold=float(
+                        self.schema.generation.output.get("copula_threshold", THRESHOLD)
+                    ),
+                    nulls=str(self.schema.generation.output.get("copula_nulls", "skip")),
                 )
         release(len(rules))
         lineage = [
