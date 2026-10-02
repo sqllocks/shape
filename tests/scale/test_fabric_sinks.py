@@ -1,17 +1,17 @@
 """P6-13: contract tests for the lakehouse, warehouse, sql_database and kql sinks, against
-recording writers (the live runs are the owner's O-02, run in the nightly workflow)."""
+recording writers. (The same sinks against the real Fabric writers and their recorded services run
+in `plugins/shape-fabric/tests/test_scale_sinks.py`; live runs are the owner's O-02, nightly.)"""
 
 from __future__ import annotations
 
+import importlib
 import threading
 
 import pyarrow as pa
-import pyarrow.parquet as pq
 import pytest
 from scale_schemas import plain_schema
 
 from shape.generation.engine import Engine
-from shape.plugins.host import default_host, reset_default_host
 from shape.scale.router import ScaleRouter
 from shape.scale.sinks import build_sink
 from shape.scale.sinks.base import SinkError
@@ -26,15 +26,13 @@ class RecordingWriter:
 
     schemes = ("test",)
 
-    def __init__(self, name: str, fail_on: str | None = None) -> None:
+    def __init__(self, name: str = "rec", fail_on: str | None = None) -> None:
         self.name = name
         self.fail_on = fail_on
         self.calls: list[dict] = []
         self.tables: dict[str, pa.Table] = {}
-        self.threads: set[int] = set()
 
     def write(self, uri, table, batches, **options):
-        self.threads.add(threading.get_ident())
         got = list(batches)
         if table == self.fail_on:
             raise RuntimeError(f"{self.name}: load of {table} failed")
@@ -42,16 +40,8 @@ class RecordingWriter:
         self.tables[table] = pa.Table.from_batches(got) if got else pa.table({})
         return sum(b.num_rows for b in got)
 
-
-@pytest.fixture
-def writers():
-    reset_default_host()
-    host = default_host()
-    made = {n: RecordingWriter(n) for n in ("lakehouse", "warehouse", "sql_database", "eventhouse")}
-    for name, w in made.items():
-        host.register("shape.sinks", name, w)
-    yield made
-    reset_default_host()
+    def by_table(self) -> dict[str, dict]:
+        return {c["table"]: c for c in self.calls}
 
 
 def run(sinks, **kw):
@@ -65,97 +55,119 @@ def check_tables(writer: RecordingWriter):
         assert writer.tables[t].combine_chunks().equals(direct.tables[t].combine_chunks()), t
 
 
-def test_lakehouse_sink_on_a_local_path_writes_one_file_per_table(tmp_path):
-    reset_default_host()
-    run([LakehouseSink(str(tmp_path / "lh"), "parquet")], chunk_size=700)
-    files = {p.name: pq.read_table(p).num_rows for p in (tmp_path / "lh").iterdir()}
-    assert files == {"customer.parquet": 40, "order.parquet": 1200, "order_line.parquet": 3100}
-
-
-@pytest.mark.parametrize("fmt", ["csv", "tsv", "jsonl"])
-def test_lakehouse_sink_formats(tmp_path, fmt):
-    run([LakehouseSink(str(tmp_path / "lh"), fmt)])
-    assert sorted(p.name for p in (tmp_path / "lh").iterdir()) == sorted(f"{t}.{fmt}" for t in ROWS)
-
-
-def test_lakehouse_sink_on_onelake_uses_the_fabric_writer_with_the_format(writers):
-    sink = LakehouseSink("abfss://ws@onelake.dfs.fabric.microsoft.com/lh/Files/landing", "parquet")
-    run([sink])
-    w = writers["lakehouse"]
+def test_lakehouse_sink_writes_every_table_through_the_writer_with_the_format():
+    w = RecordingWriter()
+    sink = LakehouseSink(
+        "abfss://ws@onelake.dfs.fabric.microsoft.com/lh/Files/landing", "csv", writer=w
+    )
+    run([sink], chunk_size=700)
     check_tables(w)
     assert {c["uri"] for c in w.calls} == {
-        "abfss://ws@onelake.dfs.fabric.microsoft.com/lh/Files/landing/"
+        "abfss://ws@onelake.dfs.fabric.microsoft.com/lh/Files/landing"
     }
-    assert all(c["options"]["format"] == "parquet" for c in w.calls)
-    assert sink.rows_written == ROWS
+    assert all(c["options"]["format"] == "csv" for c in w.calls)
+    assert sink.rows_written == ROWS and sink.format == "csv"
 
 
-def test_warehouse_sink_passes_staging_and_schema_and_streams_every_table(writers):
+def test_warehouse_sink_passes_staging_schema_mode_and_the_schemas_key_and_types():
+    w = RecordingWriter()
     sink = WarehouseSink(
-        "Driver={ODBC};Server=x", "abfss://ws@onelake.dfs.fabric.microsoft.com/lh/Files/stage",
-        schema_name="sales", auth="msi", chunk_size=250_000,
+        "Driver={ODBC};Server=x;PWD=hunter2", "onelake://ws/lh/Files/stage", schema_name="sales",
+        write_mode="replace", chunk_size=250_000, writer=w,
     )  # fmt: skip
     run([sink], chunk_size=500)
-    w = writers["warehouse"]
     check_tables(w)
     for call in w.calls:
-        assert call["uri"] == "Driver={ODBC};Server=x"
-        assert call["options"]["staging_path"].endswith("/Files/stage")
-        assert call["options"]["schema_name"] == "sales" and call["options"]["auth"] == "msi"
-        assert call["options"]["chunk_rows"] == 250_000
+        assert call["uri"] == "warehouse://configured"  # the password is not in the URI
+        opts = call["options"]
+        assert opts["connection_string"] == "Driver={ODBC};Server=x;PWD=hunter2"
+        assert (
+            opts["staging_path"] == "onelake://ws/lh/Files/stage" and opts["schema_name"] == "sales"
+        )
+        assert opts["write_mode"] == "replace" and opts["chunk_rows"] == 250_000
+    order = w.by_table()["order"]["options"]
+    assert order["primary_key"] == ["order_id"]
+    assert (
+        order["columns"]["score"]["type"] == "float"
+        and order["columns"]["order_id"]["type"] == "integer"
+    )
 
 
-def test_sql_database_sink_passes_mode_and_batch_size(writers):
+def test_a_warehouse_uri_is_used_as_the_uri():
+    w = RecordingWriter()
+    run([WarehouseSink("warehouse://host/db", "onelake://ws/lh/Files", writer=w)])
+    assert {c["uri"] for c in w.calls} == {"warehouse://host/db"}
+    assert all("connection_string" not in c["options"] for c in w.calls)
+
+
+def test_sql_database_sink_passes_mode_batch_size_and_keys():
+    w = RecordingWriter()
     sink = SqlDatabaseSink(
-        "Server=db", schema_name="dbo", write_mode="truncate_insert", batch_size=1000,
-        auth="spn", staging_path="abfss://stage", credentials={"client_id": "cid"},
+        "Server=db;Database=d", write_mode="truncate", batch_size=1000,
+        writer=w, writer_options={"credential": "cred-object"},
     )  # fmt: skip
     run([sink])
-    w = writers["sql_database"]
     check_tables(w)
-    opts = w.calls[0]["options"]
-    assert opts["write_mode"] == "truncate_insert" and opts["batch_size"] == 1000
-    assert opts["staging_path"] == "abfss://stage" and opts["client_id"] == "cid"
+    opts = w.by_table()["order_line"]["options"]
+    assert opts["write_mode"] == "truncate" and opts["batch_size"] == 1000
+    assert opts["credential"] == "cred-object" and opts["primary_key"] == ["line_id"]
+    assert w.calls[0]["uri"] == "sql-database://configured"
 
 
-def test_kql_sink_passes_database_prefix_and_batch_size(writers):
-    sink = KqlSink(
-        "https://eh.z0.kusto.fabric.microsoft.com", "db1", table_prefix="gen_", batch_size=500
+def test_kql_sink_builds_the_eventhouse_uri_and_prefixes_the_table_names():
+    w = RecordingWriter()
+    run([KqlSink("https://eh.z0.kusto.fabric.microsoft.com", "db1", table_prefix="gen_", writer=w)])
+    check_tables(w)
+    assert {c["uri"] for c in w.calls} == {"eventhouse://eh.z0.kusto.fabric.microsoft.com/db1"}
+    assert {c["table"]: c["options"]["kql_table"] for c in w.calls} == {t: f"gen_{t}" for t in ROWS}
+    assert all(c["options"]["write_mode"] == "create" for c in w.calls)
+    plain = RecordingWriter()
+    run([KqlSink("eh.example", "d", writer=plain)])
+    assert all("kql_table" not in c["options"] for c in plain.calls)
+
+
+def test_several_fabric_sinks_receive_the_same_stream():
+    a, b = RecordingWriter("a"), RecordingWriter("b")
+    run(
+        [
+            SqlDatabaseSink("Server=db", writer=a),
+            KqlSink("eh.example", "d", writer=b),
+        ]
     )
-    run([sink])
-    w = writers["eventhouse"]
-    check_tables(w)
-    opts = w.calls[0]["options"]
-    assert (opts["database"], opts["table_prefix"], opts["batch_size"]) == ("db1", "gen_", 500)
+    check_tables(a)
+    check_tables(b)
 
 
-def test_several_fabric_sinks_receive_the_same_stream(writers, tmp_path):
-    sinks = [
-        build_sink("sql_database", {"connection_string": "Server=db"}),
-        build_sink("kql", {"cluster_uri": "https://eh", "database": "d"}),
-    ]
-    run(sinks)
-    check_tables(writers["sql_database"])
-    check_tables(writers["eventhouse"])
-
-
-def test_a_failing_load_names_the_sink_and_the_others_still_get_their_tables(writers):
-    writers["sql_database"].fail_on = "order"
-    sinks = [
-        build_sink("sql_database", {"connection_string": "Server=db"}),
-        build_sink("kql", {"cluster_uri": "https://eh", "database": "d"}),
-    ]
+def test_a_failing_load_names_the_sink_and_the_others_still_get_their_tables():
+    bad, good = RecordingWriter(fail_on="order"), RecordingWriter()
     with pytest.raises(SinkError, match="sql_database.*load of order failed"):
-        run(sinks)
-    assert "customer" in writers["eventhouse"].tables
+        run([SqlDatabaseSink("Server=db", writer=bad), KqlSink("eh.example", "d", writer=good)])
+    assert "customer" in good.tables
 
 
-def test_a_missing_plugin_is_a_clear_error_at_open():
-    reset_default_host()
-    default_host()  # nothing registered: the shape-fabric writers are not installed in this test
-    sink = WarehouseSink("Server=x", "abfss://stage")
-    with pytest.raises(ImportError, match="shape-fabric"):
+def test_the_plugin_writer_is_found_when_the_sink_opens_and_its_absence_is_a_clear_error(
+    monkeypatch,
+):
+    real = importlib.import_module
+
+    def missing(name, *a, **k):
+        if name == "shape_fabric.sinks":
+            raise ImportError("no module named shape_fabric")
+        return real(name, *a, **k)
+
+    monkeypatch.setattr(importlib, "import_module", missing)
+    sink = WarehouseSink("Server=x", "onelake://ws/lh/Files")  # constructing needs no plugin
+    with pytest.raises(ImportError, match="shape-fabric plugin"):
         sink.open(None)
+
+
+def test_build_sink_makes_the_four_fabric_sinks_from_settings():
+    assert isinstance(build_sink("lakehouse", {"base_path": "x", "format": "jsonl"}), LakehouseSink)
+    assert isinstance(
+        build_sink("warehouse", {"connection_string": "x", "staging_path": "y"}), WarehouseSink
+    )
+    assert isinstance(build_sink("sql_database", {"connection_string": "x"}), SqlDatabaseSink)
+    assert isinstance(build_sink("kql", {"cluster_uri": "x", "database": "d"}), KqlSink)
 
 
 def test_batches_reach_the_writer_as_they_arrive_not_when_the_table_is_whole():
@@ -178,13 +190,13 @@ def test_batches_reach_the_writer_as_they_arrive_not_when_the_table_is_whole():
     assert got == [2, 1] and sink.rows_written == {"t": 3}
 
 
-def test_writer_sink_accepts_a_writer_object_directly():
+def test_writer_sink_accepts_a_writer_object_directly_and_close_finishes_open_tables():
     w = RecordingWriter("x")
     sink = WriterSink(w, "mem://", {"k": 1}, name="x")
     sink.open(None)
     sink.write_batch("t", pa.RecordBatch.from_pydict({"a": [1, 2]}))
     sink.write_batch("t", pa.RecordBatch.from_pydict({"a": [3]}))
-    sink.close()  # finishes the table nobody finished
+    sink.close()
     assert w.tables["t"].num_rows == 3 and w.calls[0]["options"]["k"] == 1
 
 
@@ -194,10 +206,12 @@ def test_writer_sink_accepts_a_writer_object_directly():
         lambda: LakehouseSink("", "parquet"),
         lambda: LakehouseSink("/x", "avro"),
         lambda: WarehouseSink("", "x"),
+        lambda: WarehouseSink("x", "y", write_mode="upsert"),
         lambda: SqlDatabaseSink(""),
         lambda: KqlSink("", ""),
+        lambda: KqlSink("eh", "d", write_mode="nope"),
     ],
 )
-def test_sinks_reject_missing_settings(make):
+def test_sinks_reject_bad_settings(make):
     with pytest.raises(ValueError):
         make()

@@ -30,12 +30,17 @@ sink is `parquet`; with nothing, `memory`.
 |---|---|---|
 | `memory` | `max_memory_gb` | keeps the tables in memory (library use: `MemorySink.result()`) |
 | `parquet` | `output_dir`, `chunk_rows`, `writer_threads` | `<dir>/<table>/part-NNNNNN.parquet`, part *i* holding rows `i*chunk` to `(i+1)*chunk`, then `_COMPLETE` |
-| `lakehouse` | `base_path` (local folder or `abfss://`), `format` (`parquet`, `csv`, `tsv`, `jsonl`) | `<base_path>/<table>.<format>` |
-| `warehouse` | `connection_string`, `staging_path`, `schema_name`, `auth`, `chunk_size` | `COPY INTO` from Parquet staged at `staging_path` |
-| `sql_database` | `connection_string`, `schema_name`, `write_mode`, `batch_size`, `auth`, `staging_path` | inserts |
-| `kql` | `cluster_uri`, `database`, `table_prefix`, `batch_size`, `auth` | Eventhouse ingestion |
+| `lakehouse` | `base_path` (local folder, `abfss://` or `onelake://`), `format` (`parquet`, `csv`, `jsonl`) | `<base_path>/<table>/part-0001.<format>` |
+| `warehouse` | `connection_string` (or `warehouse://host/db`), `staging_path`, `schema_name`, `write_mode`, `chunk_size` | `COPY INTO` from Parquet staged at `staging_path` |
+| `sql_database` | `connection_string` (or `sql-database://host/db`), `schema_name`, `write_mode`, `batch_size` | inserts |
+| `kql` | `cluster_uri`, `database`, `table_prefix`, `write_mode` | Eventhouse ingestion into `<table_prefix><table>` |
 
-The Fabric sinks use the writers of the `shape-fabric` plugin. A table flows into its writer as it
+`write_mode` is `create` (the default: an existing table is an error), `append`, `truncate` or
+`replace`. A database table is created with the primary key and column types of the generation
+schema. Sign-in is the connection string's (or a `credential` given to the writer in library use);
+the `--auth` modes come with the Fabric auth work package.
+
+The Fabric sinks use the writers of the `shape-fabric` plugin (`pip install 'sqllocks-shape[fabric]'`). A table flows into its writer as it
 is generated (a few batches in flight), not held until the end. Every sink gets every chunk;
 a failing sink fails the run, after the others have finished the same chunk, and every sink is closed.
 

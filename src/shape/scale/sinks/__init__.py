@@ -60,7 +60,13 @@ def build_sink(
         _check(
             name,
             settings,
-            ("connection_string", "staging_path", "schema_name", "auth", "chunk_size"),
+            (
+                "connection_string",
+                "staging_path",
+                "schema_name",
+                "write_mode",
+                "chunk_size",
+            ),
         )
         return fabric.WarehouseSink(
             settings.pop("connection_string", ""), settings.pop("staging_path", ""), **settings
@@ -69,18 +75,11 @@ def build_sink(
         _check(
             name,
             settings,
-            (
-                "connection_string",
-                "schema_name",
-                "write_mode",
-                "batch_size",
-                "auth",
-                "staging_path",
-            ),
+            ("connection_string", "schema_name", "write_mode", "batch_size"),
         )
         return fabric.SqlDatabaseSink(settings.pop("connection_string", ""), **settings)
     if name == "kql":
-        _check(name, settings, ("cluster_uri", "database", "table_prefix", "batch_size", "auth"))
+        _check(name, settings, ("cluster_uri", "database", "table_prefix", "write_mode"))
         return fabric.KqlSink(
             settings.pop("cluster_uri", ""), settings.pop("database", ""), **settings
         )

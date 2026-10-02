@@ -120,11 +120,9 @@ def test_processes_make_the_part_files(capsys, tmp_path, schema_file):
 def test_several_sinks_at_once(capsys, tmp_path, schema_file):
     code, text, _ = run(
         capsys, "generate", schema_file, "--scale-mode", "local_mp", "--sink", "parquet",
-        "--sink", "lakehouse", "--sink-config", f"parquet.output_dir={tmp_path / 'p'}",
-        "--sink-config", f"lakehouse.base_path={tmp_path / 'lh'}", "--json",
+        "--sink", "memory", "--sink-config", f"parquet.output_dir={tmp_path / 'p'}", "--json",
     )  # fmt: skip
-    assert code == 0 and set(json.loads(text)["sinks_written"]) == {"parquet", "lakehouse"}
-    assert pq.read_table(tmp_path / "lh" / "order.parquet").num_rows == 1200
+    assert code == 0 and set(json.loads(text)["sinks_written"]) == {"parquet", "memory"}
     assert part_rows(tmp_path / "p", "order") == [1200]
 
 

@@ -162,6 +162,8 @@ jobs:
       FABRIC_EVENTHOUSE_URI: ${{ secrets.FABRIC_EVENTHOUSE_URI }}
       FABRIC_EVENTHOUSE_TOKEN: ${{ secrets.FABRIC_EVENTHOUSE_TOKEN }}
       FABRIC_EVENTSTREAM_CONNECTION_STRING: ${{ secrets.FABRIC_EVENTSTREAM_CONNECTION_STRING }}
+      FABRIC_WORKSPACE_ID: ${{ secrets.FABRIC_WORKSPACE_ID }}
+      FABRIC_LAKEHOUSE_ID: ${{ secrets.FABRIC_LAKEHOUSE_ID }}
       SHAPE_RECORD_DIR: ${{ github.workspace }}/live-tapes
     steps:
       - if: env.HAVE_ANY != 'true'
@@ -192,6 +194,17 @@ jobs:
         run: python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k eventhouse
       - if: env.HAVE_ANY == 'true' && env.FABRIC_EVENTSTREAM_CONNECTION_STRING != ''
         run: python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k eventstream
+      # P6-13: the scale router's Fabric sinks and the fabric_spark mode, on the same secrets.
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_STAGING_PATH != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k lakehouse
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_SQL_CONNECTION_STRING != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k sql_database
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_WAREHOUSE_CONNECTION_STRING != '' && env.FABRIC_STAGING_PATH != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k warehouse
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_EVENTHOUSE_URI != '' && env.FABRIC_EVENTHOUSE_TOKEN != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k kql
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_WORKSPACE_ID != '' && env.FABRIC_LAKEHOUSE_ID != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k fabric_spark
       - if: always() && env.HAVE_ANY == 'true'
         uses: actions/upload-artifact@v4
         with:

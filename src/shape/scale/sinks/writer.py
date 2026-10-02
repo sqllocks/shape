@@ -89,6 +89,7 @@ class WriterSink(BaseSink):
         self._uri = uri
         self._options = dict(options or {})
         self.name = name
+        self._schema: GenSchema | None = None
         self._streams: dict[str, _TableStream] = {}
         self.rows_written: dict[str, int] = {}
 
@@ -100,15 +101,21 @@ class WriterSink(BaseSink):
         source = self._writer_source
         return source() if callable(source) and not hasattr(source, "write") else source
 
+    def options_for(self, table: str) -> dict[str, Any]:
+        """The options of ``writer.write`` for ``table``: the sink's own, plus what a subclass
+        adds per table (the key and column types of a database table, a prefixed name)."""
+        return dict(self._options)
+
     def open(self, schema: GenSchema | None) -> None:
         self._writer = self._resolve()
+        self._schema = schema
         self._streams = {}
         self.rows_written = {}
 
     def _stream(self, table: str, schema: pa.Schema) -> _TableStream:
         stream = self._streams.get(table)
         if stream is None:
-            writer, uri, options = self._writer, self._uri, self._options
+            writer, uri, options = self._writer, self._uri, self.options_for(table)
 
             def write(batches: Iterator[Any]) -> int:
                 rows = int(writer.write(uri, table, batches, schema=schema, **options))
