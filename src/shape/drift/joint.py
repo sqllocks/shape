@@ -278,6 +278,44 @@ def _associations(
     return out
 
 
+def _reference_pairs(
+    table: str | None, bt: TableView, ct: TableView, th: Mapping[str, Any], policy: Policy
+) -> list[dict[str, Any]]:
+    base = {
+        (tuple(e["columns"]), e["reference"]): e
+        for e in (bt.joint or {}).get("reference_pairs", ())
+    }
+    out: list[dict[str, Any]] = []
+    for e in (ct.joint or {}).get("reference_pairs", ()):
+        b = base.get((tuple(e["columns"]), e["reference"]))
+        if b is None or b["match_rate"] is None or e["match_rate"] is None:
+            continue
+        if _skipped(policy, table, list(e["columns"])):
+            continue
+        drop = b["match_rate"] - e["match_rate"]
+        if drop <= th["reference_match_rate"]:
+            continue
+        names = ", ".join(e["columns"])
+        out.append(
+            _record(
+                _label(table, f"({names}) in {e['reference']}"),
+                "reference_match_change",
+                b["match_rate"],
+                e["match_rate"],
+                drop,
+                {
+                    "columns": e["columns"],
+                    "reference": e["reference"],
+                    "mismatched": e["mismatched"],
+                    "examples": e["examples"],
+                },
+                f"({names}) in {e['reference']}: {b['match_rate']:.1%} of rows -> "
+                f"{e['match_rate']:.1%} hold a real combination",
+            )
+        )
+    return out
+
+
 def diff_joint(
     table: str | None, bt: TableView, ct: TableView, policy: Policy
 ) -> list[tuple[str | None, str | None, dict[str, Any]]]:
@@ -290,6 +328,7 @@ def diff_joint(
         + _placeholders(table, bt, ct, th, policy)
         + _implausible(table, bt, ct, th)
         + _associations(table, bt, ct, th, policy)
+        + _reference_pairs(table, bt, ct, th, policy)
     )
     floor = SEVERITY_RANK[th["min_severity"]]
     return [(table, None, r) for r in records if SEVERITY_RANK[r["severity"]] >= floor]

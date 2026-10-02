@@ -284,6 +284,7 @@ def profile(
     encoding: str | None = None,
     quotechar: str | None = None,
     header: bool = True,
+    reference_pairs: Any = None,
 ) -> Profile:
     """Profile a path, glob, directory, Delta table, Arrow table or DataFrame.
 
@@ -297,10 +298,16 @@ def profile(
     CSV options: ``delimiter`` (default: sniffed among comma, semicolon, tab and pipe),
     ``encoding`` (default UTF-8), ``quotechar`` (default ``"``) and ``header=False`` for a file
     without a header row (columns are then ``f0``, ``f1``, ...).
+
+    ``reference_pairs`` checks that groups of columns hold real combinations: a list of
+    ``{"columns": ["city", "zip"], "reference": <dataset name, file or table>}`` (for several
+    tables, a dict of table name to such a list). The share of rows whose tuple is in the
+    reference is stored in the table's ``joint`` entry, where the ``reference_pair`` contract
+    rule and ``shape.diff`` read it.
     """
     fmt = CsvFormat(delimiter, encoding, quotechar, header)
     with np.errstate(all="ignore"):  # inf / NaN inputs are data, not numpy warnings
-        return _profile(source, name, version, as_of, fmt)
+        return _profile(source, name, version, as_of, fmt, reference_pairs)
 
 
 def _load_tables(
@@ -338,8 +345,30 @@ def _warn_delimiter(name: str, src: Any, cols: list[Any], csv: CsvFormat | None)
         )
 
 
+def _attach_reference_pairs(
+    doc: dict[str, Any], cols: list[Any], rows: int, specs: Any, table: str | None = None
+) -> None:
+    """Add the reference-pair measurements to a table document's ``joint`` entry."""
+    if not specs:
+        return
+    if not isinstance(specs, (list, tuple)):
+        raise ValueError("reference_pairs is a list of {columns, reference} objects")
+    from shape.profile.joint.reference import measure_reference_pairs
+
+    measured = measure_reference_pairs(cols, rows, specs)
+    joint = doc.get("joint")
+    if joint is None:
+        joint = doc["joint"] = {"version": 1}
+    joint["reference_pairs"] = measured
+
+
 def _profile(
-    source: Any, name: str | None, version: int | None, as_of: Any, csv: CsvFormat | None = None
+    source: Any,
+    name: str | None,
+    version: int | None,
+    as_of: Any,
+    csv: CsvFormat | None = None,
+    reference_pairs: Any = None,
 ) -> Profile:
     check_delta_options(version, as_of)
     asked = version is not None or as_of is not None
@@ -349,7 +378,19 @@ def _profile(
         if not source:
             raise SourceError("an empty dict of tables cannot be profiled")
         cols_by_t = _load_tables({str(k): v for k, v in source.items()}, csv)
-        return Profile(dataset_to_dict(profile_dataset_columns(cols_by_t)), name=name)
+        doc = dataset_to_dict(profile_dataset_columns(cols_by_t))
+        if reference_pairs:
+            if not isinstance(reference_pairs, dict):
+                raise ValueError("for several tables, reference_pairs maps a table name to a list")
+            for tname, specs in reference_pairs.items():
+                if tname not in cols_by_t:
+                    raise ValueError(
+                        f"reference_pairs names the table {tname!r}, which is not here"
+                    )
+                _attach_reference_pairs(
+                    doc["tables"][tname], cols_by_t[tname][0], cols_by_t[tname][1], specs
+                )
+        return Profile(doc, name=name)
     delta = delta_dir(source)
     if delta is None:
         if asked:
@@ -363,7 +404,9 @@ def _profile(
         table, provenance = read_delta(delta, version=version, as_of=as_of)
         table_name, cols, rows = load_columns(table, name or delta.name)
     table_profile = _profile_cols_table(table_name, cols, rows, None)
-    return Profile(table_to_dict(table_profile), name=name, provenance=provenance)
+    doc = table_to_dict(table_profile)
+    _attach_reference_pairs(doc, cols, rows, reference_pairs)
+    return Profile(doc, name=name, provenance=provenance)
 
 
 # --- .shape artifact ---------------------------------------------------------------

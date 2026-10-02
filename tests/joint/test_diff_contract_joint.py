@@ -209,3 +209,77 @@ def test_the_rules_work_per_table_in_a_dataset(city_zip: dict) -> None:
         ("places.zip -> city", "fd"),
         (None, "places:max_implausible_rate"),
     }
+
+
+# ---- reference pairs ------------------------------------------------------------------------
+
+
+@pytest.fixture(scope="module")
+def ref_csv(reference, tmp_path_factory):  # noqa: ANN001, ANN201
+    import pyarrow.csv as pcsv
+
+    path = tmp_path_factory.mktemp("ref") / "zips.csv"
+    pcsv.write_csv(reference.select(["zip", "city", "state"]), path)
+    return path
+
+
+PAIR = {"columns": ["city", "state", "zip"], "reference": "zips.csv", "min_match_rate": 0.99}
+
+
+def test_reference_pairs_find_the_wrong_place_zips_the_format_checks_cannot(
+    city_zip, ref_csv
+) -> None:
+    spec = [{"columns": ["city", "state", "zip"], "reference": str(ref_csv)}]
+    good = shape.profile(city_zip["good"], reference_pairs=spec)
+    bad = shape.profile(city_zip["bad"], reference_pairs=spec)
+    g = good.to_dict()["joint"]["reference_pairs"][0]
+    b = bad.to_dict()["joint"]["reference_pairs"][0]
+    assert g["match_rate"] == 1.0 and g["mismatched"] == 0
+    # 8% 00000 (not a real ZIP) + 5% real ZIPs of another place: both are outside the reference
+    assert b["match_rate"] == pytest.approx(0.87, abs=0.005)
+    assert b["mismatched"] == 520 and b["examples"][0]["values"][2] == "0"
+    assert shape.check(good, {"reference_pair": [PAIR]}).passed
+    result = shape.check(bad, {"reference_pair": [PAIR]})
+    v = result.violations[0]
+    assert v["rule"] == "reference_pair" and v["observed"]["mismatched"] == 520
+    change = next(c for c in shape.diff(good, bad).changes if c["kind"] == "reference_match_change")
+    assert change["baseline"] == 1.0 and change["current"] == pytest.approx(0.87, abs=0.005)
+    assert change["severity"] == "high"
+
+
+def test_a_reference_pair_the_profile_did_not_measure_is_a_violation(city_zip) -> None:
+    result = shape.check(shape.profile(city_zip["good"]), {"reference_pair": [PAIR]})
+    assert "not measured" in result.violations[0]["observed"]
+
+
+def test_reference_pair_inputs_are_validated(city_zip, ref_csv) -> None:
+    with pytest.raises(ValueError, match="no column 'nope'"):
+        shape.profile(
+            city_zip["good"], reference_pairs=[{"columns": ["nope"], "reference": str(ref_csv)}]
+        )
+    with pytest.raises(ValueError, match="no field 'nope'"):
+        shape.profile(
+            city_zip["good"],
+            reference_pairs=[{"columns": {"zip": "nope"}, "reference": str(ref_csv)}],
+        )
+    with pytest.raises(ContractError):
+        shape.check(shape.profile(city_zip["good"]), {"reference_pair": [{"columns": ["a"]}]})
+
+
+def test_the_cli_takes_reference_pairs(city_zip, ref_csv, tmp_path, capsys) -> None:
+    from shape.cli.main import main
+
+    out = tmp_path / "bad.shape"
+    rc = main(
+        [
+            "profile",
+            str(city_zip["bad"]),
+            "-o",
+            str(out),
+            "--reference-pair",
+            f"city,state,zip={ref_csv}",
+        ]
+    )
+    assert rc == 0
+    pair = shape.load(str(out)).to_dict()["joint"]["reference_pairs"][0]
+    assert pair["columns"] == ["city", "state", "zip"] and pair["mismatched"] == 520

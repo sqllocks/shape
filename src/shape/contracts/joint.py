@@ -153,6 +153,41 @@ def check_implies(rule: dict[str, Any], table: dict[str, Any]) -> list[dict[str,
     return [_violation(label, "implies", expected, {"confidence": p, "rows": row["n"]})]
 
 
+def check_reference_pair(rule: dict[str, Any], table: dict[str, Any]) -> list[dict[str, Any]]:
+    cols = _names(rule["columns"])
+    ref = rule["reference"]
+    label = f"{', '.join(cols)} in {ref}"
+    minimum = float(rule["min_match_rate"])
+    expected = {"min_match_rate": minimum}
+    for entry in (_joint(table) or {}).get("reference_pairs", ()):
+        if entry["columns"] == cols and ref in (entry["reference"], entry["name"]):
+            rate = entry["match_rate"]
+            if rate is not None and rate >= minimum:
+                return []
+            return [
+                _violation(
+                    label,
+                    "reference_pair",
+                    expected,
+                    {
+                        "match_rate": rate,
+                        "mismatched": entry["mismatched"],
+                        "rows": entry["rows"],
+                        "examples": entry["examples"],
+                    },
+                )
+            ]
+    return [
+        _violation(
+            label,
+            "reference_pair",
+            expected,
+            "not measured: profile with reference_pairs=[{'columns': ..., 'reference': ...}] "
+            "(shape profile --reference-pair)",
+        )
+    ]
+
+
 def check_implausible(rate: float, table: dict[str, Any]) -> list[dict[str, Any]]:
     j = _joint(table)
     if j is None or j.get("implausible_rate") is None:
@@ -186,6 +221,8 @@ def check_joint_rules(contract: dict[str, Any], table: dict[str, Any]) -> list[d
         out.extend(check_fd(rule, table))
     for rule in contract.get("implies", ()):
         out.extend(check_implies(rule, table))
+    for rule in contract.get("reference_pair", ()):
+        out.extend(check_reference_pair(rule, table))
     if "max_implausible_rate" in contract:
         out.extend(check_implausible(float(contract["max_implausible_rate"]), table))
     return out

@@ -60,6 +60,7 @@ DEFAULT_THRESHOLDS: dict[str, Any] = {
     "placeholder_share": 0.01,  # absolute rise of the share of rows holding a placeholder value
     "implausible_rate": 0.02,  # absolute rise of the share of implausible rows
     "association_shift": 0.2,  # absolute change of an association measure (V, U, eta, |r|)
+    "reference_match_rate": 0.02,  # absolute drop of the share of rows in a reference
 }
 
 KIND_SEVERITY: dict[str, str] = {
@@ -88,6 +89,7 @@ KIND_SEVERITY: dict[str, str] = {
     "placeholder_surge": "medium",
     "implausible_rate_change": "medium",
     "association_shift": "low",
+    "reference_match_change": "high",
 }
 
 _NUMERIC = ("integer", "float")

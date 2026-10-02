@@ -30,6 +30,7 @@ _CONTRACT_KEYS = {
     # joint rules (#47), all optional like every rule: absent from a contract, nothing changes
     "fd",  # [{"determinant": "zip", "dependent": "city", "min_confidence": 0.99}]
     "implies",  # [{"if": {"column": "state", "equals": "CA"}, "then": {...}, "min_confidence": 1}]
+    "reference_pair",  # [{"columns": ["city", "zip"], "reference": "...", "min_match_rate": 0.99}]
     "max_implausible_rate",  # the share of rows that break a dependency or hold a placeholder
 }
 _ROW_COUNT_KEYS = {"min", "max"}
@@ -136,11 +137,34 @@ def _names(value: Any) -> list[str] | None:
     return None
 
 
+def _validate_reference_pair(contract: dict[str, Any]) -> None:
+    if "reference_pair" not in contract:
+        return
+    rules = contract["reference_pair"]
+    if not isinstance(rules, list):
+        raise ContractError("'reference_pair' must be a list of rules")
+    for rule in rules:
+        if not isinstance(rule, dict) or set(rule) - {"columns", "reference", "min_match_rate"}:
+            raise ContractError(
+                "each 'reference_pair' rule is an object with 'columns', 'reference' and "
+                "'min_match_rate'"
+            )
+        if _names(rule.get("columns")) is None or not isinstance(rule.get("reference"), str):
+            raise ContractError(
+                "reference_pair: 'columns' is a list of column names, 'reference' the name the "
+                "profile gave the reference"
+            )
+        rate = rule.get("min_match_rate")
+        if not (_is_number(rate) and 0 < rate <= 1):
+            raise ContractError("reference_pair needs 'min_match_rate' above 0 and up to 1")
+
+
 def _validate_joint_rules(contract: dict[str, Any]) -> None:
     if "max_implausible_rate" in contract and not (
         _is_number(contract["max_implausible_rate"]) and 0 <= contract["max_implausible_rate"] <= 1
     ):
         raise ContractError("max_implausible_rate must be a number from 0 to 1")
+    _validate_reference_pair(contract)
     for key, needs in (("fd", ("determinant", "dependent")), ("implies", ("if", "then"))):
         if key not in contract:
             continue
