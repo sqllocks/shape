@@ -243,6 +243,7 @@ instruction.
 
 | Date | ID | Change | Reason |
 |---|---|---|---|
+| 2026-10-02 | G5 | **Phase 5 done (P5-01..P5-04); G5 waits only on the 1-hour realtime soak** (nightly `emit-rate-soak`, run by hand on build/main-plan because the scheduled nightly runs on `main`). STREAM-EMIT 14.27x in-process (lead), live fidelity within 0.0072 of `shape fidelity`. The G5-gated packages P6-04, P6-07a, P6-13 and P7-04 started in parallel before the soak result, under the owner's standing "whatever can run in parallel, do it" (as PF-02 started before G1); G5 is marked done only when the soak passes. | Lead. |
 | 2026-10-02 | SAC-01, issue #1 | **Owner's issue sqllocks/shape#1 (Shape as Code) built as work package SAC-01**: byte-reproducible `.shape` containers (fixed member timestamps, order and attributes; members **stored, not deflated**, because deflate output differs between zlib builds and only stored members give identical bytes across machines; git compresses them itself; old deflated artifacts still read), `shape cat` and `shape git-setup` (one changed line per changed property in `git diff`), `shape profile --name` and a kept name when overwriting an existing `.shape`, docs naming `shape profile safe` output as the committable artifact (`--json` and the raw `.shape` hold real values, lead decision kept), and a real-git e2e test. Artifact spec rules unchanged (writer convention 9 added). | Owner, issue #1; lead. |
 | 2026-10-02 | P5-01b | **Realtime pacing under load:** a realtime run `gc.freeze()`s the objects that exist when it starts and writes checkpoints on a writer thread, removing two stall sources that broke `test_realtime_rate_within_five_percent` inside the full suite. Test and ±5% criterion unchanged. A residual whole-process host stall (no Python thread runnable) can still exceed 50 ms on a busy VM; if CI shows it, the options are the owner's (a quiet runner for the realtime tests, or a restated CI criterion). | Lead. |
 | 2026-10-02 | P6-01, T-21 | **Owner accepts the seed-1042 T-21 misses as documented chance** (P6-01a–d: clause (h) cells in capital_markets, education, financial, insurance, supply_chain, real_estate, iot, manufacturing, marketing, and healthcare `provider.last_name` distinct ratio). Evidence (`lane/P6-01-seed`, `docs/plans/lane_status/P6-01-seed.md`): 30 seeds per tool for every cell (150 for the two closest), per-table and per-column Mann-Whitney and KS with Bonferroni: no table or column differs; the generation rules are the same; a fresh baseline seed misses its own clause-(h) floors on 8.5 of 130 tables on average, as Shape's seeds do (p = 0.93); seed 1042 is Shape's worst of 30. No seed, floor, tolerance, case or test changed; T-21 unchanged. GEN-IN ≥10x at medium remains open (round 3). | Owner, 2026-10-02: "we can accept". |
@@ -2029,10 +2030,10 @@ Work packages are listed in execution order. The next work package is the first 
 | 62 | P6-01e | wip (lane/P6-01e, started early from lane/P6-01-int) | |
 | 63 | P6-02 | done | 0f8c36e |
 | 64 | P6-03 | done | 50d7be4 |
-| 65 | P6-04 | todo | |
+| 65 | P6-04 | wip (lanes P6-04a and P6-04b, started before G5's 1-hour soak) | |
 | 66 | P6-05 | done | 3a85d86 |
 | 67 | P6-06 | done | e5d338f |
-| 68 | P6-07a | todo | |
+| 68 | P6-07a | wip (lane/P6-07a, started before G5's 1-hour soak) | |
 | 69 | P6-07b | todo | |
 | 70 | P6-07c | todo | |
 | 71 | P6-08 | done (nightly SQL Server e2e pending) | 29eac3e |
@@ -2041,12 +2042,12 @@ Work packages are listed in execution order. The next work package is the first 
 | 73 | P6-10 | done | 1faff65 |
 | 74 | P6-11 | todo | |
 | 75 | P6-12 | todo | |
-| 76 | P6-13 | todo | |
+| 76 | P6-13 | wip (lane/P6-13; P6-07a parts after it lands) | |
 | 77 | P6-14 | done | 62160c9 |
 | 78 | P7-01 | done | b04bf32 |
 | 79 | P7-02 | done | d6e3a97 |
 | 80 | P7-03 | done | 06300e7 |
-| 81 | P7-04 | todo | |
+| 81 | P7-04 | wip (lane/P7-04, started before G5's 1-hour soak) | |
 | 82 | P8-01 | todo | |
 | 83 | P8-02 | todo | |
 | 84 | P8-03 | todo | |
