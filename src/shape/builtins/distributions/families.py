@@ -102,14 +102,18 @@ class Family:
         self, stream: RowStream, row_start: int, n: int, params: Mapping[str, Any]
     ) -> Floats:
         """``n`` values for rows ``row_start ..``; parameters outside the domain raise."""
-        full: dict[str, Any] = {
-            **self.defaults,
-            **{k: float(v) for k, v in params.items() if k in self.defaults},
-        }
+        full = self.merged(params)
         self.check(full)
         if n == 0:
             return np.empty(0, dtype=np.float64)
         return self.draw(stream, row_start, n, full)
+
+    def merged(self, params: Mapping[str, Any]) -> dict[str, Any]:
+        """``params`` over the defaults, as numbers (what :meth:`sample` checks and draws from)."""
+        return {
+            **self.defaults,
+            **{k: float(v) for k, v in params.items() if k in self.defaults},
+        }
 
 
 # ---------------------------------------------------------------------------------------------
@@ -171,6 +175,27 @@ class LogNormal(Normal):
 
     def draw(self, stream: RowStream, row_start: int, n: int, params: Mapping[str, Any]) -> Floats:
         return np.exp(_p(params, "mu") + _p(params, "sigma") * stream.normal(row_start, n))
+
+    def sample_clipped(
+        self,
+        stream: RowStream,
+        row_start: int,
+        n: int,
+        params: Mapping[str, Any],
+        low: float | None,
+        high: float | None,
+        scale: int | None,
+    ) -> Floats | None:
+        """:meth:`sample` clipped to ``[low, high]`` and rounded to ``scale`` decimals (a bound or
+        scale that is ``None`` is not applied) in one native pass, or ``None`` when the kernel
+        cannot do that and the caller must do the steps itself."""
+        full = self.merged(params)
+        self.check(full)
+        if n == 0:
+            return np.empty(0, dtype=np.float64)
+        return kernel_ops.lognormal(
+            stream, row_start, n, _p(full, "mu"), _p(full, "sigma"), low, high, scale
+        )
 
     def fit(self, x: Floats) -> dict[str, Any]:
         if (x <= 0).any():

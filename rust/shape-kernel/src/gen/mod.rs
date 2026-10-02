@@ -118,6 +118,14 @@ fn philox_uniform(
     Ok(out(Arc::new(Float64Array::from(v))))
 }
 
+/// The standard normal of two words: `sqrt(-2 ln(1 - u1)) * cos(2 pi u2)`.
+#[inline(always)]
+fn normal_of(w1: u64, w2: u64) -> f64 {
+    let u1 = 1.0 - rng::unit(w1);
+    let u2 = rng::unit(w2);
+    (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+}
+
 /// One standard normal per row by Box-Muller from words `slot` and `slot + 1`:
 /// `sqrt(-2 ln(1 - u1)) * cos(2 pi u2)`.
 #[pyfunction]
@@ -136,9 +144,7 @@ fn philox_normal(
         let mut o = vec![0f64; n_rows];
         rng::for_row_chunks([k0, k1], row_start, per_row, &mut o, true, &|w, c| {
             for (r, x) in c.iter_mut().enumerate() {
-                let u1 = 1.0 - rng::unit(w[r * per_row + slot]);
-                let u2 = rng::unit(w[r * per_row + slot + 1]);
-                *x = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
+                *x = normal_of(w[r * per_row + slot], w[r * per_row + slot + 1]);
             }
         });
         o
@@ -255,6 +261,113 @@ fn cols_of<'a>(arrays: &'a [ArrayRef]) -> PyResult<Vec<strings::Col<'a>>> {
 
 fn into_arrays(list: Vec<PyArray>) -> Vec<ArrayRef> {
     list.into_iter().map(|a| a.into_inner().0).collect()
+}
+
+/// numpy's `np.maximum` for two floats: a NaN in either gives NaN.
+#[inline(always)]
+fn np_maximum(a: f64, b: f64) -> f64 {
+    if a.is_nan() || b.is_nan() {
+        f64::NAN
+    } else if a >= b {
+        a
+    } else {
+        b
+    }
+}
+
+/// numpy's `np.minimum` for two floats: a NaN in either gives NaN.
+#[inline(always)]
+fn np_minimum(a: f64, b: f64) -> f64 {
+    if a.is_nan() || b.is_nan() {
+        f64::NAN
+    } else if a <= b {
+        a
+    } else {
+        b
+    }
+}
+
+/// `10 ** n` as numpy's `round` makes it (a table to 1e8, then repeated products of ten, which
+/// stay exact up to 1e22).
+fn numpy_power_of_ten(n: u32) -> f64 {
+    const P10: [f64; 9] = [1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8];
+    if n < 9 {
+        return P10[n as usize];
+    }
+    let mut ret = 1e8;
+    let mut k = n;
+    while k > 8 {
+        ret *= 10.0;
+        k -= 1;
+    }
+    ret
+}
+
+/// `np.round(x, decimals)` for `decimals >= 0`: `rint(x * 10**d) / 10**d` (just `rint` for 0).
+#[inline(always)]
+fn numpy_round(x: f64, decimals: u32, factor: f64) -> f64 {
+    if decimals == 0 {
+        x.round_ties_even()
+    } else {
+        (x * factor).round_ties_even() / factor
+    }
+}
+
+/// Log-normal values in one pass: `exp(mu + sigma * z)` for the standard normal `z` of each row
+/// (words `0` and `1` of its two), clipped to `[low, high]` where given and rounded to `scale`
+/// decimals where given, exactly as the NumPy expression
+/// `round(minimum(maximum(exp(mu + sigma * philox_normal), low), high), scale)` gives. `exp` is
+/// numpy's own loop (the one `np.exp` uses for the array), so the values are numpy's bit for bit.
+/// Returns `None` when numpy's loop cannot be called without the GIL; the caller then does it
+/// with NumPy.
+#[pyfunction]
+#[pyo3(signature = (k0, k1, row_start, n_rows, mu, sigma, low = None, high = None, scale = None))]
+#[allow(clippy::too_many_arguments)]
+fn lognormal_values(
+    py: Python<'_>,
+    k0: u64,
+    k1: u64,
+    row_start: u64,
+    n_rows: usize,
+    mu: f64,
+    sigma: f64,
+    low: Option<f64>,
+    high: Option<f64>,
+    scale: Option<u32>,
+) -> PyResult<Option<PyArray>> {
+    let Some(loops) = crate::numpy_loops_for_generation(py) else {
+        return Ok(None);
+    };
+    if scale.is_some_and(|d| d > 22) {
+        return Ok(None); // beyond the powers of ten that are exact
+    }
+    let factor = scale.map_or(1.0, numpy_power_of_ten);
+    let v = py.detach(|| {
+        let mut o = vec![0f64; n_rows];
+        rng::for_row_chunks([k0, k1], row_start, 2, &mut o, true, &|w, c| {
+            for (r, x) in c.iter_mut().enumerate() {
+                *x = mu + sigma * normal_of(w[2 * r], w[2 * r + 1]);
+            }
+            loops.exp.apply(c);
+            if low.is_some() || high.is_some() || scale.is_some() {
+                for x in c.iter_mut() {
+                    let mut y = *x;
+                    if let Some(lo) = low {
+                        y = np_maximum(y, lo);
+                    }
+                    if let Some(hi) = high {
+                        y = np_minimum(y, hi);
+                    }
+                    if let Some(d) = scale {
+                        y = numpy_round(y, d, factor);
+                    }
+                    *x = y;
+                }
+            }
+        });
+        o
+    });
+    Ok(Some(out(Arc::new(Float64Array::from(v)))))
 }
 
 /// One index in `0..size` per row: `min(floor(u * size), size - 1)` for the uniform `u` of word
@@ -667,6 +780,7 @@ pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(alias_sample, m)?)?;
     m.add_function(wrap_pyfunction!(zipf_guide, m)?)?;
     m.add_function(wrap_pyfunction!(zipf_draw, m)?)?;
+    m.add_function(wrap_pyfunction!(lognormal_values, m)?)?;
     m.add_function(wrap_pyfunction!(uniform_index, m)?)?;
     m.add_function(wrap_pyfunction!(pool_pick, m)?)?;
     m.add_function(wrap_pyfunction!(alias_pool, m)?)?;

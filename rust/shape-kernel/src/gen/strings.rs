@@ -413,6 +413,9 @@ pub fn pool_take(pool: &Col<'_>, indices: &arrow_array::Int64Array) -> Result<St
     })
 }
 
+/// Entries up to this many bytes are copied as one fixed-size block (see [`gather_short`]).
+const SHORT: usize = 16;
+
 /// `entries[indices[i]]` for every row, when neither has a null and every index is in range: the
 /// output is sized first (one pass over the lengths) and then filled, with no per-row growth.
 fn gather_utf8(entries: &GenericStringArray<i32>, indices: &[i64]) -> Result<StringArray, String> {
@@ -429,6 +432,18 @@ fn gather_utf8(entries: &GenericStringArray<i32>, indices: &[i64]) -> Result<Str
     if i32::try_from(total).is_err() {
         return Err("string output exceeds 2 GiB: use smaller chunks".into());
     }
+    let n_entries = offsets.len() - 1;
+    // Names, cities, statuses: short entries, picked for many rows. Worth a fixed-size copy when
+    // the picks outnumber the (cheap) set-up over the entries.
+    if indices.len() >= 512 && indices.len() * 4 >= n_entries {
+        let longest = (0..n_entries)
+            .map(|p| offsets[p + 1] - offsets[p])
+            .max()
+            .unwrap_or(0);
+        if (longest as usize) <= SHORT {
+            return gather_short(offsets, data, indices, total);
+        }
+    }
     let mut values: Vec<u8> = Vec::with_capacity(total);
     let mut ends: Vec<i32> = Vec::with_capacity(indices.len() + 1);
     ends.push(0);
@@ -437,6 +452,38 @@ fn gather_utf8(entries: &GenericStringArray<i32>, indices: &[i64]) -> Result<Str
         values.extend_from_slice(&data[lo..hi]);
         ends.push(values.len() as i32); // at most `total`, which fits
     }
+    finish_utf8(ends, values, None)
+}
+
+/// [`gather_utf8`] for entries of at most [`SHORT`] bytes: every pick is copied as `SHORT` bytes
+/// (one move, where a copy of a run-time length is a call to `memcpy`) from a copy of the entries'
+/// bytes that has `SHORT` bytes of padding after it, and the bytes past the entry's end are cut off
+/// again before the next pick.
+fn gather_short(
+    offsets: &[i32],
+    data: &[u8],
+    indices: &[i64],
+    total: usize,
+) -> Result<StringArray, String> {
+    let n_entries = offsets.len() - 1;
+    let base = offsets[0] as usize;
+    let end = offsets[n_entries] as usize;
+    let mut padded: Vec<u8> = Vec::with_capacity(end - base + SHORT);
+    padded.extend_from_slice(&data[base..end]);
+    padded.resize(end - base + SHORT, 0);
+    // Written by position: no capacity checks per row. The last block may run past `total`.
+    let mut values = vec![0u8; total + SHORT];
+    let mut ends = vec![0i32; indices.len() + 1];
+    let mut at = 0usize;
+    for (row, &i) in indices.iter().enumerate() {
+        let p = i as usize;
+        let lo = offsets[p] as usize - base;
+        let len = (offsets[p + 1] - offsets[p]) as usize;
+        values[at..at + SHORT].copy_from_slice(&padded[lo..lo + SHORT]);
+        at += len;
+        ends[row + 1] = at as i32; // at most `total`, which fits
+    }
+    values.truncate(total);
     finish_utf8(ends, values, None)
 }
 

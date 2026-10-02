@@ -302,3 +302,118 @@ def test_kernel_ops_compose_matches_the_kernel(nat):
         ("col", pa.array(["Ab c"] * 20), 0, True),
     ]
     _same(got, nat.compose_strings(["", "-", "-", ""], spec, 9, 20))
+
+
+# ------------------------------------------------------------------ pool_take, short entries
+
+
+@pytest.mark.parametrize("longest", [0, 1, 7, 15, 16, 17, 40])
+@pytest.mark.parametrize("n_rows", [3, 511, 512, 5000])
+def test_pool_take_equals_the_python_gather_for_short_and_long_entries(nat, longest, n_rows):
+    """Entries of up to 16 bytes take a fixed-size copy path once there are 512 rows to fill."""
+    rng = np.random.default_rng(longest * 1000 + n_rows)
+    lengths = rng.integers(0, longest + 1, 40)
+    lengths[0] = longest  # the longest entry is present
+    entries = [
+        "".join(chr(97 + (i + j) % 26) for j in range(int(k))) for i, k in enumerate(lengths)
+    ]
+    pool = pa.array(entries, type=pa.string())
+    idx = pa.array(rng.integers(0, len(entries), n_rows), type=pa.int64())
+    got = pa.array(nat.pool_take(pool, idx))
+    assert got.to_pylist() == [entries[i] for i in idx.to_pylist()]
+    sliced = pool.slice(5, 20)
+    idx2 = pa.array(rng.integers(0, 20, n_rows), type=pa.int64())
+    got2 = pa.array(nat.pool_take(sliced, idx2))
+    assert got2.to_pylist() == [entries[5 + i] for i in idx2.to_pylist()]
+    assert got.null_count == 0 and got.type == pa.string()
+
+
+def test_pool_take_multibyte_text_and_one_entry_pools(nat):
+    pool = pa.array(["é", "日本", "", "a"], type=pa.string())
+    idx = pa.array([0, 1, 2, 3] * 300, type=pa.int64())
+    assert pa.array(nat.pool_take(pool, idx)).to_pylist() == ["é", "日本", "", "a"] * 300
+    one = pa.array(["only"], type=pa.string())
+    zeros = pa.array([0] * 1000, type=pa.int64())
+    assert pa.array(nat.pool_take(one, zeros)).to_pylist() == ["only"] * 1000
+
+
+# ------------------------------------------------------------------ lognormal_values
+
+
+def _lognormal_numpy(nat, k0, k1, start, n, mu, sigma, low, high, scale):
+    """The expression the ``distribution`` strategy evaluated before the kernel fused it."""
+    z = np.asarray(pa.array(nat.philox_normal(k0, k1, start, n)).to_numpy())
+    with np.errstate(all="ignore"):
+        v = np.exp(mu + sigma * z)
+        if low is not None:
+            v = np.maximum(v, low)
+        if high is not None:
+            v = np.minimum(v, high)
+        if scale is not None:
+            v = np.round(v, scale)
+    return v
+
+
+def _bits(a) -> np.ndarray:
+    return np.asarray(pa.array(a).to_numpy()).view(np.uint64)
+
+
+def test_lognormal_values_equal_the_numpy_expression_bit_for_bit(nat):
+    rng = np.random.default_rng(2024)
+    for trial in range(120):
+        k0, k1 = int(rng.integers(0, 2**63)), int(rng.integers(0, 2**63))
+        start = int(rng.integers(0, 10**6))
+        n = int(rng.choice([0, 1, 7, 100, 5000, 40_000, 70_000]))
+        mu, sigma = float(rng.uniform(-3, 8)), float(rng.uniform(0.01, 3))
+        low = [None, 0.0, float(rng.uniform(0, 50))][trial % 3]
+        high = [None, float(rng.uniform(100, 1e6))][trial % 2]
+        scale = [None, 0, 1, 2, 4, 9, 15, 22][trial % 8]
+        got = nat.lognormal_values(k0, k1, start, n, mu, sigma, low, high, scale)
+        if got is None:
+            pytest.skip("numpy's exp loop is not available to the kernel here")
+        want = _lognormal_numpy(nat, k0, k1, start, n, mu, sigma, low, high, scale)
+        assert np.array_equal(_bits(got), want.view(np.uint64)), (trial, n, scale, low, high)
+
+
+def test_lognormal_values_extremes_and_chunking(nat):
+    k0, k1 = KEYS[3]
+    for mu, sigma in [(0.0, 0.0), (700.0, 5.0), (-800.0, 1.0), (20.0, 40.0)]:  # inf and 0 results
+        got = nat.lognormal_values(k0, k1, 3, 500, mu, sigma, None, None, 2)
+        if got is None:
+            pytest.skip("numpy's exp loop is not available to the kernel here")
+        want = _lognormal_numpy(nat, k0, k1, 3, 500, mu, sigma, None, None, 2)
+        assert np.array_equal(_bits(got), want.view(np.uint64))
+    whole = np.asarray(
+        pa.array(nat.lognormal_values(k0, k1, 0, 100_000, 5.0, 1.0, 1.0, 1e5, 2)).to_numpy()
+    )
+    cuts = [0, 1, 8191, 8192, 33_333, 100_000]
+    parts = [
+        np.asarray(
+            pa.array(nat.lognormal_values(k0, k1, a, b - a, 5.0, 1.0, 1.0, 1e5, 2)).to_numpy()
+        )
+        for a, b in zip(cuts, cuts[1:], strict=False)
+    ]
+    assert np.array_equal(np.concatenate(parts).view(np.uint64), whole.view(np.uint64))
+
+
+def test_lognormal_values_twin_equals_the_numpy_expression():
+    k0, k1 = KEYS[1]
+    for low, high, scale in [(None, None, None), (0.0, 1e5, 2), (1.5, None, 0), (None, 3e3, 5)]:
+        got = ref.lognormal_values(k0, k1, 11, 600, 4.0, 0.7, low, high, scale)
+        z = np.asarray(pa.array(ref.philox_normal(k0, k1, 11, 600)).to_numpy())
+        v = np.exp(4.0 + 0.7 * z)
+        if low is not None:
+            v = np.maximum(v, low)
+        if high is not None:
+            v = np.minimum(v, high)
+        if scale is not None:
+            v = np.round(v, scale)
+        assert np.array_equal(_bits(got), v.view(np.uint64))
+
+
+def test_kernel_ops_lognormal_declines_scales_it_cannot_round_like_numpy():
+    stream = RowStream(5, "t", "c", "v")
+    assert kernel_ops.lognormal(stream, 0, 10, 1.0, 1.0, None, None, -1) is None
+    assert kernel_ops.lognormal(stream, 0, 10, 1.0, 1.0, None, None, 23) is None
+    out = kernel_ops.lognormal(stream, 0, 10, 1.0, 1.0, None, None, 2)
+    assert out is not None and out.dtype == np.float64 and len(out) == 10

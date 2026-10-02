@@ -15,6 +15,7 @@ from shape.generation.arrowkit import array as arrow_array
 from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.generation.strategy_kit import (
     StrategyError,
+    column_scale,
     require,
     round_to_scale,
     spec_params,
@@ -53,6 +54,9 @@ class Distribution:
         family = FAMILIES.get(dist)
         if family is not None:
             try:
+                fused = self._sample_clipped(family, params, ctx)
+                if fused is not None:
+                    return arrow_array(fused)
                 values = family.sample(
                     stream(ctx, "v"), ctx.row_start, ctx.n_rows, family.from_spec(params)
                 )
@@ -72,6 +76,21 @@ class Distribution:
         if params.get("max") is not None:
             values = np.minimum(values, float(params["max"]))
         return arrow_array(round_to_scale(values, ctx))
+
+    @staticmethod
+    def _sample_clipped(family: Any, params: Mapping[str, Any], ctx: GenerationContext) -> Any:
+        """The family's draw, clipped to ``min``/``max`` and rounded to the column's scale in one
+        native pass, when the family can do that (``sample_clipped``) and the kernel can; else
+        ``None``, and the steps are done one by one."""
+        fused = getattr(family, "sample_clipped", None)
+        scale = column_scale(ctx)
+        if fused is None or not (scale is None or 0 <= scale <= 22):
+            return None
+        low = None if params.get("min") is None else float(params["min"])
+        high = None if params.get("max") is None else float(params["max"])
+        return fused(
+            stream(ctx, "v"), ctx.row_start, ctx.n_rows, family.from_spec(params), low, high, scale
+        )
 
 
 _PERCENTILE_KEYS = ("p1", "p5", "p10", "p25", "p50", "p75", "p90", "p95", "p99")

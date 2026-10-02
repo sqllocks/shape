@@ -93,6 +93,32 @@ def philox_normal(
     return arrow_array(z)
 
 
+def lognormal_values(
+    k0: int,
+    k1: int,
+    row_start: int,
+    n_rows: int,
+    mu: float,
+    sigma: float,
+    low: float | None = None,
+    high: float | None = None,
+    scale: int | None = None,
+) -> pa.Array:
+    """``round(minimum(maximum(exp(mu + sigma * z), low), high), scale)`` for the standard normal
+    ``z`` of each row (the same NumPy expression the strategy used before the native kernel
+    fused it); a bound or the scale that is ``None`` is not applied."""
+    z = np.asarray(arrow_numpy(philox_normal(k0, k1, row_start, n_rows)), dtype=np.float64)
+    with np.errstate(all="ignore"):
+        values = np.exp(mu + sigma * z)
+        if low is not None:
+            values = np.maximum(values, low)
+        if high is not None:
+            values = np.minimum(values, high)
+        if scale is not None:
+            values = np.round(values, scale)
+    return arrow_array(values)
+
+
 def _f64(a: Any, what: str) -> npt.NDArray[np.float64]:
     arr = arrow_array(a) if not isinstance(a, pa.Array) else a
     if not pa.types.is_float64(arr.type):

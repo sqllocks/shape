@@ -142,6 +142,15 @@ fn native_loops() -> Option<&'static numpy_loops::NumpyLoops> {
     NATIVE_LOOPS.get().and_then(Option::as_ref)
 }
 
+/// numpy's own `exp` loop, validated and ready, for the generation kernel: `None` when numpy's loops
+/// cannot be called without the GIL (the caller then keeps to numpy through Python).
+pub(crate) fn numpy_loops_for_generation(
+    py: Python<'_>,
+) -> Option<&'static numpy_loops::NumpyLoops> {
+    install_numpy_hooks(py).ok()?;
+    native_loops()
+}
+
 fn native_exp(x: f64) -> f64 {
     native_loops().map_or_else(|| x.exp(), |n| n.exp.scalar(x))
 }

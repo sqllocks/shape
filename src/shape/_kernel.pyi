@@ -35,6 +35,17 @@ def zipf_draw(cum: Any, guide: Any, k0: int, k1: int, row_start: int, n_rows: in
 def uniform_index(
     k0: int, k1: int, row_start: int, n_rows: int, size: int, per_row: int = 1, slot: int = 0
 ) -> Any: ...
+def lognormal_values(
+    k0: int,
+    k1: int,
+    row_start: int,
+    n_rows: int,
+    mu: float,
+    sigma: float,
+    low: float | None = None,
+    high: float | None = None,
+    scale: int | None = None,
+) -> Any: ...
 def pool_pick(pool: Any, k0: int, k1: int, row_start: int, n_rows: int) -> Any: ...
 def alias_pool(
     prob: Any,

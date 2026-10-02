@@ -28,6 +28,7 @@ from .gen import compose_strings as compose_strings
 from .gen import day_weights as day_weights
 from .gen import hour_weights_peaks as hour_weights_peaks
 from .gen import join_strings as join_strings
+from .gen import lognormal_values as lognormal_values
 from .gen import philox_normal as philox_normal
 from .gen import philox_uniform as philox_uniform
 from .gen import philox_words as philox_words

@@ -7,9 +7,10 @@ depend on how the rows are chunked.
 
 Stable interface: ``AliasTable``, ``alias_table``, ``alias_draw``, ``alias_pick_pool``,
 ``alias_pick_values``, ``pool_pick``, ``ZipfTable``, ``zipf_table``, ``zipf_draw``,
-``uniform_index``, ``compose_strings`` (``PoolPiece``, ``IntPiece``, ``ColumnPiece``),
-``pool_take``, ``uuid4``, ``random_strings``, ``template_strings``, ``join_strings``,
-``string_case``, ``day_weights``, ``hour_weights_peaks`` and ``temporal_sample``.
+``uniform_index``, ``lognormal``, ``compose_strings`` (``PoolPiece``, ``IntPiece``,
+``ColumnPiece``), ``pool_take``, ``uuid4``, ``random_strings``, ``template_strings``,
+``join_strings``, ``string_case``, ``day_weights``, ``hour_weights_peaks`` and
+``temporal_sample``.
 """
 
 from __future__ import annotations
@@ -133,6 +134,28 @@ def pool_pick(pool: pa.Array, stream: RowStream, row_start: int, n_rows: int) ->
     """An entry of the ``string`` array ``pool`` picked uniformly per row (as
     :func:`uniform_index`), in one call."""
     return _arrow(get_kernel().pool_pick(pool, stream.k0, stream.k1, row_start, n_rows))
+
+
+def lognormal(
+    stream: RowStream,
+    row_start: int,
+    n_rows: int,
+    mu: float,
+    sigma: float,
+    low: float | None = None,
+    high: float | None = None,
+    scale: int | None = None,
+) -> npt.NDArray[np.float64] | None:
+    """``exp(mu + sigma * z)`` for the standard normal ``z`` of each row, clipped to ``[low, high]``
+    where given and rounded to ``scale`` decimals where given, in one pass: the values of the
+    NumPy expression, bit for bit. ``None`` when the kernel cannot do it (numpy's ``exp`` loop is
+    not available to it, or ``scale`` is negative or above 22): the caller then uses NumPy."""
+    if scale is not None and not 0 <= scale <= 22:
+        return None
+    out = get_kernel().lognormal_values(
+        stream.k0, stream.k1, row_start, n_rows, mu, sigma, low, high, scale
+    )
+    return None if out is None else to_numpy(out).astype(np.float64, copy=False)
 
 
 @dataclass(frozen=True, slots=True)
