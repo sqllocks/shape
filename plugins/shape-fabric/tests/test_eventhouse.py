@@ -3,6 +3,7 @@ Kusto emulator runs in ``test_eventhouse_emulator.py`` (nightly), a real Eventho
 ``test_live.py`` (needs secrets)."""
 
 import json
+import re
 
 import pyarrow as pa
 import pytest
@@ -170,12 +171,11 @@ def test_type_mapping_and_commands_quote_names():
     cmd = create_table_command("t'x", schema)
     assert cmd.startswith(".create-merge table ['t\\'x'] (['a b']:int, ['c\\'d']:long,")
     mapping = create_mapping_command("t", schema)
-    assert (
-        json.loads(mapping.split("'shape_json' '", 1)[1].rsplit("'", 1)[0].replace("\\'", "'"))[1][
-            "path"
-        ]
-        == '$["c\'d"]'
-    )
+    literal = mapping.split("'shape_json' '", 1)[1].rsplit("'", 1)[0]
+    # what the service reads after resolving the KQL string literal's escapes
+    resolved = re.sub(r"\\(.)", r"\1", literal)
+    assert json.loads(resolved)[1]["path"] == '$["c\'d"]'
+    assert json.loads(resolved)[0]["path"] == '$["a b"]'
 
 
 @pytest.mark.parametrize(

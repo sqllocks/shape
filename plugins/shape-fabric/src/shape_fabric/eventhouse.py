@@ -112,7 +112,9 @@ def create_mapping_command(table: str, schema: pa.Schema) -> str:
         {"column": f.name, "path": "$[" + json.dumps(f.name) + "]", "datatype": kusto_type(f.type)}
         for f in schema
     ]
-    body = json.dumps(cols).replace("'", "\\'")
+    # The mapping is a KQL string literal, where a backslash starts an escape: the JSON's own
+    # backslashes (the quotes inside each path) must be doubled or the service reads broken JSON.
+    body = json.dumps(cols).replace("\\", "\\\\").replace("'", "\\'")
     return (
         f".create-or-alter table {_q(table)} ingestion json mapping '{mapping_name(table)}' "
         f"'{body}'"
