@@ -1,7 +1,6 @@
 # EXCEL — Excel source (#50) and multi-sheet workbook sink (#51) (lane/EXCEL)
 
-Status: **Step 1 (source, #50) built and pushed; Step 2 (sink, #51) built and pushed.** Final-HEAD suites for both
-kernels are recorded in "Checks" (see the last line there). Branch from `build/main-plan` @ 7d94089; not merged since
+Status: **Step 1 (source, #50) complete; Step 2 (sink, #51) complete.** Final-HEAD suites for both kernels green (see "Checks"). Branch from `build/main-plan` @ 7d94089; not merged since
 (main-plan moved to 521310f, docs/tracker only). Times US Eastern. No PR, no comments on the issues.
 
 ## Step 1 — Excel source (#50)
@@ -47,3 +46,4 @@ Drift: the answer-key format is read from `lane/ISS-diff`'s `ground_truth.json` 
 - START: `shape version` median 67 ms (min 63) under load (limit 300).
 - Profile parity `verify.py --impl shape`, SHAPE_KERNEL=rust: exit 0; SHAPE_KERNEL=python: exit 0 (Step 1 code; Spindle baseline set up with `setup_spindle.sh`, datasets regenerated).
 - Suites `pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`, Step 1 commit: rust and python each 4809 passed, 1 failed (`tests/io/test_readers.py::test_errors` asserted `.xlsx` is unsupported; fixed to `.docx` in 6cb8d73).
+- Final HEAD (6cb8d73 + status file), suites `pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`: SHAPE_KERNEL=rust 4824 passed (exit 0); SHAPE_KERNEL=python 4824 passed (exit 0). Run after a container restart, so profile parity (above) was run on the Step 1 code before it and not repeated; Step 2 does not touch the profile path.
