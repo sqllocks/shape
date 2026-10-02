@@ -2,9 +2,9 @@
 
 The acceptance case: Shape's schema for D2 equals the one the pinned baseline's ``learn`` writes
 (``benchmarks/vs_spindle/fixtures/learn/d2_20000.json``, regenerated and checked by
-``learn_1to1/baseline.py --check``) except for the columns in ``ALLOWED`` below, each with the reason
-it differs. ``learn_1to1/verify.py`` runs the same comparison on the full 1M-row D2 and on the
-multi-table set against the live baseline. Nothing here needs the baseline's venv.
+``learn_1to1/baseline.py --check``) except for the columns in ``ALLOWED`` below, each with the
+reason it differs. ``learn_1to1/verify.py`` runs the same comparison on the full 1M-row D2 and on
+the multi-table set against the live baseline. Nothing here needs the baseline's venv.
 """
 
 from __future__ import annotations

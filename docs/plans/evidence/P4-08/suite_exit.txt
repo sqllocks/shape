@@ -1,0 +1,3 @@
+rust exit 1
+python exit 1
+domains exit 0

@@ -2,8 +2,8 @@
 
 Acceptance: profiling what ``generate`` makes from a profile gives the same profile, for every field
 the plan calls ``preserved``, within the tolerances below, and every field the plan calls
-``approximate`` is within a looser tolerance. The profiler's T-22 tolerances (1e-9 on a mean, 1e-6 on
-a fitted parameter) compare two profilers on the *same* data; a regenerated sample differs by
+``approximate`` is within a looser tolerance. The profiler's T-22 tolerances (1e-9 on a mean, 1e-6
+on a fitted parameter) compare two profilers on the *same* data; a regenerated sample differs by
 sampling error, so a statistic is compared to its standard error (five of them), and the fields that
 describe structure (type, key flags, pattern, which values an enum has) must be equal.
 
@@ -43,7 +43,7 @@ def _tagged(value: Any) -> Any:
 
 
 def check_field(field: str, orig: dict[str, Any], regen: dict[str, Any], n: int) -> str | None:
-    """``None`` if ``regen`` agrees with ``orig`` on ``field`` within the tolerance, else why not."""
+    """``None`` if ``regen`` agrees with ``orig`` on ``field`` within the tolerance, else why."""
     a, b = orig[field], regen[field]
     if field in ("name", "dtype", "is_primary_key", "is_foreign_key", "fk_ref_table", "pattern"):
         return None if a == b else f"{a!r} != {b!r}"

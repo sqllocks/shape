@@ -5,20 +5,18 @@
 from the row counts and lists the correlated column pairs. The result is a
 :class:`~shape.generation.schema.GenSchema` that ``shape generate`` runs as it is.
 
-The mapping follows the baseline's schema builder rule by rule
-(``benchmarks/vs_spindle/learn_1to1`` compares the two column by column). Two rules are
-deliberately different, and :data:`DIFFERENCES` names each one with its reason (the parity harness
-and ``tests/generation/test_learn.py`` read it):
+Some rules go beyond the obvious mapping, and :data:`DIFFERENCES` names each one with its reason
+(the parity harness under ``benchmarks/`` checks, column by column, that nothing else differs from
+the reference builder the rules were ported from, and ``tests/generation/test_learn.py`` reads the
+list):
 
 * ``truncated_enum``: a numeric column with more distinct values than its profile lists (the top
-  500) is not an enum; the baseline draws only those 500 values.
-* ``exponential``: a column fitted as an exponential distribution is generated as one; the baseline
-  has no exponential generator and draws a clipped normal.
-* ``enum_pattern``: a string column of currency or language codes whose few values are all
-  listed in the profile keeps those values; the baseline draws any code of a faker provider, so the
-  column's vocabulary is lost (and the generated column needs the optional ``faker`` package).
+  500) is not an enum.
+* ``exponential``: a column fitted as an exponential distribution is generated as one.
+* ``enum_pattern``: a string column of currency or language codes whose few values are all listed
+  in the profile keeps those values.
 * ``shifted_lognormal``: a log-normal fit with a material location shift is generated from the
-  column's quantiles; the baseline drops the shift and draws values nowhere near the column's.
+  column's quantiles.
 
 Stable interface: :class:`SchemaBuilder`, :func:`profile_from_dict`, :func:`learn`,
 :data:`DIFFERENCES`.
@@ -35,26 +33,24 @@ from shape.profile.reference.model import ColumnProfile, DatasetProfile, TablePr
 DIFFERENCES: dict[str, str] = {
     "truncated_enum": (
         "a numeric column whose profile lists fewer values than it has distinct ones is generated "
-        "from its distribution; the baseline draws only the listed values (the 500 most "
-        "frequent), so the rest of the column's values never occur"
+        "from its distribution; drawing only the listed values (the 500 most frequent) would "
+        "leave the rest of the column's values out for good"
     ),
     "enum_pattern": (
         "a currency or language code column whose profile lists every value is generated from "
-        "those values and weights; the baseline draws any code of a faker provider (which needs "
-        "the optional faker package), so the column's own vocabulary is lost. Other patterns "
+        "those values and weights; drawing any code of a fake-data provider would lose the "
+        "column's own vocabulary (and needs the optional faker package). Other patterns "
         "(e-mail, phone, ip address...) are never turned into value lists: the schema would "
         "carry personal data"
     ),
     "shifted_lognormal": (
         "a log-normal fit whose location shift is more than 2% of the column's level is generated "
-        "from the column's quantiles; the baseline ignores the shift (its generator has no "
-        "location parameter), so the values land far from the column's range and are clipped to "
-        "its maximum"
+        "from the column's quantiles; the log-normal generator has no location parameter, so "
+        "dropping the shift puts the values far from the column's range, clipped to its maximum"
     ),
     "exponential": (
-        "an exponential fit becomes an exponential distribution (the family exists in Shape); the "
-        "baseline has no exponential generator and falls back to a normal with the same mean and "
-        "standard deviation, clipped to the observed range"
+        "an exponential fit becomes an exponential distribution; the alternative, a normal with "
+        "the same mean and standard deviation clipped to the observed range, has the wrong shape"
     ),
 }
 

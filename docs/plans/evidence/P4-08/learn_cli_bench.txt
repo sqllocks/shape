@@ -1,0 +1,14 @@
+spindle  warm-up 1: 41.440s
+shape    warm-up 1: 2.433s
+equivalence: equal except 3 listed columns
+spindle  run 1: 42.374s  cpu 42.53s  load 0.93
+shape    run 1: 2.088s  cpu 6.14s  load 0.96
+spindle  run 2: 42.359s  cpu 42.46s  load 1.13
+shape    run 2: 2.042s  cpu 5.86s  load 1.06
+spindle  run 3: 41.561s  cpu 41.80s  load 1.06
+shape    run 3: 2.254s  cpu 6.71s  load 1.03
+spindle  run 4: 41.420s  cpu 41.62s  load 1.03
+shape    run 4: 2.330s  cpu 6.89s  load 1.01
+spindle  run 5: 40.723s  cpu 40.84s  load 1.33
+shape    run 5: 2.401s  cpu 7.19s  load 1.17
+median spindle 41.561s, shape 2.254s => 18.44x  (docs/plans/evidence/P4-08/learn_cli_bench.json)

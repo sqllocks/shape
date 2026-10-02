@@ -456,6 +456,12 @@ def _plan_column(
         )
         mark(("fit_score",), _N, "a goodness of fit is measured again, not generated")
     elif kind in ("temporal", "temporal_midnight"):
+        add(
+            "holiday_effects",
+            _N,
+            "a profile records no holiday, payday or trend effects, so none are generated: only "
+            "the month, weekday and hour weights",
+        )
         mark(("hour_histogram", "dow_histogram"), _P, "drawn with the profile's weights")
         mark(
             ("temporal_histogram",),
