@@ -5,6 +5,12 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Composites (`docs/GENERATION_ENGINE.md`): `shape composite PRESET|DOMAIN+DOMAIN` generates several domains
+  as one dataset, tables prefixed with their domain and linked by shared entities (a person, a location,
+  an organisation). Six presets (`enterprise`, `healthcare_system`, `smart_factory`, `digital_commerce`,
+  `campus`, `telecom_bundle`; `shape presets --composites`); `generate`, `describe` and `presets` take a
+  composite as a target, and `shape.api.generate("enterprise")` returns its tables. `retail` is a packaged
+  domain like the other thirteen.
 - `shape emit`: the emitter runtime (`docs/EMIT.md`). Streams a domain's or schema's rows as
   JSON-lines events with the idempotency key `(_shape_table, _shape_seq)`: realtime pacing
   (`--rate`, `--burst START:DURATION:MULT`) or as fast as possible (the default), `--out-of-order`,

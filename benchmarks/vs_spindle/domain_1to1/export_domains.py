@@ -1,4 +1,4 @@
-"""Write the data of the ``shape-domains`` plugin's non-retail domains (D-10, P6-01).
+"""Write the data of every ``shape-domains`` domain, retail included (D-10, P6-01, P6-01e).
 
     source scripts/env.sh
     "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/domain_1to1/export_domains.py          # write
@@ -40,6 +40,7 @@ SOURCE = SPINDLE_ROOT / "sqllocks_spindle" / "domains"
 # Reference datasets each domain ships (financial, healthcare and insurance also read retail's
 # ``us_zip_locations``, the same file as the baseline's shared one).
 DOMAINS: dict[str, tuple[str, ...]] = {
+    "retail": ("categories", "product_names", "promo_names", "us_zip_locations"),
     "capital_markets": ("exchanges", "gics_sectors", "index_memberships", "sp500_constituents"),
     "education": ("aid_types", "course_catalog", "department_names"),
     "financial": ("branch_names", "merchant_names", "transaction_categories"),

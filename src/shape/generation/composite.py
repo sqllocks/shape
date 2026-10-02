@@ -305,12 +305,12 @@ def _rewrite_rule(rule: dict[str, Any], domain: str, local: set[str]) -> dict[st
     expression = str(rule.get("rule", ""))
     for table in sorted(local, key=len, reverse=True):
         expression = re.sub(rf"(?<![\w.]){re.escape(table)}\.", f"{domain}_{table}.", expression)
-    table = rule.get("table")
+    owner = rule.get("table")
     return {
         **rule,
         "name": f"{domain}_{rule['name']}",
         "rule": expression,
-        "table": f"{domain}_{table}" if table else None,
+        "table": f"{domain}_{owner}" if owner else None,
     }
 
 
@@ -323,7 +323,7 @@ def _merge_generation(docs: Mapping[str, dict[str, Any]]) -> dict[str, Any]:
         scales[scale] = {}
         for name, doc in docs.items():
             available = doc["generation"]["scales"]
-            counts = available.get(scale) or next(iter(available.values()), {})
+            counts: dict[str, int] = available.get(scale) or next(iter(available.values()), {})
             for table, rows in counts.items():
                 scales[scale][f"{name}_{table}"] = rows
     derived: dict[str, dict[str, Any]] = {}
@@ -388,15 +388,15 @@ def _cross_relationships(
         active = [m for m in mappings.get(concept, ()) if m.domain in present]
         if len(active) < 2:
             continue
-        primary = active[0]
+        first = active[0]
         for linked in active[1:]:
             out.append(
                 {
-                    "name": f"xdomain_{concept}_{primary.domain}_to_{linked.domain}",
-                    "parent": f"{primary.domain}_{primary.table}",
+                    "name": f"xdomain_{concept}_{first.domain}_to_{linked.domain}",
+                    "parent": f"{first.domain}_{first.table}",
                     "child": f"{linked.domain}_{linked.table}",
-                    "parent_columns": [primary.pk_column],
-                    "child_columns": [f"shared_{concept}_{primary.domain}_{primary.table}_id"],
+                    "parent_columns": [first.pk_column],
+                    "child_columns": [f"shared_{concept}_{first.domain}_{first.table}_id"],
                     "type": "one_to_many",
                     "cardinality": {},
                     "optional": True,

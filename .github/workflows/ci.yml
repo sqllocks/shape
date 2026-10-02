@@ -146,6 +146,13 @@ jobs:
           "$SHAPE_VENV/bin/pip" install -U pip
           "$SHAPE_VENV/bin/pip" install -e '.[dev]' 'pyarrow==25.0.1'
       - run: source scripts/env.sh && python benchmarks/vs_spindle/check_coverage.py
+      # P6-01e: the committed baseline fixtures (schemas, plans, composites) still equal the pinned
+      # baseline's output, and every domain and composite has the baseline's row counts at every scale.
+      - run: |
+          source scripts/env.sh
+          "$SHAPE_VENV/bin/pip" install -e plugins/shape-domains
+          "$SPINDLE_PY" benchmarks/vs_spindle/plan_fixtures.py --check
+          "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/domain_1to1/rowcounts.py
       - run: source scripts/env.sh && python benchmarks/vs_spindle/run.py --quick --out "$BENCH_OUT_DIR/results.json"
       # P6-09: `shape verify` against the baseline's `verify` on retail small (internal harness).
       - run: |

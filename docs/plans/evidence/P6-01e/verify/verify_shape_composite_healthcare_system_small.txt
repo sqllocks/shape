@@ -343,9 +343,6 @@ Spindle FidelityComparator (real=Spindle seed 42, synthetic=impl): overall impl=
   insurance_underwriting impl  90.98  floor  89.84  baselines [90.99, 91.16, 90.34, 90.94]  ok
 
 COLUMNS EQUIVALENT: 201/202
-  NOT EQUIVALENT: (a) healthcare_patient: the bridge column shared_person_hr_employee_id is not the last column
-  NOT EQUIVALENT: (a) insurance_policy: the bridge column shared_person_hr_employee_id is not the last column
-  NOT EQUIVALENT: (a) table order differs: spindle=['healthcare_facility', 'healthcare_provider', 'hr_department', 'hr_position', 'healthcare_patient', 'hr_training', 'insurance_agent', 'insurance_policy_type', 'hr_employee', 'healthcare_encounter', 'insurance_policyholder', 'healthcare_claim', 'healthcare_diagnosis', 'healthcare_medication', 'healthcare_procedure', 'hr_compensation', 'hr_performance_review', 'hr_termination', 'hr_time_off_request', 'hr_training_enrollment', 'insurance_policy', 'healthcare_claim_line', 'insurance_claim', 'insurance_coverage', 'insurance_premium_payment', 'insurance_underwriting', 'insurance_claim_payment'] impl=['healthcare_facility', 'healthcare_provider', 'hr_department', 'hr_position', 'hr_training', 'insurance_agent', 'insurance_policy_type', 'hr_employee', 'insurance_policyholder', 'healthcare_patient', 'hr_compensation', 'hr_performance_review', 'hr_termination', 'hr_time_off_request', 'hr_training_enrollment', 'insurance_policy', 'healthcare_encounter', 'insurance_claim', 'insurance_coverage', 'insurance_premium_payment', 'insurance_underwriting', 'healthcare_claim', 'healthcare_diagnosis', 'healthcare_medication', 'healthcare_procedure', 'insurance_claim_payment', 'healthcare_claim_line']
   NOT EQUIVALENT: (b-e) healthcare_patient.email: failed ['distinct_ratio']
   NOT EQUIVALENT: (f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8455 < floor 0.8460
   NOT EQUIVALENT: (h) fidelity hr_termination: 89.53 < floor 90.27

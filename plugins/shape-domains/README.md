@@ -27,9 +27,14 @@ domain = load_domain("retail")  # schema + reference data registered
 tables = Engine(domain.schema, scale="medium", seed=1).generate().tables
 ```
 
-Scales: `small`, `medium`, `large` and `xlarge` (and the other presets in the schema). Every domain except `retail` also offers a `star` schema (`load_domain(name, mode="star")`). The ZIP locations are
+Scales: `small`, `medium`, `large` and `xlarge` (and the other presets in the schema). Every domain also offers a `star` schema (`load_domain(name, mode="star")`). The ZIP locations are
 derived from GeoNames (CC BY 4.0), and the other reference data is carried over under the MIT license;
 see `THIRD_PARTY_NOTICES.md` in the repository.
+
+Composites: `shape composite enterprise` (or `retail+hr+financial`) generates several domains as one
+dataset. The package names the six presets (`enterprise`, `healthcare_system`, `smart_factory`,
+`digital_commerce`, `campus`, `telecom_bundle`) and the table that plays a person, a location or an
+organisation in each domain (`shape_domains.composition`); core merges the schemas (`docs/GENERATION_ENGINE.md`).
 
 Its version always equals core's (`sqllocks-shape`), and it is released together with core.
 How plugins are written: `docs/plugins/authoring.md` in the repository.

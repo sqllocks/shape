@@ -14892,6 +14892,66 @@
    "redirected_keys": {
     "healthcare_patient": "patient_id",
     "insurance_policy": "policy_id"
+   },
+   "table_order": {
+    "spindle": [
+     "healthcare_facility",
+     "healthcare_provider",
+     "hr_department",
+     "hr_position",
+     "healthcare_patient",
+     "hr_training",
+     "insurance_agent",
+     "insurance_policy_type",
+     "hr_employee",
+     "healthcare_encounter",
+     "insurance_policyholder",
+     "healthcare_claim",
+     "healthcare_diagnosis",
+     "healthcare_medication",
+     "healthcare_procedure",
+     "hr_compensation",
+     "hr_performance_review",
+     "hr_termination",
+     "hr_time_off_request",
+     "hr_training_enrollment",
+     "insurance_policy",
+     "healthcare_claim_line",
+     "insurance_claim",
+     "insurance_coverage",
+     "insurance_premium_payment",
+     "insurance_underwriting",
+     "insurance_claim_payment"
+    ],
+    "impl": [
+     "healthcare_facility",
+     "healthcare_provider",
+     "hr_department",
+     "hr_position",
+     "hr_training",
+     "insurance_agent",
+     "insurance_policy_type",
+     "hr_employee",
+     "insurance_policyholder",
+     "healthcare_patient",
+     "hr_compensation",
+     "hr_performance_review",
+     "hr_termination",
+     "hr_time_off_request",
+     "hr_training_enrollment",
+     "insurance_policy",
+     "healthcare_encounter",
+     "insurance_claim",
+     "insurance_coverage",
+     "insurance_premium_payment",
+     "insurance_underwriting",
+     "healthcare_claim",
+     "healthcare_diagnosis",
+     "healthcare_medication",
+     "healthcare_procedure",
+     "insurance_claim_payment",
+     "healthcare_claim_line"
+    ]
    }
   }
  },
@@ -14899,9 +14959,6 @@
   "columns_total": 202,
   "columns_equivalent": 201,
   "flagged": [
-   "(a) healthcare_patient: the bridge column shared_person_hr_employee_id is not the last column",
-   "(a) insurance_policy: the bridge column shared_person_hr_employee_id is not the last column",
-   "(a) table order differs: spindle=['healthcare_facility', 'healthcare_provider', 'hr_department', 'hr_position', 'healthcare_patient', 'hr_training', 'insurance_agent', 'insurance_policy_type', 'hr_employee', 'healthcare_encounter', 'insurance_policyholder', 'healthcare_claim', 'healthcare_diagnosis', 'healthcare_medication', 'healthcare_procedure', 'hr_compensation', 'hr_performance_review', 'hr_termination', 'hr_time_off_request', 'hr_training_enrollment', 'insurance_policy', 'healthcare_claim_line', 'insurance_claim', 'insurance_coverage', 'insurance_premium_payment', 'insurance_underwriting', 'insurance_claim_payment'] impl=['healthcare_facility', 'healthcare_provider', 'hr_department', 'hr_position', 'hr_training', 'insurance_agent', 'insurance_policy_type', 'hr_employee', 'insurance_policyholder', 'healthcare_patient', 'hr_compensation', 'hr_performance_review', 'hr_termination', 'hr_time_off_request', 'hr_training_enrollment', 'insurance_policy', 'healthcare_encounter', 'insurance_claim', 'insurance_coverage', 'insurance_premium_payment', 'insurance_underwriting', 'healthcare_claim', 'healthcare_diagnosis', 'healthcare_medication', 'healthcare_procedure', 'insurance_claim_payment', 'healthcare_claim_line']",
    "(b-e) healthcare_patient.email: failed ['distinct_ratio']",
    "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8455 < floor 0.8460",
    "(h) fidelity hr_termination: 89.53 < floor 90.27",
@@ -14910,6 +14967,6 @@
    "(h) fidelity insurance_policy_type: 81.77 < floor 84.15"
   ],
   "passed": false,
-  "seconds": 31.46577262878418
+  "seconds": 21.19827437400818
  }
 }
