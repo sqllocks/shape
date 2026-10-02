@@ -235,7 +235,11 @@ def valid_values(col: pa.ChunkedArray) -> list[Any]:
 
 
 def null_rate(col: pa.ChunkedArray) -> float:
-    return col.null_count / max(len(col), 1)
+    """The share of missing cells: nulls, and NaN in a float column (a missing value either way)."""
+    missing = col.null_count
+    if pa.types.is_floating(col.type):
+        missing += pc.sum(pc.is_nan(col)).as_py() or 0
+    return float(missing) / max(len(col), 1)
 
 
 def numbers(col: pa.ChunkedArray, origin_us: int = 0) -> np.ndarray:

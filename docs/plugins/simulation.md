@@ -64,7 +64,8 @@ bursts (`fraud_burst_enabled`, `fraud_burst_probability` per hour, `fraud_burst_
 `transaction_date`. `transactions` is the original rows followed by the reversals and the fraud
 events; **its columns follow the configuration, not the run** (a run with no fraud burst still
 has the fraud columns, null), so a stream's schema does not change between runs.
-`settlements` count and total the transactions in each window exactly; a partial or failed batch
+`duration_hours` is the window to simulate from the earliest transaction: set it to the span of the
+transactions you want settled. `settlements` count and total the transactions in each window exactly; a partial or failed batch
 carries a failure reason.
 
 ### IoT

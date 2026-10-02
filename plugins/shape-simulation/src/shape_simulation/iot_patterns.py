@@ -185,7 +185,7 @@ class IoTTelemetrySimulator:
                     strict=True,
                 )
             )
-            return np.asarray([owner.get(s) for s in sensor_ids], dtype=object)
+            return np.asarray([owner.get(s, s) for s in sensor_ids], dtype=object)
         return np.asarray(sensor_ids, dtype=object)
 
     def _infer_start(self) -> int:
