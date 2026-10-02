@@ -131,6 +131,8 @@ def _column_dict(cp: ColumnProfile) -> dict[str, Any]:
     for f in ("nan_count", "inf_count"):  # absent when zero, like the other optional fields
         if not d[f]:
             del d[f]
+    if cp.placeholders:  # absent when none, like the other optional fields
+        d["placeholders"] = cp.placeholders
     d["min_value"] = _tag_scalar(cp.min_value)
     d["max_value"] = _tag_scalar(cp.max_value)
     d["enum_values"] = _clean(cp.enum_values)
@@ -152,6 +154,8 @@ def table_to_dict(tp: TableProfile) -> dict[str, Any]:
     }
     if tp.correlation_truncated:
         out["correlation_truncated"] = True
+    if tp.joint:
+        out["joint"] = tp.joint
     return out
 
 
