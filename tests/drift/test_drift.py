@@ -37,11 +37,18 @@ def test_drift_reads_v2_models_with_the_v2_metric_names():
         "distinct": 100.0,
         "quantiles": {"0.25": 8.5, "0.5": 10.0, "0.75": 11.5},
     }
-    moved = {**base, "distinct": 50.0, "quantiles": {"0.25": 17.0, "0.5": 18.0, "0.75": 19.5}}
+    moved = {
+        **base,
+        "distinct": 50.0,
+        "min": 15.0,
+        "max": 22.0,
+        "quantiles": {"0.25": 17.0, "0.5": 18.0, "0.75": 19.5},
+    }
     a = _model([{"name": "x", **base}], 1000)
     b = _model([{"name": "x", **moved}], 1000)
     paths = {d.path: d.score for d in compare(a, b)}
-    assert paths == {"columns.x.distinct": 0.5, "columns.x.quantiles": paths["columns.x.quantiles"]}
+    assert set(paths) == {"columns.x.distinct", "columns.x.quantiles", "columns.x.range"}
+    assert paths["columns.x.distinct"] == 0.5
     assert paths["columns.x.quantiles"] > 0.9
     assert compare(a, a) == []
 

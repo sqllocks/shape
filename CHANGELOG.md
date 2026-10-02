@@ -5,6 +5,20 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Drift (`docs/DRIFT.md`): one engine, `shape.drift.engine`, behind `shape.diff`, `shape.drift.compare`,
+  `ShapeMonitor`, `ShapeTimeline.changes` and the stream profiler's windows; `shape.diff` takes
+  window profiles. New comparisons with documented defaults: category proportions (`category_shift`),
+  pattern, spread, KS distance from the quantiles (`distribution_shift`), min/max (`range_change`),
+  string length, outlier rate, boolean true rate (`true_rate_change`; contract rules
+  `min_true_rate` / `max_true_rate`), uniqueness, hour of day and day of week. No false drift on
+  keys, unique columns of different sizes or date strings. `shape.diff` takes `ignore_columns`,
+  `column_thresholds`, `only_columns` and `policy`; `shape diff` takes `--ignore`, `--only`,
+  `--policy`, `--threshold` and a flag per global threshold. Change records have a `score`;
+  `MonitorEvent.drifts` carry column, kind, severity and score.
+- `shape generate-drift` and `shape.generation.drift_plan`: planted drift over time (step, ramp and
+  window events on null rates, category weights and new values, distribution parameters, added and
+  dropped columns, type changes), one folder of tables per day, each day's schema and an answer key
+  (`ground_truth.json`).
 - `shape stream` (`docs/EMIT.md`): one table's rows as events in event-time order, on the `shape emit`
   runtime (same options, sinks, formats and delivery guarantees; `--table` required, `-t -s -m`,
   `--rate` 10, `--max-events` is the earliest N events). The flat-event encoder is vectorised

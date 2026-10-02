@@ -689,6 +689,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.incremental import add_arguments as add_incremental_arguments
 
     add_incremental_arguments(sub)
+    from shape.cli.drift_plan import add_arguments as add_drift_plan_arguments
+
+    add_drift_plan_arguments(sub)
     from shape.cli.pack import add_arguments as add_pack_arguments
 
     add_pack_arguments(sub)
@@ -945,6 +948,10 @@ def _dispatch(argv):
         from shape.cli.incremental import run as run_incremental
 
         return _run(run_incremental, a)
+    if a.cmd == "generate-drift":
+        from shape.cli.drift_plan import run as run_drift_plan
+
+        return _run(run_drift_plan, a)
     if a.cmd == "pack":
         from shape.cli.pack import run as run_pack
 

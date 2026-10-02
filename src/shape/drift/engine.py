@@ -30,9 +30,10 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import numpy as np
+if TYPE_CHECKING:
+    import numpy as np
 
 SEVERITY_RANK = {"low": 0, "medium": 1, "high": 2}
 
@@ -254,19 +255,30 @@ class View:
 
     @property
     def flag(self) -> bool:
-        """A boolean, or a column that only holds 0 and 1 (or ``True`` and ``False``)."""
+        """A boolean, or a column that only holds 0 and 1 (``1.0`` and ``0.0``, ``True`` and
+        ``False`` too)."""
         if self.dtype == "boolean":
             return True
-        if not self.categories or self.dtype not in ("integer", "string"):
+        if not self.categories or self.dtype not in ("integer", "float", "string"):
             return False
-        keys = set(self.categories)
-        return keys <= {"0", "1"} or keys <= {"True", "False"}
+        return all(_flag_value(k) is not None for k in self.categories)
 
     @property
     def true_rate(self) -> float | None:
         if not self.flag or self.categories is None:
             return None
-        return float(self.categories.get("True", self.categories.get("1", 0.0)))
+        return sum(v for k, v in self.categories.items() if _flag_value(k))
+
+
+def _flag_value(key: str) -> bool | None:
+    """``True``, ``1`` and ``1.0`` are true, ``False``, ``0`` and ``0.0`` false; else neither."""
+    if key in ("True", "False"):
+        return key == "True"
+    try:
+        number = float(key)
+    except ValueError:
+        return None
+    return number == 1.0 if number in (0.0, 1.0) else None
 
 
 def _number(v: Any) -> float | None:
@@ -527,6 +539,8 @@ def _tvd_noise(a: Mapping[Any, float], b: Mapping[Any, float], n1: int, n2: int)
 
 
 def _cdf(view: View) -> tuple[np.ndarray, np.ndarray] | None:
+    import numpy as np
+
     pairs = list(view.quantiles)
     if view.min is not None:
         pairs.append((0.0, view.min))
@@ -545,6 +559,8 @@ def _cdf(view: View) -> tuple[np.ndarray, np.ndarray] | None:
 
 def _ks(base: View, cur: View) -> float | None:
     """The KS distance between two columns, from their quantiles (piecewise-linear CDFs)."""
+    import numpy as np
+
     a, b = _cdf(base), _cdf(cur)
     if a is None or b is None:
         return None
@@ -669,10 +685,12 @@ def _diff_numeric(
     out: list[dict[str, Any]] = []
     b_std = base.std
     if base.mean is not None and cur.mean is not None:
-        limit = th["mean_shift_std"] * (b_std or 0.0)
+        # in baseline standard deviations; a model without a spread (a v1 capture) is read in
+        # multiples of the mean instead, so a 1% move is not a shift
+        scale = b_std if b_std is not None else abs(base.mean)
         shift = abs(cur.mean - base.mean)
-        if shift > limit:
-            z = shift / b_std if b_std else math.inf
+        if shift > th["mean_shift_std"] * scale:
+            z = shift / scale if scale else math.inf
             score = 1.0 if math.isinf(z) else z / (1.0 + z)
             out.append(_change(name, "mean_shift", base.mean, cur.mean, score))
     if not enough:
