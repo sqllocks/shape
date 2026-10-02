@@ -86,6 +86,16 @@ def _parser() -> argparse.ArgumentParser:
     sv.add_argument("--tags", default="", help="comma-separated")
     sv.add_argument("--description", default="")
     sv.add_argument("--overwrite", action="store_true", help="replace profiles that exist")
+    sv.add_argument(
+        "--safe",
+        action="store_true",
+        help="store the share-safe form (as `shape profile safe`) instead of the full profile, "
+        "which holds real values from the data",
+    )
+    sv.add_argument("--k", type=int, metavar="N", help="with --safe: minimum cohort (default 5)")
+    sv.add_argument(
+        "--sensitive", action="store_true", help="with --safe: raise the minimum cohort to 11"
+    )
     _root(sv)
     dl = rs.add_parser("delete", help="delete a profile")
     dl.add_argument("identity", metavar="SYSTEM/TABLE/NAME")
@@ -310,11 +320,12 @@ def _reg_list(a: argparse.Namespace) -> int:
     elif not rows:
         print("No profiles found.")
     else:
-        print(f"{'Identity':<45} {'Tags':<30} {'Rows':>10}")
-        print("-" * 87)
+        print(f"{'Identity':<45} {'Tags':<30} {'Rows':>10}  Form")
+        print("-" * 93)
         for e in rows:
             ident = f"{e['system']}/{e['table']}/{e['name']}"
-            print(f"{ident:<45} {', '.join(e['tags']):<30} {e['source_rows']:>10,}")
+            form = e.get("form", "full")
+            print(f"{ident:<45} {', '.join(e['tags']):<30} {e['source_rows']:>10,}  {form}")
     return 0
 
 
@@ -330,6 +341,13 @@ def _reg_save(a: argparse.Namespace) -> int:
         else shape.profile(a.source)
     )
     tags = [t.strip() for t in a.tags.split(",") if t.strip()]
+    if (a.k is not None or a.sensitive) and not a.safe:
+        raise ValueError("--k and --sensitive apply to --safe only")
+    config = None
+    if a.safe:
+        from shape.privacy.safe_profile import SafeConfig
+
+        config = SafeConfig(k=a.k, sensitive=a.sensitive)
     saved = reg.save(
         prof,
         system=a.system,
@@ -337,10 +355,19 @@ def _reg_save(a: argparse.Namespace) -> int:
         tags=tags,
         description=a.description,
         overwrite=a.overwrite,
+        safe=a.safe,
+        safe_config=config,
     )
     for i in saved:
         print(f"  Saved: {i}")
-    print(f"Saved {len(saved)} profile(s) to the registry.")
+    print(f"Saved {len(saved)} profile(s) to the registry" + (" (safe form)." if a.safe else "."))
+    if not a.safe:
+        print(
+            "shape: note: the full profile holds real values from the data (value counts and "
+            "extremes): keep this registry private, or save with --safe to store the share-safe "
+            "form",
+            file=sys.stderr,
+        )
     return 0
 
 
@@ -417,7 +444,7 @@ def _reg_validate(a: argparse.Namespace) -> int:
         if not a.identity:
             return _err("--data needs a profile identity")
         table = a.identity.split("/")[1]
-        stored = reg.load(a.identity).tables[table]
+        stored = reg.table(a.identity)
         observed = shape.profile(a.data)
         tables = observed.tables
         if table in tables:
