@@ -19,7 +19,7 @@ use pyo3::prelude::*;
 use pyo3_arrow::PyArray;
 
 use super::rng::{below, fill_words};
-use super::{err, i64_array, out};
+use super::{err, f64_values, i64_array, out};
 
 /// Codes are dense group ids (`pyarrow` dictionary codes): `0 <= code < len`. A negative code
 /// means "no group".
@@ -251,6 +251,25 @@ pub fn dense_rows(keys: &Int64Array, start: i64, size: i64) -> Int64Array {
     )
 }
 
+/// For each `u`, how many entries of the ascending `cdf` are `<= u`: NumPy's
+/// `searchsorted(cdf, u, side="right")` (a NaN `u` gives `cdf.len()`, as there). This is the draw
+/// of a discrete distribution from its cumulative table (a Zipf foreign key, a Poisson count).
+///
+/// Rust's `partition_point` is a branchless binary search; it is about three times faster than
+/// NumPy's search for a table of a few thousand entries.
+pub fn cdf_search(cdf: &[f64], us: &[f64]) -> Vec<i64> {
+    let m = cdf.len() as i64;
+    us.iter()
+        .map(|&u| {
+            if u.is_nan() {
+                m
+            } else {
+                cdf.partition_point(|c| *c <= u) as i64
+            }
+        })
+        .collect()
+}
+
 /// Per parent row of a sequence key `start, start + 1, ...` (`size` rows): the sum and the count
 /// of the non-null `values` of the child rows whose key in `keys` is that parent's. Child rows are
 /// added in row order (the order of a grouped sum), a child with a null key or a key outside the
@@ -357,6 +376,16 @@ fn dense_rows_py(py: Python<'_>, keys: PyArray, start: i64, size: i64) -> PyResu
     Ok(out(Arc::new(rows) as ArrayRef))
 }
 
+/// How many entries of the ascending float64 table `cdf` are `<= u`, for each `u` (see
+/// `cdf_search`): an int64 array.
+#[pyfunction]
+#[pyo3(name = "cdf_search")]
+fn cdf_search_py(py: Python<'_>, cdf: PyArray, u: PyArray) -> PyResult<PyArray> {
+    let cdf = f64_values(cdf, "cdf")?;
+    let u = f64_values(u, "u")?;
+    Ok(int_out(py.detach(|| cdf_search(&cdf, &u))))
+}
+
 /// `(sums, counts)` per parent row of a sequence key (see `group_sums`): `values` is int64 or
 /// float64 and the sums have its type.
 #[pyfunction]
@@ -394,6 +423,7 @@ fn group_sums_py(
 }
 
 pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(cdf_search_py, m)?)?;
     m.add_function(wrap_pyfunction!(dense_rows_py, m)?)?;
     m.add_function(wrap_pyfunction!(group_sums_py, m)?)?;
     m.add_function(wrap_pyfunction!(first_flags_py, m)?)?;
@@ -406,6 +436,75 @@ pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A tiny deterministic generator of `f64` in `[0, 1)`.
+    fn unit(state: &mut u64) -> f64 {
+        *state = state
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
+        (*state >> 11) as f64 / (1u64 << 53) as f64
+    }
+
+    fn naive(cdf: &[f64], u: f64) -> i64 {
+        if u.is_nan() {
+            return cdf.len() as i64;
+        }
+        cdf.iter().filter(|c| **c <= u).count() as i64
+    }
+
+    #[test]
+    fn cdf_search_equals_the_plain_search_for_every_table_shape() {
+        let mut state = 12345u64;
+        for m in [0usize, 1, 2, 15, 16, 17, 100, 1000, 5000] {
+            for kind in 0..4 {
+                // an ascending table: random steps (kind 0), Zipf-like (1), with ties (2), flat
+                // then steep (3)
+                let mut cdf = Vec::with_capacity(m);
+                let mut total = 0.0;
+                for k in 0..m {
+                    let step = match kind {
+                        0 => unit(&mut state),
+                        1 => ((k + 1) as f64).powf(-1.2),
+                        2 => (unit(&mut state) * 4.0).floor(),
+                        _ => {
+                            if k < m / 2 {
+                                1e-9
+                            } else {
+                                unit(&mut state)
+                            }
+                        }
+                    };
+                    total += step;
+                    cdf.push(total);
+                }
+                let top = cdf.last().copied().unwrap_or(1.0);
+                let scale = if top > 0.0 { top } else { 1.0 };
+                let mut queries = Vec::new();
+                for _ in 0..20_000 {
+                    queries.push(unit(&mut state) * scale * 1.1 - scale * 0.05);
+                }
+                // the entries themselves and their neighbours, the table's ends, the bucket edges
+                for &c in &cdf {
+                    queries.push(c);
+                    queries.push(f64::from_bits(c.to_bits().wrapping_add(1)));
+                    queries.push(f64::from_bits(c.to_bits().wrapping_sub(1)));
+                }
+                for edge in 0..=256 {
+                    queries.push(cdf.first().copied().unwrap_or(0.0) + scale * edge as f64 / 256.0);
+                }
+                queries.extend([f64::NAN, f64::INFINITY, f64::NEG_INFINITY, 0.0, -0.0, scale]);
+                let got = cdf_search(&cdf, &queries);
+                for (i, &u) in queries.iter().enumerate() {
+                    assert_eq!(got[i], naive(&cdf, u), "m {m} kind {kind} u {u:e}");
+                }
+                // fewer queries than buckets: the plain path
+                let few = cdf_search(&cdf, &queries[..10.min(queries.len())]);
+                for (i, &u) in queries.iter().take(10).enumerate() {
+                    assert_eq!(few[i], naive(&cdf, u));
+                }
+            }
+        }
+    }
 
     #[test]
     fn dense_rows_finds_the_row_of_a_sequence_key() {

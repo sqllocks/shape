@@ -18,6 +18,7 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 from shape.generation.arrowkit import array as arrow_array
 from shape.generation.arrowkit import scalar as arrow_scalar
 from shape.generation.engine import ArrayKeys, Engine, KeyPool, RangeKeys
+from shape.generation.kernel_relational import cdf_search
 from shape.generation.strategy_kit import StrategyError, where
 from shape.plugins.api.v1 import GenerationContext
 
@@ -98,6 +99,15 @@ def _zipf_head(alpha: float, head: int) -> Floats:
     return cum
 
 
+@lru_cache(maxsize=4)
+def _zipf_unit(alpha: float, head: int) -> Floats:
+    """:func:`_zipf_head` divided by its last entry: the cumulative table of the truncated law."""
+    cum = _zipf_head(alpha, head)
+    unit: Floats = cum / cum[-1]
+    unit.flags.writeable = False
+    return unit
+
+
 def zipf_index(u: Floats, pool: int, alpha: float) -> Ints:
     """Row numbers ``0 .. pool - 1`` with ``P(k)`` proportional to ``(k + 1) ** -alpha``: Zipf
     truncated to the pool, from uniforms ``u``. Ranks up to ``ZIPF_HEAD`` are exact; the ranks of
@@ -105,8 +115,7 @@ def zipf_index(u: Floats, pool: int, alpha: float) -> Ints:
     head = min(pool, ZIPF_HEAD)
     cum = _zipf_head(alpha, head)
     if pool <= ZIPF_HEAD:
-        k = np.searchsorted(cum / cum[-1], u, side="right")
-        return np.minimum(k, pool - 1).astype(np.int64)
+        return np.minimum(cdf_search(_zipf_unit(alpha, head), u), pool - 1)
     low, high = ZIPF_HEAD + 0.5, pool + 0.5
     if alpha == 1.0:
         tail = float(np.log(high / low))
@@ -114,7 +123,7 @@ def zipf_index(u: Floats, pool: int, alpha: float) -> Ints:
         tail = float((low ** (1 - alpha) - high ** (1 - alpha)) / (alpha - 1))
     target = u * (cum[-1] + tail)
     in_head = target < cum[-1]
-    out = np.minimum(np.searchsorted(cum, target, side="right"), head - 1)
+    out = np.minimum(cdf_search(cum, target), head - 1)
     rest = np.maximum(target - cum[-1], 0.0)
     if alpha == 1.0:
         x = low * np.exp(rest)

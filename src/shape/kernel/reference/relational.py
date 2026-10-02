@@ -33,6 +33,22 @@ def _ints(a: Any, what: str) -> npt.NDArray[np.int64]:
     return np.asarray(arrow_numpy(arr), dtype=np.int64)
 
 
+def _floats(a: Any, what: str) -> npt.NDArray[np.float64]:
+    arr = a if isinstance(a, pa.Array) else arrow_array(a)
+    if not pa.types.is_float64(arr.type):
+        raise ValueError(f"{what} must be a float64 array")
+    if arr.null_count:
+        raise ValueError(f"{what} must not contain nulls")
+    return np.asarray(arrow_numpy(arr), dtype=np.float64)
+
+
+def cdf_search(cdf: Any, u: Any) -> pa.Array:
+    """For each ``u``, how many entries of the ascending ``cdf`` are ``<= u``: NumPy's
+    ``searchsorted(cdf, u, side="right")`` (a NaN gives ``len(cdf)``), the draw of a discrete
+    distribution from its cumulative table."""
+    return arrow_array(np.searchsorted(_floats(cdf, "cdf"), _floats(u, "u"), side="right"))
+
+
 def _check_codes(codes: npt.NDArray[np.int64]) -> None:
     if codes.size and int(codes.max()) >= codes.size:
         raise ValueError("group codes must be dense: below the number of rows")

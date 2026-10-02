@@ -73,3 +73,31 @@ def test_lower_leaves_other_types_to_the_unicode_kernel():
 
     arr = pa.array(["ÀB", "cD"], type=pa.large_string())
     assert providers._lower(arr).equals(pc.utf8_lower(arr))
+
+
+@pytest.mark.parametrize("limit", [1, 3, 4, 5, 9, 50])
+@pytest.mark.parametrize(
+    "values",
+    [
+        ["abcd", "ab", "", "abcde"],
+        ["é" * 3, "日本語", "ab"],  # bytes exceed characters
+        [None, "abc", None],
+        ["x" * 40],
+        [],
+    ],
+)
+def test_truncate_equals_slicing_every_value(values, limit):
+    import pyarrow.compute as pc
+
+    arr = pa.array(values, type=pa.string())
+    ctx = type("Ctx", (), {"column_def": type("Col", (), {"max_length": limit})()})()
+    assert providers._truncate(arr, ctx).equals(pc.utf8_slice_codeunits(arr, 0, limit))
+    assert providers._truncate(arr.slice(1), ctx).equals(
+        pc.utf8_slice_codeunits(arr.slice(1), 0, limit)
+    )
+
+
+def test_truncate_of_a_column_without_a_limit_is_the_column():
+    arr = pa.array(["abc"], type=pa.string())
+    ctx = type("Ctx", (), {"column_def": type("Col", (), {"max_length": None})()})()
+    assert providers._truncate(arr, ctx) is arr

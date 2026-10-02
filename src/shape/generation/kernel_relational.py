@@ -8,7 +8,7 @@ kernels are functions of their inputs and the stream key alone, so the result ne
 threads, chunking or call order. Native and twin results are equal (``docs/GENERATION_KERNEL.md``).
 
 Stable interface: ``first_flags``, ``group_order``, ``scd2_offsets``, ``cap_per_parent``,
-``dense_rows`` and ``group_sums``.
+``dense_rows``, ``group_sums`` and ``cdf_search``.
 """
 
 from __future__ import annotations
@@ -66,6 +66,18 @@ def cap_per_parent(indices: Ints, pool: int, max_per_parent: int, stream: RowStr
     whose parent is full moves to another parent with room, drawn from the stream."""
     out = get_kernel().cap_per_parent(_ints(indices), pool, max_per_parent, stream.k0, stream.k1)
     return _numpy(out)
+
+
+def cdf_search(cdf: npt.NDArray[np.float64], u: npt.NDArray[np.float64]) -> Ints:
+    """For each ``u``, how many entries of the ascending float64 table ``cdf`` are ``<= u``
+    (``numpy.searchsorted(cdf, u, side="right")``, several times faster for a long ``u``): the
+    index a cumulative table draws for a uniform."""
+    return _numpy(
+        get_kernel().cdf_search(
+            arrow_array(np.ascontiguousarray(cdf, dtype=np.float64)),
+            arrow_array(np.ascontiguousarray(u, dtype=np.float64)),
+        )
+    )
 
 
 def dense_rows(keys: pa.Array, start: int, size: int) -> pa.Array:

@@ -136,3 +136,49 @@ def test_bad_arguments_are_refused(nat):
             impl.group_sums(pa.array([1], type=pa.int64()), pa.array(["x"]), 1, 1)
         with pytest.raises(ValueError, match="negative"):
             impl.group_sums(pa.array([1], type=pa.int64()), pa.array([1.0]), 1, -1)
+
+
+# ---- cdf_search: the draw of a discrete distribution from its cumulative table ---------------
+
+
+def _tables():
+    rng = np.random.default_rng(7)
+    zipf = np.cumsum(np.arange(1, 5001, dtype=np.float64) ** -1.2)
+    yield "zipf 5000", zipf / zipf[-1]
+    yield "zipf head not normalised", zipf
+    yield "random steps", np.cumsum(rng.random(1000))
+    yield "with ties", np.cumsum(np.floor(rng.random(777) * 3))
+    yield "flat then steep", np.cumsum(np.r_[np.full(300, 1e-9), rng.random(300)])
+    yield "tiny", np.cumsum(rng.random(5))
+    yield "one entry", np.array([0.5])
+    yield "empty", np.empty(0)
+
+
+@pytest.mark.parametrize("name,cdf", list(_tables()), ids=[n for n, _ in _tables()])
+def test_cdf_search_is_numpy_searchsorted(nat, name, cdf):
+    rng = np.random.default_rng(len(name))
+    top = float(cdf[-1]) if cdf.size else 1.0
+    queries = np.r_[
+        rng.random(30_000) * top * 1.1 - top * 0.05,  # below, inside and past the table
+        cdf,  # exactly on every entry
+        np.nextafter(cdf, -np.inf),
+        np.nextafter(cdf, np.inf),
+        [np.nan, np.inf, -np.inf, 0.0, -0.0, top],
+    ]
+    want = np.searchsorted(cdf, queries, side="right")
+    for few in (queries, queries[:7]):  # a bucket table, and the plain path
+        want_few = np.searchsorted(cdf, few, side="right")
+        got = nat.cdf_search(pa.array(cdf), pa.array(few))
+        assert pa.array(got).type == pa.int64()
+        assert np.array_equal(np.asarray(pa.array(got)), want_few)
+        assert ref.cdf_search(pa.array(cdf), pa.array(few)).to_pylist() == want_few.tolist()
+        assert np.array_equal(kernel_relational.cdf_search(cdf, few), want_few)
+    assert want.size == queries.size
+
+
+def test_cdf_search_rejects_what_it_cannot_search(nat):
+    for module in (nat, ref):
+        with pytest.raises(ValueError):
+            module.cdf_search(pa.array([1, 2], type=pa.int64()), pa.array([0.5]))
+        with pytest.raises(ValueError):
+            module.cdf_search(pa.array([0.5, 1.0]), pa.array([0.5, None], type=pa.float64()))
