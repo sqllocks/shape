@@ -468,6 +468,20 @@ def _column(name: str, arrow_type: pa.DataType, cfg: LiveConfig, seed: int) -> A
     return _TextColumn(name, t, cfg, seed, infer=infer)
 
 
+KS_REFERENCE_CAP = 200_000  # reference values kept per column for the KS statistic
+
+
+def _thinned(sorted_values: np.ndarray[Any, Any]) -> np.ndarray[Any, Any]:
+    """At most ``KS_REFERENCE_CAP`` order statistics of a sorted sample, evenly spaced (all of it
+    when it is smaller): the empirical distribution function moves by at most
+    ``1 / KS_REFERENCE_CAP`` anywhere, which is 5e-5 points of the score."""
+    n = sorted_values.size
+    if n <= KS_REFERENCE_CAP:
+        return sorted_values
+    pick = np.linspace(0, n - 1, KS_REFERENCE_CAP).round().astype(np.int64)
+    return sorted_values[pick]
+
+
 # ---- the target -------------------------------------------------------------------------------
 
 
@@ -476,7 +490,9 @@ class TargetShape:
     """What the stream is compared with: the reference tables, prepared once.
 
     ``from_tables`` takes the tables themselves (a reference dataset, or a domain generated at a
-    reference seed). The score is the one ``shape fidelity`` gives, so the target must be data."""
+    reference seed). The score is the one ``shape fidelity`` gives, so the target must be data.
+    A column of more than ``KS_REFERENCE_CAP`` values keeps that many evenly spaced order
+    statistics for the Kolmogorov-Smirnov statistic (its moments and counts are exact)."""
 
     columns: dict[str, dict[str, cmp._Prepared]]
     rows: dict[str, int]
@@ -509,7 +525,7 @@ class TargetShape:
                 if p.numbers is not None:
                     p.mean, p.std = cmp._moments(p)
                     p.n_numbers = int(p.numbers.size)
-                    p.numbers = np.sort(p.numbers)
+                    p.numbers = _thinned(np.sort(p.numbers))
                     p.presorted = True
                 prepared[col] = p
             columns[name] = prepared

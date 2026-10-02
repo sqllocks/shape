@@ -1,0 +1,833 @@
+{
+  "tolerance_points": 0.5,
+  "reference_seed": 7,
+  "event_seed": 1007,
+  "anomaly_fraction": 0.2,
+  "workloads": [
+    {
+      "workload": "retail:small",
+      "failures": [],
+      "clean": {
+        "events": 21750,
+        "live_overall": 90.69511783170073,
+        "fidelity_overall": 90.69511783170073,
+        "overall_diff": 0.0,
+        "max_table_diff": 0.0,
+        "worst_table": "address",
+        "tables": {
+          "address": {
+            "live": 85.32347212273199,
+            "fidelity": 85.32347212273199
+          },
+          "customer": {
+            "live": 79.05332570588901,
+            "fidelity": 79.05332570588901
+          },
+          "order": {
+            "live": 97.03528991843442,
+            "fidelity": 97.03528991843442
+          },
+          "order_line": {
+            "live": 95.86115970564873,
+            "fidelity": 95.86115970564873
+          },
+          "product": {
+            "live": 93.96930000556723,
+            "fidelity": 93.96930000556723
+          },
+          "product_category": {
+            "live": 86.87619000724074,
+            "fidelity": 86.87619000724074
+          },
+          "promotion": {
+            "live": 93.7616914542974,
+            "fidelity": 93.7616914542974
+          },
+          "return": {
+            "live": 98.48219116296102,
+            "fidelity": 98.48219116296102
+          },
+          "store": {
+            "live": 85.89344040253609,
+            "fidelity": 85.89344040253609
+          }
+        },
+        "alerts": [],
+        "approximate": {},
+        "checkpoints": [
+          {
+            "events": 6400,
+            "tables": 7,
+            "max_table_diff": 0.0,
+            "worst_table": "customer"
+          },
+          {
+            "events": 12400,
+            "tables": 8,
+            "max_table_diff": 0.0,
+            "worst_table": "customer"
+          },
+          {
+            "events": 19400,
+            "tables": 8,
+            "max_table_diff": 0.0,
+            "worst_table": "customer"
+          }
+        ],
+        "anomalies_selected": 0,
+        "profile_tables": 9
+      },
+      "anomaly": {
+        "events": 21750,
+        "live_overall": 74.35018750005618,
+        "fidelity_overall": 74.35018750005618,
+        "overall_diff": 0.0,
+        "max_table_diff": 0.0,
+        "worst_table": "address",
+        "tables": {
+          "address": {
+            "live": 65.6008246070432,
+            "fidelity": 65.6008246070432
+          },
+          "customer": {
+            "live": 62.78712353767139,
+            "fidelity": 62.78712353767139
+          },
+          "order": {
+            "live": 88.61341828726015,
+            "fidelity": 88.61341828726015
+          },
+          "order_line": {
+            "live": 72.42087443809072,
+            "fidelity": 72.42087443809072
+          },
+          "product": {
+            "live": 73.37134684063476,
+            "fidelity": 73.37134684063476
+          },
+          "product_category": {
+            "live": 72.01564578955367,
+            "fidelity": 72.01564578955367
+          },
+          "promotion": {
+            "live": 78.9612864329948,
+            "fidelity": 78.9612864329948
+          },
+          "return": {
+            "live": 83.39866062809985,
+            "fidelity": 83.39866062809985
+          },
+          "store": {
+            "live": 71.98250693915706,
+            "fidelity": 71.98250693915706
+          }
+        },
+        "alerts": [
+          {
+            "format": "shape-live-alert-v1",
+            "kind": "score-low",
+            "level": "error",
+            "table": "address",
+            "column": null,
+            "score": 65.6008,
+            "threshold": 70.0,
+            "events": 20400,
+            "time": "2026-10-02T10:22:58.476834+00:00",
+            "message": "table address: live score 65.60 < 70 after 20,400 events"
+          },
+          {
+            "format": "shape-live-alert-v1",
+            "kind": "score-low",
+            "level": "error",
+            "table": "customer",
+            "column": null,
+            "score": 62.7871,
+            "threshold": 70.0,
+            "events": 20400,
+            "time": "2026-10-02T10:22:58.476834+00:00",
+            "message": "table customer: live score 62.79 < 70 after 20,400 events"
+          },
+          {
+            "format": "shape-live-alert-v1",
+            "kind": "score-low",
+            "level": "error",
+            "table": null,
+            "column": null,
+            "score": 74.3502,
+            "threshold": 85.0,
+            "events": 21750,
+            "time": "2026-10-02T10:22:58.514208+00:00",
+            "message": "overall: live score 74.35 < 85 after 21,750 events"
+          }
+        ],
+        "approximate": {},
+        "checkpoints": [],
+        "anomalies_selected": 4350,
+        "profile_tables": 9
+      },
+      "control": {
+        "fraction": 0.2,
+        "alerts": 3,
+        "overall_drop": 16.344930331644548
+      }
+    },
+    {
+      "workload": "retail:medium",
+      "failures": [],
+      "clean": {
+        "events": 1965400,
+        "live_overall": 92.11032090922713,
+        "fidelity_overall": 92.11650329164581,
+        "overall_diff": 0.006182382418685961,
+        "max_table_diff": 0.034004615229733304,
+        "worst_table": "order",
+        "tables": {
+          "address": {
+            "live": 88.02051363111447,
+            "fidelity": 88.02051363111447
+          },
+          "customer": {
+            "live": 85.68479399308549,
+            "fidelity": 85.68479399308549
+          },
+          "order": {
+            "live": 98.38087997593145,
+            "fidelity": 98.41488459116118
+          },
+          "order_line": {
+            "live": 96.5362215265998,
+            "fidelity": 96.55785835313841
+          },
+          "product": {
+            "live": 94.36898666341084,
+            "fidelity": 94.36898666341084
+          },
+          "product_category": {
+            "live": 86.87619000724074,
+            "fidelity": 86.87619000724074
+          },
+          "promotion": {
+            "live": 93.7616914542974,
+            "fidelity": 93.7616914542974
+          },
+          "return": {
+            "live": 99.47017052882785,
+            "fidelity": 99.47017052882781
+          },
+          "store": {
+            "live": 85.89344040253609,
+            "fidelity": 85.89344040253609
+          }
+        },
+        "alerts": [],
+        "approximate": {
+          "order": [
+            "order_id",
+            "customer_id",
+            "store_id",
+            "shipping_address_id",
+            "promotion_id",
+            "order_date",
+            "order_total"
+          ],
+          "order_line": [
+            "order_line_id",
+            "order_id",
+            "product_id",
+            "quantity",
+            "promotion_id",
+            "unit_price",
+            "discount_percent",
+            "line_total"
+          ]
+        },
+        "checkpoints": [
+          {
+            "events": 491400,
+            "tables": 7,
+            "max_table_diff": 0.004678504617345425,
+            "worst_table": "order"
+          },
+          {
+            "events": 1081400,
+            "tables": 8,
+            "max_table_diff": 0.034004615229733304,
+            "worst_table": "order"
+          },
+          {
+            "events": 1671400,
+            "tables": 8,
+            "max_table_diff": 0.034004615229733304,
+            "worst_table": "order"
+          }
+        ],
+        "anomalies_selected": 0,
+        "profile_tables": 9
+      },
+      "anomaly": {
+        "events": 1965400,
+        "live_overall": 75.61673528749367,
+        "fidelity_overall": 75.62306657890164,
+        "overall_diff": 0.006331291407974504,
+        "max_table_diff": 0.035589219472356604,
+        "worst_table": "order",
+        "tables": {
+          "address": {
+            "live": 69.8139224666335,
+            "fidelity": 69.8139224666335
+          },
+          "customer": {
+            "live": 69.49764781012283,
+            "fidelity": 69.49764781012283
+          },
+          "order": {
+            "live": 89.53613917428537,
+            "fidelity": 89.57172839375772
+          },
+          "order_line": {
+            "live": 71.78662519915699,
+            "fidelity": 71.80801760235653
+          },
+          "product": {
+            "live": 73.60335884674937,
+            "fidelity": 73.60335884674937
+          },
+          "product_category": {
+            "live": 72.01564578955367,
+            "fidelity": 72.01564578955367
+          },
+          "promotion": {
+            "live": 78.9612864329948,
+            "fidelity": 78.9612864329948
+          },
+          "return": {
+            "live": 83.35348492878947,
+            "fidelity": 83.35348492878941
+          },
+          "store": {
+            "live": 71.98250693915706,
+            "fidelity": 71.98250693915706
+          }
+        },
+        "alerts": [
+          {
+            "format": "shape-live-alert-v1",
+            "kind": "score-low",
+            "level": "error",
+            "table": "customer",
+            "column": null,
+            "score": 66.4727,
+            "threshold": 70.0,
+            "events": 40000,
+            "time": "2026-10-02T10:25:19.652501+00:00",
+            "message": "table customer: live score 66.47 < 70 after 40,000 events"
+          },
+          {
+            "format": "shape-live-alert-v1",
+            "kind": "score-low",
+            "level": "error",
+            "table": "address",
+            "column": null,
+            "score": 61.9683,
+            "threshold": 70.0,
+            "events": 100000,
+            "time": "2026-10-02T10:25:21.050585+00:00",
+            "message": "table address: live score 61.97 < 70 after 100,000 events"
+          },
+          {
+            "format": "shape-live-alert-v1",
+            "kind": "score-low",
+            "level": "error",
+            "table": "order_line",
+            "column": null,
+            "score": 66.5727,
+            "threshold": 70.0,
+            "events": 1260400,
+            "time": "2026-10-02T10:26:17.408012+00:00",
+            "message": "table order_line: live score 66.57 < 70 after 1,260,400 events"
+          },
+          {
+            "format": "shape-live-alert-v1",
+            "kind": "score-low",
+            "level": "error",
+            "table": null,
+            "column": null,
+            "score": 74.9068,
+            "threshold": 85.0,
+            "events": 1940400,
+            "time": "2026-10-02T10:27:00.773034+00:00",
+            "message": "overall: live score 74.91 < 85 after 1,940,400 events"
+          }
+        ],
+        "approximate": {
+          "order": [
+            "order_id",
+            "customer_id",
+            "store_id",
+            "shipping_address_id",
+            "promotion_id",
+            "order_date",
+            "order_total"
+          ],
+          "order_line": [
+            "order_line_id",
+            "order_id",
+            "product_id",
+            "quantity",
+            "promotion_id",
+            "unit_price",
+            "discount_percent",
+            "line_total"
+          ]
+        },
+        "checkpoints": [],
+        "anomalies_selected": 393429,
+        "profile_tables": 9
+      },
+      "control": {
+        "fraction": 0.2,
+        "alerts": 4,
+        "overall_drop": 16.49358562173346
+      }
+    },
+    {
+      "workload": "pulse_3nf:small",
+      "failures": [],
+      "clean": {
+        "events": 22600,
+        "live_overall": 88.22863453093285,
+        "fidelity_overall": 88.22863453093282,
+        "overall_diff": 2.842170943040401e-14,
+        "max_table_diff": 5.684341886080802e-14,
+        "worst_table": "trip",
+        "tables": {
+          "driver": {
+            "live": 80.5220073372824,
+            "fidelity": 80.5220073372824
+          },
+          "rider": {
+            "live": 78.050156450499,
+            "fidelity": 78.050156450499
+          },
+          "trip": {
+            "live": 96.55143028421556,
+            "fidelity": 96.5514302842155
+          },
+          "vehicle": {
+            "live": 97.79094405173444,
+            "fidelity": 97.79094405173444
+          }
+        },
+        "alerts": [],
+        "approximate": {},
+        "checkpoints": [
+          {
+            "events": 6300,
+            "tables": 3,
+            "max_table_diff": 0.0,
+            "worst_table": "driver"
+          },
+          {
+            "events": 13300,
+            "tables": 3,
+            "max_table_diff": 5.684341886080802e-14,
+            "worst_table": "trip"
+          },
+          {
+            "events": 19300,
+            "tables": 3,
+            "max_table_diff": 0.0,
+            "worst_table": "driver"
+          }
+        ],
+        "anomalies_selected": 0,
+        "profile_tables": 4
+      },
+      "anomaly": {
+        "events": 22600,
+        "live_overall": 67.68509730421329,
+        "fidelity_overall": 67.68509730421329,
+        "overall_diff": 0.0,
+        "max_table_diff": 4.263256414560601e-14,
+        "worst_table": "trip",
+        "tables": {
+          "driver": {
+            "live": 64.76401722283293,
+            "fidelity": 64.76401722283293
+          },
+          "rider": {
+            "live": 65.78897597286715,
+            "fidelity": 65.78897597286715
+          },
+          "trip": {
+            "live": 70.3121610120459,
+            "fidelity": 70.31216101204595
+          },
+          "vehicle": {
+            "live": 69.87523500910712,
+            "fidelity": 69.87523500910712
+          }
+        },
+        "alerts": [
+          {
+            "format": "shape-live-alert-v1",
+            "kind": "score-low",
+            "level": "error",
+            "table": "driver",
+            "column": null,
+            "score": 64.764,
+            "threshold": 70.0,
+            "events": 20300,
+            "time": "2026-10-02T10:27:16.882701+00:00",
+            "message": "table driver: live score 64.76 < 70 after 20,300 events"
+          },
+          {
+            "format": "shape-live-alert-v1",
+            "kind": "score-low",
+            "level": "error",
+            "table": "rider",
+            "column": null,
+            "score": 65.789,
+            "threshold": 70.0,
+            "events": 20300,
+            "time": "2026-10-02T10:27:16.882701+00:00",
+            "message": "table rider: live score 65.79 < 70 after 20,300 events"
+          },
+          {
+            "format": "shape-live-alert-v1",
+            "kind": "score-low",
+            "level": "error",
+            "table": "trip",
+            "column": null,
+            "score": 69.6566,
+            "threshold": 70.0,
+            "events": 20300,
+            "time": "2026-10-02T10:27:16.882701+00:00",
+            "message": "table trip: live score 69.66 < 70 after 20,300 events"
+          },
+          {
+            "format": "shape-live-alert-v1",
+            "kind": "score-low",
+            "level": "error",
+            "table": "vehicle",
+            "column": null,
+            "score": 69.8752,
+            "threshold": 70.0,
+            "events": 22600,
+            "time": "2026-10-02T10:27:16.938418+00:00",
+            "message": "table vehicle: live score 69.88 < 70 after 22,600 events"
+          },
+          {
+            "format": "shape-live-alert-v1",
+            "kind": "score-low",
+            "level": "error",
+            "table": null,
+            "column": null,
+            "score": 67.6851,
+            "threshold": 85.0,
+            "events": 22600,
+            "time": "2026-10-02T10:27:16.938418+00:00",
+            "message": "overall: live score 67.69 < 85 after 22,600 events"
+          }
+        ],
+        "approximate": {},
+        "checkpoints": [],
+        "anomalies_selected": 4506,
+        "profile_tables": 4
+      },
+      "control": {
+        "fraction": 0.2,
+        "alerts": 5,
+        "overall_drop": 20.543537226719565
+      }
+    },
+    {
+      "workload": "telemetry:small",
+      "failures": [],
+      "clean": {
+        "events": 24400,
+        "live_overall": 98.58293780144524,
+        "fidelity_overall": 98.58293780144524,
+        "overall_diff": 0.0,
+        "max_table_diff": 0.0,
+        "worst_table": "fleet",
+        "tables": {
+          "fleet": {
+            "live": 97.33368890066129,
+            "fidelity": 97.33368890066129
+          },
+          "reading": {
+            "live": 99.8321867022292,
+            "fidelity": 99.8321867022292
+          }
+        },
+        "alerts": [],
+        "approximate": {},
+        "checkpoints": [
+          {
+            "events": 6400,
+            "tables": 2,
+            "max_table_diff": 0.0,
+            "worst_table": "fleet"
+          },
+          {
+            "events": 14400,
+            "tables": 2,
+            "max_table_diff": 0.0,
+            "worst_table": "fleet"
+          },
+          {
+            "events": 21400,
+            "tables": 2,
+            "max_table_diff": 1.2789769243681803e-13,
+            "worst_table": "reading"
+          }
+        ],
+        "anomalies_selected": 0,
+        "profile_tables": 2
+      },
+      "anomaly": {
+        "events": 24400,
+        "live_overall": 72.25519350257323,
+        "fidelity_overall": 72.25519350257318,
+        "overall_diff": 5.684341886080802e-14,
+        "max_table_diff": 1.2789769243681803e-13,
+        "worst_table": "reading",
+        "tables": {
+          "fleet": {
+            "live": 68.29471585643928,
+            "fidelity": 68.29471585643928
+          },
+          "reading": {
+            "live": 76.2156711487072,
+            "fidelity": 76.21567114870707
+          }
+        },
+        "alerts": [
+          {
+            "format": "shape-live-alert-v1",
+            "kind": "score-low",
+            "level": "error",
+            "table": "fleet",
+            "column": null,
+            "score": 68.2947,
+            "threshold": 70.0,
+            "events": 20400,
+            "time": "2026-10-02T10:27:19.204843+00:00",
+            "message": "table fleet: live score 68.29 < 70 after 20,400 events"
+          },
+          {
+            "format": "shape-live-alert-v1",
+            "kind": "score-low",
+            "level": "error",
+            "table": null,
+            "column": null,
+            "score": 70.5873,
+            "threshold": 85.0,
+            "events": 20400,
+            "time": "2026-10-02T10:27:19.204843+00:00",
+            "message": "overall: live score 70.59 < 85 after 20,400 events"
+          }
+        ],
+        "approximate": {},
+        "checkpoints": [],
+        "anomalies_selected": 4784,
+        "profile_tables": 2
+      },
+      "control": {
+        "fraction": 0.2,
+        "alerts": 2,
+        "overall_drop": 26.327744298872005
+      }
+    },
+    {
+      "workload": "telemetry:medium",
+      "failures": [],
+      "clean": {
+        "events": 244000,
+        "live_overall": 99.48914484018434,
+        "fidelity_overall": 99.49273548884958,
+        "overall_diff": 0.00359064866523795,
+        "max_table_diff": 0.0071812973304759,
+        "worst_table": "reading",
+        "tables": {
+          "fleet": {
+            "live": 99.07227686377882,
+            "fidelity": 99.07227686377882
+          },
+          "reading": {
+            "live": 99.90601281658985,
+            "fidelity": 99.91319411392033
+          }
+        },
+        "alerts": [],
+        "approximate": {
+          "reading": [
+            "reading_id",
+            "device_id",
+            "taken_at",
+            "value",
+            "retries"
+          ]
+        },
+        "checkpoints": [
+          {
+            "events": 61000,
+            "tables": 2,
+            "max_table_diff": 1.4210854715202004e-13,
+            "worst_table": "reading"
+          },
+          {
+            "events": 135000,
+            "tables": 2,
+            "max_table_diff": 0.0018390450637610911,
+            "worst_table": "reading"
+          },
+          {
+            "events": 208000,
+            "tables": 2,
+            "max_table_diff": 0.0011310350350868248,
+            "worst_table": "reading"
+          }
+        ],
+        "anomalies_selected": 0,
+        "profile_tables": 2
+      },
+      "anomaly": {
+        "events": 244000,
+        "live_overall": 72.32760214786896,
+        "fidelity_overall": 72.33138926272909,
+        "overall_diff": 0.003787114860131169,
+        "max_table_diff": 0.007574229720290759,
+        "worst_table": "reading",
+        "tables": {
+          "fleet": {
+            "live": 68.37489491149401,
+            "fidelity": 68.37489491149401
+          },
+          "reading": {
+            "live": 76.28030938424389,
+            "fidelity": 76.28788361396418
+          }
+        },
+        "alerts": [
+          {
+            "format": "shape-live-alert-v1",
+            "kind": "score-low",
+            "level": "error",
+            "table": "fleet",
+            "column": null,
+            "score": 68.3749,
+            "threshold": 70.0,
+            "events": 20000,
+            "time": "2026-10-02T10:27:26.374887+00:00",
+            "message": "table fleet: live score 68.37 < 70 after 20,000 events"
+          },
+          {
+            "format": "shape-live-alert-v1",
+            "kind": "score-low",
+            "level": "error",
+            "table": "reading",
+            "column": null,
+            "score": 67.5721,
+            "threshold": 70.0,
+            "events": 140000,
+            "time": "2026-10-02T10:27:27.336645+00:00",
+            "message": "table reading: live score 67.57 < 70 after 140,000 events"
+          },
+          {
+            "format": "shape-live-alert-v1",
+            "kind": "score-low",
+            "level": "error",
+            "table": null,
+            "column": null,
+            "score": 67.9735,
+            "threshold": 85.0,
+            "events": 140000,
+            "time": "2026-10-02T10:27:27.336645+00:00",
+            "message": "overall: live score 67.97 < 85 after 140,000 events"
+          }
+        ],
+        "approximate": {
+          "reading": [
+            "reading_id",
+            "device_id",
+            "taken_at",
+            "value",
+            "retries"
+          ]
+        },
+        "checkpoints": [],
+        "anomalies_selected": 48735,
+        "profile_tables": 2
+      },
+      "control": {
+        "fraction": 0.2,
+        "alerts": 3,
+        "overall_drop": 27.16154269231538
+      }
+    }
+  ],
+  "failures": [],
+  "overhead": {
+    "workload": "retail:medium",
+    "repeats": 3,
+    "file": {
+      "events_per_second": {
+        "none": 106435.61479427938,
+        "tee": 62158.30112396347,
+        "tee+profile": 54960.539578660675
+      },
+      "all_runs": {
+        "none": [
+          105036.9285139288,
+          114288.25494108528,
+          106435.61479427938
+        ],
+        "tee": [
+          67406.26574216833,
+          61345.45845095092,
+          62158.30112396347
+        ],
+        "tee+profile": [
+          62749.702420032205,
+          54960.539578660675,
+          52224.116571199156
+        ]
+      },
+      "overhead_percent": {
+        "tee": 41.60009199542453,
+        "tee+profile": 48.362641879892024
+      }
+    },
+    "null": {
+      "events_per_second": {
+        "none": 1499262.1843509523,
+        "tee": 301348.7729557472,
+        "tee+profile": 163572.16285698308
+      },
+      "all_runs": {
+        "none": [
+          1370921.3297793285,
+          1499262.1843509523,
+          1566027.9764642392
+        ],
+        "tee": [
+          291328.70082950505,
+          315802.6304554968,
+          301348.7729557472
+        ],
+        "tee+profile": [
+          163572.16285698308,
+          136370.34398697093,
+          170590.28970834104
+        ]
+      },
+      "overhead_percent": {
+        "tee": 79.90019516925223,
+        "tee+profile": 89.08982267649235
+      }
+    }
+  },
+  "passed": true
+}

@@ -5,6 +5,11 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Live fidelity (`shape emit --live-target`, `docs/EMIT.md`): the emitted events are teed into the
+  stream profiler and scored against a target as they go, with the score of `shape fidelity`
+  (`score_prepared` is now its single scoring function), drift alerts (`score-low`, `score-drop`,
+  `column-low`, `live-error`; stderr, a JSON-lines file and the report), `--live-fail` exit code 1.
+  `GlobalProfiler.peek()` reads a running profile. Harness: `benchmarks/live_fidelity/run.py`.
 - Emitters (`shape.emitters`): `console`, `file` and `jsonl` in core; `kafka` (`sqllocks-shape-kafka`),
   `eventhubs` (`sqllocks-shape-eventhubs`), `eventstream` and `eventhouse` (`sqllocks-shape-fabric`).
   Every message carries the idempotency key `<table>/<seq>`; delivery is at-least-once with

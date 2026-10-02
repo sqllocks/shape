@@ -355,6 +355,47 @@ def overhead(name: str, scale: str, work: Path, repeats: int) -> dict[str, Any]:
     return out
 
 
+def realtime(name: str, scale: str, work: Path, rate_per_s: int, seconds: float) -> dict[str, Any]:
+    """The tee at a paced rate: does the rate hold, and what does the tee cost in CPU?"""
+    from shape.generation.engine import Engine
+    from shape.streaming.emit import EmitConfig, EmitRunner, EventPlan, FileSink
+    from shape.streaming.emit.live import LiveConfig, LiveFidelity, TargetShape, TeeSink
+
+    schema = load_schema(name, work)
+    reference = generate_tables(schema, scale, REF_SEED)
+    out: dict[str, Any] = {"workload": f"{name}:{scale}", "target_rate": rate_per_s}
+    for mode in ("none", "tee", "tee+profile"):
+        plan = EventPlan(Engine(schema, scale=scale, seed=EVENT_SEED))
+        sink: Any = FileSink(work / "realtime.jsonl")
+        live = None
+        if mode != "none":
+            live = LiveFidelity(
+                TargetShape.from_tables(reference),
+                LiveConfig(profile=mode == "tee+profile"),
+                tables=plan.tables,
+            )
+            sink = TeeSink(sink, live)
+        cfg = EmitConfig(realtime=True, rate=float(rate_per_s), duration=seconds)
+        cpu0, wall0 = time.process_time(), time.perf_counter()
+        report = EmitRunner(plan, sink, cfg).run()
+        cpu, wall = time.process_time() - cpu0, time.perf_counter() - wall0
+        full = report.per_second[1:-1]  # whole seconds only
+        out[mode] = {
+            "events": report.events,
+            "rate": report.rate,
+            "rate_error_percent": 100.0 * (report.rate / rate_per_s - 1.0),
+            "worst_second_error_percent": max(
+                (100.0 * abs(v / rate_per_s - 1.0) for v in full), default=0.0
+            ),
+            "max_lag_seconds": report.max_lag,
+            "cpu_seconds": cpu,
+            "cpu_percent_of_one_core": 100.0 * cpu / wall,
+            "live_events": None if live is None else live.events,
+            "live_score": None if live is None or live.last is None else live.last.overall,
+        }
+    return out
+
+
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument(
@@ -367,6 +408,8 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--no-overhead", action="store_true")
     ap.add_argument("--overhead-workload", default="retail:medium")
     ap.add_argument("--repeats", type=int, default=3)
+    ap.add_argument("--realtime-rate", type=int, default=10_000, help="events/s of the paced run")
+    ap.add_argument("--realtime-seconds", type=float, default=20.0)
     ap.add_argument("--evidence", metavar="FILE", help="also write the report here")
     a = ap.parse_args(argv)
     names = (
@@ -407,6 +450,24 @@ def main(argv: list[str]) -> int:
                     + "; "
                     + ", ".join(f"{m} {v:.1f}%" for m, v in o["overhead_percent"].items())
                 )
+        if not a.no_overhead:
+            work = Path(tmp) / "realtime"
+            work.mkdir()
+            name, _, scale = a.overhead_workload.partition(":")
+            report["realtime"] = rt = realtime(
+                name, scale, work, a.realtime_rate, 2.0 if a.quick else a.realtime_seconds
+            )
+            for mode in ("none", "tee", "tee+profile"):
+                r = rt[mode]
+                print(
+                    f"realtime {rt['target_rate']:,}/s {mode:12s} rate {r['rate']:,.0f} "
+                    f"({r['rate_error_percent']:+.2f}%), worst second "
+                    f"{r['worst_second_error_percent']:.1f}%, "
+                    f"lag {r['max_lag_seconds'] * 1000:.1f} ms, "
+                    f"cpu {r['cpu_percent_of_one_core']:.0f}% of a core"
+                )
+                if abs(r["rate_error_percent"]) > 5.0:
+                    report["failures"].append(f"realtime {mode}: rate off by more than 5%")
     report["passed"] = not report["failures"]
     text = json.dumps(report, indent=2, default=str)
     (OUT / "report.json").write_text(text + "\n", encoding="utf-8")
