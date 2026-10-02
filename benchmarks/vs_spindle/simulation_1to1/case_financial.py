@@ -78,14 +78,28 @@ def _windows(inputs: dict[str, pa.Table], cfg: dict[str, Any]) -> tuple[np.ndarr
 def _facts(run: Run, inputs: dict[str, pa.Table], cfg: dict[str, Any]) -> dict[str, Any]:
     txn = inputs["transaction"].to_pydict()
     amount_of = dict(zip(txn["transaction_id"], txn["amount"], strict=True))
-    time_of = dict(zip(txn["transaction_id"], h.numbers(inputs["transaction"].column("transaction_time"), 0) * 1e6, strict=True))
+    time_of = dict(
+        zip(
+            txn["transaction_id"],
+            h.numbers(inputs["transaction"].column("transaction_time"), 0) * 1e6,
+            strict=True,
+        )
+    )
     rev = run.tables["reversals"].to_pydict()
     fraud = run.tables["fraud_events"].to_pydict()
     sett = run.tables["settlements"].to_pydict()
-    delays = [
-        (r - time_of[o]) / HOUR_US
-        for o, r in zip(rev["original_transaction_id"], h.numbers(run.tables["reversals"].column("reversed_at"), 0) * 1e6, strict=True)
-    ] if rev["reversal_id"] else []
+    delays = (
+        [
+            (r - time_of[o]) / HOUR_US
+            for o, r in zip(
+                rev["original_transaction_id"],
+                h.numbers(run.tables["reversals"].column("reversed_at"), 0) * 1e6,
+                strict=True,
+            )
+        ]
+        if rev["reversal_id"]
+        else []
+    )
     count, total = _windows(inputs, cfg)
     n_batches = len(sett["batch_id"])
     settled = [i for i, s in enumerate(sett["status"]) if s == "settled"]
@@ -95,15 +109,26 @@ def _facts(run: Run, inputs: dict[str, pa.Table], cfg: dict[str, Any]) -> dict[s
         by_account[a] = by_account.get(a, 0) + 1
     burst = cfg.get("fraud_burst_count", 15)
     return {
-        "reversal_amounts": all(abs(a + abs(amount_of[o])) < 1e-9 for a, o in zip(rev["amount"], rev["original_transaction_id"], strict=True)),
-        "reversal_ids_distinct": len(set(rev["original_transaction_id"])) == len(rev["original_transaction_id"]),
-        "reversal_delay_bounds": all(0.1 - 1e-6 <= d <= cfg.get("reversal_delay_hours_max", 48.0) + 1e-6 for d in delays),
+        "reversal_amounts": all(
+            abs(a + abs(amount_of[o])) < 1e-9
+            for a, o in zip(rev["amount"], rev["original_transaction_id"], strict=True)
+        ),
+        "reversal_ids_distinct": len(set(rev["original_transaction_id"]))
+        == len(rev["original_transaction_id"]),
+        "reversal_delay_bounds": all(
+            0.1 - 1e-6 <= d <= cfg.get("reversal_delay_hours_max", 48.0) + 1e-6 for d in delays
+        ),
         "fraud_amount_range": all(lo - 1e-9 <= a <= hi + 1e-9 for a in fraud["amount"]),
         "fraud_burst_multiples": all(c % burst == 0 for c in by_account.values()),
         "fraud_flag": all(fraud["is_fraud"]),
         "settlement_counts": sett["transaction_count"] == count.tolist()[:n_batches],
-        "settled_totals": all(abs(sett["total_amount"][i] - round(float(total[i]), 2)) < 0.011 for i in settled),
-        "failure_reason_iff_not_settled": all((r is None) == (s == "settled") for r, s in zip(sett["failure_reason"], sett["status"], strict=True)),
+        "settled_totals": all(
+            abs(sett["total_amount"][i] - round(float(total[i]), 2)) < 0.011 for i in settled
+        ),
+        "failure_reason_iff_not_settled": all(
+            (r is None) == (s == "settled")
+            for r, s in zip(sett["failure_reason"], sett["status"], strict=True)
+        ),
         "combined_is_concat": run.tables["transactions"].num_rows
         == inputs["transaction"].num_rows + len(rev["reversal_id"]) + len(fraud["fraud_tx_id"]),
         "exercised_reversals": len(rev["reversal_id"]) > 0,
@@ -111,7 +136,9 @@ def _facts(run: Run, inputs: dict[str, pa.Table], cfg: dict[str, Any]) -> dict[s
     }
 
 
-def compare(rep: Report, shape: Run, base: dict[int, Run], cfg: dict[str, Any], inputs: Any, quick: bool) -> None:
+def compare(
+    rep: Report, shape: Run, base: dict[int, Run], cfg: dict[str, Any], inputs: Any, quick: bool
+) -> None:
     accounts = frozenset(inputs["account"].column("account_id").to_pylist())
     txn_ids = frozenset(inputs["transaction"].column("transaction_id").to_pylist())
     reversal_cols = {
@@ -164,8 +191,14 @@ def compare(rep: Report, shape: Run, base: dict[int, Run], cfg: dict[str, Any], 
         skip=("seed",),
     )
     for status in ("settled", "partial", "failed"):
-        share = {s: r.tables["settlements"].column("status").to_pylist().count(status) / max(r.tables["settlements"].num_rows, 1) for s, r in base.items()}
-        mine = shape.tables["settlements"].column("status").to_pylist().count(status) / max(shape.tables["settlements"].num_rows, 1)
+        share = {
+            s: r.tables["settlements"].column("status").to_pylist().count(status)
+            / max(r.tables["settlements"].num_rows, 1)
+            for s, r in base.items()
+        }
+        mine = shape.tables["settlements"].column("status").to_pylist().count(status) / max(
+            shape.tables["settlements"].num_rows, 1
+        )
         h.compare_scalar(rep, f"settlements:share_{status}", mine, list(share.values()), floor=0.02)
     fs = _facts(shape, inputs, cfg)
     fb = {s: _facts(r, inputs, cfg) for s, r in base.items()}
@@ -175,9 +208,15 @@ def compare(rep: Report, shape: Run, base: dict[int, Run], cfg: dict[str, Any], 
         h.invariant(rep, f"invariant:{key}", value, {s: f[key] for s, f in fb.items()})
         rep.add(f"holds:{key}", bool(value))
     if cfg.get("reversal_probability", 0.03) >= 0.05:
-        rep.add("exercised:reversals", fs["exercised_reversals"] and all(f["exercised_reversals"] for f in fb.values()))
+        rep.add(
+            "exercised:reversals",
+            fs["exercised_reversals"] and all(f["exercised_reversals"] for f in fb.values()),
+        )
     if cfg.get("fraud_burst_probability", 0.01) >= 0.1:
-        rep.add("exercised:fraud_bursts", fs["exercised_fraud"] and all(f["exercised_fraud"] for f in fb.values()))
+        rep.add(
+            "exercised:fraud_bursts",
+            fs["exercised_fraud"] and all(f["exercised_fraud"] for f in fb.values()),
+        )
 
 
 def probes(ctx: h.Context) -> list[Report]:
@@ -193,12 +232,24 @@ def probes(ctx: h.Context) -> list[Report]:
     rep = Report("SIM-6 financial domain column names")
     theirs = h.baseline_once(SIM, cfg, tables, 5, "domain-names")
     ours = run_shape(cfg, 5, tables)
-    rep.add("baseline: settlement counts ignore the transaction times", theirs.tables["settlements"].column("transaction_count").to_pylist() != truth.tolist())
-    rep.add("shape: settlement counts follow the transaction times", ours.tables["settlements"].column("transaction_count").to_pylist() == truth.tolist())
+    rep.add(
+        "baseline: settlement counts ignore the transaction times",
+        theirs.tables["settlements"].column("transaction_count").to_pylist() != truth.tolist(),
+    )
+    rep.add(
+        "shape: settlement counts follow the transaction times",
+        ours.tables["settlements"].column("transaction_count").to_pylist() == truth.tolist(),
+    )
     years = {v.year for v in theirs.tables["reversals"].column("reversed_at").to_pylist()}
-    rep.add("baseline: reversals are stamped with the wall clock", years != {2024}, years=sorted(years))
+    rep.add(
+        "baseline: reversals are stamped with the wall clock", years != {2024}, years=sorted(years)
+    )
     delays = h.numbers(ours.tables["reversals"].column("reversed_at"), 0)
-    rep.add("shape: reversals follow their transactions", len(delays) > 0 and float(delays.min()) >= float(h.numbers(renamed.column("transaction_date"), 0).min()))
+    rep.add(
+        "shape: reversals follow their transactions",
+        len(delays) > 0
+        and float(delays.min()) >= float(h.numbers(renamed.column("transaction_date"), 0).min()),
+    )
     return [rep, _columns_probe()]
 
 
@@ -209,7 +260,13 @@ def _columns_probe() -> Report:
     rep = Report("SIM-7 financial combined columns")
     theirs = h.baseline_many(SIM, cfg, data, range(1, 13), "columns")
     variants = {tuple(r.tables["transactions"].column_names) for r in theirs.values()}
-    rep.add("baseline: the column set varies from seed to seed", len(variants) > 1, variants=len(variants))
-    ours = {tuple(run_shape(cfg, s, data).tables["transactions"].column_names) for s in range(1, 13)}
+    rep.add(
+        "baseline: the column set varies from seed to seed",
+        len(variants) > 1,
+        variants=len(variants),
+    )
+    ours = {
+        tuple(run_shape(cfg, s, data).tables["transactions"].column_names) for s in range(1, 13)
+    }
     rep.add("shape: one column set for every seed", len(ours) == 1)
     return rep

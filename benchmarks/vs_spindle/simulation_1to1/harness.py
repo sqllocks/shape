@@ -172,7 +172,12 @@ def baseline_runs(
         raise HarnessError(f"{SPINDLE_PY} not found (run benchmarks/vs_spindle/setup_spindle.sh)")
     pin_check()
     input_files: dict[str, str] = {}
-    key = _digest(sim, config, {k: v.schema.to_string() + str(v.num_rows) for k, v in (inputs or {}).items()}, seeds)
+    key = _digest(
+        sim,
+        config,
+        {k: v.schema.to_string() + str(v.num_rows) for k, v in (inputs or {}).items()},
+        seeds,
+    )
     work = CACHE / "baseline" / f"{sim}-{key}"
     if not (work / "DONE").exists():
         work.mkdir(parents=True, exist_ok=True)
@@ -183,7 +188,13 @@ def baseline_runs(
         job = work / "job.json"
         job.write_text(
             json.dumps(
-                {"sim": sim, "config": config, "seeds": list(seeds), "inputs": input_files, "out": str(work)}
+                {
+                    "sim": sim,
+                    "config": config,
+                    "seeds": list(seeds),
+                    "inputs": input_files,
+                    "out": str(work),
+                }
             )
         )
         res = subprocess.run(
@@ -232,7 +243,9 @@ def numbers(col: pa.ChunkedArray, origin_us: int = 0) -> np.ndarray:
     are dropped."""
     t = col.type
     if pa.types.is_timestamp(t):
-        arr = pc.cast(col, pa.timestamp("us", t.tz), safe=False).cast(pa.int64())  # ns -> us truncates
+        arr = pc.cast(col, pa.timestamp("us", t.tz), safe=False).cast(
+            pa.int64()
+        )  # ns -> us truncates
         x = arr.to_numpy(zero_copy_only=False).astype(np.float64)
         x = x[~np.isnan(x)] if arr.null_count else x
         return (x - origin_us) / 1e6
@@ -271,7 +284,9 @@ def ks_crit(n: int, m: int, alpha: float = ALPHA) -> float:
 
 
 def tvd_noise(k: int, n: int, m: int) -> float:
-    return math.sqrt(max(k, 2) / (2 * math.pi)) * (1 / math.sqrt(max(n, 1)) + 1 / math.sqrt(max(m, 1)))
+    return math.sqrt(max(k, 2) / (2 * math.pi)) * (
+        1 / math.sqrt(max(n, 1)) + 1 / math.sqrt(max(m, 1))
+    )
 
 
 def nanmax(xs: Iterable[float]) -> float:
@@ -288,8 +303,9 @@ class Col:
     otherwise categorical: TVD), ``num``, ``time``, ``enum``, ``id`` (unique, ``regex``),
     ``pattern`` (every value matches one of ``regexes``), ``vocab`` (values from ``vocab``),
     ``exact`` (equal to the baseline's, row by row, within ``tol``), ``const`` (every value equals
-    ``value``) and ``skip`` (checked by the case itself). For ``enum``, ``vocab`` adds a declared value set to
-    the values the reference run happened to draw (a rare flag may not occur in one seed)."""
+    ``value``) and ``skip`` (checked by the case itself). For ``enum``, ``vocab`` adds a declared
+    value set to the values the reference run happened to draw (a rare flag may not occur in
+    one seed)."""
 
     kind: str = "auto"
     regex: str | None = None
@@ -315,28 +331,59 @@ def _sorted(table: pa.Table, key: tuple[str, ...]) -> pa.Table:
 
 
 def compare_counts(
-    rep: Report, label: str, shape: float, base: list[float], *, exact: bool = False, floor: float = 0.0
+    rep: Report,
+    label: str,
+    shape: float,
+    base: list[float],
+    *,
+    exact: bool = False,
+    floor: float = 0.0,
 ) -> None:
     mean, spread = float(np.mean(base)), max(base) - min(base)
     if exact:
         rep.add(f"{label}:count", all(shape == b for b in base), shape=shape, baseline=base)
         return
     tol = max(5 * math.sqrt(abs(mean)), 1.5 * spread, floor)
-    rep.add(f"{label}:count", abs(shape - mean) <= tol, shape=shape, baseline_mean=mean, baseline=base, tol=tol)
+    rep.add(
+        f"{label}:count",
+        abs(shape - mean) <= tol,
+        shape=shape,
+        baseline_mean=mean,
+        baseline=base,
+        tol=tol,
+    )
 
 
-def compare_scalar(rep: Report, label: str, shape: float, base: list[float], *, floor: float = 0.0, count: bool = False) -> None:
+def compare_scalar(
+    rep: Report,
+    label: str,
+    shape: float,
+    base: list[float],
+    *,
+    floor: float = 0.0,
+    count: bool = False,
+) -> None:
     mean, spread = float(np.mean(base)), max(base) - min(base)
     tol = max(1.5 * spread, floor, 5 * math.sqrt(abs(mean)) if count else 0.0)
-    rep.add(label, abs(shape - mean) <= tol, shape=shape, baseline_mean=mean, baseline=base, tol=tol)
+    rep.add(
+        label, abs(shape - mean) <= tol, shape=shape, baseline_mean=mean, baseline=base, tol=tol
+    )
 
 
 def _check_schema(rep: Report, tname: str, shape: pa.Table, ref: pa.Table) -> bool:
     if shape.num_rows == 0 and ref.num_rows == 0 and not ref.column_names:
-        return rep.add(f"{tname}:schema", True, note="both empty (the baseline's empty frame has no columns)")
+        return rep.add(
+            f"{tname}:schema", True, note="both empty (the baseline's empty frame has no columns)"
+        )
     ok_names = shape.column_names == ref.column_names
     if shape.num_rows == 0 and ref.num_rows == 0:  # an empty pandas frame has object columns only
-        return rep.add(f"{tname}:schema", ok_names, shape=shape.column_names, baseline=ref.column_names, note="both empty: names only")
+        return rep.add(
+            f"{tname}:schema",
+            ok_names,
+            shape=shape.column_names,
+            baseline=ref.column_names,
+            note="both empty: names only",
+        )
     bad: dict[str, Any] = {}
     for name in set(shape.column_names) & set(ref.column_names):
         a, b = shape.schema.field(name).type, ref.schema.field(name).type
@@ -366,13 +413,17 @@ def compare_table(
     reference) to that seed's table."""
     ref = base[REF_SEED]
     exact_rows = spec.rows == "exact"
-    compare_counts(rep, tname, shape.num_rows, [t.num_rows for t in base.values()], exact=exact_rows)
+    compare_counts(
+        rep, tname, shape.num_rows, [t.num_rows for t in base.values()], exact=exact_rows
+    )
     if not _check_schema(rep, tname, shape, ref):
         return
     if shape.num_rows == 0 or ref.num_rows == 0:
         return
     others = [base[s] for s in BASELINE_SEEDS]
-    s_sorted, r_sorted = (_sorted(shape, spec.key), _sorted(ref, spec.key)) if exact_rows else (shape, ref)
+    s_sorted, r_sorted = (
+        (_sorted(shape, spec.key), _sorted(ref, spec.key)) if exact_rows else (shape, ref)
+    )
     for cname in shape.column_names:
         col = spec.columns.get(cname, Col())
         _compare_column(rep, f"{tname}.{cname}", col, shape, ref, others, cname, s_sorted, r_sorted)
@@ -391,13 +442,21 @@ def _compare_column(
 ) -> None:
     sc, rc = shape.column(cname), ref.column(cname)
     n, m = len(sc), len(rc)
-    kind = col.kind if col.kind != "auto" else kind_of(sc.type if not pa.types.is_null(sc.type) else rc.type)
+    kind = (
+        col.kind
+        if col.kind != "auto"
+        else kind_of(sc.type if not pa.types.is_null(sc.type) else rc.type)
+    )
     if kind == "exact":
         a, b = s_sorted.column(cname), r_sorted.column(cname)
         same = len(a) == len(b) and a.null_count == b.null_count
         worst = 0.0
         if same:
-            if pa.types.is_floating(a.type) or pa.types.is_integer(a.type) or pa.types.is_decimal(a.type):
+            if (
+                pa.types.is_floating(a.type)
+                or pa.types.is_integer(a.type)
+                or pa.types.is_decimal(a.type)
+            ):
                 x = pc.cast(a, pa.float64()).to_numpy(zero_copy_only=False)
                 y = pc.cast(b, pa.float64()).to_numpy(zero_copy_only=False)
                 worst = float(np.nanmax(np.abs(x - y))) if len(x) else 0.0
@@ -417,7 +476,12 @@ def _compare_column(
     if kind == "const":
         vs = {str(v) for v in valid_values(sc)}
         vb = {str(v) for v in valid_values(rc)}
-        rep.add(f"{label}:const", vs == vb == {str(col.value)} or (not vs and not vb), shape=sorted(vs), baseline=sorted(vb))
+        rep.add(
+            f"{label}:const",
+            vs == vb == {str(col.value)} or (not vs and not vb),
+            shape=sorted(vs),
+            baseline=sorted(vb),
+        )
         return
     if col.nulls:
         ns, nr = null_rate(sc), null_rate(rc)
@@ -433,12 +497,22 @@ def _compare_column(
         d = ks(a, b)
         crit = ks_crit(len(a), len(b))
         tol = max(crit, 1.5 * drift + 0.002) if not math.isnan(drift) else crit
-        rep.add(f"{label}:ks", math.isnan(d) or d <= tol, ks=d, tol=tol, baseline_spread=drift, n=len(a), m=len(b))
+        rep.add(
+            f"{label}:ks",
+            math.isnan(d) or d <= tol,
+            ks=d,
+            tol=tol,
+            baseline_spread=drift,
+            n=len(a),
+            m=len(b),
+        )
         return
     vs_, vr = [str(v) for v in valid_values(sc)], [str(v) for v in valid_values(rc)]
     if kind == "id":
         rx = re.compile(col.regex) if col.regex else None
-        ok_fmt = rx is None or all(rx.fullmatch(v) for v in vs_) and all(rx.fullmatch(v) for v in vr)
+        ok_fmt = (
+            rx is None or all(rx.fullmatch(v) for v in vs_) and all(rx.fullmatch(v) for v in vr)
+        )
         rep.add(f"{label}:format", ok_fmt, regex=col.regex)
         rep.add(f"{label}:unique", len(set(vs_)) == len(vs_) and len(set(vr)) == len(vr))
         return
@@ -446,28 +520,49 @@ def _compare_column(
         rxs = [re.compile(r) for r in col.regexes]
 
         def share(vals: list[str]) -> dict[str, float]:
-            hit = [next((str(i) for i, r in enumerate(rxs) if r.fullmatch(v)), "none") for v in vals]
+            hit = [
+                next((str(i) for i, r in enumerate(rxs) if r.fullmatch(v)), "none") for v in vals
+            ]
             return freq(hit)
 
         fs, fr = share(vs_), share(vr)
-        rep.add(f"{label}:format", fs.get("none", 0.0) <= 1 - VOCAB_MIN and fr.get("none", 0.0) <= 1 - VOCAB_MIN, shape_unmatched=fs.get("none", 0.0), baseline_unmatched=fr.get("none", 0.0))
-        drift = nanmax(tvd(fr, share([str(v) for v in valid_values(o.column(cname))])) for o in others)
+        rep.add(
+            f"{label}:format",
+            fs.get("none", 0.0) <= 1 - VOCAB_MIN and fr.get("none", 0.0) <= 1 - VOCAB_MIN,
+            shape_unmatched=fs.get("none", 0.0),
+            baseline_unmatched=fr.get("none", 0.0),
+        )
+        drift = nanmax(
+            tvd(fr, share([str(v) for v in valid_values(o.column(cname))])) for o in others
+        )
         d = tvd(fs, fr)
         tol = max(3 * tvd_noise(len(rxs), len(vs_), len(vr)), 1.5 * drift + 0.002)
         rep.add(f"{label}:pattern_share", d <= tol, tvd=d, tol=tol, shape=fs, baseline=fr)
         dr_s, dr_b = len(set(vs_)) / max(len(vs_), 1), len(set(vr)) / max(len(vr), 1)
         dr_drift = nanmax(
-            abs(len({str(v) for v in valid_values(o.column(cname))}) / max(len(valid_values(o.column(cname))), 1) / max(dr_b, 1e-12) - 1)
+            abs(
+                len({str(v) for v in valid_values(o.column(cname))})
+                / max(len(valid_values(o.column(cname))), 1)
+                / max(dr_b, 1e-12)
+                - 1
+            )
             for o in others
         )
         dr_tol = max(0.05, 1.5 * dr_drift)
-        rep.add(f"{label}:distinct_ratio", abs(dr_s / max(dr_b, 1e-12) - 1) <= dr_tol, shape=dr_s, baseline=dr_b, tol=dr_tol)
+        rep.add(
+            f"{label}:distinct_ratio",
+            abs(dr_s / max(dr_b, 1e-12) - 1) <= dr_tol,
+            shape=dr_s,
+            baseline=dr_b,
+            tol=dr_tol,
+        )
         return
     if kind == "vocab":
         vocab = col.vocab or frozenset()
         rep.add(
             f"{label}:vocab",
-            all(v in vocab for v in vs_) or sum(v in vocab for v in vs_) / max(len(vs_), 1) >= VOCAB_MIN,
+            all(v in vocab for v in vs_)
+            or sum(v in vocab for v in vs_) / max(len(vs_), 1) >= VOCAB_MIN,
             outside=sorted({v for v in vs_ if v not in vocab})[:5],
         )
         return
@@ -505,16 +600,30 @@ def compare_stats(
             fs = {kk: c / max(sum(v.values()), 1) for kk, c in v.items()}
             fr = {kk: c / max(sum(ref[k].values()), 1) for kk, c in ref[k].items()}
             drift = nanmax(
-                tvd(fr, {kk: c / max(sum(b[k].values()), 1) for kk, c in b[k].items()}) for s, b in base.items() if s != REF_SEED
+                tvd(fr, {kk: c / max(sum(b[k].values()), 1) for kk, c in b[k].items()})
+                for s, b in base.items()
+                if s != REF_SEED
             )
-            tol = max(3 * tvd_noise(len(fr), max(sum(v.values()), 1), max(sum(ref[k].values()), 1)), 1.5 * drift + 0.002)
+            tol = max(
+                3 * tvd_noise(len(fr), max(sum(v.values()), 1), max(sum(ref[k].values()), 1)),
+                1.5 * drift + 0.002,
+            )
             known = set().union(*(b[k].keys() for b in base.values() if isinstance(b.get(k), dict)))
-            rep.add(f"stats:{k}", fs.keys() <= known and tvd(fs, fr) <= tol, tvd=tvd(fs, fr), tol=tol)
+            rep.add(
+                f"stats:{k}", fs.keys() <= known and tvd(fs, fr) <= tol, tvd=tvd(fs, fr), tol=tol
+            )
         elif isinstance(v, (int, float)) and not isinstance(v, bool):
             if k in exact:
                 rep.add(f"stats:{k}", all(v == x for x in series), shape=v, baseline=series)
             else:
-                compare_scalar(rep, f"stats:{k}", float(v), [float(x) for x in series], floor=floors.get(k, 0.0), count=k in counts)
+                compare_scalar(
+                    rep,
+                    f"stats:{k}",
+                    float(v),
+                    [float(x) for x in series],
+                    floor=floors.get(k, 0.0),
+                    count=k in counts,
+                )
         else:
             rep.add(f"stats:{k}", all(v == x for x in series), shape=v, baseline=series[:1])
 
@@ -526,10 +635,19 @@ def compare_vector(rep: Report, label: str, shape: np.ndarray, base: dict[int, n
     d = ks(shape, ref)
     crit = ks_crit(len(shape), len(ref))
     tol = max(crit, 1.5 * drift + 0.002) if not math.isnan(drift) else crit
-    rep.add(f"{label}:ks", len(shape) > 0 and len(ref) > 0 and d <= tol, ks=d, tol=tol, n=len(shape), m=len(ref))
+    rep.add(
+        f"{label}:ks",
+        len(shape) > 0 and len(ref) > 0 and d <= tol,
+        ks=d,
+        tol=tol,
+        n=len(shape),
+        m=len(ref),
+    )
 
 
-def compare_categories(rep: Report, label: str, shape: list[Any], base: dict[int, list[Any]]) -> None:
+def compare_categories(
+    rep: Report, label: str, shape: list[Any], base: dict[int, list[Any]]
+) -> None:
     """A derived categorical vector (say, the last funnel stage reached) by the TVD rule."""
     ref = base[REF_SEED]
     fs, fr = freq(shape), freq(ref)
@@ -553,15 +671,27 @@ def baseline_once(
         pq.write_table(table, path)
         input_files[name] = str(path)
     job = work / "job.json"
-    job.write_text(json.dumps({"sim": sim, "config": config, "seeds": [seed], "inputs": input_files, "out": str(work)}))
-    res = subprocess.run([str(SPINDLE_PY), str(HERE / "baseline_worker.py"), str(job)], capture_output=True, text=True)
+    job.write_text(
+        json.dumps(
+            {"sim": sim, "config": config, "seeds": [seed], "inputs": input_files, "out": str(work)}
+        )
+    )
+    res = subprocess.run(
+        [str(SPINDLE_PY), str(HERE / "baseline_worker.py"), str(job)],
+        capture_output=True,
+        text=True,
+    )
     if res.returncode != 0:
         raise HarnessError(f"baseline worker failed for {sim}:\n{res.stderr[-2000:]}")
     return read_run(work / f"seed{seed}")
 
 
 def baseline_many(
-    sim: str, config: dict[str, Any], inputs: dict[str, pa.Table] | None, seeds: Iterable[int], tag: str
+    sim: str,
+    config: dict[str, Any],
+    inputs: dict[str, pa.Table] | None,
+    seeds: Iterable[int],
+    tag: str,
 ) -> dict[int, Run]:
     """Uncached baseline runs at the given seeds in one worker (an allow-list probe about the
     spread of a property across seeds)."""
@@ -576,8 +706,22 @@ def baseline_many(
         pq.write_table(table, path)
         input_files[name] = str(path)
     job = work / "job.json"
-    job.write_text(json.dumps({"sim": sim, "config": config, "seeds": list(seeds), "inputs": input_files, "out": str(work)}))
-    res = subprocess.run([str(SPINDLE_PY), str(HERE / "baseline_worker.py"), str(job)], capture_output=True, text=True)
+    job.write_text(
+        json.dumps(
+            {
+                "sim": sim,
+                "config": config,
+                "seeds": list(seeds),
+                "inputs": input_files,
+                "out": str(work),
+            }
+        )
+    )
+    res = subprocess.run(
+        [str(SPINDLE_PY), str(HERE / "baseline_worker.py"), str(job)],
+        capture_output=True,
+        text=True,
+    )
     if res.returncode != 0:
         raise HarnessError(f"baseline worker failed for {sim}:\n{res.stderr[-2000:]}")
     return {s: read_run(work / f"seed{s}") for s in seeds}
@@ -590,7 +734,9 @@ def conform(table: pa.Table, like: pa.Table) -> pa.Table:
     if extra:
         raise HarnessError(f"columns {extra} are not in the Shape table")
     cols = [
-        table.column(f.name) if f.name in table.column_names else pa.nulls(table.num_rows, type=f.type)
+        table.column(f.name)
+        if f.name in table.column_names
+        else pa.nulls(table.num_rows, type=f.type)
         for f in like.schema
     ]
     return pa.Table.from_arrays(cols, names=like.column_names)
@@ -610,7 +756,12 @@ def mutations(run: Run) -> dict[str, Run]:
 
     for tname, t in tables.items():
         floats = [f.name for f in t.schema if pa.types.is_floating(f.type)]
-        text = [f.name for f in t.schema if pa.types.is_string(f.type) and 1 < len(set(t.column(f.name).drop_null().to_pylist())) <= 20]
+        text = [
+            f.name
+            for f in t.schema
+            if pa.types.is_string(f.type)
+            and 1 < len(set(t.column(f.name).drop_null().to_pylist())) <= 20
+        ]
         if "rename" not in out and t.num_columns > 1:
             names_ = list(t.column_names)
             names_[1] = names_[1] + "_x"
@@ -622,19 +773,27 @@ def mutations(run: Run) -> dict[str, Run]:
         if floats and "nulls" not in out:
             i = t.column_names.index(floats[0])
             keep = pa.array(np.arange(t.num_rows) % 10 != 0)
-            col = pc.if_else(keep, t.column(floats[0]), pa.scalar(None, t.schema.field(floats[0]).type))
+            col = pc.if_else(
+                keep, t.column(floats[0]), pa.scalar(None, t.schema.field(floats[0]).type)
+            )
             out["null 10% of a numeric column"] = variant(tname, t.set_column(i, floats[0], col))
         if text and "category" not in out:
             i = t.column_names.index(text[0])
             vals = t.column(text[0]).drop_null().to_pylist()
             top = max(set(vals), key=vals.count)
             swap = pa.array(np.arange(t.num_rows) % 5 == 0)
-            col = pc.if_else(pc.and_(swap, pc.equal(t.column(text[0]), top)), pa.scalar("zzz-new-category"), t.column(text[0]))
+            col = pc.if_else(
+                pc.and_(swap, pc.equal(t.column(text[0]), top)),
+                pa.scalar("zzz-new-category"),
+                t.column(text[0]),
+            )
             out["relabel a fifth of a category"] = variant(tname, t.set_column(i, text[0], col))
     biggest = max(tables, key=lambda k: tables[k].num_rows, default=None)
     if biggest:
         t = tables[biggest]
-        out["drop 30% of the rows"] = variant(biggest, t.filter(pa.array(np.arange(t.num_rows) % 10 >= 3)))
+        out["drop 30% of the rows"] = variant(
+            biggest, t.filter(pa.array(np.arange(t.num_rows) % 10 >= 3))
+        )
     return out
 
 
@@ -662,7 +821,13 @@ def run_case(module: Any, ctx: Context) -> tuple[list[Report], list[dict[str, An
             run = module.run_shape(cfg, SHAPE_SEED, inputs)
             rep = Report(f"{module.NAME}[{cid}] control {cname}")
             module.compare(rep, run, baselines[cid], configs[cid], inputs, ctx.quick)
-            controls.append({"control": f"{module.NAME}:{cname}", "detected": bool(rep.failed), "failed_checks": [c.name for c in rep.failed][:6]})
+            controls.append(
+                {
+                    "control": f"{module.NAME}:{cname}",
+                    "detected": bool(rep.failed),
+                    "failed_checks": [c.name for c in rep.failed][:6],
+                }
+            )
     if not ctx.skip_controls:
         first = next(iter(configs))
         for what, run in mutations(shape_runs[first]).items():
@@ -671,14 +836,30 @@ def run_case(module: Any, ctx: Context) -> tuple[list[Report], list[dict[str, An
                 module.compare(rep, run, baselines[first], configs[first], inputs, ctx.quick)
             except (TypeError, ValueError, KeyError, IndexError, ZeroDivisionError) as exc:
                 # a comparison that cannot even read the damaged output has not accepted it
-                rep.add("comparison could not read the output", False, error=f"{type(exc).__name__}: {exc}")
-            controls.append({"control": f"{module.NAME}:output: {what}", "detected": bool(rep.failed), "failed_checks": [c.name for c in rep.failed][:6]})
+                rep.add(
+                    "comparison could not read the output",
+                    False,
+                    error=f"{type(exc).__name__}: {exc}",
+                )
+            controls.append(
+                {
+                    "control": f"{module.NAME}:output: {what}",
+                    "detected": bool(rep.failed),
+                    "failed_checks": [c.name for c in rep.failed][:6],
+                }
+            )
     if hasattr(module, "probes") and not ctx.only_controls:
         probes = module.probes(ctx)
     return reports, controls, probes
 
 
-def invariant(rep: Report, name: str, shape: Any, base: dict[int, Any], equal: Callable[[Any, Any], bool] | None = None) -> None:
+def invariant(
+    rep: Report,
+    name: str,
+    shape: Any,
+    base: dict[int, Any],
+    equal: Callable[[Any, Any], bool] | None = None,
+) -> None:
     """A property computed per run: Shape's value must match the baseline's at every seed
     (equal for booleans and exact quantities, by ``equal`` otherwise)."""
     eq = equal or (lambda a, b: a == b)

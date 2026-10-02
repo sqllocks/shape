@@ -5,8 +5,6 @@ from __future__ import annotations
 import datetime as dt
 
 import pyarrow as pa
-import pytest
-
 from shape_simulation.clickstream_patterns import (
     ClickstreamConfig,
     ClickstreamResult,
@@ -31,14 +29,21 @@ def test_window_starts_at_start_time_not_at_the_clock():
     assert first.date() == dt.date(2031, 5, 6)
     assert min(r.page_views.column("timestamp").to_pylist()) >= first
     last = max(r.sessions.column("started_at").to_pylist())
-    assert last <= dt.datetime(2031, 5, 6, 12, tzinfo=dt.timezone.utc)
+    assert last <= dt.datetime(2031, 5, 6, 12, tzinfo=dt.UTC)
 
 
 def test_schemas_and_types():
     r = run()
     assert r.sessions.column_names == [
-        "session_id", "user_id", "started_at", "device_type", "referrer",
-        "is_bot", "is_bounce", "user_agent", "duration_seconds",
+        "session_id",
+        "user_id",
+        "started_at",
+        "device_type",
+        "referrer",
+        "is_bot",
+        "is_bounce",
+        "user_agent",
+        "duration_seconds",
     ]
     assert r.sessions.schema.field("started_at").type == pa.timestamp("us", "UTC")
     assert r.page_views.column_names[-1] == "referrer_url"
@@ -72,7 +77,7 @@ def test_views_are_chained_and_sorted():
     s = r.sessions.to_pydict()
     ref = dict(zip(s["session_id"], s["referrer"], strict=True))
     first = {}
-    for sid, url, back, ts in zip(v["session_id"], v["page_url"], v["referrer_url"], v["timestamp"], strict=True):
+    for sid, back, ts in zip(v["session_id"], v["referrer_url"], v["timestamp"], strict=True):
         first.setdefault(sid, (ts, back))
     assert all(back == ref[sid] for sid, (_, back) in first.items())
     assert all("{" not in u for u in v["page_url"])
@@ -81,7 +86,11 @@ def test_views_are_chained_and_sorted():
 def test_funnel_only_for_engaged_humans_and_ordered():
     r = run(funnel_drop_rate=0.5)
     s = r.sessions.to_pydict()
-    engaged = {sid for sid, bot, bounce in zip(s["session_id"], s["is_bot"], s["is_bounce"], strict=True) if not bot and not bounce}
+    engaged = {
+        sid
+        for sid, bot, bounce in zip(s["session_id"], s["is_bot"], s["is_bounce"], strict=True)
+        if not bot and not bounce
+    }
     f = r.funnels.to_pydict()
     assert set(f["session_id"]) == engaged
     by: dict[str, list[tuple[int, bool]]] = {}
@@ -132,8 +141,15 @@ def test_no_users_and_no_bots_is_empty_not_an_error():
 
 
 def test_custom_pool_and_stages():
-    r = run(page_pool=["/a", "/b/{id}"], funnel_stages=["x", "y"], referrer_sources=["r1"], device_types=["d1"])
+    r = run(
+        page_pool=["/a", "/b/{id}"],
+        funnel_stages=["x", "y"],
+        referrer_sources=["r1"],
+        device_types=["d1"],
+    )
     assert set(r.funnels.column("stage").to_pylist()) <= {"x", "y"}
-    assert all(u == "/a" or u.startswith("/b/") for u in r.page_views.column("page_url").to_pylist())
+    assert all(
+        u == "/a" or u.startswith("/b/") for u in r.page_views.column("page_url").to_pylist()
+    )
     humans = [d for d in r.sessions.column("device_type").to_pylist() if d != "bot"]
     assert set(humans) == {"d1"}

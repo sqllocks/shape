@@ -24,7 +24,12 @@ def col(strategy: str, type_: str = "integer", **gen: Any) -> dict[str, Any]:
     }
 
 
-def schema_doc(tables: dict[str, dict[str, Any]], rels: list[tuple[str, str, str]], rows: dict[str, int], seed: int = 3) -> dict[str, Any]:
+def schema_doc(
+    tables: dict[str, dict[str, Any]],
+    rels: list[tuple[str, str, str]],
+    rows: dict[str, int],
+    seed: int = 3,
+) -> dict[str, Any]:
     """A generation schema document for ``tables`` ({name: {column: spec}}); ``rels`` are
     (parent, child, column) foreign keys on the same column name."""
     doc_tables = {}
@@ -38,14 +43,25 @@ def schema_doc(tables: dict[str, dict[str, Any]], rels: list[tuple[str, str, str
         "model": {"name": "sim", "seed": seed},
         "tables": doc_tables,
         "relationships": [
-            {"name": f"{c}_{p}", "parent": p, "child": c, "parent_columns": [k], "child_columns": [k]}
+            {
+                "name": f"{c}_{p}",
+                "parent": p,
+                "child": c,
+                "parent_columns": [k],
+                "child_columns": [k],
+            }
             for p, c, k in rels
         ],
         "generation": {"scale": "small", "scales": {"small": rows}},
     }
 
 
-def make(tables: dict[str, dict[str, Any]], rels: list[tuple[str, str, str]], rows: dict[str, int], seed: int = 3) -> dict[str, pa.Table]:
+def make(
+    tables: dict[str, dict[str, Any]],
+    rels: list[tuple[str, str, str]],
+    rows: dict[str, int],
+    seed: int = 3,
+) -> dict[str, pa.Table]:
     doc = schema_doc(tables, rels, rows, seed)
     return dict(Engine(GenSchema.from_dict(doc), scale="small", seed=seed).generate().tables)
 
@@ -58,7 +74,10 @@ def spec(kind: str) -> tuple[dict[str, dict[str, Any]], list[tuple[str, str, str
     if kind == "financial":
         return (
             {
-                "account": {"account_id": col("sequence", start=1000), "balance": col("distribution", "float", low=0.0, high=5000.0)},
+                "account": {
+                    "account_id": col("sequence", start=1000),
+                    "balance": col("distribution", "float", low=0.0, high=5000.0),
+                },
                 "transaction": {
                     "transaction_id": col("sequence", start=1),
                     "account_id": col("foreign_key", ref="account.account_id"),
@@ -72,8 +91,14 @@ def spec(kind: str) -> tuple[dict[str, dict[str, Any]], list[tuple[str, str, str
     if kind == "iot":
         return (
             {
-                "device": {"device_id": col("sequence", start=1), "battery_level": col("distribution", "float", low=20.0, high=100.0)},
-                "sensor": {"sensor_id": col("sequence", start=1), "device_id": col("foreign_key", ref="device.device_id")},
+                "device": {
+                    "device_id": col("sequence", start=1),
+                    "battery_level": col("distribution", "float", low=20.0, high=100.0),
+                },
+                "sensor": {
+                    "sensor_id": col("sequence", start=1),
+                    "device_id": col("foreign_key", ref="device.device_id"),
+                },
                 "reading": {
                     "reading_id": col("sequence", start=1),
                     "sensor_id": col("foreign_key", ref="sensor.sensor_id"),
@@ -94,7 +119,11 @@ def spec(kind: str) -> tuple[dict[str, dict[str, Any]], list[tuple[str, str, str
                 "driver_id": col("foreign_key", ref="driver.driver_id"),
                 "city_id": col("weighted_enum", "float", values={"1": 3, "2": 2, "3": 2, "4": 3}),
                 "requested_at": col("temporal", "timestamp", **DAY),
-                "status": col("weighted_enum", "string", values={"completed": 80, "cancelled": 12, "no_driver": 8}),
+                "status": col(
+                    "weighted_enum",
+                    "string",
+                    values={"completed": 80, "cancelled": 12, "no_driver": 8},
+                ),
                 "duration_min": col("distribution", "float", low=5.0, high=40.0),
                 "surge_mult": col("weighted_enum", "float", values={"1.0": 6, "1.5": 2, "2.0": 1}),
                 "fare": col("distribution", "float", low=5.0, high=60.0),

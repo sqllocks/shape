@@ -5,7 +5,6 @@ from __future__ import annotations
 import numpy as np
 import pyarrow as pa
 import pytest
-
 from shape_simulation import _patterns as p
 
 
@@ -49,7 +48,11 @@ def test_table_mapping_reads_generation_results_and_dicts():
 def test_timestamp_round_trip_with_nulls_and_dates():
     ts = pa.array([1_000_000, None, 5_000_000], pa.timestamp("us", "UTC"))
     us, ok, tz = p.timestamp_us(ts)
-    assert us.tolist() == [1_000_000, 0, 5_000_000] and ok.tolist() == [True, False, True] and tz == "UTC"
+    assert (
+        us.tolist() == [1_000_000, 0, 5_000_000]
+        and ok.tolist() == [True, False, True]
+        and tz == "UTC"
+    )
     assert p.timestamps(us, tz, ok).equals(ts)
     days, ok2, tz2 = p.timestamp_us(pa.array([1, 2], pa.date32()))
     assert days.tolist() == [86_400_000_000, 172_800_000_000] and tz2 is None and ok2.all()

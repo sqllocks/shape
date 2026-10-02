@@ -5,7 +5,6 @@ from __future__ import annotations
 import numpy as np
 import pyarrow as pa
 import pytest
-
 from shape_simulation.operational_log_patterns import (
     DEFAULT_SERVICES,
     OperationalLogConfig,
@@ -57,7 +56,13 @@ def test_enable_flags_are_honoured():
 
 
 def test_spikes_scale_latency_and_outages_fail_requests():
-    r = run(latency_spike_probability=0.5, latency_spike_multiplier=20.0, outage_probability=0.5, outage_error_rate=0.9, duration_hours=40.0)
+    r = run(
+        latency_spike_probability=0.5,
+        latency_spike_multiplier=20.0,
+        outage_probability=0.5,
+        outage_error_rate=0.9,
+        duration_hours=40.0,
+    )
     d = r.logs.to_pydict()
     lat = np.array(d["latency_ms"])
     spike = np.array(d["is_spike"])
@@ -73,7 +78,12 @@ def test_error_bursts_add_errors_in_burst_hours():
     d = r.logs.to_pydict()
     slow = [i for i, x in enumerate(d["latency_ms"]) if x >= 5000]
     assert len(slow) >= 4 * 3 * 10
-    assert {d["level"][i] for i in slow} == {"ERROR"} and {d["status_code"][i] for i in slow} <= {500, 502, 503, 429}
+    assert {d["level"][i] for i in slow} == {"ERROR"} and {d["status_code"][i] for i in slow} <= {
+        500,
+        502,
+        503,
+        429,
+    }
 
 
 def test_fractional_durations_are_honoured():
@@ -95,16 +105,26 @@ def test_traces_link_to_their_log_events():
     by_trace: dict[str, list[int]] = {}
     for i, t in enumerate(tr["trace_id"]):
         by_trace.setdefault(t, []).append(i)
-    assert len(by_trace) == r.stats["total_traces"] > 0 and r.stats["total_spans"] == r.traces.num_rows
+    assert (
+        len(by_trace) == r.stats["total_traces"] > 0 and r.stats["total_spans"] == r.traces.num_rows
+    )
     assert 0.25 < len(by_trace) / r.logs.num_rows < 0.35
     for t, rows in by_trace.items():
         rows.sort(key=lambda i: tr["depth"][i])
         first = rows[0]
         i = where[t]
-        assert tr["span_id"][first] == logs["span_id"][i] and tr["service"][first] == logs["service"][i]
-        assert tr["timestamp"][first] == logs["timestamp"][i] and tr["parent_span_id"][first] is None
+        assert (
+            tr["span_id"][first] == logs["span_id"][i]
+            and tr["service"][first] == logs["service"][i]
+        )
+        assert (
+            tr["timestamp"][first] == logs["timestamp"][i] and tr["parent_span_id"][first] is None
+        )
         assert [tr["depth"][j] for j in rows] == list(range(len(rows)))
-        assert all(tr["parent_span_id"][b] == tr["span_id"][a] for a, b in zip(rows, rows[1:], strict=False))
+        assert all(
+            tr["parent_span_id"][b] == tr["span_id"][a]
+            for a, b in zip(rows, rows[1:], strict=False)
+        )
         assert len({tr["service"][j] for j in rows}) == len(rows) <= 5
     assert tr["timestamp"] == sorted(tr["timestamp"])
 
@@ -128,11 +148,19 @@ def test_custom_services_and_health():
         assert h["p50_latency_ms"][i] == pytest.approx(np.percentile(lat, 50), abs=0.006)
         assert h["p99_latency_ms"][i] == pytest.approx(np.percentile(lat, 99), abs=0.006)
         assert h["mean_latency_ms"][i] == pytest.approx(lat.mean(), abs=0.006)
-        errors = sum(1 for s, c in zip(d["service"], d["status_code"], strict=True) if s == name and c >= 500)
-        assert h["error_count"][i] == errors and h["error_rate"][i] == pytest.approx(errors / len(lat), abs=1e-4)
+        errors = sum(
+            1 for s, c in zip(d["service"], d["status_code"], strict=True) if s == name and c >= 500
+        )
+        assert h["error_count"][i] == errors and h["error_rate"][i] == pytest.approx(
+            errors / len(lat), abs=1e-4
+        )
     assert r.stats["total_events"] == r.logs.num_rows
 
 
 def test_timezone_follows_the_start_time():
-    assert run(start_time="2024-02-01T00:00:00").logs.schema.field("timestamp").type == pa.timestamp("us")
-    assert run(start_time="2024-02-01T00:00:00+00:00").logs.schema.field("timestamp").type == pa.timestamp("us", "UTC")
+    assert run(start_time="2024-02-01T00:00:00").logs.schema.field(
+        "timestamp"
+    ).type == pa.timestamp("us")
+    assert run(start_time="2024-02-01T00:00:00+00:00").logs.schema.field(
+        "timestamp"
+    ).type == pa.timestamp("us", "UTC")

@@ -47,13 +47,19 @@ def controls(quick: bool) -> dict[str, tuple[str, dict[str, Any]]]:
 def run_shape(cfg: dict[str, Any], seed: int, inputs: Any) -> Run:
     from shape_simulation.iot_patterns import IoTTelemetryConfig, IoTTelemetrySimulator
 
-    r = IoTTelemetrySimulator(tables=inputs, config=IoTTelemetryConfig(**{**cfg, "seed": seed})).run()
+    r = IoTTelemetrySimulator(
+        tables=inputs, config=IoTTelemetryConfig(**{**cfg, "seed": seed})
+    ).run()
     return Run(r.table_map(), r.stats)
 
 
 def _facts(run: Run, inputs: dict[str, pa.Table], cfg: dict[str, Any]) -> dict[str, Any]:
-    before = np.asarray(inputs["reading"].column("value").to_numpy(zero_copy_only=False), dtype=float)
-    after = np.asarray(run.tables["readings"].column("value").to_numpy(zero_copy_only=False), dtype=float)
+    before = np.asarray(
+        inputs["reading"].column("value").to_numpy(zero_copy_only=False), dtype=float
+    )
+    after = np.asarray(
+        run.tables["readings"].column("value").to_numpy(zero_copy_only=False), dtype=float
+    )
     dev = np.asarray(inputs["reading"].column("device_id").to_pylist(), dtype=object)
     diff = after - before
     steps: list[float] = []
@@ -74,7 +80,13 @@ def _facts(run: Run, inputs: dict[str, pa.Table], cfg: dict[str, Any]) -> dict[s
         miss[d] = float(np.isnan(v).mean())
     start = h.numbers(inputs["reading"].column("reading_time"), 0).min() * 1e6
     at = h.numbers(run.tables["alerts"].column("triggered_at"), 0) * 1e6
-    battery0 = dict(zip(inputs["device"].column("device_id").to_pylist(), inputs["device"].column("battery_level").to_pylist(), strict=True))
+    battery0 = dict(
+        zip(
+            inputs["device"].column("device_id").to_pylist(),
+            inputs["device"].column("battery_level").to_pylist(),
+            strict=True,
+        )
+    )
     drain = cfg.get("battery_drain_rate", 0.1) * cfg.get("duration_hours", 24.0)
     status_ok = True
     battery_ok = True
@@ -84,12 +96,25 @@ def _facts(run: Run, inputs: dict[str, pa.Table], cfg: dict[str, Any]) -> dict[s
         status_ok &= st == want
         lost = battery0[d] - b
         battery_ok &= (0.7 * drain - 0.01 <= lost <= 1.3 * drain + 0.01) or b == 0.0
-    pairs = {(t, s, m) for t, s, m in zip(alerts["alert_type"], alerts["severity"], alerts["message"], strict=True)}
+    pairs = {
+        (t, s, m)
+        for t, s, m in zip(alerts["alert_type"], alerts["severity"], alerts["message"], strict=True)
+    }
     return {
-        "undrifted_untouched": float(np.nanmax(np.abs(diff[[d not in drifted for d in dev]]))) == 0.0 if (len(drifted) < len(set(dev.tolist()))) else True,
+        "undrifted_untouched": float(np.nanmax(np.abs(diff[[d not in drifted for d in dev]])))
+        == 0.0
+        if (len(drifted) < len(set(dev.tolist())))
+        else True,
         "alert_pairs_known": len(pairs) <= 8 and len({t for t, _, _ in pairs}) == len(pairs),
-        "alert_devices": set(alerts["device_id"]) <= set(inputs["device"].column("device_id").to_pylist()),
-        "alerts_in_window": bool(len(at) == 0 or (at.min() >= start and at.max() <= start + (cfg.get("duration_hours", 24.0) + 1) * HOUR_US)),
+        "alert_devices": set(alerts["device_id"])
+        <= set(inputs["device"].column("device_id").to_pylist()),
+        "alerts_in_window": bool(
+            len(at) == 0
+            or (
+                at.min() >= start
+                and at.max() <= start + (cfg.get("duration_hours", 24.0) + 1) * HOUR_US
+            )
+        ),
         "status_rule": status_ok,
         "battery_drain_bounds": battery_ok,
         "drift_steps": np.asarray(steps, dtype=float),
@@ -98,7 +123,9 @@ def _facts(run: Run, inputs: dict[str, pa.Table], cfg: dict[str, Any]) -> dict[s
     }
 
 
-def compare(rep: Report, shape: Run, base: dict[int, Run], cfg: dict[str, Any], inputs: Any, quick: bool) -> None:
+def compare(
+    rep: Report, shape: Run, base: dict[int, Run], cfg: dict[str, Any], inputs: Any, quick: bool
+) -> None:
     devices = frozenset(inputs["device"].column("device_id").to_pylist())
     specs = {
         "readings": TableSpec(
@@ -132,24 +159,52 @@ def compare(rep: Report, shape: Run, base: dict[int, Run], cfg: dict[str, Any], 
         ),
     }
     for name, spec in specs.items():
-        h.compare_table(rep, name, shape.tables[name], {s: r.tables[name] for s, r in base.items()}, spec)
+        h.compare_table(
+            rep, name, shape.tables[name], {s: r.tables[name] for s, r in base.items()}, spec
+        )
     h.compare_stats(
         rep,
         shape.stats,
         {s: r.stats for s, r in base.items()},
         exact=("total_readings", "config_duration_hours", "drifting_sensors"),
-        counts=("missing_readings_injected", "total_alerts", "fleet_online", "fleet_degraded", "fleet_offline"),
+        counts=(
+            "missing_readings_injected",
+            "total_alerts",
+            "fleet_online",
+            "fleet_degraded",
+            "fleet_offline",
+        ),
         floors={"avg_battery_level": 1.0},
         skip=("config_seed",),
     )
     fs = _facts(shape, inputs, cfg)
     fb = {s: _facts(r, inputs, cfg) for s, r in base.items()}
-    for key in ("undrifted_untouched", "alert_pairs_known", "alert_devices", "alerts_in_window", "status_rule", "battery_drain_bounds"):
+    for key in (
+        "undrifted_untouched",
+        "alert_pairs_known",
+        "alert_devices",
+        "alerts_in_window",
+        "status_rule",
+        "battery_drain_bounds",
+    ):
         h.invariant(rep, f"invariant:{key}", fs[key], {s: f[key] for s, f in fb.items()})
         rep.add(f"holds:{key}", bool(fs[key]))
-    h.invariant(rep, "invariant:alert_message_map", fs["alert_message_map"], {s: f["alert_message_map"] for s, f in fb.items()}, equal=lambda a, b: set(a) <= set(b) or set(b) <= set(a))
-    h.invariant(rep, "invariant:drifted_devices", fs["n_drifted"], {s: f["n_drifted"] for s, f in fb.items()})
-    h.compare_vector(rep, "drift steps", fs["drift_steps"], {s: f["drift_steps"] for s, f in fb.items()})
+    h.invariant(
+        rep,
+        "invariant:alert_message_map",
+        fs["alert_message_map"],
+        {s: f["alert_message_map"] for s, f in fb.items()},
+        equal=lambda a, b: set(a) <= set(b) or set(b) <= set(a),
+    )
+    h.invariant(
+        rep,
+        "invariant:drifted_devices",
+        fs["n_drifted"],
+        {s: f["n_drifted"] for s, f in fb.items()},
+    )
+    h.compare_vector(
+        rep, "drift steps", fs["drift_steps"], {s: f["drift_steps"] for s, f in fb.items()}
+    )
     if cfg.get("drift_rate", 0.001) >= 0.01:
         rep.add("exercised:drift", all(len(f["drift_steps"]) > 100 for f in [fs, *fb.values()]))
 
@@ -163,13 +218,24 @@ def probes(ctx: h.Context) -> list[Report]:
     theirs = h.baseline_once(SIM, cfg, data, 5, "no-storms")
     ours = run_shape(cfg, 5, data)
     rep.add("baseline: no alerts at all with storms off", theirs.tables["alerts"].num_rows == 0)
-    rep.add("shape: baseline-rate alerts remain", ours.tables["alerts"].num_rows > 0, alerts=ours.tables["alerts"].num_rows)
+    rep.add(
+        "shape: baseline-rate alerts remain",
+        ours.tables["alerts"].num_rows > 0,
+        alerts=ours.tables["alerts"].num_rows,
+    )
     out.append(rep)
     # SIM-6: readings per sensor with the domain's own column names.
     rng = np.random.default_rng(3)
     n_dev, n_sen, n = 20, 40, 4000
-    devices = pa.table({"device_id": pa.array(np.arange(n_dev)), "battery_level": pa.array(rng.uniform(30, 100, n_dev))})
-    sensors = pa.table({"sensor_id": pa.array(np.arange(n_sen)), "device_id": pa.array(np.arange(n_sen) % n_dev)})
+    devices = pa.table(
+        {
+            "device_id": pa.array(np.arange(n_dev)),
+            "battery_level": pa.array(rng.uniform(30, 100, n_dev)),
+        }
+    )
+    sensors = pa.table(
+        {"sensor_id": pa.array(np.arange(n_sen)), "device_id": pa.array(np.arange(n_sen) % n_dev)}
+    )
     base_t = np.datetime64("2025-06-01T00:00:00", "us")
     when = base_t + (rng.random(n) * 86400e6).astype(np.int64).astype("timedelta64[us]")
     sid = rng.integers(0, n_sen, n)
@@ -185,16 +251,33 @@ def probes(ctx: h.Context) -> list[Report]:
     dom = {"reading": readings, "device": devices}
     theirs = h.baseline_once(SIM, {}, dom, 5, "domain-names")
     ours = run_shape({}, 5, {**dom, "sensor": sensors})
-    rep.add("baseline: no last reading for any device", all(v is None for v in theirs.tables["fleet_status"].column("last_reading_at").to_pylist()))
+    rep.add(
+        "baseline: no last reading for any device",
+        all(v is None for v in theirs.tables["fleet_status"].column("last_reading_at").to_pylist()),
+    )
     years = {v.year for v in theirs.tables["alerts"].column("triggered_at").to_pylist()}
-    rep.add("baseline: alerts start in 2024, not at the readings", years == {2024}, years=sorted(years))
+    rep.add(
+        "baseline: alerts start in 2024, not at the readings", years == {2024}, years=sorted(years)
+    )
     truth: dict[int, int] = {}
     for s, t in zip(sid.tolist(), when.astype("int64").tolist(), strict=True):
         d = s % n_dev
         truth[d] = max(truth.get(d, 0), t)
-    got = dict(zip(ours.tables["fleet_status"].column("device_id").to_pylist(), h.numbers(ours.tables["fleet_status"].column("last_reading_at"), 0) * 1e6, strict=True))
-    rep.add("shape: last reading per device from its sensors", all(abs(got[d] - truth[d]) < 1 for d in truth), devices=len(truth))
+    got = dict(
+        zip(
+            ours.tables["fleet_status"].column("device_id").to_pylist(),
+            h.numbers(ours.tables["fleet_status"].column("last_reading_at"), 0) * 1e6,
+            strict=True,
+        )
+    )
+    rep.add(
+        "shape: last reading per device from its sensors",
+        all(abs(got[d] - truth[d]) < 1 for d in truth),
+        devices=len(truth),
+    )
     ours_years = {v.year for v in ours.tables["alerts"].column("triggered_at").to_pylist()}
-    rep.add("shape: alerts follow the readings' window", ours_years == {2025}, years=sorted(ours_years))
+    rep.add(
+        "shape: alerts follow the readings' window", ours_years == {2025}, years=sorted(ours_years)
+    )
     out.append(rep)
     return out

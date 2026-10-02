@@ -158,7 +158,9 @@ class FinancialStreamSimulator:
                 raise ValueError(f"{label} need a {column!r} column")
         self._config = config or FinancialStreamConfig()
         self._rng = np.random.default_rng(self._config.seed)
-        self._time_col = next((c for c in _TIME_COLUMNS if c in self._transactions.column_names), None)
+        self._time_col = next(
+            (c for c in _TIME_COLUMNS if c in self._transactions.column_names), None
+        )
         self._time_us = np.empty(0, dtype=np.int64)
         self._time_valid = np.empty(0, dtype=bool)
         self._tz: str | None = None
@@ -205,7 +207,8 @@ class FinancialStreamSimulator:
     # ---- reversals --------------------------------------------------------------------------
 
     def _account_type(self) -> pa.DataType:
-        return self._accounts.schema.field("account_id").type  # type: ignore[no-any-return]
+        account_type: pa.DataType = self._accounts.schema.field("account_id").type
+        return account_type
 
     def _empty_reversals(self) -> pa.Table:
         id_type = (
@@ -235,7 +238,9 @@ class FinancialStreamSimulator:
         if len(chosen) == 0:
             return self._empty_reversals()
         delay_us = np.round(rng.uniform(0.1, cfg.reversal_delay_hours_max, len(chosen)) * _HOUR_US)
-        reasons = pick(rng, [r for r, _ in _REVERSAL_REASONS], len(chosen), [w for _, w in _REVERSAL_REASONS])
+        reasons = pick(
+            rng, [r for r, _ in _REVERSAL_REASONS], len(chosen), [w for _, w in _REVERSAL_REASONS]
+        )
         if self._time_col is not None:
             at = self._time_us[chosen] + delay_us.astype(np.int64)
             valid = self._time_valid[chosen]

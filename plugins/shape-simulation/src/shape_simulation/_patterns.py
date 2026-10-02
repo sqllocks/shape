@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -132,7 +132,7 @@ def parse_start(text: str) -> int:
     """An ISO-8601 instant as microseconds since the epoch (a missing zone means UTC)."""
     moment = datetime.fromisoformat(text)
     if moment.tzinfo is None:
-        moment = moment.replace(tzinfo=timezone.utc)
+        moment = moment.replace(tzinfo=UTC)
     return int(moment.timestamp() * 1_000_000)
 
 
@@ -150,10 +150,6 @@ def float_array(values: np.ndarray) -> pa.Array:
     """A float64 Arrow array from ``values``, null where the value is NaN."""
     values = np.asarray(values, dtype=np.float64)
     return pa.array(values, type=pa.float64(), mask=np.isnan(values))
-
-
-def column_list(col: pa.ChunkedArray | pa.Array) -> list[Any]:
-    return col.to_pylist()
 
 
 def empty_table(schema: pa.Schema) -> pa.Table:
@@ -226,7 +222,8 @@ class TablesResult:
             raise KeyError(f"no table {table!r}; the result has {', '.join(self.table_map())}")
         batch = source.combine_chunks().to_batches()
         merged = batch[0] if batch else pa.RecordBatch.from_pylist([], schema=source.schema)
-        return with_event_fields(merged, table, seq_start)  # type: ignore[no-any-return]
+        events: pa.RecordBatch = with_event_fields(merged, table, seq_start)
+        return events
 
     def write(self, directory: str | Path, fmt: str = "parquet") -> dict[str, Path]:
         """Write every table to ``directory`` as ``<table>.<fmt>`` (parquet, csv or jsonl)

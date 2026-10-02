@@ -40,7 +40,9 @@ def discover() -> dict[str, str]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--quick", action="store_true", help="smaller inputs and populations")
     ap.add_argument("--only", nargs="+", metavar="NAME", help="run these cases only")
     ap.add_argument("--no-controls", action="store_true", help="skip the negative controls")
@@ -55,7 +57,9 @@ def main(argv: list[str] | None = None) -> int:
     ctx = harness.Context(quick=a.quick, only_controls=a.controls_only, skip_controls=a.no_controls)
     t0 = time.time()
     failed = 0
-    results: dict[str, object] = {"seeds": {"reference": 42, "baseline": [43, 44, 45, 46], "shape": 1042}}
+    results: dict[str, object] = {
+        "seeds": {"reference": 42, "baseline": [43, 44, 45, 46], "shape": 1042}
+    }
     covered: set[str] = set()
     for name in chosen:
         module = importlib.import_module(cases[name])
@@ -67,13 +71,19 @@ def main(argv: list[str] | None = None) -> int:
         print(f"\n=== {name} ===")
         for rep in reports:
             status = "PASS" if not rep.failed else "FAIL"
-            print(f"{status} {rep.label}: {len(rep.checks) - len(rep.failed)}/{len(rep.checks)} checks")
+            print(
+                f"{status} {rep.label}: "
+                f"{len(rep.checks) - len(rep.failed)}/{len(rep.checks)} checks"
+            )
             for c in rep.failed:
                 print(f"    - {c.name}: {json.dumps(harness._jsonable(c.detail))[:400]}")
             failed += bool(rep.failed)
         for c in controls:
-            print(f"{'PASS' if c['detected'] else 'FAIL'} negative control {c['control']}: "
-                  f"{'detected' if c['detected'] else 'NOT DETECTED'} ({len(c['failed_checks'])}+ checks failed)")
+            print(
+                f"{'PASS' if c['detected'] else 'FAIL'} negative control {c['control']}: "
+                f"{'detected' if c['detected'] else 'NOT DETECTED'} "
+                f"({len(c['failed_checks'])}+ checks failed)"
+            )
             failed += not c["detected"]
         for pr in probes:
             allow_id = pr.label.split()[0]
@@ -82,8 +92,10 @@ def main(argv: list[str] | None = None) -> int:
                 failed += 1
                 continue
             covered.add(allow_id)
-            print(f"{'PASS' if not pr.failed else 'FAIL'} allow-list {pr.label}: "
-                  f"{len(pr.checks) - len(pr.failed)}/{len(pr.checks)}")
+            print(
+                f"{'PASS' if not pr.failed else 'FAIL'} allow-list {pr.label}: "
+                f"{len(pr.checks) - len(pr.failed)}/{len(pr.checks)}"
+            )
             for c in pr.failed:
                 print(f"    - {c.name}: {json.dumps(harness._jsonable(c.detail))[:300]}")
             failed += bool(pr.failed)

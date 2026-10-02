@@ -62,7 +62,9 @@ def frames(inputs: dict[str, str]) -> dict[str, pd.DataFrame]:
     return {name: pq.read_table(path).to_pandas() for name, path in inputs.items()}
 
 
-def run_one(sim: str, config: dict[str, Any], seed: int, inputs: dict[str, str]) -> tuple[dict[str, pd.DataFrame], dict[str, Any]]:
+def run_one(
+    sim: str, config: dict[str, Any], seed: int, inputs: dict[str, str]
+) -> tuple[dict[str, pd.DataFrame], dict[str, Any]]:
     cfg = dict(config, seed=seed)
     if sim == "clickstream":
         r = ClickstreamSimulator(ClickstreamConfig(**cfg)).run()
@@ -81,10 +83,12 @@ def run_one(sim: str, config: dict[str, Any], seed: int, inputs: dict[str, str])
         }, r3.stats
     if sim == "iot":
         r4 = IoTTelemetrySimulator(tables=tables, config=IoTTelemetryConfig(**cfg)).run()
-        return {"readings": r4.readings, "alerts": r4.alerts, "fleet_status": r4.fleet_status}, r4.stats
+        return {
+            "readings": r4.readings,
+            "alerts": r4.alerts,
+            "fleet_status": r4.fleet_status,
+        }, r4.stats
     if sim == "pulse":
-        for k in ("tip", "fare"):  # the baseline coerces these itself; nothing to do
-            pass
         r5 = PulseDemandSimulator(tables=tables, config=PulseDemandConfig(**cfg)).run()
         return dict(r5.tables), r5.stats
     raise SystemExit(f"unknown simulator {sim!r}")
@@ -95,7 +99,11 @@ def main() -> None:
     out = Path(job["out"])
     cfg_raw = job["config"]
     for k, v in list(cfg_raw.items()):  # JSON has lists where the baseline has tuples
-        if isinstance(v, list) and k in ("fraud_burst_amount_range", "surge_multiplier_range", "surge_duration_minutes"):
+        if isinstance(v, list) and k in (
+            "fraud_burst_amount_range",
+            "surge_multiplier_range",
+            "surge_duration_minutes",
+        ):
             cfg_raw[k] = tuple(v)
     for seed in job["seeds"]:
         tables, stats = run_one(job["sim"], cfg_raw, int(seed), job.get("inputs", {}))

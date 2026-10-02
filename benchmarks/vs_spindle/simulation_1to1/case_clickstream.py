@@ -13,7 +13,18 @@ from harness import Col, Report, Run, TableSpec
 NAME = "clickstream"
 SIM = "clickstream"
 UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
-POOL = ["/", "/products", "/cart", "/checkout", "/about", "/contact", "/blog", "/search", "/account", "/faq"]
+POOL = [
+    "/",
+    "/products",
+    "/cart",
+    "/checkout",
+    "/about",
+    "/contact",
+    "/blog",
+    "/search",
+    "/account",
+    "/faq",
+]
 URLS = (*(rf"{p}" if p != "/" else "/" for p in POOL), r"/products/\d+", r"/blog/post-\d+")
 SOURCES = ("direct", "google", "bing", "facebook", "twitter", "email", "reddit")
 USERS = (r"user_\d{6}", r"bot_[0-9a-f]{8}")
@@ -74,7 +85,9 @@ def _facts(run: Run, cfg: dict[str, Any]) -> dict[str, Any]:
         dwell[sess] = dwell.get(sess, 0.0) + d
     human_views = [n for k, n in per.items() if k not in bots and k not in bounces]
     stages: dict[str, list[tuple[int, Any, bool]]] = {}
-    for sess, order, at, conv in zip(f["session_id"], f["stage_order"], f["reached_at"], f["converted"], strict=True):
+    for sess, order, at, conv in zip(
+        f["session_id"], f["stage_order"], f["reached_at"], f["converted"], strict=True
+    ):
         stages.setdefault(sess, []).append((order, at, conv))
     contiguous = all(
         [o for o, _, _ in rows] == list(range(len(rows)))
@@ -90,12 +103,17 @@ def _facts(run: Run, cfg: dict[str, Any]) -> dict[str, Any]:
             (b == (d == "bot") == (ua is not None))
             for b, d, ua in zip(s["is_bot"], s["device_type"], s["user_agent"], strict=True)
         ),
-        "duration_sum": max(abs(d - dwell.get(i, 0.0)) for i, d in zip(s["session_id"], s["duration_seconds"], strict=True)) <= 0.011 * max(per.values()),
+        "duration_sum": max(
+            abs(d - dwell.get(i, 0.0))
+            for i, d in zip(s["session_id"], s["duration_seconds"], strict=True)
+        )
+        <= 0.011 * max(per.values()),
         "funnel_eligible_only": not (set(f["session_id"]) & (bots | bounces)),
         "bot_pages": all(per[i] == cfg.get("bot_pages_per_session", 50) for i in bots),
         "bounce_pages": all(per[i] == 1 for i in bounces - bots),
         "human_pages_min": min(human_views) >= 2 if human_views else True,
-        "sorted": s["started_at"] == sorted(s["started_at"]) and v["timestamp"] == sorted(v["timestamp"]),
+        "sorted": s["started_at"] == sorted(s["started_at"])
+        and v["timestamp"] == sorted(v["timestamp"]),
         "funnel_shape": contiguous,
         "per_session_views": np.array(sorted(human_views), dtype=float),
         "bot_views": np.array([per[i] for i in bots], dtype=float),
@@ -104,7 +122,9 @@ def _facts(run: Run, cfg: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def compare(rep: Report, shape: Run, base: dict[int, Run], cfg: dict[str, Any], inputs: Any, quick: bool) -> None:
+def compare(
+    rep: Report, shape: Run, base: dict[int, Run], cfg: dict[str, Any], inputs: Any, quick: bool
+) -> None:
     so = _floor_day(shape.tables["sessions"])
     bo = {s: _floor_day(r.tables["sessions"]) for s, r in base.items()}
     mapping = {
@@ -140,7 +160,9 @@ def compare(rep: Report, shape: Run, base: dict[int, Run], cfg: dict[str, Any], 
         ),
     }
     for name, spec in mapping.items():
-        h.compare_table(rep, name, shape.tables[name], {s: r.tables[name] for s, r in base.items()}, spec)
+        h.compare_table(
+            rep, name, shape.tables[name], {s: r.tables[name] for s, r in base.items()}, spec
+        )
     h.compare_stats(
         rep,
         shape.stats,
@@ -174,8 +196,18 @@ def compare(rep: Report, shape: Run, base: dict[int, Run], cfg: dict[str, Any], 
     ):
         h.invariant(rep, f"invariant:{key}", fs[key], {s: f[key] for s, f in fb.items()})
         rep.add(f"holds:{key}", bool(fs[key]), shape=fs[key])
-    h.compare_vector(rep, "page views per human session", fs["per_session_views"], {s: f["per_session_views"] for s, f in fb.items()})
-    h.compare_categories(rep, "last funnel stage reached", fs["last_stage"], {s: f["last_stage"] for s, f in fb.items()})
+    h.compare_vector(
+        rep,
+        "page views per human session",
+        fs["per_session_views"],
+        {s: f["per_session_views"] for s, f in fb.items()},
+    )
+    h.compare_categories(
+        rep,
+        "last funnel stage reached",
+        fs["last_stage"],
+        {s: f["last_stage"] for s, f in fb.items()},
+    )
 
 
 def probes(ctx: h.Context) -> list[Report]:
@@ -186,9 +218,18 @@ def probes(ctx: h.Context) -> list[Report]:
     second = h.baseline_once(SIM, cfg, None, 5, "b")
     ids_a = set(first.tables["sessions"].column("session_id").to_pylist())
     ids_b = set(second.tables["sessions"].column("session_id").to_pylist())
-    rep.add("baseline: same seed, different session ids", not (ids_a & ids_b), shared=len(ids_a & ids_b))
+    rep.add(
+        "baseline: same seed, different session ids", not (ids_a & ids_b), shared=len(ids_a & ids_b)
+    )
     one, two = run_shape(cfg, 5, None), run_shape(cfg, 5, None)
-    rep.add("shape: same seed, identical tables", all(one.tables[k].equals(two.tables[k]) for k in one.tables))
+    rep.add(
+        "shape: same seed, identical tables",
+        all(one.tables[k].equals(two.tables[k]) for k in one.tables),
+    )
     first_ts = one.tables["sessions"].column("started_at").to_pylist()[0]
-    rep.add("shape: the window starts at start_time", first_ts.date() == dt.date(2024, 1, 1), first=str(first_ts))
+    rep.add(
+        "shape: the window starts at start_time",
+        first_ts.date() == dt.date(2024, 1, 1),
+        first=str(first_ts),
+    )
     return [rep]

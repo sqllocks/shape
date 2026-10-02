@@ -89,7 +89,9 @@ def pulse(quick: bool) -> dict[str, pa.Table]:
     )
     rider = pa.table({"rider_id": pa.array(np.arange(700))})
     driver = pa.table({"driver_id": pa.array(np.arange(120))})
-    vehicle = pa.table({"vehicle_id": pa.array(np.arange(120)), "driver_id": pa.array(np.arange(120))})
+    vehicle = pa.table(
+        {"vehicle_id": pa.array(np.arange(120)), "driver_id": pa.array(np.arange(120))}
+    )
     return {"rider": rider, "driver": driver, "vehicle": vehicle, "trip": trip}
 
 

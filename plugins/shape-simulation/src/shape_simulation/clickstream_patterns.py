@@ -131,7 +131,15 @@ class ClickstreamConfig:
         ]
     )
     referrer_sources: list[str] = field(
-        default_factory=lambda: ["direct", "google", "bing", "facebook", "twitter", "email", "reddit"]
+        default_factory=lambda: [
+            "direct",
+            "google",
+            "bing",
+            "facebook",
+            "twitter",
+            "email",
+            "reddit",
+        ]
     )
     device_types: list[str] = field(default_factory=lambda: ["desktop", "mobile", "tablet"])
     seed: int = 42
@@ -181,11 +189,11 @@ class ClickstreamSimulator:
                 _PAGE_VIEW_SCHEMA.empty_table(),
                 _FUNNEL_SCHEMA.empty_table(),
             )
-            return ClickstreamResult(*empty, stats=self._stats(sess, 0, _FUNNEL_SCHEMA.empty_table()))
+            return ClickstreamResult(
+                *empty, stats=self._stats(sess, 0, _FUNNEL_SCHEMA.empty_table())
+            )
         views = self._page_views(sess)
-        funnels = (
-            self._funnels(sess) if cfg.funnel_enabled else _FUNNEL_SCHEMA.empty_table()
-        )
+        funnels = self._funnels(sess) if cfg.funnel_enabled else _FUNNEL_SCHEMA.empty_table()
         sessions = pa.table(
             {
                 "session_id": pa.array(sess["session_id"], pa.string()),
@@ -229,7 +237,9 @@ class ClickstreamSimulator:
             m = int(need * 2.6) + 32
             cand = rng.uniform(0.0, hours, m)
             minute_of_day = (np.floor(cand * 60.0).astype(np.int64) + start_minute) % 1440
-            weight = np.maximum(0.1, 0.5 + 0.5 * np.sin(np.pi * (minute_of_day / 60.0 - 6.0) / 12.0))
+            weight = np.maximum(
+                0.1, 0.5 + 0.5 * np.sin(np.pi * (minute_of_day / 60.0 - 6.0) / 12.0)
+            )
             take = cand[rng.random(m) < weight][:need]
             kept.append(take)
             need -= len(take)

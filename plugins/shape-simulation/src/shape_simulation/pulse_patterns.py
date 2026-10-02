@@ -106,13 +106,17 @@ class PulseSimResult(TablesResult):
         return self.tables
 
     def __repr__(self) -> str:
-        return "PulseSimResult(" + ", ".join(f"{k}={v.num_rows}" for k, v in self.tables.items()) + ")"
+        return (
+            "PulseSimResult(" + ", ".join(f"{k}={v.num_rows}" for k, v in self.tables.items()) + ")"
+        )
 
 
 def _exact_sums(column: pa.ChunkedArray) -> np.ndarray:
     """The sum of each group's values (a column of lists), correctly rounded and ignoring
     nulls, so that a rounded total never depends on the order the values were added in."""
-    return np.array([math.fsum(v for v in values if v is not None) for values in column.to_pylist()])
+    return np.array(
+        [math.fsum(v for v in values if v is not None) for values in column.to_pylist()]
+    )
 
 
 def _exact_means(column: pa.ChunkedArray) -> np.ndarray:
@@ -177,7 +181,7 @@ class PulseDemandSimulator:
 
         moment = dt.datetime(1970, 1, 1) + dt.timedelta(microseconds=self._now_us())
         if self._tz:
-            moment = moment.replace(tzinfo=dt.timezone.utc)
+            moment = moment.replace(tzinfo=dt.UTC)
         return moment
 
     def _scatter(self, city: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -238,7 +242,7 @@ class PulseDemandSimulator:
         no_driver = status == "no_driver"
         eta_promised = np.round(dur * rng.uniform(0.9, 1.1, n), 1)
         eta_actual = np.round(dur + rng.normal(0, cfg.eta_noise_minutes, n), 1)
-        reason = np.where(cancelled, pick(rng, _CANCEL_REASONS, n), None)
+        reason = np.where(cancelled, pick(rng, _CANCEL_REASONS, n), np.array(None, dtype=object))
         fare = np.where(done, num["fare"], np.nan)
         tip = np.where(done, num["tip"], np.nan)
 
@@ -294,7 +298,9 @@ class PulseDemandSimulator:
         steps.append(("started", done, self._started_us))
         steps.append(("completed", done, self._completed_us))
         cancelled = np.flatnonzero(self._is_cancel & self._req_ok)
-        cancel_us = self._accepted_us + np.round(rng.uniform(30, 300, len(self._accepted_us)) * _SEC_US).astype(np.int64)
+        cancel_us = self._accepted_us + np.round(
+            rng.uniform(30, 300, len(self._accepted_us)) * _SEC_US
+        ).astype(np.int64)
         steps.append(("cancelled", cancelled, cancel_us))
 
         rows = np.concatenate([rows for _, rows, _ in steps]).astype(np.int64)
@@ -317,12 +323,18 @@ class PulseDemandSimulator:
                 "trip_id": trip_id,
                 "ts": timestamps(at, self._tz),
                 "event_type": pa.array(kind, pa.string()),
-                "driver_id": col("driver_id") if "driver_id" in trip.column_names else pa.nulls(len(rows)),
-                "rider_id": col("rider_id") if "rider_id" in trip.column_names else pa.nulls(len(rows)),
+                "driver_id": col("driver_id")
+                if "driver_id" in trip.column_names
+                else pa.nulls(len(rows)),
+                "rider_id": col("rider_id")
+                if "rider_id" in trip.column_names
+                else pa.nulls(len(rows)),
                 "city_id": col("city_id"),
                 "lat": col("pickup_lat"),
                 "lon": col("pickup_lon"),
-                "source_store": pa.array(np.full(len(rows), "Eventhouse", dtype=object), pa.string()),
+                "source_store": pa.array(
+                    np.full(len(rows), "Eventhouse", dtype=object), pa.string()
+                ),
             }
         )
 
@@ -366,7 +378,9 @@ class PulseDemandSimulator:
                 )
             )
         out = pa.concat_tables(frames)
-        return out.append_column("source_store", pa.array(np.full(out.num_rows, "Eventhouse", dtype=object), pa.string()))
+        return out.append_column(
+            "source_store", pa.array(np.full(out.num_rows, "Eventhouse", dtype=object), pa.string())
+        )
 
     # ---- driver pings -----------------------------------------------------------------------
 
@@ -386,7 +400,12 @@ class PulseDemandSimulator:
             [
                 ("ping_id", pa.string()),
                 ("ts", pa.timestamp("us", self._tz)),
-                ("driver_id", trip.schema.field("driver_id").type if "driver_id" in trip.column_names else pa.null()),
+                (
+                    "driver_id",
+                    trip.schema.field("driver_id").type
+                    if "driver_id" in trip.column_names
+                    else pa.null(),
+                ),
                 ("trip_id", trip.schema.field("trip_id").type),
                 ("city_id", trip.schema.field("city_id").type),
                 ("lat", pa.float64()),
@@ -412,7 +431,9 @@ class PulseDemandSimulator:
         dlat, dlon = trip.column("dropoff_lat").to_numpy(), trip.column("dropoff_lon").to_numpy()
         lat = plat[rows] + (dlat[rows] - plat[rows]) * frac + rng.normal(0, jitter, len(rows))
         lon = plon[rows] + (dlon[rows] - plon[rows]) * frac + rng.normal(0, jitter, len(rows))
-        at = self._started_us[rows] + np.round((self._completed_us[rows] - self._started_us[rows]) * frac).astype(np.int64)
+        at = self._started_us[rows] + np.round(
+            (self._completed_us[rows] - self._started_us[rows]) * frac
+        ).astype(np.int64)
         heading = np.round(rng.uniform(0, 360, len(rows)), 1)
         speed = np.round(np.clip(rng.normal(22, 8, len(rows)), 0, 80), 1)
         order = np.argsort(at, kind="stable")
@@ -439,7 +460,9 @@ class PulseDemandSimulator:
                 "heading": float_array(heading[order]),
                 "speed_mph": float_array(speed[order]),
                 "status": pa.array(np.full(len(rows), "on_trip", dtype=object), pa.string()),
-                "source_store": pa.array(np.full(len(rows), "Eventhouse", dtype=object), pa.string()),
+                "source_store": pa.array(
+                    np.full(len(rows), "Eventhouse", dtype=object), pa.string()
+                ),
             },
             schema=schema,
         )
@@ -463,8 +486,12 @@ class PulseDemandSimulator:
                 "date_key": self._date_key(),
                 "city_id": trip.column("city_id"),
                 "trip_id": trip.column("trip_id"),
-                "rider_id": trip.column("rider_id") if "rider_id" in trip.column_names else pa.nulls(trip.num_rows),
-                "driver_id": trip.column("driver_id") if "driver_id" in trip.column_names else pa.nulls(trip.num_rows),
+                "rider_id": trip.column("rider_id")
+                if "rider_id" in trip.column_names
+                else pa.nulls(trip.num_rows),
+                "driver_id": trip.column("driver_id")
+                if "driver_id" in trip.column_names
+                else pa.nulls(trip.num_rows),
                 "fare": float_array(self._fare),
                 "surge_mult": float_array(surge),
                 "surge_fare": float_array(np.where(surge > 1.0, self._fare, np.nan)),
@@ -505,7 +532,9 @@ class PulseDemandSimulator:
         joined = joined.sort_by([("date_key", "ascending"), ("city_id", "ascending")])
 
         def num(name: str, integer: bool = False) -> np.ndarray:
-            col = np.nan_to_num(joined.column(name).to_numpy().astype(np.float64), nan=0.0)
+            col: np.ndarray = np.nan_to_num(
+                joined.column(name).to_numpy().astype(np.float64), nan=0.0
+            )
             return col.astype(np.int64) if integer else col  # a day with no completed trip is 0
 
         fare_sum = num("fare_sum")
@@ -547,7 +576,6 @@ class PulseDemandSimulator:
         )
         base = base.filter(pa.array(self._is_done & self._req_ok))
         base = base.filter(pc.is_valid(base.column("driver_id")))
-        zero_ok = pc.ScalarAggregateOptions(min_count=0)
         groups = base.group_by(["date_key", "driver_id"], use_threads=False).aggregate(
             [
                 ("city_id", "first"),
@@ -571,7 +599,9 @@ class PulseDemandSimulator:
                 "date_key": groups.column("date_key"),
                 "driver_id": groups.column("driver_id"),
                 "city_id": groups.column("city_id_first"),
-                "trips": pa.array(groups.column("trip_id_count").to_numpy().astype(np.int64), pa.int64()),
+                "trips": pa.array(
+                    groups.column("trip_id_count").to_numpy().astype(np.int64), pa.int64()
+                ),
                 "gross": float_array(np.round(gross, 2)),
                 "tips": float_array(np.round(tips, 2)),
                 "online_hours": float_array(hours),

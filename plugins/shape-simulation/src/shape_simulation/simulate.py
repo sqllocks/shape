@@ -127,7 +127,9 @@ def build_config(pattern: Pattern, pairs: list[str], seed: int | None) -> Any:
         if not sep or not key:
             raise ValueError(f"--set needs KEY=VALUE, got {pair!r}")
         if key not in names:
-            raise ValueError(f"{pattern.config} has no setting {key!r}; it has {', '.join(sorted(names))}")
+            raise ValueError(
+                f"{pattern.config} has no setting {key!r}; it has {', '.join(sorted(names))}"
+            )
         values[key] = _value(text)
     if seed is not None:
         values["seed"] = seed
@@ -221,7 +223,10 @@ class SimulateCommand:
             "stats": result.stats,
         }
         if args.json:
-            print(json.dumps(summary, indent=2, default=str), file=sys.stderr if args.events else sys.stdout)
+            print(
+                json.dumps(summary, indent=2, default=str),
+                file=sys.stderr if args.events else sys.stdout,
+            )
         elif not args.events:
             for name, rows in summary["tables"].items():
                 print(f"{name}: {rows} rows")

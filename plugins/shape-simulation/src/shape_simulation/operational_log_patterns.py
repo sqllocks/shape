@@ -27,7 +27,14 @@ from typing import Any, ClassVar
 import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 
-from shape_simulation._patterns import TablesResult, float_array, parse_start, pick, timestamps, uuid_strings
+from shape_simulation._patterns import (
+    TablesResult,
+    float_array,
+    parse_start,
+    pick,
+    timestamps,
+    uuid_strings,
+)
 
 DEFAULT_SERVICES: list[dict[str, Any]] = [
     {"name": "api-gateway", "port": 8080, "tier": "edge"},
@@ -227,23 +234,43 @@ class OperationalLogSimulator:
         n_svc = len(services)
         hours = int(np.ceil(cfg.duration_hours)) if cfg.duration_hours > 0 else 0
 
-        spike = self._windows(cfg.latency_spike_probability, cfg.latency_spike_duration_minutes, hours)
+        spike = self._windows(
+            cfg.latency_spike_probability, cfg.latency_spike_duration_minutes, hours
+        )
         outage = self._windows(cfg.outage_probability, cfg.outage_duration_minutes, hours)
         burst_hours = np.flatnonzero(rng.random(hours) < cfg.error_burst_probability)
 
         span_s = np.minimum(3600.0, (cfg.duration_hours - np.arange(hours)) * 3600.0)
         lam = cfg.events_per_hour * span_s / 3600.0
-        counts = np.maximum(1, rng.poisson(np.repeat(lam[:, None], n_svc, axis=1))) if n_svc else np.zeros((hours, 0), dtype=np.int64)
+        counts = (
+            np.maximum(1, rng.poisson(np.repeat(lam[:, None], n_svc, axis=1)))
+            if n_svc
+            else np.zeros((hours, 0), dtype=np.int64)
+        )
         flat = counts.ravel()
         total = int(flat.sum())
-        hour_of = np.repeat(np.repeat(np.arange(hours), n_svc), flat) if n_svc else np.empty(0, dtype=np.int64)
-        svc_of = np.repeat(np.tile(np.arange(n_svc), hours), flat) if n_svc else np.empty(0, dtype=np.int64)
+        hour_of = (
+            np.repeat(np.repeat(np.arange(hours), n_svc), flat)
+            if n_svc
+            else np.empty(0, dtype=np.int64)
+        )
+        svc_of = (
+            np.repeat(np.tile(np.arange(n_svc), hours), flat)
+            if n_svc
+            else np.empty(0, dtype=np.int64)
+        )
 
-        ts = start_us + hour_of * 3_600_000_000 + np.round(rng.uniform(0, 1, total) * span_s[hour_of] * 1e6).astype(np.int64)
+        ts = (
+            start_us
+            + hour_of * 3_600_000_000
+            + np.round(rng.uniform(0, 1, total) * span_s[hour_of] * 1e6).astype(np.int64)
+        )
         sigma = cfg.latency_std_ms / cfg.latency_mean_ms
         latency = rng.lognormal(np.log(cfg.latency_mean_ms), sigma, total)
         in_spike = spike[hour_of] if cfg.latency_spike_enabled else np.zeros(total, dtype=bool)
-        latency = np.round(np.maximum(0.5, np.where(in_spike, latency * cfg.latency_spike_multiplier, latency)), 2)
+        latency = np.round(
+            np.maximum(0.5, np.where(in_spike, latency * cfg.latency_spike_multiplier, latency)), 2
+        ).astype(np.float64)
         in_outage = outage[hour_of] if cfg.outage_enabled else np.zeros(total, dtype=bool)
         failing = in_outage & (rng.random(total) < cfg.outage_error_rate)
         status = np.where(
@@ -251,15 +278,19 @@ class OperationalLogSimulator:
             pick(rng, [500, 502, 503, 504], total),
             pick(rng, _STATUS_CODES, total, _STATUS_WEIGHTS),
         ).astype(np.int64)
-        level = np.where(failing | (status >= 500), "ERROR", np.where(status >= 400, "WARN", "INFO"))
+        level = np.where(
+            failing | (status >= 500), "ERROR", np.where(status >= 400, "WARN", "INFO")
+        )
         handled = np.array([f"Handled request in {x}ms" for x in latency.tolist()], dtype=object)
         message = np.where(failing, pick(rng, ERROR_MESSAGES, total), handled)
-        method = pick(rng, [m for m, _ in DEFAULT_HTTP_METHODS], total, [w for _, w in DEFAULT_HTTP_METHODS])
+        method = pick(
+            rng, [m for m, _ in DEFAULT_HTTP_METHODS], total, [w for _, w in DEFAULT_HTTP_METHODS]
+        )
         endpoint = pick(rng, DEFAULT_ENDPOINTS, total)
 
         trace_id = np.full(total, None, dtype=object)
         span_id = np.full(total, None, dtype=object)
-        span_tables: list[dict[str, Any]] = []
+        span_tables: list[pa.Table] = []
         if cfg.trace_enabled:
             trace_id = np.array(uuid_strings(rng, total), dtype=object)
             span_id = np.array([u[:16] for u in uuid_strings(rng, total)], dtype=object)
@@ -292,12 +323,14 @@ class OperationalLogSimulator:
 
         order = np.argsort(parts["ts"], kind="stable")
         logs = self._logs_table(parts, order, zone)
-        traces = (
-            span_tables[0] if span_tables else _traces_schema(zone).empty_table()
-        )
+        traces: pa.Table = span_tables[0] if span_tables else _traces_schema(zone).empty_table()
         if traces.num_rows:
             traces = traces.take(
-                pa.array(np.argsort(np.asarray(traces.column("timestamp").cast(pa.int64())), kind="stable"))
+                pa.array(
+                    np.argsort(
+                        np.asarray(traces.column("timestamp").cast(pa.int64())), kind="stable"
+                    )
+                )
             )
         traces = traces.cast(_traces_schema(zone))
         health = self._health(parts, services)
@@ -388,11 +421,15 @@ class OperationalLogSimulator:
         svc = np.tile(np.repeat(np.arange(n_svc), per), len(burst_hours))
         n = len(hour)
         extra: dict[str, np.ndarray] = {
-            "ts": start_us + hour * 3_600_000_000 + np.round(rng.uniform(0, 300, n) * 1e6).astype(np.int64),
+            "ts": start_us
+            + hour * 3_600_000_000
+            + np.round(rng.uniform(0, 300, n) * 1e6).astype(np.int64),
             "service": names[svc],
             "tier": tiers[svc],
             "level": np.full(n, "ERROR", dtype=object),
-            "method": pick(rng, [m for m, _ in DEFAULT_HTTP_METHODS], n, [w for _, w in DEFAULT_HTTP_METHODS]).astype(object),
+            "method": pick(
+                rng, [m for m, _ in DEFAULT_HTTP_METHODS], n, [w for _, w in DEFAULT_HTTP_METHODS]
+            ).astype(object),
             "endpoint": pick(rng, DEFAULT_ENDPOINTS, n).astype(object),
             "status": pick(rng, [500, 502, 503, 429], n).astype(np.int64),
             "latency": np.round(rng.uniform(5000, 30000, n), 2),
@@ -406,7 +443,9 @@ class OperationalLogSimulator:
 
     # ---- tables -----------------------------------------------------------------------------
 
-    def _logs_table(self, p: dict[str, np.ndarray], order: np.ndarray, zone: str | None) -> pa.Table:
+    def _logs_table(
+        self, p: dict[str, np.ndarray], order: np.ndarray, zone: str | None
+    ) -> pa.Table:
         n = len(order)
         ids = np.array(uuid_strings(self._rng, n), dtype=object)
         return pa.table(

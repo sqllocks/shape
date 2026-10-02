@@ -35,7 +35,6 @@ from shape_simulation._patterns import (
     as_table,
     float_array,
     float_values,
-    pick,
     table_mapping,
     timestamp_us,
     timestamps,
@@ -158,7 +157,9 @@ class IoTTelemetrySimulator:
         self._devices = as_table(devices)
         if "device_id" not in self._devices.column_names:
             raise ValueError("devices need a 'device_id' column")
-        self._value_col = next((c for c in _VALUE_COLUMNS if c in self._readings.column_names), "value")
+        self._value_col = next(
+            (c for c in _VALUE_COLUMNS if c in self._readings.column_names), "value"
+        )
         if self._value_col not in self._readings.column_names:
             raise ValueError(f"readings need a value column ({', '.join(_VALUE_COLUMNS)})")
         self._time_col = next((c for c in _TIME_COLUMNS if c in self._readings.column_names), None)
@@ -217,7 +218,9 @@ class IoTTelemetrySimulator:
             float_array(values),
         )
         fleet = self._fleet_status(values, battery)
-        return IoTTelemetryResult(readings, alerts, fleet, stats=self._stats(readings, fleet, alerts))
+        return IoTTelemetryResult(
+            readings, alerts, fleet, stats=self._stats(readings, fleet, alerts)
+        )
 
     # ---- drift ------------------------------------------------------------------------------
 
@@ -261,11 +264,14 @@ class IoTTelemetrySimulator:
             if not valid.all():
                 level = np.where(valid, level, rng.uniform(60.0, 100.0, size=n))
         else:
-            level = rng.uniform(60.0, 100.0, size=n) if cfg.battery_drain_enabled else np.full(n, 100.0)
+            level = (
+                rng.uniform(60.0, 100.0, size=n) if cfg.battery_drain_enabled else np.full(n, 100.0)
+            )
         if not cfg.battery_drain_enabled:
             return np.asarray(level)
         drain = cfg.battery_drain_rate * cfg.duration_hours * rng.uniform(0.7, 1.3, size=n)
-        return np.maximum(0.0, level - drain)
+        left: np.ndarray = np.maximum(0.0, level - drain)
+        return left
 
     # ---- alerts -----------------------------------------------------------------------------
 
@@ -287,7 +293,9 @@ class IoTTelemetrySimulator:
                 size = min(n_devices, max(1, int(n_devices * 0.2)))
                 for hour in hit:
                     chosen = rng.choice(n_devices, size=size, replace=False)
-                    offsets = rng.uniform(0, cfg.alert_storm_duration_minutes * 60, (size, per_device))
+                    offsets = rng.uniform(
+                        0, cfg.alert_storm_duration_minutes * 60, (size, per_device)
+                    )
                     base = self._start_us + int(hour) * 3_600_000_000
                     times.append((base + np.round(offsets * 1e6).astype(np.int64)).ravel())
                     who.append(np.repeat(chosen, per_device))
@@ -376,7 +384,9 @@ class IoTTelemetrySimulator:
                 "device_id": pa.array(unique, self._devices.schema.field("device_id").type),
                 "status": pa.array(status, pa.string()),
                 "battery_level": pa.array(batt, pa.float64()),
-                "last_reading_at": timestamps(np.asarray(last, dtype=np.int64), tz, np.asarray(last_ok)),
+                "last_reading_at": timestamps(
+                    np.asarray(last, dtype=np.int64), tz, np.asarray(last_ok)
+                ),
                 "drift_detected": pa.array(drift, pa.bool_()),
             }
         )
