@@ -152,3 +152,94 @@ def json_messages(
         (json.dumps(r).encode(), None if start_ms is None else start_ms + i * step_ms)
         for i, r in enumerate(rows)
     ]
+
+
+class FakeProducer:
+    """The slice of ``confluent_kafka.Producer`` the emitter uses, over an in-memory log.
+
+    ``produce`` queues a message; ``flush`` delivers the queue and calls each ``on_delivery``.
+    ``full`` makes ``produce`` raise ``BufferError`` until ``poll`` has been called that many
+    times (a full local queue draining); ``failures`` makes the next flushes fail: the first half
+    of the queued messages is delivered and the rest reports a delivery error, as a broker that
+    drops mid-batch does, so the batch is delivered twice in part when it is retried.
+    """
+
+    def __init__(self, store: FakeProducerStore, config: Mapping[str, Any]) -> None:
+        self.store = store
+        self.config = dict(config)
+        self.queue: list[tuple[str, bytes | None, bytes | None, Any, Any]] = []
+
+    def produce(
+        self,
+        topic: str,
+        value: bytes | None = None,
+        key: bytes | None = None,
+        headers: Any = None,
+        on_delivery: Any = None,
+        **_: Any,
+    ) -> None:
+        if self.store.full > 0:
+            self.store.hits += 1
+            raise BufferError("Local: Queue full")
+        self.queue.append((topic, key, value, headers, on_delivery))
+
+    def poll(self, timeout: float = 0) -> int:
+        if self.store.full > 0:
+            self.store.full -= 1
+        return 0
+
+    def flush(self, timeout: float = -1) -> int:
+        queue, self.queue = self.queue, []
+        fail = self.store.failures > 0
+        if fail:
+            self.store.failures -= 1
+        cut = len(queue) // 2 if fail else len(queue)
+        for i, (topic, key, value, headers, cb) in enumerate(queue):
+            if i < cut:
+                self.store.log.append((topic, key, value, headers))
+                if cb is not None:
+                    cb(None, None)
+            elif cb is not None:
+                cb(FakeError("_MSG_TIMED_OUT", retriable=True), None)
+        return 0
+
+
+class FakeProducerStore:
+    """What the producers of one fake cluster sent, and the faults to inject."""
+
+    def __init__(self) -> None:
+        self.log: list[tuple[str, bytes | None, bytes | None, Any]] = []
+        self.full = 0
+        self.failures = 0
+        self.hits = 0
+        self.producers: list[FakeProducer] = []
+
+    def factory(self, config: Mapping[str, Any]) -> FakeProducer:
+        p = FakeProducer(self, config)
+        self.producers.append(p)
+        return p
+
+
+class EmitterHarness:
+    """The emitter contract's harness (``shape.streaming.emit.contract``) over a fake cluster."""
+
+    def __init__(self, topic: str = "events") -> None:
+        self.store = FakeProducerStore()
+        self.uri = f"kafka://broker-a:9092,broker-b:9092/{topic}"
+
+    def make(self) -> Any:
+        from .emitter import KafkaEmitter
+
+        return KafkaEmitter(self.store.factory)
+
+    def delivered(self) -> list[tuple[str, bytes]]:
+        return [(k.decode() if k else "", v or b"") for _, k, v, _ in self.store.log]
+
+    def inject_failures(self, n: int) -> None:
+        self.store.failures = n
+
+    def congest(self, n: int) -> None:
+        self.store.full = n
+
+    def congestion_hits(self) -> int:
+        return self.store.hits

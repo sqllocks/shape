@@ -166,6 +166,117 @@ def _udf_gate() -> dict:
     }
 
 
+# PF-06: generate a domain, profile the tables, check them against the domain's contract.
+GENERATE_EXIT_VALUE = "json(activity('GenerateDomain').output.result.exitValue)"
+DOMAIN_EXIT_VALUE = "json(activity('ProfileAndCheck').output.result.exitValue)"
+GENERATE_NOTEBOOK_PARAMETERS = {
+    "domain": "string",
+    "scale": "string",
+    "seed": "int",
+    "mode": "string",
+    "tablePrefix": "string",
+    "writeMode": "string",
+    "outputDir": "string",
+}
+DOMAIN_NOTEBOOK_PARAMETERS = {
+    "domain": "string",
+    "contractPath": "string",
+    "tablePrefix": "string",
+    "baselinePath": "string",
+    "outputDir": "string",
+    "failOnDrift": "bool",
+}
+
+
+def _generate_gate() -> dict:
+    parameters = {
+        "domain": {"type": "string", "defaultValue": "retail"},
+        "scale": {"type": "string", "defaultValue": "small"},
+        "seed": {"type": "int", "defaultValue": 42},
+        "mode": {"type": "string", "defaultValue": ""},
+        "tablePrefix": {"type": "string", "defaultValue": ""},
+        "writeMode": {"type": "string", "defaultValue": "overwrite"},
+        "outputDir": {"type": "string", "defaultValue": "shape"},
+        "baselinePath": {"type": "string", "defaultValue": ""},
+        "failOnDrift": {"type": "bool", "defaultValue": False},
+    }
+    generate_args = {
+        name: {"value": _expr(f"@pipeline().parameters.{name}"), "type": kind}
+        for name, kind in GENERATE_NOTEBOOK_PARAMETERS.items()
+    }
+    profile_args = {
+        name: {"value": _expr(f"@pipeline().parameters.{name}"), "type": kind}
+        for name, kind in DOMAIN_NOTEBOOK_PARAMETERS.items()
+        if name != "contractPath"
+    }
+    # the contract is where the generate notebook wrote it
+    profile_args["contractPath"] = {
+        "value": _expr(f"@{GENERATE_EXIT_VALUE}.contractPath"),
+        "type": "string",
+    }
+    return {
+        "properties": {
+            "description": (
+                "Shape: generate a domain into lakehouse Delta tables, profile them, and check "
+                "the profile against the domain's contract."
+            ),
+            "parameters": parameters,
+            "activities": [
+                {
+                    "name": "GenerateDomain",
+                    "type": "TridentNotebook",
+                    "dependsOn": [],
+                    "policy": POLICY,
+                    "typeProperties": {
+                        "notebookId": "<<NOTEBOOK_ID:shape_generate>>",
+                        "workspaceId": "<<WORKSPACE_ID>>",
+                        "parameters": generate_args,
+                    },
+                },
+                {
+                    "name": "ProfileAndCheck",
+                    "type": "TridentNotebook",
+                    "dependsOn": [
+                        {"activity": "GenerateDomain", "dependencyConditions": ["Succeeded"]}
+                    ],
+                    "policy": POLICY,
+                    "typeProperties": {
+                        "notebookId": "<<NOTEBOOK_ID:shape_profile_domain>>",
+                        "workspaceId": "<<WORKSPACE_ID>>",
+                        "parameters": profile_args,
+                    },
+                },
+                {
+                    "name": "CheckGate",
+                    "type": "IfCondition",
+                    "dependsOn": [
+                        {"activity": "ProfileAndCheck", "dependencyConditions": ["Succeeded"]}
+                    ],
+                    "typeProperties": {
+                        "expression": _expr(f"@{DOMAIN_EXIT_VALUE}.passed"),
+                        "ifTrueActivities": [],
+                        "ifFalseActivities": [
+                            {
+                                "name": "FailGate",
+                                "type": "Fail",
+                                "dependsOn": [],
+                                "typeProperties": {
+                                    "message": _expr(
+                                        "@concat('Shape generated data broke the contract of ', "
+                                        "pipeline().parameters.domain, ': ', "
+                                        f"string({DOMAIN_EXIT_VALUE}.violations))"
+                                    ),
+                                    "errorCode": "ShapeContractFailed",
+                                },
+                            }
+                        ],
+                    },
+                },
+            ],
+        }
+    }
+
+
 def build() -> dict[str, dict]:
     return {
         "shape_gate_notebook": _notebook_gate(
@@ -175,6 +286,7 @@ def build() -> dict[str, dict]:
             "shape_profile_spark", "Shape quality gate using the PySpark notebook (Environment)."
         ),
         "shape_gate_udf": _udf_gate(),
+        "shape_generate_gate": _generate_gate(),
     }
 
 

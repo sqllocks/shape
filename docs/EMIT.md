@@ -79,6 +79,44 @@ or an error. After a crash (even `kill -9`), run the same command again:
 
 A run with no checkpoint (the console sink, or no `--checkpoint`) starts from the beginning.
 
+## Emitters
+
+`--sink` takes `console` (the default), `file` (with `-o`) or the URI of an emitter, a
+`shape.emitters` plugin. `shape emit` hands the emitter each batch and counts it delivered when
+`emit` returns, so an emitter returns only after its destination acknowledged the batch.
+
+| URI | where it comes from | what it does |
+|---|---|---|
+| `console://` | core | JSON lines on standard output |
+| `file:///path.jsonl` | core | JSON lines in one file (appended to after a resume) |
+| `jsonl:///dir` | core | JSON lines, one `<table>.jsonl` per table |
+| `kafka://host:9092/topic` | `sqllocks-shape-kafka` | one message per event, **message key = `<table>/<seq>`**, header `shape-table`; `acks=all`, idempotent producer |
+| `eventhubs://namespace/hub` | `sqllocks-shape-eventhubs` | one message per event, property `shape_key` = `<table>/<seq>`; one table per service batch, partition key = table |
+| `eventstream://name[/entity]` | `sqllocks-shape-fabric` | a Fabric Eventstream custom endpoint (Event Hubs protocol; connection string in `FABRIC_EVENTSTREAM_CONNECTION_STRING`-style option or `SHAPE_EVENTSTREAM_CONNECTION_STRING`) |
+| `eventhouse://query-host/database[/table]` | `sqllocks-shape-fabric` | a KQL database by streaming ingestion; each Shape table becomes a KQL table (created from the schema) unless `table` is given |
+
+What every emitter owes the runtime (and what `shape.streaming.emit.contract` tests for each):
+
+* **Idempotency key.** Every message carries `<table>/<seq>` where the transport has a place for
+  it (Kafka key, Event Hubs property, CloudEvents `id`, the `_shape_table`/`_shape_seq` columns of
+  a KQL table), the same for the same row on every run.
+* **At-least-once.** `emit` returns after acknowledgement. A transient failure raises
+  `OSError`/`ConnectionError`/`TimeoutError` and the runtime retries the batch (`--retries`), so
+  a destination may see a message twice and never zero times. Kafka, Event Hubs and Eventstream
+  do not deduplicate; **Eventhouse does not either**: read it with
+  `shape_fabric.eventhouse.dedupe_query(table)` (`summarize take_any(*) by _shape_table,
+  _shape_seq`).
+* **Backpressure.** A full producer queue (Kafka), a throttled service (Event Hubs
+  `server-busy`, Eventhouse 429/503) is waited for inside `emit`; the bounded queue then blocks the
+  generator. Nothing is dropped. A service that stays busy past `busy_retries` is a retryable
+  failure.
+* **Checkpoint.** The checkpoint moves only past events whose `emit` returned. After a crash the
+  run resumes from the checkpoint; the events after it are sent again.
+
+Options of an emitter (a Kafka `config`, a connection string, a token) are keyword options of its
+`emit`; see each plugin's README. Sign-in material belongs in environment variables or an options
+file, never in the URI.
+
 ## Limits
 
 * The first block of a table with post-passes waits for the whole schema to generate.

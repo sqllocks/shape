@@ -1,0 +1,281 @@
+{
+  "name": "shape_generate_gate_synapse",
+  "properties": {
+    "description": "Shape: generate a domain into ADLS Gen2 tables in a Synapse Spark notebook, profile them, check the profile against the domain's contract, and fail the pipeline when it does not hold.",
+    "activities": [
+      {
+        "name": "GenerateDomain",
+        "type": "SynapseNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "notebook": {
+            "referenceName": "shape_generate_synapse",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "domain": {
+              "value": {
+                "value": "@pipeline().parameters.domain",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "scale": {
+              "value": {
+                "value": "@pipeline().parameters.scale",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "seed": {
+              "value": {
+                "value": "@pipeline().parameters.seed",
+                "type": "Expression"
+              },
+              "type": "int"
+            },
+            "mode": {
+              "value": {
+                "value": "@pipeline().parameters.mode",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "outputPath": {
+              "value": {
+                "value": "@pipeline().parameters.outputPath",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "tablePrefix": {
+              "value": {
+                "value": "@pipeline().parameters.tablePrefix",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "tableFormat": {
+              "value": {
+                "value": "@pipeline().parameters.tableFormat",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "writeMode": {
+              "value": {
+                "value": "@pipeline().parameters.writeMode",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "linkedServiceName": {
+              "value": {
+                "value": "@pipeline().parameters.linkedServiceName",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "snapshot": true,
+          "sparkPool": {
+            "referenceName": "<<SPARK_POOL>>",
+            "type": "BigDataPoolReference"
+          }
+        }
+      },
+      {
+        "name": "ProfileAndCheck",
+        "type": "SynapseNotebook",
+        "dependsOn": [
+          {
+            "activity": "GenerateDomain",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "notebook": {
+            "referenceName": "shape_profile_domain_synapse",
+            "type": "NotebookReference"
+          },
+          "parameters": {
+            "domain": {
+              "value": {
+                "value": "@pipeline().parameters.domain",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "tablePrefix": {
+              "value": {
+                "value": "@pipeline().parameters.tablePrefix",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "tableFormat": {
+              "value": {
+                "value": "@pipeline().parameters.tableFormat",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "baselinePath": {
+              "value": {
+                "value": "@pipeline().parameters.baselinePath",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "failOnDrift": {
+              "value": {
+                "value": "@pipeline().parameters.failOnDrift",
+                "type": "Expression"
+              },
+              "type": "bool"
+            },
+            "linkedServiceName": {
+              "value": {
+                "value": "@pipeline().parameters.linkedServiceName",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "tablesPath": {
+              "value": {
+                "value": "@json(activity('GenerateDomain').output.status.Output.result.exitValue).tablesPath",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "contractPath": {
+              "value": {
+                "value": "@json(activity('GenerateDomain').output.status.Output.result.exitValue).contractPath",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "outputPath": {
+              "value": {
+                "value": "@pipeline().parameters.reportPath",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "snapshot": true,
+          "sparkPool": {
+            "referenceName": "<<SPARK_POOL>>",
+            "type": "BigDataPoolReference"
+          }
+        }
+      },
+      {
+        "name": "CheckGate",
+        "type": "IfCondition",
+        "dependsOn": [
+          {
+            "activity": "ProfileAndCheck",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "userProperties": [],
+        "typeProperties": {
+          "expression": {
+            "value": "@json(activity('ProfileAndCheck').output.status.Output.result.exitValue).passed",
+            "type": "Expression"
+          },
+          "ifTrueActivities": [],
+          "ifFalseActivities": [
+            {
+              "name": "FailGate",
+              "type": "Fail",
+              "dependsOn": [],
+              "userProperties": [],
+              "typeProperties": {
+                "message": {
+                  "value": "@concat('Shape generated data broke the contract of ', pipeline().parameters.domain, ': ', string(json(activity('ProfileAndCheck').output.status.Output.result.exitValue).violations))",
+                  "type": "Expression"
+                },
+                "errorCode": "ShapeContractFailed"
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "parameters": {
+      "domain": {
+        "type": "string",
+        "defaultValue": "retail"
+      },
+      "scale": {
+        "type": "string",
+        "defaultValue": "small"
+      },
+      "seed": {
+        "type": "int",
+        "defaultValue": 42
+      },
+      "mode": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "outputPath": {
+        "type": "string",
+        "defaultValue": "abfss://shape@<<STORAGE_ACCOUNT>>.dfs.core.windows.net/generated"
+      },
+      "reportPath": {
+        "type": "string",
+        "defaultValue": "abfss://shape@<<STORAGE_ACCOUNT>>.dfs.core.windows.net/shape"
+      },
+      "tablePrefix": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "tableFormat": {
+        "type": "string",
+        "defaultValue": "delta"
+      },
+      "writeMode": {
+        "type": "string",
+        "defaultValue": "overwrite"
+      },
+      "baselinePath": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "failOnDrift": {
+        "type": "bool",
+        "defaultValue": false
+      },
+      "linkedServiceName": {
+        "type": "string",
+        "defaultValue": ""
+      }
+    },
+    "annotations": [
+      "shape"
+    ]
+  }
+}
