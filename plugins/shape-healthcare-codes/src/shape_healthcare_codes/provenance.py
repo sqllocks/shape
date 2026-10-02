@@ -46,3 +46,10 @@ ASSETS: dict[str, Asset] = {}
 def register(asset: Asset) -> Asset:
     ASSETS[asset.id] = asset
     return asset
+
+
+def all_assets() -> dict[str, Asset]:
+    """The registered assets (importing the catalog registers them)."""
+    from shape_healthcare_codes import catalog  # noqa: F401
+
+    return dict(ASSETS)

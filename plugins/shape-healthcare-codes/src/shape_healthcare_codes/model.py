@@ -12,8 +12,10 @@ The diagnosis systems (ICD-10-CM, ICD-10-GM, ICD-10-AM, WHO ICD-10) and the proc
 
 from __future__ import annotations
 
+import bisect
 import datetime as dt
 import enum
+import json
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -23,8 +25,8 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 FY_BASE = 2016
-"""Fiscal year of bit 0 in the per-fiscal-year masks: FY2016 began 2015-10-01, the first
-fiscal year of ICD-10-CM in US use."""
+"""First fiscal year of ICD-10-CM in US use (FY2016 began 2015-10-01). Tables without a
+``releases`` entry in their schema metadata are read as one release per fiscal year from here."""
 
 BASE_COLUMNS = ("code", "short_desc", "long_desc", "leaf", "valid_from", "valid_to")
 """Columns every code-set table has. ``leaf`` is true for a code that can be reported
@@ -92,11 +94,26 @@ def fy_end(fy: int) -> dt.date:
     return dt.date(fy, 9, 30)
 
 
-def fy_bit(fy: int) -> int:
-    """The mask bit of fiscal year ``fy``."""
-    if fy < FY_BASE:
-        raise ValueError(f"fiscal year {fy} is before FY{FY_BASE}")
-    return 1 << (fy - FY_BASE)
+@dataclass(frozen=True, slots=True)
+class Release:
+    """One published version of a code set: bit ``index`` of ``valid_mask`` and ``leaf_mask``
+    says whether a code existed (was billable) in it, from ``effective`` until the next one."""
+
+    id: str
+    effective: dt.date
+
+
+def default_releases(last_fy: int = 2040) -> list[Release]:
+    """One release per fiscal year, October 1 of the year before, from FY2016."""
+    return [Release(f"FY{fy}", fy_start(fy)) for fy in range(FY_BASE, last_fy + 1)]
+
+
+def releases_to_json(releases: Sequence[Release]) -> str:
+    return json.dumps([{"id": r.id, "effective": r.effective.isoformat()} for r in releases])
+
+
+def releases_from_json(text: str) -> list[Release]:
+    return [Release(d["id"], dt.date.fromisoformat(d["effective"])) for d in json.loads(text)]
 
 
 @dataclass(frozen=True, slots=True)
@@ -116,8 +133,9 @@ class CodeRecord:
 class CodeSet:
     """A loaded code system with date-aware lookups.
 
-    ``table`` carries :data:`BASE_COLUMNS` and may carry ``fy_valid_mask`` and ``fy_leaf_mask``
-    (int32, bit ``fy - FY_BASE``): when they are present validity is exact per fiscal year,
+    ``table`` carries :data:`BASE_COLUMNS` and may carry ``valid_mask`` and ``leaf_mask``
+    (int64; bit ``i`` is release ``i`` of :attr:`releases`). Where they exist validity is exact
+    per release (ICD-10-CM changes every October 1, and sometimes April 1 or January 1);
     otherwise it is the ``valid_from`` / ``valid_to`` range.
     """
 
@@ -129,6 +147,13 @@ class CodeSet:
         self.table = table
         self.release = release
         self._index: dict[str, int] | None = None
+        meta = table.schema.metadata or {}
+        raw = meta.get(b"releases")
+        self.releases: list[Release] = (
+            releases_from_json(raw.decode("utf-8")) if raw else default_releases()
+        )
+        self._effective = [r.effective for r in self.releases]
+        self._masked = "valid_mask" in table.column_names
 
     def __len__(self) -> int:
         return int(self.table.num_rows)
@@ -141,6 +166,10 @@ class CodeSet:
 
     def __contains__(self, code: object) -> bool:
         return isinstance(code, str) and normalize_code(code) in self.index
+
+    def release_index(self, on: dt.date) -> int:
+        """Index of the release in force on ``on``, or -1 before the first one."""
+        return bisect.bisect_right(self._effective, on) - 1
 
     def get(self, code: str) -> CodeRecord | None:
         i = self.index.get(normalize_code(code))
@@ -164,17 +193,16 @@ class CodeSet:
         i = self.index.get(normalize_code(code))
         if i is None:
             return False
-        names = self.table.column_names
-        if "fy_valid_mask" in names:
-            fy = fiscal_year(on)
-            if fy < FY_BASE:
+        if self._masked:
+            k = self.release_index(on)
+            if k < 0:
                 return False
-            col = "fy_leaf_mask" if leaf_only and "fy_leaf_mask" in names else "fy_valid_mask"
-            mask = self.table.column(col)[i].as_py()
-            ok = bool(mask & fy_bit(fy))
-            if leaf_only and col == "fy_valid_mask":
-                ok = ok and bool(self.table.column("leaf")[i].as_py())
-            return ok
+            col = (
+                "leaf_mask"
+                if leaf_only and "leaf_mask" in self.table.column_names
+                else "valid_mask"
+            )
+            return bool(self.table.column(col)[i].as_py() & (1 << k))
         lo = self.table.column("valid_from")[i].as_py()
         hi = self.table.column("valid_to")[i].as_py()
         if (lo is not None and on < lo) or (hi is not None and on > hi):
@@ -183,13 +211,17 @@ class CodeSet:
 
     def codes_on(self, on: dt.date, *, leaf_only: bool = True) -> pa.Array:
         """Every code valid on ``on`` (reportable ones only by default), in table order."""
-        names = self.table.column_names
-        if "fy_valid_mask" in names:
-            fy = fiscal_year(on)
-            if fy < FY_BASE:
-                return self.table.column("code").slice(0, 0).combine_chunks()
-            col = "fy_leaf_mask" if leaf_only and "fy_leaf_mask" in names else "fy_valid_mask"
-            keep = pc.not_equal(pc.bit_wise_and(self.table.column(col), fy_bit(fy)), 0)
+        codes = self.table.column("code")
+        if self._masked:
+            k = self.release_index(on)
+            if k < 0:
+                return codes.slice(0, 0).combine_chunks()
+            col = (
+                "leaf_mask"
+                if leaf_only and "leaf_mask" in self.table.column_names
+                else "valid_mask"
+            )
+            keep = pc.not_equal(pc.bit_wise_and(self.table.column(col), 1 << k), 0)
         else:
             lo, hi = self.table.column("valid_from"), self.table.column("valid_to")
             day = pa.scalar(on, pa.date32())
@@ -199,9 +231,7 @@ class CodeSet:
             )
             if leaf_only:
                 keep = pc.and_(keep, self.table.column("leaf"))
-        if "fy_valid_mask" in names and leaf_only and "fy_leaf_mask" not in names:
-            keep = pc.and_(keep, self.table.column("leaf"))
-        out = self.table.column("code").filter(keep)
+        out = codes.filter(keep)
         return out.combine_chunks() if isinstance(out, pa.ChunkedArray) else out
 
     def column(self, name: str) -> pa.ChunkedArray:

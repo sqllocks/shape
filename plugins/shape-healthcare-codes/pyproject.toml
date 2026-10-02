@@ -14,6 +14,9 @@ license-files = ["LICENSE"]
 dependencies = ["sqllocks-shape==0.9.0"]
 
 # Entry points (shape.* groups, plugin API v1); see docs/plugins/authoring.md.
+[project.entry-points."shape.commands"]
+healthcare-codes = "shape_healthcare_codes.cli:HealthcareCodesCommand"
+
 [project.entry-points."shape.detectors"]
 icd10 = "shape_healthcare_codes.detectors:Icd10Detector"
 ndc = "shape_healthcare_codes.detectors:NdcDetector"
