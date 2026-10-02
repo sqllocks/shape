@@ -66,8 +66,8 @@ def run(a: argparse.Namespace) -> int:
     from shape.scale.jobs import (
         TOKEN_ENV,
         JobNotFoundError,
-        JobStateError,
         Jobs,
+        JobStateError,
         JobStore,
     )
 

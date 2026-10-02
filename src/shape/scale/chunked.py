@@ -56,7 +56,8 @@ def derive_counts(
     per unit of the scale factor. ``overrides`` win."""
     if target_table not in schema.tables:
         raise ValueError(
-            f"target_table {target_table!r} is not in the schema; tables: {', '.join(schema.tables)}"
+            f"target_table {target_table!r} is not in the schema; "
+            f"tables: {', '.join(schema.tables)}"
         )
     if target_count < 1:
         raise ValueError("target_count must be at least 1")
@@ -64,9 +65,7 @@ def derive_counts(
     ref_target = ref.get(target_table) or target_count
     ref[target_table] = ref_target
     factor = target_count / ref_target
-    counts = {
-        name: max(1, int(ref.get(name, 100) * factor)) for name in schema.tables
-    }
+    counts = {name: max(1, int(ref.get(name, 100) * factor)) for name in schema.tables}
     counts[target_table] = target_count
     if overrides:
         counts.update({k: int(v) for k, v in overrides.items()})

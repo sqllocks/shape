@@ -105,7 +105,9 @@ def build_request(a: argparse.Namespace) -> dict[str, Any]:
             raise ValueError("-o DIR is the parquet sink's folder: add --sink parquet")
         config.setdefault("parquet", {}).setdefault("output_dir", a.output)
     if a.scale_mode != "fabric_spark" and sinks == ["memory"]:
-        print("shape: no -o and no --sink: generating into memory (nothing is kept)", file=sys.stderr)
+        print(
+            "shape: no -o and no --sink: generating into memory (nothing is kept)", file=sys.stderr
+        )
     request: dict[str, Any] = {
         "domain": a.target,
         "mode": a.mode,

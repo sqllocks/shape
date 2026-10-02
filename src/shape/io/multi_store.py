@@ -93,8 +93,13 @@ class MultiStoreWriter:
         def call(writer: TableWriter) -> Any:
             return writer.write_all(tables, **kwargs)
 
-        with ThreadPoolExecutor(max_workers=self._max_workers, thread_name_prefix="shape-store") as pool:
-            futures = [(label, pool.submit(call, w)) for label, w in zip(self._labels, self._writers, strict=True)]
+        with ThreadPoolExecutor(
+            max_workers=self._max_workers, thread_name_prefix="shape-store"
+        ) as pool:
+            futures = [
+                (label, pool.submit(call, w))
+                for label, w in zip(self._labels, self._writers, strict=True)
+            ]
             for label, future in futures:
                 try:
                     out = future.result()

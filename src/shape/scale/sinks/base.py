@@ -56,9 +56,7 @@ class SinkError(Exception):
 
     def __init__(self, errors: list[tuple[str, Exception]]) -> None:
         self.sink_errors = errors
-        super().__init__(
-            "sink failures: " + "; ".join(f"{name}: {exc}" for name, exc in errors)
-        )
+        super().__init__("sink failures: " + "; ".join(f"{name}: {exc}" for name, exc in errors))
 
 
 def sink_name(sink: object) -> str:

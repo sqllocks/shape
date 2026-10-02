@@ -44,7 +44,9 @@ class LakehouseSink(WriterSink):
 
     def __init__(self, base_path: str, format: str = "parquet") -> None:
         if format not in LAKEHOUSE_FORMATS:
-            raise ValueError(f"unknown lakehouse format {format!r}; choose one of {LAKEHOUSE_FORMATS}")
+            raise ValueError(
+                f"unknown lakehouse format {format!r}; choose one of {LAKEHOUSE_FORMATS}"
+            )
         if not base_path:
             raise ValueError("the lakehouse sink needs base_path")
         uri = base_path if base_path.endswith(("/", "\\")) else base_path + "/"

@@ -208,7 +208,9 @@ class FabricJobTracker:
         }
         reason = data.get("failureReason")
         if reason:
-            out["error"] = str(reason.get("message", reason) if isinstance(reason, dict) else reason)
+            out["error"] = str(
+                reason.get("message", reason) if isinstance(reason, dict) else reason
+            )
         return out
 
     def cancel(self, workspace_id: str, item_id: str, run_id: str) -> dict[str, Any]:
@@ -274,7 +276,9 @@ class Jobs:
             running = self._local.get(job_id)
         if running is None:
             # Recorded as active, but nothing in this process runs it (the process that did died).
-            record = self.store.update(job_id, status="cancelled", error="no live run; marked cancelled")
+            record = self.store.update(
+                job_id, status="cancelled", error="no live run; marked cancelled"
+            )
             return {**self.describe(record), "cancelled": True}
         running[1].set()
         running[0].join(timeout=30)
@@ -301,7 +305,10 @@ class Jobs:
     def start_local(
         self,
         request: dict[str, Any],
-        run: Callable[[dict[str, Any], threading.Event, Callable[[dict[str, Any]], None], bool], dict[str, Any]],
+        run: Callable[
+            [dict[str, Any], threading.Event, Callable[[dict[str, Any]], None], bool],
+            dict[str, Any],
+        ],
         *,
         stored: dict[str, Any] | None = None,
         job_id: str | None = None,
@@ -318,7 +325,9 @@ class Jobs:
         live = request
         if job_id is None:
             record = self.store.put(
-                JobRecord(new_job_id("local"), "local", request=stored if stored is not None else request)
+                JobRecord(
+                    new_job_id("local"), "local", request=stored if stored is not None else request
+                )
             )
         else:
             record = self.store.get(job_id)
@@ -327,7 +336,9 @@ class Jobs:
             if record.status not in RESUMABLE and not (
                 record.status in ACTIVE and job_id not in self._local
             ):
-                raise JobStateError(f"{job_id} is {record.status}: only a failed or cancelled job resumes")
+                raise JobStateError(
+                    f"{job_id} is {record.status}: only a failed or cancelled job resumes"
+                )
             live = _merged(record.request, overrides)
             record = self.store.update(
                 job_id, status="submitted", error=None, attempts=record.attempts + 1
@@ -422,7 +433,10 @@ class LocalRunner:
         self,
         store: JobStore,
         job_id: str,
-        run: Callable[[dict[str, Any], threading.Event, Callable[[dict[str, Any]], None], bool], dict[str, Any]],
+        run: Callable[
+            [dict[str, Any], threading.Event, Callable[[dict[str, Any]], None], bool],
+            dict[str, Any],
+        ],
         request: dict[str, Any],
         *,
         resume: bool,
@@ -445,7 +459,7 @@ class LocalRunner:
     def run(self) -> None:
         from shape.scale.router import ScaleCancelled
 
-        record = self.store.update(self.job_id, status="running")
+        self.store.update(self.job_id, status="running")
         try:
             result = self._run(self._request, self.cancel, self._progress, self._resume)
         except ScaleCancelled:
@@ -508,7 +522,10 @@ class StreamManager:
         stream_id = uuid.uuid4().hex
         state = StreamState(stream_id=stream_id)
         thread = threading.Thread(
-            target=self._run, args=(run_fn, state), name=f"shape-stream-{stream_id[:8]}", daemon=True
+            target=self._run,
+            args=(run_fn, state),
+            name=f"shape-stream-{stream_id[:8]}",
+            daemon=True,
         )
         state.thread = thread
         with self._lock:

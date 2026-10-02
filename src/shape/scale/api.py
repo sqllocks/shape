@@ -216,7 +216,10 @@ def scale_generate(
         return run_local(request, cancel, progress)
 
     def run(
-        req: dict[str, Any], event: threading.Event, report: Callable[[dict[str, Any]], None], resume: bool
+        req: dict[str, Any],
+        event: threading.Event,
+        report: Callable[[dict[str, Any]], None],
+        resume: bool,
     ) -> dict[str, Any]:
         return run_local(req, event, report, resume)
 

@@ -15,7 +15,9 @@ from shape.scale.sinks.base import BaseSink, Sink, SinkError
 SINK_NAMES = ("memory", "parquet", "lakehouse", "warehouse", "sql_database", "kql")
 
 _SECRET_KEYS = ("client_secret", "password", "token", "sas", "secret", "key")
-_CONN_SECRET = re.compile(r"(?i)\b(pwd|password|accountkey|sharedaccesskey|sharedaccesssignature)\s*=[^;]*")
+_CONN_SECRET = re.compile(
+    r"(?i)\b(pwd|password|accountkey|sharedaccesskey|sharedaccesssignature)\s*=[^;]*"
+)
 
 
 def _check(name: str, cfg: Mapping[str, Any], allowed: Sequence[str]) -> None:
@@ -27,7 +29,11 @@ def _check(name: str, cfg: Mapping[str, Any], allowed: Sequence[str]) -> None:
 
 
 def build_sink(
-    name: str, cfg: Mapping[str, Any] | None = None, *, chunk_rows: int = 500_000, resume: bool = False
+    name: str,
+    cfg: Mapping[str, Any] | None = None,
+    *,
+    chunk_rows: int = 500_000,
+    resume: bool = False,
 ) -> Sink:
     """One sink by name with its settings (a mapping; see each sink's class)."""
     settings = dict(cfg or {})
@@ -75,7 +81,9 @@ def build_sink(
         return fabric.SqlDatabaseSink(settings.pop("connection_string", ""), **settings)
     if name == "kql":
         _check(name, settings, ("cluster_uri", "database", "table_prefix", "batch_size", "auth"))
-        return fabric.KqlSink(settings.pop("cluster_uri", ""), settings.pop("database", ""), **settings)
+        return fabric.KqlSink(
+            settings.pop("cluster_uri", ""), settings.pop("database", ""), **settings
+        )
     raise ValueError(f"unknown sink {name!r}; the sinks are: {', '.join(SINK_NAMES)}")
 
 
@@ -95,7 +103,8 @@ def build_sinks(
 
 
 def redact(config: Mapping[str, Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
-    """``config`` with the value of every secret-looking setting (and the password of a connection string) masked, for a job record."""
+    """``config`` with every secret-looking setting, and the password of a connection string,
+    masked: what a job record may keep."""
     from shape.scale.jobs import MASK
 
     def one(key: str, value: Any) -> Any:

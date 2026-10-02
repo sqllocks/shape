@@ -282,6 +282,7 @@ source_modules = [
     "shape.location",
     "shape.model",
     "shape.runlog",
+    "shape.scale",
     "shape.scenario",
     "shape.packs",
     "shape.plugins",

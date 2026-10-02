@@ -33,23 +33,25 @@ class _TableStream:
         self.table = table
         self.rows = 0
         self.error: BaseException | None = None
+        self._ended = False  # the writer has read the end marker
         self._queue: queue.Queue[Any] = queue.Queue(maxsize=_DEPTH)
         self._write = write
-        self._thread = threading.Thread(
-            target=self._run, name=f"shape-writer-{table}", daemon=True
-        )
+        self._thread = threading.Thread(target=self._run, name=f"shape-writer-{table}", daemon=True)
         self._thread.start()
 
     def _drain(self) -> Iterator[Any]:
         while (item := self._queue.get()) is not _END:
             yield item
+        self._ended = True
 
     def _run(self) -> None:
         try:
             self._write(self._drain())
         except BaseException as exc:
             self.error = exc
-            while self._queue.get() is not _END:  # keep the producer from blocking
+            # Keep the producer from blocking: read what is left, up to the end marker (a writer
+            # that fails after reading everything has read it already).
+            while not self._ended and self._queue.get() is not _END:
                 pass
 
     def put(self, batch: pa.RecordBatch) -> None:

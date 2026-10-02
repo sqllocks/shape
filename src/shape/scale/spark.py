@@ -36,7 +36,9 @@ SPEC_DIR = "shape_jobs"
 _GUID = re.compile(r"^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$")
 _NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_ .-]{0,127}$")
 _PREFIX = re.compile(r"^[A-Za-z0-9_]{0,64}$")
-_REQUIREMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.\-]*(\[[A-Za-z0-9_,.\-]+\])?(==[A-Za-z0-9_.!+\-]+)?$")
+_REQUIREMENT = re.compile(
+    r"^[A-Za-z0-9][A-Za-z0-9_.\-]*(\[[A-Za-z0-9_,.\-]+\])?(==[A-Za-z0-9_.!+\-]+)?$"
+)
 
 
 class NotebookNotFoundError(RuntimeError):
@@ -126,7 +128,9 @@ class FabricSparkRouter:
         self._storage_factory = storage_token_factory
         self._prefix = table_prefix
         self._sleep = sleep
-        self._requirements = list(requirements) if requirements is not None else default_requirements()
+        self._requirements = (
+            list(requirements) if requirements is not None else default_requirements()
+        )
         for item in self._requirements:
             if not _REQUIREMENT.match(item):
                 raise ValueError(f"not a plain pip requirement: {item!r}")
@@ -139,14 +143,17 @@ class FabricSparkRouter:
                 self._storage_token = self._storage_factory()
             else:
                 try:
-                    from azure.identity import DefaultAzureCredential  # type: ignore[import-not-found]
+                    from azure.identity import (
+                        DefaultAzureCredential,
+                    )
                 except ImportError as exc:
                     raise RuntimeError(
-                        "OneLake needs a storage token: pass storage_token, or install azure-identity"
+                        "OneLake needs a storage token: pass storage_token, "
+                        "or install azure-identity"
                     ) from exc
-                self._storage_token = DefaultAzureCredential().get_token(
-                    "https://storage.azure.com/.default"
-                ).token
+                self._storage_token = (
+                    DefaultAzureCredential().get_token("https://storage.azure.com/.default").token
+                )
         return self._storage_token
 
     def upload_spec(self, spec: Mapping[str, Any], run_id: str) -> str:
@@ -204,7 +211,7 @@ class FabricSparkRouter:
             "metadata": {
                 "type": "Notebook",
                 "displayName": self._notebook,
-                "description": "Shape generation worker (created by shape generate --scale-mode fabric_spark)",
+                "description": "Shape generation worker (made by generate --scale-mode)",
             },
             "config": {"version": "2.0", "logicalId": str(uuid.uuid4())},
         }
@@ -245,7 +252,9 @@ class FabricSparkRouter:
             return str(item_id)
         location = response.headers.get("location", "")
         if not location:
-            raise NotebookNotFoundError("the Items API accepted the notebook but gave no operation URL")
+            raise NotebookNotFoundError(
+                "the Items API accepted the notebook but gave no operation URL"
+            )
         for _ in range(60):
             self._sleep(2.0)
             operation = self._http.request("GET", location).json()
@@ -256,7 +265,9 @@ class FabricSparkRouter:
                     return created
                 raise NotebookNotFoundError(f"notebook {self._notebook!r} not found after creation")
             if state == "Failed":
-                raise NotebookNotFoundError(f"notebook creation failed: {operation.get('error', 'unknown')}")
+                raise NotebookNotFoundError(
+                    f"notebook creation failed: {operation.get('error', 'unknown')}"
+                )
         raise NotebookNotFoundError("notebook creation timed out after about 2 minutes")
 
     # -- submitting -----------------------------------------------------------------------

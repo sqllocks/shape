@@ -54,8 +54,8 @@ class SinkRegistry:
                 except Exception as exc:
                     errors.append((sink_name(sink), exc))
         if errors:
-            for name, exc in errors:
-                logger.error("sink %s: %s failed: %s", name, label, exc)
+            for name, err in errors:
+                logger.error("sink %s: %s failed: %s", name, label, err)
             raise SinkError(errors)
 
     def open(self, schema: GenSchema | None) -> None:

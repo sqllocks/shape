@@ -141,7 +141,9 @@ class ScaleRouter:
         resume: bool = False,
     ) -> None:
         if mode not in LOCAL_MODES:
-            raise ValueError(f"unknown local mode {mode!r}; the local modes are: {', '.join(LOCAL_MODES)}")
+            raise ValueError(
+                f"unknown local mode {mode!r}; the local modes are: {', '.join(LOCAL_MODES)}"
+            )
         if chunk_size < 1:
             raise ValueError("chunk_size must be at least 1")
         if processes < 0:
@@ -161,9 +163,7 @@ class ScaleRouter:
         self._rows_done = 0
         self._chunks = 0
         self._tables: dict[str, int] = {}
-        self._rows_total = sum(
-            engine.row_counts[n] for n in engine.order if n in engine.row_counts
-        )
+        self._rows_total = sum(engine.row_counts[n] for n in engine.order if n in engine.row_counts)
 
     # ---- the run ------------------------------------------------------------------------
 

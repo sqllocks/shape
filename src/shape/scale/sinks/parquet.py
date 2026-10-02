@@ -32,7 +32,7 @@ COMPLETE = "_COMPLETE"
 def part_rows_ok(path: Path, rows: int) -> bool:
     """True when ``path`` is a readable Parquet file of exactly ``rows`` rows."""
     try:
-        import pyarrow.parquet as pq
+        import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
         return bool(pq.ParquetFile(path).metadata.num_rows == rows)
     except Exception:
@@ -129,7 +129,6 @@ class ParquetSink(BaseSink):
         os.replace(tmp, target / COMPLETE)
 
     def close(self) -> None:
-        pool, self._pool = self._pool, None
         try:
             for table in list(self._parts):
                 if self._pending_rows.get(table) or (
@@ -138,6 +137,7 @@ class ParquetSink(BaseSink):
                     self.finish_table(table)
             self._drain()
         finally:
+            pool, self._pool = self._pool, None
             if pool is not None:
                 pool.shutdown(wait=True)
 
