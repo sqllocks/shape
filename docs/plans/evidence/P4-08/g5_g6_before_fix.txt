@@ -1,0 +1,216 @@
+FFFFFFFFFFF                                                              [100%]
+=================================== FAILURES ===================================
+__________________ test_missingness_nulls_the_values_it_masks __________________
+
+    def test_missingness_nulls_the_values_it_masks() -> None:
+        values, mask = missingness(np.arange(20_000, dtype=np.float64), 0.2, seed=1)
+>       assert isinstance(values, pa.Array)
+E       AssertionError: assert False
+E        +  where False = isinstance(array([0.0000e+00, 1.0000e+00, 2.0000e+00, ..., 1.9997e+04, 1.9998e+04,\n       1.9999e+04], shape=(20000,)), <class 'pyarrow.lib.Array'>)
+E        +    where <class 'pyarrow.lib.Array'> = pa.Array
+
+tests/regressions/test_g5_future.py:19: AssertionError
+________________ test_missingness_keeps_the_type_and_is_seeded _________________
+
+    def test_missingness_keeps_the_type_and_is_seeded() -> None:
+        ints = pa.array(np.arange(1000, dtype=np.int64))
+        a, _ = missingness(ints, 0.5, seed=3)
+        b, _ = missingness(ints, 0.5, seed=3)
+        c, _ = missingness(ints, 0.5, seed=4)
+>       assert a.type == pa.int64() and a.equals(b) and not a.equals(c)
+               ^^^^^^
+E       AttributeError: 'numpy.ndarray' object has no attribute 'type'
+
+tests/regressions/test_g5_future.py:31: AttributeError
+________________ test_copula_gives_each_column_its_own_marginal ________________
+
+    def test_copula_gives_each_column_its_own_marginal() -> None:
+        corr = [[1.0, 0.7], [0.7, 1.0]]
+        uniform = lambda u: 10.0 + 10.0 * u  # noqa: E731  uniform on [10, 20)
+        expo = lambda u: -np.log1p(-u) / 0.5  # noqa: E731  exponential, rate 0.5
+>       out = gaussian_copula(corr, 100_000, seed=2, marginals=[uniform, expo])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: gaussian_copula() got an unexpected keyword argument 'marginals'
+
+tests/regressions/test_g5_future.py:45: TypeError
+____ test_copula_without_marginals_has_unit_variance_even_for_a_bad_matrix _____
+
+    def test_copula_without_marginals_has_unit_variance_even_for_a_bad_matrix() -> None:
+        """A matrix that is not a correlation matrix is repaired to one: unit variances, in range."""
+        bad = [[1.0, 0.9, 0.9], [0.9, 1.0, -0.9], [0.9, -0.9, 1.0]]
+        out = gaussian_copula(bad, 200_000, seed=5)
+>       assert np.allclose(out.std(axis=0), 1.0, atol=0.02)
+E       assert False
+E        +  where False = <function allclose at 0x7fd12707ec70>(array([1.12556232, 1.12839562, 1.12552232]), 1.0, atol=0.02)
+E        +    where <function allclose at 0x7fd12707ec70> = np.allclose
+E        +    and   array([1.12556232, 1.12839562, 1.12552232]) = <built-in method std of numpy.ndarray object at 0x7fd1271cc7b0>(axis=0)
+E        +      where <built-in method std of numpy.ndarray object at 0x7fd1271cc7b0> = array([[ 1.49051234,  1.52688904, -0.0363631 ],\n       [-1.27857619, -1.04909042, -0.22949177],\n       [ 0.88325482,  ...8],\n       [ 1.06544244,  2.44614035, -1.38069729],\n       [ 1.51963733, -1.09875264,  2.61826471]], shape=(200000, 3)).std
+
+tests/regressions/test_g5_future.py:57: AssertionError
+_________________ test_generating_from_a_profile_applies_both __________________
+
+    def test_generating_from_a_profile_applies_both() -> None:
+        """The product path: nulls appear at the profile's rate and the correlation survives them."""
+        rng = np.random.default_rng(7)
+        n = 40_000
+        z = rng.multivariate_normal([0, 0], [[1, 0.7], [0.7, 1]], n)
+        x = np.round(np.exp(2 + 0.8 * z[:, 0]), 2)
+        y = np.round(50 + 10 * z[:, 1], 2)
+        table = pa.table(
+            {
+                "id": np.arange(1, n + 1),
+                "x": x,
+                "y": pa.array(y, mask=rng.random(n) < 0.15),
+            }
+        )
+        profile = shape.profile(table, name="t")
+        original = profile.to_dict()
+>       out = shape.generate(profile, seed=11).tables["t"]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/regressions/test_g5_future.py:77: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+shape = Profile('t', rows=40000, columns=3), n = None, seed = 11
+relationships = None, scale = None, mode = None
+
+    def generate(
+        shape: Any,
+        n: Any = None,
+        seed: int | None = None,
+        relationships: Any = None,
+        *,
+        scale: str | None = None,
+        mode: str | None = None,
+    ) -> Any:
+        """Generate data.
+    
+        ``generate("retail", scale="medium", seed=42, mode="star")`` runs a domain (or a
+        ``GenSchema``, or a generation schema ``dict``) through the engine and returns the
+        ``GenerationResult``: ``result.tables`` maps each table name to a ``pyarrow.Table`` (so does
+        ``result["order"]``). ``scale`` is a preset name, ``seed`` defaults to the schema's and ``mode``
+        (``3nf`` or ``star``) picks a domain's schema.
+    
+        The earlier form, ``generate(shape_model, n, seed, relationships)``, still generates rows from
+        a Shape model.
+        """
+        from shape.generation.schema import GenSchema
+    
+        if _is_profile(shape):
+>           raise NotImplementedError(
+                "generating data from a shape.profile() result is not available yet in this "
+                "early-access release; profiling, check and diff are. It is planned (profile to "
+                "generate)."
+            )
+E           NotImplementedError: generating data from a shape.profile() result is not available yet in this early-access release; profiling, check and diff are. It is planned (profile to generate).
+
+src/shape/api.py:50: NotImplementedError
+________________ test_text_without_top_values_is_not_preserved _________________
+
+    def test_text_without_top_values_is_not_preserved() -> None:
+        plan = plan_reconstruction({"columns": {"name": {"kind": "text", "distinct_estimate": 50}}})
+>       assert _status(plan, "column:name") == "not_modelled"
+E       AssertionError: assert 'preserved' == 'not_modelled'
+E         
+E         - not_modelled
+E         + preserved
+
+tests/regressions/test_g6_plan.py:24: AssertionError
+________________ test_text_with_top_values_is_only_approximate _________________
+
+    def test_text_with_top_values_is_only_approximate() -> None:
+        evidence = {"columns": {"c": {"kind": "text", "topk": [["a", 6], ["b", 4]]}}}
+>       assert _status(plan_reconstruction(evidence), "column:c") == "approximate"
+E       AssertionError: assert 'preserved' == 'approximate'
+E         
+E         - approximate
+E         + preserved
+
+tests/regressions/test_g6_plan.py:29: AssertionError
+__________ test_a_correlation_naming_a_missing_column_is_unavailable ___________
+
+    def test_a_correlation_naming_a_missing_column_is_unavailable() -> None:
+        evidence = {
+            "columns": {"a": {"kind": "numeric", "mean": 1, "variance_population": 1}},
+            "relationships": {"correlations": [{"source": "a", "target": "ghost", "rho": 0.5}]},
+        }
+        plan = plan_reconstruction(evidence)
+>       assert _status(plan, "correlations:0") == "unavailable"
+E       AssertionError: assert 'preserved' == 'unavailable'
+E         
+E         - unavailable
+E         + preserved
+
+tests/regressions/test_g6_plan.py:38: AssertionError
+________________ test_foreign_keys_and_conditionals_are_checked ________________
+
+    def test_foreign_keys_and_conditionals_are_checked() -> None:
+        evidence = {
+            "columns": {"s": {"kind": "text", "topk": [["A", 1]]}, "v": {"kind": "numeric"}},
+            "relationships": {
+                "foreign_keys": [{"field": "c"}, {"field": "c", "parent_count": 10}],
+                "conditionals": [
+                    {"when": "s", "field": "v", "mean": 1},
+                    {"when": "nope", "field": "v"},
+                ],
+            },
+        }
+        plan = plan_reconstruction(evidence)
+>       assert [_status(plan, f"foreign_keys:{i}") for i in (0, 1)] == ["unavailable", "approximate"]
+E       AssertionError: assert ['preserved', 'preserved'] == ['unavailable', 'approximate']
+E         
+E         At index 0 diff: 'preserved' != 'unavailable'
+E         Use -v to get more diff
+
+tests/regressions/test_g6_plan.py:54: AssertionError
+_____________ test_numeric_is_never_reported_as_exactly_preserved ______________
+
+    def test_numeric_is_never_reported_as_exactly_preserved() -> None:
+        plan = plan_reconstruction({"columns": {"x": {"kind": "numeric", "mean": 1.0}}})
+>       assert _status(plan, "column:x") == "approximate"
+E       AssertionError: assert 'preserved' == 'approximate'
+E         
+E         - approximate
+E         + preserved
+
+tests/regressions/test_g6_plan.py:60: AssertionError
+___________________ test_a_profile_is_planned_field_by_field ___________________
+
+    def test_a_profile_is_planned_field_by_field() -> None:
+        rng = np.random.default_rng(1)
+        n = 2000
+        table = pa.table(
+            {
+                "id": np.arange(n),
+                "name": [f"person {i}" for i in range(n)],
+                "score": rng.normal(10, 2, n),
+            }
+        )
+>       plan = plan_reconstruction(shape.profile(table, name="t"))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/regressions/test_g6_plan.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+shape = Profile('t', rows=2000, columns=3)
+
+    def plan_reconstruction(shape):
+        items = []
+>       for n, c in shape.get("columns", {}).items():
+                    ^^^^^^^^^
+E       AttributeError: 'Profile' object has no attribute 'get'
+
+src/shape/generation/fidelity.py:92: AttributeError
+=========================== short test summary info ============================
+FAILED tests/regressions/test_g5_future.py::test_missingness_nulls_the_values_it_masks
+FAILED tests/regressions/test_g5_future.py::test_missingness_keeps_the_type_and_is_seeded
+FAILED tests/regressions/test_g5_future.py::test_copula_gives_each_column_its_own_marginal
+FAILED tests/regressions/test_g5_future.py::test_copula_without_marginals_has_unit_variance_even_for_a_bad_matrix
+FAILED tests/regressions/test_g5_future.py::test_generating_from_a_profile_applies_both
+FAILED tests/regressions/test_g6_plan.py::test_text_without_top_values_is_not_preserved
+FAILED tests/regressions/test_g6_plan.py::test_text_with_top_values_is_only_approximate
+FAILED tests/regressions/test_g6_plan.py::test_a_correlation_naming_a_missing_column_is_unavailable
+FAILED tests/regressions/test_g6_plan.py::test_foreign_keys_and_conditionals_are_checked
+FAILED tests/regressions/test_g6_plan.py::test_numeric_is_never_reported_as_exactly_preserved
+FAILED tests/regressions/test_g6_plan.py::test_a_profile_is_planned_field_by_field
+11 failed in 0.96s

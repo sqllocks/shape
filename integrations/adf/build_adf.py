@@ -32,14 +32,17 @@ POLICY = {
     "secureOutput": False,
 }
 
-# The container command. ADF passes the pipeline's values in activity.json (extendedProperties),
-# so nothing user-supplied is spliced into the shell command. VERIFY IN THE WORKSPACE ON FIRST
-# RUN: the pool needs Docker (a container-enabled VM image), and the task user must be allowed to
-# run it (autoUserSpecification below).
+# The container command. ADF passes the pipeline's values in activity.json (extendedProperties).
+# The one value spliced into the shell command is the image name: it is wrapped in single quotes
+# after every single quote is removed from it, so the shell reads it as one word whatever the
+# parameter holds (P7-04: it was concatenated raw, a command injection through ``image``).
+# VERIFY IN THE WORKSPACE ON FIRST RUN: the pool needs Docker (a container-enabled VM image), and
+# the task user must be allowed to run it (autoUserSpecification below).
 COMMAND = (
     '@concat(\'docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp '
     '-v "$AZ_BATCH_TASK_WORKING_DIR:/work" -w /work \', '
-    "pipeline().parameters.image, ' python /work/run_gate.py --activity /work/activity.json')"
+    "'''', replace(pipeline().parameters.image, '''', ''), '''', "
+    "' python /work/run_gate.py --activity /work/activity.json')"
 )
 
 # The one expression the gate hinges on: the Lookup reads gate.json (written by run_gate.py).
@@ -84,6 +87,61 @@ def _param(name: str) -> dict:
     return _expr(f"@pipeline().parameters.{name}")
 
 
+def _read_gate(after: str) -> dict:
+    """The Lookup that reads gate.json back; it runs on ``Completed``, so also after a failed gate."""
+    return {
+        "name": "ReadGate",
+        "type": "Lookup",
+        "dependsOn": [{"activity": after, "dependencyConditions": ["Completed"]}],
+        "policy": {**POLICY, "timeout": "0.00:10:00"},
+        "userProperties": [],
+        "typeProperties": {
+            "source": {
+                "type": "JsonSource",
+                "storeSettings": {
+                    "type": "AzureBlobFSReadSettings",
+                    "recursive": False,
+                    "enablePartitionDiscovery": False,
+                },
+                "formatSettings": {"type": "JsonReadSettings"},
+            },
+            "dataset": {
+                "referenceName": "ShapeGateJson",
+                "type": "DatasetReference",
+                "parameters": {
+                    "fileSystem": _param("outputFileSystem"),
+                    "folderPath": _expr(
+                        "@concat(pipeline().parameters.outputFolder, '/', pipeline().RunId)"
+                    ),
+                },
+            },
+            "firstRowOnly": True,
+        },
+    }
+
+
+def _check_gate(message: str, error_code: str = "ShapeGateFailed") -> dict:
+    return {
+        "name": "CheckGate",
+        "type": "IfCondition",
+        "dependsOn": [{"activity": "ReadGate", "dependencyConditions": ["Succeeded"]}],
+        "userProperties": [],
+        "typeProperties": {
+            "expression": _expr(PASSED_EXPRESSION),
+            "ifTrueActivities": [],
+            "ifFalseActivities": [
+                {
+                    "name": "FailGate",
+                    "type": "Fail",
+                    "dependsOn": [],
+                    "userProperties": [],
+                    "typeProperties": {"message": _expr(message), "errorCode": error_code},
+                }
+            ],
+        },
+    }
+
+
 def pipeline() -> dict:
     return {
         "name": PIPELINE_NAME,
@@ -123,64 +181,91 @@ def pipeline() -> dict:
                         "autoUserSpecification": "pool-admin",
                     },
                 },
-                {
-                    "name": "ReadGate",
-                    "type": "Lookup",
-                    "dependsOn": [
-                        {"activity": "ProfileAndCheck", "dependencyConditions": ["Completed"]}
-                    ],
-                    "policy": {**POLICY, "timeout": "0.00:10:00"},
-                    "userProperties": [],
-                    "typeProperties": {
-                        "source": {
-                            "type": "JsonSource",
-                            "storeSettings": {
-                                "type": "AzureBlobFSReadSettings",
-                                "recursive": False,
-                                "enablePartitionDiscovery": False,
-                            },
-                            "formatSettings": {"type": "JsonReadSettings"},
-                        },
-                        "dataset": {
-                            "referenceName": "ShapeGateJson",
-                            "type": "DatasetReference",
-                            "parameters": {
-                                "fileSystem": _param("outputFileSystem"),
-                                "folderPath": _expr(
-                                    "@concat(pipeline().parameters.outputFolder, '/', "
-                                    "pipeline().RunId)"
-                                ),
-                            },
-                        },
-                        "firstRowOnly": True,
-                    },
-                },
-                {
-                    "name": "CheckGate",
-                    "type": "IfCondition",
-                    "dependsOn": [{"activity": "ReadGate", "dependencyConditions": ["Succeeded"]}],
-                    "userProperties": [],
-                    "typeProperties": {
-                        "expression": _expr(PASSED_EXPRESSION),
-                        "ifTrueActivities": [],
-                        "ifFalseActivities": [
-                            {
-                                "name": "FailGate",
-                                "type": "Fail",
-                                "dependsOn": [],
-                                "userProperties": [],
-                                "typeProperties": {
-                                    "message": _expr(FAIL_MESSAGE_EXPRESSION),
-                                    "errorCode": "ShapeGateFailed",
-                                },
-                            }
-                        ],
-                    },
-                },
+                _read_gate("ProfileAndCheck"),
+                _check_gate(FAIL_MESSAGE_EXPRESSION),
             ],
             "parameters": {
                 name: {"type": kind, "defaultValue": default}
                 for name, (kind, default) in PARAMETERS.items()
+            },
+            "annotations": ["shape"],
+        },
+    }
+
+
+# ---------------------------------------------------------------- generation pipeline (PF-06)
+
+GENERATE_PIPELINE_NAME = "shape_generate_gate_batch"
+GENERATE_COMMAND = COMMAND.replace("run_gate.py", "run_generate_gate.py")
+GENERATE_FAIL_MESSAGE_EXPRESSION = (
+    "@concat('Shape generated data broke the contract of ', pipeline().parameters.domain, ': ', "
+    "if(empty(activity('ReadGate').output.firstRow.error), "
+    "string(activity('ReadGate').output.firstRow.violations), "
+    "activity('ReadGate').output.firstRow.error))"
+)
+GENERATE_PARAMETERS = {
+    "domain": ("string", "retail"),
+    "scale": ("string", "small"),
+    "seed": ("int", 42),
+    "mode": ("string", ""),
+    "baselineUrl": ("string", ""),
+    "failOnDrift": ("bool", False),
+    "storageAccount": ("string", "<<STORAGE_ACCOUNT>>"),
+    "outputFileSystem": ("string", "shape"),
+    "outputFolder": ("string", "generated/retail"),
+    "image": ("string", "ghcr.io/sqllocks/shape:0.9.0"),
+    "scriptsFolder": ("string", "shape-batch"),
+    "managedIdentityClientId": ("string", ""),
+}
+
+
+def generate_pipeline() -> dict:
+    return {
+        "name": GENERATE_PIPELINE_NAME,
+        "properties": {
+            "description": (
+                "Shape on an Azure Batch pool: the container generates a domain, profiles the "
+                "tables and checks the profile against the domain's contract; the exit code fails "
+                "the Custom activity; the gate document in ADLS is read back by a Lookup to branch."
+            ),
+            "activities": [
+                {
+                    "name": "GenerateAndCheck",
+                    "type": "Custom",
+                    "dependsOn": [],
+                    "policy": POLICY,
+                    "userProperties": [],
+                    "linkedServiceName": {
+                        "referenceName": "ShapeBatch",
+                        "type": "LinkedServiceReference",
+                    },
+                    "typeProperties": {
+                        "command": _expr(GENERATE_COMMAND),
+                        "resourceLinkedService": {
+                            "referenceName": "ShapeBatchStorage",
+                            "type": "LinkedServiceReference",
+                        },
+                        "folderPath": _param("scriptsFolder"),
+                        "extendedProperties": {
+                            "domain": _param("domain"),
+                            "scale": _param("scale"),
+                            "seed": _param("seed"),
+                            "mode": _param("mode"),
+                            "baselineUrl": _param("baselineUrl"),
+                            "failOnDrift": _param("failOnDrift"),
+                            "managedIdentityClientId": _param("managedIdentityClientId"),
+                            "outputUrl": _expr(OUTPUT_URL),
+                        },
+                        "retentionTimeInDays": 1,
+                        "autoUserSpecification": "pool-admin",
+                    },
+                },
+                _read_gate("GenerateAndCheck"),
+                _check_gate(GENERATE_FAIL_MESSAGE_EXPRESSION, "ShapeContractFailed"),
+            ],
+            "parameters": {
+                name: {"type": kind, "defaultValue": default}
+                for name, (kind, default) in GENERATE_PARAMETERS.items()
             },
             "annotations": ["shape"],
         },
@@ -267,7 +352,11 @@ def linked_services() -> dict[str, dict]:
 
 
 def build() -> dict[str, dict]:
-    files = {f"pipeline/{PIPELINE_NAME}.json": pipeline(), "dataset/ShapeGateJson.json": dataset()}
+    files = {
+        f"pipeline/{PIPELINE_NAME}.json": pipeline(),
+        f"pipeline/{GENERATE_PIPELINE_NAME}.json": generate_pipeline(),
+        "dataset/ShapeGateJson.json": dataset(),
+    }
     for name, doc in linked_services().items():
         files[f"linkedService/{name}.json"] = doc
     return files

@@ -8,7 +8,9 @@ matrix (eigenvalues clipped to stay positive definite), and reorder each column'
 the rank of its normal. The marginals are therefore exactly preserved, and the result depends
 only on the table's contents and the seed. Key-like columns (``id``, ``pk`` and names ending
 ``_id``, ``_pk``, ``_fk``) are never reordered: shuffling one would break the rows' references.
-A column with nulls is left alone.
+A column with nulls is left alone, unless ``nulls="rank"`` is asked for (the schema's
+``generation.output.copula_nulls``, which ``shape generate --from`` sets): then the non-null values
+are reordered among the non-null rows and the nulls stay where they are.
 
 Stable interface: :func:`apply_copula`.
 """
@@ -22,6 +24,7 @@ import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
 from shape.generation.rng import RowStream
 
 THRESHOLD = 0.5
@@ -32,12 +35,24 @@ def _looks_like_key(name: str) -> bool:
     return n in ("id", "pk") or n.endswith(("_id", "_pk", "_fk"))
 
 
+def _reorder_with_nulls(col: pa.Array, z: Any) -> pa.Array:
+    """``col`` with its non-null values reordered by the rank of ``z`` among the non-null rows;
+    null rows keep their nulls."""
+    keep = np.asarray(col.is_valid().to_numpy(zero_copy_only=False))
+    present = np.flatnonzero(keep)
+    values = pc.take(col, pa.array(present))
+    ranks = np.argsort(np.argsort(z[present], kind="stable"), kind="stable")
+    mixed = pc.take(pc.take(values, pc.sort_indices(values)), pa.array(ranks))
+    return pc.replace_with_mask(col, pa.array(keep), mixed)
+
+
 def apply_copula(
     table: pa.Table,
     pairs: Sequence[Sequence[Any]],
     seed: int,
     table_name: str,
     threshold: float = THRESHOLD,
+    nulls: str = "skip",
 ) -> pa.Table:
     """``table`` with the columns of ``pairs`` reordered to match their target correlations."""
     matrix: dict[str, dict[str, float]] = {}
@@ -80,8 +95,11 @@ def apply_copula(
     for i, c in enumerate(cols):
         col = table[c].combine_chunks()
         if col.null_count:
+            if nulls != "rank":
+                continue
+            out = out.set_column(out.column_names.index(c), c, _reorder_with_nulls(col, z[:, i]))
             continue
         ranks = np.argsort(np.argsort(z[:, i], kind="stable"), kind="stable")
         ascending = pc.take(col, pc.sort_indices(col))
-        out = out.set_column(out.column_names.index(c), c, pc.take(ascending, pa.array(ranks)))
+        out = out.set_column(out.column_names.index(c), c, pc.take(ascending, arrow_array(ranks)))
     return out

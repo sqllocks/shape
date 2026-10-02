@@ -38,6 +38,8 @@ import pyarrow.json as pajson  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 import shape
+from shape.integrations.fabric import generation
+from shape.security.jsondepth import check_json_depth
 
 __all__ = [
     "LAKEHOUSE_ALIAS",
@@ -45,6 +47,7 @@ __all__ = [
     "bounded",
     "check_profile",
     "diff_profiles",
+    "generate_sample",
     "json_safe",
     "profile_data_frame",
     "profile_lakehouse_file",
@@ -173,6 +176,7 @@ def _table_from_bytes(data: bytes, path: str) -> pa.Table:
         if suffix == ".csv":
             return pacsv.read_csv(buf)
         if suffix in (".jsonl", ".ndjson"):
+            check_json_depth(data)
             return pajson.read_json(buf)
     except Exception as e:
         raise _fail(f"Could not parse {path!r} as {suffix[1:]}: {e}") from e
@@ -378,3 +382,28 @@ def profile_data_frame(data: Any) -> dict[str, Any]:
         output="",
         extra={"sampled": False},
     )
+
+
+def generate_sample(domain: str, table: str, rows: int = 10000, seed: int = 42) -> Any:
+    """Generate ``rows`` rows of ``table`` from an installed domain, as a pandas DataFrame.
+
+    The domain and table must be installed names (letters, digits, underscores): they are looked
+    up, never used to build a path or a statement. ``rows`` is capped at
+    ``generation.MAX_SAMPLE_ROWS`` and the frame is cut to the leading rows whose JSON stays under
+    ``generation.MAX_RESPONSE_BYTES`` (25 MB; the response limit is 30 MB). The same arguments
+    always return the same rows.
+    """
+    started = time.perf_counter()
+    try:
+        frame = generation.sample_to_pandas(domain, table, rows, seed)
+    except generation.GenerationRequestError as e:
+        raise _fail(str(e)) from e
+    log.info(
+        "shape.udf generate domain=%s table=%s requested=%s returned=%s elapsed_seconds=%.3f",
+        domain,
+        table,
+        rows,
+        len(frame),
+        time.perf_counter() - started,
+    )
+    return frame

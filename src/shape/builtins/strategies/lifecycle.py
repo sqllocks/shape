@@ -8,6 +8,7 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.generation import kernel_ops
+from shape.generation.arrowkit import array as arrow_array
 from shape.generation.strategy_kit import StrategyError, stream, where
 from shape.plugins.api.v1 import GenerationContext
 
@@ -38,7 +39,7 @@ class Lifecycle:
         index = kernel_ops.alias_draw(
             kernel_ops.alias_table(weights), stream(ctx, "v"), ctx.row_start, ctx.n_rows
         )
-        return kernel_ops.pool_take(pa.array([str(k) for k in phases], type=pa.string()), index)
+        return kernel_ops.pool_take(arrow_array([str(k) for k in phases], type=pa.string()), index)
 
 
 __all__ = ["SHAPE_API", "Lifecycle"]

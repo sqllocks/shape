@@ -90,5 +90,8 @@ def main(argv: Sequence[str]) -> int:
     try:
         return _validate(a) if a.cmd == "validate" else _safe(a)
     except (OSError, ValueError, KeyError, ImportError, zipfile.BadZipFile) as exc:
-        print(f"shape: error: {exc}", file=sys.stderr)
-        return 2
+        from shape.cli import errors
+
+        if errors.debug_enabled():
+            raise
+        return errors.fail(exc)

@@ -1,0 +1,191 @@
++ /root/.venvs/spindle/bin/python /home/user/shape/benchmarks/vs_spindle/stream_1to1/verify.py --scale medium
+
+== whole table: 500,000 events
+  PASS  field_names_and_order
+  PASS  json_types
+  PASS  shape:consistent_field_order
+  PASS  shape:event_count
+  PASS  shape:seq_unique
+  PASS  shape:seq_in_range
+  PASS  shape:seq_covers_every_row
+  PASS  shape:table_field_constant
+  PASS  shape:has_event_time
+  PASS  shape:event_time_is_first_datetime_column
+  PASS  shape:events_in_event_time_order
+  PASS  baseline:consistent_field_order
+  PASS  baseline:event_count
+  PASS  baseline:seq_unique
+  PASS  baseline:seq_in_range
+  PASS  baseline:seq_covers_every_row
+  PASS  baseline:table_field_constant
+  PASS  baseline:has_event_time
+  PASS  baseline:event_time_is_first_datetime_column
+  PASS  baseline:events_in_event_time_order
+  PASS  baseline_seed_set:seed43.jsonl
+  PASS  baseline_seed_set:seed44.jsonl
+  PASS  baseline_seed_set:seed45.jsonl
+  PASS  baseline_seed_set:seed46.jsonl
+  PASS  T21:order_id
+  PASS  T21:customer_id
+  PASS  T21:store_id
+  PASS  T21:shipping_address_id
+  PASS  T21:promotion_id
+  PASS  T21:order_date
+  PASS  T21:status
+  PASS  T21:order_total
+  PASS  T21:_shape_table
+  PASS  T21:_shape_seq
+  PASS  T21:_shape_event_time
+
+== first 100000: 100,000 events
+  PASS  field_names_and_order
+  PASS  json_types
+  PASS  shape:consistent_field_order
+  PASS  shape:event_count
+  PASS  shape:seq_unique
+  PASS  shape:seq_in_range
+  PASS  shape:table_field_constant
+  PASS  shape:has_event_time
+  PASS  shape:event_time_is_first_datetime_column
+  PASS  shape:events_in_event_time_order
+  PASS  baseline:consistent_field_order
+  PASS  baseline:event_count
+  PASS  baseline:seq_unique
+  PASS  baseline:seq_in_range
+  PASS  baseline:table_field_constant
+  PASS  baseline:has_event_time
+  PASS  baseline:event_time_is_first_datetime_column
+  PASS  baseline:events_in_event_time_order
+  PASS  baseline_seed_set:seed43_max100000.jsonl
+  PASS  baseline_seed_set:seed44_max100000.jsonl
+  PASS  baseline_seed_set:seed45_max100000.jsonl
+  PASS  baseline_seed_set:seed46_max100000.jsonl
+  PASS  T21:order_id
+  PASS  T21:customer_id
+  PASS  T21:store_id
+  PASS  T21:shipping_address_id
+  PASS  T21:promotion_id
+  PASS  T21:order_date
+  PASS  T21:status
+  PASS  T21:order_total
+  PASS  T21:_shape_table
+  PASS  T21:_shape_seq
+  PASS  T21:_shape_event_time
++ /root/.venvs/spindle/bin/spindle stream retail --table order --scale small --no-realtime --sink file -o $BENCH_OUT_DIR/stream/probe/spindle_plain.jsonl --seed 7 --max-events 3000
++ /root/.venvs/spindle/bin/spindle stream retail --table order --scale small --no-realtime --sink file -o $BENCH_OUT_DIR/stream/probe/spindle_anomaly.jsonl --seed 7 --max-events 3000 --anomaly-fraction 0.2
++ /root/.venvs/shape/bin/shape stream retail --table order --scale small --no-realtime --sink file -o $BENCH_OUT_DIR/stream/probe/shape_plain.jsonl --seed 7 --max-events 3000
++ /root/.venvs/shape/bin/shape stream retail --table order --scale small --no-realtime --sink file -o $BENCH_OUT_DIR/stream/probe/shape_anomaly.jsonl --seed 7 --max-events 3000 --anomaly-fraction 0.2
++ /root/.venvs/shape/bin/shape stream retail --table order --scale small --no-realtime --sink file -o $BENCH_OUT_DIR/stream/probe/shape_anomaly2.jsonl --seed 7 --max-events 3000 --anomaly-fraction 0.2
+
+== allow-list ST-1 (--anomaly-fraction): PASS
+  baseline output identical with the flag: True; Shape changed 18.9% of events, deterministic: True
+
+VERDICT PASS  (report: /root/bench-out/verify/stream_medium.json)
++ /root/.venvs/shape/bin/python /home/user/shape/benchmarks/vs_spindle/stream_1to1/bench.py --scale medium --runs 5 --report /root/bench-out/bench/stream_medium.json
+[medium] spindle  warm-up 1: total 14.49s
+[medium] shape    warm-up 1: total 0.88s
+[medium] spindle  run 1: total 14.03s  emit 4.41s  rss 933MB  load 1.06
+[medium] shape    run 1: total 0.91s  emit 0.44s  rss 479MB  load 1.05
+[medium] spindle  run 2: total 12.91s  emit 4.00s  rss 933MB  load 1.05
+[medium] shape    run 2: total 0.83s  emit 0.40s  rss 520MB  load 1.04
+[medium] spindle  run 3: total 13.49s  emit 4.36s  rss 933MB  load 1.04
+[medium] shape    run 3: total 0.86s  emit 0.39s  rss 507MB  load 1.03
+[medium] spindle  run 4: total 13.73s  emit 4.24s  rss 934MB  load 1.03
+[medium] shape    run 4: total 0.83s  emit 0.38s  rss 497MB  load 1.02
+[medium] spindle  run 5: total 13.47s  emit 4.42s  rss 933MB  load 1.02
+[medium] shape    run 5: total 0.88s  emit 0.39s  rss 496MB  load 1.22
+[medium] spindle  cli 1: 14.25s
+[medium] shape    cli 1: 1.32s
+[medium] spindle  cli 2: 15.63s
+[medium] shape    cli 2: 1.52s
+[medium] spindle  cli 3: 15.17s
+[medium] shape    cli 3: 1.31s
+
+== stream:retail:order:medium: median of 5 fresh-process runs (1 warm-up), 4 cores, Intel(R) Xeon(R) Processor @ 2.10GHz
+tool        events  total s  emit s   events/s  RSS MB
+spindle    500,000    13.49    4.36     37,067     933
+shape      500,000     0.86    0.39    579,099     497
+speedup (shape vs baseline, in-process): 15.62x
+speedup (command lines, start-up included): 11.50x
++ /root/.venvs/spindle/bin/python /home/user/shape/benchmarks/vs_spindle/stream_1to1/verify.py --scale medium --no-generate
+
+== whole table: 500,000 events
+  PASS  field_names_and_order
+  PASS  json_types
+  PASS  shape:consistent_field_order
+  PASS  shape:event_count
+  PASS  shape:seq_unique
+  PASS  shape:seq_in_range
+  PASS  shape:seq_covers_every_row
+  PASS  shape:table_field_constant
+  PASS  shape:has_event_time
+  PASS  shape:event_time_is_first_datetime_column
+  PASS  shape:events_in_event_time_order
+  PASS  baseline:consistent_field_order
+  PASS  baseline:event_count
+  PASS  baseline:seq_unique
+  PASS  baseline:seq_in_range
+  PASS  baseline:seq_covers_every_row
+  PASS  baseline:table_field_constant
+  PASS  baseline:has_event_time
+  PASS  baseline:event_time_is_first_datetime_column
+  PASS  baseline:events_in_event_time_order
+  PASS  baseline_seed_set:seed43.jsonl
+  PASS  baseline_seed_set:seed44.jsonl
+  PASS  baseline_seed_set:seed45.jsonl
+  PASS  baseline_seed_set:seed46.jsonl
+  PASS  T21:order_id
+  PASS  T21:customer_id
+  PASS  T21:store_id
+  PASS  T21:shipping_address_id
+  PASS  T21:promotion_id
+  PASS  T21:order_date
+  PASS  T21:status
+  PASS  T21:order_total
+  PASS  T21:_shape_table
+  PASS  T21:_shape_seq
+  PASS  T21:_shape_event_time
+
+== first 100000: 100,000 events
+  PASS  field_names_and_order
+  PASS  json_types
+  PASS  shape:consistent_field_order
+  PASS  shape:event_count
+  PASS  shape:seq_unique
+  PASS  shape:seq_in_range
+  PASS  shape:table_field_constant
+  PASS  shape:has_event_time
+  PASS  shape:event_time_is_first_datetime_column
+  PASS  shape:events_in_event_time_order
+  PASS  baseline:consistent_field_order
+  PASS  baseline:event_count
+  PASS  baseline:seq_unique
+  PASS  baseline:seq_in_range
+  PASS  baseline:table_field_constant
+  PASS  baseline:has_event_time
+  PASS  baseline:event_time_is_first_datetime_column
+  PASS  baseline:events_in_event_time_order
+  PASS  baseline_seed_set:seed43_max100000.jsonl
+  PASS  baseline_seed_set:seed44_max100000.jsonl
+  PASS  baseline_seed_set:seed45_max100000.jsonl
+  PASS  baseline_seed_set:seed46_max100000.jsonl
+  PASS  T21:order_id
+  PASS  T21:customer_id
+  PASS  T21:store_id
+  PASS  T21:shipping_address_id
+  PASS  T21:promotion_id
+  PASS  T21:order_date
+  PASS  T21:status
+  PASS  T21:order_total
+  PASS  T21:_shape_table
+  PASS  T21:_shape_seq
+  PASS  T21:_shape_event_time
+
+== allow-list ST-1 (--anomaly-fraction): PASS
+  baseline output identical with the flag: True; Shape changed 18.9% of events, deterministic: True
+
+VERDICT PASS  (report: /root/bench-out/verify/stream_medium.json)
+
+wrote /root/bench-out/results_stream.json
+  shape          stream:retail:order:medium verifier=pass        spindle=13.49 impl=0.86 speedup=15.62
+exit 0

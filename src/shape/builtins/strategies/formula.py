@@ -30,6 +30,9 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import fill_null as arrow_fill_null
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.generation.strategy_kit import StrategyError, require, where
 from shape.plugins.api.v1 import GenerationContext
 
@@ -210,9 +213,9 @@ def _numeric(column: pa.Array, name: str, ctx: GenerationContext) -> tuple[Any, 
         raise StrategyError(
             f"formula for {where(ctx)} reads column {name!r} of type {t}; it must be numeric"
         )
-    mask = column.is_null().to_numpy(zero_copy_only=False) if column.null_count else None
-    values = column.fill_null(False if pa.types.is_boolean(column.type) else 0)
-    return np.asarray(values.to_numpy(zero_copy_only=False)), mask
+    mask = arrow_numpy(column.is_null()) if column.null_count else None
+    values = arrow_fill_null(column, False if pa.types.is_boolean(column.type) else 0)
+    return np.asarray(arrow_numpy(values)), mask
 
 
 class Formula:
@@ -255,7 +258,7 @@ class Formula:
         scale = getattr(column, "scale", None)
         if scale is not None and values.dtype.kind in "fiu":
             values = np.round(values, int(scale))
-        return pa.array(values, mask=null_mask)
+        return arrow_array(values, mask=null_mask)
 
 
 __all__ = ["SHAPE_API", "Formula", "compile_expression"]

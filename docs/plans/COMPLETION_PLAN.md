@@ -215,7 +215,7 @@ instruction.
 | T-04 | **Wheels built with `PyO3/maturin-action`:** manylinux_2_28 and musllinux_1_2 for x86_64 (native) and aarch64 (native on `ubuntu-24.04-arm`); macOS arm64 and x86_64 (cross-compiled on `macos-14`); win_amd64. They are abi3 wheels, one per platform, test-installed on Python 3.11 and 3.14. The sdist builds with Rust ≥1.85. | Avoids redundant builds per Python version and slow QEMU emulation. |
 | T-05 | **Build backend:** maturin, with a mixed Python/Rust layout (`python-source = "src"`, `module-name = "shape._kernel"`). | Needed for T-02. |
 | T-06 | **Python 3.11–3.14.** Tests run on the full matrix on Linux, and on 3.11 plus 3.14 on macOS and Windows. | Current floor and current release. |
-| T-07 | **Core dependencies are `numpy>=2.0,<3` and `pyarrow>=14.0.1` (no upper bound).** Remove `pydantic` (unused) and `typing-extensions`. Move `cryptography` to `[sign]`, and make `shape.security` import `crypto` lazily. Remove the `pyarrow<24` pin. The install range must admit the Fabric UDF SDK, which pins `pyarrow>=19.0.1,<20` (`fabric-user-data-functions` 1.0.x), and Fabric runtimes' preinstalled pyarrow; 14.0.1 is the first release without CVE-2023-47248. The benchmark harness still pins pyarrow 25.0.1 in both venvs (§1), so every performance number uses the same pyarrow. CI tests both the newest pyarrow (main matrix) and 19.x (the `fabric-demo` job). | Import time, install size, Fabric UDF compatibility, and a fair Parquet comparison. |
+| T-07 | **Core dependencies are `numpy>=2.0,<3` and `pyarrow>=14.0.1` (no upper bound), plus `tzdata` on Windows only (`tzdata; sys_platform == "win32"`, owner 2026-10-02: named time zones work out of the box where the OS has no time-zone database).** Remove `pydantic` (unused) and `typing-extensions`. Move `cryptography` to `[sign]`, and make `shape.security` import `crypto` lazily. Remove the `pyarrow<24` pin. The install range must admit the Fabric UDF SDK, which pins `pyarrow>=19.0.1,<20` (`fabric-user-data-functions` 1.0.x), and Fabric runtimes' preinstalled pyarrow; 14.0.1 is the first release without CVE-2023-47248. The benchmark harness still pins pyarrow 25.0.1 in both venvs (§1), so every performance number uses the same pyarrow. CI tests both the newest pyarrow (main matrix) and 19.x (the `fabric-demo` job). | Import time, install size, Fabric UDF compatibility, and a fair Parquet comparison. |
 | T-08 | **Extras:** `[sign]`, `[scipy]`, `[kafka]`, `[eventhubs]`, `[fabric]`, `[sqlserver]`, `[domains]`, `[simulation]`, `[mcp]`, `[excel]`, `[delta]` and `[all]`. Each plugin extra depends on the matching `sqllocks-shape-*` distribution. `[dev]` adds pytest, pytest-cov, hypothesis, ruff, mypy, pip-audit, build, maturin, xxhash, import-linter, vulture, bandit and py-spy. | Mirrors Spindle's extras. |
 | T-09 | **First-party plugins live under `plugins/<dist-name>/`,** each with its own `pyproject.toml`. Their versions are kept in lockstep with core, and they are released together. | One CI and atomic API changes. |
 | T-10 | **Package and version.** `sqllocks-shape` is not on PyPI (confirmed 404 on 2026-09-29). The version is `0.9.0.devN` during the build and becomes **1.0.0 at G8**. | Nothing published yet. |
@@ -243,6 +243,23 @@ instruction.
 
 | Date | ID | Change | Reason |
 |---|---|---|---|
+| 2026-10-02 | T-07, issue #21 | **Owner: add `tzdata` as a Windows-only core dependency** so named time zones work out of the box on Windows (Linux and macOS use the OS database; unchanged). T-07 amended. | Owner, 2026-10-02: "Add tzdata on Windows". |
+| 2026-10-02 | T-22, issue #24 | **Owner: decimal columns keep `dtype: float`** with `precision` and `scale` beside it (no new `decimal` dtype; T-22 vocabulary unchanged). | Owner, 2026-10-02. |
+| 2026-10-02 | P6-01e, T-21 | **Owner: investigate the composites' seed-1042 misses before accepting them** (18 cells), as was done for the single domains. Lane `lane/P6-01e-seed`. | Owner, 2026-10-02: "Investigate first". |
+| 2026-10-02 | CI | **Lead: full CI runs on `main`, `build/main-plan` and `lane/CI-FIX` pushes (plus PRs and manual runs), with superseded runs cancelled per branch.** Every lane push ran the full matrix; the queue reached 179 runs and held the G5 soak for hours. Lanes are verified locally by the lead before merging; build/main-plan keeps the full matrix after every merge. The stream-plugins job now also tests the SQL Server and Fabric plugins. | Lead. |
+| 2026-10-02 | G5 | **Phase 5 done (P5-01..P5-04); G5 waits only on the 1-hour realtime soak** (nightly `emit-rate-soak`, run by hand on build/main-plan because the scheduled nightly runs on `main`). STREAM-EMIT 14.27x in-process (lead), live fidelity within 0.0072 of `shape fidelity`. The G5-gated packages P6-04, P6-07a, P6-13 and P7-04 started in parallel before the soak result, under the owner's standing "whatever can run in parallel, do it" (as PF-02 started before G1); G5 is marked done only when the soak passes. | Lead. |
+| 2026-10-02 | SAC-01, issue #1 | **Owner's issue sqllocks/shape#1 (Shape as Code) built as work package SAC-01**: byte-reproducible `.shape` containers (fixed member timestamps, order and attributes; members **stored, not deflated**, because deflate output differs between zlib builds and only stored members give identical bytes across machines; git compresses them itself; old deflated artifacts still read), `shape cat` and `shape git-setup` (one changed line per changed property in `git diff`), `shape profile --name` and a kept name when overwriting an existing `.shape`, docs naming `shape profile safe` output as the committable artifact (`--json` and the raw `.shape` hold real values, lead decision kept), and a real-git e2e test. Artifact spec rules unchanged (writer convention 9 added). | Owner, issue #1; lead. |
+| 2026-10-02 | P5-01b | **Realtime pacing under load:** a realtime run `gc.freeze()`s the objects that exist when it starts and writes checkpoints on a writer thread, removing two stall sources that broke `test_realtime_rate_within_five_percent` inside the full suite. Test and ±5% criterion unchanged. A residual whole-process host stall (no Python thread runnable) can still exceed 50 ms on a busy VM; if CI shows it, the options are the owner's (a quiet runner for the realtime tests, or a restated CI criterion). | Lead. |
+| 2026-10-02 | P6-01, T-21 | **Owner accepts the seed-1042 T-21 misses as documented chance** (P6-01a–d: clause (h) cells in capital_markets, education, financial, insurance, supply_chain, real_estate, iot, manufacturing, marketing, and healthcare `provider.last_name` distinct ratio). Evidence (`lane/P6-01-seed`, `docs/plans/lane_status/P6-01-seed.md`): 30 seeds per tool for every cell (150 for the two closest), per-table and per-column Mann-Whitney and KS with Bonferroni: no table or column differs; the generation rules are the same; a fresh baseline seed misses its own clause-(h) floors on 8.5 of 130 tables on average, as Shape's seeds do (p = 0.93); seed 1042 is Shape's worst of 30. No seed, floor, tolerance, case or test changed; T-21 unchanged. GEN-IN ≥10x at medium remains open (round 3). | Owner, 2026-10-02: "we can accept". |
+| 2026-10-02 | PF-06b, §12.3 | **Owner: a contract may check a subset of a dataset's tables** (option (a)). PF-06b keeps its fixes (a `tables` contract against a single-table profile raises `ContractError`; a named table the profile lacks is a `table_exists` violation; `shape profile FOLDER --dataset`; artifact folders unique to the microsecond) and drops its new default that flagged every unnamed profile table as `extra_table`, which broke existing partial contracts (§12.3: every rule is optional, format final for 1.0). | Owner, 2026-10-02: "A". |
+| 2026-10-02 | P6-01, T-21 | **Owner: investigate the seed-1042 T-21 misses before accepting any** (P6-01a–d: clause (h) cells and healthcare `provider.last_name`). Lane `lane/P6-01-seed`: many-seed distributions for both tools, per-column decomposition, generation-rule comparison; fix real differences. No seed, floor, tolerance or case changes. | Owner, 2026-10-02: "Investigate further first". |
+| 2026-10-02 | P6-01a, allocator | **Owner: keep the Arrow memory-pool / THP setting on `import shape`** (documented; `SHAPE_MEMORY_POOL=default` opts out). | Owner, 2026-10-02. |
+| 2026-10-02 | P6-01, T-21, GEN-IN | **Lead notes on the P6-01 domain lanes.** (1) P6-01c's harness change to `domain_1to1/verify.py` clause (e) is accepted: the vocabulary of a `faker` provider is its full pool (`company`, `sentence`; `uri` by component), and of an `enum`/`weighted_enum` its declared value set, instead of the values the baseline drew at seed 42; no tolerance changed and values outside the vocabulary still fail. (2) P6-01a round 2 sets the Arrow memory pool (or turns off THP) on `import shape`, documented with an opt-out (`SHAPE_MEMORY_POOL=default`); the owner was told and may ask to limit it to the command line. (3) GEN-IN at medium after round 2 is 2.65x-8.1x across the 13 domains; round 3 runs as two lanes (per-domain hot paths; engine-wide writer, scheduler and native core). Gate unchanged. | Lead; investigated; owner accepted the seed-1042 misses as chance (2026-10-02). |
+| 2026-10-02 | P6-02, P6-10 | **Lead acceptance notes.** P6-02: `shape.plugins.kit.check_chaos` assumes a mutation keeps the batch schema; five of the six categories change it by design (schema, value `wrong_types`, volume, file). P6-02's acceptance does not use the kit check, so the kit is left as is (a follow-up, no contract change). P6-10: `tests/privacy/test_safe_validator.py::test_cli_input_errors_exit_2` changed one assertion to the new contract (`shape profile validate FILE` without `--safe` is the structural check: 0 valid, 1 missing), as P6-10's deliverable requires; nothing skipped. | Lead. |
+| 2026-10-02 | P6-01a, GEN-IN | **P6-01a GEN-IN at medium missed after round 1** (capital_markets 5.20x, education 7.82x, financial 7.15x; gate 10x). Following the owner's standing "keep optimising" direction (P4-10, G1): round 2 on `lane/P6-01a` with the lane's option (b) (process-wide Arrow allocator choice, native pandas-free generation path) and, if needed, (c) (parallel Parquet encoding); retail must not regress. Gate unchanged. P6-01b/c/d start from `lane/P6-01a` in parallel. T-21 clause (h) misses at seed 1042 in 6 of 60 cells are escalated to the owner (no seed, floor or case changed). | Lead; owner ruling on clause (h) pending. |
+| 2026-10-02 | PF-06 | **Trust fixes from PF-06's findings** (owner's standing decision, 2026-10-01): `shape check` must not pass a multi-table contract against a single-table profile, and `shape profile <folder>` must not silently read a folder as one table; artifact folders named by the second must not collide. Lane `lane/PF-06b`. | Lead, applying the owner's 2026-10-01 decision. |
+| 2026-10-02 | P4-10, GEN-CLI | **Owner decision on the P4-10 GEN-CLI miss** (retail medium 6.83x, gate 10x; large 19.8x; equivalence passes): keep optimising (§6.5 round 2, lane `lane/P4-10r2`); the gate is unchanged. | Owner, 2026-10-02: "Keep optimizing". Evidence: docs/plans/lane_status/P4-10.md. |
+| 2026-10-02 | P4-08, P4-10, P4-11, D-13 | **Plan text superseded by D-13 (2026-09-30) in three work packages:** P4-10 `shape validate` dispatches on Shape generation schemas and contracts only (no baseline schema input); P4-11 adds no baseline library-name aliases to `shape.fidelity`; P4-08 has no `--spindle-json` output (Shape's `learn` writes its own schema; equality with the baseline's `learn` is checked in `benchmarks/vs_spindle/learn_1to1/`, outside the package). | Lead, applying the owner's D-13 decision. |
 | 2026-10-01 | P1-18, T-22 | **Owner: fix the enum rule.** The profiler marks a column `is_enum` (and lists every value in `enum_values`) when it has fewer than 200 distinct values, or fewer than 50,000 at a cardinality ratio under 0.30, so every column of a table under 200 rows is an "enum", unique keys and free text included (the SQL Server plugin: at most 50 distinct). New work package **P1-18**: a column is an enum only if, in addition, its values repeat (distinct values at most half of the non-null values; a unique column is never an enum); both kernels and the SQL Server plugin. T-22 parity for `is_enum`, `enum_values` (and fields derived from them) becomes a narrow named allow-list; every other field still equal. | Owner, 2026-10-01: "We should probably fix that too right?" |
 | 2026-10-01 | P4-01c, P6-08b | **Owner: also fix the further copied baseline behaviours that harm user trust (round 2).** Lead's call on which: P4-01c F6 undeclared FK guesses point at the parent's primary key (never a missing column), F7 generated strings fit declared lengths (CHAR(2)/CHAR(3) codes), F8 `CustomerId`-style keys recognised; P6-08b FIX-4 deterministic spread sample instead of the first N rows, FIX-5 unsampled statistics are null not 0.0, FIX-6 null-aware `is_unique` with a minimum sample, FIX-7 undeclared columns still inferred beside declared keys (evidence marked), FIX-8 whole-word `id`/`key` name matching, FIX-9 a guessed primary key never picks a foreign-key column. Same acceptance as round 1 (test per fix, narrow named parity allow-list, everything else equal). Not changed: `is_enum` (<= 50 distinct), the core profiler's rule under T-22 parity (flagged to the owner). | Owner, 2026-10-01: "Fix those too if they harm user trust". |
 | 2026-10-01 | P4-01b, P6-08, T-22, P4-01c, P6-08b | **Owner decision: fix the baseline bugs that P4-01b and P6-08 reproduced for parity.** New work packages **P4-01c** (DDL import) and **P6-08b** (SQL Server profiling). Their acceptance replaces exact equality with the baseline, for these behaviours only, by: a test asserting the correct behaviour per bug, and the parity harness listing each one as an intentional, documented difference (every other field still equal). | Owner, 2026-10-01: "Fix the bugs. Those are not acceptable and would harm user trust in Shape." |
@@ -1984,7 +2001,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 30 | PF-03 | done | a726dd4 |
 | 31 | PF-04 | done (fsspec test requirement fixed at integration, c033f48) | b98dbac |
 | 32 | PF-05 | wip (merged; CI image build and 500 MB check pending) | 6d2e22a |
-| 33 | PF-06 | todo | |
+| 33 | PF-06 | done | fefd854 |
 | 34 | P3-01 | done | 37386f3 |
 | 35 | P3-02 | done | 500367f |
 | 36 | P3-03 | done | 43f5d88 |
@@ -2001,40 +2018,40 @@ Work packages are listed in execution order. The next work package is the first 
 | 46 | P4-04d | done (G7 regression test; scd2 fixture regenerated at integration for the shared calendar fingerprint) | 71b2ebd |
 | 47 | P4-05 | done | 9f6fea8 |
 | 48 | P4-06 | done (SQL comment/literal injection fixed at integration, 36f32d3) | ba051d2 |
-| 49 | P4-07 | wip (lane/P4-07) | |
-| 50 | P4-08 | todo | |
-| 51 | P4-09 | todo | |
-| 52 | P4-10 | todo | |
-| 53 | P4-11 | todo | |
-| 54 | P5-01 | todo | |
-| 55 | P5-02 | todo | |
-| 56 | P5-03 | todo | |
-| 57 | P5-04 | todo | |
-| 58 | P6-01a | todo | |
-| 59 | P6-01b | todo | |
-| 60 | P6-01c | todo | |
-| 61 | P6-01d | todo | |
-| 62 | P6-01e | todo | |
-| 63 | P6-02 | todo | |
-| 64 | P6-03 | todo | |
-| 65 | P6-04 | todo | |
-| 66 | P6-05 | todo | |
-| 67 | P6-06 | todo | |
-| 68 | P6-07a | todo | |
-| 69 | P6-07b | todo | |
+| 49 | P4-07 | done (retail T-21 PASS small/medium/large; lead GEN-IN on 2.10 GHz: medium 11.8x, large 17.9x; evidence P4-07-lead/) | b1e6530 |
+| 50 | P4-08 | done (lead LEARN-CLI 15.28x; G5, G6 fixed) | d237c55 |
+| 51 | P4-09 | done (retail per table equal to the baseline comparator, max diff 0.00000; G3, G4 fixed) | 9fd7caa |
+| 52 | P4-10 | done (two §6.5 rounds; lead GEN-CLI 2.10 GHz: medium 10.57x, large 31.64x; evidence P4-10-lead/) | 5fdf9b2 |
+| 53 | P4-11 | done (retail medium tiers 1-3: 0 mismatches over 9 tables; AUC/GMM max diff 0.017 <= 0.02; DP distinct unseeded) | f85b99d |
+| 54 | P5-01 | done | 33f57a7 |
+| 55 | P5-02 | done | 2d0a1d3 |
+| 56 | P5-03 | done | 19e8e6a |
+| 57 | P5-04 | done (lead STREAM-EMIT in-process 14.27x on 2.10 GHz; stream verifier and negative control exit 0) | 08d3f7e |
+| 58 | P6-01a | wip (lane/P6-01a merged into lane/P6-01-int; T-21 seed-1042 misses accepted as chance (owner); GEN-IN round 3 in lane/P6-01-perf-domains and lane/P6-01-perf-engine) | |
+| 59 | P6-01b | wip (built, merged into lane/P6-01-int; T-21 seed-1042 misses accepted as chance (owner); GEN-IN round 3) | |
+| 60 | P6-01c | wip (built, merged into lane/P6-01-int; T-21 seed-1042 misses accepted as chance (owner); GEN-IN round 3) | |
+| 61 | P6-01d | wip (built, merged into lane/P6-01-int; T-21 seed-1042 misses accepted as chance (owner); GEN-IN round 3) | |
+| 62 | P6-01e | wip (lane/P6-01e, started early from lane/P6-01-int) | |
+| 63 | P6-02 | done | 0f8c36e |
+| 64 | P6-03 | done | 50d7be4 |
+| 65 | P6-04 | wip (lanes P6-04a and P6-04b, started before G5's 1-hour soak) | |
+| 66 | P6-05 | done | 3a85d86 |
+| 67 | P6-06 | done | e5d338f |
+| 68 | P6-07a | done (contract tests on recorded interactions; 5 baseline defects fixed: destructive default mode, unescaped SQL/KQL identifiers, COPY INTO location, bulk-load cleanup and row counts; emulator/live tests nightly) | 98f6ac6 |
+| 69 | P6-07b | wip (lane/P6-07b) | |
 | 70 | P6-07c | todo | |
 | 71 | P6-08 | done (nightly SQL Server e2e pending) | 29eac3e |
 | 71a | P6-08b | done (rounds 1-2: FIX-1..FIX-9; real-server parity 11/11) | 515d26e |
 | 72 | P6-09 | done (CI bench-quick verify_1to1 green on c7bd366, run 36850390984) | 3859a3c |
-| 73 | P6-10 | todo | |
+| 73 | P6-10 | done | 1faff65 |
 | 74 | P6-11 | todo | |
 | 75 | P6-12 | todo | |
-| 76 | P6-13 | todo | |
-| 77 | P6-14 | todo | |
+| 76 | P6-13 | done (lead scale_1to1: local_single and local_mp pass T-21 at retail medium, negative controls flagged; baseline local_mp row-count defect fixed) | 693c897 |
+| 77 | P6-14 | done | 62160c9 |
 | 78 | P7-01 | done | b04bf32 |
 | 79 | P7-02 | done | d6e3a97 |
 | 80 | P7-03 | done | 06300e7 |
-| 81 | P7-04 | todo | |
+| 81 | P7-04 | done (threat model, nightly fuzzer, no high finding open; plugin security tests moved into the plugins' suites at integration) | d08fe3d |
 | 82 | P8-01 | todo | |
 | 83 | P8-02 | todo | |
 | 84 | P8-03 | todo | |
@@ -2048,7 +2065,7 @@ Work packages are listed in execution order. The next work package is the first 
 | G2 | done (lead, Oct 1: out-of-tree example plugin adds a source, a detector and a command with no core change, tests/plugins/test_plugin_kit_install.py 7 passed; `shape plugins list` shows all 72 built-ins; G1 gates pass, see G1) |
 | GF | todo |
 | G3 | done (lead, 8:55 AM EDT Oct 1, on 7ef6a6e: stream_prof verify stream == batch bounded rel 1e-9 PASS and identical across 3 processes PASS; STREAM-PROF 115.7% default / 101.7% SHAPE_THREADS=1 (gate 80%), docs/plans/evidence/G3/stream-prof-lead.json; S2-S5 regression tests pass in both kernels; P3-01..P3-05 done) |
-| G4 | todo |
+| G4 | done (lead, 1:00 AM EDT Oct 2, 4 vCPU Xeon 2.10 GHz, equivalence first: retail T-21 PASS at small, medium and large (60/60 columns); P4-11 acceptance passed (0 mismatches); GEN-IN medium 14.18x, large 31.09x; GEN-CLI medium 10.57x, large 31.64x; LEARN-CLI 15.28x; tests/generation + tests/regressions 1643 passed (every strategy); G-bugs G1-G8 each have a regression test; evidence docs/plans/evidence/G4/, P4-10-lead/) |
 | G5 | todo |
 | G6 | todo |
 | G7 | todo |

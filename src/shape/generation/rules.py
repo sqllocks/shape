@@ -32,9 +32,13 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import to_numpy as arrow_numpy
+from shape.generation.keypos import dense_start, first_rows
 from shape.generation.rng import RowStream
 from shape.generation.schema import BusinessRule, GenSchema
 
+MAX_RULE_CHARS = 2000
 _COMPARISON = re.compile(r"^(.+?)\s*(>=|<=|>|<|==)\s*(.+)$")
 
 Tables = dict[str, pa.Table]
@@ -62,7 +66,10 @@ class RuleViolation:
 
 def parse_comparison(rule: str) -> tuple[str, str, str]:
     """``"A >= B"`` as ``("A", ">=", "B")``; three empty strings when it is not a comparison."""
-    m = _COMPARISON.match(rule.strip())
+    text = rule.strip()
+    if len(text) > MAX_RULE_CHARS:  # the pattern below is quadratic on a long run of spaces
+        return "", "", ""
+    m = _COMPARISON.match(text)
     return (m.group(1).strip(), m.group(2), m.group(3).strip()) if m else ("", "", "")
 
 
@@ -77,8 +84,8 @@ def _numpy(arr: pa.ChunkedArray | pa.Array) -> npt.NDArray[Any]:
     """Floats (NaN for null) for numeric columns, ``datetime64[us]`` (NaT for null) for temporal
     ones."""
     if _is_temporal(arr):
-        return np.asarray(pc.cast(arr, pa.timestamp("us")).to_numpy(zero_copy_only=False))
-    return np.asarray(pc.cast(arr, pa.float64()).to_numpy(zero_copy_only=False), dtype=np.float64)
+        return np.asarray(arrow_numpy(pc.cast(arr, pa.timestamp("us"))))
+    return np.asarray(arrow_numpy(pc.cast(arr, pa.float64())), dtype=np.float64)
 
 
 def _evaluable(arr: pa.ChunkedArray | pa.Array) -> bool:
@@ -141,6 +148,11 @@ def _check_single_table(rule: BusinessRule, tables: Tables) -> RuleViolation | N
     return RuleViolation(rule.name, rule.table, count, table.num_rows)
 
 
+def _take_first(values: pa.ChunkedArray, probe: pa.ChunkedArray, keys: pa.ChunkedArray) -> pa.Array:
+    """``values`` at the first row of ``keys`` equal to each ``probe`` value; null where none."""
+    return pc.take(values, first_rows(probe, keys))
+
+
 def _cross_table_parts(
     rule: BusinessRule, tables: Tables
 ) -> tuple[str, str, str, str, str, pa.Table, pa.Table] | None:
@@ -171,13 +183,20 @@ def _check_cross_table(rule: BusinessRule, tables: Tables) -> RuleViolation | No
         return None
     if _is_temporal(lt[lcol]) != _is_temporal(rt[rcol]):
         return None
-    merged = pa.table({"v": lt[rule.via], "l": lt[lcol]}).join(
-        pa.table({"v": rt[rule.via], "r": rt[rcol]}), keys="v", join_type="left outer"
-    )
-    count = _count_violations(_numpy(merged["l"]), op, _numpy(merged["r"]))
+    if dense_start(rt[rule.via]) is not None:  # unique keys: the join is a row lookup
+        count = _count_violations(
+            _numpy(lt[lcol]), op, _numpy(_take_first(rt[rcol], lt[rule.via], rt[rule.via]))
+        )
+        rows = lt.num_rows
+    else:
+        merged = pa.table({"v": lt[rule.via], "l": lt[lcol]}).join(
+            pa.table({"v": rt[rule.via], "r": rt[rcol]}), keys="v", join_type="left outer"
+        )
+        count = _count_violations(_numpy(merged["l"]), op, _numpy(merged["r"]))
+        rows = merged.num_rows
     if not count:
         return None
-    return RuleViolation(rule.name, ltable, count, merged.num_rows)
+    return RuleViolation(rule.name, ltable, count, rows)
 
 
 def validate_rules(tables: Tables, schema: GenSchema) -> list[RuleViolation]:
@@ -202,12 +221,12 @@ def _replace(
 ) -> pa.Table:
     """``table`` with ``column`` set to ``values`` where ``mask``, keeping the column's type."""
     old = table[column]
-    new = pa.array(values, from_pandas=True)
+    new = arrow_array(values, from_pandas=True)
     if pa.types.is_integer(old.type):
         new = pc.cast(pc.round(pc.cast(new, pa.float64())), old.type)
     else:
         new = pc.cast(new, old.type)
-    fixed = pc.if_else(pa.array(mask), new, old.combine_chunks() if old.num_chunks else old)
+    fixed = pc.if_else(arrow_array(mask), new, old.combine_chunks() if old.num_chunks else old)
     return table.set_column(table.column_names.index(column), column, fixed)
 
 
@@ -256,8 +275,7 @@ def _fix_cross_table(rule: BusinessRule, tables: Tables, seed: int) -> Tables:
         return tables
     if _is_temporal(left_col) != _is_temporal(right_col):
         return tables
-    pos = pc.index_in(lt[rule.via], value_set=rt[rule.via].combine_chunks())
-    right_vals = _numpy(pc.take(right_col, pos))  # NaN / NaT where no parent row matched
+    right_vals = _numpy(_take_first(right_col, lt[rule.via], rt[rule.via]))  # NaN / NaT: no parent
     lv = _numpy(left_col)
     temporal = _is_temporal(left_col)
     offset = np.timedelta64(1, "D") if temporal else 1.0
@@ -275,14 +293,36 @@ def _fix_cross_table(rule: BusinessRule, tables: Tables, seed: int) -> Tables:
     return {**tables, ltable: _replace(lt, lcol, mask, np.where(mask, new, lv))}
 
 
+def repair_target(rule: BusinessRule) -> str | None:
+    """The table :func:`fix_rule` can change for ``rule``: the table a ``cross_column`` rule names,
+    the table on the left of a ``cross_table`` rule, none for any other rule."""
+    if rule.type == "cross_column":
+        return rule.table or None
+    if rule.type == "cross_table":
+        left = parse_comparison(rule.rule)[0]
+        return left.split(".", 1)[0] if "." in left else None
+    return None
+
+
+def repaired_tables(schema: GenSchema) -> set[str]:
+    """The tables :func:`fix_rules` can change."""
+    return {t for t in map(repair_target, schema.business_rules) if t}
+
+
+def fix_rule(rule: BusinessRule, tables: Tables, seed: int) -> Tables:
+    """``tables`` with the violations of one rule repaired (the inputs are not changed)."""
+    if rule.type == "cross_table":
+        return _fix_cross_table(rule, tables, seed)
+    if rule.type == "cross_column":
+        return _fix_cross_column(rule, tables, seed)
+    return tables
+
+
 def fix_rules(tables: Tables, schema: GenSchema) -> tuple[Tables, list[RuleViolation]]:
     """Repair ``tables`` for every ``cross_table`` and ``cross_column`` rule, in schema order;
     return the repaired tables (the inputs are not changed) and the violations that remain."""
     out = dict(tables)
     seed = schema.model.seed
     for rule in schema.business_rules:
-        if rule.type == "cross_table":
-            out = _fix_cross_table(rule, out, seed)
-        elif rule.type == "cross_column":
-            out = _fix_cross_column(rule, out, seed)
+        out = fix_rule(rule, out, seed)
     return out, validate_rules(out, schema)

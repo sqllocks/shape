@@ -13,6 +13,8 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.generation import kernel_ops
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.generation.strategy_kit import StrategyError, stream, where
 from shape.plugins.api.v1 import GenerationContext
 
@@ -45,6 +47,9 @@ def _range(spec: Mapping[str, Any], ctx: GenerationContext) -> tuple[int, int]:
     start = spec.get("start", "2022-01-01") if start is None else start
     end = spec.get("end", "2025-12-31") if end is None else end
     return _microseconds(start, "start", ctx), _microseconds(end, "end", ctx)
+
+
+_UNITS = ("s", "ms", "us", "ns")
 
 
 def _uniform(start: int, end: int, ctx: GenerationContext) -> npt.NDArray[np.int64]:
@@ -88,7 +93,8 @@ def _day_weights(
 
 
 class Temporal:
-    """Timestamps (``timestamp[us]``).
+    """Timestamps (``timestamp[us]``, or the ``unit`` asked for: ``s``, ``ms``, ``us`` or ``ns``;
+    the values are the same instants whatever the unit).
 
     The range is ``date_range`` (or ``range``) ``{"start", "end"}``, or top-level ``start`` and
     ``end``, or ``range_ref: "model.date_range"``; the default is 2022-01-01 .. 2025-12-31.
@@ -97,7 +103,8 @@ class Temporal:
     ``Dec``) and ``profiles.day_of_week`` (``Mon`` .. ``Sun``; missing names weigh 1/12 and 1/7,
     and ``month_weights`` / ``day_of_week_weights`` at the top level are accepted too); the end
     date itself is a possible day. ``profiles.hour_of_day`` replaces the time of day by a whole
-    second of an hour drawn uniformly, or with ``{"distribution": "bimodal", "peaks": [12, 18],
+    second of an hour drawn uniformly, with one weight per hour (keys ``"0"`` .. ``"23"``), or with
+    ``{"distribution": "bimodal", "peaks": [12, 18],
     "std_dev": 2}`` from equally likely Gaussian peaks wrapped around midnight. Without it the
     time of day is uniform.
     """
@@ -105,9 +112,33 @@ class Temporal:
     name = "temporal"
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
+        values = self._microseconds(spec, ctx)
+        granularity = spec.get("granularity")
+        if granularity == "day":
+            micros = values.cast(pa.int64()).to_numpy(zero_copy_only=False)
+            values = arrow_array((micros // _DAY_US) * _DAY_US, type=pa.int64()).cast(
+                pa.timestamp("us")
+            )
+        elif granularity is not None:
+            raise StrategyError(
+                f"temporal 'granularity' must be 'day', not {granularity!r} ({where(ctx)})"
+            )
+        unit = str(spec.get("unit", "us"))
+        if unit == "us":
+            return values
+        if unit not in _UNITS:
+            raise StrategyError(
+                f"temporal 'unit' must be one of {', '.join(_UNITS)}, not {unit!r} ({where(ctx)})"
+            )
+        try:
+            return values.cast(pa.timestamp(unit))
+        except pa.ArrowInvalid as exc:
+            raise StrategyError(f"temporal values do not fit unit {unit!r} ({where(ctx)})") from exc
+
+    def _microseconds(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         start, end = _range(spec, ctx)
         if spec.get("pattern", "uniform") != "seasonal":
-            return pa.array(
+            return arrow_array(
                 _uniform(start, end, ctx).astype("datetime64[us]"), type=pa.timestamp("us")
             )
         profiles = dict(spec.get("profiles") or {})
@@ -120,7 +151,7 @@ class Temporal:
         hours = self._hours(hour_profile, ctx)
         if not month_w and not dow_w:
             if not hour_profile:
-                return pa.array(
+                return arrow_array(
                     _uniform(start, end, ctx).astype("datetime64[us]"), type=pa.timestamp("us")
                 )
             first = start // _DAY_US
@@ -135,8 +166,8 @@ class Temporal:
                 raise StrategyError(f"temporal range must end after it starts ({where(ctx)})")
             days = _day_weights(first, n_days, _weights(month_w, _MONTHS), _weights(dow_w, _DOW))
         return kernel_ops.temporal_sample(
-            pa.array(days),
-            pa.array(hours),
+            arrow_array(days),
+            arrow_array(hours),
             first,
             stream(ctx, "t"),
             ctx.row_start,
@@ -154,9 +185,17 @@ class Temporal:
                     f"temporal bimodal hours need peaks and a positive std_dev ({where(ctx)})"
                 )
             return np.asarray(
-                kernel_ops.hour_weights_peaks(peaks, std).to_numpy(zero_copy_only=False),
+                arrow_numpy(kernel_ops.hour_weights_peaks(peaks, std)),
                 dtype=np.float64,
             )
+        if profile and all(str(k).isdigit() for k in profile):
+            # one weight per hour of the day (a profile's hour histogram): "0" .. "23"
+            w = np.array([float(profile.get(str(h), 0.0)) for h in range(24)], dtype=np.float64)
+            if any(int(k) > 23 for k in profile):
+                raise StrategyError(f"temporal hour_of_day keys are hours 0..23 ({where(ctx)})")
+            if (w < 0).any() or not np.isfinite(w).all() or w.sum() <= 0:
+                raise StrategyError("temporal hour_of_day weights must be non-negative, not all 0")
+            return w
         return np.ones(24)
 
 

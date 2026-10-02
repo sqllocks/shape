@@ -15,6 +15,8 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import scalar as arrow_scalar
 from shape.generation.engine import ArrayKeys, Engine, KeyPool, RangeKeys
 from shape.generation.strategy_kit import StrategyError, where
 from shape.plugins.api.v1 import GenerationContext
@@ -82,11 +84,11 @@ def take_keys(pool: KeyPool, indices: Ints, null: npt.NDArray[np.bool_] | None =
         return pool.take(indices)
     safe = np.where(null, 0, indices)
     if isinstance(pool, RangeKeys):
-        return pa.array(pool.start + safe * pool.step, mask=null)
+        return arrow_array(pool.start + safe * pool.step, mask=null)
     if isinstance(pool, ArrayKeys):
-        return pc.take(pool.values, pa.array(safe, mask=null))
+        return pc.take(pool.values, arrow_array(safe, mask=null))
     taken = pool.take(safe)
-    return pc.if_else(pa.array(null), pa.scalar(None, type=taken.type), taken)
+    return pc.if_else(arrow_array(null), arrow_scalar(None, type=taken.type), taken)
 
 
 @lru_cache(maxsize=4)

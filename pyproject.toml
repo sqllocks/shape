@@ -10,7 +10,7 @@ readme="README.md"
 requires-python=">=3.11"
 license = "MIT"
 license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
-dependencies=["numpy>=2.0,<3","pyarrow>=14.0.1"]
+dependencies=["numpy>=2.0,<3","pyarrow>=14.0.1","tzdata; sys_platform == 'win32'"]
 
 [project.optional-dependencies]
 yaml=["pyyaml>=6"]
@@ -20,9 +20,13 @@ excel=["openpyxl>=3.1"]
 azure=["adlfs>=2024.4.1","azure-identity>=1.15","deltalake>=0.17"]
 pandas=["pandas>=2"]
 scipy=["scipy>=1.11"]
+advanced=["scikit-learn>=1.3,<2"]
+ctgan=["sdv>=1.0,<2"]
 kafka=["sqllocks-shape-kafka==0.9.0"]
 eventhubs=["sqllocks-shape-eventhubs==0.9.0"]
 sqlserver=["sqllocks-shape-sqlserver==0.9.0"]
+domains=["sqllocks-shape-domains==0.9.0"]
+simulation=["sqllocks-shape-simulation==0.9.0"]
 streaming=["confluent-kafka>=2.5,<4","azure-eventhub>=5.12,<6"]
 dev=["pytest>=8.3","pytest-cov>=6","hypothesis>=6.115","ruff>=0.8","mypy>=1.13","pip-audit>=2.7","build>=1.2","pyyaml>=6","pandas>=2","deltalake>=0.17","twine>=5","cryptography>=50,<51","xxhash>=3.5","maturin>=1.15,<2","import-linter>=2","vulture>=2.11","bandit>=1.8","py-spy>=0.4","sqlglot>=25","openpyxl>=3.1","scipy>=1.11","pyspark>=4.0,<5"]
 
@@ -65,7 +69,7 @@ packages=["shape"]
 # Optional cloud packages (extra [azure], and Fabric's own notebookutils): not installed in every
 # environment, so mypy must not depend on them being present.
 [[tool.mypy.overrides]]
-module=["adlfs","azure.*","deltalake","deltalake.*","openpyxl","openpyxl.*","notebookutils","mssparkutils","pyspark","pyspark.*"]
+module=["adlfs","azure.*","deltalake","deltalake.*","openpyxl","openpyxl.*","notebookutils","mssparkutils","pyspark","pyspark.*","sklearn","sklearn.*","scipy","scipy.*","sdv","sdv.*"]
 ignore_missing_imports=true
 
 # T-12 ratchet: modules not yet strict. A work package that creates or rewrites a module
@@ -88,8 +92,6 @@ module=[
     "shape.generation.core",
     "shape.generation.distribution_fidelity",
     "shape.generation.evolution",
-    "shape.generation.fidelity",
-    "shape.generation.future",
     "shape.generation.geo_fidelity",
     "shape.generation.joint",
     "shape.generation.relational",
@@ -151,6 +153,11 @@ sql = "shape.builtins.sinks:SqlSink"
 excel = "shape.builtins.sinks:ExcelSink"
 delta = "shape.builtins.sinks:DeltaSink"
 
+[project.entry-points."shape.emitters"]
+console = "shape.builtins.emitters:ConsoleEmitter"
+file = "shape.builtins.emitters:FileEmitter"
+jsonl = "shape.builtins.emitters:JsonlEmitter"
+
 [project.entry-points."shape.detectors"]
 email = "shape.builtins.detectors:EmailDetector"
 us_ssn = "shape.builtins.detectors:UsSsnDetector"
@@ -183,6 +190,7 @@ correlated = "shape.builtins.strategies.linked:Correlated"
 reference_data = "shape.builtins.strategies.reference_data:ReferenceData"
 record_sample = "shape.builtins.strategies.reference_data:RecordSample"
 record_field = "shape.builtins.strategies.reference_data:RecordField"
+bootstrap = "shape.builtins.strategies.bootstrap:Bootstrap"
 temporal = "shape.builtins.strategies.temporal:Temporal"
 foreign_key = "shape.builtins.strategies.keys:ForeignKey"
 composite_foreign_key = "shape.builtins.strategies.keys:CompositeForeignKey"
@@ -192,6 +200,14 @@ scd2 = "shape.builtins.strategies.groups:Scd2"
 self_referencing = "shape.builtins.strategies.hierarchy:SelfReferencing"
 self_ref_field = "shape.builtins.strategies.hierarchy:SelfRefField"
 lifecycle = "shape.builtins.strategies.lifecycle:Lifecycle"
+
+[project.entry-points."shape.commands"]
+ctgan = "shape.builtins.ctgan:CtganCommand"
+
+[project.entry-points."shape.transforms"]
+mask = "shape.builtins.transforms:Mask"
+star = "shape.builtins.dimensional:StarTransform"
+cdm = "shape.builtins.dimensional:CdmTransform"
 
 [project.entry-points."shape.distributions"]
 normal = "shape.builtins.distributions:Normal"
@@ -219,6 +235,19 @@ us_federal = "shape.builtins.calendars:UsFederalCalendar"
 us_retail = "shape.builtins.calendars:UsRetailCalendar"
 composite = "shape.builtins.calendars:CompositeCalendar"
 
+[project.entry-points."shape.chaos"]
+schema = "shape.builtins.chaos:SchemaChaos"
+value = "shape.builtins.chaos:ValueChaos"
+file = "shape.builtins.chaos:FileChaos"
+referential = "shape.builtins.chaos:ReferentialChaos"
+temporal = "shape.builtins.chaos:TemporalChaos"
+volume = "shape.builtins.chaos:VolumeChaos"
+
+[project.entry-points."shape.reports"]
+json = "shape.builtins.reports:JsonReport"
+md = "shape.builtins.reports:MarkdownReport"
+html = "shape.builtins.reports:HtmlReport"
+
 [project.urls]
 Homepage = "https://github.com/sqllocks/shape"
 Repository = "https://github.com/sqllocks/shape"
@@ -233,16 +262,20 @@ type = "forbidden"
 # Every top-level module except shape.builtins (a test fails when one is missing here: naming
 # the root "shape" would make import-linter skip its own subpackages).
 source_modules = [
+    "shape.__main__",
     "shape._callable",
     "shape.api",
     "shape.artifact",
     "shape.capture",
+    "shape.chaos",
     "shape.cli",
     "shape.connectors",
     "shape.contracts",
     "shape.diff",
+    "shape.dimensional",
     "shape.drift",
     "shape.errors",
+    "shape.fidelity",
     "shape.generation",
     "shape.geospatial",
     "shape.integrations",
@@ -250,6 +283,9 @@ source_modules = [
     "shape.kernel",
     "shape.location",
     "shape.model",
+    "shape.runlog",
+    "shape.scale",
+    "shape.scenario",
     "shape.packs",
     "shape.plugins",
     "shape.privacy",

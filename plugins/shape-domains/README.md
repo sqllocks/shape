@@ -1,10 +1,21 @@
 # sqllocks-shape-domains
 
-Shape plugin: industry domains with their reference data.
+Shape plugin: industry domains with their reference data (`shape.domains`).
 
-This distribution is a **skeleton**: it builds and installs, declares plugin API 1.x and
-registers nothing yet. The work package that implements it adds the entry points to
-`pyproject.toml` and the code under `src/shape_domains/`, and tests it with `shape.plugins.kit`.
+| Domain | Tables | Reference data |
+|---|---|---|
+| `retail` | customer, address, product_category, product, store, promotion, order, order_line, return (3NF) | product categories, product and promotion names, 40,977 US ZIP locations |
+
+```python
+from shape.generation.domains import load_domain
+from shape.generation.engine import Engine
+
+domain = load_domain("retail")  # schema + reference data registered
+tables = Engine(domain.schema, scale="medium", seed=1).generate().tables
+```
+
+Scales: `small`, `medium`, `large` and `xlarge` (and the other presets in the schema). The ZIP
+locations are derived from GeoNames (CC BY 4.0); see `THIRD_PARTY_NOTICES.md` in the repository.
 
 Its version always equals core's (`sqllocks-shape`), and it is released together with core.
 How plugins are written: `docs/plugins/authoring.md` in the repository.

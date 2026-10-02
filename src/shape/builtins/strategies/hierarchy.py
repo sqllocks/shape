@@ -13,6 +13,7 @@ from typing import Any
 import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
 from shape.generation.strategy_kit import StrategyError, stream, where
 from shape.plugins.api.v1 import GenerationContext
 
@@ -83,7 +84,7 @@ class SelfReferencing:
         index: Ints = first + np.minimum((u * size).astype(np.int64), size - 1)
         pool = parent_pool(ctx, ctx.table, pk_column, "self_referencing")
         parent = take_keys(pool, index, level == 1)
-        return {ctx.column: parent, sr_key(ctx.table, "level"): pa.array(level.astype(np.int64))}
+        return {ctx.column: parent, sr_key(ctx.table, "level"): arrow_array(level.astype(np.int64))}
 
 
 class SelfRefField:

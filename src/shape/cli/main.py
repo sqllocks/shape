@@ -28,10 +28,11 @@ def _artifact_kind(path):
     """The ``kind`` in a ``.shape`` manifest, or None when ``path`` is not a Shape artifact."""
     import zipfile
 
+    from shape.artifact.io import read_manifest_bytes
+
     try:
-        with zipfile.ZipFile(path) as z:
-            return json.loads(z.read("manifest.json")).get("kind")
-    except (OSError, ValueError, KeyError, zipfile.BadZipFile):
+        return json.loads(read_manifest_bytes(path)).get("kind")
+    except (OSError, ValueError, KeyError, AttributeError, zipfile.BadZipFile, RecursionError):
         return None
 
 
@@ -47,38 +48,128 @@ def _write_json(path, obj):
         fh.write("\n")
 
 
+_VERIFIED = set()  # inputs ``--verify`` has checked in this run
+
+
+def _notices_to_stderr():
+    """Route "artifact not verified" notices to stderr as ``shape: note: ...``, once per message,
+    without importing the artifact modules (they load only for commands that read artifacts).
+    Returns what to restore."""
+    import warnings
+
+    previous = warnings.showwarning
+    seen = set()
+
+    def show(message, category, filename, lineno, file=None, line=None):
+        if category.__name__ != "ArtifactNotVerifiedWarning":
+            return previous(message, category, filename, lineno, file, line)
+        text = str(message)
+        if any(text.startswith(f"{p} ") for p in _VERIFIED):
+            return  # --verify already checked this file; the command's own read has no key
+        if text not in seen:
+            seen.add(text)
+            print(f"shape: note: {text}", file=sys.stderr)
+
+    warnings.showwarning = show
+    return previous
+
+
 def _run(fn, a):
     """Run a profile/check/diff command: 0 ok, 1 failed check or drift, 2 input error."""
-    import zipfile
+    import warnings
 
-    from shape.artifact.io import ArtifactSignatureError
-    from shape.errors import ShapeError
+    from shape.cli import errors
 
+    restore = _notices_to_stderr()
     try:
         return fn(a)
-    except ArtifactSignatureError as exc:
-        print(f"shape: signature check failed: {exc}", file=sys.stderr)
-        return 1
-    except (
-        OSError,
-        ValueError,
-        ImportError,
-        NotImplementedError,
-        KeyError,
-        ShapeError,
-        zipfile.BadZipFile,
-    ) as exc:
-        print(f"shape: error: {exc}", file=sys.stderr)
-        return 2
+    except errors.EXPECTED as exc:
+        if errors.debug_enabled():
+            raise
+        # The artifact modules are not imported by the commands that never touch an artifact; an
+        # ArtifactSignatureError can only come from one that is.
+        artifact_io = sys.modules.get("shape.artifact.io")
+        if artifact_io is not None and isinstance(exc, artifact_io.ArtifactSignatureError):
+            print(f"shape: signature check failed: {exc}", file=sys.stderr)
+            return 1
+        return errors.fail(exc)
+    finally:
+        warnings.showwarning = restore
+
+
+def _load_json(path):
+    """A JSON file's content; a file that is not JSON is an input error that names the file."""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"{path} is not valid JSON: {exc}") from exc
+    except UnicodeDecodeError as exc:
+        raise ValueError(f"{path} is not a text file: {exc}") from exc
 
 
 def _sign_output(a, path):
     """Sign the artifact just written when ``--sign KEY`` was given."""
     if getattr(a, "sign", None):
-        from shape.artifact.signing import load_private_key, sign_artifact
+        from shape.artifact.signing import sign_artifact
 
-        return sign_artifact(path, load_private_key(a.sign))
+        return sign_artifact(path, _private_key(a.sign, a))
     return None
+
+
+def _private_key(source, a):
+    """The private key behind ``source`` (a file, ``-``, ``env://``, ``file://`` or ``kv://``). An
+    encrypted key's passphrase comes from ``--passphrase-env``, ``--passphrase-stdin``,
+    ``SHAPE_KEY_PASSPHRASE`` or a prompt, and is only asked for when the key is encrypted."""
+    from shape.artifact.keys import STDIN, load_private_key, read_passphrase
+
+    use_stdin = bool(getattr(a, "passphrase_stdin", False))
+    if use_stdin and source == STDIN:
+        raise ValueError("the key and the passphrase cannot both come from standard input")
+
+    def passphrase():
+        return read_passphrase(
+            env=getattr(a, "passphrase_env", None),
+            use_stdin=use_stdin,
+            prompt="Private key passphrase: ",
+        )
+
+    return load_private_key(source, passphrase)
+
+
+def _add_passphrase_args(parser):
+    parser.add_argument(
+        "--passphrase-env",
+        metavar="VAR",
+        help="read the private key passphrase from this environment variable "
+        "(default: SHAPE_KEY_PASSPHRASE, then a prompt)",
+    )
+    parser.add_argument(
+        "--passphrase-stdin",
+        action="store_true",
+        help="read the private key passphrase from the first line of standard input",
+    )
+
+
+_KEY_HELP = (
+    "private key: a file, - (standard input), env://VAR, file://PATH or kv://... "
+    "(an encrypted key asks for its passphrase)"
+)
+
+
+def _looks_like_artifact(path):
+    """True for a path the readers will treat as a Shape artifact. The readers sniff content, not
+    the file name, so ``--verify`` must too: deciding by extension let a forged ``x.bin`` or
+    ``x.SHAPE`` through unverified (P7-04)."""
+    import zipfile
+
+    if path.lower().endswith(".shape"):
+        return True
+    try:
+        with zipfile.ZipFile(path) as z:
+            return "manifest.json" in z.namelist()
+    except (OSError, zipfile.BadZipFile):
+        return False
 
 
 def _verify_inputs(a):
@@ -88,24 +179,64 @@ def _verify_inputs(a):
     key = load_public_key(a.verify)
     for name in ("shape", "before", "after", "target", "observed"):
         path = getattr(a, name, None)
-        if isinstance(path, str) and path.endswith(".shape"):
+        if isinstance(path, str) and _looks_like_artifact(path):
             verify_artifact(path, key)
+            _VERIFIED.add(path)
 
 
 def _cmd_keygen(a):
+    import warnings
+
+    from shape.artifact.keys import (
+        KeyFilePermissionWarning,
+        UnencryptedKeyWarning,
+        read_passphrase,
+    )
     from shape.artifact.signing import key_id, load_public_key, write_keypair
 
-    priv, pub = write_keypair(a.prefix)
+    if a.no_passphrase and (a.passphrase_env or a.passphrase_stdin):
+        raise ValueError("--no-passphrase cannot be combined with a passphrase option")
+    passphrase = None
+    if not a.no_passphrase:
+        passphrase = read_passphrase(
+            env=a.passphrase_env,
+            use_stdin=a.passphrase_stdin,
+            prompt="New private key passphrase: ",
+            confirm=True,
+        )
+        if passphrase is None:
+            raise ValueError(
+                "keygen protects the private key with a passphrase: set SHAPE_KEY_PASSPHRASE, "
+                "use --passphrase-env VAR or --passphrase-stdin, or run it in a terminal; "
+                "--no-passphrase writes an UNENCRYPTED key"
+            )
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        priv, pub = write_keypair(a.prefix, passphrase, unencrypted=a.no_passphrase)
+    for w in caught:
+        if issubclass(w.category, UnencryptedKeyWarning):
+            print(
+                f"shape: WARNING: {priv} is an UNENCRYPTED private key. Anyone who can read it "
+                "can sign as you. Prefer a passphrase (omit --no-passphrase).",
+                file=sys.stderr,
+            )
+        elif issubclass(w.category, KeyFilePermissionWarning):
+            print(f"shape: warning: {w.message}", file=sys.stderr)
     _dump(
-        {"private_key": str(priv), "public_key": str(pub), "key_id": key_id(load_public_key(pub))}
+        {
+            "encrypted": passphrase is not None,
+            "key_id": key_id(load_public_key(pub)),
+            "private_key": str(priv),
+            "public_key": str(pub),
+        }
     )
     return 0
 
 
 def _cmd_sign(a):
-    from shape.artifact.signing import load_private_key, sign_artifact
+    from shape.artifact.signing import sign_artifact
 
-    kid = sign_artifact(a.shape, load_private_key(a.key), a.output)
+    kid = sign_artifact(a.shape, _private_key(a.key, a), a.output)
     _dump({"signed": a.output or a.shape, "key_id": kid})
     return 0
 
@@ -119,12 +250,61 @@ def _cmd_verify_signature(a):
     return 0
 
 
+def _profile_source(a):
+    """What ``shape profile`` reads. A folder is one table (its files are partitions) unless
+    ``--dataset`` asks for one table per file, named by the file's stem. A folder whose files
+    do not share their columns is refused: read as one table it would be a meaningless merge."""
+    if not os.path.isdir(a.src):
+        if a.dataset:
+            raise ValueError(f"--dataset needs a folder of table files, and {a.src} is not one")
+        return a.src
+    from shape.profile.reference.sources import folder_is_one_table, folder_tables
+
+    if a.dataset:
+        return {name: str(path) for name, path in folder_tables(a.src).items()}
+    if not folder_is_one_table(a.src):
+        raise ValueError(
+            f"the files in {a.src} do not share their columns, so the folder is not one table: "
+            "add --dataset to profile it as several tables (one per file, named by the file "
+            "name without its extension)"
+        )
+    return a.src
+
+
+def _profile_name(a):
+    """``--name``, else the name of the profile ``-o`` is about to overwrite (so a versioned
+    ``.shape`` keeps its name when the input file changes), else None: the input's own name."""
+    if a.name:
+        return a.name
+    if _artifact_kind(a.output) == "profile":
+        from shape.artifact.io import read_manifest_bytes
+
+        return str(json.loads(read_manifest_bytes(a.output)).get("name") or "") or None
+    return None
+
+
+def _warn_empty(a, prof):
+    """A table with 0 rows is almost always a pipeline mistake: warn, or refuse with
+    ``--fail-on-empty``."""
+    empty = [n for n, t in prof.tables.items() if not t["row_count"]]
+    if not empty:
+        return
+    what = f"{a.src}" if len(prof.tables) == 1 else f"{a.src} (table {', '.join(empty)})"
+    msg = f"{what} has 0 rows: the profile holds no data, and a diff against it is meaningless"
+    if a.fail_on_empty:
+        raise ValueError(msg)
+    print(f"shape: warning: {msg}", file=sys.stderr)
+
+
 def _cmd_profile(a):
     import shape
 
     if not a.output:
         raise ValueError("profile needs -o OUT.shape")
-    prof = shape.profile(a.src)
+    prof = shape.profile(
+        _profile_source(a), name=_profile_name(a), version=a.delta_version, as_of=a.as_of
+    )
+    _warn_empty(a, prof)
     content_id = shape.save(prof, a.output)
     key_id = _sign_output(a, a.output)
     if a.html:
@@ -133,8 +313,23 @@ def _cmd_profile(a):
     if a.json:
         _write_json(a.json, prof.summary())
     out = {"written": a.output, "shape_content_id": content_id}
+    if prof.provenance is not None:
+        out["provenance"] = prof.provenance
     if key_id:
         out["signed_by"] = key_id
+    _dump(out)
+    return 0
+
+
+def _cmd_plan_profile(a):
+    """``shape plan PROFILE.shape``: the fitted schema's plan."""
+    import shape
+    from shape.generation.fit import fit_schema
+
+    plan = fit_schema(shape.load(a.shape), rows=a.rows).plan
+    out = plan.to_dict()
+    if a.status:
+        out["items"] = [x for x in out["items"] if x["status"] in a.status]
     _dump(out)
     return 0
 
@@ -147,19 +342,26 @@ def _cmd_stream_profile(a):
 
 def _cmd_inspect(a):
     """Print what a .shape artifact holds: a profile or a Shape model."""
-    if _artifact_kind(a.shape) == "profile":
+    if a.pretty:
+        from shape.cli.gitcmds import render
+
+        sys.stdout.write(render(a.shape, "json"))
+    elif _artifact_kind(a.shape) == "profile":
         import shape
 
         prof = shape.load(a.shape)
-        _dump({"kind": "profile", "name": prof.name, "profile": prof.to_dict()})
+        doc = {"kind": "profile", "name": prof.name, "profile": prof.to_dict()}
+        if prof.provenance is not None:
+            doc["provenance"] = prof.provenance
+        _dump(doc)
     elif str(a.shape).endswith(".shape"):
         from shape.artifact import read_model
 
-        manifest, model = read_model(a.shape)
-        _dump({"kind": "model", "manifest": manifest, "shape": model})
+        read = read_model(a.shape)
+        manifest, model = read
+        _dump({"kind": "model", "manifest": manifest, "shape": model, "signature": read.signature})
     else:
-        with open(a.shape, encoding="utf-8") as fh:
-            _dump(json.load(fh))
+        _dump(_load_json(a.shape))
     return 0
 
 
@@ -174,10 +376,112 @@ def _cmd_check(a):
     return 0 if result.passed else 1
 
 
+def _cmd_fidelity(a):
+    """``shape fidelity REFERENCE SYNTHETIC``: 0 when every pass mark is met, 1 when not."""
+    from pathlib import Path
+
+    if a.tier:
+        from shape.cli.tiers import run_fidelity
+
+        return run_fidelity(a)
+    from shape.generation.report import Thresholds, compare_tables, render_report
+    from shape.quality import load_tables
+
+    real = load_tables(a.reference, a.input_format)
+    synth = load_tables(a.csv, a.input_format)
+    if not real:
+        raise ValueError(f"no data files found in {a.reference}")
+    if len(real) == 1 and len(synth) == 1:  # two single files compare whatever they are called
+        synth = {next(iter(real)): next(iter(synth.values()))}
+    marks = Thresholds(a.min_score, a.min_table_score, a.min_column_score)
+    report = compare_tables(real, synth, marks).to_dict()
+    ext = {".json": "json", ".md": "md", ".html": "html", ".htm": "html"}
+    for out in a.output:
+        fmt = ext.get(Path(out).suffix.lower())
+        if fmt is None:
+            raise ValueError(f"cannot tell the report format of {out}: use .json, .md or .html")
+        Path(out).write_bytes(render_report(report, fmt))
+    sys.stdout.write(render_report(report, a.format).decode())
+    return 0 if report["passed"] else 1
+
+
+_DIFF_THRESHOLD_FLAGS = (
+    ("--null-rate", "null_rate", float),
+    ("--cardinality-ratio-max", "cardinality_ratio_max", float),
+    ("--cardinality-ratio-min", "cardinality_ratio_min", float),
+    ("--mean-shift-std", "mean_shift_std", float),
+    ("--min-severity", "min_severity", str),
+)
+
+
+def _diff_policy_arguments(d):
+    """The ``shape diff`` flags that set thresholds, ignore columns and read a policy file."""
+    g = d.add_argument_group("drift thresholds (defaults: docs/DRIFT.md)")
+    for flag, key, kind in _DIFF_THRESHOLD_FLAGS:
+        g.add_argument(flag, dest=f"th_{key}", type=kind, metavar=key.upper())
+    g.add_argument(
+        "--threshold",
+        action="append",
+        default=[],
+        metavar="KEY=VALUE",
+        help="any threshold by name (repeatable), e.g. --threshold category_tvd=0.2",
+    )
+    g.add_argument(
+        "--column-threshold",
+        action="append",
+        default=[],
+        metavar="COLUMN:KEY=VALUE",
+        help="a threshold for the columns COLUMN matches (a name, table.column or a glob)",
+    )
+    g.add_argument("--ignore", metavar="COL1,COL2", help="columns to leave out (table.column ok)")
+    g.add_argument("--only", metavar="COL1,COL2", help="compare only these columns")
+    g.add_argument(
+        "--policy",
+        metavar="POLICY.json",
+        help='thresholds, "columns", "ignore" and "only" in one JSON file (a contract\'s '
+        '"drift" object works)',
+    )
+
+
+def _threshold_value(key, raw):
+    return raw if key == "min_severity" else float(raw)
+
+
+def _diff_options(a):
+    """``shape.diff`` keyword arguments from the command line; a bad value is an input error."""
+    thresholds = {}
+    for _flag, key, _kind in _DIFF_THRESHOLD_FLAGS:
+        if getattr(a, f"th_{key}") is not None:
+            thresholds[key] = getattr(a, f"th_{key}")
+    for item in a.threshold:
+        key, sep, raw = item.partition("=")
+        if not sep:
+            raise ValueError(f"--threshold wants KEY=VALUE, got {item!r}")
+        thresholds[key] = _threshold_value(key, raw)
+    columns = {}
+    for item in a.column_threshold:
+        column, sep, rest = item.rpartition(":")
+        key, eq, raw = rest.partition("=")
+        if not sep or not eq:
+            raise ValueError(f"--column-threshold wants COLUMN:KEY=VALUE, got {item!r}")
+        columns.setdefault(column, {})[key] = _threshold_value(key, raw)
+
+    def names(raw):
+        return [n.strip() for n in raw.split(",") if n.strip()] if raw else None
+
+    return {
+        "thresholds": thresholds or None,
+        "column_thresholds": columns or None,
+        "ignore_columns": names(a.ignore),
+        "only_columns": names(a.only),
+        "policy": a.policy,
+    }
+
+
 def _cmd_diff(a):
     import shape
 
-    result = shape.diff(shape.load(a.before), shape.load(a.after))
+    result = shape.diff(shape.load(a.before), shape.load(a.after), **_diff_options(a))
     out = result.to_dict()
     if a.json:
         _write_json(a.json, out)
@@ -196,17 +500,35 @@ def _cmd_verify(a):
 def _cmd_verify_gates(a):
     """Load tables, run the gates, print the gate table; 0 pass, 1 a gate failed (or a warning
     under --strict), 2 input error."""
-    from shape.quality import VerifyReport, VerifyRunner, load_gate_schema, load_tables
+    from shape.quality import (
+        VerifyReport,
+        VerifyRunner,
+        load_gate_schema,
+        load_tables,
+        load_verify_config,
+    )
+    from shape.quality.verify import data_files
 
     tables = load_tables(a.shape, a.format)
     if not tables:
         raise ValueError(f"no {a.format} data files found in {a.shape}")
     schema = load_gate_schema(a.schema) if a.schema else None
-    result = VerifyRunner(schema, a.statistical, a.shape, a.schema).run(tables)
+    config = load_verify_config(a.config) if a.config else None
+    result = VerifyRunner(
+        schema,
+        a.statistical,
+        a.shape,
+        a.schema,
+        config,
+        a.config,
+        data_files(a.shape, a.format),
+    ).run(tables)
     print(f"Shape {_version()} - Verify\n")
     print(f"Data path:   {a.shape}")
     if a.schema:
         print(f"Schema:      {a.schema}")
+    if a.config:
+        print(f"Config:      {a.config}")
     print(f"Statistical: {'yes' if a.statistical else 'no'}\n")
     if result.gate_results:
         print(f"{'Gate':<28} {'Status':<8} {'Errors':>6} {'Warnings':>8}")
@@ -235,7 +557,10 @@ def _cmd_verify_gates(a):
     return 1 if (not result.passed or (a.strict and has_warnings)) else 0
 
 
-_VERIFY_HELP = "require every .shape input to be signed by this public key (exit 1 if not)"
+_VERIFY_HELP = (
+    "require every .shape input to be signed by this public key: a file, - (standard input), "
+    "env://VAR, file://PATH or kv://... (exit 1 if not)"
+)
 
 
 def _cmd_from_ddl(a):
@@ -299,7 +624,11 @@ def _cmd_plugins(a):
 def _stream_profile_arguments(parser):
     """The ``stream-profile`` arguments; the command itself is ``shape.streaming.cli``."""
     parser.add_argument(
-        "uri", metavar="URI", help="kafka://host:9092/TOPIC or eventhubs://NAMESPACE/HUB"
+        "uri",
+        metavar="URI",
+        help="kafka://host:9092/TOPIC, eventhubs://NAMESPACE/HUB, or no broker at all: a file "
+        "(file:///PATH or PATH), a folder or glob of files, or - for standard input, as JSON "
+        "lines (what `shape emit` and `shape stream` write), CSV or Parquet",
     )
     parser.add_argument("-o", "--output", metavar="OUT.json", help="the global profile")
     parser.add_argument(
@@ -329,6 +658,12 @@ def _stream_profile_arguments(parser):
         choices=("s", "ms", "us"),
         default="ms",
         help="unit of a numeric event time (default: ms)",
+    )
+    parser.add_argument(
+        "--order",
+        choices=("file", "event-time"),
+        help="files only: replay in file order (default) or sorted by event time (reads every "
+        "row into memory first)",
     )
     parser.add_argument(
         "--start",
@@ -391,10 +726,22 @@ def _stream_profile_arguments(parser):
 
 
 def _build_parser(plugin_commands=()):
+    from shape.cli import gitcmds
+
     p = argparse.ArgumentParser(prog="shape", description="Shape as Code")
     p.add_argument("--version", "-V", action="store_true", help="print the version and exit")
+    g = p.add_argument_group("run logging and metrics (before the command)")
+    g.add_argument("--log-json", action="store_true", help="log JSON lines to stderr")
+    g.add_argument("--log-level", default="INFO", metavar="LEVEL", help="log level (default INFO)")
+    g.add_argument("--metrics", metavar="FILE", help="write the run's metrics to FILE as JSON")
+    g.add_argument(
+        "--debug",
+        action="store_true",
+        help="show the traceback of an error instead of a one-line message (also SHAPE_DEBUG=1)",
+    )
     sub = p.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("doctor")
+    dr = sub.add_parser("doctor", help="check this installation: version, kernel, packages")
+    dr.add_argument("--json", action="store_true", help="print the report as JSON")
     sub.add_parser("conformance")
     sub.add_parser("version")
     pl = sub.add_parser("plugins", help="inspect installed plugins")
@@ -407,19 +754,62 @@ def _build_parser(plugin_commands=()):
     pli.add_argument("--json", action="store_true", help="print the description as JSON")
     pld = pls.add_parser("doctor", help="load every plugin and report failures")
     pld.add_argument("--json", action="store_true", help="print the report as JSON")
-    c = sub.add_parser("capture")
+    c = sub.add_parser(
+        "capture",
+        help="write a Shape model of a CSV (for `query`, `compatibility`, `plan`); "
+        "use `shape profile` for profiles",
+        description="Capture a CSV file as a Shape model: JSON, or a model .shape with -o "
+        "OUT.shape. It reads CSV only and writes a model, which `shape query`, `shape "
+        "compatibility` and `shape plan` read. `shape profile` is the command for profiling "
+        "data: it reads CSV, Parquet, JSONL, folders and Delta tables, and its profile feeds "
+        "`check`, `diff` and `generate --from`.",
+    )
     c.add_argument("csv")
     c.add_argument("-o", "--output")
-    c.add_argument("--sign", metavar="KEY", help="sign the written .shape with this private key")
+    c.add_argument("--sign", metavar="KEY", help="sign the written .shape; KEY: " + _KEY_HELP)
+    _add_passphrase_args(c)
     pr = sub.add_parser(
         "profile",
         help="profile a file, glob, directory or Delta table",
         epilog="also: `shape profile safe PROFILE.shape -o SAFE.json` writes the share-safe "
-        "form; `shape profile validate --safe ARTIFACT` scans it for leaks",
+        "form; `shape profile validate --safe ARTIFACT` scans it for leaks; "
+        "`shape profile export|import|list|validate` and `shape profile registry "
+        "list|save|delete|tag|diff|reindex|validate` manage profiles and the profile registry",
     )
     pr.add_argument("src", metavar="SRC")
     pr.add_argument("-o", "--output", metavar="OUT")
-    pr.add_argument("--sign", metavar="KEY", help="sign the written .shape with this private key")
+    pr.add_argument("--sign", metavar="KEY", help="sign the written .shape; KEY: " + _KEY_HELP)
+    _add_passphrase_args(pr)
+    pr.add_argument(
+        "--dataset",
+        action="store_true",
+        help="SRC is a folder of table files: profile one table per file, named by the file name "
+        "without its extension (without it a folder is one table)",
+    )
+    pr.add_argument(
+        "--name",
+        metavar="NAME",
+        help="the profile's name (default: the input's file name, or, when -o overwrites a "
+        "profile, that profile's name, so re-profiling a versioned file keeps a stable name)",
+    )
+    pr.add_argument(
+        "--version",
+        dest="delta_version",
+        type=int,
+        metavar="N",
+        help="a Delta table: profile version N instead of the latest",
+    )
+    pr.add_argument(
+        "--as-of",
+        metavar="TIMESTAMP",
+        help="a Delta table: profile the newest version committed at or before this ISO-8601 "
+        "time (no zone means UTC), instead of the latest",
+    )
+    pr.add_argument(
+        "--fail-on-empty",
+        action="store_true",
+        help="exit 2 instead of warning when a table has 0 rows",
+    )
     pr.add_argument("--html", metavar="REPORT.html")
     pr.add_argument("--json", metavar="SUMMARY.json")
     sp = sub.add_parser(
@@ -433,10 +823,22 @@ def _build_parser(plugin_commands=()):
     d.add_argument("--json", metavar="RESULT.json")
     d.add_argument("--fail-on-drift", action="store_true")
     d.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
-    for name in ("show", "inspect"):
-        sh = sub.add_parser(name, help="print a .shape artifact's manifest and contents")
-        sh.add_argument("shape")
-        sh.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
+    _diff_policy_arguments(d)
+    sh = sub.add_parser(
+        "inspect",
+        aliases=["show"],
+        help="print a .shape artifact's manifest and contents (`show` is an alias)",
+        description="Print what a .shape artifact holds (a profile or a Shape model) as one JSON "
+        "line. `shape show` is an alias of `shape inspect`.",
+    )
+    sh.add_argument("shape", metavar="ARTIFACT.shape")
+    sh.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
+    sh.add_argument(
+        "--pretty",
+        action="store_true",
+        help="pretty-printed JSON with sorted keys, one value per line (git-diffable)",
+    )
+    gitcmds.add_parsers(sub)
     fd = sub.add_parser(
         "from-ddl",
         help="read SQL CREATE TABLE DDL into a generation schema",
@@ -458,13 +860,29 @@ def _build_parser(plugin_commands=()):
     )
     fd.add_argument("--explain", action="store_true", help="print the inference report")
     kg = sub.add_parser("keygen", help="generate an Ed25519 signing key pair")
-    kg.add_argument("prefix", help="writes PREFIX.key (private, mode 0600) and PREFIX.pub")
+    kg.add_argument(
+        "prefix",
+        help="writes PREFIX.key (private, passphrase-protected, mode 0600 where the OS has "
+        "mode bits) and PREFIX.pub",
+    )
+    kg.add_argument(
+        "--no-passphrase",
+        action="store_true",
+        help="write an UNENCRYPTED private key (warns; keep the file out of reach)",
+    )
+    _add_passphrase_args(kg)
     sg = sub.add_parser("sign", help="sign a .shape artifact")
     sg.add_argument("shape", metavar="ARTIFACT.shape")
-    sg.add_argument("--key", required=True, metavar="PRIVATE.key")
+    sg.add_argument("--key", required=True, metavar="KEY", help=_KEY_HELP)
+    _add_passphrase_args(sg)
     sg.add_argument("-o", "--output", metavar="OUT.shape", help="default: sign in place")
-    va = sub.add_parser("validate", help="validate a Shape-as-Code contract document")
-    va.add_argument("contract")
+    va = sub.add_parser(
+        "validate",
+        help="validate a generation schema or a contract (chosen by what the file holds)",
+        description="Validate FILE: a Shape generation schema goes through the schema "
+        "validator, a contract through the contract validation; any other document exits 2.",
+    )
+    va.add_argument("contract", metavar="FILE")
     vf = sub.add_parser(
         "verify",
         help="run the validation gates over data, or check a .shape artifact's signature",
@@ -478,19 +896,86 @@ def _build_parser(plugin_commands=()):
     vf.add_argument("--key", metavar="PUBLIC.pub", help="public key for a .shape artifact")
     vf.add_argument("--format", choices=("auto", "csv", "parquet", "jsonl"), default="auto")
     vf.add_argument("--schema", metavar="GATES.json", help="gate schema (or Shape model v2)")
+    vf.add_argument(
+        "--config",
+        metavar="CONFIG.json",
+        help="verify configuration (format shape-verify-config): ranges, date_range, no_future, "
+        "ordering, baseline, file_paths; runs the range, temporal, drift and file gates",
+    )
     vf.add_argument("--statistical", action="store_true", help="add KS and chi-squared tests")
     vf.add_argument("-o", "--output", metavar="REPORT", help="write a .json or .md report")
     vf.add_argument("--strict", action="store_true", help="exit 1 on warnings too")
     qu = sub.add_parser("quality")
     qu.add_argument("csv")
     qu.add_argument("--reference")
-    ge = sub.add_parser("generate")
-    ge.add_argument("--rows", type=int, default=10)
-    ge.add_argument("--seed", type=int, default=0)
-    fi = sub.add_parser("fidelity")
-    fi.add_argument("reference")
-    fi.add_argument("csv")
-    fi.add_argument("--tolerance", type=float, default=0.1)
+    from shape.cli.generation import add_arguments as add_generation_arguments
+
+    add_generation_arguments(sub)
+    from shape.cli.learn import add_arguments as add_learn_arguments
+
+    add_learn_arguments(sub)
+    from shape.cli.emit import add_arguments as add_emit_arguments
+
+    add_emit_arguments(sub)
+    from shape.cli.stream import add_arguments as add_stream_arguments
+
+    add_stream_arguments(sub)
+    from shape.cli.mask import add_arguments as add_mask_arguments
+
+    add_mask_arguments(sub)
+    from shape.cli.incremental import add_arguments as add_incremental_arguments
+
+    add_incremental_arguments(sub)
+    from shape.cli.chaos import add_arguments as add_chaos_arguments
+
+    add_chaos_arguments(sub)
+    from shape.cli.drift_plan import add_arguments as add_drift_plan_arguments
+
+    add_drift_plan_arguments(sub)
+    from shape.cli.pack import add_arguments as add_pack_arguments
+
+    add_pack_arguments(sub)
+    from shape.cli.transform import add_arguments as add_transform_arguments
+
+    add_transform_arguments(sub)
+    from shape.cli.jobs import add_arguments as add_jobs_arguments
+
+    add_jobs_arguments(sub)
+    fi = sub.add_parser(
+        "fidelity",
+        aliases=["compare"],
+        help="score synthetic data against reference data, per column and per table",
+        description=(
+            "Compare SYNTHETIC with REFERENCE (a CSV, Parquet or JSONL file, or a directory of one "
+            "file per table; a profile is not a reference, use `shape diff`) and "
+            "score every column 0-100, then every table and the whole. Exit 0 when every pass "
+            "mark is met, 1 when not, 2 for bad input. Given a captured profile (REFERENCE.json) "
+            "and a CSV file it certifies the CSV against the profile instead (--tolerance; exit "
+            "3 on failure)."
+        ),
+    )
+    fi.add_argument("reference", metavar="REFERENCE")
+    fi.add_argument("csv", metavar="SYNTHETIC")
+    fi.add_argument("--tolerance", type=float, default=0.1, help="with a REFERENCE.json profile")
+    fi.add_argument("--input-format", default="auto", choices=("auto", "csv", "parquet", "jsonl"))
+    fi.add_argument("--min-score", type=float, default=85.0, help="overall pass mark (default 85)")
+    fi.add_argument(
+        "--min-table-score", type=float, default=70.0, help="per-table pass mark (default 70)"
+    )
+    fi.add_argument("--min-column-score", type=float, help="per-column pass mark (default: none)")
+    fi.add_argument(
+        "-o",
+        "--output",
+        action="append",
+        default=[],
+        metavar="REPORT",
+        help="write a report; .json, .md or .html by extension (repeatable)",
+    )
+    fi.add_argument(
+        "--format",
+        default="json",
+        help="what to print: a shape.reports format such as json, md or html (default json)",
+    )
     k = sub.add_parser("key")
     k.add_argument("csv")
     k.add_argument("fields", nargs="+")
@@ -510,22 +995,49 @@ def _build_parser(plugin_commands=()):
     ck.add_argument("contract", metavar="CONTRACT.json")
     ck.add_argument("--json", metavar="RESULT.json")
     ck.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
-    co = sub.add_parser("compatibility")
-    co.add_argument("before")
-    co.add_argument("after")
+    co = sub.add_parser(
+        "compatibility",
+        help="compare two Shape models (not profiles; use `shape diff` for those)",
+        description="Check whether AFTER is compatible with BEFORE. Both are Shape model "
+        "artifacts (`shape capture ... -o X.shape`) or model JSON; profiles written by "
+        "`shape profile` are compared with `shape diff`.",
+    )
+    co.add_argument("before", metavar="BEFORE", help="a model .shape or model JSON")
+    co.add_argument("after", metavar="AFTER", help="a model .shape or model JSON")
     co.add_argument("--mode", choices=("backward", "forward", "full"), default="backward")
-    gp = sub.add_parser("plan")
-    gp.add_argument("shape")
+    gp = sub.add_parser(
+        "plan",
+        help="what generating from a profile preserves, and what it does not",
+        description="Fit the generation schema of a profile (`shape generate --from`) and list, "
+        "for every field of the profile, whether generated data keeps it: preserved, "
+        "approximate, or not_modelled (with the reason). Evidence documents are checked "
+        "against what the generator can build from them.",
+    )
+    gp.add_argument("shape", metavar="PROFILE.shape")
+    gp.add_argument(
+        "--status",
+        choices=("preserved", "approximate", "not_modelled", "unavailable"),
+        action="append",
+        help="list only items with this status (repeatable)",
+    )
+    gp.add_argument("--rows", type=int, metavar="N", help="plan for N rows (a one-table profile)")
     gp.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     fc = sub.add_parser("certify-shapes")
     fc.add_argument("target")
     fc.add_argument("observed")
-    rg = sub.add_parser("registry")
-    rg.add_argument("root")
-    rg.add_argument("action", choices=("commit", "checkout", "tag", "promote", "log"))
-    rg.add_argument("name")
-    rg.add_argument("arg1", nargs="?")
-    rg.add_argument("arg2", nargs="?")
+    fc.add_argument(
+        "--threshold",
+        type=float,
+        default=0.9,
+        help="minimum certificate score, 0 to 1 (default 0.9); below it the exit code is 3",
+    )
+    from shape.cli.tiers import add_drift_parser, add_fidelity_arguments
+
+    add_fidelity_arguments(fi)
+    add_drift_parser(sub)
+    from shape.cli.registry import add_arguments as add_registry_arguments
+
+    add_registry_arguments(sub)
     for rec in plugin_commands:  # listed in --help only; the plugin loads when it is run
         sub.add_parser(rec.name, help=f"(plugin {rec.source})", add_help=False)
     return p
@@ -537,18 +1049,122 @@ def _version():
     return __version__
 
 
+_GLOBAL_VALUE_OPTIONS = ("--log-level", "--metrics")
+
+
+def _split_global(argv):
+    """Take the global options (``--log-json``, ``--log-level L``, ``--metrics FILE``, ``--debug``)
+    off the front of ``argv``; they may also come from SHAPE_LOG_JSON, SHAPE_LOG_LEVEL,
+    SHAPE_METRICS and SHAPE_DEBUG."""
+    opts = {
+        "log_json": os.environ.get("SHAPE_LOG_JSON", "") not in ("", "0"),
+        "log_level": os.environ.get("SHAPE_LOG_LEVEL", "INFO"),
+        "metrics": os.environ.get("SHAPE_METRICS") or None,
+        "debug": False,
+    }
+    rest = list(argv)
+    while rest and rest[0].startswith("--"):
+        name, eq, value = rest[0].partition("=")
+        if name == "--log-json":
+            opts["log_json"] = True
+            rest.pop(0)
+        elif name == "--debug":
+            opts["debug"] = True
+            rest.pop(0)
+        elif name in _GLOBAL_VALUE_OPTIONS:
+            if not eq:
+                if len(rest) < 2:
+                    print(f"shape: error: {name} needs a value", file=sys.stderr)
+                    raise SystemExit(2)
+                value = rest.pop(1)
+            opts[name[2:].replace("-", "_")] = value
+            rest.pop(0)
+        else:
+            break
+    return opts, rest
+
+
 def main(argv=None):
-    argv = list(sys.argv[1:] if argv is None else argv)
+    """Run a command: 0 ok, 1 a check failed, 2 bad input. With the global options (or the
+    environment variables) on, the run logs JSON lines to stderr and writes its metrics.
+
+    Called as the program (no ``argv``), a ``generate`` that wrote its files ends the process as
+    soon as everything is flushed (``lifecycle.exit_now``) instead of tearing the interpreter down:
+    freeing the hundreds of megabytes of tables and unloading the modules takes about 40 ms of a
+    half-second run, and nothing is left to do (every file is closed, no ``atexit`` handler of
+    Shape's is pending)."""
+    from shape.cli import lifecycle
+
+    lifecycle.quick_exit_allowed = argv is None
+    return _main(argv)
+
+
+def _main(argv):
+    _VERIFIED.clear()
+    from shape.cli import errors
+
+    opts, argv = _split_global(sys.argv[1:] if argv is None else argv)
+    errors.set_debug(opts["debug"])
+    return errors.guarded(lambda: _logged(opts, argv))
+
+
+def _logged(opts, argv):
+    if not (opts["log_json"] or opts["metrics"]):
+        return _dispatch(argv)
+    from shape.cli import lifecycle
+
+    lifecycle.quick_exit_allowed = False  # the log line and metrics file come after the command
+    import logging
+    import time
+
+    from shape import runlog
+
+    if opts["log_json"]:
+        runlog.configure_logging(level=opts["log_level"])
+    command = next((x for x in argv if not x.startswith("-")), "")
+    run = runlog.begin(f"{time.strftime('%Y%m%dT%H%M%S')}_{command or 'shape'}")
+    run.set(command=command)
+    log = logging.getLogger(runlog.LOGGER)
+    log.info("command started", extra={"command": command})
+    code = 1
+    try:
+        code = _dispatch(argv)
+        return code
+    except SystemExit as exc:
+        code = exc.code if isinstance(exc.code, int) else 1
+        raise
+    finally:
+        run.set(exit_code=code)
+        summary = run.finish()
+        log.info(
+            "command finished",
+            extra={"command": command, "exit_code": code, "metrics": summary},
+        )
+        if opts["metrics"]:
+            with open(opts["metrics"], "w", encoding="utf-8") as fh:
+                fh.write(run.to_json() + "\n")
+
+
+def _dispatch(argv):
     if argv[:1] in (["--version"], ["-V"]):
         print(f"shape {_version()}")
         return 0
     if argv[:1] == ["profile"] and argv[1:2] in (["safe"], ["validate"]):
+        from shape.cli import profiles
+
+        if profiles.routes(argv[1:]):
+            return profiles.main(argv[1:])
         from shape.privacy.cli import main as privacy_main
 
         return privacy_main(argv[1:])
+    if argv[:1] == ["profile"] and argv[1:2] in (["export"], ["import"], ["list"], ["registry"]):
+        from shape.cli import profiles
+
+        return profiles.main(argv[1:])
+    parser = _build_parser()
     builtin = {
         n
-        for act in _build_parser()._actions
+        for act in parser._actions
         if isinstance(act, argparse._SubParsersAction)
         for n in act.choices
     }
@@ -564,7 +1180,7 @@ def main(argv=None):
         from shape.plugins.host import default_host
 
         return run_command(default_host(), argv[0], argv[1:])
-    a = _build_parser(plugin_cmds.values()).parse_args(argv)
+    a = (_build_parser(plugin_cmds.values()) if plugin_cmds else parser).parse_args(argv)
     if a.version:
         print(f"shape {_version()}")
         return 0
@@ -574,8 +1190,56 @@ def main(argv=None):
         rc = _run(_verify_inputs, a)
         if rc:
             return rc
+    if a.cmd in ("generate", "describe", "list", "presets"):
+        from shape.cli.generation import run as run_generation
+
+        return _run(run_generation, a)
+    if a.cmd == "emit":
+        from shape.cli.emit import run as run_emit
+
+        return _run(run_emit, a)
+    if a.cmd == "stream":
+        from shape.cli.stream import run as run_stream
+
+        return _run(run_stream, a)
     if a.cmd == "from-ddl":
         return _run(_cmd_from_ddl, a)
+    if a.cmd in ("continue", "time-travel"):
+        from shape.cli.incremental import run as run_incremental
+
+        return _run(run_incremental, a)
+    if a.cmd == "chaos":
+        from shape.cli.chaos import run as run_chaos
+
+        return _run(run_chaos, a)
+    if a.cmd == "generate-drift":
+        from shape.cli.drift_plan import run as run_drift_plan
+
+        return _run(run_drift_plan, a)
+    if a.cmd == "pack":
+        from shape.cli.pack import run as run_pack
+
+        return _run(run_pack, a)
+    if a.cmd == "learn":
+        from shape.cli.learn import run as run_learn
+
+        return _run(run_learn, a)
+    if a.cmd == "mask":
+        from shape.cli.mask import run as run_mask
+
+        return _run(run_mask, a)
+    if a.cmd == "jobs":
+        from shape.cli.jobs import run as run_jobs
+
+        return _run(run_jobs, a)
+    if a.cmd == "transform":
+        from shape.cli.transform import run as run_transform
+
+        return _run(run_transform, a)
+    if a.cmd in ("cat", "git-setup"):
+        from shape.cli.gitcmds import run as run_gitcmds
+
+        return _run(run_gitcmds, a)
     if a.cmd == "profile":
         return _run(_cmd_profile, a)
     if a.cmd == "stream-profile":
@@ -590,14 +1254,9 @@ def main(argv=None):
         _dump({"shape": _version(), "specification": "2", "artifact_format": 2})
         return 0
     if a.cmd == "doctor":
-        checks = {"python": sys.version.split()[0]}
-        for name in ("pyarrow", "cryptography", "yaml"):
-            try:
-                checks[name] = __import__(name).__version__
-            except Exception:
-                checks[name] = None
-        _dump(checks)
-        return 0
+        from shape.cli.doctor import run as run_doctor
+
+        return run_doctor(a)
     if a.cmd == "conformance":
         from shape.validation.suite import conformance
 
@@ -618,7 +1277,7 @@ def main(argv=None):
             _dump(out)
             return 0
         if getattr(a, "sign", None):
-            raise SystemExit("capture --sign needs -o OUT.shape")
+            raise ValueError("capture --sign needs -o OUT.shape")
         raw = json.dumps(obj, sort_keys=True, indent=2, default=str)
         if a.output:
             open(a.output, "w", encoding="utf-8").write(raw + "\n")
@@ -628,57 +1287,57 @@ def main(argv=None):
     if a.cmd == "diff":
         from shape.drift import compare
 
-        _dump([asdict(v) for v in compare(json.load(open(a.before)), json.load(open(a.after)))])
+        _dump([asdict(v) for v in compare(_load_json(a.before), _load_json(a.after))])
         return 0
     if a.cmd in ("show", "inspect"):
         return _run(_cmd_inspect, a)
     if a.cmd == "validate":
-        from shape.spec import load_contract
+        from shape.cli.validate import cmd_validate
 
-        c = load_contract(a.contract)
-        _dump({"valid": True, "name": c.name, "version": c.version, "fidelity": c.fidelity})
-        return 0
+        return _run(cmd_validate, a)
     if a.cmd == "quality":
         from shape.capture import capture_rows
         from shape.quality import infer_rules, validate_rows
 
         rows = list(_rows(a.csv))
-        ref = json.load(open(a.reference)) if a.reference else capture_rows(rows).to_dict()
+        ref = _load_json(a.reference) if a.reference else capture_rows(rows).to_dict()
         result = validate_rows(rows, infer_rules(ref))
         _dump({"passed": result.passed, "violations": [asdict(v) for v in result.violations]})
         return 0 if result.passed else 2
-    if a.cmd == "generate":
-        from shape.generation import Choice, GenerationPlan, SequenceStrategy
+    if a.cmd == "drift":
+        from shape.cli.tiers import run_drift
 
-        plan = GenerationPlan(
-            (("id", SequenceStrategy()), ("segment", Choice(("A", "B", "C"), (0.7, 0.2, 0.1)))),
-            a.seed,
+        return _run(run_drift, a)
+    if a.cmd in ("fidelity", "compare") and not a.tier and _artifact_kind(a.reference) == "profile":
+        print(
+            f"shape: error: {a.reference} is a profile, and `shape fidelity` compares data with "
+            "data: pass the reference data (CSV, Parquet, JSONL or a folder of them), or profile "
+            "the synthetic data and compare the two profiles with `shape diff`",
+            file=sys.stderr,
         )
-        for row in plan.rows(a.rows):
-            print(json.dumps(row, sort_keys=True))
-        return 0
-    if a.cmd == "fidelity":
+        return 2
+    if a.cmd in ("fidelity", "compare") and (a.tier or not str(a.reference).endswith(".json")):
+        return _run(_cmd_fidelity, a)
+    if a.cmd in ("fidelity", "compare"):
         from shape.generation import certify
 
-        ref = json.load(open(a.reference))
+        ref = _load_json(a.reference)
         cert = certify(ref, list(_rows(a.csv)), tolerance=a.tolerance)
         _dump(cert.to_dict())
         return 0 if cert.passed else 3
-    if a.cmd in ("query", "plan") and _artifact_kind(a.shape) == "profile":
+    if a.cmd == "plan" and _artifact_kind(a.shape) == "profile":
+        return _run(_cmd_plan_profile, a)
+    if a.cmd == "query" and _artifact_kind(a.shape) == "profile":
         print(
-            f"shape: error: `shape {a.cmd}` does not read profiles made by `shape profile` yet "
-            "(planned). Use `shape check` or `shape diff`.",
+            "shape: error: `shape query` does not read profiles made by `shape profile` yet "
+            "(planned). Use `shape check`, `shape diff` or `shape plan`.",
             file=sys.stderr,
         )
         return 2
     if a.cmd in ("query", "check", "plan"):
         from shape.artifact import read_shape
 
-        _, s = (
-            read_shape(a.shape)
-            if str(a.shape).endswith(".shape")
-            else ({}, json.load(open(a.shape)))
-        )
+        _, s = read_shape(a.shape) if str(a.shape).endswith(".shape") else ({}, _load_json(a.shape))
         if a.cmd == "query":
             from shape.query import query as shape_query
 
@@ -691,7 +1350,7 @@ def main(argv=None):
             return 0
         from shape.contracts import evaluate_contract
 
-        contract = json.load(open(a.contract))
+        contract = _load_json(a.contract)
         r = evaluate_contract(s, contract)
         _dump(r.to_dict())
         return 0 if r.passed else 4
@@ -699,7 +1358,12 @@ def main(argv=None):
         from shape.artifact import read_shape
 
         def LS(p):
-            return read_shape(p)[1] if str(p).endswith(".shape") else json.load(open(p))
+            if _artifact_kind(p) == "profile":
+                raise ValueError(
+                    f"{p} is a profile (made by `shape profile`), and `shape {a.cmd}` reads Shape "
+                    "model artifacts or model JSON; compare two profiles with `shape diff`"
+                )
+            return read_shape(p)[1] if str(p).endswith(".shape") else _load_json(p)
 
         if a.cmd == "compatibility":
             from shape.contracts import compatibility
@@ -709,30 +1373,13 @@ def main(argv=None):
             return 0 if r.compatible else 5
         from shape.generation.fidelity import certify_shapes
 
-        _dump(certify_shapes(LS(a.target), LS(a.observed)).to_dict())
-        return 0
+        cert = certify_shapes(LS(a.target), LS(a.observed))
+        _dump(cert.to_dict())
+        return 0 if cert.score >= a.threshold else 3
     if a.cmd == "registry":
-        from shape.registry import LocalRegistry
+        from shape.cli.registry import run as run_registry
 
-        r = LocalRegistry(a.root)
-        if a.action == "commit":
-            if not a.arg1:
-                raise SystemExit("registry commit requires artifact path")
-            _dump({"content_id": r.commit(a.name, open(a.arg1, "rb").read())})
-        elif a.action == "checkout":
-            data = r.checkout(a.name, a.arg1 or "latest")
-            if a.arg2:
-                open(a.arg2, "wb").write(data)
-                _dump({"written": a.arg2})
-            else:
-                sys.stdout.buffer.write(data)
-        elif a.action == "tag":
-            _dump({"content_id": r.tag(a.name, a.arg1, a.arg2 or "latest")})
-        elif a.action == "promote":
-            _dump({"content_id": r.promote(a.name, a.arg1, a.arg2)})
-        else:
-            _dump(r.log(a.name))
-        return 0
+        return run_registry(a)
     from shape.privacy.measure import k_anonymity
     from shape.profile.dependencies import candidate_key, functional_dependency
 

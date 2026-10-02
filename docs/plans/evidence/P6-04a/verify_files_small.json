@@ -1,0 +1,1220 @@
+{
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "cases": {
+  "file_drop": {
+   "allowed": {
+    "FD-1": {
+     "baseline": "the run raises (it splits a frame with numpy, which returns arrays, and then asks the array for .empty): a drop with several files per partition cannot be made",
+     "shape": "the partition is split into multi_file_chunks files of nearly equal size, each with a checksum in the manifest",
+     "what": "multi_file_enabled"
+    },
+    "FD-2": {
+     "baseline": "each source slot's late rows are written to <partition>_00900 immediately, so a later slot's late rows for the same partition replace the file: those rows are lost, and the result lists the replaced path twice",
+     "shape": "the late rows of every slot that land in one partition share that one 00900 file (oldest slot first); nothing is lost and each file is listed once",
+     "what": "late arrivals landing in the same partition"
+    },
+    "FD-3": {
+     "baseline": "a column named like a date (date, timestamp, created, updated) is the time column when pandas can parse its values: an integer column such as updated_count is read as nanoseconds since 1970, every row falls outside the date range and the drop silently writes nothing",
+     "shape": "only dates, timestamps and ISO-8601 text can be the time column; a table without one is dealt out round robin",
+     "what": "time column heuristic"
+    },
+    "FD-4": {
+     "baseline": "an unknown cadence is treated as daily (the manifest still says the unknown name), and an end date before the start date writes nothing without an error",
+     "shape": "both raise a ValueError that names the setting",
+     "what": "invalid configuration"
+    },
+    "FD-5": {
+     "baseline": "a timestamp is written to the millisecond (pandas to_json's default unit), so a value with microseconds or nanoseconds silently loses them: the JSON Lines file does not hold what the Parquet file of the same drop holds",
+     "shape": "the full precision of the column is written",
+     "what": "JSON Lines timestamps"
+    }
+   },
+   "checks": [
+    {
+     "detail": "5156 files; only in baseline [], only in Shape []",
+     "name": "daily_all: same files",
+     "ok": true
+    },
+    {
+     "detail": "2088 files, 39 explained by the allow-list; first problems []",
+     "name": "daily_all: data files equal",
+     "ok": true
+    },
+    {
+     "detail": "1534 manifests; []",
+     "name": "daily_all: manifests equal",
+     "ok": true
+    },
+    {
+     "detail": "1534 flags; bad []",
+     "name": "daily_all: done flags",
+     "ok": true
+    },
+    {
+     "detail": "['customer', 'order', 'product', 'promotion', 'return']; differ []",
+     "name": "daily_all: stats rows_written and formats equal",
+     "ok": true
+    },
+    {
+     "detail": "2088 vs 2088",
+     "name": "daily_all: stats files equal (baseline minus 40 replaced listings)",
+     "ok": true
+    },
+    {
+     "detail": "2088 listed",
+     "name": "daily_all: files listed once (Shape)",
+     "ok": true
+    },
+    {
+     "detail": "502 files; only in baseline [], only in Shape []",
+     "name": "hourly_formats: same files",
+     "ok": true
+    },
+    {
+     "detail": "336 files, 68 explained by the allow-list; first problems []",
+     "name": "hourly_formats: data files equal",
+     "ok": true
+    },
+    {
+     "detail": "83 manifests; []",
+     "name": "hourly_formats: manifests equal",
+     "ok": true
+    },
+    {
+     "detail": "83 flags; bad []",
+     "name": "hourly_formats: done flags",
+     "ok": true
+    },
+    {
+     "detail": "['customer', 'order']; differ []",
+     "name": "hourly_formats: stats rows_written and formats equal",
+     "ok": true
+    },
+    {
+     "detail": "336 vs 336",
+     "name": "hourly_formats: stats files equal (baseline minus 0 replaced listings)",
+     "ok": true
+    },
+    {
+     "detail": "336 listed",
+     "name": "hourly_formats: files listed once (Shape)",
+     "ok": true
+    },
+    {
+     "detail": "646 files; only in baseline [], only in Shape []",
+     "name": "quarter_hour_round_robin: same files",
+     "ok": true
+    },
+    {
+     "detail": "258 files, 0 explained by the allow-list; first problems []",
+     "name": "quarter_hour_round_robin: data files equal",
+     "ok": true
+    },
+    {
+     "detail": "194 manifests; []",
+     "name": "quarter_hour_round_robin: manifests equal",
+     "ok": true
+    },
+    {
+     "detail": "194 flags; bad []",
+     "name": "quarter_hour_round_robin: done flags",
+     "ok": true
+    },
+    {
+     "detail": "['product', 'store']; differ []",
+     "name": "quarter_hour_round_robin: stats rows_written and formats equal",
+     "ok": true
+    },
+    {
+     "detail": "258 vs 258",
+     "name": "quarter_hour_round_robin: stats files equal (baseline minus 0 replaced listings)",
+     "ok": true
+    },
+    {
+     "detail": "258 listed",
+     "name": "quarter_hour_round_robin: files listed once (Shape)",
+     "ok": true
+    },
+    {
+     "detail": "583 files; only in baseline [], only in Shape []",
+     "name": "plain: same files",
+     "ok": true
+    },
+    {
+     "detail": "583 files, 0 explained by the allow-list; first problems []",
+     "name": "plain: data files equal",
+     "ok": true
+    },
+    {
+     "detail": "0 manifests; []",
+     "name": "plain: manifests equal",
+     "ok": true
+    },
+    {
+     "detail": "0 flags; bad []",
+     "name": "plain: done flags",
+     "ok": true
+    },
+    {
+     "detail": "['order', 'return']; differ []",
+     "name": "plain: stats rows_written and formats equal",
+     "ok": true
+    },
+    {
+     "detail": "583 vs 583",
+     "name": "plain: stats files equal (baseline minus 0 replaced listings)",
+     "ok": true
+    },
+    {
+     "detail": "583 listed",
+     "name": "plain: files listed once (Shape)",
+     "ok": true
+    },
+    {
+     "detail": "customer files equal to their Parquet twin (equal, different): baseline (0, 62), Shape (62, 0); 68 files explained",
+     "name": "FD-5 probe: baseline JSON Lines lose sub-millisecond precision, Shape's keep it",
+     "ok": true
+    },
+    {
+     "detail": "2917 files; only in baseline [], only in Shape []",
+     "name": "late_collisions: same files",
+     "ok": true
+    },
+    {
+     "detail": "1331 files, 115 explained by the allow-list; first problems []",
+     "name": "late_collisions: data files equal",
+     "ok": true
+    },
+    {
+     "detail": "793 manifests; []",
+     "name": "late_collisions: manifests equal",
+     "ok": true
+    },
+    {
+     "detail": "793 flags; bad []",
+     "name": "late_collisions: done flags",
+     "ok": true
+    },
+    {
+     "detail": "['customer', 'order']; differ []",
+     "name": "late_collisions: stats rows_written and formats equal",
+     "ok": true
+    },
+    {
+     "detail": "1331 vs 1331",
+     "name": "late_collisions: stats files equal (baseline minus 134 replaced listings)",
+     "ok": true
+    },
+    {
+     "detail": "1331 listed",
+     "name": "late_collisions: files listed once (Shape)",
+     "ok": true
+    },
+    {
+     "detail": "(in range, baseline wrote, Shape wrote) per table: {'order': (1087, 954, 1087), 'customer': (480, 450, 480)}",
+     "name": "FD-2 probe: baseline loses late rows, Shape loses none",
+     "ok": true
+    },
+    {
+     "detail": "listed twice 134; lost rows seen as 00900 differences 163",
+     "name": "FD-2 probe: baseline lists a replaced file twice; the replaced rows are the differences found",
+     "ok": true
+    },
+    {
+     "detail": "AttributeError: 'numpy.ndarray' object has no attribute 'empty'",
+     "name": "FD-1 probe: baseline raises for multi_file_enabled",
+     "ok": true
+    },
+    {
+     "detail": "bad []",
+     "name": "FD-1 probe: Shape splits each partition into near-equal files with checksums",
+     "ok": true
+    },
+    {
+     "detail": "1087 rows, 8 columns",
+     "name": "FD-1 probe: the split files hold the single-file run's rows, in order",
+     "ok": true
+    },
+    {
+     "detail": "baseline data files 0 (error None); Shape rows 200 (error None)",
+     "name": "FD-3 probe: baseline writes no data for an integer 'updated_count' column, Shape deals the rows out",
+     "ok": true
+    },
+    {
+     "detail": "baseline error None manifest cadence weekly; Shape error ValueError: unknown cadence 'weekly'; use one of daily, hourly, every_15m",
+     "name": "FD-4 probe: baseline accepts cadence 'weekly' (and says so in its manifest), Shape raises",
+     "ok": true
+    },
+    {
+     "detail": "baseline files 0 error None; Shape error ValueError: date_range_end is before date_range_start",
+     "name": "FD-4 probe: baseline writes nothing for an end date before the start without an error, Shape raises",
+     "ok": true
+    },
+    {
+     "detail": "not equivalent: []",
+     "name": "T-21 order: (a)-(e) on 8 columns",
+     "ok": true
+    },
+    {
+     "detail": "Shape 5235 vs baseline 5160 (tol 359.2)",
+     "name": "T-21 order: rows written",
+     "ok": true
+    },
+    {
+     "detail": "not equivalent: []",
+     "name": "T-21 return: (a)-(e) on 5 columns",
+     "ok": true
+    },
+    {
+     "detail": "Shape 881 vs baseline 889 (tol 149.1)",
+     "name": "T-21 return: rows written",
+     "ok": true
+    },
+    {
+     "detail": "Shape 2086 vs baseline 2096 (tol 228.9)",
+     "name": "T-21: data files written",
+     "ok": true
+    }
+   ],
+   "ok": true,
+   "seconds": 264.4
+  },
+  "hybrid": {
+   "allowed": {
+    "HY-1": {
+     "baseline": "the run's id is written only into the _correlation_id column of the rows; every manifest and every event has a correlation id of its own, so the files and the events cannot be joined on what the documentation says they share",
+     "shape": "the run id is also the correlation_id of every manifest and the correlationid of every event (with the natural_keys strategy nothing is stamped, as before)",
+     "what": "the run id in manifests and events"
+    },
+    "HY-2": {
+     "baseline": "names that are not tables are skipped without a word: a mistyped table silently leaves its stream or its batch out",
+     "shape": "raises a ValueError that names the table",
+     "what": "an unknown table name in stream_tables or batch_tables"
+    }
+   },
+   "checks": [
+    {
+     "detail": "623 files; only in baseline [], only in Shape []",
+     "name": "both_paths: same files",
+     "ok": true
+    },
+    {
+     "detail": "243 files, 4 explained by the allow-list; first problems []",
+     "name": "both_paths: data files equal",
+     "ok": true
+    },
+    {
+     "detail": "190 manifests; []",
+     "name": "both_paths: manifests equal",
+     "ok": true
+    },
+    {
+     "detail": "190 flags; bad []",
+     "name": "both_paths: done flags",
+     "ok": true
+    },
+    {
+     "detail": "{'order': {'files': 205, 'formats': ['parquet'], 'rows_written': 208}, 'return': {'files': 38, 'formats': ['parquet'], 'rows_written': 32}} {'events_sent': 5850, 'replays': 1401, 'topics': ['order', 'return']}",
+     "name": "both_paths: result statistics equal (drop stats, files, stream counts, link strategy)",
+     "ok": true
+    },
+    {
+     "detail": "7251 vs 7251",
+     "name": "both_paths: same number of events",
+     "ok": true
+    },
+    {
+     "detail": "first difference at event None",
+     "name": "both_paths: same order of (table, row, replay) for every event",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "both_paths: envelope fields (mapped baseline names + shapetable, shapeseq)",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "both_paths: envelope values equal (specversion, source, type, datacontenttype, topic, schemaversion)",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "both_paths: Shape time/replaytime are ISO-8601 UTC, id is <table>/<row>",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "both_paths: a replayed event repeats the id of its original",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "both_paths: data field names and order (mapped)",
+     "ok": true
+    },
+    {
+     "detail": "7251 rows, 14 columns",
+     "name": "both_paths: data values equal",
+     "ok": true
+    },
+    {
+     "detail": "0 events",
+     "name": "both_paths: _shape_event_time is the first date column's value",
+     "ok": true
+    },
+    {
+     "detail": "d38acfd3-fb42-4516-9fd7-b66ccd5ab844",
+     "name": "both_paths: Shape's run id is a UUID",
+     "ok": true
+    },
+    {
+     "detail": "{'d38acfd3-fb42-4516-9fd7-b66ccd5ab844'} {'d38acfd3-fb42-4516-9fd7-b66ccd5ab844'}",
+     "name": "both_paths: every row of the drop and every event carries the run id (_correlation_id)",
+     "ok": true
+    },
+    {
+     "detail": "{'d38acfd3-fb42-4516-9fd7-b66ccd5ab844'}",
+     "name": "both_paths: every manifest has the run id as its correlation_id (HY-1)",
+     "ok": true
+    },
+    {
+     "detail": "{'d38acfd3-fb42-4516-9fd7-b66ccd5ab844'}",
+     "name": "both_paths: every event has the run id as its correlationid (HY-1)",
+     "ok": true
+    },
+    {
+     "detail": "630 files; only in baseline [], only in Shape []",
+     "name": "split_concurrent_natural_keys: same files",
+     "ok": true
+    },
+    {
+     "detail": "210 files, 0 explained by the allow-list; first problems []",
+     "name": "split_concurrent_natural_keys: data files equal",
+     "ok": true
+    },
+    {
+     "detail": "210 manifests; []",
+     "name": "split_concurrent_natural_keys: manifests equal",
+     "ok": true
+    },
+    {
+     "detail": "210 flags; bad []",
+     "name": "split_concurrent_natural_keys: done flags",
+     "ok": true
+    },
+    {
+     "detail": "{'customer': {'files': 177, 'formats': ['parquet'], 'rows_written': 256}, 'return': {'files': 33, 'formats': ['parquet'], 'rows_written': 37}} {'events_sent': 800, 'replays': 215, 'topics': ['customer', 'order']}",
+     "name": "split_concurrent_natural_keys: result statistics equal (drop stats, files, stream counts, link strategy)",
+     "ok": true
+    },
+    {
+     "detail": "1015 vs 1015",
+     "name": "split_concurrent_natural_keys: same number of events",
+     "ok": true
+    },
+    {
+     "detail": "first difference at event None",
+     "name": "split_concurrent_natural_keys: same order of (table, row, replay) for every event",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "split_concurrent_natural_keys: envelope fields (mapped baseline names + shapetable, shapeseq)",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "split_concurrent_natural_keys: envelope values equal (specversion, source, type, datacontenttype, topic, schemaversion)",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "split_concurrent_natural_keys: Shape time/replaytime are ISO-8601 UTC, id is <table>/<row>",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "split_concurrent_natural_keys: a replayed event repeats the id of its original",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "split_concurrent_natural_keys: data field names and order (mapped)",
+     "ok": true
+    },
+    {
+     "detail": "1015 rows, 10 columns",
+     "name": "split_concurrent_natural_keys: data values equal",
+     "ok": true
+    },
+    {
+     "detail": "0 events",
+     "name": "split_concurrent_natural_keys: _shape_event_time is the first date column's value",
+     "ok": true
+    },
+    {
+     "detail": "62b8194e-5815-4b2a-807d-b9dfe0cadb8d",
+     "name": "split_concurrent_natural_keys: Shape's run id is a UUID",
+     "ok": true
+    },
+    {
+     "detail": "set() {None}",
+     "name": "split_concurrent_natural_keys: nothing is stamped with natural_keys",
+     "ok": true
+    },
+    {
+     "detail": "baseline: rows 1 id, manifests 190 ids, events 5850 ids (none equal the run id); Shape: one id everywhere",
+     "name": "HY-1 probe: the baseline's manifests and events carry ids other than the run id in the rows, Shape's carry the run id",
+     "ok": true
+    },
+    {
+     "detail": "baseline error None stream {'events_sent': 5000, 'replays': 1195, 'topics': ['order']}; Shape error ValueError: unknown table 'ordr'; the tables are order, return",
+     "name": "HY-2 probe: the baseline skips an unknown stream table without a word (and streams the rest), Shape raises",
+     "ok": true
+    },
+    {
+     "detail": "not equivalent: []",
+     "name": "T-21 drop order: (a)-(e) on 8 columns",
+     "ok": true
+    },
+    {
+     "detail": "not equivalent: []",
+     "name": "T-21 drop return: (a)-(e) on 5 columns",
+     "ok": true
+    },
+    {
+     "detail": "not equivalent: []",
+     "name": "T-21 stream: (a)-(e) on 12 data fields",
+     "ok": true
+    },
+    {
+     "detail": "Shape 6520 vs baseline 6385 (tol 399.5)",
+     "name": "T-21 stream: events delivered",
+     "ok": true
+    }
+   ],
+   "ok": true,
+   "seconds": 142.8
+  },
+  "scd2_file_drops": {
+   "allowed": {
+    "SCD-1": {
+     "baseline": "the state is built from the table, not from the snapshot, so the first time a record changes its expired row has no valid_from (null) although the snapshot gave it one",
+     "shape": "the expired row keeps the valid_from of the version it expires (the initial date, or the day the entity was inserted)",
+     "what": "valid_from of an expired version"
+    },
+    "SCD-2": {
+     "baseline": "an insert copies the first entity's row as it is in the state; while that entity has never changed it has no version columns, so the insert has valid_from null, valid_to null and is_current null (not true)",
+     "shape": "an insert has valid_from = the day, valid_to null and is_current true",
+     "what": "version columns of an inserted entity"
+    },
+    "SCD-3": {
+     "baseline": "a delta's columns are the union of its rows' keys in order of first appearance: valid_to, is_current, _delta_type and valid_from come after the table's columns in an order that depends on the first row, and differs from the snapshot's",
+     "shape": "every delta has the snapshot's columns in the snapshot's order, then _delta_type",
+     "what": "column order of the delta files"
+    },
+    "SCD-4": {
+     "baseline": "pandas holds such a column as float, so a changed value is the product with the factor, unrounded: an id column ends with values such as 889.73",
+     "shape": "an integer stays an integer: the product is rounded to the nearest integer (halves to even)",
+     "what": "changing an integer column that has nulls"
+    },
+    "SCD-5": {
+     "baseline": "the first delta mixes text keys with the integer keys of the inserts, and the write fails with an Arrow conversion error after the snapshot is on disk",
+     "shape": "the run raises a ValueError that names the key column, before anything is written",
+     "what": "a business key that is not numeric"
+    }
+   },
+   "checks": [
+    {
+     "detail": "33 files; only in baseline [], only in Shape []",
+     "name": "customers: same files",
+     "ok": true
+    },
+    {
+     "detail": "22 files, 20 explained by the allow-list; first problems []",
+     "name": "customers: data files equal",
+     "ok": true
+    },
+    {
+     "detail": "11 manifests; []",
+     "name": "customers: manifests equal",
+     "ok": true
+    },
+    {
+     "detail": "0 flags; bad []",
+     "name": "customers: done flags",
+     "ok": true
+    },
+    {
+     "detail": "{'days_simulated': 10, 'initial_rows': 1000, 'total_deltas': 1304, 'total_new': 214, 'total_updates': 545}",
+     "name": "customers: stats equal",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "customers: initial snapshot has the same columns in the same order",
+     "ok": true
+    },
+    {
+     "detail": "26 files; only in baseline [], only in Shape []",
+     "name": "orders_with_nulls: same files",
+     "ok": true
+    },
+    {
+     "detail": "13 files, 12 explained by the allow-list; first problems []",
+     "name": "orders_with_nulls: data files equal",
+     "ok": true
+    },
+    {
+     "detail": "13 manifests; []",
+     "name": "orders_with_nulls: manifests equal",
+     "ok": true
+    },
+    {
+     "detail": "0 flags; bad []",
+     "name": "orders_with_nulls: done flags",
+     "ok": true
+    },
+    {
+     "detail": "{'days_simulated': 12, 'initial_rows': 5000, 'total_deltas': 19871, 'total_new': 3971, 'total_updates': 7950}",
+     "name": "orders_with_nulls: stats equal",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "orders_with_nulls: initial snapshot has the same columns in the same order",
+     "ok": true
+    },
+    {
+     "detail": "Shape {'no_valid_from': 0, 'no_current_flag': 0, 'version_gaps': 0, 'not_exactly_one_current': 0, 'last_version_closed': 0}",
+     "name": "customers: Shape's version chain is consistent (no missing valid_from or is_current, no gaps, one current version per entity)",
+     "ok": true
+    },
+    {
+     "detail": "baseline {'no_valid_from': 617, 'no_current_flag': 168, 'version_gaps': 814, 'not_exactly_one_current': 533, 'last_version_closed': 0}; explained expired rows 898, inserts 336",
+     "name": "SCD-1 / SCD-2 probe: the baseline's chain is broken, and the differences found are exactly those rows",
+     "ok": true
+    },
+    {
+     "detail": "baseline ['customer_id', 'first_name', 'last_name', 'email', 'gender', 'loyalty_tier', 'signup_date', 'is_active', 'valid_to', 'is_current', '_delta_type', 'valid_from']; Shape ['customer_id', 'first_name', 'last_name', 'email', 'gender', 'loyalty_tier', 'signup_date', 'is_active', 'valid_from', 'valid_to', 'is_current', '_delta_type']",
+     "name": "SCD-3 probe: baseline delta columns differ from the snapshot's, Shape's are the snapshot's plus _delta_type",
+     "ok": true
+    },
+    {
+     "detail": "Shape {'no_valid_from': 0, 'no_current_flag': 0, 'version_gaps': 0, 'not_exactly_one_current': 0, 'last_version_closed': 0}",
+     "name": "orders_with_nulls: Shape's version chain is consistent (no missing valid_from or is_current, no gaps, one current version per entity)",
+     "ok": true
+    },
+    {
+     "detail": "fractional values: baseline 6289, Shape 0; delta files explained 24",
+     "name": "SCD-4 probe: baseline has fractional shipping_address_id values after a change, Shape has none",
+     "ok": true
+    },
+    {
+     "detail": "baseline ArrowTypeError: (\"Expected bytes, got a 'int' object\", 'Conversion fai (snapshot written: True); Shape ValueError: the business key column 'id' of table 't' must be numeric (new entities get the next integer key) (written: False)",
+     "name": "SCD-5 probe: baseline fails late (snapshot already written), Shape raises first and names the key column",
+     "ok": true
+    },
+    {
+     "detail": "not equivalent: []",
+     "name": "T-21 order: (a)-(e) on 11 columns (valid_from, is_current: SCD-1/2)",
+     "ok": true
+    },
+    {
+     "detail": "Shape 5000 vs baseline 5000 (tol 353.6)",
+     "name": "T-21 order: initial_rows",
+     "ok": true
+    },
+    {
+     "detail": "Shape 6560 vs baseline 6560 (tol 405.0)",
+     "name": "T-21 order: total_deltas",
+     "ok": true
+    },
+    {
+     "detail": "Shape 1092 vs baseline 1092 (tol 165.2)",
+     "name": "T-21 order: total_new",
+     "ok": true
+    },
+    {
+     "detail": "Shape 2734 vs baseline 2734 (tol 261.4)",
+     "name": "T-21 order: total_updates",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "T-21 order: valid_from and is_current of Shape's rows are complete (no nulls where the baseline has them)",
+     "ok": true
+    }
+   ],
+   "ok": true,
+   "seconds": 40.8
+  },
+  "state_machine": {
+   "allowed": {
+    "WF-1": {
+     "baseline": "an entity whose initial state has no way out has no events, and its summary row says it started and ended in the first initial state of the workflow, whichever state it was actually given",
+     "shape": "its summary row names the state it started in",
+     "what": "entities that never move (their initial state)"
+    },
+    "WF-2": {
+     "baseline": "a new random UUID for every event on every run: the same seed gives a different event_id column each time",
+     "shape": "a UUID derived from the seed (a stream of its own, so no other draw moves): the same seed gives the same ids (a determinism rule, not a defect)",
+     "what": "event ids"
+    }
+   },
+   "checks": [
+    {
+     "detail": "5664 rows, 7 columns",
+     "name": "order_fulfillment: events equal (event_id aside)",
+     "ok": true
+    },
+    {
+     "detail": "5664 ids",
+     "name": "order_fulfillment: Shape event_id are unique UUIDs",
+     "ok": true
+    },
+    {
+     "detail": "2000 rows, 6 columns",
+     "name": "order_fulfillment: summaries equal for entities that moved",
+     "ok": true
+    },
+    {
+     "detail": "{'anomaly_count': 611, 'config_seed': 7, 'mean_completion_hours': 87.5717, 'total_entities': 2000, 'total_events': 5664}",
+     "name": "order_fulfillment: stats equal",
+     "ok": true
+    },
+    {
+     "detail": "{'cancelled': 336, 'confirmed': 60, 'created': 62, 'delivered': 1336, 'returned': 158, 'shipped': 48}",
+     "name": "order_fulfillment: state_distribution equal",
+     "ok": true
+    },
+    {
+     "detail": "6791 rows, 7 columns",
+     "name": "support_ticket: events equal (event_id aside)",
+     "ok": true
+    },
+    {
+     "detail": "6791 ids",
+     "name": "support_ticket: Shape event_id are unique UUIDs",
+     "ok": true
+    },
+    {
+     "detail": "1500 rows, 6 columns",
+     "name": "support_ticket: summaries equal for entities that moved",
+     "ok": true
+    },
+    {
+     "detail": "{'anomaly_count': 245, 'config_seed': 8, 'mean_completion_hours': 24.7334, 'total_entities': 1500, 'total_events': 6791}",
+     "name": "support_ticket: stats equal",
+     "ok": true
+    },
+    {
+     "detail": "{'closed': 1426, 'escalated': 6, 'in_progress': 18, 'opened': 15, 'reopened': 2, 'resolved': 16, 'triaged': 17}",
+     "name": "support_ticket: state_distribution equal",
+     "ok": true
+    },
+    {
+     "detail": "6861 rows, 7 columns",
+     "name": "onboarding_no_anomalies: events equal (event_id aside)",
+     "ok": true
+    },
+    {
+     "detail": "6861 ids",
+     "name": "onboarding_no_anomalies: Shape event_id are unique UUIDs",
+     "ok": true
+    },
+    {
+     "detail": "3000 rows, 6 columns",
+     "name": "onboarding_no_anomalies: summaries equal for entities that moved",
+     "ok": true
+    },
+    {
+     "detail": "{'anomaly_count': 0, 'config_seed': 9, 'mean_completion_hours': 179.651, 'total_entities': 3000, 'total_events': 6861}",
+     "name": "onboarding_no_anomalies: stats equal",
+     "ok": true
+    },
+    {
+     "detail": "{'hired': 411, 'rejected': 2169, 'withdrawn': 420}",
+     "name": "onboarding_no_anomalies: state_distribution equal",
+     "ok": true
+    },
+    {
+     "detail": "1150 rows, 7 columns",
+     "name": "custom_graph: events equal (event_id aside)",
+     "ok": true
+    },
+    {
+     "detail": "1150 ids",
+     "name": "custom_graph: Shape event_id are unique UUIDs",
+     "ok": true
+    },
+    {
+     "detail": "502 rows, 6 columns",
+     "name": "custom_graph: summaries equal for entities that moved",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "custom_graph: WF-1: 498 entities that never moved differ only in their initial state",
+     "ok": true
+    },
+    {
+     "detail": "{'anomaly_count': 61, 'config_seed': 10, 'mean_completion_hours': 10.4644, 'total_entities': 1000, 'total_events': 1150}",
+     "name": "custom_graph: stats equal",
+     "ok": true
+    },
+    {
+     "detail": "{'done': 489, 'new': 9, 'parked': 498, 'work': 4}",
+     "name": "custom_graph: state_distribution equal",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "WF-2 probe: the baseline's ids change on every run, Shape's are reproducible",
+     "ok": true
+    },
+    {
+     "detail": "not equivalent: []",
+     "name": "T-21 events: (a)-(e) on 6 columns",
+     "ok": true
+    },
+    {
+     "detail": "not equivalent: []",
+     "name": "T-21 entity summary: (a)-(e) on 5 columns",
+     "ok": true
+    },
+    {
+     "detail": "Shape 16552 vs baseline 16521 (tol 642.7)",
+     "name": "T-21: total_events",
+     "ok": true
+    },
+    {
+     "detail": "Shape 571 vs baseline 555 (tol 117.8)",
+     "name": "T-21: anomaly_count",
+     "ok": true
+    },
+    {
+     "detail": "Shape 86.5293 vs baseline 86.6617 (tol 46.5)",
+     "name": "T-21: mean_completion_hours",
+     "ok": true
+    }
+   ],
+   "ok": true,
+   "seconds": 54.4
+  },
+  "stream_emit": {
+   "allowed": {
+    "SE-1": {
+     "baseline": "the setting is accepted and never read: a paced run with a burst window runs at the base rate throughout",
+     "shape": "the runtime's rate schedule applies the bursts (the rate is multiplied inside each window)",
+     "what": "burst_windows"
+    },
+    "SE-2": {
+     "baseline": "accepted and replaced by the console sink: the events go to standard output and nothing is sent anywhere",
+     "shape": "raises a ValueError (an emitter is named by its URI, eventstream://...); a sink type that is not console, file or a URI is never a silent console",
+     "what": "sink_type eventstream"
+    },
+    "SE-3": {
+     "baseline": "a new random correlation_id for every event, so no two events of a run share one and nothing can be joined on it",
+     "shape": "one correlationid for the whole run (the hybrid simulator passes its own run id to its manifests and events)",
+     "what": "correlation id"
+    },
+    "SE-4": {
+     "baseline": "the replay buffer survives between calls: a second emit() can send again events of the first call that are not among its own events",
+     "shape": "the window starts empty at every call: a replay is only ever of this call's events",
+     "what": "replay window across emit() calls"
+    }
+   },
+   "checks": [
+    {
+     "detail": "events.jsonl / events.jsonl",
+     "name": "mixed: the default event file is named events.jsonl (baseline's name mapped)",
+     "ok": true
+    },
+    {
+     "detail": "5000 vs 5000",
+     "name": "mixed: same number of events",
+     "ok": true
+    },
+    {
+     "detail": "first difference at event None",
+     "name": "mixed: same order of (table, row, replay) for every event",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "mixed: envelope fields (mapped baseline names + shapetable, shapeseq)",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "mixed: envelope values equal (specversion, source, type, datacontenttype, topic, schemaversion)",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "mixed: Shape time/replaytime are ISO-8601 UTC, id is <table>/<row>",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "mixed: a replayed event repeats the id of its original",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "mixed: data field names and order (mapped)",
+     "ok": true
+    },
+    {
+     "detail": "5000 rows, 17 columns",
+     "name": "mixed: data values equal",
+     "ok": true
+    },
+    {
+     "detail": "0 events",
+     "name": "mixed: _shape_event_time is the first date column's value",
+     "ok": true
+    },
+    {
+     "detail": "[(4000, 1000)]",
+     "name": "mixed: results (events sent, replays, topics, schema versions) equal",
+     "ok": true
+    },
+    {
+     "detail": "events.jsonl / events.jsonl",
+     "name": "topics_all_events: the default event file is named events.jsonl (baseline's name mapped)",
+     "ok": true
+    },
+    {
+     "detail": "6850 vs 6850",
+     "name": "topics_all_events: same number of events",
+     "ok": true
+    },
+    {
+     "detail": "first difference at event None",
+     "name": "topics_all_events: same order of (table, row, replay) for every event",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "topics_all_events: envelope fields (mapped baseline names + shapetable, shapeseq)",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "topics_all_events: envelope values equal (specversion, source, type, datacontenttype, topic, schemaversion)",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "topics_all_events: Shape time/replaytime are ISO-8601 UTC, id is <table>/<row>",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "topics_all_events: a replayed event repeats the id of its original",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "topics_all_events: data field names and order (mapped)",
+     "ok": true
+    },
+    {
+     "detail": "6850 rows, 21 columns",
+     "name": "topics_all_events: data values equal",
+     "ok": true
+    },
+    {
+     "detail": "0 events",
+     "name": "topics_all_events: _shape_event_time is the first date column's value",
+     "ok": true
+    },
+    {
+     "detail": "[(6850, 0)]",
+     "name": "topics_all_events: results (events sent, replays, topics, schema versions) equal",
+     "ok": true
+    },
+    {
+     "detail": "events.jsonl / events.jsonl",
+     "name": "single_topic: the default event file is named events.jsonl (baseline's name mapped)",
+     "ok": true
+    },
+    {
+     "detail": "1500 vs 1500",
+     "name": "single_topic: same number of events",
+     "ok": true
+    },
+    {
+     "detail": "first difference at event None",
+     "name": "single_topic: same order of (table, row, replay) for every event",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "single_topic: envelope fields (mapped baseline names + shapetable, shapeseq)",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "single_topic: envelope values equal (specversion, source, type, datacontenttype, topic, schemaversion)",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "single_topic: Shape time/replaytime are ISO-8601 UTC, id is <table>/<row>",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "single_topic: a replayed event repeats the id of its original",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "single_topic: data field names and order (mapped)",
+     "ok": true
+    },
+    {
+     "detail": "1500 rows, 17 columns",
+     "name": "single_topic: data values equal",
+     "ok": true
+    },
+    {
+     "detail": "0 events",
+     "name": "single_topic: _shape_event_time is the first date column's value",
+     "ok": true
+    },
+    {
+     "detail": "[(1500, 0)]",
+     "name": "single_topic: results (events sent, replays, topics, schema versions) equal",
+     "ok": true
+    },
+    {
+     "detail": "events.jsonl / events.jsonl",
+     "name": "replay_heavy: the default event file is named events.jsonl (baseline's name mapped)",
+     "ok": true
+    },
+    {
+     "detail": "38563 vs 38563",
+     "name": "replay_heavy: same number of events",
+     "ok": true
+    },
+    {
+     "detail": "first difference at event None",
+     "name": "replay_heavy: same order of (table, row, replay) for every event",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "replay_heavy: envelope fields (mapped baseline names + shapetable, shapeseq)",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "replay_heavy: envelope values equal (specversion, source, type, datacontenttype, topic, schemaversion)",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "replay_heavy: Shape time/replaytime are ISO-8601 UTC, id is <table>/<row>",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "replay_heavy: a replayed event repeats the id of its original",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "replay_heavy: data field names and order (mapped)",
+     "ok": true
+    },
+    {
+     "detail": "38563 rows, 10 columns",
+     "name": "replay_heavy: data values equal",
+     "ok": true
+    },
+    {
+     "detail": "0 events",
+     "name": "replay_heavy: _shape_event_time is the first date column's value",
+     "ok": true
+    },
+    {
+     "detail": "[(800, 37763)]",
+     "name": "replay_heavy: results (events sent, replays, topics, schema versions) equal",
+     "ok": true
+    },
+    {
+     "detail": "events.jsonl / events.jsonl",
+     "name": "two_emits: the default event file is named events.jsonl (baseline's name mapped)",
+     "ok": true
+    },
+    {
+     "detail": "1200 vs 1200",
+     "name": "two_emits: same number of events",
+     "ok": true
+    },
+    {
+     "detail": "first difference at event None",
+     "name": "two_emits: same order of (table, row, replay) for every event",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "two_emits: envelope fields (mapped baseline names + shapetable, shapeseq)",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "two_emits: envelope values equal (specversion, source, type, datacontenttype, topic, schemaversion)",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "two_emits: Shape time/replaytime are ISO-8601 UTC, id is <table>/<row>",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "two_emits: a replayed event repeats the id of its original",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "two_emits: data field names and order (mapped)",
+     "ok": true
+    },
+    {
+     "detail": "1200 rows, 10 columns",
+     "name": "two_emits: data values equal",
+     "ok": true
+    },
+    {
+     "detail": "0 events",
+     "name": "two_emits: _shape_event_time is the first date column's value",
+     "ok": true
+    },
+    {
+     "detail": "[(600, 0), (600, 0)]",
+     "name": "two_emits: results (events sent, replays, topics, schema versions) equal",
+     "ok": true
+    },
+    {
+     "detail": "spindle_events.jsonl / events.jsonl",
+     "name": "default_path: the default event file is named events.jsonl (baseline's name mapped)",
+     "ok": true
+    },
+    {
+     "detail": "50 vs 50",
+     "name": "default_path: same number of events",
+     "ok": true
+    },
+    {
+     "detail": "first difference at event None",
+     "name": "default_path: same order of (table, row, replay) for every event",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "default_path: envelope fields (mapped baseline names + shapetable, shapeseq)",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "default_path: envelope values equal (specversion, source, type, datacontenttype, topic, schemaversion)",
+     "ok": true
+    },
+    {
+     "detail": "first at []",
+     "name": "default_path: Shape time/replaytime are ISO-8601 UTC, id is <table>/<row>",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "default_path: a replayed event repeats the id of its original",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "default_path: data field names and order (mapped)",
+     "ok": true
+    },
+    {
+     "detail": "50 rows, 7 columns",
+     "name": "default_path: data values equal",
+     "ok": true
+    },
+    {
+     "detail": "0 events",
+     "name": "default_path: _shape_event_time is the first date column's value",
+     "ok": true
+    },
+    {
+     "detail": "[(50, 0)]",
+     "name": "default_path: results (events sent, replays, topics, schema versions) equal",
+     "ok": true
+    },
+    {
+     "detail": "baseline 3.32 s, Shape 1.01 s for 300 events at 100/s with a 3x burst for 1.5 s",
+     "name": "SE-1 probe: the baseline ignores the burst window (paced at the base rate: about 3 s), Shape applies it (about 1 s)",
+     "ok": true
+    },
+    {
+     "detail": "baseline error None stdout lines 20; Shape error ValueError: Unknown sink_type 'eventstream'. Supported: console, file, or the URI of an emitter (kafka://, eventhubs://, eventstream://, ...).",
+     "name": "SE-2 probe: the baseline's eventstream sink prints the events on standard output, Shape raises",
+     "ok": true
+    },
+    {
+     "detail": "baseline 80 ids for 80 primary events; Shape 1",
+     "name": "SE-3 probe: every baseline event has its own correlation id (a replay repeats its original's), Shape's events share one",
+     "ok": true
+    },
+    {
+     "detail": "replays of events outside the second call: baseline 10, Shape 0",
+     "name": "SE-4 probe: the baseline's second call replays events of the first, Shape's never does",
+     "ok": true
+    },
+    {
+     "detail": "not equivalent: []",
+     "name": "T-21 events: (a)-(e) on 8 data fields",
+     "ok": true
+    },
+    {
+     "detail": "Shape 5565 vs baseline 5465 (tol 369.6)",
+     "name": "T-21: events delivered (primary and replays)",
+     "ok": true
+    },
+    {
+     "detail": "Shape 565 vs baseline 465 (tol 210.0)",
+     "name": "T-21: replayed events",
+     "ok": true
+    }
+   ],
+   "ok": true,
+   "seconds": 47.5
+  }
+ },
+ "name_map_baseline_to_shape": {
+  "_replay": "replay",
+  "_replay_time": "replaytime",
+  "_spindle_seq": "_shape_seq",
+  "_spindle_table": "_shape_table",
+  "correlation_id": "correlationid",
+  "schema_version": "schemaversion",
+  "spindle": "shape",
+  "spindle_events.jsonl": "events.jsonl"
+ },
+ "ok": true,
+ "reference_seed": 42,
+ "scale": "small",
+ "seconds": 550.6,
+ "shape_seed": 1042
+}

@@ -1,0 +1,8 @@
+All checks passed!
+546 files already formatted
+Success: no issues found in 248 source files
+vulture=0
+
+Contracts: 1 kept, 0 broken.
+check_user_facing: clean
+bandit=0

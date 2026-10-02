@@ -13,6 +13,10 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import fill_null as arrow_fill_null
+from shape.generation.arrowkit import scalar as arrow_scalar
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.generation.lookup import lookup_values
 from shape.generation.strategy_kit import (
     StrategyError,
@@ -75,22 +79,22 @@ def _equals(col: pa.Array, text: str) -> npt.NDArray[np.bool_]:
         number = None
     if number is not None:
         try:
-            matched = pc.equal(col.cast(pa.float64()), pa.scalar(number))
+            matched = pc.equal(col.cast(pa.float64()), arrow_scalar(number))
         except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
             matched = None
     if matched is None:
-        matched = pc.equal(col.cast(pa.string()), pa.scalar(text))
-    return np.asarray(pc.fill_null(matched, False).to_numpy(zero_copy_only=False), dtype=bool)
+        matched = pc.equal(col.cast(pa.string()), arrow_scalar(text))
+    return np.asarray(arrow_numpy(arrow_fill_null(matched, False)), dtype=bool)
 
 
 def _mask(condition: str, ctx: GenerationContext) -> npt.NDArray[np.bool_]:
     cond = condition.strip()
     if _NOT_NULL.search(cond):
         col = _column_ci(ctx, _NOT_NULL.sub("", cond).strip())
-        return np.asarray(pc.is_valid(col).to_numpy(zero_copy_only=False), dtype=bool)
+        return np.asarray(arrow_numpy(pc.is_valid(col)), dtype=bool)
     if _NULL.search(cond):
         col = _column_ci(ctx, _NULL.sub("", cond).strip())
-        return np.asarray(pc.is_null(col).to_numpy(zero_copy_only=False), dtype=bool)
+        return np.asarray(arrow_numpy(pc.is_null(col)), dtype=bool)
     for op in ("!=", "=="):
         if op in cond:
             left, right = cond.split(op, 1)
@@ -114,9 +118,9 @@ def _branch(gen: Mapping[str, Any], ctx: GenerationContext, side: str) -> pa.Arr
         if value is None:
             return pa.nulls(n, pa.float64())
         try:
-            return pa.array(np.full(n, float(value)))
+            return arrow_array(np.full(n, float(value)))
         except (TypeError, ValueError):
-            return pa.array([str(value)] * n, type=pa.string())
+            return arrow_array([str(value)] * n, type=pa.string())
     name = gen.get("strategy", "")
     if name == "lookup":
         missing = [k for k in ("source_table", "source_column", "via") if not gen.get(k)]
@@ -134,12 +138,12 @@ def _branch(gen: Mapping[str, Any], ctx: GenerationContext, side: str) -> pa.Arr
                 f"conditional {side} lookup of {gen['source_table']}.{gen['source_column']} is not "
                 f"numeric ({where(ctx)})"
             ) from exc
-        return pc.if_else(pc.is_null(ctx.columns[via]), pa.scalar(0.0), found)
+        return pc.if_else(pc.is_null(ctx.columns[via]), arrow_scalar(0.0), found)
     if name:
         raise StrategyError(
             f"conditional {side} supports 'fixed' and 'lookup', not {name!r} ({where(ctx)})"
         )
-    return pa.array(np.zeros(n))
+    return arrow_array(np.zeros(n))
 
 
 class Conditional:
@@ -161,7 +165,7 @@ class Conditional:
         no = _branch(spec.get("false_generator") or {}, ctx, "false_generator")
         if pa.types.is_string(yes.type) or pa.types.is_string(no.type):
             yes, no = yes.cast(pa.string()), no.cast(pa.string())
-        return pc.if_else(pa.array(mask), yes, no)
+        return pc.if_else(arrow_array(mask), yes, no)
 
 
 class Correlated:
@@ -187,9 +191,7 @@ class Correlated:
         source_arr = ctx.columns[source_name]
         try:
             source = np.asarray(
-                pc.fill_null(source_arr.cast(pa.float64()), float("nan")).to_numpy(
-                    zero_copy_only=False
-                ),
+                arrow_numpy(arrow_fill_null(source_arr.cast(pa.float64()), float("nan"))),
                 dtype=np.float64,
             )
         except (pa.ArrowInvalid, pa.ArrowNotImplementedError) as exc:
@@ -213,7 +215,7 @@ class Correlated:
             )
         scale = column_scale(ctx)
         result = np.round(result, 2 if scale is None else scale)
-        return pa.array(result, mask=np.isnan(source))
+        return arrow_array(result, mask=np.isnan(source))
 
 
 __all__ = ["SHAPE_API", "Conditional", "Correlated", "Lookup"]

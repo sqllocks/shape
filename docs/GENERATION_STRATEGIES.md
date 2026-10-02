@@ -39,7 +39,10 @@ schema, `row_counts`, `key_pool(table)`) and `column_def` (the column: `type`, `
 4. **Errors name the column.** Raise `StrategyError` (a `ValueError`) with the strategy and
    `table.column`: `require(spec, key, ctx, "strategy")`, `where(ctx)`.
 5. **Types.** A strategy returns its natural type and the engine does not cast: integers
-   (`sequence`) as `int64`; numeric draws as `float64`; text as `string`.
+   (`sequence`) as `int64`; numeric draws as `float64`; text as `string`. The one exception is a
+   generator that asks for it: `"output_type": "int64"` (or `float64`, `bool`, `string`) casts the
+   strategy's output (floats are rounded first), which is how a profile's integer and boolean
+   columns keep their type (`shape.generation.engine.cast_output`).
 
 ### Helpers
 
@@ -135,6 +138,9 @@ URI domains and paths). `provider` defaults to `word`. Every draw is row address
 | `ssn` | `AAA-GG-SSSS`, `AAA` 1 to 899 without 666, `GG` 1 to 99, `SSSS` 1 to 9999 |
 | `street_address` | `<100..9998> <street> <St, Ave, Blvd, Dr, Ln, Way, Ct, Pl, Rd or Cir>` |
 | `uri` | `https://<domain>/<path>` |
+| `ipv4` | `A.B.C.D`, `A` and `D` 1 to 254, `B` and `C` 0 to 255 |
+| `postcode` | five digits, 00501 to 99950 |
+| `zip_plus4` | `NNNNN-NNNN`: a `postcode` and four digits, 0001 to 9999 |
 | `pystr`, `word` | 12 characters from `a-z0-9` |
 
 The column's `max_length` cuts the text. `native` raises `StrategyError` for any other provider.
@@ -224,6 +230,16 @@ sampled uniformly; a dataset of records with `field` gives that field of a unifo
 (or `value`) with a `weight`, and a name is drawn in proportion to its weight. The column has the
 type of the values (`string`, `int64`, `float64`; a field that mixes types becomes `string`).
 
+### `bootstrap`
+`{"dataset": "people", "field": "income", "jitter": 0.01}`: `field` of a source row of a dataset of
+records, rows drawn with replacement. Every `bootstrap` column of a table that names the same
+dataset takes the same source row for a given row, so the columns keep the source's joint
+distribution. `jitter` (default 0.01, `0` for none) is the standard deviation of normal noise as a
+fraction of the source column's standard deviation; it applies to integer and float fields only (they
+become `float64`; a constant column and text are never jittered). Nulls stay null. The source rows are
+copied: a bootstrapped table contains the people of the source (`docs/FIDELITY_TIERS.md`). The
+library form, seeded with numpy's generator, is `shape.fidelity.bootstrap_table`.
+
 ### `record_sample` and `record_field`
 `record_sample` (`{"dataset": "places", "field": "city"}`) is the anchor of a group of columns that
 share one randomly chosen record: this column is that record's `field`. `record_field`
@@ -250,10 +266,14 @@ and the anchor's null rate does not touch the fields.
   bucket is the product of the two weights, shared equally by the days of the range in it; the
   probability of a bucket with no day in the range is spread over the other days. The end date is a
   possible day. Without a month or weekday profile the range is uniform.
-* `profiles.hour_of_day` replaces the time of day by a whole second in an hour drawn uniformly, or
-  from `{"distribution": "bimodal", "peaks": [12, 18], "std_dev": 2}`: equally likely Gaussian
+* `profiles.hour_of_day` replaces the time of day by a whole second in an hour drawn uniformly, from
+  one weight per hour (`{"0": 0.01, ..., "23": 0.02}`, a profile's hour histogram), or from
+  `{"distribution": "bimodal", "peaks": [12, 18], "std_dev": 2}`: equally likely Gaussian
   peaks, wrapped around midnight. Without it the time of day is uniform to the microsecond.
-* The column is `timestamp[us]`. Calendars, paydays and trends (`shape.calendars`) are separate.
+* `"granularity": "day"` cuts every value to midnight (a date column: the hour profile is ignored).
+* The column is `timestamp[us]`, or the `unit` given (`s`, `ms`, `us` or `ns`): the same instants in
+  another Arrow unit, for output that must match a `timestamp[ns]` column type. Calendars, paydays
+  and trends (`shape.calendars`) are separate.
 
 ### Reference datasets (`shape.generation.reference`)
 `load_dataset(name)` finds a dataset in this order: datasets registered in the process

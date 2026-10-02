@@ -37,8 +37,10 @@ from .gen import uuid4_strings as uuid4_strings
 from .hashing import hash_array as hash_array
 from .profile import ProfileState as ProfileState
 from .relational import cap_per_parent as cap_per_parent
+from .relational import dense_rows as dense_rows
 from .relational import first_flags as first_flags
 from .relational import group_order as group_order
+from .relational import group_sums as group_sums
 from .relational import scd2_offsets as scd2_offsets
 from .sketch import Hll as Hll
 from .sketch import Kll as Kll

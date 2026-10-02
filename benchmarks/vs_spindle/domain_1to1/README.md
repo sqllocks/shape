@@ -11,6 +11,8 @@ tools under the same conditions.
 | `port.py` | `generate(scale='medium', seed=42, spindle_root=...) -> dict[str, pyarrow.Table]` and `write_parquet(tables, dir)`. Uses only numpy, pyarrow and the standard library. Retail only. |
 | `generate.py` | Writes one run of a domain as Parquet, for `--impl spindle\|reference_port\|shape`, into `$BENCH_OUT_DIR/<impl>/<domain>/<scale>/seed<N>/`. Each impl runs in its own venv. |
 | `verify.py` | Equivalence verifier (T-21 clauses (a)-(h)); reads Parquet only, in the Spindle venv. Tables, FKs and business rules come from `../dump_schema.py`. Exits 1 unless every clause holds, 2 if a required run directory is missing. |
+| `export_retail.py` | Writes the `shape-domains` plugin's retail data (the schema, from the baseline's dump, and the four reference datasets, from the baseline checkout); `--check` proves the shipped files equal what it would write. |
+| `pipeline_run.py` | Writes what the Fabric generate notebook and the `generateSample` function produce (run in the `fabric-demo` environment) as a run directory, so `verify.py --impl shape` checks the pipeline path against T-21. Use a `BENCH_OUT_DIR` of its own: it replaces the product path's run. |
 | `bench.py` | Benchmark harness: every run is a fresh process (median of `--runs`), timing generate + write through `generate.py`. |
 
 The recorded results quoted below (`verify_*` reports for small, medium and large, the
@@ -435,3 +437,21 @@ Import time, outside the timed region: Spindle 0.98s (pandas and Spindle), port 
   validation pass and all rule fixing.
 * **Not measured.** Spindle's chunked, streaming and Spark paths, `to_parquet` via
   `GenerationResult` (4 threads, zstd), and scales above large.
+
+## The product (`--impl shape`)
+
+`--impl shape` is the product path, not a port: the `shape.domains` plugin (`sqllocks-shape-domains`,
+installed with `pip install -e plugins/shape-domains`) supplies the schema and reference data,
+`shape.generation.engine.Engine` generates it on every core, and `shape.generation.output.write_engine`
+writes snappy Parquet as each table is final. The timed region is construct (load the domain, build
+the engine) + generate + write; the strategy and sink plugins are loaded before it, as the baseline's
+import loads all of its own (T-19: imports are excluded for both tools). Because generation and
+writing overlap, the runner reports the whole as `gen_s` and `write_s` is 0. `bench.py --warmup 1`
+discards one fresh-process run per tool before the timed ones (T-19).
+
+```bash
+source scripts/env.sh
+"$SPINDLE_PY" benchmarks/vs_spindle/domain_1to1/verify.py --domain retail --scale medium --impl shape
+"$SHAPE_VENV/bin/python" benchmarks/vs_spindle/domain_1to1/bench.py \
+    --impl shape --domain retail --scales medium,large --runs 5 --warmup 1
+```

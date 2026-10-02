@@ -24,6 +24,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape.generation import kernel_ops
+from shape.generation.arrowkit import array as arrow_array
 from shape.generation.rng import stream_key
 from shape.generation.strategy_kit import StrategyError, stream, where
 from shape.plugins.api.v1 import GenerationContext
@@ -39,7 +40,7 @@ FAKER_POOL_ROWS = 50_000  # most values a faker pool holds
 def pool(name: str) -> pa.Array:
     """The reference pool ``name`` (``pools/<name>.txt``, one entry per line) as a string array."""
     text = resources.files(__package__).joinpath(f"pools/{name}.txt").read_text("utf-8")
-    return pa.array(text.split("\n")[:-1], type=pa.string())
+    return arrow_array(text.split("\n")[:-1], type=pa.string())
 
 
 @cache
@@ -92,7 +93,7 @@ def _email(ctx: GenerationContext) -> pa.Array:
     else:
         firsts, lasts = _first_name(ctx), _last_name(ctx)
     domains = _from_pool(ctx, "domain", "email_domains")
-    suffix = pa.array(_ints(ctx, "suffix", 1, 999))
+    suffix = arrow_array(_ints(ctx, "suffix", 1, 999))
     return kernel_ops.template_strings(
         ["", ".", "", "@", ""],
         [(0, 0), (1, 0), (2, 0), (3, 0)],
@@ -113,7 +114,7 @@ def _phone_number(ctx: GenerationContext) -> pa.Array:
     return kernel_ops.template_strings(
         ["(", ") ", "-", ""],
         [(0, 0), (1, 0), (2, 0)],
-        [pa.array(area), pa.array(exchange), pa.array(subscriber)],
+        [arrow_array(area), arrow_array(exchange), arrow_array(subscriber)],
         ctx.n_rows,
     )
 
@@ -126,7 +127,37 @@ def _ssn(ctx: GenerationContext) -> pa.Array:
     return kernel_ops.template_strings(
         ["", "-", "-", ""],
         [(0, 3), (1, 2), (2, 4)],
-        [pa.array(area), pa.array(group), pa.array(serial)],
+        [arrow_array(area), arrow_array(group), arrow_array(serial)],
+        ctx.n_rows,
+    )
+
+
+def _ipv4(ctx: GenerationContext) -> pa.Array:
+    # a.b.c.d with the first and last octet in 1..254
+    parts = [
+        arrow_array(_ints(ctx, "a", 1, 255)),
+        arrow_array(_ints(ctx, "b", 0, 256)),
+        arrow_array(_ints(ctx, "c", 0, 256)),
+        arrow_array(_ints(ctx, "d", 1, 255)),
+    ]
+    return kernel_ops.template_strings(
+        ["", ".", ".", ".", ""], [(0, 0), (1, 0), (2, 0), (3, 0)], parts, ctx.n_rows
+    )
+
+
+def _postcode(ctx: GenerationContext) -> pa.Array:
+    # five digits, zero padded
+    return kernel_ops.template_strings(
+        ["", ""], [(0, 5)], [arrow_array(_ints(ctx, "zip", 501, 99_951))], ctx.n_rows
+    )
+
+
+def _zip_plus4(ctx: GenerationContext) -> pa.Array:
+    # NNNNN-NNNN, zero padded
+    return kernel_ops.template_strings(
+        ["", "-", ""],
+        [(0, 5), (1, 4)],
+        [arrow_array(_ints(ctx, "zip", 501, 99_951)), arrow_array(_ints(ctx, "plus4", 1, 10_000))],
         ctx.n_rows,
     )
 
@@ -140,7 +171,7 @@ def _street_address(ctx: GenerationContext) -> pa.Array:
         ["", " ", " ", ""],
         [(0, 0), (1, 0), (2, 0)],
         [
-            pa.array(_ints(ctx, "number", 100, 9999)),
+            arrow_array(_ints(ctx, "number", 100, 9999)),
             _from_pool(ctx, "street", "street_names"),
             _from_pool(ctx, "suffix", "street_suffixes"),
         ],
@@ -204,6 +235,9 @@ PROVIDERS: dict[str, Callable[[GenerationContext], pa.Array]] = {
     "state_abbr": _state_abbr,
     "uri": _uri,
     "company_email": _company_email,
+    "ipv4": _ipv4,
+    "postcode": _postcode,
+    "zip_plus4": _zip_plus4,
     "pystr": _word,
     "word": _word,
 }
@@ -224,7 +258,9 @@ def _provider(spec: Mapping[str, Any]) -> str:
 class Native:
     """Text from the built-in pools: ``spec['provider']`` is one of ``first_name``, ``last_name``,
     ``name``, ``email``, ``phone_number``, ``ssn``, ``company``, ``street_address``, ``sentence``,
-    ``city``, ``state_abbr``, ``uri``, ``company_email``, ``pystr`` or ``word`` (the default).
+    ``city``, ``state_abbr``, ``uri``, ``company_email``, ``ipv4``, ``postcode``, ``zip_plus4``,
+    ``pystr`` or
+    ``word`` (the default).
     The column's ``max_length`` truncates."""
 
     name = "native"
@@ -257,7 +293,7 @@ def _faker_pool(locale: str, provider: str, args_json: str, key: int, size: int)
         raise StrategyError(f"unknown faker provider {provider!r}")
     args = json.loads(args_json)
     try:
-        return pa.array([method(**args) for _ in range(size)])
+        return arrow_array([method(**args) for _ in range(size)])
     except (pa.ArrowInvalid, pa.ArrowTypeError) as exc:
         raise StrategyError(f"faker provider {provider!r} returns mixed types: {exc}") from exc
 
@@ -295,7 +331,7 @@ class Faker:
             index = np.arange(ctx.row_start, ctx.row_start + ctx.n_rows, dtype=np.int64)
         else:
             index = _pick(ctx, "faker", size)
-        values = pc.take(entries, pa.array(index))
+        values = pc.take(entries, arrow_array(index))
         return _truncate(values, ctx)
 
 

@@ -13,8 +13,9 @@ license = "MIT"
 license-files = ["LICENSE"]
 dependencies = ["sqllocks-shape==0.9.0"]
 
-# Entry points (shape.* groups, plugin API v1) are added here by the work package that
-# implements this plugin; see docs/plugins/authoring.md.
+# Entry points (shape.* groups, plugin API v1); see docs/plugins/authoring.md.
+[project.entry-points."shape.commands"]
+simulate = "shape_simulation.cli:SimulateCommand"
 
 [tool.setuptools.packages.find]
 where = ["src"]

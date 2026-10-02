@@ -14,6 +14,7 @@ from collections.abc import Mapping
 import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
 from shape.generation.strategy_kit import stream
 from shape.plugins.api.v1 import GenerationContext
 
@@ -44,7 +45,7 @@ class Normal:
 
     def sample(self, params: Mapping[str, float], ctx: GenerationContext) -> pa.Array:
         z = stream(ctx, "dist").normal(ctx.row_start, ctx.n_rows)
-        return pa.array(_param(params, "loc", 0.0) + _scale(params) * z)
+        return arrow_array(_param(params, "loc", 0.0) + _scale(params) * z)
 
 
 class Uniform:
@@ -54,7 +55,7 @@ class Uniform:
 
     def sample(self, params: Mapping[str, float], ctx: GenerationContext) -> pa.Array:
         u = stream(ctx, "dist").uniform(ctx.row_start, ctx.n_rows)
-        return pa.array(_param(params, "loc", 0.0) + _scale(params) * u)
+        return arrow_array(_param(params, "loc", 0.0) + _scale(params) * u)
 
 
 class Exponential:
@@ -64,7 +65,7 @@ class Exponential:
 
     def sample(self, params: Mapping[str, float], ctx: GenerationContext) -> pa.Array:
         u = stream(ctx, "dist").uniform(ctx.row_start, ctx.n_rows)
-        return pa.array(_param(params, "loc", 0.0) + _scale(params) * -np.log1p(-u))
+        return arrow_array(_param(params, "loc", 0.0) + _scale(params) * -np.log1p(-u))
 
 
 class Lognormal:
@@ -77,7 +78,7 @@ class Lognormal:
         if not s > 0:
             raise ValueError("s must be positive")
         z = stream(ctx, "dist").normal(ctx.row_start, ctx.n_rows)
-        return pa.array(_param(params, "loc", 0.0) + _scale(params) * np.exp(s * z))
+        return arrow_array(_param(params, "loc", 0.0) + _scale(params) * np.exp(s * z))
 
 
 class FamilyDistribution:
@@ -88,7 +89,7 @@ class FamilyDistribution:
 
     def sample(self, params: Mapping[str, float], ctx: GenerationContext) -> pa.Array:
         values = self.family.sample(stream(ctx, "dist"), ctx.row_start, ctx.n_rows, params)
-        return pa.array(values)
+        return arrow_array(values)
 
 
 class LogNormalFamily(FamilyDistribution):

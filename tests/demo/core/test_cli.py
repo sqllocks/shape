@@ -142,11 +142,12 @@ def test_missing_first_shape_exits_2(tmp_path: Path):
     assert main(["diff", str(tmp_path / "no-such.shape"), str(tmp_path / "b.shape")]) == 2
 
 
-def test_plan_and_query_on_a_profile_exit_2_with_a_message(tmp_path: Path, day1: Path, capsys):
-    """Legacy commands must not crash on a 0.9 profile: exit 2 and say it is not supported yet."""
+def test_plan_reads_a_profile_and_query_exits_2_with_a_message(tmp_path: Path, day1: Path, capsys):
+    """`plan` reads a 0.9 profile (P4-08); `query` must not crash on one: exit 2, with a message."""
     out = tmp_path / "p.shape"
     assert main(["profile", str(day1), "-o", str(out)]) == 0
     capsys.readouterr()
-    assert main(["plan", str(out)]) == 2
-    assert "not read profiles" in capsys.readouterr().err
+    assert main(["plan", str(out)]) == 0
+    assert json.loads(capsys.readouterr().out)["executable"] is True
     assert main(["query", str(out), "rows"]) == 2
+    assert "not read profiles" in capsys.readouterr().err

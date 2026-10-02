@@ -22,6 +22,14 @@ Add `sqllocks_shape-0.9.0-py3-none-any.whl` (build it with `python scripts/build
 * each must be **under 28.6 MB**. Shape's pure wheel is checked against this by DM-03;
 * once Shape is on PyPI you can list `sqllocks-shape==0.9.0` as a public library instead.
 
+### `generateSample` needs a domain
+
+`generateSample` generates from an installed domain, and a domain is a plugin. Also add the
+`sqllocks-shape-domains` wheel `sqllocks_shape_domains-0.9.0-py3-none-any.whl` (`pip wheel --no-deps plugins/shape-domains`) under
+**Add from local**; it is `py3-none-any` and about 2 MB. Without it the function raises
+`no domain named 'retail' (installed: none installed)`. `generateSample` caps `rows` at 500,000 and
+cuts the response to the leading rows that fit in 25 MB of JSON (limit: 30 MB).
+
 `function_app.py` is a thin template: the logic is `shape.integrations.fabric.udf` inside the wheel, so
 upgrading the wheel upgrades the functions. CI (`pure-wheel`) builds the wheel, checks the tag and size,
 and runs the UDF tests against it with `SHAPE_KERNEL=python`.

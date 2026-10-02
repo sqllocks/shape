@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import base64
 import math
+import re
 import zlib
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
@@ -44,15 +45,54 @@ _US = timedelta(microseconds=1)
 _DAY_US = 86_400_000_000
 
 LateSink = Callable[[pa.RecordBatch], None]
-Duration = timedelta | int
+Duration = timedelta | str
+"""A window size, slide, gap, offset or lateness: a ``timedelta``, or a string with a unit
+(``"500ms"``, ``"60s"``, ``"5m"``, ``"1h"``, ``"2d"``, ``"250us"``; a bare numeric string is
+seconds, as on the command line). A bare ``int`` is refused, except ``0``, which is the same in
+every unit: it used to mean microseconds, so ``60_000`` was 60 *milliseconds*."""
+
+_UNIT_US = {"us": 1, "ms": 1_000, "s": 1_000_000, "m": 60_000_000, "h": 3_600_000_000}
+_UNIT_US["d"] = 24 * _UNIT_US["h"]
+_DURATION = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*(us|ms|s|m|h|d)?\s*$")
+
+
+def parse_duration(text: str, what: str) -> int:
+    """``"500ms"``, ``"30s"``, ``"5m"``, ``"1h"``, ``"2d"`` or a bare number of seconds, as
+    whole microseconds."""
+    m = _DURATION.match(text)
+    if m is None:
+        raise ValueError(f"{what}: {text!r} is not a duration (examples: 500ms, 30s, 5m, 1h)")
+    us = round(float(m.group(1)) * _UNIT_US[m.group(2) or "s"])
+    if not math.isfinite(us):
+        raise ValueError(f"{what}: {text!r} is not a duration")
+    return int(us)
 
 
 def _micros(value: Duration, what: str, *, positive: bool) -> int:
-    """A duration as whole microseconds (an ``int`` already is)."""
-    us = value // _US if isinstance(value, timedelta) else int(value)
+    """A duration as whole microseconds."""
+    if isinstance(value, timedelta):
+        us = value // _US
+    elif isinstance(value, str):
+        us = parse_duration(value, what)
+    elif isinstance(value, int) and not isinstance(value, bool) and value == 0:
+        us = 0
+    else:
+        hint = (
+            f"{what}: a bare number is not accepted, because its unit would be a guess "
+            "(it used to be microseconds, so 60_000 was 60 ms): pass timedelta(seconds=60) or a "
+            "string such as '60s' or '5m' (timedelta(microseconds=n) for microseconds)"
+            if isinstance(value, int | float) and not isinstance(value, bool)
+            else f"{what}: {value!r} is not a duration (a timedelta, or a string such as '60s')"
+        )
+        raise ValueError(hint)
     if us < 0 or (positive and us == 0):
         raise ValueError(f"{what} must be {'positive' if positive else 'zero or more'}")
     return us
+
+
+def _stored(us: int) -> timedelta:
+    """Whole microseconds (a snapshot holds them) as the ``timedelta`` the constructors take."""
+    return timedelta(microseconds=int(us))
 
 
 def _to_iso(us: int | None) -> str | None:
@@ -152,7 +192,7 @@ class WindowedProfiler:
         schema: pa.Schema,
         *,
         event_time: str | None = EVENT_TIME,
-        allowed_lateness: Duration = 0,
+        allowed_lateness: Duration = timedelta(0),
         late_sink: LateSink | None = None,
         name: str = "stream",
         top_n: int = 500,
@@ -330,7 +370,7 @@ class WindowedProfiler:
     def _common(snapshot: dict[str, Any], late_sink: LateSink | None) -> dict[str, Any]:
         return {
             "event_time": snapshot["event_time"],
-            "allowed_lateness": snapshot["allowed_lateness_us"],
+            "allowed_lateness": _stored(snapshot["allowed_lateness_us"]),
             "late_sink": late_sink,
             "name": snapshot["name"],
             "top_n": snapshot["top_n"],
@@ -352,9 +392,9 @@ class SlidingProfiler(WindowedProfiler):
         size: Duration,
         slide: Duration,
         *,
-        offset: Duration = 0,
+        offset: Duration = timedelta(0),
         event_time: str | None = EVENT_TIME,
-        allowed_lateness: Duration = 0,
+        allowed_lateness: Duration = timedelta(0),
         late_sink: LateSink | None = None,
         name: str = "stream",
         top_n: int = 500,
@@ -482,9 +522,9 @@ class SlidingProfiler(WindowedProfiler):
         cfg = snapshot["config"]
         return cls(
             _decode_schema(snapshot["schema"]),
-            cfg["size_us"],
-            cfg["slide_us"],
-            offset=cfg["offset_us"],
+            _stored(cfg["size_us"]),
+            _stored(cfg["slide_us"]),
+            offset=_stored(cfg["offset_us"]),
             **cls._common(snapshot, late_sink),
         )
 
@@ -499,9 +539,9 @@ class TumblingProfiler(SlidingProfiler):
         schema: pa.Schema,
         size: Duration,
         *,
-        offset: Duration = 0,
+        offset: Duration = timedelta(0),
         event_time: str | None = EVENT_TIME,
-        allowed_lateness: Duration = 0,
+        allowed_lateness: Duration = timedelta(0),
         late_sink: LateSink | None = None,
         name: str = "stream",
         top_n: int = 500,
@@ -528,8 +568,8 @@ class TumblingProfiler(SlidingProfiler):
         cfg = snapshot["config"]
         return cls(
             _decode_schema(snapshot["schema"]),
-            cfg["size_us"],
-            offset=cfg["offset_us"],
+            _stored(cfg["size_us"]),
+            offset=_stored(cfg["offset_us"]),
             **cls._common(snapshot, late_sink),
         )
 
@@ -556,7 +596,7 @@ class SessionProfiler(WindowedProfiler):
         gap: Duration,
         *,
         event_time: str | None = EVENT_TIME,
-        allowed_lateness: Duration = 0,
+        allowed_lateness: Duration = timedelta(0),
         late_sink: LateSink | None = None,
         name: str = "stream",
         top_n: int = 500,
@@ -641,7 +681,7 @@ class SessionProfiler(WindowedProfiler):
     ) -> WindowedProfiler:
         return cls(
             _decode_schema(snapshot["schema"]),
-            snapshot["config"]["gap_us"],
+            _stored(snapshot["config"]["gap_us"]),
             **cls._common(snapshot, late_sink),
         )
 
@@ -664,7 +704,12 @@ class GlobalProfiler(WindowedProfiler):
         top_n: int = 500,
     ) -> None:
         super().__init__(
-            schema, event_time=None, allowed_lateness=0, late_sink=late_sink, name=name, top_n=top_n
+            schema,
+            event_time=None,
+            allowed_lateness=timedelta(0),
+            late_sink=late_sink,
+            name=name,
+            top_n=top_n,
         )
         self._state: Any = self._new_state()
 
@@ -673,6 +718,12 @@ class GlobalProfiler(WindowedProfiler):
     ) -> np.ndarray:
         self._state.update(batch)
         return np.zeros(batch.num_rows, dtype=bool)
+
+    def peek(self) -> WindowProfile:
+        """The profile of everything seen so far, without closing the window: the stream goes on
+        (``finish()`` still emits the final one). Used for live reading of a running stream."""
+        entry = table_entry(self._state, self.name, self.schema, "bounded", self.top_n)
+        return WindowProfile(self.kind, None, None, int(self._state.rows), entry)
 
     def _close(self, wm: int | None) -> list[WindowProfile]:
         return [self._emit(None, None, self._state)] if wm is None else []

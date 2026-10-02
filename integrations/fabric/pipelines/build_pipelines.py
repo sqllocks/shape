@@ -52,7 +52,22 @@ def _expr(text: str) -> dict:
     return {"value": text, "type": "Expression"}
 
 
-def _notebook_gate(notebook: str, description: str) -> dict:
+# Inline ``%pip`` is disabled by default in pipeline runs; a Boolean notebook-activity parameter
+# turns it on (Microsoft Learn, "Manage Apache Spark libraries"). A Python notebook cannot attach
+# an Environment, so the notebooks that install Shape with ``%pip`` get it. VERIFY IN THE WORKSPACE.
+INLINE_INSTALL = "_inlineInstallationEnabled"
+
+
+def _notebook_parameters(args: dict, *, inline_install: bool) -> dict:
+    """The notebook activity's parameters; ``inline_install`` adds the flag that lets ``%pip``
+    run in the pipeline (only for a notebook that has a ``%pip`` cell)."""
+    out = dict(args)
+    if inline_install:
+        out[INLINE_INSTALL] = {"value": True, "type": "bool"}
+    return out
+
+
+def _notebook_gate(notebook: str, description: str, *, inline_install: bool = False) -> dict:
     return {
         "properties": {
             "description": description,
@@ -72,10 +87,16 @@ def _notebook_gate(notebook: str, description: str) -> dict:
                     "typeProperties": {
                         "notebookId": f"<<NOTEBOOK_ID:{notebook}>>",
                         "workspaceId": "<<WORKSPACE_ID>>",
-                        "parameters": {
-                            name: {"value": _expr(f"@pipeline().parameters.{name}"), "type": kind}
-                            for name, kind in NOTEBOOK_PARAMETERS.items()
-                        },
+                        "parameters": _notebook_parameters(
+                            {
+                                name: {
+                                    "value": _expr(f"@pipeline().parameters.{name}"),
+                                    "type": kind,
+                                }
+                                for name, kind in NOTEBOOK_PARAMETERS.items()
+                            },
+                            inline_install=inline_install,
+                        ),
                     },
                 },
                 {
@@ -166,15 +187,129 @@ def _udf_gate() -> dict:
     }
 
 
+# PF-06: generate a domain, profile the tables, check them against the domain's contract.
+GENERATE_EXIT_VALUE = "json(activity('GenerateDomain').output.result.exitValue)"
+DOMAIN_EXIT_VALUE = "json(activity('ProfileAndCheck').output.result.exitValue)"
+GENERATE_NOTEBOOK_PARAMETERS = {
+    "domain": "string",
+    "scale": "string",
+    "seed": "int",
+    "mode": "string",
+    "tablePrefix": "string",
+    "writeMode": "string",
+    "outputDir": "string",
+}
+DOMAIN_NOTEBOOK_PARAMETERS = {
+    "domain": "string",
+    "contractPath": "string",
+    "tablePrefix": "string",
+    "baselinePath": "string",
+    "outputDir": "string",
+    "failOnDrift": "bool",
+}
+
+
+def _generate_gate() -> dict:
+    parameters = {
+        "domain": {"type": "string", "defaultValue": "retail"},
+        "scale": {"type": "string", "defaultValue": "small"},
+        "seed": {"type": "int", "defaultValue": 42},
+        "mode": {"type": "string", "defaultValue": ""},
+        "tablePrefix": {"type": "string", "defaultValue": ""},
+        "writeMode": {"type": "string", "defaultValue": "overwrite"},
+        "outputDir": {"type": "string", "defaultValue": "shape"},
+        "baselinePath": {"type": "string", "defaultValue": ""},
+        "failOnDrift": {"type": "bool", "defaultValue": False},
+    }
+    generate_args = {
+        name: {"value": _expr(f"@pipeline().parameters.{name}"), "type": kind}
+        for name, kind in GENERATE_NOTEBOOK_PARAMETERS.items()
+    }
+    profile_args = {
+        name: {"value": _expr(f"@pipeline().parameters.{name}"), "type": kind}
+        for name, kind in DOMAIN_NOTEBOOK_PARAMETERS.items()
+        if name != "contractPath"
+    }
+    # the contract is where the generate notebook wrote it
+    profile_args["contractPath"] = {
+        "value": _expr(f"@{GENERATE_EXIT_VALUE}.contractPath"),
+        "type": "string",
+    }
+    return {
+        "properties": {
+            "description": (
+                "Shape: generate a domain into lakehouse Delta tables, profile them, and check "
+                "the profile against the domain's contract."
+            ),
+            "parameters": parameters,
+            "activities": [
+                {
+                    "name": "GenerateDomain",
+                    "type": "TridentNotebook",
+                    "dependsOn": [],
+                    "policy": POLICY,
+                    "typeProperties": {
+                        "notebookId": "<<NOTEBOOK_ID:shape_generate>>",
+                        "workspaceId": "<<WORKSPACE_ID>>",
+                        "parameters": _notebook_parameters(generate_args, inline_install=True),
+                    },
+                },
+                {
+                    "name": "ProfileAndCheck",
+                    "type": "TridentNotebook",
+                    "dependsOn": [
+                        {"activity": "GenerateDomain", "dependencyConditions": ["Succeeded"]}
+                    ],
+                    "policy": POLICY,
+                    "typeProperties": {
+                        "notebookId": "<<NOTEBOOK_ID:shape_profile_domain>>",
+                        "workspaceId": "<<WORKSPACE_ID>>",
+                        "parameters": _notebook_parameters(profile_args, inline_install=True),
+                    },
+                },
+                {
+                    "name": "CheckGate",
+                    "type": "IfCondition",
+                    "dependsOn": [
+                        {"activity": "ProfileAndCheck", "dependencyConditions": ["Succeeded"]}
+                    ],
+                    "typeProperties": {
+                        "expression": _expr(f"@{DOMAIN_EXIT_VALUE}.passed"),
+                        "ifTrueActivities": [],
+                        "ifFalseActivities": [
+                            {
+                                "name": "FailGate",
+                                "type": "Fail",
+                                "dependsOn": [],
+                                "typeProperties": {
+                                    "message": _expr(
+                                        "@concat('Shape generated data broke the contract of ', "
+                                        "pipeline().parameters.domain, ': ', "
+                                        f"string({DOMAIN_EXIT_VALUE}.violations))"
+                                    ),
+                                    "errorCode": "ShapeContractFailed",
+                                },
+                            }
+                        ],
+                    },
+                },
+            ],
+        }
+    }
+
+
 def build() -> dict[str, dict]:
     return {
         "shape_gate_notebook": _notebook_gate(
-            "shape_profile", "Shape quality gate using the Python notebook."
+            "shape_profile",
+            "Shape quality gate using the Python notebook.",
+            inline_install=True,
         ),
         "shape_gate_spark": _notebook_gate(
             "shape_profile_spark", "Shape quality gate using the PySpark notebook (Environment)."
         ),
         "shape_gate_udf": _udf_gate(),
+        "shape_generate_gate": _generate_gate(),
     }
 
 

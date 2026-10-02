@@ -23,7 +23,11 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import fill_null as arrow_fill_null
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.generation.engine import Engine, EngineContext
+from shape.generation.keypos import dense_positions, dense_row_array, dense_start
 from shape.generation.strategy_kit import StrategyError, where
 from shape.plugins.api.v1 import GenerationContext
 
@@ -34,7 +38,7 @@ def _is_number(t: pa.DataType) -> bool:
 
 def _numpy_float(arr: pa.Array) -> npt.NDArray[np.float64]:
     return np.asarray(
-        pc.fill_null(arr.cast(pa.float64()), float("nan")).to_numpy(zero_copy_only=False),
+        arrow_numpy(arrow_fill_null(arr.cast(pa.float64()), float("nan"))),
         dtype=np.float64,
     )
 
@@ -43,25 +47,26 @@ class KeyIndex:
     """First-row positions of the values of one key column."""
 
     def __init__(self, keys: pa.Array) -> None:
-        self._keys = keys
+        self.keys = keys
         self._numeric = _is_number(keys.type)
         self._integral = bool(pa.types.is_integer(keys.type))
         self._sorted: npt.NDArray[Any] | None = None
         self._order: npt.NDArray[np.int64] | None = None
         self._float_sorted: npt.NDArray[np.float64] | None = None
         self._float_order: npt.NDArray[np.int64] | None = None
+        self.dense: int | None = dense_start(keys)
         self._lock = threading.Lock()
 
     def _sort(self, as_float: bool) -> tuple[npt.NDArray[Any], npt.NDArray[np.int64]]:
         with self._lock:
             if as_float:
                 if self._float_sorted is None or self._float_order is None:
-                    flat = _numpy_float(self._keys)
+                    flat = _numpy_float(self.keys)
                     order = np.argsort(flat, kind="stable").astype(np.int64)
                     self._float_sorted, self._float_order = flat[order], order
                 return self._float_sorted, self._float_order
             if self._sorted is None or self._order is None:
-                raw = np.asarray(self._keys.to_numpy(zero_copy_only=False))
+                raw = np.asarray(arrow_numpy(self.keys))
                 order = np.argsort(raw, kind="stable").astype(np.int64)
                 self._sorted, self._order = raw[order], order
             return self._sorted, self._order
@@ -71,25 +76,34 @@ class KeyIndex:
         no key equals)."""
         if len(values) == 0:
             return np.empty(0, dtype=np.int64)
+        if self.dense is not None and pa.types.is_signed_integer(values.type):
+            return dense_positions(values, self.dense, len(self.keys))  # row = value - start
         if self._numeric and _is_number(values.type):
             as_float = not (self._integral and pa.types.is_integer(values.type))
             sorted_keys, order = self._sort(as_float)
             probe = (
                 _numpy_float(values)
                 if as_float
-                else np.asarray(
-                    pc.fill_null(values, 0).to_numpy(zero_copy_only=False), dtype=np.int64
-                )
+                else np.asarray(arrow_numpy(arrow_fill_null(values, 0)), dtype=np.int64)
             )
             where_ = np.searchsorted(sorted_keys, probe, side="left")
             clipped = np.minimum(where_, max(len(sorted_keys) - 1, 0))
             hit = (where_ < len(sorted_keys)) & (sorted_keys[clipped] == probe)
-            hit &= np.asarray(pc.is_valid(values).to_numpy(zero_copy_only=False), dtype=bool)
+            hit &= np.asarray(arrow_numpy(pc.is_valid(values)), dtype=bool)
             return np.where(hit, order[clipped] if len(order) else 0, -1).astype(np.int64)
-        probe_arr = values if values.type == self._keys.type else values.cast(pa.string())
-        keys = self._keys if values.type == self._keys.type else self._keys.cast(pa.string())
+        probe_arr = values if values.type == self.keys.type else values.cast(pa.string())
+        keys = self.keys if values.type == self.keys.type else self.keys.cast(pa.string())
         found = pc.index_in(probe_arr, value_set=keys)
-        return np.asarray(pc.fill_null(found, -1).to_numpy(zero_copy_only=False), dtype=np.int64)
+        return np.asarray(arrow_numpy(arrow_fill_null(found, -1)), dtype=np.int64)
+
+
+def _index_array(index: KeyIndex, values: pa.Array) -> pa.Array:
+    """The rows ``index`` finds for ``values`` as ``take`` indices (null where there is none)."""
+    if index.dense is not None and pa.types.is_signed_integer(values.type):
+        return dense_row_array(values, index.dense, len(index.keys))
+    pos = index.positions(values)
+    miss = pos < 0
+    return arrow_array(np.where(miss, 0, pos), mask=miss, type=pa.int64())
 
 
 _indexes: weakref.WeakKeyDictionary[Engine, dict[tuple[str, str], KeyIndex]] = (
@@ -168,11 +182,13 @@ def lookup_values(
     _active.tables = active | {mark}
     try:
         index = key_index(engine, source_table, key_name)
-        source = engine.generate_table(source_table)[source_column].combine_chunks()
+        source = engine.cached(
+            ("lookup.column", source_table, source_column),
+            lambda: engine.generate_table(source_table)[source_column].combine_chunks(),
+        )
     finally:
         _active.tables = active
-    pos = index.positions(ctx.columns[via])
-    take = pa.array(np.where(pos < 0, 0, pos), mask=pos < 0, type=pa.int64())
+    probe = ctx.columns[via]
     if len(source) == 0:
-        return pa.nulls(len(pos), source.type)
-    return pc.take(source, take)
+        return pa.nulls(len(probe), source.type)
+    return pc.take(source, _index_array(index, probe))

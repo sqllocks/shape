@@ -1,0 +1,3 @@
+jobs: 153   runs per tool: 20083   comparisons: 792   z = 4.846 (alpha 0.001, Bonferroni)
+outputs identical cell for cell (informational): 20083/20083
+chaos_1to1: PASS (report: /root/bench-out/chaos_1to1_full.json)

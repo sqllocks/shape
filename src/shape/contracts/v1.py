@@ -12,11 +12,20 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from shape.drift.engine import DEFAULT_THRESHOLDS as DRIFT_DEFAULTS
+from shape.drift.engine import diff_tables, resolve_policy, view_of_profile_column
 from shape.profile.reference.profile import Profile
 
 # --- contract check ---------------------------------------------------------------
 
-_CONTRACT_KEYS = {"row_count", "columns", "required_columns", "allow_extra_columns", "tables"}
+_CONTRACT_KEYS = {
+    "row_count",
+    "columns",
+    "required_columns",
+    "allow_extra_columns",
+    "tables",
+    "drift",  # the drift policy (thresholds, ignore, per-column thresholds): ignored by check
+}
 _ROW_COUNT_KEYS = {"min", "max"}
 _COLUMN_RULES = {
     "dtype",
@@ -28,6 +37,8 @@ _COLUMN_RULES = {
     "min",
     "max",
     "distribution",
+    "min_true_rate",  # the share of true values of a boolean (or 0/1) column
+    "max_true_rate",
 }
 
 
@@ -80,6 +91,9 @@ def _validate_contract(contract: dict[str, Any]) -> None:
             raise ContractError(f"unknown rules for column {name!r}: {sorted(bad)}")
         if "allowed_values" in rules and not isinstance(rules["allowed_values"], list):
             raise ContractError(f"allowed_values for column {name!r} must be a list")
+        for key in ("min_true_rate", "max_true_rate"):
+            if key in rules and not (_is_number(rules[key]) and 0 <= rules[key] <= 1):
+                raise ContractError(f"{key} for column {name!r} must be a number from 0 to 1")
     required = contract.get("required_columns", [])
     if not isinstance(required, list) or not all(isinstance(c, str) for c in required):
         raise ContractError("'required_columns' must be a list of column names")
@@ -133,6 +147,7 @@ def _check_column(
         out.append(_violation(name, "distribution", rules["distribution"], col["distribution"]))
     if "allowed_values" in rules:
         out.extend(_check_allowed(name, rules["allowed_values"], col))
+    out.extend(_check_true_rate(name, rules, col, row_count))
     for bound in ("min", "max"):
         if bound not in rules:
             continue
@@ -149,6 +164,29 @@ def _check_column(
         beyond = observed < expected if bound == "min" else observed > expected
         if beyond:
             out.append(_violation(name, bound, expected, observed))
+    return out
+
+
+def _check_true_rate(
+    name: str, rules: dict[str, Any], col: dict[str, Any], row_count: int
+) -> list[dict[str, Any]]:
+    if "min_true_rate" not in rules and "max_true_rate" not in rules:
+        return []
+    rate = view_of_profile_column(col, row_count).true_rate
+    if rate is None:
+        return [
+            _violation(
+                name,
+                "true_rate",
+                {k: rules[k] for k in ("min_true_rate", "max_true_rate") if k in rules},
+                "not a boolean column",
+            )
+        ]
+    out = []
+    if "min_true_rate" in rules and rate < rules["min_true_rate"]:
+        out.append(_violation(name, "min_true_rate", rules["min_true_rate"], rate))
+    if "max_true_rate" in rules and rate > rules["max_true_rate"]:
+        out.append(_violation(name, "max_true_rate", rules["max_true_rate"], rate))
     return out
 
 
@@ -201,7 +239,13 @@ def _check_table(
 
 
 def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResult:
-    """Check ``profile`` against a v1 contract (a dict, or the path to a JSON file)."""
+    """Check ``profile`` against a v1 contract (a dict, or the path to a JSON file).
+
+    The contract and the profile must describe the same tables. A ``tables`` contract against a
+    single-table profile raises :class:`ContractError`; against a dataset, a table the contract
+    names and the profile lacks is a ``table_exists`` violation. Every rule is optional (§12.3), so
+    a profile table the contract does not name is not checked.
+    """
     contract = _load_contract(contract)
     _validate_contract(contract)
     if profile.is_dataset:
@@ -224,21 +268,24 @@ def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResul
                     v["rule"] = f"{tname}:{v['rule']}"
                 violations.append(v)
         return CheckResult(passed=not violations, violations=violations)
+    if "tables" in contract:
+        # A multi-table contract has nothing to say about one table: checking it would pass
+        # without testing a single rule.
+        raise ContractError(
+            "the contract has a 'tables' object but the profile is a single table "
+            f"({profile.name!r}): profile the tables together as a dataset, one table per file "
+            "(`shape profile --dataset FOLDER`, or `shape.profile({name: source, ...})`)"
+        )
     violations = _check_table(next(iter(profile.tables.values())), contract)
     return CheckResult(passed=not violations, violations=violations)
 
 
 # --- drift ------------------------------------------------------------------------
+#
+# The rules live in ``shape.drift.engine`` (one engine for ``shape.diff``, ``ShapeMonitor`` and
+# ``ShapeTimeline.changes``); ``diff`` is its front end for profiles.
 
-_SEVERITY_RANK = {"low": 0, "medium": 1, "high": 2}
-
-DEFAULT_THRESHOLDS: dict[str, Any] = {
-    "null_rate": 0.05,  # absolute change
-    "cardinality_ratio_max": 1.5,
-    "cardinality_ratio_min": 0.67,
-    "mean_shift_std": 0.5,  # multiples of the baseline standard deviation
-    "min_severity": "low",  # changes below this severity are not reported
-}
+DEFAULT_THRESHOLDS: dict[str, Any] = DRIFT_DEFAULTS
 
 
 @dataclass
@@ -252,104 +299,31 @@ class DiffResult:
         return {"drifted": self.drifted, "changes": [dict(c) for c in self.changes]}
 
 
-def _change(
-    column: str | None, kind: str, baseline: Any, current: Any, severity: str
-) -> dict[str, Any]:
-    return {
-        "column": column,
-        "kind": kind,
-        "baseline": baseline,
-        "current": current,
-        "severity": severity,
-    }
-
-
-def _num(v: Any) -> float | None:
-    return float(v) if _is_number(v) else None
-
-
-def _diff_column(
-    name: str, base: dict[str, Any], cur: dict[str, Any], th: dict[str, Any]
-) -> list[dict[str, Any]]:
-    out: list[dict[str, Any]] = []
-    if base["dtype"] != cur["dtype"]:
-        out.append(_change(name, "dtype_change", base["dtype"], cur["dtype"], "high"))
-    b_null, c_null = base["null_rate"], cur["null_rate"]
-    if b_null is not None and c_null is not None and abs(c_null - b_null) > th["null_rate"]:
-        out.append(_change(name, "null_rate_change", b_null, c_null, "medium"))
-    b_card, c_card = base["cardinality"], cur["cardinality"]
-    if b_card > 0:
-        ratio = c_card / b_card
-        if ratio > th["cardinality_ratio_max"] or ratio < th["cardinality_ratio_min"]:
-            out.append(_change(name, "cardinality_change", b_card, c_card, "medium"))
-    elif c_card > 0:
-        out.append(_change(name, "cardinality_change", b_card, c_card, "medium"))
-    b_mean, c_mean, b_std = _num(base["mean"]), _num(cur["mean"]), _num(base["std"])
-    if b_mean is not None and c_mean is not None:
-        limit = th["mean_shift_std"] * (b_std or 0.0)
-        if abs(c_mean - b_mean) > limit:
-            out.append(_change(name, "mean_shift", b_mean, c_mean, "medium"))
-    if base["distribution"] != cur["distribution"]:
-        out.append(
-            _change(name, "distribution_change", base["distribution"], cur["distribution"], "low")
-        )
-    b_enum, c_enum = base.get("enum_values"), cur.get("enum_values")
-    if b_enum is not None and c_enum is not None:
-        new = [v for v in c_enum if v not in b_enum]
-        if new:
-            out.append(
-                _change(name, "new_categorical_values", sorted(b_enum), sorted(c_enum), "low")
-            )
-    return out
-
-
-def _diff_table(
-    base: dict[str, Any], cur: dict[str, Any], th: dict[str, Any], prefix: str = ""
-) -> list[dict[str, Any]]:
-    out: list[dict[str, Any]] = []
-    b_cols, c_cols = base["columns"], cur["columns"]
-    for name in b_cols:
-        if name not in c_cols:
-            out.append(_change(prefix + name, "column_removed", "present", "absent", "high"))
-    for name in c_cols:
-        if name not in b_cols:
-            out.append(_change(prefix + name, "column_added", "absent", "present", "high"))
-    for name in b_cols:
-        if name in c_cols:
-            for ch in _diff_column(name, b_cols[name], c_cols[name], th):
-                ch["column"] = prefix + name
-                out.append(ch)
-    return out
-
-
 def diff(
-    baseline: Profile, current: Profile, *, thresholds: dict[str, Any] | None = None
+    baseline: Any,
+    current: Any,
+    *,
+    thresholds: dict[str, Any] | None = None,
+    ignore_columns: list[str] | None = None,
+    column_thresholds: dict[str, dict[str, Any]] | None = None,
+    only_columns: list[str] | None = None,
+    policy: dict[str, Any] | str | Path | None = None,
 ) -> DiffResult:
-    """Compare two profiles with the §12.3 defaults (override through ``thresholds``)."""
-    th = dict(DEFAULT_THRESHOLDS)
-    if thresholds:
-        unknown = set(thresholds) - set(DEFAULT_THRESHOLDS)
-        if unknown:
-            raise ValueError(f"unknown thresholds: {sorted(unknown)}")
-        th.update(thresholds)
-    if th["min_severity"] not in _SEVERITY_RANK:
-        raise ValueError("min_severity must be 'low', 'medium' or 'high'")
-    changes: list[dict[str, Any]] = []
-    if baseline.is_dataset or current.is_dataset:
-        b_tables, c_tables = baseline.tables, current.tables
-        for tname in b_tables:
-            if tname not in c_tables:
-                changes.append(_change(None, "table_removed", tname, None, "high"))
-        for tname in c_tables:
-            if tname not in b_tables:
-                changes.append(_change(None, "table_added", None, tname, "high"))
-        for tname in b_tables:
-            if tname in c_tables:
-                changes.extend(_diff_table(b_tables[tname], c_tables[tname], th, f"{tname}."))
-    else:
-        changes = _diff_table(
-            next(iter(baseline.tables.values())), next(iter(current.tables.values())), th
-        )
-    floor = _SEVERITY_RANK[th["min_severity"]]
-    changes = [c for c in changes if _SEVERITY_RANK[c["severity"]] >= floor]
+    """Compare two profiles with the documented defaults (``docs/DRIFT.md``).
+
+    ``baseline`` and ``current`` are profiles; a window of the stream profiler works too.
+    ``thresholds`` overrides the defaults for every column, ``column_thresholds`` for the columns
+    its patterns match (``{"order_total": {"mean_shift_std": 0.25}, "*": {...}}``),
+    ``ignore_columns`` drops columns (a name, ``table.column`` or a glob) and ``only_columns``
+    keeps only those. ``policy`` is a dict or JSON file holding the same four settings (a
+    contract's ``"drift"`` object works), so a team keeps one policy file.
+    """
+    resolved = resolve_policy(
+        thresholds,
+        ignore_columns=ignore_columns,
+        column_thresholds=column_thresholds,
+        only_columns=only_columns,
+        policy=policy,
+    )
+    changes = diff_tables(baseline, current, resolved)
     return DiffResult(drifted=bool(changes), changes=changes)

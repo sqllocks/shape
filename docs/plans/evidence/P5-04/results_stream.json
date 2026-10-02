@@ -1,0 +1,100 @@
+{
+ "schema_version": 1,
+ "mode": "full",
+ "runs": 5,
+ "generated_utc": "2026-10-02T14:00:21Z",
+ "machine": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-10-02 14:00:20",
+  "loadavg_start": 0.63623046875,
+  "spindle_venv": {
+   "python": "3.11.15",
+   "pandas": "3.0.6",
+   "numpy": "2.4.6",
+   "pyarrow": "25.0.1"
+  },
+  "shape_venv": {
+   "python": "3.11.15",
+   "numpy": "2.4.6",
+   "pyarrow": "25.0.1"
+  }
+ },
+ "spindle_commit": "422e78df2267e73bb2fa976267e48cb437861e2f",
+ "shape_commit": "c1c1a82897b8064973327acc21d4eb0445175e4e",
+ "shape_tree_dirty": false,
+ "spindle": {
+  "workloads": {
+   "stream:retail:order:medium": {
+    "kind": "stream",
+    "domain": "retail",
+    "scale": "medium",
+    "median_s": 13.489046458000303,
+    "runs_s": [
+     14.032,
+     12.914,
+     13.489,
+     13.732,
+     13.469
+    ],
+    "verifier": null,
+    "events": 500000,
+    "peak_rss_mb": 932.7890625
+   }
+  }
+ },
+ "reference_port": {
+  "workloads": {}
+ },
+ "shape": {
+  "workloads": {
+   "stream:retail:order:medium": {
+    "kind": "stream",
+    "domain": "retail",
+    "scale": "medium",
+    "verifier": {
+     "status": "pass",
+     "exit_code": 0,
+     "command": "$SPINDLE_PY $SHAPE_ROOT/benchmarks/vs_spindle/stream_1to1/verify.py --scale medium --no-generate",
+     "first_run": {
+      "status": "pass",
+      "exit_code": 0,
+      "command": "$SPINDLE_PY $SHAPE_ROOT/benchmarks/vs_spindle/stream_1to1/verify.py --scale medium"
+     }
+    },
+    "median_s": 0.8634108589999414,
+    "runs_s": [
+     0.909,
+     0.828,
+     0.863,
+     0.832,
+     0.88
+    ],
+    "speedup_vs_spindle": 15.622975223666046,
+    "events": 500000,
+    "peak_rss_mb": 497.05078125,
+    "cli_end_to_end_s": {
+     "spindle": {
+      "runs": [
+       14.255,
+       15.632,
+       15.168
+      ],
+      "median": 15.167940087000261
+     },
+     "shape": {
+      "runs": [
+       1.319,
+       1.523,
+       1.311
+      ],
+      "median": 1.319197604999772
+     }
+    },
+    "cli_speedup_vs_spindle": 11.497852959642755
+   }
+  }
+ }
+}
