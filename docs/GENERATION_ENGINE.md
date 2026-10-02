@@ -235,7 +235,7 @@ print(format_summary(result))                                   # the `summary` 
 |---|---|---|
 | `csv`, `tsv` | `<table>.csv`, `<table>.tsv` | header row, nulls are empty fields |
 | `jsonl` | `<table>.jsonl` | dates and times ISO 8601; decimals are exact strings |
-| `parquet` | `<table>.parquet` | snappy, dictionary encoding on (T-17); options `row_group_rows` (1,048,576) and `dictionary_page_bytes` (131,072: a column whose dictionary outgrows it stops using one) |
+| `parquet` | `<table>.parquet` | snappy, dictionary encoding on (T-17); options `row_group_rows` (262,144: a table streamed while it is generated is encoded as its chunks arrive; a larger group would wait for a million rows) and `dictionary_page_bytes` (131,072: a column whose dictionary outgrows it stops using one) |
 | `sql` | `<table>.sql` | see below |
 | `excel` | `<table>.xlsx` | extra `[excel]`; refuses a table over 1,048,575 rows |
 | `delta` | `<dir>/<table>/` | extra `[delta]`; `mode` (`overwrite`, `append`), `partition_by` |

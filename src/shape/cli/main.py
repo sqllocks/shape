@@ -684,9 +684,10 @@ def _dispatch(argv):
         from shape.privacy.cli import main as privacy_main
 
         return privacy_main(argv[1:])
+    parser = _build_parser()
     builtin = {
         n
-        for act in _build_parser()._actions
+        for act in parser._actions
         if isinstance(act, argparse._SubParsersAction)
         for n in act.choices
     }
@@ -702,7 +703,7 @@ def _dispatch(argv):
         from shape.plugins.host import default_host
 
         return run_command(default_host(), argv[0], argv[1:])
-    a = _build_parser(plugin_cmds.values()).parse_args(argv)
+    a = (_build_parser(plugin_cmds.values()) if plugin_cmds else parser).parse_args(argv)
     if a.version:
         print(f"shape {_version()}")
         return 0
