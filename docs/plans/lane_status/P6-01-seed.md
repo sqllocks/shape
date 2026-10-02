@@ -100,8 +100,8 @@ single reference sample). I read the strategy code of both tools for the three f
 
 - `reference_data`: the baseline draws `rng.integers` (list of strings or a requested field) or `rng.choice(p=weights)`
   (name/weight records), always **with replacement**; Shape draws a uniform row or an alias-table weighted row,
-  **with replacement** (`src/shape/builtins/strategies/reference_data.py`). Same strategy, same parameters, same data
-  (checked set-equal for the datasets involved).
+  **with replacement** (`src/shape/builtins/strategies/reference_data.py`). Same strategy and parameters; the data of the domains' reference files is proven equal to the baseline's by
+  `export_domains.py --check` (P6-01a-d), and the `last_names` pool was compared directly (below).
 - `record_sample` / `record_field` (the `neighborhood` city, state, zip): uniform record with replacement in both;
   `unique` is off in this schema and means the same in both when on (a permutation without replacement while the
   table fits the dataset). Pooled over 30 + 30 runs the `neighborhood` columns do not differ (`pooled_real_estate_small_neighborhood.json`:

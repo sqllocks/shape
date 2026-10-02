@@ -68,6 +68,9 @@ class FakeFs:
         assert m, f"not an abfss URL: {url}"
         return self.root / m.group(1) / m.group(2)
 
+    def exists(self, url):
+        return self._path(url).exists()
+
     def head(self, url, max_bytes=65536):
         self.calls.append(("head", url))
         return self._path(url).read_text(encoding="utf-8")[:max_bytes]
@@ -232,6 +235,23 @@ def test_day1_passes_through_the_adls_stub(spark, lakehouse, adls):
     # storage went through mssparkutils.fs only: the contract was read, the artifacts copied
     kinds = {c[0] for c in utils.fs.calls}
     assert {"head", "cp", "put"} <= kinds
+
+
+def test_two_runs_in_the_same_instant_keep_both_artifacts(spark, lakehouse, adls, monkeypatch):
+    """PF-06b: the folder was named by the second, so a second run overwrote the first one's
+    baseline. Here every run sees the same clock reading."""
+    from datetime import UTC, datetime
+
+    from shape.integrations.fabric import run_folder
+
+    frozen = run_folder.run_stamp(datetime(2026, 9, 30, 12, 0, 0, 5, tzinfo=UTC))
+    monkeypatch.setattr(run_folder, "run_stamp", lambda now=None: frozen)
+    first = _artifacts(adls, json.loads(_run(spark, adls, _params(lakehouse, 1))[0]))
+    before = first.read_bytes()
+    second = _artifacts(adls, json.loads(_run(spark, adls, _params(lakehouse, 1))[0]))
+    assert first != second and first.parent.parent == second.parent.parent
+    assert first.parent.name == frozen and second.parent.name == f"{frozen}_2"
+    assert first.read_bytes() == before
 
 
 def test_day2_fails_with_violations_and_drift_against_the_baseline(spark, lakehouse, adls):
