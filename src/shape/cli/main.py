@@ -543,6 +543,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.learn import add_arguments as add_learn_arguments
 
     add_learn_arguments(sub)
+    from shape.cli.emit import add_arguments as add_emit_arguments
+
+    add_emit_arguments(sub)
     fi = sub.add_parser(
         "fidelity",
         aliases=["compare"],
@@ -771,6 +774,10 @@ def _dispatch(argv):
         from shape.cli.generation import run as run_generation
 
         return _run(run_generation, a)
+    if a.cmd == "emit":
+        from shape.cli.emit import run as run_emit
+
+        return _run(run_emit, a)
     if a.cmd == "from-ddl":
         return _run(_cmd_from_ddl, a)
     if a.cmd == "learn":
