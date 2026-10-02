@@ -41,7 +41,7 @@ WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH 
 
 ## Domain reference data (Spindle)
 
-The reference data of the `capital_markets`, `education`, `financial` and `retail` domains in
+The reference data of the `capital_markets`, `education`, `financial`, `iot`, `manufacturing`, `marketing` and `retail` domains in
 `plugins/shape-domains` (names, catalogs, exchange and sector lists, index memberships, constituents)
 is copied from the reference data of Spindle 3.0.1 (https://github.com/sqllocks/spindle,
 commit 422e78df2267e73bb2fa976267e48cb437861e2f), which is released under the MIT license with the
