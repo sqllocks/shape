@@ -198,6 +198,9 @@ lifecycle = "shape.builtins.strategies.lifecycle:Lifecycle"
 [project.entry-points."shape.commands"]
 ctgan = "shape.builtins.ctgan:CtganCommand"
 
+[project.entry-points."shape.transforms"]
+mask = "shape.builtins.transforms:Mask"
+
 [project.entry-points."shape.distributions"]
 normal = "shape.builtins.distributions:Normal"
 uniform = "shape.builtins.distributions:Uniform"

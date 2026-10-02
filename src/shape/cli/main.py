@@ -543,6 +543,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.learn import add_arguments as add_learn_arguments
 
     add_learn_arguments(sub)
+    from shape.cli.mask import add_arguments as add_mask_arguments
+
+    add_mask_arguments(sub)
     fi = sub.add_parser(
         "fidelity",
         aliases=["compare"],
@@ -777,6 +780,10 @@ def _dispatch(argv):
         from shape.cli.learn import run as run_learn
 
         return _run(run_learn, a)
+    if a.cmd == "mask":
+        from shape.cli.mask import run as run_mask
+
+        return _run(run_mask, a)
     if a.cmd == "profile":
         return _run(_cmd_profile, a)
     if a.cmd == "stream-profile":

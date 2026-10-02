@@ -69,6 +69,7 @@ BUILTINS: tuple[tuple[str, str, str], ...] = (
     ("shape.strategies", "self_ref_field", "shape.builtins.strategies.hierarchy:SelfRefField"),
     ("shape.strategies", "lifecycle", "shape.builtins.strategies.lifecycle:Lifecycle"),
     ("shape.commands", "ctgan", "shape.builtins.ctgan:CtganCommand"),
+    ("shape.transforms", "mask", "shape.builtins.transforms:Mask"),
     ("shape.distributions", "normal", "shape.builtins.distributions:Normal"),
     ("shape.distributions", "uniform", "shape.builtins.distributions:Uniform"),
     ("shape.distributions", "exponential", "shape.builtins.distributions:Exponential"),
