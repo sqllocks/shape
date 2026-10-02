@@ -1,0 +1,79 @@
+{
+  "channel": "http",
+  "format": 1,
+  "result": {
+    "value": 3
+  },
+  "scenario": "eventhouse_emit_events",
+  "source": "in-repo fake service",
+  "steps": [
+    {
+      "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".create-merge table ['customer'] (['id']:long, ['name']:string, ['segment']:string, ['balance']:decimal, ['score']:real, ['active']:bool, ['born']:datetime, ['seen']:datetime, ['seen_tz']:datetime, ['_shape_table']:string, ['_shape_seq']:long, ['_shape_event_time']:datetime)\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".create-or-alter table ['customer'] ingestion json mapping 'shape_json' '[{\\\"column\\\": \\\"id\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"id\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"long\\\"}, {\\\"column\\\": \\\"name\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"name\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"string\\\"}, {\\\"column\\\": \\\"segment\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"segment\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"string\\\"}, {\\\"column\\\": \\\"balance\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"balance\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"decimal\\\"}, {\\\"column\\\": \\\"score\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"score\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"real\\\"}, {\\\"column\\\": \\\"active\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"active\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"bool\\\"}, {\\\"column\\\": \\\"born\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"born\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"datetime\\\"}, {\\\"column\\\": \\\"seen\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"seen\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"datetime\\\"}, {\\\"column\\\": \\\"seen_tz\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"seen_tz\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"datetime\\\"}, {\\\"column\\\": \\\"_shape_table\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"_shape_table\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"string\\\"}, {\\\"column\\\": \\\"_shape_seq\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"_shape_seq\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"long\\\"}, {\\\"column\\\": \\\"_shape_event_time\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"_shape_event_time\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"datetime\\\"}]'\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".alter table ['customer'] policy streamingingestion enable\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"id\":0,\"name\":\"O'Brien; DROP TABLE x;--\",\"segment\":\"a\",\"balance\":\"0.00\",\"score\":null,\"active\":true,\"born\":\"2000-01-01\",\"seen\":\"2026-01-01T12:00:00.123456000\",\"seen_tz\":\"2026-01-01T12:00:00.123456Z\",\"_shape_table\":\"customer\",\"_shape_seq\":0,\"_shape_event_time\":\"2000-01-01\"}\n{\"id\":1,\"name\":\"name 1\",\"segment\":\"b\",\"balance\":\"0.25\",\"score\":0.3333333333333333,\"active\":false,\"born\":\"2000-01-02\",\"seen\":\"2026-01-02T12:00:00.123456000\",\"seen_tz\":\"2026-01-02T12:00:00.123456Z\",\"_shape_table\":\"customer\",\"_shape_seq\":1,\"_shape_event_time\":\"2000-01-02\"}\n{\"id\":2,\"name\":\"name 2\",\"segment\":\"a\",\"balance\":\"0.50\",\"score\":0.6666666666666666,\"active\":true,\"born\":\"2000-01-03\",\"seen\":\"2026-01-03T12:00:00.123456000\",\"seen_tz\":\"2026-01-03T12:00:00.123456Z\",\"_shape_table\":\"customer\",\"_shape_seq\":2,\"_shape_event_time\":\"2000-01-03\"}\n",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/ingest/db1/customer?streamFormat=JSON&mappingName=shape_json"
+      },
+      "response": {
+        "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    }
+  ]
+}
