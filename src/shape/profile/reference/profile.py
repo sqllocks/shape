@@ -16,6 +16,7 @@ import numpy as np
 
 from shape.artifact import codec
 from shape.artifact.io import ArtifactError, read_artifact, write_artifact
+from shape.security.hardening import validate_structure
 
 from .column import MAX_VALUE_CHARS
 from .model import ColumnProfile, DatasetProfile, TableProfile
@@ -382,6 +383,7 @@ def load(path: str | Path) -> Profile:
         raise ArtifactError("Shape content identity mismatch")
     try:
         data = codec.loads(body)
+        validate_structure(data, allow_nonfinite=True)  # depth and size bounds, as read_model
     except (ValueError, TypeError, RecursionError) as e:
         raise ArtifactError(f"invalid {PROFILE_COMPONENT}: {e}") from e
     if not isinstance(data, dict):

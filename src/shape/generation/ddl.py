@@ -211,7 +211,10 @@ _SERIAL_TYPES = {"serial", "bigserial", "smallserial"}
 # Largest accepted DDL text (guards the regular expressions against pathological input).
 _MAX_DDL_SIZE = 10 * 1024 * 1024
 
-_NAME = r"[\w.\[\]\"` ]"
+# One name character: a word character or dot, or a whole quoted part (``[my table]``, ``"a b"``,
+# backquoted). A bare space is not a name character: with it, ``_NAME+?\s*\(`` matched a run of
+# spaces in cubic time, so 8 KB of spaces stalled the parser for over a minute (P7-04).
+_NAME = r"(?:[\w.]|\[[^\]\n]*\]|\"[^\"\n]*\"|`[^`\n]*`)"
 _UNQUOTE = re.compile(r'[\[\]"`]')
 _CREATE_TABLE_HEADER = re.compile(
     r"CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(" + _NAME + r"+?)\s*\(", re.IGNORECASE

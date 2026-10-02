@@ -86,6 +86,9 @@ def add_arguments(sub: Any) -> None:
         metavar="N",
         help="with no target: print N demo rows as JSON lines",
     )
+    from shape.cli.scale import add_arguments as add_scale_arguments
+
+    add_scale_arguments(ge)
     sql = ge.add_argument_group("sql output (--format sql)")
     sql.add_argument("--sql-dialect", choices=SQL_DIALECTS, default="tsql", help="default: tsql")
     sql.add_argument("--schema-name", metavar="NAME", help="qualify tables with this schema")
@@ -206,6 +209,8 @@ def _demo_rows(a: argparse.Namespace) -> int:
 
 def cmd_generate(a: argparse.Namespace) -> int:
     """``shape generate``: 0 generated (or the plan is sound), 1 a dry run found problems."""
+    if a.scale_mode and a.from_profile:
+        raise ValueError("--scale-mode does not combine with --from")
     if a.from_profile:
         return _generate_from_profile(a)
     if a.target is None:
@@ -214,6 +219,10 @@ def cmd_generate(a: argparse.Namespace) -> int:
         return _demo_rows(a)
     if a.rows is not None:
         raise ValueError("--rows prints demo rows and takes no target")
+    if a.scale_mode:
+        from shape.cli.scale import run_scale
+
+        return run_scale(a)
     from shape.cli.lifecycle import quick_exit_allowed
 
     if quick_exit_allowed:

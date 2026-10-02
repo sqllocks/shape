@@ -28,7 +28,9 @@ class DeltaSink:
             raise ImportError(
                 "writing Delta needs deltalake: pip install 'sqllocks-shape[delta]'"
             ) from exc
-        target = local_path(uri) / table
+        from shape.security.names import contained
+
+        target = contained(local_path(uri), table)
         target.mkdir(parents=True, exist_ok=True)
         stream = iter(batches)
         first = next(stream, None)

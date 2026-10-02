@@ -129,9 +129,11 @@ class _LazySink:
 
 def _target(fmt: str, sink: Any, output_dir: Path, table: str) -> Path:
     # A sink with an empty extension (Delta) writes <output_dir>/<table>/ itself; the others write
-    # <output_dir>/<table>.<extension>.
+    # <output_dir>/<table>.<extension>, which may not leave the output directory.
+    from shape.security.names import contained
+
     extension = _extension(fmt, sink)
-    return output_dir if not extension else output_dir / f"{table}.{extension}"
+    return output_dir if not extension else contained(output_dir, table, f".{extension}")
 
 
 def _options(fmt: str, schema: GenSchema, table: str, options: Mapping[str, Any]) -> dict[str, Any]:

@@ -11,17 +11,26 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
-dependencies = ["sqllocks-shape==0.9.0", "sqllocks-shape-eventhubs==0.9.0"]
+dependencies = [
+    "sqllocks-shape==0.9.0",
+    "sqllocks-shape-eventhubs==0.9.0",
+    "sqllocks-shape-sqlserver==0.9.0",
+]
 
 [project.optional-dependencies]
 # Microsoft Entra sign-in to an Eventhouse instead of a bearer token.
 entra = ["azure-identity>=1.15"]
+# Reading and writing OneLake / ADLS Gen2 paths (abfss://, onelake://): adlfs and azure-identity.
+onelake = ["sqllocks-shape[azure]==0.9.0"]
 
 # Entry points (shape.* groups, plugin API v1) are added here by the work package that
 # implements each part of this plugin; see docs/plugins/authoring.md.
 [project.entry-points."shape.emitters"]
 eventstream = "shape_fabric:EventstreamEmitter"
 eventhouse = "shape_fabric:EventhouseEmitter"
+
+[project.entry-points."shape.sources"]
+onelake = "shape_fabric:LakehouseSource"
 
 [tool.setuptools.packages.find]
 where = ["src"]
