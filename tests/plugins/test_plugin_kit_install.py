@@ -141,7 +141,6 @@ def test_skeleton_tree_follows_the_lockstep_rules():
         "sqlserver",
         "domains",
         "simulation",
-        "mcp",
     }
 
 
@@ -149,11 +148,11 @@ def test_skeleton_check_catches_version_drift(monkeypatch):
     script = _script()
     monkeypatch.setattr(script, "core_version", lambda: "9.9.9")
     problems = script.check_tree()
-    assert len(problems) >= 7 and all("9.9.9" in p for p in problems if "version" in p)
+    assert len(problems) >= 6 and all("9.9.9" in p for p in problems if "version" in p)
 
 
 def test_every_skeleton_builds_a_pure_wheel(tmp_path):
     script = _script()
     assert script.build_wheels(tmp_path, isolated=not _pip_args()) == []
-    assert len(list(tmp_path.glob("*.whl"))) == 7
+    assert len(list(tmp_path.glob("*.whl"))) == 6
     assert not list((ROOT / "plugins").rglob("build")), "build left files in the source tree"
