@@ -5,4 +5,4 @@ from __future__ import annotations
 from shape.cli.main import main
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main())  # type: ignore[no-untyped-call]
