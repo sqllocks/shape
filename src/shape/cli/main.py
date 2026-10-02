@@ -75,9 +75,8 @@ def _notices_to_stderr():
 
 def _run(fn, a):
     """Run a profile/check/diff command: 0 ok, 1 failed check or drift, 2 input error."""
-    import zipfile
-
     import warnings
+    import zipfile
 
     from shape.errors import ShapeError
 

@@ -15,6 +15,7 @@ import os
 import sys
 from collections.abc import Callable, Mapping
 from pathlib import Path
+from typing import IO
 
 Resolver = Callable[[str], str]
 
@@ -101,30 +102,34 @@ def resolve_reference(ref: str, *, environ: Mapping[str, str] | None = None) -> 
     ``environ`` replaces ``os.environ`` for ``env://`` (for tests and embedding)."""
     scheme = scheme_of(ref)
     if scheme is None:
-        raise CredentialReferenceError("not a credential reference (expected env://, file:// or kv://)")
+        raise CredentialReferenceError(
+            "not a credential reference (expected env://, file:// or kv://)"
+        )
     rest = ref[len(scheme) + 3 :]
     if scheme == "env" and environ is not None and "env" not in _RESOLVERS:
-        value = environ.get(rest)
-        if not value:
+        found = environ.get(rest)
+        if not found:
             raise CredentialReferenceError(f"environment variable {rest} is not set (env://{rest})")
-        return value
+        return found
     resolver = _resolver_for(scheme)
-    assert resolver is not None
+    if resolver is None:
+        raise CredentialReferenceError(f"no resolver for {scheme}://")
+    failure: str | None = None
+    value: str = ""
     try:
         value = resolver(rest)
     except CredentialReferenceError:
         raise
-    except Exception as e:  # a store's own failure: keep the type, drop its text (may echo a secret)
-        raise CredentialReferenceError(
-            f"{scheme}:// resolver failed for {rest!r} ({type(e).__name__})"
-        ) from None
+    except Exception as e:  # noqa: BLE001 - a store's own failure; its text may echo a secret
+        failure = type(e).__name__
+    if failure is not None:  # raised outside the handler so no traceback chain holds the original
+        raise CredentialReferenceError(f"{scheme}:// resolver failed for {rest!r} ({failure})")
     if not isinstance(value, str) or not value:
         raise CredentialReferenceError(f"{scheme}://{rest} resolved to an empty value")
     return value
 
 
-def read_stdin_text(stream: object = None) -> str:
+def read_stdin_text(stream: IO[str] | None = None) -> str:
     """All of standard input (or ``stream``), for secrets piped in."""
     src = stream if stream is not None else sys.stdin
-    text = src.read()  # type: ignore[attr-defined]
-    return str(text)
+    return src.read()

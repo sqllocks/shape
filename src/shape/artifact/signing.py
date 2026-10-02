@@ -73,9 +73,7 @@ def write_keypair(
     return _write_keypair(prefix, passphrase, unencrypted=unencrypted, generate=generate_keypair)
 
 
-def load_private_key(
-    source: str | os.PathLike[str], passphrase: PassphraseSource = None
-) -> bytes:
+def load_private_key(source: str | os.PathLike[str], passphrase: PassphraseSource = None) -> bytes:
     """The private key behind ``source``: a file path, ``-`` (standard input), ``env://NAME``,
     ``file://PATH`` or ``kv://...``. An encrypted key needs ``passphrase`` (a value, or a callable
     asked only when the key is encrypted)."""

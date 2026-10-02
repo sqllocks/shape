@@ -271,7 +271,9 @@ def test_cli_keygen_no_passphrase_warns_loudly(tmp_path):
     assert r.returncode == 0
     assert "WARNING" in r.stderr and "UNENCRYPTED" in r.stderr
     assert json.loads(r.stdout)["encrypted"] is False
-    r = _cli("keygen", str(tmp_path / "v"), "--no-passphrase", "--passphrase-env", "X", env={"X": "y"})
+    r = _cli(
+        "keygen", str(tmp_path / "v"), "--no-passphrase", "--passphrase-env", "X", env={"X": "y"}
+    )
     assert r.returncode == 2
 
 
@@ -295,7 +297,9 @@ def test_cli_sign_encrypted_key_passphrase_sources(tmp_path):
     csv = tmp_path / "d.csv"
     csv.write_text("a,b\n1,x\n2,y\n")
     out = tmp_path / "d.shape"
-    r = _cli("profile", str(csv), "-o", str(out), "--sign", str(priv), env={"SHAPE_KEY_PASSPHRASE": PASS})
+    r = _cli(
+        "profile", str(csv), "-o", str(out), "--sign", str(priv), env={"SHAPE_KEY_PASSPHRASE": PASS}
+    )
     assert r.returncode == 0, r.stderr
     assert _cli("verify", str(out), "--key", str(pub)).returncode == 0
 
@@ -312,7 +316,9 @@ def test_passphrase_has_no_command_line_form():
 def test_read_passphrase_order_and_prompt():
     env = {"A": "from-a", "SHAPE_KEY_PASSPHRASE": "from-default"}
     assert read_passphrase(env="A", environ=env) == b"from-a"
-    assert read_passphrase(use_stdin=True, stdin=io.StringIO("line\nrest\n"), environ=env) == b"line"
+    assert (
+        read_passphrase(use_stdin=True, stdin=io.StringIO("line\nrest\n"), environ=env) == b"line"
+    )
     assert read_passphrase(environ=env) == b"from-default"
     assert read_passphrase(environ={}, interactive=False, prompt="p") is None
     answers = iter(["one", "one"])

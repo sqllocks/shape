@@ -83,7 +83,9 @@ def load_private_key_pem(data: bytes, passphrase: bytes | None) -> bytes:
     try:
         key = serialization.load_pem_private_key(data, password=passphrase or None)
     except Exception:  # the library's error types vary; none of their text is passed on
-        raise ValueError("cannot decrypt the private key: wrong passphrase or damaged key") from None
+        raise ValueError(
+            "cannot decrypt the private key: wrong passphrase or damaged key"
+        ) from None
     if not isinstance(key, Ed25519PrivateKey):
         raise ValueError("the private key is not an Ed25519 key")
     return key.private_bytes(
