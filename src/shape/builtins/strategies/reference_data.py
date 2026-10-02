@@ -39,8 +39,7 @@ def _dataset(name: str, ctx: GenerationContext) -> Dataset:
 
 def _uniform_rows(rows: RowStream, row_start: int, n_rows: int, size: int) -> npt.NDArray[np.int64]:
     """A uniformly chosen row of a ``size``-row dataset for each row."""
-    u = rows.uniform(row_start, n_rows)
-    return np.minimum((u * size).astype(np.int64), size - 1)
+    return kernel_ops.uniform_index(rows, row_start, n_rows, size)
 
 
 class ReferenceData:

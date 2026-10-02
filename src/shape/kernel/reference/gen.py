@@ -172,6 +172,85 @@ def alias_sample(
     return arrow_array(_pick(p, a, w[:, slot], w[:, slot + 1]), type=pa.int64())
 
 
+def _index(words: npt.NDArray[np.uint64], size: int) -> npt.NDArray[np.int64]:
+    """``min(floor(u * size), size - 1)`` for the uniforms of ``words``: the index of a uniform
+    pool or key pick (``size`` is converted to a double first, as the native kernel does)."""
+    u = _unit(words)
+    return np.minimum((u * float(size)).astype(np.int64), size - 1)
+
+
+def uniform_index(
+    k0: int,
+    k1: int,
+    row_start: int,
+    n_rows: int,
+    size: int,
+    per_row: int = 1,
+    slot: int = 0,
+) -> pa.Array:
+    _slot(per_row, slot, 1)
+    if size < 1:
+        raise ValueError("size must be positive")
+    w = _words(k0, k1, row_start, n_rows, per_row).reshape(n_rows, per_row)
+    return arrow_array(_index(w[:, slot], size), type=pa.int64())
+
+
+def pool_pick(pool: Any, k0: int, k1: int, row_start: int, n_rows: int) -> pa.Array:
+    entries = _values(pool)
+    if pa.types.is_integer(pool.type):
+        raise ValueError("pool_pick needs a string pool")
+    if not entries:
+        raise ValueError("pool_pick needs a non-empty pool")
+    index = _index(_words(k0, k1, row_start, n_rows, 1), len(entries))
+    return arrow_array([entries[i] for i in index], type=pa.string())
+
+
+def _alias_draw(
+    prob: Any, alias: Any, size: int, k0: int, k1: int, row_start: int, n_rows: int,
+    per_row: int, slot: int,
+) -> npt.NDArray[np.int64]:  # fmt: skip
+    _slot(per_row, slot, 2)
+    p = _f64(prob, "prob")
+    if len(p) == 0 or len(p) != size:
+        raise ValueError("prob, alias and the values must have the same non-zero length")
+    drawn = alias_sample(prob, alias, k0, k1, row_start, n_rows, per_row, slot)
+    return np.asarray(arrow_numpy(drawn), dtype=np.int64)
+
+
+def alias_pool(
+    prob: Any,
+    alias: Any,
+    pool: Any,
+    k0: int,
+    k1: int,
+    row_start: int,
+    n_rows: int,
+    per_row: int = 2,
+    slot: int = 0,
+) -> pa.Array:
+    entries = _values(pool)
+    if pa.types.is_integer(pool.type):
+        raise ValueError("alias_pool needs a string pool")
+    index = _alias_draw(prob, alias, len(entries), k0, k1, row_start, n_rows, per_row, slot)
+    return arrow_array([entries[i] for i in index], type=pa.string())
+
+
+def alias_values(
+    prob: Any,
+    alias: Any,
+    values: Any,
+    k0: int,
+    k1: int,
+    row_start: int,
+    n_rows: int,
+    per_row: int = 2,
+    slot: int = 0,
+) -> pa.Array:
+    table = _f64(values, "values")
+    index = _alias_draw(prob, alias, len(table), k0, k1, row_start, n_rows, per_row, slot)
+    return arrow_array(table[index], type=pa.float64())
+
+
 def _cum(cum: Any) -> npt.NDArray[np.float64]:
     values = _f64(cum, "cum")
     if len(values) == 0 or not np.isfinite(values).all() or (np.diff(values) < 0).any():
@@ -257,6 +336,62 @@ def template_strings(
         parts = [literals[0]]
         for k, (c, w) in enumerate(slots):
             parts.append(_fmt(cols[c][i], w))
+            parts.append(literals[k + 1])
+        out.append("".join(parts))
+    return arrow_array(out, type=pa.string())
+
+
+def compose_strings(
+    literals: Sequence[str], pieces: Sequence[tuple[Any, ...]], row_start: int, n_rows: int
+) -> pa.Array:
+    """``literals[0] + piece + literals[1] + ...``; a piece is ``("pool", pool, k0, k1)`` (an entry
+    picked per row), ``("int", k0, k1, low, high, width, remap_from, remap_to)`` (an integer drawn
+    per row) or ``("col", array, width, slug)`` (a column of the caller; ``slug``: ASCII lower
+    case, spaces removed). A null in a piece makes the row null."""
+    if len(literals) != len(pieces) + 1:
+        raise ValueError("compose needs one more literal than pieces")
+    columns: list[list[Any]] = []
+    for piece in pieces:
+        kind = piece[0]
+        if kind == "pool":
+            _, pool, k0, k1 = piece
+            entries = _values(pool)
+            if pa.types.is_integer(pool.type):
+                raise ValueError("compose needs a string pool")
+            if not entries:
+                raise ValueError("compose needs a non-empty pool")
+            w = _words(k0, k1, row_start, n_rows, 1)
+            columns.append([entries[i] for i in _index(w, len(entries))])
+        elif kind == "int":
+            _, k0, k1, low, high, width, remap_from, remap_to = piece
+            if high <= low:
+                raise ValueError("an integer piece needs low < high")
+            w = _words(k0, k1, row_start, n_rows, 1)
+            drawn = [int(low + i) for i in _index(w, high - low)]
+            if remap_from is not None and remap_to is not None:
+                drawn = [remap_to if v == remap_from else v for v in drawn]
+            columns.append([_fmt(v, width) for v in drawn])
+        elif kind == "col":
+            _, array, width, slug = piece
+            values = _values(array)
+            if len(values) != n_rows:
+                raise ValueError("n_rows must equal the length of every column piece")
+            if slug:
+                if any(isinstance(v, str) and not v.isascii() for v in values):
+                    raise ValueError("a slug column must be ASCII text")
+                values = [None if v is None else v.lower().replace(" ", "") for v in values]
+            columns.append([None if v is None else _fmt(v, width) for v in values])
+        else:
+            raise ValueError(f"unknown piece kind {kind!r}")
+    out: list[str | None] = []
+    for i in range(n_rows):
+        row = [col[i] for col in columns]
+        if any(v is None for v in row):
+            out.append(None)
+            continue
+        parts = [literals[0]]
+        for k, v in enumerate(row):
+            parts.append(v)
             parts.append(literals[k + 1])
         out.append("".join(parts))
     return arrow_array(out, type=pa.string())

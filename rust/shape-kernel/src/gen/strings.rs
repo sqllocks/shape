@@ -440,6 +440,136 @@ fn gather_utf8(entries: &GenericStringArray<i32>, indices: &[i64]) -> Result<Str
     finish_utf8(ends, values, None)
 }
 
+/// One input of [`compose`].
+pub enum Piece<'a> {
+    /// `pool[index[i]]`: a pool entry per row (the indices are drawn by the caller).
+    Pool { pool: Col<'a>, index: Vec<i64> },
+    /// An integer per row, in decimal and zero-padded to `width`.
+    Int { values: Vec<i64>, width: usize },
+    /// A column of the caller, with integers zero-padded to `width`; `slug` writes a string
+    /// as ASCII lower case with its spaces removed (the form a name takes in an e-mail address).
+    Column {
+        col: Col<'a>,
+        width: usize,
+        slug: bool,
+    },
+}
+
+impl Piece<'_> {
+    fn row_bytes(&self) -> usize {
+        match self {
+            Piece::Pool { pool, .. } => pool.row_bytes(0),
+            Piece::Int { width, .. } => (*width).max(6),
+            Piece::Column { col, width, .. } => col.row_bytes(*width),
+        }
+    }
+
+    fn may_be_null(&self) -> bool {
+        match self {
+            Piece::Pool { pool, .. } => pool.null_count() > 0,
+            Piece::Int { .. } => false,
+            Piece::Column { col, .. } => col.null_count() > 0,
+        }
+    }
+
+    #[inline]
+    fn is_null(&self, i: usize) -> bool {
+        match self {
+            Piece::Pool { pool, index } => pool.is_null(index[i] as usize),
+            Piece::Int { .. } => false,
+            Piece::Column { col, .. } => col.is_null(i),
+        }
+    }
+
+    /// Append row `i` (not null).
+    #[inline]
+    fn write(&self, i: usize, buf: &mut Vec<u8>) {
+        match self {
+            Piece::Pool { pool, index } => pool.write(index[i] as usize, 0, buf),
+            Piece::Int { values, width } => write_int(buf, values[i], *width),
+            Piece::Column { col, width, slug } => match (col, *slug) {
+                (Col::S32(a), true) => write_slug(a.value(i).as_bytes(), buf),
+                (Col::S64(a), true) => write_slug(a.value(i).as_bytes(), buf),
+                _ => col.write(i, *width, buf),
+            },
+        }
+    }
+}
+
+/// The bytes of an ASCII string in lower case with spaces left out.
+#[inline]
+fn write_slug(bytes: &[u8], buf: &mut Vec<u8>) {
+    for &b in bytes {
+        if b != b' ' {
+            buf.push(b.to_ascii_lowercase());
+        }
+    }
+}
+
+/// `literals[0] + piece[0] + literals[1] + ...`: the string assembly of the pool, number and
+/// address providers in one pass. Every piece has `n_rows` rows; a null in a piece makes the row
+/// null. A `slug` column must hold ASCII only (the caller checks; this is an error otherwise).
+pub fn compose(
+    literals: &[String],
+    pieces: &[Piece<'_>],
+    n_rows: usize,
+) -> Result<StringArray, String> {
+    if literals.len() != pieces.len() + 1 {
+        return Err("compose needs one more literal than pieces".into());
+    }
+    for piece in pieces {
+        let (len, what) = match piece {
+            Piece::Pool { pool, index } => {
+                if pool.is_empty() {
+                    return Err("compose needs a non-empty pool".into());
+                }
+                if matches!(pool, Col::Int(_)) {
+                    return Err("compose needs a string pool".into());
+                }
+                let size = pool.len() as i64;
+                if index.iter().any(|v| *v < 0 || *v >= size) {
+                    return Err(format!("pool index out of range 0..{size}"));
+                }
+                (index.len(), "pool index")
+            }
+            Piece::Int { values, .. } => (values.len(), "integer"),
+            Piece::Column { col, slug, .. } => {
+                if *slug {
+                    let ascii = match col {
+                        Col::S32(a) => a.value_data().is_ascii(),
+                        Col::S64(a) => a.value_data().is_ascii(),
+                        Col::Int(_) => false,
+                    };
+                    if !ascii {
+                        return Err("a slug column must be ASCII text".into());
+                    }
+                }
+                (col.len(), "column")
+            }
+        };
+        if len != n_rows {
+            return Err(format!(
+                "n_rows must equal the length of every {what} piece"
+            ));
+        }
+    }
+    let may_be_null = pieces.iter().any(Piece::may_be_null);
+    let literals: Vec<&[u8]> = literals.iter().map(String::as_bytes).collect();
+    let row_bytes = literals.iter().map(|l| l.len()).sum::<usize>()
+        + pieces.iter().map(Piece::row_bytes).sum::<usize>();
+    build_utf8_sized(n_rows, row_bytes, &|i, buf| {
+        if may_be_null && pieces.iter().any(|p| p.is_null(i)) {
+            return false;
+        }
+        buf.extend_from_slice(literals[0]);
+        for (k, p) in pieces.iter().enumerate() {
+            p.write(i, buf);
+            buf.extend_from_slice(literals[k + 1]);
+        }
+        true
+    })
+}
+
 const HEX: &[u8; 16] = b"0123456789abcdef";
 
 /// RFC 4122 version-4 UUIDs: each row's 16 bytes are its words 0 and 1 in little-endian order,
@@ -543,8 +673,77 @@ pub fn random_chars(
 
 #[cfg(test)]
 mod tests {
-    use super::{build_utf8, write_int};
-    use arrow_array::Array;
+    use super::{build_utf8, compose, write_int, Col, Piece};
+    use arrow_array::{Array, Int64Array, StringArray};
+
+    #[test]
+    fn compose_assembles_pools_numbers_and_slugged_columns() {
+        let pool = StringArray::from(vec!["Ann Lee", "Bo", "Cy Di"]);
+        let names = StringArray::from(vec![Some("Mary Ann"), None, Some("JO")]);
+        let ids = Int64Array::from(vec![7, 42, -3]);
+        let pool_ref: arrow_array::ArrayRef = std::sync::Arc::new(pool);
+        let names_ref: arrow_array::ArrayRef = std::sync::Arc::new(names);
+        let ids_ref: arrow_array::ArrayRef = std::sync::Arc::new(ids);
+        let pieces = vec![
+            Piece::Pool {
+                pool: Col::from_array(&pool_ref).unwrap(),
+                index: vec![2, 0, 1],
+            },
+            Piece::Column {
+                col: Col::from_array(&names_ref).unwrap(),
+                width: 0,
+                slug: true,
+            },
+            Piece::Column {
+                col: Col::from_array(&ids_ref).unwrap(),
+                width: 4,
+                slug: false,
+            },
+            Piece::Int {
+                values: vec![5, 66, 777],
+                width: 3,
+            },
+        ];
+        let lits: Vec<String> = ["<", "|", "#", "@", ">"].map(String::from).to_vec();
+        let got = compose(&lits, &pieces, 3).unwrap();
+        assert_eq!(got.value(0), "<Cy Di|maryann#0007@005>");
+        assert!(got.is_null(1)); // a null column makes the row null
+        assert_eq!(got.value(2), "<Bo|jo#-003@777>");
+        // Wrong lengths, a missing literal and a non-ASCII slug are errors.
+        assert!(compose(&lits[1..], &pieces, 3).is_err());
+        assert!(compose(&lits, &pieces, 4).is_err());
+        let accent: arrow_array::ArrayRef = std::sync::Arc::new(StringArray::from(vec!["é"]));
+        let bad = vec![Piece::Column {
+            col: Col::from_array(&accent).unwrap(),
+            width: 0,
+            slug: true,
+        }];
+        let two: Vec<String> = vec![String::new(), String::new()];
+        assert!(compose(&two, &bad, 1).is_err());
+    }
+
+    #[test]
+    fn compose_serial_and_parallel_paths_agree() {
+        let pool: arrow_array::ArrayRef =
+            std::sync::Arc::new(StringArray::from(vec!["a", "bb", "ccc"]));
+        for n in [0usize, 1, 1000, 32_768, 50_000] {
+            let index: Vec<i64> = (0..n).map(|i| (i % 3) as i64).collect();
+            let values: Vec<i64> = (0..n as i64).collect();
+            let pieces = vec![
+                Piece::Pool {
+                    pool: Col::from_array(&pool).unwrap(),
+                    index,
+                },
+                Piece::Int { values, width: 5 },
+            ];
+            let lits: Vec<String> = ["", "-", ""].map(String::from).to_vec();
+            let got = compose(&lits, &pieces, n).unwrap();
+            for i in 0..n {
+                let p = ["a", "bb", "ccc"][i % 3];
+                assert_eq!(got.value(i), format!("{p}-{i:05}"));
+            }
+        }
+    }
 
     /// The rows `build_utf8` must give for `f`: row `i` is `"r{i}"`, null where `null(i)`.
     fn check(n: usize, null: impl Fn(usize) -> bool + Sync) {

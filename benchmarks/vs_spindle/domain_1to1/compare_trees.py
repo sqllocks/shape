@@ -5,7 +5,9 @@
         --domains retail,hr --scale medium --pairs 12 --report out.json
 
 ``--old`` is the ``src`` directory of another checkout (a git worktree of the commit to compare
-with, built with its own native kernel); the current tree is the other side. Each timed run is a
+with, built with its own native kernel); the current tree is the other side. When the two trees'
+plugins differ too, give the old checkout's ``plugins/shape-domains/src`` as well, joined with the
+platform's path separator (``--old old/src:old/plugins/shape-domains/src``). Each timed run is a
 fresh process of ``generate.py`` (the harness's own timed region: load the domain, build the
 engine, generate, write Parquet, imports excluded), alternating old and new run by run and domain
 by domain, so a machine that is faster or slower at one time of the day is the same for both.
@@ -122,13 +124,23 @@ def compare(old_src: Path, domains: list[str], scale: str, pairs: int, report: P
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--old", type=Path, required=True, help="src directory of the old checkout")
+    ap.add_argument(
+        "--old",
+        required=True,
+        help="src directory of the old checkout (more directories, joined with ':' on Linux)",
+    )
     ap.add_argument("--domains", required=True)
     ap.add_argument("--scale", default="medium")
     ap.add_argument("--pairs", type=int, default=12)
     ap.add_argument("--report", type=Path, required=True)
     a = ap.parse_args(argv)
-    compare(a.old.resolve(), a.domains.split(","), a.scale, a.pairs, a.report)
+    compare(
+        Path(os.pathsep.join(str(Path(p).resolve()) for p in a.old.split(os.pathsep))),
+        a.domains.split(","),
+        a.scale,
+        a.pairs,
+        a.report,
+    )
     return 0
 
 

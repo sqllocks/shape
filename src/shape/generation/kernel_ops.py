@@ -5,10 +5,11 @@ A strategy calls the kernel through these functions: they pick the implementatio
 whichever kernel ran. Every result is a function of ``(stream key, row)`` alone, so it does not
 depend on how the rows are chunked.
 
-Stable interface: ``AliasTable``, ``alias_table``, ``alias_draw``, ``ZipfTable``, ``zipf_table``,
-``zipf_draw``, ``pool_take``, ``uuid4``,
-``random_strings``, ``template_strings``, ``join_strings``, ``string_case``, ``day_weights``,
-``hour_weights_peaks`` and ``temporal_sample``.
+Stable interface: ``AliasTable``, ``alias_table``, ``alias_draw``, ``alias_pick_pool``,
+``alias_pick_values``, ``pool_pick``, ``ZipfTable``, ``zipf_table``, ``zipf_draw``,
+``uniform_index``, ``compose_strings`` (``PoolPiece``, ``IntPiece``, ``ColumnPiece``),
+``pool_take``, ``uuid4``, ``random_strings``, ``template_strings``, ``join_strings``,
+``string_case``, ``day_weights``, ``hour_weights_peaks`` and ``temporal_sample``.
 """
 
 from __future__ import annotations
@@ -72,6 +73,28 @@ def alias_draw(
     return to_numpy(out).astype(np.int64, copy=False)
 
 
+def alias_pick_pool(
+    table: AliasTable, pool: pa.Array, stream: RowStream, row_start: int, n_rows: int
+) -> pa.Array:
+    """``pool[alias_draw(...)]`` for a ``string`` pool of ``table.size`` entries, in one call."""
+    return _arrow(
+        get_kernel().alias_pool(
+            table.prob, table.alias, pool, stream.k0, stream.k1, row_start, n_rows, 2, 0
+        )
+    )
+
+
+def alias_pick_values(
+    table: AliasTable, values: pa.Array, stream: RowStream, row_start: int, n_rows: int
+) -> pa.Array:
+    """``values[alias_draw(...)]`` for a ``float64`` array of ``table.size`` entries (one call)."""
+    return _arrow(
+        get_kernel().alias_values(
+            table.prob, table.alias, values, stream.k0, stream.k1, row_start, n_rows, 2, 0
+        )
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class ZipfTable:
     """A normalised cumulative weight array and the kernel's guide table for it."""
@@ -95,6 +118,83 @@ def zipf_draw(
     clipped to the last row, for the uniform ``u`` of word 0 of each row."""
     out = get_kernel().zipf_draw(table.cum, table.guide, stream.k0, stream.k1, row_start, n_rows)
     return to_numpy(out).astype(np.int64, copy=False)
+
+
+def uniform_index(
+    stream: RowStream, row_start: int, n_rows: int, size: int, *, slot: int = 0, per_row: int = 1
+) -> npt.NDArray[np.int64]:
+    """``min(floor(u * size), size - 1)`` for the uniform ``u`` of word ``slot`` of each row: the
+    index of a uniform draw among ``size`` entries."""
+    out = get_kernel().uniform_index(stream.k0, stream.k1, row_start, n_rows, size, per_row, slot)
+    return to_numpy(out).astype(np.int64, copy=False)
+
+
+def pool_pick(pool: pa.Array, stream: RowStream, row_start: int, n_rows: int) -> pa.Array:
+    """An entry of the ``string`` array ``pool`` picked uniformly per row (as
+    :func:`uniform_index`), in one call."""
+    return _arrow(get_kernel().pool_pick(pool, stream.k0, stream.k1, row_start, n_rows))
+
+
+@dataclass(frozen=True, slots=True)
+class PoolPiece:
+    """An entry of ``pool`` (strings) picked uniformly per row from ``stream`` (word 0)."""
+
+    pool: pa.Array
+    stream: RowStream
+
+
+@dataclass(frozen=True, slots=True)
+class IntPiece:
+    """An integer in ``[low, high)`` drawn uniformly per row from ``stream`` (word 0), in decimal
+    zero-padded to ``width``; ``remap`` (``(from, to)``) writes ``to`` where the draw is
+    ``from``."""
+
+    stream: RowStream
+    low: int
+    high: int
+    width: int = 0
+    remap: tuple[int, int] | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ColumnPiece:
+    """A column of the caller (strings, or ints zero-padded to ``width``); ``slug`` writes ASCII
+    text in lower case with its spaces removed."""
+
+    column: pa.Array
+    width: int = 0
+    slug: bool = False
+
+
+def compose_strings(
+    literals: Sequence[str],
+    pieces: Sequence[PoolPiece | IntPiece | ColumnPiece],
+    row_start: int,
+    n_rows: int,
+) -> pa.Array:
+    """``literals[0] + piece[0] + literals[1] + ...`` in one native pass: the pool, number and
+    address providers. A null in a column piece makes the row null."""
+    specs: list[tuple[Any, ...]] = []
+    for piece in pieces:
+        if isinstance(piece, PoolPiece):
+            specs.append(("pool", piece.pool, piece.stream.k0, piece.stream.k1))
+        elif isinstance(piece, IntPiece):
+            frm, to = piece.remap if piece.remap is not None else (None, None)
+            specs.append(
+                (
+                    "int",
+                    piece.stream.k0,
+                    piece.stream.k1,
+                    piece.low,
+                    piece.high,
+                    piece.width,
+                    frm,
+                    to,
+                )
+            )
+        else:
+            specs.append(("col", piece.column, piece.width, piece.slug))
+    return _arrow(get_kernel().compose_strings(list(literals), specs, row_start, n_rows))
 
 
 def pool_take(pool: pa.Array, indices: npt.NDArray[np.integer[Any]]) -> pa.Array:

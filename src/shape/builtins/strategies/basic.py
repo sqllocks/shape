@@ -32,11 +32,13 @@ class Uuid:
 
 
 @lru_cache(maxsize=64)
-def _labels(keys: tuple[str, ...]) -> tuple[np.ndarray[Any, Any] | None, pa.Array]:
+def _labels(keys: tuple[str, ...]) -> tuple[pa.Array | None, pa.Array]:
     """(float values, or None) and the string pool of a label list. Numeric labels give a float
     column: a formula can use it as a number."""
     try:
-        numbers: np.ndarray[Any, Any] | None = np.array([float(k) for k in keys], dtype=np.float64)
+        numbers: pa.Array | None = arrow_array(
+            np.array([float(k) for k in keys], dtype=np.float64), type=pa.float64()
+        )
     except (TypeError, ValueError):
         numbers = None
     return numbers, arrow_array([str(k) for k in keys], type=pa.string())
@@ -64,12 +66,12 @@ class WeightedEnum:
                 f"weighted_enum weights must be non-negative with a positive sum ({where(ctx)})"
             )
         numbers, pool = _labels(tuple(str(k) for k in values))
-        index = kernel_ops.alias_draw(
-            kernel_ops.alias_table(weights), stream(ctx, "v"), ctx.row_start, ctx.n_rows
-        )
+        table = kernel_ops.alias_table(weights)
         if numbers is not None:
-            return arrow_array(numbers[index])
-        return kernel_ops.pool_take(pool, index)
+            return kernel_ops.alias_pick_values(
+                table, numbers, stream(ctx, "v"), ctx.row_start, ctx.n_rows
+            )
+        return kernel_ops.alias_pick_pool(table, pool, stream(ctx, "v"), ctx.row_start, ctx.n_rows)
 
 
 __all__ = ["SHAPE_API", "Uuid", "WeightedEnum", "require"]

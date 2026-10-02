@@ -75,6 +75,33 @@ pub fn below(w: u64, n: u64) -> u64 {
     ((u128::from(w) * u128::from(n)) >> 64) as u64
 }
 
+/// An index in `0..size` from a word, by the uniform of its top 53 bits: `min(floor(unit(w) *
+/// size), size - 1)`. This is the draw of the pool, key and integer providers (`size` is
+/// converted to a double first, as numpy does for `u * size`).
+#[inline(always)]
+pub fn index_of_unit(w: u64, size: i64) -> i64 {
+    ((unit(w) * size as f64) as i64).min(size - 1)
+}
+
+/// `n_rows` indices in `0..size`, from word `slot` of each row's `per_row` words (see
+/// [`index_of_unit`]).
+pub fn uniform_index(
+    key: [u64; 2],
+    row_start: u64,
+    n_rows: usize,
+    size: i64,
+    per_row: usize,
+    slot: usize,
+) -> Vec<i64> {
+    let mut out = vec![0i64; n_rows];
+    for_row_chunks(key, row_start, per_row, &mut out, true, &|words, chunk| {
+        for (r, o) in chunk.iter_mut().enumerate() {
+            *o = index_of_unit(words[r * per_row + slot], size);
+        }
+    });
+    out
+}
+
 /// Run `f(words, out)` over consecutive row chunks of `out` (one element per row), where
 /// `words` holds the chunk's `per_row` words per row. Chunks run in parallel for large calls;
 /// the result does not depend on the split.
@@ -153,6 +180,28 @@ mod tests {
         fill_words(key, 2, &mut w);
         assert_eq!(&w[..2], &b0[2..]);
         assert_eq!(&w[2..6], &b1[..]);
+    }
+
+    #[test]
+    fn uniform_index_matches_the_formula_and_stays_in_range() {
+        let key = [0xfedc_ba98_7654_3210, 0x0123_4567_89ab_cdef];
+        for size in [1i64, 2, 7, 1000, 999_983, 1 << 40] {
+            let got = uniform_index(key, 5, 100, size, 1, 0);
+            let mut words = vec![0u64; 100];
+            fill_words(key, 5, &mut words);
+            for (g, w) in got.iter().zip(words) {
+                let want = ((unit(w) * size as f64) as i64).min(size - 1);
+                assert_eq!(*g, want);
+                assert!((0..size).contains(g));
+            }
+        }
+        // Two words per row, the second one used.
+        let two = uniform_index(key, 3, 10, 50, 2, 1);
+        let mut words = vec![0u64; 20];
+        fill_words(key, 6, &mut words);
+        for (r, g) in two.iter().enumerate() {
+            assert_eq!(*g, index_of_unit(words[2 * r + 1], 50));
+        }
     }
 
     #[test]

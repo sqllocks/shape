@@ -16,6 +16,7 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation import kernel_ops
 from shape.generation.arrowkit import array as arrow_array
 from shape.generation.arrowkit import fill_null as arrow_fill_null
 from shape.generation.arrowkit import to_numpy as arrow_numpy
@@ -74,10 +75,10 @@ def _indices(
         if drawn is not None:
             return drawn
         return zipf_index(stream(ctx, "fk").uniform(row_start, n_rows), pool, alpha)
-    u = stream(ctx, "fk").uniform(row_start, n_rows)
     if distribution == "pareto":
+        u = stream(ctx, "fk").uniform(row_start, n_rows)
         return pareto_index(u, pool, positive(params, "alpha", 1.2, ctx))
-    return np.minimum((u * pool).astype(np.int64), pool - 1)
+    return kernel_ops.uniform_index(stream(ctx, "fk"), row_start, n_rows, pool)
 
 
 class ForeignKey:

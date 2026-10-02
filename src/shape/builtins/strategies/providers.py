@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import os
 from collections.abc import Callable, Mapping
 from functools import cache, lru_cache
 from importlib import resources
@@ -57,10 +58,24 @@ def _lines(raw: bytes) -> pa.Array:
     return out
 
 
+_POOLS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pools")
+
+
+def _pool_bytes(name: str) -> bytes:
+    """The bytes of ``pools/<name>.txt``: a plain file read when the package is on disk
+    (``importlib.resources`` costs about 0.8 ms in a fresh process, and a generation reads three or
+    four pools), the resource otherwise (a zipped install)."""
+    try:
+        with open(os.path.join(_POOLS, f"{name}.txt"), "rb") as handle:
+            return handle.read()
+    except OSError:
+        return resources.files(__package__).joinpath(f"pools/{name}.txt").read_bytes()
+
+
 @cache
 def pool(name: str) -> pa.Array:
     """The reference pool ``name`` (``pools/<name>.txt``, one entry per line) as a string array."""
-    return _lines(resources.files(__package__).joinpath(f"pools/{name}.txt").read_bytes())
+    return _lines(_pool_bytes(name))
 
 
 def _lower(strings: pa.Array) -> pa.Array:
@@ -86,23 +101,59 @@ def _company_stems() -> pa.Array:
 
 def _pick(ctx: GenerationContext, label: str, size: int) -> npt.NDArray[np.int64]:
     """A uniform index into ``size`` entries for each row (its own stream, one word per row)."""
-    u = stream(ctx, label).uniform(ctx.row_start, ctx.n_rows)
-    return np.minimum((u * size).astype(np.int64), size - 1)
-
-
-def _ints(ctx: GenerationContext, label: str, low: int, high: int) -> npt.NDArray[np.int64]:
-    """Uniform integers in ``[low, high)``, one per row."""
-    return low + _pick(ctx, label, high - low)
+    return kernel_ops.uniform_index(stream(ctx, label), ctx.row_start, ctx.n_rows, size)
 
 
 def _from_pool(ctx: GenerationContext, label: str, name: str) -> pa.Array:
-    entries = pool(name)
-    return kernel_ops.pool_take(entries, _pick(ctx, label, len(entries)))
+    return kernel_ops.pool_pick(pool(name), stream(ctx, label), ctx.row_start, ctx.n_rows)
+
+
+def _pool_piece(ctx: GenerationContext, label: str, entries: pa.Array) -> kernel_ops.PoolPiece:
+    return kernel_ops.PoolPiece(entries, stream(ctx, label))
+
+
+def _int_piece(
+    ctx: GenerationContext,
+    label: str,
+    low: int,
+    high: int,
+    width: int = 0,
+    remap: tuple[int, int] | None = None,
+) -> kernel_ops.IntPiece:
+    """Uniform integers in ``[low, high)``, one per row, zero padded to ``width``."""
+    return kernel_ops.IntPiece(stream(ctx, label), low, high, width, remap)
+
+
+def _compose(
+    ctx: GenerationContext,
+    literals: list[str],
+    pieces: list[kernel_ops.PoolPiece | kernel_ops.IntPiece | kernel_ops.ColumnPiece],
+) -> pa.Array:
+    return kernel_ops.compose_strings(literals, pieces, ctx.row_start, ctx.n_rows)
 
 
 def _slug(names: pa.Array) -> pa.Array:
     """Lower case with spaces removed (the form names take inside an e-mail address)."""
     return pc.replace_substring(_lower(names), " ", "")
+
+
+@cache
+def _slugged_pool(name: str) -> pa.Array:
+    """The pool ``name`` with every entry slugged: picking from it equals slugging a pick."""
+    return _slug(pool(name))
+
+
+def _is_ascii(strings: pa.Array) -> bool:
+    """Whether every byte of the ``string`` array's buffer is ASCII (a slice only adds bytes)."""
+    data = strings.buffers()[2]
+    return data is None or not (np.frombuffer(data, dtype=np.uint8) & 0x80).any()
+
+
+def _slug_piece(strings: pa.Array) -> kernel_ops.ColumnPiece:
+    """``strings`` as an e-mail slug: the kernel does it for ASCII text, Arrow for the rest."""
+    if _is_ascii(strings):
+        return kernel_ops.ColumnPiece(strings, 0, True)
+    return kernel_ops.ColumnPiece(_slug(strings), 0, False)
 
 
 def _first_name(ctx: GenerationContext) -> pa.Array:
@@ -114,22 +165,36 @@ def _last_name(ctx: GenerationContext) -> pa.Array:
 
 
 def _name(ctx: GenerationContext) -> pa.Array:
-    return kernel_ops.join_strings([_first_name(ctx), _last_name(ctx)], " ")
+    return _compose(
+        ctx,
+        ["", " ", ""],
+        [
+            _pool_piece(ctx, "first", pool("first_names")),
+            _pool_piece(ctx, "last", pool("last_names")),
+        ],
+    )
 
 
 def _email(ctx: GenerationContext) -> pa.Array:
     # The same row's first_name and last_name columns when the table has both.
     if "first_name" in ctx.columns and "last_name" in ctx.columns:
-        firsts, lasts = ctx.columns["first_name"], ctx.columns["last_name"]
+        names: list[Any] = [
+            _slug_piece(_as_string(ctx.columns["first_name"])),
+            _slug_piece(_as_string(ctx.columns["last_name"])),
+        ]
     else:
-        firsts, lasts = _first_name(ctx), _last_name(ctx)
-    domains = _from_pool(ctx, "domain", "email_domains")
-    suffix = arrow_array(_ints(ctx, "suffix", 1, 999))
-    return kernel_ops.template_strings(
+        names = [
+            _pool_piece(ctx, "first", _slugged_pool("first_names")),
+            _pool_piece(ctx, "last", _slugged_pool("last_names")),
+        ]
+    return _compose(
+        ctx,
         ["", ".", "", "@", ""],
-        [(0, 0), (1, 0), (2, 0), (3, 0)],
-        [_slug(_as_string(firsts)), _slug(_as_string(lasts)), suffix, domains],
-        ctx.n_rows,
+        [
+            *names,
+            _int_piece(ctx, "suffix", 1, 999),
+            _pool_piece(ctx, "domain", pool("email_domains")),
+        ],
     )
 
 
@@ -140,56 +205,55 @@ def _as_string(column: pa.Array) -> pa.Array:
 
 
 def _phone_number(ctx: GenerationContext) -> pa.Array:
-    area, exchange = _ints(ctx, "area", 200, 999), _ints(ctx, "exchange", 200, 999)
-    subscriber = _ints(ctx, "subscriber", 1000, 9999)
-    return kernel_ops.template_strings(
+    return _compose(
+        ctx,
         ["(", ") ", "-", ""],
-        [(0, 0), (1, 0), (2, 0)],
-        [arrow_array(area), arrow_array(exchange), arrow_array(subscriber)],
-        ctx.n_rows,
+        [
+            _int_piece(ctx, "area", 200, 999),
+            _int_piece(ctx, "exchange", 200, 999),
+            _int_piece(ctx, "subscriber", 1000, 9999),
+        ],
     )
 
 
 def _ssn(ctx: GenerationContext) -> pa.Array:
     # AAA-GG-SSSS without the reserved area numbers 000, 666 and 900-999.
-    area = _ints(ctx, "area", 1, 900)
-    area = np.where(area == 666, 665, area)
-    group, serial = _ints(ctx, "group", 1, 100), _ints(ctx, "serial", 1, 10_000)
-    return kernel_ops.template_strings(
+    return _compose(
+        ctx,
         ["", "-", "-", ""],
-        [(0, 3), (1, 2), (2, 4)],
-        [arrow_array(area), arrow_array(group), arrow_array(serial)],
-        ctx.n_rows,
+        [
+            _int_piece(ctx, "area", 1, 900, 3, (666, 665)),
+            _int_piece(ctx, "group", 1, 100, 2),
+            _int_piece(ctx, "serial", 1, 10_000, 4),
+        ],
     )
 
 
 def _ipv4(ctx: GenerationContext) -> pa.Array:
     # a.b.c.d with the first and last octet in 1..254
-    parts = [
-        arrow_array(_ints(ctx, "a", 1, 255)),
-        arrow_array(_ints(ctx, "b", 0, 256)),
-        arrow_array(_ints(ctx, "c", 0, 256)),
-        arrow_array(_ints(ctx, "d", 1, 255)),
-    ]
-    return kernel_ops.template_strings(
-        ["", ".", ".", ".", ""], [(0, 0), (1, 0), (2, 0), (3, 0)], parts, ctx.n_rows
+    return _compose(
+        ctx,
+        ["", ".", ".", ".", ""],
+        [
+            _int_piece(ctx, "a", 1, 255),
+            _int_piece(ctx, "b", 0, 256),
+            _int_piece(ctx, "c", 0, 256),
+            _int_piece(ctx, "d", 1, 255),
+        ],
     )
 
 
 def _postcode(ctx: GenerationContext) -> pa.Array:
     # five digits, zero padded
-    return kernel_ops.template_strings(
-        ["", ""], [(0, 5)], [arrow_array(_ints(ctx, "zip", 501, 99_951))], ctx.n_rows
-    )
+    return _compose(ctx, ["", ""], [_int_piece(ctx, "zip", 501, 99_951, 5)])
 
 
 def _zip_plus4(ctx: GenerationContext) -> pa.Array:
     # NNNNN-NNNN, zero padded
-    return kernel_ops.template_strings(
+    return _compose(
+        ctx,
         ["", "-", ""],
-        [(0, 5), (1, 4)],
-        [arrow_array(_ints(ctx, "zip", 501, 99_951)), arrow_array(_ints(ctx, "plus4", 1, 10_000))],
-        ctx.n_rows,
+        [_int_piece(ctx, "zip", 501, 99_951, 5), _int_piece(ctx, "plus4", 1, 10_000, 4)],
     )
 
 
@@ -198,15 +262,14 @@ def _company(ctx: GenerationContext) -> pa.Array:
 
 
 def _street_address(ctx: GenerationContext) -> pa.Array:
-    return kernel_ops.template_strings(
+    return _compose(
+        ctx,
         ["", " ", " ", ""],
-        [(0, 0), (1, 0), (2, 0)],
         [
-            arrow_array(_ints(ctx, "number", 100, 9999)),
-            _from_pool(ctx, "street", "street_names"),
-            _from_pool(ctx, "suffix", "street_suffixes"),
+            _int_piece(ctx, "number", 100, 9999),
+            _pool_piece(ctx, "street", pool("street_names")),
+            _pool_piece(ctx, "suffix", pool("street_suffixes")),
         ],
-        ctx.n_rows,
     )
 
 
@@ -223,25 +286,25 @@ def _state_abbr(ctx: GenerationContext) -> pa.Array:
 
 
 def _uri(ctx: GenerationContext) -> pa.Array:
-    return kernel_ops.template_strings(
+    return _compose(
+        ctx,
         ["https://", "/", ""],
-        [(0, 0), (1, 0)],
-        [_from_pool(ctx, "domain", "uri_domains"), _from_pool(ctx, "path", "uri_paths")],
-        ctx.n_rows,
+        [
+            _pool_piece(ctx, "domain", pool("uri_domains")),
+            _pool_piece(ctx, "path", pool("uri_paths")),
+        ],
     )
 
 
 def _company_email(ctx: GenerationContext) -> pa.Array:
-    stems = _company_stems()
-    return kernel_ops.template_strings(
+    return _compose(
+        ctx,
         ["", ".", "@", ".com"],
-        [(0, 0), (1, 0), (2, 0)],
         [
-            _slug(_first_name(ctx)),
-            _slug(_last_name(ctx)),
-            kernel_ops.pool_take(stems, _pick(ctx, "company", len(stems))),
+            _pool_piece(ctx, "first", _slugged_pool("first_names")),
+            _pool_piece(ctx, "last", _slugged_pool("last_names")),
+            _pool_piece(ctx, "company", _company_stems()),
         ],
-        ctx.n_rows,
     )
 
 

@@ -585,7 +585,7 @@ def _clone(value: Any) -> Any:
         _DATACLASS_FIELDS[kind] = names
     if names is None:
         return copy.deepcopy(value)
-    new = kind.__new__(kind)
+    new = object.__new__(kind)
     for name in names:
         object.__setattr__(new, name, _clone(getattr(value, name)))
     return new

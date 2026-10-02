@@ -32,6 +32,35 @@ def alias_sample(
 ) -> Any: ...
 def zipf_guide(cum: Any) -> Any: ...
 def zipf_draw(cum: Any, guide: Any, k0: int, k1: int, row_start: int, n_rows: int) -> Any: ...
+def uniform_index(
+    k0: int, k1: int, row_start: int, n_rows: int, size: int, per_row: int = 1, slot: int = 0
+) -> Any: ...
+def pool_pick(pool: Any, k0: int, k1: int, row_start: int, n_rows: int) -> Any: ...
+def alias_pool(
+    prob: Any,
+    alias: Any,
+    pool: Any,
+    k0: int,
+    k1: int,
+    row_start: int,
+    n_rows: int,
+    per_row: int = 2,
+    slot: int = 0,
+) -> Any: ...
+def alias_values(
+    prob: Any,
+    alias: Any,
+    values: Any,
+    k0: int,
+    k1: int,
+    row_start: int,
+    n_rows: int,
+    per_row: int = 2,
+    slot: int = 0,
+) -> Any: ...
+def compose_strings(
+    literals: list[str], pieces: list[tuple[Any, ...]], row_start: int, n_rows: int
+) -> Any: ...
 def pool_take(pool: Any, indices: Any) -> Any: ...
 def template_strings(
     literals: list[str], slots: list[tuple[int, int]], columns: list[Any], n_rows: int

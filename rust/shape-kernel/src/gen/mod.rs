@@ -18,6 +18,7 @@ use arrow_array::{
 };
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use pyo3::types::PyTuple;
 use pyo3_arrow::PyArray;
 
 fn err(e: String) -> PyErr {
@@ -256,6 +257,264 @@ fn into_arrays(list: Vec<PyArray>) -> Vec<ArrayRef> {
     list.into_iter().map(|a| a.into_inner().0).collect()
 }
 
+/// One index in `0..size` per row: `min(floor(u * size), size - 1)` for the uniform `u` of word
+/// `slot` of each row's `per_row` words (the draw of a uniform key or pool pick).
+#[pyfunction]
+#[pyo3(signature = (k0, k1, row_start, n_rows, size, per_row = 1, slot = 0))]
+#[allow(clippy::too_many_arguments)]
+fn uniform_index(
+    py: Python<'_>,
+    k0: u64,
+    k1: u64,
+    row_start: u64,
+    n_rows: usize,
+    size: i64,
+    per_row: usize,
+    slot: usize,
+) -> PyResult<PyArray> {
+    check_slot(per_row, slot, 1)?;
+    if size < 1 {
+        return Err(err("size must be positive".into()));
+    }
+    let v = py.detach(|| rng::uniform_index([k0, k1], row_start, n_rows, size, per_row, slot));
+    Ok(out(Arc::new(Int64Array::from(v))))
+}
+
+/// `pool[i]` for an index `i` drawn per row as in `uniform_index` over the pool's length (the
+/// pick of the name, city and company providers), as a `string` array.
+#[pyfunction]
+fn pool_pick(
+    py: Python<'_>,
+    pool: PyArray,
+    k0: u64,
+    k1: u64,
+    row_start: u64,
+    n_rows: usize,
+) -> PyResult<PyArray> {
+    let (pool, _) = pool.into_inner();
+    let col = strings::Col::from_array(&pool).map_err(err)?;
+    if col.is_empty() {
+        return Err(err("pool_pick needs a non-empty pool".into()));
+    }
+    let r = py
+        .detach(|| {
+            let index = rng::uniform_index([k0, k1], row_start, n_rows, col.len() as i64, 1, 0);
+            strings::pool_take(&col, &Int64Array::from(index))
+        })
+        .map_err(err)?;
+    Ok(out(Arc::new(r)))
+}
+
+/// The alias draw of `alias_sample`, taken from `pool` (strings): `pool[draw]` per row.
+#[pyfunction]
+#[pyo3(signature = (prob, alias, pool, k0, k1, row_start, n_rows, per_row = 2, slot = 0))]
+#[allow(clippy::too_many_arguments)]
+fn alias_pool(
+    py: Python<'_>,
+    prob: PyArray,
+    alias: PyArray,
+    pool: PyArray,
+    k0: u64,
+    k1: u64,
+    row_start: u64,
+    n_rows: usize,
+    per_row: usize,
+    slot: usize,
+) -> PyResult<PyArray> {
+    check_slot(per_row, slot, 2)?;
+    let (prob_arr, _) = prob.into_inner();
+    let prob = f64_slice(&prob_arr, "prob")?;
+    let alias = i64_array(alias, "alias")?;
+    let (pool, _) = pool.into_inner();
+    let col = strings::Col::from_array(&pool).map_err(err)?;
+    if prob.len() != alias.len() || prob.len() != col.len() || prob.is_empty() {
+        return Err(err(
+            "prob, alias and pool must have the same non-zero length".into(),
+        ));
+    }
+    let r = py
+        .detach(|| {
+            let draw = alias::sample(
+                prob,
+                alias.values(),
+                [k0, k1],
+                row_start,
+                n_rows,
+                per_row,
+                slot,
+            );
+            strings::pool_take(&col, &Int64Array::from(draw))
+        })
+        .map_err(err)?;
+    Ok(out(Arc::new(r)))
+}
+
+/// The alias draw of `alias_sample`, taken from `values` (float64): `values[draw]` per row.
+#[pyfunction]
+#[pyo3(signature = (prob, alias, values, k0, k1, row_start, n_rows, per_row = 2, slot = 0))]
+#[allow(clippy::too_many_arguments)]
+fn alias_values(
+    py: Python<'_>,
+    prob: PyArray,
+    alias: PyArray,
+    values: PyArray,
+    k0: u64,
+    k1: u64,
+    row_start: u64,
+    n_rows: usize,
+    per_row: usize,
+    slot: usize,
+) -> PyResult<PyArray> {
+    check_slot(per_row, slot, 2)?;
+    let (prob_arr, _) = prob.into_inner();
+    let prob = f64_slice(&prob_arr, "prob")?;
+    let alias = i64_array(alias, "alias")?;
+    let (values_arr, _) = values.into_inner();
+    let values = f64_slice(&values_arr, "values")?;
+    if prob.len() != alias.len() || prob.len() != values.len() || prob.is_empty() {
+        return Err(err(
+            "prob, alias and values must have the same non-zero length".into(),
+        ));
+    }
+    let v = py.detach(|| {
+        alias::sample(
+            prob,
+            alias.values(),
+            [k0, k1],
+            row_start,
+            n_rows,
+            per_row,
+            slot,
+        )
+        .into_iter()
+        .map(|i| values[i as usize])
+        .collect::<Vec<f64>>()
+    });
+    Ok(out(Arc::new(Float64Array::from(v))))
+}
+
+/// What one piece of `compose_strings` reads, before its arrays are borrowed.
+enum PieceSpec {
+    Pool {
+        pool: ArrayRef,
+        key: [u64; 2],
+    },
+    Int {
+        key: [u64; 2],
+        low: i64,
+        high: i64,
+        width: usize,
+        remap: Option<(i64, i64)>,
+    },
+    Column {
+        array: ArrayRef,
+        width: usize,
+        slug: bool,
+    },
+}
+
+fn piece_spec(item: &Bound<'_, PyAny>) -> PyResult<PieceSpec> {
+    let t = item.cast::<PyTuple>()?;
+    let kind: String = t.get_item(0)?.extract()?;
+    match kind.as_str() {
+        // ("pool", pool, k0, k1)
+        "pool" => Ok(PieceSpec::Pool {
+            pool: t.get_item(1)?.extract::<PyArray>()?.into_inner().0,
+            key: [t.get_item(2)?.extract()?, t.get_item(3)?.extract()?],
+        }),
+        // ("int", k0, k1, low, high, width, remap_from, remap_to)
+        "int" => {
+            let from: Option<i64> = t.get_item(6)?.extract()?;
+            let to: Option<i64> = t.get_item(7)?.extract()?;
+            Ok(PieceSpec::Int {
+                key: [t.get_item(1)?.extract()?, t.get_item(2)?.extract()?],
+                low: t.get_item(3)?.extract()?,
+                high: t.get_item(4)?.extract()?,
+                width: t.get_item(5)?.extract()?,
+                remap: from.zip(to),
+            })
+        }
+        // ("col", array, width, slug)
+        "col" => Ok(PieceSpec::Column {
+            array: t.get_item(1)?.extract::<PyArray>()?.into_inner().0,
+            width: t.get_item(2)?.extract()?,
+            slug: t.get_item(3)?.extract()?,
+        }),
+        other => Err(err(format!("unknown piece kind {other:?}"))),
+    }
+}
+
+/// `literals[0] + piece + literals[1] + ...` where a piece is a pool entry picked per row, an
+/// integer drawn per row, or a column of the caller (see `strings::compose`). Pieces:
+/// `("pool", pool, k0, k1)`, `("int", k0, k1, low, high, width, remap_from, remap_to)` and
+/// `("col", array, width, slug)`. A pool pick takes `min(floor(u * len), len - 1)` and an integer
+/// `low + min(floor(u * (high - low)), high - low - 1)`, for the uniform `u` of word 0 of each row of
+/// the piece's own stream; an integer equal to `remap_from` is written as `remap_to`.
+#[pyfunction]
+fn compose_strings(
+    py: Python<'_>,
+    literals: Vec<String>,
+    pieces: Vec<Bound<'_, PyAny>>,
+    row_start: u64,
+    n_rows: usize,
+) -> PyResult<PyArray> {
+    let specs: Vec<PieceSpec> = pieces.iter().map(piece_spec).collect::<PyResult<_>>()?;
+    for spec in &specs {
+        if let PieceSpec::Int { low, high, .. } = spec {
+            if high <= low {
+                return Err(err("an integer piece needs low < high".into()));
+            }
+        }
+    }
+    let r = py
+        .detach(|| {
+            let mut built: Vec<strings::Piece<'_>> = Vec::with_capacity(specs.len());
+            for spec in &specs {
+                built.push(match spec {
+                    PieceSpec::Pool { pool, key } => {
+                        let col = strings::Col::from_array(pool)?;
+                        if col.is_empty() {
+                            return Err("compose needs a non-empty pool".to_string());
+                        }
+                        let index =
+                            rng::uniform_index(*key, row_start, n_rows, col.len() as i64, 1, 0);
+                        strings::Piece::Pool { pool: col, index }
+                    }
+                    PieceSpec::Int {
+                        key,
+                        low,
+                        high,
+                        width,
+                        remap,
+                    } => {
+                        let mut values =
+                            rng::uniform_index(*key, row_start, n_rows, high - low, 1, 0);
+                        for v in values.iter_mut() {
+                            *v += low;
+                            if let Some((from, to)) = remap {
+                                if *v == *from {
+                                    *v = *to;
+                                }
+                            }
+                        }
+                        strings::Piece::Int {
+                            values,
+                            width: *width,
+                        }
+                    }
+                    PieceSpec::Column { array, width, slug } => strings::Piece::Column {
+                        col: strings::Col::from_array(array)?,
+                        width: *width,
+                        slug: *slug,
+                    },
+                });
+            }
+            strings::compose(&literals, &built, n_rows)
+        })
+        .map_err(err)?;
+    Ok(out(Arc::new(r)))
+}
+
 /// `pool[indices]` as a `string` array.
 #[pyfunction]
 fn pool_take(py: Python<'_>, pool: PyArray, indices: PyArray) -> PyResult<PyArray> {
@@ -408,6 +667,11 @@ pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(alias_sample, m)?)?;
     m.add_function(wrap_pyfunction!(zipf_guide, m)?)?;
     m.add_function(wrap_pyfunction!(zipf_draw, m)?)?;
+    m.add_function(wrap_pyfunction!(uniform_index, m)?)?;
+    m.add_function(wrap_pyfunction!(pool_pick, m)?)?;
+    m.add_function(wrap_pyfunction!(alias_pool, m)?)?;
+    m.add_function(wrap_pyfunction!(alias_values, m)?)?;
+    m.add_function(wrap_pyfunction!(compose_strings, m)?)?;
     m.add_function(wrap_pyfunction!(pool_take, m)?)?;
     m.add_function(wrap_pyfunction!(template_strings, m)?)?;
     m.add_function(wrap_pyfunction!(join_strings, m)?)?;

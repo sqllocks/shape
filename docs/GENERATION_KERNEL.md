@@ -41,6 +41,11 @@ Conversions (shared by both implementations):
 | `alias_sample(prob, alias, k0, k1, row_start, n_rows, per_row=2, slot=0)` | uses 2 | int64 category per row |
 | `zipf_guide(cum)` | | int64 guide table (a power-of-two size) for `cum`: non-empty, finite, non-decreasing float64, ending at 1 |
 | `zipf_draw(cum, guide, k0, k1, row_start, n_rows)` | uses 1 | int64 parent row per row: `min(searchsorted(cum, u, "right"), len(cum) - 1)` for the uniform `u` of the row's word. The guide table (a lower bound per bucket of `u`) makes it 3 to 5 times faster than the binary search and never changes the answer; the reference searches the whole array |
+| `uniform_index(k0, k1, row_start, n_rows, size, per_row=1, slot=0)` | uses 1 | int64: `min(floor(u * size), size - 1)` for the uniform `u` of word `slot` (`size` is converted to a double first, as NumPy does for `u * size`): the draw of a uniform foreign key, pool pick or integer provider |
+| `pool_pick(pool, k0, k1, row_start, n_rows)` | 1 | `string`: `pool[uniform_index(..., size=len(pool))]`; `pool` is non-empty string or large_string |
+| `alias_pool(prob, alias, pool, k0, k1, row_start, n_rows, per_row=2, slot=0)` | uses 2 | `string`: `pool[alias_sample(...)]` in one call; `pool` has `len(prob)` entries |
+| `alias_values(prob, alias, values, k0, k1, row_start, n_rows, per_row=2, slot=0)` | uses 2 | float64: `values[alias_sample(...)]` in one call; `values` is float64 with `len(prob)` entries (NaN allowed, no nulls) |
+| `compose_strings(literals, pieces, row_start, n_rows)` | 1 per drawn piece | `string`: `literals[0] + piece + literals[1] + ...` in one pass (see below); a null in a column piece gives null |
 | `pool_take(pool, indices)` | | `string`: `pool[indices]`, nulls stay null; `pool` is string or large_string |
 | `template_strings(literals, slots, columns, n_rows)` | | `string`: `literals[0] + col + literals[1] + ...`; `slots` are `(column index, zero-pad width)`; a null in a used column gives null; columns are string, large_string or int64 |
 | `join_strings(columns, sep, skip_nulls=False)` | | `string`: the columns joined with `sep` |
@@ -59,6 +64,27 @@ Conversions (shared by both implementations):
 | `cap_per_parent(indices, pool, max_per_parent, k0, k1)` | up to 64 per moved row | int64 parent indices with at most `max_per_parent` rows each (see below) |
 
 Days are numbers of days since 1970-01-01 (a Thursday); weekdays count from Monday = 0.
+
+## Composed strings
+
+`compose_strings` builds the text of the pool, number and address providers (names, e-mail
+addresses, phone numbers, street addresses, URIs, postcodes) without a round trip through Python
+for each part. `pieces` is a list of tuples:
+
+* `("pool", pool, k0, k1)`: an entry of the string array `pool`, picked per row as
+  `uniform_index` does from the stream `(k0, k1)`;
+* `("int", k0, k1, low, high, width, remap_from, remap_to)`: `low + uniform_index(size = high - low)`
+  in decimal, zero-padded to `width`; a value equal to `remap_from` is written as `remap_to`
+  (both `None` for no remapping);
+* `("col", array, width, slug)`: a column of the caller (string, large_string, or int64 padded to
+  `width`); `slug` writes a string as ASCII lower case with its spaces removed and is an error
+  for text that is not ASCII (the caller does the Unicode case change itself and passes `slug`
+  false).
+
+Every piece draws from its own stream, so the values do not depend on the chunking, and the result
+equals the older composition (indices drawn with `philox_uniform` and NumPy, `pool_take`, then
+`template_strings`) bit for bit. `kernel_ops.compose_strings` takes the pieces as `PoolPiece`,
+`IntPiece` and `ColumnPiece` objects.
 
 ## Alias tables
 

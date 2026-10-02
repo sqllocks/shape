@@ -56,9 +56,9 @@ def _uniform(start: int, end: int, ctx: GenerationContext) -> npt.NDArray[np.int
     """Microsecond timestamps uniform on ``[start, end)``."""
     if end <= start:
         raise StrategyError(f"temporal range must end after it starts ({where(ctx)})")
-    u = stream(ctx, "v").uniform(ctx.row_start, ctx.n_rows)
-    offsets = np.minimum((u * (end - start)).astype(np.int64), end - start - 1)
-    return start + offsets
+    return start + kernel_ops.uniform_index(
+        stream(ctx, "v"), ctx.row_start, ctx.n_rows, end - start
+    )
 
 
 def _weights(profile: Mapping[str, Any], names: tuple[str, ...]) -> npt.NDArray[np.float64]:
