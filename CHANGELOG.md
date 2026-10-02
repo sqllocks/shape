@@ -5,6 +5,9 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Profile files and the profile registry (`docs/PROFILE_REGISTRY.md`): `shape profile export|import|list|validate` and
+  `shape profile registry list|save|delete|tag|diff|reindex|validate` (named, tagged `.shape` profiles under
+  `system/table/name`; `shape registry` keeps its meaning).
 - Fidelity tiers 1 to 3 (`docs/FIDELITY_TIERS.md`): `shape fidelity REFERENCE SYNTHETIC --tier 1|2|3`
   (tier 1: Gaussian-mixture fits, conditional profiles, adversarial AUC, temporal profiles and
   periodicity; tier 2: format preservation, string similarity, cardinality and anomaly-rate checks;
