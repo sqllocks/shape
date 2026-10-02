@@ -143,7 +143,7 @@ tests against it, and checks that `shape plugins list` shows it next to every bu
 
 Features that ship with Shape but are not part of core live under `plugins/<dist-name>/`, one
 distribution each (decision T-09): `shape-kafka`, `shape-eventhubs`, `shape-fabric`,
-`shape-sqlserver`, `shape-domains`, `shape-simulation` and `shape-mcp`. They publish as
+`shape-sqlserver`, `shape-domains` and `shape-simulation`. They publish as
 `sqllocks-shape-<name>`.
 
 ```
