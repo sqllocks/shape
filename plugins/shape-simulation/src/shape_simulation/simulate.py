@@ -8,8 +8,8 @@ generation engine when it runs.
     shape simulate financial --events transactions | head
 
 The patterns that layer anomalies on existing tables (``financial``, ``iot``, ``pulse``)
-generate those tables with the engine first, from ``--domain`` (default: the pattern's own
-domain) at ``--scale`` and ``--seed``.
+generate those tables with the engine first, from ``--domain`` (an installed domain or a
+generation schema file; default: the pattern's own domain) at ``--scale`` and ``--seed``.
 """
 
 from __future__ import annotations
@@ -144,9 +144,9 @@ class SimulateCommand:
         parser.add_argument("pattern", choices=sorted(PATTERNS), help="the simulator to run")
         parser.add_argument(
             "--domain",
-            metavar="NAME",
-            help="for financial, iot and pulse: the domain that supplies the base tables "
-            "(default: the pattern's own domain)",
+            metavar="DOMAIN|SCHEMA.json",
+            help="for financial, iot and pulse: the domain (or generation schema file) that "
+            "supplies the base tables (default: the pattern's own domain)",
         )
         parser.add_argument("--scale", metavar="PRESET", help="scale preset of the base tables")
         parser.add_argument("--seed", type=int, help="random seed (default: the configuration's)")
@@ -187,10 +187,15 @@ class SimulateCommand:
     def _base_tables(self, pattern: Pattern, args: Any, seed: int | None) -> Any:
         if pattern.domain is None:
             return None
+        from pathlib import Path
+
         from shape.api import generate
 
-        domain = args.domain or pattern.domain
-        return generate(domain, scale=args.scale, seed=seed).tables
+        target = args.domain or pattern.domain
+        if Path(target).is_file() or target.lower().endswith(".json"):
+            document = json.loads(Path(target).read_text(encoding="utf-8"))
+            return generate(document, scale=args.scale, seed=seed).tables
+        return generate(target, scale=args.scale, seed=seed).tables
 
     def _run(self, args: Any) -> int:
         pattern = PATTERNS[args.pattern]

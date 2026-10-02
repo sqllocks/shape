@@ -3,6 +3,8 @@ have the columns the simulators read (the shipped domains are used too, where in
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from typing import Any
 
 import pyarrow as pa
@@ -22,8 +24,8 @@ def col(strategy: str, type_: str = "integer", **gen: Any) -> dict[str, Any]:
     }
 
 
-def make(tables: dict[str, dict[str, Any]], rels: list[tuple[str, str, str]], rows: dict[str, int], seed: int = 3) -> dict[str, pa.Table]:
-    """Generate ``tables`` ({name: {column: spec}}) with the engine; ``rels`` are
+def schema_doc(tables: dict[str, dict[str, Any]], rels: list[tuple[str, str, str]], rows: dict[str, int], seed: int = 3) -> dict[str, Any]:
+    """A generation schema document for ``tables`` ({name: {column: spec}}); ``rels`` are
     (parent, child, column) foreign keys on the same column name."""
     doc_tables = {}
     for name, columns in tables.items():
@@ -31,7 +33,7 @@ def make(tables: dict[str, dict[str, Any]], rels: list[tuple[str, str, str]], ro
         for cname, cd in columns.items():
             cd["name"] = cname
         doc_tables[name] = {"name": name, "primary_key": [pk], "columns": columns}
-    doc = {
+    return {
         "schema_version": 1,
         "model": {"name": "sim", "seed": seed},
         "tables": doc_tables,
@@ -41,50 +43,48 @@ def make(tables: dict[str, dict[str, Any]], rels: list[tuple[str, str, str]], ro
         ],
         "generation": {"scale": "small", "scales": {"small": rows}},
     }
+
+
+def make(tables: dict[str, dict[str, Any]], rels: list[tuple[str, str, str]], rows: dict[str, int], seed: int = 3) -> dict[str, pa.Table]:
+    doc = schema_doc(tables, rels, rows, seed)
     return dict(Engine(GenSchema.from_dict(doc), scale="small", seed=seed).generate().tables)
 
 
 DAY = {"date_range": {"start": "2024-03-01", "end": "2024-03-03"}}
 
 
-@pytest.fixture(scope="session")
-def financial_tables() -> dict[str, pa.Table]:
-    return make(
-        {
-            "account": {"account_id": col("sequence", start=1000), "balance": col("distribution", "float", low=0.0, high=5000.0)},
-            "transaction": {
-                "transaction_id": col("sequence", start=1),
-                "account_id": col("foreign_key", ref="account.account_id"),
-                "amount": col("distribution", "float", low=1.0, high=900.0),
-                "transaction_time": col("temporal", "timestamp", **DAY),
+def spec(kind: str) -> tuple[dict[str, dict[str, Any]], list[tuple[str, str, str]], dict[str, int]]:
+    """The tables, relationships and row counts of a base data set; a fresh copy each time."""
+    if kind == "financial":
+        return (
+            {
+                "account": {"account_id": col("sequence", start=1000), "balance": col("distribution", "float", low=0.0, high=5000.0)},
+                "transaction": {
+                    "transaction_id": col("sequence", start=1),
+                    "account_id": col("foreign_key", ref="account.account_id"),
+                    "amount": col("distribution", "float", low=1.0, high=900.0),
+                    "transaction_time": col("temporal", "timestamp", **DAY),
+                },
             },
-        },
-        [("account", "transaction", "account_id")],
-        {"account": 40, "transaction": 1500},
-    )
-
-
-@pytest.fixture(scope="session")
-def iot_tables() -> dict[str, pa.Table]:
-    return make(
-        {
-            "device": {"device_id": col("sequence", start=1), "battery_level": col("distribution", "float", low=20.0, high=100.0)},
-            "sensor": {"sensor_id": col("sequence", start=1), "device_id": col("foreign_key", ref="device.device_id")},
-            "reading": {
-                "reading_id": col("sequence", start=1),
-                "sensor_id": col("foreign_key", ref="sensor.sensor_id"),
-                "reading_value": col("distribution", "float", low=10.0, high=30.0),
-                "reading_timestamp": col("temporal", "timestamp", **DAY),
+            [("account", "transaction", "account_id")],
+            {"account": 40, "transaction": 1500},
+        )
+    if kind == "iot":
+        return (
+            {
+                "device": {"device_id": col("sequence", start=1), "battery_level": col("distribution", "float", low=20.0, high=100.0)},
+                "sensor": {"sensor_id": col("sequence", start=1), "device_id": col("foreign_key", ref="device.device_id")},
+                "reading": {
+                    "reading_id": col("sequence", start=1),
+                    "sensor_id": col("foreign_key", ref="sensor.sensor_id"),
+                    "reading_value": col("distribution", "float", low=10.0, high=30.0),
+                    "reading_timestamp": col("temporal", "timestamp", **DAY),
+                },
             },
-        },
-        [("device", "sensor", "device_id"), ("sensor", "reading", "sensor_id")],
-        {"device": 12, "sensor": 24, "reading": 1200},
-    )
-
-
-@pytest.fixture(scope="session")
-def pulse_tables() -> dict[str, pa.Table]:
-    return make(
+            [("device", "sensor", "device_id"), ("sensor", "reading", "sensor_id")],
+            {"device": 12, "sensor": 24, "reading": 1200},
+        )
+    return (
         {
             "rider": {"rider_id": col("sequence", start=1)},
             "driver": {"driver_id": col("sequence", start=1)},
@@ -105,3 +105,29 @@ def pulse_tables() -> dict[str, pa.Table]:
         [("rider", "trip", "rider_id"), ("driver", "trip", "driver_id")],
         {"rider": 60, "driver": 20, "trip": 900},
     )
+
+
+@pytest.fixture(scope="session")
+def financial_tables() -> dict[str, pa.Table]:
+    return make(*spec("financial"))
+
+
+@pytest.fixture(scope="session")
+def iot_tables() -> dict[str, pa.Table]:
+    return make(*spec("iot"))
+
+
+@pytest.fixture(scope="session")
+def pulse_tables() -> dict[str, pa.Table]:
+    return make(*spec("pulse"))
+
+
+@pytest.fixture(scope="session")
+def schema_files(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Path]:
+    """Each base data set as a generation schema file (what ``--domain`` accepts)."""
+    out = {}
+    for kind in ("financial", "iot", "pulse"):
+        path = tmp_path_factory.mktemp("schemas") / f"{kind}.json"
+        path.write_text(json.dumps(schema_doc(*spec(kind))))
+        out[kind] = path
+    return out
