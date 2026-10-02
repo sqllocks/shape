@@ -5,6 +5,20 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
+  values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
+  records approximate functional dependencies, two-column keys, association measures for every
+  type pair (Pearson, Spearman, Kendall, Cramer's V, Theil's U, correlation ratio, mutual
+  information), conditional probability tables and the share of implausible rows, on a bounded
+  sample; `reference_pairs` / `--reference-pair` check that columns hold real combinations.
+  `shape diff` reports `dependency_broken`, `placeholder_surge`, `implausible_rate_change`,
+  `association_shift` and `reference_match_change`, naming the columns and the value. New optional
+  contract rules `fd`, `implies`, `reference_pair`, `max_implausible_rate` and `no_placeholder`.
+  Generation: hierarchical sampling (`hierarchy` and `hierarchy_field` strategies,
+  `HierarchicalSampler`), categorical joint tables from a profile (`conditional_table`), a Chow-Liu
+  joint model with per-row plausibility scores and a report of impossible combinations
+  (`fit_joint`), and a joint fidelity check (`joint_fidelity`).
+
 - `shape generate --scale-mode local_single|local_mp|fabric_spark` and `shape jobs list|status|cancel|resume`
   (`docs/SCALE.md`): the scale router with sinks (memory, Parquet part files, Lakehouse, Warehouse,
   SQL Database, KQL), a durable job store (submit, status, cancel, resume), the `fabric_spark` router
