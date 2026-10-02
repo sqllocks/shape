@@ -1,0 +1,185 @@
+{
+  "channel": "odbc",
+  "format": 1,
+  "result": {
+    "value": 7
+  },
+  "scenario": "warehouse_append",
+  "source": "in-repo fake service",
+  "steps": [
+    {
+      "request": {
+        "op": "execute",
+        "params": [
+          "dbo",
+          "customer"
+        ],
+        "sql": "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "fetchone"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [],
+        "sql": "CREATE TABLE [dbo].[customer] (\n    [id] BIGINT NULL,\n    [name] VARCHAR(8000) NULL,\n    [segment] VARCHAR(8000) NULL,\n    [balance] DECIMAL(12,2) NULL,\n    [score] FLOAT NULL,\n    [active] BIT NULL,\n    [born] DATE NULL,\n    [seen] DATETIME2(6) NULL,\n    [seen_tz] DATETIME2(6) NULL\n)"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "commit"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [],
+        "sql": "COPY INTO [dbo].[customer] FROM 'https://onelake.dfs.fabric.microsoft.com/Analytics/Sales.Lakehouse/Files/staging/run000000001/customer-81398e09/' WITH (FILE_TYPE = 'PARQUET')"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "rowcount"
+      },
+      "response": {
+        "value": -1
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [],
+        "sql": "SELECT COUNT(*) FROM [dbo].[customer]"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "fetchone"
+      },
+      "response": {
+        "value": [
+          2
+        ]
+      }
+    },
+    {
+      "request": {
+        "op": "commit"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [
+          "dbo",
+          "customer"
+        ],
+        "sql": "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "fetchone"
+      },
+      "response": {
+        "value": [
+          1
+        ]
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [],
+        "sql": "SELECT COUNT(*) FROM [dbo].[customer]"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "fetchone"
+      },
+      "response": {
+        "value": [
+          2
+        ]
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [],
+        "sql": "COPY INTO [dbo].[customer] FROM 'https://onelake.dfs.fabric.microsoft.com/Analytics/Sales.Lakehouse/Files/staging/run000000001/customer-81398e09/' WITH (FILE_TYPE = 'PARQUET')"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "rowcount"
+      },
+      "response": {
+        "value": -1
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [],
+        "sql": "SELECT COUNT(*) FROM [dbo].[customer]"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "fetchone"
+      },
+      "response": {
+        "value": [
+          9
+        ]
+      }
+    },
+    {
+      "request": {
+        "op": "commit"
+      },
+      "response": {
+        "value": null
+      }
+    }
+  ]
+}

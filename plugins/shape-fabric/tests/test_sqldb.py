@@ -113,7 +113,7 @@ def test_a_failed_append_rolls_back_only_its_own_rows(batches):
     w = writer(server)
     w.write_table("t", batches)
     bad = [pa.RecordBatch.from_arrays([pa.array([1])], names=["x"])]
-    with pytest.raises(WriteError):
+    with pytest.raises(ShapeError, match="a batch has columns"):
         w.write_table("t", [*batches, *bad], write_mode="append")
     assert len(server.rows("dbo", "t")) == 7  # the append's rows were rolled back
     assert ("dbo", "t") in server.tables  # and the existing table was not dropped
@@ -326,3 +326,12 @@ def test_sign_in_is_retried_and_errors_hide_the_password(monkeypatch):
     with pytest.raises(ShapeError) as info:
         _tsql.connect("Driver={x};Server=s;UID=u;PWD=hunter2hunter2")
     assert "hunter2" not in str(info.value)
+
+
+def test_a_batch_with_other_columns_is_refused_not_mapped_by_position():
+    server = FakeSqlServer()
+    a = pa.RecordBatch.from_arrays([pa.array([1]), pa.array(["x"])], names=["id", "s"])
+    reordered = pa.RecordBatch.from_arrays([pa.array(["y"]), pa.array([2])], names=["s", "id"])
+    with pytest.raises(ShapeError, match="a batch has columns"):
+        writer(server).write_table("t", [a, reordered])
+    assert ("dbo", "t") not in server.tables  # rolled back and dropped: nothing half written

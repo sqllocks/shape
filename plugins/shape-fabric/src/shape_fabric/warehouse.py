@@ -169,7 +169,7 @@ class WarehouseWriter:
             )
             if first is None:
                 return 0
-            staged = self._stage(folder, first, stream, chunk_rows)
+            staged = self._stage(table, folder, first, stream, chunk_rows)
             loaded = self._copy(sname, table, folder, mode, created, staged)
             if loaded != staged:
                 raise ShapeError(
@@ -190,6 +190,7 @@ class WarehouseWriter:
 
     def _stage(
         self,
+        table: str,
         folder: onelake.OneLakePath,
         first: pa.RecordBatch,
         rest: Iterator[pa.RecordBatch],
@@ -198,6 +199,7 @@ class WarehouseWriter:
         def normalized() -> Iterator[pa.RecordBatch]:
             yield _tsql.normalize_batch(first)
             for batch in rest:
+                _tsql.check_columns(first.schema, batch, table)
                 yield _tsql.normalize_batch(batch)
 
         schema = _tsql.normalize_schema(first.schema)

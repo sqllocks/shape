@@ -196,6 +196,16 @@ def normalize_schema(schema: pa.Schema) -> pa.Schema:
     return normalize_batch(empty).schema
 
 
+def check_columns(expected: pa.Schema, batch: pa.RecordBatch, table: str) -> None:
+    """Every batch of a table must have the first batch's columns, in the same order: the
+    ``INSERT`` names them once, so a reordered batch would put values into the wrong columns."""
+    if batch.schema.names != expected.names:
+        raise ShapeError(
+            f"table {table!r}: a batch has columns {batch.schema.names}, "
+            f"but the table has {expected.names}"
+        )
+
+
 def widest_first(batch: pa.RecordBatch) -> bool:
     """Whether row 0 holds the longest string (or bytes) of every text column. The ODBC driver
     sizes its parameter buffers from the first row, so when this is false the batch must not

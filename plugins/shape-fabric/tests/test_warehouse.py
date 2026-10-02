@@ -194,3 +194,12 @@ def test_no_warnings_on_a_clean_run(batches):
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         w.write_table("t", batches)
+
+
+def test_a_warehouse_batch_with_other_columns_is_refused():
+    w, server, fs = make()
+    a = pa.RecordBatch.from_arrays([pa.array([1]), pa.array(["x"])], names=["id", "s"])
+    reordered = pa.RecordBatch.from_arrays([pa.array(["y"]), pa.array([2])], names=["s", "id"])
+    with pytest.raises(ShapeError, match="a batch has columns"):
+        w.write_table("t", [a, reordered])
+    assert fs.files == {} and ("dbo", "t") not in server.tables

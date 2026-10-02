@@ -324,6 +324,7 @@ class SqlDatabaseWriter:
             yield from rest
 
         for raw in batches():
+            _tsql.check_columns(first.schema, raw, table)
             batch = _tsql.normalize_batch(raw)
             for start in range(0, batch.num_rows, batch_size):
                 piece = batch.slice(start, batch_size)
