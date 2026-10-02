@@ -1,0 +1,341 @@
+{
+ "meta": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+  "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-10-02 05:41:28",
+  "impl": "shape",
+  "domain": "capital_markets",
+  "runs": 3,
+  "warmup": 1,
+  "ref_seed": 42,
+  "impl_seed": 1042,
+  "loadavg_start": 0.7158203125
+ },
+ "scales": {
+  "large": {
+   "summary": {
+    "spindle": {
+     "total_s": 2.0849572830002217,
+     "gen_s": 1.4932406140001149,
+     "write_s": 0.5917166690001068,
+     "cpu_s": 2.0797920000000003,
+     "user_s": 1.204329,
+     "sys_s": 0.8924190000000001,
+     "minor_faults": 28400,
+     "import_s": 1.3804795309997644,
+     "peak_rss_mb": 431.70703125,
+     "parquet_bytes": 34065444,
+     "rows": 1260625,
+     "rows_per_s_total": 604628.694447869,
+     "rows_per_s_generate": 844220.943484131,
+     "runs_total_s": [
+      1.928,
+      2.198,
+      2.085
+     ],
+     "loadavg_before": [
+      0.81884765625,
+      0.83349609375,
+      0.83349609375
+     ],
+     "per_table_s_median": {
+      "company": 0.01261316899990561,
+      "exchange": 0.0016878540000107023,
+      "sector": 0.001146353999956773,
+      "daily_price": 0.18179337800029316,
+      "dividend": 0.004768811999838363,
+      "earnings": 0.003170538000176748,
+      "insider_transaction": 0.00858914199989158,
+      "industry": 0.0008162439999068738,
+      "split": 0.0011933860000681307,
+      "trade": 1.1456215900002462,
+      "_compute_phase+business_rules": 0.0846223700000337,
+      "_construct_domain+Spindle()": 0.009046834999935527
+     },
+     "row_counts": {
+      "company": 1000,
+      "exchange": 3,
+      "sector": 11,
+      "daily_price": 252000,
+      "dividend": 1500,
+      "earnings": 4000,
+      "insider_transaction": 2000,
+      "industry": 61,
+      "split": 50,
+      "trade": 1000000
+     }
+    },
+    "shape": {
+     "total_s": 0.29959420900013356,
+     "gen_s": 0.29959420900013356,
+     "write_s": 0.0,
+     "cpu_s": 0.673797,
+     "user_s": 0.5324190000000001,
+     "sys_s": 0.141378,
+     "minor_faults": 30245,
+     "import_s": 0.40086371400002463,
+     "peak_rss_mb": 290.08203125,
+     "parquet_bytes": 37657216,
+     "rows": 1260625,
+     "rows_per_s_total": 4207774.923978714,
+     "rows_per_s_generate": 4207774.923978714,
+     "runs_total_s": [
+      0.357,
+      0.27,
+      0.3
+     ],
+     "loadavg_before": [
+      0.81884765625,
+      0.83349609375,
+      0.84716796875
+     ],
+     "per_table_s_median": {
+      "_construct_domain+Engine": 0.007218647000172496,
+      "_generate+write": 0.2921421440000813
+     },
+     "row_counts": {
+      "company": 1000,
+      "exchange": 3,
+      "sector": 11,
+      "daily_price": 252000,
+      "dividend": 1500,
+      "earnings": 4000,
+      "insider_transaction": 2000,
+      "industry": 61,
+      "split": 50,
+      "trade": 1000000
+     },
+     "numpy": "2.4.6",
+     "pyarrow": "25.0.1"
+    }
+   },
+   "raw": {
+    "spindle": [
+     {
+      "import_s": 1.3804795309997644,
+      "gen_s": 1.2221998579998399,
+      "write_s": 0.7059935550000773,
+      "total_s": 1.9281934129999172,
+      "rows": {
+       "company": 1000,
+       "exchange": 3,
+       "sector": 11,
+       "daily_price": 252000,
+       "dividend": 1500,
+       "earnings": 4000,
+       "insider_transaction": 2000,
+       "industry": 61,
+       "split": 50,
+       "trade": 1000000
+      },
+      "per_table_s": {
+       "company": 0.01261316899990561,
+       "exchange": 0.001670743999966362,
+       "sector": 0.001146353999956773,
+       "daily_price": 0.10670928599984109,
+       "dividend": 0.004805951999969693,
+       "earnings": 0.003170538000176748,
+       "insider_transaction": 0.00858914199989158,
+       "industry": 0.0008162439999068738,
+       "split": 0.0011933860000681307,
+       "trade": 0.9881066670000109,
+       "_compute_phase+business_rules": 0.08141620500009594,
+       "_construct_domain+Spindle()": 0.011962171000050148
+      },
+      "user_s": 1.225031,
+      "sys_s": 0.699592,
+      "minor_faults": 27435,
+      "major_faults": 0,
+      "cpu_s": 1.9246230000000002,
+      "peak_rss_mb": 428.25,
+      "parquet_bytes": 34065444,
+      "loadavg_before": 0.81884765625
+     },
+     {
+      "import_s": 1.44609192300004,
+      "gen_s": 1.659506040999986,
+      "write_s": 0.5384970319996683,
+      "total_s": 2.1980030729996543,
+      "rows": {
+       "company": 1000,
+       "exchange": 3,
+       "sector": 11,
+       "daily_price": 252000,
+       "dividend": 1500,
+       "earnings": 4000,
+       "insider_transaction": 2000,
+       "industry": 61,
+       "split": 50,
+       "trade": 1000000
+      },
+      "per_table_s": {
+       "company": 0.009824940999806131,
+       "exchange": 0.0016878540000107023,
+       "sector": 0.0010969449999720382,
+       "daily_price": 0.18179337800029316,
+       "dividend": 0.004768811999838363,
+       "earnings": 0.004165698000178963,
+       "insider_transaction": 0.011390294999728212,
+       "industry": 0.000995844000044599,
+       "split": 0.0013210249999247026,
+       "trade": 1.34879204400022,
+       "_compute_phase+business_rules": 0.0846223700000337,
+       "_construct_domain+Spindle()": 0.009046834999935527
+      },
+      "user_s": 1.204329,
+      "sys_s": 0.987008,
+      "minor_faults": 28400,
+      "major_faults": 0,
+      "cpu_s": 2.1913369999999994,
+      "peak_rss_mb": 432.32421875,
+      "parquet_bytes": 34065444,
+      "loadavg_before": 0.83349609375
+     },
+     {
+      "import_s": 1.370440004000102,
+      "gen_s": 1.4932406140001149,
+      "write_s": 0.5917166690001068,
+      "total_s": 2.0849572830002217,
+      "rows": {
+       "company": 1000,
+       "exchange": 3,
+       "sector": 11,
+       "daily_price": 252000,
+       "dividend": 1500,
+       "earnings": 4000,
+       "insider_transaction": 2000,
+       "industry": 61,
+       "split": 50,
+       "trade": 1000000
+      },
+      "per_table_s": {
+       "company": 0.032241097999758495,
+       "exchange": 0.001747482000155287,
+       "sector": 0.0011616669999057194,
+       "daily_price": 0.19800213000007716,
+       "dividend": 0.004730191999897215,
+       "earnings": 0.003125354000076186,
+       "insider_transaction": 0.008094663000065339,
+       "industry": 0.0007668389998798375,
+       "split": 0.0010845580000022892,
+       "trade": 1.1456215900002462,
+       "_compute_phase+business_rules": 0.08763911899995946,
+       "_construct_domain+Spindle()": 0.009025922000091668
+      },
+      "user_s": 1.187373,
+      "sys_s": 0.8924190000000001,
+      "minor_faults": 28891,
+      "major_faults": 0,
+      "cpu_s": 2.0797920000000003,
+      "peak_rss_mb": 431.70703125,
+      "parquet_bytes": 34065444,
+      "loadavg_before": 0.83349609375
+     }
+    ],
+    "shape": [
+     {
+      "import_s": 0.4327072699998098,
+      "gen_s": 0.35688608500004193,
+      "write_s": 0.0,
+      "total_s": 0.35688608500004193,
+      "overlapped": true,
+      "rows": {
+       "company": 1000,
+       "exchange": 3,
+       "sector": 11,
+       "daily_price": 252000,
+       "dividend": 1500,
+       "earnings": 4000,
+       "insider_transaction": 2000,
+       "industry": 61,
+       "split": 50,
+       "trade": 1000000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.007167246999870258,
+       "_generate+write": 0.3497188380001717
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.538775,
+      "sys_s": 0.23344899999999996,
+      "minor_faults": 29549,
+      "major_faults": 0,
+      "cpu_s": 0.772224,
+      "peak_rss_mb": 290.08203125,
+      "parquet_bytes": 37657216,
+      "loadavg_before": 0.81884765625
+     },
+     {
+      "import_s": 0.3886333759996887,
+      "gen_s": 0.27003668599991215,
+      "write_s": 0.0,
+      "total_s": 0.27003668599991215,
+      "overlapped": true,
+      "rows": {
+       "company": 1000,
+       "exchange": 3,
+       "sector": 11,
+       "daily_price": 252000,
+       "dividend": 1500,
+       "earnings": 4000,
+       "insider_transaction": 2000,
+       "industry": 61,
+       "split": 50,
+       "trade": 1000000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.007218647000172496,
+       "_generate+write": 0.26281803899973966
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.500628,
+      "sys_s": 0.114461,
+      "minor_faults": 30729,
+      "major_faults": 0,
+      "cpu_s": 0.6150889999999999,
+      "peak_rss_mb": 272.18359375,
+      "parquet_bytes": 37657216,
+      "loadavg_before": 0.83349609375
+     },
+     {
+      "import_s": 0.40086371400002463,
+      "gen_s": 0.29959420900013356,
+      "write_s": 0.0,
+      "total_s": 0.29959420900013356,
+      "overlapped": true,
+      "rows": {
+       "company": 1000,
+       "exchange": 3,
+       "sector": 11,
+       "daily_price": 252000,
+       "dividend": 1500,
+       "earnings": 4000,
+       "insider_transaction": 2000,
+       "industry": 61,
+       "split": 50,
+       "trade": 1000000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.007452065000052244,
+       "_generate+write": 0.2921421440000813
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.5324190000000001,
+      "sys_s": 0.141378,
+      "minor_faults": 30245,
+      "major_faults": 0,
+      "cpu_s": 0.673797,
+      "peak_rss_mb": 299.23046875,
+      "parquet_bytes": 37657216,
+      "loadavg_before": 0.84716796875
+     }
+    ]
+   }
+  }
+ }
+}
