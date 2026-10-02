@@ -91,3 +91,12 @@ from .verify import (
 from .verify import (
     load_tables as load_tables,
 )
+from .verifyconfig import (
+    VerifyConfig as VerifyConfig,
+)
+from .verifyconfig import (
+    VerifyConfigError as VerifyConfigError,
+)
+from .verifyconfig import (
+    load_verify_config as load_verify_config,
+)

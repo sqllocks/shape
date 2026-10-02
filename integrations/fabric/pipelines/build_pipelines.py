@@ -52,7 +52,22 @@ def _expr(text: str) -> dict:
     return {"value": text, "type": "Expression"}
 
 
-def _notebook_gate(notebook: str, description: str) -> dict:
+# Inline ``%pip`` is disabled by default in pipeline runs; a Boolean notebook-activity parameter
+# turns it on (Microsoft Learn, "Manage Apache Spark libraries"). A Python notebook cannot attach
+# an Environment, so the notebooks that install Shape with ``%pip`` get it. VERIFY IN THE WORKSPACE.
+INLINE_INSTALL = "_inlineInstallationEnabled"
+
+
+def _notebook_parameters(args: dict, *, inline_install: bool) -> dict:
+    """The notebook activity's parameters; ``inline_install`` adds the flag that lets ``%pip``
+    run in the pipeline (only for a notebook that has a ``%pip`` cell)."""
+    out = dict(args)
+    if inline_install:
+        out[INLINE_INSTALL] = {"value": True, "type": "bool"}
+    return out
+
+
+def _notebook_gate(notebook: str, description: str, *, inline_install: bool = False) -> dict:
     return {
         "properties": {
             "description": description,
@@ -72,10 +87,16 @@ def _notebook_gate(notebook: str, description: str) -> dict:
                     "typeProperties": {
                         "notebookId": f"<<NOTEBOOK_ID:{notebook}>>",
                         "workspaceId": "<<WORKSPACE_ID>>",
-                        "parameters": {
-                            name: {"value": _expr(f"@pipeline().parameters.{name}"), "type": kind}
-                            for name, kind in NOTEBOOK_PARAMETERS.items()
-                        },
+                        "parameters": _notebook_parameters(
+                            {
+                                name: {
+                                    "value": _expr(f"@pipeline().parameters.{name}"),
+                                    "type": kind,
+                                }
+                                for name, kind in NOTEBOOK_PARAMETERS.items()
+                            },
+                            inline_install=inline_install,
+                        ),
                     },
                 },
                 {
@@ -230,7 +251,7 @@ def _generate_gate() -> dict:
                     "typeProperties": {
                         "notebookId": "<<NOTEBOOK_ID:shape_generate>>",
                         "workspaceId": "<<WORKSPACE_ID>>",
-                        "parameters": generate_args,
+                        "parameters": _notebook_parameters(generate_args, inline_install=True),
                     },
                 },
                 {
@@ -243,7 +264,7 @@ def _generate_gate() -> dict:
                     "typeProperties": {
                         "notebookId": "<<NOTEBOOK_ID:shape_profile_domain>>",
                         "workspaceId": "<<WORKSPACE_ID>>",
-                        "parameters": profile_args,
+                        "parameters": _notebook_parameters(profile_args, inline_install=True),
                     },
                 },
                 {
@@ -280,7 +301,9 @@ def _generate_gate() -> dict:
 def build() -> dict[str, dict]:
     return {
         "shape_gate_notebook": _notebook_gate(
-            "shape_profile", "Shape quality gate using the Python notebook."
+            "shape_profile",
+            "Shape quality gate using the Python notebook.",
+            inline_install=True,
         ),
         "shape_gate_spark": _notebook_gate(
             "shape_profile_spark", "Shape quality gate using the PySpark notebook (Environment)."

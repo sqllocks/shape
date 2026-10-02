@@ -412,17 +412,35 @@ def _cmd_verify(a):
 def _cmd_verify_gates(a):
     """Load tables, run the gates, print the gate table; 0 pass, 1 a gate failed (or a warning
     under --strict), 2 input error."""
-    from shape.quality import VerifyReport, VerifyRunner, load_gate_schema, load_tables
+    from shape.quality import (
+        VerifyReport,
+        VerifyRunner,
+        load_gate_schema,
+        load_tables,
+        load_verify_config,
+    )
+    from shape.quality.verify import data_files
 
     tables = load_tables(a.shape, a.format)
     if not tables:
         raise ValueError(f"no {a.format} data files found in {a.shape}")
     schema = load_gate_schema(a.schema) if a.schema else None
-    result = VerifyRunner(schema, a.statistical, a.shape, a.schema).run(tables)
+    config = load_verify_config(a.config) if a.config else None
+    result = VerifyRunner(
+        schema,
+        a.statistical,
+        a.shape,
+        a.schema,
+        config,
+        a.config,
+        data_files(a.shape, a.format),
+    ).run(tables)
     print(f"Shape {_version()} - Verify\n")
     print(f"Data path:   {a.shape}")
     if a.schema:
         print(f"Schema:      {a.schema}")
+    if a.config:
+        print(f"Config:      {a.config}")
     print(f"Statistical: {'yes' if a.statistical else 'no'}\n")
     if result.gate_results:
         print(f"{'Gate':<28} {'Status':<8} {'Errors':>6} {'Warnings':>8}")
@@ -764,6 +782,12 @@ def _build_parser(plugin_commands=()):
     vf.add_argument("--key", metavar="PUBLIC.pub", help="public key for a .shape artifact")
     vf.add_argument("--format", choices=("auto", "csv", "parquet", "jsonl"), default="auto")
     vf.add_argument("--schema", metavar="GATES.json", help="gate schema (or Shape model v2)")
+    vf.add_argument(
+        "--config",
+        metavar="CONFIG.json",
+        help="verify configuration (format shape-verify-config): ranges, date_range, no_future, "
+        "ordering, baseline, file_paths; runs the range, temporal, drift and file gates",
+    )
     vf.add_argument("--statistical", action="store_true", help="add KS and chi-squared tests")
     vf.add_argument("-o", "--output", metavar="REPORT", help="write a .json or .md report")
     vf.add_argument("--strict", action="store_true", help="exit 1 on warnings too")
