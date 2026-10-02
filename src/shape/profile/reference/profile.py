@@ -14,6 +14,7 @@ import numpy as np
 
 from shape.artifact import codec
 from shape.artifact.io import ArtifactError, read_artifact, write_artifact
+from shape.io.excel import is_workbook_spec
 from shape.security.hardening import validate_structure
 
 from .model import ColumnProfile, DatasetProfile, TableProfile
@@ -174,12 +175,15 @@ def _column_summary(col: dict[str, Any]) -> dict[str, Any]:
 
 
 def _table_summary(table: dict[str, Any]) -> dict[str, Any]:
-    return {
+    out = {
         "name": table["name"],
         "row_count": table["row_count"],
         "primary_key": list(table["primary_key"]),
         "columns": {c: _column_summary(col) for c, col in table["columns"].items()},
     }
+    if table.get("findings"):
+        out["findings"] = copy.deepcopy(table["findings"])
+    return out
 
 
 class Profile:
@@ -213,12 +217,15 @@ class Profile:
             out = _table_summary(self._data)
             out["name"] = self.name if self.name else out["name"]
             return out
-        return {
+        out = {
             "name": self.name,
             "row_count": sum(t["row_count"] for t in self._data["tables"].values()),
             "tables": {n: _table_summary(t) for n, t in self._data["tables"].items()},
             "relationships": copy.deepcopy(self._data["relationships"]),
         }
+        if self._data.get("findings"):
+            out["findings"] = copy.deepcopy(self._data["findings"])
+        return out
 
     def to_html(self) -> str:
         """A self-contained HTML report (no external assets)."""
@@ -240,12 +247,29 @@ class Profile:
     __hash__ = None  # type: ignore[assignment]
 
 
-def profile(source: Any, *, name: str | None = None) -> Profile:
+def profile(
+    source: Any,
+    *,
+    name: str | None = None,
+    sheet: str | None = None,
+    include_hidden: bool = False,
+) -> Profile:
     """Profile a path, glob, directory, Delta table, Arrow table or DataFrame.
 
     Pass a ``dict`` of such sources to profile several tables and detect foreign keys.
+
+    An ``.xlsx`` workbook is a dataset with one table per visible sheet (``"book.xlsx#Sheet"``
+    or ``sheet=`` profiles that sheet alone, hidden or not; ``include_hidden=True`` reads the
+    hidden sheets too), and the profile carries ``findings`` about its cells.
     """
     with np.errstate(all="ignore"):  # inf / NaN inputs are data, not numpy warnings
+        if is_workbook_spec(source):
+            from .workbook import profile_workbook
+
+            data, title = profile_workbook(source, name, sheet, include_hidden)
+            return Profile(data, name=title)
+        if sheet is not None or include_hidden:
+            raise SourceError("sheet and include_hidden apply to .xlsx workbooks only")
         return _profile(source, name)
 
 

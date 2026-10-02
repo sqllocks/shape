@@ -159,6 +159,16 @@ def _profile_source(a):
     return a.src
 
 
+def _workbook_options(a):
+    """``--sheet`` and ``--include-hidden``: the options of an ``.xlsx`` source."""
+    opts = {}
+    if a.sheet:
+        opts["sheet"] = a.sheet
+    if a.include_hidden:
+        opts["include_hidden"] = True
+    return opts
+
+
 def _profile_name(a):
     """``--name``, else the name of the profile ``-o`` is about to overwrite (so a versioned
     ``.shape`` keeps its name when the input file changes), else None: the input's own name."""
@@ -176,7 +186,7 @@ def _cmd_profile(a):
 
     if not a.output:
         raise ValueError("profile needs -o OUT.shape")
-    prof = shape.profile(_profile_source(a), name=_profile_name(a))
+    prof = shape.profile(_profile_source(a), name=_profile_name(a), **_workbook_options(a))
     content_id = shape.save(prof, a.output)
     key_id = _sign_output(a, a.output)
     if a.html:
@@ -517,7 +527,7 @@ def _build_parser(plugin_commands=()):
     c.add_argument("--sign", metavar="KEY", help="sign the written .shape with this private key")
     pr = sub.add_parser(
         "profile",
-        help="profile a file, glob, directory or Delta table",
+        help="profile a file, glob, directory, Excel workbook or Delta table",
         epilog="also: `shape profile safe PROFILE.shape -o SAFE.json` writes the share-safe "
         "form; `shape profile validate --safe ARTIFACT` scans it for leaks; "
         "`shape profile export|import|list|validate` and `shape profile registry "
@@ -537,6 +547,17 @@ def _build_parser(plugin_commands=()):
         metavar="NAME",
         help="the profile's name (default: the input's file name, or, when -o overwrites a "
         "profile, that profile's name, so re-profiling a versioned file keeps a stable name)",
+    )
+    pr.add_argument(
+        "--sheet",
+        metavar="SHEET",
+        help="SRC is an .xlsx workbook: profile this sheet alone (also SRC#SHEET); without it "
+        "every visible sheet is a table",
+    )
+    pr.add_argument(
+        "--include-hidden",
+        action="store_true",
+        help="SRC is an .xlsx workbook: read its hidden sheets too (they are always reported)",
     )
     pr.add_argument("--html", metavar="REPORT.html")
     pr.add_argument("--json", metavar="SUMMARY.json")

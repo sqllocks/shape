@@ -1,5 +1,6 @@
 """Input: turn any supported source into a stream of Arrow record batches."""
 
+from .excel import WorkbookError as WorkbookError
 from .readers import (
     PANDAS_CSV as PANDAS_CSV,
 )
@@ -25,6 +26,9 @@ from .readers import (
     open_source as open_source,
 )
 from .readers import (
+    open_workbook as open_workbook,
+)
+from .readers import (
     read_batches as read_batches,
 )
 from .readers import (
@@ -35,11 +39,13 @@ __all__ = [
     "PANDAS_CSV",
     "CsvOptions",
     "ReaderError",
+    "WorkbookError",
     "Source",
     "expand_paths",
     "file_kind",
     "iter_rows",
     "open_source",
+    "open_workbook",
     "read_batches",
     "read_table",
 ]

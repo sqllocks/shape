@@ -243,6 +243,36 @@ PROVIDERS: dict[str, Callable[[GenerationContext], pa.Array]] = {
 }
 
 
+MAX_DIGITS = 18  # the widest zero-padded identifier (it must fit an int64)
+
+
+def _digit_width(spec: Mapping[str, Any]) -> int:
+    return max(1, min(int(spec.get("width", 8)), MAX_DIGITS))
+
+
+def _digits(spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
+    """Fixed-width digit text with leading zeros (ZIP codes, NDCs, member ids): ``spec['width']``
+    digits, drawn at random."""
+    width = _digit_width(spec)
+    numbers = _ints(ctx, "digits", 0, 10**width)
+    return kernel_ops.template_strings(["", ""], [(0, width)], [arrow_array(numbers)], ctx.n_rows)
+
+
+def _digit_ids(spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
+    """Fixed-width digit text counting up from 1 in row order, zero padded: unique identifiers."""
+    width = _digit_width(spec)
+    numbers = ctx.row_start + np.arange(1, ctx.n_rows + 1, dtype=np.int64)
+    if width < MAX_DIGITS:
+        numbers = numbers % 10**width
+    return kernel_ops.template_strings(["", ""], [(0, width)], [arrow_array(numbers)], ctx.n_rows)
+
+
+SPEC_PROVIDERS: dict[str, Callable[[Mapping[str, Any], GenerationContext], pa.Array]] = {
+    "digits": _digits,
+    "digit_ids": _digit_ids,
+}
+
+
 def _truncate(values: pa.Array, ctx: GenerationContext) -> pa.Array:
     """Cut text at the column's ``max_length`` characters (as a database column would)."""
     limit = getattr(getattr(ctx, "column_def", None), "max_length", None)
@@ -260,13 +290,16 @@ class Native:
     ``name``, ``email``, ``phone_number``, ``ssn``, ``company``, ``street_address``, ``sentence``,
     ``city``, ``state_abbr``, ``uri``, ``company_email``, ``ipv4``, ``postcode``, ``zip_plus4``,
     ``pystr`` or
-    ``word`` (the default).
+    ``word`` (the default), or ``digits`` / ``digit_ids`` (``spec['width']`` zero-padded digits,
+    random or counting up).
     The column's ``max_length`` truncates."""
 
     name = "native"
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         provider = _provider(spec)
+        if provider in SPEC_PROVIDERS:
+            return SPEC_PROVIDERS[provider](spec, ctx)
         make = PROVIDERS.get(provider)
         if make is None:
             raise StrategyError(
@@ -312,6 +345,8 @@ class Faker:
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         provider = _provider(spec)
+        if provider in SPEC_PROVIDERS:
+            return SPEC_PROVIDERS[provider](spec, ctx)
         make = PROVIDERS.get(provider)
         if make is not None:
             return _truncate(make(ctx), ctx)

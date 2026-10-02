@@ -609,7 +609,7 @@ def _profile_column(
         stype = "string"
     else:  # str
         stype = "string"
-        if n_nn:
+        if n_nn and not c.text:
             # the six words have at most 62 spellings in all: more distinct values cannot match
             if (
                 cardinality <= _MAX_BOOL_SPELLINGS
