@@ -1,0 +1,4 @@
+[medium] spindle          warm-up 1: total 2.64s
+[medium] shape            warm-up 1: total 0.65s
+[medium] spindle          run 1: total 2.60s  gen 1.89s  write 0.71s  rss 489MB  load 1.18
+[medium] shape            run 1: total 0.63s  gen 0.63s  write 0.00s  rss 266MB  load 1.18
