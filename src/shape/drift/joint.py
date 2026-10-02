@@ -133,10 +133,16 @@ def _dependencies(
             msg += f" ({c['violating_groups']} violating groups"
             if violations:
                 v0 = violations[0]
-                msg += f"; worst: {det}={v0['determinant_value']!r} maps to {v0['distinct_dependents']} {dep} values"
+                msg += (
+                    f"; worst: {det}={v0['determinant_value']!r} maps to "
+                    f"{v0['distinct_dependents']} {dep} values"
+                )
             msg += ")"
         if causes:
-            msg += f"; placeholder {causes[0]['value']!r} in {det} ({causes[0]['share_of_rows']:.1%} of rows)"
+            msg += (
+                f"; placeholder {causes[0]['value']!r} in {det} "
+                f"({causes[0]['share_of_rows']:.1%} of rows)"
+            )
         if basis == "key":
             msg += f" ({det} was unique, so the dependency held trivially)"
         out.append(

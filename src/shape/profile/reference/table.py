@@ -524,9 +524,7 @@ def profile_dataset_columns(
     profiles = {}
     for n, w in works.items():
         fks = _detect_fks(n, w, works, pks)
-        profiles[n] = _finish_table(
-            n, w, pks[n], fks, cols_by_t[n][1], corr[n][1](), joint[n][1]()
-        )
+        profiles[n] = _finish_table(n, w, pks[n], fks, cols_by_t[n][1], corr[n][1](), joint[n][1]())
     rels = []
     for n, tp in profiles.items():
         for col, parent in tp.detected_fks.items():

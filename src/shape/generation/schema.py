@@ -49,6 +49,7 @@ STRATEGY_REQUIRED_KEYS: dict[str, frozenset[str]] = {
     "first_per_parent": frozenset({"parent_column"}),
     "record_sample": frozenset({"dataset", "field"}),
     "record_field": frozenset({"dataset", "field"}),
+    "conditional_table": frozenset({"source_column", "table", "values"}),
     "hierarchy": frozenset({"dataset", "field", "levels"}),
     "hierarchy_field": frozenset({"dataset", "field"}),
     "scd2": frozenset({"role", "business_key"}),

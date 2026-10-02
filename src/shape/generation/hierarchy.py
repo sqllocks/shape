@@ -63,7 +63,7 @@ class HierarchyTree:
         labels: list[list[Any]] = []  # per level: the label of each node
         parent: list[Ints] = []  # per level: the parent node of each node
         prev = np.zeros(self.n_records, dtype=np.int64)
-        for depth, name in enumerate(levels):
+        for name in levels:
             codes, names = _codes(columns[name])
             key = prev * (len(names) + 1) + codes
             uniq, inverse = np.unique(key, return_inverse=True)
@@ -71,11 +71,12 @@ class HierarchyTree:
             labels.append([names[int(u % (len(names) + 1))] for u in uniq])
             parent.append((uniq // (len(names) + 1)).astype(np.int64))
             prev = node_of[-1]
-            del depth
         self.labels = labels
         self.parent = parent
         self.node_of = node_of
-        self.record_count = [np.bincount(n, minlength=len(lab)) for n, lab in zip(node_of, labels)]
+        self.record_count = [
+            np.bincount(n, minlength=len(lab)) for n, lab in zip(node_of, labels, strict=True)
+        ]
         # nodes are sorted by (parent, value): the children of a node are one contiguous range
         self.child_start: list[Ints] = [np.zeros(1, dtype=np.int64)]
         self.child_count: list[Ints] = [np.array([len(labels[0])], dtype=np.int64)]
@@ -92,7 +93,9 @@ class HierarchyTree:
     def top_index(self) -> dict[Any, int]:
         return {lab: i for i, lab in enumerate(self.labels[0])}
 
-    def _weights(self, depth: int, weighting: str, top_weights: Mapping[Any, float] | None) -> Floats:
+    def _weights(
+        self, depth: int, weighting: str, top_weights: Mapping[Any, float] | None
+    ) -> Floats:
         if depth == 0 and top_weights is not None:
             index = self.top_index()
             w = np.zeros(len(self.labels[0]))
@@ -175,9 +178,7 @@ class HierarchicalSampler:
         return self.tree.levels
 
     def streams(self, seed: int, table: str, key: str) -> list[RowStream]:
-        return [
-            RowStream(seed, table, key, f"hierarchy/{i}") for i in range(len(self.levels) + 1)
-        ]
+        return [RowStream(seed, table, key, f"hierarchy/{i}") for i in range(len(self.levels) + 1)]
 
     def records(
         self, n: int, seed: int = 0, *, start: int = 0, table: str = "", key: str = ""
@@ -212,9 +213,6 @@ def hierarchy_violations(
 ) -> int:
     """The number of ``rows`` whose values at ``levels`` are not one record of ``reference``
     (a ZIP outside its city, a city outside its state)."""
-    ref = {
-        tuple(vals)
-        for vals in zip(*(reference[lv].to_pylist() for lv in levels), strict=True)
-    }
+    ref = {tuple(vals) for vals in zip(*(reference[lv].to_pylist() for lv in levels), strict=True)}
     got = zip(*(rows[lv].to_pylist() for lv in levels), strict=True)
     return sum(tuple(v) not in ref for v in got)

@@ -54,7 +54,9 @@ def test_a_stable_dependency_is_not_drift(profiles) -> None:
 def test_policy_ignore_and_thresholds_apply(profiles) -> None:
     result = shape.diff(*profiles, ignore_columns=["zip"])
     assert not any(c["kind"] in ("dependency_broken", "placeholder_surge") for c in result.changes)
-    result = shape.diff(*profiles, thresholds={"placeholder_share": 0.5, "dependency_confidence": 0.5})
+    result = shape.diff(
+        *profiles, thresholds={"placeholder_share": 0.5, "dependency_confidence": 0.5}
+    )
     assert not any(c["kind"] in ("dependency_broken", "placeholder_surge") for c in result.changes)
     only = shape.diff(*profiles, only_columns=["city"])
     assert any(c["kind"] == "dependency_broken" for c in only.changes)  # a column of the pair
@@ -136,11 +138,25 @@ def test_implies_reads_the_conditional_tables() -> None:
         }
     )
     p = shape.profile(t)
-    ok = {"implies": [{"if": {"column": "dept", "equals": "cardio"},
-                        "then": {"column": "ward", "equals": "A"}, "min_confidence": 0.99}]}
+    ok = {
+        "implies": [
+            {
+                "if": {"column": "dept", "equals": "cardio"},
+                "then": {"column": "ward", "equals": "A"},
+                "min_confidence": 0.99,
+            }
+        ]
+    }
     assert shape.check(p, ok).passed
-    wrong = {"implies": [{"if": {"column": "dept", "equals": "cardio"},
-                           "then": {"column": "ward", "equals": "B"}, "min_confidence": 0.5}]}
+    wrong = {
+        "implies": [
+            {
+                "if": {"column": "dept", "equals": "cardio"},
+                "then": {"column": "ward", "equals": "B"},
+                "min_confidence": 0.5,
+            }
+        ]
+    }
     v = shape.check(p, wrong).violations
     assert v[0]["rule"] == "implies" and v[0]["observed"]["confidence"] == 0.0
 
@@ -162,7 +178,11 @@ def test_a_rule_the_profile_cannot_test_is_a_violation_not_a_pass(profiles) -> N
         {"fd": [{"determinant": "a", "dependent": "b", "min_confidence": 1.5}]},
         {"fd": [{"determinant": 3, "dependent": "b", "min_confidence": 0.9}]},
         {"fd": [{"determinant": "a", "dependent": "b", "min_confidence": 0.9, "x": 1}]},
-        {"implies": [{"if": {"column": "a"}, "then": {"column": "b", "equals": 1}, "min_confidence": 1}]},
+        {
+            "implies": [
+                {"if": {"column": "a"}, "then": {"column": "b", "equals": 1}, "min_confidence": 1}
+            ]
+        },
         {"max_implausible_rate": 2},
         {"columns": {"a": {"no_placeholder": "yes"}}},
         {"columns": {"a": {"no_placeholder": {"max_share": 3}}}},

@@ -8,8 +8,10 @@ and is dropped pairwise) or as float arrays (NaN marks a missing value), so a pa
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 
 import numpy as np
+import numpy.typing as npt
 
 DENSE_CELLS = 1 << 21  # a contingency table of more cells than this is counted by sorting
 
@@ -151,7 +153,25 @@ def quantile_codes(x: np.ndarray, bins: int = 10) -> tuple[np.ndarray, int]:
     return out, len(edges) + 1
 
 
-def fd_stats(a: np.ndarray, b: np.ndarray, ka: int, kb: int) -> dict[str, object] | None:
+@dataclass(frozen=True)
+class FdStats:
+    """How well one column determines another (see :func:`fd_stats`)."""
+
+    rows: int
+    groups: int
+    repeat_groups: int  # determinant values seen in two or more rows
+    violating_groups: int
+    confidence: float
+    baseline: float  # the share of the dependent's most frequent value
+    support: float  # the share of rows in a repeated determinant group
+    mode: npt.NDArray[np.int64]  # per determinant value: its modal dependent (-1: absent)
+    group_ix: npt.NDArray[np.int64]
+    distinct: npt.NDArray[np.int64]
+    total: npt.NDArray[np.int64]
+    most: npt.NDArray[np.int64]
+
+
+def fd_stats(a: np.ndarray, b: np.ndarray, ka: int, kb: int) -> FdStats | None:
     """How well ``a`` determines ``b``: row-weighted share of rows whose ``b`` is the modal ``b``
     of their ``a`` group, plus the group evidence. None when fewer than two rows are present."""
     m = (a >= 0) & (b >= 0)
@@ -192,17 +212,17 @@ def fd_stats(a: np.ndarray, b: np.ndarray, ka: int, kb: int) -> dict[str, object
         mode_full[groups_ix] = gb[pick]
         bmode = float(np.bincount(bb, minlength=kb).max()) / n
     in_repeats = tot >= 2
-    return {
-        "rows": n,
-        "groups": int(len(groups_ix)),
-        "repeat_groups": int(in_repeats.sum()),
-        "violating_groups": int((distinct > 1).sum()),
-        "confidence": float(mx.sum()) / n,
-        "baseline": bmode,
-        "support": float(tot[in_repeats].sum()) / n,
-        "_mode": mode_full,
-        "_group_ix": groups_ix,
-        "_distinct": distinct,
-        "_tot": tot,
-        "_mx": mx,
-    }
+    return FdStats(
+        rows=n,
+        groups=int(len(groups_ix)),
+        repeat_groups=int(in_repeats.sum()),
+        violating_groups=int((distinct > 1).sum()),
+        confidence=float(mx.sum()) / n,
+        baseline=bmode,
+        support=float(tot[in_repeats].sum()) / n,
+        mode=mode_full,
+        group_ix=groups_ix,
+        distinct=distinct,
+        total=tot,
+        most=mx,
+    )

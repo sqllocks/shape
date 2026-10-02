@@ -10,7 +10,8 @@ import pyarrow as pa
 import pytest
 
 import shape
-from shape.profile.joint import analyze, measures as M
+from shape.profile.joint import analyze
+from shape.profile.joint import measures as M
 
 
 def _table(profile: object) -> dict:
@@ -55,7 +56,9 @@ def test_a_dependency_matches_the_fd_command(city_zip: dict) -> None:
 def _csv(path):  # noqa: ANN001, ANN202
     import pyarrow.csv as pcsv
 
-    return pcsv.read_csv(path, convert_options=pcsv.ConvertOptions(column_types={"zip": pa.int64()}))
+    return pcsv.read_csv(
+        path, convert_options=pcsv.ConvertOptions(column_types={"zip": pa.int64()})
+    )
 
 
 def test_every_input_kind_gets_the_same_joint_analysis(city_zip: dict, tmp_path) -> None:
@@ -172,7 +175,9 @@ def test_tiny_and_single_column_tables_have_no_joint_entry() -> None:
     assert "joint" not in _table(shape.profile(pa.table({"a": [1, 2, 3], "b": [1, 2, 3]})))
 
 
-def test_the_joint_entry_is_deterministic_and_survives_save_and_load(city_zip: dict, tmp_path) -> None:
+def test_the_joint_entry_is_deterministic_and_survives_save_and_load(
+    city_zip: dict, tmp_path
+) -> None:
     a = shape.profile(city_zip["bad"])
     b = shape.profile(city_zip["bad"])
     assert _table(a)["joint"] == _table(b)["joint"]

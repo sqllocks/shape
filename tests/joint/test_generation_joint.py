@@ -24,14 +24,24 @@ def _cols(table: pa.Table) -> dict[str, pa.Array]:
 def _schema(rows: int, **anchor: object) -> dict:
     def col(name: str, typ: str, strategy: str, **gen: object) -> dict:
         return {
-            "name": name, "type": typ, "generator": {"strategy": strategy, **gen},
-            "nullable": False, "null_rate": 0.0,
+            "name": name,
+            "type": typ,
+            "generator": {"strategy": strategy, **gen},
+            "nullable": False,
+            "null_rate": 0.0,
         }
 
     cols = [
         col("id", "integer", "sequence", start=1),
-        col("state", "string", "hierarchy", dataset="us_zip", field="state",
-            levels=list(LEVELS), **anchor),
+        col(
+            "state",
+            "string",
+            "hierarchy",
+            dataset="us_zip",
+            field="state",
+            levels=list(LEVELS),
+            **anchor,
+        ),
         col("city", "string", "hierarchy_field", dataset="us_zip", field="city"),
         col("zip", "string", "hierarchy_field", dataset="us_zip", field="zip"),
         col("lat", "float", "hierarchy_field", dataset="us_zip", field="lat"),
@@ -39,11 +49,23 @@ def _schema(rows: int, **anchor: object) -> dict:
     ]
     return {
         "schema_version": 1,
-        "model": {"name": "geo", "domain": "geo", "schema_mode": "3nf", "locale": "en_US",
-                  "seed": 1, "date_range": {"start": "2022-01-01", "end": "2022-12-31"}},
-        "tables": {"place": {"name": "place", "primary_key": ["id"],
-                             "columns": {c["name"]: c for c in cols}}},
-        "relationships": [], "business_rules": [],
+        "model": {
+            "name": "geo",
+            "domain": "geo",
+            "schema_mode": "3nf",
+            "locale": "en_US",
+            "seed": 1,
+            "date_range": {"start": "2022-01-01", "end": "2022-12-31"},
+        },
+        "tables": {
+            "place": {
+                "name": "place",
+                "primary_key": ["id"],
+                "columns": {c["name"]: c for c in cols},
+            }
+        },
+        "relationships": [],
+        "business_rules": [],
         "generation": {"scale": "s", "scales": {"s": {"place": rows}}},
         "correlated_columns": {},
     }
@@ -64,12 +86,14 @@ def test_a_generated_table_keeps_every_zip_inside_its_city(us_zip: pa.Table) -> 
     got = {k: tab[k] for k in ("state", "city", "zip")}
     assert hierarchy_violations(got, ref, ("city", "state", "zip")) == 0
     # the coordinates are the record's own
-    coords = set(zip(ref["zip"].to_pylist(), ref["lat"].to_pylist(), ref["lng"].to_pylist(),
-                     strict=True))
+    coords = set(
+        zip(ref["zip"].to_pylist(), ref["lat"].to_pylist(), ref["lng"].to_pylist(), strict=True)
+    )
     assert all(
         (z, la, lo) in coords
-        for z, la, lo in zip(tab["zip"].to_pylist(), tab["lat"].to_pylist(),
-                             tab["lng"].to_pylist(), strict=True)
+        for z, la, lo in zip(
+            tab["zip"].to_pylist(), tab["lat"].to_pylist(), tab["lng"].to_pylist(), strict=True
+        )
     )
     # a table with independent columns would not: shuffling the zips breaks it
     shuffled = dict(got)
@@ -120,7 +144,8 @@ def test_records_weighting_matches_the_reference_mix_and_uniform_equalises_level
     top = max(ref, key=ref.get)  # type: ignore[arg-type]
     assert got[top] / 20000 == pytest.approx(ref[top] / len(us_zip), abs=0.01)
     u = collections.Counter(
-        HierarchicalSampler(_cols(us_zip), LEVELS, weighting="uniform").sample(20000, 1)["state"]
+        HierarchicalSampler(_cols(us_zip), LEVELS, weighting="uniform")
+        .sample(20000, 1)["state"]
         .to_pylist()
     )
     assert u[top] / 20000 == pytest.approx(1 / len(ref), abs=0.01)  # every state as likely
@@ -133,8 +158,9 @@ def test_a_small_hierarchy_by_hand() -> None:
         "zip": pa.array(["1", "2", "3", "4"]),
     }
     out = HierarchicalSampler(cols, LEVELS).sample(500, 0)
-    seen = set(zip(out["state"].to_pylist(), out["city"].to_pylist(), out["zip"].to_pylist(),
-                   strict=True))
+    seen = set(
+        zip(out["state"].to_pylist(), out["city"].to_pylist(), out["zip"].to_pylist(), strict=True)
+    )
     assert seen == {("A", "x", "1"), ("A", "x", "2"), ("A", "y", "3"), ("B", "z", "4")}
 
 
@@ -239,3 +265,79 @@ def test_marginals_alone_cannot_hide_a_broken_pair(city_tables) -> None:
     perm = np.random.default_rng(0).permutation(good.num_rows)
     shuffled = good.set_column(1, "state", good["state"].take(pa.array(perm)))
     assert joint_fidelity(good, shuffled, [("city", "state")], max_levels=5000)["max_tvd"] > 0.5
+
+
+# ---- categorical joint tables from a profile -------------------------------------------------
+
+
+def _dept_ward(n: int = 6000) -> pa.Table:
+    rng = np.random.default_rng(1)
+    dept = rng.choice(["cardio", "onco", "neuro", "ortho"], n, p=[0.4, 0.3, 0.2, 0.1])
+    home = {"cardio": "A", "onco": "B", "neuro": "C", "ortho": "D"}
+    ward = np.array([home[d] if rng.random() < 0.9 else rng.choice(list("ABCD")) for d in dept])
+    return pa.table({"dept": dept, "ward": ward, "x": rng.normal(0, 1, n)})
+
+
+def test_a_generated_table_keeps_the_categorical_joint_table_of_its_profile() -> None:
+    from shape.generation.fit import fit_schema
+
+    t = _dept_ward()
+    profile = shape.profile(t)
+    fit = fit_schema(profile)
+    strategies = {c.name: c.strategy for c in fit.schema.tables["table"].columns.values()}
+    assert strategies["ward"] == "conditional_table" and strategies["dept"] == "weighted_enum"
+    plan = {i.evidence: i for i in fit.plan.items}
+    assert plan["table.joint.conditionals[dept,ward]"].status == "approximate"
+    gen = next(iter(shape.generate(profile, seed=3).tables.values()))
+    fidelity = joint_fidelity(t, gen)
+    pair = next(p for p in fidelity["pairs"] if (p["a"], p["b"]) == ("dept", "ward"))
+    assert pair["tvd"] < 0.03  # without the table the pair is 0.63 away (the columns independent)
+
+
+def test_the_plan_names_what_is_not_modelled_about_dependencies(city_zip: dict) -> None:
+    from shape.generation.fit import fit_schema
+
+    plan = {i.evidence: i for i in fit_schema(shape.profile(city_zip["bad"])).plan.items}
+    assert plan["bad.joint.dependencies"].status == "not_modelled"
+    assert "hierarchy" in plan["bad.joint.dependencies"].reason
+
+
+def test_conditional_table_strategy_draws_given_the_source_and_falls_back() -> None:
+    gen = {
+        "strategy": "conditional_table",
+        "source_column": "a",
+        "table": {"x": {"p": 1.0}, "y": {"q": 3, "r": 1}},
+        "values": {"z": 1},
+    }
+
+    def col(name: str, typ: str, g: dict) -> dict:
+        return {"name": name, "type": typ, "generator": g, "nullable": False, "null_rate": 0.0}
+
+    cols = [
+        col("a", "string", {"strategy": "weighted_enum", "values": {"x": 1, "y": 1, "w": 1}}),
+        col("b", "string", gen),
+    ]
+    doc = {
+        "schema_version": 1,
+        "model": {
+            "name": "t",
+            "domain": "t",
+            "schema_mode": "3nf",
+            "locale": "en_US",
+            "seed": 1,
+            "date_range": {"start": "2022-01-01", "end": "2022-12-31"},
+        },
+        "tables": {"t": {"name": "t", "primary_key": [], "columns": {c["name"]: c for c in cols}}},
+        "relationships": [],
+        "business_rules": [],
+        "generation": {"scale": "s", "scales": {"s": {"t": 3000}}},
+        "correlated_columns": {},
+    }
+    t = shape.generate(doc, seed=2).tables["t"]
+    pairs = collections.Counter(zip(t["a"].to_pylist(), t["b"].to_pylist(), strict=True))
+    assert {k for k in pairs if k[0] == "x"} == {("x", "p")}
+    assert {k for k in pairs if k[0] == "y"} == {("y", "q"), ("y", "r")}
+    assert {k for k in pairs if k[0] == "w"} == {("w", "z")}  # no entry: the column's own values
+    q, r = pairs[("y", "q")], pairs[("y", "r")]
+    assert q / (q + r) == pytest.approx(0.75, abs=0.05)
+    assert shape.generate(doc, seed=2).tables["t"].equals(t)

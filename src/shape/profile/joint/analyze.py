@@ -28,7 +28,9 @@ MAX_FD_PAIRS = 240
 MIN_FD_CONFIDENCE = 0.8
 MIN_FD_LIFT = 0.3  # (confidence - baseline) / (1 - baseline): beats guessing the dependent's mode
 MIN_REPEAT_GROUPS = 5  # determinant values seen twice or more, below which a dependency is vacuous
-IMPLAUSIBLE_FD_CONFIDENCE = 0.95  # a dependency this strong (and not exact) makes its exceptions implausible
+IMPLAUSIBLE_FD_CONFIDENCE = (
+    0.95  # a dependency this strong (and not exact) makes its exceptions implausible
+)
 MAX_DEPENDENCIES = 40
 MAX_KEY_PAIRS = 120
 MAX_ASSOCIATIONS = 60
@@ -121,10 +123,10 @@ def _round(x: float | None, digits: int = 4) -> float | None:
 
 
 def _violations(
-    aa: np.ndarray, bb: np.ndarray, va: _View, vb: _View, st: dict[str, Any]
+    aa: np.ndarray, bb: np.ndarray, va: _View, vb: _View, st: M.FdStats
 ) -> list[dict[str, Any]]:
     """The groups that break the dependency most: rows outside the group's modal value."""
-    ix, tot, mx, distinct = st["_group_ix"], st["_tot"], st["_mx"], st["_distinct"]
+    ix, tot, mx, distinct = st.group_ix, st.total, st.most, st.distinct
     excess = tot - mx
     out: list[dict[str, Any]] = []
     for pos in np.argsort(-excess, kind="stable")[:MAX_VIOLATIONS]:
@@ -163,9 +165,7 @@ def _placeholder_rows(cats: list[_View], n_rows: int) -> np.ndarray:
     return rows
 
 
-def _dependencies(
-    cats: list[_View], n_rows: int
-) -> tuple[list[dict[str, Any]], np.ndarray, int]:
+def _dependencies(cats: list[_View], n_rows: int) -> tuple[list[dict[str, Any]], np.ndarray, int]:
     """Approximate functional dependencies ``a -> b`` among the categorical views, and the rows
     that are in the minority of a strong one."""
     found: list[dict[str, Any]] = []
@@ -183,11 +183,11 @@ def _dependencies(
             st = M.fd_stats(va.codes, vb.codes, va.k, vb.k)
             if st is None:
                 continue
-            conf, base = float(st["confidence"]), float(st["baseline"])  # type: ignore[arg-type]
+            conf, base = st.confidence, st.baseline
             lift = (conf - base) / (1.0 - base) if base < 1.0 else 0.0
             if conf < MIN_FD_CONFIDENCE or lift < MIN_FD_LIFT:
                 continue
-            if int(st["repeat_groups"]) < MIN_REPEAT_GROUPS:  # type: ignore[call-overload]
+            if st.repeat_groups < MIN_REPEAT_GROUPS:
                 continue
             m = (va.codes >= 0) & (vb.codes >= 0)
             aa, bb = va.codes[m], vb.codes[m]
@@ -196,18 +196,18 @@ def _dependencies(
                 "dependent": vb.name,
                 "confidence": _round(conf, 6),
                 "baseline": _round(base, 6),
-                "support": _round(float(st["support"]), 6),  # type: ignore[arg-type]
-                "rows": st["rows"],
-                "groups": st["groups"],
-                "repeat_groups": st["repeat_groups"],
-                "violating_groups": st["violating_groups"],
-                "violations": _violations(aa, bb, va, vb, st) if st["violating_groups"] else [],
+                "support": _round(st.support, 6),
+                "rows": st.rows,
+                "groups": st.groups,
+                "repeat_groups": st.repeat_groups,
+                "violating_groups": st.violating_groups,
+                "violations": _violations(aa, bb, va, vb, st) if st.violating_groups else [],
             }
             found.append(entry)
             if conf >= IMPLAUSIBLE_FD_CONFIDENCE and conf < 1.0:
-                mode = st["_mode"][aa]  # type: ignore[index]
+                mode = st.mode[aa]
                 tot_by_g = np.zeros(va.k, dtype=np.int64)
-                tot_by_g[st["_group_ix"]] = st["_tot"]  # type: ignore[index]
+                tot_by_g[st.group_ix] = st.total
                 minority = (bb != mode) & (tot_by_g[aa] >= 2)
                 flagged[np.flatnonzero(m)[minority]] = True
     found.sort(key=lambda e: (-e["confidence"], -e["support"], e["determinant"], e["dependent"]))

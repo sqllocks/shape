@@ -18,7 +18,8 @@ def _violation(column: str | None, rule: str, expected: Any, observed: Any) -> d
 
 
 def check_no_placeholder(name: str, rule: Any, col: dict[str, Any]) -> list[dict[str, Any]]:
-    """``no_placeholder`` on a column: true (none at all) or ``{"max_share": s, "allow": [...]}``."""
+    """``no_placeholder`` on a column: true (none at all), or an object with ``max_share`` and
+    ``allow``."""
     if rule is False:
         return []
     max_share = 0.0 if rule is True else float(rule.get("max_share", 0.0))
@@ -66,7 +67,9 @@ def check_fd(rule: dict[str, Any], table: dict[str, Any]) -> list[dict[str, Any]
         return []  # a unique determinant fixes every other column
     j = _joint(table)
     if j is None:
-        return [_violation(label, "fd", expected, "not measured: the profile has no joint analysis")]
+        return [
+            _violation(label, "fd", expected, "not measured: the profile has no joint analysis")
+        ]
     for entry in j.get("dependencies", ()):
         if entry["determinant"] == det and entry["dependent"] == dep:
             if entry["confidence"] >= minimum:
@@ -138,7 +141,9 @@ def check_implies(rule: dict[str, Any], table: dict[str, Any]) -> list[dict[str,
         ]
     row = cond["table"].get(str(a["equals"]))
     if row is None:
-        return [_violation(label, "implies", expected, "not measured: the value is not in the table")]
+        return [
+            _violation(label, "implies", expected, "not measured: the value is not in the table")
+        ]
     probs = row["p"]
     p = probs.get(str(b["equals"]))
     if p is None:  # not among the listed top values: at most the smallest listed

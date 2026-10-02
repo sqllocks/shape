@@ -109,7 +109,7 @@ class _Encoder:
             x = pc.cast(arr, pa.float64()).to_numpy(zero_copy_only=False).astype(np.float64)
             codes = np.searchsorted(self.edges, x, side="right").astype(np.int64)
             codes[np.isnan(x)] = self.index[MISSING] if MISSING in self.index else self.k - 1
-            return codes
+            return np.asarray(codes, dtype=np.int64)
         d = pc.dictionary_encode(arr, null_encoding="encode")
         names = d.dictionary.to_pylist()
         lut = np.array([self.index.get(v, self.index[OTHER]) for v in names], dtype=np.int64)
@@ -129,11 +129,17 @@ def _fit_encoder(name: str, values: Any, max_levels: int, bins: int) -> _Encoder
         numeric = False  # few distinct numbers: each is a level
     d = pc.dictionary_encode(arr, null_encoding="encode")
     names = d.dictionary.to_pylist()
-    counts = np.bincount(d.indices.to_numpy(zero_copy_only=False).astype(np.int64), minlength=len(names))
+    counts = np.bincount(
+        d.indices.to_numpy(zero_copy_only=False).astype(np.int64), minlength=len(names)
+    )
     order = np.argsort(-counts, kind="stable")[: max_levels - 1]
     kept = [names[int(i)] for i in order]
     enc = _Encoder(name, False, [str(v) for v in kept] + [OTHER], values=kept)
-    rare = [names[int(i)] for i in np.argsort(-counts, kind="stable")[max_levels - 1 :] if names[int(i)] is not None]
+    rare = [
+        names[int(i)]
+        for i in np.argsort(-counts, kind="stable")[max_levels - 1 :]
+        if names[int(i)] is not None
+    ]
     enc.other_pool = rare[:1000]
     enc.index = {v: i for i, v in enumerate(kept)}
     enc.index[OTHER] = len(kept)
@@ -232,7 +238,10 @@ class ChowLiuModel:
                 combos.append(
                     {
                         "columns": [p, col],
-                        "values": [self.encoders[p].labels[int(a)], self.encoders[col].labels[int(b)]],
+                        "values": [
+                            self.encoders[p].labels[int(a)],
+                            self.encoders[col].labels[int(b)],
+                        ],
                         "rows": int(cnt),
                         "training_rows": int(counts[int(a)].sum()),
                     }
@@ -265,7 +274,9 @@ class ChowLiuModel:
             # draw from what was observed: a level seen with this parent is drawn in proportion to
             # its count; only a parent never seen falls back to the smoothed table
             counts = self.pair_counts[col].astype(np.float64)
-            table = np.where(counts.sum(axis=1, keepdims=True) > 0, counts, np.exp(self.cond_logp[col]))
+            table = np.where(
+                counts.sum(axis=1, keepdims=True) > 0, counts, np.exp(self.cond_logp[col])
+            )
             cum = np.cumsum(table, axis=1)
             cum /= cum[:, -1:]
             u = rng.random(n)
@@ -310,7 +321,10 @@ def fit_joint(
     idx: Any = None
     if n_rows > MAX_TRAIN_ROWS:
         idx = np.sort(np.random.RandomState(7).choice(n_rows, MAX_TRAIN_ROWS, replace=False))
-    sampled = {c: (_as_arrow(data[c]) if idx is None else _as_arrow(data[c]).take(pa.array(idx))) for c in names}
+    sampled = {
+        c: (_as_arrow(data[c]) if idx is None else _as_arrow(data[c]).take(pa.array(idx)))
+        for c in names
+    }
     enc = {c: _fit_encoder(c, sampled[c], max_levels, bins) for c in names}
     codes = {c: enc[c].encode(sampled[c]) for c in names}
     n = len(codes[names[0]])
@@ -374,9 +388,11 @@ def joint_fidelity(
     if isinstance(generated, pa.Table):
         generated = {n: generated[n] for n in generated.column_names}
     shared = [c for c in target if c in generated]
-    chosen = list(pairs) if pairs is not None else [
-        (a, b) for i, a in enumerate(shared) for b in shared[i + 1 :]
-    ]
+    chosen = (
+        list(pairs)
+        if pairs is not None
+        else [(a, b) for i, a in enumerate(shared) for b in shared[i + 1 :]]
+    )
     chosen = chosen[:max_pairs]
     needed = sorted({c for p in chosen for c in p})
     enc = {c: _fit_encoder(c, target[c], max_levels, bins) for c in needed}

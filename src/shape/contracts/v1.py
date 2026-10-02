@@ -155,7 +155,7 @@ def _validate_joint_rules(contract: dict[str, Any]) -> None:
                 )
             if any(n not in rule for n in needs):
                 raise ContractError(f"a '{key}' rule needs {', '.join(repr(n) for n in needs)}")
-            conf = rule.get("min_confidence")
+            conf: Any = rule.get("min_confidence")
             if not (_is_number(conf) and 0 < conf <= 1):
                 raise ContractError(f"a '{key}' rule needs 'min_confidence' above 0 and up to 1")
             if key == "fd":

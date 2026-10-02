@@ -60,9 +60,7 @@ def _levels(spec: Mapping[str, Any], ctx: GenerationContext) -> tuple[str, ...]:
     return tuple(levels)
 
 
-def _sampler(
-    ds: Dataset, spec: Mapping[str, Any], ctx: GenerationContext
-) -> HierarchicalSampler:
+def _sampler(ds: Dataset, spec: Mapping[str, Any], ctx: GenerationContext) -> HierarchicalSampler:
     levels = _levels(spec, ctx)
     weighting = str(spec.get("weighting", "records"))
     if weighting not in WEIGHTINGS:
@@ -70,7 +68,12 @@ def _sampler(
     top = spec.get("top_weights")
     if top is not None and not isinstance(top, Mapping):
         raise StrategyError(f"hierarchy top_weights is an object of value to weight ({where(ctx)})")
-    key = (id(ds), levels, weighting, tuple(sorted((str(k), float(v)) for k, v in (top or {}).items())))
+    key = (
+        id(ds),
+        levels,
+        weighting,
+        tuple(sorted((str(k), float(v)) for k, v in (top or {}).items())),
+    )
     with _CACHE_LOCK:
         found = _CACHE.get(key)
     if found is not None:

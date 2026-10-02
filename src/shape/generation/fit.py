@@ -612,10 +612,90 @@ def fit_schema(
             "copula_threshold": 0.0,
         }
 
+    for tname, tp in dataset.tables.items():
+        items.extend(_joint_tables(tname, tp, doc["tables"][tname], kinds))
+
     doc["generation"]["scales"][PRESET] = dict(parent_scale)
     doc["generation"]["scale"] = PRESET
     items.extend(_dataset_items(dataset))
     return Fit(GenSchema.from_dict(doc), ReconstructionPlan(tuple(items)))
+
+
+def _joint_tables(
+    tname: str,
+    tp: TableProfile,
+    table_doc: dict[str, Any],
+    kinds: Mapping[tuple[str, str], str],
+) -> list[PlanItem]:
+    """Categorical joint tables (#47): where the profile holds ``P(target | given)`` for two
+    enum columns, the target is drawn given the row's ``given`` value instead of on its own. Each
+    column has at most one parent and a parent is never its own descendant."""
+    joint = tp.joint or {}
+    items: list[PlanItem] = []
+    chosen: dict[tuple[str, str], dict[str, Any]] = {}
+    for cond in joint.get("conditionals", ()):
+        key = tuple(sorted((cond["given"], cond["target"])))
+        best = chosen.get(key)  # type: ignore[arg-type]
+        # the column with more values is the given one: it is the one that fixes the other
+        if best is None or len(cond["table"]) > len(best["table"]):
+            chosen[key] = cond  # type: ignore[index]
+    parent: dict[str, str] = {}
+    for cond in chosen.values():
+        given, target = cond["given"], cond["target"]
+        evidence = f"{tname}.joint.conditionals[{given},{target}]"
+        if kinds.get((tname, given)) != "enum" or kinds.get((tname, target)) != "enum":
+            items.append(PlanItem(evidence, _N, "both columns must be enumerations to be linked"))
+            continue
+        up, cycle = given, False
+        while up in parent:
+            up = parent[up]
+            cycle = cycle or up == target
+        if target in parent or cycle or given == target:
+            items.append(
+                PlanItem(
+                    evidence, _N, "the target already follows another column: left independent"
+                )
+            )
+            continue
+        column = table_doc["columns"][target]
+        gen = column["generator"]
+        column["generator"] = {
+            **{k: v for k, v in gen.items() if k not in ("strategy", "values")},
+            "strategy": "conditional_table",
+            "source_column": given,
+            "table": {g: dict(row["p"]) for g, row in cond["table"].items()},
+            "values": gen["values"],
+        }
+        parent[target] = given
+        items.append(
+            PlanItem(
+                evidence,
+                _A,
+                f"{target} is drawn given {given} from the profile's table P({target} | {given}) "
+                f"(Cramer's V {cond['cramers_v']}); values the table does not list use the "
+                "column's own distribution",
+            )
+        )
+    if joint.get("dependencies"):
+        items.append(
+            PlanItem(
+                f"{tname}.joint.dependencies",
+                _N,
+                "functional dependencies are not generated from a profile: use a reference "
+                "hierarchy (the `hierarchy` strategy) for state, city and ZIP",
+            )
+        )
+    for field in ("keys", "associations", "implausible_rate"):
+        if joint.get(field):
+            items.append(
+                PlanItem(
+                    f"{tname}.joint.{field}",
+                    _N,
+                    "not modelled: the generated columns are "
+                    "linked only by the conditional tables and the numeric copula above",
+                )
+            )
+    return items
 
 
 def _table_items(tname: str, tp: TableProfile) -> list[PlanItem]:

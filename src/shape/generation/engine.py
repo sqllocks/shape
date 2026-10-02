@@ -96,6 +96,7 @@ _DEPENDENT = frozenset(
         "composite_fk_field",
         "correlated",
         "conditional",
+        "conditional_table",
     }
 )
 
