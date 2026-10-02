@@ -67,8 +67,8 @@ def budget_for(row_count: int) -> Budget:
     return SMALL if row_count <= SMALL.sample_rows else LARGE
 
 
-_NUMERIC_KINDS = ("int", "uint64", "float", "dt64")
-_CATEGORY_KINDS = ("int", "uint64", "float", "str", "bool")
+_NUMERIC_KINDS = ("int", "uint64", "float", "dt64", "objdec")
+_CATEGORY_KINDS = ("int", "uint64", "float", "str", "bool", "objbool", "objdate", "objdec", "cat")
 
 
 class _View:
@@ -137,6 +137,8 @@ def _take(arr: Any, idx: np.ndarray | None) -> Any:
 
 def _build_view(name: str, kind: str, arr: Any, idx: np.ndarray | None) -> _View | None:
     a = _take(arr, idx)
+    if pa.types.is_dictionary(a.type):
+        a = a.dictionary_decode()
     n = len(a)
     nn = n - a.null_count
     if nn < 3:
@@ -144,10 +146,13 @@ def _build_view(name: str, kind: str, arr: Any, idx: np.ndarray | None) -> _View
     v = _View(name)
     v.nn = nn
     if kind in _CATEGORY_KINDS:
-        d = pc.dictionary_encode(a)
-        k = len(d.dictionary)
-        limit = NUMERIC_AS_CATEGORY if kind == "float" else MAX_LEVELS
-        if 2 <= k <= limit:
+        try:
+            d = pc.dictionary_encode(a)
+        except pa.ArrowNotImplementedError:  # a type Arrow cannot hash: no categorical view
+            d = None
+        k = 0 if d is None else len(d.dictionary)
+        limit = NUMERIC_AS_CATEGORY if kind in ("float", "objdec") else MAX_LEVELS
+        if d is not None and 2 <= k <= limit:
             v.codes = pc.fill_null(d.indices, -1).to_numpy(zero_copy_only=False).astype(np.int64)
             v.dictionary = d.dictionary
     if kind in _NUMERIC_KINDS:

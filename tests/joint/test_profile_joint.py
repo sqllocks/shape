@@ -221,3 +221,34 @@ def test_the_new_fields_are_the_only_difference_they_make(city_zip: dict, monkey
     assert "joint" in on and "joint" not in off
     on = {k: v for k, v in on.items() if k != "joint"}
     assert on == off
+
+
+def test_every_column_type_profiles_with_a_joint_entry() -> None:
+    """The joint analysis never fails a profile: each Arrow type either joins it or is left out."""
+    import datetime as dt
+    import decimal
+
+    n = 500
+    rng = np.random.default_rng(0)
+    cols = {
+        "b": pa.array(rng.random(n) < 0.5),
+        "nullable_bool": pa.array([None if i % 7 == 0 else bool(i % 2) for i in range(n)]),
+        "date": pa.array([dt.date(2020, 1, 1) + dt.timedelta(days=i % 40) for i in range(n)]),
+        "ts": pa.array([dt.datetime(2020, 1, 1) + dt.timedelta(hours=i % 90) for i in range(n)]),
+        "dec": pa.array([decimal.Decimal(i % 30) / 10 for i in range(n)], pa.decimal128(10, 2)),
+        "binary": pa.array([bytes([i % 5]) for i in range(n)]),
+        "dict": pa.array([f"k{i % 6}" for i in range(n)]).dictionary_encode(),
+        "large": pa.array([f"v{i % 9}" for i in range(n)], pa.large_string()),
+        "all_null": pa.array([None] * n, pa.int64()),
+        "constant": pa.array([7] * n),
+        "nonfinite": pa.array([float("inf") if i % 50 == 0 else float(i % 13) for i in range(n)]),
+        "u64": pa.array(np.arange(n, dtype=np.uint64) % 10),
+        "duration": pa.array([dt.timedelta(minutes=i % 20) for i in range(n)]),
+    }
+    together = _table(shape.profile(pa.table(cols)))["joint"]
+    assert {"b", "nullable_bool", "date", "ts", "dec", "dict", "large", "nonfinite", "u64"} <= set(
+        together["columns"]
+    )
+    for name, col in cols.items():  # each against a plain partner, so one failure names its type
+        t = pa.table({name: col, "other": pa.array([i % 4 for i in range(n)])})
+        assert "joint" in _table(shape.profile(t)) or name in ("all_null", "constant")
