@@ -16,6 +16,9 @@ dependencies = ["sqllocks-shape==0.9.0"]
 # Entry points (shape.* groups, plugin API v1); see docs/plugins/authoring.md.
 [project.entry-points."shape.domains"]
 retail = "shape_domains.retail:RetailDomain"
+capital_markets = "shape_domains.capital_markets:CapitalMarketsDomain"
+education = "shape_domains.education:EducationDomain"
+financial = "shape_domains.financial:FinancialDomain"
 
 [tool.setuptools.packages.find]
 where = ["src"]

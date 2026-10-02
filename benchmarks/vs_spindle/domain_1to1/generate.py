@@ -160,6 +160,9 @@ def _run_shape(domain: str, scale: str, seed: int, dest: Path) -> dict:
     host.load_all("shape.strategies")
     host.load_all("shape.sinks")
     known = domain_names()
+    from shape.kernel.dispatch import get_kernel
+
+    get_kernel()  # the native extension is an import too (12 ms), not part of the run
     import_s = time.perf_counter() - t_imp
     if domain not in known:
         raise Unsupported(f"impl 'shape' has no domain {domain!r} (installed: {known})")

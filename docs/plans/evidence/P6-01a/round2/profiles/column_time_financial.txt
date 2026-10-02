@@ -1,0 +1,30 @@
+wall 0.573 sum column time 1.092
+by strategy (calls, ms, rows, ns/row):
+  distribution         43   275.6  3540000      78
+  weighted_enum        55   229.4  2514200      91
+  foreign_key          35   229.2  2178000     105
+  temporal             32   118.8  1728200      69
+  correlated           13    74.2   920000      81
+  faker                 8    56.9   200000     285
+  sequence             31    36.9  1678240      22
+  reference_data        8    33.7   500240      67
+  pattern               3    13.6    88000     155
+  formula               6    13.5   240000      56
+  derived               3     8.3    88000      94
+  record_sample         1     1.2      200    5959
+  self_referencing      1     0.7       40   16608
+  record_field          4     0.6      800     770
+  self_ref_field        1     0.0       40     983
+top columns (ms):
+   106.1 transaction.account_id [foreign_key]
+    65.2 statement.total_deposits [distribution]
+    50.7 statement.fees_charged [distribution]
+    49.0 statement.closing_balance [correlated]
+    48.5 statement.total_withdrawals [distribution]
+    46.2 transaction.category_id [foreign_key]
+    43.8 transaction.transaction_type [weighted_enum]
+    38.8 statement.opening_balance [distribution]
+    37.6 transaction.channel [weighted_enum]
+    37.4 transaction.status [weighted_enum]
+    33.9 loan_payment.payment_method [weighted_enum]
+    33.3 statement.account_id [foreign_key]

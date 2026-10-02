@@ -257,6 +257,7 @@ type = "forbidden"
 # the root "shape" would make import-linter skip its own subpackages).
 source_modules = [
     "shape._callable",
+    "shape._process",
     "shape.api",
     "shape.artifact",
     "shape.capture",

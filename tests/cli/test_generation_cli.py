@@ -51,7 +51,7 @@ def test_presets_for_retail(capsys):
     code, out, _ = run(capsys, "presets", "retail")
     assert code == 0 and "medium" in out and "order_line" in out
     code, out, _ = run(capsys, "presets")
-    assert code == 0 and out.startswith("retail")
+    assert code == 0 and any(line.startswith("retail") for line in out.splitlines())
 
 
 def test_describe_retail(capsys):

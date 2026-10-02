@@ -1,0 +1,211 @@
+{
+ "domain": "financial",
+ "scale": "small",
+ "impl": "shape",
+ "floor": {
+  "branch": 84.9073215698637,
+  "transaction_category": 81.63384578464596,
+  "customer": 75.81620715423368,
+  "account": 95.82541245297817,
+  "card": 98.14292478947428,
+  "transaction": 93.98699142490024,
+  "loan": 96.98354638675576,
+  "loan_payment": 97.69642223674472,
+  "fraud_flag": 96.96699024906495,
+  "statement": 97.64357900954661
+ },
+ "baseline": {
+  "43": {
+   "branch": 86.6039528120171,
+   "transaction_category": 82.13384578464596,
+   "customer": 76.88441638422081,
+   "account": 96.4772469759575,
+   "card": 99.67682280574797,
+   "transaction": 94.48699142490024,
+   "loan": 98.32424764738079,
+   "loan_payment": 98.87040960040916,
+   "fraud_flag": 97.82177272738524,
+   "statement": 98.70893578739003
+  },
+  "44": {
+   "branch": 86.0318660929438,
+   "transaction_category": 83.31511997805556,
+   "customer": 76.31620715423368,
+   "account": 97.16776967416381,
+   "card": 98.64292478947428,
+   "transaction": 95.60346238322924,
+   "loan": 97.99566572522593,
+   "loan_payment": 98.19642223674472,
+   "fraud_flag": 98.91995110109279,
+   "statement": 98.74028086302367
+  },
+  "45": {
+   "branch": 86.06652943326142,
+   "transaction_category": 83.8364790519678,
+   "customer": 76.75712412320267,
+   "account": 96.32541245297817,
+   "card": 99.08769823561187,
+   "transaction": 95.13497036354038,
+   "loan": 97.48354638675576,
+   "loan_payment": 99.31696161194483,
+   "fraud_flag": 98.37758573857066,
+   "statement": 98.14357900954661
+  },
+  "46": {
+   "branch": 85.4073215698637,
+   "transaction_category": 85.59322143583802,
+   "customer": 77.09723270094011,
+   "account": 96.71084884233336,
+   "card": 98.96470450101198,
+   "transaction": 95.85867285884575,
+   "loan": 98.0160856629897,
+   "loan_payment": 98.87057475763461,
+   "fraud_flag": 97.46699024906495,
+   "statement": 99.2801449940643
+  }
+ },
+ "impl_seeds": {
+  "1042": {
+   "scores": {
+    "branch": 84.59358706419675,
+    "transaction_category": 82.38990293326606,
+    "customer": 76.68967461462888,
+    "account": 95.66848649687954,
+    "card": 99.05975858122207,
+    "transaction": 95.14919379177503,
+    "loan": 96.94667630860778,
+    "loan_payment": 99.25362399294848,
+    "fraud_flag": 98.28174323233058,
+    "statement": 99.09939789381463
+   },
+   "below_floor": [
+    "account",
+    "branch",
+    "loan"
+   ],
+   "shortfall": {
+    "branch": 0.31373450566694316,
+    "account": 0.15692595609863247,
+    "loan": 0.036870078147984486
+   }
+  },
+  "1043": {
+   "scores": {
+    "branch": 84.92601505978234,
+    "transaction_category": 83.45990720703361,
+    "customer": 76.81096333317015,
+    "account": 96.75765132554524,
+    "card": 99.51466392934432,
+    "transaction": 95.5575579266857,
+    "loan": 96.98629919433097,
+    "loan_payment": 99.2947656998973,
+    "fraud_flag": 98.21793963150127,
+    "statement": 98.75746020143313
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1044": {
+   "scores": {
+    "branch": 86.85842595511656,
+    "transaction_category": 85.14628503047143,
+    "customer": 76.65549687239218,
+    "account": 96.46457603922455,
+    "card": 99.64164767679452,
+    "transaction": 94.80812499602331,
+    "loan": 98.34245013101174,
+    "loan_payment": 99.41760683464508,
+    "fraud_flag": 97.55242528597182,
+    "statement": 99.08672261178776
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1045": {
+   "scores": {
+    "branch": 85.14858510156722,
+    "transaction_category": 83.95383457937723,
+    "customer": 76.69334503999838,
+    "account": 96.00559434188892,
+    "card": 99.66554384801007,
+    "transaction": 96.05675097857294,
+    "loan": 96.56226402999464,
+    "loan_payment": 99.34349424933998,
+    "fraud_flag": 96.96664557911014,
+    "statement": 97.89592156468547
+   },
+   "below_floor": [
+    "fraud_flag",
+    "loan"
+   ],
+   "shortfall": {
+    "loan": 0.42128235676112524,
+    "fraud_flag": 0.0003446699548135257
+   }
+  },
+  "1046": {
+   "scores": {
+    "branch": 86.28765887961589,
+    "transaction_category": 82.90607957861687,
+    "customer": 76.5430835857131,
+    "account": 97.26959219621371,
+    "card": 99.69292105696323,
+    "transaction": 95.13394509898437,
+    "loan": 97.26877512050675,
+    "loan_payment": 99.01529526952126,
+    "fraud_flag": 98.24256776461065,
+    "statement": 99.00861486464609
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1047": {
+   "scores": {
+    "branch": 85.75299111257151,
+    "transaction_category": 88.36166972641108,
+    "customer": 76.74635262392458,
+    "account": 96.87489002129414,
+    "card": 98.92004674068082,
+    "transaction": 95.81702218569738,
+    "loan": 97.60217932696688,
+    "loan_payment": 98.93294266076282,
+    "fraud_flag": 97.9997187138576,
+    "statement": 98.48923171560884
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1048": {
+   "scores": {
+    "branch": 86.36474303947726,
+    "transaction_category": 81.88502397185516,
+    "customer": 76.76392831866744,
+    "account": 96.53661352426516,
+    "card": 99.32553656597224,
+    "transaction": 95.20746116071332,
+    "loan": 98.17488716830024,
+    "loan_payment": 98.93576910816725,
+    "fraud_flag": 98.5079794745241,
+    "statement": 99.07059410685588
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1049": {
+   "scores": {
+    "branch": 86.3537438097921,
+    "transaction_category": 85.58147146813198,
+    "customer": 76.54563242982387,
+    "account": 96.98392046071378,
+    "card": 99.39369064346928,
+    "transaction": 95.36589440403647,
+    "loan": 97.30962967762652,
+    "loan_payment": 99.46032910918397,
+    "fraud_flag": 98.60150234112398,
+    "statement": 98.00530964024938
+   },
+   "below_floor": [],
+   "shortfall": {}
+  }
+ }
+}

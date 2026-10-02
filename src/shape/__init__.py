@@ -12,6 +12,10 @@ from typing import TYPE_CHECKING, Any
 
 __version__ = "0.9.0"
 
+from shape import _process  # noqa: E402
+
+_process.configure()  # Arrow's allocator for the whole process, in this one place (see _process)
+
 if TYPE_CHECKING:
     from .api import certify as certify
     from .api import check as check

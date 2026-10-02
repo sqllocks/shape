@@ -1,0 +1,3 @@
+[tester]	WARNING	nosec encountered (B608), but no failed test on file src/shape/builtins/sinks/sql.py:214
+[tester]	WARNING	nosec encountered (B608), but no failed test on file src/shape/builtins/sinks/sql.py:214
+[tester]	WARNING	nosec encountered (B608), but no failed test on file src/shape/integrations/fabric/udf.py:282
