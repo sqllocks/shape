@@ -476,6 +476,30 @@ def _estimated_row_bytes(table: Table) -> int:
 # ---- the engine ---------------------------------------------------------------------------
 
 
+class _Background:
+    """``fn(*args)`` on a helper thread; :meth:`result` waits for it and returns its value or
+    raises what it raised."""
+
+    def __init__(self, fn: Callable[..., Any], *args: Any) -> None:
+        self._value: Any = None
+        self._error: BaseException | None = None
+
+        def run() -> None:
+            try:
+                self._value = fn(*args)
+            except BaseException as exc:  # raised by result()
+                self._error = exc
+
+        self._thread = threading.Thread(target=run, name="shape-validate", daemon=True)
+        self._thread.start()
+
+    def result(self) -> Any:
+        self._thread.join()
+        if self._error is not None:
+            raise self._error
+        return self._value
+
+
 class Engine:
     """Generates one schema. ``scale`` and ``seed`` override the schema's; ``row_counts``
     overrides single tables; ``strategies`` (name to strategy object) is looked up before the
@@ -1092,7 +1116,10 @@ class Engine:
             if i >= rules_done and i not in streamed_rules:
                 tables = fix_rule(rule, tables, self.seed)
             release(i)
-        remaining = validate_rules(tables, self.schema) if rules else []
+        # The validation reads the tables as they are now (the copula below only replaces
+        # entries of the dict, which the snapshot does not share): it runs beside the copula and
+        # the hand-over of the last tables instead of in front of them.
+        check = _Background(validate_rules, dict(tables), self.schema) if rules else None
         for tname in self.schema.correlated_columns:
             if tname in copula:
                 tables[tname] = apply_copula(
@@ -1106,6 +1133,7 @@ class Engine:
                     nulls=str(self.schema.generation.output.get("copula_nulls", "skip")),
                 )
         release(len(rules))
+        remaining: list[RuleViolation] = check.result() if check is not None else []
         lineage = [
             ColumnLineage(name, cname, col.strategy, dict(col.generator))
             for name in flat

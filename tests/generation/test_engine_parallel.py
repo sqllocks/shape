@@ -439,3 +439,29 @@ def test_the_result_lists_tables_in_level_order_whatever_order_they_are_made_in(
     rows = {"customer": 40, "order": 120, "order_line": 300}
     result = Engine(schema(rows), strategies=STRATEGIES).generate()
     assert list(result.tables) == [n for level in dependency_levels(result.schema) for n in level]
+
+
+def test_the_final_validation_runs_beside_the_last_passes_and_its_errors_surface(monkeypatch):
+    from shape.generation import engine as engine_module
+    from shape.generation.domains import load_domain
+
+    s = load_domain("manufacturing").schema
+    assert s.business_rules  # the validation runs only for a schema that has rules
+    threads_seen: list[str] = []
+    real = engine_module.validate_rules
+
+    def spy(tables, schema):
+        threads_seen.append(threading.current_thread().name)
+        return real(tables, schema)
+
+    monkeypatch.setattr(engine_module, "validate_rules", spy)
+    result = Engine(s, scale="small").generate()
+    assert threads_seen == ["shape-validate"]
+    assert result.remaining_violations == real(result.tables, result.schema)
+
+    def boom(tables, schema):
+        raise RuntimeError("validation failed")
+
+    monkeypatch.setattr(engine_module, "validate_rules", boom)
+    with pytest.raises(RuntimeError, match="validation failed"):
+        Engine(s, scale="small").generate()
