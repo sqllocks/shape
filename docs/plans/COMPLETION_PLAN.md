@@ -2033,8 +2033,8 @@ Work packages are listed in execution order. The next work package is the first 
 | 65 | P6-04 | wip (lanes P6-04a and P6-04b, started before G5's 1-hour soak) | |
 | 66 | P6-05 | done | 3a85d86 |
 | 67 | P6-06 | done | e5d338f |
-| 68 | P6-07a | wip (lane/P6-07a, started before G5's 1-hour soak) | |
-| 69 | P6-07b | todo | |
+| 68 | P6-07a | done (contract tests on recorded interactions; 5 baseline defects fixed: destructive default mode, unescaped SQL/KQL identifiers, COPY INTO location, bulk-load cleanup and row counts; emulator/live tests nightly) | 98f6ac6 |
+| 69 | P6-07b | wip (lane/P6-07b) | |
 | 70 | P6-07c | todo | |
 | 71 | P6-08 | done (nightly SQL Server e2e pending) | 29eac3e |
 | 71a | P6-08b | done (rounds 1-2: FIX-1..FIX-9; real-server parity 11/11) | 515d26e |
@@ -2042,12 +2042,12 @@ Work packages are listed in execution order. The next work package is the first 
 | 73 | P6-10 | done | 1faff65 |
 | 74 | P6-11 | todo | |
 | 75 | P6-12 | todo | |
-| 76 | P6-13 | wip (lane/P6-13; P6-07a parts after it lands) | |
+| 76 | P6-13 | done (lead scale_1to1: local_single and local_mp pass T-21 at retail medium, negative controls flagged; baseline local_mp row-count defect fixed) | 693c897 |
 | 77 | P6-14 | done | 62160c9 |
 | 78 | P7-01 | done | b04bf32 |
 | 79 | P7-02 | done | d6e3a97 |
 | 80 | P7-03 | done | 06300e7 |
-| 81 | P7-04 | wip (lane/P7-04, started before G5's 1-hour soak) | |
+| 81 | P7-04 | done (threat model, nightly fuzzer, no high finding open; plugin security tests moved into the plugins' suites at integration) | d08fe3d |
 | 82 | P8-01 | todo | |
 | 83 | P8-02 | todo | |
 | 84 | P8-03 | todo | |
