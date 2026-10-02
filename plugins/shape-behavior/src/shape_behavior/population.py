@@ -79,7 +79,15 @@ class Population:
     def from_dict(cls, doc: dict[str, Any], **override: Any) -> Population:
         """A population from a document (as written by ``--population-spec``)."""
         merged = {**doc, **override}
-        unknown = set(merged) - {"size", "start", "attributes", "age_at_start", "arrival", "lifetime", "first_id"}
+        unknown = set(merged) - {
+            "size",
+            "start",
+            "attributes",
+            "age_at_start",
+            "arrival",
+            "lifetime",
+            "first_id",
+        }
         if unknown:
             raise ValueError(f"unknown population settings: {', '.join(sorted(unknown))}")
         return cls(**merged)

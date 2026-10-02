@@ -33,7 +33,7 @@ _ZERO_LIMIT = 10_000  # consecutive zero-time entries of one module instance bef
 
 @dataclass
 class SimConfig:
-    """``seed`` fixes every draw; ``poll`` is how often a guard on a non-age condition is re-tested."""
+    """``seed`` fixes every draw; ``poll`` is how often a non-age guard is re-tested."""
 
     seed: int = 0
     poll: str = "7 days"
@@ -99,7 +99,7 @@ class _Branching:
 def _compile_transition(
     t: dict[str, Any], index: dict[str, int], bit: Callable[[str, str], int]
 ) -> Any:
-    (kind, body), = t.items()
+    ((kind, body),) = t.items()
     if kind == "stop":
         return _Direct(-1)
     if kind == "direct":
@@ -333,7 +333,9 @@ class Simulator:
 
     @classmethod
     def resume(
-        cls, source: Checkpoint | str | Path, modules: Sequence[Module | str | dict[str, Any] | Path]
+        cls,
+        source: Checkpoint | str | Path,
+        modules: Sequence[Module | str | dict[str, Any] | Path],
     ) -> Simulator:
         """Continue a checkpointed run. ``modules`` must be the modules it was started with."""
         ck = source if isinstance(source, Checkpoint) else Checkpoint.load(source)
@@ -342,7 +344,9 @@ class Simulator:
         if [m.digest() for m in mods] != meta["digests"]:
             raise ModuleError(["the modules differ from the ones the checkpoint was made with"])
         pop = Population.from_dict(meta["population"])
-        sim = cls(mods, pop, SimConfig(seed=meta["seed"], poll=meta["poll"]), _store=_empty_store(a))
+        sim = cls(
+            mods, pop, SimConfig(seed=meta["seed"], poll=meta["poll"]), _store=_empty_store(a)
+        )
         s = sim.store
         for i, name in enumerate(meta["num"]):
             s.num[name] = a[f"num_{i}"].copy()
@@ -367,7 +371,9 @@ class Simulator:
         s.end_reported[due] = True
         seq = s.seq[due].copy()
         s.seq[due] += 1
-        self._buffer.add(s.ids[due], seq, s.end[due], {"module": "", "state": "", "kind": "entity_end"}, None)
+        self._buffer.add(
+            s.ids[due], seq, s.end[due], {"module": "", "state": "", "kind": "entity_end"}, None
+        )
 
     def _enter_module(self, mi: int, rows: Any, t: Any) -> None:
         cm = self.cmods[mi]
@@ -378,7 +384,9 @@ class Simulator:
             self._enter_state(mi, cm, cm.states[int(si)], rows[sel], t[sel], steps[sel])
         self.step[rows, mi] += 1
 
-    def _enter_state(self, mi: int, cm: _CModule, cs: _CState, rows: Any, t: Any, steps: Any) -> None:
+    def _enter_state(
+        self, mi: int, cm: _CModule, cs: _CState, rows: Any, t: Any, steps: Any
+    ) -> None:
         store = self.store
         proceed = np.ones(len(rows), bool)
         wait_until = None
@@ -397,7 +405,9 @@ class Simulator:
         nxt = cs.trans.choose(store, rows, t, u)
         new_t = t.copy()
         if cs.delay is not None:
-            new_t = t + dist.sample_us(cs.delay, self.draw(mi, rows, steps, 1), self.draw(mi, rows, steps, 2))
+            new_t = t + dist.sample_us(
+                cs.delay, self.draw(mi, rows, steps, 1), self.draw(mi, rows, steps, 2)
+            )
         new_state = np.where(nxt >= 0, nxt, self.state[rows, mi])
         new_time = np.where(nxt >= 0, new_t, INF)
         if wait_until is not None:
@@ -414,7 +424,9 @@ class Simulator:
                 f"(more than {_ZERO_LIMIT} entries at one instant); add a delay"
             )
 
-    def _apply_effect(self, mi: int, cm: _CModule, cs: _CState, rows: Any, t: Any, steps: Any) -> None:
+    def _apply_effect(
+        self, mi: int, cm: _CModule, cs: _CState, rows: Any, t: Any, steps: Any
+    ) -> None:
         store, doc, kind = self.store, cs.doc, cs.kind
         emission: dict[str, Any] = {"module": cm.module.name, "state": cs.name}
         value: Any = None
@@ -422,7 +434,11 @@ class Simulator:
         if kind == "set_attribute":
             name = doc["attribute"]
             if "distribution" in doc:
-                v: Any = dist.sample(doc["distribution"], self.draw(mi, rows, steps, 3), self.draw(mi, rows, steps, 4))
+                v: Any = dist.sample(
+                    doc["distribution"],
+                    self.draw(mi, rows, steps, 3),
+                    self.draw(mi, rows, steps, 4),
+                )
             else:
                 v = doc["value"]
                 v = float(v) if isinstance(v, (bool, int, float)) else v
@@ -430,7 +446,9 @@ class Simulator:
         elif kind == "counter":
             name = doc["attribute"]
             sign = -1.0 if doc.get("action") == "decrement" else 1.0
-            store.num[name][rows] = np.nan_to_num(store.num[name][rows]) + sign * float(doc.get("amount", 1))
+            store.num[name][rows] = np.nan_to_num(store.num[name][rows]) + sign * float(
+                doc.get("amount", 1)
+            )
         elif kind in ("condition_onset", "medication_order"):
             which = "condition" if kind == "condition_onset" else "medication"
             code = code_of(doc["codes"][0])
@@ -466,7 +484,16 @@ class Simulator:
                 emit = em is not None
                 if em is not None:
                     value = em.value
-                    for col in ("kind", "code", "system", "display", "ref", "unit", "text", "payload"):
+                    for col in (
+                        "kind",
+                        "code",
+                        "system",
+                        "display",
+                        "ref",
+                        "unit",
+                        "text",
+                        "payload",
+                    ):
                         emission[col] = getattr(em, col)
         if not emit:
             return
@@ -491,7 +518,9 @@ class Simulator:
         m = np.uint64(mask)
         arr[rows] = (arr[rows] | m) if on else (arr[rows] & ~m)
 
-    def _end_codes(self, kind: str, doc: dict[str, Any], cm: _CModule, rows: Any, emission: dict[str, Any]) -> None:
+    def _end_codes(
+        self, kind: str, doc: dict[str, Any], cm: _CModule, rows: Any, emission: dict[str, Any]
+    ) -> None:
         which = "condition" if kind == "condition_end" else "medication"
         onset_key = "condition_onset" if which == "condition" else "medication_order"
         if onset_key in doc:

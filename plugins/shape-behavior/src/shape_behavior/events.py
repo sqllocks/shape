@@ -7,7 +7,18 @@ from typing import Any
 import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 
-TEXT_COLUMNS = ("module", "state", "kind", "code", "system", "display", "ref", "unit", "text", "payload")
+TEXT_COLUMNS = (
+    "module",
+    "state",
+    "kind",
+    "code",
+    "system",
+    "display",
+    "ref",
+    "unit",
+    "text",
+    "payload",
+)
 EVENT_SCHEMA = pa.schema(
     [
         pa.field("entity_id", pa.int64(), nullable=False),
@@ -85,7 +96,9 @@ class EventBuffer:
             idx = cols[column][order]
             dictionary = pa.array(self._strings[column], pa.string())
             arrays.append(
-                pa.DictionaryArray.from_arrays(pa.array(idx, pa.int32(), mask=idx < 0), dictionary).cast(pa.string())
+                pa.DictionaryArray.from_arrays(
+                    pa.array(idx, pa.int32(), mask=idx < 0), dictionary
+                ).cast(pa.string())
             )
         value = cols["value"][order]
         arrays.insert(10, pa.array(value, pa.float64(), mask=np.isnan(value)))

@@ -9,7 +9,9 @@ from shape_behavior import Module, Population, SimConfig, Simulator
 T0 = "2020-01-01"
 
 
-def module(states: dict[str, Any], attributes: dict[str, Any] | None = None, name: str = "t") -> Module:
+def module(
+    states: dict[str, Any], attributes: dict[str, Any] | None = None, name: str = "t"
+) -> Module:
     doc: dict[str, Any] = {"format": "shape-behavior/1", "name": name, "states": states}
     if attributes:
         doc["attributes"] = attributes

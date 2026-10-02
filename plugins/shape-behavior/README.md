@@ -15,7 +15,7 @@ shape behave run subscription --population 10000 --years 3 --seed 7 -o out/
 from shape_behavior import Population, Simulator, load_module
 
 sim = Simulator([load_module("subscription")], Population(size=10_000, start="2024-01-01"))
-events = sim.run_until("2027-01-01")      # a pyarrow.Table
+events = sim.run_until("2027-01-01")  # a pyarrow.Table
 ```
 
 Full reference: `docs/plugins/behavior.md` in the repository. Its version always equals core's

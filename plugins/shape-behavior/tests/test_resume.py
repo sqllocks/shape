@@ -3,7 +3,6 @@
 import pyarrow as pa
 import pytest
 from helpers import T0
-
 from shape_behavior import Checkpoint, ModuleError, Population, SimConfig, Simulator, load_module
 
 ALL = ("subscription", "equipment_maintenance", "healthcare_screening")
@@ -11,7 +10,9 @@ ALL = ("subscription", "equipment_maintenance", "healthcare_screening")
 
 def _sim(name, size=800, seed=5):
     m = load_module(name)
-    return m, Simulator([m], Population(size=size, start=T0, **m.doc["population_defaults"]), SimConfig(seed=seed))
+    return m, Simulator(
+        [m], Population(size=size, start=T0, **m.doc["population_defaults"]), SimConfig(seed=seed)
+    )
 
 
 @pytest.mark.parametrize("name", ALL)

@@ -23,9 +23,30 @@ GMF_TYPES = (
     "DeviceEnd", "CarePlanStart", "CarePlanEnd", "AllergyOnset", "AllergyEnd", "ImagingStudy",
     "SupplyList", "MultiObservation", "DiagnosticReport", "Physiology", "Vaccine",
 )  # fmt: skip
-_OPS = {"==": "==", "!=": "!=", "<": "<", "<=": "<=", ">": ">", ">=": ">=", "is nil": "is_nil", "is not nil": "is_not_nil"}
-_SIMPLE = {"Initial": "initial", "Terminal": "terminal", "Simple": "simple", "EncounterEnd": "encounter_end", "Death": "death"}
-_TRANSITIONS = ("direct_transition", "distributed_transition", "conditional_transition", "complex_transition", "lookup_table_transition")
+_OPS = {
+    "==": "==",
+    "!=": "!=",
+    "<": "<",
+    "<=": "<=",
+    ">": ">",
+    ">=": ">=",
+    "is nil": "is_nil",
+    "is not nil": "is_not_nil",
+}
+_SIMPLE = {
+    "Initial": "initial",
+    "Terminal": "terminal",
+    "Simple": "simple",
+    "EncounterEnd": "encounter_end",
+    "Death": "death",
+}
+_TRANSITIONS = (
+    "direct_transition",
+    "distributed_transition",
+    "conditional_transition",
+    "complex_transition",
+    "lookup_table_transition",
+)
 
 
 class UnsupportedGmfError(ValueError):
@@ -75,7 +96,9 @@ def is_gmf(doc: Any) -> bool:
 def import_gmf(source: Any, *, strict: bool = False) -> ImportResult:
     """Import a GMF module given as a path, a JSON string or a ``dict``."""
     doc: Any = source
-    if isinstance(source, Path) or (isinstance(source, str) and not source.lstrip().startswith("{")):
+    if isinstance(source, Path) or (
+        isinstance(source, str) and not source.lstrip().startswith("{")
+    ):
         doc = json.loads(Path(source).read_text(encoding="utf-8"))
     elif isinstance(source, str):
         doc = json.loads(source)
@@ -106,7 +129,11 @@ class _Importer:
             states[name] = self.convert_state(name, s)
             if s.get("type") == "Initial" and initial is None:
                 initial = name
-        out: dict[str, Any] = {"format": "shape-behavior/1", "name": str(self.doc.get("name", "gmf_module")), "states": states}
+        out: dict[str, Any] = {
+            "format": "shape-behavior/1",
+            "name": str(self.doc.get("name", "gmf_module")),
+            "states": states,
+        }
         if initial is not None:
             out["initial"] = initial
         if "remarks" in self.doc:
@@ -125,23 +152,41 @@ class _Importer:
             d = self.duration(s)
             out = {"type": "delay", "delay": d} if d else None
         elif kind == "Guard":
-            out = {"type": "guard", "condition": self.condition((s.get("allow") or {}))}
+            out = {"type": "guard", "condition": self.condition(s.get("allow") or {})}
         elif kind == "SetAttribute":
             out = self.set_attribute(s)
         elif kind == "Counter":
-            out = {"type": "counter", "attribute": s.get("attribute"), "action": s.get("action", "increment"), "amount": s.get("amount", 1)}
+            out = {
+                "type": "counter",
+                "attribute": s.get("attribute"),
+                "action": s.get("action", "increment"),
+                "amount": s.get("amount", 1),
+            }
         elif kind == "Encounter":
-            out = {"type": "encounter", "codes": s.get("codes", []), "encounter_class": s.get("encounter_class")}
+            out = {
+                "type": "encounter",
+                "codes": s.get("codes", []),
+                "encounter_class": s.get("encounter_class"),
+            }
             if s.get("wellness"):
                 self.warnings.append(f"{name}: wellness encounter treated as immediate")
         elif kind in ("ConditionOnset", "MedicationOrder", "Procedure"):
-            out = self.coded(s, {"ConditionOnset": "condition_onset", "MedicationOrder": "medication_order", "Procedure": "procedure"}[kind])
+            out = self.coded(
+                s,
+                {
+                    "ConditionOnset": "condition_onset",
+                    "MedicationOrder": "medication_order",
+                    "Procedure": "procedure",
+                }[kind],
+            )
         elif kind in ("ConditionEnd", "MedicationEnd"):
             out = self.end(s, kind)
         elif kind == "Observation":
             out = self.observation(s)
         else:
-            self.miss(str(kind), "state type is not in the supported subset; runs as a pass-through")
+            self.miss(
+                str(kind), "state type is not in the supported subset; runs as a pass-through"
+            )
         if out is None:
             out = {"type": "simple"}
         out = {k: v for k, v in out.items() if v is not None}
@@ -157,7 +202,12 @@ class _Importer:
             return {"kind": "exact", "value": e.get("quantity", 0), "unit": e.get("unit", "days")}
         if "range" in s:
             r = s["range"]
-            return {"kind": "uniform", "low": r.get("low", 0), "high": r.get("high", 0), "unit": r.get("unit", "days")}
+            return {
+                "kind": "uniform",
+                "low": r.get("low", 0),
+                "high": r.get("high", 0),
+                "unit": r.get("unit", "days"),
+            }
         if "distribution" in s:
             d = self.distribution(s["distribution"])
             if d is not None:
@@ -175,9 +225,16 @@ class _Importer:
         if kind == "UNIFORM":
             return {"kind": "uniform", "low": p.get("low", 0), "high": p.get("high", 0)}
         if kind == "GAUSSIAN":
-            return {"kind": "gaussian", "mean": p.get("mean", 0), "std": p.get("standardDeviation", 0)}
+            return {
+                "kind": "gaussian",
+                "mean": p.get("mean", 0),
+                "std": p.get("standardDeviation", 0),
+            }
         if kind == "EXPONENTIAL":
-            return {"kind": "exponential", "mean": 1.0 / p["rate"] if p.get("rate") else p.get("mean", 1)}
+            return {
+                "kind": "exponential",
+                "mean": 1.0 / p["rate"] if p.get("rate") else p.get("mean", 1),
+            }
         self.miss("distribution", f"kind {d.get('kind')!r} is not supported")
         return None
 
@@ -188,7 +245,9 @@ class _Importer:
             return {"type": "set_attribute", "attribute": name, "distribution": d} if d else None
         if "value" in s and s["value"] is not None:
             return {"type": "set_attribute", "attribute": name, "value": s["value"]}
-        self.miss("SetAttribute", "no value or distribution (an expression, or clearing the attribute)")
+        self.miss(
+            "SetAttribute", "no value or distribution (an expression, or clearing the attribute)"
+        )
         return None
 
     def coded(self, s: dict[str, Any], native: str) -> dict[str, Any] | None:
@@ -236,7 +295,9 @@ class _Importer:
         return d
 
     def distributed(self, items: list[dict[str, Any]], where: str) -> list[dict[str, Any]]:
-        branches = [{"p": self.probability(i.get("distribution", 0)), "to": i["transition"]} for i in items]
+        branches = [
+            {"p": self.probability(i.get("distribution", 0)), "to": i["transition"]} for i in items
+        ]
         ps = [b["p"] for b in branches]
         if all(isinstance(p, (int, float)) for p in ps):
             total = float(sum(ps))
@@ -287,7 +348,12 @@ class _Importer:
         if kind in ("True", "False"):
             return {"type": kind.lower()}
         if kind == "Gender":
-            return {"type": "attribute", "attribute": "gender", "op": "==", "value": c.get("gender")}
+            return {
+                "type": "attribute",
+                "attribute": "gender",
+                "op": "==",
+                "value": c.get("gender"),
+            }
         if kind == "Age":
             value = c["quantity"] if "quantity" in c else c.get("value", 0)
             op = self.op(c)
@@ -310,23 +376,41 @@ class _Importer:
                 return {"type": "false"}
             if op in ("is_nil", "is_not_nil"):
                 return {"type": "attribute", "attribute": c["attribute"], "op": op}
-            return {"type": "attribute", "attribute": c["attribute"], "op": op, "value": c.get("value")}
+            return {
+                "type": "attribute",
+                "attribute": c["attribute"],
+                "op": op,
+                "value": c.get("value"),
+            }
         if kind in ("Active Condition", "Active Medication"):
             return {"type": kind.lower().replace(" ", "_"), "codes": c.get("codes", [])}
         if kind in ("And", "Or"):
-            return {"type": kind.lower(), "conditions": [self.condition(x) for x in c.get("conditions", [])]}
+            return {
+                "type": kind.lower(),
+                "conditions": [self.condition(x) for x in c.get("conditions", [])],
+            }
         if kind == "Not":
-            return {"type": "not", "condition": self.condition(c.get("condition", {"condition_type": "False"}))}
+            return {
+                "type": "not",
+                "condition": self.condition(c.get("condition", {"condition_type": "False"})),
+            }
         if kind in ("At Least", "At Most"):
             key = "minimum" if kind == "At Least" else "maximum"
-            return {"type": kind.lower().replace(" ", "_"), key: c.get(key, 0), "conditions": [self.condition(x) for x in c.get("conditions", [])]}
+            return {
+                "type": kind.lower().replace(" ", "_"),
+                key: c.get(key, 0),
+                "conditions": [self.condition(x) for x in c.get("conditions", [])],
+            }
         self.miss(f"condition {kind}", "condition type is not supported; counted as false")
         return {"type": "false"}
 
     def op(self, c: dict[str, Any]) -> str | None:
         op = _OPS.get(str(c.get("operator")))
         if op is None:
-            self.miss(f"condition {c.get('condition_type')}", f"operator {c.get('operator')!r} is not supported; counted as false")
+            self.miss(
+                f"condition {c.get('condition_type')}",
+                f"operator {c.get('operator')!r} is not supported; counted as false",
+            )
         return op
 
 

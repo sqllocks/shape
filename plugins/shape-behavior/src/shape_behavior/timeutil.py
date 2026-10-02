@@ -17,7 +17,7 @@ UNIT_US: dict[str, int] = {
     "years": 31_557_600 * US,  # 365.25 days
 }
 _ALIASES = {u[:-1]: u for u in UNIT_US} | {u: u for u in UNIT_US}
-_EPOCH = dt.datetime(1970, 1, 1, tzinfo=dt.timezone.utc)
+_EPOCH = dt.datetime(1970, 1, 1, tzinfo=dt.UTC)
 _DURATION = re.compile(r"^\s*([0-9]*\.?[0-9]+)\s*([a-z]+)\s*$")
 
 
@@ -44,13 +44,13 @@ def to_us(value: Any) -> int:
             raise ValueError(f"not an ISO-8601 date or time: {value!r}") from None
     if isinstance(value, dt.datetime):
         if value.tzinfo is None:
-            value = value.replace(tzinfo=dt.timezone.utc)
+            value = value.replace(tzinfo=dt.UTC)
         delta = value - _EPOCH
     elif isinstance(value, dt.date):
-        delta = dt.datetime(value.year, value.month, value.day, tzinfo=dt.timezone.utc) - _EPOCH
+        delta = dt.datetime(value.year, value.month, value.day, tzinfo=dt.UTC) - _EPOCH
     else:
         raise TypeError(f"cannot read {type(value).__name__} as a time")
-    return (delta.days * 86400 + delta.seconds) * US + delta.microseconds
+    return int((delta.days * 86400 + delta.seconds) * US + delta.microseconds)
 
 
 def from_us(us: int) -> dt.datetime:

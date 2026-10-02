@@ -17,6 +17,11 @@ dependencies = ["sqllocks-shape==0.9.0"]
 [project.entry-points."shape.commands"]
 behave = "shape_behavior.cli:BehaveCommand"
 
+[project.entry-points."shape.behaviors"]
+subscription = "shape_behavior.behaviors:Subscription"
+equipment_maintenance = "shape_behavior.behaviors:EquipmentMaintenance"
+healthcare_screening = "shape_behavior.behaviors:HealthcareScreening"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

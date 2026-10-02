@@ -1,4 +1,7 @@
-"""Module documents: validation, canonical form and loading (``docs/plugins/behavior.md``, section 2)."""
+"""Module documents: validation, canonical form and loading.
+
+Reference: ``docs/plugins/behavior.md``, section 2.
+"""
 
 from __future__ import annotations
 
@@ -126,9 +129,11 @@ class Module:
             for cond in _conditions_of(state):
                 for node in conditions.walk(cond):
                     if node["type"] == "active_condition":
-                        [add(conds, c) for c in node["codes"]]
+                        for c in node["codes"]:
+                            add(conds, c)
                     elif node["type"] == "active_medication":
-                        [add(meds, c) for c in node["codes"]]
+                        for c in node["codes"]:
+                            add(meds, c)
             target = {
                 "condition_onset": conds,
                 "condition_end": conds,
@@ -194,7 +199,10 @@ def _state_uses(state: dict[str, Any], note: Any) -> None:
         for node in conditions.walk(cond):
             if node["type"] == "attribute":
                 v = node.get("value")
-                note(node["attribute"], "cat" if isinstance(v, str) else ("num" if v is not None else None))
+                note(
+                    node["attribute"],
+                    "cat" if isinstance(v, str) else ("num" if v is not None else None),
+                )
     t = state.get("transition")
     if isinstance(t, dict):
         branches = list(t.get("distributed", []))
@@ -242,12 +250,18 @@ def _check_attribute_spec(spec: Any, where: str) -> list[str]:
         values = spec.get("values")
         if not isinstance(values, dict) or not values:
             return [f"{where}: categorical needs 'values' (value to weight)"]
-        if any(isinstance(w, bool) or not isinstance(w, (int, float)) or w < 0 for w in values.values()):
+        if any(
+            isinstance(w, bool) or not isinstance(w, (int, float)) or w < 0 for w in values.values()
+        ):
             return [f"{where}: weights must be non-negative numbers"]
         if sum(values.values()) <= 0:
             return [f"{where}: weights sum to zero"]
         return []
-    if isinstance(spec, dict) and spec.get("kind") in ("exact", "constant") and isinstance(spec.get("value"), str):
+    if (
+        isinstance(spec, dict)
+        and spec.get("kind") in ("exact", "constant")
+        and isinstance(spec.get("value"), str)
+    ):
         return []
     return dist.check(spec, where)
 
@@ -284,7 +298,9 @@ def _codes_ok(state: dict[str, Any], where: str, *, required: bool) -> list[str]
     return []
 
 
-def _check_fields(where: str, kind: str, state: dict[str, Any], states: dict[str, Any]) -> list[str]:
+def _check_fields(
+    where: str, kind: str, state: dict[str, Any], states: dict[str, Any]
+) -> list[str]:
     out: list[str] = []
     if kind == "delay":
         out += dist.check(state.get("delay"), f"{where}.delay", duration=True)
@@ -315,7 +331,9 @@ def _check_fields(where: str, kind: str, state: dict[str, Any], states: dict[str
         onset_type = "condition_onset" if kind == "condition_end" else "medication_order"
         refs = [k for k in (onset_type, "codes", "referenced_by_attribute") if k in state]
         if len(refs) != 1:
-            out.append(f"{where}: needs exactly one of '{onset_type}', 'codes', 'referenced_by_attribute'")
+            out.append(
+                f"{where}: needs exactly one of '{onset_type}', 'codes', 'referenced_by_attribute'"
+            )
         elif refs[0] == onset_type:
             target = states.get(state[onset_type])
             if not isinstance(target, dict) or target.get("type") != onset_type:
@@ -333,7 +351,12 @@ def _check_fields(where: str, kind: str, state: dict[str, Any], states: dict[str
             out.append(f"{where}: 'exact' must be a number")
         elif given[0] == "range":
             r = state["range"]
-            if not (isinstance(r, dict) and isinstance(r.get("low"), (int, float)) and isinstance(r.get("high"), (int, float)) and r["low"] <= r["high"]):
+            if not (
+                isinstance(r, dict)
+                and isinstance(r.get("low"), (int, float))
+                and isinstance(r.get("high"), (int, float))
+                and r["low"] <= r["high"]
+            ):
                 out.append(f"{where}: 'range' needs numeric low <= high")
     elif kind == "event":
         if not isinstance(state.get("event"), str) or not state["event"]:
@@ -363,8 +386,12 @@ def _check_branches(where: str, branches: Any, states: dict[str, Any]) -> list[s
         p = b["p"]
         if isinstance(p, dict):
             constant = False
-            if not isinstance(p.get("attribute"), str) or not isinstance(p.get("default"), (int, float)):
-                out.append(f"{where}[{i}]: a probability object needs 'attribute' and a numeric 'default'")
+            if not isinstance(p.get("attribute"), str) or not isinstance(
+                p.get("default"), (int, float)
+            ):
+                out.append(
+                    f"{where}[{i}]: a probability object needs 'attribute' and a numeric 'default'"
+                )
         elif isinstance(p, bool) or not isinstance(p, (int, float)) or p < 0:
             out.append(f"{where}[{i}]: 'p' must be a non-negative number")
         else:
@@ -377,7 +404,7 @@ def _check_branches(where: str, branches: Any, states: dict[str, Any]) -> list[s
 def _check_transition(where: str, t: Any, states: dict[str, Any]) -> list[str]:
     if not isinstance(t, dict) or len([k for k in t if k in TRANSITION_KINDS]) != 1 or len(t) != 1:
         return [f"{where}.transition: needs exactly one of {', '.join(TRANSITION_KINDS)}"]
-    (kind, body), = t.items()
+    ((kind, body),) = t.items()
     path = f"{where}.transition.{kind}"
     out: list[str] = []
     if kind == "stop":
@@ -403,8 +430,30 @@ def _check_transition(where: str, t: Any, states: dict[str, Any]) -> list[str]:
             elif kind == "complex" and "distributed" in entry:
                 out += _check_branches(f"{here}.distributed", entry["distributed"], states)
             else:
-                out.append(f"{here}: needs 'to'" + (" or 'distributed'" if kind == "complex" else ""))
+                out.append(
+                    f"{here}: needs 'to'" + (" or 'distributed'" if kind == "complex" else "")
+                )
     return out
+
+
+def _registered_module(name: str) -> Module | None:
+    """The module of a behavior registered under ``shape.behaviors`` (the engine loads by name)."""
+    from shape.plugins.host import PluginLoadError, default_host
+
+    host = default_host()
+    if host.record("shape.behaviors", name) is None:
+        return None
+    try:
+        found = host.get("shape.behaviors", name)
+    except PluginLoadError as exc:
+        raise ModuleError([str(exc)], name) from exc
+    module = getattr(found, "module", None)
+    if not isinstance(module, Module):
+        raise ModuleError(
+            ["the behavior is registered but exposes no `module`, so the engine cannot run it"],
+            name,
+        )
+    return module
 
 
 def load_module(source: Any, *, strict: bool = False) -> Module:
@@ -424,9 +473,19 @@ def load_module(source: Any, *, strict: bool = False) -> Module:
         elif path.is_file():
             doc = json.loads(path.read_text(encoding="utf-8"))
         elif text in examples():
-            doc = json.loads((importlib.resources.files("shape_behavior") / "examples" / f"{text}.json").read_text(encoding="utf-8"))
+            doc = json.loads(
+                (
+                    importlib.resources.files("shape_behavior") / "examples" / f"{text}.json"
+                ).read_text(encoding="utf-8")
+            )
         else:
-            raise FileNotFoundError(f"no module file or built-in example named {text!r}; examples: {', '.join(examples())}")
+            registered = _registered_module(text)
+            if registered is None:
+                raise FileNotFoundError(
+                    f"no module file, built-in example or registered behavior named {text!r}; "
+                    f"examples: {', '.join(examples())}"
+                )
+            return registered
     from shape_behavior.gmf import import_gmf, is_gmf
 
     if is_gmf(doc):

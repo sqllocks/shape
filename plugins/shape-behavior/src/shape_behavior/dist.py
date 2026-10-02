@@ -9,7 +9,16 @@ import numpy as np
 
 from shape_behavior.timeutil import unit_us
 
-KINDS = ("exact", "constant", "uniform", "gaussian", "normal", "exponential", "lognormal", "bernoulli")
+KINDS = (
+    "exact",
+    "constant",
+    "uniform",
+    "gaussian",
+    "normal",
+    "exponential",
+    "lognormal",
+    "bernoulli",
+)
 _REQUIRED: dict[str, tuple[str, ...]] = {
     "exact": ("value",),
     "constant": ("value",),

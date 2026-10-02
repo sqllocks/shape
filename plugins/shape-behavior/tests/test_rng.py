@@ -1,7 +1,6 @@
 """The counter-based draws are uniform, independent across keys and a pure function of the key."""
 
 import numpy as np
-
 from shape_behavior import rng
 
 
