@@ -19,7 +19,7 @@ from __future__ import annotations
 import base64
 import json
 from collections.abc import Iterator, Mapping
-from typing import Any
+from typing import Any, NamedTuple
 
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
@@ -94,32 +94,70 @@ def _dumps(obj: Any) -> str:
     return json.dumps(obj, separators=(",", ":"), ensure_ascii=False, allow_nan=False, default=str)
 
 
+def _wrap(rows: list[dict[str, Any]], envelope: str, source: str) -> list[dict[str, Any]]:
+    if envelope not in ENVELOPES:
+        raise ValueError(f"unknown envelope {envelope!r}; choose from {', '.join(ENVELOPES)}")
+    if envelope == "flat":
+        return rows
+    wrapped = []
+    for row in rows:
+        table, seq = row[FIELD_TABLE], row[FIELD_SEQ]
+        ce: dict[str, Any] = {
+            "specversion": "1.0",
+            "id": f"{table}/{seq}",
+            "source": f"shape://{source}",
+            "type": f"shape.{table}.row",
+        }
+        if row.get(FIELD_TIME) is not None:
+            ce["time"] = row[FIELD_TIME]
+        ce["datacontenttype"] = "application/json"
+        ce["shapetable"] = table
+        ce["shapeseq"] = seq
+        ce["data"] = row
+        wrapped.append(ce)
+    return wrapped
+
+
 def encode_batch(batch: pa.RecordBatch, envelope: str = "flat", source: str = "shape") -> bytes:
     """``batch`` of flat events as UTF-8 JSON lines, one per line, each ending in a newline."""
     if envelope not in ENVELOPES:
         raise ValueError(f"unknown envelope {envelope!r}; choose from {', '.join(ENVELOPES)}")
     if batch.num_rows == 0:
         return b""
-    rows = rows_of(batch)
-    if envelope == "cloudevents":
-        wrapped = []
-        for row in rows:
-            table, seq = row[FIELD_TABLE], row[FIELD_SEQ]
-            ce: dict[str, Any] = {
-                "specversion": "1.0",
-                "id": f"{table}/{seq}",
-                "source": f"shape://{source}",
-                "type": f"shape.{table}.row",
-            }
-            if row.get(FIELD_TIME) is not None:
-                ce["time"] = row[FIELD_TIME]
-            ce["datacontenttype"] = "application/json"
-            ce["shapetable"] = table
-            ce["shapeseq"] = seq
-            ce["data"] = row
-            wrapped.append(ce)
-        rows = wrapped
+    rows = _wrap(rows_of(batch), envelope, source)
     return ("\n".join(_dumps(r) for r in rows) + "\n").encode("utf-8")
+
+
+class EncodedEvent(NamedTuple):
+    """One event ready for a message transport: the D-12 idempotency key as a string
+    (``<table>/<seq>``, the CloudEvents ``id``), its parts, and the JSON body (no newline)."""
+
+    key: str
+    table: str
+    seq: int
+    time: str | None
+    body: bytes
+
+
+def encode_events(
+    batch: pa.RecordBatch, envelope: str = "flat", source: str = "shape"
+) -> list[EncodedEvent]:
+    """``batch`` of flat events as one :class:`EncodedEvent` per row, for emitters that send one
+    message per event (the same JSON as :func:`encode_batch`, line by line)."""
+    if envelope not in ENVELOPES:
+        raise ValueError(f"unknown envelope {envelope!r}; choose from {', '.join(ENVELOPES)}")
+    flat = rows_of(batch)
+    wrapped = _wrap(flat, envelope, source)
+    return [
+        EncodedEvent(
+            f"{row[FIELD_TABLE]}/{row[FIELD_SEQ]}",
+            row[FIELD_TABLE],
+            row[FIELD_SEQ],
+            row.get(FIELD_TIME),
+            _dumps(out).encode("utf-8"),
+        )
+        for row, out in zip(flat, wrapped, strict=True)
+    ]
 
 
 def decode_line(line: str | bytes) -> dict[str, Any]:

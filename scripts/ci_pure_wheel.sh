@@ -22,6 +22,9 @@ VPY="$WORK/venv/bin/python"
 # the wheel's own requirements are numpy and pyarrow; pandas and pytest are the UDF test needs
 "$VPY" -m pip install -q numpy pyarrow pandas pytest
 "$VPY" -m pip install -q "$WHEEL"
+# PF-06: generation needs an installed domain, which is a plugin wheel (pure Python, about 2 MB)
+"$PY" -m pip wheel -q --no-deps "$ROOT/plugins/shape-domains" -w "$WORK/plugins"
+"$VPY" -m pip install -q --no-deps "$WORK"/plugins/sqllocks_shape_domains-*.whl
 cd "$WORK"
 "$VPY" -c "import shape, sys; assert 'site-packages' in shape.__file__, shape.__file__; print('shape', shape.__version__)"
 export SHAPE_KERNEL=python
@@ -33,6 +36,9 @@ export SHAPE_KERNEL=python
 "$VPY" -m pip install -q "pyspark>=4.0,<5"
 "$VPY" -m pytest -q -p no:cacheprovider --rootdir "$ROOT" "$ROOT/tests/integrations"
 
+# (tests/integrations includes the PF-06 generation helpers and generateSample, on the pure kernel)
+
 # 2. the real function_app.py against the public SDK (needs unixODBC for pyodbc)
 "$VPY" -m pip install -q fabric-user-data-functions nbformat
-"$VPY" -m pytest -q -p no:cacheprovider --rootdir "$ROOT" "$ROOT/tests/demo/fabric/test_udf.py"
+"$VPY" -m pytest -q -p no:cacheprovider --rootdir "$ROOT" "$ROOT/tests/demo/fabric/test_udf.py" \
+    "$ROOT/tests/demo/fabric/test_generate_udf.py"

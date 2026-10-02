@@ -1,0 +1,677 @@
+{
+ "allow_list": {
+  "ID-1": {
+   "baseline": "the baseline's version, packages and clock",
+   "observed": true,
+   "shape": "Shape's own",
+   "what": "manifest engine_version, sbom values, timestamps, run_id"
+  },
+  "PK-1": {
+   "baseline": "a table lists every written file whose path contains the table's name ('order' lists order_line's file, a directory named like a table matches all)",
+   "observed": true,
+   "shape": "a table lists exactly its own files",
+   "what": "manifest tables.*.file_paths"
+  },
+  "PK-10": {
+   "baseline": "a nested `config:` mapping is stored as one setting called 'config', so its settings (warmup_days, escalation, breaking_change_day) are never read",
+   "observed": true,
+   "shape": "the nested settings are the chaos configuration",
+   "what": "GSL chaos.config"
+  },
+  "PK-2": {
+   "baseline": "always empty (it hashes the spec's directory, never the file)",
+   "observed": true,
+   "shape": "the sha256 of the spec file when the run came from a spec",
+   "what": "manifest spec_hash"
+  },
+  "PK-3": {
+   "baseline": "always empty",
+   "observed": true,
+   "shape": "kind, file and event counts and the output root",
+   "what": "manifest outputs"
+  },
+  "PK-4": {
+   "baseline": "an unknown gate passes; a failed gate still reports SUCCESS",
+   "observed": true,
+   "shape": "an unknown gate fails; a failed gate (without chaos) fails the run",
+   "what": "unknown validation gate / failing gate"
+  },
+  "PK-5": {
+   "baseline": "an absolute or '..' lakehouse_files_root or topic name writes outside the output directory",
+   "observed": true,
+   "shape": "rejected by validation",
+   "what": "landing and topic paths"
+  },
+  "PK-6": {
+   "baseline": "an empty or non-mapping file, or a wrong-typed value, crashes or is silently misread",
+   "observed": true,
+   "shape": "a clear error naming the key",
+   "what": "malformed documents"
+  },
+  "PK-7": {
+   "baseline": "parsed and ignored by the runner",
+   "observed": true,
+   "shape": "applied with shape.chaos; counts per category in manifest chaos",
+   "what": "pack chaos section"
+  },
+  "PK-8": {
+   "baseline": "unknown keys, unsimulated enabled features and topics matching no table pass silently",
+   "observed": false,
+   "shape": "a warning each",
+   "what": "extra warnings"
+  },
+  "PK-9": {
+   "baseline": "pandas to_json writes datetimes as epoch milliseconds",
+   "observed": false,
+   "shape": "ISO 8601",
+   "what": "stream files: datetimes"
+  }
+ },
+ "inputs": [
+  {
+   "chaos": false,
+   "input": "tutorial_custom_pack.yaml",
+   "kind": "pack",
+   "t21": {
+    "columns": 16,
+    "columns_equivalent": 16,
+    "fk_checked": [
+     "order.customer_id->customer.customer_id"
+    ],
+    "tables": {
+     "customer": {
+      "columns": {
+       "customer_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "email": {
+        "checks": {
+         "distinct_ratio": true,
+         "null_rate": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "first_name": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "gender": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "is_active": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "last_name": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "loyalty_tier": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "signup_date": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       }
+      },
+      "rows": {
+       "baseline": 200,
+       "shape": 200
+      }
+     },
+     "order": {
+      "columns": {
+       "customer_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "order_date": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "order_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "order_total": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "promotion_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "shipping_address_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "status": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "store_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       }
+      },
+      "rows": {
+       "baseline": 1000,
+       "shape": 1000
+      }
+     }
+    }
+   }
+  },
+  {
+   "chaos": false,
+   "input": "notebook_custom_pack.yaml",
+   "kind": "pack",
+   "t21": {
+    "columns": 16,
+    "columns_equivalent": 16,
+    "fk_checked": [
+     "order.customer_id->customer.customer_id"
+    ],
+    "tables": {
+     "customer": {
+      "columns": {
+       "customer_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "email": {
+        "checks": {
+         "distinct_ratio": true,
+         "null_rate": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "first_name": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "gender": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "is_active": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "last_name": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "loyalty_tier": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "signup_date": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       }
+      },
+      "rows": {
+       "baseline": 200,
+       "shape": 200
+      }
+     },
+     "order": {
+      "columns": {
+       "customer_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "order_date": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "order_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "order_total": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "promotion_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "shipping_address_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "status": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "store_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       }
+      },
+      "rows": {
+       "baseline": 1000,
+       "shape": 1000
+      }
+     }
+    }
+   }
+  },
+  {
+   "chaos": false,
+   "input": "retail_basic.gsl.yaml",
+   "kind": "spec",
+   "t21": {
+    "columns": 16,
+    "columns_equivalent": 16,
+    "fk_checked": [
+     "order.customer_id->customer.customer_id"
+    ],
+    "tables": {
+     "customer": {
+      "columns": {
+       "customer_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "email": {
+        "checks": {
+         "distinct_ratio": true,
+         "null_rate": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "first_name": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "gender": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "is_active": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "last_name": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "loyalty_tier": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "signup_date": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       }
+      },
+      "rows": {
+       "baseline": 200,
+       "shape": 200
+      }
+     },
+     "order": {
+      "columns": {
+       "customer_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "order_date": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "order_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "order_total": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "promotion_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "shipping_address_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "status": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "store_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       }
+      },
+      "rows": {
+       "baseline": 1000,
+       "shape": 1000
+      }
+     }
+    }
+   }
+  },
+  {
+   "chaos": true,
+   "input": "retail_chaos.gsl.yaml",
+   "kind": "spec",
+   "t21": "skipped: the input enables chaos (T-21 covers packs without chaos)"
+  },
+  {
+   "chaos": false,
+   "input": "retail_hybrid.gsl.yaml",
+   "kind": "spec",
+   "t21": {
+    "columns": 16,
+    "columns_equivalent": 16,
+    "fk_checked": [
+     "order.customer_id->customer.customer_id"
+    ],
+    "tables": {
+     "customer": {
+      "columns": {
+       "customer_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "email": {
+        "checks": {
+         "distinct_ratio": true,
+         "null_rate": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "first_name": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "gender": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "is_active": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "last_name": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "loyalty_tier": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "signup_date": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       }
+      },
+      "rows": {
+       "baseline": 200,
+       "shape": 200
+      }
+     },
+     "order": {
+      "columns": {
+       "customer_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "order_date": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "order_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "order_total": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "promotion_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "shipping_address_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       },
+       "status": {
+        "checks": {
+         "null_rate": true,
+         "tvd": true,
+         "vocab": true
+        },
+        "equivalent": true
+       },
+       "store_id": {
+        "checks": {
+         "ks": true,
+         "null_rate": true
+        },
+        "equivalent": true
+       }
+      },
+      "rows": {
+       "baseline": 1000,
+       "shape": 1000
+      }
+     }
+    }
+   }
+  }
+ ],
+ "mode": "verify",
+ "problems": [],
+ "seconds": 24.0
+}

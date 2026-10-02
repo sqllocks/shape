@@ -243,6 +243,10 @@ instruction.
 
 | Date | ID | Change | Reason |
 |---|---|---|---|
+| 2026-10-02 | PF-06b, §12.3 | **Owner: a contract may check a subset of a dataset's tables** (option (a)). PF-06b keeps its fixes (a `tables` contract against a single-table profile raises `ContractError`; a named table the profile lacks is a `table_exists` violation; `shape profile FOLDER --dataset`; artifact folders unique to the microsecond) and drops its new default that flagged every unnamed profile table as `extra_table`, which broke existing partial contracts (§12.3: every rule is optional, format final for 1.0). | Owner, 2026-10-02: "A". |
+| 2026-10-02 | P6-01, T-21 | **Owner: investigate the seed-1042 T-21 misses before accepting any** (P6-01a–d: clause (h) cells and healthcare `provider.last_name`). Lane `lane/P6-01-seed`: many-seed distributions for both tools, per-column decomposition, generation-rule comparison; fix real differences. No seed, floor, tolerance or case changes. | Owner, 2026-10-02: "Investigate further first". |
+| 2026-10-02 | P6-01a, allocator | **Owner: keep the Arrow memory-pool / THP setting on `import shape`** (documented; `SHAPE_MEMORY_POOL=default` opts out). | Owner, 2026-10-02. |
+| 2026-10-02 | P6-01, T-21, GEN-IN | **Lead notes on the P6-01 domain lanes.** (1) P6-01c's harness change to `domain_1to1/verify.py` clause (e) is accepted: the vocabulary of a `faker` provider is its full pool (`company`, `sentence`; `uri` by component), and of an `enum`/`weighted_enum` its declared value set, instead of the values the baseline drew at seed 42; no tolerance changed and values outside the vocabulary still fail. (2) P6-01a round 2 sets the Arrow memory pool (or turns off THP) on `import shape`, documented with an opt-out (`SHAPE_MEMORY_POOL=default`); the owner was told and may ask to limit it to the command line. (3) GEN-IN at medium after round 2 is 2.65x-8.1x across the 13 domains; round 3 runs as two lanes (per-domain hot paths; engine-wide writer, scheduler and native core). Gate unchanged. | Lead; owner asked for an investigation first (see the row above). |
 | 2026-10-02 | P6-02, P6-10 | **Lead acceptance notes.** P6-02: `shape.plugins.kit.check_chaos` assumes a mutation keeps the batch schema; five of the six categories change it by design (schema, value `wrong_types`, volume, file). P6-02's acceptance does not use the kit check, so the kit is left as is (a follow-up, no contract change). P6-10: `tests/privacy/test_safe_validator.py::test_cli_input_errors_exit_2` changed one assertion to the new contract (`shape profile validate FILE` without `--safe` is the structural check: 0 valid, 1 missing), as P6-10's deliverable requires; nothing skipped. | Lead. |
 | 2026-10-02 | P6-01a, GEN-IN | **P6-01a GEN-IN at medium missed after round 1** (capital_markets 5.20x, education 7.82x, financial 7.15x; gate 10x). Following the owner's standing "keep optimising" direction (P4-10, G1): round 2 on `lane/P6-01a` with the lane's option (b) (process-wide Arrow allocator choice, native pandas-free generation path) and, if needed, (c) (parallel Parquet encoding); retail must not regress. Gate unchanged. P6-01b/c/d start from `lane/P6-01a` in parallel. T-21 clause (h) misses at seed 1042 in 6 of 60 cells are escalated to the owner (no seed, floor or case changed). | Lead; owner ruling on clause (h) pending. |
 | 2026-10-02 | PF-06 | **Trust fixes from PF-06's findings** (owner's standing decision, 2026-10-01): `shape check` must not pass a multi-table contract against a single-table profile, and `shape profile <folder>` must not silently read a folder as one table; artifact folders named by the second must not collide. Lane `lane/PF-06b`. | Lead, applying the owner's 2026-10-01 decision. |
@@ -1989,7 +1993,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 30 | PF-03 | done | a726dd4 |
 | 31 | PF-04 | done (fsspec test requirement fixed at integration, c033f48) | b98dbac |
 | 32 | PF-05 | wip (merged; CI image build and 500 MB check pending) | 6d2e22a |
-| 33 | PF-06 | wip (lane/PF-06; built, lead verification next; trust fixes in lane/PF-06b) | |
+| 33 | PF-06 | done | fefd854 |
 | 34 | P3-01 | done | 37386f3 |
 | 35 | P3-02 | done | 500367f |
 | 36 | P3-03 | done | 43f5d88 |
@@ -2012,14 +2016,14 @@ Work packages are listed in execution order. The next work package is the first 
 | 52 | P4-10 | done (two §6.5 rounds; lead GEN-CLI 2.10 GHz: medium 10.57x, large 31.64x; evidence P4-10-lead/) | 5fdf9b2 |
 | 53 | P4-11 | done (retail medium tiers 1-3: 0 mismatches over 9 tables; AUC/GMM max diff 0.017 <= 0.02; DP distinct unseeded) | f85b99d |
 | 54 | P5-01 | done | 33f57a7 |
-| 55 | P5-02 | wip (lane/P5-02; built, lead verification next) | |
+| 55 | P5-02 | done | 2d0a1d3 |
 | 56 | P5-03 | todo | |
 | 57 | P5-04 | todo | |
-| 58 | P6-01a | wip (lane/P6-01a; built; T-21 clause (h) chance misses with the owner; GEN-IN round 2) | |
-| 59 | P6-01b | wip (lane/P6-01b) | |
-| 60 | P6-01c | wip (lane/P6-01c) | |
-| 61 | P6-01d | wip (lane/P6-01d) | |
-| 62 | P6-01e | todo | |
+| 58 | P6-01a | wip (lane/P6-01a merged into lane/P6-01-int; T-21 clause (h) chance misses with the owner; GEN-IN round 3 in lane/P6-01-perf-domains and lane/P6-01-perf-engine) | |
+| 59 | P6-01b | wip (built, merged into lane/P6-01-int; T-21 clause (h) chance misses with the owner; GEN-IN round 3) | |
+| 60 | P6-01c | wip (built, merged into lane/P6-01-int; T-21 clause (h) chance misses with the owner; GEN-IN round 3) | |
+| 61 | P6-01d | wip (built, merged into lane/P6-01-int; T-21 clause (h) chance misses with the owner; GEN-IN round 3) | |
+| 62 | P6-01e | wip (lane/P6-01e, started early from lane/P6-01-int) | |
 | 63 | P6-02 | done | 0f8c36e |
 | 64 | P6-03 | done | 50d7be4 |
 | 65 | P6-04 | todo | |
@@ -2035,7 +2039,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 74 | P6-11 | todo | |
 | 75 | P6-12 | todo | |
 | 76 | P6-13 | todo | |
-| 77 | P6-14 | wip (lane/P6-14; built, lead verification next) | |
+| 77 | P6-14 | done | 62160c9 |
 | 78 | P7-01 | done | b04bf32 |
 | 79 | P7-02 | done | d6e3a97 |
 | 80 | P7-03 | done | 06300e7 |
