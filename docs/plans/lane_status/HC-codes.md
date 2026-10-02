@@ -126,7 +126,7 @@ kept). No text of either side was edited.
 
 ## Checks (run in this session on this branch, after the merge)
 
-- `pytest plugins/shape-healthcare-codes/tests`: 100 passed.
+- `pytest plugins/shape-healthcare-codes/tests`: 100 passed (run before the final edit; rerun below).
 - `ruff check` and `ruff format --check` on `src tests plugins benchmarks/vs_spindle`: clean.
 - `mypy` (repo config, strict): no issues in 347 files; `mypy --strict` on the plugin source: no
   issues in 24 files.
@@ -142,3 +142,13 @@ kept). No text of either side was edited.
 - Plugin kit: `python -m shape.plugins.kit sqllocks-shape-healthcare-codes`: 8 plugins conform.
 - Suites `pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`
   with `SHAPE_KERNEL=rust` and `python`: see the last section.
+
+## Suite results
+
+`pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`, all plugins
+installed editable, run after the merge: `SHAPE_KERNEL=rust` 5194 passed, 16 skipped, 2 failed
+(9 min); `SHAPE_KERNEL=python` 5194 passed, 16 skipped, 2 failed (16.5 min). The 2 failures were
+the same in both: `tests/plugins/test_plugin_kit_install.py` pins the plugin inventory (6
+distributions) and failed on the added one. I changed the inventory in that test (the set now
+includes `healthcare-codes`, the wheel count is 7); no check was loosened. `tests/plugins`
+re-run after the change: 100 passed.
