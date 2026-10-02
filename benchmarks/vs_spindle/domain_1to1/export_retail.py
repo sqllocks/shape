@@ -40,14 +40,14 @@ DATASETS = ("categories", "product_names", "promo_names", "us_zip_locations")
 
 
 def schema_document(fixture: Path = SCHEMA_FIXTURES["schema.json"]) -> dict[str, Any]:
-    """The schema as Shape reads it. One addition to the baseline's: its uniform ``temporal``
+    """The schema as Shape reads it. One addition to the baseline's: its non-seasonal ``temporal``
     columns are nanosecond timestamps (pandas ``datetime64[ns]``), so they carry ``unit: ns``
     to give the same Arrow type (T-21 (a)); ``derived`` dates follow their source's unit."""
     doc: dict[str, Any] = import_dump(json.loads(fixture.read_text("utf-8"))).to_dict()
     for table in doc["tables"].values():
         for column in table["columns"].values():
             gen = column["generator"]
-            if gen.get("strategy") == "temporal" and gen.get("pattern") == "uniform":
+            if gen.get("strategy") == "temporal" and gen.get("pattern", "uniform") != "seasonal":
                 gen["unit"] = "ns"
     return doc
 

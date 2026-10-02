@@ -168,6 +168,23 @@ def foreign_keys(raw: dict) -> list[tuple[str, str, str, str]]:
 # ─────────────────────────────────────────────────────────────────────────────
 
 
+def column_pool(
+    pools: "Pools",
+    raw: dict,
+    fk_parent: dict[tuple[str, str], tuple[str, str]],
+    table: str,
+    column: str,
+) -> set[str] | None:
+    """The values a column can take: its own generator's pool, and for a foreign key the pool of
+    the key it points at (a text key sampled from a reference dataset takes different values under
+    another seed, but always from that dataset)."""
+    seen: set[tuple[str, str]] = set()
+    while (table, column) in fk_parent and (table, column) not in seen:
+        seen.add((table, column))
+        table, column = fk_parent[(table, column)]
+    return pools.pool_for(raw["tables"][table]["columns"][column]["generator"])
+
+
 def same_values(a: pd.Series, b: pd.Series) -> bool:
     if len(a) != len(b):
         return False
@@ -321,6 +338,33 @@ class Pools:
                 return float(ok.mean())
 
             return street, "number(100..9998)+' '+STREET_NAMES+' '+_STREET_SUFFIXES"
+        if st == "faker" and gen.get("provider") == "name":
+            firsts, lasts = set(self.names.FIRST_NAMES), set(self.names.LAST_NAMES)
+
+            def full_name(s: pd.Series) -> float:
+                def ok(v: str) -> bool:
+                    words = v.split(" ")
+                    return any(
+                        " ".join(words[:i]) in firsts and " ".join(words[i:]) in lasts
+                        for i in range(1, len(words))
+                    )
+
+                nn = s.dropna().astype(str)
+                return float(np.mean([ok(v) for v in nn])) if len(nn) else 1.0
+
+            return full_name, "FIRST_NAMES+' '+LAST_NAMES"
+        if st == "faker" and gen.get("provider") == "phone_number":
+
+            def phone(s: pd.Series) -> float:
+                ex = s.dropna().astype(str).str.extract(r"^\((\d{3})\) (\d{3})-(\d{4})$")
+                ok = (
+                    ex[0].astype(float).between(200, 998)
+                    & ex[1].astype(float).between(200, 998)
+                    & ex[2].astype(float).between(1000, 9998)
+                )
+                return float(ok.mean())
+
+            return phone, "(AAA) EEE-SSSS, AAA/EEE 200..998, SSSS 1000..9998"
         if st == "pattern":
             rx = pattern_regex(gen.get("format", ""))
             if rx is not None:
@@ -464,10 +508,19 @@ def compare_column(
 # ─────────────────────────────────────────────────────────────────────────────
 
 
+def _fk_values(column: pd.Series) -> pd.Series:
+    """The non-null values of a key column: numbers for a numeric key, text for a text key
+    (``capital_markets`` keys its tables by ticker)."""
+    values = column.dropna()
+    if pd.api.types.is_numeric_dtype(values) or pd.api.types.is_bool_dtype(values):
+        return pd.to_numeric(values)
+    return values
+
+
 def fk_checks(T: dict[str, pd.DataFrame], fks) -> dict:
     out = {}
     for c, cc, p, pc_ in fks:
-        vals = pd.to_numeric(T[c][cc].dropna())
+        vals = _fk_values(T[c][cc])
         ok = vals.isin(set(T[p][pc_].tolist()))
         out[f"{c}.{cc}->{p}.{pc_}"] = {
             "integrity": float(ok.mean()) if len(ok) else 1.0,
@@ -481,7 +534,9 @@ def fanout(T: dict[str, pd.DataFrame], fks) -> dict:
     for c, cc, p, pc_ in fks:
         if c == p:
             continue
-        vals = pd.to_numeric(T[c][cc].dropna()).astype("int64")
+        vals = _fk_values(T[c][cc])
+        if pd.api.types.is_numeric_dtype(vals):
+            vals = vals.astype("int64")
         cnt = vals.value_counts().reindex(T[p][pc_].to_numpy(), fill_value=0).to_numpy()
         q = np.quantile(cnt, [0.5, 0.9, 0.99])
         out[f"{p}->{c}.{cc}"] = {
@@ -619,6 +674,7 @@ def main(argv: list[str] | None = None) -> int:
     raw = load_schema_json(domain)
     tables = list(raw["tables"])
     fks = foreign_keys(raw)
+    fk_parent = {(c, cc): (p, pc_) for c, cc, p, pc_ in fks if (c, cc) != (p, pc_)}
 
     runs = [(ref, REF_SEED)] + [("spindle", s) for s in BASELINE_SEEDS] + [(impl, IMPL_SEED)]
     for who, seed in runs:
@@ -704,7 +760,11 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             gen = raw["tables"][tn]["columns"][c]["generator"]
             cr = compare_column(
-                sp[c], im[c], B[(tn, c)], pools.pool_for(gen), pools.component_fn(gen)
+                sp[c],
+                im[c],
+                B[(tn, c)],
+                column_pool(pools, raw, fk_parent, tn, c),
+                pools.component_fn(gen),
             )
             cr["arrow_type_match"] = ts.get(c) == ti.get(c)
             cr["equivalent"] = cr["equivalent"] and cr["arrow_type_match"]
