@@ -1,6 +1,7 @@
-"""Streaming form of ``seed_study_wide.py`` for large composite cells: the same scores, one seed at a time.
+"""Streaming form of ``seed_study_wide.py`` for large composite cells (one seed at a time).
 
-    source scripts/env.sh && "$SPINDLE_PY" benchmarks/vs_spindle/domain_1to1/seed_study_wide_stream.py \\
+    source scripts/env.sh && "$SPINDLE_PY" \\
+        benchmarks/vs_spindle/domain_1to1/seed_study_wide_stream.py \\
         --domain composite_enterprise --scale small --n 30 --out wide.json
 
 A composite at medium scale writes gigabytes per run, so holding 61 runs on disk (as

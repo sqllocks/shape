@@ -262,7 +262,7 @@ def test_the_baseline_really_has_the_cmp_1_defect():
 
 def test_each_domain_reads_its_own_dataset_when_names_clash():
     """CMP-2. Education and HR both ship ``department_names``; in the baseline the first one
-    loaded served both ('Supply Chain' as a university department)."""
+    loaded served both (in campus, 'Biology' as a company department)."""
     schema = resolve("campus").schema
     tables = Engine(schema, scale="small", seed=3).generate().tables
     edu = set(

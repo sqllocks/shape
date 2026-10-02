@@ -62,8 +62,9 @@ DATASET_CLASH: dict[str, Any] = {
     "baseline": (
         "A reference dataset is found by its name alone and cached for the process. Education and "
         "HR each ship department_names (university departments; company departments). In a "
-        "composite the first one loaded serves both: in campus the education departments are named "
-        "'Supply Chain' and 'Business Development'."
+        "composite the first one loaded serves both: in campus (education loaded first) HR's "
+        "departments are named 'Biology' and 'Nursing'. Measured on the baseline's own output, "
+        "P6-01e-seed: every hr_department.department_name value is a university department."
     ),
     "shape": (
         "Each domain's references read that domain's own dataset when the names clash "
@@ -80,7 +81,7 @@ DATASET_CLASH: dict[str, Any] = {
     # columns where the baseline draws from the wrong domain's dataset
     "pool_columns": {
         "composite_campus": {
-            ("education_department", "department_name"): ("education", "department_names"),
+            ("hr_department", "department_name"): ("hr", "department_names"),
         },
     },
 }
