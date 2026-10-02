@@ -62,7 +62,7 @@ def norm_series(s: pd.Series) -> pd.Series:
         nn = s.dropna()
         head = list(nn.head(50))
         if head and all(isinstance(v, str) for v in head) and all(DATETIME_RE.match(v) for v in head):
-            parsed = pd.to_datetime(s, errors="coerce", utc=True)
+            parsed = pd.to_datetime(s, errors="coerce", utc=True, format="ISO8601")
             return parsed.dt.tz_localize(None).astype("datetime64[ns]")
         if head and all(hasattr(v, "year") and hasattr(v, "day") for v in head):
             return pd.to_datetime(s, errors="coerce").astype("datetime64[ns]")
