@@ -14,7 +14,9 @@ overrides and null/boolean tokens; ``PANDAS_CSV`` reproduces ``pandas.read_csv``
 
 from __future__ import annotations
 
+import csv as _csv
 import glob as _glob
+import io
 import itertools
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
@@ -74,7 +76,9 @@ class CsvOptions:
     """CSV parsing options. ``column_types`` overrides inference per column (Arrow types or
     their names, e.g. ``{"zip": "string"}``); ``None`` tokens keep pyarrow's defaults."""
 
-    delimiter: str | None = None  # None: "," ("\t" for .tsv)
+    delimiter: str | None = None  # None: "\t" for .tsv, else sniffed (comma, semicolon, tab, pipe)
+    encoding: str | None = None  # None: utf-8
+    quotechar: str | None = None  # None: '"'
     column_types: Mapping[str, Any] = field(default_factory=dict)
     null_values: tuple[str, ...] | None = None
     true_values: tuple[str, ...] | None = None
@@ -168,17 +172,71 @@ def _resolve_type(t: Any) -> Any:
     raise ReaderError(f"cannot use {t!r} as a column type")
 
 
+_DELIMITERS = (",", ";", "\t", "|")
+_SNIFF_BYTES = 1 << 16
+_SNIFF_ROWS = 100
+
+
+def sniff_delimiter(
+    path: str | Path, encoding: str | None = None, quotechar: str | None = None
+) -> str | None:
+    """The delimiter (comma, semicolon, tab or pipe) that splits the head of a file into the same
+    number (two or more) of fields on every row, or ``None`` when no candidate does. A comma wins
+    when it qualifies, then the candidate with the most fields."""
+    try:
+        with open(path, "rb") as fh:
+            head = fh.read(_SNIFF_BYTES)
+        text = head.decode(encoding or "utf-8", errors="ignore")
+    except (OSError, LookupError):
+        return None
+    lines = text.splitlines()
+    if len(head) == _SNIFF_BYTES:
+        lines = lines[:-1]  # the last line was cut
+    lines = [line for line in lines if line.strip()][:_SNIFF_ROWS]
+    if len(lines) < 2:
+        return None
+    best: tuple[int, str] | None = None
+    for cand in _DELIMITERS:
+        try:
+            rows = list(
+                _csv.reader(
+                    io.StringIO("\n".join(lines)), delimiter=cand, quotechar=quotechar or '"'
+                )
+            )
+        except _csv.Error:
+            continue
+        widths = {len(r) for r in rows}
+        if len(widths) != 1 or (width := widths.pop()) < 2:
+            continue
+        if cand == ",":
+            return ","
+        if best is None or width > best[0]:
+            best = (width, cand)
+    return best[1] if best else None
+
+
 def _csv_options(
     path: Path, opts: CsvOptions, columns: list[str] | None, schema: pa.Schema | None
 ) -> tuple[Any, Any, Any]:
-    delimiter = opts.delimiter or ("\t" if _strip_compression(path) == ".tsv" else ",")
+    delimiter = opts.delimiter
+    if delimiter is None:
+        if _strip_compression(path) == ".tsv":
+            delimiter = "\t"
+        else:  # a compressed file is not sniffed (its head is not text)
+            sniffed = (
+                None
+                if path.suffix.lower() in _COMPRESSION
+                else sniff_delimiter(path, opts.encoding, opts.quotechar)
+            )
+            delimiter = sniffed or ","
     ro = pacsv.ReadOptions(
+        encoding=opts.encoding or "utf8",
         use_threads=opts.use_threads,
         block_size=opts.block_size,
         autogenerate_column_names=not opts.has_header and opts.column_names is None,
         column_names=list(opts.column_names) if opts.column_names else None,
     )
-    po = pacsv.ParseOptions(delimiter=delimiter)
+    po = pacsv.ParseOptions(delimiter=delimiter, quote_char=opts.quotechar or '"')
     types = {k: _resolve_type(v) for k, v in opts.column_types.items()}
     if schema is not None:
         types = {**{f.name: f.type for f in schema}, **types}

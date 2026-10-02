@@ -9,6 +9,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any, cast
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
@@ -138,6 +139,170 @@ def detect_pattern(non_null: pa.Array, cardinality: int) -> str | None:
     if rate("language") >= thr and cardinality <= 200:
         return "language_code"
     return None
+
+
+# Rates of personal-data patterns (#2). ``pattern`` is one label gated at 90% of a 1,000-row
+# sample, so a column where 4% of the values are SSNs reports nothing. These rates are measured
+# on every distinct value (weighted by its count), up to ``_RATE_MAX_DISTINCT`` of them; beyond
+# that an evenly spaced sample of the distinct values stands in for all of them. Whole-value rates
+# are taken for the personal-data families and for the detected ``pattern``; each family is first
+# narrowed by a plain substring every match must hold, which is far cheaper than the regex.
+_RATE_LABELS = {"mac": "mac_address", "postal": "postal_code", "currency": "currency_code"}
+_RATE_LABELS |= {"language": "language_code", "ipv4": "ip_address", "ipv6": "ip_address"}
+_RATE_LABELS |= {"ssn": "ssn", "email": "email", "iban": "iban"}
+_RATE_FAMILIES = ("email", "ssn", "ipv4", "ipv6", "iban")
+_NEEDS = {"email": "@", "ssn": "-", "ipv4": ".", "ipv6": ":"}
+_CONTAINS_RE = {
+    "ssn": r"(?:^|\D)\d{3}-\d{2}-\d{4}(?:\D|$)",
+    "email": r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}",
+    "credit_card": r"(?:^|\D)\d(?:[ -]?\d){12,18}(?:\D|$)",
+}
+_CONTAINS_NEEDS = {"ssn": "-", "email": "@"}
+_CARD_RUN = re.compile(r"\d(?:[ -]?\d){12,18}")
+_RATE_MAX_DISTINCT = 50_000
+
+
+def _luhn(digits: str) -> bool:
+    total = 0
+    for i, ch in enumerate(reversed(digits)):
+        d = int(ch)
+        if i % 2:
+            d = d * 2 - 9 if d > 4 else d * 2
+        total += d
+    return total % 10 == 0
+
+
+def _has_card(text: str) -> bool:
+    for m in _CARD_RUN.finditer(text):
+        digits = re.sub(r"\D", "", m.group())
+        if 13 <= len(digits) <= 19 and _luhn(digits):
+            return True
+    return False
+
+
+def _mask(uniq: pa.Array, pat: str, needs: str | None) -> np.ndarray:
+    """Which of ``uniq`` match the regex ``pat``; ``needs`` is a substring every match contains."""
+    if needs is None:
+        hit = pc.match_substring_regex(uniq, pat).fill_null(False)
+        return np.asarray(hit.to_numpy(zero_copy_only=False), dtype=bool)
+    cand = np.asarray(
+        pc.match_substring(uniq, needs).fill_null(False).to_numpy(zero_copy_only=False), dtype=bool
+    )
+    out = np.zeros(len(uniq), dtype=bool)
+    if cand.any():
+        hit = pc.match_substring_regex(uniq.filter(pa.array(cand)), pat).fill_null(False)
+        out[np.flatnonzero(cand)] = np.asarray(hit.to_numpy(zero_copy_only=False), dtype=bool)
+    return out
+
+
+def pattern_rates(
+    uniq: pa.Array, counts: np.ndarray, n_nn: int, detected: str | None = None
+) -> tuple[dict[str, float], dict[str, float]]:
+    """``(whole, contains)``: the share of the non-null values that are entirely a pattern of each
+    personal-data family (and of the detected ``pattern``), and the share that contain an SSN,
+    email address or card number. Zero rates are left out."""
+    if n_nn == 0 or len(uniq) == 0:
+        return {}, {}
+    counts = np.asarray(counts, dtype=np.int64)
+    if len(uniq) > _RATE_MAX_DISTINCT:
+        pick = np.linspace(0, len(uniq) - 1, _RATE_MAX_DISTINCT).astype(np.int64)
+        uniq = uniq.take(pa.array(pick))
+        counts = counts[pick]
+        n_nn = int(counts.sum())
+    keys = list(_RATE_FAMILIES)
+    for key, label in _RATE_LABELS.items():
+        if label == detected and key not in keys:
+            keys.append(key)
+    whole: dict[str, float] = {}
+    for key in keys:
+        hit = int(counts[_mask(uniq, _PATTERNS[key], _NEEDS.get(key))].sum())
+        if hit:
+            label = _RATE_LABELS[key]
+            whole[label] = whole.get(label, 0.0) + hit / n_nn
+    contains: dict[str, float] = {}
+    for key, pat in _CONTAINS_RE.items():
+        mask = _mask(uniq, pat, _CONTAINS_NEEDS.get(key))
+        if key == "credit_card" and mask.any():
+            keep = np.array([_has_card(t) for t in uniq.filter(pa.array(mask)).to_pylist()])
+            mask = mask.copy()
+            mask[np.flatnonzero(mask)] = keep
+        hit = int(counts[mask].sum())
+        if hit:
+            contains[key] = hit / n_nn
+    return {k: round(v, 6) for k, v in whole.items()}, {k: round(v, 6) for k, v in contains.items()}
+
+
+_FIXED_OFFSET = re.compile(r"([+-])(\d{2}):?(\d{2})")
+_UNIT_TO_US = {"s": (1_000_000, 1), "ms": (1000, 1), "us": (1, 1), "ns": (1, 1000)}
+
+
+def _tzinfo(tz: str) -> _dt.tzinfo:
+    """The ``tzinfo`` of a column's zone. UTC and fixed offsets need no time-zone database (Windows
+    has none); a named zone does (#21)."""
+    if tz.upper() in ("UTC", "Z"):
+        return _dt.UTC
+    m = _FIXED_OFFSET.fullmatch(tz)
+    if m:
+        delta = _dt.timedelta(hours=int(m.group(2)), minutes=int(m.group(3)))
+        return _dt.timezone(-delta if m.group(1) == "-" else delta)
+    try:
+        return ZoneInfo(tz)
+    except (ZoneInfoNotFoundError, ValueError, OSError) as exc:
+        raise ValueError(
+            f"cannot read the time zone {tz!r}: this system has no time-zone database. "
+            "Install the 'tzdata' package (pip install tzdata)."
+        ) from exc
+
+
+def _local_timestamp(aware: pa.Array, tz: str) -> pa.Array:
+    """The wall-clock (zone-less) timestamps of a zoned column. Arrow's conversion is used for
+    named zones (it needs the database); UTC and fixed offsets are plain integer arithmetic."""
+    tzinfo = _tzinfo(tz)
+    offset = _dt.datetime(1970, 1, 1, tzinfo=_dt.UTC).astimezone(tzinfo).utcoffset()
+    if isinstance(tzinfo, _dt.timezone) and offset is not None:
+        per_sec = {"s": 1, "ms": 1000, "us": 1_000_000, "ns": 1_000_000_000}[aware.type.unit]
+        shift = int(offset.total_seconds()) * per_sec
+        ints = pc.cast(aware, pa.int64())
+        return pc.cast(pc.add(ints, pa.scalar(shift, pa.int64())), pa.timestamp(aware.type.unit))
+    try:
+        return pc.local_timestamp(aware)
+    except pa.ArrowInvalid as exc:
+        raise ValueError(
+            f"cannot read the time zone {tz!r}: this system has no time-zone database. "
+            "Install the 'tzdata' package (pip install tzdata)."
+        ) from exc
+
+
+def _aware_datetimes(aware: pa.Array, tz: str) -> list[_dt.datetime | None]:
+    """The values of a zoned column as aware datetimes (nanoseconds cut to microseconds), built
+    from the integers so that pyarrow never needs a time-zone database."""
+    tzinfo = _tzinfo(tz)
+    div, mul = _UNIT_TO_US[aware.type.unit]
+    epoch = _dt.datetime(1970, 1, 1, tzinfo=_dt.UTC)
+    ints = pc.cast(aware, pa.int64()).to_pylist()
+    return [
+        None
+        if v is None
+        else (epoch + _dt.timedelta(microseconds=v * mul // div)).astimezone(tzinfo)
+        for v in ints
+    ]
+
+
+MAX_VALUE_CHARS = 256  # a stored text value (a value-count key, a minimum, a maximum) is cut here
+
+
+def _capped(keys: list[str], shares: Any) -> dict[str, float]:
+    """``dict(zip(keys, shares))`` with keys longer than ``MAX_VALUE_CHARS`` cut (and marked with
+    an ellipsis), so a column of long documents cannot make the profile as big as the data (#37).
+    Keys that become equal add their shares."""
+    out: dict[str, float] = {}
+    for k, v in zip(keys, shares, strict=True):
+        if len(k) > MAX_VALUE_CHARS:
+            k = k[:MAX_VALUE_CHARS] + "\u2026"
+            out[k] = round(out.get(k, 0.0) + float(v), 6)
+        else:
+            out[k] = v
+    return out
 
 
 def _iso_strings(values: pa.Array, unit: str) -> list[str | None]:
@@ -408,8 +573,8 @@ def _profile_object_column(c: _Col, row_count: int, top_n: int = 500) -> _Work:
     if n_nn:
         props = [round(n / n_nn, 6) for _, n in entries]
         if is_enum:
-            enum_values = dict(zip(ukeys, props, strict=True))
-        value_counts_ext = dict(zip(ukeys[:top_n], props[:top_n], strict=True))
+            enum_values = _capped(ukeys, props)
+        value_counts_ext = _capped(ukeys[:top_n], props[:top_n])
 
     # ---- column type, numeric stats ------------------------------------------------------
     stype = "string"
@@ -480,6 +645,8 @@ def _profile_object_column(c: _Col, row_count: int, top_n: int = 500) -> _Work:
         outlier_rate=base.outlier_rate if base else None,
         value_counts_ext=value_counts_ext,
         fit_score=base.fit_score if base else None,
+        precision=c.arr.type.precision if kind == "objdec" else None,
+        scale=c.arr.type.scale if kind == "objdec" else None,
     )
     return _Work(col=c, prof=prof, uniques=pa.array(ukeys, pa.string()))
 
@@ -499,16 +666,23 @@ def _profile_column(
         # pandas' .dt.hour etc. use the wall clock of the column's zone; keys and min/max
         # keep the zone (and its UTC offset) in their text
         aware = _combine(arr)
-        arr = pc.local_timestamp(aware)
-        tzmap = dict(zip(_combine(arr).to_pylist(), aware.to_pylist(), strict=True))
+        arr = _local_timestamp(aware, c.tz)
+        tzmap = dict(zip(_combine(arr).to_pylist(), _aware_datetimes(aware, c.tz), strict=True))
 
     # ---- non-null values ---------------------------------------------------
+    nan_count = inf_count = 0
     if kind == "float":
         a = _combine(arr)
         fvals = a.to_numpy(zero_copy_only=False)  # nulls -> NaN
-        nan_mask = np.isnan(fvals)
-        null_count = int(nan_mask.sum())
-        nn_np = fvals[~nan_mask] if null_count else fvals
+        # a null is a missing value; NaN and +-inf are values that are not finite (#22): they are
+        # counted on their own and kept out of every statistic
+        null_count = a.null_count
+        finite = np.isfinite(fvals)
+        bad = int(len(fvals) - null_count - int(finite.sum()))
+        if bad:
+            nan_count = int(np.isnan(fvals).sum()) - null_count
+            inf_count = bad - nan_count
+        nn_np = fvals[finite] if null_count + bad else fvals
         raw_nn = nn_np
         nn_np = nn_np + 0.0  # pandas hashes -0.0 == 0.0 (key printed as the first-seen zero)
         non_null = pa.array(nn_np)
@@ -563,7 +737,7 @@ def _profile_column(
     else:
         cardinality = 0
     cardinality_ratio = cardinality / row_count if row_count > 0 else 0.0
-    is_unique = cardinality == row_count and null_count == 0
+    is_unique = cardinality == row_count and null_count + nan_count + inf_count == 0
     # enum rule (P1-18): the size limits, and the values repeat (distinct <= half the non-null
     # values; a unique column never qualifies)
     is_enum = (
@@ -658,7 +832,12 @@ def _profile_column(
     # ---- enum + value_counts_ext ------------------------------------------
     enum_values = None
     value_counts_ext = None
-    if n_nn:
+    # a text column whose values are (nearly) all different has no frequencies to report: its top
+    # values would be an arbitrary few of them, stored whole (#37)
+    arbitrary_top = (
+        kind == "str" and stype == "string" and cardinality > top_n and cardinality >= 0.95 * n_nn
+    )
+    if n_nn and not arbitrary_top:
         if num_top is not None:
             top_keys = _pa(num_top["keys"])
             top_counts = _pa(num_top["counts"]).to_numpy(zero_copy_only=False)
@@ -679,8 +858,8 @@ def _profile_column(
         props = top_counts / n_nn
         rounded = _round6(props)
         if is_enum:
-            enum_values = dict(zip(keys, rounded, strict=True))
-        value_counts_ext = dict(zip(keys[:top_n], rounded[:top_n], strict=True))
+            enum_values = _capped(keys, rounded)
+        value_counts_ext = _capped(keys[:top_n], rounded[:top_n])
 
     # ---- min / max (pandas types) ------------------------------------------
     min_value = max_value = None
@@ -713,6 +892,8 @@ def _profile_column(
             xs = xs_sorted.astype(np.float64, copy=False)
         st = kernel.numeric_stats(pa.array(numeric), pa.array(xs) if xs is not None else None)
         mean_val, std_val = st["mean"], st["std"]
+        if cnt < 2:
+            std_val = None  # a spread needs two values; NaN would not be valid JSON (#22)
         fitted = _kernel_detect_distribution(numeric)
         dist_name, dist_params = fitted["distribution"], fitted["distribution_params"]
         fit_score_val = fitted["fit_score"]
@@ -726,8 +907,12 @@ def _profile_column(
     # ---- strings -------------------------------------------------------------
     pattern = None
     string_length = None
+    rates: dict[str, float] = {}
+    contains: dict[str, float] = {}
     if stype == "string" and n_nn:
         pattern = detect_pattern(non_null, cardinality)
+        if kind == "str":
+            rates, contains = pattern_rates(uniq, counts, n_nn, pattern)
         lens = pc.utf8_length(non_null).to_numpy()
         string_length = {
             "min": float(lens.min()),
@@ -795,6 +980,10 @@ def _profile_column(
         outlier_rate=outlier_rate_val,
         value_counts_ext=value_counts_ext,
         fit_score=fit_score_val,
+        nan_count=nan_count,
+        inf_count=inf_count,
+        pattern_rates=rates or None,
+        pattern_contains_rates=contains or None,
     )
     return _Work(col=c, prof=prof, uniques=uniq if (keep_uniques or num_top is None) else None)
 
