@@ -58,6 +58,19 @@ def test_category_proportions_shift_without_a_new_value():
     assert ch[0]["baseline"]["completed"] == pytest.approx(0.8, abs=0.03)
 
 
+def test_a_category_shift_record_lists_the_categories_that_moved_most():
+    rng = random.Random(2)
+    values = [f"v{i}" for i in range(40)]
+    flat = [1.0] * 40
+    skewed = [1.0] * 40
+    skewed[0], skewed[1] = 30.0, 0.1
+    d = shape.diff(prof(k=mix(rng, flat, 4000, values)), prof(k=mix(rng, skewed, 4000, values)))
+    ch = next(c for c in d.changes if c["kind"] == "category_shift")
+    assert len(ch["baseline"]) == len(ch["current"]) == 10
+    assert {"v0", "v1"} <= set(ch["baseline"])
+    assert ch["current"]["v0"] > 5 * ch["baseline"]["v0"]
+
+
 def test_spread_change_with_the_same_mean():
     nr = np.random.default_rng(1)
     a = prof(x=[float(v) for v in nr.normal(100, 10, 4000)])

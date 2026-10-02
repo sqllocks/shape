@@ -33,6 +33,11 @@ shape check customers.shape contract.json          # exit code 1 if the contract
 shape diff customers.shape customers_next.shape --fail-on-drift
 ```
 
+`shape diff` compares types, null rates, distinct values, category mix, true rates, spread,
+quantiles, ranges, patterns and string lengths, with a documented default for each; thresholds can
+be set per column and columns ignored (`--ignore`, `--policy`). See `docs/DRIFT.md`, which also
+covers `shape generate-drift`, daily data with planted drift and an answer key.
+
 A folder is one table (its files are partitions) unless you pass `--dataset`, which profiles one
 table per file, named by the file name: `shape profile data/ --dataset -o data.shape`. A contract
 with a `tables` object is checked against such a dataset profile only; against a single table

@@ -538,6 +538,17 @@ def _tvd_noise(a: Mapping[Any, float], b: Mapping[Any, float], n1: int, n2: int)
     return 0.4 * total
 
 
+def _largest_moves(
+    a: Mapping[str, float], b: Mapping[str, float], limit: int = 10
+) -> tuple[dict[str, float], dict[str, float]]:
+    """The proportions of the ``limit`` categories that moved most, for the change record."""
+    keys = sorted(set(a) | set(b), key=lambda k: (-abs(a.get(k, 0.0) - b.get(k, 0.0)), k))[:limit]
+    return (
+        {k: round(a.get(k, 0.0), 4) for k in keys},
+        {k: round(b.get(k, 0.0), 4) for k in keys},
+    )
+
+
 def _cdf(view: View) -> tuple[np.ndarray, np.ndarray] | None:
     import numpy as np
 
@@ -782,8 +793,7 @@ def _diff_categories(
                 _change(
                     name,
                     "category_shift",
-                    {k: round(v, 4) for k, v in base.categories.items()},
-                    {k: round(v, 4) for k, v in cur.categories.items()},
+                    *_largest_moves(base.categories, cur.categories),
                     tvd,
                 )
             )
