@@ -125,7 +125,7 @@ _SECRET_KEYS = (
 )
 # A value is a brace-quoted ODBC value, a quoted string (which may hold ``;``), or runs to ``;``.
 _PAIR = re.compile(
-    r"(?P<key>[^=;{}]+)=(?P<value>\{(?:[^}]|\}\})*\}|\"[^\"]*\"|'[^']*'|[^;]*)"
+    r"(?P<key>[^=;{}]+)=(?P<value>\s*\{(?:[^}]|\}\})*\}|\s*\"[^\"]*\"|\s*'[^']*'|[^;]*)"
 )
 
 
