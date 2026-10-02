@@ -42,6 +42,10 @@ DOMAINS: dict[str, tuple[str, ...]] = {
     "capital_markets": ("exchanges", "gics_sectors", "index_memberships", "sp500_constituents"),
     "education": ("aid_types", "course_catalog", "department_names"),
     "financial": ("branch_names", "merchant_names", "transaction_categories"),
+    "pulse": (),
+    "real_estate": ("inspection_items", "neighborhoods", "property_types"),
+    "supply_chain": ("carrier_names", "material_categories", "shipping_methods"),
+    "telecom": ("device_models", "network_event_types", "plan_types"),
 }
 OVERRIDES: dict[tuple[str, str, str], dict[str, Any]] = {
     ("capital_markets", "industry", "industry_name"): {"strategy": "constant", "value": ""},

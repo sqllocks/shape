@@ -1,0 +1,1359 @@
+{
+ "schema_version": 1,
+ "model": {
+  "name": "real_estate_3nf",
+  "description": "Real estate domain — 3nf schema",
+  "domain": "real_estate",
+  "schema_mode": "3nf",
+  "locale": "en_US",
+  "seed": 42,
+  "date_range": {
+   "start": "2020-01-01",
+   "end": "2025-12-31"
+  }
+ },
+ "tables": {
+  "neighborhood": {
+   "name": "neighborhood",
+   "description": "Neighborhoods with demographics",
+   "cdm_mapping": null,
+   "primary_key": [
+    "neighborhood_id"
+   ],
+   "columns": {
+    "neighborhood_id": {
+     "name": "neighborhood_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "neighborhood_name": {
+     "name": "neighborhood_name",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "neighborhoods"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "city": {
+     "name": "city",
+     "type": "string",
+     "generator": {
+      "strategy": "record_sample",
+      "dataset": "us_zip_locations",
+      "field": "city"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "state": {
+     "name": "state",
+     "type": "string",
+     "generator": {
+      "strategy": "record_field",
+      "dataset": "us_zip_locations",
+      "field": "state"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 2,
+     "precision": null,
+     "scale": null
+    },
+    "zip_code": {
+     "name": "zip_code",
+     "type": "string",
+     "generator": {
+      "strategy": "record_field",
+      "dataset": "us_zip_locations",
+      "field": "zip"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 10,
+     "precision": null,
+     "scale": null
+    },
+    "median_income": {
+     "name": "median_income",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 11.0,
+      "sigma": 0.5,
+      "min": 25000.0,
+      "max": 500000.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "walk_score": {
+     "name": "walk_score",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 10,
+      "max": 100
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "agent": {
+   "name": "agent",
+   "description": "Real estate agents",
+   "cdm_mapping": null,
+   "primary_key": [
+    "agent_id"
+   ],
+   "columns": {
+    "agent_id": {
+     "name": "agent_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "first_name": {
+     "name": "first_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "first_name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "last_name": {
+     "name": "last_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "last_name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "email": {
+     "name": "email",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "email"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 255,
+     "precision": null,
+     "scale": null
+    },
+    "phone": {
+     "name": "phone",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "phone_number"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    },
+    "license_number": {
+     "name": "license_number",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "RE-{seq:6}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 15,
+     "precision": null,
+     "scale": null
+    },
+    "brokerage": {
+     "name": "brokerage",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "company"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 150,
+     "precision": null,
+     "scale": null
+    },
+    "years_experience": {
+     "name": "years_experience",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 1,
+      "max": 30
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "specialization": {
+     "name": "specialization",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Residential": 0.45,
+       "Commercial": 0.2,
+       "Luxury": 0.15,
+       "Investment": 0.12,
+       "New Construction": 0.08
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "property": {
+   "name": "property",
+   "description": "Physical properties",
+   "cdm_mapping": null,
+   "primary_key": [
+    "property_id"
+   ],
+   "columns": {
+    "property_id": {
+     "name": "property_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "neighborhood_id": {
+     "name": "neighborhood_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "neighborhood.neighborhood_id",
+      "distribution": "zipf",
+      "alpha": 1.3
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "property_type": {
+     "name": "property_type",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "property_types"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "address": {
+     "name": "address",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "street_address"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 200,
+     "precision": null,
+     "scale": null
+    },
+    "bedrooms": {
+     "name": "bedrooms",
+     "type": "integer",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "1": 0.08,
+       "2": 0.18,
+       "3": 0.35,
+       "4": 0.25,
+       "5": 0.1,
+       "6": 0.04
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "bathrooms": {
+     "name": "bathrooms",
+     "type": "float",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "1.0": 0.12,
+       "1.5": 0.15,
+       "2.0": 0.3,
+       "2.5": 0.22,
+       "3.0": 0.12,
+       "3.5": 0.05,
+       "4.0": 0.04
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "sqft": {
+     "name": "sqft",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 7.3,
+      "sigma": 0.4,
+      "min": 500,
+      "max": 10000
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "lot_size_sqft": {
+     "name": "lot_size_sqft",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 8.5,
+      "sigma": 0.6,
+      "min": 1000,
+      "max": 200000
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "year_built": {
+     "name": "year_built",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 1950,
+      "max": 2025
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "assessed_value": {
+     "name": "assessed_value",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 12.2,
+      "sigma": 0.7,
+      "min": 50000.0,
+      "max": 5000000.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "listing": {
+   "name": "listing",
+   "description": "MLS property listings",
+   "cdm_mapping": null,
+   "primary_key": [
+    "listing_id"
+   ],
+   "columns": {
+    "listing_id": {
+     "name": "listing_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "property_id": {
+     "name": "property_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "property.property_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "agent_id": {
+     "name": "agent_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "agent.agent_id",
+      "distribution": "zipf",
+      "alpha": 1.4
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "list_date": {
+     "name": "list_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2020-01-01",
+      "end": "2025-12-31",
+      "pattern": "seasonal",
+      "month_weights": {
+       "Jan": 0.06,
+       "Feb": 0.06,
+       "Mar": 0.09,
+       "Apr": 0.1,
+       "May": 0.11,
+       "Jun": 0.1,
+       "Jul": 0.09,
+       "Aug": 0.09,
+       "Sep": 0.08,
+       "Oct": 0.08,
+       "Nov": 0.07,
+       "Dec": 0.07
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "list_price": {
+     "name": "list_price",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 12.5,
+      "sigma": 0.7,
+      "min": 50000.0,
+      "max": 5000000.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "status": {
+     "name": "status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Active": 0.2,
+       "Pending": 0.1,
+       "Sold": 0.45,
+       "Withdrawn": 0.1,
+       "Expired": 0.15
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "days_on_market": {
+     "name": "days_on_market",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 3.5,
+      "sigma": 0.8,
+      "min": 1,
+      "max": 365
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "mls_number": {
+     "name": "mls_number",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "MLS-{seq:7}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 15,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "showing": {
+   "name": "showing",
+   "description": "Property showings",
+   "cdm_mapping": null,
+   "primary_key": [
+    "showing_id"
+   ],
+   "columns": {
+    "showing_id": {
+     "name": "showing_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "listing_id": {
+     "name": "listing_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "listing.listing_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "showing_date": {
+     "name": "showing_date",
+     "type": "datetime",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2020-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "agent_id": {
+     "name": "agent_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "agent.agent_id",
+      "distribution": "zipf",
+      "alpha": 1.2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "feedback": {
+     "name": "feedback",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "sentence"
+     },
+     "nullable": true,
+     "null_rate": 0.25,
+     "max_length": 500,
+     "precision": null,
+     "scale": null
+    },
+    "buyer_interest_level": {
+     "name": "buyer_interest_level",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "High": 0.2,
+       "Medium": 0.35,
+       "Low": 0.3,
+       "None": 0.15
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "offer": {
+   "name": "offer",
+   "description": "Purchase offers on listings",
+   "cdm_mapping": null,
+   "primary_key": [
+    "offer_id"
+   ],
+   "columns": {
+    "offer_id": {
+     "name": "offer_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "listing_id": {
+     "name": "listing_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "listing.listing_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "offer_date": {
+     "name": "offer_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2020-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "offer_amount": {
+     "name": "offer_amount",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 12.4,
+      "sigma": 0.7,
+      "min": 40000.0,
+      "max": 5000000.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "status": {
+     "name": "status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Pending": 0.15,
+       "Accepted": 0.3,
+       "Rejected": 0.25,
+       "Countered": 0.2,
+       "Withdrawn": 0.1
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "contingencies": {
+     "name": "contingencies",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Inspection": 0.3,
+       "Financing": 0.28,
+       "Appraisal": 0.22,
+       "None": 0.2
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "transaction": {
+   "name": "transaction",
+   "description": "Closed real estate transactions",
+   "cdm_mapping": null,
+   "primary_key": [
+    "transaction_id"
+   ],
+   "columns": {
+    "transaction_id": {
+     "name": "transaction_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "listing_id": {
+     "name": "listing_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "listing.listing_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "sale_price": {
+     "name": "sale_price",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 12.5,
+      "sigma": 0.7,
+      "min": 50000.0,
+      "max": 5000000.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "close_date": {
+     "name": "close_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2020-03-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "buyer_agent_id": {
+     "name": "buyer_agent_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "agent.agent_id",
+      "distribution": "zipf",
+      "alpha": 1.3
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "seller_agent_id": {
+     "name": "seller_agent_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "agent.agent_id",
+      "distribution": "zipf",
+      "alpha": 1.3
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "commission_rate": {
+     "name": "commission_rate",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 2.5,
+      "max": 6.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "inspection": {
+   "name": "inspection",
+   "description": "Property inspections for transactions",
+   "cdm_mapping": null,
+   "primary_key": [
+    "inspection_id"
+   ],
+   "columns": {
+    "inspection_id": {
+     "name": "inspection_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "transaction_id": {
+     "name": "transaction_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "transaction.transaction_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "inspection_date": {
+     "name": "inspection_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2020-03-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "inspector_name": {
+     "name": "inspector_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "inspection_type": {
+     "name": "inspection_type",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "inspection_items"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "result": {
+     "name": "result",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Pass": 0.6,
+       "Fail": 0.1,
+       "Conditional": 0.3
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "findings_count": {
+     "name": "findings_count",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 0,
+      "max": 15
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "appraisal": {
+   "name": "appraisal",
+   "description": "Property appraisals for transactions",
+   "cdm_mapping": null,
+   "primary_key": [
+    "appraisal_id"
+   ],
+   "columns": {
+    "appraisal_id": {
+     "name": "appraisal_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "transaction_id": {
+     "name": "transaction_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "transaction.transaction_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "appraisal_date": {
+     "name": "appraisal_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2020-03-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "appraised_value": {
+     "name": "appraised_value",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 12.5,
+      "sigma": 0.7,
+      "min": 50000.0,
+      "max": 5000000.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "appraiser_name": {
+     "name": "appraiser_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "condition_rating": {
+     "name": "condition_rating",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Excellent": 0.15,
+       "Good": 0.5,
+       "Fair": 0.3,
+       "Poor": 0.05
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  }
+ },
+ "relationships": [
+  {
+   "name": "property_neighborhood",
+   "parent": "neighborhood",
+   "child": "property",
+   "parent_columns": [
+    "neighborhood_id"
+   ],
+   "child_columns": [
+    "neighborhood_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "listing_property",
+   "parent": "property",
+   "child": "listing",
+   "parent_columns": [
+    "property_id"
+   ],
+   "child_columns": [
+    "property_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "listing_agent",
+   "parent": "agent",
+   "child": "listing",
+   "parent_columns": [
+    "agent_id"
+   ],
+   "child_columns": [
+    "agent_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "showing_listing",
+   "parent": "listing",
+   "child": "showing",
+   "parent_columns": [
+    "listing_id"
+   ],
+   "child_columns": [
+    "listing_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "showing_agent",
+   "parent": "agent",
+   "child": "showing",
+   "parent_columns": [
+    "agent_id"
+   ],
+   "child_columns": [
+    "agent_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "offer_listing",
+   "parent": "listing",
+   "child": "offer",
+   "parent_columns": [
+    "listing_id"
+   ],
+   "child_columns": [
+    "listing_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "transaction_listing",
+   "parent": "listing",
+   "child": "transaction",
+   "parent_columns": [
+    "listing_id"
+   ],
+   "child_columns": [
+    "listing_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "transaction_buyer_agent",
+   "parent": "agent",
+   "child": "transaction",
+   "parent_columns": [
+    "agent_id"
+   ],
+   "child_columns": [
+    "buyer_agent_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "transaction_seller_agent",
+   "parent": "agent",
+   "child": "transaction",
+   "parent_columns": [
+    "agent_id"
+   ],
+   "child_columns": [
+    "seller_agent_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "inspection_transaction",
+   "parent": "transaction",
+   "child": "inspection",
+   "parent_columns": [
+    "transaction_id"
+   ],
+   "child_columns": [
+    "transaction_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "appraisal_transaction",
+   "parent": "transaction",
+   "child": "appraisal",
+   "parent_columns": [
+    "transaction_id"
+   ],
+   "child_columns": [
+    "transaction_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  }
+ ],
+ "business_rules": [
+  {
+   "name": "list_price_positive",
+   "type": "constraint",
+   "rule": "list_price > 0",
+   "table": "listing",
+   "via": null,
+   "when": null
+  },
+  {
+   "name": "sale_price_positive",
+   "type": "constraint",
+   "rule": "sale_price > 0",
+   "table": "transaction",
+   "via": null,
+   "when": null
+  },
+  {
+   "name": "sqft_positive",
+   "type": "constraint",
+   "rule": "sqft > 0",
+   "table": "property",
+   "via": null,
+   "when": null
+  }
+ ],
+ "generation": {
+  "scale": "small",
+  "scales": {
+   "fabric_demo": {
+    "property": 100
+   },
+   "small": {
+    "property": 1000
+   },
+   "medium": {
+    "property": 10000
+   },
+   "large": {
+    "property": 100000
+   },
+   "xlarge": {
+    "property": 5000000
+   },
+   "warehouse": {
+    "property": 1000000
+   },
+   "xxl": {
+    "property": 20000000
+   },
+   "xxxl": {
+    "property": 100000000
+   }
+  },
+  "derived_counts": {
+   "neighborhood": {
+    "fixed": 50
+   },
+   "agent": {
+    "fixed": 100
+   },
+   "listing": {
+    "per_parent": "property",
+    "ratio": 1.5
+   },
+   "showing": {
+    "per_parent": "listing",
+    "ratio": 5.0
+   },
+   "offer": {
+    "per_parent": "listing",
+    "ratio": 1.5
+   },
+   "transaction": {
+    "per_parent": "listing",
+    "ratio": 0.4
+   },
+   "inspection": {
+    "per_parent": "transaction",
+    "ratio": 1.0
+   },
+   "appraisal": {
+    "per_parent": "transaction",
+    "ratio": 1.0
+   }
+  },
+  "output": {}
+ },
+ "correlated_columns": {}
+}

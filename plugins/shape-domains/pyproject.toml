@@ -19,6 +19,10 @@ retail = "shape_domains.retail:RetailDomain"
 capital_markets = "shape_domains.capital_markets:CapitalMarketsDomain"
 education = "shape_domains.education:EducationDomain"
 financial = "shape_domains.financial:FinancialDomain"
+pulse = "shape_domains.pulse:PulseDomain"
+real_estate = "shape_domains.real_estate:RealEstateDomain"
+supply_chain = "shape_domains.supply_chain:SupplyChainDomain"
+telecom = "shape_domains.telecom:TelecomDomain"
 
 [tool.setuptools.packages.find]
 where = ["src"]
