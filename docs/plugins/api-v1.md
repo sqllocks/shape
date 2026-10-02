@@ -254,10 +254,16 @@ A semantic label for a column, with a confidence in [0, 1].
 
 What a domain contributes: schema, reference data, profiles and scale presets.
 
+``validated`` is optional and off by default: a plugin sets it only when it has checked
+``schema`` against ``generation-schema-v1.json`` itself (a packaged domain compares a content
+digest with the one recorded when the schema was checked) and the document holds only JSON
+types. The host then skips its own check; without it every schema is checked.
+
 - `schema: Mapping[str, Any]`
 - `reference_data: Mapping[str, pa.Table]`
 - `profiles: Mapping[str, Any]`
 - `scale_presets: Mapping[str, Mapping[str, int]]`
+- `validated: bool`
 
 ### `FitResult`
 

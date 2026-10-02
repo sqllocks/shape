@@ -93,12 +93,18 @@ class GenerationContext:
 
 @dataclass(frozen=True, slots=True)
 class DomainDefinition:
-    """What a domain contributes: schema, reference data, profiles and scale presets."""
+    """What a domain contributes: schema, reference data, profiles and scale presets.
+
+    ``validated`` is optional and off by default: a plugin sets it only when it has checked
+    ``schema`` against ``generation-schema-v1.json`` itself (a packaged domain compares a content
+    digest with the one recorded when the schema was checked) and the document holds only JSON
+    types. The host then skips its own check; without it every schema is checked."""
 
     schema: Mapping[str, Any]
     reference_data: Mapping[str, pa.Table] = field(default_factory=dict)
     profiles: Mapping[str, Any] = field(default_factory=dict)
     scale_presets: Mapping[str, Mapping[str, int]] = field(default_factory=dict)
+    validated: bool = False
 
 
 @runtime_checkable

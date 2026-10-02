@@ -13,7 +13,11 @@ property names, ``to_dict``/``from_dict``, ``validate`` and :class:`Issue`.
 
 from __future__ import annotations
 
+import copy
+import dataclasses
+import hashlib
 import json
+import os
 from dataclasses import dataclass, field
 from functools import cache
 from importlib import resources
@@ -289,14 +293,28 @@ class GenSchema:
             "correlated_columns": json.loads(json.dumps(self.correlated_columns)),
         }
 
+    def clone(self) -> GenSchema:
+        """A deep copy: nothing mutable is shared with ``self`` (about five times faster than
+        ``copy.deepcopy``, which dominated the cost of a small engine's set-up)."""
+        copied: GenSchema = _clone(self)
+        return copied
+
     @classmethod
-    def from_dict(cls, doc: Any) -> GenSchema:
+    def from_dict(cls, doc: Any, *, validated: bool = False) -> GenSchema:
         """Parse a document; :class:`GenSchemaError` lists the first problems if it does not
-        follow the JSON Schema."""
-        problems = schema_problems(doc)
-        if problems:
-            more = f" (+{len(problems) - 5} more)" if len(problems) > 5 else ""
-            raise GenSchemaError("; ".join(problems[:5]) + more)
+        follow the JSON Schema.
+
+        ``validated=True`` is for a document the caller has already checked against
+        ``generation-schema-v1.json`` (a packaged domain whose content digest is on record, see
+        ``shape_domains._packaged``) and that holds only JSON types: the check is skipped and the
+        generators are copied without a JSON round trip. Documents of unknown origin keep the
+        default and are checked."""
+        if not validated:
+            problems = schema_problems(doc)
+            if problems:
+                more = f" (+{len(problems) - 5} more)" if len(problems) > 5 else ""
+                raise GenSchemaError("; ".join(problems[:5]) + more)
+        detach: Any = _clone if validated else _json_copy
         m, g = doc["model"], doc["generation"]
         model = Model(
             name=m["name"],
@@ -313,7 +331,7 @@ class GenSchema:
                 cname: Column(
                     name=cname,
                     type=c["type"],
-                    generator=json.loads(json.dumps(c["generator"])),
+                    generator=detach(c["generator"]),
                     nullable=c.get("nullable", False),
                     null_rate=float(c.get("null_rate", 0.0)),
                     max_length=c.get("max_length"),
@@ -509,12 +527,68 @@ class GenSchema:
         return out
 
 
+_JSON_SCHEMA_FILE = "generation-schema-v1.json"
+
+
+def _json_schema_bytes() -> bytes:
+    """The bytes of the shipped JSON Schema: a plain file read when the package is on disk (the
+    ``importlib.resources`` route costs about 0.8 ms in a fresh process), the resource otherwise."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "schemas")
+    try:
+        with open(os.path.join(path, _JSON_SCHEMA_FILE), "rb") as handle:
+            return handle.read()
+    except OSError:  # a zipped install
+        return resources.files("shape").joinpath("schemas/" + _JSON_SCHEMA_FILE).read_bytes()
+
+
 @cache
 def json_schema() -> dict[str, Any]:
     """The JSON Schema of the generation schema, as shipped in ``shape/schemas``."""
-    text = resources.files("shape").joinpath("schemas/generation-schema-v1.json").read_text("utf-8")
-    schema: dict[str, Any] = json.loads(text)
+    schema: dict[str, Any] = json.loads(_json_schema_bytes().decode("utf-8"))
     return schema
+
+
+@cache
+def json_schema_digest() -> str:
+    """SHA-256 (hex) of the shipped ``generation-schema-v1.json``. A packaged domain records the
+    digest its schemas were checked against; when it differs the check runs again
+    (:meth:`GenSchema.from_dict` with ``validated``)."""
+    return hashlib.sha256(_json_schema_bytes()).hexdigest()
+
+
+_ATOMS = (str, int, float, bool, type(None))
+_DATACLASS_FIELDS: dict[type, tuple[str, ...] | None] = {}
+
+
+def _json_copy(value: Any) -> Any:
+    return json.loads(json.dumps(value))
+
+
+def _clone(value: Any) -> Any:
+    """Deep copy of JSON values and of the dataclasses of this module; anything else goes through
+    ``copy.deepcopy``."""
+    kind = type(value)
+    if kind in _ATOMS:
+        return value
+    if kind is dict:
+        return {k: _clone(v) for k, v in value.items()}
+    if kind is list:
+        return [_clone(v) for v in value]
+    if kind is tuple:
+        return tuple(_clone(v) for v in value)
+    try:
+        names = _DATACLASS_FIELDS[kind]
+    except KeyError:
+        names = None
+        if dataclasses.is_dataclass(kind):
+            names = tuple(f.name for f in dataclasses.fields(kind))
+        _DATACLASS_FIELDS[kind] = names
+    if names is None:
+        return copy.deepcopy(value)
+    new = kind.__new__(kind)
+    for name in names:
+        object.__setattr__(new, name, _clone(getattr(value, name)))
+    return new
 
 
 def schema_problems(doc: Any) -> list[str]:

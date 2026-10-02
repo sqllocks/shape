@@ -37,7 +37,6 @@ methods, ``EngineContext``, ``KeyPool`` (``RangeKeys``, ``ArrayKeys``), ``Genera
 
 from __future__ import annotations
 
-import copy
 import os
 import threading
 import time
@@ -517,7 +516,7 @@ class Engine:
     ) -> None:
         if chunk_rows < 1:
             raise ValueError("chunk_rows must be at least 1")
-        self.schema = copy.deepcopy(schema)
+        self.schema = schema.clone()
         if scale is not None:
             self.schema.generation.scale = scale
         if seed is not None:

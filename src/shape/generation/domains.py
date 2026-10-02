@@ -85,7 +85,9 @@ def load_domain(
     for dataset, table in definition.reference_data.items():
         register_dataset(dataset, table)
     document: Any = definition.schema
-    return LoadedDomain(name, GenSchema.from_dict(document), definition)
+    return LoadedDomain(
+        name, GenSchema.from_dict(document, validated=bool(definition.validated)), definition
+    )
 
 
 __all__ = [

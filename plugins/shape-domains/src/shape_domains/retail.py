@@ -12,6 +12,7 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.plugins.api.v1 import DomainDefinition
+from shape_domains._packaged import _FILES, is_validated, reference_table, schema_document
 
 SHAPE_API = "1.0"
 
@@ -19,24 +20,9 @@ _PACKAGE = "shape_domains"
 _DATASETS = ("categories", "product_names", "promo_names", "us_zip_locations")
 
 
-_FILES = {"3nf": "schema.json", "star": "schema_star.json"}
-
-
-@cache
-def _schema(mode: str = "3nf") -> dict[str, Any]:
-    text = resources.files(_PACKAGE).joinpath(f"data/retail/{_FILES[mode]}").read_text("utf-8")
-    document: dict[str, Any] = json.loads(text)
-    return document
-
-
 @cache
 def _reference_data() -> dict[str, pa.Table]:
-    root = resources.files(_PACKAGE).joinpath("data/retail/reference")
-    out: dict[str, pa.Table] = {}
-    for name in _DATASETS:
-        with root.joinpath(f"{name}.arrow").open("rb") as handle:
-            out[name] = pa.ipc.open_file(handle).read_all()
-    return out
+    return {name: reference_table("retail", name) for name in _DATASETS}
 
 
 @cache
@@ -55,11 +41,12 @@ class RetailDomain:
     def definition(self, mode: str = "3nf") -> DomainDefinition:
         if mode not in _FILES:
             raise ValueError(f"retail has no {mode!r} mode (3nf, star)")
-        schema = _schema(mode)
+        schema = schema_document("retail", mode)
         return DomainDefinition(
             schema=schema,
             reference_data=_reference_data(),
             scale_presets={k: dict(v) for k, v in schema["generation"]["scales"].items()},
+            validated=is_validated("retail", mode),
         )
 
     def star_map(self) -> dict[str, Any]:
