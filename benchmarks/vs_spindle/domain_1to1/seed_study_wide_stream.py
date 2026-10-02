@@ -80,7 +80,14 @@ def main(argv: list[str] | None = None) -> int:
         "raw": {"reference": _raw(ref), "spindle": {}, "impl_runs": {}},
     }
 
+    parts = Path(args.out + ".parts")  # one file per scored seed: a restart resumes here
+    parts.mkdir(exist_ok=True)
+
     def one(label: str, impl: str, seed: int):
+        cached = parts / f"{label}_{seed}.json"
+        if cached.is_file():
+            got = json.loads(cached.read_text("utf-8"))
+            return label, seed, (got["scored"], got["raw"])
         if not verify.ensure_run(impl, args.domain, args.scale, seed, tables):
             return label, seed, None
         frames = verify.load_run(impl, args.domain, args.scale, seed, tables)[0]
@@ -92,6 +99,7 @@ def main(argv: list[str] | None = None) -> int:
         raw_stats = _raw(frames)
         del frames
         shutil.rmtree(generate.out_dir(impl, args.domain, args.scale, seed), ignore_errors=True)
+        cached.write_text(json.dumps({"scored": scored, "raw": raw_stats}), "utf-8")
         return label, seed, (scored, raw_stats)
 
     jobs = [("spindle", "spindle", s) for s in base_seeds] + [
@@ -108,6 +116,7 @@ def main(argv: list[str] | None = None) -> int:
     out["spindle"] = {k: out["spindle"][k] for k in sorted(out["spindle"], key=int)}
     out["impl_runs"] = {k: out["impl_runs"][k] for k in sorted(out["impl_runs"], key=int)}
     Path(args.out).write_text(json.dumps(out) + "\n", "utf-8")
+    shutil.rmtree(parts, ignore_errors=True)
     print(f"{args.domain} {args.scale}: {args.n} seeds per tool -> {args.out}")
     return 0
 

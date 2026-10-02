@@ -1,0 +1,90 @@
+{
+ "domain": "composite_enterprise",
+ "scale": "small",
+ "rates": {
+  "retail_promotion.end_date - start_date in [3,30] days": {
+   "floor": 0.995,
+   "baseline_mean": 1.0,
+   "baseline_sd": 0.0,
+   "shape_mean": 1.0,
+   "shape_sd": 0.0,
+   "shape_1042": 1.0,
+   "frac_fresh_baseline_below_floor": 0.0,
+   "frac_shape_below_floor": 0.0,
+   "p_mannwhitney": 1.0,
+   "p_ks": 1.0
+  },
+  "retail_order.order_total == sum(retail_order_line.line_total)": {
+   "floor": 0.995,
+   "baseline_mean": 1.0,
+   "baseline_sd": 0.0,
+   "shape_mean": 1.0,
+   "shape_sd": 0.0,
+   "shape_1042": 1.0,
+   "frac_fresh_baseline_below_floor": 0.0,
+   "frac_shape_below_floor": 0.0,
+   "p_mannwhitney": 1.0,
+   "p_ks": 1.0
+  },
+  "retail_order_line.promotion_id == lookup retail_order.promotion_id via order_id": {
+   "floor": 0.995,
+   "baseline_mean": 1.0,
+   "baseline_sd": 0.0,
+   "shape_mean": 1.0,
+   "shape_sd": 0.0,
+   "shape_1042": 1.0,
+   "frac_fresh_baseline_below_floor": 0.0,
+   "frac_shape_below_floor": 0.0,
+   "p_mannwhitney": 1.0,
+   "p_ks": 1.0
+  },
+  "retail_order_line.unit_price == lookup retail_product.unit_price via product_id": {
+   "floor": 0.995,
+   "baseline_mean": 1.0,
+   "baseline_sd": 0.0,
+   "shape_mean": 1.0,
+   "shape_sd": 0.0,
+   "shape_1042": 1.0,
+   "frac_fresh_baseline_below_floor": 0.0,
+   "frac_shape_below_floor": 0.0,
+   "p_mannwhitney": 1.0,
+   "p_ks": 1.0
+  },
+  "retail_return.return_date - retail_order.order_date in [1,90] days": {
+   "floor": 0.9926470588235294,
+   "baseline_mean": 0.9997285067873304,
+   "baseline_sd": 0.0006051856469611091,
+   "shape_mean": 0.9994117647058824,
+   "shape_sd": 0.0007408512116734218,
+   "shape_1042": 1.0,
+   "frac_fresh_baseline_below_floor": 0.0,
+   "frac_shape_below_floor": 0.0,
+   "p_mannwhitney": 0.06449295028377121,
+   "p_ks": 0.32929630965818857
+  },
+  "hr_time_off_request.end_date - start_date in [1,14] days": {
+   "floor": 0.995,
+   "baseline_mean": 1.0,
+   "baseline_sd": 0.0,
+   "shape_mean": 1.0,
+   "shape_sd": 0.0,
+   "shape_1042": 1.0,
+   "frac_fresh_baseline_below_floor": 0.0,
+   "frac_shape_below_floor": 0.0,
+   "p_mannwhitney": 1.0,
+   "p_ks": 1.0
+  },
+  "hr_training_enrollment.completion_date - enrollment_date in [1,90] days": {
+   "floor": 0.846,
+   "baseline_mean": 0.84775,
+   "baseline_sd": 0.010866692229008794,
+   "shape_mean": 0.8471500000000002,
+   "shape_sd": 0.007482335519581186,
+   "shape_1042": 0.8455,
+   "frac_fresh_baseline_below_floor": 0.5384615384615384,
+   "frac_shape_below_floor": 0.43333333333333335,
+   "p_mannwhitney": 0.862931195988038,
+   "p_ks": 0.3642140800018744
+  }
+ }
+}
