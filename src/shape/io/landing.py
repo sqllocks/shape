@@ -6,7 +6,9 @@ backfill writes a range of them. The date is always given, never read from the c
 run is the same files.
 
 Tokens: ``{table}``, ``{ext}``, ``{date}`` (``YYYY-MM-DD``), ``{yyyymmdd}``, ``{yyyy}``, ``{mm}``,
-``{dd}``. A template is relative to the output directory and cannot leave it.
+``{dd}``; for rolling writers also ``{part}`` (the file's number in its table, five digits) and
+``{hhmmss}`` (the time the file was opened, UTC). A template is relative to the output directory
+and cannot leave it.
 """
 
 from __future__ import annotations
@@ -16,7 +18,7 @@ import re
 from pathlib import PurePosixPath
 
 DEFAULT_TEMPLATE = "{table}/ingest_date={date}/{table}_{yyyymmdd}.{ext}"
-TOKENS = ("table", "ext", "date", "yyyymmdd", "yyyy", "mm", "dd")
+TOKENS = ("table", "ext", "date", "yyyymmdd", "yyyy", "mm", "dd", "part", "hhmmss")
 _TOKEN = re.compile(r"\{([^{}]*)\}")
 _DATE_TOKENS = frozenset({"date", "yyyymmdd", "yyyy", "mm", "dd"})
 
@@ -55,12 +57,31 @@ def uses_date(template: str) -> bool:
     return any(t in _DATE_TOKENS for t in _TOKEN.findall(template))
 
 
-def render_path(template: str, table: str, ext: str, batch_date: str | dt.date | None) -> str:
-    """``template`` for ``table`` with extension ``ext`` (no dot) on ``batch_date``."""
+def render_path(
+    template: str,
+    table: str,
+    ext: str,
+    batch_date: str | dt.date | None,
+    *,
+    part: int | None = None,
+    now: dt.datetime | None = None,
+) -> str:
+    """``template`` for ``table`` with extension ``ext`` (no dot) on ``batch_date``.
+
+    ``part`` fills ``{part}`` and ``now`` fills ``{hhmmss}``; a template using either needs it."""
     check_template(template)
     if "/" in table or "\\" in table or table in ("", ".", ".."):
         raise ValueError(f"table name {table!r} cannot be used in a path")
     values = {"table": table, "ext": ext}
+    tokens = _TOKEN.findall(template)
+    if "part" in tokens:
+        if part is None:
+            raise ValueError(f"path template {template!r} has {{part}}: it is for rolling files")
+        values["part"] = f"{part:05d}"
+    if "hhmmss" in tokens:
+        if now is None:
+            raise ValueError(f"path template {template!r} has {{hhmmss}}: it is for rolling files")
+        values["hhmmss"] = now.strftime("%H%M%S")
     if uses_date(template):
         if batch_date is None:
             raise ValueError(
