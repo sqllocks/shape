@@ -33,7 +33,9 @@ CADENCES: dict[str, dt.timedelta] = {
 def as_tables(source: Any) -> dict[str, pa.Table]:
     """``source`` as ``{name: Arrow table}``: a mapping of tables or frames, or an object with a
     ``tables`` mapping (a generation result)."""
-    tables = source.tables if hasattr(source, "tables") and not isinstance(source, Mapping) else source
+    tables = (
+        source.tables if hasattr(source, "tables") and not isinstance(source, Mapping) else source
+    )
     if not isinstance(tables, Mapping):
         raise TypeError("expected a mapping of table name to table, or a generation result")
     return {str(name): as_table(table) for name, table in tables.items()}

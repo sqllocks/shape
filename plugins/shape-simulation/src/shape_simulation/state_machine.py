@@ -244,7 +244,9 @@ class WorkflowSimulator:
 
             dwell = self._compute_dwell(rule)
             at = now + dt.timedelta(hours=dwell)
-            events.append((entity_id, current, actual, at, round(dwell, 4), is_anomaly, anomaly_type))
+            events.append(
+                (entity_id, current, actual, at, round(dwell, 4), is_anomaly, anomaly_type)
+            )
             current = actual
             now = at
             visited.append(current)
@@ -352,7 +354,9 @@ class WorkflowSimulator:
                 "initial_state": pa.array([records[e][0] for e in ids], pa.string()),
                 "final_state": pa.array([records[e][1] for e in ids], pa.string()),
                 "total_transitions": pa.array([records[e][2] for e in ids], pa.int64()),
-                "total_hours": pa.array([round(float(records[e][3]), 4) for e in ids], pa.float64()),
+                "total_hours": pa.array(
+                    [round(float(records[e][3]), 4) for e in ids], pa.float64()
+                ),
                 "is_complete": pa.array(
                     [records[e][1] in self._terminal_states for e in ids], pa.bool_()
                 ),

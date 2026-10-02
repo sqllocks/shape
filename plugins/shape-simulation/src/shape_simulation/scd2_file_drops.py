@@ -162,7 +162,9 @@ class SCD2FileDropSimulator:
                 )
                 if not rows:
                     continue
-                delta = pa.Table.from_pylist(rows, schema=schema.append(pa.field(DELTA_TYPE, pa.string())))
+                delta = pa.Table.from_pylist(
+                    rows, schema=schema.append(pa.field(DELTA_TYPE, pa.string()))
+                )
                 files, manifests = self._write_delta(delta, day, entity)
                 delta_paths.extend(files)
                 manifest_paths.extend(manifests)
@@ -194,9 +196,7 @@ class SCD2FileDropSimulator:
         """The table's columns, then the version columns it does not have, in a fixed order."""
         effective, end, current = self._version_columns()
         types = {effective: pa.timestamp("us"), end: pa.timestamp("us"), current: pa.bool_()}
-        fields = [
-            pa.field(f.name, types[f.name]) if f.name in types else f for f in schema
-        ]
+        fields = [pa.field(f.name, types[f.name]) if f.name in types else f for f in schema]
         for name in (effective, end, current):
             if name not in schema.names:
                 fields.append(pa.field(name, types[name]))
@@ -229,7 +229,9 @@ class SCD2FileDropSimulator:
     @staticmethod
     def _next_business_key(state: dict[Any, dict[str, Any]]) -> int:
         """The next integer key for an insert: past the largest numeric key."""
-        numeric = [k for k in state if isinstance(k, (int, float, np.integer)) and not isinstance(k, bool)]
+        numeric = [
+            k for k in state if isinstance(k, (int, float, np.integer)) and not isinstance(k, bool)
+        ]
         if numeric:
             return int(max(numeric)) + 1
         return len(state) + 1
@@ -309,9 +311,7 @@ class SCD2FileDropSimulator:
             return int(round(mutated)) if isinstance(value, int) else mutated
         return value
 
-    def _new_row(
-        self, template: dict[str, Any], key: int, day: dt.datetime
-    ) -> dict[str, Any]:
+    def _new_row(self, template: dict[str, Any], key: int, day: dt.datetime) -> dict[str, Any]:
         """A new entity shaped like ``template``: strings get the key as a suffix, numbers are
         redrawn around the template's value, flags are drawn."""
         cfg = self._config
@@ -376,7 +376,9 @@ class SCD2FileDropSimulator:
             path = folder / f"{entity}_delta.{fmt}"
             tb.write_table(delta, path, fmt)
             files.append(path)
-        manifests = [self._write_manifest(folder, files, day, entity)] if cfg.manifest_enabled else []
+        manifests = (
+            [self._write_manifest(folder, files, day, entity)] if cfg.manifest_enabled else []
+        )
         return files, manifests
 
     def _write_manifest(

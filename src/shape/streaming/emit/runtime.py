@@ -48,9 +48,9 @@ import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
 from shape.streaming.checkpoint import CheckpointError, FileCheckpointStore
+from shape.streaming.emit.anomaly import AnomalyInjector
 from shape.streaming.emit.rate import Burst, RateSchedule
 from shape.streaming.emit.sinks import EventSink
-from shape.streaming.emit.anomaly import AnomalyInjector
 from shape.streaming.emit.source import EventBlock
 
 CHECKPOINT_FORMAT = "shape-emit-v1"
