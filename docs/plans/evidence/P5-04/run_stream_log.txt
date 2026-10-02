@@ -1,14 +1,4 @@
 + /root/.venvs/spindle/bin/python /home/user/shape/benchmarks/vs_spindle/stream_1to1/verify.py --scale medium
-+ /root/.venvs/spindle/bin/spindle stream retail --table order --scale medium --no-realtime --sink file -o $BENCH_OUT_DIR/stream/spindle/retail_order_medium/seed42.jsonl --seed 42
-+ /root/.venvs/spindle/bin/spindle stream retail --table order --scale medium --no-realtime --sink file -o $BENCH_OUT_DIR/stream/spindle/retail_order_medium/seed43.jsonl --seed 43
-+ /root/.venvs/spindle/bin/spindle stream retail --table order --scale medium --no-realtime --sink file -o $BENCH_OUT_DIR/stream/spindle/retail_order_medium/seed44.jsonl --seed 44
-+ /root/.venvs/spindle/bin/spindle stream retail --table order --scale medium --no-realtime --sink file -o $BENCH_OUT_DIR/stream/spindle/retail_order_medium/seed45.jsonl --seed 45
-+ /root/.venvs/spindle/bin/spindle stream retail --table order --scale medium --no-realtime --sink file -o $BENCH_OUT_DIR/stream/spindle/retail_order_medium/seed46.jsonl --seed 46
-+ /root/.venvs/spindle/bin/spindle stream retail --table order --scale medium --no-realtime --sink file -o $BENCH_OUT_DIR/stream/spindle/retail_order_medium/seed42_max100000.jsonl --seed 42 --max-events 100000
-+ /root/.venvs/spindle/bin/spindle stream retail --table order --scale medium --no-realtime --sink file -o $BENCH_OUT_DIR/stream/spindle/retail_order_medium/seed43_max100000.jsonl --seed 43 --max-events 100000
-+ /root/.venvs/spindle/bin/spindle stream retail --table order --scale medium --no-realtime --sink file -o $BENCH_OUT_DIR/stream/spindle/retail_order_medium/seed44_max100000.jsonl --seed 44 --max-events 100000
-+ /root/.venvs/spindle/bin/spindle stream retail --table order --scale medium --no-realtime --sink file -o $BENCH_OUT_DIR/stream/spindle/retail_order_medium/seed45_max100000.jsonl --seed 45 --max-events 100000
-+ /root/.venvs/spindle/bin/spindle stream retail --table order --scale medium --no-realtime --sink file -o $BENCH_OUT_DIR/stream/spindle/retail_order_medium/seed46_max100000.jsonl --seed 46 --max-events 100000
 
 == whole table: 500,000 events
   PASS  field_names_and_order
@@ -92,31 +82,31 @@
 
 VERDICT PASS  (report: /root/bench-out/verify/stream_medium.json)
 + /root/.venvs/shape/bin/python /home/user/shape/benchmarks/vs_spindle/stream_1to1/bench.py --scale medium --runs 5 --report /root/bench-out/bench/stream_medium.json
-[medium] spindle  warm-up 1: total 12.71s
-[medium] shape    warm-up 1: total 1.06s
-[medium] spindle  run 1: total 13.68s  emit 4.49s  rss 933MB  load 1.00
-[medium] shape    run 1: total 0.87s  emit 0.40s  rss 481MB  load 1.00
-[medium] spindle  run 2: total 13.55s  emit 3.97s  rss 933MB  load 1.00
-[medium] shape    run 2: total 1.27s  emit 0.76s  rss 483MB  load 1.00
-[medium] spindle  run 3: total 12.82s  emit 3.96s  rss 933MB  load 1.00
-[medium] shape    run 3: total 0.87s  emit 0.45s  rss 482MB  load 1.00
-[medium] spindle  run 4: total 13.46s  emit 4.50s  rss 933MB  load 1.00
-[medium] shape    run 4: total 1.07s  emit 0.63s  rss 527MB  load 1.00
-[medium] spindle  run 5: total 12.58s  emit 3.85s  rss 934MB  load 1.00
-[medium] shape    run 5: total 1.04s  emit 0.58s  rss 503MB  load 1.00
-[medium] spindle  cli 1: 13.99s
-[medium] shape    cli 1: 1.17s
-[medium] spindle  cli 2: 13.76s
-[medium] shape    cli 2: 1.47s
-[medium] spindle  cli 3: 14.33s
-[medium] shape    cli 3: 1.32s
+[medium] spindle  warm-up 1: total 14.49s
+[medium] shape    warm-up 1: total 0.88s
+[medium] spindle  run 1: total 14.03s  emit 4.41s  rss 933MB  load 1.06
+[medium] shape    run 1: total 0.91s  emit 0.44s  rss 479MB  load 1.05
+[medium] spindle  run 2: total 12.91s  emit 4.00s  rss 933MB  load 1.05
+[medium] shape    run 2: total 0.83s  emit 0.40s  rss 520MB  load 1.04
+[medium] spindle  run 3: total 13.49s  emit 4.36s  rss 933MB  load 1.04
+[medium] shape    run 3: total 0.86s  emit 0.39s  rss 507MB  load 1.03
+[medium] spindle  run 4: total 13.73s  emit 4.24s  rss 934MB  load 1.03
+[medium] shape    run 4: total 0.83s  emit 0.38s  rss 497MB  load 1.02
+[medium] spindle  run 5: total 13.47s  emit 4.42s  rss 933MB  load 1.02
+[medium] shape    run 5: total 0.88s  emit 0.39s  rss 496MB  load 1.22
+[medium] spindle  cli 1: 14.25s
+[medium] shape    cli 1: 1.32s
+[medium] spindle  cli 2: 15.63s
+[medium] shape    cli 2: 1.52s
+[medium] spindle  cli 3: 15.17s
+[medium] shape    cli 3: 1.31s
 
 == stream:retail:order:medium: median of 5 fresh-process runs (1 warm-up), 4 cores, Intel(R) Xeon(R) Processor @ 2.10GHz
 tool        events  total s  emit s   events/s  RSS MB
-spindle    500,000    13.46    3.97     37,137     933
-shape      500,000     1.04    0.58    479,112     483
-speedup (shape vs baseline, in-process): 12.90x
-speedup (command lines, start-up included): 10.62x
+spindle    500,000    13.49    4.36     37,067     933
+shape      500,000     0.86    0.39    579,099     497
+speedup (shape vs baseline, in-process): 15.62x
+speedup (command lines, start-up included): 11.50x
 + /root/.venvs/spindle/bin/python /home/user/shape/benchmarks/vs_spindle/stream_1to1/verify.py --scale medium --no-generate
 
 == whole table: 500,000 events
@@ -197,5 +187,5 @@ speedup (command lines, start-up included): 10.62x
 VERDICT PASS  (report: /root/bench-out/verify/stream_medium.json)
 
 wrote /root/bench-out/results_stream.json
-  shape          stream:retail:order:medium verifier=pass        spindle=13.46 impl=1.04 speedup=12.9
+  shape          stream:retail:order:medium verifier=pass        spindle=13.49 impl=0.86 speedup=15.62
 exit 0
