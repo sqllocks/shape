@@ -14,6 +14,30 @@ NAME = "iot"
 SIM = "iot"
 UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
 HOUR_US = 3_600_000_000
+TYPES = frozenset(
+    {
+        "threshold_exceeded",
+        "sensor_malfunction",
+        "connectivity_lost",
+        "battery_low",
+        "temperature_spike",
+        "vibration_anomaly",
+        "data_quality_issue",
+        "firmware_error",
+    }
+)
+MESSAGES = frozenset(
+    {
+        "Sensor reading exceeded configured threshold",
+        "Sensor reporting erratic values",
+        "Device lost network connectivity",
+        "Battery level below minimum threshold",
+        "Temperature reading abnormally high",
+        "Unusual vibration pattern detected",
+        "Reading quality score below acceptable range",
+        "Device firmware reported an internal error",
+    }
+)
 
 
 def inputs(quick: bool) -> dict[str, pa.Table]:
@@ -142,9 +166,9 @@ def compare(
             columns={
                 "alert_id": Col("id", regex=UUID),
                 "device_id": Col("vocab", vocab=devices),
-                "alert_type": Col("enum"),
-                "severity": Col("enum"),
-                "message": Col("enum"),
+                "alert_type": Col("enum", vocab=TYPES),
+                "severity": Col("enum", vocab=frozenset({"critical", "warning", "info"})),
+                "message": Col("enum", vocab=MESSAGES),
             }
         ),
         "fleet_status": TableSpec(
@@ -152,9 +176,9 @@ def compare(
             key=("device_id",),
             columns={
                 "device_id": Col("exact"),
-                "status": Col("enum"),
+                "status": Col("enum", vocab=frozenset({"online", "degraded", "offline"})),
                 "last_reading_at": Col("exact"),
-                "drift_detected": Col("enum"),
+                "drift_detected": Col("enum", vocab=frozenset({"True", "False"})),
             },
         ),
     }

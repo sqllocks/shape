@@ -50,6 +50,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--only", nargs="+", metavar="NAME", help="run these cases only")
     ap.add_argument("--no-controls", action="store_true", help="skip the negative controls")
     ap.add_argument("--controls-only", action="store_true", help="run only the negative controls")
+    ap.add_argument(
+        "--chance-rate",
+        action="store_true",
+        help="diagnostic, not a verdict: Shape at seeds 1043-1049 against the same baseline runs; "
+        "prints how many runs fail a check by chance (exit 0)",
+    )
     a = ap.parse_args(argv)
     cases = discover()
     chosen = a.only or list(cases)
@@ -58,6 +64,23 @@ def main(argv: list[str] | None = None) -> int:
         print(f"unknown case {unknown}; cases: {', '.join(cases)}", file=sys.stderr)
         return 2
     ctx = harness.Context(quick=a.quick, only_controls=a.controls_only, skip_controls=a.no_controls)
+    if a.chance_rate:
+        runs = []
+        try:
+            for name in chosen:
+                runs += harness.chance_rate(importlib.import_module(cases[name]), ctx)
+        except harness.HarnessError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 2
+        bad = [r for r in runs if r["failed"]]
+        for r in bad:
+            print(f"{r['run']}: {', '.join(r['failed'][:4])}")
+        checks = sum(r["checks"] for r in runs)
+        print(
+            f"\nother Shape seeds (not a verdict): {len(bad)} of {len(runs)} runs failed a check; "
+            f"{sum(len(r['failed']) for r in runs)} of {checks} checks"
+        )
+        return 0
     t0 = time.time()
     failed = 0
     results: dict[str, object] = {

@@ -14,6 +14,27 @@ NAME = "financial"
 SIM = "financial"
 UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
 HOUR_US = 3_600_000_000
+REASONS = frozenset({"customer_dispute", "duplicate", "fraud_confirmed", "error"})
+MERCHANTS = frozenset(
+    {
+        "electronics",
+        "jewelry",
+        "gift_cards",
+        "cryptocurrency",
+        "wire_transfer",
+        "online_gambling",
+        "luxury_goods",
+    }
+)
+FAILURES = frozenset(
+    {
+        "insufficient_funds",
+        "account_closed",
+        "compliance_hold",
+        "network_timeout",
+        "duplicate_batch",
+    }
+)
 
 
 def inputs(quick: bool) -> dict[str, pa.Table]:
@@ -145,12 +166,12 @@ def compare(
         "reversal_id": Col("id", regex=UUID),
         "original_transaction_id": Col("vocab", vocab=txn_ids),
         "account_id": Col("vocab", vocab=accounts),
-        "reversal_reason": Col("enum"),
+        "reversal_reason": Col("enum", vocab=REASONS),
     }
     fraud_cols = {
         "fraud_tx_id": Col("id", regex=UUID),
         "account_id": Col("vocab", vocab=accounts),
-        "merchant_category": Col("enum"),
+        "merchant_category": Col("enum", vocab=MERCHANTS),
         "is_fraud": Col("const", value=True),
     }
     specs = {
@@ -160,8 +181,8 @@ def compare(
                 "account_id": Col("vocab", vocab=accounts),
                 **{k: v for k, v in reversal_cols.items() if k not in ("account_id",)},
                 "fraud_tx_id": Col("id", regex=UUID),
-                "merchant_category": Col("enum"),
-                "is_fraud": Col("enum"),
+                "merchant_category": Col("enum", vocab=MERCHANTS),
+                "is_fraud": Col("enum", vocab=frozenset({"True", "False"})),
             }
         ),
         "reversals": TableSpec(columns=reversal_cols),
@@ -172,8 +193,8 @@ def compare(
             columns={
                 "batch_id": Col("id", regex=UUID),
                 "transaction_count": Col("exact"),
-                "status": Col("enum"),
-                "failure_reason": Col("enum"),
+                "status": Col("enum", vocab=frozenset({"settled", "partial", "failed"})),
+                "failure_reason": Col("enum", vocab=FAILURES),
             },
         ),
     }

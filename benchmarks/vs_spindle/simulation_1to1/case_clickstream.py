@@ -26,9 +26,13 @@ POOL = [
     "/faq",
 ]
 URLS = (*(rf"{p}" if p != "/" else "/" for p in POOL), r"/products/\d+", r"/blog/post-\d+")
+STAGES = ("landing", "product", "cart", "checkout", "confirmation")
 SOURCES = ("direct", "google", "bing", "facebook", "twitter", "email", "reddit")
 USERS = (r"user_\d{6}", r"bot_[0-9a-f]{8}")
 DAY_US = 86_400 * 1_000_000
+BOOL = frozenset({"True", "False"})
+DEVICES = frozenset({"desktop", "mobile", "tablet", "bot"})
+BOTS = frozenset({"Googlebot/2.1", "Bingbot/2.0", "Amazonbot/0.1", "GPTBot/1.0", "AhrefsBot/7.0"})
 
 
 def inputs(quick: bool) -> None:
@@ -133,11 +137,11 @@ def compare(
                 "session_id": Col("id", regex=UUID),
                 "user_id": Col("pattern", regexes=USERS),
                 "started_at": Col("time", origin=(so, bo[h.REF_SEED])),
-                "device_type": Col("enum"),
-                "referrer": Col("enum"),
-                "is_bot": Col("enum"),
-                "is_bounce": Col("enum"),
-                "user_agent": Col("enum"),
+                "device_type": Col("enum", vocab=DEVICES),
+                "referrer": Col("enum", vocab=frozenset(SOURCES)),
+                "is_bot": Col("enum", vocab=BOOL),
+                "is_bounce": Col("enum", vocab=BOOL),
+                "user_agent": Col("enum", vocab=BOTS),
             }
         ),
         "page_views": TableSpec(
@@ -146,7 +150,7 @@ def compare(
                 "session_id": Col("skip"),
                 "user_id": Col("pattern", regexes=USERS),
                 "page_url": Col("pattern", regexes=URLS),
-                "timestamp": Col("time", origin=(so, bo[h.REF_SEED])),
+                "timestamp": Col("time", origin=(so, bo[h.REF_SEED]), cluster="session_id"),
                 "referrer_url": Col("pattern", regexes=(*URLS, *SOURCES)),
             }
         ),
@@ -154,8 +158,10 @@ def compare(
             columns={
                 "session_id": Col("skip"),
                 "user_id": Col("pattern", regexes=USERS),
-                "stage_order": Col("enum"),
-                "reached_at": Col("time", origin=(so, bo[h.REF_SEED])),
+                "stage": Col("enum", vocab=frozenset(cfg.get("funnel_stages", STAGES))),
+                "stage_order": Col("enum", vocab=frozenset(str(i) for i in range(8))),
+                "converted": Col("enum", vocab=BOOL),
+                "reached_at": Col("time", origin=(so, bo[h.REF_SEED]), cluster="session_id"),
             }
         ),
     }

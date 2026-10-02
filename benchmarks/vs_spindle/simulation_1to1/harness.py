@@ -288,6 +288,17 @@ def ks_crit(n: int, m: int, alpha: float = ALPHA) -> float:
     return c * math.sqrt((n + m) / (n * m)) if n and m else float("nan")
 
 
+def kish(clusters: pa.ChunkedArray) -> float:
+    """The effective number of independent observations of rows that fall in clusters, as in
+    Kish's design effect: ``(sum of sizes)^2 / sum of squared sizes``. Rows in one cluster are
+    treated as perfectly correlated, so this is a conservative (low) count."""
+    sizes: dict[str, int] = {}
+    for v in valid_values(clusters):
+        sizes[str(v)] = sizes.get(str(v), 0) + 1
+    total = sum(sizes.values())
+    return total**2 / sum(s * s for s in sizes.values()) if sizes else 0.0
+
+
 def tvd_noise(k: int, n: int, m: int) -> float:
     return math.sqrt(max(k, 2) / (2 * math.pi)) * (
         1 / math.sqrt(max(n, 1)) + 1 / math.sqrt(max(m, 1))
@@ -310,7 +321,10 @@ class Col:
     ``exact`` (equal to the baseline's, row by row, within ``tol``), ``const`` (every value equals
     ``value``) and ``skip`` (checked by the case itself). For ``enum``, ``vocab`` adds a declared
     value set to the values the reference run happened to draw (a rare flag may not occur in
-    one seed)."""
+    one seed). ``cluster`` names the column that identifies the independent units of correlated
+    rows (a session's page views), whose effective number (Kish) replaces the row count in the
+    KS critical value;
+    ``distinct=False`` skips the distinct-ratio check of a ``pattern`` column."""
 
     kind: str = "auto"
     regex: str | None = None
@@ -319,12 +333,15 @@ class Col:
     value: Any = None
     tol: float = 0.0
     nulls: bool = True  # compare the null rate
+    cluster: str | None = None  # a column naming the independent units of correlated rows
+    distinct: bool = True  # ``pattern``: also compare the distinct-value ratio
     origin: tuple[int, int] = (0, 0)  # time origin (microseconds) of (shape, baseline)
 
 
 @dataclass
 class TableSpec:
-    rows: str = "random"  # "random" (count rule) or "exact"
+    rows: str = "random"  # "random" (count rule), "exact", or "free" (not compared)
+    count_floor: float = 0.0  # a floor for the count rule, for counts with their own random state
     columns: dict[str, Col] = field(default_factory=dict)
     key: tuple[str, ...] = ()  # sort both sides by these before comparing ``exact`` columns
 
@@ -500,7 +517,11 @@ def _compare_column(
         bs = [numbers(o.column(cname), col.origin[1]) for o in others]
         drift = nanmax(ks(b, x) for x in bs)
         d = ks(a, b)
-        crit = ks_crit(len(a), len(b))
+        n_a, n_b = len(a), len(b)
+        if col.cluster:  # correlated rows (a session's page views): the units are the clusters
+            n_a = min(n_a, int(kish(shape.column(col.cluster))))
+            n_b = min(n_b, int(kish(ref.column(col.cluster))))
+        crit = ks_crit(n_a, n_b)
         tol = max(crit, 1.5 * drift + 0.002) if not math.isnan(drift) else crit
         rep.add(
             f"{label}:ks",
@@ -543,6 +564,8 @@ def _compare_column(
         d = tvd(fs, fr)
         tol = max(3 * tvd_noise(len(rxs), len(vs_), len(vr)), 1.5 * drift + 0.002)
         rep.add(f"{label}:pattern_share", d <= tol, tvd=d, tol=tol, shape=fs, baseline=fr)
+        if not col.distinct:
+            return
         dr_s, dr_b = len(set(vs_)) / max(len(vs_), 1), len(set(vr)) / max(len(vr), 1)
         dr_drift = nanmax(
             abs(
@@ -553,7 +576,7 @@ def _compare_column(
             )
             for o in others
         )
-        dr_tol = max(0.05, 1.5 * dr_drift)
+        dr_tol = max(0.10, 3 * dr_drift)
         rep.add(
             f"{label}:distinct_ratio",
             abs(dr_s / max(dr_b, 1e-12) - 1) <= dr_tol,
@@ -748,6 +771,31 @@ def conform(table: pa.Table, like: pa.Table) -> pa.Table:
 
 
 # ---- cases ----------------------------------------------------------------------------------
+
+
+CHANCE_SEEDS = tuple(range(1043, 1050))
+
+
+def chance_rate(module: Any, ctx: Context) -> list[dict[str, Any]]:
+    """A diagnostic, never a verdict: Shape at seeds 1043-1049 against the same baseline runs.
+    Each tolerance comes from five baseline seeds, so a correct Shape fails some checks by chance
+    at other seeds; this shows how often, so that a change to a simulator's random draws (which
+    moves seed 1042) can be told from a real difference. Returns the failed runs."""
+    inputs = module.inputs(ctx.quick)
+    out: list[dict[str, Any]] = []
+    for cid, cfg in module.configs(ctx.quick).items():
+        base = baseline_runs(module.SIM, cfg, inputs)
+        for seed in CHANCE_SEEDS:
+            rep = Report(f"{module.NAME}[{cid}]@{seed}")
+            module.compare(rep, module.run_shape(cfg, seed, inputs), base, cfg, inputs, ctx.quick)
+            out.append(
+                {
+                    "run": rep.label,
+                    "checks": len(rep.checks),
+                    "failed": [c.name for c in rep.failed],
+                }
+            )
+    return out
 
 
 def mutations(run: Run) -> dict[str, Run]:

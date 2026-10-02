@@ -11,7 +11,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   modules, and `shape simulate`. A run is reproducible from its seed (ids come from the seed; the
   clickstream window starts at `start_time`); the financial `transactions` columns follow the
   configuration; log events that start a trace carry its ids; `latency_spike_enabled` and
-  `outage_enabled` are honoured; fractional durations count; IoT alerts do not depend on the storm
+  `outage_enabled` are honoured and a run without tracing has no trace ids; fractional durations count; IoT alerts do not depend on the storm
   switch; readings per sensor and the domains' own column names are understood. Harness:
   `benchmarks/vs_spindle/simulation_1to1/` (parity verifier, negative controls, allow-list probes).
 - `shape stream` (`docs/EMIT.md`): one table's rows as events in event-time order, on the `shape emit`

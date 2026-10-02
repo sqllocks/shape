@@ -14,6 +14,7 @@ from harness import Col, Report, Run, TableSpec
 NAME = "pulse"
 SIM = "pulse"
 MIN_US = 60_000_000
+ZONES = frozenset({"downtown", "airport", "north", "south", "east", "west"})
 MONEY = 0.0101  # the marts round to cents: a total on a rounding tie may flip one cent, because
 # the two tools add the same numbers in a different order (Shape's sums are order-independent)
 # utilization_pct is online_hours (rounded to 0.01 h) / 8 h, rounded again: a flip is 0.125 + 0.01
@@ -194,7 +195,7 @@ def compare(
                 "signal_id": Col("exact"),
                 "ts": Col("exact"),
                 "city_id": Col("exact"),
-                "zone": Col("enum"),
+                "zone": Col("enum", vocab=ZONES),
                 "trigger": Col(
                     "enum", vocab=frozenset({"baseline", "weather", "event", "imbalance"})
                 ),
@@ -207,7 +208,12 @@ def compare(
                 "ping_id": Col("pattern", regexes=(r"\d+-\d+",)),
                 "driver_id": Col("skip"),
                 "trip_id": Col("skip"),
-                "city_id": Col("enum"),
+                "city_id": Col(
+                    "enum", vocab=frozenset({"1.0", "2.0", "3.0", "4.0", "1", "2", "3", "4"})
+                ),
+                "ts": Col("time", cluster="trip_id"),
+                "lat": Col("num", cluster="trip_id"),
+                "lon": Col("num", cluster="trip_id"),
                 "status": Col("const", value="on_trip"),
                 "source_store": Col("const", value="Eventhouse"),
             },

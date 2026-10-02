@@ -420,6 +420,11 @@ class OperationalLogSimulator:
         hour = np.repeat(burst_hours, n_svc * per)
         svc = np.tile(np.repeat(np.arange(n_svc), per), len(burst_hours))
         n = len(hour)
+        trace_id = np.full(n, None, dtype=object)
+        span_id = np.full(n, None, dtype=object)
+        if cfg.trace_enabled:  # a run without tracing has no trace ids, bursts included
+            trace_id = np.array(uuid_strings(rng, n), dtype=object)
+            span_id = np.array([u[:16] for u in uuid_strings(rng, n)], dtype=object)
         extra: dict[str, np.ndarray] = {
             "ts": start_us
             + hour * 3_600_000_000
@@ -434,8 +439,8 @@ class OperationalLogSimulator:
             "status": pick(rng, [500, 502, 503, 429], n).astype(np.int64),
             "latency": np.round(rng.uniform(5000, 30000, n), 2),
             "message": pick(rng, ERROR_MESSAGES, n).astype(object),
-            "trace_id": np.array(uuid_strings(rng, n), dtype=object),
-            "span_id": np.array([u[:16] for u in uuid_strings(rng, n)], dtype=object),
+            "trace_id": trace_id,
+            "span_id": span_id,
             "spike": np.zeros(n, dtype=bool),
             "outage": np.zeros(n, dtype=bool),
         }

@@ -136,6 +136,14 @@ def test_traces_disabled_leaves_ids_empty_and_traces_typed():
     assert r.logs.column("span_id").null_count == r.logs.num_rows
 
 
+def test_error_bursts_carry_trace_ids_only_when_tracing_is_on():
+    burst = {"error_burst_probability": 1.0, "error_burst_count": 5, "duration_hours": 3.0}
+    off = run(trace_enabled=False, **burst)
+    assert off.logs.column("trace_id").null_count == off.logs.num_rows
+    on = run(**burst)
+    assert on.logs.column("trace_id").null_count == 0 and on.logs.column("span_id").null_count == 0
+
+
 def test_custom_services_and_health():
     svc = [{"name": "a", "tier": "x"}, {"name": "b"}]
     r = run(services=svc, events_per_hour=100.0, latency_mean_ms=20.0, latency_std_ms=5.0)

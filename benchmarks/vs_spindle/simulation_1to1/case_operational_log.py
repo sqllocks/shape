@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import math
 import re
 from typing import Any
 
 import harness as h
 import numpy as np
+import pyarrow as pa
 from harness import Col, Report, Run, TableSpec
 
 NAME = "operational_log"
@@ -29,7 +31,42 @@ ERRORS = (
 )
 MESSAGES = (r"Handled request in [0-9.]+ms", *(re.escape(m) for m in ERRORS))
 HOUR_US = 3_600_000_000
+BOOL = frozenset({"True", "False"})
+METHODS = frozenset({"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"})
+ENDPOINTS = frozenset(
+    {
+        "/api/v1/orders",
+        "/api/v1/orders/{id}",
+        "/api/v1/products",
+        "/api/v1/products/search",
+        "/api/v1/users/auth",
+        "/api/v1/users/profile",
+        "/api/v1/cart",
+        "/api/v1/checkout",
+        "/api/v1/inventory/check",
+        "/api/v1/payments/process",
+        "/api/v1/notifications/send",
+        "/healthz",
+        "/readyz",
+    }
+)
+CODES = frozenset(
+    str(c) for c in (200, 201, 204, 301, 302, 400, 401, 403, 404, 429, 500, 502, 503, 504)
+)
+SERVICES = (
+    "api-gateway",
+    "auth-service",
+    "order-service",
+    "inventory-service",
+    "payment-service",
+    "notification-service",
+    "search-service",
+    "analytics-service",
+)
+TIERS = frozenset({"edge", "middleware", "core", "support"})
 START_US = 1_704_067_200_000_000  # 2024-01-01T00:00:00 UTC
+BURST_LATENCY_MS = 5000.0  # error-burst events are 5-30 s; nothing else gets near
+THIN = 300  # a stratum with fewer events than this in either tool is not compared
 
 
 def inputs(quick: bool) -> None:
@@ -53,6 +90,13 @@ def configs(quick: bool) -> dict[str, dict[str, Any]]:
             "trace_depth_mean": 2.5,
         },
         "no_traces": {"trace_enabled": False, "duration_hours": 12.0, "events_per_hour": rate},
+        "bursts": {
+            "service_count": 4,
+            "duration_hours": 8.0,
+            "events_per_hour": rate * 0.5,
+            "error_burst_probability": 1.0,
+            "error_burst_count": 40,
+        },
     }
 
 
@@ -61,6 +105,7 @@ def controls(quick: bool) -> dict[str, tuple[str, dict[str, Any]]]:
         "outage_error_rate 0.7 -> 0.3": ("variant", {"outage_error_rate": 0.3}),
         "latency_std_ms 30 -> 90": ("default", {"latency_std_ms": 90.0}),
         "latency_spike_multiplier 5 -> 12": ("variant", {"latency_spike_multiplier": 12.0}),
+        "error_burst_count 40 -> 70": ("bursts", {"error_burst_count": 70}),
     }
 
 
@@ -101,8 +146,9 @@ def _facts(run: Run) -> dict[str, Any]:
     ts_us = h.numbers(run.tables["logs"].column("timestamp"), 0) * 1e6
     hour = ((ts_us - START_US) // HOUR_US).astype(int)
     per_hour: dict[tuple[str, int], int] = {}
-    for s, hr in zip(logs["service"], hour.tolist(), strict=True):
-        per_hour[(s, hr)] = per_hour.get((s, hr), 0) + 1
+    for s, hr, x in zip(logs["service"], hour.tolist(), lat, strict=True):
+        if x < BURST_LATENCY_MS:  # the burst events of a burst hour are a separate stratum
+            per_hour[(s, hr)] = per_hour.get((s, hr), 0) + 1
     outage = [s for s, o in zip(status, logs["is_outage"], strict=True) if o]
     spiked = np.array([x for x, f in zip(lat, logs["is_spike"], strict=True) if f], dtype=float)
     by_trace: dict[str, list[int]] = {}
@@ -152,35 +198,139 @@ def _facts(run: Run) -> dict[str, Any]:
     }
 
 
+def _hours(cfg: dict[str, Any]) -> int:
+    return int(np.ceil(cfg.get("duration_hours", 24.0)))
+
+
+def _burst_floor(cfg: dict[str, Any], services: int) -> float:
+    """5 sigma of the events the random burst hours add (each burst hour adds ``count`` events
+    per service): the count's own spread, beyond what five baseline seeds show."""
+    p = cfg.get("error_burst_probability", 0.03)
+    return 5 * math.sqrt(_hours(cfg) * p * (1 - p)) * services * cfg.get("error_burst_count", 50)
+
+
+def _window_floor(cfg: dict[str, Any], p: float, minutes: float, per_hour: float) -> float:
+    """5 sigma of the events in the hours a random window covers (a window covers
+    ``max(1, int(minutes / 60) + 1)`` hours, each hour starting one with probability ``p``)."""
+    length = max(1, int(minutes / 60) + 1)
+    covered = 1 - (1 - p) ** length
+    return 5 * math.sqrt(_hours(cfg) * covered * (1 - covered)) * per_hour
+
+
+def _strata(table: pa.Table) -> dict[str, pa.Table]:
+    """The log events split by the hour-level state they happened in: error-burst events
+    (latency of 5 s or more), and the rest by spike and outage window. Spike, outage and burst
+    hours are drawn at random, so the mixture of the whole table varies from run to run; each
+    stratum does not."""
+    lat = np.asarray(table.column("latency_ms").to_numpy(zero_copy_only=False), dtype=float)
+    spike = np.asarray(table.column("is_spike").to_pylist(), dtype=bool)
+    outage = np.asarray(table.column("is_outage").to_pylist(), dtype=bool)
+    burst = lat >= BURST_LATENCY_MS
+    out = {"regular": table.filter(pa.array(~burst)), "burst": table.filter(pa.array(burst))}
+    for sp in (False, True):
+        for ou in (False, True):
+            keep = ~burst & (spike == sp) & (outage == ou)
+            out[f"spike={sp} outage={ou}"] = table.filter(pa.array(keep))
+    return out
+
+
+def _health_matches_logs(run: Run) -> bool:
+    logs, health = run.tables["logs"].to_pydict(), run.tables["service_health"].to_pydict()
+    for i, name in enumerate(health["service"]):
+        lat = np.array(
+            [x for s, x in zip(logs["service"], logs["latency_ms"], strict=True) if s == name]
+        )
+        codes = [c for s, c in zip(logs["service"], logs["status_code"], strict=True) if s == name]
+        ok = health["total_requests"][i] == len(lat)
+        ok &= health["error_count"][i] == sum(1 for c in codes if c >= 500)
+        if len(lat):
+            for key, q in (("p50_latency_ms", 50), ("p95_latency_ms", 95), ("p99_latency_ms", 99)):
+                ok &= abs(health[key][i] - float(np.percentile(lat, q))) <= 0.006
+            ok &= abs(health["mean_latency_ms"][i] - float(lat.mean())) <= 0.006
+        if not ok:
+            return False
+    return True
+
+
 def compare(
     rep: Report, shape: Run, base: dict[int, Run], cfg: dict[str, Any], inputs: Any, quick: bool
 ) -> None:
+    n_svc = cfg.get("service_count", 5)
+    per_hour = n_svc * cfg.get("events_per_hour", 100.0)
+    burst = _burst_floor(cfg, n_svc)
+    spike_f = _window_floor(
+        cfg,
+        cfg.get("latency_spike_probability", 0.05),
+        cfg.get("latency_spike_duration_minutes", 15.0),
+        per_hour,
+    )
+    outage_f = _window_floor(
+        cfg,
+        cfg.get("outage_probability", 0.02),
+        cfg.get("outage_duration_minutes", 30.0),
+        per_hour,
+    )
+    skip = Col("skip")
+    steady = {  # columns that do not depend on the random hour states
+        "log_id": Col("id", regex=UUID),
+        "service": Col("enum", vocab=frozenset(SERVICES)),
+        "tier": Col("enum", vocab=TIERS),
+        "method": Col("enum", vocab=METHODS),
+        "endpoint": Col("enum", vocab=ENDPOINTS),
+        "trace_id": Col("id", regex=UUID),
+        "span_id": Col("id", regex=SPAN),
+    }
+    stateful = {  # columns that do: compared inside each stratum
+        "timestamp": skip,
+        "latency_ms": skip,
+        "status_code": skip,
+        "level": skip,
+        "message": skip,
+        "is_spike": skip,
+        "is_outage": skip,
+    }
+    by_state = {
+        "latency_ms": Col("num"),
+        "status_code": Col("enum", vocab=CODES),
+        "level": Col("enum", vocab=frozenset({"INFO", "WARN", "ERROR"})),
+        "message": Col("pattern", regexes=MESSAGES, distinct=False),
+    }
+    others = {k: skip for k in (*steady, *stateful)}
+    logs = {s: r.tables["logs"] for s, r in base.items()}
+    h.compare_table(
+        rep,
+        "logs",
+        shape.tables["logs"],
+        logs,
+        TableSpec(columns={**stateful, **steady}, count_floor=burst),
+    )
+    mine, theirs = _strata(shape.tables["logs"]), {s: _strata(t) for s, t in logs.items()}
+    for name in mine:
+        columns = (
+            {**others, **by_state} if name != "regular" else {**others, "timestamp": Col("time")}
+        )
+        ref = theirs[h.REF_SEED][name]
+        if mine[name].num_rows < THIN or ref.num_rows < THIN:
+            rep.add(f"logs[{name}]:thin", True, shape=mine[name].num_rows, baseline=ref.num_rows)
+            continue
+        h.compare_table(
+            rep,
+            f"logs[{name}]",
+            mine[name],
+            {s: t[name] for s, t in theirs.items()},
+            TableSpec(rows="free", columns=columns),
+        )
     specs = {
-        "logs": TableSpec(
-            columns={
-                "log_id": Col("id", regex=UUID),
-                "service": Col("enum"),
-                "tier": Col("enum"),
-                "level": Col("enum"),
-                "method": Col("enum"),
-                "endpoint": Col("enum"),
-                "status_code": Col("enum"),
-                "message": Col("pattern", regexes=MESSAGES),
-                "trace_id": Col("id", regex=UUID),
-                "span_id": Col("id", regex=SPAN),
-                "is_spike": Col("enum", vocab=frozenset({"True", "False"})),
-                "is_outage": Col("enum", vocab=frozenset({"True", "False"})),
-            }
-        ),
         "traces": TableSpec(
             columns={
                 "trace_id": Col("pattern", regexes=(UUID,)),
                 "span_id": Col("id", regex=SPAN),
                 "parent_span_id": Col("pattern", regexes=(SPAN,)),
-                "service": Col("enum"),
-                "operation": Col("enum"),
-                "status": Col("enum"),
-                "depth": Col("enum"),
+                "service": Col("enum", vocab=frozenset(SERVICES)),
+                "operation": Col("enum", vocab=ENDPOINTS),
+                "status": Col("enum", vocab=frozenset({"OK", "ERROR"})),
+                "depth": Col("enum", vocab=frozenset(str(i) for i in range(8))),
+                "timestamp": Col("time", cluster="trace_id"),
             }
         ),
         "service_health": TableSpec(
@@ -189,13 +339,13 @@ def compare(
             columns={
                 "service": Col("exact"),
                 "tier": Col("exact"),
-                "total_requests": Col("skip"),
-                "error_count": Col("skip"),
-                "error_rate": Col("skip"),
-                "p50_latency_ms": Col("skip"),
-                "p95_latency_ms": Col("skip"),
-                "p99_latency_ms": Col("skip"),
-                "mean_latency_ms": Col("skip"),
+                "total_requests": skip,
+                "error_count": skip,
+                "error_rate": skip,
+                "p50_latency_ms": skip,
+                "p95_latency_ms": skip,
+                "p99_latency_ms": skip,
+                "mean_latency_ms": skip,
             },
         ),
     }
@@ -205,19 +355,17 @@ def compare(
         )
     sh = shape.tables["service_health"].to_pydict()
     for i, svc in enumerate(sh["service"]):
-        for metric in ("total_requests", "error_rate", "p50_latency_ms"):
-            series = [r.tables["service_health"].to_pydict()[metric][i] for r in base.values()]
-            floor = (
-                0.02 * max(abs(float(np.mean(series))), 1.0) if metric != "error_rate" else 0.005
-            )
-            h.compare_scalar(
-                rep,
-                f"service_health.{svc}.{metric}",
-                float(sh[metric][i]),
-                [float(x) for x in series],
-                floor=floor,
-                count=metric in ("total_requests", "error_count"),
-            )
+        series = [
+            r.tables["service_health"].to_pydict()["total_requests"][i] for r in base.values()
+        ]
+        h.compare_scalar(
+            rep,
+            f"service_health.{svc}.total_requests",
+            float(sh["total_requests"][i]),
+            [float(x) for x in series],
+            floor=burst / max(n_svc, 1),
+            count=True,
+        )
     h.compare_stats(
         rep,
         shape.stats,
@@ -230,6 +378,13 @@ def compare(
             "total_traces",
             "total_spans",
         ),
+        floors={
+            "total_events": burst,
+            "total_errors": burst + outage_f * cfg.get("outage_error_rate", 0.8),
+            "error_rate": (burst + outage_f) / max(per_hour * _hours(cfg), 1),
+            "spike_events": spike_f,
+            "outage_events": outage_f,
+        },
     )
     fs = _facts(shape)
     fb = {s: _facts(r) for s, r in base.items()}
@@ -247,9 +402,13 @@ def compare(
             continue
         h.invariant(rep, f"invariant:{key}", fs[key], {s: f[key] for s, f in fb.items()})
         rep.add(f"holds:{key}", bool(fs[key]))
+    rep.add("holds:service_health_matches_logs", _health_matches_logs(shape))
+    rep.add(
+        "invariant:service_health_matches_logs", all(_health_matches_logs(r) for r in base.values())
+    )
     h.compare_vector(
         rep,
-        "events per service per hour",
+        "events per service per hour (without bursts)",
         fs["per_service_hour"],
         {s: f["per_service_hour"] for s, f in fb.items()},
     )
@@ -273,11 +432,15 @@ def compare(
             fs["n_outage"] > 200 and all(f["n_outage"] > 200 for f in fb.values()),
         )
     if cfg.get("latency_spike_probability", 0.05) >= 0.1:
-        pooled = {s: np.sort(f["spiked_latency"]) for s, f in fb.items()}
-        h.compare_vector(rep, "latency of spiked events", np.sort(fs["spiked_latency"]), pooled)
         rep.add(
             "exercised:spikes",
             fs["n_spiked"] > 200 and all(f["n_spiked"] > 200 for f in fb.values()),
+        )
+    if cfg.get("error_burst_probability", 0.03) >= 0.5:
+        rep.add(
+            "exercised:bursts",
+            mine["burst"].num_rows >= THIN
+            and all(t["burst"].num_rows >= THIN for t in theirs.values()),
         )
 
 
@@ -331,6 +494,26 @@ def probes(ctx: h.Context) -> list[Report]:
             for i in roots
         ),
         traces=len(roots),
+    )
+    out.append(rep)
+    # SIM-8: bursts with tracing off.
+    rep = Report("SIM-8 operational log bursts without tracing")
+    cfg = {
+        **quiet,
+        "duration_hours": 3.0,
+        "trace_enabled": False,
+        "error_burst_probability": 1.0,
+        "error_burst_count": 5,
+    }
+    theirs = h.baseline_once(SIM, cfg, None, 5, "burst-trace")
+    ours = run_shape(cfg, 5, None)
+    rep.add(
+        "baseline: burst events carry trace ids although tracing is off",
+        theirs.tables["logs"].column("trace_id").null_count < theirs.tables["logs"].num_rows,
+    )
+    rep.add(
+        "shape: no event carries one",
+        ours.tables["logs"].column("trace_id").null_count == ours.tables["logs"].num_rows,
     )
     out.append(rep)
     # SIM-4: windows shorter than an hour or with a fractional hour.

@@ -59,6 +59,8 @@ ALLOWED = {
     "no events (or drops the fraction) in the baseline; Shape honours the window.",
     "SIM-5": "IoT: with `alert_storm_enabled=False` the baseline generates no alerts at all, not "
     "even the baseline-rate ones; Shape generates them whether or not storms are on.",
+    "SIM-8": "Operational logs: with `trace_enabled=False` the baseline's error-burst events still "
+    "carry trace and span ids; Shape's carry none, as every other event of such a run.",
     "SIM-7": "Financial: the columns of the combined transactions table depend on chance in the "
     "baseline (a run with no fraud burst has no fraud columns, one with none of reversals has no "
     "reversal columns); Shape's follow the configuration, so a stream's schema does not change "

@@ -92,7 +92,8 @@ count), `start_time`, `events_per_hour`, latency (`latency_mean_ms`, `latency_st
 traces (`trace_enabled`, `trace_depth_mean`), error bursts (`error_burst_enabled`,
 `_probability`, `_count`), `seed`. A spike or outage window covers whole hours. About 30% of
 events start a distributed trace; such an event carries the trace's `trace_id` and the id of its
-entry span, so `logs` joins to `traces`. Tables: `logs`, `traces`, `service_health`.
+entry span, so `logs` joins to `traces`; a run with `trace_enabled=False` has no trace ids at all,
+error bursts included. Tables: `logs`, `traces`, `service_health`.
 
 ### Pulse
 

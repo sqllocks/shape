@@ -169,3 +169,45 @@ def test_the_baseline_names_are_confined_to_the_harness():
         assert path.is_file()
     assert set(names.MODULES) >= {"clickstream_patterns", "pulse_patterns"}
     assert names.PARAMETERS["FinancialStreamSimulator"]["transactions_df"] == "transactions"
+
+
+def test_exit_codes(monkeypatch, capsys):
+    """0 when everything passes, 1 on a failed check, an undetected control or a failed probe,
+    2 when the baseline is missing."""
+    ok = h.Report("a")
+    ok.add("x", True)
+    bad = h.Report("a")
+    bad.add("x", False)
+    results = {
+        "pass": ([ok], [{"control": "c", "detected": True, "failed_checks": ["x"]}], []),
+        "failed check": ([bad], [], []),
+        "undetected control": (
+            [ok],
+            [{"control": "c", "detected": False, "failed_checks": []}],
+            [],
+        ),
+        "failed probe": ([ok], [], [_probe(False)]),
+    }
+    current: dict[str, object] = {}
+    monkeypatch.setattr(verify.importlib, "import_module", lambda name: ModuleType(name))
+    monkeypatch.setattr(h, "run_case", lambda module, ctx: current["result"])
+    monkeypatch.setattr(verify.harness, "run_case", lambda module, ctx: current["result"])
+    codes = {}
+    for label, result in results.items():
+        current["result"] = result
+        codes[label] = verify.main(["--quick", "--only", "clickstream"])
+    assert codes == {"pass": 0, "failed check": 1, "undetected control": 1, "failed probe": 1}
+
+    def missing(module, ctx):
+        raise h.HarnessError("no baseline")
+
+    monkeypatch.setattr(verify.harness, "run_case", missing)
+    assert verify.main(["--only", "clickstream"]) == 2
+    assert "no baseline" in capsys.readouterr().err
+    assert verify.main(["--only", "nonexistent"]) == 2
+
+
+def _probe(passed: bool) -> object:
+    rep = h.Report("SIM-1 probe")
+    rep.add("p", passed)
+    return rep
