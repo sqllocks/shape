@@ -236,7 +236,9 @@ class _Sample:
 
     def sorted_values(self) -> np.ndarray[Any, Any]:
         if self._sorted is None:
-            values = self.full if self.full is not None else np.concatenate(self.parts or [np.empty(0)])
+            values = (
+                self.full if self.full is not None else np.concatenate(self.parts or [np.empty(0)])
+            )
             self._sorted = np.sort(np.asarray(values))
         return self._sorted
 
