@@ -243,6 +243,9 @@ instruction.
 
 | Date | ID | Change | Reason |
 |---|---|---|---|
+| 2026-10-02 | P6-02, P6-10 | **Lead acceptance notes.** P6-02: `shape.plugins.kit.check_chaos` assumes a mutation keeps the batch schema; five of the six categories change it by design (schema, value `wrong_types`, volume, file). P6-02's acceptance does not use the kit check, so the kit is left as is (a follow-up, no contract change). P6-10: `tests/privacy/test_safe_validator.py::test_cli_input_errors_exit_2` changed one assertion to the new contract (`shape profile validate FILE` without `--safe` is the structural check: 0 valid, 1 missing), as P6-10's deliverable requires; nothing skipped. | Lead. |
+| 2026-10-02 | P6-01a, GEN-IN | **P6-01a GEN-IN at medium missed after round 1** (capital_markets 5.20x, education 7.82x, financial 7.15x; gate 10x). Following the owner's standing "keep optimising" direction (P4-10, G1): round 2 on `lane/P6-01a` with the lane's option (b) (process-wide Arrow allocator choice, native pandas-free generation path) and, if needed, (c) (parallel Parquet encoding); retail must not regress. Gate unchanged. P6-01b/c/d start from `lane/P6-01a` in parallel. T-21 clause (h) misses at seed 1042 in 6 of 60 cells are escalated to the owner (no seed, floor or case changed). | Lead; owner ruling on clause (h) pending. |
+| 2026-10-02 | PF-06 | **Trust fixes from PF-06's findings** (owner's standing decision, 2026-10-01): `shape check` must not pass a multi-table contract against a single-table profile, and `shape profile <folder>` must not silently read a folder as one table; artifact folders named by the second must not collide. Lane `lane/PF-06b`. | Lead, applying the owner's 2026-10-01 decision. |
 | 2026-10-02 | P4-10, GEN-CLI | **Owner decision on the P4-10 GEN-CLI miss** (retail medium 6.83x, gate 10x; large 19.8x; equivalence passes): keep optimising (§6.5 round 2, lane `lane/P4-10r2`); the gate is unchanged. | Owner, 2026-10-02: "Keep optimizing". Evidence: docs/plans/lane_status/P4-10.md. |
 | 2026-10-02 | P4-08, P4-10, P4-11, D-13 | **Plan text superseded by D-13 (2026-09-30) in three work packages:** P4-10 `shape validate` dispatches on Shape generation schemas and contracts only (no baseline schema input); P4-11 adds no baseline library-name aliases to `shape.fidelity`; P4-08 has no `--spindle-json` output (Shape's `learn` writes its own schema; equality with the baseline's `learn` is checked in `benchmarks/vs_spindle/learn_1to1/`, outside the package). | Lead, applying the owner's D-13 decision. |
 | 2026-10-01 | P1-18, T-22 | **Owner: fix the enum rule.** The profiler marks a column `is_enum` (and lists every value in `enum_values`) when it has fewer than 200 distinct values, or fewer than 50,000 at a cardinality ratio under 0.30, so every column of a table under 200 rows is an "enum", unique keys and free text included (the SQL Server plugin: at most 50 distinct). New work package **P1-18**: a column is an enum only if, in addition, its values repeat (distinct values at most half of the non-null values; a unique column is never an enum); both kernels and the SQL Server plugin. T-22 parity for `is_enum`, `enum_values` (and fields derived from them) becomes a narrow named allow-list; every other field still equal. | Owner, 2026-10-01: "We should probably fix that too right?" |
@@ -1986,7 +1989,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 30 | PF-03 | done | a726dd4 |
 | 31 | PF-04 | done (fsspec test requirement fixed at integration, c033f48) | b98dbac |
 | 32 | PF-05 | wip (merged; CI image build and 500 MB check pending) | 6d2e22a |
-| 33 | PF-06 | wip (lane/PF-06) | |
+| 33 | PF-06 | wip (lane/PF-06; built, lead verification next; trust fixes in lane/PF-06b) | |
 | 34 | P3-01 | done | 37386f3 |
 | 35 | P3-02 | done | 500367f |
 | 36 | P3-03 | done | 43f5d88 |
@@ -2008,31 +2011,31 @@ Work packages are listed in execution order. The next work package is the first 
 | 51 | P4-09 | done (retail per table equal to the baseline comparator, max diff 0.00000; G3, G4 fixed) | 9fd7caa |
 | 52 | P4-10 | done (two §6.5 rounds; lead GEN-CLI 2.10 GHz: medium 10.57x, large 31.64x; evidence P4-10-lead/) | 5fdf9b2 |
 | 53 | P4-11 | done (retail medium tiers 1-3: 0 mismatches over 9 tables; AUC/GMM max diff 0.017 <= 0.02; DP distinct unseeded) | f85b99d |
-| 54 | P5-01 | wip (lane/P5-01) | |
-| 55 | P5-02 | todo | |
+| 54 | P5-01 | done | 33f57a7 |
+| 55 | P5-02 | wip (lane/P5-02; built, lead verification next) | |
 | 56 | P5-03 | todo | |
 | 57 | P5-04 | todo | |
-| 58 | P6-01a | wip (lane/P6-01a) | |
-| 59 | P6-01b | todo | |
-| 60 | P6-01c | todo | |
-| 61 | P6-01d | todo | |
+| 58 | P6-01a | wip (lane/P6-01a; built; T-21 clause (h) chance misses with the owner; GEN-IN round 2) | |
+| 59 | P6-01b | wip (lane/P6-01b) | |
+| 60 | P6-01c | wip (lane/P6-01c) | |
+| 61 | P6-01d | wip (lane/P6-01d) | |
 | 62 | P6-01e | todo | |
-| 63 | P6-02 | wip (lane/P6-02) | |
-| 64 | P6-03 | wip (lane/P6-03) | |
+| 63 | P6-02 | done | 0f8c36e |
+| 64 | P6-03 | done | 50d7be4 |
 | 65 | P6-04 | todo | |
-| 66 | P6-05 | wip (lane/P6-05) | |
-| 67 | P6-06 | wip (lane/P6-06) | |
+| 66 | P6-05 | done | 3a85d86 |
+| 67 | P6-06 | done | e5d338f |
 | 68 | P6-07a | todo | |
 | 69 | P6-07b | todo | |
 | 70 | P6-07c | todo | |
 | 71 | P6-08 | done (nightly SQL Server e2e pending) | 29eac3e |
 | 71a | P6-08b | done (rounds 1-2: FIX-1..FIX-9; real-server parity 11/11) | 515d26e |
 | 72 | P6-09 | done (CI bench-quick verify_1to1 green on c7bd366, run 36850390984) | 3859a3c |
-| 73 | P6-10 | wip (lane/P6-10) | |
+| 73 | P6-10 | done | 1faff65 |
 | 74 | P6-11 | todo | |
 | 75 | P6-12 | todo | |
 | 76 | P6-13 | todo | |
-| 77 | P6-14 | todo | |
+| 77 | P6-14 | wip (lane/P6-14; built, lead verification next) | |
 | 78 | P7-01 | done | b04bf32 |
 | 79 | P7-02 | done | d6e3a97 |
 | 80 | P7-03 | done | 06300e7 |
