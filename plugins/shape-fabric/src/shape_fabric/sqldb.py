@@ -229,9 +229,7 @@ class SqlDatabaseWriter:
 
     @property
     def destination(self) -> str:
-        from shape_sqlserver.sql import redact_connection_string
-
-        return redact_connection_string(self.db.connection_string or "<open connection>")
+        return _tsql.redact(self.db.connection_string or "<open connection>")
 
     def close(self) -> None:
         self.db.close()
@@ -304,7 +302,7 @@ class SqlDatabaseWriter:
         except Exception as exc:
             undo(db, sname, table, created)
             raise WriteError(
-                f"writing {sname}.{table} failed: {_tsql.redact_connection_string(str(exc))}"
+                f"writing {sname}.{table} failed: {_tsql.redact(str(exc))}"
             ) from exc
 
     def _insert(

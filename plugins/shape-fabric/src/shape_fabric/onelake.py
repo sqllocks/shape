@@ -117,6 +117,8 @@ def to_abfss(uri: str) -> str:
 def join(base: str, *parts: str) -> str:
     """``base`` (a local directory or a URI) with ``parts`` appended; every part is one checked
     segment (it may contain ``/`` between segments)."""
+    if any(not str(part) for part in parts):
+        raise ShapeError("a path part cannot be empty")
     segs = [segment(s, "path segment") for part in parts for s in str(part).split("/") if s]
     if is_remote(base):
         return "/".join([base.rstrip("/"), *segs])

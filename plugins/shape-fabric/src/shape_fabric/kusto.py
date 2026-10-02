@@ -169,6 +169,7 @@ class KustoClient:
         self.busy_retries = busy_retries
         self.timeout = timeout
         self._prepared: set[tuple[str, str]] = set()
+        self.accepted = 0  # ingestion requests the service has accepted, over the client's life
 
     def _headers(self, content_type: str = "application/json") -> dict[str, str]:
         headers = {"Content-Type": content_type, "Accept": "application/json"}
@@ -256,6 +257,7 @@ class KustoClient:
             f"{quote(table, safe='')}?streamFormat=JSON&mappingName={mapping_name(table)}"
         )
         self._call("POST", url, "application/json; charset=utf-8", body)
+        self.accepted += 1
 
     def ingest_lines(self, table: str, lines: Any, max_bytes: int) -> int:
         """Send JSON ``lines`` (bytes each) in requests of at most ``max_bytes``; the number of

@@ -93,7 +93,7 @@ class EventhouseWriter:
                 f"table {table!r} has no batches and no schema: pass schema= to create it empty"
             )
         client = self.client
-        requests = 0
+        accepted_before = client.accepted
         try:
             self._prepare(name, mode, use_schema)
             rows = 0
@@ -105,15 +105,12 @@ class EventhouseWriter:
                         rows += batch.num_rows
                         yield from (_line(r) for r in rows_of(batch))
 
-                requests = client.ingest_lines(name, lines(), max_request_bytes)
+                client.ingest_lines(name, lines(), max_request_bytes)
             return rows
-        except ShapeError as exc:
+        except (ShapeError, ConnectionError) as exc:
+            done = client.accepted - accepted_before
             raise WriteError(
-                f"writing KQL table {name!r} failed after {requests} accepted request(s): {exc}"
-            ) from exc
-        except ConnectionError as exc:
-            raise WriteError(
-                f"writing KQL table {name!r} failed after {requests} accepted request(s): {exc}"
+                f"writing KQL table {name!r} failed after {done} accepted request(s): {exc}"
             ) from exc
 
     def _prepare(self, name: str, mode: str, schema: pa.Schema) -> None:

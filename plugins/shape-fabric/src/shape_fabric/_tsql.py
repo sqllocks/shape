@@ -36,6 +36,17 @@ ACCESS_TOKEN_ATTR = 1256  # SQL_COPT_SS_ACCESS_TOKEN
 _KEY_COLUMN_LENGTH = 450  # the longest string a key column can index
 
 
+_SECRET_VALUE = re.compile(
+    r"(?i)\b(pwd|password|accesstoken|access token)(\s*=\s*)(\{(?:[^}]|\}\})*\}|[^;\s]+)"
+)
+
+
+def redact(text: str) -> str:
+    """``text`` (an error message, a connection string) with passwords and tokens hidden,
+    wherever a ``PWD=...`` appears, also inside a longer sentence."""
+    return _SECRET_VALUE.sub(r"\1\2***", redact_connection_string(text))
+
+
 def ident(name: str) -> str:
     """``name`` as a bracket-quoted identifier; refuses an empty, NUL-containing or over-long
     (more than 128 characters) name."""
@@ -301,7 +312,7 @@ def connect(
         try:
             conn = pyodbc.connect(connection_string, autocommit=False, timeout=timeout)
         except pyodbc.Error as exc:
-            raise ShapeError(f"could not connect: {redact_connection_string(str(exc))}") from None
+            raise ShapeError(f"could not connect: {redact(str(exc))}") from None
         return conn
     if _LOGIN_KEYS.search(connection_string):
         raise ShapeError(
@@ -324,4 +335,4 @@ def connect(
             last = exc
             if attempt < retries:
                 time.sleep(retry_delay * attempt)
-    raise ShapeError(f"could not connect: {redact_connection_string(str(last))}") from None
+    raise ShapeError(f"could not connect: {redact(str(last))}") from None

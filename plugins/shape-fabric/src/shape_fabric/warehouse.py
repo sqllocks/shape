@@ -120,9 +120,7 @@ class WarehouseWriter:
 
     @property
     def destination(self) -> str:
-        from shape_sqlserver.sql import redact_connection_string
-
-        return redact_connection_string(self.db.connection_string or "<open connection>")
+        return _tsql.redact(self.db.connection_string or "<open connection>")
 
     def close(self) -> None:
         self.db.close()
@@ -185,7 +183,7 @@ class WarehouseWriter:
         except Exception as exc:
             undo(db, sname, table, created)
             raise WriteError(
-                f"loading {sname}.{table} failed: {_tsql.redact_connection_string(str(exc))}"
+                f"loading {sname}.{table} failed: {_tsql.redact(str(exc))}"
             ) from exc
         finally:
             self._cleanup(folder)
