@@ -91,7 +91,24 @@ copula tables were never handed to the writer (`Engine._generate`'s `release()` 
 
 ## Checks run in this session
 
-RESULTS_PLACEHOLDER
+Final tree, after merging `origin/build/main-plan` (merge commit, no rebase):
+
+* `ruff check` and `ruff format --check` (src, tests, plugins, benchmarks/vs_spindle): clean. `mypy` (strict): no issues (332 files).
+  `vulture src/shape scripts/vulture_whitelist.py --min-confidence 80`: clean. `lint-imports`: 1 kept, 0 broken.
+  `python scripts/check_user_facing.py`: clean. `bandit -q -r src -ll`: no findings (only the existing `nosec` notes).
+* Rust: no Rust file changed on this lane or in the merge, so `cargo fmt/clippy/test` were not re-run.
+* START: median of 10 runs of `shape --version`, 36 ms (limit 300 ms).
+* Profile parity `verify.py --impl shape`: exit 0 under `SHAPE_KERNEL=rust` and under `SHAPE_KERNEL=python`; the identifier allow-list
+  applied to 12 of 12 columns. Stream profiler equivalence `stream_prof/verify.py`: exit 0 (stream == batch, identical across processes).
+* `pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`: 4,932 passed under `SHAPE_KERNEL=rust`
+  (`.[advanced]` and `-e plugins/shape-domains` installed first). Under `SHAPE_KERNEL=python`: 4,931 passed and 1 failed,
+  `tests/streaming/emit/test_runtime.py::test_realtime_rate_within_five_percent` (a wall-clock pacing test, 6.1% off); it passed
+  (26/26 in that file) when re-run alone on a quiet machine. Not a code change of this lane (no emit code touched); reported, not hidden.
+* `pytest -m heavy tests/kernel tests/profile tests/streaming` (rust): 42 passed. An earlier run, concurrent with the python-kernel suite,
+  failed `test_bounded_mode_memory_does_not_grow_with_rows` (12% growth, limit 10%); alone it passed (82 s). A contention artefact.
+* Not run: the Event Hubs/Kafka emulator tests (Docker), `pytest -m heavy` under the Python kernel (the lane before this one found its
+  bounded-memory test runs for over 40 minutes).
+
 
 ## Proposals for the lead / owner (not built)
 
