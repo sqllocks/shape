@@ -33,7 +33,6 @@ EXPECTED = (
     "sqlserver",
     "domains",
     "simulation",
-    "mcp",
     "healthcare-codes",
 )
 
