@@ -63,6 +63,9 @@ def add_options(em: Any, *, stream: bool = False) -> None:
         help="the table to stream (required)" if stream else "stream only this table (repeatable)",
     )
     em.add_argument("--sink", default="console", metavar="SINK", help=SINKS_HELP)
+    from shape.cli.auth import add_arguments as add_auth_arguments
+
+    add_auth_arguments(em)
     em.add_argument("-o", "--output", metavar="FILE", help="the file for --sink file")
     em.add_argument(
         "--envelope",
@@ -358,8 +361,42 @@ def _sink(a: argparse.Namespace, envelope: str, resuming: bool) -> Any:
     for name in host.names("shape.emitters"):
         emitter = host.try_get("shape.emitters", name)
         if emitter is not None and scheme and scheme in getattr(emitter, "schemes", ()):
-            return EmitterSink(emitter, a.sink, envelope=envelope, resuming=resuming)
+            return EmitterSink(
+                emitter, a.sink, envelope=envelope, resuming=resuming, **_auth_options(a, scheme)
+            )
     raise ShapeError(f"unknown sink {a.sink!r}: {SINKS_HELP}")
+
+
+def _auth_options(a: argparse.Namespace, scheme: str) -> dict[str, Any]:
+    """The emitter options ``--auth`` and ``--connection-string`` give (none when neither is
+    used). Secrets stay references until here; the plugin resolves them."""
+    from shape.cli import auth
+    from shape.errors import ShapeError
+    from shape.security import credrefs
+
+    settings = auth.settings_from_args(a)
+    conn = auth.connection_string_from_args(a)
+    if not settings and not conn:
+        return {}
+    if scheme not in ("eventhouse", "eventstream"):
+        raise ShapeError(
+            "--auth and --connection-string apply to eventhouse:// and eventstream:// sinks"
+        )
+    if settings and settings.get("mode") == "sql":
+        raise ShapeError("--auth sql is a database login, not for an event destination")
+    options: dict[str, Any] = {}
+    if conn:
+        if scheme == "eventhouse":
+            raise ShapeError("--connection-string is for eventstream:// (an eventhouse signs in)")
+        try:
+            options["connection_string"] = (
+                credrefs.resolve_reference(conn) if credrefs.is_reference(conn) else conn
+            )
+        except credrefs.CredentialReferenceError as exc:
+            raise ShapeError(f"--connection-string: {exc}") from None
+    if settings:
+        options["credential"] = auth.make_credential(settings)
+    return options
 
 
 def run(a: argparse.Namespace) -> int:

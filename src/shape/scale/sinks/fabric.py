@@ -8,8 +8,10 @@ at ``open``, not at import. ``writer`` replaces the plugin's writer (a recording
 contract tests); ``writer_options`` adds options for it (a ``credential``, or a ``connection``).
 
 A database table is created with the key and column types of the generation schema. Sign-in is
-the connection string's (or the ``credential`` option's): the ``--auth`` modes arrive with the
-Fabric auth work package.
+the ``auth`` settings' (``--auth cli|msi|spn|sql|device-code|fabric``, built by the plugin's
+``shape_fabric.auth``), else the connection string's, else the ``credential`` writer option. A
+``connection_string`` setting may be a credential reference (``env://``, ``file://``, ``kv://``);
+it is resolved when the sink is built for a run, so no job record or log holds the string.
 """
 
 from __future__ import annotations
@@ -34,6 +36,46 @@ def plugin_sink(name: str) -> Any:
             f"the {name} sink needs the shape-fabric plugin: pip install 'sqllocks-shape[fabric]'"
         ) from exc
     return getattr(sinks, name)()
+
+
+def _auth_module() -> Any:
+    try:
+        return importlib.import_module("shape_fabric.auth")
+    except ImportError as exc:
+        raise ImportError(
+            "--auth needs the shape-fabric plugin: pip install 'sqllocks-shape[fabric]'"
+        ) from exc
+
+
+def auth_options(
+    auth: Mapping[str, Any] | None, connection_string: str | None = None
+) -> dict[str, Any] | None:
+    """Writer options for the sign-in ``auth`` (a credential, or for ``sql`` the connection
+    string with its login), or ``None`` when no sign-in was asked for."""
+    if not auth:
+        return None
+    options: dict[str, Any] = _auth_module().writer_options(auth, connection_string=connection_string)
+    return options
+
+
+def connection_and_auth(
+    connection_string: str, auth: Mapping[str, Any] | None, resolve: bool
+) -> tuple[str, dict[str, Any] | None]:
+    """The connection string (a credential reference resolved) and the writer options of a
+    database sink. With ``resolve=False`` the string is returned as given, with no options."""
+    if not resolve:
+        return connection_string, None
+    from shape.security import credrefs
+
+    if connection_string and credrefs.is_reference(connection_string):
+        try:
+            connection_string = credrefs.resolve_reference(connection_string)
+        except credrefs.CredentialReferenceError as exc:
+            raise ValueError(f"connection_string: {exc}") from None
+    options = auth_options(auth, connection_string)
+    if options and "connection_string" in options:
+        connection_string = options.pop("connection_string")
+    return connection_string, options
 
 
 def _check_mode(mode: str) -> str:

@@ -71,6 +71,9 @@ def add_arguments(ge: argparse.ArgumentParser) -> None:
         metavar="DIR",
         help="the job store (default: $SHAPE_JOBS_DIR or ~/.shape/jobs)",
     )
+    from shape.cli.auth import add_arguments as add_auth_arguments
+
+    add_auth_arguments(ge)
 
 
 def parse_sink_config(items: list[str]) -> dict[str, dict[str, Any]]:
@@ -82,8 +85,27 @@ def parse_sink_config(items: list[str]) -> dict[str, dict[str, Any]]:
         sink, dot, key = left.partition(".")
         if not sep or not dot or not sink or not key:
             raise ValueError(f"--sink-config wants SINK.KEY=VALUE, got {item!r}")
+        if key in SECRET_SETTINGS or key == "connection_string":
+            _check_secret_setting(item.split("=", 1)[0], value)
         config.setdefault(sink, {})[key] = int(value) if value.lstrip("-").isdigit() else value
     return config
+
+
+SECRET_SETTINGS = ("password", "client_secret", "token", "sas_token", "account_key", "sql_password")
+
+
+def _check_secret_setting(name: str, value: str) -> None:
+    """A secret given on the command line must be a credential reference (see ``cli/auth.py``)."""
+    from shape.cli.auth import check_connection_string
+    from shape.security import credrefs
+
+    if name.endswith(".connection_string"):
+        check_connection_string(value, flag=f"--sink-config {name}")
+    elif not credrefs.is_reference(value):
+        raise ValueError(
+            f"--sink-config {name} takes a credential reference (env://NAME, file://PATH or "
+            "kv://VAULT/SECRET), not the secret itself"
+        )
 
 
 def build_request(a: argparse.Namespace) -> dict[str, Any]:
@@ -120,6 +142,18 @@ def build_request(a: argparse.Namespace) -> dict[str, Any]:
         "max_workers": a.max_workers,
         "processes": a.processes,
     }
+    from shape.cli import auth
+
+    settings = auth.settings_from_args(a)
+    if settings:
+        request["auth"] = settings
+    conn = auth.connection_string_from_args(a)
+    if conn:
+        targets = [s for s in sinks if s in ("warehouse", "sql_database")]
+        if not targets:
+            raise ValueError("--connection-string is for the warehouse and sql_database sinks")
+        for sink in targets:
+            config.setdefault(sink, {}).setdefault("connection_string", conn)
     if a.scale_mode == "fabric_spark":
         request["fabric"] = {
             "workspace_id": a.fabric_workspace or "",
@@ -210,7 +244,12 @@ def run_scale(a: argparse.Namespace) -> int:
         print(f"\nshape: interrupted; resume with: shape jobs resume {job_id}", file=sys.stderr)
         return 130
     if final["status"] != "succeeded":
-        print(f"shape: job {job_id} {final['status']}: {final['error']}", file=sys.stderr)
+        from shape.security.redact import redact_text
+
+        print(
+            f"shape: job {job_id} {final['status']}: {redact_text(str(final['error']))}",
+            file=sys.stderr,
+        )
         print(f"  resume with: shape jobs resume {job_id}", file=sys.stderr)
         return 1
     out = {**final["result"], "job_id": job_id}

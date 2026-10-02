@@ -34,6 +34,13 @@ logger = logging.getLogger(__name__)
 JOBS_DIR_ENV = "SHAPE_JOBS_DIR"
 TOKEN_ENV = "SHAPE_FABRIC_TOKEN"  # noqa: S105  # nosec B105  # the variable's name, not a secret
 MASK = "***"
+
+
+def _safe(text: str) -> str:
+    """``text`` (an error that may echo a connection string) with secrets hidden."""
+    from shape.security.redact import redact_text
+
+    return redact_text(text)
 ACTIVE = ("submitted", "running")
 FINAL = ("succeeded", "failed", "cancelled")
 RESUMABLE = ("failed", "cancelled")
@@ -255,7 +262,7 @@ class Jobs:
             )
             changes: dict[str, Any] = {"status": polled["status"]}
             if polled.get("error"):
-                changes["error"] = polled["error"]
+                changes["error"] = _safe(polled["error"])
             record = self.store.update(job_id, **changes)
         return self.describe(record)
 
@@ -467,8 +474,10 @@ class LocalRunner:
         except ScaleCancelled:
             self.store.update(self.job_id, status="cancelled")
         except BaseException as exc:
-            logger.error("job %s failed: %s", self.job_id, exc)
-            self.store.update(self.job_id, status="failed", error=f"{type(exc).__name__}: {exc}")
+            logger.error("job %s failed: %s", self.job_id, _safe(str(exc)))
+            self.store.update(
+                self.job_id, status="failed", error=_safe(f"{type(exc).__name__}: {exc}")
+            )
         else:
             self.store.update(
                 self.job_id,
@@ -540,8 +549,8 @@ class StreamManager:
         try:
             run_fn(state)
         except Exception as exc:
-            state.error = f"{type(exc).__name__}: {exc}"
-            logger.error("stream %s failed: %s", state.stream_id, exc)
+            state.error = _safe(f"{type(exc).__name__}: {exc}")
+            logger.error("stream %s failed: %s", state.stream_id, state.error)
         finally:
             state.running = False
 

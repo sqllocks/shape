@@ -100,7 +100,9 @@ def _run(fn, a):
         if artifact_io is not None and isinstance(exc, artifact_io.ArtifactSignatureError):
             print(f"shape: signature check failed: {exc}", file=sys.stderr)
             return 1
-        print(f"shape: error: {exc}", file=sys.stderr)
+        from shape.security.redact import redact_text
+
+        print(f"shape: error: {redact_text(str(exc))}", file=sys.stderr)
         return 2
     finally:
         warnings.showwarning = restore
@@ -286,7 +288,18 @@ def _cmd_profile(a):
 
     if not a.output:
         raise ValueError("profile needs -o OUT.shape")
-    prof = shape.profile(_profile_source(a), name=_profile_name(a))
+    from shape.cli import auth
+
+    settings = auth.settings_from_args(a)
+    if settings and "://" not in a.src:
+        raise ValueError("--auth is for a source in the cloud (onelake://, abfss://, ...)")
+    if settings:
+        from shape.profile.reference.sources import source_options
+
+        with source_options(credential=auth.make_credential(settings)):
+            prof = shape.profile(_profile_source(a), name=_profile_name(a))
+    else:
+        prof = shape.profile(_profile_source(a), name=_profile_name(a))
     content_id = shape.save(prof, a.output)
     key_id = _sign_output(a, a.output)
     if a.html:
@@ -656,6 +669,9 @@ def _build_parser(plugin_commands=()):
     )
     pr.add_argument("--html", metavar="REPORT.html")
     pr.add_argument("--json", metavar="SUMMARY.json")
+    from shape.cli.auth import add_arguments as add_auth_arguments
+
+    add_auth_arguments(pr, connection_string=False)
     sp = sub.add_parser(
         "stream-profile",
         help="profile a Kafka topic or an Event Hubs hub (bounded mode, windows, checkpoints)",
