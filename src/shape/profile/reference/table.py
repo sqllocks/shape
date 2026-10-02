@@ -512,14 +512,12 @@ def profile_dataset_columns(
     corr = {n: _spawn_correlation(c, rc, threads) for n, (c, rc) in cols_by_t.items()}
     joint = {n: _spawn_joint(c, rc, threads) for n, (c, rc) in cols_by_t.items()}
 
-    def starter(n: str) -> Callable[[], None]:
-        def go() -> None:
-            corr[n][0]()
-            joint[n][0]()
-
-        return go
-
-    works = _profile_tables(cols_by_t, threads, [starter(n) for n in cols_by_t])
+    # The joint analyses start once every column is profiled, not beside the column work: a table's
+    # column pool may fork, and a fork while another table's analysis runs on a thread would copy
+    # that thread's locks (a single table forks before its own analysis starts).
+    works = _profile_tables(cols_by_t, threads, [corr[n][0] for n in cols_by_t])
+    for n in cols_by_t:
+        joint[n][0]()
     pks = {n: _detect_primary_key(w, cols_by_t[n][1]) for n, w in works.items()}
     profiles = {}
     for n, w in works.items():
