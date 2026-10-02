@@ -438,3 +438,66 @@ def test_temporal_rows_do_not_depend_on_the_call_split(nat):
         for a in range(0, 100_000, 20_000)
     ]
     assert (np.concatenate(pieces) == whole).all()
+
+
+# ------------------------------------------------------------------ zipf draws
+
+
+def _zipf_cum(n, alpha):
+    cum = np.cumsum(np.arange(1, n + 1, dtype=np.float64) ** (-alpha))
+    return cum / cum[-1]
+
+
+@pytest.mark.parametrize(
+    "n,alpha", [(1, 1.5), (2, 1.5), (9, 0.7), (200, 1.5), (5_000, 1.2), (50_000, 2.0)]
+)
+@pytest.mark.parametrize("k0,k1", KEYS[:2])
+def test_zipf_draw_is_numpys_searchsorted_in_both_kernels(nat, n, alpha, k0, k1):
+    cum = _zipf_cum(n, alpha)
+    arrow = pa.array(cum)
+    u = _np(nat.philox_uniform(k0, k1, 13, 70_001))
+    expected = np.minimum(np.searchsorted(cum, u, side="right"), n - 1).astype(np.int64)
+    got = _np(nat.zipf_draw(arrow, nat.zipf_guide(arrow), k0, k1, 13, 70_001))
+    assert got.dtype == np.int64
+    assert np.array_equal(got, expected)
+    twin = ref.zipf_draw(arrow, ref.zipf_guide(arrow), k0, k1, 13, 70_001)
+    assert np.array_equal(_np(twin), expected)
+
+
+def test_zipf_draw_does_not_depend_on_the_split_or_the_guide(nat):
+    cum = _zipf_cum(3_000, 1.3)
+    arrow = pa.array(cum)
+    guide = nat.zipf_guide(arrow)
+    whole = _np(nat.zipf_draw(arrow, guide, 5, 6, 0, 300_000))
+    parts = np.concatenate(
+        [
+            _np(nat.zipf_draw(arrow, guide, 5, 6, s, min(77_777, 300_000 - s)))
+            for s in range(0, 300_000, 77_777)
+        ]
+    )
+    assert np.array_equal(whole, parts)
+    # a guide that gives only the smallest lower bound (all zeros) reaches the same rows
+    zeros = pa.array(np.zeros(1024, dtype=np.int64))
+    assert np.array_equal(whole, _np(nat.zipf_draw(arrow, zeros, 5, 6, 0, 300_000)))
+
+
+def test_zipf_draw_with_flat_stretches(nat):
+    cum = pa.array([0.25, 0.25, 0.25, 0.5, 0.5, 1.0])
+    got = _np(nat.zipf_draw(cum, nat.zipf_guide(cum), 3, 4, 0, 5_000))
+    u = _np(nat.philox_uniform(3, 4, 0, 5_000))
+    assert np.array_equal(got, np.minimum(np.searchsorted(cum.to_numpy(), u, side="right"), 5))
+
+
+@pytest.mark.parametrize("module", ["native", "reference"])
+def test_zipf_functions_reject_bad_tables(nat, module):
+    m = nat if module == "native" else ref
+    for bad in ([], [0.5, 0.4], [0.5, float("nan")], [float("inf")]):
+        with pytest.raises(ValueError):
+            m.zipf_guide(pa.array(bad, pa.float64()))
+    good = pa.array([0.5, 1.0])
+    with pytest.raises(ValueError):
+        m.zipf_draw(good, pa.array([0, 0, 0], pa.int64()), 1, 2, 0, 3)  # not a power of two
+    with pytest.raises(ValueError):
+        m.zipf_draw(good, pa.array([0, 9], pa.int64()), 1, 2, 0, 3)  # a bound past the table
+    with pytest.raises(ValueError):
+        m.zipf_draw(pa.array([1, 2]), pa.array([0, 0], pa.int64()), 1, 2, 0, 3)  # not float64

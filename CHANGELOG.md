@@ -12,7 +12,8 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   order; pyarrow's writer is the fallback (pure-Python kernel, another codec, a nested column,
   `SHAPE_PARQUET_WRITER=pyarrow`). Tables start as soon as the tables they point at are complete
   instead of at level barriers, longest path first, on the calling thread while the work is small.
-  The first generation in a process raises glibc's allocation thresholds (`mallopt`, Linux; left
+  Zipf foreign keys are drawn in one native pass (`zipf_guide`, `zipf_draw`: the rows of
+  `searchsorted`, found through a guide table). The first generation in a process raises glibc's allocation thresholds (`mallopt`, Linux; left
   alone when `MALLOC_*` or `GLIBC_TUNABLES` is set; `SHAPE_MEMORY_POOL=default` turns it off).
 - Emitters (`shape.emitters`): `console`, `file` and `jsonl` in core; `kafka` (`sqllocks-shape-kafka`),
   `eventhubs` (`sqllocks-shape-eventhubs`), `eventstream` and `eventhouse` (`sqllocks-shape-fabric`).

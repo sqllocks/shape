@@ -15,10 +15,12 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation import kernel_ops
 from shape.generation.arrowkit import array as arrow_array
 from shape.generation.arrowkit import scalar as arrow_scalar
 from shape.generation.engine import ArrayKeys, Engine, KeyPool, RangeKeys
 from shape.generation.kernel_relational import cdf_search
+from shape.generation.rng import RowStream
 from shape.generation.strategy_kit import StrategyError, where
 from shape.plugins.api.v1 import GenerationContext
 
@@ -106,6 +108,22 @@ def _zipf_unit(alpha: float, head: int) -> Floats:
     unit: Floats = cum / cum[-1]
     unit.flags.writeable = False
     return unit
+
+
+@lru_cache(maxsize=8)
+def _zipf_table(alpha: float, pool: int) -> kernel_ops.ZipfTable:
+    return kernel_ops.zipf_table(_zipf_unit(alpha, pool))
+
+
+def zipf_draw(
+    stream: RowStream, row_start: int, n_rows: int, pool: int, alpha: float
+) -> Ints | None:
+    """:func:`zipf_index` of the uniforms of ``stream`` (word 0 of each row) in one native pass
+    (the uniforms are never made as an array), or ``None`` for a pool beyond ``ZIPF_HEAD`` (drawn
+    the long way). The same rows, bit for bit."""
+    if pool > ZIPF_HEAD:
+        return None
+    return kernel_ops.zipf_draw(_zipf_table(alpha, pool), stream, row_start, n_rows)
 
 
 def zipf_index(u: Floats, pool: int, alpha: float) -> Ints:

@@ -63,6 +63,21 @@ def test_the_native_file_holds_the_same_table_as_pyarrow_writes(tmp_path, rows, 
     assert native.equals(pa.Table.from_batches(batches))
 
 
+@pytest.mark.parametrize("parallel", [True, False])
+def test_the_serial_writer_writes_the_same_file_content(tmp_path, parallel):
+    batches = _batches(9_000, 9)
+    _write(tmp_path / "t.parquet", batches, row_group_rows=1_500, parallel=parallel)
+    assert pq.read_table(tmp_path / "t.parquet").equals(pa.Table.from_batches(batches))
+    assert pq.ParquetFile(tmp_path / "t.parquet").metadata.num_row_groups == 5
+
+
+def test_serial_and_parallel_files_are_byte_identical(tmp_path):
+    batches = _batches(9_000, 9)
+    _write(tmp_path / "a.parquet", batches, row_group_rows=1_500, parallel=True)
+    _write(tmp_path / "b.parquet", batches, row_group_rows=1_500, parallel=False)
+    assert (tmp_path / "a.parquet").read_bytes() == (tmp_path / "b.parquet").read_bytes()
+
+
 def test_row_groups_keep_the_row_order_whichever_finishes_first(tmp_path):
     batches = _batches(30_000, 30)
     _write(tmp_path / "t.parquet", batches, row_group_rows=1_000)
@@ -246,6 +261,23 @@ def test_the_sink_uses_the_native_writer_when_it_can(tmp_path, kernel, monkeypat
 
 
 @pytest.mark.parametrize("kernel", ["rust"], indirect=True)
+def test_one_thread_means_the_native_writer_encodes_serially(tmp_path, kernel, monkeypatch):
+    seen: list[bool] = []
+
+    def spy(*args, **kwargs):
+        seen.append(kwargs["parallel"])
+        return ParquetOut(*args, **kwargs)
+
+    monkeypatch.setattr(dispatch.get_kernel(), "ParquetOut", spy)
+    monkeypatch.setenv("SHAPE_THREADS", "1")
+    ParquetSink().write(str(tmp_path / "a.parquet"), "a", iter(_batches(100, 1)))
+    monkeypatch.setenv("SHAPE_THREADS", "3")
+    ParquetSink().write(str(tmp_path / "b.parquet"), "b", iter(_batches(100, 1)))
+    ParquetSink().write(str(tmp_path / "c.parquet"), "c", iter(_batches(100, 1)), threads=1)
+    assert seen == [False, True, False]
+
+
+@pytest.mark.parametrize("kernel", ["rust"], indirect=True)
 def test_the_sink_falls_back_for_a_nested_column(tmp_path, kernel):
     table = pa.table({"l": pa.array([[1, 2], [], None]), "i": pa.array([1, 2, 3])})
     ParquetSink().write(str(tmp_path / "t.parquet"), "t", iter(table.to_batches()))
@@ -258,3 +290,128 @@ def test_the_sink_writes_an_empty_table_with_its_schema(tmp_path, kernel):
     ParquetSink().write(str(tmp_path / "t.parquet"), "t", iter([]), schema=schema)
     table = pq.read_table(tmp_path / "t.parquet")
     assert table.num_rows == 0 and table.schema.equals(schema)
+
+
+# ---- finish, wait and the engine's native route ---------------------------------------------
+
+
+def test_finish_returns_and_wait_completes_the_file(tmp_path):
+    batches = _batches(20_000, 10)
+    writers = []
+    for i in range(5):  # five files in flight at once, none waited for before the next starts
+        out = ParquetOut(str(tmp_path / f"{i}.parquet"), batches[0].schema, row_group_rows=3_000)
+        for batch in batches:
+            out.write_batch(batch)
+        out.finish()
+        writers.append(out)
+    for out in writers:
+        out.wait()
+    for i in range(5):
+        assert pq.read_table(tmp_path / f"{i}.parquet").equals(pa.Table.from_batches(batches))
+
+
+def test_finish_twice_and_wait_twice(tmp_path):
+    batches = _batches(100, 1)
+    out = ParquetOut(str(tmp_path / "t.parquet"), batches[0].schema)
+    out.write_batch(batches[0])
+    out.finish()
+    out.finish()
+    out.wait()
+    out.wait()
+    out.close()
+    assert pq.read_table(tmp_path / "t.parquet").num_rows == 100
+
+
+def test_an_empty_file_is_finished_by_finish_alone(tmp_path):
+    out = ParquetOut(str(tmp_path / "t.parquet"), pa.schema([("a", pa.int64())]))
+    out.finish()
+    out.wait()  # nothing was encoded, so nothing else could have written the footer
+    assert pq.read_table(tmp_path / "t.parquet").num_rows == 0
+
+
+def _engine_files(tmp_path, monkeypatch, threads="3", **kw):
+    from engine_fixtures import STRATEGIES
+    from gen_fixtures import schema
+
+    from shape.generation.engine import Engine
+    from shape.generation.output import write_engine
+
+    monkeypatch.setenv("SHAPE_THREADS", threads)
+    rows = {"customer": 700, "order": 2_100, "order_line": 5_300}
+    engine = Engine(schema(rows), strategies=STRATEGIES, chunk_rows=300)
+    write_engine(engine, "parquet", tmp_path, **kw)
+    return Engine(schema(rows), strategies=STRATEGIES).generate().tables
+
+
+@pytest.mark.parametrize("kernel", ["rust", "python"], indirect=True)
+@pytest.mark.parametrize("threads", ["1", "3"])
+def test_write_engine_files_equal_the_generated_tables(tmp_path, kernel, monkeypatch, threads):
+    expected = _engine_files(tmp_path, monkeypatch, threads)
+    for name, table in expected.items():
+        assert pq.read_table(tmp_path / f"{name}.parquet").equals(table), name
+
+
+@pytest.mark.parametrize("kernel", ["rust"], indirect=True)
+def test_write_engine_hands_every_table_to_the_native_writer(tmp_path, kernel, monkeypatch):
+    opened: list[str] = []
+
+    def spy(*args, **kwargs):
+        opened.append(args[0])
+        return ParquetOut(*args, **kwargs)
+
+    monkeypatch.setattr(dispatch.get_kernel(), "ParquetOut", spy)
+    expected = _engine_files(tmp_path, monkeypatch)
+    assert sorted(p.rsplit("/", 1)[-1] for p in opened) == sorted(f"{n}.parquet" for n in expected)
+
+
+@pytest.mark.parametrize("kernel", ["rust"], indirect=True)
+def test_a_table_the_native_writer_declines_goes_to_a_writer_thread(tmp_path, kernel, monkeypatch):
+    original = ParquetSink.open_native
+
+    def decline_orders(self, target, schema, options):
+        return None if target.stem == "order" else original(self, target, schema, options)
+
+    monkeypatch.setattr(ParquetSink, "open_native", decline_orders)
+    expected = _engine_files(tmp_path, monkeypatch)
+    for name, table in expected.items():
+        assert pq.read_table(tmp_path / f"{name}.parquet").equals(table), name
+
+
+@pytest.mark.parametrize("kernel", ["rust"], indirect=True)
+def test_a_generator_failure_leaves_no_writer_open_and_raises(tmp_path, kernel, monkeypatch):
+    from engine_fixtures import STRATEGIES
+    from gen_fixtures import schema
+
+    from shape.generation.engine import Engine
+    from shape.generation.output import write_engine
+
+    monkeypatch.setenv("SHAPE_THREADS", "3")
+    engine = Engine(
+        schema({"customer": 700, "order": 2_100, "order_line": 5_300}),
+        strategies=STRATEGIES,
+        chunk_rows=300,
+    )
+    original = engine.generate_chunk
+
+    def boom(table_name, start, n, **kw):
+        if table_name == "order_line" and start > 0:
+            raise RuntimeError("generator failed")
+        return original(table_name, start, n, **kw)
+
+    engine.generate_chunk = boom  # type: ignore[method-assign]
+    outcome: list[BaseException | None] = []
+
+    def run() -> None:
+        try:
+            write_engine(engine, "parquet", tmp_path)
+            outcome.append(None)
+        except BaseException as exc:
+            outcome.append(exc)
+
+    worker = threading.Thread(target=run, daemon=True)
+    worker.start()
+    worker.join(timeout=60)
+    assert not worker.is_alive(), "write_engine hung after a generator failure"
+    assert isinstance(outcome[0], RuntimeError) and "generator failed" in str(outcome[0])
+    for path in tmp_path.glob("*.parquet"):  # every file that was started has its footer
+        pq.ParquetFile(path)

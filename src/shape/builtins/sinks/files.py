@@ -134,37 +134,60 @@ def _native_writer(schema: pa.Schema, options: dict[str, Any]) -> Any:
     return cls
 
 
+def _encode_in_parallel(options: dict[str, Any]) -> bool:
+    """Whether the native writer may use several threads: not when the caller asked for one thread
+    (``SHAPE_THREADS=1``, or the ``threads`` option) or the machine has one core."""
+    if "threads" in options:
+        return int(options["threads"]) != 1
+    from shape.generation.engine import worker_threads
+
+    return worker_threads() > 1
+
+
 class ParquetSink(_FileSink):
     name = "parquet"
     extension = "parquet"
 
+    def open_native(self, target: Path, schema: pa.Schema, options: dict[str, Any]) -> Any:
+        """The native writer for ``target`` (``write_batch``, ``finish``, ``wait``, ``close``), or
+        ``None`` when it cannot write this file (see ``_native_writer``); the caller then writes it
+        through :meth:`write`. ``finish`` returns at once and the file is complete after ``wait``,
+        so a caller that streams many tables need not wait for each before it starts the next."""
+        native = _native_writer(schema, options)
+        use_dictionary = options.get("use_dictionary", True)
+        if native is None or not isinstance(use_dictionary, bool):
+            return None
+        try:
+            return native(
+                str(target),
+                schema,
+                row_group_rows=int(options.get("row_group_rows", ROW_GROUP_ROWS)),
+                compression=str(options.get("compression", "snappy")).lower(),
+                use_dictionary=use_dictionary,
+                dictionary_page_bytes=int(
+                    options.get("dictionary_page_bytes", DICTIONARY_PAGE_BYTES)
+                ),
+                parallel=_encode_in_parallel(options),
+            )
+        except ValueError:  # a type the native writer does not do
+            return None
+
     def _open(self, target: Path, schema: pa.Schema, options: dict[str, Any]) -> Any:
         # T-17: snappy, dictionary encoding on. The native writer encodes the row groups and
         # columns of the file on several threads; pyarrow's writer (the twin) on one.
-        row_group_rows = int(options.get("row_group_rows", ROW_GROUP_ROWS))
-        use_dictionary = options.get("use_dictionary", True)
-        dictionary_bytes = int(options.get("dictionary_page_bytes", DICTIONARY_PAGE_BYTES))
-        native = _native_writer(schema, options)
-        if native is not None and isinstance(use_dictionary, bool):
-            try:
-                return native(
-                    str(target),
-                    schema,
-                    row_group_rows=row_group_rows,
-                    compression=str(options.get("compression", "snappy")).lower(),
-                    use_dictionary=use_dictionary,
-                    dictionary_page_bytes=dictionary_bytes,
-                )
-            except ValueError:  # a type the native writer does not do
-                pass
+        native = self.open_native(target, schema, options)
+        if native is not None:
+            return native
         writer = pq.ParquetWriter(
             str(target),
             schema,
             compression=options.get("compression", "snappy"),
-            use_dictionary=use_dictionary,
-            dictionary_pagesize_limit=dictionary_bytes,
+            use_dictionary=options.get("use_dictionary", True),
+            dictionary_pagesize_limit=int(
+                options.get("dictionary_page_bytes", DICTIONARY_PAGE_BYTES)
+            ),
         )
-        return _ParquetRowGroups(writer, row_group_rows)
+        return _ParquetRowGroups(writer, int(options.get("row_group_rows", ROW_GROUP_ROWS)))
 
 
 class IpcSink(_FileSink):

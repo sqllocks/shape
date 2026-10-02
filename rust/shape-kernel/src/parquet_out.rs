@@ -38,6 +38,10 @@ struct State {
     remaining: BTreeMap<usize, usize>,
     /// Row groups submitted and not yet appended.
     in_flight: usize,
+    /// Row groups the file will have, once `finish` has been called.
+    expected: Option<usize>,
+    /// The footer is written and the file closed.
+    finished: bool,
     error: Option<String>,
 }
 
@@ -46,6 +50,19 @@ struct Shared {
     cv: Condvar,
     factory: ArrowRowGroupWriterFactory,
     schema: SchemaRef,
+}
+
+/// Write the footer once `finish` has said how many row groups there are and all are appended.
+fn finalize(st: &mut State) {
+    if st.finished || st.error.is_some() || st.expected != Some(st.next_commit) {
+        return;
+    }
+    if let Some(writer) = st.writer.take() {
+        if let Err(e) = writer.close() {
+            st.error = Some(e.to_string());
+        }
+    }
+    st.finished = true;
 }
 
 impl Shared {
@@ -89,6 +106,7 @@ impl Shared {
             st.next_commit += 1;
             st.in_flight -= 1;
         }
+        finalize(&mut st);
         self.cv.notify_all();
     }
 }
@@ -103,6 +121,8 @@ pub struct ParquetOut {
     row_group_rows: usize,
     next_rg: usize,
     closed: bool,
+    /// Encode on the rayon pool; otherwise on the thread that calls `write_batch` and `close`.
+    parallel: bool,
 }
 
 fn flat(dt: &DataType) -> bool {
@@ -124,7 +144,7 @@ impl ParquetOut {
     /// Create `path` and its footer-less file. `compression` is `snappy` or `none`; any other
     /// codec, or a nested column type, is a `ValueError` (the caller falls back to pyarrow).
     #[new]
-    #[pyo3(signature = (path, schema, row_group_rows=262_144, compression="snappy", use_dictionary=true, dictionary_page_bytes=131_072))]
+    #[pyo3(signature = (path, schema, row_group_rows=262_144, compression="snappy", use_dictionary=true, dictionary_page_bytes=131_072, parallel=true))]
     fn new(
         path: &str,
         schema: PySchema,
@@ -132,6 +152,7 @@ impl ParquetOut {
         compression: &str,
         use_dictionary: bool,
         dictionary_page_bytes: usize,
+        parallel: bool,
     ) -> PyResult<Self> {
         let schema: SchemaRef = schema.into_inner();
         if let Some(f) = schema.fields().iter().find(|f| !flat(f.data_type())) {
@@ -178,6 +199,8 @@ impl ParquetOut {
                 done: BTreeMap::new(),
                 remaining: BTreeMap::new(),
                 in_flight: 0,
+                expected: None,
+                finished: false,
                 error: None,
             }),
             cv: Condvar::new(),
@@ -191,6 +214,7 @@ impl ParquetOut {
             row_group_rows,
             next_rg: 0,
             closed: false,
+            parallel,
         })
     }
 
@@ -213,29 +237,44 @@ impl ParquetOut {
         Ok(())
     }
 
-    /// Encode what is held, wait for every row group, write the footer.
-    fn close(&mut self, py: Python<'_>) -> PyResult<()> {
+    /// Hand what is held to the encoders and return: the last row group to be appended writes the
+    /// footer. `wait` blocks until the file is complete. Called once; later calls do nothing.
+    fn finish(&mut self, py: Python<'_>) -> PyResult<()> {
         if self.closed {
             return Ok(());
         }
         self.closed = true;
         let flushed = self.flush(py);
+        {
+            let mut st = self.shared.state.lock().unwrap();
+            st.expected = Some(self.next_rg);
+            finalize(&mut st);
+            self.shared.cv.notify_all();
+        }
+        flushed
+    }
+
+    /// Block until the file is complete (after `finish`), or raise the first error.
+    fn wait(&self, py: Python<'_>) -> PyResult<()> {
         let shared = Arc::clone(&self.shared);
-        let result = py.detach(move || {
+        py.detach(move || {
             let mut st = shared.state.lock().unwrap();
-            while st.in_flight > 0 && st.error.is_none() {
+            while !st.finished && st.error.is_none() {
                 st = shared.cv.wait(st).unwrap();
             }
-            if let Some(e) = st.error.clone() {
-                return Err(e);
-            }
-            match st.writer.take() {
-                Some(w) => w.close().map(|_| ()).map_err(|e| e.to_string()),
+            match st.error.clone() {
+                Some(e) => Err(e),
                 None => Ok(()),
             }
-        });
-        flushed?;
-        result.map_err(PyRuntimeError::new_err)
+        })
+        .map_err(PyRuntimeError::new_err)
+    }
+
+    /// `finish` and `wait`: the file is complete when this returns.
+    fn close(&mut self, py: Python<'_>) -> PyResult<()> {
+        let flushed = self.finish(py);
+        let waited = self.wait(py);
+        flushed.and(waited)
     }
 
     fn __enter__(slf: Py<Self>) -> Py<Self> {
@@ -298,15 +337,15 @@ impl ParquetOut {
         for (col, writer) in writers.into_iter().enumerate() {
             let shared = Arc::clone(&self.shared);
             let batches = Arc::clone(&batches);
-            rayon::spawn(move || {
-                match encode_column(&shared.schema, &batches, col, writer) {
-                    Ok(chunk) => shared.finish_column(rg, col, ncols, chunk),
-                    Err(e) => {
-                        // Count the column as done so the row group's turn is not waited for.
-                        shared.fail(e);
-                    }
-                }
-            });
+            let task = move || match encode_column(&shared.schema, &batches, col, writer) {
+                Ok(chunk) => shared.finish_column(rg, col, ncols, chunk),
+                Err(e) => shared.fail(e),
+            };
+            if self.parallel && crate::can_par() {
+                rayon::spawn(task);
+            } else {
+                py.detach(task);
+            }
         }
         Ok(())
     }

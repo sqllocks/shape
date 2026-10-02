@@ -1,0 +1,477 @@
+{
+ "meta": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-10-02 11:52:54",
+  "impl": "shape",
+  "domain": "hr",
+  "runs": 5,
+  "warmup": 1,
+  "ref_seed": 42,
+  "impl_seed": 1042,
+  "loadavg_start": 1.2646484375
+ },
+ "scales": {
+  "medium": {
+   "summary": {
+    "spindle": {
+     "total_s": 0.26462016600089555,
+     "gen_s": 0.17752519300120184,
+     "write_s": 0.0895845430004556,
+     "cpu_s": 0.26732900000000015,
+     "user_s": 0.21944700000000017,
+     "sys_s": 0.04788199999999998,
+     "minor_faults": 3160,
+     "import_s": 1.2575195099998382,
+     "peak_rss_mb": 242.12109375,
+     "parquet_bytes": 2959123,
+     "rows": 78460,
+     "rows_per_s_total": 296500.45643057476,
+     "rows_per_s_generate": 441965.43979799433,
+     "runs_total_s": [
+      0.345,
+      0.307,
+      0.232,
+      0.263,
+      0.265
+     ],
+     "loadavg_before": [
+      1.2431640625,
+      1.2431640625,
+      1.2236328125,
+      1.2236328125,
+      1.20556640625
+     ],
+     "per_table_s_median": {
+      "department": 0.004921944000670919,
+      "position": 0.0016890570004761685,
+      "training": 0.0013850369996362133,
+      "employee": 0.023156488001404796,
+      "compensation": 0.0075735589998657815,
+      "performance_review": 0.0077136290001362795,
+      "termination": 0.002042960000835592,
+      "time_off_request": 0.07755191400065087,
+      "training_enrollment": 0.04099927300012496,
+      "_compute_phase+business_rules": 0.0005668960002367385,
+      "_construct_domain+Spindle()": 0.00928627199937182
+     },
+     "row_counts": {
+      "department": 30,
+      "position": 80,
+      "training": 100,
+      "employee": 5000,
+      "compensation": 15000,
+      "performance_review": 12500,
+      "termination": 750,
+      "time_off_request": 25000,
+      "training_enrollment": 20000
+     }
+    },
+    "shape": {
+     "total_s": 0.045982848998392,
+     "gen_s": 0.045982848998392,
+     "write_s": 0.0,
+     "cpu_s": 0.07678599999999991,
+     "user_s": 0.06380299999999994,
+     "sys_s": 0.012507999999999998,
+     "minor_faults": 4117,
+     "import_s": 0.3927844729987555,
+     "peak_rss_mb": 132.39453125,
+     "parquet_bytes": 2912208,
+     "rows": 78460,
+     "rows_per_s_total": 1706288.3598783475,
+     "rows_per_s_generate": 1706288.3598783475,
+     "runs_total_s": [
+      0.052,
+      0.046,
+      0.041,
+      0.048,
+      0.042
+     ],
+     "loadavg_before": [
+      1.2431640625,
+      1.2236328125,
+      1.2236328125,
+      1.20556640625,
+      1.20556640625
+     ],
+     "per_table_s_median": {
+      "_construct_domain+Engine": 0.006726794999849517,
+      "_generate+write": 0.039254006998817204
+     },
+     "row_counts": {
+      "department": 30,
+      "position": 80,
+      "training": 100,
+      "employee": 5000,
+      "compensation": 15000,
+      "performance_review": 12500,
+      "termination": 750,
+      "time_off_request": 25000,
+      "training_enrollment": 20000
+     },
+     "numpy": "2.4.6",
+     "pyarrow": "25.0.1"
+    }
+   },
+   "raw": {
+    "spindle": [
+     {
+      "import_s": 1.2522392929986381,
+      "gen_s": 0.22287535000032221,
+      "write_s": 0.12192789599976095,
+      "total_s": 0.34480324600008316,
+      "rows": {
+       "department": 30,
+       "position": 80,
+       "training": 100,
+       "employee": 5000,
+       "compensation": 15000,
+       "performance_review": 12500,
+       "termination": 750,
+       "time_off_request": 25000,
+       "training_enrollment": 20000
+      },
+      "per_table_s": {
+       "department": 0.004839197999899625,
+       "position": 0.0017392899990227306,
+       "training": 0.0016356710002582986,
+       "employee": 0.04161571000076947,
+       "compensation": 0.014859667999189696,
+       "performance_review": 0.026410544000100344,
+       "termination": 0.0020538370008580387,
+       "time_off_request": 0.07864310499826388,
+       "training_enrollment": 0.042073925000295276,
+       "_compute_phase+business_rules": 0.0005668960002367385,
+       "_construct_domain+Spindle()": 0.008437506001428119
+      },
+      "user_s": 0.21145499999999995,
+      "sys_s": 0.13590799999999997,
+      "minor_faults": 3160,
+      "major_faults": 0,
+      "cpu_s": 0.3473630000000001,
+      "peak_rss_mb": 242.12890625,
+      "parquet_bytes": 2959123,
+      "loadavg_before": 1.2431640625
+     },
+     {
+      "import_s": 1.3438995179985795,
+      "gen_s": 0.20912236299955111,
+      "write_s": 0.09748904899970512,
+      "total_s": 0.30661141199925623,
+      "rows": {
+       "department": 30,
+       "position": 80,
+       "training": 100,
+       "employee": 5000,
+       "compensation": 15000,
+       "performance_review": 12500,
+       "termination": 750,
+       "time_off_request": 25000,
+       "training_enrollment": 20000
+      },
+      "per_table_s": {
+       "department": 0.006655852999756462,
+       "position": 0.0024203409993788227,
+       "training": 0.001962356000149157,
+       "employee": 0.02418006100015191,
+       "compensation": 0.0075723179998021806,
+       "performance_review": 0.0073621840001578676,
+       "termination": 0.002042960000835592,
+       "time_off_request": 0.09813188099906256,
+       "training_enrollment": 0.046246604000771185,
+       "_compute_phase+business_rules": 0.0005657059991790447,
+       "_construct_domain+Spindle()": 0.011982099000306334
+      },
+      "user_s": 0.2576640000000001,
+      "sys_s": 0.052121,
+      "minor_faults": 3161,
+      "major_faults": 0,
+      "cpu_s": 0.30978499999999976,
+      "peak_rss_mb": 242.12109375,
+      "parquet_bytes": 2959123,
+      "loadavg_before": 1.2431640625
+     },
+     {
+      "import_s": 1.2687418570003501,
+      "gen_s": 0.17435486700014735,
+      "write_s": 0.05730442999993102,
+      "total_s": 0.23165929700007837,
+      "rows": {
+       "department": 30,
+       "position": 80,
+       "training": 100,
+       "employee": 5000,
+       "compensation": 15000,
+       "performance_review": 12500,
+       "termination": 750,
+       "time_off_request": 25000,
+       "training_enrollment": 20000
+      },
+      "per_table_s": {
+       "department": 0.004881216000285349,
+       "position": 0.0015711040014139144,
+       "training": 0.0013850369996362133,
+       "employee": 0.02244643999983964,
+       "compensation": 0.00846723599897814,
+       "performance_review": 0.008542281000700314,
+       "termination": 0.00183807000030356,
+       "time_off_request": 0.07465355999920575,
+       "training_enrollment": 0.04075680599999032,
+       "_compute_phase+business_rules": 0.0005268450004223268,
+       "_construct_domain+Spindle()": 0.00928627199937182
+      },
+      "user_s": 0.21039699999999995,
+      "sys_s": 0.023835999999999996,
+      "minor_faults": 3157,
+      "major_faults": 0,
+      "cpu_s": 0.2342329999999997,
+      "peak_rss_mb": 241.984375,
+      "parquet_bytes": 2959123,
+      "loadavg_before": 1.2236328125
+     },
+     {
+      "import_s": 1.2575195099998382,
+      "gen_s": 0.1738367609996203,
+      "write_s": 0.0895845430004556,
+      "total_s": 0.2634213040000759,
+      "rows": {
+       "department": 30,
+       "position": 80,
+       "training": 100,
+       "employee": 5000,
+       "compensation": 15000,
+       "performance_review": 12500,
+       "termination": 750,
+       "time_off_request": 25000,
+       "training_enrollment": 20000
+      },
+      "per_table_s": {
+       "department": 0.004921944000670919,
+       "position": 0.0016623890005575959,
+       "training": 0.0012871049984823912,
+       "employee": 0.023156488001404796,
+       "compensation": 0.0075735589998657815,
+       "performance_review": 0.0077136290001362795,
+       "termination": 0.002291412998602027,
+       "time_off_request": 0.07497605600110546,
+       "training_enrollment": 0.04086054899926239,
+       "_compute_phase+business_rules": 0.0005806389999634121,
+       "_construct_domain+Spindle()": 0.008812989999569254
+      },
+      "user_s": 0.22134600000000004,
+      "sys_s": 0.044181,
+      "minor_faults": 3158,
+      "major_faults": 0,
+      "cpu_s": 0.26552700000000007,
+      "peak_rss_mb": 242.03125,
+      "parquet_bytes": 2959123,
+      "loadavg_before": 1.2236328125
+     },
+     {
+      "import_s": 1.2559046910009783,
+      "gen_s": 0.17752519300120184,
+      "write_s": 0.08709497299969371,
+      "total_s": 0.26462016600089555,
+      "rows": {
+       "department": 30,
+       "position": 80,
+       "training": 100,
+       "employee": 5000,
+       "compensation": 15000,
+       "performance_review": 12500,
+       "termination": 750,
+       "time_off_request": 25000,
+       "training_enrollment": 20000
+      },
+      "per_table_s": {
+       "department": 0.005136540999956196,
+       "position": 0.0016890570004761685,
+       "training": 0.001372541000819183,
+       "employee": 0.022597792998567456,
+       "compensation": 0.007110114000170142,
+       "performance_review": 0.0075646550012606895,
+       "termination": 0.0018913709991466021,
+       "time_off_request": 0.07755191400065087,
+       "training_enrollment": 0.04099927300012496,
+       "_compute_phase+business_rules": 0.0006262890001380583,
+       "_construct_domain+Spindle()": 0.01098564499989152
+      },
+      "user_s": 0.21944700000000017,
+      "sys_s": 0.04788199999999998,
+      "minor_faults": 3164,
+      "major_faults": 0,
+      "cpu_s": 0.26732900000000015,
+      "peak_rss_mb": 242.30078125,
+      "parquet_bytes": 2959123,
+      "loadavg_before": 1.20556640625
+     }
+    ],
+    "shape": [
+     {
+      "import_s": 0.3866810819999955,
+      "gen_s": 0.05161308700007794,
+      "write_s": 0.0,
+      "total_s": 0.05161308700007794,
+      "overlapped": true,
+      "rows": {
+       "department": 30,
+       "position": 80,
+       "training": 100,
+       "employee": 5000,
+       "compensation": 15000,
+       "performance_review": 12500,
+       "termination": 750,
+       "time_off_request": 25000,
+       "training_enrollment": 20000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.008315543000207981,
+       "_generate+write": 0.04329754399986996
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.06380299999999994,
+      "sys_s": 0.023201999999999993,
+      "minor_faults": 4362,
+      "major_faults": 0,
+      "cpu_s": 0.087005,
+      "peak_rss_mb": 133.33984375,
+      "parquet_bytes": 2912208,
+      "loadavg_before": 1.2431640625
+     },
+     {
+      "import_s": 0.38113827999950445,
+      "gen_s": 0.045982848998392,
+      "write_s": 0.0,
+      "total_s": 0.045982848998392,
+      "overlapped": true,
+      "rows": {
+       "department": 30,
+       "position": 80,
+       "training": 100,
+       "employee": 5000,
+       "compensation": 15000,
+       "performance_review": 12500,
+       "termination": 750,
+       "time_off_request": 25000,
+       "training_enrollment": 20000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.006728841999574797,
+       "_generate+write": 0.039254006998817204
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.07048100000000002,
+      "sys_s": 0.008351999999999998,
+      "minor_faults": 4100,
+      "major_faults": 0,
+      "cpu_s": 0.07883300000000004,
+      "peak_rss_mb": 132.39453125,
+      "parquet_bytes": 2912208,
+      "loadavg_before": 1.2236328125
+     },
+     {
+      "import_s": 0.3927844729987555,
+      "gen_s": 0.041348062999531976,
+      "write_s": 0.0,
+      "total_s": 0.041348062999531976,
+      "overlapped": true,
+      "rows": {
+       "department": 30,
+       "position": 80,
+       "training": 100,
+       "employee": 5000,
+       "compensation": 15000,
+       "performance_review": 12500,
+       "termination": 750,
+       "time_off_request": 25000,
+       "training_enrollment": 20000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.006551924998348113,
+       "_generate+write": 0.03479613800118386
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.05298899999999995,
+      "sys_s": 0.019677999999999994,
+      "minor_faults": 4117,
+      "major_faults": 0,
+      "cpu_s": 0.07266699999999993,
+      "peak_rss_mb": 132.39453125,
+      "parquet_bytes": 2912208,
+      "loadavg_before": 1.2236328125
+     },
+     {
+      "import_s": 0.4004120600002352,
+      "gen_s": 0.047907234000376775,
+      "write_s": 0.0,
+      "total_s": 0.047907234000376775,
+      "overlapped": true,
+      "rows": {
+       "department": 30,
+       "position": 80,
+       "training": 100,
+       "employee": 5000,
+       "compensation": 15000,
+       "performance_review": 12500,
+       "termination": 750,
+       "time_off_request": 25000,
+       "training_enrollment": 20000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.006726794999849517,
+       "_generate+write": 0.04118043900052726
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.06755299999999997,
+      "sys_s": 0.009232999999999991,
+      "minor_faults": 4084,
+      "major_faults": 0,
+      "cpu_s": 0.07678599999999991,
+      "peak_rss_mb": 132.234375,
+      "parquet_bytes": 2912208,
+      "loadavg_before": 1.20556640625
+     },
+     {
+      "import_s": 0.3952766109996446,
+      "gen_s": 0.04236699799912458,
+      "write_s": 0.0,
+      "total_s": 0.04236699799912458,
+      "overlapped": true,
+      "rows": {
+       "department": 30,
+       "position": 80,
+       "training": 100,
+       "employee": 5000,
+       "compensation": 15000,
+       "performance_review": 12500,
+       "termination": 750,
+       "time_off_request": 25000,
+       "training_enrollment": 20000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.005961558999842964,
+       "_generate+write": 0.036405438999281614
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.06272100000000003,
+      "sys_s": 0.012507999999999998,
+      "minor_faults": 4158,
+      "major_faults": 0,
+      "cpu_s": 0.07522899999999999,
+      "peak_rss_mb": 132.5390625,
+      "parquet_bytes": 2912208,
+      "loadavg_before": 1.20556640625
+     }
+    ]
+   }
+  }
+ }
+}

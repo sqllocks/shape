@@ -1,0 +1,15 @@
+domain            old median  new median   change   old min   new min  old cpu s  new cpu s
+retail               414.5ms     322.2ms   -22.3%   396.8ms   297.3ms      1.057      0.889
+capital_markets      171.1ms     112.3ms   -34.4%   159.9ms    97.0ms      0.333      0.284
+education             95.0ms      66.6ms   -29.9%    89.4ms    62.2ms      0.182      0.146
+financial            379.6ms     273.5ms   -27.9%   365.7ms   263.2ms      0.875      0.788
+healthcare           332.3ms     276.6ms   -16.7%   321.6ms   264.4ms      0.785      0.715
+hr                    59.9ms      43.2ms   -27.9%    54.3ms    39.9ms      0.110      0.074
+insurance             84.5ms      59.0ms   -30.2%    77.9ms    57.0ms      0.166      0.128
+iot                   93.7ms      64.4ms   -31.2%    84.5ms    61.6ms      0.168      0.126
+manufacturing         48.2ms      35.9ms   -25.6%    44.4ms    32.5ms      0.082      0.060
+marketing            166.9ms     109.5ms   -34.4%   164.2ms    99.8ms      0.347      0.272
+pulse                314.7ms     179.3ms   -43.0%   299.6ms   174.6ms      0.533      0.517
+real_estate           90.0ms      62.3ms   -30.8%    77.1ms    56.7ms      0.162      0.121
+supply_chain         112.6ms      77.6ms   -31.1%   100.0ms    67.3ms      0.215      0.154
+telecom              414.5ms     259.5ms   -37.4%   381.9ms   238.6ms      0.894      0.728

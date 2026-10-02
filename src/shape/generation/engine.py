@@ -476,6 +476,30 @@ def _estimated_row_bytes(table: Table) -> int:
 # ---- the engine ---------------------------------------------------------------------------
 
 
+class _Background:
+    """``fn(*args)`` on a helper thread; :meth:`result` waits for it and returns its value or
+    raises what it raised."""
+
+    def __init__(self, fn: Callable[..., Any], *args: Any) -> None:
+        self._value: Any = None
+        self._error: BaseException | None = None
+
+        def run() -> None:
+            try:
+                self._value = fn(*args)
+            except BaseException as exc:  # raised by result()
+                self._error = exc
+
+        self._thread = threading.Thread(target=run, name="shape-validate", daemon=True)
+        self._thread.start()
+
+    def result(self) -> Any:
+        self._thread.join()
+        if self._error is not None:
+            raise self._error
+        return self._value
+
+
 class Engine:
     """Generates one schema. ``scale`` and ``seed`` override the schema's; ``row_counts``
     overrides single tables; ``strategies`` (name to strategy object) is looked up before the
@@ -507,6 +531,7 @@ class Engine:
         self._pools: dict[str, KeyPool] = {}
         self._building: set[str] = set()
         self._memo: dict[Hashable, Any] = {}
+        self._gates: dict[Hashable, threading.Lock] = {}  # one per key being built
         # Both are on unless a test turns them off to compare with the plain order of the passes:
         self._early_rules = True  # repair rules on a helper thread when the order allows it
         self._stream_aggregates = True  # sum children as the child table's chunks are made
@@ -648,12 +673,24 @@ class Engine:
     def cached(self, key: Hashable, build: Callable[[], _T]) -> _T:
         """``build()`` once per engine and ``key``: strategies keep whole-table results (the
         first row of each parent, the versions of each business key) here, computed from the
-        schema and seed alone, so a chunk read in any order finds the same value."""
+        schema and seed alone, so a chunk read in any order finds the same value. A key is built
+        under a lock of its own: a thread that needs another key, or the engine's tables, does not
+        wait for it."""
         with self._lock:
-            if key not in self._memo:
-                self._memo[key] = build()
-            found: _T = self._memo[key]
-            return found
+            if key in self._memo:
+                found: _T = self._memo[key]
+                return found
+            gate = self._gates.setdefault(key, threading.Lock())
+        with gate:
+            with self._lock:
+                if key in self._memo:
+                    found = self._memo[key]
+                    return found
+            value = build()
+            with self._lock:
+                self._memo[key] = value
+                self._gates.pop(key, None)
+            return value
 
     def _column(
         self,
@@ -735,6 +772,51 @@ class Engine:
             with self._lock:
                 self._tables[table] = built
         return built
+
+    def _prepare_caches(self, order: Collection[str]) -> threading.Thread | None:
+        """Start a thread that builds, ahead of the tables that need them, the whole-table results
+        that depend on no generated data. A strategy offers one through ``prepare(spec, ctx)``,
+        which returns a function that builds it (through :meth:`cached`, so a chunk that needs it
+        sooner waits for it instead of building it twice) or ``None``. Returns the thread, or
+        ``None`` when there is nothing to build."""
+        jobs: list[Callable[[], None]] = []
+        for name in order:
+            for col in self.schema.tables[name].columns.values():
+                if not col.strategy or col.strategy == "computed":
+                    continue
+                prepare = getattr(self._strategy(col.strategy), "prepare", None)
+                if prepare is None:
+                    continue
+                ctx = EngineContext(
+                    seed=self.seed,
+                    table=name,
+                    column=col.name,
+                    chunk=0,
+                    row_start=0,
+                    n_rows=0,
+                    columns={},
+                    engine=self,
+                    column_def=col,
+                )
+                try:
+                    job = prepare(col.generator, ctx)
+                except Exception:  # the column's own generation reports it
+                    continue
+                if job is not None:
+                    jobs.append(job)
+        if not jobs:
+            return None
+
+        def run() -> None:
+            for job in jobs:
+                try:
+                    job()
+                except Exception:  # the chunk that needs the result builds it and raises
+                    continue
+
+        thread = threading.Thread(target=run, name="shape-prepare", daemon=True)
+        thread.start()
+        return thread
 
     def _plan_chunks(self, names: Collection[str], workers: int) -> dict[str, list[Chunk]]:
         """The chunks of every table of ``names`` that is not built yet (a built table has none):
@@ -848,16 +930,21 @@ class Engine:
             if early is not None:
                 early.poll()
 
-        run_tables(
-            order,
-            deps,
-            planned,
-            run,
-            on_chunk,
-            on_done,
-            workers,
-            1 if explicit else SPAWN_CELLS,
-        )
+        warm = self._prepare_caches(order)
+        try:
+            run_tables(
+                order,
+                deps,
+                planned,
+                run,
+                on_chunk,
+                on_done,
+                workers,
+                1 if explicit else SPAWN_CELLS,
+            )
+        finally:
+            if warm is not None:
+                warm.join()
 
     # ---- rules applied to each chunk -----------------------------------------------------
 
@@ -1029,7 +1116,10 @@ class Engine:
             if i >= rules_done and i not in streamed_rules:
                 tables = fix_rule(rule, tables, self.seed)
             release(i)
-        remaining = validate_rules(tables, self.schema) if rules else []
+        # The validation reads the tables as they are now (the copula below only replaces
+        # entries of the dict, which the snapshot does not share): it runs beside the copula and
+        # the hand-over of the last tables instead of in front of them.
+        check = _Background(validate_rules, dict(tables), self.schema) if rules else None
         for tname in self.schema.correlated_columns:
             if tname in copula:
                 tables[tname] = apply_copula(
@@ -1043,6 +1133,7 @@ class Engine:
                     nulls=str(self.schema.generation.output.get("copula_nulls", "skip")),
                 )
         release(len(rules))
+        remaining: list[RuleViolation] = check.result() if check is not None else []
         lineage = [
             ColumnLineage(name, cname, col.strategy, dict(col.generator))
             for name in flat

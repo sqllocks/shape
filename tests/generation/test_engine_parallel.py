@@ -370,6 +370,66 @@ def test_small_levels_give_the_same_tables(monkeypatch) -> None:
         assert table.equals(threaded[name]), name
 
 
+# ---- Engine.cached: one lock per key; strategies that prepare a result ahead of its table -------
+
+
+def test_cached_builds_each_key_once_however_many_threads_ask():
+    engine = Engine(schema(ROWS), strategies=STRATEGIES)
+    builds: list[str] = []
+    gate = threading.Barrier(6, timeout=30)
+
+    def build() -> int:
+        builds.append("x")
+        return 7
+
+    results: list[int] = []
+
+    def ask() -> None:
+        gate.wait()
+        results.append(engine.cached("k", build))
+
+    threads = [threading.Thread(target=ask) for _ in range(6)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=30)
+    assert results == [7] * 6 and builds == ["x"]
+
+
+def test_cached_builds_different_keys_at_the_same_time():
+    """While one key is being built, another can be built and the engine's tables can be read:
+    "slow" waits for "fast" to finish, which a single engine-wide lock would never allow."""
+    engine = Engine(schema(ROWS), strategies=STRATEGIES)
+    fast_done = threading.Event()
+    started = threading.Event()
+
+    def slow() -> str:
+        started.set()
+        assert fast_done.wait(30), "another key could not be built while this one was"
+        return "slow"
+
+    out: list[str] = []
+    t = threading.Thread(target=lambda: out.append(engine.cached("slow", slow)))
+    t.start()
+    assert started.wait(30)
+    assert engine.cached("fast", lambda: "fast") == "fast"
+    assert engine._built("customer") is None  # the engine's own lock is free too
+    fast_done.set()
+    t.join(timeout=30)
+    assert out == ["slow"]
+
+
+def test_a_failed_build_is_not_remembered_and_can_be_retried():
+    engine = Engine(schema(ROWS), strategies=STRATEGIES)
+
+    def boom() -> int:
+        raise RuntimeError("no")
+
+    with pytest.raises(RuntimeError):
+        engine.cached("k", boom)
+    assert engine.cached("k", lambda: 3) == 3
+
+
 def test_the_result_lists_tables_in_level_order_whatever_order_they_are_made_in(
     monkeypatch,
 ) -> None:
@@ -379,3 +439,29 @@ def test_the_result_lists_tables_in_level_order_whatever_order_they_are_made_in(
     rows = {"customer": 40, "order": 120, "order_line": 300}
     result = Engine(schema(rows), strategies=STRATEGIES).generate()
     assert list(result.tables) == [n for level in dependency_levels(result.schema) for n in level]
+
+
+def test_the_final_validation_runs_beside_the_last_passes_and_its_errors_surface(monkeypatch):
+    from shape.generation import engine as engine_module
+    from shape.generation.domains import load_domain
+
+    s = load_domain("manufacturing").schema
+    assert s.business_rules  # the validation runs only for a schema that has rules
+    threads_seen: list[str] = []
+    real = engine_module.validate_rules
+
+    def spy(tables, schema):
+        threads_seen.append(threading.current_thread().name)
+        return real(tables, schema)
+
+    monkeypatch.setattr(engine_module, "validate_rules", spy)
+    result = Engine(s, scale="small").generate()
+    assert threads_seen == ["shape-validate"]
+    assert result.remaining_violations == real(result.tables, result.schema)
+
+    def boom(tables, schema):
+        raise RuntimeError("validation failed")
+
+    monkeypatch.setattr(engine_module, "validate_rules", boom)
+    with pytest.raises(RuntimeError, match="validation failed"):
+        Engine(s, scale="small").generate()

@@ -5,7 +5,8 @@ A strategy calls the kernel through these functions: they pick the implementatio
 whichever kernel ran. Every result is a function of ``(stream key, row)`` alone, so it does not
 depend on how the rows are chunked.
 
-Stable interface: ``AliasTable``, ``alias_table``, ``alias_draw``, ``pool_take``, ``uuid4``,
+Stable interface: ``AliasTable``, ``alias_table``, ``alias_draw``, ``ZipfTable``, ``zipf_table``,
+``zipf_draw``, ``pool_take``, ``uuid4``,
 ``random_strings``, ``template_strings``, ``join_strings``, ``string_case``, ``day_weights``,
 ``hour_weights_peaks`` and ``temporal_sample``.
 """
@@ -68,6 +69,31 @@ def alias_draw(
     out = get_kernel().alias_sample(
         table.prob, table.alias, stream.k0, stream.k1, row_start, n_rows, per_row, slot
     )
+    return to_numpy(out).astype(np.int64, copy=False)
+
+
+@dataclass(frozen=True, slots=True)
+class ZipfTable:
+    """A normalised cumulative weight array and the kernel's guide table for it."""
+
+    size: int
+    cum: pa.Array
+    guide: pa.Array
+
+
+def zipf_table(cum: npt.NDArray[np.float64]) -> ZipfTable:
+    """The table for ``cum`` (non-decreasing, finite, ending at 1). Keep it: building the guide
+    costs about as much as drawing a few chunks."""
+    arrow = arrow_array(np.ascontiguousarray(cum, dtype=np.float64), type=pa.float64())
+    return ZipfTable(len(cum), arrow, _arrow(get_kernel().zipf_guide(arrow)))
+
+
+def zipf_draw(
+    table: ZipfTable, stream: RowStream, row_start: int, n_rows: int
+) -> npt.NDArray[np.int64]:
+    """Parent rows ``0 .. size - 1`` of rows ``row_start ..``: ``searchsorted(cum, u, "right")``
+    clipped to the last row, for the uniform ``u`` of word 0 of each row."""
+    out = get_kernel().zipf_draw(table.cum, table.guide, stream.k0, stream.k1, row_start, n_rows)
     return to_numpy(out).astype(np.int64, copy=False)
 
 

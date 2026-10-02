@@ -7,6 +7,7 @@ pub mod relational;
 pub mod rng;
 pub mod strings;
 pub mod temporal;
+pub mod zipf;
 
 use std::sync::Arc;
 
@@ -188,6 +189,62 @@ fn alias_sample(
     Ok(out(Arc::new(Int64Array::from(v))))
 }
 
+fn f64_slice<'a>(a: &'a ArrayRef, what: &str) -> PyResult<&'a [f64]> {
+    let p = a
+        .as_primitive_opt::<Float64Type>()
+        .ok_or_else(|| err(format!("{what} must be a float64 array")))?;
+    if p.null_count() > 0 {
+        return Err(err(format!("{what} must not contain nulls")));
+    }
+    Ok(p.values())
+}
+
+/// Guide table of a normalised cumulative weight array (non-decreasing, finite): see `zipf`.
+#[pyfunction]
+fn zipf_guide(py: Python<'_>, cum: PyArray) -> PyResult<PyArray> {
+    let (cum, _) = cum.into_inner();
+    let values = f64_slice(&cum, "cum")?;
+    if values.is_empty()
+        || values.iter().any(|x| !x.is_finite())
+        || values.windows(2).any(|w| w[1] < w[0])
+    {
+        return Err(err(
+            "cum must be non-empty, finite and non-decreasing".into()
+        ));
+    }
+    let g = py.detach(|| zipf::guide(values));
+    Ok(out(Arc::new(Int64Array::from(g))))
+}
+
+/// One parent row per row from the Zipf draw of word 0 of each row of the stream `(k0, k1)`: the
+/// index of the first entry of `cum` that is greater than the uniform, clipped to the last.
+#[pyfunction]
+fn zipf_draw(
+    py: Python<'_>,
+    cum: PyArray,
+    guide: PyArray,
+    k0: u64,
+    k1: u64,
+    row_start: u64,
+    n_rows: usize,
+) -> PyResult<PyArray> {
+    let (cum, _) = cum.into_inner();
+    let values = f64_slice(&cum, "cum")?;
+    let guide = i64_array(guide, "guide")?;
+    let g = guide.values();
+    let m = g.len();
+    if values.is_empty()
+        || !m.is_power_of_two()
+        || g.iter().any(|x| *x < 0 || *x as usize > values.len())
+    {
+        return Err(err(
+            "cum must be non-empty and guide a power-of-two table of its own".into(),
+        ));
+    }
+    let v = py.detach(|| zipf::draw(values, g, [k0, k1], row_start, n_rows));
+    Ok(out(Arc::new(Int64Array::from(v))))
+}
+
 fn cols_of<'a>(arrays: &'a [ArrayRef]) -> PyResult<Vec<strings::Col<'a>>> {
     arrays
         .iter()
@@ -349,6 +406,8 @@ pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(philox_normal, m)?)?;
     m.add_function(wrap_pyfunction!(alias_build, m)?)?;
     m.add_function(wrap_pyfunction!(alias_sample, m)?)?;
+    m.add_function(wrap_pyfunction!(zipf_guide, m)?)?;
+    m.add_function(wrap_pyfunction!(zipf_draw, m)?)?;
     m.add_function(wrap_pyfunction!(pool_take, m)?)?;
     m.add_function(wrap_pyfunction!(template_strings, m)?)?;
     m.add_function(wrap_pyfunction!(join_strings, m)?)?;
