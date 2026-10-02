@@ -4,59 +4,59 @@
   "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
   "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
   "python": "3.11.15",
-  "started": "2026-10-02 12:02:13",
+  "started": "2026-10-02 14:07:40",
   "impl": "shape",
   "domain": "marketing",
   "runs": 5,
   "warmup": 1,
   "ref_seed": 42,
   "impl_seed": 1042,
-  "loadavg_start": 1.1865234375
+  "loadavg_start": 1.0
  },
  "scales": {
   "medium": {
    "summary": {
     "spindle": {
-     "total_s": 1.0023501999985456,
-     "gen_s": 0.6056371020004008,
-     "write_s": 0.43578771200009214,
-     "cpu_s": 0.9922520000000001,
-     "user_s": 0.6991989999999999,
-     "sys_s": 0.298527,
-     "minor_faults": 21211,
-     "import_s": 1.4830551319992082,
-     "peak_rss_mb": 336.1484375,
+     "total_s": 1.255298493000737,
+     "gen_s": 0.8149594579990662,
+     "write_s": 0.4487495170033071,
+     "cpu_s": 1.2398430000000005,
+     "user_s": 0.6661960000000002,
+     "sys_s": 0.581834,
+     "minor_faults": 21711,
+     "import_s": 1.5404905769973993,
+     "peak_rss_mb": 335.75,
      "parquet_bytes": 15902968,
      "rows": 438060,
-     "rows_per_s_total": 437032.88531357166,
-     "rows_per_s_generate": 723304.4319000624,
+     "rows_per_s_total": 348968.79303410655,
+     "rows_per_s_generate": 537523.6715155736,
      "runs_total_s": [
-      1.069,
-      1.303,
-      0.95,
-      1.002,
-      0.981
+      1.255,
+      0.788,
+      1.336,
+      1.324,
+      1.238
      ],
      "loadavg_before": [
-      1.17138671875,
-      1.1572265625,
-      1.14453125,
-      1.14453125,
-      1.1328125
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
      ],
      "per_table_s_median": {
-      "campaign_type": 0.0057853469988913275,
-      "industry": 0.001653515000725747,
-      "lead_source": 0.0014156649995129555,
-      "campaign": 0.006519033999211388,
-      "contact": 0.1524071109997749,
-      "email_send": 0.05597391199989943,
-      "lead": 0.015868163000050117,
-      "web_visit": 0.3007151409983635,
-      "conversion": 0.004553520999252214,
-      "opportunity": 0.010567884000920458,
-      "_compute_phase+business_rules": 0.0009621070003049681,
-      "_construct_domain+Spindle()": 0.009116458999415045
+      "campaign_type": 0.005246199998509837,
+      "industry": 0.001593449000210967,
+      "lead_source": 0.0013659030009876005,
+      "campaign": 0.006658120000793133,
+      "contact": 0.21037775500008138,
+      "email_send": 0.07774947000143584,
+      "lead": 0.015842936998524237,
+      "web_visit": 0.4444445250010176,
+      "conversion": 0.004330671999923652,
+      "opportunity": 0.01065521399868885,
+      "_compute_phase+business_rules": 0.0008866770003805868,
+      "_construct_domain+Spindle()": 0.00883411100221565
      },
      "row_counts": {
       "campaign_type": 15,
@@ -72,36 +72,36 @@
      }
     },
     "shape": {
-     "total_s": 0.14862264699877414,
-     "gen_s": 0.14862264699877414,
+     "total_s": 0.15601630400124122,
+     "gen_s": 0.15601630400124122,
      "write_s": 0.0,
-     "cpu_s": 0.361108,
-     "user_s": 0.26615999999999995,
-     "sys_s": 0.07930400000000001,
-     "minor_faults": 16534,
-     "import_s": 0.4460476730000664,
-     "peak_rss_mb": 181.83203125,
+     "cpu_s": 0.3624879999999999,
+     "user_s": 0.2818210000000001,
+     "sys_s": 0.07387599999999998,
+     "minor_faults": 16203,
+     "import_s": 0.5027659869992931,
+     "peak_rss_mb": 180.83984375,
      "parquet_bytes": 16877048,
      "rows": 438060,
-     "rows_per_s_total": 2947464.6619879752,
-     "rows_per_s_generate": 2947464.6619879752,
+     "rows_per_s_total": 2807783.473684359,
+     "rows_per_s_generate": 2807783.473684359,
      "runs_total_s": [
-      0.137,
-      0.142,
-      0.152,
-      0.152,
-      0.149
+      0.157,
+      0.16,
+      0.147,
+      0.156,
+      0.12
      ],
      "loadavg_before": [
-      1.1572265625,
-      1.14453125,
-      1.14453125,
-      1.1328125,
-      1.1220703125
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
      ],
      "per_table_s_median": {
-      "_construct_domain+Engine": 0.007020383998678881,
-      "_generate+write": 0.1412404719994811
+      "_construct_domain+Engine": 0.010090385003422853,
+      "_generate+write": 0.14550701400003163
      },
      "row_counts": {
       "campaign_type": 15,
@@ -122,10 +122,10 @@
    "raw": {
     "spindle": [
      {
-      "import_s": 1.3360494259995903,
-      "gen_s": 0.6990053379995516,
-      "write_s": 0.3697444480003469,
-      "total_s": 1.0687497859998984,
+      "import_s": 1.5874528200001805,
+      "gen_s": 0.8280475420033326,
+      "write_s": 0.4272509509974043,
+      "total_s": 1.255298493000737,
       "rows": {
        "campaign_type": 15,
        "industry": 25,
@@ -139,73 +139,33 @@
        "opportunity": 10000
       },
       "per_table_s": {
-       "campaign_type": 0.005271710000670282,
-       "industry": 0.001653515000725747,
-       "lead_source": 0.0014156649995129555,
-       "campaign": 0.006519033999211388,
-       "contact": 0.1390992010001355,
-       "email_send": 0.05234118800035503,
-       "lead": 0.017192306999277207,
-       "web_visit": 0.45082552600069903,
-       "conversion": 0.004111099999136059,
-       "opportunity": 0.010567884000920458,
-       "_compute_phase+business_rules": 0.0008316849998664111,
-       "_construct_domain+Spindle()": 0.009176522999041481
+       "campaign_type": 0.004652670999348629,
+       "industry": 0.001343086998531362,
+       "lead_source": 0.0013659030009876005,
+       "campaign": 0.006658120000793133,
+       "contact": 0.23633749399959925,
+       "email_send": 0.07774947000143584,
+       "lead": 0.015842936998524237,
+       "web_visit": 0.4593551040015882,
+       "conversion": 0.004252056998666376,
+       "opportunity": 0.01065521399868885,
+       "_compute_phase+business_rules": 0.0010013740029535256,
+       "_construct_domain+Spindle()": 0.00883411100221565
       },
-      "user_s": 0.6991989999999999,
-      "sys_s": 0.355621,
-      "minor_faults": 21262,
-      "major_faults": 0,
-      "cpu_s": 1.05482,
-      "peak_rss_mb": 336.3046875,
-      "parquet_bytes": 15902968,
-      "loadavg_before": 1.17138671875
-     },
-     {
-      "import_s": 1.5443195150000975,
-      "gen_s": 0.8514549680003256,
-      "write_s": 0.4516396930011979,
-      "total_s": 1.3030946610015235,
-      "rows": {
-       "campaign_type": 15,
-       "industry": 25,
-       "lead_source": 20,
-       "campaign": 2000,
-       "contact": 50000,
-       "email_send": 100000,
-       "lead": 20000,
-       "web_visit": 250000,
-       "conversion": 6000,
-       "opportunity": 10000
-      },
-      "per_table_s": {
-       "campaign_type": 0.006015341999955126,
-       "industry": 0.0019887819998984924,
-       "lead_source": 0.0016773469997133361,
-       "campaign": 0.0069769620004080934,
-       "contact": 0.2583123759995942,
-       "email_send": 0.0769692390003911,
-       "lead": 0.015868163000050117,
-       "web_visit": 0.45375052400049753,
-       "conversion": 0.00476097499995376,
-       "opportunity": 0.011468048000097042,
-       "_compute_phase+business_rules": 0.0016042119987105252,
-       "_construct_domain+Spindle()": 0.012062998001056258
-      },
-      "user_s": 0.7047490000000001,
-      "sys_s": 0.58144,
+      "user_s": 0.6661960000000002,
+      "sys_s": 0.573647,
       "minor_faults": 21581,
       "major_faults": 0,
-      "cpu_s": 1.2861890000000002,
-      "peak_rss_mb": 336.9765625,
+      "cpu_s": 1.2398430000000005,
+      "peak_rss_mb": 335.75,
       "parquet_bytes": 15902968,
-      "loadavg_before": 1.1572265625
+      "loadavg_before": 1.0
      },
      {
-      "import_s": 1.403607786000066,
-      "gen_s": 0.6056371020004008,
-      "write_s": 0.3441211890003615,
-      "total_s": 0.9497582910007623,
+      "import_s": 1.4567107780021615,
+      "gen_s": 0.4339093070011586,
+      "write_s": 0.354344207997201,
+      "total_s": 0.7882535149983596,
       "rows": {
        "campaign_type": 15,
        "industry": 25,
@@ -219,33 +179,33 @@
        "opportunity": 10000
       },
       "per_table_s": {
-       "campaign_type": 0.006916320999152958,
-       "industry": 0.002102055001159897,
-       "lead_source": 0.0015380849999928614,
-       "campaign": 0.010395646999313612,
-       "contact": 0.19352599299963913,
-       "email_send": 0.05162338199988881,
-       "lead": 0.015204889001324773,
-       "web_visit": 0.3007151409983635,
-       "conversion": 0.003919945000234293,
-       "opportunity": 0.00962343600076565,
-       "_compute_phase+business_rules": 0.0009621070003049681,
-       "_construct_domain+Spindle()": 0.009110101000260329
+       "campaign_type": 0.005095061002066359,
+       "industry": 0.001529311000922462,
+       "lead_source": 0.001345871998637449,
+       "campaign": 0.006009731001540786,
+       "contact": 0.12788510099926498,
+       "email_send": 0.050840897998568835,
+       "lead": 0.014675043999886839,
+       "web_visit": 0.2023421270023391,
+       "conversion": 0.004330671999923652,
+       "opportunity": 0.010205905997281661,
+       "_compute_phase+business_rules": 0.000864437002746854,
+       "_construct_domain+Spindle()": 0.00878514699797961
       },
-      "user_s": 0.7238740000000001,
-      "sys_s": 0.21794000000000002,
-      "minor_faults": 21211,
+      "user_s": 0.6639870000000001,
+      "sys_s": 0.11838399999999999,
+      "minor_faults": 21301,
       "major_faults": 0,
-      "cpu_s": 0.9418139999999999,
-      "peak_rss_mb": 335.9140625,
+      "cpu_s": 0.7823710000000004,
+      "peak_rss_mb": 335.85546875,
       "parquet_bytes": 15902968,
-      "loadavg_before": 1.14453125
+      "loadavg_before": 1.0
      },
      {
-      "import_s": 1.4830551319992082,
-      "gen_s": 0.5665624879984534,
-      "write_s": 0.43578771200009214,
-      "total_s": 1.0023501999985456,
+      "import_s": 1.5404905769973993,
+      "gen_s": 0.8236777400015853,
+      "write_s": 0.5123115289970883,
+      "total_s": 1.3359892689986737,
       "rows": {
        "campaign_type": 15,
        "industry": 25,
@@ -259,33 +219,33 @@
        "opportunity": 10000
       },
       "per_table_s": {
-       "campaign_type": 0.004988335000234656,
-       "industry": 0.0014645150004071184,
-       "lead_source": 0.0012156499997217907,
-       "campaign": 0.0061380679999274435,
-       "contact": 0.1524071109997749,
-       "email_send": 0.06120265999925323,
-       "lead": 0.020311375001256238,
-       "web_visit": 0.29248204699979397,
-       "conversion": 0.004553520999252214,
-       "opportunity": 0.011609036000663764,
-       "_compute_phase+business_rules": 0.0010737109987530857,
-       "_construct_domain+Spindle()": 0.009116458999415045
+       "campaign_type": 0.02795255799719598,
+       "industry": 0.001716106002277229,
+       "lead_source": 0.0015199839981505647,
+       "campaign": 0.006978780002100393,
+       "contact": 0.22314749699944514,
+       "email_send": 0.07529229300052975,
+       "lead": 0.016457628000352997,
+       "web_visit": 0.44110134599759476,
+       "conversion": 0.006717362000927096,
+       "opportunity": 0.012116589001379907,
+       "_compute_phase+business_rules": 0.0011640810007520486,
+       "_construct_domain+Spindle()": 0.009513516000879463
       },
-      "user_s": 0.6937250000000001,
-      "sys_s": 0.298527,
-      "minor_faults": 21208,
+      "user_s": 0.7239300000000002,
+      "sys_s": 0.592305,
+      "minor_faults": 22330,
       "major_faults": 0,
-      "cpu_s": 0.9922520000000001,
-      "peak_rss_mb": 336.1484375,
+      "cpu_s": 1.3162349999999998,
+      "peak_rss_mb": 335.20703125,
       "parquet_bytes": 15902968,
-      "loadavg_before": 1.14453125
+      "loadavg_before": 1.0
      },
      {
-      "import_s": 1.5368267519988876,
-      "gen_s": 0.48589139499927114,
-      "write_s": 0.4952407670007233,
-      "total_s": 0.9811321619999944,
+      "import_s": 1.6653536500016344,
+      "gen_s": 0.8149594579990662,
+      "write_s": 0.5089571889984654,
+      "total_s": 1.3239166469975316,
       "rows": {
        "campaign_type": 15,
        "industry": 25,
@@ -299,35 +259,75 @@
        "opportunity": 10000
       },
       "per_table_s": {
-       "campaign_type": 0.0057853469988913275,
-       "industry": 0.0015267430007952498,
-       "lead_source": 0.0012057299991283799,
-       "campaign": 0.006056154999896535,
-       "contact": 0.14496235300066473,
-       "email_send": 0.05597391199989943,
-       "lead": 0.015376257000752958,
-       "web_visit": 0.23045484099930036,
-       "conversion": 0.004669575000662007,
-       "opportunity": 0.010235922998617752,
-       "_compute_phase+business_rules": 0.0009281830007239478,
-       "_construct_domain+Spindle()": 0.008716375999938464
+       "campaign_type": 0.005246199998509837,
+       "industry": 0.001593449000210967,
+       "lead_source": 0.0012557480004034005,
+       "campaign": 0.006540004000271438,
+       "contact": 0.18744957599847112,
+       "email_send": 0.08602336700278101,
+       "lead": 0.019231432997912634,
+       "web_visit": 0.4819156910016318,
+       "conversion": 0.004781419000210008,
+       "opportunity": 0.01121964399862918,
+       "_compute_phase+business_rules": 0.0008866770003805868,
+       "_construct_domain+Spindle()": 0.008816249999654246
       },
-      "user_s": 0.6861100000000002,
-      "sys_s": 0.2852549999999999,
-      "minor_faults": 21206,
+      "user_s": 0.7311699999999997,
+      "sys_s": 0.581834,
+      "minor_faults": 21787,
       "major_faults": 0,
-      "cpu_s": 0.9713650000000005,
-      "peak_rss_mb": 335.66796875,
+      "cpu_s": 1.3130039999999998,
+      "peak_rss_mb": 337.328125,
       "parquet_bytes": 15902968,
-      "loadavg_before": 1.1328125
+      "loadavg_before": 1.0
+     },
+     {
+      "import_s": 1.450198492002528,
+      "gen_s": 0.7896777809983178,
+      "write_s": 0.4487495170033071,
+      "total_s": 1.2384272980016249,
+      "rows": {
+       "campaign_type": 15,
+       "industry": 25,
+       "lead_source": 20,
+       "campaign": 2000,
+       "contact": 50000,
+       "email_send": 100000,
+       "lead": 20000,
+       "web_visit": 250000,
+       "conversion": 6000,
+       "opportunity": 10000
+      },
+      "per_table_s": {
+       "campaign_type": 0.005517459001566749,
+       "industry": 0.0017190689977724105,
+       "lead_source": 0.0014453520016104449,
+       "campaign": 0.006735531998856459,
+       "contact": 0.21037775500008138,
+       "email_send": 0.07850220100226579,
+       "lead": 0.015714419998403173,
+       "web_visit": 0.4444445250010176,
+       "conversion": 0.004269975997885922,
+       "opportunity": 0.010243169002933428,
+       "_compute_phase+business_rules": 0.0008317759966303129,
+       "_construct_domain+Spindle()": 0.009876546999294078
+      },
+      "user_s": 0.6389270000000002,
+      "sys_s": 0.597468,
+      "minor_faults": 21711,
+      "major_faults": 0,
+      "cpu_s": 1.2363950000000004,
+      "peak_rss_mb": 335.4140625,
+      "parquet_bytes": 15902968,
+      "loadavg_before": 1.0
      }
     ],
     "shape": [
      {
-      "import_s": 0.4250964760012721,
-      "gen_s": 0.13708798400148225,
+      "import_s": 0.4357331550017989,
+      "gen_s": 0.1567822119977791,
       "write_s": 0.0,
-      "total_s": 0.13708798400148225,
+      "total_s": 0.1567822119977791,
       "overlapped": true,
       "rows": {
        "campaign_type": 15,
@@ -342,25 +342,25 @@
        "opportunity": 10000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.006646035000812844,
-       "_generate+write": 0.1304419490006694
+       "_construct_domain+Engine": 0.007296974999917438,
+       "_generate+write": 0.14948523699786165
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.26336899999999996,
-      "sys_s": 0.07930400000000001,
-      "minor_faults": 16153,
+      "user_s": 0.274968,
+      "sys_s": 0.08752,
+      "minor_faults": 16135,
       "major_faults": 0,
-      "cpu_s": 0.342673,
-      "peak_rss_mb": 180.54296875,
+      "cpu_s": 0.3624879999999999,
+      "peak_rss_mb": 180.41796875,
       "parquet_bytes": 16877048,
-      "loadavg_before": 1.1572265625
+      "loadavg_before": 1.0
      },
      {
-      "import_s": 0.4075259430010192,
-      "gen_s": 0.1422667110000475,
+      "import_s": 0.5027659869992931,
+      "gen_s": 0.15956534200086026,
       "write_s": 0.0,
-      "total_s": 0.1422667110000475,
+      "total_s": 0.15956534200086026,
       "overlapped": true,
       "rows": {
        "campaign_type": 15,
@@ -375,25 +375,25 @@
        "opportunity": 10000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.0069633300008717924,
-       "_generate+write": 0.13530338099917572
+       "_construct_domain+Engine": 0.013472311999066733,
+       "_generate+write": 0.14609303000179352
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.23930099999999999,
-      "sys_s": 0.12180699999999998,
-      "minor_faults": 16539,
+      "user_s": 0.3039940000000001,
+      "sys_s": 0.063545,
+      "minor_faults": 16395,
       "major_faults": 0,
-      "cpu_s": 0.361108,
-      "peak_rss_mb": 181.83203125,
+      "cpu_s": 0.36753900000000017,
+      "peak_rss_mb": 181.53125,
       "parquet_bytes": 16877048,
-      "loadavg_before": 1.14453125
+      "loadavg_before": 1.0
      },
      {
-      "import_s": 0.46069358499880764,
-      "gen_s": 0.15211671500037482,
+      "import_s": 0.5128445150003245,
+      "gen_s": 0.14669315500213997,
       "write_s": 0.0,
-      "total_s": 0.15211671500037482,
+      "total_s": 0.14669315500213997,
       "overlapped": true,
       "rows": {
        "campaign_type": 15,
@@ -408,25 +408,25 @@
        "opportunity": 10000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.010876243000893737,
-       "_generate+write": 0.1412404719994811
+       "_construct_domain+Engine": 0.010090385003422853,
+       "_generate+write": 0.13660276999871712
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.3083480000000002,
-      "sys_s": 0.06793499999999998,
-      "minor_faults": 16380,
+      "user_s": 0.2818210000000001,
+      "sys_s": 0.07387599999999998,
+      "minor_faults": 16696,
       "major_faults": 0,
-      "cpu_s": 0.37628300000000015,
-      "peak_rss_mb": 181.37890625,
+      "cpu_s": 0.35569700000000004,
+      "peak_rss_mb": 182.93359375,
       "parquet_bytes": 16877048,
-      "loadavg_before": 1.14453125
+      "loadavg_before": 1.0
      },
      {
-      "import_s": 0.4460476730000664,
-      "gen_s": 0.15209001699986402,
+      "import_s": 0.6164285829981964,
+      "gen_s": 0.15601630400124122,
       "write_s": 0.0,
-      "total_s": 0.15209001699986402,
+      "total_s": 0.15601630400124122,
       "overlapped": true,
       "rows": {
        "campaign_type": 15,
@@ -441,25 +441,25 @@
        "opportunity": 10000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.008325721999426605,
-       "_generate+write": 0.14376429500043741
+       "_construct_domain+Engine": 0.010509290001209592,
+       "_generate+write": 0.14550701400003163
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.273833,
-      "sys_s": 0.071969,
-      "minor_faults": 16534,
+      "user_s": 0.2923880000000001,
+      "sys_s": 0.07097,
+      "minor_faults": 16056,
       "major_faults": 0,
-      "cpu_s": 0.34580200000000005,
-      "peak_rss_mb": 182.00390625,
+      "cpu_s": 0.36335800000000007,
+      "peak_rss_mb": 179.9765625,
       "parquet_bytes": 16877048,
-      "loadavg_before": 1.1328125
+      "loadavg_before": 1.0
      },
      {
-      "import_s": 0.46092535000025237,
-      "gen_s": 0.14862264699877414,
+      "import_s": 0.4351412079995498,
+      "gen_s": 0.11987611700169509,
       "write_s": 0.0,
-      "total_s": 0.14862264699877414,
+      "total_s": 0.11987611700169509,
       "overlapped": true,
       "rows": {
        "campaign_type": 15,
@@ -474,19 +474,19 @@
        "opportunity": 10000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.007020383998678881,
-       "_generate+write": 0.14160226300009526
+       "_construct_domain+Engine": 0.007254878000821918,
+       "_generate+write": 0.11262123900087317
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.26615999999999995,
-      "sys_s": 0.110965,
-      "minor_faults": 16820,
+      "user_s": 0.21942499999999998,
+      "sys_s": 0.07525699999999999,
+      "minor_faults": 16203,
       "major_faults": 0,
-      "cpu_s": 0.37712499999999993,
-      "peak_rss_mb": 182.60546875,
+      "cpu_s": 0.2946819999999999,
+      "peak_rss_mb": 180.83984375,
       "parquet_bytes": 16877048,
-      "loadavg_before": 1.1220703125
+      "loadavg_before": 1.0
      }
     ]
    }

@@ -4,53 +4,53 @@
   "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
   "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
   "python": "3.11.15",
-  "started": "2026-10-02 11:44:22",
+  "started": "2026-10-02 13:53:50",
   "impl": "shape",
   "domain": "pulse",
   "runs": 5,
   "warmup": 1,
   "ref_seed": 42,
   "impl_seed": 1042,
-  "loadavg_start": 1.37646484375
+  "loadavg_start": 1.025390625
  },
  "scales": {
   "medium": {
    "summary": {
     "spindle": {
-     "total_s": 1.7505416610001703,
-     "gen_s": 1.452554997000334,
-     "write_s": 0.3398090000009688,
-     "cpu_s": 1.753304,
-     "user_s": 1.1263280000000002,
-     "sys_s": 0.681106,
-     "minor_faults": 29643,
-     "import_s": 1.3946356329997798,
-     "peak_rss_mb": 412.1875,
+     "total_s": 1.7873866029985948,
+     "gen_s": 1.4458865909982705,
+     "write_s": 0.3415000120003242,
+     "cpu_s": 1.798868,
+     "user_s": 1.1623640000000002,
+     "sys_s": 0.712607,
+     "minor_faults": 29633,
+     "import_s": 1.406974330002413,
+     "peak_rss_mb": 412.19921875,
      "parquet_bytes": 15452480,
      "rows": 560000,
-     "rows_per_s_total": 319900.98406458064,
-     "rows_per_s_generate": 385527.57118074974,
+     "rows_per_s_total": 313306.5891064197,
+     "rows_per_s_generate": 387305.61821820633,
      "runs_total_s": [
-      1.751,
-      1.708,
-      1.796,
-      1.603,
-      1.816
+      1.787,
+      1.934,
+      1.903,
+      1.636,
+      1.608
      ],
      "loadavg_before": [
-      1.34619140625,
-      1.318359375,
-      1.29248046875,
-      1.26904296875,
-      1.2470703125
+      1.02294921875,
+      1.02099609375,
+      1.01904296875,
+      1.09765625,
+      1.09765625
      ],
      "per_table_s_median": {
-      "driver": 0.027555788999961806,
-      "rider": 0.15454120399954263,
-      "trip": 1.1044605690003664,
-      "vehicle": 0.00876222599981702,
-      "_compute_phase+business_rules": 0.14244371200038586,
-      "_construct_domain+Spindle()": 0.008602461000918993
+      "driver": 0.06292888700045296,
+      "rider": 0.16449814599764068,
+      "trip": 1.0587857870013977,
+      "vehicle": 0.00908119199812063,
+      "_compute_phase+business_rules": 0.139915542997187,
+      "_construct_domain+Spindle()": 0.009461048000957817
      },
      "row_counts": {
       "driver": 5000,
@@ -60,36 +60,36 @@
      }
     },
     "shape": {
-     "total_s": 0.23808853400078078,
-     "gen_s": 0.23808853400078078,
+     "total_s": 0.22135633300058544,
+     "gen_s": 0.22135633300058544,
      "write_s": 0.0,
-     "cpu_s": 0.6137270000000001,
-     "user_s": 0.483294,
-     "sys_s": 0.138611,
-     "minor_faults": 43106,
-     "import_s": 0.4135419890008052,
-     "peak_rss_mb": 285.71484375,
+     "cpu_s": 0.6007089999999999,
+     "user_s": 0.477402,
+     "sys_s": 0.129664,
+     "minor_faults": 48496,
+     "import_s": 0.44550731599883875,
+     "peak_rss_mb": 306.3671875,
      "parquet_bytes": 15371502,
      "rows": 560000,
-     "rows_per_s_total": 2352066.2275914703,
-     "rows_per_s_generate": 2352066.2275914703,
+     "rows_per_s_total": 2529857.593902764,
+     "rows_per_s_generate": 2529857.593902764,
      "runs_total_s": [
-      0.229,
-      0.316,
-      0.266,
-      0.238,
-      0.231
+      0.192,
+      0.235,
+      0.233,
+      0.221,
+      0.207
      ],
      "loadavg_before": [
-      1.318359375,
-      1.29248046875,
-      1.26904296875,
-      1.2470703125,
-      1.22705078125
+      1.02099609375,
+      1.02099609375,
+      1.01904296875,
+      1.09765625,
+      1.08935546875
      ],
      "per_table_s_median": {
-      "_construct_domain+Engine": 0.0037845700007892447,
-      "_generate+write": 0.23465808700166235
+      "_construct_domain+Engine": 0.0040343129985558335,
+      "_generate+write": 0.2173220200020296
      },
      "row_counts": {
       "driver": 5000,
@@ -104,10 +104,10 @@
    "raw": {
     "spindle": [
      {
-      "import_s": 1.348014068998964,
-      "gen_s": 1.45553216999906,
-      "write_s": 0.2950094910011103,
-      "total_s": 1.7505416610001703,
+      "import_s": 1.3519085250009084,
+      "gen_s": 1.4458865909982705,
+      "write_s": 0.3415000120003242,
+      "total_s": 1.7873866029985948,
       "rows": {
        "driver": 5000,
        "rider": 50000,
@@ -115,27 +115,27 @@
        "vehicle": 5000
       },
       "per_table_s": {
-       "driver": 0.03490375300134474,
-       "rider": 0.16840602199954446,
-       "trip": 1.1044605690003664,
-       "vehicle": 0.008538353999028914,
-       "_compute_phase+business_rules": 0.1308800839997275,
-       "_construct_domain+Spindle()": 0.008343387999047991
+       "driver": 0.06811928500246722,
+       "rider": 0.16449814599764068,
+       "trip": 1.0587857870013977,
+       "vehicle": 0.00908119199812063,
+       "_compute_phase+business_rules": 0.13680188400030602,
+       "_construct_domain+Spindle()": 0.008600296998338308
       },
-      "user_s": 1.0717219999999998,
-      "sys_s": 0.681582,
-      "minor_faults": 29597,
+      "user_s": 1.0537239999999999,
+      "sys_s": 0.745144,
+      "minor_faults": 30428,
       "major_faults": 0,
-      "cpu_s": 1.753304,
-      "peak_rss_mb": 412.07421875,
+      "cpu_s": 1.798868,
+      "peak_rss_mb": 412.19921875,
       "parquet_bytes": 15452480,
-      "loadavg_before": 1.34619140625
+      "loadavg_before": 1.02294921875
      },
      {
-      "import_s": 1.4436336210001173,
-      "gen_s": 1.4169127959994512,
-      "write_s": 0.2910761729999649,
-      "total_s": 1.707988968999416,
+      "import_s": 1.406974330002413,
+      "gen_s": 1.6304563369994867,
+      "write_s": 0.3034447669997462,
+      "total_s": 1.9339011039992329,
       "rows": {
        "driver": 5000,
        "rider": 50000,
@@ -143,27 +143,27 @@
        "vehicle": 5000
       },
       "per_table_s": {
-       "driver": 0.02594372299972747,
-       "rider": 0.12585022599887452,
-       "trip": 1.074131135999778,
-       "vehicle": 0.009566676000758889,
-       "_compute_phase+business_rules": 0.17276364200006356,
-       "_construct_domain+Spindle()": 0.008657393000248703
+       "driver": 0.07494166099786526,
+       "rider": 0.18644396800300456,
+       "trip": 1.2099243289994774,
+       "vehicle": 0.008855542000674177,
+       "_compute_phase+business_rules": 0.139915542997187,
+       "_construct_domain+Spindle()": 0.010375294001278235
       },
-      "user_s": 1.1263280000000002,
-      "sys_s": 0.557313,
-      "minor_faults": 29629,
+      "user_s": 1.186438,
+      "sys_s": 0.712607,
+      "minor_faults": 30433,
       "major_faults": 0,
-      "cpu_s": 1.6836410000000002,
-      "peak_rss_mb": 411.9375,
+      "cpu_s": 1.8990450000000003,
+      "peak_rss_mb": 411.96484375,
       "parquet_bytes": 15452480,
-      "loadavg_before": 1.318359375
+      "loadavg_before": 1.02099609375
      },
      {
-      "import_s": 1.4203975559994433,
-      "gen_s": 1.452554997000334,
-      "write_s": 0.34325264700055413,
-      "total_s": 1.795807644000888,
+      "import_s": 1.6285675879989867,
+      "gen_s": 1.5493250529980287,
+      "write_s": 0.3541578100011975,
+      "total_s": 1.9034828629992262,
       "rows": {
        "driver": 5000,
        "rider": 50000,
@@ -171,27 +171,27 @@
        "vehicle": 5000
       },
       "per_table_s": {
-       "driver": 0.025139286000921857,
-       "rider": 0.15454120399954263,
-       "trip": 1.1232793879989913,
-       "vehicle": 0.00876222599981702,
-       "_compute_phase+business_rules": 0.13242503000037686,
-       "_construct_domain+Spindle()": 0.008407863000684301
+       "driver": 0.06292888700045296,
+       "rider": 0.1920309660017665,
+       "trip": 1.1343025360001775,
+       "vehicle": 0.009325561997684417,
+       "_compute_phase+business_rules": 0.13933072700092453,
+       "_construct_domain+Spindle()": 0.011406374997022795
       },
-      "user_s": 1.071767,
-      "sys_s": 0.73104,
-      "minor_faults": 29643,
+      "user_s": 1.1725450000000004,
+      "sys_s": 0.7327119999999999,
+      "minor_faults": 29633,
       "major_faults": 0,
-      "cpu_s": 1.802807,
-      "peak_rss_mb": 412.1875,
+      "cpu_s": 1.9052570000000006,
+      "peak_rss_mb": 411.71484375,
       "parquet_bytes": 15452480,
-      "loadavg_before": 1.29248046875
+      "loadavg_before": 1.01904296875
      },
      {
-      "import_s": 1.3946356329997798,
-      "gen_s": 1.1770913470008963,
-      "write_s": 0.425763482999173,
-      "total_s": 1.6028548300000693,
+      "import_s": 1.4017602480016649,
+      "gen_s": 1.229323043000477,
+      "write_s": 0.4068979160001618,
+      "total_s": 1.6362209590006387,
       "rows": {
        "driver": 5000,
        "rider": 50000,
@@ -199,27 +199,27 @@
        "vehicle": 5000
       },
       "per_table_s": {
-       "driver": 0.028228446000866825,
-       "rider": 0.16668061099881015,
-       "trip": 0.8191808840001613,
-       "vehicle": 0.00852246900103637,
-       "_compute_phase+business_rules": 0.14513456500026223,
-       "_construct_domain+Spindle()": 0.00934437199975946
+       "driver": 0.024801135001325747,
+       "rider": 0.1224721069993393,
+       "trip": 0.917179431002296,
+       "vehicle": 0.009869596997305052,
+       "_compute_phase+business_rules": 0.14670764500260702,
+       "_construct_domain+Spindle()": 0.008293127997603733
       },
-      "user_s": 1.1712430000000003,
-      "sys_s": 0.42101599999999995,
-      "minor_faults": 29777,
+      "user_s": 1.127479,
+      "sys_s": 0.515771,
+      "minor_faults": 29546,
       "major_faults": 0,
-      "cpu_s": 1.592259,
+      "cpu_s": 1.64325,
       "peak_rss_mb": 412.3359375,
       "parquet_bytes": 15452480,
-      "loadavg_before": 1.26904296875
+      "loadavg_before": 1.09765625
      },
      {
-      "import_s": 1.350920198001404,
-      "gen_s": 1.4763105729998642,
-      "write_s": 0.3398090000009688,
-      "total_s": 1.816119573000833,
+      "import_s": 1.543792314001621,
+      "gen_s": 1.289289420001296,
+      "write_s": 0.3186315079983615,
+      "total_s": 1.6079209279996576,
       "rows": {
        "driver": 5000,
        "rider": 50000,
@@ -227,29 +227,29 @@
        "vehicle": 5000
       },
       "per_table_s": {
-       "driver": 0.027555788999961806,
-       "rider": 0.15056873100002122,
-       "trip": 1.137425181999788,
-       "vehicle": 0.009714697998788324,
-       "_compute_phase+business_rules": 0.14244371200038586,
-       "_construct_domain+Spindle()": 0.008602461000918993
+       "driver": 0.026248311998642748,
+       "rider": 0.14405242599968915,
+       "trip": 0.9567906680022134,
+       "vehicle": 0.00834071099961875,
+       "_compute_phase+business_rules": 0.14439625500017428,
+       "_construct_domain+Spindle()": 0.009461048000957817
       },
-      "user_s": 1.145368,
-      "sys_s": 0.681106,
-      "minor_faults": 29964,
+      "user_s": 1.1623640000000002,
+      "sys_s": 0.446239,
+      "minor_faults": 29255,
       "major_faults": 0,
-      "cpu_s": 1.826474,
-      "peak_rss_mb": 412.19140625,
+      "cpu_s": 1.608603,
+      "peak_rss_mb": 412.28515625,
       "parquet_bytes": 15452480,
-      "loadavg_before": 1.2470703125
+      "loadavg_before": 1.09765625
      }
     ],
     "shape": [
      {
-      "import_s": 0.3883320710010594,
-      "gen_s": 0.22911556500002916,
+      "import_s": 0.38645531099973596,
+      "gen_s": 0.19196838700008811,
       "write_s": 0.0,
-      "total_s": 0.22911556500002916,
+      "total_s": 0.19196838700008811,
       "overlapped": true,
       "rows": {
        "driver": 5000,
@@ -258,25 +258,25 @@
        "vehicle": 5000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.005700028999854112,
-       "_generate+write": 0.22341553600017505
+       "_construct_domain+Engine": 0.004499474998738151,
+       "_generate+write": 0.18746891200134996
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.42300000000000004,
-      "sys_s": 0.138611,
-      "minor_faults": 42675,
+      "user_s": 0.3975010000000001,
+      "sys_s": 0.14661200000000002,
+      "minor_faults": 48414,
       "major_faults": 0,
-      "cpu_s": 0.5616110000000001,
-      "peak_rss_mb": 283.26171875,
+      "cpu_s": 0.5441130000000001,
+      "peak_rss_mb": 306.24609375,
       "parquet_bytes": 15371502,
-      "loadavg_before": 1.318359375
+      "loadavg_before": 1.02099609375
      },
      {
-      "import_s": 0.47324710199973197,
-      "gen_s": 0.31561091000003216,
+      "import_s": 0.47609571399880224,
+      "gen_s": 0.23525395300021046,
       "write_s": 0.0,
-      "total_s": 0.31561091000003216,
+      "total_s": 0.23525395300021046,
       "overlapped": true,
       "rows": {
        "driver": 5000,
@@ -285,25 +285,25 @@
        "vehicle": 5000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.004161296001257142,
-       "_generate+write": 0.311449613998775
+       "_construct_domain+Engine": 0.003751631000341149,
+       "_generate+write": 0.2315023219998693
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.507729,
-      "sys_s": 0.18531400000000003,
-      "minor_faults": 42511,
+      "user_s": 0.504169,
+      "sys_s": 0.143059,
+      "minor_faults": 48903,
       "major_faults": 0,
-      "cpu_s": 0.693043,
-      "peak_rss_mb": 282.9375,
+      "cpu_s": 0.6472279999999999,
+      "peak_rss_mb": 308.12109375,
       "parquet_bytes": 15371502,
-      "loadavg_before": 1.29248046875
+      "loadavg_before": 1.02099609375
      },
      {
-      "import_s": 0.3892299369999819,
-      "gen_s": 0.266411042000982,
+      "import_s": 0.44550731599883875,
+      "gen_s": 0.2332035929975973,
       "write_s": 0.0,
-      "total_s": 0.266411042000982,
+      "total_s": 0.2332035929975973,
       "overlapped": true,
       "rows": {
        "driver": 5000,
@@ -312,25 +312,25 @@
        "vehicle": 5000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.0037845700007892447,
-       "_generate+write": 0.26262647200019273
+       "_construct_domain+Engine": 0.003957983997679548,
+       "_generate+write": 0.22924560899991775
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.494522,
-      "sys_s": 0.15447099999999997,
-      "minor_faults": 43522,
+      "user_s": 0.4962319999999999,
+      "sys_s": 0.123833,
+      "minor_faults": 48496,
       "major_faults": 0,
-      "cpu_s": 0.6489929999999999,
-      "peak_rss_mb": 286.93359375,
+      "cpu_s": 0.620065,
+      "peak_rss_mb": 306.3671875,
       "parquet_bytes": 15371502,
-      "loadavg_before": 1.26904296875
+      "loadavg_before": 1.01904296875
      },
      {
-      "import_s": 0.4135419890008052,
-      "gen_s": 0.23808853400078078,
+      "import_s": 0.41588099699947634,
+      "gen_s": 0.22135633300058544,
       "write_s": 0.0,
-      "total_s": 0.23808853400078078,
+      "total_s": 0.22135633300058544,
       "overlapped": true,
       "rows": {
        "driver": 5000,
@@ -339,25 +339,25 @@
        "vehicle": 5000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.0034304469991184305,
-       "_generate+write": 0.23465808700166235
+       "_construct_domain+Engine": 0.0040343129985558335,
+       "_generate+write": 0.2173220200020296
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.483294,
-      "sys_s": 0.13043300000000002,
-      "minor_faults": 43106,
+      "user_s": 0.477402,
+      "sys_s": 0.12330700000000001,
+      "minor_faults": 48756,
       "major_faults": 0,
-      "cpu_s": 0.6137270000000001,
-      "peak_rss_mb": 285.71484375,
+      "cpu_s": 0.6007089999999999,
+      "peak_rss_mb": 307.49609375,
       "parquet_bytes": 15371502,
-      "loadavg_before": 1.2470703125
+      "loadavg_before": 1.09765625
      },
      {
-      "import_s": 0.46642602199972316,
-      "gen_s": 0.2310080619990913,
+      "import_s": 0.47449565900024027,
+      "gen_s": 0.20686493999892264,
       "write_s": 0.0,
-      "total_s": 0.2310080619990913,
+      "total_s": 0.20686493999892264,
       "overlapped": true,
       "rows": {
        "driver": 5000,
@@ -366,19 +366,19 @@
        "vehicle": 5000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.0037062239989609225,
-       "_generate+write": 0.22730183800013037
+       "_construct_domain+Engine": 0.004991544999938924,
+       "_generate+write": 0.2018733949989837
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.45533199999999996,
-      "sys_s": 0.129115,
-      "minor_faults": 43496,
+      "user_s": 0.44865600000000005,
+      "sys_s": 0.129664,
+      "minor_faults": 48226,
       "major_faults": 0,
-      "cpu_s": 0.584447,
-      "peak_rss_mb": 286.63671875,
+      "cpu_s": 0.5783200000000002,
+      "peak_rss_mb": 305.3671875,
       "parquet_bytes": 15371502,
-      "loadavg_before": 1.22705078125
+      "loadavg_before": 1.08935546875
      }
     ]
    }

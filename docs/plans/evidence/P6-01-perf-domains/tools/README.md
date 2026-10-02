@@ -7,7 +7,9 @@ Small scripts used to profile and compare (not part of the product; they are kep
 |---|---|
 | `digest.py OUT.json scale[,scale]` | sha256 of every generated table of every domain (3nf and star) at seed 1042; two trees that give the same file give the same values |
 | `ab_domains.py` | interleaved fresh-process before/after timing of load + engine + write for each domain (`BEFORE_SRC` names a checkout of the start commit) |
-| `timeline.py DOMAIN SCALE` | when each chunk is generated and each file written, by thread (set `FLOOR=1` for one row per table) |
 | `floor.py DOMAIN...` | the fixed cost of the product path: one row per table against the preset |
-| `decomp.py SCALE` | wall time against the end of generation, per domain |
 | `strat_bench.py DOMAIN TABLE ROWS` | warm cost per row of each column of one table through the engine |
+
+The timeline and decomposition scripts used on the start commit patched `Engine.generate_chunk` and the
+Parquet sink to stamp them; they do not run against the engine lane's scheduler and writer, so they are not
+kept (the numbers quoted from them in the status file are marked as from the start commit).

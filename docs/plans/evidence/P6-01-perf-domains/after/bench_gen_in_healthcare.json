@@ -4,58 +4,58 @@
   "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
   "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
   "python": "3.11.15",
-  "started": "2026-10-02 11:56:18",
+  "started": "2026-10-02 14:02:48",
   "impl": "shape",
   "domain": "healthcare",
   "runs": 5,
   "warmup": 1,
   "ref_seed": 42,
   "impl_seed": 1042,
-  "loadavg_start": 1.0390625
+  "loadavg_start": 1.0712890625
  },
  "scales": {
   "medium": {
    "summary": {
     "spindle": {
-     "total_s": 3.2034152500000346,
-     "gen_s": 2.3008729970006243,
-     "write_s": 0.8334966959992016,
-     "cpu_s": 3.17955,
-     "user_s": 2.062273,
-     "sys_s": 1.1405830000000001,
-     "minor_faults": 42616,
-     "import_s": 1.4486454729994875,
-     "peak_rss_mb": 483.60546875,
+     "total_s": 3.169984279997152,
+     "gen_s": 2.401986853998096,
+     "write_s": 0.7011816919984994,
+     "cpu_s": 3.1431560000000003,
+     "user_s": 2.108864,
+     "sys_s": 1.128492,
+     "minor_faults": 42485,
+     "import_s": 1.4358120830002008,
+     "peak_rss_mb": 483.2265625,
      "parquet_bytes": 25999982,
      "rows": 1260800,
-     "rows_per_s_total": 393579.9456533106,
-     "rows_per_s_generate": 547965.92495264,
+     "rows_per_s_total": 397730.67896763596,
+     "rows_per_s_generate": 524898.7928062155,
      "runs_total_s": [
-      2.848,
-      3.263,
-      3.409,
-      3.203,
-      2.901
+      3.001,
+      3.032,
+      3.294,
+      3.382,
+      3.17
      ],
      "loadavg_before": [
-      1.49462890625,
-      1.45458984375,
-      1.49853515625,
-      1.45849609375,
-      1.4677734375
+      1.0654296875,
+      1.35009765625,
+      1.32177734375,
+      1.2958984375,
+      1.27197265625
      ],
      "per_table_s_median": {
-      "facility": 0.13036847799958196,
-      "patient": 0.20344455799931893,
-      "provider": 0.00553348600078607,
-      "encounter": 0.2160699560008652,
-      "claim": 0.15801363099853916,
-      "diagnosis": 0.7599291909991734,
-      "medication": 0.047287794999647303,
-      "procedure": 0.23088659499990172,
-      "claim_line": 0.19731852800032357,
-      "_compute_phase+business_rules": 0.1820891120005399,
-      "_construct_domain+Spindle()": 0.0090429360006965
+      "facility": 0.13940585599993938,
+      "patient": 0.2059360760031268,
+      "provider": 0.005499941999005387,
+      "encounter": 0.23311906399976579,
+      "claim": 0.23789324199969997,
+      "diagnosis": 1.0149732680001762,
+      "medication": 0.04375374599840143,
+      "procedure": 0.21580999399884604,
+      "claim_line": 0.17820862799999304,
+      "_compute_phase+business_rules": 0.1721790419978788,
+      "_construct_domain+Spindle()": 0.00977198499822407
      },
      "row_counts": {
       "facility": 50,
@@ -70,36 +70,36 @@
      }
     },
     "shape": {
-     "total_s": 0.3866722380007559,
-     "gen_s": 0.3866722380007559,
+     "total_s": 0.3398394400028337,
+     "gen_s": 0.3398394400028337,
      "write_s": 0.0,
-     "cpu_s": 0.911223,
-     "user_s": 0.721232,
-     "sys_s": 0.17120599999999997,
-     "minor_faults": 43413,
-     "import_s": 0.46170737799911876,
-     "peak_rss_mb": 286.55078125,
+     "cpu_s": 0.855642,
+     "user_s": 0.695972,
+     "sys_s": 0.17630699999999996,
+     "minor_faults": 43236,
+     "import_s": 0.45365639200099395,
+     "peak_rss_mb": 286.53125,
      "parquet_bytes": 25686933,
      "rows": 1260800,
-     "rows_per_s_total": 3260642.673802548,
-     "rows_per_s_generate": 3260642.673802548,
+     "rows_per_s_total": 3709987.281021552,
+     "rows_per_s_generate": 3709987.281021552,
      "runs_total_s": [
-      0.345,
-      0.465,
-      0.38,
-      0.387,
-      0.411
+      0.323,
+      0.381,
+      0.357,
+      0.339,
+      0.34
      ],
      "loadavg_before": [
-      1.45458984375,
-      1.49853515625,
-      1.45849609375,
-      1.42138671875,
-      1.43017578125
+      1.380859375,
+      1.32177734375,
+      1.2958984375,
+      1.27197265625,
+      1.25
      ],
      "per_table_s_median": {
-      "_construct_domain+Engine": 0.011645267999483622,
-      "_generate+write": 0.3750269700012723
+      "_construct_domain+Engine": 0.01116119600192178,
+      "_generate+write": 0.33041726000010385
      },
      "row_counts": {
       "facility": 50,
@@ -119,10 +119,10 @@
    "raw": {
     "spindle": [
      {
-      "import_s": 1.5106457689998933,
-      "gen_s": 2.122433958000329,
-      "write_s": 0.7254573009995511,
-      "total_s": 2.84789125899988,
+      "import_s": 1.4358120830002008,
+      "gen_s": 2.390933957998641,
+      "write_s": 0.6096131439990131,
+      "total_s": 3.000547101997654,
       "rows": {
        "facility": 50,
        "patient": 25000,
@@ -135,32 +135,32 @@
        "claim_line": 356250
       },
       "per_table_s": {
-       "facility": 0.1165877420007746,
-       "patient": 0.19744544599961955,
-       "provider": 0.007865048999519786,
-       "encounter": 0.2160699560008652,
-       "claim": 0.14749624999967637,
-       "diagnosis": 0.7599046230006934,
-       "medication": 0.06763631799913128,
-       "procedure": 0.2216781719998835,
-       "claim_line": 0.19731852800032357,
-       "_compute_phase+business_rules": 0.1820891120005399,
-       "_construct_domain+Spindle()": 0.008342761999301729
+       "facility": 0.13523933100077556,
+       "patient": 0.197556416002044,
+       "provider": 0.005029183997976361,
+       "encounter": 0.21921088299859548,
+       "claim": 0.16914894500223454,
+       "diagnosis": 1.0417065689980518,
+       "medication": 0.0430750440027623,
+       "procedure": 0.21980793100010487,
+       "claim_line": 0.17820862799999304,
+       "_compute_phase+business_rules": 0.1721790419978788,
+       "_construct_domain+Spindle()": 0.00977198499822407
       },
-      "user_s": 2.020709,
-      "sys_s": 0.782422,
-      "minor_faults": 42558,
+      "user_s": 2.0134640000000004,
+      "sys_s": 0.9820060000000002,
+      "minor_faults": 42696,
       "major_faults": 0,
-      "cpu_s": 2.803131,
-      "peak_rss_mb": 484.1640625,
+      "cpu_s": 2.9954700000000005,
+      "peak_rss_mb": 482.19921875,
       "parquet_bytes": 25999982,
-      "loadavg_before": 1.49462890625
+      "loadavg_before": 1.0654296875
      },
      {
-      "import_s": 1.4350522909990104,
-      "gen_s": 2.429667899999913,
-      "write_s": 0.8334966959992016,
-      "total_s": 3.2631645959991147,
+      "import_s": 1.4326523359995917,
+      "gen_s": 2.2340544939979736,
+      "write_s": 0.7983340560022043,
+      "total_s": 3.032388550000178,
       "rows": {
        "facility": 50,
        "patient": 25000,
@@ -173,32 +173,32 @@
        "claim_line": 356250
       },
       "per_table_s": {
-       "facility": 0.12817998900027305,
-       "patient": 0.1978238859992416,
-       "provider": 0.0050823849996959325,
-       "encounter": 0.23807888100054697,
-       "claim": 0.16964315000041097,
-       "diagnosis": 0.7599291909991734,
-       "medication": 0.047287794999647303,
-       "procedure": 0.5388391690012213,
-       "claim_line": 0.17644178999944415,
-       "_compute_phase+business_rules": 0.15951803700045275,
-       "_construct_domain+Spindle()": 0.008843626999805565
+       "facility": 0.13940585599993938,
+       "patient": 0.2059360760031268,
+       "provider": 0.004929588998493273,
+       "encounter": 0.22200629500002833,
+       "claim": 0.1496984830009751,
+       "diagnosis": 0.9111564239974541,
+       "medication": 0.04552634500214481,
+       "procedure": 0.21580999399884604,
+       "claim_line": 0.16968420700140996,
+       "_compute_phase+business_rules": 0.15790178399765864,
+       "_construct_domain+Spindle()": 0.011999440997897182
       },
-      "user_s": 2.062273,
-      "sys_s": 1.147964,
-      "minor_faults": 41814,
+      "user_s": 2.108864,
+      "sys_s": 0.8945029999999999,
+      "minor_faults": 42740,
       "major_faults": 0,
-      "cpu_s": 3.2102370000000002,
-      "peak_rss_mb": 480.08984375,
+      "cpu_s": 3.0033670000000003,
+      "peak_rss_mb": 484.1796875,
       "parquet_bytes": 25999982,
-      "loadavg_before": 1.45458984375
+      "loadavg_before": 1.35009765625
      },
      {
-      "import_s": 1.444732584999656,
-      "gen_s": 2.7216981689998647,
-      "write_s": 0.6875813900005596,
-      "total_s": 3.4092795590004243,
+      "import_s": 1.409937237000122,
+      "gen_s": 2.5927024170014192,
+      "write_s": 0.7011816919984994,
+      "total_s": 3.2938841089999187,
       "rows": {
        "facility": 50,
        "patient": 25000,
@@ -211,32 +211,32 @@
        "claim_line": 356250
       },
       "per_table_s": {
-       "facility": 0.13526113700027054,
-       "patient": 0.27335582399973646,
-       "provider": 0.01593259599940211,
-       "encounter": 0.2697103099999367,
-       "claim": 0.29485310800009756,
-       "diagnosis": 1.0094801880004525,
-       "medication": 0.05813247399964894,
-       "procedure": 0.2530085260004853,
-       "claim_line": 0.21033364499999152,
-       "_compute_phase+business_rules": 0.19245979399966018,
-       "_construct_domain+Spindle()": 0.009170567000182928
+       "facility": 0.12271865300135687,
+       "patient": 0.24590548199921614,
+       "provider": 0.015682105000450974,
+       "encounter": 0.26511018900055205,
+       "claim": 0.24811703500017757,
+       "diagnosis": 1.0149732680001762,
+       "medication": 0.046529302999260835,
+       "procedure": 0.24428628500027116,
+       "claim_line": 0.19367112499821815,
+       "_compute_phase+business_rules": 0.18719160300315707,
+       "_construct_domain+Spindle()": 0.008517368998582242
       },
-      "user_s": 2.1568919999999996,
-      "sys_s": 1.185527,
-      "minor_faults": 42887,
+      "user_s": 2.1181200000000002,
+      "sys_s": 1.128492,
+      "minor_faults": 41645,
       "major_faults": 0,
-      "cpu_s": 3.3424189999999996,
-      "peak_rss_mb": 484.3125,
+      "cpu_s": 3.2466120000000007,
+      "peak_rss_mb": 484.37109375,
       "parquet_bytes": 25999982,
-      "loadavg_before": 1.49853515625
+      "loadavg_before": 1.32177734375
      },
      {
-      "import_s": 1.5630031149994466,
-      "gen_s": 2.3008729970006243,
-      "write_s": 0.9025422529994103,
-      "total_s": 3.2034152500000346,
+      "import_s": 1.4858050709990493,
+      "gen_s": 2.8129734239992104,
+      "write_s": 0.5688385729990841,
+      "total_s": 3.3818119969982945,
       "rows": {
        "facility": 50,
        "patient": 25000,
@@ -249,32 +249,32 @@
        "claim_line": 356250
       },
       "per_table_s": {
-       "facility": 0.14095596100014518,
-       "patient": 0.20344455799931893,
-       "provider": 0.004985818999557523,
-       "encounter": 0.21284504100003687,
-       "claim": 0.148097986000721,
-       "diagnosis": 0.9635082539989526,
-       "medication": 0.044034870001269155,
-       "procedure": 0.22078612499899464,
-       "claim_line": 0.1770703849997517,
-       "_compute_phase+business_rules": 0.1750006600013876,
-       "_construct_domain+Spindle()": 0.010143338000489166
+       "facility": 0.18737095100004808,
+       "patient": 0.4145439549974981,
+       "provider": 0.018707275001361268,
+       "encounter": 0.27501091999874916,
+       "claim": 0.2614093240008515,
+       "diagnosis": 1.0245642740010226,
+       "medication": 0.04375374599840143,
+       "procedure": 0.2124903740004811,
+       "claim_line": 0.17979940300210728,
+       "_compute_phase+business_rules": 0.1853930559991568,
+       "_construct_domain+Spindle()": 0.009930145999533124
       },
-      "user_s": 2.038967,
-      "sys_s": 1.1405830000000001,
-      "minor_faults": 42616,
+      "user_s": 2.200977,
+      "sys_s": 1.16607,
+      "minor_faults": 42485,
       "major_faults": 0,
-      "cpu_s": 3.17955,
-      "peak_rss_mb": 483.17578125,
+      "cpu_s": 3.3670469999999995,
+      "peak_rss_mb": 483.2265625,
       "parquet_bytes": 25999982,
-      "loadavg_before": 1.45849609375
+      "loadavg_before": 1.2958984375
      },
      {
-      "import_s": 1.4486454729994875,
-      "gen_s": 2.0484682229998725,
-      "write_s": 0.8520354209995276,
-      "total_s": 2.9005036439994,
+      "import_s": 1.4625254059974395,
+      "gen_s": 2.401986853998096,
+      "write_s": 0.7679974259990558,
+      "total_s": 3.169984279997152,
       "rows": {
        "facility": 50,
        "patient": 25000,
@@ -287,34 +287,34 @@
        "claim_line": 356250
       },
       "per_table_s": {
-       "facility": 0.13036847799958196,
-       "patient": 0.22493122599917115,
-       "provider": 0.00553348600078607,
-       "encounter": 0.21371213900056318,
-       "claim": 0.15801363099853916,
-       "diagnosis": 0.5949892810003803,
-       "medication": 0.044419945999834454,
-       "procedure": 0.23088659499990172,
-       "claim_line": 0.21197817800020857,
-       "_compute_phase+business_rules": 0.22459232700020948,
-       "_construct_domain+Spindle()": 0.0090429360006965
+       "facility": 0.14318203999937396,
+       "patient": 0.1930643310006417,
+       "provider": 0.005499941999005387,
+       "encounter": 0.23311906399976579,
+       "claim": 0.23789324199969997,
+       "diagnosis": 1.002519626999856,
+       "medication": 0.04094290500142961,
+       "procedure": 0.21047065099992324,
+       "claim_line": 0.17104927900072653,
+       "_compute_phase+business_rules": 0.15473125299831736,
+       "_construct_domain+Spindle()": 0.009514519999356708
       },
-      "user_s": 2.170433,
-      "sys_s": 0.714655,
-      "minor_faults": 43471,
+      "user_s": 1.9878650000000002,
+      "sys_s": 1.155291,
+      "minor_faults": 42076,
       "major_faults": 0,
-      "cpu_s": 2.885088,
-      "peak_rss_mb": 483.60546875,
+      "cpu_s": 3.1431560000000003,
+      "peak_rss_mb": 481.6328125,
       "parquet_bytes": 25999982,
-      "loadavg_before": 1.4677734375
+      "loadavg_before": 1.27197265625
      }
     ],
     "shape": [
      {
-      "import_s": 0.43262568899990583,
-      "gen_s": 0.3453911570013588,
+      "import_s": 0.422216611001204,
+      "gen_s": 0.3229218950000359,
       "write_s": 0.0,
-      "total_s": 0.3453911570013588,
+      "total_s": 0.3229218950000359,
       "overlapped": true,
       "rows": {
        "facility": 50,
@@ -328,25 +328,25 @@
        "claim_line": 356250
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.011049690001527779,
-       "_generate+write": 0.334341466999831
+       "_construct_domain+Engine": 0.01048664400150301,
+       "_generate+write": 0.31243525099853287
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.687655,
-      "sys_s": 0.13529199999999997,
-      "minor_faults": 43221,
+      "user_s": 0.6729550000000001,
+      "sys_s": 0.15361599999999997,
+      "minor_faults": 43167,
       "major_faults": 0,
-      "cpu_s": 0.822947,
-      "peak_rss_mb": 285.7890625,
+      "cpu_s": 0.8265710000000001,
+      "peak_rss_mb": 286.390625,
       "parquet_bytes": 25686933,
-      "loadavg_before": 1.45458984375
+      "loadavg_before": 1.380859375
      },
      {
-      "import_s": 0.46170737799911876,
-      "gen_s": 0.4648212060001242,
+      "import_s": 0.5331859269972483,
+      "gen_s": 0.38143505200059735,
       "write_s": 0.0,
-      "total_s": 0.4648212060001242,
+      "total_s": 0.38143505200059735,
       "overlapped": true,
       "rows": {
        "facility": 50,
@@ -360,25 +360,25 @@
        "claim_line": 356250
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.01008457199895929,
-       "_generate+write": 0.45473663400116493
+       "_construct_domain+Engine": 0.015429283001139993,
+       "_generate+write": 0.36600576899945736
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.8122700000000002,
-      "sys_s": 0.15984399999999999,
-      "minor_faults": 43413,
+      "user_s": 0.741229,
+      "sys_s": 0.191043,
+      "minor_faults": 43824,
       "major_faults": 0,
-      "cpu_s": 0.972114,
-      "peak_rss_mb": 286.55078125,
+      "cpu_s": 0.932272,
+      "peak_rss_mb": 289.0,
       "parquet_bytes": 25686933,
-      "loadavg_before": 1.49853515625
+      "loadavg_before": 1.32177734375
      },
      {
-      "import_s": 0.5097062990007544,
-      "gen_s": 0.38018334499975026,
+      "import_s": 0.4965012979992025,
+      "gen_s": 0.35741586400035885,
       "write_s": 0.0,
-      "total_s": 0.38018334499975026,
+      "total_s": 0.35741586400035885,
       "overlapped": true,
       "rows": {
        "facility": 50,
@@ -392,25 +392,25 @@
        "claim_line": 356250
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.01514917799977411,
-       "_generate+write": 0.36503416699997615
+       "_construct_domain+Engine": 0.012134977998357499,
+       "_generate+write": 0.34528088600200135
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.721232,
-      "sys_s": 0.17120599999999997,
-      "minor_faults": 43269,
+      "user_s": 0.7073410000000001,
+      "sys_s": 0.17630699999999996,
+      "minor_faults": 43041,
       "major_faults": 0,
-      "cpu_s": 0.892438,
-      "peak_rss_mb": 285.765625,
+      "cpu_s": 0.883648,
+      "peak_rss_mb": 285.94140625,
       "parquet_bytes": 25686933,
-      "loadavg_before": 1.45849609375
+      "loadavg_before": 1.2958984375
      },
      {
-      "import_s": 0.5362563859998772,
-      "gen_s": 0.3866722380007559,
+      "import_s": 0.45365639200099395,
+      "gen_s": 0.3385952720018395,
       "write_s": 0.0,
-      "total_s": 0.3866722380007559,
+      "total_s": 0.3385952720018395,
       "overlapped": true,
       "rows": {
        "facility": 50,
@@ -424,25 +424,25 @@
        "claim_line": 356250
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.011645267999483622,
-       "_generate+write": 0.3750269700012723
+       "_construct_domain+Engine": 0.01116119600192178,
+       "_generate+write": 0.3274340759999177
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.7210380000000001,
-      "sys_s": 0.190185,
-      "minor_faults": 44281,
+      "user_s": 0.695972,
+      "sys_s": 0.152995,
+      "minor_faults": 44160,
       "major_faults": 0,
-      "cpu_s": 0.911223,
-      "peak_rss_mb": 289.59375,
+      "cpu_s": 0.8489670000000001,
+      "peak_rss_mb": 290.31640625,
       "parquet_bytes": 25686933,
-      "loadavg_before": 1.42138671875
+      "loadavg_before": 1.27197265625
      },
      {
-      "import_s": 0.4100715390013647,
-      "gen_s": 0.41093595899837965,
+      "import_s": 0.42223648200160824,
+      "gen_s": 0.3398394400028337,
       "write_s": 0.0,
-      "total_s": 0.41093595899837965,
+      "total_s": 0.3398394400028337,
       "overlapped": true,
       "rows": {
        "facility": 50,
@@ -456,19 +456,19 @@
        "claim_line": 356250
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.016982139999527135,
-       "_generate+write": 0.3939538189988525
+       "_construct_domain+Engine": 0.009422180002729874,
+       "_generate+write": 0.33041726000010385
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.760264,
-      "sys_s": 0.188437,
-      "minor_faults": 43734,
+      "user_s": 0.671917,
+      "sys_s": 0.18372499999999997,
+      "minor_faults": 43236,
       "major_faults": 0,
-      "cpu_s": 0.948701,
-      "peak_rss_mb": 287.71875,
+      "cpu_s": 0.855642,
+      "peak_rss_mb": 286.53125,
       "parquet_bytes": 25686933,
-      "loadavg_before": 1.43017578125
+      "loadavg_before": 1.25
      }
     ]
    }

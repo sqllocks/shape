@@ -5325,6 +5325,6 @@
    "(h) fidelity purchase_order_line: 97.65 < floor 97.67"
   ],
   "passed": false,
-  "seconds": 20.709539651870728
+  "seconds": 11.314992904663086
  }
 }

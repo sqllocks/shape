@@ -4,58 +4,58 @@
   "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
   "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
   "python": "3.11.15",
-  "started": "2026-10-02 11:42:30",
+  "started": "2026-10-02 13:52:40",
   "impl": "shape",
   "domain": "real_estate",
   "runs": 5,
   "warmup": 1,
   "ref_seed": 42,
   "impl_seed": 1042,
-  "loadavg_start": 0.984375
+  "loadavg_start": 1.08935546875
  },
  "scales": {
   "medium": {
    "summary": {
     "spindle": {
-     "total_s": 0.44140790199890034,
-     "gen_s": 0.32474752300004184,
-     "write_s": 0.12573905099998228,
-     "cpu_s": 0.44026299999999985,
-     "user_s": 0.38043000000000005,
-     "sys_s": 0.10728599999999999,
-     "minor_faults": 10396,
-     "import_s": 1.3695089820012072,
-     "peak_rss_mb": 281.8359375,
+     "total_s": 0.5519211049977457,
+     "gen_s": 0.3525176699986332,
+     "write_s": 0.19011276099990937,
+     "cpu_s": 0.5411579999999998,
+     "user_s": 0.3826940000000001,
+     "sys_s": 0.17367099999999996,
+     "minor_faults": 10409,
+     "import_s": 1.5717051430001447,
+     "peak_rss_mb": 281.87109375,
      "parquet_bytes": 4397775,
      "rows": 140650,
-     "rows_per_s_total": 318639.5154302208,
-     "rows_per_s_generate": 433105.68992386706,
+     "rows_per_s_total": 254837.14742268185,
+     "rows_per_s_generate": 398987.0919110107,
      "runs_total_s": [
-      0.677,
-      0.432,
-      0.412,
-      0.441,
-      0.652
+      0.558,
+      0.552,
+      0.495,
+      0.774,
+      0.488
      ],
      "loadavg_before": [
-      1.38623046875,
-      1.38623046875,
-      1.35498046875,
-      1.35498046875,
-      1.21923828125
+      1.08935546875,
+      1.08203125,
+      1.0751953125,
+      1.0751953125,
+      1.06884765625
      ],
      "per_table_s_median": {
-      "agent": 0.012487673999203253,
-      "neighborhood": 0.12334357400141016,
-      "property": 0.015580636001686798,
-      "listing": 0.038118271999337594,
-      "offer": 0.011669506000544061,
-      "showing": 0.1011594920000789,
-      "transaction": 0.00901490500109503,
-      "appraisal": 0.006628999999520602,
-      "inspection": 0.007116860000678571,
-      "_compute_phase+business_rules": 0.000851744000101462,
-      "_construct_domain+Spindle()": 0.008788413999354816
+      "agent": 0.012939078998897457,
+      "neighborhood": 0.12493038899992825,
+      "property": 0.02096973399966373,
+      "listing": 0.04372680999949807,
+      "offer": 0.015854395998758264,
+      "showing": 0.0886534359997313,
+      "transaction": 0.007919847001176095,
+      "appraisal": 0.006449259999499191,
+      "inspection": 0.007355421999818645,
+      "_compute_phase+business_rules": 0.0009028360000229441,
+      "_construct_domain+Spindle()": 0.00983002800057875
      },
      "row_counts": {
       "agent": 100,
@@ -70,36 +70,36 @@
      }
     },
     "shape": {
-     "total_s": 0.08318668600077217,
-     "gen_s": 0.08318668600077217,
+     "total_s": 0.08310831099879579,
+     "gen_s": 0.08310831099879579,
      "write_s": 0.0,
-     "cpu_s": 0.15330599999999994,
-     "user_s": 0.11216499999999996,
-     "sys_s": 0.053863,
-     "minor_faults": 9019,
-     "import_s": 0.4714453760007018,
-     "peak_rss_mb": 152.328125,
+     "cpu_s": 0.15991899999999992,
+     "user_s": 0.11888199999999993,
+     "sys_s": 0.044938000000000006,
+     "minor_faults": 8701,
+     "import_s": 0.4304272289991786,
+     "peak_rss_mb": 151.359375,
      "parquet_bytes": 4963086,
      "rows": 140650,
-     "rows_per_s_total": 1690775.3723798352,
-     "rows_per_s_generate": 1690775.3723798352,
+     "rows_per_s_total": 1692369.8521804633,
+     "rows_per_s_generate": 1692369.8521804633,
      "runs_total_s": [
-      0.086,
-      0.086,
-      0.079,
       0.083,
-      0.081
+      0.082,
+      0.084,
+      0.08,
+      0.088
      ],
      "loadavg_before": [
-      1.38623046875,
-      1.35498046875,
-      1.35498046875,
-      1.21923828125,
-      1.21923828125
+      1.08203125,
+      1.0751953125,
+      1.0751953125,
+      1.06884765625,
+      1.06298828125
      ],
      "per_table_s_median": {
-      "_construct_domain+Engine": 0.009629715999835753,
-      "_generate+write": 0.07276422500035551
+      "_construct_domain+Engine": 0.00942964399655466,
+      "_generate+write": 0.07381358699785778
      },
      "row_counts": {
       "agent": 100,
@@ -119,10 +119,10 @@
    "raw": {
     "spindle": [
      {
-      "import_s": 1.3043516289999388,
-      "gen_s": 0.4301761639999313,
-      "write_s": 0.2468850069999462,
-      "total_s": 0.6770611709998775,
+      "import_s": 1.485997874999157,
+      "gen_s": 0.3215098410000792,
+      "write_s": 0.23690068799987785,
+      "total_s": 0.558410528999957,
       "rows": {
        "agent": 100,
        "neighborhood": 50,
@@ -135,32 +135,32 @@
        "inspection": 6000
       },
       "per_table_s": {
-       "agent": 0.03440592100014328,
-       "neighborhood": 0.12550233299953106,
-       "property": 0.036852481000096304,
-       "listing": 0.04834371900142287,
-       "offer": 0.023673352998230257,
-       "showing": 0.12815367600160243,
-       "transaction": 0.00981928299916035,
-       "appraisal": 0.006628999999520602,
-       "inspection": 0.006463501000325778,
-       "_compute_phase+business_rules": 0.000851744000101462,
-       "_construct_domain+Spindle()": 0.009481152999796905
+       "agent": 0.012267674999748124,
+       "neighborhood": 0.12493038899992825,
+       "property": 0.016490029000124196,
+       "listing": 0.03554707099829102,
+       "offer": 0.01229285600129515,
+       "showing": 0.07732354899781058,
+       "transaction": 0.00788086800093879,
+       "appraisal": 0.012177065000287257,
+       "inspection": 0.011876079999638023,
+       "_compute_phase+business_rules": 0.0011010480011464097,
+       "_construct_domain+Spindle()": 0.009623211000871379
       },
-      "user_s": 0.3853049999999998,
-      "sys_s": 0.289532,
-      "minor_faults": 10396,
+      "user_s": 0.3826940000000001,
+      "sys_s": 0.17367099999999996,
+      "minor_faults": 10407,
       "major_faults": 0,
-      "cpu_s": 0.6748369999999999,
-      "peak_rss_mb": 281.6796875,
+      "cpu_s": 0.556365,
+      "peak_rss_mb": 281.890625,
       "parquet_bytes": 4397775,
-      "loadavg_before": 1.38623046875
+      "loadavg_before": 1.08935546875
      },
      {
-      "import_s": 1.412043795999125,
-      "gen_s": 0.30599492600049416,
-      "write_s": 0.12573905099998228,
-      "total_s": 0.43173397700047644,
+      "import_s": 1.5717051430001447,
+      "gen_s": 0.4165682659986487,
+      "write_s": 0.135352838999097,
+      "total_s": 0.5519211049977457,
       "rows": {
        "agent": 100,
        "neighborhood": 50,
@@ -173,32 +173,32 @@
        "inspection": 6000
       },
       "per_table_s": {
-       "agent": 0.012487673999203253,
-       "neighborhood": 0.12647032499990019,
-       "property": 0.014550517000316177,
-       "listing": 0.038118271999337594,
-       "offer": 0.01165834100174834,
-       "showing": 0.07235464899895305,
-       "transaction": 0.0072925439999380615,
-       "appraisal": 0.005760091000411194,
-       "inspection": 0.007116860000678571,
-       "_compute_phase+business_rules": 0.0007532119998359121,
-       "_construct_domain+Spindle()": 0.00943244100017182
+       "agent": 0.023862191999796778,
+       "neighborhood": 0.12108225799966021,
+       "property": 0.04287023200231488,
+       "listing": 0.05102959599753376,
+       "offer": 0.023947530000441475,
+       "showing": 0.12415302400040673,
+       "transaction": 0.007523462001699954,
+       "appraisal": 0.006074078999517951,
+       "inspection": 0.006099409998569172,
+       "_compute_phase+business_rules": 0.0007720020003034733,
+       "_construct_domain+Spindle()": 0.009154480998404324
       },
-      "user_s": 0.3256640000000002,
-      "sys_s": 0.10728599999999999,
-      "minor_faults": 10395,
+      "user_s": 0.35456299999999996,
+      "sys_s": 0.186595,
+      "minor_faults": 10413,
       "major_faults": 0,
-      "cpu_s": 0.43295000000000017,
-      "peak_rss_mb": 281.65625,
+      "cpu_s": 0.5411579999999998,
+      "peak_rss_mb": 281.87109375,
       "parquet_bytes": 4397775,
-      "loadavg_before": 1.38623046875
+      "loadavg_before": 1.08203125
      },
      {
-      "import_s": 1.3695089820012072,
-      "gen_s": 0.2925059169992892,
-      "write_s": 0.11947416200018779,
-      "total_s": 0.411980078999477,
+      "import_s": 1.7015717979993497,
+      "gen_s": 0.3525176699986332,
+      "write_s": 0.14213168200149084,
+      "total_s": 0.49464935200012405,
       "rows": {
        "agent": 100,
        "neighborhood": 50,
@@ -211,32 +211,32 @@
        "inspection": 6000
       },
       "per_table_s": {
-       "agent": 0.012216122000609175,
-       "neighborhood": 0.11770542999875033,
-       "property": 0.015580636001686798,
-       "listing": 0.03560411699982069,
-       "offer": 0.01111559599848988,
-       "showing": 0.07060025700047845,
-       "transaction": 0.008093402000667993,
-       "appraisal": 0.005803932999697281,
-       "inspection": 0.006225171999176382,
-       "_compute_phase+business_rules": 0.0007728380005573854,
-       "_construct_domain+Spindle()": 0.008788413999354816
+       "agent": 0.012939078998897457,
+       "neighborhood": 0.13562647200160427,
+       "property": 0.02096973399966373,
+       "listing": 0.04372680999949807,
+       "offer": 0.015854395998758264,
+       "showing": 0.0886534359997313,
+       "transaction": 0.008354058001714293,
+       "appraisal": 0.0071140920008474495,
+       "inspection": 0.007577963999210624,
+       "_compute_phase+business_rules": 0.0009028360000229441,
+       "_construct_domain+Spindle()": 0.010798792998684803
       },
-      "user_s": 0.3562179999999999,
-      "sys_s": 0.05665499999999998,
-      "minor_faults": 10410,
+      "user_s": 0.411845,
+      "sys_s": 0.06711999999999999,
+      "minor_faults": 10404,
       "major_faults": 0,
-      "cpu_s": 0.41287300000000005,
-      "peak_rss_mb": 281.8359375,
+      "cpu_s": 0.4789650000000001,
+      "peak_rss_mb": 282.140625,
       "parquet_bytes": 4397775,
-      "loadavg_before": 1.35498046875
+      "loadavg_before": 1.0751953125
      },
      {
-      "import_s": 1.4363285990002623,
-      "gen_s": 0.32474752300004184,
-      "write_s": 0.1166603789988585,
-      "total_s": 0.44140790199890034,
+      "import_s": 1.5025873680024233,
+      "gen_s": 0.5443239650012401,
+      "write_s": 0.22922602099788492,
+      "total_s": 0.7735499859991251,
       "rows": {
        "agent": 100,
        "neighborhood": 50,
@@ -249,32 +249,32 @@
        "inspection": 6000
       },
       "per_table_s": {
-       "agent": 0.010660747999281739,
-       "neighborhood": 0.11031852599990088,
-       "property": 0.014646276000348735,
-       "listing": 0.03555450099884183,
-       "offer": 0.011669506000544061,
-       "showing": 0.1011594920000789,
-       "transaction": 0.010419305001050816,
-       "appraisal": 0.00989250799830188,
-       "inspection": 0.010851484001250356,
-       "_compute_phase+business_rules": 0.0011023759998352034,
-       "_construct_domain+Spindle()": 0.008472801000607433
+       "agent": 0.025025069000548683,
+       "neighborhood": 0.1656879949987342,
+       "property": 0.05050282500087633,
+       "listing": 0.07683130899749813,
+       "offer": 0.03698147500108462,
+       "showing": 0.15624661399851902,
+       "transaction": 0.008497562001139158,
+       "appraisal": 0.006449259999499191,
+       "inspection": 0.007355421999818645,
+       "_compute_phase+business_rules": 0.000916406002943404,
+       "_construct_domain+Spindle()": 0.00983002800057875
       },
-      "user_s": 0.38043000000000005,
-      "sys_s": 0.059833,
-      "minor_faults": 10396,
+      "user_s": 0.47831800000000024,
+      "sys_s": 0.294563,
+      "minor_faults": 10412,
       "major_faults": 0,
-      "cpu_s": 0.44026299999999985,
-      "peak_rss_mb": 282.12109375,
+      "cpu_s": 0.7728809999999999,
+      "peak_rss_mb": 281.7109375,
       "parquet_bytes": 4397775,
-      "loadavg_before": 1.35498046875
+      "loadavg_before": 1.0751953125
      },
      {
-      "import_s": 1.3427155279987346,
-      "gen_s": 0.4181774070002575,
-      "write_s": 0.234067628000048,
-      "total_s": 0.6522450350003055,
+      "import_s": 1.6133492589979141,
+      "gen_s": 0.2978364020018489,
+      "write_s": 0.19011276099990937,
+      "total_s": 0.4879491630017583,
       "rows": {
        "agent": 100,
        "neighborhood": 50,
@@ -287,34 +287,34 @@
        "inspection": 6000
       },
       "per_table_s": {
-       "agent": 0.012506834998930572,
-       "neighborhood": 0.12334357400141016,
-       "property": 0.03852059099881444,
-       "listing": 0.04922205600087182,
-       "offer": 0.025157422000120278,
-       "showing": 0.13393284299854713,
-       "transaction": 0.00901490500109503,
-       "appraisal": 0.008826527000564965,
-       "inspection": 0.008049539999774424,
-       "_compute_phase+business_rules": 0.0008695420001458842,
-       "_construct_domain+Spindle()": 0.008733571999982814
+       "agent": 0.01195750600163592,
+       "neighborhood": 0.11985354100033874,
+       "property": 0.016130719999637222,
+       "listing": 0.034933408998767845,
+       "offer": 0.011885373001859989,
+       "showing": 0.06923869099773583,
+       "transaction": 0.007919847001176095,
+       "appraisal": 0.006307555999228498,
+       "inspection": 0.007161661000282038,
+       "_compute_phase+business_rules": 0.0008406320011999924,
+       "_construct_domain+Spindle()": 0.011607465999986744
       },
-      "user_s": 0.3886189999999998,
-      "sys_s": 0.257352,
-      "minor_faults": 10408,
+      "user_s": 0.37782000000000027,
+      "sys_s": 0.11127800000000002,
+      "minor_faults": 10409,
       "major_faults": 0,
-      "cpu_s": 0.6459710000000001,
-      "peak_rss_mb": 282.01953125,
+      "cpu_s": 0.48909800000000025,
+      "peak_rss_mb": 281.70703125,
       "parquet_bytes": 4397775,
-      "loadavg_before": 1.21923828125
+      "loadavg_before": 1.06884765625
      }
     ],
     "shape": [
      {
-      "import_s": 0.5208533719996922,
-      "gen_s": 0.0855833919995348,
+      "import_s": 0.4304272289991786,
+      "gen_s": 0.08310831099879579,
       "write_s": 0.0,
-      "total_s": 0.0855833919995348,
+      "total_s": 0.08310831099879579,
       "overlapped": true,
       "rows": {
        "agent": 100,
@@ -328,25 +328,25 @@
        "inspection": 6000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.009629715999835753,
-       "_generate+write": 0.07595367599969904
+       "_construct_domain+Engine": 0.009294724000938004,
+       "_generate+write": 0.07381358699785778
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.13200600000000007,
-      "sys_s": 0.03458900000000001,
-      "minor_faults": 9057,
+      "user_s": 0.10561599999999993,
+      "sys_s": 0.05430299999999999,
+      "minor_faults": 8701,
       "major_faults": 0,
-      "cpu_s": 0.16659500000000005,
-      "peak_rss_mb": 152.328125,
+      "cpu_s": 0.15991899999999992,
+      "peak_rss_mb": 151.48828125,
       "parquet_bytes": 4963086,
-      "loadavg_before": 1.38623046875
+      "loadavg_before": 1.08203125
      },
      {
-      "import_s": 0.4600354409994907,
-      "gen_s": 0.08565892900151084,
+      "import_s": 0.4712585389970627,
+      "gen_s": 0.0822755569970468,
       "write_s": 0.0,
-      "total_s": 0.08565892900151084,
+      "total_s": 0.0822755569970468,
       "overlapped": true,
       "rows": {
        "agent": 100,
@@ -360,25 +360,25 @@
        "inspection": 6000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.009956629000953399,
-       "_generate+write": 0.07570230000055744
+       "_construct_domain+Engine": 0.009034416998474626,
+       "_generate+write": 0.07324113999857218
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.12080499999999994,
-      "sys_s": 0.02481,
-      "minor_faults": 8971,
+      "user_s": 0.133718,
+      "sys_s": 0.025308999999999998,
+      "minor_faults": 8587,
       "major_faults": 0,
-      "cpu_s": 0.14561499999999994,
-      "peak_rss_mb": 152.4140625,
+      "cpu_s": 0.15902700000000003,
+      "peak_rss_mb": 150.640625,
       "parquet_bytes": 4963086,
-      "loadavg_before": 1.35498046875
+      "loadavg_before": 1.0751953125
      },
      {
-      "import_s": 0.4714453760007018,
-      "gen_s": 0.07895593700050085,
+      "import_s": 0.42590679299974,
+      "gen_s": 0.08414800099853892,
       "write_s": 0.0,
-      "total_s": 0.07895593700050085,
+      "total_s": 0.08414800099853892,
       "overlapped": true,
       "rows": {
        "agent": 100,
@@ -392,25 +392,25 @@
        "inspection": 6000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.008764594000240322,
-       "_generate+write": 0.07019134300026053
+       "_construct_domain+Engine": 0.00942964399655466,
+       "_generate+write": 0.07471835700198426
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.08366099999999999,
-      "sys_s": 0.063903,
-      "minor_faults": 9202,
+      "user_s": 0.11888199999999993,
+      "sys_s": 0.044938000000000006,
+      "minor_faults": 8839,
       "major_faults": 0,
-      "cpu_s": 0.14756400000000003,
-      "peak_rss_mb": 153.19140625,
+      "cpu_s": 0.16381999999999985,
+      "peak_rss_mb": 151.68359375,
       "parquet_bytes": 4963086,
-      "loadavg_before": 1.35498046875
+      "loadavg_before": 1.0751953125
      },
      {
-      "import_s": 0.5050419409999449,
-      "gen_s": 0.08318668600077217,
+      "import_s": 0.5024048769992078,
+      "gen_s": 0.08048014499945566,
       "write_s": 0.0,
-      "total_s": 0.08318668600077217,
+      "total_s": 0.08048014499945566,
       "overlapped": true,
       "rows": {
        "agent": 100,
@@ -424,25 +424,25 @@
        "inspection": 6000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.011495078000734793,
-       "_generate+write": 0.07169160800003738
+       "_construct_domain+Engine": 0.009921883000060916,
+       "_generate+write": 0.07055826199939474
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.09605600000000003,
-      "sys_s": 0.057249999999999995,
-      "minor_faults": 9019,
+      "user_s": 0.12791600000000003,
+      "sys_s": 0.024577,
+      "minor_faults": 8805,
       "major_faults": 0,
-      "cpu_s": 0.15330599999999994,
-      "peak_rss_mb": 152.3046875,
+      "cpu_s": 0.1524930000000001,
+      "peak_rss_mb": 151.359375,
       "parquet_bytes": 4963086,
-      "loadavg_before": 1.21923828125
+      "loadavg_before": 1.06884765625
      },
      {
-      "import_s": 0.4678447670012247,
-      "gen_s": 0.08092242400016403,
+      "import_s": 0.41295257800084073,
+      "gen_s": 0.08841786300035892,
       "write_s": 0.0,
-      "total_s": 0.08092242400016403,
+      "total_s": 0.08841786300035892,
       "overlapped": true,
       "rows": {
        "agent": 100,
@@ -456,19 +456,19 @@
        "inspection": 6000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.00815819899980852,
-       "_generate+write": 0.07276422500035551
+       "_construct_domain+Engine": 0.010380595002061455,
+       "_generate+write": 0.07803726799829747
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.11216499999999996,
-      "sys_s": 0.053863,
-      "minor_faults": 8986,
+      "user_s": 0.10830499999999998,
+      "sys_s": 0.05696699999999999,
+      "minor_faults": 8636,
       "major_faults": 0,
-      "cpu_s": 0.16602799999999995,
-      "peak_rss_mb": 152.18359375,
+      "cpu_s": 0.16527199999999997,
+      "peak_rss_mb": 151.05859375,
       "parquet_bytes": 4963086,
-      "loadavg_before": 1.21923828125
+      "loadavg_before": 1.06298828125
      }
     ]
    }

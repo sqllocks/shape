@@ -1,18 +1,18 @@
-[medium] spindle          warm-up 1: total 2.96s
+[medium] spindle          warm-up 1: total 3.32s
 [medium] shape            warm-up 1: total 0.39s
-[medium] spindle          run 1: total 2.99s  gen 1.98s  write 1.01s  rss 489MB  load 1.21
-[medium] shape            run 1: total 0.33s  gen 0.33s  write 0.00s  rss 275MB  load 1.18
-[medium] spindle          run 2: total 3.25s  gen 2.28s  write 0.97s  rss 489MB  load 1.29
-[medium] shape            run 2: total 0.36s  gen 0.36s  write 0.00s  rss 274MB  load 1.26
-[medium] spindle          run 3: total 3.24s  gen 2.24s  write 1.00s  rss 490MB  load 1.26
-[medium] shape            run 3: total 0.34s  gen 0.34s  write 0.00s  rss 277MB  load 1.24
-[medium] spindle          run 4: total 2.82s  gen 1.99s  write 0.83s  rss 489MB  load 1.24
-[medium] shape            run 4: total 0.33s  gen 0.33s  write 0.00s  rss 276MB  load 1.30
-[medium] spindle          run 5: total 2.73s  gen 1.89s  write 0.83s  rss 489MB  load 1.30
-[medium] shape            run 5: total 0.32s  gen 0.32s  write 0.00s  rss 276MB  load 1.28
+[medium] spindle          run 1: total 3.33s  gen 2.23s  write 1.10s  rss 489MB  load 1.05
+[medium] shape            run 1: total 0.36s  gen 0.36s  write 0.00s  rss 294MB  load 1.04
+[medium] spindle          run 2: total 3.04s  gen 1.92s  write 1.12s  rss 489MB  load 1.04
+[medium] shape            run 2: total 0.34s  gen 0.34s  write 0.00s  rss 294MB  load 1.04
+[medium] spindle          run 3: total 3.03s  gen 1.96s  write 1.08s  rss 490MB  load 1.04
+[medium] shape            run 3: total 0.36s  gen 0.36s  write 0.00s  rss 295MB  load 1.04
+[medium] spindle          run 4: total 3.05s  gen 2.07s  write 0.97s  rss 490MB  load 1.04
+[medium] shape            run 4: total 0.36s  gen 0.36s  write 0.00s  rss 296MB  load 1.03
+[medium] spindle          run 5: total 3.07s  gen 1.73s  write 1.34s  rss 490MB  load 1.27
+[medium] shape            run 5: total 0.40s  gen 0.40s  write 0.00s  rss 299MB  load 1.25
 
 == financial medium: median of 5 fresh-process runs, 4 cores
 tool                     rows  total s   gen s  write s  rows/s total   rows/s gen  peak RSS MB
-spindle             1,678,240     2.99    1.99     0.97       560,936      842,898          489
-shape               1,678,240     0.33    0.33     0.00     5,063,237    5,063,237          276
-speedup (shape vs spindle): total 9.03x
+spindle             1,678,240     3.05    1.96     1.10       550,561      857,384          490
+shape               1,678,240     0.36    0.36     0.00     4,668,399    4,668,399          295
+speedup (shape vs spindle): total 8.48x

@@ -4,59 +4,59 @@
   "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
   "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
   "python": "3.11.15",
-  "started": "2026-10-02 11:52:26",
+  "started": "2026-10-02 13:59:59",
   "impl": "shape",
   "domain": "financial",
   "runs": 5,
   "warmup": 1,
   "ref_seed": 42,
   "impl_seed": 1042,
-  "loadavg_start": 1.232421875
+  "loadavg_start": 1.0546875
  },
  "scales": {
   "medium": {
    "summary": {
     "spindle": {
-     "total_s": 2.9918584209990513,
-     "gen_s": 1.9910364630013646,
-     "write_s": 0.9706683339991287,
-     "cpu_s": 2.9612329999999996,
-     "user_s": 2.038348,
-     "sys_s": 0.744856,
-     "minor_faults": 41219,
-     "import_s": 1.3535743089996686,
-     "peak_rss_mb": 489.05078125,
+     "total_s": 3.0482341019996966,
+     "gen_s": 1.9573950350022642,
+     "write_s": 1.0972533599997405,
+     "cpu_s": 3.039599,
+     "user_s": 2.1889140000000005,
+     "sys_s": 0.8354769999999999,
+     "minor_faults": 40576,
+     "import_s": 1.4750958619988523,
+     "peak_rss_mb": 489.734375,
      "parquet_bytes": 70638596,
      "rows": 1678240,
-     "rows_per_s_total": 560935.6339260186,
-     "rows_per_s_generate": 842897.6722355736,
+     "rows_per_s_total": 550561.3886082582,
+     "rows_per_s_generate": 857384.4165278873,
      "runs_total_s": [
-      2.992,
-      3.254,
-      3.241,
-      2.822,
-      2.725
+      3.331,
+      3.045,
+      3.033,
+      3.048,
+      3.075
      ],
      "loadavg_before": [
-      1.21337890625,
-      1.287109375,
-      1.263671875,
-      1.2421875,
-      1.30322265625
+      1.0458984375,
+      1.0419921875,
+      1.03857421875,
+      1.03515625,
+      1.27001953125
      ],
      "per_table_s_median": {
-      "branch": 0.12282137799957127,
-      "transaction_category": 0.001677562999248039,
-      "customer": 0.1753559859989764,
-      "account": 0.0896838310000021,
-      "loan": 0.012789970000085304,
-      "card": 0.1373203459988872,
-      "loan_payment": 0.11970699899939063,
-      "statement": 0.4697568120009237,
-      "transaction": 0.8978088699986984,
-      "fraud_flag": 0.006579480001164484,
-      "_compute_phase+business_rules": 0.00011941699995077215,
-      "_construct_domain+Spindle()": 0.009248591000869055
+      "branch": 0.1328783890021441,
+      "transaction_category": 0.002143731999240117,
+      "customer": 0.1717072179999377,
+      "account": 0.06674724399999832,
+      "loan": 0.013519582000299124,
+      "card": 0.132271087000845,
+      "loan_payment": 0.11989035700025852,
+      "statement": 0.43644484700053,
+      "transaction": 0.8765660000026401,
+      "fraud_flag": 0.007118328001524787,
+      "_compute_phase+business_rules": 0.00011893800183315761,
+      "_construct_domain+Spindle()": 0.010053426001832122
      },
      "row_counts": {
       "branch": 200,
@@ -72,36 +72,36 @@
      }
     },
     "shape": {
-     "total_s": 0.3314559329992335,
-     "gen_s": 0.3314559329992335,
+     "total_s": 0.359489427999506,
+     "gen_s": 0.359489427999506,
      "write_s": 0.0,
-     "cpu_s": 0.902487,
-     "user_s": 0.7313310000000001,
-     "sys_s": 0.15348199999999998,
-     "minor_faults": 40448,
-     "import_s": 0.40138116300113325,
-     "peak_rss_mb": 275.578125,
+     "cpu_s": 1.020654,
+     "user_s": 0.817651,
+     "sys_s": 0.193606,
+     "minor_faults": 45516,
+     "import_s": 0.4735630939976545,
+     "peak_rss_mb": 295.4453125,
      "parquet_bytes": 68164399,
      "rows": 1678240,
-     "rows_per_s_total": 5063237.169460717,
-     "rows_per_s_generate": 5063237.169460717,
+     "rows_per_s_total": 4668398.760261473,
+     "rows_per_s_generate": 4668398.760261473,
      "runs_total_s": [
-      0.331,
-      0.362,
-      0.342,
-      0.331,
-      0.32
+      0.359,
+      0.34,
+      0.356,
+      0.363,
+      0.399
      ],
      "loadavg_before": [
-      1.1806640625,
-      1.263671875,
-      1.2421875,
-      1.30322265625,
-      1.27880859375
+      1.0419921875,
+      1.03857421875,
+      1.03515625,
+      1.0322265625,
+      1.248046875
      ],
      "per_table_s_median": {
-      "_construct_domain+Engine": 0.009290277001127834,
-      "_generate+write": 0.3222155120001844
+      "_construct_domain+Engine": 0.010685777000617236,
+      "_generate+write": 0.34863574799965136
      },
      "row_counts": {
       "branch": 200,
@@ -122,10 +122,10 @@
    "raw": {
     "spindle": [
      {
-      "import_s": 1.4764950429998862,
-      "gen_s": 1.9771261019996018,
-      "write_s": 1.0147323189994495,
-      "total_s": 2.9918584209990513,
+      "import_s": 1.4750958619988523,
+      "gen_s": 2.234141807999549,
+      "write_s": 1.0972533599997405,
+      "total_s": 3.3313951679992897,
       "rows": {
        "branch": 200,
        "transaction_category": 40,
@@ -139,33 +139,33 @@
        "fraud_flag": 10000
       },
       "per_table_s": {
-       "branch": 0.13520144199901551,
-       "transaction_category": 0.0017073650014935993,
-       "customer": 0.1753559859989764,
-       "account": 0.11356563200024539,
-       "loan": 0.02300436599944078,
-       "card": 0.1500451370011433,
-       "loan_payment": 0.10994836099962413,
-       "statement": 0.3183383550003782,
-       "transaction": 0.9325294109985407,
-       "fraud_flag": 0.007622027000252274,
-       "_compute_phase+business_rules": 0.00012278800022613723,
-       "_construct_domain+Spindle()": 0.009685232000265387
+       "branch": 0.1328783890021441,
+       "transaction_category": 0.0023063169974193443,
+       "customer": 0.1710738660003699,
+       "account": 0.07093188400176587,
+       "loan": 0.012833408000005875,
+       "card": 0.14506182900004205,
+       "loan_payment": 0.18982701099957922,
+       "statement": 0.6147099599984358,
+       "transaction": 0.8765660000026401,
+       "fraud_flag": 0.0069093399979465175,
+       "_compute_phase+business_rules": 0.00011893800183315761,
+       "_construct_domain+Spindle()": 0.010924865997367306
       },
-      "user_s": 2.216377,
-      "sys_s": 0.744856,
-      "minor_faults": 40877,
+      "user_s": 2.1889140000000005,
+      "sys_s": 1.123868,
+      "minor_faults": 40576,
       "major_faults": 0,
-      "cpu_s": 2.9612329999999996,
-      "peak_rss_mb": 489.078125,
+      "cpu_s": 3.312782000000001,
+      "peak_rss_mb": 488.66015625,
       "parquet_bytes": 70638596,
-      "loadavg_before": 1.21337890625
+      "loadavg_before": 1.0458984375
      },
      {
-      "import_s": 1.3535743089996686,
-      "gen_s": 2.283041521000996,
-      "write_s": 0.9706683339991287,
-      "total_s": 3.2537098550001247,
+      "import_s": 1.457716144999722,
+      "gen_s": 1.9223070879997977,
+      "write_s": 1.122241781999037,
+      "total_s": 3.0445488699988346,
       "rows": {
        "branch": 200,
        "transaction_category": 40,
@@ -179,33 +179,33 @@
        "fraud_flag": 10000
       },
       "per_table_s": {
-       "branch": 0.11801111599925207,
-       "transaction_category": 0.0019610580002336064,
-       "customer": 0.1980728230009845,
-       "account": 0.0896838310000021,
-       "loan": 0.012789970000085304,
-       "card": 0.1373203459988872,
-       "loan_payment": 0.1643141149997973,
-       "statement": 0.5845807349996903,
-       "transaction": 0.9598760690005292,
-       "fraud_flag": 0.007020383000053698,
-       "_compute_phase+business_rules": 0.00016248400061158463,
-       "_construct_domain+Spindle()": 0.009248591000869055
+       "branch": 0.12822444799894583,
+       "transaction_category": 0.002143731999240117,
+       "customer": 0.1717072179999377,
+       "account": 0.07399539900143282,
+       "loan": 0.01393070799895213,
+       "card": 0.11622023200106923,
+       "loan_payment": 0.11989035700025852,
+       "statement": 0.39981172300031176,
+       "transaction": 0.8791034479982045,
+       "fraud_flag": 0.007118328001524787,
+       "_compute_phase+business_rules": 0.00010806899808812886,
+       "_construct_domain+Spindle()": 0.010053426001832122
       },
-      "user_s": 2.038348,
-      "sys_s": 1.169349,
-      "minor_faults": 41640,
+      "user_s": 2.148428,
+      "sys_s": 0.8354769999999999,
+      "minor_faults": 40539,
       "major_faults": 0,
-      "cpu_s": 3.207697,
-      "peak_rss_mb": 489.05078125,
+      "cpu_s": 2.983905,
+      "peak_rss_mb": 488.74609375,
       "parquet_bytes": 70638596,
-      "loadavg_before": 1.287109375
+      "loadavg_before": 1.0419921875
      },
      {
-      "import_s": 1.2973007920008968,
-      "gen_s": 2.238432214999193,
-      "write_s": 1.0028474669998104,
-      "total_s": 3.2412796819990035,
+      "import_s": 1.4180393909991835,
+      "gen_s": 1.9573950350022642,
+      "write_s": 1.075948857000185,
+      "total_s": 3.033343892002449,
       "rows": {
        "branch": 200,
        "transaction_category": 40,
@@ -219,33 +219,33 @@
        "fraud_flag": 10000
       },
       "per_table_s": {
-       "branch": 0.12321630400037975,
-       "transaction_category": 0.001677562999248039,
-       "customer": 0.24025373599943123,
-       "account": 0.0967629790011415,
-       "loan": 0.012556957999549923,
-       "card": 0.13812691800012544,
-       "loan_payment": 0.16816799700063711,
-       "statement": 0.582485861999885,
-       "transaction": 0.8591622269996151,
-       "fraud_flag": 0.006550336000145762,
-       "_compute_phase+business_rules": 0.00011407999954826664,
-       "_construct_domain+Spindle()": 0.009357254999486031
+       "branch": 0.12198323900156538,
+       "transaction_category": 0.001976578001631424,
+       "customer": 0.1696572049986571,
+       "account": 0.06286020499828737,
+       "loan": 0.01289569000073243,
+       "card": 0.132271087000845,
+       "loan_payment": 0.11348775000078604,
+       "statement": 0.4872590509985457,
+       "transaction": 0.8390446960002009,
+       "fraud_flag": 0.006872711001051357,
+       "_compute_phase+business_rules": 0.00010425599975860678,
+       "_construct_domain+Spindle()": 0.008982567000202835
       },
-      "user_s": 2.0227910000000002,
-      "sys_s": 1.194066,
-      "minor_faults": 40188,
+      "user_s": 2.131142,
+      "sys_s": 0.902409,
+      "minor_faults": 40755,
       "major_faults": 0,
-      "cpu_s": 3.216857000000001,
-      "peak_rss_mb": 490.19921875,
+      "cpu_s": 3.033551,
+      "peak_rss_mb": 489.734375,
       "parquet_bytes": 70638596,
-      "loadavg_before": 1.263671875
+      "loadavg_before": 1.03857421875
      },
      {
-      "import_s": 1.3592518819987163,
-      "gen_s": 1.9910364630013646,
-      "write_s": 0.8312576649987022,
-      "total_s": 2.822294128000067,
+      "import_s": 1.531871946001047,
+      "gen_s": 2.0733151099993847,
+      "write_s": 0.9749189920003118,
+      "total_s": 3.0482341019996966,
       "rows": {
        "branch": 200,
        "transaction_category": 40,
@@ -259,33 +259,33 @@
        "fraud_flag": 10000
       },
       "per_table_s": {
-       "branch": 0.11935970500053372,
-       "transaction_category": 0.0016233269998338073,
-       "customer": 0.16893676400104596,
-       "account": 0.08693584299908252,
-       "loan": 0.012994652999623213,
-       "card": 0.09823056800087215,
-       "loan_payment": 0.11970699899939063,
-       "statement": 0.4697568120009237,
-       "transaction": 0.8978088699986984,
-       "fraud_flag": 0.006579480001164484,
-       "_compute_phase+business_rules": 0.00011941699995077215,
-       "_construct_domain+Spindle()": 0.00898402500024531
+       "branch": 0.13299729000209481,
+       "transaction_category": 0.0024065559991868213,
+       "customer": 0.1798731039998529,
+       "account": 0.06262314500054345,
+       "loan": 0.013519582000299124,
+       "card": 0.10899822399733239,
+       "loan_payment": 0.17308116200001677,
+       "statement": 0.43644484700053,
+       "transaction": 0.9465700239998114,
+       "fraud_flag": 0.007484833000489743,
+       "_compute_phase+business_rules": 0.00012453900126274675,
+       "_construct_domain+Spindle()": 0.009191803997964598
       },
-      "user_s": 2.065863,
-      "sys_s": 0.743417,
-      "minor_faults": 41219,
+      "user_s": 2.28844,
+      "sys_s": 0.751159,
+      "minor_faults": 40978,
       "major_faults": 0,
-      "cpu_s": 2.80928,
-      "peak_rss_mb": 488.89453125,
+      "cpu_s": 3.039599,
+      "peak_rss_mb": 490.08984375,
       "parquet_bytes": 70638596,
-      "loadavg_before": 1.2421875
+      "loadavg_before": 1.03515625
      },
      {
-      "import_s": 1.3179171120009414,
-      "gen_s": 1.8907447010005853,
-      "write_s": 0.8343430989989429,
-      "total_s": 2.725087799999528,
+      "import_s": 1.4983052919997135,
+      "gen_s": 1.734013330002199,
+      "write_s": 1.340737401998922,
+      "total_s": 3.074750732001121,
       "rows": {
        "branch": 200,
        "transaction_category": 40,
@@ -299,35 +299,35 @@
        "fraud_flag": 10000
       },
       "per_table_s": {
-       "branch": 0.12282137799957127,
-       "transaction_category": 0.0016058469991548918,
-       "customer": 0.17329608500040194,
-       "account": 0.056943686000522575,
-       "loan": 0.012398323000525124,
-       "card": 0.09947350099901087,
-       "loan_payment": 0.09947240099972987,
-       "statement": 0.4590911610011972,
-       "transaction": 0.8502272379992064,
-       "fraud_flag": 0.006516691999422619,
-       "_compute_phase+business_rules": 0.00010645000111253466,
-       "_construct_domain+Spindle()": 0.008791939000730054
+       "branch": 0.13977120599884074,
+       "transaction_category": 0.0018195330012531485,
+       "customer": 0.1730357999986154,
+       "account": 0.06674724399999832,
+       "loan": 0.01572126500104787,
+       "card": 0.13348175899955095,
+       "loan_payment": 0.10919861599904834,
+       "statement": 0.2685402079987398,
+       "transaction": 0.8071314660010103,
+       "fraud_flag": 0.00828233900028863,
+       "_compute_phase+business_rules": 0.0001285760008613579,
+       "_construct_domain+Spindle()": 0.010155318002944114
       },
-      "user_s": 1.9973899999999998,
-      "sys_s": 0.741935,
-      "minor_faults": 41990,
+      "user_s": 2.253171,
+      "sys_s": 0.797334,
+      "minor_faults": 39797,
       "major_faults": 0,
-      "cpu_s": 2.739325,
-      "peak_rss_mb": 488.6640625,
+      "cpu_s": 3.050505,
+      "peak_rss_mb": 489.90234375,
       "parquet_bytes": 70638596,
-      "loadavg_before": 1.30322265625
+      "loadavg_before": 1.27001953125
      }
     ],
     "shape": [
      {
-      "import_s": 0.4549864439995872,
-      "gen_s": 0.33134666700061643,
+      "import_s": 0.4735630939976545,
+      "gen_s": 0.359489427999506,
       "write_s": 0.0,
-      "total_s": 0.33134666700061643,
+      "total_s": 0.359489427999506,
       "overlapped": true,
       "rows": {
        "branch": 200,
@@ -342,25 +342,25 @@
        "fraud_flag": 10000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.009131155000432045,
-       "_generate+write": 0.3222155120001844
+       "_construct_domain+Engine": 0.010853679999854648,
+       "_generate+write": 0.34863574799965136
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.7313310000000001,
-      "sys_s": 0.15348199999999998,
-      "minor_faults": 40282,
+      "user_s": 0.778059,
+      "sys_s": 0.24259499999999998,
+      "minor_faults": 45210,
       "major_faults": 0,
-      "cpu_s": 0.8848130000000001,
-      "peak_rss_mb": 275.01953125,
+      "cpu_s": 1.020654,
+      "peak_rss_mb": 294.09375,
       "parquet_bytes": 68164399,
-      "loadavg_before": 1.1806640625
+      "loadavg_before": 1.0419921875
      },
      {
-      "import_s": 0.4589730320003582,
-      "gen_s": 0.36198731799959205,
+      "import_s": 0.45313655299833044,
+      "gen_s": 0.34024416800093604,
       "write_s": 0.0,
-      "total_s": 0.36198731799959205,
+      "total_s": 0.34024416800093604,
       "overlapped": true,
       "rows": {
        "branch": 200,
@@ -375,25 +375,25 @@
        "fraud_flag": 10000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.009290277001127834,
-       "_generate+write": 0.3526970409984642
+       "_construct_domain+Engine": 0.010827858000993729,
+       "_generate+write": 0.3294163099999423
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.8078590000000001,
-      "sys_s": 0.151872,
-      "minor_faults": 40111,
+      "user_s": 0.76295,
+      "sys_s": 0.17917399999999994,
+      "minor_faults": 44968,
       "major_faults": 0,
-      "cpu_s": 0.959731,
-      "peak_rss_mb": 274.3984375,
+      "cpu_s": 0.9421240000000001,
+      "peak_rss_mb": 293.60546875,
       "parquet_bytes": 68164399,
-      "loadavg_before": 1.263671875
+      "loadavg_before": 1.03857421875
      },
      {
-      "import_s": 0.39640116100054,
-      "gen_s": 0.34200301700002456,
+      "import_s": 0.5272726659968612,
+      "gen_s": 0.35584522700082744,
       "write_s": 0.0,
-      "total_s": 0.34200301700002456,
+      "total_s": 0.35584522700082744,
       "overlapped": true,
       "rows": {
        "branch": 200,
@@ -408,25 +408,25 @@
        "fraud_flag": 10000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.011556538000149885,
-       "_generate+write": 0.33044647899987467
+       "_construct_domain+Engine": 0.008905808001145488,
+       "_generate+write": 0.34693941899968195
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.721996,
-      "sys_s": 0.18049099999999996,
-      "minor_faults": 40763,
+      "user_s": 0.817651,
+      "sys_s": 0.193606,
+      "minor_faults": 45516,
       "major_faults": 0,
-      "cpu_s": 0.902487,
-      "peak_rss_mb": 276.79296875,
+      "cpu_s": 1.0112569999999999,
+      "peak_rss_mb": 295.4453125,
       "parquet_bytes": 68164399,
-      "loadavg_before": 1.2421875
+      "loadavg_before": 1.03515625
      },
      {
-      "import_s": 0.40138116300113325,
-      "gen_s": 0.3314559329992335,
+      "import_s": 0.4695544649985095,
+      "gen_s": 0.36292782300006365,
       "write_s": 0.0,
-      "total_s": 0.3314559329992335,
+      "total_s": 0.36292782300006365,
       "overlapped": true,
       "rows": {
        "branch": 200,
@@ -441,25 +441,25 @@
        "fraud_flag": 10000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.009296786000049906,
-       "_generate+write": 0.3221591469991836
+       "_construct_domain+Engine": 0.009424539999599801,
+       "_generate+write": 0.35350328300046385
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.7614919999999998,
-      "sys_s": 0.142302,
-      "minor_faults": 40448,
+      "user_s": 0.875436,
+      "sys_s": 0.14822399999999997,
+      "minor_faults": 45658,
       "major_faults": 0,
-      "cpu_s": 0.9037939999999998,
-      "peak_rss_mb": 275.578125,
+      "cpu_s": 1.02366,
+      "peak_rss_mb": 295.96875,
       "parquet_bytes": 68164399,
-      "loadavg_before": 1.30322265625
+      "loadavg_before": 1.0322265625
      },
      {
-      "import_s": 0.37313763100064534,
-      "gen_s": 0.32049673199981044,
+      "import_s": 0.5358938610006589,
+      "gen_s": 0.39941254000223125,
       "write_s": 0.0,
-      "total_s": 0.32049673199981044,
+      "total_s": 0.39941254000223125,
       "overlapped": true,
       "rows": {
        "branch": 200,
@@ -474,19 +474,19 @@
        "fraud_flag": 10000
       },
       "per_table_s": {
-       "_construct_domain+Engine": 0.00854401099968527,
-       "_generate+write": 0.31195272100012517
+       "_construct_domain+Engine": 0.010685777000617236,
+       "_generate+write": 0.388726763001614
       },
       "numpy": "2.4.6",
       "pyarrow": "25.0.1",
-      "user_s": 0.7218030000000001,
-      "sys_s": 0.180486,
-      "minor_faults": 40548,
+      "user_s": 0.907384,
+      "sys_s": 0.213575,
+      "minor_faults": 46321,
       "major_faults": 0,
-      "cpu_s": 0.9022890000000001,
-      "peak_rss_mb": 275.98828125,
+      "cpu_s": 1.120959,
+      "peak_rss_mb": 298.65625,
       "parquet_bytes": 68164399,
-      "loadavg_before": 1.27880859375
+      "loadavg_before": 1.248046875
      }
     ]
    }
