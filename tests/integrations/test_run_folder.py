@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from pathlib import Path
 
-from shape.integrations.run_folder import (
+from shape.integrations.fabric.run_folder import (
     claim_run_folder,
     parse_run_folder,
     run_stamp,

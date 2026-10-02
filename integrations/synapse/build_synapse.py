@@ -47,7 +47,7 @@ from pathlib import Path
 import pyarrow as pa
 
 import shape
-from shape.integrations.run_folder import unique_run_name
+from shape.integrations.fabric.run_folder import unique_run_name
 from shape.kernel.dispatch import get_kernel
 
 try:  # Synapse Spark pools predefine `mssparkutils`; newer runtimes also offer the import
@@ -441,7 +441,7 @@ import pyarrow as pa
 
 import shape
 from shape.integrations.fabric import generation
-from shape.integrations.run_folder import unique_run_name
+from shape.integrations.fabric.run_folder import unique_run_name
 from shape.kernel.dispatch import get_kernel
 
 try:  # Synapse Spark pools predefine `mssparkutils`; newer runtimes also offer the import

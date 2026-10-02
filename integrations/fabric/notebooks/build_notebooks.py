@@ -91,7 +91,7 @@ import os
 from pathlib import Path
 
 import shape
-from shape.integrations.run_folder import claim_run_folder
+from shape.integrations.fabric.run_folder import claim_run_folder
 from shape.kernel.dispatch import get_kernel
 
 KERNEL = get_kernel().NAME  # "rust" with a platform wheel, "python" with the pure-Python wheel
@@ -630,7 +630,7 @@ from pathlib import Path
 
 import shape
 from shape.integrations.fabric import generation
-from shape.integrations.run_folder import claim_run_folder
+from shape.integrations.fabric.run_folder import claim_run_folder
 from shape.kernel.dispatch import get_kernel
 
 KERNEL = get_kernel().NAME

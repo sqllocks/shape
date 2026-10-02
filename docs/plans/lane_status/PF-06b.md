@@ -45,13 +45,13 @@ hid it).
 **Before / after.** Name `20260930T120000Z` becomes `20260930T120000123456Z` (microseconds), claimed with an
 exclusive `mkdir` (Fabric) or an existence check (Synapse: `mssparkutils.fs.exists`); a taken name gets `_2`,
 `_3` …. The folder is claimed when the artifacts are written, not at start, so a failed run leaves no empty
-"latest" folder. Names still sort in run order and parse with `shape.integrations.run_folder.parse_run_folder`
+"latest" folder. Names still sort in run order and parse with `shape.integrations.fabric.run_folder.parse_run_folder`
 (also reads the old name). Earlier one-second folders sort after the runs of their own second and before the next
 one. No reader in the repo parsed the name (a repo search found none); baselines are passed by explicit path.
 
-**Code.** `src/shape/integrations/run_folder.py`; the four cells that built `stamp` in
+**Code.** `src/shape/integrations/fabric/run_folder.py` (not `shape.integrations.run_folder`: `tests/test_removed_modules.py` pins `shape.integrations` to `fabric` only, and that assertion is unchanged); the four cells that built `stamp` in
 `integrations/fabric/notebooks/build_notebooks.py` and `integrations/synapse/build_synapse.py` (notebooks
-regenerated, then `ruff format`). ADF has no such folder (it writes `run-<n>` settings paths of its own).
+regenerated, then `ruff format`). ADF has no such timestamped folder (a search for it found none).
 
 **Tests.** `tests/integrations/test_run_folder.py` (name, parse, sort, collision with a frozen clock, 50 real
 runs); `tests/demo/fabric/test_notebooks.py::test_two_runs_in_the_same_instant_keep_both_artifacts` and
@@ -64,3 +64,19 @@ changed; test_synapse fakes only gained a method.
 ## Changelog
 
 `CHANGELOG.md`, one entry under Unreleased.
+
+## Checks (run in this session, after `git fetch` + merge of `origin/build/main-plan`: already up to date)
+
+| Check | Result |
+|---|---|
+| `ruff check` / `ruff format --check` (src tests plugins benchmarks/vs_spindle) | passed / 602 files formatted |
+| `mypy` (strict) | no issues in 265 files |
+| `vulture`, `lint-imports`, `check_user_facing`, `bandit -q -r src -ll` | clean / 1 kept / clean / exit 0 |
+| START (`shape --version`, median of 7) | 44 ms (limit 300) |
+| `profile_1to1/verify.py --impl shape`, `SHAPE_KERNEL=rust` and `python` | exit 0 both |
+| `pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`, rust and python | 3954 passed each, 45 deselected |
+| `pytest tests/demo/fabric tests/demo/content` (shape-fabric venv, unixODBC) | 249 passed |
+
+One earlier run failed `test_legacy_integrations_stay_removed` (a module I had put directly under
+`shape.integrations`); the module was moved, the test is unchanged. Not run: `heavy` tests, GitHub Actions jobs,
+live Fabric/Synapse runs, `scripts/ci_pure_wheel.sh`.

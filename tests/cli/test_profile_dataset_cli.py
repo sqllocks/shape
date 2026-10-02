@@ -23,7 +23,8 @@ def _generate(tmp_path: Path, *, damage: bool) -> tuple[Path, Path]:
     from shape.integrations.fabric import generation
 
     data = tmp_path / "data"
-    assert main(["generate", DOMAIN, "--scale", "small", "--format", "parquet", "-o", str(data)]) == 0
+    args = ["generate", DOMAIN, "--scale", "small", "--format", "parquet", "-o", str(data)]
+    assert main(args) == 0
     planned = generation.plan_row_counts(DOMAIN, "small")
     contract = tmp_path / "contract.json"
     contract.write_text(json.dumps(generation.contract_for_domain(DOMAIN, planned)))

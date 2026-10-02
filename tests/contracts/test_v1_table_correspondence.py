@@ -46,9 +46,13 @@ def test_a_contract_table_missing_from_the_profile_fails():
     only_orders = shape.profile({"orders": ORDERS, "other": CUSTOMER})
     result = check(only_orders, CONTRACT)
     assert not result.passed
-    assert {"column": None, "rule": "table_exists", "expected": "customer", "observed": "missing"} in (
-        result.violations
-    )
+    missing = {
+        "column": None,
+        "rule": "table_exists",
+        "expected": "customer",
+        "observed": "missing",
+    }
+    assert missing in result.violations
 
 
 def test_a_profile_table_the_contract_does_not_name_fails():

@@ -230,7 +230,7 @@ def test_two_runs_in_the_same_instant_keep_both_artifacts(lakehouse, monkeypatch
     baseline. Here every run sees the same clock reading."""
     from datetime import UTC, datetime
 
-    from shape.integrations import run_folder
+    from shape.integrations.fabric import run_folder
 
     frozen = run_folder.run_stamp(datetime(2026, 9, 30, 12, 0, 0, 5, tzinfo=UTC))
     monkeypatch.setattr(run_folder, "run_stamp", lambda now=None: frozen)
