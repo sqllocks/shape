@@ -356,6 +356,18 @@ fresh process per run, interleaved, the `generate.py` timed region at medium: ed
 default, 0.148 s with the environment variable, 0.149 s with huge pages off; financial 0.728 s, 0.566 s,
 0.586 s (12 runs each, `docs/plans/lane_status/P6-01a.md`, "Escalation 2, round 2").
 
+The first `generate()` in a process also raises glibc's allocation thresholds, once and for the rest
+of the process (`shape._process.tune_malloc`, Linux with glibc; `mallopt`: blocks up to 32 MiB come
+from the heap, up to 256 MiB of free memory is kept, 16 MiB is requested at a time). glibc otherwise
+trims freed memory soon after it is freed and maps each large block fresh, so the short-lived arrays of
+a run fault their pages in again. The three are set together because setting one alone freezes the
+adaptive mmap threshold at 128 KiB, which is slower than leaving it alone (measured: the trim
+threshold alone, +29% on retail). Interleaved fresh-process runs of the medium workloads, 4 vCPU Xeon
+@ 2.10GHz: retail 418 to 394 ms, pulse 228 to 213, marketing 140 to 132, financial 311 to 292,
+healthcare 307 to 295, supply_chain 90 to 85, education 82 to 78 (medians of 7). A host that sets
+`MALLOC_*` or `GLIBC_TUNABLES` itself is left alone; `SHAPE_MEMORY_POOL=default` turns it off. No
+value changes.
+
 `shape.generation.keypos` finds the row of a key (`first_positions`, `first_rows`): for the primary key
 of a parent that is a sequence (`start`, `start + 1`, ...) the row is `key - start`, found by the native
 `dense_rows` kernel in one pass; any other key is found by binary search or Arrow's lookup. The compute
