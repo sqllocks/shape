@@ -80,6 +80,12 @@ COLUMN_FIELDS = (
     "dow_histogram",
     "temporal_histogram",
     "string_length",
+    "nan_count",
+    "inf_count",
+    "pattern_rates",
+    "pattern_contains_rates",
+    "precision",
+    "scale",
     *_MARGINAL_FIELDS,
 )
 """Every field of a column of a profile; the plan reports each one that has a value."""
@@ -521,6 +527,13 @@ def _plan_column(
             f"synthetic values from {provider}: the real values, their lengths and how often "
             "they repeat are not reproduced",
         )
+    mark(("nan_count", "inf_count"), _N, "generated numbers are always finite")
+    mark(
+        ("pattern_rates", "pattern_contains_rates"),
+        _N,
+        "the generated values are synthetic: how often they match a pattern is not the profile's",
+    )
+    mark(("precision", "scale"), _N, "generated numbers do not take the profile's decimal type")
     for f in sorted(present):  # a field no rule above covered is never reported as preserved
         add(f, _N, "not modelled")
     return items
@@ -530,6 +543,8 @@ def _has(col: ColumnProfile, field: str) -> bool:
     if field == "value_counts_ext_order":
         return bool(col.value_counts_ext)
     value = getattr(col, field, None)
+    if field in ("nan_count", "inf_count"):
+        return bool(value)  # zero is the usual case, and not worth a plan item
     return value is not None
 
 

@@ -127,6 +127,9 @@ def _tag_scalar(v: Any) -> list[Any] | None:
 
 def _column_dict(cp: ColumnProfile) -> dict[str, Any]:
     d = {f: _clean(getattr(cp, f)) for f in _COLUMN_FIELDS}
+    for f in ("nan_count", "inf_count"):  # absent when zero, like the other optional fields
+        if not d[f]:
+            del d[f]
     d["min_value"] = _tag_scalar(cp.min_value)
     d["max_value"] = _tag_scalar(cp.max_value)
     d["enum_values"] = _clean(cp.enum_values)
