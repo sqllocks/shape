@@ -4,3 +4,15 @@
 [medium] shape            run 1: total 0.60s  gen 0.60s  write 0.00s  rss 272MB  load 1.20
 [medium] spindle          run 2: total 2.23s  gen 1.74s  write 0.49s  rss 484MB  load 1.20
 [medium] shape            run 2: total 0.55s  gen 0.55s  write 0.00s  rss 272MB  load 1.18
+[medium] spindle          run 3: total 2.32s  gen 1.70s  write 0.62s  rss 484MB  load 1.18
+[medium] shape            run 3: total 0.60s  gen 0.60s  write 0.00s  rss 273MB  load 1.25
+[medium] spindle          run 4: total 2.37s  gen 1.89s  write 0.48s  rss 486MB  load 1.25
+[medium] shape            run 4: total 0.56s  gen 0.56s  write 0.00s  rss 273MB  load 1.23
+[medium] spindle          run 5: total 2.08s  gen 1.44s  write 0.64s  rss 483MB  load 1.23
+[medium] shape            run 5: total 0.55s  gen 0.55s  write 0.00s  rss 272MB  load 1.21
+
+== healthcare medium: median of 5 fresh-process runs, 4 cores
+tool                     rows  total s   gen s  write s  rows/s total   rows/s gen  peak RSS MB
+spindle             1,260,800     2.32    1.74     0.49       542,938      724,361          484
+shape               1,260,800     0.56    0.56     0.00     2,255,188    2,255,188          272
+speedup (shape vs spindle): total 4.15x
