@@ -156,10 +156,28 @@ def suppress_bins(
         return None, dropped
     out = [b if ok else 0 for b, ok in zip(bins, keep, strict=True)]
     if proportions:
-        total = sum(bins)
-        scale = total / sum(out)
-        out = [round(b * scale, 6) for b in out]
+        out = _renormalize(out, sum(bins))
     return out, dropped
+
+
+def _renormalize(bins: list[float], total: float) -> list[float]:
+    """Scale ``bins`` to ``total`` at 6 decimals, the released total exactly ``round(total, 6)``.
+
+    Rounding each bin on its own lets the error of many bins add up; the units left over are
+    given to the bins with the largest remainders (ties to the earlier bin), so no bin moves by
+    more than one unit in the last place and zero bins stay zero.
+    """
+    unit = 10**6
+    scale = total / sum(bins)
+    exact = [b * scale * unit for b in bins]
+    floors = [int(e // 1) for e in exact]
+    short = round(total * unit) - sum(floors)
+    order = sorted(
+        (i for i, b in enumerate(bins) if b > 0), key=lambda i: (floors[i] - exact[i], i)
+    )
+    for i in order[: max(short, 0)]:
+        floors[i] += 1
+    return [f / unit for f in floors]
 
 
 def _cells_in_map(values: Mapping[Any, Any]) -> str:

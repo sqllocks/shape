@@ -243,6 +243,8 @@ instruction.
 
 | Date | ID | Change | Reason |
 |---|---|---|---|
+| 2026-10-02 | P4-10, GEN-CLI | **Owner decision on the P4-10 GEN-CLI miss** (retail medium 6.83x, gate 10x; large 19.8x; equivalence passes): keep optimising (§6.5 round 2, lane `lane/P4-10r2`); the gate is unchanged. | Owner, 2026-10-02: "Keep optimizing". Evidence: docs/plans/lane_status/P4-10.md. |
+| 2026-10-02 | P4-08, P4-10, P4-11, D-13 | **Plan text superseded by D-13 (2026-09-30) in three work packages:** P4-10 `shape validate` dispatches on Shape generation schemas and contracts only (no baseline schema input); P4-11 adds no baseline library-name aliases to `shape.fidelity`; P4-08 has no `--spindle-json` output (Shape's `learn` writes its own schema; equality with the baseline's `learn` is checked in `benchmarks/vs_spindle/learn_1to1/`, outside the package). | Lead, applying the owner's D-13 decision. |
 | 2026-10-01 | P1-18, T-22 | **Owner: fix the enum rule.** The profiler marks a column `is_enum` (and lists every value in `enum_values`) when it has fewer than 200 distinct values, or fewer than 50,000 at a cardinality ratio under 0.30, so every column of a table under 200 rows is an "enum", unique keys and free text included (the SQL Server plugin: at most 50 distinct). New work package **P1-18**: a column is an enum only if, in addition, its values repeat (distinct values at most half of the non-null values; a unique column is never an enum); both kernels and the SQL Server plugin. T-22 parity for `is_enum`, `enum_values` (and fields derived from them) becomes a narrow named allow-list; every other field still equal. | Owner, 2026-10-01: "We should probably fix that too right?" |
 | 2026-10-01 | P4-01c, P6-08b | **Owner: also fix the further copied baseline behaviours that harm user trust (round 2).** Lead's call on which: P4-01c F6 undeclared FK guesses point at the parent's primary key (never a missing column), F7 generated strings fit declared lengths (CHAR(2)/CHAR(3) codes), F8 `CustomerId`-style keys recognised; P6-08b FIX-4 deterministic spread sample instead of the first N rows, FIX-5 unsampled statistics are null not 0.0, FIX-6 null-aware `is_unique` with a minimum sample, FIX-7 undeclared columns still inferred beside declared keys (evidence marked), FIX-8 whole-word `id`/`key` name matching, FIX-9 a guessed primary key never picks a foreign-key column. Same acceptance as round 1 (test per fix, narrow named parity allow-list, everything else equal). Not changed: `is_enum` (<= 50 distinct), the core profiler's rule under T-22 parity (flagged to the owner). | Owner, 2026-10-01: "Fix those too if they harm user trust". |
 | 2026-10-01 | P4-01b, P6-08, T-22, P4-01c, P6-08b | **Owner decision: fix the baseline bugs that P4-01b and P6-08 reproduced for parity.** New work packages **P4-01c** (DDL import) and **P6-08b** (SQL Server profiling). Their acceptance replaces exact equality with the baseline, for these behaviours only, by: a test asserting the correct behaviour per bug, and the parity harness listing each one as an intentional, documented difference (every other field still equal). | Owner, 2026-10-01: "Fix the bugs. Those are not acceptable and would harm user trust in Shape." |
@@ -2003,9 +2005,9 @@ Work packages are listed in execution order. The next work package is the first 
 | 48 | P4-06 | done (SQL comment/literal injection fixed at integration, 36f32d3) | ba051d2 |
 | 49 | P4-07 | done (retail T-21 PASS small/medium/large; lead GEN-IN on 2.10 GHz: medium 11.8x, large 17.9x; evidence P4-07-lead/) | b1e6530 |
 | 50 | P4-08 | todo | |
-| 51 | P4-09 | todo | |
-| 52 | P4-10 | todo | |
-| 53 | P4-11 | todo | |
+| 51 | P4-09 | done (retail per table equal to the baseline comparator, max diff 0.00000; G3, G4 fixed) | 9fd7caa |
+| 52 | P4-10 | wip (lane/P4-10) | |
+| 53 | P4-11 | wip (lane/P4-11) | |
 | 54 | P5-01 | todo | |
 | 55 | P5-02 | todo | |
 | 56 | P5-03 | todo | |
