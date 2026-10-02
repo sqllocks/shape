@@ -265,6 +265,17 @@ the last rule repair that can change it and the copula, and `on_table(name, tabl
 (and receives every table when there is no `on_batch`). Both callbacks run on the calling thread:
 hand the data to a writer. `write_engine` does exactly that.
 
+`write_engine` leaves one core to the writer threads (a Parquet file is encoded by one thread, and with
+every core generating, the encoder of the largest table is what a run waits for): `SHAPE_THREADS`
+unset means every core less one while writing, and exactly `SHAPE_THREADS` when set. Two passes run
+while the tables are still being made, and give what the plain order of the passes gives (tests compare
+them): a `sum_children` or `count_children` column over a `sequence` key is accumulated as the child
+table's chunks are made (`StreamedAggregate`, the same row-order additions as the single pass), and the
+leading business rules are repaired on a helper thread once the tables they name exist, when no
+`computed` column and no earlier rule is in their way (`EarlyRules`). The generation path builds Arrow
+arrays and reads them back through `shape.generation.arrowkit`, which never imports pandas (pyarrow's
+own `array`, `to_numpy` and `scalar` do, about 0.16 s of start-up).
+
 `generate()` runs with Arrow's system memory pool (`shape.generation.runtime.generation_memory`; set
 `SHAPE_MEMORY_POOL=default` to keep Arrow's default). The default pool maps fresh memory for each large
 array and returns it soon after, which on a virtual machine makes the page faults of short-lived arrays

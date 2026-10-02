@@ -5,6 +5,11 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `shape generate` starts faster and ends sooner: the generation path never imports pandas
+  (`shape.generation.arrowkit`), sinks and sources load on first use, Parquet row groups are 256k
+  rows (were 1M), one core is left to the writer threads, and two passes run while tables are still
+  being made (summed children, leading business rules). The data is unchanged.
+
 - Generation commands: `shape generate DOMAIN|SCHEMA.json` (`--mode 3nf|star`, `--scale`, `--seed`,
   `--format summary|csv|tsv|jsonl|parquet|excel|sql|delta`, `-o DIR`, `--dry-run`, the SQL options
   `--sql-dialect`, `--schema-name`, `--batch-size`, `--sql-ddl`, `--sql-drop`, `--sql-go`, and for
