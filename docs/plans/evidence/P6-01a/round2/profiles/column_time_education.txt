@@ -1,0 +1,24 @@
+wall 0.129 sum column time 0.198
+by strategy (calls, ms, rows, ns/row):
+  foreign_key          24    65.8   558850     118
+  weighted_enum        31    65.7   635925     103
+  faker                 6    29.0    60450     480
+  sequence             14    14.3   238275      60
+  distribution          8     7.8   114625      68
+  pattern               2     5.3      900    5941
+  reference_data        3     4.4    14325     310
+  temporal              6     3.9    60550      64
+  correlated            1     1.3      600    2241
+top columns (ms):
+    22.0 enrollment.student_id [foreign_key]
+    19.3 enrollment.semester [weighted_enum]
+    16.2 enrollment.grade [weighted_enum]
+    15.2 enrollment.course_id [foreign_key]
+    14.7 enrollment.instructor_id [foreign_key]
+    10.4 student.email [faker]
+     7.6 academic_standing.standing [weighted_enum]
+     7.3 enrollment.credits_attempted [weighted_enum]
+     6.5 instructor.first_name [faker]
+     6.1 academic_standing.semester [weighted_enum]
+     6.0 enrollment.enrollment_id [sequence]
+     4.8 course.course_code [pattern]

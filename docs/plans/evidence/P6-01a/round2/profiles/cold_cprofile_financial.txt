@@ -1,0 +1,35 @@
+# cold, single thread (SHAPE_THREADS=1), cProfile, top 25 by own time
+single-thread generate s 0.544
+         29233 function calls (29057 primitive calls) in 0.543 seconds
+
+   Ordered by: internal time
+   List reduced from 391 to 25 due to restriction <25>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       59    0.071    0.001    0.071    0.001 {built-in method shape._kernel.philox_normal}
+       50    0.055    0.001    0.055    0.001 {built-in method shape._kernel.pool_take}
+       98    0.043    0.000    0.043    0.000 {built-in method shape._kernel.philox_uniform}
+       58    0.037    0.001    0.037    0.001 {built-in method shape._kernel.alias_sample}
+      177    0.028    0.000    0.028    0.000 {method 'astype' of 'numpy.ndarray' objects}
+       59    0.028    0.000    0.104    0.002 /home/user/shape/src/shape/builtins/distributions/families.py:171(draw)
+       61    0.017    0.000    0.128    0.002 /home/user/shape/src/shape/builtins/strategies/numeric.py:50(generate)
+        1    0.016    0.016    0.023    0.023 /home/user/shape/src/shape/builtins/strategies/_relational.py:128(pareto_index)
+       10    0.015    0.002    0.015    0.002 {method 'searchsorted' of 'numpy.ndarray' objects}
+        4    0.014    0.003    0.014    0.003 {built-in method shape._kernel.template_strings}
+       15    0.014    0.001    0.014    0.001 /root/.venvs/shape/lib/python3.11/site-packages/pyarrow/compute.py:467(take)
+        6    0.012    0.002    0.012    0.002 /root/.venvs/shape/lib/python3.11/site-packages/pyarrow/compute.py:256(wrapper)
+       16    0.012    0.001    0.038    0.002 /home/user/shape/src/shape/builtins/strategies/linked.py:182(generate)
+        1    0.011    0.011    0.011    0.011 {built-in method shape._kernel.cap_per_parent}
+      325    0.011    0.000    0.016    0.000 /home/user/shape/src/shape/generation/arrowkit.py:29(_from_numpy)
+      661    0.011    0.000    0.030    0.000 /home/user/shape/src/shape/generation/arrowkit.py:97(array)
+       12    0.010    0.001    0.010    0.001 /root/.venvs/shape/lib/python3.11/site-packages/pyarrow/compute.py:246(wrapper)
+        8    0.009    0.001    0.009    0.001 {built-in method shape._kernel.temporal_sample}
+       16    0.008    0.000    0.008    0.000 {method 'round' of 'numpy.ndarray' objects}
+       32    0.007    0.000    0.011    0.000 /home/user/shape/src/shape/builtins/strategies/__init__.py:41(generate)
+       26    0.007    0.000    0.007    0.000 /root/.venvs/shape/lib/python3.11/site-packages/pyarrow/compute.py:511(fill_null)
+       62    0.006    0.000    0.006    0.000 /root/.venvs/shape/lib/python3.11/site-packages/pyarrow/compute.py:348(cast)
+       31    0.006    0.000    0.079    0.003 /home/user/shape/src/shape/builtins/strategies/keys.py:60(_indices)
+       24    0.006    0.000    0.025    0.001 /home/user/shape/src/shape/builtins/strategies/temporal.py:55(_uniform)
+       38    0.004    0.000    0.006    0.000 /home/user/shape/src/shape/generation/engine.py:310(take)
+
+

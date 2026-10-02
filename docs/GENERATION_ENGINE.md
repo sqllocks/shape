@@ -324,10 +324,26 @@ leading business rules are repaired on a helper thread once the tables they name
 arrays and reads them back through `shape.generation.arrowkit`, which never imports pandas (pyarrow's
 own `array`, `to_numpy` and `scalar` do, about 0.16 s of start-up).
 
-`generate()` runs with Arrow's system memory pool (`shape.generation.runtime.generation_memory`; set
-`SHAPE_MEMORY_POOL=default` to keep Arrow's default). The default pool maps fresh memory for each large
-array and returns it soon after, which on a virtual machine makes the page faults of short-lived arrays
-a large part of a run. Values are unaffected; arrays stay valid after the block.
+`import shape` sets Arrow's allocator for the whole process, in one place (`shape._process.configure`),
+so the command line and the Python API behave alike. Arrow's default pool (mimalloc) reserves a large
+arena with `MADV_HUGEPAGE` at its first allocation, which on a virtual machine with transparent huge
+pages in `madvise` mode stalls 10 to 13 ms of system time in about half of all processes, and it maps
+fresh memory for each large array and returns it soon after, which makes the page faults of
+short-lived arrays a large part of a run. Two cases:
+
+* `shape` is imported before `pyarrow` (the command line always is): `ARROW_DEFAULT_MEMORY_POOL=system`
+  is set for the process, so every Arrow user in it, the Parquet encoder included, takes the system
+  pool. A value the environment already has is kept.
+* `pyarrow` was imported first: its C++ default pool can no longer change, so transparent huge pages
+  are switched off for the process (`prctl(PR_SET_THP_DISABLE)`, Linux), which removes the stall.
+  `generate()` additionally runs with Arrow's system pool for the Python-level allocations
+  (`shape.generation.runtime.generation_memory`).
+
+`SHAPE_MEMORY_POOL=default` turns all of it off. Values are unaffected (a test compares a run with and
+without it); arrays stay valid whichever pool made them. Measured on 4 vCPU (Intel Xeon @ 2.80GHz, KVM),
+fresh process per run, interleaved, the `generate.py` timed region at medium: education median 0.205 s
+default, 0.148 s with the environment variable, 0.149 s with huge pages off; financial 0.728 s, 0.566 s,
+0.586 s (12 runs each, `docs/plans/lane_status/P6-01a.md`, "Escalation 2, round 2").
 
 `shape.generation.keypos` finds the row of a key (`first_positions`, `first_rows`): for the primary key
 of a parent that is a sequence (`start`, `start + 1`, ...) the row is `key - start`, found by the native
