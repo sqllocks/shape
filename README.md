@@ -33,6 +33,14 @@ shape check customers.shape contract.json          # exit code 1 if the contract
 shape diff customers.shape customers_next.shape --fail-on-drift
 ```
 
+A Delta table can be profiled as it was: `shape profile events/ --version 3 -o v3.shape`, or
+`--as-of 2026-06-02T00:00:00Z` for the newest version committed at or before that time (no zone
+means UTC); the API is `shape.profile(path, version=3)` and `shape.profile(path, as_of=...)`.
+The Delta version and its commit time are recorded in the `.shape` manifest
+(`Profile.provenance`, printed by `shape profile` and `shape inspect`), outside the profile body,
+so they do not change the content id or a diff. The data of a version must still be in the table
+(not vacuumed).
+
 A folder is one table (its files are partitions) unless you pass `--dataset`, which profiles one
 table per file, named by the file name: `shape profile data/ --dataset -o data.shape`. A contract
 with a `tables` object is checked against such a dataset profile only; against a single table

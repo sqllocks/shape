@@ -17,7 +17,7 @@ from shape.artifact.io import ArtifactError, read_artifact, write_artifact
 from shape.security.hardening import validate_structure
 
 from .model import ColumnProfile, DatasetProfile, TableProfile
-from .sources import SourceError, load_columns
+from .sources import SourceError, check_delta_options, delta_dir, load_columns, read_delta
 from .table import _profile_cols_table, profile_dataset_columns
 
 ARTIFACT_FORMAT = "shape"
@@ -185,11 +185,26 @@ def _table_summary(table: dict[str, Any]) -> dict[str, Any]:
 class Profile:
     """A data profile. ``to_dict()`` is the full profile as JSON-ready dicts."""
 
-    def __init__(self, data: dict[str, Any], *, name: str | None = None) -> None:
+    def __init__(
+        self,
+        data: dict[str, Any],
+        *,
+        name: str | None = None,
+        provenance: dict[str, Any] | None = None,
+    ) -> None:
         if "tables" not in data and "columns" not in data:
             raise ValueError("not a profile: expected a table or dataset profile dictionary")
         self._data = data
+        self._provenance = None if provenance is None else dict(provenance)
         self.name = name or (data.get("name") if "columns" in data else None) or "dataset"
+
+    @property
+    def provenance(self) -> dict[str, Any] | None:
+        """Where the data came from, for a source that has a state to name: a Delta table's
+        ``format``, ``version``, commit ``timestamp`` and the ``as_of`` asked for. ``None``
+        otherwise. It is kept in the ``.shape`` file's manifest, not in the profile body, so it
+        never changes the content id or a ``shape.diff``."""
+        return None if self._provenance is None else dict(self._provenance)
 
     @property
     def is_dataset(self) -> bool:
@@ -240,13 +255,24 @@ class Profile:
     __hash__ = None  # type: ignore[assignment]
 
 
-def profile(source: Any, *, name: str | None = None) -> Profile:
+def profile(
+    source: Any,
+    *,
+    name: str | None = None,
+    version: int | None = None,
+    as_of: _dt.datetime | str | None = None,
+) -> Profile:
     """Profile a path, glob, directory, Delta table, Arrow table or DataFrame.
 
     Pass a ``dict`` of such sources to profile several tables and detect foreign keys.
+
+    For a Delta table directory, ``version=N`` profiles that version and ``as_of`` (a
+    ``datetime``, naive meaning UTC, or an ISO-8601 string) the newest version committed at or
+    before that time, instead of the latest; give one at most. ``Profile.provenance`` records
+    which version was read.
     """
     with np.errstate(all="ignore"):  # inf / NaN inputs are data, not numpy warnings
-        return _profile(source, name)
+        return _profile(source, name, version, as_of)
 
 
 def _load_tables(sources: dict[str, Any]) -> dict[str, tuple[list[Any], int]]:
@@ -262,15 +288,29 @@ def _load_tables(sources: dict[str, Any]) -> dict[str, tuple[list[Any], int]]:
     return {n: (cols, rows) for n, (_, cols, rows) in loaded}
 
 
-def _profile(source: Any, name: str | None) -> Profile:
+def _profile(source: Any, name: str | None, version: int | None, as_of: Any) -> Profile:
+    check_delta_options(version, as_of)
+    asked = version is not None or as_of is not None
     if isinstance(source, dict):
+        if asked:
+            raise SourceError("version and as_of read one Delta table, not a dict of tables")
         if not source:
             raise SourceError("an empty dict of tables cannot be profiled")
         cols_by_t = _load_tables({str(k): v for k, v in source.items()})
         return Profile(dataset_to_dict(profile_dataset_columns(cols_by_t)), name=name)
-    table_name, cols, rows = load_columns(source, name)
-    table = _profile_cols_table(table_name, cols, rows, None)
-    return Profile(table_to_dict(table), name=name)
+    delta = delta_dir(source)
+    if delta is None:
+        if asked:
+            raise SourceError(
+                "version and as_of read a Delta table: the source is not a Delta table"
+            )
+        table_name, cols, rows = load_columns(source, name)
+        provenance = None
+    else:
+        table, provenance = read_delta(delta, version=version, as_of=as_of)
+        table_name, cols, rows = load_columns(table, name or delta.name)
+    table_profile = _profile_cols_table(table_name, cols, rows, None)
+    return Profile(table_to_dict(table_profile), name=name, provenance=provenance)
 
 
 # --- .shape artifact ---------------------------------------------------------------
@@ -287,13 +327,15 @@ def save(p: Profile, path: str | Path) -> str:
         raise TypeError(f"save() expects a Profile, got {type(p).__name__}")
     body = _encode(p._data)
     content_id = hashlib.sha256(body).hexdigest()
-    manifest = {
+    manifest: dict[str, Any] = {
         "format": ARTIFACT_FORMAT,
         "format_version": ARTIFACT_FORMAT_VERSION,
         "kind": ARTIFACT_KIND,
         "name": p.name,
         "shape_content_id": content_id,
     }
+    if p.provenance is not None:
+        manifest["provenance"] = p.provenance
     write_artifact(str(path), manifest, {PROFILE_COMPONENT: body})
     return content_id
 
@@ -318,4 +360,9 @@ def load(path: str | Path) -> Profile:
         raise ArtifactError(f"invalid {PROFILE_COMPONENT}: {e}") from e
     if not isinstance(data, dict):
         raise ArtifactError(f"invalid {PROFILE_COMPONENT}: not an object")
-    return Profile(data, name=str(manifest.get("name") or "") or None)
+    provenance = manifest.get("provenance")
+    return Profile(
+        data,
+        name=str(manifest.get("name") or "") or None,
+        provenance=provenance if isinstance(provenance, dict) else None,
+    )

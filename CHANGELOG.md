@@ -33,6 +33,19 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - `shape chaos` and `shape.chaos.groundtruth` (`docs/CHAOS.md`): named corruptions (`duplicates`,
   `orphan_keys`, `date_shift`, `negative_amounts`, `case_whitespace`, `pii_fill`, `type_change`,
   `null_creep`) with a rate and a seed, and a JSON Lines ground-truth log of every change.
+- `shape stream-profile` reads files (issue #33): a path or `file://` URI, a folder, a glob or `-`
+  (standard input), as JSON lines (what `shape emit` / `shape stream` write, flat or CloudEvents),
+  CSV or Parquet, with the same windows, lateness, event time and checkpoints as a broker;
+  `--order event-time` replays a file in time order. `docs/plugins/streaming.md`.
+- Delta time travel (issue #36): `shape.profile(path, version=N)` / `as_of=...` and
+  `shape profile DIR --version N | --as-of TIMESTAMP` profile an earlier state of a Delta table;
+  `as_of` before the first commit is an error, not version 0. The Delta version and commit time
+  are recorded as `Profile.provenance` in the `.shape` manifest (not in the profile body).
+- Stream API durations (`TumblingProfiler`, `SlidingProfiler`, `SessionProfiler`; issue #34):
+  a duration is a `timedelta` or a string with a unit (`"60s"`, `"5m"`). **Breaking:** a bare
+  `int` or `float` other than `0` now raises `ValueError` instead of being read as microseconds
+  (`60_000` was 60 ms and gave 360 windows for 6 minutes of events instead of 6). Snapshots and
+  checkpoints are unchanged and still restore. Spec: `docs/specs/STREAMING_SEMANTICS.md` §2.
 - `shape stream` (`docs/EMIT.md`): one table's rows as events in event-time order, on the `shape emit`
   runtime (same options, sinks, formats and delivery guarantees; `--table` required, `-t -s -m`,
   `--rate` 10, `--max-events` is the earliest N events). The flat-event encoder is vectorised
