@@ -39,6 +39,8 @@ Conversions (shared by both implementations):
 | `philox_normal(k0, k1, row_start, n_rows, per_row=2, slot=0)` | uses 2 | float64 |
 | `alias_build(weights)` | | `(prob float64, alias int64)`: Vose's method, deterministic |
 | `alias_sample(prob, alias, k0, k1, row_start, n_rows, per_row=2, slot=0)` | uses 2 | int64 category per row |
+| `zipf_guide(cum)` | | int64 guide table (a power-of-two size) for `cum`: non-empty, finite, non-decreasing float64, ending at 1 |
+| `zipf_draw(cum, guide, k0, k1, row_start, n_rows)` | uses 1 | int64 parent row per row: `min(searchsorted(cum, u, "right"), len(cum) - 1)` for the uniform `u` of the row's word. The guide table (a lower bound per bucket of `u`) makes it 3 to 5 times faster than the binary search and never changes the answer; the reference searches the whole array |
 | `pool_take(pool, indices)` | | `string`: `pool[indices]`, nulls stay null; `pool` is string or large_string |
 | `template_strings(literals, slots, columns, n_rows)` | | `string`: `literals[0] + col + literals[1] + ...`; `slots` are `(column index, zero-pad width)`; a null in a used column gives null; columns are string, large_string or int64 |
 | `join_strings(columns, sep, skip_nulls=False)` | | `string`: the columns joined with `sep` |

@@ -15,9 +15,11 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation import kernel_ops
 from shape.generation.arrowkit import array as arrow_array
 from shape.generation.arrowkit import scalar as arrow_scalar
 from shape.generation.engine import ArrayKeys, Engine, KeyPool, RangeKeys
+from shape.generation.rng import RowStream
 from shape.generation.strategy_kit import StrategyError, where
 from shape.plugins.api.v1 import GenerationContext
 
@@ -96,6 +98,22 @@ def _zipf_head(alpha: float, head: int) -> Floats:
     cum: Floats = np.cumsum(np.arange(1, head + 1, dtype=np.float64) ** (-alpha))
     cum.flags.writeable = False
     return cum
+
+
+@lru_cache(maxsize=8)
+def _zipf_table(alpha: float, pool: int) -> kernel_ops.ZipfTable:
+    cum = _zipf_head(alpha, pool)
+    return kernel_ops.zipf_table(cum / cum[-1])
+
+
+def zipf_draw(
+    stream: RowStream, row_start: int, n_rows: int, pool: int, alpha: float
+) -> Ints | None:
+    """:func:`zipf_index` of the uniforms of ``stream`` (word 0 of each row) in one native pass, or
+    ``None`` for a pool beyond ``ZIPF_HEAD`` (drawn the long way). The same rows, bit for bit."""
+    if pool > ZIPF_HEAD:
+        return None
+    return kernel_ops.zipf_draw(_zipf_table(alpha, pool), stream, row_start, n_rows)
 
 
 def zipf_index(u: Floats, pool: int, alpha: float) -> Ints:

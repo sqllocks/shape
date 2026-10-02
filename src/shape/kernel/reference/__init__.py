@@ -34,6 +34,8 @@ from .gen import string_case as string_case
 from .gen import template_strings as template_strings
 from .gen import temporal_sample as temporal_sample
 from .gen import uuid4_strings as uuid4_strings
+from .gen import zipf_draw as zipf_draw
+from .gen import zipf_guide as zipf_guide
 from .hashing import hash_array as hash_array
 from .profile import ProfileState as ProfileState
 from .relational import cap_per_parent as cap_per_parent

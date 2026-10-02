@@ -33,6 +33,7 @@ from ._relational import (
     positive,
     take_keys,
     whole_column,
+    zipf_draw,
     zipf_index,
 )
 
@@ -67,9 +68,13 @@ def _indices(
 ) -> Ints:
     """Parent row numbers (``0 .. pool - 1``) of ``n_rows`` rows from the ``fk`` stream: uniform,
     ``zipf`` or ``pareto`` (anything else is uniform)."""
-    u = stream(ctx, "fk").uniform(row_start, n_rows)
     if distribution == "zipf":
-        return zipf_index(u, pool, positive(params, "alpha", 1.5, ctx))
+        alpha = positive(params, "alpha", 1.5, ctx)
+        drawn = zipf_draw(stream(ctx, "fk"), row_start, n_rows, pool, alpha)
+        if drawn is not None:
+            return drawn
+        return zipf_index(stream(ctx, "fk").uniform(row_start, n_rows), pool, alpha)
+    u = stream(ctx, "fk").uniform(row_start, n_rows)
     if distribution == "pareto":
         return pareto_index(u, pool, positive(params, "alpha", 1.2, ctx))
     return np.minimum((u * pool).astype(np.int64), pool - 1)

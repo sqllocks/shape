@@ -172,6 +172,34 @@ def alias_sample(
     return arrow_array(_pick(p, a, w[:, slot], w[:, slot + 1]), type=pa.int64())
 
 
+def _cum(cum: Any) -> npt.NDArray[np.float64]:
+    values = _f64(cum, "cum")
+    if len(values) == 0 or not np.isfinite(values).all() or (np.diff(values) < 0).any():
+        raise ValueError("cum must be non-empty, finite and non-decreasing")
+    return values
+
+
+def zipf_guide(cum: Any) -> pa.Array:
+    """The native kernel's guide table speeds up the search and never changes its answer; the
+    reference searches the whole array, so its guide is the smallest valid one."""
+    _cum(cum)
+    return arrow_array(np.zeros(1024, dtype=np.int64), type=pa.int64())
+
+
+def zipf_draw(cum: Any, guide: Any, k0: int, k1: int, row_start: int, n_rows: int) -> pa.Array:
+    values = _cum(cum)
+    table = np.asarray(arrow_numpy(arrow_array(guide)), dtype=np.int64)
+    if (
+        len(table) == 0
+        or len(table) & (len(table) - 1)
+        or ((table < 0) | (table > len(values))).any()
+    ):
+        raise ValueError("cum must be non-empty and guide a power-of-two table of its own")
+    u = _unit(_words(k0, k1, row_start, n_rows, 1))
+    found = np.searchsorted(values, u, side="right")
+    return arrow_array(np.minimum(found, len(values) - 1).astype(np.int64), type=pa.int64())
+
+
 # ---------------------------------------------------------------- strings
 
 
