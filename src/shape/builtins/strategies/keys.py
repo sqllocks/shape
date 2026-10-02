@@ -8,7 +8,7 @@ far in a chunk.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Any
 
 import numpy as np
@@ -127,6 +127,38 @@ class ForeignKey:
             return pool.take(index[ctx.row_start : ctx.row_start + ctx.n_rows])
         index = _indices(distribution, params, len(pool), ctx.row_start, ctx.n_rows, ctx)
         return pool.take(index)
+
+    def prepare(self, spec: Mapping[str, Any], ctx: GenerationContext) -> Callable[[], None] | None:
+        """The whole-table cap of a ``pareto`` key with ``max_per_parent`` (see :meth:`_capped`),
+        which the engine may build ahead of the table when it needs no generated data: a plain
+        reference (no ``constrained_by``, ``sample_rate`` or ``fan_out``) to the sequence key of
+        another table."""
+        ref = str(spec.get("ref", ""))
+        if "." not in ref or spec.get("distribution") != "pareto":
+            return None
+        if spec.get("constrained_by") or spec.get("sample_rate") is not None:
+            return None
+        if spec.get("fan_out") is not None:
+            return None
+        params = _params(spec)
+        if params.get("max_per_parent") is None:
+            return None
+        ref_table, ref_column = ref.split(".", 1)
+        engine = engine_of(ctx, "foreign_key")
+        parent = engine.schema.tables.get(ref_table)
+        if parent is None or ref_table == ctx.table or parent.primary_key != [ref_column]:
+            return None
+        key = parent.columns.get(ref_column)
+        if key is None or key.strategy != "sequence" or (key.nullable and key.null_rate):
+            return None  # the keys would have to be generated first
+        size = len(engine.key_pool(ref_table))
+        if size == 0:
+            return None
+
+        def build() -> None:
+            self._capped("pareto", params, size, ctx)
+
+        return build
 
     @staticmethod
     def _capped(

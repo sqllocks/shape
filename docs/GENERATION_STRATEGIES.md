@@ -53,6 +53,7 @@ schema, `row_counts`, `key_pool(table)`) and `column_def` (the column: `type`, `
 | | `spec_params(spec)` | the `params` mapping if there is one, else the spec |
 | | `column_scale(ctx)`, `round_to_scale(values, ctx)` | the column's decimal scale |
 | `shape.generation.kernel_ops` | `alias_table`, `alias_draw` | weighted categorical draws (two words per row) |
+| | `ZipfTable`, `zipf_table`, `zipf_draw` | Zipf-distributed parent rows (one word per row); `zipf_table(cum)` keeps the table and its guide, which is worth reusing |
 | | `pool_take`, `template_strings`, `join_strings`, `string_case` | string assembly |
 | | `uuid4`, `random_strings` | UUIDs and random text |
 | | `day_weights`, `hour_weights_peaks`, `temporal_sample` | dates and times |
@@ -293,8 +294,12 @@ day profiles (and the share of whole-second values) as well as KS.
 
 The relational strategies. All are row addressed (the parent or version of row `r` is a function of the
 seed, the table, the column and `r`), so a chunk read in any order gives the same values. The ones that look
-at a whole group of rows read the whole column once and keep the result with `Engine.cached`; the
-row-sequential passes run in the kernel (`shape.generation.kernel_relational`, `docs/GENERATION_KERNEL.md`).
+at a whole group of rows read the whole column once and keep the result with `Engine.cached` (a key is
+built under a lock of its own, once). A strategy may also define `prepare(spec, ctx)`, returning a function
+that builds such a result, or `None`: the engine runs those on a helper thread when generation starts,
+ahead of the tables that need them, for results that depend on no generated data (the cap of a
+`pareto` key with `max_per_parent` over another table's sequence key). A chunk that needs one sooner waits
+for it instead of building it twice. The row-sequential passes run in the kernel (`shape.generation.kernel_relational`, `docs/GENERATION_KERNEL.md`).
 Their equivalence to the baseline is tested per strategy in `tests/generation/test_strategies_p404d.py`
 (cases in `strategy_1to1/relational_cases.py`).
 
@@ -359,3 +364,6 @@ fraction)` measures a generated column. `FanOut.from_spec` reads `{"top_fraction
 "shape", "shuffle"}`; P4-04d's `foreign_key` uses it for a `fan_out` key.
 
 `kernel_ops.alias_table(weights)` returns an `AliasTable` (`size`, `prob`, `alias`), cached by the weights.
+`kernel_ops.zipf_table(cum)` returns a `ZipfTable` (`size`, `cum`, `guide`) for a normalised cumulative weight
+array, and `zipf_draw(table, stream, row_start, n_rows)` the parent rows `searchsorted(cum, u, "right")`
+gives for the uniform of word 0 of each row, clipped to the last row.
