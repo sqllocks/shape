@@ -24,7 +24,7 @@ from shape.spec.migrate import legacy_view, to_model
 from shape.spec.model import ModelError
 
 from . import codec
-from .io import ArtifactError, read_artifact, write_artifact
+from .io import ArtifactError, ArtifactRead, read_artifact, write_artifact
 from .migrate import MIGRATIONS
 
 FORMAT = "shape"
@@ -76,14 +76,16 @@ def write_model(
     return content_id
 
 
-def read_model(
-    path: Any, *, verify_key: bytes | None = None
-) -> tuple[dict[str, Any], dict[str, Any]]:
+def read_model(path: Any, *, verify_key: bytes | None = None) -> ArtifactRead:
     """``(manifest, model)`` of a .shape file; a version 1 file is migrated (its manifest then
     says ``format_version`` 2, with ``migrated_from`` and ``source_content_id``). Any defect of
     the file is an ``ArtifactError``. With ``verify_key`` (a trusted Ed25519 public key) the file
-    must carry a valid signature, else ``ArtifactSignatureError``."""
-    m, parts = read_artifact(path, verify_key=verify_key)
+    must carry a valid signature, else ``ArtifactSignatureError``. The tuple also has ``.signature``
+    (``status`` ``verified``, ``unsigned`` or ``signed_not_verified``); without ``verify_key`` an
+    unverified artifact also raises a notice (see ``read_artifact``)."""
+    read = read_artifact(path, verify_key=verify_key)
+    m, parts = read
+    signature = read.signature
     if m.get("format") != FORMAT:
         raise ArtifactError("not a Shape artifact")
     version = m.get("format_version")
@@ -116,7 +118,7 @@ def read_model(
         raise
     except (ValueError, TypeError, KeyError, RecursionError, ModelError) as e:
         raise ArtifactError(f"invalid {COMPONENT}: {e}") from e
-    return m, obj
+    return ArtifactRead(m, obj, signature)
 
 
 def write_shape(
@@ -134,10 +136,9 @@ def write_shape(
     )
 
 
-def read_shape(
-    path: Any, *, verify_key: bytes | None = None
-) -> tuple[dict[str, Any], dict[str, Any]]:
+def read_shape(path: Any, *, verify_key: bytes | None = None) -> ArtifactRead:
     """``(manifest, shape)`` as the v1 consumers read it: the v1 document of a migrated capture,
     or the v2 model of a file that has none."""
-    m, model = read_model(path, verify_key=verify_key)
-    return m, legacy_view(model)
+    read = read_model(path, verify_key=verify_key)
+    m, model = read
+    return ArtifactRead(m, legacy_view(model), read.signature)
