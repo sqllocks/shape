@@ -42,7 +42,7 @@ import time
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Protocol
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
@@ -50,7 +50,8 @@ from shape.errors import ShapeError
 from shape.streaming.checkpoint import CheckpointError, FileCheckpointStore
 from shape.streaming.emit.rate import Burst, RateSchedule
 from shape.streaming.emit.sinks import EventSink
-from shape.streaming.emit.source import EventPlan
+from shape.streaming.emit.anomaly import AnomalyInjector
+from shape.streaming.emit.source import EventBlock
 
 CHECKPOINT_FORMAT = "shape-emit-v1"
 _END = object()
@@ -129,6 +130,19 @@ class _CheckpointWriter:
                 return
 
 
+class EventSequence(Protocol):
+    """What the runner needs of a plan: a counted, resumable sequence of event blocks.
+    ``EventPlan`` is one (a schema's rows); the simulation plugin's stream emitter is another
+    (the rows of tables it is given)."""
+
+    total_events: int
+    anomaly: AnomalyInjector | None
+
+    def fingerprint(self) -> str: ...
+
+    def blocks(self, offset: int = 0) -> Iterator[EventBlock]: ...
+
+
 @dataclass
 class EmitConfig:
     realtime: bool = False
@@ -188,7 +202,7 @@ class EmitReport:
 class EmitRunner:
     def __init__(
         self,
-        plan: EventPlan,
+        plan: EventSequence,
         sink: EventSink,
         config: EmitConfig | None = None,
         *,
