@@ -1,20 +1,36 @@
-"""P6-04 acceptance: parity of the ``shape-simulation`` simulators against the pinned baseline
-(T-21 applied to simulators), one case module per simulator.
+"""Simulation parity verifier: Shape's simulators against the pinned baseline's (P6-04).
 
-    source scripts/env.sh && python benchmarks/vs_spindle/simulation_1to1/verify.py [--quick]
-        [--only NAME ...] [--no-controls | --controls-only]
+Runs in the *baseline* venv (it needs pandas and scipy); each side's code runs in its own venv,
+through ``baseline_worker.py`` and ``shape_worker.py``:
 
-Runs in the Shape venv. The baseline runs in its own venv (``baseline_worker.py``) at the fixed
-seeds 42 (reference) and 43-46 (its own spread); Shape runs at 1042 (the set has no option, and a
-verdict from another set counts for nothing). Each case module (``case_<name>.py``) defines its
-configurations, how to run Shape, what to compare (``harness.py`` holds the rules and their
-tolerances, derived from T-21), a negative control per case (a deliberate perturbation of
-Shape's run that the comparison must catch) and the probes of the allow-list (``names.ALLOWED``:
-baseline defects that Shape fixes, each shown in the baseline and absent in Shape).
+    source scripts/env.sh && "$SPINDLE_PY" benchmarks/vs_spindle/simulation_1to1/verify.py \\
+        [--scale small|medium] [--case NAME ...] [--negative-control] [--out REPORT.json]
 
-Exit codes: 0 every check passed, every control was detected and every probe passed; 1 a
-check failed, a control went undetected or a probe failed; 2 the baseline or an input is
-missing, or a command failed.
+Every ``case_<simulator>.py`` in this directory is one case (a module per simulator, so the lanes
+that port different simulators never edit the same file). A case runs two kinds of check:
+
+* **Mechanism parity (exact).** Both tools get the *same* input tables (the baseline's retail at
+  seed 42), the same configuration and the same seed. The simulators draw their random numbers in
+  the same order, so the outputs must be equal: the same files, the same rows in the same order,
+  the same manifests. The harness maps the baseline's names to Shape's (``sim_common.NAME_MAP``,
+  D-13) before it compares and records the map in the report. Wall-clock and random values (ids,
+  times) are checked for form, never for equality.
+* **T-21 parity.** Each tool simulates its own generated retail tables, the baseline at the
+  reference seed 42 and Shape at 1042, with the baseline's own spread from seeds 43-46: the output
+  columns satisfy T-21 (a)-(e) (names and order, null rate, KS, TVD, vocabulary) and the output
+  counts lie within max(5 sigma, 1.5 x the baseline's range). The seed set is fixed; there is no
+  option for another, and the verifier refuses to run if the constants were edited.
+
+**Allow-list.** Where the baseline has a trust-harming defect, Shape fixes it (owner's standing
+decision, 2026-10-01) and the difference is a named entry of the case's ``ALLOWED``. Each entry is
+shown by a *probe*: the baseline's defective behaviour is observed, and so is Shape's fix; an entry
+the baseline no longer shows fails the run (a stale entry), and any difference that is not allowed
+fails it.
+
+``--negative-control`` tampers with Shape's output (a value, a file, a count, a name) and requires
+every tampering to be caught; it exits 1 if one goes undetected.
+
+Exit codes: 0 every check passed, 1 a check failed, 2 an input is missing or a worker did not run.
 """
 
 from __future__ import annotations
@@ -22,93 +38,152 @@ from __future__ import annotations
 import argparse
 import importlib
 import json
+import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
-import harness  # noqa: E402
-import names  # noqa: E402
-from paths import BENCH_OUT_DIR  # noqa: E402
+import sim_common as sc  # noqa: E402
+from paths import BENCH_OUT_DIR, SHAPE_PY, SPINDLE_PY  # noqa: E402
+
+if not (sc.BASELINE_SEEDS == (43, 44, 45, 46) and sc.REF_SEED == 42 and sc.SHAPE_SEED == 1042):
+    sys.exit("the T-21 seed set is fixed (baseline 42 + 43-46, Shape 1042); a verdict from any other counts for nothing")
 
 
-def discover() -> dict[str, str]:
-    """``case_<name>.py`` modules next to this file, by name."""
-    return {p.stem[len("case_") :]: p.stem for p in sorted(HERE.glob("case_*.py"))}
+class MissingInput(Exception):
+    """An input is missing or a worker did not run (exit code 2)."""
+
+
+class Ctx:
+    """What a case gets: the scale, the retail inputs and a way to run one job on either side."""
+
+    def __init__(self, scale: str, tables: list[str]) -> None:
+        self.scale = scale
+        self.tables = tables
+        self.seeds = sc.BASELINE_SEEDS
+        self.ref_seed = sc.REF_SEED
+        self.shape_seed = sc.SHAPE_SEED
+
+    def input_dir(self, tool: str, seed: int) -> Path:
+        """The retail tables a tool generated at ``seed`` (Parquet, ``<table>.parquet``)."""
+        import sim_compare
+
+        gen = sim_compare.dv().generate
+        return gen.out_dir("spindle" if tool == "baseline" else "shape", sc.DOMAIN, self.scale, seed)
+
+    @property
+    def exact_dir(self) -> Path:
+        """The shared input of the mechanism parity checks: the baseline's retail, seed 42."""
+        return self.input_dir("baseline", sc.REF_SEED)
+
+    def run(self, side: str, sim: str, name: str, **params: Any) -> dict[str, Any]:
+        """Run job ``name`` of simulator ``sim`` on ``side`` (``baseline`` or ``shape``) in a
+        clean output directory; the result is the dict the side returned, plus ``out_dir``. A
+        simulator that raised is a result with an ``error`` key (a case may expect it)."""
+        out = sc.work_dir(sim, name, side)
+        if out.exists():
+            import shutil
+
+            shutil.rmtree(out)
+        out.mkdir(parents=True)
+        job = {"sim": sim, "name": name, "side": side, "out_dir": str(out), "scale": self.scale, **params}
+        job_file = out.parent / f"{side}.job.json"
+        sc.write_json(job_file, job)
+        py = SPINDLE_PY if side == "baseline" else SHAPE_PY
+        worker = HERE / ("baseline_worker.py" if side == "baseline" else "shape_worker.py")
+        proc = subprocess.run([str(py), str(worker), str(job_file)], capture_output=True, text=True)
+        result_file = out / "_result.json"
+        if proc.returncode != 0 or not result_file.exists():
+            raise MissingInput(
+                f"{side} worker for {sim}/{name} exited {proc.returncode}:\n{proc.stderr[-2000:]}"
+            )
+        result = sc.read_json(result_file)
+        result["out_dir"] = str(out)
+        return result
+
+
+def ensure_inputs(scale: str) -> list[str]:
+    """Generate the retail runs the cases read (the baseline at 42-46, Shape at 1042) when missing."""
+    import sim_compare
+
+    dv = sim_compare.dv()
+    raw = dv.load_schema_json(sc.DOMAIN)
+    tables = list(raw["tables"])
+    runs = [("spindle", s) for s in (sc.REF_SEED, *sc.BASELINE_SEEDS)] + [("shape", sc.SHAPE_SEED)]
+    for impl, seed in runs:
+        if not dv.ensure_run(impl, sc.DOMAIN, scale, seed, tables):
+            raise MissingInput(f"could not generate {impl} {sc.DOMAIN}/{scale}/seed{seed}")
+    return tables
+
+
+def discover(names: list[str]) -> list[Any]:
+    mods = []
+    for path in sorted(HERE.glob("case_*.py")):
+        mod = importlib.import_module(path.stem)
+        if not hasattr(mod, "baseline_side"):  # a pattern case (P6-04b), run by verify_patterns.py
+            continue
+        if names and mod.NAME not in names:
+            continue
+        mods.append(mod)
+    if names:
+        unknown = set(names) - {m.NAME for m in mods}
+        if unknown:
+            raise MissingInput(f"no case for {', '.join(sorted(unknown))}")
+    return mods
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    ap.add_argument("--quick", action="store_true", help="smaller inputs and populations")
-    ap.add_argument("--only", nargs="+", metavar="NAME", help="run these cases only")
-    ap.add_argument("--no-controls", action="store_true", help="skip the negative controls")
-    ap.add_argument("--controls-only", action="store_true", help="run only the negative controls")
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--scale", choices=["small", "medium"], default="small")
+    ap.add_argument("--case", action="append", default=[], metavar="NAME", help="run only this case (repeatable)")
+    ap.add_argument("--negative-control", action="store_true", help="tamper with Shape's output and require every change to be caught")
+    ap.add_argument("--list", action="store_true", help="list the cases and exit")
+    ap.add_argument("--out", default=None, help="report JSON (default: $BENCH_OUT_DIR/simulation/report_<scale>.json)")
     a = ap.parse_args(argv)
-    cases = discover()
-    chosen = a.only or list(cases)
-    unknown = [c for c in chosen if c not in cases]
-    if unknown:
-        print(f"unknown case {unknown}; cases: {', '.join(cases)}", file=sys.stderr)
-        return 2
-    ctx = harness.Context(quick=a.quick, only_controls=a.controls_only, skip_controls=a.no_controls)
-    t0 = time.time()
-    failed = 0
-    results: dict[str, object] = {
-        "seeds": {"reference": 42, "baseline": [43, 44, 45, 46], "shape": 1042}
-    }
-    covered: set[str] = set()
-    for name in chosen:
-        module = importlib.import_module(cases[name])
-        try:
-            reports, controls, probes = harness.run_case(module, ctx)
-        except harness.HarnessError as exc:
-            print(f"ERROR {name}: {exc}", file=sys.stderr)
-            return 2
-        print(f"\n=== {name} ===")
-        for rep in reports:
-            status = "PASS" if not rep.failed else "FAIL"
-            print(
-                f"{status} {rep.label}: "
-                f"{len(rep.checks) - len(rep.failed)}/{len(rep.checks)} checks"
-            )
-            for c in rep.failed:
-                print(f"    - {c.name}: {json.dumps(harness._jsonable(c.detail))[:400]}")
-            failed += bool(rep.failed)
-        for c in controls:
-            print(
-                f"{'PASS' if c['detected'] else 'FAIL'} negative control {c['control']}: "
-                f"{'detected' if c['detected'] else 'NOT DETECTED'} "
-                f"({len(c['failed_checks'])}+ checks failed)"
-            )
-            failed += not c["detected"]
-        for pr in probes:
-            allow_id = pr.label.split()[0]
-            if allow_id not in names.ALLOWED:
-                print(f"FAIL probe {pr.label}: not an allow-list entry")
-                failed += 1
-                continue
-            covered.add(allow_id)
-            print(
-                f"{'PASS' if not pr.failed else 'FAIL'} allow-list {pr.label}: "
-                f"{len(pr.checks) - len(pr.failed)}/{len(pr.checks)}"
-            )
-            for c in pr.failed:
-                print(f"    - {c.name}: {json.dumps(harness._jsonable(c.detail))[:300]}")
-            failed += bool(pr.failed)
-        results[name] = {
-            "reports": [r.as_dict() for r in reports],
-            "controls": controls,
-            "probes": [p.as_dict() for p in probes],
+    try:
+        cases = discover(a.case)
+        if a.list:
+            for m in cases:
+                print(m.NAME)
+            return 0
+        t0 = time.time()
+        tables = ensure_inputs(a.scale)
+        ctx = Ctx(a.scale, tables)
+        report: dict[str, Any] = {
+            "scale": a.scale,
+            "reference_seed": sc.REF_SEED,
+            "baseline_seeds": list(sc.BASELINE_SEEDS),
+            "shape_seed": sc.SHAPE_SEED,
+            "name_map_baseline_to_shape": sc.NAME_MAP,
+            "cases": {},
         }
-    out = BENCH_OUT_DIR / "simulation_1to1"
-    out.mkdir(parents=True, exist_ok=True)
-    (out / "results.json").write_text(json.dumps(results, indent=2, default=str))
-    print(f"\nallow-list entries exercised: {', '.join(sorted(covered)) or 'none'}")
-    print(f"{'FAILED' if failed else 'OK'}: {failed} failure(s) in {time.time() - t0:.0f} s")
+        failed = False
+        for mod in cases:
+            fn = mod.negative_controls if a.negative_control else mod.run
+            t1 = time.time()
+            checks = fn(ctx)
+            for c in checks.items:
+                print(c.line(), flush=True)
+            report["cases"][mod.NAME] = {
+                "ok": checks.ok,
+                "seconds": round(time.time() - t1, 1),
+                "allowed": getattr(mod, "ALLOWED", {}),
+                "checks": [{"name": c.name, "ok": c.ok, "detail": c.detail} for c in checks.items],
+            }
+            failed |= not checks.ok
+        report["ok"] = not failed
+        report["seconds"] = round(time.time() - t0, 1)
+    except MissingInput as exc:
+        print(f"MISSING: {exc}", file=sys.stderr)
+        return 2
+    out = Path(a.out) if a.out else BENCH_OUT_DIR / "simulation" / f"report_{a.scale}{'_negative' if a.negative_control else ''}.json"
+    sc.write_json(out, report)
+    label = "negative control" if a.negative_control else "verify"
+    print(f"{label}: {'ALL PASSED' if not failed else 'FAILED'} ({report['seconds']}s) -> {out}")
     return 1 if failed else 0
 
 

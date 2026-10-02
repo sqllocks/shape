@@ -1,8 +1,8 @@
 """Shared machinery of the simulation parity harness (P6-04): running the baseline, and the
 comparison rules (T-21's, applied to simulators).
 
-Used by every ``case_*.py`` and by ``verify.py``; runs in the Shape venv (numpy, scipy and
-pyarrow). The baseline runs in its own venv through ``baseline_worker.py``.
+Used by the pattern cases (``names.PATTERN_CASES``) and by ``verify_patterns.py``; runs in the Shape venv (numpy, scipy and
+pyarrow). The baseline runs in its own venv through ``pattern_worker.py``.
 
 The comparison rules, per output table of a simulator (the reference baseline seed is 42, its
 own spread comes from seeds 43-46 against it, Shape runs at seed 1042; the set is fixed and has
@@ -144,7 +144,7 @@ def _digest(*parts: Any) -> str:
     h = hashlib.sha256()
     for part in parts:
         h.update(json.dumps(part, sort_keys=True, default=str).encode())
-    h.update((HERE / "baseline_worker.py").read_bytes())
+    h.update((HERE / "pattern_worker.py").read_bytes())
     return h.hexdigest()[:16]
 
 
@@ -198,7 +198,7 @@ def baseline_runs(
             )
         )
         res = subprocess.run(
-            [str(SPINDLE_PY), str(HERE / "baseline_worker.py"), str(job)],
+            [str(SPINDLE_PY), str(HERE / "pattern_worker.py"), str(job)],
             capture_output=True,
             text=True,
         )
@@ -681,7 +681,7 @@ def baseline_once(
         )
     )
     res = subprocess.run(
-        [str(SPINDLE_PY), str(HERE / "baseline_worker.py"), str(job)],
+        [str(SPINDLE_PY), str(HERE / "pattern_worker.py"), str(job)],
         capture_output=True,
         text=True,
     )
@@ -722,7 +722,7 @@ def baseline_many(
         )
     )
     res = subprocess.run(
-        [str(SPINDLE_PY), str(HERE / "baseline_worker.py"), str(job)],
+        [str(SPINDLE_PY), str(HERE / "pattern_worker.py"), str(job)],
         capture_output=True,
         text=True,
     )

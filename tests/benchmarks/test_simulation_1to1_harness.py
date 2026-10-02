@@ -1,6 +1,6 @@
 """P6-04: the simulation parity harness's own rules, without the baseline.
 
-``benchmarks/vs_spindle/simulation_1to1/verify.py`` compares the simulators with the pinned
+``benchmarks/vs_spindle/simulation_1to1/verify_patterns.py`` compares the simulators with the pinned
 baseline. These tests check the comparison itself on tables built here: the same table passes,
 a deliberately damaged one fails (the rules' negative control), the seed set cannot be changed,
 and every allow-list entry has a probe in a case module.
@@ -26,7 +26,7 @@ def _load(*modules: str) -> list[ModuleType]:
     ``harness``, ``names`` or ``verify`` too, so the names are cleared while these load and the
     other modules put back afterwards (these stay available as ``sim1to1_<name>``)."""
     saved_path = list(sys.path)
-    taken = ("harness", "names", "verify", "paths")
+    taken = ("harness", "names", "verify_patterns", "paths")
     stale = {m: sys.modules.pop(m) for m in taken if m in sys.modules}
     sys.path[:0] = [str(BENCH.parent), str(BENCH)]
     try:
@@ -40,7 +40,7 @@ def _load(*modules: str) -> list[ModuleType]:
     return loaded
 
 
-h, names, verify = _load("harness", "names", "verify")
+h, names, verify = _load("harness", "names", "verify_patterns")
 
 
 def table(seed: int, n: int = 3000, bias: float = 0.0) -> pa.Table:

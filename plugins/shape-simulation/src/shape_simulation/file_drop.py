@@ -277,8 +277,7 @@ class FileDropSimulator:
         order = rows[np.argsort(assignment[rows], kind="stable")]
         cuts = np.searchsorted(assignment[order], np.arange(len(slots) + 1))
         return {
-            slot: table.take(pa.array(order[cuts[i] : cuts[i + 1]]))
-            for i, slot in enumerate(slots)
+            slot: table.take(pa.array(order[cuts[i] : cuts[i + 1]])) for i, slot in enumerate(slots)
         }
 
     def _slot_rows(

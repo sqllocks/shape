@@ -1,9 +1,9 @@
-"""Runs one job of a case on the pinned baseline (baseline venv); the checkout is only imported.
+"""Runs one job of a case on Shape (Shape venv).
 
-    $SPINDLE_PY baseline_worker.py JOB.json
+    $SHAPE_VENV/bin/python shape_worker.py JOB.json
 
 The job names a simulator; the worker imports ``case_<simulator>`` and calls its
-``baseline_side(job)``. The returned dict (or the exception, as ``{"error": ...}``) is written to
+``shape_side(job)``. The returned dict (or the exception, as ``{"error": ...}``) is written to
 ``<out_dir>/_result.json``.
 """
 
@@ -27,8 +27,8 @@ def main() -> int:
     job = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
     mod = importlib.import_module(f"case_{job['sim']}")
     try:
-        result = mod.baseline_side(job)
-    except Exception as exc:  # a baseline that raises is a result: a case may expect it
+        result = mod.shape_side(job)
+    except Exception as exc:  # a simulator that raises is a result: a case may expect it
         result = {"error": f"{type(exc).__name__}: {exc}", "trace": traceback.format_exc()[-1500:]}
     sc.write_json(Path(job["out_dir"]) / "_result.json", result)
     return 0

@@ -10,6 +10,10 @@ the first five entries.
 
 from __future__ import annotations
 
+# The pattern cases of P6-04b (``case_<name>.py``, run by ``verify_patterns.py``); the other
+# lane's cases (file_drop, ...) use ``verify.py``.
+PATTERN_CASES = ("clickstream", "financial", "iot", "operational_log", "pulse")
+
 # baseline module (under sqllocks_spindle.simulation) -> Shape module (under shape_simulation).
 # The module names are the same; the baseline's class names are kept by Shape too, so the
 # mapping is the identity for classes. What does change is listed in PARAMETERS and FIELDS.
