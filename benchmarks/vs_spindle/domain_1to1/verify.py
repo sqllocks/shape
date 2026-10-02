@@ -285,6 +285,8 @@ class Pools:
         table = {
             "first_name": lambda: n.FIRST_NAMES,
             "last_name": lambda: n.LAST_NAMES,
+            "company": lambda: n.COMPANY_NAMES,
+            "sentence": lambda: n.SENTENCES,
             "city": lambda: nat._US_CITIES,
             "state_abbr": lambda: nat._US_STATES,
         }
@@ -296,6 +298,8 @@ class Pools:
         st = gen.get("strategy")
         if st == "faker":
             return self.faker(gen.get("provider", ""))
+        if st in ("weighted_enum", "enum") and isinstance(gen.get("values"), (dict, list)):
+            return {str(v) for v in gen["values"]}  # the declared value set
         if st == "reference_data":
             ds = self.dataset(gen["dataset"])
             out: set[str] = set()
@@ -365,6 +369,14 @@ class Pools:
                 return float(ok.mean())
 
             return phone, "(AAA) EEE-SSSS, AAA/EEE 200..998, SSSS 1000..9998"
+        if st == "faker" and gen.get("provider") == "uri":
+            domains, paths = set(self.names.URI_DOMAINS), set(self.names.URI_PATHS)
+
+            def uri(s: pd.Series) -> float:
+                ex = s.dropna().astype(str).str.extract(r"^https://([^/]+)/(.*)$")
+                return float((ex[0].isin(domains) & ex[1].isin(paths)).mean())
+
+            return uri, "'https://'+URI_DOMAINS+'/'+URI_PATHS"
         if st == "pattern":
             rx = pattern_regex(gen.get("format", ""))
             if rx is not None:

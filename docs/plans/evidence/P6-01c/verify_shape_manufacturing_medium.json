@@ -1,0 +1,3982 @@
+{
+ "domain": "manufacturing",
+ "scale": "medium",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "production_line": {
+   "rows": {
+    "spindle": 20,
+    "impl": 20
+   },
+   "columns_spindle": [
+    "line_id",
+    "line_name",
+    "facility",
+    "line_type",
+    "capacity_per_hour",
+    "is_active"
+   ],
+   "columns_impl": [
+    "line_id",
+    "line_name",
+    "facility",
+    "line_type",
+    "capacity_per_hour",
+    "is_active"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "line_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "line_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "facility": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "line_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "capacity_per_hour": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "is_active": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "line_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.6164779987778186,
+     "stats": {
+      "mean": {
+       "spindle": 10.5,
+       "impl": 10.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 20.0,
+       "impl": 20.0
+      },
+      "std": {
+       "spindle": 5.766281297335398,
+       "impl": 5.766281297335398,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 20,
+      "impl": 20
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "line_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "distinct": {
+      "spindle": 20,
+      "impl": 20,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "LINE-001",
+       "spindle": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "LINE-002",
+       "spindle": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "LINE-003",
+       "spindle": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "LINE-004",
+       "spindle": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "LINE-005",
+       "spindle": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "LINE-006",
+       "spindle": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "LINE-007",
+       "spindle": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "LINE-008",
+       "spindle": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "LINE-009",
+       "spindle": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "LINE-010",
+       "spindle": 0.05,
+       "impl": 0.05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "LINE-{seq:3}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "facility": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Plant B",
+       "spindle": 0.55,
+       "impl": 0.3
+      },
+      {
+       "value": "Plant A",
+       "spindle": 0.2,
+       "impl": 0.45
+      },
+      {
+       "value": "Plant C",
+       "spindle": 0.15,
+       "impl": 0.05
+      },
+      {
+       "value": "Plant D",
+       "spindle": 0.1,
+       "impl": 0.2
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.35,
+     "tvd_baseline": 0.35000000000000003,
+     "tvd_tol": 1.0704744696916628,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "line_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 4,
+      "ratio": 0.8,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Assembly",
+       "spindle": 0.3,
+       "impl": 0.25
+      },
+      {
+       "value": "Machining",
+       "spindle": 0.25,
+       "impl": 0.15
+      },
+      {
+       "value": "Packaging",
+       "spindle": 0.25,
+       "impl": 0.5
+      },
+      {
+       "value": "Testing",
+       "spindle": 0.1,
+       "impl": 0.1
+      },
+      {
+       "value": "Finishing",
+       "spindle": 0.1,
+       "impl": 0.0
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.25,
+     "tvd_baseline": 0.25,
+     "tvd_tol": 1.1968268412042982,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "capacity_per_hour": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "ks": 0.25,
+     "ks_baseline": 0.35,
+     "ks_tol": 0.6164779987778186,
+     "stats": {
+      "mean": {
+       "spindle": 286.1619459983779,
+       "impl": 321.36508775952154
+      },
+      "min": {
+       "spindle": 80.4603226729572,
+       "impl": 57.6496337321595
+      },
+      "max": {
+       "spindle": 485.3302121797039,
+       "impl": 488.69426037983004
+      },
+      "std": {
+       "spindle": 150.72666818861035,
+       "impl": 132.56058935552335,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 20,
+      "impl": 20
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_active": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 1,
+      "ratio": 0.5,
+      "baseline_max_ratio_dev": 0.5
+     },
+     "top10": [
+      {
+       "value": "true",
+       "spindle": 0.85,
+       "impl": 1.0
+      },
+      {
+       "value": "false",
+       "spindle": 0.15,
+       "impl": 0.0
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.15000000000000002,
+     "tvd_baseline": 0.15000000000000002,
+     "tvd_tol": 0.7569397566060481,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "product": {
+   "rows": {
+    "spindle": 100,
+    "impl": 100
+   },
+   "columns_spindle": [
+    "product_id",
+    "product_name",
+    "product_category",
+    "unit_cost",
+    "weight_kg",
+    "sell_price"
+   ],
+   "columns_impl": [
+    "product_id",
+    "product_name",
+    "product_category",
+    "unit_cost",
+    "weight_kg",
+    "sell_price"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "product_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "product_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "product_category": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "unit_cost": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "weight_kg": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "sell_price": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "product_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 50.5,
+       "impl": 50.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "spindle": 28.86607004772212,
+       "impl": 28.86607004772212,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "product_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "PRD-00001",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "PRD-00002",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "PRD-00003",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "PRD-00004",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "PRD-00005",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "PRD-00006",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "PRD-00007",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "PRD-00008",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "PRD-00009",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "PRD-00010",
+       "spindle": 0.01,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "PRD-{seq:5}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "product_category": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 18,
+      "impl": 18,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.11111111111111116
+     },
+     "top10": [
+      {
+       "value": "Carbon Steel",
+       "spindle": 0.15,
+       "impl": 0.1
+      },
+      {
+       "value": "Aluminum 6061",
+       "spindle": 0.13,
+       "impl": 0.14
+      },
+      {
+       "value": "Aluminum 7075",
+       "spindle": 0.11,
+       "impl": 0.1
+      },
+      {
+       "value": "Stainless Steel",
+       "spindle": 0.08,
+       "impl": 0.07
+      },
+      {
+       "value": "Cast Iron",
+       "spindle": 0.07,
+       "impl": 0.07
+      },
+      {
+       "value": "ABS Plastic",
+       "spindle": 0.06,
+       "impl": 0.12
+      },
+      {
+       "value": "Nylon",
+       "spindle": 0.05,
+       "impl": 0.07
+      },
+      {
+       "value": "Polycarbonate",
+       "spindle": 0.05,
+       "impl": 0.1
+      },
+      {
+       "value": "Brass",
+       "spindle": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "Fiberglass",
+       "spindle": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "Epoxy Resin",
+       "spindle": 0.04,
+       "impl": 0.06
+      },
+      {
+       "value": "Carbon Fiber",
+       "spindle": 0.03,
+       "impl": 0.03
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.19,
+     "tvd_baseline": 0.32000000000000006,
+     "tvd_tol": 1.0155412503859615,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "unit_cost": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.09000000000000008,
+     "ks_baseline": 0.15000000000000002,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 166.41814739086513,
+       "impl": 164.03247952847417
+      },
+      "min": {
+       "spindle": 7.305000536181384,
+       "impl": 1.8824729761816998
+      },
+      "max": {
+       "spindle": 2971.645156090441,
+       "impl": 1619.091541395556
+      },
+      "std": {
+       "spindle": 335.1650133750362,
+       "impl": 226.55050327547747,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "weight_kg": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.15000000000000008,
+     "ks_baseline": 0.12,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 7.142785539488461,
+       "impl": 6.378394870257177
+      },
+      "min": {
+       "spindle": 0.39655495003478713,
+       "impl": 0.35510377888539757
+      },
+      "max": {
+       "spindle": 44.017334728775715,
+       "impl": 36.90842972300609
+      },
+      "std": {
+       "spindle": 7.641039037960246,
+       "impl": 5.879445983433466,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "sell_price": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.10999999999999999,
+     "ks_baseline": 0.16999999999999993,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 328.61440000000005,
+       "impl": 333.53049999999996
+      },
+      "min": {
+       "spindle": 13.99,
+       "impl": 3.84
+      },
+      "max": {
+       "spindle": 5195.99,
+       "impl": 4045.56
+      },
+      "std": {
+       "spindle": 643.7294439519136,
+       "impl": 531.2641017260154,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "bom": {
+   "rows": {
+    "spindle": 500,
+    "impl": 500
+   },
+   "columns_spindle": [
+    "bom_id",
+    "product_id",
+    "component_name",
+    "quantity_required",
+    "unit_of_measure",
+    "unit_cost",
+    "is_critical"
+   ],
+   "columns_impl": [
+    "bom_id",
+    "product_id",
+    "component_name",
+    "quantity_required",
+    "unit_of_measure",
+    "unit_cost",
+    "is_critical"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "bom_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "product_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "component_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "quantity_required": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "unit_of_measure": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "unit_cost": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "is_critical": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "bom_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.1232955997555637,
+     "stats": {
+      "mean": {
+       "spindle": 250.5,
+       "impl": 250.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "spindle": 144.33727862198316,
+       "impl": 144.33727862198316,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 500,
+      "impl": 500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "product_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "ks": 0.040000000000000036,
+     "ks_baseline": 0.04400000000000004,
+     "ks_tol": 0.1232955997555637,
+     "stats": {
+      "mean": {
+       "spindle": 50.408,
+       "impl": 49.606
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "spindle": 28.550543532479377,
+       "impl": 28.488572516010695,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 99
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "component_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "spindle": 500,
+      "impl": 500,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "CMP-00001",
+       "spindle": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "CMP-00002",
+       "spindle": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "CMP-00003",
+       "spindle": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "CMP-00004",
+       "spindle": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "CMP-00005",
+       "spindle": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "CMP-00006",
+       "spindle": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "CMP-00007",
+       "spindle": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "CMP-00008",
+       "spindle": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "CMP-00009",
+       "spindle": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "CMP-00010",
+       "spindle": 0.002,
+       "impl": 0.002
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "CMP-{seq:5}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "quantity_required": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "ks": 0.07600000000000001,
+     "ks_baseline": 0.05800000000000005,
+     "ks_tol": 0.1232955997555637,
+     "stats": {
+      "mean": {
+       "spindle": 26.3890639828377,
+       "impl": 24.653560460208404
+      },
+      "min": {
+       "spindle": 1.255729466842755,
+       "impl": 1.114153579825497
+      },
+      "max": {
+       "spindle": 49.908462589640955,
+       "impl": 49.76291734388929
+      },
+      "std": {
+       "spindle": 13.894274120767054,
+       "impl": 13.846812749415143,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 500,
+      "impl": 500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "unit_of_measure": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "EA",
+       "spindle": 0.39,
+       "impl": 0.402
+      },
+      {
+       "value": "KG",
+       "spindle": 0.192,
+       "impl": 0.19
+      },
+      {
+       "value": "LB",
+       "spindle": 0.158,
+       "impl": 0.142
+      },
+      {
+       "value": "LT",
+       "spindle": 0.142,
+       "impl": 0.142
+      },
+      {
+       "value": "M",
+       "spindle": 0.118,
+       "impl": 0.124
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.018000000000000016,
+     "tvd_baseline": 0.068,
+     "tvd_tol": 0.2393653682408596,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "unit_cost": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "ks": 0.035999999999999976,
+     "ks_baseline": 0.05999999999999994,
+     "ks_tol": 0.1232955997555637,
+     "stats": {
+      "mean": {
+       "spindle": 45.33812694204116,
+       "impl": 50.52600224260545
+      },
+      "min": {
+       "spindle": 0.5099784534398742,
+       "impl": 0.2124404616822779
+      },
+      "max": {
+       "spindle": 1740.075017702307,
+       "impl": 1310.5586487750336
+      },
+      "std": {
+       "spindle": 100.97691501482149,
+       "impl": 98.72245161884743,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 500,
+      "impl": 500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_critical": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "false",
+       "spindle": 0.756,
+       "impl": 0.758
+      },
+      {
+       "value": "true",
+       "spindle": 0.244,
+       "impl": 0.242
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0020000000000000018,
+     "tvd_baseline": 0.02200000000000002,
+     "tvd_tol": 0.15138795132120958,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "work_order": {
+   "rows": {
+    "spindle": 5000,
+    "impl": 5000
+   },
+   "columns_spindle": [
+    "wo_id",
+    "product_id",
+    "production_line_id",
+    "work_order_number",
+    "quantity_planned",
+    "start_date",
+    "status",
+    "priority",
+    "quantity_produced",
+    "end_date"
+   ],
+   "columns_impl": [
+    "wo_id",
+    "product_id",
+    "production_line_id",
+    "work_order_number",
+    "quantity_planned",
+    "start_date",
+    "status",
+    "priority",
+    "quantity_produced",
+    "end_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "wo_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "product_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "production_line_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "work_order_number": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "quantity_planned": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "start_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "priority": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "quantity_produced": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "end_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "wo_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 2500.5,
+       "impl": 2500.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 1443.3756441065507,
+       "impl": 1443.3756441065507,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "product_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.006599999999999939,
+     "ks_baseline": 0.016800000000000037,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 11.6106,
+       "impl": 11.5894
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "spindle": 19.022759201545924,
+       "impl": 18.893851053715863,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "production_line_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.017600000000000005,
+     "ks_baseline": 0.01859999999999995,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 10.528,
+       "impl": 10.378
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 20.0,
+       "impl": 20.0
+      },
+      "std": {
+       "spindle": 5.735574600683004,
+       "impl": 5.769429434528167,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 20,
+      "impl": 20
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "work_order_number": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "WO-000001",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "WO-000002",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "WO-000003",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "WO-000004",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "WO-000005",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "WO-000006",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "WO-000007",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "WO-000008",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "WO-000009",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "WO-000010",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "WO-{seq:6}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "quantity_planned": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.01539999999999997,
+     "ks_baseline": 0.026600000000000013,
+     "ks_tol": 0.04190000000000002,
+     "stats": {
+      "mean": {
+       "spindle": 246.4560845975208,
+       "impl": 247.58923127643322
+      },
+      "min": {
+       "spindle": 4.015796158320048,
+       "impl": 2.4083275348305344
+      },
+      "max": {
+       "spindle": 5887.634391075465,
+       "impl": 8229.484955331647
+      },
+      "std": {
+       "spindle": 330.4070891005382,
+       "impl": 337.7328083649295,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "start_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.010199999999999987,
+     "ks_baseline": 0.013600000000000001,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": "2023-12-29 10:00:40.829756672",
+       "impl": "2023-12-29 17:14:58.774073344"
+      },
+      "min": {
+       "spindle": "2022-01-02 00:30:00.808109824",
+       "impl": "2022-01-01 02:44:54.775756032"
+      },
+      "max": {
+       "spindle": "2025-12-30 22:18:50.316717824",
+       "impl": "2025-12-30 20:43:03.929457920"
+      },
+      "std": {
+       "spindle": 421.0175676591762,
+       "impl": 420.9935078310589,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Completed",
+       "spindle": 0.5508,
+       "impl": 0.5496
+      },
+      {
+       "value": "In Progress",
+       "spindle": 0.1598,
+       "impl": 0.15
+      },
+      {
+       "value": "Open",
+       "spindle": 0.1016,
+       "impl": 0.1066
+      },
+      {
+       "value": "Cancelled",
+       "spindle": 0.098,
+       "impl": 0.0994
+      },
+      {
+       "value": "On Hold",
+       "spindle": 0.0898,
+       "impl": 0.0944
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.010999999999999989,
+     "tvd_baseline": 0.01639999999999997,
+     "tvd_tol": 0.0756939756606048,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "priority": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Medium",
+       "spindle": 0.5586,
+       "impl": 0.55
+      },
+      {
+       "value": "Low",
+       "spindle": 0.246,
+       "impl": 0.246
+      },
+      {
+       "value": "High",
+       "spindle": 0.1954,
+       "impl": 0.204
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.008599999999999969,
+     "tvd_baseline": 0.013000000000000012,
+     "tvd_tol": 0.058632301428350395,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "quantity_produced": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.015000000000000013,
+     "ks_baseline": 0.024399999999999977,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 228.026046,
+       "impl": 229.212666
+      },
+      "min": {
+       "spindle": 3.56,
+       "impl": 2.08
+      },
+      "max": {
+       "spindle": 5405.49,
+       "impl": 7191.55
+      },
+      "std": {
+       "spindle": 305.64939881057495,
+       "impl": 311.87821438996417,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4670,
+      "impl": 4703
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "end_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.010199999999999987,
+     "ks_baseline": 0.013600000000000001,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": "2024-01-12 10:00:40.829756672",
+       "impl": "2024-01-12 17:14:58.774073344"
+      },
+      "min": {
+       "spindle": "2022-01-16 00:30:00.808109824",
+       "impl": "2022-01-15 02:44:54.775756032"
+      },
+      "max": {
+       "spindle": "2026-01-13 22:18:50.316717824",
+       "impl": "2026-01-13 20:43:03.929457920"
+      },
+      "std": {
+       "spindle": 421.0175676591762,
+       "impl": 420.9935078310589,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "quality_check": {
+   "rows": {
+    "spindle": 15000,
+    "impl": 15000
+   },
+   "columns_spindle": [
+    "check_id",
+    "wo_id",
+    "check_date",
+    "check_type",
+    "result",
+    "defect_count",
+    "inspector_name"
+   ],
+   "columns_impl": [
+    "check_id",
+    "wo_id",
+    "check_date",
+    "check_type",
+    "result",
+    "defect_count",
+    "inspector_name"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "check_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "wo_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "check_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "check_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "result": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "defect_count": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "inspector_name": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "check_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.022510593742416898,
+     "stats": {
+      "mean": {
+       "spindle": 7500.5,
+       "impl": 7500.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 15000.0,
+       "impl": 15000.0
+      },
+      "std": {
+       "spindle": 4330.127009299689,
+       "impl": 4330.127009299689,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 15000,
+      "impl": 15000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "wo_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.005733333333333257,
+     "ks_baseline": 0.007133333333333325,
+     "ks_tol": 0.022510593742416898,
+     "stats": {
+      "mean": {
+       "spindle": 2495.7828,
+       "impl": 2485.8758
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 1440.8691715387718,
+       "impl": 1438.6313622239577,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4746,
+      "impl": 4752
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "check_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.0074666666666666215,
+     "ks_baseline": 0.014600000000000057,
+     "ks_tol": 0.023900000000000088,
+     "stats": {
+      "mean": {
+       "spindle": "2023-12-31 15:24:29.148935424",
+       "impl": "2023-12-31 04:04:51.443650048"
+      },
+      "min": {
+       "spindle": "2022-01-01 00:43:48.924097024",
+       "impl": "2022-01-01 01:25:00.614618112"
+      },
+      "max": {
+       "spindle": "2025-12-30 22:56:40.742631680",
+       "impl": "2025-12-30 22:15:57.145968896"
+      },
+      "std": {
+       "spindle": 423.74462527320475,
+       "impl": 421.6569049807914,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 15000,
+      "impl": 15000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "check_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "distinct": {
+      "spindle": 15,
+      "impl": 15,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Visual Inspection",
+       "spindle": 0.11206666666666666,
+       "impl": 0.11186666666666667
+      },
+      {
+       "value": "Dimensional Check",
+       "spindle": 0.10406666666666667,
+       "impl": 0.10353333333333334
+      },
+      {
+       "value": "Functional Test",
+       "spindle": 0.09346666666666667,
+       "impl": 0.0912
+      },
+      {
+       "value": "Assembly Verification",
+       "spindle": 0.07706666666666667,
+       "impl": 0.07886666666666667
+      },
+      {
+       "value": "Material Analysis",
+       "spindle": 0.0746,
+       "impl": 0.07773333333333333
+      },
+      {
+       "value": "Final QC Audit",
+       "spindle": 0.07193333333333334,
+       "impl": 0.07426666666666666
+      },
+      {
+       "value": "Electrical Test",
+       "spindle": 0.0632,
+       "impl": 0.064
+      },
+      {
+       "value": "Weld Integrity Check",
+       "spindle": 0.058866666666666664,
+       "impl": 0.0568
+      },
+      {
+       "value": "Pressure Test",
+       "spindle": 0.05873333333333333,
+       "impl": 0.0554
+      },
+      {
+       "value": "Surface Finish Inspection",
+       "spindle": 0.0572,
+       "impl": 0.057666666666666665
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.011666666666666645,
+     "tvd_baseline": 0.017666666666666647,
+     "tvd_tol": 0.07569397566060479,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "result": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Pass",
+       "spindle": 0.82,
+       "impl": 0.8239333333333333
+      },
+      {
+       "value": "Rework",
+       "spindle": 0.10186666666666666,
+       "impl": 0.0966
+      },
+      {
+       "value": "Fail",
+       "spindle": 0.07813333333333333,
+       "impl": 0.07946666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0052666666666666695,
+     "tvd_baseline": 0.005466666666666613,
+     "tvd_tol": 0.03385137501286537,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "defect_count": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.006599999999999995,
+     "ks_baseline": 0.013466666666666682,
+     "ks_tol": 0.022510593742416898,
+     "stats": {
+      "mean": {
+       "spindle": 2.2740501451133004,
+       "impl": 2.267440777547857
+      },
+      "min": {
+       "spindle": 0.08551731756831342,
+       "impl": 0.07442380141321735
+      },
+      "max": {
+       "spindle": 49.74279203543247,
+       "impl": 36.36074046755385
+      },
+      "std": {
+       "spindle": 2.168890471767269,
+       "impl": 2.1296995239956997,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 15000,
+      "impl": 15000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "inspector_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "distinct": {
+      "spindle": 14996,
+      "impl": 14996,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.00026673779674579734
+     },
+     "top10": [
+      {
+       "value": "Naita Marson",
+       "spindle": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Donald Myersgate",
+       "spindle": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Joard Masway",
+       "spindle": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Orie Callahan",
+       "spindle": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Erisa Ferrham",
+       "spindle": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Ryan Watefield",
+       "spindle": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Brel Osborne",
+       "spindle": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Miix Hebcroft",
+       "spindle": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Betty Berworth",
+       "spindle": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Siel Lindsman",
+       "spindle": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Kristi Meyeberg",
+       "spindle": 0.0,
+       "impl": 0.00013333333333333334
+      },
+      {
+       "value": "Erne Benjamin",
+       "spindle": 0.0,
+       "impl": 0.00013333333333333334
+      },
+      {
+       "value": "Anria Mason",
+       "spindle": 0.0,
+       "impl": 0.00013333333333333334
+      },
+      {
+       "value": "Hiix Osbosen",
+       "spindle": 0.0,
+       "impl": 0.00013333333333333334
+      },
+      {
+       "value": "Trria Deladale",
+       "spindle": 0.0,
+       "impl": 6.666666666666667e-05
+      }
+     ],
+     "vocab_overlap": 0.0006666666666666666,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "FIRST_NAMES+' '+LAST_NAMES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "defect": {
+   "rows": {
+    "spindle": 4500,
+    "impl": 4500
+   },
+   "columns_spindle": [
+    "defect_id",
+    "check_id",
+    "defect_code",
+    "severity",
+    "root_cause",
+    "disposition"
+   ],
+   "columns_impl": [
+    "defect_id",
+    "check_id",
+    "defect_code",
+    "severity",
+    "root_cause",
+    "disposition"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "defect_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "check_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "defect_code": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "severity": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "root_cause": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "disposition": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "defect_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0015711737986690533
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.04109853325185457,
+     "stats": {
+      "mean": {
+       "spindle": 2250.5,
+       "impl": 2250.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 4500.0,
+       "impl": 4500.0
+      },
+      "std": {
+       "spindle": 1299.0380736016427,
+       "impl": 1299.0380736016427,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4500,
+      "impl": 4500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "check_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0015711737986690533
+     },
+     "ks": 0.01044444444444445,
+     "ks_baseline": 0.020444444444444432,
+     "ks_tol": 0.04109853325185457,
+     "stats": {
+      "mean": {
+       "spindle": 7532.555777777778,
+       "impl": 7545.216444444444
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 4.0
+      },
+      "max": {
+       "spindle": 14999.0,
+       "impl": 14999.0
+      },
+      "std": {
+       "spindle": 4320.094354087903,
+       "impl": 4331.279717927437,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 3863,
+      "impl": 3890
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "defect_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0015711737986690533
+     },
+     "distinct": {
+      "spindle": 25,
+      "impl": 25,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "D001 - Dimensional Out of Spec",
+       "spindle": 0.088,
+       "impl": 0.098
+      },
+      {
+       "value": "D002 - Surface Scratch",
+       "spindle": 0.0748888888888889,
+       "impl": 0.07777777777777778
+      },
+      {
+       "value": "D010 - Burr/Flash",
+       "spindle": 0.058666666666666666,
+       "impl": 0.058666666666666666
+      },
+      {
+       "value": "D003 - Weld Porosity",
+       "spindle": 0.05688888888888889,
+       "impl": 0.058444444444444445
+      },
+      {
+       "value": "D009 - Cracked",
+       "spindle": 0.05177777777777778,
+       "impl": 0.051333333333333335
+      },
+      {
+       "value": "D006 - Bent/Warped",
+       "spindle": 0.051555555555555556,
+       "impl": 0.05533333333333333
+      },
+      {
+       "value": "D011 - Misalignment",
+       "spindle": 0.051333333333333335,
+       "impl": 0.05711111111111111
+      },
+      {
+       "value": "D018 - Assembly Error",
+       "spindle": 0.050444444444444445,
+       "impl": 0.048666666666666664
+      },
+      {
+       "value": "D008 - Electrical Failure",
+       "spindle": 0.044,
+       "impl": 0.043555555555555556
+      },
+      {
+       "value": "D004 - Missing Component",
+       "spindle": 0.042222222222222223,
+       "impl": 0.04622222222222222
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.03244444444444444,
+     "tvd_baseline": 0.04444444444444444,
+     "tvd_tol": 0.17841241161527713,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "severity": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0015711737986690533
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Minor",
+       "spindle": 0.504,
+       "impl": 0.5
+      },
+      {
+       "value": "Cosmetic",
+       "spindle": 0.30466666666666664,
+       "impl": 0.3035555555555556
+      },
+      {
+       "value": "Major",
+       "spindle": 0.13755555555555554,
+       "impl": 0.14644444444444443
+      },
+      {
+       "value": "Critical",
+       "spindle": 0.05377777777777778,
+       "impl": 0.05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.008888888888888866,
+     "tvd_baseline": 0.018444444444444454,
+     "tvd_tol": 0.07136496464611086,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "root_cause": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0015711737986690533
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Material",
+       "spindle": 0.25266666666666665,
+       "impl": 0.25822222222222224
+      },
+      {
+       "value": "Process",
+       "spindle": 0.24644444444444444,
+       "impl": 0.24288888888888888
+      },
+      {
+       "value": "Equipment",
+       "spindle": 0.20155555555555554,
+       "impl": 0.20355555555555555
+      },
+      {
+       "value": "Human",
+       "spindle": 0.2008888888888889,
+       "impl": 0.19466666666666665
+      },
+      {
+       "value": "Design",
+       "spindle": 0.09844444444444445,
+       "impl": 0.10066666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.009777777777777809,
+     "tvd_baseline": 0.012222222222222218,
+     "tvd_tol": 0.07978845608028654,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "disposition": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0015711737986690533
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Rework",
+       "spindle": 0.3562222222222222,
+       "impl": 0.35355555555555557
+      },
+      {
+       "value": "Use As-Is",
+       "spindle": 0.2551111111111111,
+       "impl": 0.24644444444444444
+      },
+      {
+       "value": "Scrap",
+       "spindle": 0.24644444444444444,
+       "impl": 0.24733333333333332
+      },
+      {
+       "value": "Return to Supplier",
+       "spindle": 0.14222222222222222,
+       "impl": 0.15266666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.011333333333333334,
+     "tvd_baseline": 0.023333333333333345,
+     "tvd_tol": 0.07136496464611086,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "equipment": {
+   "rows": {
+    "spindle": 80,
+    "impl": 80
+   },
+   "columns_spindle": [
+    "equipment_id",
+    "production_line_id",
+    "equipment_name",
+    "equipment_type",
+    "purchase_date",
+    "status",
+    "last_maintenance_date"
+   ],
+   "columns_impl": [
+    "equipment_id",
+    "production_line_id",
+    "equipment_name",
+    "equipment_type",
+    "purchase_date",
+    "status",
+    "last_maintenance_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "equipment_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "production_line_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "equipment_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "equipment_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "purchase_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "last_maintenance_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "equipment_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.3082389993889093,
+     "stats": {
+      "mean": {
+       "spindle": 40.5,
+       "impl": 40.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 80.0,
+       "impl": 80.0
+      },
+      "std": {
+       "spindle": 23.092206477510977,
+       "impl": 23.092206477510977,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 80,
+      "impl": 80
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "production_line_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "ks": 0.07500000000000007,
+     "ks_baseline": 0.175,
+     "ks_tol": 0.3082389993889093,
+     "stats": {
+      "mean": {
+       "spindle": 10.2625,
+       "impl": 9.9
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 20.0,
+       "impl": 20.0
+      },
+      "std": {
+       "spindle": 6.069892400199529,
+       "impl": 5.855766388782941,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 20,
+      "impl": 20
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "equipment_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "distinct": {
+      "spindle": 80,
+      "impl": 80,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "EQP-0001",
+       "spindle": 0.0125,
+       "impl": 0.0125
+      },
+      {
+       "value": "EQP-0002",
+       "spindle": 0.0125,
+       "impl": 0.0125
+      },
+      {
+       "value": "EQP-0003",
+       "spindle": 0.0125,
+       "impl": 0.0125
+      },
+      {
+       "value": "EQP-0004",
+       "spindle": 0.0125,
+       "impl": 0.0125
+      },
+      {
+       "value": "EQP-0005",
+       "spindle": 0.0125,
+       "impl": 0.0125
+      },
+      {
+       "value": "EQP-0006",
+       "spindle": 0.0125,
+       "impl": 0.0125
+      },
+      {
+       "value": "EQP-0007",
+       "spindle": 0.0125,
+       "impl": 0.0125
+      },
+      {
+       "value": "EQP-0008",
+       "spindle": 0.0125,
+       "impl": 0.0125
+      },
+      {
+       "value": "EQP-0009",
+       "spindle": 0.0125,
+       "impl": 0.0125
+      },
+      {
+       "value": "EQP-0010",
+       "spindle": 0.0125,
+       "impl": 0.0125
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "EQP-{seq:4}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "equipment_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "distinct": {
+      "spindle": 6,
+      "impl": 6,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Press",
+       "spindle": 0.225,
+       "impl": 0.125
+      },
+      {
+       "value": "CNC",
+       "spindle": 0.2125,
+       "impl": 0.275
+      },
+      {
+       "value": "Robot",
+       "spindle": 0.1875,
+       "impl": 0.1875
+      },
+      {
+       "value": "Conveyor",
+       "spindle": 0.1375,
+       "impl": 0.1375
+      },
+      {
+       "value": "Tester",
+       "spindle": 0.125,
+       "impl": 0.1875
+      },
+      {
+       "value": "Oven",
+       "spindle": 0.1125,
+       "impl": 0.0875
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.12500000000000003,
+     "tvd_baseline": 0.2,
+     "tvd_tol": 0.6555290583552474,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "purchase_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "ks": 0.09999999999999998,
+     "ks_baseline": 0.21249999999999997,
+     "ks_tol": 0.32075,
+     "stats": {
+      "mean": {
+       "spindle": "2020-06-17 15:04:03.944985344",
+       "impl": "2020-04-10 00:10:04.840084736"
+      },
+      "min": {
+       "spindle": "2015-01-22 07:58:02.966552320",
+       "impl": "2015-03-23 13:38:41.070359040"
+      },
+      "max": {
+       "spindle": "2025-05-22 18:29:35.729428224",
+       "impl": "2025-05-26 22:35:42.914978048"
+      },
+      "std": {
+       "spindle": 1088.4227507635221,
+       "impl": 1030.0712768023645,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 80,
+      "impl": 80
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Operational",
+       "spindle": 0.7875,
+       "impl": 0.775
+      },
+      {
+       "value": "Under Maintenance",
+       "spindle": 0.1625,
+       "impl": 0.175
+      },
+      {
+       "value": "Decommissioned",
+       "spindle": 0.05,
+       "impl": 0.05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.01249999999999997,
+     "tvd_baseline": 0.050000000000000024,
+     "tvd_tol": 0.46352904242782744,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_maintenance_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "ks": 0.16250000000000003,
+     "ks_baseline": 0.16250000000000003,
+     "ks_tol": 0.3082389993889093,
+     "stats": {
+      "mean": {
+       "spindle": "2024-06-04 05:17:20.797379072",
+       "impl": "2024-04-05 07:22:35.170086144"
+      },
+      "min": {
+       "spindle": "2023-01-03 00:04:30.160669440",
+       "impl": "2023-01-22 20:36:23.899278080"
+      },
+      "max": {
+       "spindle": "2025-12-27 20:21:46.102306560",
+       "impl": "2025-12-29 06:15:09.399079936"
+      },
+      "std": {
+       "spindle": 341.0303526877906,
+       "impl": 302.1379295331909,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 80,
+      "impl": 80
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "downtime_event": {
+   "rows": {
+    "spindle": 320,
+    "impl": 320
+   },
+   "columns_spindle": [
+    "event_id",
+    "equipment_id",
+    "start_time",
+    "duration_minutes",
+    "cause",
+    "impact_level"
+   ],
+   "columns_impl": [
+    "event_id",
+    "equipment_id",
+    "start_time",
+    "duration_minutes",
+    "cause",
+    "impact_level"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "event_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "equipment_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "start_time": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "duration_minutes": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "cause": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "impact_level": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "event_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02206253319756709
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.15411949969445465,
+     "stats": {
+      "mean": {
+       "spindle": 160.5,
+       "impl": 160.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 320.0,
+       "impl": 320.0
+      },
+      "std": {
+       "spindle": 92.37559201434111,
+       "impl": 92.37559201434111,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 320,
+      "impl": 320
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "equipment_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02206253319756709
+     },
+     "ks": 0.06874999999999998,
+     "ks_baseline": 0.078125,
+     "ks_tol": 0.15411949969445465,
+     "stats": {
+      "mean": {
+       "spindle": 38.9375,
+       "impl": 41.053125
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 80.0,
+       "impl": 80.0
+      },
+      "std": {
+       "spindle": 23.754391041447473,
+       "impl": 23.54225568492482,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 78,
+      "impl": 78
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "start_time": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02206253319756709
+     },
+     "ks": 0.08124999999999999,
+     "ks_baseline": 0.10312500000000002,
+     "ks_tol": 0.15668750000000004,
+     "stats": {
+      "mean": {
+       "spindle": "2024-01-27 04:50:43.698893312",
+       "impl": "2023-12-04 09:16:33.002485248"
+      },
+      "min": {
+       "spindle": "2022-01-09 14:42:38.037396224",
+       "impl": "2022-01-04 11:08:16.318843904"
+      },
+      "max": {
+       "spindle": "2025-12-30 07:03:00.694231552",
+       "impl": "2025-12-21 07:51:40.185523968"
+      },
+      "std": {
+       "spindle": 425.5209650609211,
+       "impl": 415.4066644225534,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 320,
+      "impl": 320
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "duration_minutes": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02206253319756709
+     },
+     "ks": 0.06562500000000002,
+     "ks_baseline": 0.07187500000000002,
+     "ks_tol": 0.15411949969445465,
+     "stats": {
+      "mean": {
+       "spindle": 48.65203350939713,
+       "impl": 50.21078987789561
+      },
+      "min": {
+       "spindle": 5.0,
+       "impl": 5.0
+      },
+      "max": {
+       "spindle": 449.60876848199615,
+       "impl": 499.22166898284553
+      },
+      "std": {
+       "spindle": 53.81746603364148,
+       "impl": 57.127398628716016,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 312,
+      "impl": 309
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "cause": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02206253319756709
+     },
+     "distinct": {
+      "spindle": 6,
+      "impl": 6,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Planned Maintenance",
+       "spindle": 0.309375,
+       "impl": 0.21875
+      },
+      {
+       "value": "Breakdown",
+       "spindle": 0.259375,
+       "impl": 0.25625
+      },
+      {
+       "value": "Changeover",
+       "spindle": 0.15625,
+       "impl": 0.15625
+      },
+      {
+       "value": "Material Shortage",
+       "spindle": 0.1375,
+       "impl": 0.1375
+      },
+      {
+       "value": "Quality Issue",
+       "spindle": 0.08125,
+       "impl": 0.121875
+      },
+      {
+       "value": "Power Outage",
+       "spindle": 0.05625,
+       "impl": 0.109375
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.09375000000000003,
+     "tvd_baseline": 0.090625,
+     "tvd_tol": 0.3277645291776237,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "impact_level": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02206253319756709
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Medium",
+       "spindle": 0.48125,
+       "impl": 0.4875
+      },
+      {
+       "value": "Low",
+       "spindle": 0.334375,
+       "impl": 0.321875
+      },
+      {
+       "value": "High",
+       "spindle": 0.184375,
+       "impl": 0.190625
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.012499999999999956,
+     "tvd_baseline": 0.05624999999999995,
+     "tvd_tol": 0.23176452121391372,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "production_metric": {
+   "rows": {
+    "spindle": 25000,
+    "impl": 25000
+   },
+   "columns_spindle": [
+    "metric_id",
+    "wo_id",
+    "metric_date",
+    "oee_score",
+    "yield_rate",
+    "cycle_time_seconds",
+    "scrap_rate"
+   ],
+   "columns_impl": [
+    "metric_id",
+    "wo_id",
+    "metric_date",
+    "oee_score",
+    "yield_rate",
+    "cycle_time_seconds",
+    "scrap_rate"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "metric_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "wo_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "metric_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "oee_score": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "yield_rate": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "cycle_time_seconds": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "scrap_rate": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "metric_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.01743663093552431,
+     "stats": {
+      "mean": {
+       "spindle": 12500.5,
+       "impl": 12500.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 25000.0,
+       "impl": 25000.0
+      },
+      "std": {
+       "spindle": 7216.87835909682,
+       "impl": 7216.87835909682,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 25000,
+      "impl": 25000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "wo_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.006120000000000014,
+     "ks_baseline": 0.010639999999999983,
+     "ks_tol": 0.017959999999999976,
+     "stats": {
+      "mean": {
+       "spindle": 2503.43352,
+       "impl": 2496.58828
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 1445.4190525036017,
+       "impl": 1451.6311881626964,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4971,
+      "impl": 4960
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "metric_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.006520000000000081,
+     "ks_baseline": 0.007640000000000091,
+     "ks_tol": 0.01743663093552431,
+     "stats": {
+      "mean": {
+       "spindle": "2023-12-31 18:57:30.207567104",
+       "impl": "2023-12-29 17:04:26.606395904"
+      },
+      "min": {
+       "spindle": "2022-01-01 00:05:48.198509056",
+       "impl": "2022-01-01 00:31:16.429837056"
+      },
+      "max": {
+       "spindle": "2025-12-30 23:43:06.658196224",
+       "impl": "2025-12-30 23:22:41.216837888"
+      },
+      "std": {
+       "spindle": 422.95994223857195,
+       "impl": 421.89169460506713,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 25000,
+      "impl": 25000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "oee_score": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.010760000000000047,
+     "ks_baseline": 0.008199999999999985,
+     "ks_tol": 0.01743663093552431,
+     "stats": {
+      "mean": {
+       "spindle": 0.7452525726902607,
+       "impl": 0.7473078941445728
+      },
+      "min": {
+       "spindle": 0.5000098715255569,
+       "impl": 0.5000327858860167
+      },
+      "max": {
+       "spindle": 0.989969993203114,
+       "impl": 0.9899844244425362
+      },
+      "std": {
+       "spindle": 0.14110147375220083,
+       "impl": 0.14166966778217793,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 25000,
+      "impl": 25000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "yield_rate": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.006760000000000016,
+     "ks_baseline": 0.007480000000000014,
+     "ks_tol": 0.01743663093552431,
+     "stats": {
+      "mean": {
+       "spindle": 0.9196912067855725,
+       "impl": 0.9200495201021587
+      },
+      "min": {
+       "spindle": 0.850001647997454,
+       "impl": 0.8500172098361946
+      },
+      "max": {
+       "spindle": 0.9899873703604278,
+       "impl": 0.9899962046826676
+      },
+      "std": {
+       "spindle": 0.040426378009074365,
+       "impl": 0.040412503209649606,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 25000,
+      "impl": 25000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "cycle_time_seconds": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.011320000000000108,
+     "ks_baseline": 0.011120000000000019,
+     "ks_tol": 0.01868000000000003,
+     "stats": {
+      "mean": {
+       "spindle": 74.28492418782739,
+       "impl": 75.63339415535755
+      },
+      "min": {
+       "spindle": 5.0,
+       "impl": 5.0
+      },
+      "max": {
+       "spindle": 1864.4778072919605,
+       "impl": 1445.1126725117804
+      },
+      "std": {
+       "spindle": 70.5831215592089,
+       "impl": 71.9469282586719,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 24957,
+      "impl": 24961
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "scrap_rate": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.00852,
+     "ks_baseline": 0.011080000000000034,
+     "ks_tol": 0.018620000000000053,
+     "stats": {
+      "mean": {
+       "spindle": 0.05022308605458753,
+       "impl": 0.050451441748600424
+      },
+      "min": {
+       "spindle": 0.0010063357621455512,
+       "impl": 0.001008063345993776
+      },
+      "max": {
+       "spindle": 0.09999696517593704,
+       "impl": 0.09999982070518387
+      },
+      "std": {
+       "spindle": 0.028645727387285956,
+       "impl": 0.028414693338313448,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 25000,
+      "impl": 25000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "spindle": [
+   "product",
+   "production_line",
+   "bom",
+   "equipment",
+   "work_order",
+   "downtime_event",
+   "production_metric",
+   "quality_check",
+   "defect"
+  ],
+  "impl": [
+   "product",
+   "production_line",
+   "bom",
+   "equipment",
+   "work_order",
+   "downtime_event",
+   "production_metric",
+   "quality_check",
+   "defect"
+  ]
+ },
+ "fk_integrity": {
+  "spindle": {
+   "bom.product_id->product.product_id": {
+    "integrity": 1.0,
+    "n": 500
+   },
+   "work_order.product_id->product.product_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "work_order.production_line_id->production_line.line_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "quality_check.wo_id->work_order.wo_id": {
+    "integrity": 1.0,
+    "n": 15000
+   },
+   "defect.check_id->quality_check.check_id": {
+    "integrity": 1.0,
+    "n": 4500
+   },
+   "equipment.production_line_id->production_line.line_id": {
+    "integrity": 1.0,
+    "n": 80
+   },
+   "downtime_event.equipment_id->equipment.equipment_id": {
+    "integrity": 1.0,
+    "n": 320
+   },
+   "production_metric.wo_id->work_order.wo_id": {
+    "integrity": 1.0,
+    "n": 25000
+   }
+  },
+  "impl": {
+   "bom.product_id->product.product_id": {
+    "integrity": 1.0,
+    "n": 500
+   },
+   "work_order.product_id->product.product_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "work_order.production_line_id->production_line.line_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "quality_check.wo_id->work_order.wo_id": {
+    "integrity": 1.0,
+    "n": 15000
+   },
+   "defect.check_id->quality_check.check_id": {
+    "integrity": 1.0,
+    "n": 4500
+   },
+   "equipment.production_line_id->production_line.line_id": {
+    "integrity": 1.0,
+    "n": 80
+   },
+   "downtime_event.equipment_id->equipment.equipment_id": {
+    "integrity": 1.0,
+    "n": 320
+   },
+   "production_metric.wo_id->work_order.wo_id": {
+    "integrity": 1.0,
+    "n": 25000
+   }
+  }
+ },
+ "fanout": {
+  "product->bom.product_id": {
+   "spindle": {
+    "p50": 5.0,
+    "p90": 8.0,
+    "p99": 11.02000000000001,
+    "max": 13,
+    "mean": 5.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 5.0,
+    "p90": 8.0,
+    "p99": 11.0,
+    "max": 11,
+    "mean": 5.0,
+    "zero_frac": 0.01
+   },
+   "ks_counts": 0.040000000000000036,
+   "ks_baseline_max": 0.08000000000000002,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "product->work_order.product_id": {
+   "spindle": {
+    "p50": 10.0,
+    "p90": 75.80000000000015,
+    "p99": 662.4200000000048,
+    "max": 1595,
+    "mean": 50.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 11.0,
+    "p90": 72.40000000000003,
+    "p99": 653.650000000005,
+    "max": 1609,
+    "mean": 50.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.06000000000000005,
+   "ks_baseline_max": 0.07,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "production_line->work_order.production_line_id": {
+   "spindle": {
+    "p50": 248.5,
+    "p90": 269.5,
+    "p99": 282.09999999999997,
+    "max": 284,
+    "mean": 250.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 252.5,
+    "p90": 265.2,
+    "p99": 267.0,
+    "max": 267,
+    "mean": 250.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.20000000000000007,
+   "ks_baseline_max": 0.3,
+   "ks_tol": 0.6164779987778186,
+   "equivalent": true
+  },
+  "work_order->quality_check.wo_id": {
+   "spindle": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 8.0,
+    "max": 10,
+    "mean": 3.0,
+    "zero_frac": 0.0508
+   },
+   "impl": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 8.0,
+    "max": 10,
+    "mean": 3.0,
+    "zero_frac": 0.0496
+   },
+   "ks_counts": 0.01479999999999998,
+   "ks_baseline_max": 0.010799999999999976,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  },
+  "quality_check->defect.check_id": {
+   "spindle": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 5,
+    "mean": 0.3,
+    "zero_frac": 0.7424666666666667
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 4,
+    "mean": 0.3,
+    "zero_frac": 0.7406666666666667
+   },
+   "ks_counts": 0.0018000000000000238,
+   "ks_baseline_max": 0.0033333333333334103,
+   "ks_tol": 0.022510593742416898,
+   "equivalent": true
+  },
+  "production_line->equipment.production_line_id": {
+   "spindle": {
+    "p50": 4.0,
+    "p90": 6.0,
+    "p99": 6.809999999999999,
+    "max": 7,
+    "mean": 4.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 4.0,
+    "p90": 7.0,
+    "p99": 7.809999999999999,
+    "max": 8,
+    "mean": 4.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.1,
+   "ks_baseline_max": 0.1,
+   "ks_tol": 0.6164779987778186,
+   "equivalent": true
+  },
+  "equipment->downtime_event.equipment_id": {
+   "spindle": {
+    "p50": 4.0,
+    "p90": 6.1000000000000085,
+    "p99": 9.0,
+    "max": 9,
+    "mean": 4.0,
+    "zero_frac": 0.025
+   },
+   "impl": {
+    "p50": 4.0,
+    "p90": 6.0,
+    "p99": 8.209999999999994,
+    "max": 9,
+    "mean": 4.0,
+    "zero_frac": 0.025
+   },
+   "ks_counts": 0.050000000000000044,
+   "ks_baseline_max": 0.07500000000000001,
+   "ks_tol": 0.3082389993889093,
+   "equivalent": true
+  },
+  "work_order->production_metric.wo_id": {
+   "spindle": {
+    "p50": 5.0,
+    "p90": 8.0,
+    "p99": 11.0,
+    "max": 15,
+    "mean": 5.0,
+    "zero_frac": 0.0058
+   },
+   "impl": {
+    "p50": 5.0,
+    "p90": 8.0,
+    "p99": 11.0,
+    "max": 14,
+    "mean": 5.0,
+    "zero_frac": 0.008
+   },
+   "ks_counts": 0.0046000000000000485,
+   "ks_baseline_max": 0.009000000000000008,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {},
+ "strategy_semantics": {},
+ "business_rules": {
+  "spindle_BusinessRulesEngine_violations": {},
+  "spindle_on_spindle": {}
+ },
+ "spindle_fidelity_comparator": {
+  "overall_impl": 96.40140863183281,
+  "overall_baseline_spindle_vs_spindle": [
+   96.00433892154427,
+   96.54561519778842,
+   96.27491759153082,
+   96.50826402298799
+  ],
+  "tables": {
+   "bom": {
+    "impl": 98.7790725802167,
+    "baseline": [
+     98.92034365609277,
+     98.09437930307641,
+     98.54763786008668,
+     98.1003576865691
+    ],
+    "floor": 97.59437930307641,
+    "ok": true
+   },
+   "defect": {
+    "impl": 99.93837233471801,
+    "baseline": [
+     96.39583681272181,
+     97.48307515952335,
+     96.60426740649636,
+     97.4329439981853
+    ],
+    "floor": 95.89583681272181,
+    "ok": true
+   },
+   "downtime_event": {
+    "impl": 96.59780782396884,
+    "baseline": [
+     96.95046775400964,
+     96.01010950085647,
+     97.32573213181479,
+     96.9520070173851
+    ],
+    "floor": 95.51010950085647,
+    "ok": true
+   },
+   "equipment": {
+    "impl": 97.68655449570058,
+    "baseline": [
+     97.14871553207126,
+     97.76494553659019,
+     97.13214216354966,
+     96.05904046517146
+    ],
+    "floor": 95.55904046517146,
+    "ok": true
+   },
+   "product": {
+    "impl": 91.1720254538306,
+    "baseline": [
+     89.79773562463885,
+     91.72132459954746,
+     89.97238600324437,
+     91.44653364877807
+    ],
+    "floor": 89.29773562463885,
+    "ok": true
+   },
+   "production_line": {
+    "impl": 92.4692159391361,
+    "baseline": [
+     94.51449694867956,
+     98.00584154208468,
+     96.71222986022762,
+     98.78196154758854
+    ],
+    "floor": 94.01449694867956,
+    "ok": false
+   },
+   "production_metric": {
+    "impl": 99.5688498369541,
+    "baseline": [
+     99.59100910609858,
+     99.65285826277834,
+     99.57030513121751,
+     99.6529163837172
+    ],
+    "floor": 99.07030513121751,
+    "ok": true
+   },
+   "quality_check": {
+    "impl": 91.6999599074989,
+    "baseline": [
+     91.65434183374946,
+     90.63244417607766,
+     91.26939206906569,
+     90.70850838378021
+    ],
+    "floor": 90.13244417607766,
+    "ok": true
+   },
+   "work_order": {
+    "impl": 99.70081931447142,
+    "baseline": [
+     99.0661030258365,
+     99.54555869956134,
+     99.34016569807493,
+     99.44010707571688
+    ],
+    "floor": 98.5661030258365,
+    "ok": true
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 62,
+  "columns_equivalent": 62,
+  "flagged": [
+   "(h) fidelity production_line: 92.47 < floor 94.01"
+  ],
+  "passed": false,
+  "seconds": 18.373809576034546
+ }
+}
