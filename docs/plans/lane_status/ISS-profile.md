@@ -81,7 +81,11 @@ above.
 * Profile parity `verify.py --impl shape`: exit 0, 49/49 PASS under `SHAPE_KERNEL=rust` and under `SHAPE_KERNEL=python`.
 * `pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`: 4,561 passed under each kernel
   (`.[advanced]` and `-e plugins/shape-domains` installed first).
-* `pytest -m heavy tests/kernel tests/profile`: see the last line of this file.
+* `pytest -m heavy tests/kernel tests/profile`: 40 passed under `SHAPE_KERNEL=rust` (3 min 23 s). Under `SHAPE_KERNEL=python`
+  39 of the 40 passed and the last, `test_bounded_mode_memory_does_not_grow_with_rows` (profiles a CSV of tens of millions of
+  rows in bounded mode through the engine), was still running after more than 40 minutes, so it was stopped: not a pass and
+  not a failure. That test goes through `shape.profile.engine`, which this lane changed only to let `CsvOptions` sniff the
+  delimiter (reads the first 64 KB of the file); the Rust-kernel run covers it.
 * Cost of the new per-column work (in-process, same file, with and without `pattern_rates`, best of 3, machine loaded by
   another run): d1.csv 0.09 s to 0.13 s, d2.csv 2.17 s to 2.35 s, d4.parquet unchanged within noise. The first version of
   the rates cost 3x on d1; the substring prefilters and the 50,000-distinct cap brought it here. The tracked G1 benchmarks
