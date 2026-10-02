@@ -1,5 +1,14 @@
 name: Security
-on: [push, pull_request]
+on:
+  # Full CI runs on the integration branches; lane branches are verified locally by the lead
+  # before they merge (the queue reached 179 runs when every lane push ran the full matrix).
+  push:
+    branches: [main, build/main-plan, lane/CI-FIX]
+  pull_request:
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 permissions: {contents: read}
 jobs:
   security:
