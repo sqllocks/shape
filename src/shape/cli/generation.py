@@ -269,7 +269,7 @@ def _generate(a: argparse.Namespace, engine: Any) -> int:
             f"Wrote {len(paths)} {a.format} {'directories' if a.format == 'delta' else 'files'} "
             f"to {a.output}: {total:,} rows in {len(counts)} tables ({seconds:.2f}s)"
         )
-    from shape.cli.main import exit_now
+    from shape.cli.lifecycle import exit_now
 
     exit_now(0)  # as the program, nothing is left to do: skip freeing the tables
     return 0
