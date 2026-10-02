@@ -166,3 +166,16 @@ def test_a_relationship_without_a_name_names_the_missing_key():
         GateSchema.from_dict(
             {"format": "shape-gates", "version": 1, "tables": {}, "relationships": [rel]}
         )
+
+
+def test_temporal_rules_that_cannot_apply_warn_instead_of_passing_silently(tmp_path):
+    d = tmp_path / "csv"
+    d.mkdir()
+    (d / "orders.csv").write_text("id,placed\n1,2020-01-01T00:00:00\n")
+    cfg = VerifyConfig.from_dict(
+        doc(date_range={"start": "2026-01-01"}, no_future=["orders.placed"])
+    )
+    (gate,) = VerifyRunner(None, config=cfg).run(load_tables(d)).gate_results
+    assert gate.passed
+    assert any("date_range checked nothing" in w for w in gate.warnings)
+    assert any("orders.placed: not a timestamp column" in w for w in gate.warnings)

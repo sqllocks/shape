@@ -429,6 +429,8 @@ def test_notebook_parameters_match_the_notebook_parameters_cell(
     p = _pipeline()
     acts = {a["name"]: a for a in p["properties"]["activities"]}
     passed = acts[activity]["typeProperties"]["parameters"]
+    # read by Fabric, not by the notebook (test_inline_install.py)
+    passed = {k: v for k, v in passed.items() if k != "_inlineInstallationEnabled"}
     defaults = _cell_defaults(notebook)
     assert set(passed) == set(defaults)
     for name, spec in passed.items():
