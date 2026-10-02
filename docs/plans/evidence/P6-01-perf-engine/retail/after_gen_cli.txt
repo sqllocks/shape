@@ -11,3 +11,16 @@
 [medium] spindle  run 5: 6.942s  cpu 7.80s  load 1.21
 [medium] shape    run 5: 0.576s  cpu 1.55s  load 1.20
 [medium] median spindle 6.942s, shape 0.603s => 11.52x
+[large] spindle  warm-up 1: 101.945s
+[large] shape    warm-up 1: 4.154s
+[large] spindle  run 1: 103.396s  cpu 105.13s  load 1.33
+[large] shape    run 1: 4.004s  cpu 10.54s  load 1.06
+[large] spindle  run 2: 113.714s  cpu 115.66s  load 1.06
+[large] shape    run 2: 3.859s  cpu 10.05s  load 1.01
+[large] spindle  run 3: 103.374s  cpu 105.04s  load 1.09
+[large] shape    run 3: 3.882s  cpu 10.02s  load 1.01
+[large] spindle  run 4: 105.591s  cpu 107.53s  load 1.01
+[large] shape    run 4: 4.109s  cpu 10.45s  load 1.04
+[large] spindle  run 5: 103.561s  cpu 105.55s  load 1.04
+[large] shape    run 5: 4.220s  cpu 10.63s  load 1.09
+[large] median spindle 103.561s, shape 4.004s => 25.86x
