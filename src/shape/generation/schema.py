@@ -14,7 +14,7 @@ property names, ``to_dict``/``from_dict``, ``validate`` and :class:`Issue`.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field, is_dataclass
 from functools import cache
 from importlib import resources
 from typing import Any
@@ -63,6 +63,18 @@ STRATEGY_REQUIRED_KEYS: dict[str, frozenset[str]] = {
 }
 
 MODES = ("3nf", "star")
+
+
+def _plain_json(value: Any) -> Any:
+    """A copy of ``value`` made of JSON types only. A dataclass (an ``AddressReference`` or a
+    ``Location`` row of an address reference) becomes a dict, as a schema file would hold it."""
+
+    def default(obj: Any) -> Any:
+        if is_dataclass(obj) and not isinstance(obj, type):
+            return asdict(obj)
+        raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+    return json.loads(json.dumps(value, default=default))
 
 
 class GenSchemaError(ShapeSchemaError):
@@ -321,7 +333,7 @@ class GenSchema:
                 cname: Column(
                     name=cname,
                     type=c["type"],
-                    generator=json.loads(json.dumps(c["generator"])),
+                    generator=_plain_json(c["generator"]),
                     nullable=c.get("nullable", False),
                     null_rate=float(c.get("null_rate", 0.0)),
                     max_length=c.get("max_length"),

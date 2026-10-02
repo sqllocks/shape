@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -38,16 +39,21 @@ def test_plan_reads_the_schema_from_ddl_writes(
 
 
 def test_unexpected_input_is_one_line_error_not_a_traceback(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """#26: any unexpected failure is ``shape: error: ...`` with exit 2; ``--debug`` re-raises."""
+    """#26: as the program, any unexpected failure is ``shape: error: ...`` with exit 2;
+    ``--debug`` lets it propagate, and so does a call with an argv list (a library caller)."""
     bad = tmp_path / "bad.json"
     bad.write_text(json.dumps({"columns": {"a": 1}, "relationships": []}), encoding="utf-8")
-    assert main(["plan", str(bad)]) == 2
+    monkeypatch.setattr(sys, "argv", ["shape", "plan", str(bad)])
+    assert main() == 2
     err = capsys.readouterr().err
-    assert err.startswith("shape: error: ") and "Traceback" not in err
-    with pytest.raises(Exception):  # noqa: B017 - whichever error the input provokes
-        main(["--debug", "plan", str(bad)])
+    assert err.startswith("shape: error: ") and "Traceback" not in err and "--debug" in err
+    monkeypatch.setattr(sys, "argv", ["shape", "--debug", "plan", str(bad)])
+    with pytest.raises(AttributeError):
+        main()
+    with pytest.raises(AttributeError):
+        main(["plan", str(bad)])
 
 
 def test_generate_rows_override_per_table(

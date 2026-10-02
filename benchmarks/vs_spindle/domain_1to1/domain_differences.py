@@ -1,10 +1,10 @@
 """The deliberate differences of Shape's domain output from the baseline's (ISS-gen).
 
 The owner decided (2026-10-01) to fix behaviour of the baseline that harms trust, and to record
-each such difference in a narrow, named allow-list with its reason (``ddl_1to1/differences.py`` and
-``strategy_1to1/differences.py`` are the others). ``verify.py`` accepts a column that fails **only**
-the listed checks, and only when the column also meets the replacement rule given here; a listed
-column that passes every check fails the run (the entry is stale).
+each such difference in a narrow, named allow-list with its reason (``ddl_1to1/differences.py``
+and ``strategy_1to1/identifier_differences.py`` are the others). ``verify.py`` accepts a column
+that fails **only** the listed checks, and only when the column also meets the replacement rule
+given here; a listed column that passes every check fails the run (the entry is stale).
 """
 
 from __future__ import annotations

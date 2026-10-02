@@ -21,7 +21,7 @@ from shape.generation.schema import GenSchema
 
 S1 = Path(__file__).resolve().parents[2] / "benchmarks" / "vs_spindle" / "strategy_1to1"
 sys.path.insert(0, str(S1))
-import differences  # noqa: E402
+import identifier_differences as differences  # noqa: E402
 
 REAL_EMAIL_DOMAINS = set(providers.pool("email_domains").to_pylist())
 

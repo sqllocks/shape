@@ -310,7 +310,7 @@ def test_native_value_shapes():
         engine = _text_engine("native", provider, rows, options=options or None)
         return engine.generate_table("t").column("x").to_pylist()
 
-    # the explicit opt-ins give the baseline's realistic values (see strategy_1to1/differences.py)
+    # the explicit opt-ins give the baseline's realistic values (identifier_differences.py)
     ssn = col("ssn", range="assignable")
     areas = np.array([int(v[:3]) for v in ssn])
     assert areas.min() >= 1 and areas.max() <= 899 and not (areas == 666).any()

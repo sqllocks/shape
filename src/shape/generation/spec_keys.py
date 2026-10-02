@@ -79,7 +79,7 @@ STRATEGY_KEYS: dict[str, frozenset[str]] = {
     "self_ref_field": frozenset({"field"}),
     "lifecycle": frozenset({"phases", "values"}),
     "scd2": frozenset({"role", "business_key", "min_gap_days", "effective_date_column"}),
-    "address": frozenset({"reference", "scope", "weights", "mode", "field"}),
+    "address": frozenset({"reference", "scope", "weights", "exclude", "mode", "field", "group"}),
 }
 
 # The keys of a nested ``params`` of a strategy that has one (``distribution`` takes its

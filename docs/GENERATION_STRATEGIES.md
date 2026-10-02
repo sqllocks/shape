@@ -319,6 +319,40 @@ holds Arrow columns; `unregister_dataset` and `clear_search_paths` undo the abov
 cases are in `strategy_1to1/cases.py`. Datetime columns are compared on month, weekday and hour of
 day profiles (and the share of whole-second values) as well as KS.
 
+### `address`
+`{"strategy": "address", "scope": [{"state": "WA"}]}`: coherent addresses from a scope alone. The
+column is a struct of `address_line_1`, `city`, `county`, `state`, `postal_code`, `country`,
+`latitude`, `longitude`, `timezone`, `mode` and `reference_id`, or, with `"field": "city"` (also
+`zip`, `lat`, `lng`, ...), one of them as a plain column.
+
+* **Scope.** A list (or one entry) of `{"state": "WA"}`, `{"postal_code": "98101"}`,
+  `{"city": "Seattle", "state": "WA"}`, `{"county": ..., "state": ...}`, `"WA"`, `"98101"` or
+  `"Seattle, WA"`; `weights` (one per entry) and `exclude` (places to leave out). Without a scope
+  every state of the reference is an entry of equal weight. A place the reference does not have
+  is a `StrategyError` naming the column.
+* **Reference.** The places come from `reference`: `{"dataset": name}` (any dataset registered with
+  `shape.generation.reference.register_dataset`; its columns `city`, `state`, `postal_code` (or
+  `zip`), `latitude` (or `lat`) and `longitude` (or `lng`) are required, `county`, `country`,
+  `street`, `timezone` optional), or rows given inline (dicts, `AddressReference`, `Location`, or
+  what `shape.location.load_geonames_postal` returns). Without `reference` the dataset
+  `us_zip_locations` is used: 40,977 US ZIP codes with city, state and coordinates, shipped by the
+  `sqllocations-shape-domains` package (GeoNames data, attribution in `THIRD_PARTY_NOTICES.md`);
+  without that package the error says so. A named dataset keeps a schema small; the reference is
+  compiled once per engine, not per chunk.
+* **Coherence.** One place is drawn for every row, and the city, state, ZIP and coordinates are
+  that place's (the coordinates within 0.002 degrees of its reference point, or exactly at it in
+  `reference` and `exact_reference` modes). Every address column of a table with the same `group`
+  (default `address`) draws the same place for the same row, so separate `city`, `state`,
+  `postal_code`, `latitude` and `longitude` columns agree; give a second set of columns another
+  `group` for an independent address (a work address next to a home address).
+* **Mode.** `street_synthetic` (default): a house number 1 to 9999 and the reference street's name
+  (or, when the reference has no streets, a name and a suffix from Shape's street pools);
+  `geographic`: the number and `Synthetic Way`; `reference` and `exact_reference`: the reference's
+  street and point as they are (the reference needs streets).
+
+Row addressed: the value of row `r` depends on the seed, the table, the group, `r` and the spec,
+never on the chunk.
+
 ## Strategies of P4-04d
 
 The relational strategies. All are row addressed (the parent or version of row `r` is a function of the

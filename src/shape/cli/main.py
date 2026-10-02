@@ -776,14 +776,16 @@ def main(argv=None):
 
 
 def _main(argv):
+    as_program = argv is None
     opts, argv = _split_global(sys.argv[1:] if argv is None else argv)
-    if opts["debug"]:
+    if opts["debug"] or not as_program:
         return _main_logged(opts, argv)
     try:
         return _main_logged(opts, argv)
     except Exception as exc:  # noqa: BLE001 - the one place that turns a crash into a message
-        # An unexpected failure is a one-line error and exit 2, never a traceback; `--debug`
-        # (or SHAPE_DEBUG=1) lets it propagate.
+        # As the program, an unexpected failure is a one-line error and exit 2, never a
+        # traceback; `--debug` (or SHAPE_DEBUG=1) lets it propagate. A call with an argv list
+        # (a library or test) always propagates it.
         detail = str(exc) or "no detail"
         print(
             f"shape: error: {type(exc).__name__}: {detail} (run with --debug for the traceback)",
