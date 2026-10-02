@@ -20,6 +20,7 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.builtins.sources.files import local_path
+from shape.plugins.schemes import require_scheme
 
 CLOUD_PREFIX = "delta+"
 
@@ -127,11 +128,13 @@ class DeltaTableWriter:
 class DeltaSink:
     name = "delta"
     schemes = ("file", "delta+abfss", "delta+abfs")
+    extension = ""  # no file extension: a directory per table
 
     def open_table(
         self, uri: str, table: str, schema: pa.Schema | None = None, **options: Any
     ) -> DeltaTableWriter:
         """A streaming writer for ``table``; the schema comes from ``schema``."""
+        require_scheme(self, uri)
         if schema is None:
             schema = options.get("schema")
         if schema is None:
@@ -140,6 +143,7 @@ class DeltaSink:
         return DeltaTableWriter(location, schema, options, storage)
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+        require_scheme(self, uri)
         stream = iter(batches)
         first = next(stream, None)
         schema = first.schema if first is not None else options.get("schema")

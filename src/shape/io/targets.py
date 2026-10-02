@@ -7,21 +7,17 @@ drive letter are local files and are not routed here (the file sinks are chosen 
 
 from __future__ import annotations
 
-import re
 from typing import Any
 
 from shape.errors import ShapeError
+from shape.plugins.schemes import redact, sinks_by_scheme, uri_scheme
 
-_SCHEME = re.compile(r"^([A-Za-z][A-Za-z0-9+.\-]*)://")
 LOCAL_SCHEMES = frozenset({"file"})
 
 
 def scheme_of(target: str) -> str | None:
     """The scheme of a URI target, or ``None`` for a path (``file://`` counts as a path)."""
-    match = _SCHEME.match(target)
-    if match is None:
-        return None
-    scheme = match.group(1).lower()
+    scheme = uri_scheme(target)
     return None if scheme in LOCAL_SCHEMES else scheme
 
 
@@ -30,17 +26,12 @@ def is_remote_target(target: str) -> bool:
 
 
 def sink_names_by_scheme() -> dict[str, str]:
-    """Every non-file scheme a registered sink handles, with the sink's name."""
-    from shape.plugins.host import default_host
-
-    host = default_host()
-    found: dict[str, str] = {}
-    for name in host.names("shape.sinks"):
-        sink = host.try_get("shape.sinks", name)
-        for scheme in getattr(sink, "schemes", ()) if sink is not None else ():
-            if scheme not in LOCAL_SCHEMES:
-                found.setdefault(str(scheme).lower(), name)
-    return found
+    """Every non-file scheme a registered sink handles, with the name of the first sink."""
+    return {
+        scheme: names[0]
+        for scheme, names in sinks_by_scheme().items()
+        if scheme not in LOCAL_SCHEMES
+    }
 
 
 def sink_for_target(target: str) -> tuple[str, Any]:
@@ -61,7 +52,4 @@ def sink_for_target(target: str) -> tuple[str, Any]:
     return name, default_host().get("shape.sinks", name)
 
 
-def redact(target: str) -> str:
-    """``target`` without a password (``user:password@``) or a query string, for messages."""
-    stripped = re.sub(r"^([A-Za-z][A-Za-z0-9+.\-]*://)[^/@:]*:[^/@]*@", r"\1", target)
-    return stripped.split("?", 1)[0]
+__all__ = ["is_remote_target", "redact", "scheme_of", "sink_for_target", "sink_names_by_scheme"]

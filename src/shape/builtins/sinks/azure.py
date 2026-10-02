@@ -36,6 +36,7 @@ from shape.builtins.sinks._roll import Encoder, RollingTableWriter
 from shape.builtins.sinks.files import CsvSink, IpcSink, JsonlSink, ParquetSink, TsvSink
 from shape.builtins.sources import azure
 from shape.io.store import FsspecStore
+from shape.plugins.schemes import require_scheme
 
 SCHEMES = azure.SCHEMES
 FORMATS = ("parquet", "csv", "tsv", "jsonl", "ipc")
@@ -113,6 +114,7 @@ class AbfssSink:
         self, uri: str, table: str, schema: pa.Schema | None = None, **options: Any
     ) -> RollingTableWriter:
         """A streaming writer for ``table`` (``write_batch``, ``flush``, ``close``)."""
+        require_scheme(self, uri)
         store = self._store(uri, options)
         rolling = bool(
             options.get("roll_rows") or options.get("roll_seconds") or options.get("streaming")

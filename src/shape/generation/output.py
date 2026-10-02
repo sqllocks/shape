@@ -21,16 +21,11 @@ import pyarrow as pa  # type: ignore[import-untyped]
 from shape.generation.engine import Engine, GenerationResult, worker_threads
 from shape.generation.schema import GenSchema
 from shape.plugins.host import default_host
+from shape.plugins.schemes import local_path, require_scheme, uri_scheme
 
-FORMATS = ("summary", "csv", "tsv", "jsonl", "parquet", "excel", "sql", "delta")
-EXTENSIONS = {
-    "csv": "csv",
-    "tsv": "tsv",
-    "jsonl": "jsonl",
-    "parquet": "parquet",
-    "excel": "xlsx",
-    "sql": "sql",
-}
+# The formats Shape ships, for help text. What is accepted is whatever ``shape.sinks`` plugins are
+# installed (``available_formats()``), so a third-party sink needs no change here.
+FORMATS = ("summary", "csv", "tsv", "jsonl", "parquet", "ipc", "excel", "sql", "delta")
 _QUEUE_DEPTH = 2
 _POST_PASS_STRATEGIES = ("computed",)
 
@@ -76,10 +71,36 @@ def sql_options(schema: GenSchema, table: str) -> dict[str, Any]:
     }
 
 
+def available_formats() -> tuple[str, ...]:
+    """``summary`` and the name of every installed ``shape.sinks`` plugin, in a stable order:
+    the built-ins first, then the others by name."""
+    names = default_host().names("shape.sinks")
+    ordered = [f for f in FORMATS if f in names]
+    return ("summary", *ordered, *sorted(n for n in names if n not in FORMATS))
+
+
+def format_argument(text: str) -> str:
+    """The ``--format`` argument type: the name, if a sink is installed for it (or ``summary``)."""
+    if text != "summary":
+        _check_format(text)
+    return text
+
+
+def _check_format(fmt: str) -> None:
+    if fmt == "summary" or fmt not in default_host().names("shape.sinks"):
+        raise ValueError(f"unknown format {fmt!r}; choose one of {', '.join(available_formats())}")
+
+
 def _sink(fmt: str) -> Any:
-    if fmt not in EXTENSIONS and fmt != "delta":
-        raise ValueError(f"unknown format {fmt!r}; choose one of {', '.join(FORMATS)}")
+    _check_format(fmt)
     return default_host().get("shape.sinks", fmt)
+
+
+def _extension(fmt: str, sink: Any) -> str:
+    """The file extension of ``fmt``'s sink: its ``extension`` (the format name when it has none);
+    an empty one marks a sink that writes a directory per table (Delta)."""
+    value = getattr(sink, "extension", fmt)
+    return value if isinstance(value, str) else fmt
 
 
 class _LazySink:
@@ -88,24 +109,31 @@ class _LazySink:
     first tables are being generated, instead of before the first row."""
 
     def __init__(self, fmt: str) -> None:
-        if fmt not in EXTENSIONS and fmt != "delta":
-            raise ValueError(f"unknown format {fmt!r}; choose one of {', '.join(FORMATS)}")
+        _check_format(fmt)
         self._fmt = fmt
         self._sink: Any = None
         self._lock = threading.Lock()
 
-    def write(self, *args: Any, **kwargs: Any) -> Any:
+    def loaded(self) -> Any:
         with self._lock:
             if self._sink is None:
                 self._sink = _sink(self._fmt)
-        return self._sink.write(*args, **kwargs)
+            return self._sink
+
+    def target(self, output_dir: Path, table: str) -> Path:
+        return _target(self._fmt, self.loaded(), output_dir, table)
+
+    def write(self, *args: Any, **kwargs: Any) -> Any:
+        return self.loaded().write(*args, **kwargs)
 
 
-def _target(fmt: str, output_dir: Path, table: str) -> Path:
-    # Delta writes <output_dir>/<table>/ itself; files are <table>.<extension>.
+def _target(fmt: str, sink: Any, output_dir: Path, table: str) -> Path:
+    # A sink with an empty extension (Delta) writes <output_dir>/<table>/ itself; the others write
+    # <output_dir>/<table>.<extension>.
     from shape.security.names import contained
 
-    return output_dir if fmt == "delta" else contained(output_dir, table, f".{EXTENSIONS[fmt]}")
+    extension = _extension(fmt, sink)
+    return output_dir if not extension else contained(output_dir, table, f".{extension}")
 
 
 def _options(fmt: str, schema: GenSchema, table: str, options: Mapping[str, Any]) -> dict[str, Any]:
@@ -122,8 +150,19 @@ def _options(fmt: str, schema: GenSchema, table: str, options: Mapping[str, Any]
     return merged
 
 
-def _paths(fmt: str, output_dir: Path, tables: list[str]) -> list[Path]:
-    return [output_dir / t if fmt == "delta" else _target(fmt, output_dir, t) for t in tables]
+def _paths(fmt: str, sink: Any, output_dir: Path, tables: list[str]) -> list[Path]:
+    directory = not _extension(fmt, sink)
+    return [output_dir / t if directory else _target(fmt, sink, output_dir, t) for t in tables]
+
+
+def _check_destination(sink: Any, output_dir: str | Path) -> Path:
+    """The output directory as a path, after the sink has accepted its URI scheme: a path made
+    from ``abfss://account/dir`` would otherwise be created as a local folder called ``abfss:``.
+    A local destination does not load a lazy sink (that happens on a writer thread)."""
+    text = str(output_dir)
+    if uri_scheme(text) != "file":
+        require_scheme(sink.loaded() if isinstance(sink, _LazySink) else sink, text)
+    return local_path(text)
 
 
 def write_result(
@@ -136,14 +175,14 @@ def write_result(
 ) -> list[Path]:
     """Write every table of ``result`` as ``fmt``; return the files (or Delta directories)."""
     sink = _sink(fmt)
-    out = Path(output_dir)
+    out = _check_destination(sink, output_dir)
     out.mkdir(parents=True, exist_ok=True)
     names = list(result.generation_order)
 
     def one(name: str) -> None:
         table = result.tables[name]
         sink.write(
-            str(_target(fmt, out, name)),
+            str(_target(fmt, sink, out, name)),
             name,
             iter(table.to_batches()),
             schema=table.schema,
@@ -151,7 +190,7 @@ def write_result(
         )
 
     _run_parallel(names, one, _writers(max_workers))
-    return _paths(fmt, out, names)
+    return _paths(fmt, sink, out, names)
 
 
 def _writers(max_workers: int | None) -> int:
@@ -225,14 +264,14 @@ def _write_overlapped(
     ``on_batch``), and the others after the post-passes (``on_table``), so the writes overlap
     the generation of the other tables and the post-passes."""
     sink = _LazySink(fmt)
-    out = Path(output_dir)
+    out = _check_destination(sink, output_dir)
     out.mkdir(parents=True, exist_ok=True)
     queues: dict[str, queue.Queue[pa.RecordBatch | None]] = {}
 
     def write(name: str, batches: Iterator[pa.RecordBatch], schema: pa.Schema | None) -> None:
         extra = {"schema": schema} if schema is not None else {}
         sink.write(
-            str(_target(fmt, out, name)),
+            str(sink.target(out, name)),
             name,
             batches,
             **extra,
@@ -264,7 +303,7 @@ def _write_overlapped(
             raise
     for future in futures:
         future.result()
-    return _paths(fmt, out, list(result.generation_order))
+    return _paths(fmt, sink.loaded(), out, list(result.generation_order))
 
 
 def write_engine(
@@ -287,20 +326,20 @@ def write_engine(
         return _write_overlapped(engine, fmt, output_dir, _writers(max_workers), options)
     engine.schema.validate_or_raise()
     sink = _LazySink(fmt)
-    out = Path(output_dir)
+    out = _check_destination(sink, output_dir)
     out.mkdir(parents=True, exist_ok=True)
     names = list(engine.order)
 
     def one(name: str) -> None:
         sink.write(
-            str(_target(fmt, out, name)),
+            str(sink.target(out, name)),
             name,
             _prefetch(engine.iter_chunks(name, chunk_rows)),
             **_options(fmt, engine.schema, name, options),
         )
 
     _run_parallel(names, one, _writers(max_workers))
-    return _paths(fmt, out, names)
+    return _paths(fmt, sink.loaded(), out, names)
 
 
 # ---- targets by URI (abfss://, delta+abfss://, mssql://, postgresql://, ...) ------------------

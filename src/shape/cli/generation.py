@@ -23,9 +23,21 @@ if TYPE_CHECKING:
     from shape.generation.schema import GenSchema
 
 DEFAULT_TEMPLATE = "{table}/ingest_date={date}/{table}_{yyyymmdd}.{ext}"
-FORMATS = ("summary", "csv", "tsv", "jsonl", "parquet", "excel", "sql", "delta")
 SQL_DIALECTS = ("tsql", "tsql-fabric-warehouse", "postgres", "mysql")
 MODES = ("3nf", "star")
+
+
+def _format(text: str) -> str:
+    """The ``--format`` type: any installed sink, checked when the option is given."""
+    if text == "summary":
+        return text
+    from shape.generation.output import format_argument
+
+    try:
+        return format_argument(text)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from None
+
 
 _TARGET_HELP = (
     "an installed domain (see `shape list`) or a generation schema file "
@@ -51,10 +63,11 @@ def add_arguments(sub: Any) -> None:
     ge.add_argument(
         "--format",
         "-f",
-        choices=FORMATS,
+        type=_format,
         default="summary",
+        metavar="FORMAT",
         help="summary (default: print the plan result, write nothing), or csv, tsv, jsonl, "
-        "parquet, excel, sql, delta",
+        "parquet, ipc, excel, sql, delta, or any installed sink (see `shape plugins list`)",
     )
     ge.add_argument("-o", "--output", metavar="DIR", help="the output directory (needed to write)")
     ge.add_argument("--dry-run", action="store_true", help="plan the run; generate nothing")
@@ -526,4 +539,4 @@ def run(a: argparse.Namespace) -> int:
     return COMMANDS[a.cmd](a)
 
 
-__all__ = ["COMMANDS", "FORMATS", "add_arguments", "load_target", "run"]
+__all__ = ["COMMANDS", "add_arguments", "load_target", "run"]

@@ -30,6 +30,7 @@ import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.builtins.sources.files import local_path
 from shape.io.landing import render_path
+from shape.plugins.schemes import require_scheme
 
 DEFAULT_ROLL_TEMPLATE = "{table}/{table}-{part}.{ext}"
 
@@ -72,6 +73,7 @@ class _FileSink:
         )
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+        require_scheme(self, uri)
         from shape.builtins.sinks._roll import wants_rolling
 
         if wants_rolling(options):
