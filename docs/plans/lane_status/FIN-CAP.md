@@ -48,3 +48,5 @@ baseline checkout. Results below are from runs in the builder session (final tab
 | vulture, lint-imports, check_user_facing (repo and plugin wheel), bandit -ll | clean |
 | `shape --version` start | 42-53 ms |
 | `pytest plugins/shape-simulation`, plugin kit | 156 passed; OK |
+| Full suite `-m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`, SHAPE_KERNEL=rust and python | 5226 passed, 1 failed on each: `test_every_skeleton_builds_a_pure_wheel`, caused by a `plugins/shape-simulation/build/` directory left by my own wheel build; after removing it the file passes (7 passed). The full suites were not re-run after that or after the merge |
+| After merging `origin/build/main-plan` (one conflict, `COMPLETION_PLAN.md`: kept both sides, T-07 with tzdata and T-08 without mcp, both decision-log blocks; no other edit) | ruff, format, mypy, check_user_facing, lint-imports clean; 646 passed in plugin, cli, plugins, contracts, capture and benchmarks tests |
