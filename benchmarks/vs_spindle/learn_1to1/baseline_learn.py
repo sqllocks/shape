@@ -3,7 +3,8 @@
 Run in the *baseline* venv (internal harness; never part of the product):
 
     source scripts/env.sh
-    "$SPINDLE_PY" benchmarks/vs_spindle/learn_1to1/baseline_learn.py INPUT -o OUT.json [--domain NAME]
+    "$SPINDLE_PY" benchmarks/vs_spindle/learn_1to1/baseline_learn.py INPUT -o OUT.json \
+        [--domain NAME]
 
 ``INPUT`` is a data file or a directory of CSV files, read the way the baseline's ``learn`` command
 reads them (pandas, one table per file). The output is the command's own schema dictionary
@@ -32,9 +33,11 @@ def learn(input_path: Path, domain: str = "inferred") -> dict:
     profile = DataProfiler().profile_dataset(tables)
     schema = SchemaBuilder().build(profile, domain_name=domain)
     doc = _schema_to_dict(schema)
-    doc["correlated_columns"] = {
-        t: [[a, b, r] for a, b, r in pairs] for t, pairs in schema.correlated_columns.items()
-    } if getattr(schema, "correlated_columns", None) else {}
+    doc["correlated_columns"] = (
+        {t: [[a, b, r] for a, b, r in pairs] for t, pairs in schema.correlated_columns.items()}
+        if getattr(schema, "correlated_columns", None)
+        else {}
+    )
     return doc
 
 

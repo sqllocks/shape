@@ -66,10 +66,14 @@ def run(a: argparse.Namespace) -> int:
     if a.output:
         out = Path(a.output)
     else:
-        out = (path / f"{a.domain}.schema.json") if path.is_dir() else path.with_suffix(".schema.json")
+        out = (
+            (path / f"{a.domain}.schema.json")
+            if path.is_dir()
+            else path.with_suffix(".schema.json")
+        )
     out.write_text(json.dumps(schema.to_dict(), indent=2) + "\n", encoding="utf-8")
 
-    tables = {
+    tables: dict[str, dict[str, Any]] = {
         name: {
             "columns": len(t.columns),
             "primary_key": list(t.primary_key),
@@ -89,7 +93,8 @@ def run(a: argparse.Namespace) -> int:
         return 0
     print(f"Schema inference: {len(tables)} tables, {len(schema.relationships)} relationships")
     for name, t in tables.items():
-        key = f" (key: {', '.join(t['primary_key'])})" if t["primary_key"] else ""
+        keys = list(t["primary_key"])
+        key = f" (key: {', '.join(keys)})" if keys else ""
         fks = f", {t['foreign_keys']} foreign keys" if t["foreign_keys"] else ""
         print(f"  {name}: {t['columns']} columns{key}{fks}")
     print(f"Schema written to {out}")

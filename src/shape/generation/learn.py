@@ -14,6 +14,8 @@ and ``tests/generation/test_learn.py`` read it):
   500) is not an enum; the baseline draws only those 500 values.
 * ``exponential``: a column fitted as an exponential distribution is generated as one; the baseline
   has no exponential generator and draws a clipped normal.
+* ``shifted_lognormal``: a log-normal fit with a material location shift is generated from the
+  column's quantiles; the baseline drops the shift and draws values nowhere near the column's.
 
 Stable interface: :class:`SchemaBuilder`, :func:`profile_from_dict`, :func:`learn`,
 :data:`DIFFERENCES`.
@@ -32,6 +34,12 @@ DIFFERENCES: dict[str, str] = {
         "a numeric column whose profile lists fewer values than it has distinct ones is generated "
         "from its distribution; the baseline draws only the listed values (the 500 most "
         "frequent), so the rest of the column's values never occur"
+    ),
+    "shifted_lognormal": (
+        "a log-normal fit whose location shift is more than 2% of the column's level is generated "
+        "from the column's quantiles; the baseline ignores the shift (its generator has no "
+        "location parameter), so the values land far from the column's range and are clipped to "
+        "its maximum"
     ),
     "exponential": (
         "an exponential fit becomes an exponential distribution (the family exists in Shape); the "
@@ -181,7 +189,7 @@ def as_dataset(profile: Any) -> DatasetProfile:
 def _is_covered_enum(col: ColumnProfile) -> bool:
     """Whether the profile lists every distinct value of the column."""
     values = col.value_counts_ext or col.enum_values
-    return bool(values) and len(values) >= col.cardinality
+    return values is not None and len(values) > 0 and len(values) >= col.cardinality
 
 
 def guess_provider(column_name: str) -> str:
@@ -240,12 +248,23 @@ def _exponential(col: ColumnProfile) -> dict[str, Any] | None:
     scale, loc = params.get("scale"), params.get("loc", 0.0)
     if scale is None or scale <= 0 or abs(loc) > 0.01 * scale:
         return None
-    spec: dict[str, float] = {"lambda": 1.0 / float(scale)}
+    # the rate from the sample mean (the fitted scale can sit a little off it)
+    mean = (col.mean - loc) if col.mean is not None and col.mean - loc > 0 else float(scale)
+    spec: dict[str, float] = {"lambda": 1.0 / float(mean)}
     if col.min_value is not None:
         spec["min"] = float(col.min_value)
     if col.max_value is not None:
         spec["max"] = float(col.max_value)
     return {"strategy": "distribution", "distribution": "exponential", "params": spec}
+
+
+def _shifted_lognormal(col: ColumnProfile) -> bool:
+    """The ``shifted_lognormal`` rule (:data:`DIFFERENCES`)."""
+    params = col.distribution_params
+    if col.distribution != "lognormal" or not params:
+        return False
+    level = max(abs(col.mean or 0.0), abs(col.std or 0.0))
+    return abs(params.get("loc", 0.0)) > 0.02 * level
 
 
 class SchemaBuilder:
@@ -379,7 +398,9 @@ class SchemaBuilder:
             if col.hour_histogram:
                 profiles["hour_of_day"] = {str(h): w for h, w in enumerate(col.hour_histogram)}
             if col.dow_histogram:
-                profiles["day_of_week"] = {_DOW_NAMES[i]: w for i, w in enumerate(col.dow_histogram)}
+                profiles["day_of_week"] = {
+                    _DOW_NAMES[i]: w for i, w in enumerate(col.dow_histogram)
+                }
             gen["profiles"] = profiles
         return gen
 
@@ -390,6 +411,8 @@ class SchemaBuilder:
         exponential = _exponential(col)
         if exponential is not None:
             return exponential
+        if _shifted_lognormal(col) and col.quantiles:
+            return {"strategy": "empirical", "quantiles": dict(col.quantiles)}
         translated = translate_distribution(col.distribution, col.distribution_params)
         if translated is not None:
             family, params = translated
@@ -411,7 +434,11 @@ class SchemaBuilder:
                 "distribution": "uniform",
                 "params": {"min": float(col.min_value), "max": float(col.max_value)},
             }
-        return {"strategy": "distribution", "distribution": "uniform", "params": {"min": 0, "max": 1}}
+        return {
+            "strategy": "distribution",
+            "distribution": "uniform",
+            "params": {"min": 0, "max": 1},
+        }
 
     # ---- the rest of the schema ---------------------------------------------------------
 

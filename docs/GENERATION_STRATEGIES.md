@@ -39,7 +39,10 @@ schema, `row_counts`, `key_pool(table)`) and `column_def` (the column: `type`, `
 4. **Errors name the column.** Raise `StrategyError` (a `ValueError`) with the strategy and
    `table.column`: `require(spec, key, ctx, "strategy")`, `where(ctx)`.
 5. **Types.** A strategy returns its natural type and the engine does not cast: integers
-   (`sequence`) as `int64`; numeric draws as `float64`; text as `string`.
+   (`sequence`) as `int64`; numeric draws as `float64`; text as `string`. The one exception is a
+   generator that asks for it: `"output_type": "int64"` (or `float64`, `bool`, `string`, `date32`) casts the
+   strategy's output (floats are rounded first), which is how a profile's integer and boolean
+   columns keep their type (`shape.generation.engine.cast_output`).
 
 ### Helpers
 
@@ -135,6 +138,9 @@ URI domains and paths). `provider` defaults to `word`. Every draw is row address
 | `ssn` | `AAA-GG-SSSS`, `AAA` 1 to 899 without 666, `GG` 1 to 99, `SSSS` 1 to 9999 |
 | `street_address` | `<100..9998> <street> <St, Ave, Blvd, Dr, Ln, Way, Ct, Pl, Rd or Cir>` |
 | `uri` | `https://<domain>/<path>` |
+| `ipv4` | `A.B.C.D`, `A` and `D` 1 to 254, `B` and `C` 0 to 255 |
+| `postcode` | five digits, 00501 to 99950 |
+| `zip_plus4` | `NNNNN-NNNN`: a `postcode` and four digits, 0001 to 9999 |
 | `pystr`, `word` | 12 characters from `a-z0-9` |
 
 The column's `max_length` cuts the text. `native` raises `StrategyError` for any other provider.
@@ -250,9 +256,11 @@ and the anchor's null rate does not touch the fields.
   bucket is the product of the two weights, shared equally by the days of the range in it; the
   probability of a bucket with no day in the range is spread over the other days. The end date is a
   possible day. Without a month or weekday profile the range is uniform.
-* `profiles.hour_of_day` replaces the time of day by a whole second in an hour drawn uniformly, or
-  from `{"distribution": "bimodal", "peaks": [12, 18], "std_dev": 2}`: equally likely Gaussian
+* `profiles.hour_of_day` replaces the time of day by a whole second in an hour drawn uniformly, from
+  one weight per hour (`{"0": 0.01, ..., "23": 0.02}`, a profile's hour histogram), or from
+  `{"distribution": "bimodal", "peaks": [12, 18], "std_dev": 2}`: equally likely Gaussian
   peaks, wrapped around midnight. Without it the time of day is uniform to the microsecond.
+* `"granularity": "day"` cuts every value to midnight (a date column: the hour profile is ignored).
 * The column is `timestamp[us]`, or the `unit` given (`s`, `ms`, `us` or `ns`): the same instants in
   another Arrow unit, for output that must match a `timestamp[ns]` column type. Calendars, paydays
   and trends (`shape.calendars`) are separate.

@@ -49,7 +49,10 @@ def main(argv: list[str]) -> int:
         shape_doc, base_doc = run_both(name, BENCH_OUT_DIR / "learn_1to1")
         bad, explained = compare(shape_doc, base_doc)
         cols = sum(len(t["columns"]) for t in base_doc["tables"].values())
-        print(f"{name}: {cols} baseline columns, {len(explained)} deliberate differences, {len(bad)} unexplained")
+        print(
+            f"{name}: {cols} baseline columns, {len(explained)} deliberate differences, "
+            f"{len(bad)} unexplained"
+        )
         for e in explained:
             print(f"  allowed {e['column']} [{e['rule']}]: {e['reason']}")
         for line in bad:

@@ -29,10 +29,19 @@ def _explain(shape_col: dict[str, Any], base_col: dict[str, Any]) -> str | None:
     same_rest = all(shape_col[k] == base_col[k] for k in shape_col if k != "generator")
     if not (numeric and same_rest):
         return None
-    if bg.get("strategy") == "weighted_enum" and sg.get("strategy") in ("distribution", "empirical"):
+    if bg.get("strategy") == "weighted_enum" and sg.get("strategy") in (
+        "distribution",
+        "empirical",
+    ):
         # only when the baseline's list was cut short
         if len(bg["values"]) >= 500:
             return "truncated_enum"
+    if (
+        bg.get("strategy") == "distribution"
+        and bg.get("distribution") == "log_normal"
+        and sg.get("strategy") == "empirical"
+    ):
+        return "shifted_lognormal"
     if (
         bg.get("strategy") == "distribution"
         and bg.get("distribution") == "normal"
@@ -43,7 +52,9 @@ def _explain(shape_col: dict[str, Any], base_col: dict[str, Any]) -> str | None:
     return None
 
 
-def compare(shape_doc: dict[str, Any], baseline_doc: dict[str, Any]) -> tuple[list[str], list[dict[str, str]]]:
+def compare(
+    shape_doc: dict[str, Any], baseline_doc: dict[str, Any]
+) -> tuple[list[str], list[dict[str, str]]]:
     """``(unexplained differences, explained differences)``; the explained ones carry the rule
     name, the column and the reason."""
     s = schema_import.to_native(shape_doc) if "schema_version" not in shape_doc else shape_doc
@@ -53,7 +64,10 @@ def compare(shape_doc: dict[str, Any], baseline_doc: dict[str, Any]) -> tuple[li
 
     def check(path: str, x: Any, y: Any) -> None:
         if x != y:
-            bad.append(f"{path}: shape {json.dumps(x, default=str)[:160]} != baseline {json.dumps(y, default=str)[:160]}")
+            bad.append(
+                f"{path}: shape {json.dumps(x, default=str)[:160]} != "
+                f"baseline {json.dumps(y, default=str)[:160]}"
+            )
 
     for key in ("name", "description", "domain", "schema_mode", "locale", "seed", "date_range"):
         check(f"model.{key}", s["model"][key], b["model"][key])

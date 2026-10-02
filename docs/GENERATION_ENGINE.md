@@ -108,7 +108,11 @@ They need whole tables, so `generate()` runs them and `iter_chunks()` does not. 
    returns what still violates. Repairs draw from the `fix:<rule>` stream.
 3. **Correlation** (`correlation.py`): a Gaussian copula reorders the values of the numeric columns
    named in `correlated_columns` to match the target correlations, leaving every column's values
-   unchanged. Key-like columns and columns with nulls are not reordered.
+   unchanged. Key-like columns and columns with nulls are not reordered, unless the schema's
+   `generation.output.copula_nulls` is `"rank"` (what `shape generate --from` writes): then the
+   non-null values are reordered among the non-null rows and the nulls stay where they are.
+   Pairs with `|r|` below 0.5 are ignored, unless `generation.output.copula_threshold` lowers
+   that (`shape generate --from` writes 0 and lists only the pairs it wants).
 
 ## Reading SQL DDL
 

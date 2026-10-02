@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -63,7 +64,7 @@ def add_arguments(sub: Any) -> None:
         "--from",
         dest="from_profile",
         metavar="X.shape",
-        help="generate from a profile (not available yet)",
+        help="generate from a profile (a .shape file): fits strategies to it",
     )
     ge.add_argument(
         "--rows",
@@ -192,10 +193,7 @@ def _demo_rows(a: argparse.Namespace) -> int:
 def cmd_generate(a: argparse.Namespace) -> int:
     """``shape generate``: 0 generated (or the plan is sound), 1 a dry run found problems."""
     if a.from_profile:
-        raise NotImplementedError(
-            "`shape generate --from` (profile to generate) is not available yet; "
-            "name a domain or a generation schema instead"
-        )
+        return _generate_from_profile(a)
     if a.target is None:
         if a.rows is None:
             raise ValueError("name a domain or a schema file (see `shape list`), or give --rows N")
@@ -214,6 +212,50 @@ def cmd_generate(a: argparse.Namespace) -> int:
     engine = Engine(schema, scale=a.scale, seed=a.seed, **kwargs)
     run.set(
         domain=schema.model.domain or schema.model.name,
+        mode=schema.model.schema_mode,
+        scale=engine.schema.generation.scale,
+        seed=engine.seed,
+        format=a.format,
+    )
+    if a.dry_run:
+        plan = engine.dry_run()
+        run.set(rows=plan.total_rows, tables=len(plan.order))
+        if a.json:
+            _dump(plan.to_dict())
+        else:
+            print(plan.render())
+        return 0 if plan.ok else 1
+    return _generate(a, engine)
+
+
+def _generate_from_profile(a: argparse.Namespace) -> int:
+    """``shape generate --from X.shape``: fit a schema to the profile and generate it."""
+    if a.target is not None:
+        raise ValueError("--from takes a profile: give no domain or schema file")
+    if a.mode is not None:
+        raise ValueError("--mode is for domains; a profile has one schema")
+    import shape
+    from shape.generation.engine import Engine
+    from shape.generation.fit import PRESET, fit_schema
+    from shape.runlog import current
+
+    run = current()
+    fitted = fit_schema(shape.load(a.from_profile), rows=a.rows)
+    schema = fitted.schema
+    _check_scale(schema, a.scale)
+    counts = fitted.plan.counts()
+    print(
+        "profile fit: "
+        + ", ".join(f"{n} {s.replace('_', ' ')}" for s, n in sorted(counts.items()))
+        + " (see `shape plan`)",
+        file=sys.stderr,
+    )
+    kwargs: dict[str, Any] = {}
+    if a.chunk_rows:
+        kwargs["chunk_rows"] = a.chunk_rows
+    engine = Engine(schema, scale=a.scale or PRESET, seed=a.seed, **kwargs)
+    run.set(
+        domain=schema.model.domain,
         mode=schema.model.schema_mode,
         scale=engine.schema.generation.scale,
         seed=engine.seed,

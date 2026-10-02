@@ -101,7 +101,8 @@ class Temporal:
     ``Dec``) and ``profiles.day_of_week`` (``Mon`` .. ``Sun``; missing names weigh 1/12 and 1/7,
     and ``month_weights`` / ``day_of_week_weights`` at the top level are accepted too); the end
     date itself is a possible day. ``profiles.hour_of_day`` replaces the time of day by a whole
-    second of an hour drawn uniformly, or with ``{"distribution": "bimodal", "peaks": [12, 18],
+    second of an hour drawn uniformly, with one weight per hour (keys ``"0"`` .. ``"23"``), or with
+    ``{"distribution": "bimodal", "peaks": [12, 18],
     "std_dev": 2}`` from equally likely Gaussian peaks wrapped around midnight. Without it the
     time of day is uniform.
     """
@@ -110,6 +111,16 @@ class Temporal:
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         values = self._microseconds(spec, ctx)
+        granularity = spec.get("granularity")
+        if granularity == "day":
+            micros = values.cast(pa.int64()).to_numpy(zero_copy_only=False)
+            values = pa.array((micros // _DAY_US) * _DAY_US, type=pa.int64()).cast(
+                pa.timestamp("us")
+            )
+        elif granularity is not None:
+            raise StrategyError(
+                f"temporal 'granularity' must be 'day', not {granularity!r} ({where(ctx)})"
+            )
         unit = str(spec.get("unit", "us"))
         if unit == "us":
             return values
@@ -175,6 +186,14 @@ class Temporal:
                 kernel_ops.hour_weights_peaks(peaks, std).to_numpy(zero_copy_only=False),
                 dtype=np.float64,
             )
+        if profile and all(str(k).isdigit() for k in profile):
+            # one weight per hour of the day (a profile's hour histogram): "0" .. "23"
+            w = np.array([float(profile.get(str(h), 0.0)) for h in range(24)], dtype=np.float64)
+            if any(int(k) > 23 for k in profile):
+                raise StrategyError(f"temporal hour_of_day keys are hours 0..23 ({where(ctx)})")
+            if (w < 0).any() or not np.isfinite(w).all() or w.sum() <= 0:
+                raise StrategyError("temporal hour_of_day weights must be non-negative, not all 0")
+            return w
         return np.ones(24)
 
 
