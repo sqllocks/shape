@@ -36,19 +36,21 @@ Alerts (``docs/EMIT.md``) are edge-triggered: one alert when a condition becomes
   had reached.
 * ``live-error`` (error): the live side failed and was switched off.
 
-The alerts judge a table only once ``min_events`` of its events were seen and ``min_progress`` of
-the target table's rows: a table that is half emitted scores lower than the finished one (distinct
-counts grow with the rows), and that is not drift. The score itself is never gated: at any moment it
-is ``shape fidelity`` of the target against the events delivered so far. Tables are streamed one
-after the other, so the overall live score covers the tables that have started; after the last
-event it is that of ``shape fidelity`` on all the events.
+The alerts judge a table only once ``min_events`` of its events were seen (or all of a smaller
+table) and ``min_progress`` of the target table's rows: a table that is half emitted scores lower
+than the finished one (distinct counts grow with the rows), and that is not drift. The score itself
+is never gated: at any moment it is ``shape fidelity`` of the target against the events delivered
+so far. Tables are streamed one after the other, so the overall live score covers the tables that
+have started; after the last event it is that of ``shape fidelity`` on all the events.
 """
 
 from __future__ import annotations
 
 import json
 import math
+import queue
 import sys
+import threading
 import time
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -234,7 +236,7 @@ class _Sample:
 
     def sorted_values(self) -> np.ndarray[Any, Any]:
         if self._sorted is None:
-            values = self.full if self.full is not None else np.concatenate(self.parts or [[]])
+            values = self.full if self.full is not None else np.concatenate(self.parts or [np.empty(0)])
             self._sorted = np.sort(np.asarray(values))
         return self._sorted
 
@@ -773,7 +775,8 @@ class LiveFidelity:
             n: t
             for n, t in tables.items()
             if self._tables.get(n) is not None
-            and self._tables[n].rows >= max(cfg.min_events, cfg.min_progress * self.target.rows[n])
+            and self._tables[n].rows
+            >= max(min(cfg.min_events, self.target.rows[n]), cfg.min_progress * self.target.rows[n])
         }
         started = {
             n: t.score for n, t in tables.items() if self._tables.get(n) is not None and t.present
@@ -990,21 +993,59 @@ class TeeSink:
     """A sink that delivers to ``inner`` and shows each delivered batch to a ``LiveFidelity``.
 
     The live side sees a batch only after ``inner.send`` returned, so a batch the runtime
-    retries is counted once, and nothing the live side does can fail a delivery."""
+    retries is counted once, and nothing the live side does can fail a delivery. By default the
+    counting runs on its own thread, fed through a bounded queue (``queue_batches``): the
+    delivering thread only hands the batch over, and when the live side cannot keep up the queue
+    fills and delivery slows down (no event is skipped, so the score stays exact).
+    ``threaded=False`` counts inline."""
 
-    def __init__(self, inner: EventSink, live: LiveFidelity) -> None:
+    def __init__(
+        self,
+        inner: EventSink,
+        live: LiveFidelity,
+        *,
+        threaded: bool = True,
+        queue_batches: int = 64,
+    ) -> None:
         self.inner = inner
         self.live = live
+        self.handoff_seconds = 0.0
+        self._queue: queue.Queue[Any] | None = None
+        self._worker: threading.Thread | None = None
+        if threaded:
+            self._queue = queue.Queue(maxsize=max(1, queue_batches))
+            self._worker = threading.Thread(target=self._drain, name="shape-live", daemon=True)
+            self._worker.start()
+
+    def _drain(self) -> None:
+        assert self._queue is not None
+        while True:
+            item = self._queue.get()
+            if item is None:
+                return
+            self.live.observe(item)
 
     def send(self, batch: pa.RecordBatch) -> None:
         self.inner.send(batch)
-        self.live.observe(batch)
+        if self._queue is None:
+            self.live.observe(batch)
+            return
+        started = time.perf_counter()
+        self._queue.put(batch)
+        self.handoff_seconds += time.perf_counter() - started
 
     def flush(self) -> None:
         self.inner.flush()
 
+    def _stop_worker(self) -> None:
+        if self._queue is not None and self._worker is not None:
+            self._queue.put(None)
+            self._worker.join()
+            self._queue = self._worker = None
+
     def close(self) -> None:
         try:
+            self._stop_worker()
             if self.live.failed is None and self.live.events:
                 self.live.final()
         finally:

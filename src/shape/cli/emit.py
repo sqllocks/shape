@@ -222,7 +222,9 @@ def _live_target(a: argparse.Namespace, engine: Any, schema: Any) -> Any:
     target = a.live_target
     path = Path(target)
     only = a.table
-    if path.exists() and not (path.is_file() and path.suffix.lower() == ".json" and _is_schema(path)):
+    if path.exists() and not (
+        path.is_file() and path.suffix.lower() == ".json" and _is_schema(path)
+    ):
         from shape.quality import load_tables
 
         tables = load_tables(target, "auto")
