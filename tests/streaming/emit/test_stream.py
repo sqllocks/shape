@@ -65,14 +65,18 @@ def _random_batch(rng: random.Random, n: int) -> pa.RecordBatch:
 
     alphabet = ["a", "Z", " ", "é", "漢", "😀", '"', "\\", "\n", "\t", "\x01", "'", "/"]
     strings = [
-        None if rng.random() < 0.1 else "".join(rng.choice(alphabet) for _ in range(rng.randrange(6)))
+        None
+        if rng.random() < 0.1
+        else "".join(rng.choice(alphabet) for _ in range(rng.randrange(6)))
         for _ in range(n)
     ]
     plain = [None if rng.random() < 0.1 else rng.choice(["ab", "cd", "x y", "é"]) for _ in range(n)]
     base = dt.datetime(2020, 1, 1)
     return pa.RecordBatch.from_pydict(
         {
-            "i": pa.array([None if rng.random() < 0.1 else rng.randrange(-(2**62), 2**62) for _ in range(n)]),
+            "i": pa.array(
+                [None if rng.random() < 0.1 else rng.randrange(-(2**62), 2**62) for _ in range(n)]
+            ),
             "u": pa.array([rng.randrange(0, 2**63) for _ in range(n)], pa.uint64()),
             "f": pa.array(floats(), pa.float64()),
             "f32": pa.array([rng.uniform(0, 1) for _ in range(n)], pa.float32()),
@@ -81,14 +85,34 @@ def _random_batch(rng: random.Random, n: int) -> pa.RecordBatch:
             "plain": pa.array(plain, pa.string()),
             "ls": pa.array(plain, pa.large_string()),
             "d": pa.array(plain, pa.string()).dictionary_encode(),
-            "ts": pa.array([None if rng.random() < 0.1 else base + dt.timedelta(seconds=rng.randrange(10**8), microseconds=rng.randrange(10**6)) for _ in range(n)]),
-            "tz": pa.array([base + dt.timedelta(hours=i) for i in range(n)], pa.timestamp("us", "UTC")),
-            "day": pa.array([None if rng.random() < 0.1 else dt.date(2020, 1, 1) + dt.timedelta(days=rng.randrange(900)) for _ in range(n)]),
-            "dec": pa.array([decimal.Decimal(rng.randrange(-10**6, 10**6)) / 100 for _ in range(n)], pa.decimal128(12, 2)),
+            "ts": pa.array(
+                [
+                    None
+                    if rng.random() < 0.1
+                    else base
+                    + dt.timedelta(seconds=rng.randrange(10**8), microseconds=rng.randrange(10**6))
+                    for _ in range(n)
+                ]
+            ),
+            "tz": pa.array(
+                [base + dt.timedelta(hours=i) for i in range(n)], pa.timestamp("us", "UTC")
+            ),
+            "day": pa.array(
+                [
+                    None
+                    if rng.random() < 0.1
+                    else dt.date(2020, 1, 1) + dt.timedelta(days=rng.randrange(900))
+                    for _ in range(n)
+                ]
+            ),
+            "dec": pa.array(
+                [decimal.Decimal(rng.randrange(-(10**6), 10**6)) / 100 for _ in range(n)],
+                pa.decimal128(12, 2),
+            ),
             "raw": pa.array([rng.choice([b"\x00\x01", b"abc", None]) for _ in range(n)]),
             "nul": pa.nulls(n),
             "lst": pa.array([[1, 2], None, []][i % 3] for i in range(n)),
-            "weird name \"q\"": pa.array(range(n)),
+            'weird name "q"': pa.array(range(n)),
         }
     )
 
@@ -103,7 +127,21 @@ def test_vectorised_encoder_equals_the_row_encoder(seed: int) -> None:
 def test_encoder_edge_values() -> None:
     batch = pa.RecordBatch.from_pydict(
         {
-            "f": pa.array([100.0, 1e-4, 9.999e-5, 1e16, 1e15, 123456789012345.6, 5e-324, 1.7976931348623157e308, -0.0, 0.1 + 0.2], pa.float64()),
+            "f": pa.array(
+                [
+                    100.0,
+                    1e-4,
+                    9.999e-5,
+                    1e16,
+                    1e15,
+                    123456789012345.6,
+                    5e-324,
+                    1.7976931348623157e308,
+                    -0.0,
+                    0.1 + 0.2,
+                ],
+                pa.float64(),
+            ),
             "s": pa.array(["", " ", "\x7f", "\\", '"', "a\u0000b", "é", "\r\n", "ok", "tab\t"]),
         }
     )
@@ -143,7 +181,9 @@ def test_ties_keep_row_order_and_nulls_come_first() -> None:
     batches = _run(EventPlan(engine, tables=["order"], by_event_time=True))
     t = pa.Table.from_batches(batches)
     last: tuple | None = None
-    for time_, seq in zip(t.column(FIELD_TIME).to_pylist(), t.column(FIELD_SEQ).to_pylist(), strict=True):
+    for time_, seq in zip(
+        t.column(FIELD_TIME).to_pylist(), t.column(FIELD_SEQ).to_pylist(), strict=True
+    ):
         if last is not None and last[0] == time_:
             assert seq > last[1]
         last = (time_, seq)
@@ -175,7 +215,9 @@ def test_resume_is_the_suffix_and_max_events_the_prefix() -> None:
 
 
 def test_out_of_order_delays_events_and_is_deterministic() -> None:
-    plain = pa.Table.from_batches(_run(EventPlan(make_engine(), tables=["order"], by_event_time=True)))
+    plain = pa.Table.from_batches(
+        _run(EventPlan(make_engine(), tables=["order"], by_event_time=True))
+    )
     a = pa.Table.from_batches(
         _run(EventPlan(make_engine(), tables=["order"], by_event_time=True, out_of_order=0.1))
     )
@@ -186,7 +228,9 @@ def test_out_of_order_delays_events_and_is_deterministic() -> None:
     assert sorted(a.column(FIELD_SEQ).to_pylist()) == sorted(plain.column(FIELD_SEQ).to_pylist())
     moved = sum(
         x != y
-        for x, y in zip(a.column(FIELD_SEQ).to_pylist(), plain.column(FIELD_SEQ).to_pylist(), strict=True)
+        for x, y in zip(
+            a.column(FIELD_SEQ).to_pylist(), plain.column(FIELD_SEQ).to_pylist(), strict=True
+        )
     )
     assert 0 < moved < a.num_rows
 
@@ -206,7 +250,20 @@ def test_stream_file_is_the_emit_table_in_time_order(tmp_path: Path, capsys) -> 
     assert "shape stream:" in capsys.readouterr().out
     assert (
         main(
-            ["emit", "retail", "--scale", "small", "--seed", "3", "--table", "order", "--sink", "file", "-o", str(ref)]
+            [
+                "emit",
+                "retail",
+                "--scale",
+                "small",
+                "--seed",
+                "3",
+                "--table",
+                "order",
+                "--sink",
+                "file",
+                "-o",
+                str(ref),
+            ]
         )
         == 0
     )
@@ -227,9 +284,31 @@ def test_max_events_is_the_earliest_events(tmp_path: Path) -> None:
 
 def test_short_flags_and_defaults(tmp_path: Path) -> None:
     long_, short = tmp_path / "l.jsonl", tmp_path / "s.jsonl"
-    assert main([*BASE, "--mode", "3nf", "--sink", "file", "-o", str(long_), "--max-events", "50"]) == 0
     assert (
-        main(["stream", "retail", "-s", "small", "--seed", "3", "-t", "order", "-m", "3nf", "--sink", "file", "-o", str(short), "--max-events", "50"])
+        main([*BASE, "--mode", "3nf", "--sink", "file", "-o", str(long_), "--max-events", "50"])
+        == 0
+    )
+    assert (
+        main(
+            [
+                "stream",
+                "retail",
+                "-s",
+                "small",
+                "--seed",
+                "3",
+                "-t",
+                "order",
+                "-m",
+                "3nf",
+                "--sink",
+                "file",
+                "-o",
+                str(short),
+                "--max-events",
+                "50",
+            ]
+        )
         == 0
     )
     assert long_.read_bytes() == short.read_bytes()
@@ -267,7 +346,17 @@ def test_stream_resumes_from_its_checkpoint(tmp_path: Path) -> None:
     out, ck = tmp_path / "s.jsonl", tmp_path / "s.ck"
     whole = tmp_path / "w.jsonl"
     assert main([*BASE, "--sink", "file", "-o", str(whole), "--out-of-order", "0.1"]) == 0
-    args = [*BASE, "--sink", "file", "-o", str(out), "--checkpoint", str(ck), "--out-of-order", "0.1"]
+    args = [
+        *BASE,
+        "--sink",
+        "file",
+        "-o",
+        str(out),
+        "--checkpoint",
+        str(ck),
+        "--out-of-order",
+        "0.1",
+    ]
     assert main([*args, "--max-events", "3000"]) == 0
     assert len(out.read_bytes().splitlines()) == 3000
     assert main(args) == 0

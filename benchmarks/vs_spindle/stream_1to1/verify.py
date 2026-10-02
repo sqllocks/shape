@@ -85,8 +85,10 @@ class MissingInput(Exception):
 
 
 def command(tool: str, scale: str, seed: int, out: Path, max_events: int | None, *extra: str):
-    exe = (SPINDLE_VENV if tool == "spindle" else SHAPE_VENV) / "bin" / (
-        "spindle" if tool == "spindle" else "shape"
+    exe = (
+        (SPINDLE_VENV if tool == "spindle" else SHAPE_VENV)
+        / "bin"
+        / ("spindle" if tool == "spindle" else "shape")
     )
     cmd = [str(exe), "stream", sc.DOMAIN, "--table", sc.TABLE, "--scale", scale]
     cmd += ["--no-realtime", "--sink", "file", "-o", str(out), "--seed", str(seed)]
@@ -167,7 +169,7 @@ def load(tool: str, path: Path) -> Events:
     raw_time = df[sc.FIELD_TIME].copy() if sc.FIELD_TIME in df else pd.Series(dtype=object)
     for c in df.columns:
         s = df[c]
-        if s.dtype == object:
+        if s.dtype == object or pd.api.types.is_string_dtype(s.dtype):
             nn = s.dropna()
             if len(nn) and isinstance(nn.iloc[0], str) and DATETIME_RE.match(nn.iloc[0]):
                 df[c] = pd.to_datetime(s, format="ISO8601")
@@ -280,28 +282,34 @@ def probe_anomaly_fraction(generate: bool) -> dict[str, Any]:
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def perturbations(shape: Events) -> dict[str, Events]:
-    """Copies of Shape's events with one thing made wrong each."""
+def ks_tolerance(ref: Events, others: list[Events], col: str) -> float:
+    """The KS tolerance T-21 (c) allows ``col``: max(critical value, 1.5 x the baseline's spread +
+    0.002)."""
+    B = dv.merge_baselines([dv.baseline_distances(ref.df[col], o.df[col]) for o in others])
+    crit = dv.ks_crit(len(ref.df), len(ref.df))
+    return max(crit, 1.5 * B["ks"] + 0.002)
+
+
+def perturbations(shape: Events, ref: Events, others: list[Events]) -> dict[str, Events]:
+    """Copies of Shape's events with one thing made wrong each. A numeric field is perturbed
+    where T-21 is tightest: some fields vary so much between the baseline's own seeds (a handful
+    of popular values dominate) that their tolerance is wide, and a 20% shift stays inside it."""
     from copy import deepcopy
 
     out: dict[str, Events] = {}
-    numeric = next(
-        c
-        for c in shape.names
-        if pd.api.types.is_float_dtype(shape.df[c]) and not c.startswith("_shape")
+    plain = [c for c in shape.names if not c.startswith("_shape")]
+    numeric = min(
+        (c for c in plain if shape.types[c] in (["float"], ["int"])),
+        key=lambda c: ks_tolerance(ref, others, c),
     )
-    cat = next(
-        c for c in shape.names if shape.df[c].dtype == object and not c.startswith("_shape")
-    )
-    nullable = next(
-        c
-        for c in shape.names
-        if pd.api.types.is_numeric_dtype(shape.df[c]) and not c.startswith("_shape") and c != numeric
-    )
+    cat = next(c for c in plain if pd.api.types.is_string_dtype(shape.df[c].dtype))
+    nullable = next(c for c in plain if pd.api.types.is_numeric_dtype(shape.df[c]) and c != numeric)
+    stamp = next(c for c in plain if pd.api.types.is_datetime64_any_dtype(shape.df[c]))
+    tol = ks_tolerance(ref, others, numeric)
 
     e = deepcopy(shape)
     e.df[numeric] = e.df[numeric] * 1.2
-    out[f"{numeric} scaled by 1.2"] = e
+    out[f"{numeric} scaled by 1.2 (KS tolerance {tol:.4f})"] = e
 
     e = deepcopy(shape)
     top = e.df[cat].value_counts().index[0]
@@ -312,6 +320,11 @@ def perturbations(shape: Events) -> dict[str, Events]:
     rng = np.random.default_rng(0)
     e.df.loc[rng.random(len(e.df)) < 0.15, nullable] = np.nan
     out[f"{nullable} nulls raised by 15%"] = e
+
+    e = deepcopy(shape)
+    e.df[stamp] = e.df[stamp] + pd.Timedelta(days=400)
+    e.df[sc.FIELD_TIME] = e.df[stamp]
+    out[f"{stamp} shifted by 400 days"] = e
 
     e = deepcopy(shape)
     e.df = e.df.sample(frac=1.0, random_state=0).reset_index(drop=True)
@@ -370,7 +383,10 @@ def main(argv: list[str] | None = None) -> int:
         rows = len(ref_full.df)
         verdicts: dict[str, dict[str, Any]] = {}
         loaded: dict[str, tuple[Any, ...]] = {}
-        for label, n in (("whole table", None), (f"first {sc.PREFIX_EVENTS[a.scale]}", sc.PREFIX_EVENTS[a.scale])):
+        for label, n in (
+            ("whole table", None),
+            (f"first {sc.PREFIX_EVENTS[a.scale]}", sc.PREFIX_EVENTS[a.scale]),
+        ):
             loaded[label] = workload(a.scale, n, generate, rows)
         for label, (shape, ref, others, expected) in loaded.items():
             verdicts[label] = compare_events(shape, ref, others, rows, expected)
@@ -389,9 +405,11 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     report["runs"] = {
-        k: {kk: vv for kk, vv in v.items() if kk != "columns"} | {
+        k: {kk: vv for kk, vv in v.items() if kk != "columns"}
+        | {
             "columns": {
-                c: {kk: vv for kk, vv in r.items() if kk != "top10"} for c, r in v["columns"].items()
+                c: {kk: vv for kk, vv in r.items() if kk != "top10"}
+                for c, r in v["columns"].items()
             }
         }
         for k, v in verdicts.items()
@@ -403,11 +421,13 @@ def main(argv: list[str] | None = None) -> int:
         shape, ref, others, expected = loaded["whole table"]
         undetected = []
         print("\n== negative control: each perturbation must make the verifier fail")
-        for name, bad in perturbations(shape).items():
+        for name, bad in perturbations(shape, ref, others).items():
             res = compare_events(bad, ref, others, rows, expected)
             detected = not res["ok"]
             failed = [k for k, v in res["checks"].items() if not v][:3]
-            print(f"  {'detected' if detected else 'NOT DETECTED':12s} {name}  ({', '.join(failed)})")
+            print(
+                f"  {'detected' if detected else 'NOT DETECTED':12s} {name}  ({', '.join(failed)})"
+            )
             if not detected:
                 undetected.append(name)
         report["negative_control"] = {"undetected": undetected}

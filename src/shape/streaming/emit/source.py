@@ -201,7 +201,9 @@ class EventPlan:
         time_col = event_time_column(schema)
         if time_col is None:
             flat = [_flat(c) for c in columns]
-            self._timed = with_event_fields(pa.RecordBatch.from_arrays(flat, schema=schema), table, 0)
+            self._timed = with_event_fields(
+                pa.RecordBatch.from_arrays(flat, schema=schema), table, 0
+            )
             return self._timed
         check_reserved(schema, table)
         names = list(schema.names)

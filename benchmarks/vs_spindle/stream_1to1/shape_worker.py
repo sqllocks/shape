@@ -39,10 +39,10 @@ def main(argv: list[str] | None = None) -> int:
     import numpy  # noqa: F401
     import pyarrow
 
-    import shape.cli.emit
-    import shape.cli.stream
-    import shape.generation.engine
-    import shape.streaming.emit
+    import shape.cli.emit  # noqa: F401
+    import shape.cli.stream  # noqa: F401
+    import shape.generation.engine  # noqa: F401
+    import shape.streaming.emit  # noqa: F401
     from shape.cli.main import main as shape_main
     from shape.plugins.host import default_host
 

@@ -182,12 +182,17 @@ def _column_tokens(col: pa.Array) -> pa.Array:
         col = pc.if_else(finite, col, pa.scalar(None, t))
         mag = pc.abs(col)
         out_of_range = pc.any(
-            pc.and_(pc.not_equal(mag, 0.0), pc.or_(pc.less(mag, _FLOAT_MIN), pc.greater_equal(mag, _FLOAT_MAX)))
+            pc.and_(
+                pc.not_equal(mag, 0.0),
+                pc.or_(pc.less(mag, _FLOAT_MIN), pc.greater_equal(mag, _FLOAT_MAX)),
+            )
         ).as_py()
         text = col.cast(pa.string())
         if not out_of_range and not pc.any(pc.match_substring(text, "e")).as_py():
             bare = pc.invert(pc.match_substring_regex(text, r"[.eE]"))
-            text = pc.if_else(bare, pc.binary_join_element_wise(text, pa.scalar(".0"), pa.scalar("")), text)
+            text = pc.if_else(
+                bare, pc.binary_join_element_wise(text, pa.scalar(".0"), pa.scalar("")), text
+            )
             return _filled(text)
     elif pa.types.is_string(t) or pa.types.is_large_string(t):
         if not pc.any(pc.match_substring_regex(col, _NEEDS_ESCAPE)).as_py():
@@ -196,7 +201,7 @@ def _column_tokens(col: pa.Array) -> pa.Array:
         if t.tz is not None:
             col = col.cast(pa.timestamp(t.unit, "UTC"))
             return _quote(pc.strftime(col, format="%Y-%m-%dT%H:%M:%SZ"))
-        # The text cast writes the same digits as ``%S`` (fraction to the column's unit), much faster.
+        # The text cast writes the same digits as ``%S`` (the fraction to the column's unit).
         iso = pc.replace_substring(col.cast(pa.string()), " ", "T", max_replacements=1)
         return _quote(iso)
     elif pa.types.is_date(t) or pa.types.is_decimal(t):
@@ -242,7 +247,9 @@ def _encode_parallel(batch: pa.RecordBatch) -> bytes:
         _pool = ThreadPoolExecutor(max_workers=max(1, min(4, os.cpu_count() or 1)))
     parts = _pool._max_workers
     step = -(-batch.num_rows // parts)
-    futures = [_pool.submit(_encode_flat, batch.slice(i, step)) for i in range(0, batch.num_rows, step)]
+    futures = [
+        _pool.submit(_encode_flat, batch.slice(i, step)) for i in range(0, batch.num_rows, step)
+    ]
     return b"".join(f.result() for f in futures)
 
 

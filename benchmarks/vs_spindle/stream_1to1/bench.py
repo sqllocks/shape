@@ -159,7 +159,8 @@ def print_table(results: dict) -> None:
         f"\n== {m['workload']}: median of {m['runs']} fresh-process runs ({m['warmup']} warm-up), "
         f"{m['cores']} cores, {m['cpu']}"
     )
-    print(f"{'tool':8s} {'events':>9s} {'total s':>8s} {'emit s':>7s} {'events/s':>10s} {'RSS MB':>7s}")
+    head = f"{'tool':8s} {'events':>9s} {'total s':>8s} {'emit s':>7s} {'events/s':>10s}"
+    print(head + f" {'RSS MB':>7s}")
     for t, s in results["summary"].items():
         print(
             f"{t:8s} {s['events']:>9,} {s['total_s']:>8.2f} {s['emit_s']:>7.2f} "
