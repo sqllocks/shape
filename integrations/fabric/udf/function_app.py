@@ -1,12 +1,13 @@
 """Shape as Fabric User Data Functions (template; logic in ``shape.integrations.fabric.udf``).
 
-Five functions, all camelCase parameters and ``dict`` results:
+Six functions, all camelCase parameters and ``dict`` results:
 
 * ``profileLakehouseFile``   profile a CSV / Parquet / JSONL file in the lakehouse Files area
 * ``profileLakehouseTable``  profile a lakehouse table through the SQL endpoint (row-capped)
 * ``checkProfile``           check a saved ``.shape`` profile against a contract
 * ``diffProfiles``           diff two saved ``.shape`` profiles
 * ``profileDataFrame``       profile inline data (request limit 4 MB)
+* ``generateSample``         generate rows of one table of a domain (response capped under 30 MB)
 
 Paste this file into the User Data Functions item with the Shape wheel as a private library
 (see ``requirements.md``). It only declares the Fabric bindings; the work, the size guards and
@@ -82,3 +83,13 @@ def diffProfiles(
 def profileDataFrame(data: pd.DataFrame) -> dict:
     """Profile inline data. The request body is limited to 4 MB."""
     return shape_udf.profile_data_frame(data)
+
+
+@udf.function()
+def generateSample(domain: str, table: str, rows: int = 10000, seed: int = 42) -> pd.DataFrame:
+    """Generate ``rows`` rows of ``table`` from the domain ``domain``.
+
+    ``rows`` is capped so the response stays under 30 MB; the same arguments always return the
+    same rows. ``domain`` and ``table`` must be installed names (letters, digits, underscores).
+    """
+    return shape_udf.generate_sample(domain, table, rows, seed)
