@@ -1,0 +1,355 @@
+Spindle composite_healthcare_system (seed 42) vs shape (seed 1042) - scale=small  (baseline = max distance of Spindle seeds [43, 44, 45, 46] to Spindle seed 42)
+table order identical: False
+
+table.column                       kind        type         null s/i       dist  baseline     tol  vocab  verdict
+-- healthcare_provider: rows 100 / 100  cols identical+ordered=True  types identical=True
+healthcare_provider.provider_id    numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2757         EQUIVALENT
+healthcare_provider.npi            categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+healthcare_provider.first_name     categorical ok    0.0000/0.0000 TVD  1.0000    0.9900  2.3696 1.0000  EQUIVALENT
+healthcare_provider.last_name      categorical ok    0.0000/0.0000 TVD  0.9800    0.9900  2.3937 1.0000  EQUIVALENT
+healthcare_provider.credential     categorical ok    0.0000/0.0000 TVD  0.1000    0.1100  0.5352 1.0000  EQUIVALENT
+healthcare_provider.specialty      categorical ok    0.0000/0.0000 TVD  0.3400    0.3200  1.3541 1.0000  EQUIVALENT
+healthcare_provider.is_active      categorical ok    0.0000/0.0000 TVD  0.0300    0.0400  0.3385 1.0000  EQUIVALENT
+-- healthcare_facility: rows 50 / 50  cols identical+ordered=True  types identical=True
+healthcare_facility.facility_id    numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3899         EQUIVALENT
+healthcare_facility.facility_name  categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+healthcare_facility.facility_type  categorical ok    0.0000/0.0000 TVD  0.2000    0.2800  0.8956 1.0000  EQUIVALENT
+healthcare_facility.bed_count      numeric     ok    0.0000/0.0000  KS  0.1000    0.2400  0.3899         EQUIVALENT
+healthcare_facility.street         categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+healthcare_facility.city           categorical ok    0.0000/0.0000 TVD  0.9600    0.9800  2.3937 1.0000  EQUIVALENT
+healthcare_facility.phone          categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+healthcare_facility.state          categorical ok    0.0000/0.0000 TVD  0.4200    0.5600  1.8848 1.0000  EQUIVALENT
+healthcare_facility.zip_code       categorical ok    0.0000/0.0000 TVD  1.0000    1.0000  2.3937 1.0000  EQUIVALENT
+healthcare_facility.lat            numeric     ok    0.0000/0.0000  KS  0.1400    0.2200  0.3899         EQUIVALENT
+healthcare_facility.lng            numeric     ok    0.0000/0.0000  KS  0.1400    0.2000  0.3899         EQUIVALENT
+-- healthcare_patient: rows 500 / 500  cols identical+ordered=True  types identical=True
+healthcare_patient.patient_id      numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1233         EQUIVALENT
+healthcare_patient.mrn             categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+healthcare_patient.first_name      categorical ok    0.0000/0.0000 TVD  0.8960    0.9200  2.3380 1.0000  EQUIVALENT
+healthcare_patient.last_name       categorical ok    0.0000/0.0000 TVD  0.9200    0.9220  2.3453 1.0000  EQUIVALENT
+healthcare_patient.date_of_birth   datetime    ok    0.0000/0.0000  KS  0.0640    0.0860  0.1310         EQUIVALENT
+healthcare_patient.gender          categorical ok    0.0000/0.0000 TVD  0.0240    0.0380  0.1854 1.0000  EQUIVALENT
+healthcare_patient.race            categorical ok    0.0000/0.0000 TVD  0.0420    0.0540  0.2394 1.0000  EQUIVALENT
+healthcare_patient.street          categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+healthcare_patient.city            categorical ok    0.0000/0.0000 TVD  0.8940    0.9000  2.2658 1.0000  EQUIVALENT
+healthcare_patient.phone           categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+healthcare_patient.email           categorical ok    0.1300/0.1580 |dR-1|  0.0322    0.0207  0.0310 1.0000  NOT EQUIVALENT
+healthcare_patient.insurance_plan  categorical ok    0.0000/0.0000 TVD  0.1120    0.1360  0.5134 1.0000  EQUIVALENT
+healthcare_patient.insurance_member_id categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+healthcare_patient.registration_date datetime    ok    0.0000/0.0000  KS  0.0580    0.0900  0.1370         EQUIVALENT
+healthcare_patient.is_active       categorical ok    0.0000/0.0000 TVD  0.0740    0.0740  0.1514 1.0000  EQUIVALENT
+healthcare_patient.state           categorical ok    0.0000/0.0000 TVD  0.1500    0.1800  0.7493 1.0000  EQUIVALENT
+healthcare_patient.zip_code        categorical ok    0.0000/0.0000 TVD  0.9960    0.9940  2.3865 1.0000  EQUIVALENT
+-- healthcare_encounter: rows 2,500 / 2,500  cols identical+ordered=True  types identical=True
+healthcare_encounter.encounter_id  numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0551         EQUIVALENT
+healthcare_encounter.patient_id    numeric     ok    0.0000/0.0000  KS  0.0344    0.0472  0.0728         EQUIVALENT
+healthcare_encounter.provider_id   numeric     ok    0.0000/0.0000  KS  0.0180    0.0256  0.0551         EQUIVALENT
+healthcare_encounter.facility_id   numeric     ok    0.0000/0.0000  KS  0.0176    0.0192  0.0551         EQUIVALENT
+healthcare_encounter.encounter_type categorical ok    0.0000/0.0000 TVD  0.0100    0.0156  0.1070 1.0000  EQUIVALENT
+healthcare_encounter.encounter_date datetime    ok    0.0000/0.0000  KS  0.0412    0.1012  0.1538         EQUIVALENT
+healthcare_encounter.status        categorical ok    0.0000/0.0000 TVD  0.0072    0.0108  0.0957 1.0000  EQUIVALENT
+-- healthcare_diagnosis: rows 4,500 / 4,500  cols identical+ordered=True  types identical=True
+healthcare_diagnosis.diagnosis_id  numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0411         EQUIVALENT
+healthcare_diagnosis.encounter_id  numeric     ok    0.0000/0.0000  KS  0.0167    0.0289  0.0453         EQUIVALENT
+healthcare_diagnosis.icd10_code    categorical ok    0.0000/0.0000 TVD  0.0596    0.0664  0.2472 1.0000  EQUIVALENT
+healthcare_diagnosis.diagnosis_type categorical ok    0.0000/0.0000 TVD  0.0084    0.0171  0.0714 1.0000  EQUIVALENT
+healthcare_diagnosis.is_chronic    categorical ok    0.0000/0.0000 TVD  0.0164    0.0136  0.0505 1.0000  EQUIVALENT
+healthcare_diagnosis.description   categorical ok    0.0000/0.0000 TVD  0.0596    0.0664  0.2472 1.0000  EQUIVALENT
+-- healthcare_procedure: rows 3,000 / 3,000  cols identical+ordered=True  types identical=True
+healthcare_procedure.procedure_id  numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0503         EQUIVALENT
+healthcare_procedure.encounter_id  numeric     ok    0.0000/0.0000  KS  0.0153    0.0300  0.0503         EQUIVALENT
+healthcare_procedure.performing_provider_id numeric     ok    0.0000/0.0000  KS  0.0110    0.0223  0.0503         EQUIVALENT
+healthcare_procedure.cpt_code      categorical ok    0.0000/0.0000 TVD  0.0720    0.0773  0.3059 1.0000  EQUIVALENT
+healthcare_procedure.modifier      categorical ok    0.7090/0.7060 TVD  0.0170    0.0374  0.0977 1.0000  EQUIVALENT
+healthcare_procedure.cpt_description categorical ok    0.0000/0.0000 TVD  0.0720    0.0773  0.3059 1.0000  EQUIVALENT
+healthcare_procedure.standard_charge numeric     ok    0.0000/0.0000  KS  0.0220    0.0233  0.0503         EQUIVALENT
+-- healthcare_medication: rows 2,250 / 2,250  cols identical+ordered=True  types identical=True
+healthcare_medication.medication_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0581         EQUIVALENT
+healthcare_medication.encounter_id numeric     ok    0.0000/0.0000  KS  0.0231    0.0413  0.0640         EQUIVALENT
+healthcare_medication.medication_name categorical ok    0.0000/0.0000 TVD  0.0711    0.0907  0.3192 1.0000  EQUIVALENT
+healthcare_medication.dosage       categorical ok    0.0000/0.0000 TVD  0.0213    0.0498  0.1427 1.0000  EQUIVALENT
+healthcare_medication.frequency    categorical ok    0.0000/0.0000 TVD  0.0218    0.0356  0.1335 1.0000  EQUIVALENT
+healthcare_medication.days_supply  numeric     ok    0.0000/0.0000  KS  0.0342    0.0342  0.0581         EQUIVALENT
+healthcare_medication.patient_id   numeric     ok    0.0000/0.0000  KS  0.0360    0.0502  0.0773         EQUIVALENT
+-- healthcare_claim: rows 2,375 / 2,375  cols identical+ordered=True  types identical=True
+healthcare_claim.claim_id          numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0566         EQUIVALENT
+healthcare_claim.encounter_id      numeric     ok    0.0000/0.0000  KS  0.0206    0.0265  0.0566         EQUIVALENT
+healthcare_claim.claim_number      categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+healthcare_claim.claim_type        categorical ok    0.0000/0.0000 TVD  0.0088    0.0139  0.0851 1.0000  EQUIVALENT
+healthcare_claim.status            categorical ok    0.0000/0.0000 TVD  0.0105    0.0202  0.1098 1.0000  EQUIVALENT
+healthcare_claim.patient_id        numeric     ok    0.0000/0.0000  KS  0.0505    0.0602  0.0923         EQUIVALENT
+healthcare_claim.filing_date       datetime    ok    0.0000/0.0000  KS  0.0568    0.1162  0.1763         EQUIVALENT
+healthcare_claim.total_amount      numeric     ok    0.0000/0.0000  KS  0.1524    0.3966  0.5969         EQUIVALENT
+healthcare_claim.allowed_amount    numeric     ok    0.0000/0.0000  KS  0.1305    0.3891  0.5856         EQUIVALENT
+healthcare_claim.paid_amount       numeric     ok    0.0000/0.0000  KS  0.1238    0.3802  0.5723         EQUIVALENT
+-- healthcare_claim_line: rows 5,937 / 5,937  cols identical+ordered=True  types identical=True
+healthcare_claim_line.claim_line_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0358         EQUIVALENT
+healthcare_claim_line.claim_id     numeric     ok    0.0000/0.0000  KS  0.0138    0.0177  0.0358         EQUIVALENT
+healthcare_claim_line.procedure_id numeric     ok    0.0000/0.0000  KS  0.0140    0.0192  0.0358         EQUIVALENT
+healthcare_claim_line.patient_copay numeric     ok    0.0000/0.0000  KS  0.0113    0.0106  0.0358         EQUIVALENT
+healthcare_claim_line.cpt_code     categorical ok    0.0000/0.0000 TVD  0.6899    0.7152  1.0748 1.0000  EQUIVALENT
+healthcare_claim_line.charge_amount numeric     ok    0.0000/0.0000  KS  0.1713    0.3877  0.5836         EQUIVALENT
+healthcare_claim_line.allowed_amount numeric     ok    0.0000/0.0000  KS  0.1481    0.3648  0.5492         EQUIVALENT
+healthcare_claim_line.paid_amount  numeric     ok    0.0000/0.0000  KS  0.1053    0.3569  0.5374         EQUIVALENT
+-- insurance_agent: rows 100 / 100  cols identical+ordered=True  types identical=True
+insurance_agent.agent_id           numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2757         EQUIVALENT
+insurance_agent.first_name         categorical ok    0.0000/0.0000 TVD  0.9900    1.0000  2.3696 1.0000  EQUIVALENT
+insurance_agent.last_name          categorical ok    0.0000/0.0000 TVD  0.9900    1.0000  2.3817 1.0000  EQUIVALENT
+insurance_agent.email              categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+insurance_agent.license_number     categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+insurance_agent.specialization     categorical ok    0.0000/0.0000 TVD  0.1200    0.1700  0.5352 1.0000  EQUIVALENT
+insurance_agent.years_experience   numeric     ok    0.0000/0.0000  KS  0.1000    0.1300  0.2757         EQUIVALENT
+insurance_agent.is_active          categorical ok    0.0000/0.0000 TVD  0.0400    0.0400  0.3385 1.0000  EQUIVALENT
+-- insurance_policyholder: rows 1,000 / 1,000  cols identical+ordered=True  types identical=True
+insurance_policyholder.policyholder_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0872         EQUIVALENT
+insurance_policyholder.agent_id    numeric     ok    0.0000/0.0000  KS  0.0420    0.0750  0.1145         EQUIVALENT
+insurance_policyholder.first_name  categorical ok    0.0000/0.0000 TVD  0.8330    0.8460  2.2733 1.0000  EQUIVALENT
+insurance_policyholder.last_name   categorical ok    0.0000/0.0000 TVD  0.8220    0.8350  2.2821 1.0000  EQUIVALENT
+insurance_policyholder.email       categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+insurance_policyholder.phone       categorical ok    0.0650/0.0700 |dR-1|  0.0053    0.0374  0.0561 1.0000  EQUIVALENT
+insurance_policyholder.date_of_birth datetime    ok    0.0000/0.0000  KS  0.0230    0.0460  0.0872         EQUIVALENT
+insurance_policyholder.address_city categorical ok    0.0000/0.0000 TVD  0.8580    0.8560  2.2582 1.0000  EQUIVALENT
+insurance_policyholder.credit_score numeric     ok    0.0000/0.0000  KS  0.0470    0.0670  0.1025         EQUIVALENT
+insurance_policyholder.address_state categorical ok    0.0000/0.0000 TVD  0.1030    0.1450  0.5352 1.0000  EQUIVALENT
+insurance_policyholder.address_zip categorical ok    0.0000/0.0000 TVD  0.9780    0.9850  2.3768 1.0000  EQUIVALENT
+-- insurance_policy_type: rows 30 / 30  cols identical+ordered=True  types identical=True
+insurance_policy_type.policy_type_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.5034         EQUIVALENT
+insurance_policy_type.type_name    categorical ok    0.0000/0.0000 TVD  0.4667    0.5667  1.9049 1.0000  EQUIVALENT
+insurance_policy_type.category     categorical ok    0.0000/0.0000 TVD  0.2000    0.2667  1.0705 1.0000  EQUIVALENT
+insurance_policy_type.base_premium_min numeric     ok    0.0000/0.0000  KS  0.2667    0.1667  0.5034         EQUIVALENT
+insurance_policy_type.base_premium_max numeric     ok    0.0000/0.0000  KS  0.3333    0.3333  0.5034         EQUIVALENT
+-- insurance_policy: rows 1,800 / 1,800  cols identical+ordered=True  types identical=True
+insurance_policy.policy_id         numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0650         EQUIVALENT
+insurance_policy.policyholder_id   numeric     ok    0.0000/0.0000  KS  0.0378    0.0294  0.0650         EQUIVALENT
+insurance_policy.policy_type_id    numeric     ok    0.0000/0.0000  KS  0.0289    0.0217  0.0650         EQUIVALENT
+insurance_policy.policy_number     categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+insurance_policy.effective_date    datetime    ok    0.0000/0.0000  KS  0.0244    0.0322  0.0650         EQUIVALENT
+insurance_policy.premium_amount    numeric     ok    0.0000/0.0000  KS  0.0400    0.0467  0.0720         EQUIVALENT
+insurance_policy.deductible        numeric     ok    0.0000/0.0000  KS  0.0144    0.0167  0.0650         EQUIVALENT
+insurance_policy.status            categorical ok    0.0000/0.0000 TVD  0.0067    0.0222  0.1128 1.0000  EQUIVALENT
+insurance_policy.expiration_date   datetime    ok    0.0000/0.0000  KS  0.0244    0.0322  0.0650         EQUIVALENT
+-- insurance_coverage: rows 4,500 / 4,500  cols identical+ordered=True  types identical=True
+insurance_coverage.coverage_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0411         EQUIVALENT
+insurance_coverage.policy_id       numeric     ok    0.0000/0.0000  KS  0.0147    0.0249  0.0411         EQUIVALENT
+insurance_coverage.coverage_type   categorical ok    0.0000/0.0000 TVD  0.0142    0.0313  0.0874 1.0000  EQUIVALENT
+insurance_coverage.coverage_limit  numeric     ok    0.0000/0.0000  KS  0.0182    0.0196  0.0411         EQUIVALENT
+insurance_coverage.coverage_premium numeric     ok    0.0000/0.0000  KS  0.0240    0.0224  0.0411         EQUIVALENT
+-- insurance_claim: rows 540 / 540  cols identical+ordered=True  types identical=True
+insurance_claim.claim_id           numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1186         EQUIVALENT
+insurance_claim.policy_id          numeric     ok    0.0000/0.0000  KS  0.0370    0.0574  0.1186         EQUIVALENT
+insurance_claim.claim_number       categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+insurance_claim.incident_date      datetime    ok    0.0000/0.0000  KS  0.0481    0.0556  0.1186         EQUIVALENT
+insurance_claim.claim_amount       numeric     ok    0.0000/0.0000  KS  0.0963    0.0593  0.1186         EQUIVALENT
+insurance_claim.status             categorical ok    0.0000/0.0000 TVD  0.0796    0.0722  0.2303 1.0000  EQUIVALENT
+insurance_claim.cause              categorical ok    0.0000/0.0000 TVD  0.1296    0.1167  0.5150 1.0000  EQUIVALENT
+insurance_claim.filed_date         datetime    ok    0.0000/0.0000  KS  0.0481    0.0556  0.1186         EQUIVALENT
+-- insurance_claim_payment: rows 810 / 810  cols identical+ordered=True  types identical=True
+insurance_claim_payment.payment_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0969         EQUIVALENT
+insurance_claim_payment.claim_id   numeric     ok    0.0000/0.0000  KS  0.0370    0.0469  0.0969         EQUIVALENT
+insurance_claim_payment.payment_date datetime    ok    0.0000/0.0000  KS  0.0321    0.0481  0.0969         EQUIVALENT
+insurance_claim_payment.payment_amount numeric     ok    0.0000/0.0000  KS  0.0580    0.0593  0.0969         EQUIVALENT
+insurance_claim_payment.payment_type categorical ok    0.0000/0.0000 TVD  0.0062    0.0296  0.1457 1.0000  EQUIVALENT
+-- insurance_premium_payment: rows 10,800 / 10,800  cols identical+ordered=True  types identical=True
+insurance_premium_payment.payment_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0265         EQUIVALENT
+insurance_premium_payment.policy_id numeric     ok    0.0000/0.0000  KS  0.0167    0.0161  0.0265         EQUIVALENT
+insurance_premium_payment.payment_date datetime    ok    0.0000/0.0000  KS  0.0071    0.0118  0.0265         EQUIVALENT
+insurance_premium_payment.amount   numeric     ok    0.0000/0.0000  KS  0.0090    0.0111  0.0265         EQUIVALENT
+insurance_premium_payment.payment_method categorical ok    0.0000/0.0000 TVD  0.0021    0.0131  0.0461 1.0000  EQUIVALENT
+insurance_premium_payment.status   categorical ok    0.0000/0.0000 TVD  0.0082    0.0087  0.0461 1.0000  EQUIVALENT
+-- insurance_underwriting: rows 1,800 / 1,800  cols identical+ordered=True  types identical=True
+insurance_underwriting.underwriting_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0650         EQUIVALENT
+insurance_underwriting.policy_id   numeric     ok    0.0000/0.0000  KS  0.0411    0.0439  0.0678         EQUIVALENT
+insurance_underwriting.assessed_date datetime    ok    0.0000/0.0000  KS  0.0372    0.0428  0.0662         EQUIVALENT
+insurance_underwriting.risk_score  numeric     ok    0.0000/0.0000  KS  0.0183    0.0294  0.0650         EQUIVALENT
+insurance_underwriting.risk_tier   categorical ok    0.0000/0.0000 TVD  0.0278    0.0361  0.1128 1.0000  EQUIVALENT
+insurance_underwriting.notes       categorical ok    0.3844/0.3972 TVD  0.6341    0.6758  1.6555 1.0000  EQUIVALENT
+-- hr_department: rows 30 / 30  cols identical+ordered=True  types identical=True
+hr_department.department_id        numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.5034         EQUIVALENT
+hr_department.department_name      categorical ok    0.0000/0.0000 TVD  0.5000    0.6000  1.8019 1.0000  EQUIVALENT
+hr_department.cost_center          categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+hr_department.is_active            categorical ok    0.0000/0.0000 TVD  0.0667    0.0333  0.6180 1.0000  EQUIVALENT
+-- hr_position: rows 80 / 80  cols identical+ordered=True  types identical=True
+hr_position.position_id            numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3082         EQUIVALENT
+hr_position.position_title         categorical ok    0.0000/0.0000 TVD  0.5250    0.6125  1.7952 1.0000  EQUIVALENT
+hr_position.pay_grade              categorical ok    0.0000/0.0000 TVD  0.1250    0.2250  0.7081 1.0000  EQUIVALENT
+hr_position.is_exempt              categorical ok    0.0000/0.0000 TVD  0.0250    0.0625  0.3785 1.0000  EQUIVALENT
+hr_position.min_salary             numeric     ok    0.0000/0.0000  KS  0.1000    0.1500  0.3082         EQUIVALENT
+hr_position.max_salary             numeric     ok    0.0000/0.0000  KS  0.1000    0.1625  0.3082         EQUIVALENT
+-- hr_employee: rows 500 / 500  cols identical+ordered=True  types identical=True
+hr_employee.employee_id            numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1233         EQUIVALENT
+hr_employee.department_id          numeric     ok    0.0000/0.0000  KS  0.0220    0.0820  0.1250         EQUIVALENT
+hr_employee.position_id            numeric     ok    0.0000/0.0000  KS  0.0280    0.0620  0.1233         EQUIVALENT
+hr_employee.first_name             categorical ok    0.0000/0.0000 TVD  0.9200    0.9180  2.3207 1.0000  EQUIVALENT
+hr_employee.last_name              categorical ok    0.0000/0.0000 TVD  0.9060    0.9160  2.3257 1.0000  EQUIVALENT
+hr_employee.email                  categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+hr_employee.phone                  categorical ok    0.0640/0.0820 |dR-1|  0.0192    0.0321  0.0481 1.0000  EQUIVALENT
+hr_employee.hire_date              datetime    ok    0.0000/0.0000  KS  0.0700    0.0620  0.1233         EQUIVALENT
+hr_employee.manager_id             numeric     ok    0.0100/0.0100  KS  0.0465    0.0364  0.1239         EQUIVALENT
+hr_employee.employment_status      categorical ok    0.0000/0.0000 TVD  0.0380    0.0440  0.2141 1.0000  EQUIVALENT
+hr_employee.employment_type        categorical ok    0.0000/0.0000 TVD  0.0260    0.0520  0.2141 1.0000  EQUIVALENT
+-- hr_compensation: rows 1,500 / 1,500  cols identical+ordered=True  types identical=True
+hr_compensation.compensation_id    numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0712         EQUIVALENT
+hr_compensation.employee_id        numeric     ok    0.0000/0.0000  KS  0.0480    0.0413  0.0712         EQUIVALENT
+hr_compensation.effective_date     datetime    ok    0.0000/0.0000  KS  0.0260    0.0487  0.0750         EQUIVALENT
+hr_compensation.base_salary        numeric     ok    0.0000/0.0000  KS  0.0273    0.0300  0.0712         EQUIVALENT
+hr_compensation.bonus_pct          numeric     ok    0.0000/0.0000  KS  0.0247    0.0520  0.0800         EQUIVALENT
+hr_compensation.change_reason      categorical ok    0.0000/0.0000 TVD  0.0093    0.0327  0.1382 1.0000  EQUIVALENT
+-- hr_performance_review: rows 1,250 / 1,250  cols identical+ordered=True  types identical=True
+hr_performance_review.review_id    numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0780         EQUIVALENT
+hr_performance_review.employee_id  numeric     ok    0.0000/0.0000  KS  0.0512    0.0536  0.0824         EQUIVALENT
+hr_performance_review.reviewer_id  numeric     ok    0.0000/0.0000  KS  0.0256    0.0416  0.0780         EQUIVALENT
+hr_performance_review.review_date  datetime    ok    0.0000/0.0000  KS  0.0304    0.0520  0.0800         EQUIVALENT
+hr_performance_review.review_period_year numeric     ok    0.0000/0.0000  KS  0.0096    0.0216  0.0780         EQUIVALENT
+hr_performance_review.rating       numeric     ok    0.0000/0.0000  KS  0.0368    0.0416  0.0780         EQUIVALENT
+hr_performance_review.comments     categorical ok    0.1864/0.1840 TVD  0.6714    0.6912  1.9257 1.0000  EQUIVALENT
+-- hr_time_off_request: rows 2,500 / 2,500  cols identical+ordered=True  types identical=True
+hr_time_off_request.request_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0551         EQUIVALENT
+hr_time_off_request.employee_id    numeric     ok    0.0000/0.0000  KS  0.0228    0.0264  0.0551         EQUIVALENT
+hr_time_off_request.leave_type     categorical ok    0.0000/0.0000 TVD  0.0252    0.0240  0.1267 1.0000  EQUIVALENT
+hr_time_off_request.start_date     datetime    ok    0.0000/0.0000  KS  0.0264    0.0332  0.0551         EQUIVALENT
+hr_time_off_request.hours_requested numeric     ok    0.0000/0.0000  KS  0.0228    0.0228  0.0551         EQUIVALENT
+hr_time_off_request.status         categorical ok    0.0000/0.0000 TVD  0.0160    0.0220  0.0957 1.0000  EQUIVALENT
+hr_time_off_request.end_date       datetime    ok    0.0000/0.0000  KS  0.0272    0.0328  0.0551         EQUIVALENT
+-- hr_training: rows 100 / 100  cols identical+ordered=True  types identical=True
+hr_training.training_id            numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2757         EQUIVALENT
+hr_training.course_name            categorical ok    0.0000/0.0000 TVD  0.4000    0.3400  1.6235 1.0000  EQUIVALENT
+hr_training.category               categorical ok    0.0000/0.0000 TVD  0.1500    0.1700  0.6333 1.0000  EQUIVALENT
+hr_training.duration_hours         numeric     ok    0.0000/0.0000  KS  0.1500    0.1500  0.2757         EQUIVALENT
+hr_training.is_mandatory           categorical ok    0.0000/0.0000 TVD  0.0200    0.1100  0.3385 1.0000  EQUIVALENT
+-- hr_training_enrollment: rows 2,000 / 2,000  cols identical+ordered=True  types identical=True
+hr_training_enrollment.enrollment_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0616         EQUIVALENT
+hr_training_enrollment.employee_id numeric     ok    0.0000/0.0000  KS  0.0255    0.0490  0.0755         EQUIVALENT
+hr_training_enrollment.training_id numeric     ok    0.0000/0.0000  KS  0.0305    0.0340  0.0616         EQUIVALENT
+hr_training_enrollment.enrollment_date datetime    ok    0.0000/0.0000  KS  0.0285    0.0380  0.0616         EQUIVALENT
+hr_training_enrollment.status      categorical ok    0.0000/0.0000 TVD  0.0115    0.0210  0.1197 1.0000  EQUIVALENT
+hr_training_enrollment.score       numeric     ok    0.2560/0.2570  KS  0.0193    0.0326  0.0715         EQUIVALENT
+hr_training_enrollment.completion_date datetime    ok    0.1445/0.1545  KS  0.0349    0.0388  0.0668         EQUIVALENT
+-- hr_termination: rows 75 / 75  cols identical+ordered=True  types identical=True
+hr_termination.termination_id      numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3183         EQUIVALENT
+hr_termination.employee_id         numeric     ok    0.0000/0.0000  KS  0.1467    0.1733  0.3183         EQUIVALENT
+hr_termination.termination_date    datetime    ok    0.0000/0.0000  KS  0.1200    0.1333  0.3183         EQUIVALENT
+hr_termination.termination_type    categorical ok    0.0000/0.0000 TVD  0.1467    0.1733  0.5528 1.0000  EQUIVALENT
+hr_termination.reason              categorical ok    0.0000/0.0000 TVD  0.1733    0.2267  0.7818 1.0000  EQUIVALENT
+hr_termination.eligible_for_rehire categorical ok    0.0000/0.0000 TVD  0.2267    0.2267  0.3909 1.0000  EQUIVALENT
+
+FK integrity (spindle / impl):
+  healthcare_encounter.patient_id->healthcare_patient.patient_id 1.0000 / 1.0000
+  healthcare_encounter.provider_id->healthcare_provider.provider_id 1.0000 / 1.0000
+  healthcare_encounter.facility_id->healthcare_facility.facility_id 1.0000 / 1.0000
+  healthcare_diagnosis.encounter_id->healthcare_encounter.encounter_id 1.0000 / 1.0000
+  healthcare_procedure.encounter_id->healthcare_encounter.encounter_id 1.0000 / 1.0000
+  healthcare_medication.encounter_id->healthcare_encounter.encounter_id 1.0000 / 1.0000
+  healthcare_claim.encounter_id->healthcare_encounter.encounter_id 1.0000 / 1.0000
+  healthcare_claim_line.claim_id->healthcare_claim.claim_id 1.0000 / 1.0000
+  healthcare_claim_line.procedure_id->healthcare_procedure.procedure_id 1.0000 / 1.0000
+  healthcare_procedure.performing_provider_id->healthcare_provider.provider_id 1.0000 / 1.0000
+  insurance_policyholder.agent_id->insurance_agent.agent_id 1.0000 / 1.0000
+  insurance_policy.policyholder_id->insurance_policyholder.policyholder_id 1.0000 / 1.0000
+  insurance_policy.policy_type_id->insurance_policy_type.policy_type_id 1.0000 / 1.0000
+  insurance_coverage.policy_id->insurance_policy.policy_id 1.0000 / 1.0000
+  insurance_claim.policy_id->insurance_policy.policy_id   1.0000 / 1.0000
+  insurance_claim_payment.claim_id->insurance_claim.claim_id 1.0000 / 1.0000
+  insurance_premium_payment.policy_id->insurance_policy.policy_id 1.0000 / 1.0000
+  insurance_underwriting.policy_id->insurance_policy.policy_id 1.0000 / 1.0000
+  hr_employee.department_id->hr_department.department_id  1.0000 / 1.0000
+  hr_employee.position_id->hr_position.position_id        1.0000 / 1.0000
+  hr_compensation.employee_id->hr_employee.employee_id    1.0000 / 1.0000
+  hr_performance_review.employee_id->hr_employee.employee_id 1.0000 / 1.0000
+  hr_time_off_request.employee_id->hr_employee.employee_id 1.0000 / 1.0000
+  hr_training_enrollment.employee_id->hr_employee.employee_id 1.0000 / 1.0000
+  hr_training_enrollment.training_id->hr_training.training_id 1.0000 / 1.0000
+  hr_termination.employee_id->hr_employee.employee_id     1.0000 / 1.0000
+  healthcare_patient.patient_id->hr_employee.employee_id  1.0000 / moved (CMP-1)
+  insurance_policy.policy_id->hr_employee.employee_id     0.2778 / moved (CMP-1)
+  hr_employee.manager_id->hr_employee.employee_id         1.0000 / 1.0000
+  healthcare_medication.patient_id->healthcare_patient.patient_id 1.0000 / 1.0000
+  healthcare_claim.patient_id->healthcare_patient.patient_id 1.0000 / 1.0000
+  healthcare_patient.shared_person_hr_employee_id->hr_employee.employee_id (bridge, CMP-1) / 1.0000
+  insurance_policy.shared_person_hr_employee_id->hr_employee.employee_id (bridge, CMP-1) / 1.0000
+FK fan-out (children per parent)  spindle p50/p90/p99/max/zero% | impl | KS (baseline max, tol)
+  healthcare_patient->healthcare_encounter.patient_id 3/6/80/80/0.060 | 3/7/80/80/0.048 | 0.0280 (0.0700, 0.1233)
+  healthcare_provider->healthcare_encounter.provider_id 7/39/302/703/0.020 | 6/40/345/678/0.010 | 0.0800 (0.0800, 0.2757)
+  healthcare_facility->healthcare_encounter.facility_id 12/88/683/999/0.000 | 11/81/668/955/0.000 | 0.1000 (0.1200, 0.3899)
+  healthcare_encounter->healthcare_diagnosis.encounter_id 2/4/6/8/0.159 | 2/4/5/8/0.170 | 0.0112 (0.0132, 0.0551)
+  healthcare_encounter->healthcare_procedure.encounter_id 1/3/4/7/0.309 | 1/3/4/6/0.293 | 0.0164 (0.0164, 0.0551)
+  healthcare_encounter->healthcare_medication.encounter_id 1/2/4/7/0.407 | 1/2/4/5/0.417 | 0.0116 (0.0112, 0.0551)
+  healthcare_encounter->healthcare_claim.encounter_id 1/2/4/5/0.390 | 1/2/4/5/0.383 | 0.0072 (0.0084, 0.0551)
+  healthcare_claim->healthcare_claim_line.claim_id 2/5/7/10/0.075 | 2/5/7/10/0.080 | 0.0059 (0.0185, 0.0566)
+  healthcare_procedure->healthcare_claim_line.procedure_id 0/1/19/1597/0.778 | 0/1/17/1680/0.775 | 0.0027 (0.0100, 0.0503)
+  healthcare_provider->healthcare_procedure.performing_provider_id 6/49/376/962/0.000 | 6/50/381/929/0.000 | 0.0500 (0.0700, 0.2757)
+  insurance_agent->insurance_policyholder.agent_id 10/14/16/19/0.000 | 10/14/17/19/0.000 | 0.0800 (0.0900, 0.2757)
+  insurance_policyholder->insurance_policy.policyholder_id 2/4/6/8/0.172 | 2/4/6/9/0.174 | 0.0080 (0.0190, 0.0872)
+  insurance_policy_type->insurance_policy.policy_type_id 61/68/74/75/0.000 | 61/68/73/74/0.000 | 0.1000 (0.1333, 0.5034)
+  insurance_policy->insurance_coverage.policy_id 2/5/7/9/0.081 | 2/5/7/10/0.084 | 0.0111 (0.0150, 0.0650)
+  insurance_policy->insurance_claim.policy_id 0/1/2/4/0.738 | 0/1/2/4/0.744 | 0.0067 (0.0067, 0.0650)
+  insurance_claim->insurance_claim_payment.claim_id 1/3/5/6/0.198 | 1/3/5/6/0.237 | 0.0389 (0.0370, 0.1186)
+  insurance_policy->insurance_premium_payment.policy_id 6/9/13/14/0.001 | 6/9/12/15/0.002 | 0.0233 (0.0278, 0.0650)
+  insurance_policy->insurance_underwriting.policy_id 1/2/4/5/0.374 | 1/2/4/5/0.362 | 0.0122 (0.0111, 0.0650)
+  hr_department->hr_employee.department_id 5/31/158/190/0.033 | 5/26/158/188/0.000 | 0.1000 (0.2333, 0.5034)
+  hr_position->hr_employee.position_id     2/10/82/140/0.175 | 2/10/78/138/0.237 | 0.0625 (0.0875, 0.3082)
+  hr_employee->hr_compensation.employee_id 3/5/8/9/0.040 | 3/5/8/10/0.050 | 0.0100 (0.0360, 0.1233)
+  hr_employee->hr_performance_review.employee_id 2/4/7/7/0.092 | 2/5/7/9/0.088 | 0.0340 (0.0380, 0.1233)
+  hr_employee->hr_time_off_request.employee_id 5/8/10/13/0.006 | 5/8/11/16/0.008 | 0.0380 (0.0320, 0.1233)
+  hr_employee->hr_training_enrollment.employee_id 4/7/8/13/0.016 | 4/7/8/10/0.018 | 0.0220 (0.0340, 0.1233)
+  hr_training->hr_training_enrollment.training_id 6/31/249/551/0.020 | 5/37/250/577/0.030 | 0.0600 (0.0700, 0.2757)
+  hr_employee->hr_termination.employee_id  0/1/1/3/0.862 | 0/1/1/2/0.858 | 0.0040 (0.0080, 0.1233)
+  healthcare_patient->healthcare_medication.patient_id 2/7/67/76/0.198 | 2/8/66/80/0.180 | 0.0220 (0.0740, 0.1233)
+  healthcare_patient->healthcare_claim.patient_id 2/8/63/80/0.182 | 2/8/72/88/0.176 | 0.0220 (0.0680, 0.1233)
+record_coherence (impl / min over Spindle seeds, floor):
+  healthcare_facility.city+state+zip_code+lat+lng in us_zip_locations 1.0000 / 1.0000  floor 0.9950
+  healthcare_patient.city+state+zip_code in us_zip_locations   1.0000 / 1.0000  floor 0.9950
+  healthcare_diagnosis.icd10_code+description in icd10_codes   1.0000 / 1.0000  floor 0.9950
+  healthcare_procedure.cpt_code+cpt_description+standard_charge in cpt_codes 1.0000 / 1.0000  floor 0.9950
+  insurance_policyholder.address_city+address_state+address_zip in us_zip_locations 1.0000 / 1.0000  floor 0.9950
+strategy_semantics (impl / min over Spindle seeds, floor):
+  healthcare_medication.patient_id == lookup healthcare_encounter.patient_id via encounter_id 1.0000 / 1.0000  floor 0.9950
+  healthcare_claim.patient_id == lookup healthcare_encounter.patient_id via encounter_id 1.0000 / 1.0000  floor 0.9950
+  healthcare_claim.filing_date - healthcare_encounter.encounter_date in [0,30] days 1.0000 / 1.0000  floor 0.9950
+  healthcare_claim.total_amount == sum(healthcare_claim_line.charge_amount) 1.0000 / 1.0000  floor 0.9950
+  healthcare_claim.allowed_amount == sum(healthcare_claim_line.allowed_amount) 1.0000 / 1.0000  floor 0.9950
+  healthcare_claim.paid_amount == sum(healthcare_claim_line.paid_amount) 1.0000 / 1.0000  floor 0.9950
+  healthcare_claim_line.cpt_code == lookup healthcare_procedure.cpt_code via procedure_id 1.0000 / 1.0000  floor 0.9950
+  healthcare_claim_line.charge_amount == lookup healthcare_procedure.standard_charge via procedure_id 1.0000 / 1.0000  floor 0.9950
+  hr_time_off_request.end_date - start_date in [1,14] days     1.0000 / 1.0000  floor 0.9950
+  hr_training_enrollment.completion_date - enrollment_date in [1,90] days 0.8455 / 0.8510  floor 0.8460
+Spindle BusinessRulesEngine violations on impl output: {}
+Spindle FidelityComparator (real=Spindle seed 42, synthetic=impl): overall impl=90.53  Spindle-vs-Spindle baselines=[90.73, 90.72, 90.62, 90.39]
+  healthcare_claim   impl  97.20  floor  94.54  baselines [95.04, 96.97, 98.09, 95.06]  ok
+  healthcare_claim_line impl  93.42  floor  91.64  baselines [93.99, 95.93, 95.9, 92.14]  ok
+  healthcare_diagnosis impl  90.00  floor  89.66  baselines [90.16, 90.39, 90.35, 90.22]  ok
+  healthcare_encounter impl  98.83  floor  97.69  baselines [98.58, 98.19, 98.65, 99.14]  ok
+  healthcare_facility impl  76.89  floor  75.05  baselines [76.94, 77.42, 75.55, 75.84]  ok
+  healthcare_medication impl  96.52  floor  93.05  baselines [94.39, 94.39, 94.17, 93.55]  ok
+  healthcare_patient impl  76.58  floor  76.07  baselines [76.66, 76.83, 76.57, 77.0]  ok
+  healthcare_procedure impl  95.44  floor  94.55  baselines [95.13, 95.1, 95.05, 95.45]  ok
+  healthcare_provider impl  80.03  floor  78.96  baselines [79.46, 81.8, 80.72, 80.96]  ok
+  hr_compensation    impl  99.07  floor  98.11  baselines [98.61, 98.69, 98.79, 99.12]  ok
+  hr_department      impl  87.13  floor  82.92  baselines [88.44, 88.44, 88.87, 83.42]  ok
+  hr_employee        impl  78.53  floor  77.35  baselines [78.08, 78.31, 77.85, 78.96]  ok
+  hr_performance_review impl  91.41  floor  90.70  baselines [91.26, 91.2, 91.26, 91.64]  ok
+  hr_position        impl  91.57  floor  87.83  baselines [89.62, 90.37, 88.33, 89.98]  ok
+  hr_termination     impl  89.53  floor  90.27  baselines [96.77, 90.77, 91.35, 92.21]  FAIL
+  hr_time_off_request impl  99.25  floor  98.38  baselines [98.88, 99.32, 98.9, 99.16]  ok
+  hr_training        impl  90.30  floor  90.52  baselines [91.06, 92.08, 91.46, 91.02]  FAIL
+  hr_training_enrollment impl  99.04  floor  97.62  baselines [98.12, 98.86, 99.09, 98.73]  ok
+  insurance_agent    impl  78.09  floor  77.11  baselines [77.63, 77.99, 77.61, 77.8]  ok
+  insurance_claim    impl  95.32  floor  95.66  baselines [98.02, 96.16, 96.72, 97.1]  FAIL
+  insurance_claim_payment impl  98.50  floor  96.30  baselines [99.05, 96.8, 98.73, 98.49]  ok
+  insurance_coverage impl  99.33  floor  97.31  baselines [98.54, 98.12, 98.03, 97.81]  ok
+  insurance_policy   impl  98.86  floor  98.24  baselines [99.1, 99.31, 99.2, 98.74]  ok
+  insurance_policy_type impl  81.77  floor  84.15  baselines [84.85, 84.79, 84.65, 85.55]  FAIL
+  insurance_policyholder impl  71.50  floor  70.40  baselines [71.21, 70.9, 71.25, 71.14]  ok
+  insurance_premium_payment impl  99.18  floor  98.59  baselines [99.12, 99.09, 99.27, 99.25]  ok
+  insurance_underwriting impl  90.98  floor  89.84  baselines [90.99, 91.16, 90.34, 90.94]  ok
+
+COLUMNS EQUIVALENT: 201/202
+  NOT EQUIVALENT: (a) healthcare_patient: the bridge column shared_person_hr_employee_id is not the last column
+  NOT EQUIVALENT: (a) insurance_policy: the bridge column shared_person_hr_employee_id is not the last column
+  NOT EQUIVALENT: (a) table order differs: spindle=['healthcare_facility', 'healthcare_provider', 'hr_department', 'hr_position', 'healthcare_patient', 'hr_training', 'insurance_agent', 'insurance_policy_type', 'hr_employee', 'healthcare_encounter', 'insurance_policyholder', 'healthcare_claim', 'healthcare_diagnosis', 'healthcare_medication', 'healthcare_procedure', 'hr_compensation', 'hr_performance_review', 'hr_termination', 'hr_time_off_request', 'hr_training_enrollment', 'insurance_policy', 'healthcare_claim_line', 'insurance_claim', 'insurance_coverage', 'insurance_premium_payment', 'insurance_underwriting', 'insurance_claim_payment'] impl=['healthcare_facility', 'healthcare_provider', 'hr_department', 'hr_position', 'hr_training', 'insurance_agent', 'insurance_policy_type', 'hr_employee', 'insurance_policyholder', 'healthcare_patient', 'hr_compensation', 'hr_performance_review', 'hr_termination', 'hr_time_off_request', 'hr_training_enrollment', 'insurance_policy', 'healthcare_encounter', 'insurance_claim', 'insurance_coverage', 'insurance_premium_payment', 'insurance_underwriting', 'healthcare_claim', 'healthcare_diagnosis', 'healthcare_medication', 'healthcare_procedure', 'insurance_claim_payment', 'healthcare_claim_line']
+  NOT EQUIVALENT: (b-e) healthcare_patient.email: failed ['distinct_ratio']
+  NOT EQUIVALENT: (f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8455 < floor 0.8460
+  NOT EQUIVALENT: (h) fidelity hr_termination: 89.53 < floor 90.27
+  NOT EQUIVALENT: (h) fidelity hr_training: 90.30 < floor 90.52
+  NOT EQUIVALENT: (h) fidelity insurance_claim: 95.32 < floor 95.66
+  NOT EQUIVALENT: (h) fidelity insurance_policy_type: 81.77 < floor 84.15
+VERDICT: FAIL

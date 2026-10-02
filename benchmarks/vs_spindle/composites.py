@@ -50,6 +50,16 @@ def spec_of(domain: str) -> str:
     return body if body in PRESETS else body.replace("-", "+")
 
 
+def children(spec: str) -> list[str]:
+    """The domains of a composite, in the baseline's order (Spindle venv for a preset)."""
+    if spec in PRESETS:
+        sys.path.insert(0, str(SPINDLE_ROOT))
+        from sqllocks_spindle.presets import get_preset
+
+        return list(get_preset(spec).domains)
+    return [part.strip() for part in spec.split("+")]
+
+
 def baseline_domain(spec: str) -> Any:
     """The baseline's ``CompositeDomain`` for a preset name or ``a+b+c`` (Spindle venv)."""
     sys.path.insert(0, str(SPINDLE_ROOT))

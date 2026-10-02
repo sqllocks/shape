@@ -585,6 +585,16 @@
    }
   }
  },
+ "preset": {
+  "description": "Telecom provider with marketing and billing",
+  "domains": [
+   "telecom",
+   "marketing",
+   "financial"
+  ],
+  "name": "telecom_bundle",
+  "shared_entities": {}
+ },
  "schema": {
   "business_rules": [
    {

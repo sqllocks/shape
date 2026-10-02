@@ -551,6 +551,16 @@
    }
   }
  },
+ "preset": {
+  "description": "Smart factory combining manufacturing, IoT, and supply chain",
+  "domains": [
+   "manufacturing",
+   "iot",
+   "supply_chain"
+  ],
+  "name": "smart_factory",
+  "shared_entities": {}
+ },
  "schema": {
   "business_rules": [
    {

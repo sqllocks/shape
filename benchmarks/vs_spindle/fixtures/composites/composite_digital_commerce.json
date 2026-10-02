@@ -586,6 +586,16 @@
    }
   }
  },
+ "preset": {
+  "description": "Digital commerce with retail, marketing, and financial data",
+  "domains": [
+   "retail",
+   "marketing",
+   "financial"
+  ],
+  "name": "digital_commerce",
+  "shared_entities": {}
+ },
  "schema": {
   "business_rules": [
    {

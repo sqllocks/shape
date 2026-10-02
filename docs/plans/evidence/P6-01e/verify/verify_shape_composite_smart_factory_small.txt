@@ -1,0 +1,320 @@
+Spindle composite_smart_factory (seed 42) vs shape (seed 1042) - scale=small  (baseline = max distance of Spindle seeds [43, 44, 45, 46] to Spindle seed 42)
+table order identical: True
+
+table.column                       kind        type         null s/i       dist  baseline     tol  vocab  verdict
+-- manufacturing_production_line: rows 20 / 20  cols identical+ordered=True  types identical=True
+manufacturing_production_line.line_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.6165         EQUIVALENT
+manufacturing_production_line.line_name categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+manufacturing_production_line.facility categorical ok    0.0000/0.0000 TVD  0.1000    0.3000  1.0705 1.0000  EQUIVALENT
+manufacturing_production_line.line_type categorical ok    0.0000/0.0000 TVD  0.2000    0.3500  1.1968 1.0000  EQUIVALENT
+manufacturing_production_line.capacity_per_hour numeric     ok    0.0000/0.0000  KS  0.3000    0.3000  0.6165         EQUIVALENT
+manufacturing_production_line.is_active categorical ok    0.0000/0.0000 TVD  0.1000    0.1500  0.7569 1.0000  EQUIVALENT
+-- manufacturing_product: rows 100 / 100  cols identical+ordered=True  types identical=True
+manufacturing_product.product_id   numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2757         EQUIVALENT
+manufacturing_product.product_name categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+manufacturing_product.product_category categorical ok    0.0000/0.0000 TVD  0.2500    0.2700  1.0705 1.0000  EQUIVALENT
+manufacturing_product.unit_cost    numeric     ok    0.0000/0.0000  KS  0.0800    0.1700  0.2757         EQUIVALENT
+manufacturing_product.weight_kg    numeric     ok    0.0000/0.0000  KS  0.1100    0.1700  0.2757         EQUIVALENT
+manufacturing_product.sell_price   numeric     ok    0.0000/0.0000  KS  0.0800    0.1600  0.2757         EQUIVALENT
+-- manufacturing_bom: rows 500 / 500  cols identical+ordered=True  types identical=True
+manufacturing_bom.bom_id           numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1233         EQUIVALENT
+manufacturing_bom.product_id       numeric     ok    0.0000/0.0000  KS  0.0460    0.0440  0.1233         EQUIVALENT
+manufacturing_bom.component_name   categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+manufacturing_bom.quantity_required numeric     ok    0.0000/0.0000  KS  0.0740    0.0800  0.1233         EQUIVALENT
+manufacturing_bom.unit_of_measure  categorical ok    0.0000/0.0000 TVD  0.0860    0.0600  0.2394 1.0000  EQUIVALENT
+manufacturing_bom.unit_cost        numeric     ok    0.0000/0.0000  KS  0.0440    0.0520  0.1233         EQUIVALENT
+manufacturing_bom.is_critical      categorical ok    0.0000/0.0000 TVD  0.0260    0.0200  0.1514 1.0000  EQUIVALENT
+-- manufacturing_work_order: rows 500 / 500  cols identical+ordered=True  types identical=True
+manufacturing_work_order.wo_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1233         EQUIVALENT
+manufacturing_work_order.product_id numeric     ok    0.0000/0.0000  KS  0.0340    0.0780  0.1233         EQUIVALENT
+manufacturing_work_order.production_line_id numeric     ok    0.0000/0.0000  KS  0.0820    0.1120  0.1700         EQUIVALENT
+manufacturing_work_order.work_order_number categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+manufacturing_work_order.quantity_planned numeric     ok    0.0000/0.0000  KS  0.0520    0.0560  0.1233         EQUIVALENT
+manufacturing_work_order.start_date datetime    ok    0.0000/0.0000  KS  0.0880    0.0880  0.1340         EQUIVALENT
+manufacturing_work_order.status    categorical ok    0.0000/0.0000 TVD  0.0380    0.0820  0.2394 1.0000  EQUIVALENT
+manufacturing_work_order.priority  categorical ok    0.0000/0.0000 TVD  0.0200    0.0300  0.1854 1.0000  EQUIVALENT
+manufacturing_work_order.quantity_produced numeric     ok    0.0000/0.0000  KS  0.0600    0.0520  0.1233         EQUIVALENT
+manufacturing_work_order.end_date  datetime    ok    0.0000/0.0000  KS  0.0880    0.0880  0.1340         EQUIVALENT
+-- manufacturing_quality_check: rows 1,500 / 1,500  cols identical+ordered=True  types identical=True
+manufacturing_quality_check.check_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0712         EQUIVALENT
+manufacturing_quality_check.wo_id  numeric     ok    0.0000/0.0000  KS  0.0340    0.0267  0.0712         EQUIVALENT
+manufacturing_quality_check.check_date datetime    ok    0.0000/0.0000  KS  0.0560    0.0687  0.1050         EQUIVALENT
+manufacturing_quality_check.check_type categorical ok    0.0000/0.0000 TVD  0.0400    0.0567  0.2394 1.0000  EQUIVALENT
+manufacturing_quality_check.result categorical ok    0.0000/0.0000 TVD  0.0100    0.0147  0.1070 1.0000  EQUIVALENT
+manufacturing_quality_check.defect_count numeric     ok    0.0000/0.0000  KS  0.0320    0.0407  0.0712         EQUIVALENT
+manufacturing_quality_check.inspector_name categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0007  0.0200 1.0000  EQUIVALENT
+-- manufacturing_defect: rows 450 / 450  cols identical+ordered=True  types identical=True
+manufacturing_defect.defect_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1300         EQUIVALENT
+manufacturing_defect.check_id      numeric     ok    0.0000/0.0000  KS  0.0756    0.0578  0.1300         EQUIVALENT
+manufacturing_defect.defect_code   categorical ok    0.0000/0.0000 TVD  0.1333    0.1400  0.5642 1.0000  EQUIVALENT
+manufacturing_defect.severity      categorical ok    0.0000/0.0000 TVD  0.0156    0.0822  0.2257 1.0000  EQUIVALENT
+manufacturing_defect.root_cause    categorical ok    0.0000/0.0000 TVD  0.0511    0.0778  0.2523 1.0000  EQUIVALENT
+manufacturing_defect.disposition   categorical ok    0.0000/0.0000 TVD  0.0444    0.0622  0.2257 1.0000  EQUIVALENT
+-- manufacturing_equipment: rows 80 / 80  cols identical+ordered=True  types identical=True
+manufacturing_equipment.equipment_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3082         EQUIVALENT
+manufacturing_equipment.production_line_id numeric     ok    0.0000/0.0000  KS  0.1125    0.2000  0.3082         EQUIVALENT
+manufacturing_equipment.equipment_name categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+manufacturing_equipment.equipment_type categorical ok    0.0000/0.0000 TVD  0.1500    0.1500  0.6555 1.0000  EQUIVALENT
+manufacturing_equipment.purchase_date datetime    ok    0.0000/0.0000  KS  0.1375    0.1500  0.3082         EQUIVALENT
+manufacturing_equipment.status     categorical ok    0.0000/0.0000 TVD  0.0625    0.0500  0.4635 1.0000  EQUIVALENT
+manufacturing_equipment.last_maintenance_date datetime    ok    0.0000/0.0000  KS  0.1500    0.1375  0.3082         EQUIVALENT
+-- manufacturing_downtime_event: rows 320 / 320  cols identical+ordered=True  types identical=True
+manufacturing_downtime_event.event_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1541         EQUIVALENT
+manufacturing_downtime_event.equipment_id numeric     ok    0.0000/0.0000  KS  0.0562    0.0750  0.1541         EQUIVALENT
+manufacturing_downtime_event.start_time datetime    ok    0.0000/0.0000  KS  0.0813    0.0781  0.1541         EQUIVALENT
+manufacturing_downtime_event.duration_minutes numeric     ok    0.0000/0.0000  KS  0.0656    0.0813  0.1541         EQUIVALENT
+manufacturing_downtime_event.cause categorical ok    0.0000/0.0000 TVD  0.0812    0.0906  0.3278 1.0000  EQUIVALENT
+manufacturing_downtime_event.impact_level categorical ok    0.0000/0.0000 TVD  0.0906    0.0781  0.2318 1.0000  EQUIVALENT
+-- manufacturing_production_metric: rows 2,500 / 2,500  cols identical+ordered=True  types identical=True
+manufacturing_production_metric.metric_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0551         EQUIVALENT
+manufacturing_production_metric.wo_id numeric     ok    0.0000/0.0000  KS  0.0180    0.0244  0.0551         EQUIVALENT
+manufacturing_production_metric.metric_date datetime    ok    0.0000/0.0000  KS  0.0256    0.0360  0.0560         EQUIVALENT
+manufacturing_production_metric.oee_score numeric     ok    0.0000/0.0000  KS  0.0180    0.0340  0.0551         EQUIVALENT
+manufacturing_production_metric.yield_rate numeric     ok    0.0000/0.0000  KS  0.0272    0.0304  0.0551         EQUIVALENT
+manufacturing_production_metric.cycle_time_seconds numeric     ok    0.0000/0.0000  KS  0.0308    0.0332  0.0551         EQUIVALENT
+manufacturing_production_metric.scrap_rate numeric     ok    0.0000/0.0000  KS  0.0340    0.0412  0.0638         EQUIVALENT
+-- iot_device_type: rows 20 / 20  cols identical+ordered=True  types identical=True
+iot_device_type.type_id            numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.6165         EQUIVALENT
+iot_device_type.type_name          categorical ok    0.0000/0.0000 TVD  0.3500    0.5500  1.9298 1.0000  EQUIVALENT
+iot_device_type.manufacturer       categorical ok    0.0000/0.0000 TVD  1.0000    1.0000  2.3937 1.0000  EQUIVALENT
+iot_device_type.category           categorical ok    0.0000/0.0000 TVD  0.3000    0.4000  1.1968 1.0000  EQUIVALENT
+iot_device_type.protocol           categorical ok    0.0000/0.0000 TVD  0.2500    0.2500  1.1968 1.0000  EQUIVALENT
+-- iot_location: rows 100 / 100  cols identical+ordered=True  types identical=True
+iot_location.location_id           numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2757         EQUIVALENT
+iot_location.shared_location_manufacturing_production_line_id numeric     ok    0.0000/0.0000  KS  0.1100    0.1400  0.2757         EQUIVALENT
+iot_location.location_name         categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+iot_location.facility_type         categorical ok    0.0000/0.0000 TVD  0.0500    0.0900  0.5352 1.0000  EQUIVALENT
+iot_location.city                  categorical ok    0.0000/0.0000 TVD  0.9800    0.9900  2.3696 1.0000  EQUIVALENT
+iot_location.state                 categorical ok    0.0000/0.0000 TVD  0.3000    0.3400  1.4755 1.0000  EQUIVALENT
+iot_location.zip_code              categorical ok    0.0000/0.0000 TVD  1.0000    1.0000  2.3937 1.0000  EQUIVALENT
+iot_location.lat                   numeric     ok    0.0000/0.0000  KS  0.0700    0.1400  0.2757         EQUIVALENT
+iot_location.lng                   numeric     ok    0.0000/0.0000  KS  0.1200    0.1800  0.2757         EQUIVALENT
+-- iot_device: rows 500 / 500  cols identical+ordered=True  types identical=True
+iot_device.device_id               numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1233         EQUIVALENT
+iot_device.device_type_id          numeric     ok    0.0000/0.0000  KS  0.0460    0.0600  0.1233         EQUIVALENT
+iot_device.location_id             numeric     ok    0.0000/0.0000  KS  0.0360    0.0400  0.1233         EQUIVALENT
+iot_device.serial_number           categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+iot_device.firmware_version        categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+iot_device.install_date            datetime    ok    0.0000/0.0000  KS  0.0560    0.0960  0.1460         EQUIVALENT
+iot_device.status                  categorical ok    0.0000/0.0000 TVD  0.0400    0.0520  0.2141 1.0000  EQUIVALENT
+iot_device.battery_level           numeric     ok    0.0000/0.0000  KS  0.0600    0.0500  0.1233         EQUIVALENT
+-- iot_sensor: rows 1,250 / 1,250  cols identical+ordered=True  types identical=True
+iot_sensor.sensor_id               numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0780         EQUIVALENT
+iot_sensor.device_id               numeric     ok    0.0000/0.0000  KS  0.0360    0.0400  0.0780         EQUIVALENT
+iot_sensor.sensor_type             categorical ok    0.0000/0.0000 TVD  0.0384    0.0496  0.1915 1.0000  EQUIVALENT
+iot_sensor.unit_of_measure         categorical ok    0.0000/0.0000 TVD  0.0336    0.0512  0.1915 1.0000  EQUIVALENT
+iot_sensor.min_range               numeric     ok    0.0000/0.0000  KS  0.0328    0.0448  0.0780         EQUIVALENT
+iot_sensor.max_range               numeric     ok    0.0000/0.0000  KS  0.0264    0.0328  0.0780         EQUIVALENT
+-- iot_reading: rows 25,000 / 25,000  cols identical+ordered=True  types identical=True
+iot_reading.reading_id             numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0174         EQUIVALENT
+iot_reading.sensor_id              numeric     ok    0.0000/0.0000  KS  0.0077    0.0117  0.0196         EQUIVALENT
+iot_reading.reading_value          numeric     ok    0.0000/0.0000  KS  0.0074    0.0077  0.0174         EQUIVALENT
+iot_reading.reading_timestamp      datetime    ok    0.0000/0.0000  KS  0.0120    0.0078  0.0174         EQUIVALENT
+iot_reading.quality_flag           categorical ok    0.0000/0.0000 TVD  0.0014    0.0022  0.0262 1.0000  EQUIVALENT
+-- iot_alert: rows 250 / 250  cols identical+ordered=True  types identical=True
+iot_alert.alert_id                 numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1744         EQUIVALENT
+iot_alert.device_id                numeric     ok    0.0000/0.0000  KS  0.0280    0.1160  0.1760         EQUIVALENT
+iot_alert.alert_type               categorical ok    0.0000/0.0000 TVD  0.1240    0.1160  0.3385 1.0000  EQUIVALENT
+iot_alert.severity                 categorical ok    0.0000/0.0000 TVD  0.0440    0.1000  0.3028 1.0000  EQUIVALENT
+iot_alert.triggered_at             datetime    ok    0.0000/0.0000  KS  0.1160    0.1000  0.1744         EQUIVALENT
+iot_alert.acknowledged             categorical ok    0.0000/0.0000 TVD  0.0000    0.0560  0.2141 1.0000  EQUIVALENT
+iot_alert.resolved_at              datetime    ok    0.2480/0.3000  KS  0.1414    0.0815  0.2048         EQUIVALENT
+-- iot_maintenance_log: rows 750 / 750  cols identical+ordered=True  types identical=True
+iot_maintenance_log.log_id         numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1007         EQUIVALENT
+iot_maintenance_log.device_id      numeric     ok    0.0000/0.0000  KS  0.0507    0.0427  0.1007         EQUIVALENT
+iot_maintenance_log.maintenance_type categorical ok    0.0000/0.0000 TVD  0.0520    0.0787  0.1748 1.0000  EQUIVALENT
+iot_maintenance_log.performed_date datetime    ok    0.0000/0.0000  KS  0.0307    0.0467  0.1007         EQUIVALENT
+iot_maintenance_log.performed_by   categorical ok    0.0000/0.0000 |dR-1|  0.0013    0.0013  0.0200 1.0000  EQUIVALENT
+iot_maintenance_log.notes          categorical ok    0.3027/0.2973 TVD  0.8138    0.8052  1.8726 1.0000  EQUIVALENT
+-- iot_command: rows 1,500 / 1,500  cols identical+ordered=True  types identical=True
+iot_command.command_id             numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0712         EQUIVALENT
+iot_command.device_id              numeric     ok    0.0000/0.0000  KS  0.0267    0.0287  0.0712         EQUIVALENT
+iot_command.command_type           categorical ok    0.0000/0.0000 TVD  0.0180    0.0200  0.1382 1.0000  EQUIVALENT
+iot_command.issued_at              datetime    ok    0.0000/0.0000  KS  0.0287    0.0387  0.0712         EQUIVALENT
+iot_command.status                 categorical ok    0.0000/0.0000 TVD  0.0160    0.0507  0.1236 1.0000  EQUIVALENT
+iot_command.issued_by              categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+-- supply_chain_warehouse: rows 50 / 50  cols identical+ordered=True  types identical=True
+supply_chain_warehouse.warehouse_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3899         EQUIVALENT
+supply_chain_warehouse.shared_location_manufacturing_production_line_id numeric     ok    0.0000/0.0000  KS  0.0800    0.1800  0.3899         EQUIVALENT
+supply_chain_warehouse.warehouse_name categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+supply_chain_warehouse.warehouse_type categorical ok    0.0000/0.0000 TVD  0.1000    0.2000  0.7569 1.0000  EQUIVALENT
+supply_chain_warehouse.city        categorical ok    0.0000/0.0000 TVD  1.0000    1.0000  2.3937 1.0000  EQUIVALENT
+supply_chain_warehouse.capacity_sqft numeric     ok    0.0000/0.0000  KS  0.1000    0.1200  0.3899         EQUIVALENT
+supply_chain_warehouse.is_active   categorical ok    0.0000/0.0000 TVD  0.0800    0.1000  0.4787 1.0000  EQUIVALENT
+supply_chain_warehouse.state       categorical ok    0.0000/0.0000 TVD  0.4600    0.4600  1.7912 1.0000  EQUIVALENT
+supply_chain_warehouse.zip_code    categorical ok    0.0000/0.0000 TVD  1.0000    1.0000  2.3937 1.0000  EQUIVALENT
+supply_chain_warehouse.lat         numeric     ok    0.0000/0.0000  KS  0.1400    0.1400  0.3899         EQUIVALENT
+supply_chain_warehouse.lng         numeric     ok    0.0000/0.0000  KS  0.2000    0.3200  0.4820         EQUIVALENT
+-- supply_chain_supplier: rows 200 / 200  cols identical+ordered=True  types identical=True
+supply_chain_supplier.supplier_id  numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1949         EQUIVALENT
+supply_chain_supplier.shared_organization_manufacturing_production_line_id numeric     ok    0.0000/0.0000  KS  0.0550    0.1000  0.1949         EQUIVALENT
+supply_chain_supplier.supplier_name categorical ok    0.0000/0.0000 TVD  0.9050    0.9300  2.3146 1.0000  EQUIVALENT
+supply_chain_supplier.contact_name categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+supply_chain_supplier.contact_email categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+supply_chain_supplier.country      categorical ok    0.0000/0.0000 TVD  0.1250    0.1850  0.5078 1.0000  EQUIVALENT
+supply_chain_supplier.lead_time_days numeric     ok    0.0000/0.0000  KS  0.0650    0.0800  0.1949         EQUIVALENT
+supply_chain_supplier.reliability_score numeric     ok    0.0000/0.0000  KS  0.0400    0.1200  0.1949         EQUIVALENT
+supply_chain_supplier.is_active    categorical ok    0.0000/0.0000 TVD  0.0250    0.0300  0.2394 1.0000  EQUIVALENT
+-- supply_chain_material: rows 300 / 300  cols identical+ordered=True  types identical=True
+supply_chain_material.material_id  numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1592         EQUIVALENT
+supply_chain_material.material_name categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+supply_chain_material.category     categorical ok    0.0000/0.0000 TVD  0.2133    0.2133  0.7569 1.0000  EQUIVALENT
+supply_chain_material.unit_of_measure categorical ok    0.0000/0.0000 TVD  0.0533    0.0967  0.3385 1.0000  EQUIVALENT
+supply_chain_material.unit_cost    numeric     ok    0.0000/0.0000  KS  0.0667    0.0667  0.1592         EQUIVALENT
+supply_chain_material.reorder_point numeric     ok    0.0000/0.0000  KS  0.0600    0.0700  0.1592         EQUIVALENT
+supply_chain_material.is_hazardous categorical ok    0.0000/0.0000 TVD  0.0000    0.0333  0.1954 1.0000  EQUIVALENT
+-- supply_chain_purchase_order: rows 2,000 / 2,000  cols identical+ordered=True  types identical=True
+supply_chain_purchase_order.po_id  numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0616         EQUIVALENT
+supply_chain_purchase_order.supplier_id numeric     ok    0.0000/0.0000  KS  0.0200    0.0240  0.0616         EQUIVALENT
+supply_chain_purchase_order.po_number categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+supply_chain_purchase_order.order_date datetime    ok    0.0000/0.0000  KS  0.0250    0.0360  0.0616         EQUIVALENT
+supply_chain_purchase_order.total_amount numeric     ok    0.0000/0.0000  KS  0.0250    0.0300  0.0616         EQUIVALENT
+supply_chain_purchase_order.status categorical ok    0.0000/0.0000 TVD  0.0185    0.0365  0.1197 1.0000  EQUIVALENT
+supply_chain_purchase_order.priority categorical ok    0.0000/0.0000 TVD  0.0035    0.0165  0.1070 1.0000  EQUIVALENT
+supply_chain_purchase_order.expected_delivery_date datetime    ok    0.0000/0.0000  KS  0.0250    0.0360  0.0616         EQUIVALENT
+-- supply_chain_purchase_order_line: rows 6,000 / 6,000  cols identical+ordered=True  types identical=True
+supply_chain_purchase_order_line.po_line_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0356         EQUIVALENT
+supply_chain_purchase_order_line.po_id numeric     ok    0.0000/0.0000  KS  0.0142    0.0190  0.0356         EQUIVALENT
+supply_chain_purchase_order_line.material_id numeric     ok    0.0000/0.0000  KS  0.0183    0.0193  0.0356         EQUIVALENT
+supply_chain_purchase_order_line.quantity_ordered numeric     ok    0.0000/0.0000  KS  0.0120    0.0165  0.0356         EQUIVALENT
+supply_chain_purchase_order_line.unit_price numeric     ok    0.0000/0.0000  KS  0.0207    0.0210  0.0356         EQUIVALENT
+supply_chain_purchase_order_line.quantity_received numeric     ok    0.0000/0.0000  KS  0.0132    0.0152  0.0356         EQUIVALENT
+supply_chain_purchase_order_line.line_total numeric     ok    0.0000/0.0000  KS  0.0200    0.0168  0.0356         EQUIVALENT
+-- supply_chain_inventory: rows 900 / 900  cols identical+ordered=True  types identical=True
+supply_chain_inventory.inventory_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0919         EQUIVALENT
+supply_chain_inventory.warehouse_id numeric     ok    0.0000/0.0000  KS  0.0367    0.0444  0.0919         EQUIVALENT
+supply_chain_inventory.material_id numeric     ok    0.0000/0.0000  KS  0.0233    0.0578  0.0919         EQUIVALENT
+supply_chain_inventory.quantity_on_hand numeric     ok    0.0000/0.0000  KS  0.0489    0.0589  0.0919         EQUIVALENT
+supply_chain_inventory.last_counted_date datetime    ok    0.0000/0.0000  KS  0.0267    0.0433  0.0919         EQUIVALENT
+supply_chain_inventory.bin_location categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+supply_chain_inventory.quantity_reserved numeric     ok    0.0000/0.0000  KS  0.0511    0.0433  0.0919         EQUIVALENT
+-- supply_chain_shipment: rows 2,400 / 2,400  cols identical+ordered=True  types identical=True
+supply_chain_shipment.shipment_id  numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0563         EQUIVALENT
+supply_chain_shipment.po_id        numeric     ok    0.0000/0.0000  KS  0.0104    0.0271  0.0563         EQUIVALENT
+supply_chain_shipment.warehouse_id numeric     ok    0.0000/0.0000  KS  0.0158    0.0171  0.0563         EQUIVALENT
+supply_chain_shipment.shipment_number categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+supply_chain_shipment.carrier_name categorical ok    0.0000/0.0000 TVD  0.0500    0.0638  0.2443 1.0000  EQUIVALENT
+supply_chain_shipment.shipping_method categorical ok    0.0000/0.0000 TVD  0.0262    0.0417  0.1382 1.0000  EQUIVALENT
+supply_chain_shipment.ship_date    datetime    ok    0.0000/0.0000  KS  0.0304    0.0300  0.0563         EQUIVALENT
+supply_chain_shipment.status       categorical ok    0.0000/0.0000 TVD  0.0100    0.0321  0.1197 1.0000  EQUIVALENT
+supply_chain_shipment.weight_kg    numeric     ok    0.0000/0.0000  KS  0.0196    0.0346  0.0563         EQUIVALENT
+supply_chain_shipment.delivery_date datetime    ok    0.0000/0.0000  KS  0.0304    0.0300  0.0563         EQUIVALENT
+-- supply_chain_shipment_event: rows 9,600 / 9,600  cols identical+ordered=True  types identical=True
+supply_chain_shipment_event.event_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0281         EQUIVALENT
+supply_chain_shipment_event.shipment_id numeric     ok    0.0000/0.0000  KS  0.0140    0.0166  0.0281         EQUIVALENT
+supply_chain_shipment_event.event_type categorical ok    0.0000/0.0000 TVD  0.0230    0.0196  0.0646 1.0000  EQUIVALENT
+supply_chain_shipment_event.event_timestamp datetime    ok    0.0000/0.0000  KS  0.0183    0.0232  0.0368         EQUIVALENT
+supply_chain_shipment_event.location categorical ok    0.0000/0.0000 TVD  0.0592    0.0590  0.2431 1.0000  EQUIVALENT
+supply_chain_shipment_event.notes  categorical ok    0.5991/0.5978 |dR-1|  0.0161    0.0260  0.0389 1.0000  EQUIVALENT
+-- supply_chain_quality_inspection: rows 720 / 720  cols identical+ordered=True  types identical=True
+supply_chain_quality_inspection.inspection_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1027         EQUIVALENT
+supply_chain_quality_inspection.shipment_id numeric     ok    0.0000/0.0000  KS  0.0528    0.0625  0.1027         EQUIVALENT
+supply_chain_quality_inspection.inspector_name categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+supply_chain_quality_inspection.inspection_date datetime    ok    0.0000/0.0000  KS  0.0333    0.0361  0.1027         EQUIVALENT
+supply_chain_quality_inspection.result categorical ok    0.0000/0.0000 TVD  0.0653    0.0736  0.1784 1.0000  EQUIVALENT
+supply_chain_quality_inspection.defect_count numeric     ok    0.0000/0.0000  KS  0.0236    0.0847  0.1291         EQUIVALENT
+supply_chain_quality_inspection.notes categorical ok    0.3972/0.4042 TVD  0.8063    0.8226  1.7458 1.0000  EQUIVALENT
+-- supply_chain_demand_forecast: rows 1,800 / 1,800  cols identical+ordered=True  types identical=True
+supply_chain_demand_forecast.forecast_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0650         EQUIVALENT
+supply_chain_demand_forecast.material_id numeric     ok    0.0000/0.0000  KS  0.0194    0.0422  0.0653         EQUIVALENT
+supply_chain_demand_forecast.forecast_date datetime    ok    0.0000/0.0000  KS  0.0350    0.0522  0.0803         EQUIVALENT
+supply_chain_demand_forecast.forecast_quantity numeric     ok    0.0000/0.0000  KS  0.0289    0.0367  0.0650         EQUIVALENT
+supply_chain_demand_forecast.confidence_level numeric     ok    0.0000/0.0000  KS  0.0256    0.0272  0.0650         EQUIVALENT
+supply_chain_demand_forecast.forecast_method categorical ok    0.0000/0.0000 TVD  0.0356    0.0550  0.1262 1.0000  EQUIVALENT
+
+FK integrity (spindle / impl):
+  manufacturing_bom.product_id->manufacturing_product.product_id 1.0000 / 1.0000
+  manufacturing_work_order.product_id->manufacturing_product.product_id 1.0000 / 1.0000
+  manufacturing_work_order.production_line_id->manufacturing_production_line.line_id 1.0000 / 1.0000
+  manufacturing_quality_check.wo_id->manufacturing_work_order.wo_id 1.0000 / 1.0000
+  manufacturing_defect.check_id->manufacturing_quality_check.check_id 1.0000 / 1.0000
+  manufacturing_equipment.production_line_id->manufacturing_production_line.line_id 1.0000 / 1.0000
+  manufacturing_downtime_event.equipment_id->manufacturing_equipment.equipment_id 1.0000 / 1.0000
+  manufacturing_production_metric.wo_id->manufacturing_work_order.wo_id 1.0000 / 1.0000
+  iot_device.device_type_id->iot_device_type.type_id      1.0000 / 1.0000
+  iot_device.location_id->iot_location.location_id        1.0000 / 1.0000
+  iot_sensor.device_id->iot_device.device_id              1.0000 / 1.0000
+  iot_reading.sensor_id->iot_sensor.sensor_id             1.0000 / 1.0000
+  iot_alert.device_id->iot_device.device_id               1.0000 / 1.0000
+  iot_maintenance_log.device_id->iot_device.device_id     1.0000 / 1.0000
+  iot_command.device_id->iot_device.device_id             1.0000 / 1.0000
+  supply_chain_purchase_order.supplier_id->supply_chain_supplier.supplier_id 1.0000 / 1.0000
+  supply_chain_purchase_order_line.po_id->supply_chain_purchase_order.po_id 1.0000 / 1.0000
+  supply_chain_purchase_order_line.material_id->supply_chain_material.material_id 1.0000 / 1.0000
+  supply_chain_inventory.warehouse_id->supply_chain_warehouse.warehouse_id 1.0000 / 1.0000
+  supply_chain_inventory.material_id->supply_chain_material.material_id 1.0000 / 1.0000
+  supply_chain_shipment.po_id->supply_chain_purchase_order.po_id 1.0000 / 1.0000
+  supply_chain_shipment.warehouse_id->supply_chain_warehouse.warehouse_id 1.0000 / 1.0000
+  supply_chain_shipment_event.shipment_id->supply_chain_shipment.shipment_id 1.0000 / 1.0000
+  supply_chain_quality_inspection.shipment_id->supply_chain_shipment.shipment_id 1.0000 / 1.0000
+  supply_chain_demand_forecast.material_id->supply_chain_material.material_id 1.0000 / 1.0000
+  iot_location.shared_location_manufacturing_production_line_id->manufacturing_production_line.line_id 1.0000 / 1.0000
+  supply_chain_warehouse.shared_location_manufacturing_production_line_id->manufacturing_production_line.line_id 1.0000 / 1.0000
+  supply_chain_supplier.shared_organization_manufacturing_production_line_id->manufacturing_production_line.line_id 1.0000 / 1.0000
+FK fan-out (children per parent)  spindle p50/p90/p99/max/zero% | impl | KS (baseline max, tol)
+  manufacturing_product->manufacturing_bom.product_id 5/8/11/13/0.000 | 5/8/11/11/0.010 | 0.0500 (0.0800, 0.2757)
+  manufacturing_product->manufacturing_work_order.product_id 1/7/74/166/0.350 | 1/6/55/178/0.340 | 0.1300 (0.1400, 0.2757)
+  manufacturing_production_line->manufacturing_work_order.production_line_id 25/32/37/38/0.000 | 24/30/32/32/0.000 | 0.2000 (0.2000, 0.6165)
+  manufacturing_work_order->manufacturing_quality_check.wo_id 3/5/7/11/0.050 | 3/5/7/8/0.044 | 0.0100 (0.0400, 0.1233)
+  manufacturing_quality_check->manufacturing_defect.check_id 0/1/2/3/0.741 | 0/1/2/3/0.743 | 0.0027 (0.0060, 0.0712)
+  manufacturing_production_line->manufacturing_equipment.production_line_id 4/5/7/7/0.000 | 4/6/9/9/0.000 | 0.1500 (0.2500, 0.6165)
+  manufacturing_equipment->manufacturing_downtime_event.equipment_id 4/7/8/9/0.013 | 4/7/8/8/0.013 | 0.0625 (0.0625, 0.3082)
+  manufacturing_work_order->manufacturing_production_metric.wo_id 5/8/11/13/0.004 | 5/8/10/12/0.008 | 0.0600 (0.0580, 0.1233)
+  iot_device_type->iot_device.device_type_id 10/46/152/170/0.000 | 12/55/162/182/0.000 | 0.1500 (0.2000, 0.6165)
+  iot_location->iot_device.location_id     2/8/46/129/0.190 | 2/9/49/119/0.140 | 0.0600 (0.0700, 0.2757)
+  iot_device->iot_sensor.device_id         2/5/7/8/0.062 | 2/5/7/8/0.090 | 0.0280 (0.0340, 0.1233)
+  iot_sensor->iot_reading.sensor_id        4/23/251/4327/0.050 | 4/21/256/4253/0.045 | 0.0136 (0.0248, 0.0780)
+  iot_device->iot_alert.device_id          0/1/7/72/0.856 | 0/1/8/73/0.856 | 0.0060 (0.0260, 0.1233)
+  iot_device->iot_maintenance_log.device_id 1/3/5/8/0.218 | 1/3/5/6/0.204 | 0.0140 (0.0320, 0.1233)
+  iot_device->iot_command.device_id        3/5/8/9/0.046 | 3/5/8/10/0.034 | 0.0320 (0.0520, 0.1233)
+  supply_chain_supplier->supply_chain_purchase_order.supplier_id 2/13/146/540/0.140 | 2/15/144/500/0.155 | 0.0300 (0.0800, 0.1949)
+  supply_chain_purchase_order->supply_chain_purchase_order_line.po_id 3/5/7/10/0.057 | 3/5/8/10/0.056 | 0.0105 (0.0145, 0.0616)
+  supply_chain_material->supply_chain_purchase_order_line.material_id 6/27/265/1201/0.020 | 5/27/251/1222/0.040 | 0.0367 (0.0733, 0.1592)
+  supply_chain_warehouse->supply_chain_inventory.warehouse_id 6/34/177/244/0.020 | 7/35/164/238/0.020 | 0.0800 (0.1400, 0.3899)
+  supply_chain_material->supply_chain_inventory.material_id 3/5/8/8/0.050 | 3/5/8/9/0.060 | 0.0300 (0.0567, 0.1592)
+  supply_chain_purchase_order->supply_chain_shipment.po_id 1/3/4/7/0.294 | 1/3/4/6/0.302 | 0.0080 (0.0155, 0.0616)
+  supply_chain_warehouse->supply_chain_shipment.warehouse_id 18/82/458/639/0.000 | 20/91/462/622/0.000 | 0.1000 (0.1200, 0.3899)
+  supply_chain_shipment->supply_chain_shipment_event.shipment_id 4/7/9/12/0.020 | 4/7/10/13/0.023 | 0.0150 (0.0142, 0.0563)
+  supply_chain_shipment->supply_chain_quality_inspection.shipment_id 0/1/2/4/0.740 | 0/1/2/3/0.740 | 0.0033 (0.0067, 0.0563)
+  supply_chain_material->supply_chain_demand_forecast.material_id 6/9/12/12/0.003 | 6/9/12/14/0.000 | 0.0433 (0.0667, 0.1592)
+  manufacturing_production_line->iot_location.shared_location_manufacturing_production_line_id 4/7/10/11/0.000 | 5/8/8/8/0.000 | 0.1000 (0.1500, 0.6165)
+  manufacturing_production_line->supply_chain_warehouse.shared_location_manufacturing_production_line_id 3/5/5/5/0.100 | 2/4/6/6/0.000 | 0.2000 (0.1500, 0.6165)
+  manufacturing_production_line->supply_chain_supplier.shared_organization_manufacturing_production_line_id 9/15/16/16/0.000 | 10/14/17/17/0.000 | 0.1000 (0.2500, 0.6165)
+record_coherence (impl / min over Spindle seeds, floor):
+  iot_location.city+state+zip_code+lat+lng in us_zip_locations 1.0000 / 1.0000  floor 0.9950
+  supply_chain_warehouse.city+state+zip_code+lat+lng in us_zip_locations 1.0000 / 1.0000  floor 0.9950
+strategy_semantics (impl / min over Spindle seeds, floor):
+  iot_alert.resolved_at - triggered_at in [0,7] days           0.7000 / 0.7280  floor 0.7230
+Spindle BusinessRulesEngine violations on impl output: {}
+Spindle FidelityComparator (real=Spindle seed 42, synthetic=impl): overall impl=93.26  Spindle-vs-Spindle baselines=[93.08, 92.82, 93.3, 93.07]
+  iot_alert          impl  96.08  floor  95.05  baselines [97.26, 96.35, 97.35, 95.55]  ok
+  iot_command        impl  89.99  floor  88.09  baselines [89.31, 89.97, 89.93, 88.59]  ok
+  iot_device         impl  98.89  floor  97.90  baselines [98.4, 98.8, 98.46, 98.88]  ok
+  iot_device_type    impl  79.58  floor  73.73  baselines [76.54, 74.23, 79.0, 79.14]  ok
+  iot_location       impl  87.02  floor  84.65  baselines [87.95, 85.15, 87.31, 88.11]  ok
+  iot_maintenance_log impl  80.38  floor  79.15  baselines [80.34, 80.15, 80.12, 79.65]  ok
+  iot_reading        impl  99.69  floor  99.21  baselines [99.73, 99.81, 99.76, 99.71]  ok
+  iot_sensor         impl  99.20  floor  97.46  baselines [98.38, 97.96, 98.91, 98.44]  ok
+  manufacturing_bom  impl  97.25  floor  96.23  baselines [96.82, 97.1, 96.73, 98.43]  ok
+  manufacturing_defect impl  96.34  floor  94.78  baselines [96.0, 98.94, 95.28, 97.27]  ok
+  manufacturing_downtime_event impl  97.08  floor  96.00  baselines [98.07, 96.5, 98.9, 98.26]  ok
+  manufacturing_equipment impl  96.17  floor  95.64  baselines [96.82, 96.49, 96.14, 97.8]  ok
+  manufacturing_product impl  94.00  floor  88.11  baselines [88.61, 94.96, 94.7, 93.25]  ok
+  manufacturing_production_line impl  97.08  floor  95.74  baselines [97.66, 96.24, 99.47, 96.6]  ok
+  manufacturing_production_metric impl  98.82  floor  98.16  baselines [98.68, 98.68, 98.66, 98.77]  ok
+  manufacturing_quality_check impl  91.10  floor  89.32  baselines [89.99, 90.9, 89.82, 90.02]  ok
+  manufacturing_work_order impl  97.37  floor  95.26  baselines [95.76, 96.99, 96.88, 96.92]  ok
+  supply_chain_demand_forecast impl  98.15  floor  96.96  baselines [98.59, 98.25, 98.61, 97.46]  ok
+  supply_chain_inventory impl  98.00  floor  97.00  baselines [98.29, 98.11, 97.94, 97.5]  ok
+  supply_chain_material impl  94.08  floor  93.91  baselines [96.45, 95.87, 94.41, 94.43]  ok
+  supply_chain_purchase_order impl  98.96  floor  98.18  baselines [98.72, 99.03, 98.68, 99.0]  ok
+  supply_chain_purchase_order_line impl  97.55  floor  96.41  baselines [98.11, 96.91, 97.91, 97.9]  ok
+  supply_chain_quality_inspection impl  82.55  floor  81.61  baselines [82.98, 82.21, 83.21, 82.11]  ok
+  supply_chain_shipment impl  98.45  floor  96.41  baselines [98.28, 97.39, 97.8, 96.91]  ok
+  supply_chain_shipment_event impl  87.94  floor  87.59  baselines [88.13, 88.14, 88.28, 88.09]  ok
+  supply_chain_supplier impl  79.81  floor  77.80  baselines [79.77, 78.3, 80.09, 78.48]  ok
+  supply_chain_warehouse impl  86.47  floor  82.31  baselines [87.61, 82.81, 84.85, 85.65]  ok
+
+COLUMNS EQUIVALENT: 192/192
+  NOT EQUIVALENT: (f) strategy_semantics: iot_alert.resolved_at - triggered_at in [0,7] days impl 0.7000 < floor 0.7230
+VERDICT: FAIL

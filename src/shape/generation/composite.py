@@ -136,6 +136,11 @@ def resolve(spec: str, *, host: PluginHost | None = None) -> ResolvedComposite:
                 f"no {what} named {name!r} (domains: {', '.join(installed) or 'none installed'}; "
                 f"{options}); name domains joined by '+', for example retail+hr"
             )
+    if len(set(names)) != len(names):
+        dupes = sorted({n for n in names if names.count(n) > 1})
+        raise CompositeError(
+            f"duplicate domains in composition: {', '.join(dupes)}; each domain may appear once"
+        )
     loaded = {name: load_domain(name, host=plugins) for name in names}
     schema, datasets = compose(loaded, shared or None, known.mappings)
     for dataset, table in datasets.items():
@@ -202,7 +207,7 @@ def compose(
             raise CompositeError(
                 f"domain {name!r} has correlated columns, which a composite cannot merge"
             )
-    cross = _cross_relationships(names, shared_entities, mappings or {})
+    cross = _cross_relationships(names, shared_entities, mappings or {}, docs)
     relationships.extend(cross)
     _ensure_bridge_columns(tables, cross)
     first = docs[names[0]]["model"]
@@ -331,10 +336,24 @@ def _merge_generation(docs: Mapping[str, dict[str, Any]]) -> dict[str, Any]:
     return {"scale": "small", "scales": scales, "derived_counts": derived, "output": {}}
 
 
+def _primary_key_of(docs: Mapping[str, dict[str, Any]], domain: str, table: str) -> str:
+    """The column an explicit link points at: ``<table>_id`` when the table has it, else its
+    one-column primary key (capital_markets keys ``company`` by ``ticker``)."""
+    spec = docs[domain]["tables"].get(table)
+    if spec is None:
+        raise CompositeError(f"domain {domain!r} has no table {table!r}")
+    if f"{table}_id" in spec["columns"]:
+        return f"{table}_id"
+    if len(spec["primary_key"]) == 1:
+        return str(spec["primary_key"][0])
+    raise CompositeError(f"cannot tell which column of {domain}.{table} the link points at")
+
+
 def _cross_relationships(
     names: Sequence[str],
     shared: Mapping[str, Mapping[str, Any]] | None,
     mappings: Mapping[str, Sequence[EntityMapping]],
+    docs: Mapping[str, dict[str, Any]],
 ) -> list[dict[str, Any]]:
     present = set(names)
     out: list[dict[str, Any]] = []
@@ -355,7 +374,7 @@ def _cross_relationships(
                         "name": f"xdomain_{concept}_{domain}_to_{link_domain}",
                         "parent": f"{domain}_{table}",
                         "child": f"{link_domain}_{link_table}",
-                        "parent_columns": [f"{table}_id"],
+                        "parent_columns": [_primary_key_of(docs, domain, table)],
                         "child_columns": [column],
                         "type": "one_to_many",
                         "cardinality": {},

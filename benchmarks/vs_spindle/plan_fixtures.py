@@ -64,8 +64,20 @@ def collect_composites() -> dict[str, dict[str, Any]]:
     out: dict[str, dict[str, Any]] = {}
     for spec in composites.specs():
         schema = composites.baseline_domain(spec).get_schema()
+        preset = None
+        if spec in composites.PRESETS:
+            from sqllocks_spindle.presets import get_preset
+
+            p = get_preset(spec)
+            preset = {
+                "name": p.name,
+                "description": p.description,
+                "domains": list(p.domains),
+                "shared_entities": p.shared_entities,
+            }
         out[composites.harness_id(spec)] = {
             "spec": spec,
+            "preset": preset,
             "schema": json.loads(json.dumps(dataclasses.asdict(schema), indent=1, default=str)),
             "plan": _plan_of(schema),
         }

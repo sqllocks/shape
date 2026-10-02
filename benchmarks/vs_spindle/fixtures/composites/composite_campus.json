@@ -373,6 +373,15 @@
    }
   }
  },
+ "preset": {
+  "description": "University campus combining education and HR",
+  "domains": [
+   "education",
+   "hr"
+  ],
+  "name": "campus",
+  "shared_entities": {}
+ },
  "schema": {
   "business_rules": [
    {

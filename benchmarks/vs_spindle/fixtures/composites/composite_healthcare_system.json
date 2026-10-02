@@ -561,6 +561,24 @@
    }
   }
  },
+ "preset": {
+  "description": "Healthcare system with insurance and HR",
+  "domains": [
+   "healthcare",
+   "insurance",
+   "hr"
+  ],
+  "name": "healthcare_system",
+  "shared_entities": {
+   "person": {
+    "links": {
+     "healthcare": "patient.patient_id",
+     "insurance": "policy.policy_id"
+    },
+    "primary": "hr.employee"
+   }
+  }
+ },
  "schema": {
   "business_rules": [
    {

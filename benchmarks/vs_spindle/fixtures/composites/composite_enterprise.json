@@ -567,6 +567,24 @@
    }
   }
  },
+ "preset": {
+  "description": "Enterprise dataset combining retail, HR, and financial domains",
+  "domains": [
+   "retail",
+   "hr",
+   "financial"
+  ],
+  "name": "enterprise",
+  "shared_entities": {
+   "person": {
+    "links": {
+     "financial": "account.account_id",
+     "retail": "customer.customer_id"
+    },
+    "primary": "hr.employee"
+   }
+  }
+ },
  "schema": {
   "business_rules": [
    {
