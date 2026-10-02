@@ -1,7 +1,9 @@
-"""``shape stream-profile``: profile a Kafka topic or an Event Hubs hub (P3-05).
+"""``shape stream-profile``: profile a Kafka topic, an Event Hubs hub, or files (P3-05, ISS-stream).
 
 The command reads a stream source (the ``shape.stream_sources`` plugin that claims the URI's
-scheme: ``kafka://`` from ``shape-kafka``, ``eventhubs://`` from ``shape-eventhubs``) into a
+scheme: ``kafka://`` from ``shape-kafka``, ``eventhubs://`` from ``shape-eventhubs``; or, with no
+broker, the built-in file source: a path, ``file://``, a folder, a glob or ``-`` for standard
+input, in ``shape.streaming.file_source``) into a
 windowed profiler in bounded mode (``shape.streaming.runtime``), through a ``StreamConsumer``
 with checkpoints, reconnects and deduplication on offset (``shape.streaming.consumer``).
 
@@ -66,7 +68,14 @@ def parse_option(text: str) -> tuple[str, Any]:
 
 
 def find_source(uri: str) -> Any:
-    """The stream-source plugin whose scheme is ``uri``'s."""
+    """The source that reads ``uri``: the built-in file source for ``-``, ``file://`` and plain
+    paths (``shape.streaming.file_source``), else the stream-source plugin whose scheme is
+    ``uri``'s."""
+    from .file_source import FileStreamSource, is_file_uri
+
+    if is_file_uri(uri):
+        return FileStreamSource()
+
     from shape.plugins.host import default_host
 
     scheme = uri.partition("://")[0].lower() if "://" in uri else ""
@@ -235,6 +244,8 @@ def _source_options(args: Any) -> dict[str, Any]:
         options["event_time_field"] = args.event_time
         options["event_time_unit"] = args.event_time_unit
     options["batch_size"] = args.batch_size
+    if args.order:
+        options["order"] = args.order
     return options
 
 

@@ -5,6 +5,10 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `shape stream-profile` reads files (issue #33): a path or `file://` URI, a folder, a glob or `-`
+  (standard input), as JSON lines (what `shape emit` / `shape stream` write, flat or CloudEvents),
+  CSV or Parquet, with the same windows, lateness, event time and checkpoints as a broker;
+  `--order event-time` replays a file in time order. `docs/plugins/streaming.md`.
 - Delta time travel (issue #36): `shape.profile(path, version=N)` / `as_of=...` and
   `shape profile DIR --version N | --as-of TIMESTAMP` profile an earlier state of a Delta table;
   `as_of` before the first commit is an error, not version 0. The Delta version and commit time

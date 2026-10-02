@@ -388,7 +388,11 @@ def _cmd_plugins(a):
 def _stream_profile_arguments(parser):
     """The ``stream-profile`` arguments; the command itself is ``shape.streaming.cli``."""
     parser.add_argument(
-        "uri", metavar="URI", help="kafka://host:9092/TOPIC or eventhubs://NAMESPACE/HUB"
+        "uri",
+        metavar="URI",
+        help="kafka://host:9092/TOPIC, eventhubs://NAMESPACE/HUB, or no broker at all: a file "
+        "(file:///PATH or PATH), a folder or glob of files, or - for standard input, as JSON "
+        "lines (what `shape emit` and `shape stream` write), CSV or Parquet",
     )
     parser.add_argument("-o", "--output", metavar="OUT.json", help="the global profile")
     parser.add_argument(
@@ -418,6 +422,12 @@ def _stream_profile_arguments(parser):
         choices=("s", "ms", "us"),
         default="ms",
         help="unit of a numeric event time (default: ms)",
+    )
+    parser.add_argument(
+        "--order",
+        choices=("file", "event-time"),
+        help="files only: replay in file order (default) or sorted by event time (reads every "
+        "row into memory first)",
     )
     parser.add_argument(
         "--start",
