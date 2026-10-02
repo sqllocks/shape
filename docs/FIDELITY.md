@@ -13,6 +13,9 @@ JSONL; `--input-format` forces one). Tables are paired by file name; two single 
 whatever they are called. Exit codes: **0** every pass mark is met, **1** one is not, **2** the
 input is unusable (a missing path, no data files, an unknown report extension).
 
+`shape fidelity REFERENCE SYNTHETIC --tier 1|2|3` runs the deeper checks (mixture fits, adversarial
+score, formats, dependency trees); see `docs/FIDELITY_TIERS.md`.
+
 `shape fidelity PROFILE.json DATA.csv` (a first argument ending in `.json`) certifies a CSV file
 against a captured profile instead, with `--tolerance`, and exits 3 on failure. A column the data
 lacks scores 0 there too, and a profile that describes no columns fails.

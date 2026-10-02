@@ -20,6 +20,8 @@ excel=["openpyxl>=3.1"]
 azure=["adlfs>=2024.4.1","azure-identity>=1.15","deltalake>=0.17"]
 pandas=["pandas>=2"]
 scipy=["scipy>=1.11"]
+advanced=["scikit-learn>=1.3,<2"]
+ctgan=["sdv>=1.0,<2"]
 kafka=["sqllocks-shape-kafka==0.9.0"]
 eventhubs=["sqllocks-shape-eventhubs==0.9.0"]
 sqlserver=["sqllocks-shape-sqlserver==0.9.0"]
@@ -66,7 +68,7 @@ packages=["shape"]
 # Optional cloud packages (extra [azure], and Fabric's own notebookutils): not installed in every
 # environment, so mypy must not depend on them being present.
 [[tool.mypy.overrides]]
-module=["adlfs","azure.*","deltalake","deltalake.*","openpyxl","openpyxl.*","notebookutils","mssparkutils","pyspark","pyspark.*"]
+module=["adlfs","azure.*","deltalake","deltalake.*","openpyxl","openpyxl.*","notebookutils","mssparkutils","pyspark","pyspark.*","sklearn","sklearn.*","scipy","scipy.*","sdv","sdv.*"]
 ignore_missing_imports=true
 
 # T-12 ratchet: modules not yet strict. A work package that creates or rewrites a module
@@ -184,6 +186,7 @@ correlated = "shape.builtins.strategies.linked:Correlated"
 reference_data = "shape.builtins.strategies.reference_data:ReferenceData"
 record_sample = "shape.builtins.strategies.reference_data:RecordSample"
 record_field = "shape.builtins.strategies.reference_data:RecordField"
+bootstrap = "shape.builtins.strategies.bootstrap:Bootstrap"
 temporal = "shape.builtins.strategies.temporal:Temporal"
 foreign_key = "shape.builtins.strategies.keys:ForeignKey"
 composite_foreign_key = "shape.builtins.strategies.keys:CompositeForeignKey"
@@ -193,6 +196,9 @@ scd2 = "shape.builtins.strategies.groups:Scd2"
 self_referencing = "shape.builtins.strategies.hierarchy:SelfReferencing"
 self_ref_field = "shape.builtins.strategies.hierarchy:SelfRefField"
 lifecycle = "shape.builtins.strategies.lifecycle:Lifecycle"
+
+[project.entry-points."shape.commands"]
+ctgan = "shape.builtins.ctgan:CtganCommand"
 
 [project.entry-points."shape.distributions"]
 normal = "shape.builtins.distributions:Normal"
@@ -249,6 +255,7 @@ source_modules = [
     "shape.diff",
     "shape.drift",
     "shape.errors",
+    "shape.fidelity",
     "shape.generation",
     "shape.geospatial",
     "shape.integrations",
