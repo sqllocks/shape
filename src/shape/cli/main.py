@@ -256,10 +256,83 @@ def _cmd_fidelity(a):
     return 0 if report["passed"] else 1
 
 
+_DIFF_THRESHOLD_FLAGS = (
+    ("--null-rate", "null_rate", float),
+    ("--cardinality-ratio-max", "cardinality_ratio_max", float),
+    ("--cardinality-ratio-min", "cardinality_ratio_min", float),
+    ("--mean-shift-std", "mean_shift_std", float),
+    ("--min-severity", "min_severity", str),
+)
+
+
+def _diff_policy_arguments(d):
+    """The ``shape diff`` flags that set thresholds, ignore columns and read a policy file."""
+    g = d.add_argument_group("drift thresholds (defaults: docs/DRIFT.md)")
+    for flag, key, kind in _DIFF_THRESHOLD_FLAGS:
+        g.add_argument(flag, dest=f"th_{key}", type=kind, metavar=key.upper())
+    g.add_argument(
+        "--threshold",
+        action="append",
+        default=[],
+        metavar="KEY=VALUE",
+        help="any threshold by name (repeatable), e.g. --threshold category_tvd=0.2",
+    )
+    g.add_argument(
+        "--column-threshold",
+        action="append",
+        default=[],
+        metavar="COLUMN:KEY=VALUE",
+        help="a threshold for the columns COLUMN matches (a name, table.column or a glob)",
+    )
+    g.add_argument("--ignore", metavar="COL1,COL2", help="columns to leave out (table.column ok)")
+    g.add_argument("--only", metavar="COL1,COL2", help="compare only these columns")
+    g.add_argument(
+        "--policy",
+        metavar="POLICY.json",
+        help='thresholds, "columns", "ignore" and "only" in one JSON file (a contract\'s '
+        '"drift" object works)',
+    )
+
+
+def _threshold_value(key, raw):
+    return raw if key == "min_severity" else float(raw)
+
+
+def _diff_options(a):
+    """``shape.diff`` keyword arguments from the command line; a bad value is an input error."""
+    thresholds = {}
+    for _flag, key, _kind in _DIFF_THRESHOLD_FLAGS:
+        if getattr(a, f"th_{key}") is not None:
+            thresholds[key] = getattr(a, f"th_{key}")
+    for item in a.threshold:
+        key, sep, raw = item.partition("=")
+        if not sep:
+            raise ValueError(f"--threshold wants KEY=VALUE, got {item!r}")
+        thresholds[key] = _threshold_value(key, raw)
+    columns = {}
+    for item in a.column_threshold:
+        column, sep, rest = item.rpartition(":")
+        key, eq, raw = rest.partition("=")
+        if not sep or not eq:
+            raise ValueError(f"--column-threshold wants COLUMN:KEY=VALUE, got {item!r}")
+        columns.setdefault(column, {})[key] = _threshold_value(key, raw)
+
+    def names(raw):
+        return [n.strip() for n in raw.split(",") if n.strip()] if raw else None
+
+    return {
+        "thresholds": thresholds or None,
+        "column_thresholds": columns or None,
+        "ignore_columns": names(a.ignore),
+        "only_columns": names(a.only),
+        "policy": a.policy,
+    }
+
+
 def _cmd_diff(a):
     import shape
 
-    result = shape.diff(shape.load(a.before), shape.load(a.after))
+    result = shape.diff(shape.load(a.before), shape.load(a.after), **_diff_options(a))
     out = result.to_dict()
     if a.json:
         _write_json(a.json, out)
@@ -535,6 +608,7 @@ def _build_parser(plugin_commands=()):
     d.add_argument("--json", metavar="RESULT.json")
     d.add_argument("--fail-on-drift", action="store_true")
     d.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
+    _diff_policy_arguments(d)
     for name in ("show", "inspect"):
         sh = sub.add_parser(name, help="print a .shape artifact's manifest and contents")
         sh.add_argument("shape")

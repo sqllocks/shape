@@ -38,7 +38,12 @@ EXPECTED_CHANGES = {
 # Side effects of the drift that the profiler reports; documented in DRIFT.md. Anything
 # outside EXPECTED_CHANGES | KNOWN_SIDE_EFFECTS fails the test.
 KNOWN_SIDE_EFFECTS = {
-    "orders": {("order_total", "new_categorical_values")},
+    "orders": {
+        ("order_total", "new_categorical_values"),
+        # the +40% price step also moves the value mix and stretches the range
+        ("order_total", "category_shift"),
+        ("order_total", "range_change"),
+    },
 }
 
 

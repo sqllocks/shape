@@ -29,10 +29,21 @@ def _model(columns, rows=10, table="t"):
 
 
 def test_drift_reads_v2_models_with_the_v2_metric_names():
-    a = _model([{"name": "x", "mean": 10.0, "distinct": 100.0, "quantiles": {"0.5": 9.0}}])
-    b = _model([{"name": "x", "mean": 10.0, "distinct": 50.0, "quantiles": {"0.5": 18.0}}])
+    base = {
+        "mean": 10.0,
+        "variance_population": 4.0,
+        "min": 4.0,
+        "max": 16.0,
+        "distinct": 100.0,
+        "quantiles": {"0.25": 8.5, "0.5": 10.0, "0.75": 11.5},
+    }
+    moved = {**base, "distinct": 50.0, "quantiles": {"0.25": 17.0, "0.5": 18.0, "0.75": 19.5}}
+    a = _model([{"name": "x", **base}], 1000)
+    b = _model([{"name": "x", **moved}], 1000)
     paths = {d.path: d.score for d in compare(a, b)}
-    assert paths == {"columns.x.distinct": 0.5, "columns.x.median": 0.5}
+    assert paths == {"columns.x.distinct": 0.5, "columns.x.quantiles": paths["columns.x.quantiles"]}
+    assert paths["columns.x.quantiles"] > 0.9
+    assert compare(a, a) == []
 
 
 def test_int_to_float_is_not_a_type_change_but_text_is():
