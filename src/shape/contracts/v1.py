@@ -205,8 +205,8 @@ def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResul
 
     The contract and the profile must describe the same tables. A ``tables`` contract against a
     single-table profile raises :class:`ContractError`; against a dataset, a table the contract
-    names and the profile lacks is a ``table_exists`` violation, and a profile table the contract
-    does not name is an ``extra_table`` violation.
+    names and the profile lacks is a ``table_exists`` violation. Every rule is optional (§12.3), so
+    a profile table the contract does not name is not checked.
     """
     contract = _load_contract(contract)
     _validate_contract(contract)
@@ -229,11 +229,6 @@ def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResul
                 else:
                     v["rule"] = f"{tname}:{v['rule']}"
                 violations.append(v)
-        # The tables a contract does not name are an error, as an extra column is when
-        # allow_extra_columns is false: a table nobody checks is a table that can be damaged.
-        for tname in profile.tables:
-            if tname not in per_table:
-                violations.append(_violation(None, "extra_table", "absent", tname))
         return CheckResult(passed=not violations, violations=violations)
     if "tables" in contract:
         # A multi-table contract has nothing to say about one table: checking it would pass

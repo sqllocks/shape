@@ -55,13 +55,12 @@ def test_a_contract_table_missing_from_the_profile_fails():
     assert missing in result.violations
 
 
-def test_a_profile_table_the_contract_does_not_name_fails():
+def test_a_profile_table_the_contract_does_not_name_is_not_checked():
+    # Contract v1 is final for 1.0 and every rule is optional: a contract may check a subset of
+    # a dataset's tables (owner decision, 2026-10-02). The vacuous pass guarded here is the
+    # single-table case and a named table that is missing.
     extra = shape.profile({"orders": ORDERS, "customer": CUSTOMER, "audit": CUSTOMER})
-    result = check(extra, CONTRACT)
-    assert not result.passed
-    assert result.violations == [
-        {"column": None, "rule": "extra_table", "expected": "absent", "observed": "audit"}
-    ]
+    assert check(extra, CONTRACT).passed
 
 
 def test_a_dataset_profile_against_a_single_table_contract_is_still_an_error():
