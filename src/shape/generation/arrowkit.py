@@ -16,7 +16,7 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
-__all__ = ["array", "fill_null", "scalar", "to_numpy"]
+__all__ = ["array", "fill_null", "raw_numpy", "scalar", "to_numpy"]
 
 _FIXED_KINDS = frozenset("biufM")
 
@@ -168,3 +168,19 @@ def scalar(value: Any, type: pa.DataType | None = None) -> pa.Scalar:
 def fill_null(values: Any, fill: Any) -> Any:
     """``pyarrow.compute.fill_null(values, fill)`` for a Python ``fill`` value, without pandas."""
     return pc.fill_null(values, scalar(fill, values.type))
+
+
+def raw_numpy(values: pa.Array) -> tuple[npt.NDArray[Any], npt.NDArray[np.bool_] | None]:
+    """The values of an integer or floating Arrow array as numpy (a read-only view of the Arrow
+    buffer; what a null row holds is undefined) and the validity mask (``None`` without nulls).
+    Unlike :func:`to_numpy` an integer array keeps its dtype when it has nulls."""
+    dtype = _numpy_dtype(values.type)
+    if dtype is None or dtype.kind not in "iuf":
+        raise TypeError(f"raw_numpy takes an integer or floating array, not {values.type}")
+    n = len(values)
+    if n == 0:
+        return np.empty(0, dtype=dtype), None
+    data = np.frombuffer(
+        values.buffers()[1], dtype=dtype, count=n, offset=values.offset * dtype.itemsize
+    )
+    return data, (to_numpy(values.is_valid()) if values.null_count else None)

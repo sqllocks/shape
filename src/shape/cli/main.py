@@ -51,14 +51,10 @@ def _run(fn, a):
     """Run a profile/check/diff command: 0 ok, 1 failed check or drift, 2 input error."""
     import zipfile
 
-    from shape.artifact.io import ArtifactSignatureError
     from shape.errors import ShapeError
 
     try:
         return fn(a)
-    except ArtifactSignatureError as exc:
-        print(f"shape: signature check failed: {exc}", file=sys.stderr)
-        return 1
     except (
         OSError,
         ValueError,
@@ -68,6 +64,12 @@ def _run(fn, a):
         ShapeError,
         zipfile.BadZipFile,
     ) as exc:
+        # The artifact modules are not imported by the commands that never touch an artifact; an
+        # ArtifactSignatureError can only come from one that is.
+        artifact_io = sys.modules.get("shape.artifact.io")
+        if artifact_io is not None and isinstance(exc, artifact_io.ArtifactSignatureError):
+            print(f"shape: signature check failed: {exc}", file=sys.stderr)
+            return 1
         print(f"shape: error: {exc}", file=sys.stderr)
         return 2
 

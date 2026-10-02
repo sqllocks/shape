@@ -54,7 +54,11 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 from shape.errors import ShapeSchemaError
 from shape.generation.arrowkit import array as arrow_array
 from shape.generation.arrowkit import scalar as arrow_scalar
-from shape.generation.compute import apply_compute_phase
+from shape.generation.compute import (
+    StreamedAggregate,
+    apply_compute_phase,
+    plan_streamed_aggregates,
+)
 from shape.generation.correlation import apply_copula
 from shape.generation.rng import RowStream
 from shape.generation.rules import (
@@ -692,13 +696,15 @@ class Engine:
         names: list[str],
         on_batch: Callable[[str, pa.RecordBatch | None], None] | None = None,
         streamed: Collection[str] = (),
+        observers: Mapping[str, list[StreamedAggregate]] | None = None,
     ) -> set[str]:
         """Generate every table of ``names`` that is not built yet, their chunks spread over
         :func:`worker_threads` threads. A chunk depends only on its row range and on the tables of
         earlier levels, so the tables are the same as when built one chunk after another.
 
         ``on_batch`` receives each chunk of the tables in ``streamed``, in row order as soon as it
-        is ready, then ``None`` when the table is whole. Returns the tables it delivered."""
+        is ready, then ``None`` when the table is whole. ``observers`` (child table to aggregates)
+        are fed every chunk of their table, in row order. Returns the tables it delivered."""
         todo = [n for n in names if n not in self._tables]
         workers = worker_threads()
         jobs = []
@@ -721,6 +727,8 @@ class Engine:
             for i, (job, batch) in enumerate(zip(jobs, produced, strict=False)):
                 name = job[0]
                 by_table.setdefault(name, []).append(batch)
+                for aggregate in (observers or {}).get(name, ()):
+                    aggregate.feed(batch)
                 if on_batch is not None and name in streamed:
                     on_batch(name, batch)
                     if last[name] == i:
@@ -804,9 +812,16 @@ class Engine:
         flat = [n for level in levels for n in level]
         touched = self._post_pass_tables()
         final_early = [n for n in flat if n not in touched]
+        aggregates = plan_streamed_aggregates(self.schema, self.row_counts)
+        observers: dict[str, list[StreamedAggregate]] = {}
+        for aggregate in aggregates:
+            observers.setdefault(aggregate.child, []).append(aggregate)
         for level in levels:
             delivered = self._generate_level(
-                level, on_batch, [n for n in level if n in final_early] if on_batch else ()
+                level,
+                on_batch,
+                [n for n in level if n in final_early] if on_batch else (),
+                observers,
             )
             for name in level:
                 if name in touched or name in delivered:
@@ -819,7 +834,14 @@ class Engine:
                 elif on_table is not None:
                     on_table(name, table)
         tables = {name: self.generate_table(name) for name in flat}
-        tables = apply_compute_phase(tables, self.schema)
+        precomputed = {
+            (a.parent, a.column): done
+            for a in aggregates
+            if a.parent in tables
+            and a.child in tables
+            and (done := a.result(tables[a.parent], tables[a.child])) is not None
+        }
+        tables = apply_compute_phase(tables, self.schema, precomputed)
         rules = self.schema.business_rules
         copula = {t for t, pairs in self.schema.correlated_columns.items() if t in tables and pairs}
         emitted: set[str] = set()
