@@ -4,11 +4,15 @@ name: Wheels
 # Nothing is published from here (release is P8-04, by the owner).
 on:
   push:
+    branches: [main, build/main-plan, lane/CI-FIX]
     paths: ['rust/**', 'pyproject.toml', 'src/shape/_kernel.pyi', '.github/workflows/wheels.yml']
   pull_request:
     paths: ['rust/**', 'pyproject.toml', 'src/shape/_kernel.pyi', '.github/workflows/wheels.yml']
   workflow_dispatch: {}
 permissions: {contents: read}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   wheel:
     name: wheel (${{ matrix.name }})
