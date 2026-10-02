@@ -5,7 +5,7 @@
 # glob	wp	note
 cli.py	P4-10	CLI entry point; each section-10 row is built by the WP named in that row; P8-01 completes remaining aliases
 mcp_bridge.py	P6-11	JSON stdio bridge, 17 commands
-mcp_bridge_server.py	P6-11	MCP server
+mcp_bridge_server.py	P6-11	MCP server: a separate private commercial component built on shape bridge (2026-10-02)
 observability.py	P4-10	structured JSON logging and per-run metrics
 __init__.py	P4-10	package API surface: Spindle().generate(...) equivalent is shape.api.generate (P4-10)
 chaos/*	P6-02	schema, value, file, referential, temporal, volume
