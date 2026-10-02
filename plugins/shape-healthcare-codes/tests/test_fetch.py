@@ -52,3 +52,15 @@ def test_only_https_is_allowed_by_default(tmp_path: Path, monkeypatch: pytest.Mo
     for url in ("file:///etc/passwd", "http://example.org/x.zip", "ftp://example.org/x"):
         with pytest.raises(ValueError, match="only https"):
             fetch.download(url, tmp_path)
+
+
+def test_cache_names_do_not_collide_when_two_sources_end_alike(tmp_path: Path):
+    a = tmp_path / "cm" / "updated-01" / "11" / "2023.zip"
+    b = tmp_path / "pcs" / "updated-01" / "11" / "2023.zip"
+    for p, data in ((a, b"cm"), (b, b"pcs")):
+        p.parent.mkdir(parents=True)
+        p.write_bytes(data)
+    dest = tmp_path / "dl"
+    assert fetch.download(a.as_uri(), dest).read_bytes() == b"cm"
+    assert fetch.download(b.as_uri(), dest).read_bytes() == b"pcs"
+    assert len(list(dest.iterdir())) == 2

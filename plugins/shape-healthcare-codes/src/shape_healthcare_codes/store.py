@@ -77,7 +77,9 @@ def read_table(asset: str, data_dir: Path | None = None) -> pa.Table:
             f"Licensed sets: `shape healthcare-codes byo {asset} FILE`. "
             f"Searched: {data_dir or user_dir()}, {SHIPPED_DIR}"
         )
-    with pa.memory_map(str(path)) as src:
+    # Read into memory (the file is zstd-compressed, so a memory map would not help) and close
+    # it: an open map would stop Windows from replacing the file when an asset is rebuilt.
+    with pa.OSFile(str(path), "rb") as src:
         return ipc.open_file(src).read_all()
 
 

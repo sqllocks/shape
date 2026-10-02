@@ -134,3 +134,11 @@ def test_xml_that_declares_entities_is_refused_not_expanded():
         read_claml(bomb)
     doctype = b'<?xml version="1.0"?><!DOCTYPE ClaML SYSTEM "ClaML.dtd"><a/>'
     assert parse_xml(doctype).tag == "a"  # an external DTD reference is not fetched or expanded
+
+
+def test_a_loaded_asset_can_be_replaced_while_the_table_is_in_use(tmp_path: Path):
+    t = store.read_table("icd10cm").slice(0, 5)
+    store.write_asset("icd10cm", t, {"release": "one"}, tmp_path)
+    cs = store.load("icd10cm", tmp_path)
+    store.write_asset("icd10cm", t.slice(0, 2), {"release": "two"}, tmp_path)  # no file lock
+    assert len(cs) == 5 and len(store.load("icd10cm", tmp_path)) == 2

@@ -86,3 +86,11 @@ def test_codes_on_a_date_are_all_valid_and_billable_that_day():
         assert len(codes) > 1000
         assert all(cs.is_valid(c, day, leaf_only=True) for c in codes[::50])
     assert len(cs.codes_on(D(2015, 9, 30))) == 0
+
+
+def test_the_notices_travel_inside_the_wheel():
+    import tomllib
+
+    meta = tomllib.loads((PLUGIN / "pyproject.toml").read_text(encoding="utf-8"))
+    assert "THIRD_PARTY_NOTICES.md" in meta["project"]["license-files"]
+    assert "data/*.arrow" in meta["tool"]["setuptools"]["package-data"]["shape_healthcare_codes"]

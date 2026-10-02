@@ -9,6 +9,7 @@ by the SHA-256 of the bytes that were used, in the asset manifest.
 from __future__ import annotations
 
 import hashlib
+import re
 import shutil
 import time
 import urllib.error
@@ -58,7 +59,10 @@ def download(
         raise ValueError(f"{url!r}: only {', '.join(ALLOWED_SCHEMES)} downloads are allowed")
     d = dest_dir or user_dir() / "downloads"
     d.mkdir(parents=True, exist_ok=True)
-    target = d / (name or url.rsplit("/", 1)[-1].replace("%20", "_"))
+    # The whole path names the cache file: two sources can end in the same file name
+    # (CMS has ".../updated-01/11/2023.zip" for both ICD-10-CM and ICD-10-PCS).
+    path_name = urllib.parse.unquote(urllib.parse.urlparse(url).path).strip("/")
+    target = d / (name or re.sub(r"[^A-Za-z0-9._-]+", "_", path_name))
     if target.is_file():
         try:
             verify(target, pin)
