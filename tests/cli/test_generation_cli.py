@@ -300,6 +300,30 @@ def test_generate_as_a_program_flushes_and_ends_early(tmp_path):
         assert pq.read_metadata(f).num_rows > 0  # the footer is there: the file was closed
 
 
+def test_only_a_plain_generate_skips_the_interpreter_teardown(tmp_path):
+    """The early end is for the one command that has megabytes to free and nothing left to do: an
+    ``atexit`` handler still runs after every other command, and when the run logs or writes
+    metrics."""
+    marker = tmp_path / "atexit.txt"
+    code = (
+        "import atexit, sys; from shape.cli.main import main; "
+        f"atexit.register(lambda: open({str(marker)!r}, 'w').close()); "
+        "sys.argv = ['shape', *sys.argv[1:]]; sys.exit(main())"
+    )
+
+    def ran_atexit(*args):
+        marker.unlink(missing_ok=True)
+        done = subprocess.run([sys.executable, "-c", code, *map(str, args)], capture_output=True)
+        assert done.returncode == 0, done.stderr
+        return marker.exists()
+
+    out = tmp_path / "out"
+    generate = ("generate", "retail", "--scale", "small", "-f", "csv", "-o", out)
+    assert not ran_atexit(*generate)
+    assert ran_atexit("version")
+    assert ran_atexit("--metrics", tmp_path / "m.json", *generate)
+
+
 def test_a_failed_program_run_still_reports(tmp_path):
     done = _as_program("generate", "retail", "--scale", "nope", "-f", "parquet", "-o", tmp_path)
     assert done.returncode == 2

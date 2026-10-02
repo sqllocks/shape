@@ -20,8 +20,6 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from shape.generation.schema import GenSchema
 
-WROTE_FILES = False  # set once a ``generate`` has written (and closed) every file of its output
-
 FORMATS = ("summary", "csv", "tsv", "jsonl", "parquet", "excel", "sql", "delta")
 SQL_DIALECTS = ("tsql", "tsql-fabric-warehouse", "postgres", "mysql")
 MODES = ("3nf", "star")
@@ -251,8 +249,6 @@ def _generate(a: argparse.Namespace, engine: Any) -> int:
     if not a.output:
         raise ValueError(f"--format {a.format} writes files: give -o DIR")
     paths = write_engine(engine, a.format, a.output, **_sink_options(a))
-    global WROTE_FILES
-    WROTE_FILES = True
     seconds = time.perf_counter() - started
     counts = {name: int(rows) for name, rows in engine.row_counts.items() if name in engine.order}
     total = sum(counts.values())
@@ -273,6 +269,9 @@ def _generate(a: argparse.Namespace, engine: Any) -> int:
             f"Wrote {len(paths)} {a.format} {'directories' if a.format == 'delta' else 'files'} "
             f"to {a.output}: {total:,} rows in {len(counts)} tables ({seconds:.2f}s)"
         )
+    from shape.cli.main import exit_now
+
+    exit_now(0)  # as the program, nothing is left to do: skip freeing the tables
     return 0
 
 

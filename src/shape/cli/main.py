@@ -644,18 +644,23 @@ def main(argv=None):
     environment variables) on, the run logs JSON lines to stderr and writes its metrics.
 
     Called as the program (no ``argv``), a ``generate`` that wrote its files ends the process as
-    soon as everything is flushed instead of tearing the interpreter down: freeing the hundreds of
-    megabytes of tables and unloading the modules takes about 30 ms of a half-second run, and
-    nothing is left to do (every file is closed, no ``atexit`` handler of Shape's is pending)."""
-    code = _main(argv)
-    if argv is None and code == 0:
-        generation = sys.modules.get("shape.cli.generation")
-        if generation is not None and generation.WROTE_FILES:
-            _exit_now(code)
-    return code
+    soon as everything is flushed (:func:`exit_now`) instead of tearing the interpreter down:
+    freeing the hundreds of megabytes of tables and unloading the modules takes about 40 ms of a
+    half-second run, and nothing is left to do (every file is closed, no ``atexit`` handler of
+    Shape's is pending)."""
+    global _AS_PROGRAM
+    _AS_PROGRAM = argv is None
+    return _main(argv)
 
 
-def _exit_now(code):
+_AS_PROGRAM = False  # ``main`` was called with no ``argv``: this is the process's command line
+
+
+def exit_now(code):
+    """End the process now when running as the program; flush what is buffered first. Returns
+    (so the caller carries on) when ``main`` was called with an ``argv``, as the tests do."""
+    if not _AS_PROGRAM:
+        return
     import logging
 
     for stream in (sys.stdout, sys.stderr):
@@ -671,6 +676,8 @@ def _main(argv):
     opts, argv = _split_global(sys.argv[1:] if argv is None else argv)
     if not (opts["log_json"] or opts["metrics"]):
         return _dispatch(argv)
+    global _AS_PROGRAM
+    _AS_PROGRAM = False  # the log line and the metrics file are written after the command returns
     import logging
     import time
 
