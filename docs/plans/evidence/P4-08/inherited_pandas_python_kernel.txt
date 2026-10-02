@@ -1,0 +1,1 @@
+origin/lane/P4-10r2 tip (f22dcc1), no P4-08 code, SHAPE_KERNEL=python: 'shape generate retail --scale small -f parquet' exits 0 and 'pandas' in sys.modules is True, so tests/cli/test_generation_cli.py::test_generate_parquet_never_imports_pandas fails there too (it passes with the Rust kernel).

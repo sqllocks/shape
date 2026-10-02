@@ -1,61 +1,20 @@
 == ruff check
-E501 Line too long (101 > 100)
- --> tests/generation/test_fit.py:5:101
-  |
-3 | Acceptance: profiling what ``generate`` makes from a profile gives the same profile, for every field
-4 | the plan calls ``preserved``, within the tolerances below, and every field the plan calls
-5 | ``approximate`` is within a looser tolerance. The profiler's T-22 tolerances (1e-9 on a mean, 1e-6 on
-  |                                                                                                     ^
-6 | a fitted parameter) compare two profilers on the *same* data; a regenerated sample differs by
-7 | sampling error, so a statistic is compared to its standard error (five of them), and the fields that
-  |
-
-E501 Line too long (101 > 100)
-  --> tests/generation/test_fit.py:46:101
-   |
-45 | def check_field(field: str, orig: dict[str, Any], regen: dict[str, Any], n: int) -> str | None:
-46 |     """``None`` if ``regen`` agrees with ``orig`` on ``field`` within the tolerance, else why not."""
-   |                                                                                                     ^
-47 |     a, b = orig[field], regen[field]
-48 |     if field in ("name", "dtype", "is_primary_key", "is_foreign_key", "fk_ref_table", "pattern"):
-   |
-
-E501 Line too long (101 > 100)
- --> tests/generation/test_learn.py:5:101
-  |
-3 | The acceptance case: Shape's schema for D2 equals the one the pinned baseline's ``learn`` writes
-4 | (``benchmarks/vs_spindle/fixtures/learn/d2_20000.json``, regenerated and checked by
-5 | ``learn_1to1/baseline.py --check``) except for the columns in ``ALLOWED`` below, each with the reason
-  |                                                                                                     ^
-6 | it differs. ``learn_1to1/verify.py`` runs the same comparison on the full 1M-row D2 and on the
-7 | multi-table set against the live baseline. Nothing here needs the baseline's venv.
-  |
-
-Found 3 errors.
-== ruff format
-560 files already formatted
-== mypy
-Success: no issues found in 251 source files
+All checks passed!
+exit 0
+== ruff format --check
+562 files already formatted
+== mypy (strict)
+Success: no issues found in 252 source files
 == vulture
 exit 0
 == lint-imports
 
-Built-ins load only through the plugin registry (plan 4.3) KEPT (1 ignored import)
-
 Contracts: 1 kept, 0 broken.
 == check_user_facing
-user-facing mention of the baseline library: src/shape/generation/learn.py:9
-exit 1
-== bandit
-[tester]	WARNING	nosec encountered (B608), but no failed test on file src/shape/builtins/sinks/sql.py:214
-[tester]	WARNING	nosec encountered (B608), but no failed test on file src/shape/builtins/sinks/sql.py:214
-[tester]	WARNING	nosec encountered (B608), but no failed test on file src/shape/integrations/fabric/udf.py:282
+check_user_facing: clean
 exit 0
-== check_requirements
-Requirement registry OK: 89 requirements.
-== check_secrets
-Basic secret check OK.
-== check_plugin_skeletons
-plugin skeletons OK (7 distributions, version 0.9.0)
-== check_conformance_coverage
-32 normative statements, 32 conformance tests
+== bandit -q -r src -ll
+exit 0
+== START (test_version_stays_light)
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+3736 deselected, 1 error in 3.58s

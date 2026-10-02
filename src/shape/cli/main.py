@@ -830,10 +830,10 @@ def _dispatch(argv):
         return 0 if cert.passed else 3
     if a.cmd == "plan" and _artifact_kind(a.shape) == "profile":
         return _run(_cmd_plan_profile, a)
-    if a.cmd in ("query", "plan") and _artifact_kind(a.shape) == "profile":
+    if a.cmd == "query" and _artifact_kind(a.shape) == "profile":
         print(
-            f"shape: error: `shape {a.cmd}` does not read profiles made by `shape profile` yet "
-            "(planned). Use `shape check` or `shape diff`.",
+            "shape: error: `shape query` does not read profiles made by `shape profile` yet "
+            "(planned). Use `shape check`, `shape diff` or `shape plan`.",
             file=sys.stderr,
         )
         return 2

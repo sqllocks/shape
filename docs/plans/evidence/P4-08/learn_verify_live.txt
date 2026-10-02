@@ -1,0 +1,8 @@
+d2: 20 baseline columns, 3 deliberate differences, 0 unexplained
+  allowed d2.wait_time [exponential]: an exponential fit becomes an exponential distribution; the alternative, a normal with the same mean and standard deviation clipped to the observed range, has the wrong shape
+  allowed d2.currency [enum_pattern]: a currency or language code column whose profile lists every value is generated from those values and weights; drawing any code of a fake-data provider would lose the column's own vocabulary (and needs the optional faker package). Other patterns (e-mail, phone, ip address...) are never turned into value lists: the schema would carry personal data
+  allowed d2.order_value [truncated_enum]: a numeric column whose profile lists fewer values than it has distinct ones is generated from its distribution; drawing only the listed values (the 500 most frequent) would leave the rest of the column's values out for good
+mt: 15 baseline columns, 2 deliberate differences, 0 unexplained
+  allowed orders.amount [truncated_enum]: a numeric column whose profile lists fewer values than it has distinct ones is generated from its distribution; drawing only the listed values (the 500 most frequent) would leave the rest of the column's values out for good
+  allowed orders.customer_id [truncated_enum]: a numeric column whose profile lists fewer values than it has distinct ones is generated from its distribution; drawing only the listed values (the 500 most frequent) would leave the rest of the column's values out for good
+d1: 6 baseline columns, 0 deliberate differences, 0 unexplained

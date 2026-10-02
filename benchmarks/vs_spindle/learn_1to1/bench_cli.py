@@ -50,13 +50,16 @@ def cpu_mhz() -> float | None:
         return None
 
 
-def run_once(tool: str, src: Path, out: Path) -> dict:
+def run_once(tool: str, src: Path, out: Path, threads: int | None = None) -> dict:
     out.unlink(missing_ok=True)  # no cache between runs
     load = wait_for_quiet()
     cmd = command(tool, src, out)
+    env = dict(os.environ)
+    if threads is not None and tool != "spindle":
+        env["SHAPE_THREADS"] = str(threads)
     before = resource.getrusage(resource.RUSAGE_CHILDREN)
     t0 = time.perf_counter()
-    done = subprocess.run(cmd, capture_output=True, text=True, cwd=BENCH_OUT_DIR)
+    done = subprocess.run(cmd, capture_output=True, text=True, cwd=BENCH_OUT_DIR, env=env)
     wall = time.perf_counter() - t0
     after = resource.getrusage(resource.RUSAGE_CHILDREN)
     if done.returncode != 0:
@@ -85,6 +88,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--dataset", default="d2.csv")
     ap.add_argument("--runs", type=int, default=5)
     ap.add_argument("--warmup", type=int, default=1)
+    ap.add_argument(
+        "--shape-threads", type=int, default=None, help="SHAPE_THREADS for the Shape runs"
+    )
     ap.add_argument("--report", default=None)
     a = ap.parse_args(argv)
     src = PROFILE_DATA_DIR / a.dataset
@@ -101,17 +107,18 @@ def main(argv: list[str] | None = None) -> int:
             "dataset": str(src),
             "runs": a.runs,
             "warmup": a.warmup,
+            "shape_threads": a.shape_threads,
             "loadavg_start": os.getloadavg()[0],
         }
         for i in range(a.warmup):
             for t in tools:
-                r = run_once(t, src, outs[t])
+                r = run_once(t, src, outs[t], a.shape_threads)
                 print(f"{t:8s} warm-up {i + 1}: {r['wall_s']:.3f}s", flush=True)
         explained = verify(outs)  # equivalence first
         print(f"equivalence: equal except {len(explained)} listed columns", flush=True)
         for i in range(a.runs):
             for t in tools:
-                r = run_once(t, src, outs[t])
+                r = run_once(t, src, outs[t], a.shape_threads)
                 raw[t].append(r)
                 print(
                     f"{t:8s} run {i + 1}: {r['wall_s']:.3f}s  cpu {r['cpu_s']:.2f}s  "
