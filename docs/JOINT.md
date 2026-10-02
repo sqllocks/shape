@@ -40,6 +40,9 @@ Computed on a deterministic sample of at most 20,000 rows and at most 16 columns
 A determinant whose values are all different (a key) determines every column trivially and is not
 listed; `diff` knows that and treats the baseline's confidence as 1.
 
+The privacy-safe profile (`docs/PRIVACY_MODEL.md`) is built from an allow-list of fields and carries
+neither `joint` nor `placeholders`: both hold values (violating groups, conditional tables).
+
 ### Reference membership
 
 ```python

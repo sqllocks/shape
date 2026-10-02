@@ -186,3 +186,38 @@ def test_the_joint_entry_is_deterministic_and_survives_save_and_load(
     shape.save(a, str(tmp_path / "p.shape"))
     again = shape.load(str(tmp_path / "p.shape"))
     assert _table(again)["joint"] == _table(a)["joint"]
+
+
+def test_the_privacy_safe_profile_carries_no_joint_values(city_zip: dict) -> None:
+    """``joint`` and ``placeholders`` hold values (violating groups, conditional tables): the safe
+    profile is built from allow-listed fields and leaves them out."""
+    import json
+
+    from shape.privacy.safe_profile import SafeConfig, to_safe_profile
+
+    profile = shape.profile(city_zip["bad"])
+    assert "violations" in json.dumps(profile.to_dict())
+    safe = json.dumps(to_safe_profile(profile, SafeConfig()).to_dict(), default=str)
+    assert "joint" not in safe and "placeholders" not in safe and "violations" not in safe
+
+
+def test_two_column_keys_agree_with_the_key_command() -> None:
+    from shape.profile.dependencies import candidate_key
+
+    n = 400
+    rows = [{"region": f"r{i % 20}", "store": f"s{i // 20}"} for i in range(n)]
+    assert candidate_key(rows, ("region", "store")).unique
+    t = pa.table({k: [r[k] for r in rows] for k in ("region", "store")})
+    keys = _table(shape.profile(t))["joint"]["keys"]
+    assert keys and keys[0]["fields"] == ["region", "store"]
+
+
+def test_the_new_fields_are_the_only_difference_they_make(city_zip: dict, monkeypatch) -> None:
+    """Every field the parity check compares is unchanged: with the joint analysis on or off, the
+    profile differs only by ``joint`` (and ``placeholders``, which depend on no switch)."""
+    on = _table(shape.profile(city_zip["bad"]))
+    monkeypatch.setenv("SHAPE_PROFILE_JOINT", "0")
+    off = _table(shape.profile(city_zip["bad"]))
+    assert "joint" in on and "joint" not in off
+    on = {k: v for k, v in on.items() if k != "joint"}
+    assert on == off
