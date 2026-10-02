@@ -40,7 +40,7 @@ def controls(quick: bool) -> dict[str, tuple[str, dict[str, Any]]]:
     return {
         "reversal_probability 0.03 -> 0.08": ("default", {"reversal_probability": 0.08}),
         "settlement_success_rate 0.70 -> 0.92": ("variant", {"settlement_success_rate": 0.92}),
-        "fraud_burst_probability 0.30 -> 0.60": ("variant", {"fraud_burst_probability": 0.60}),
+        "fraud_burst_probability 0.30 -> 0.90": ("variant", {"fraud_burst_probability": 0.90}),
     }
 
 
@@ -151,7 +151,10 @@ def compare(rep: Report, shape: Run, base: dict[int, Run], cfg: dict[str, Any], 
         ),
     }
     for name, spec in specs.items():
-        h.compare_table(rep, name, shape.tables[name], {s: r.tables[name] for s, r in base.items()}, spec)
+        tables = {s: r.tables[name] for s, r in base.items()}
+        if name == "transactions":  # SIM-7: the baseline's column set depends on chance
+            tables = {s: h.conform(t, shape.tables[name]) for s, t in tables.items()}
+        h.compare_table(rep, name, shape.tables[name], tables, spec)
     h.compare_stats(
         rep,
         shape.stats,
@@ -196,4 +199,17 @@ def probes(ctx: h.Context) -> list[Report]:
     rep.add("baseline: reversals are stamped with the wall clock", years != {2024}, years=sorted(years))
     delays = h.numbers(ours.tables["reversals"].column("reversed_at"), 0)
     rep.add("shape: reversals follow their transactions", len(delays) > 0 and float(delays.min()) >= float(h.numbers(renamed.column("transaction_date"), 0).min()))
-    return [rep]
+    return [rep, _columns_probe()]
+
+
+def _columns_probe() -> Report:
+    """SIM-7: the baseline's combined table has the fraud columns only when a burst happened."""
+    data = fixtures.financial(True)
+    cfg = {"fraud_burst_probability": 0.05, "reversal_probability": 0.0}
+    rep = Report("SIM-7 financial combined columns")
+    theirs = h.baseline_many(SIM, cfg, data, range(1, 13), "columns")
+    variants = {tuple(r.tables["transactions"].column_names) for r in theirs.values()}
+    rep.add("baseline: the column set varies from seed to seed", len(variants) > 1, variants=len(variants))
+    ours = {tuple(run_shape(cfg, s, data).tables["transactions"].column_names) for s in range(1, 13)}
+    rep.add("shape: one column set for every seed", len(ours) == 1)
+    return rep

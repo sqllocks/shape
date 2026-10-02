@@ -82,10 +82,9 @@ def as_table(obj: Any) -> pa.Table:
             return out
     if hasattr(obj, "__arrow_c_stream__"):
         return pa.table(obj)
-    try:
+    if hasattr(obj, "columns") and hasattr(obj, "dtypes"):  # a pandas frame
         return pa.Table.from_pandas(obj, preserve_index=False)
-    except (TypeError, pa.ArrowException) as exc:
-        raise TypeError(f"cannot read {type(obj).__name__} as an Arrow table") from exc
+    raise TypeError(f"cannot read {type(obj).__name__} as an Arrow table")
 
 
 def table_mapping(tables: Any) -> dict[str, pa.Table]:

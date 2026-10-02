@@ -124,7 +124,11 @@ def _facts(run: Run, cfg: dict[str, Any]) -> dict[str, Any]:
 
 
 def compare(rep: Report, shape: Run, base: dict[int, Run], cfg: dict[str, Any], inputs: Any, quick: bool) -> None:
-    capped = cfg.get("max_live_trips", 400) < 400
+    # The pings follow the live trips; whether those are fixed depends on the input (a trip at
+    # the edge of the window moves in or out with the random acceptance and wait times, and a
+    # large live set is sampled). The count is exact only where the baseline's own is.
+    counts = {r.tables["driver_pings"].num_rows for r in base.values()}
+    capped = len(counts) > 1
     trip_cols = {
         c: Col("exact") for c in inputs["trip"].column_names
     }

@@ -560,6 +560,42 @@ def baseline_once(
     return read_run(work / f"seed{seed}")
 
 
+def baseline_many(
+    sim: str, config: dict[str, Any], inputs: dict[str, pa.Table] | None, seeds: Iterable[int], tag: str
+) -> dict[int, Run]:
+    """Uncached baseline runs at the given seeds in one worker (an allow-list probe about the
+    spread of a property across seeds)."""
+    pin_check()
+    seeds = tuple(seeds)
+    key = _digest(sim, config, seeds, tag, str(time.time_ns()))
+    work = CACHE / "probe" / f"{sim}-{key}"
+    work.mkdir(parents=True, exist_ok=True)
+    input_files: dict[str, str] = {}
+    for name, table in (inputs or {}).items():
+        path = work / f"input_{name}.parquet"
+        pq.write_table(table, path)
+        input_files[name] = str(path)
+    job = work / "job.json"
+    job.write_text(json.dumps({"sim": sim, "config": config, "seeds": list(seeds), "inputs": input_files, "out": str(work)}))
+    res = subprocess.run([str(SPINDLE_PY), str(HERE / "baseline_worker.py"), str(job)], capture_output=True, text=True)
+    if res.returncode != 0:
+        raise HarnessError(f"baseline worker failed for {sim}:\n{res.stderr[-2000:]}")
+    return {s: read_run(work / f"seed{s}") for s in seeds}
+
+
+def conform(table: pa.Table, like: pa.Table) -> pa.Table:
+    """``table`` with the columns of ``like``, in its order: columns ``table`` lacks are null
+    (typed as in ``like``). ``table`` must not have a column ``like`` lacks."""
+    extra = [c for c in table.column_names if c not in like.column_names]
+    if extra:
+        raise HarnessError(f"columns {extra} are not in the Shape table")
+    cols = [
+        table.column(f.name) if f.name in table.column_names else pa.nulls(table.num_rows, type=f.type)
+        for f in like.schema
+    ]
+    return pa.Table.from_arrays(cols, names=like.column_names)
+
+
 # ---- cases ----------------------------------------------------------------------------------
 
 

@@ -107,7 +107,8 @@ class FinancialStreamResult(TablesResult):
 
     Attributes:
         transactions: The original transactions followed by the reversals and fraud events
-            (columns of all three; cells a source lacks are null).
+            (the columns of all three, whether or not a run produced any; cells a source lacks
+            are null; a disabled kind adds no columns).
         reversals: Only the reversal records.
         fraud_events: Only the fraud burst records.
         settlements: The settlement batch results.
@@ -182,10 +183,12 @@ class FinancialStreamSimulator:
         reversals = self._reversals() if cfg.reversal_enabled else self._empty_reversals()
         fraud = self._fraud_bursts() if cfg.fraud_burst_enabled else self._empty_fraud()
         settlements = self._settlements() if cfg.settlement_enabled else self._empty_settlements()
+        # The columns follow the configuration, not the run: a stream with no reversal or fraud
+        # burst by chance keeps the columns of those it could have had.
         parts = [self._transactions]
-        if reversals.num_rows:
+        if cfg.reversal_enabled:
             parts.append(reversals)
-        if fraud.num_rows:
+        if cfg.fraud_burst_enabled:
             parts.append(fraud)
         combined = combine(parts) if len(parts) > 1 else self._transactions
         stats = {
