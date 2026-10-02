@@ -1,0 +1,9 @@
+# A local DuckDB database (dbt-duckdb): `dbt build --profiles-dir .` needs no server.
+jaffle_shop:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: target/jaffle_shop.duckdb
+      schema: main
+      threads: 1

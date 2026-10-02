@@ -10,8 +10,10 @@ the DDL does not declare are found by the ``<table>_id`` naming convention. Smar
     from shape.generation.ddl import from_ddl
     schema, notes = from_ddl(open("tables.sql").read(), domain="shop", smart=True)
 
-Stable interface: :class:`DdlParser`, :func:`from_ddl`, :func:`apply_scale` and
-:class:`DdlError`.
+Stable interface: :class:`DdlParser`, :func:`from_ddl`, :func:`apply_scale`,
+:class:`DdlError` and, for importers of other schema sources (``shape-dbt``), the tables the
+parser builds, :class:`ParsedTable`, :class:`ParsedColumn` and :class:`ParsedForeignKey`, with
+:func:`schema_from_parsed`, which runs the same schema builder on them.
 """
 
 from __future__ import annotations
@@ -879,6 +881,49 @@ def from_ddl(
     schema = DdlParser().parse_string(sql)
     schema.model.domain = domain
     schema.model.name = f"{domain}_ddl_import"
+    annotations: list[Any] = []
+    if smart:
+        from shape.generation.ddl_infer import SchemaInference
+
+        annotations = SchemaInference().run(schema)
+        fit_string_lengths(schema)
+    if scale:
+        apply_scale(schema, scale)
+    return schema, annotations
+
+
+# The parsed form of a table, public so that an importer for another source of table definitions
+# (the ``shape-dbt`` plugin reads dbt projects) builds its schema with the same builder.
+ParsedColumn = _ParsedColumn
+ParsedTable = _ParsedTable
+ParsedForeignKey = _ForeignKey
+
+
+def schema_from_parsed(
+    tables: list[_ParsedTable],
+    foreign_keys: list[_ForeignKey],
+    *,
+    domain: str = "custom",
+    smart: bool = True,
+    scale: str | None = None,
+    description: str = "Imported from SQL DDL",
+    name_suffix: str = "ddl_import",
+) -> tuple[GenSchema, list[Any]]:
+    """The schema :func:`from_ddl` builds, from tables that were not read from DDL text.
+
+    ``tables`` and ``foreign_keys`` are what :class:`DdlParser` extracts: a foreign key that
+    names only its parent table is resolved against the parent's single-column primary key, and
+    one the parent does not give is dropped. ``domain``, ``smart`` and ``scale`` are
+    :func:`from_ddl`'s; the schema is named ``<domain>_<name_suffix>``. Returns
+    ``(schema, annotations)``."""
+    parser = DdlParser()
+    names = {t.name.lower(): t.name for t in tables}
+    schema = parser._build_schema(
+        tables, parser._resolve_key_references(tables, list(foreign_keys)), names
+    )
+    schema.model.domain = domain
+    schema.model.name = f"{domain}_{name_suffix}"
+    schema.model.description = description
     annotations: list[Any] = []
     if smart:
         from shape.generation.ddl_infer import SchemaInference
