@@ -19,7 +19,7 @@ class FhirEmitter:
     """
 
     name = "fhir"
-    schemes = ("file", "")
+    schemes = ("file",)
 
     def emit(self, uri: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         table = str(options.get("table", "member"))

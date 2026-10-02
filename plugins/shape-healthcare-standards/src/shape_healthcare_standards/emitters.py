@@ -2,4 +2,6 @@
 
 from .fhir.emitter import FhirEmitter
 
-__all__ = ["FhirEmitter"]
+SHAPE_API = "1.0"
+
+__all__ = ["SHAPE_API", "FhirEmitter"]

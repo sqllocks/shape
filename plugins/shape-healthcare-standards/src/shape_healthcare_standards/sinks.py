@@ -10,7 +10,10 @@ from .x12.sink import (
     X12Remittance835Sink,
 )
 
+SHAPE_API = "1.0"
+
 __all__ = [
+    "SHAPE_API",
     "FhirBundleSink",
     "FhirNdjsonSink",
     "NcpdpSink",

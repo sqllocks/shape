@@ -25,7 +25,6 @@ Resource = dict[str, Any]
 
 SYSTEM_BASE = "urn:shape:healthcare"
 SYS_MEMBER = f"{SYSTEM_BASE}:member-id"
-SYS_SUBSCRIBER = f"{SYSTEM_BASE}:subscriber-id"
 SYS_ELIGIBILITY = f"{SYSTEM_BASE}:eligibility-id"
 SYS_CLAIM = f"{SYSTEM_BASE}:claim-id"
 SYS_PAYER_CLAIM = f"{SYSTEM_BASE}:payer-claim-number"

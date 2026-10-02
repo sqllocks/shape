@@ -44,7 +44,7 @@ class FhirNdjsonSink:
     """One ``<ResourceType>.ndjson`` file per resource type in the output directory."""
 
     name = "fhir-ndjson"
-    schemes = ("file", "")
+    schemes = ("file",)
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         by_type: dict[str, list[str]] = {t: [] for t in TABLE_RESOURCES.get(table, ())}
@@ -67,7 +67,7 @@ class FhirBundleSink:
     """
 
     name = "fhir-bundle"
-    schemes = ("file", "")
+    schemes = ("file",)
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         size = int(options.get("bundle_size", 100))
