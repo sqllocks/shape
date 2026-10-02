@@ -30,8 +30,8 @@ def add_arguments(sub: Any) -> None:
         help="corrupt tables on purpose and log exactly what changed",
         description="Apply named corruptions (duplicates, orphan_keys, date_shift, "
         "negative_amounts, case_whitespace, pii_fill, type_change, null_creep) to tables, each "
-        "with a rate, and write a machine-readable ground-truth log (JSON Lines): the table, row, key, "
-        "column, before and after of every change, with the seed. The same seed gives the same "
+        "with a rate, and write a machine-readable ground-truth log (JSON Lines): the table, row, "
+        "key, column, before and after of every change, with the seed. The same seed gives the same "
         "corruption and the same log.",
     )
     ch.add_argument("target", nargs="?", metavar="DOMAIN|SCHEMA.json", help=_TARGET_HELP)
