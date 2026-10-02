@@ -7,7 +7,7 @@ keyed by ``(seed, member index)``: results never depend on how members are batch
 
 This is the small, domain-local runtime the modules are written against.  The behaviour lane's
 domain-agnostic engine exposes the same shape (a virtual clock, dated state-machine events, emitted
-records); ``BehaviorAdapter`` is the one place that maps between them (see the lane status file).
+records); ``behavior_engine.py`` replays that engine's events through this runtime.
 """
 
 from __future__ import annotations
@@ -42,16 +42,6 @@ class Module(Protocol):
     def handle(
         self, ctx: SimContext, person: Person, day: date, kind: str, payload: dict[str, Any]
     ) -> None: ...
-
-
-class BehaviorAdapter(Protocol):
-    """What a behaviour engine must offer for a module to run on it."""
-
-    def schedule(
-        self, person: Person, day: date, module: str, kind: str, **payload: Any
-    ) -> None: ...
-
-    def now(self) -> date: ...
 
 
 @dataclass(slots=True)
