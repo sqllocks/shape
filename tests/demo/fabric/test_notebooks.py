@@ -225,6 +225,24 @@ def test_artifacts_can_be_the_next_baseline(lakehouse):
     assert _check_exit(raw2, lakehouse)["drifted"] is True
 
 
+def test_two_runs_in_the_same_instant_keep_both_artifacts(lakehouse, monkeypatch):
+    """PF-06b: the folder was named by the second, so a second run overwrote the first one's
+    baseline. Here every run sees the same clock reading."""
+    from datetime import UTC, datetime
+
+    from shape.integrations.fabric import run_folder
+
+    frozen = run_folder.run_stamp(datetime(2026, 9, 30, 12, 0, 0, 5, tzinfo=UTC))
+    monkeypatch.setattr(run_folder, "run_stamp", lambda now=None: frozen)
+    params = _params("orders_day1", baselinePath="")
+    first = _check_exit(run_notebook(PY_NB, lakehouse, params)[0], lakehouse)["artifactPath"]
+    before = (lakehouse / "Files" / first).read_bytes()
+    second = _check_exit(run_notebook(PY_NB, lakehouse, params)[0], lakehouse)["artifactPath"]
+    assert first != second and first.split("/")[:2] == second.split("/")[:2]
+    assert first.split("/")[2] == frozen and second.split("/")[2] == f"{frozen}_2"
+    assert (lakehouse / "Files" / first).read_bytes() == before
+
+
 # --------------------------------------------------------------- DM-05b: spark nb
 
 

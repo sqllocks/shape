@@ -33,6 +33,11 @@ shape check customers.shape contract.json          # exit code 1 if the contract
 shape diff customers.shape customers_next.shape --fail-on-drift
 ```
 
+A folder is one table (its files are partitions) unless you pass `--dataset`, which profiles one
+table per file, named by the file name: `shape profile data/ --dataset -o data.shape`. A contract
+with a `tables` object is checked against such a dataset profile only; against a single table
+`shape check` exits 2, and a table of the profile that the contract does not name fails it.
+
 ```bash
 shape --version
 shape inspect customers.shape                        # what a .shape file holds
