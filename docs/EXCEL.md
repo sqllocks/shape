@@ -52,3 +52,38 @@ there is something to report. A profile of any other source has no `findings` ke
 
 `shape profile --json` includes the findings in the summary. The share-safe form (`shape profile safe`) leaves them out,
 because their examples are cell values.
+
+## Writing a workbook
+
+```bash
+shape generate retail --scale small -f excel -o out/                       # out/retail.xlsx
+shape generate retail -f excel -o out/ --chaos-log out/_chaos_ground_truth.jsonl --drift-plan plan.json
+```
+
+```python
+from shape.generation.output import write_engine, write_result
+write_result(result, "excel", "out/")        # out/<domain>.xlsx
+```
+
+The `excel` format writes **one workbook** for the whole dataset (`<domain>.xlsx`; the `workbook` option names it):
+
+- **One sheet per table**, in dependency order. Sheet names are made valid (at most 31 characters, none of `[]:*?/\`, no
+  leading or trailing apostrophe, not `History`) and unique ignoring case (`orders`, `orders_2`); a table that has to be
+  renamed is listed with its sheet in the `_README`.
+- **`_README`**, the first sheet: Shape version, domain, schema mode, seed, scale, generation time (UTC) and duration,
+  rows and columns per table, the table-to-sheet mapping, the text-format identifier columns, and what was planted: the
+  chaos in the ground-truth log (`--chaos-log`, from `shape chaos`: the changes per table, kind and column, with an
+  example) and the drift plan or its answer key (`--drift-plan`: every event). With neither, it says `none`.
+- **Formatting**: a styled header row, frozen; column widths fitted to the first 1,000 rows and capped at 50; dates and
+  timestamps have a date format; **identifier columns have the text number format `@`** so leading zeros survive editing
+  in Excel: text columns whose values are all digits (ZIP, NPI, member id), text columns named like an identifier (`id`,
+  `key`, `code`, `zip`, `ndc`, `npi`, `mrn`, `ssn`, `member`, `account`, `number`) and the text key columns of the
+  schema. Integer keys stay numbers.
+- Text that Excel would read as a formula (`=1+1`) or an error (`#N/A`) is stored as text.
+- **Limits**: a sheet holds 1,048,576 rows (header included) and 16,384 columns. A larger table is refused before
+  anything is written, with an error that names the table (`WorkbookTooLargeError`): write it as csv or parquet, or
+  generate fewer rows. There is no automatic split.
+
+The per-table sink (`shape.sinks` `excel`, `write(uri, table, batches)`, `<table>.xlsx`) is unchanged for code that calls it
+directly; `write_workbook` is the multi-sheet form, and a workbook it wrote reads back with the source above (identifier
+columns come back as text).

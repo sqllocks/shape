@@ -281,7 +281,7 @@ print(format_summary(result))                                   # the `summary` 
 | `jsonl` | `<table>.jsonl` | dates and times ISO 8601; decimals are exact strings |
 | `parquet` | `<table>.parquet` | snappy, dictionary encoding on (T-17); options `row_group_rows` (262,144: a table streamed while it is generated is encoded as its chunks arrive; a larger group would wait for a million rows) and `dictionary_page_bytes` (131,072: a column whose dictionary outgrows it stops using one) |
 | `sql` | `<table>.sql` | see below |
-| `excel` | `<table>.xlsx` | extra `[excel]`; refuses a table over 1,048,575 rows |
+| `excel` | `<domain>.xlsx` | one workbook for all the tables, extra `[excel]`; see [EXCEL.md](EXCEL.md) |
 | `delta` | `<dir>/<table>/` | extra `[delta]`; `mode` (`overwrite`, `append`), `partition_by` |
 
 `write_result` writes tables in parallel (`max_workers`: up to 4 threads, fewer when `SHAPE_THREADS` is lower). `write_engine` overlaps generation of chunk *n* + 1 with the
