@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 
@@ -80,6 +81,9 @@ def simulate(
         return person
 
     ctx = SimContext(cal, start, end, seed, directory, spawn_newborn=spawn)
+    k = float(cal.get("util.frailty_shape"))
+    # E[frailty ** 0.5] for a gamma(k, 1/k) frailty, so the mean utilisation does not depend on k
+    ctx.frailty_norm = math.gamma(k + 0.5) / (math.gamma(k) * math.sqrt(k))
     mods = [CohortModule()] + [c() for c in CHRONIC_MODULES] + [c() for c in EVENT_MODULES]
     ctx.modules = {m.name: m for m in mods}
     # the cohort assigns conditions first; modules then see them in start()

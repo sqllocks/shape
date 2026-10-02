@@ -62,6 +62,7 @@ class SimContext:
     _seq: Any = field(default_factory=itertools.count)
     _queue: list[tuple[int, int, str, str, dict[str, Any]]] = field(default_factory=list)
     current: Person | None = None
+    frailty_norm: float = 1.0
 
     # ---- scheduling -------------------------------------------------------------------------
     def schedule(self, person: Person, day: date, module: str, kind: str, **payload: Any) -> None:
@@ -118,7 +119,7 @@ class SimContext:
             a, b = max(cur, lo), min(nxt - timedelta(days=1), hi)
             if b >= a:
                 frac = ((b - a).days + 1) / 365.25
-                lam = annual_rate * weights[cur.month] / norm * frac * person.member.frailty ** 0.5
+                lam = annual_rate * weights[cur.month] / norm * frac * person.member.frailty ** 0.5 / self.frailty_norm
                 for _ in range(int(person.rng.poisson(lam))):
                     out.append(self.rand_day(person, a, b))
             cur = nxt
@@ -194,6 +195,7 @@ class SimContext:
         for t in person.therapies:
             if t.drug_key == drug_key and t.stop is None and not t.acute and not acute:
                 return t  # already on it
+        dx = resolve(dx, day)
         daw = "0" if person.rng.random() < 0.97 else "1"
         t = Therapy(drug_key, day, stop, indication, dx, specialty, days_supply, refills, daw,
                     acute, encounter.eid if encounter else None, quantity)

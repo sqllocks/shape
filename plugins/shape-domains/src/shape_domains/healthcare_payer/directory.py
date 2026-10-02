@@ -22,7 +22,7 @@ RATIOS: dict[str, int] = {
     "psychiatry": 8000, "psychology": 3000, "oncology": 10000, "radiation_oncology": 25000,
     "emergency_medicine": 6000, "ophthalmology": 8000, "optometry": 6000, "podiatry": 10000,
     "general_surgery": 6000, "orthopedics": 8000, "urology": 12000, "radiology": 5000,
-    "hospitalist": 5000, "hospital": 25000, "laboratory": 20000, "urgent_care": 15000,
+    "hospitalist": 5000, "rheumatology": 20000, "dermatology": 15000, "gastroenterology": 12000, "hospital": 25000, "laboratory": 20000, "urgent_care": 15000,
     "dialysis_center": 30000, "ambulance": 30000, "dme_supplier": 20000, "retail_pharmacy": 3000,
 }
 MIN_COUNT = {"individual": 3, "organization": 2}

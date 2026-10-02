@@ -59,16 +59,37 @@ class ChronicBase:
     def onboard(self, ctx: SimContext, person: Person, day: date, incident: bool, key: str) -> None:
         raise NotImplementedError
 
+    _suppress = False
+
     def handle(self, ctx: SimContext, person: Person, day: date, kind: str, payload: dict[str, Any]) -> None:
-        getattr(self, f"on_{kind}")(ctx, person, day, **payload)
+        args = dict(payload)
+        self._suppress = bool(args.pop("nochain", False))
+        try:
+            getattr(self, f"on_{kind}")(ctx, person, day, **args)
+        finally:
+            self._suppress = False
 
     def _next_review(self, ctx: SimContext, person: Person, after: date, per_year: float, key: str) -> None:
+        if self._suppress:
+            return  # a one-off review in a coverage span: the review chain already runs
         nxt = ctx.exp_next(person, 365.0 / max(per_year, 0.2), after)
         ctx.schedule(person, nxt, self.name, "review", key=key)
 
-    def _first_review(self, ctx: SimContext, person: Person, key: str) -> None:
+    def _first_review(self, ctx: SimContext, person: Person, key: str, chain: bool = True) -> None:
+        """A review soon after the window opens and after each (re-)enrolment, inside the coverage
+        span: a member who enrols with a known chronic condition establishes care, so the condition
+        is coded on a claim.  Only the first starts the renewing review chain (when ``chain``)."""
         lo = max(ctx.start, person.conds[key].onset)
-        ctx.schedule(person, ctx.rand_day(person, lo, lo + timedelta(days=150)), self.name, "review", key=key)
+        first = chain
+        for s in person.member.spans:
+            begin = max(s.start, lo)
+            stop = min(s.end or ctx.end, ctx.end)
+            if begin > stop:
+                continue
+            hi = min(begin + timedelta(days=120), stop)
+            ctx.schedule(person, ctx.rand_day(person, begin, hi, weekday_bias=False), self.name, "review",
+                         key=key, **({} if first else {"nochain": True}))
+            first = False
 
     def _problems(self, person: Person, day: date, skip: tuple[str, ...] = ()) -> list[str]:
         return [c for c in problem_codes(person, day) if c not in skip]
@@ -106,8 +127,11 @@ class DiabetesModule(ChronicBase):
                 self._eye_exam(ctx, person, first + timedelta(days=int(rng.integers(20, 90))))
         else:
             self._prevalent_drugs(ctx, person, t1, ind, spec)
-        self._first_review(ctx, person, "dm") if not incident else self._next_review(
-            ctx, person, day, cal.get("dm.visits_per_year"), "dm")
+        if incident:
+            self._next_review(ctx, person, day, cal.get("dm.visits_per_year"), "dm")
+            self._first_review(ctx, person, "dm", chain=False)
+        else:
+            self._first_review(ctx, person, "dm")
         for lo, hi in ctx.year_ends():
             if hi < max(ctx.start, c.onset):
                 continue
@@ -264,6 +288,7 @@ class HypertensionModule(ChronicBase):
             self._regimen(ctx, person, day, incident, spec)
         if incident:
             self._next_review(ctx, person, day, ctx.cal.get("htn.visits_per_year"), "htn")
+            self._first_review(ctx, person, "htn", chain=False)
         else:
             self._first_review(ctx, person, "htn")
 
@@ -319,6 +344,7 @@ class LipidModule(ChronicBase):
             _start_drug(ctx, person, day, incident, "fenofibrate", "lipid", code, spec)
         if incident:
             ctx.schedule(person, day + timedelta(days=int(rng.integers(60, 120))), self.name, "review", key="lipid")
+            self._first_review(ctx, person, "lipid", chain=False)
         else:
             self._first_review(ctx, person, "lipid")
 
@@ -348,7 +374,11 @@ class CkdModule(ChronicBase):
             _start_drug(ctx, person, day, incident, "empagliflozin", "ckd", ckd_codes(person)[0], "nephrology")
         if person.has("dm") and not person.has("htn") and rng.random() < 0.5:
             _start_drug(ctx, person, day, incident, "lisinopril", "dm_ckd", ckd_codes(person)[0], pcp_specialty(ctx, person))
-        self._first_review(ctx, person, "ckd") if not incident else self._next_review(ctx, person, day, 1.0, "ckd")
+        if incident:
+            self._next_review(ctx, person, day, 1.0, "ckd")
+            self._first_review(ctx, person, "ckd", chain=False)
+        else:
+            self._first_review(ctx, person, "ckd")
         h = ctx.cal.get("ckd.progress_hazard")[str(min(c.stage, 5))] if c.stage < 6 else 0.0
         if h:
             t = rng.exponential(1.0 / h)
@@ -456,10 +486,14 @@ class RespChronicModule(ChronicBase):
             rate = ctx.cal.get("copd.exac_rate")
         # a rescue inhaler about once a year
         if rng.random() < 0.9:
-            ctx.schedule(person, ctx.rand_day(person, ctx.start, ctx.start + timedelta(days=240)), self.name, "rescue", key=key)
+            ctx.schedule(person, ctx.rand_day(person, max(ctx.start, day), max(ctx.start, day) + timedelta(days=240)), self.name, "rescue", key=key)
         for d in ctx.seasonal_dates(person, rate, ctx.cal.get("resp.season_weight"), max(ctx.start, day), ctx.end):
             ctx.schedule(person, d, self.name, "exac", key=key)
-        self._first_review(ctx, person, key) if not incident else self._next_review(ctx, person, day, 1.5, key)
+        if incident:
+            self._next_review(ctx, person, day, 1.5, key)
+            self._first_review(ctx, person, key, chain=False)
+        else:
+            self._first_review(ctx, person, key)
 
     def on_review(self, ctx: SimContext, person: Person, day: date, key: str) -> None:
         if not person.has(key):
@@ -543,6 +577,9 @@ class BehavioralModule(ChronicBase):
         treated = incident or rng.random() < ctx.cal.get("bh.treated_share")
         if not treated:
             return
+        if incident:
+            visit(ctx, person, day, self.name, f"new {key}", [dx], new=True, level=4,
+                  specialty=pcp_specialty(ctx, person), extra=self._problems(person, day, (dx,)))
         spec = "psychiatry" if key in ("bipolar", "schizophrenia") or rng.random() < 0.3 else pcp_specialty(ctx, person)
         drug = _pick(person, self._DRUGS[key])
         if drug:
@@ -551,7 +588,11 @@ class BehavioralModule(ChronicBase):
         if key == "adhd" and rng.random() < 0.0:
             return
         n = ctx.cal.get("bh.visits_per_year")[key]
-        self._first_review(ctx, person, key) if not incident else self._next_review(ctx, person, day, n, key)
+        if incident:
+            self._next_review(ctx, person, day, n, key)
+            self._first_review(ctx, person, key, chain=False)
+        else:
+            self._first_review(ctx, person, key)
         rate = ctx.cal.get("bh.admit_per_year").get(key, 0.0)
         for d in ctx.poisson_days(person, rate, max(ctx.start, day), ctx.end):
             ctx.schedule(person, d, self.name, "admit", key=key)
@@ -620,7 +661,11 @@ class CardiacModule(ChronicBase):
                 _start_drug(ctx, person, day, incident, "metoprolol_succ", "afib", code, "cardiology")
             rate = 0.05
             principal = code
-        self._first_review(ctx, person, key) if not incident else self._next_review(ctx, person, day, 2.5, key)
+        if incident:
+            self._next_review(ctx, person, day, 2.5, key)
+            self._first_review(ctx, person, key, chain=False)
+        else:
+            self._first_review(ctx, person, key)
         for d in ctx.poisson_days(person, rate, max(ctx.start, day), ctx.end):
             ctx.schedule(person, d, self.name, "admit", key=key, principal=principal)
 
@@ -645,34 +690,43 @@ class CardiacModule(ChronicBase):
 # ---------------------------------------------------------------------------------------------
 class SimpleChronicModule(ChronicBase):
     name = "simple"
-    keys = ("hypothyroid", "gerd", "osteoporosis", "bph")
+    keys = ("hypothyroid", "gerd", "osteoporosis", "bph", "autoimmune")
     _SPEC: dict[str, dict[str, Any]] = {
         "hypothyroid": {"dx": "E03.9", "drugs": [("levothyroxine", 0.9)], "labs": ("LAB_TSH",), "per_year": 1.2, "spec": None},
         "gerd": {"dx": "K21.9", "drugs": [("omeprazole", 0.5), ("pantoprazole", 0.3)], "labs": (), "per_year": 0.8, "spec": None},
         "osteoporosis": {"dx": "M81.0", "drugs": [("alendronate", 0.5)], "labs": (), "per_year": 1.0, "spec": None},
         "bph": {"dx": "N40.1", "drugs": [("tamsulosin", 0.6)], "labs": (), "per_year": 1.0, "spec": "urology"},
+        "autoimmune": {"dx": None, "drugs": [("adalimumab", 0.28), ("etanercept", 0.10), ("ustekinumab", 0.08), ("methotrexate", 0.30)],
+                       "labs": ("LAB_CBC", "LAB_CMP"), "per_year": 3.0, "spec": "rheumatology"},
     }
 
     def onboard(self, ctx: SimContext, person: Person, day: date, incident: bool, key: str) -> None:
         spec = self._SPEC[key]
-        dx = spec["dx"]
+        dx = spec["dx"] or person.conds[key].code
         pcp = pcp_specialty(ctx, person)
         if incident:
             visit(ctx, person, day, self.name, f"new {key}", [dx], level=3, labs=spec["labs"],
                   extra=self._problems(person, day))
         drug = _pick(person, spec["drugs"])
         if drug:
-            _start_drug(ctx, person, day, incident, drug, key, dx, pcp)
-        self._first_review(ctx, person, key) if not incident else self._next_review(ctx, person, day, spec["per_year"], key)
+            _start_drug(ctx, person, day, incident, drug, key, dx, person.conds[key].data.get("specialty", pcp) if key == "autoimmune" else pcp)
+        if incident:
+            self._next_review(ctx, person, day, spec["per_year"], key)
+            self._first_review(ctx, person, key, chain=False)
+        else:
+            self._first_review(ctx, person, key)
 
     def on_review(self, ctx: SimContext, person: Person, day: date, key: str) -> None:
         if not person.has(key):
             return
         spec = self._SPEC[key]
-        specialty = spec["spec"] if spec["spec"] and person.rng.random() < 0.3 else pcp_specialty(ctx, person)
-        labs = tuple(k for k in spec["labs"] if due(person, k, day, 330, 0.8))
-        visit(ctx, person, day, self.name, f"{key} review", [spec["dx"]], specialty=specialty,
-              level=level_for(person), labs=labs, extra=self._problems(person, day, (spec["dx"],)))
+        dx = spec["dx"] or person.conds[key].code
+        specialty = spec["spec"] if spec["spec"] and person.rng.random() < (0.9 if key == "autoimmune" else 0.3) else pcp_specialty(ctx, person)
+        if key == "autoimmune":
+            specialty = person.conds[key].data["specialty"] if person.rng.random() < 0.85 else pcp_specialty(ctx, person)
+        labs = tuple(k for k in spec["labs"] if due(person, k, day, 120 if key == "autoimmune" else 330, 0.8))
+        visit(ctx, person, day, self.name, f"{key} review", [dx], specialty=specialty,
+              level=level_for(person), labs=labs, extra=self._problems(person, day, (dx,)))
         self._next_review(ctx, person, day, spec["per_year"], key)
 
 

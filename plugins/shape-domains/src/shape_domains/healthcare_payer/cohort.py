@@ -23,7 +23,7 @@ from .model import Cond, Person
 ORDER = (
     "obesity", "dm", "htn", "lipid", "ckd", "cad", "hf", "afib", "asthma", "copd", "depression",
     "anxiety", "adhd", "sud_opioid", "sud_alcohol", "bipolar", "schizophrenia", "hypothyroid",
-    "gerd", "osteoporosis", "bph",
+    "gerd", "osteoporosis", "bph", "autoimmune",
 )
 # condition -> [(parent condition, odds-ratio key table, key)]
 PARENTS: dict[str, tuple[tuple[str, str, str], ...]] = {
@@ -43,10 +43,11 @@ _ANXIETY_GIVEN_DEPRESSION_OR = 4.0
 FLOOR = {"htn": 0.004, "dm": 0.003, "lipid": 0.006, "ckd": 0.002, "asthma": 0.0015,
          "depression": 0.006, "anxiety": 0.006, "adhd": 0.002, "copd": 0.002, "hf": 0.002,
          "cad": 0.003, "afib": 0.002, "obesity": 0.0, "hypothyroid": 0.004, "gerd": 0.006,
-         "sud_opioid": 0.0005, "sud_alcohol": 0.0008, "bipolar": 0.0003, "schizophrenia": 0.0002,
+         "autoimmune": 0.0008, "sud_opioid": 0.0005, "sud_alcohol": 0.0008, "bipolar": 0.0003, "schizophrenia": 0.0002,
          "osteoporosis": 0.003, "bph": 0.004}
 _CENTERS = (9, 26, 40, 50, 60, 70, 80)
-_SCALAR = {"bipolar": "cond.bipolar", "schizophrenia": "cond.schizophrenia", "gerd": "cond.gerd"}
+_SCALAR = {"bipolar": "cond.bipolar", "schizophrenia": "cond.schizophrenia", "gerd": "cond.gerd",
+           "autoimmune": "cond.autoimmune"}
 
 
 def _sigmoid(x: float) -> float:
@@ -109,6 +110,8 @@ class Prevalence:
         """Yearly hazard from the slope of the prevalence curve, never below a floor."""
         p0 = self.p(key, age, sex)
         p1 = self.p(key, age + 5, sex)
+        if p0 <= 0 and p1 <= 0:
+            return 0.0  # outside the ages the condition occurs at
         h = max((p1 - p0) / 5.0 / max(1e-6, 1 - p0), FLOOR.get(key, 0.001))
         if age < 18 and key in ("htn", "dm", "lipid", "ckd", "cad", "hf", "afib", "copd"):
             return 0.0 if key != "dm" else 0.0003
@@ -227,6 +230,9 @@ class CohortModule:
             cond.code = "F90.9" if rng.random() < 0.6 else "F90.2"
         elif key == "hf":
             data["systolic"] = bool(rng.random() < 0.5)
+        elif key == "autoimmune":
+            r = rng.random()
+            cond.code, data["specialty"] = (("M06.9", "rheumatology") if r < 0.40 else ("L40.0", "dermatology") if r < 0.65 else ("K50.90", "gastroenterology") if r < 0.85 else ("K51.90", "gastroenterology"))
         person.conds[key] = cond
 
 
@@ -236,7 +242,7 @@ CONDITION_MODULE: dict[str, str] = {
     "copd": "resp_chronic", "depression": "behavioral", "anxiety": "behavioral",
     "adhd": "behavioral", "sud_opioid": "behavioral", "sud_alcohol": "behavioral",
     "bipolar": "behavioral", "schizophrenia": "behavioral", "hypothyroid": "simple",
-    "gerd": "simple", "osteoporosis": "simple", "bph": "simple", "cad": "cardiac", "hf": "cardiac",
+    "gerd": "simple", "osteoporosis": "simple", "bph": "simple", "autoimmune": "simple", "cad": "cardiac", "hf": "cardiac",
     "afib": "cardiac", "obesity": "",
 }
 assert set(BANDS)  # the band names are shared with the calibration table

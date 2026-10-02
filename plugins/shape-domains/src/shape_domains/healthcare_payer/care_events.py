@@ -34,6 +34,10 @@ def _birth_rate(ctx: SimContext, person: Person, day: date) -> float:
 
 
 # ---------------------------------------------------------------------------------------------
+_PRETERM_CODE = {28: "P07.31", 29: "P07.32", 30: "P07.33", 31: "P07.34", 32: "P07.35", 33: "P07.36",
+                 34: "P07.37", 35: "P07.38", 36: "P07.39"}
+
+
 class PregnancyModule:
     name = "pregnancy"
 
@@ -49,7 +53,7 @@ class PregnancyModule:
         for _ in range(4):
             c = cur + timedelta(days=int(min(rng.exponential(mean_gap), 36500.0)))
             preterm = rng.random() < ctx.cal.get("preg.preterm_rate")
-            weeks = int(rng.integers(34, 37)) if preterm else int(rng.choice([37, 38, 39, 40, 41], p=[0.07, 0.17, 0.3, 0.3, 0.16]))
+            weeks = (int(rng.integers(28, 34)) if rng.random() < 0.26 else int(rng.integers(34, 37))) if preterm else int(rng.choice([37, 38, 39, 40, 41], p=[0.07, 0.17, 0.3, 0.3, 0.16]))
             delivery = c + timedelta(days=weeks * 7 + int(rng.integers(0, 7)))
             cur = delivery + timedelta(days=60)
             if c > ctx.end:
@@ -150,7 +154,7 @@ class PregnancyModule:
         if ctx.spawn_newborn is not None:
             baby = ctx.spawn_newborn(person, day, "cesarean" if info["cesarean"] else "vaginal")
             if baby is not None:
-                preterm = [] if weeks >= 37 else [{34: "P07.37", 35: "P07.38"}.get(weeks, "P07.39")]
+                preterm = [] if weeks >= 37 else [_PRETERM_CODE[weeks]]
                 admit_stay(
                     ctx, baby, day, self.name, "newborn", principal=["Z38.01" if info["cesarean"] else "Z38.00"],
                     secondary=preterm, los=None if preterm else max(1, (stay.discharge - stay.admit).days) if stay.discharge and stay.admit else 2,
@@ -189,18 +193,24 @@ class CancerModule:
                 rate *= 3.0
             if rate <= 0:
                 continue
+            if person.rng.random() < rate * 0.9:
+                # diagnosed in the 330 days before the window opens: still in treatment or follow-up
+                ctx.schedule(person, ctx.start, self.name, "begin", site=site,
+                             prior=int(person.rng.integers(20, 330)))
+                return
             t = person.rng.exponential(1.0 / rate)
             if t < years:
-                ctx.schedule(person, ctx.start + timedelta(days=int(t * 365.25) + 1), self.name, "begin", site=site)
+                ctx.schedule(person, ctx.start + timedelta(days=int(t * 365.25) + 1), self.name, "begin", site=site, prior=0)
                 return  # one primary cancer in the window
 
     def handle(self, ctx: SimContext, person: Person, day: date, kind: str, payload: dict[str, Any]) -> None:
         getattr(self, f"on_{kind}")(ctx, person, day, **payload)
 
     # ---- pathway ---------------------------------------------------------------------------------
-    def on_begin(self, ctx: SimContext, person: Person, day: date, site: str) -> None:
+    def on_begin(self, ctx: SimContext, person: Person, day: date, site: str, prior: int = 0) -> None:
         if person.age(day) < 18:
             return
+        day = day - timedelta(days=prior)  # the pathway runs from the diagnosis; dates before the window are not emitted
         rng = person.rng
         cal = ctx.cal
         left = rng.random() < 0.5

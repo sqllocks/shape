@@ -49,8 +49,12 @@ def severity_tier(secondary: list[str]) -> int:
 
 def assign_drg(dx: list[tuple[str, str]]) -> str:
     codes = [c for c, _ in dx]
-    if codes[0].startswith("Z38") and any(c.startswith("P07") for c in codes[1:]):
-        return DRG_FAMILIES["premature"][0]
+    if codes[0].startswith("Z38"):
+        very = any(c in ("P07.31", "P07.32", "P07.33", "P07.34", "P07.35", "P07.36") for c in codes[1:])
+        if very:
+            return DRG_FAMILIES["very_premature"][0]
+        if any(c.startswith("P07") for c in codes[1:]):
+            return DRG_FAMILIES["premature"][0]
     fam = family_of(codes[0])
     return DRG_FAMILIES[fam][severity_tier(codes[1:])]
 
@@ -96,6 +100,8 @@ def visit(
     key = "EM_TELE_EST" if kind == "telehealth" else (
         "EM_URGENT_3" if kind == "urgent" else em_key(level, new)
     )
+    if kind == "telehealth":
+        extra_services = tuple(k for k in extra_services if {"02", "10"} & set(SERVICES[k].pos))
     services = [Svc(key)] + [Svc(k) for k in extra_services]
     enc = ctx.encounter(person, day, kind, spec, dx, services, module, reason)
     if enc is None:

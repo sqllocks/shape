@@ -270,7 +270,10 @@ class ClaimsBuilder:
             tier = d.billing.price_tier
             if d.facility_type == "inpatient":
                 fac_mult = mult["commercial_facility"] if lob == "commercial" else mult["ma"] if lob == "ma" else mult["medicaid"]
-                total = DRG[d.drg or "795"].weight * base_rate * reg * fac_mult * tier * float(rng.lognormal(0, 0.05))
+                drg = DRG[d.drg or "795"]
+                total = drg.weight * base_rate * reg * fac_mult * tier * float(rng.lognormal(0, float(self.cal.get("price.drg_case_sigma"))))
+                over = max(0, d.inpatient_days - 2.0 * drg.gmlos)
+                total += over * float(self.cal.get("price.outlier_per_diem")) * reg * fac_mult
                 weights = {"INPT_ROOM_BOARD": 0.45, "INPT_ANCILLARY": 0.40, "INPT_OPERATING_ROOM": 0.15}
                 keys = [l.svc.key for l in d.lines]
                 wsum = sum(weights[k] for k in keys)

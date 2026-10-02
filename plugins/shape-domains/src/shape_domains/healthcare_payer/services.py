@@ -36,7 +36,8 @@ _PC = ("family_medicine", "internal_medicine", "pediatrics")
 _OFFICE = ("11", "19", "22", "49", "50", "02", "10")
 _ANY_MD = _PC + (
     "cardiology", "endocrinology", "nephrology", "pulmonology", "obgyn", "oncology", "urology",
-    "psychiatry", "general_surgery", "orthopedics", "hospitalist",
+    "psychiatry", "general_surgery", "orthopedics", "hospitalist", "rheumatology", "dermatology",
+    "gastroenterology",
 )
 
 

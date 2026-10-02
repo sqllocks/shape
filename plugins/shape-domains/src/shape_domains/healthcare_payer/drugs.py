@@ -122,6 +122,11 @@ _ITEMS: tuple[Drug, ...] = (
     _d("bicalutamide", "bicalutamide", "50 mg", "TABLET", "Antiandrogen", "cancer_prostate", 30, 25.0, sex="M", age_min=18),
     _d("abiraterone", "abiraterone acetate", "250 mg", "TABLET", "CYP17 inhibitor", "cancer_prostate", 120, 480.0, tier=4, sex="M", age_min=18, pa=True),
     _d("ondansetron", "ondansetron hydrochloride", "4 mg", "TABLET", "Antiemetic", "nausea_chemo nausea_pregnancy gastroenteritis", 20, 9.0, mail=False),
+    # autoimmune and specialty
+    _d("adalimumab", "adalimumab", "40 mg/0.4 mL", "KIT", "TNF blocker", "autoimmune", 2, 6900.0, tier=4, route="SUBCUTANEOUS", brand="Humira", age_min=16, pa=True, mail=False),
+    _d("etanercept", "etanercept", "50 mg/mL", "INJECTION, SOLUTION", "TNF blocker", "autoimmune", 4, 6400.0, tier=4, route="SUBCUTANEOUS", brand="Enbrel", age_min=16, pa=True, mail=False),
+    _d("ustekinumab", "ustekinumab", "45 mg/0.5 mL", "INJECTION, SOLUTION", "Interleukin-12/23 antagonist", "autoimmune", 1, 5300.0, tier=4, route="SUBCUTANEOUS", brand="Stelara", age_min=18, pa=True, mail=False),
+    _d("methotrexate", "methotrexate", "2.5 mg", "TABLET", "Antimetabolite", "autoimmune", 16, 22.0, age_min=16),
     # other chronic
     _d("levothyroxine", "levothyroxine sodium", "50 mcg", "TABLET", "Thyroid hormone", "hypothyroid", 30, 10.0),
     _d("omeprazole", "omeprazole", "20 mg", "CAPSULE, DELAYED RELEASE", "Proton pump inhibitor", "gerd", 30, 8.0),

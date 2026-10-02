@@ -17,6 +17,9 @@ dependencies = ["sqllocks-shape==0.9.0"]
 [project.entry-points."shape.domains"]
 retail = "shape_domains.retail:RetailDomain"
 
+[project.entry-points."shape.commands"]
+healthcare-payer = "shape_domains.healthcare_payer.cli:HealthcarePayerCommand"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
