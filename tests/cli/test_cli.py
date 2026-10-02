@@ -4,7 +4,7 @@ from shape.cli.main import main
 
 
 def test_cli_doctor(capsys):
-    assert main(["doctor"]) == 0
+    assert main(["doctor", "--json"]) == 0
     o = json.loads(capsys.readouterr().out)
     assert "python" in o and "pyarrow" in o
 

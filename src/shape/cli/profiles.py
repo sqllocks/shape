@@ -463,4 +463,8 @@ def main(argv: Sequence[str]) -> int:
     try:
         return handler(a)
     except _INPUT_ERRORS as e:
-        return _err(str(e))
+        from shape.cli import errors
+
+        if errors.debug_enabled():
+            raise
+        return errors.fail(e)
