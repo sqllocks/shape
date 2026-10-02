@@ -111,8 +111,10 @@ def test_new_categorical_values_is_low():
 
 
 def test_min_severity_threshold_filters():
+    # one new value in 101 rows: a low-severity change; a third of the rows would also be a
+    # (medium) category_shift
     a = shape.profile(pa.table({"s": ["placed", "shipped"] * 50}))
-    b = shape.profile(pa.table({"s": ["placed", "shipped", "lost"] * 50}))
+    b = shape.profile(pa.table({"s": ["placed", "shipped"] * 50 + ["lost"]}))
     assert shape.diff(a, b).drifted
     assert not shape.diff(a, b, thresholds={"min_severity": "medium"}).drifted
 
