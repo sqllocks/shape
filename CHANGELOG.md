@@ -5,6 +5,10 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Delta time travel (issue #36): `shape.profile(path, version=N)` / `as_of=...` and
+  `shape profile DIR --version N | --as-of TIMESTAMP` profile an earlier state of a Delta table;
+  `as_of` before the first commit is an error, not version 0. The Delta version and commit time
+  are recorded as `Profile.provenance` in the `.shape` manifest (not in the profile body).
 - Stream API durations (`TumblingProfiler`, `SlidingProfiler`, `SessionProfiler`; issue #34):
   a duration is a `timedelta` or a string with a unit (`"60s"`, `"5m"`). **Breaking:** a bare
   `int` or `float` other than `0` now raises `ValueError` instead of being read as microseconds

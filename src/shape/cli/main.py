@@ -160,7 +160,9 @@ def _cmd_profile(a):
 
     if not a.output:
         raise ValueError("profile needs -o OUT.shape")
-    prof = shape.profile(_profile_source(a), name=_profile_name(a))
+    prof = shape.profile(
+        _profile_source(a), name=_profile_name(a), version=a.delta_version, as_of=a.as_of
+    )
     content_id = shape.save(prof, a.output)
     key_id = _sign_output(a, a.output)
     if a.html:
@@ -169,6 +171,8 @@ def _cmd_profile(a):
     if a.json:
         _write_json(a.json, prof.summary())
     out = {"written": a.output, "shape_content_id": content_id}
+    if prof.provenance is not None:
+        out["provenance"] = prof.provenance
     if key_id:
         out["signed_by"] = key_id
     _dump(out)
@@ -204,7 +208,10 @@ def _cmd_inspect(a):
         import shape
 
         prof = shape.load(a.shape)
-        _dump({"kind": "profile", "name": prof.name, "profile": prof.to_dict()})
+        doc = {"kind": "profile", "name": prof.name, "profile": prof.to_dict()}
+        if prof.provenance is not None:
+            doc["provenance"] = prof.provenance
+        _dump(doc)
     elif str(a.shape).endswith(".shape"):
         from shape.artifact import read_model
 
@@ -521,6 +528,19 @@ def _build_parser(plugin_commands=()):
         metavar="NAME",
         help="the profile's name (default: the input's file name, or, when -o overwrites a "
         "profile, that profile's name, so re-profiling a versioned file keeps a stable name)",
+    )
+    pr.add_argument(
+        "--version",
+        dest="delta_version",
+        type=int,
+        metavar="N",
+        help="a Delta table: profile version N instead of the latest",
+    )
+    pr.add_argument(
+        "--as-of",
+        metavar="TIMESTAMP",
+        help="a Delta table: profile the newest version committed at or before this ISO-8601 "
+        "time (no zone means UTC), instead of the latest",
     )
     pr.add_argument("--html", metavar="REPORT.html")
     pr.add_argument("--json", metavar="SUMMARY.json")

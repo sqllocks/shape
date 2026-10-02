@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import glob as _glob
+from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from typing import Any
 from urllib.parse import urlparse
@@ -33,14 +34,101 @@ def _kind(path: Path) -> str:
     )
 
 
-def _read_delta(path: Path) -> pa.Table:
+def delta_dir(source: Any) -> Path | None:
+    """The directory of a local Delta table, when ``source`` names one."""
+    if not isinstance(source, (str, Path)) or _is_url(str(source)):
+        return None
+    path = Path(source)
+    return path if (path / "_delta_log").is_dir() else None
+
+
+def _as_of_utc(as_of: Any) -> datetime:
+    if isinstance(as_of, datetime):
+        when = as_of
+    elif isinstance(as_of, str):
+        try:
+            when = datetime.fromisoformat(as_of.strip())
+        except ValueError:
+            raise ValueError(
+                f"as_of: {as_of!r} is not an ISO-8601 time (example: 2026-06-02T00:00:00Z)"
+            ) from None
+    else:
+        raise ValueError(
+            f"as_of must be a datetime or an ISO-8601 string, not {type(as_of).__name__}"
+        )
+    return (when.replace(tzinfo=UTC) if when.tzinfo is None else when).astimezone(UTC)
+
+
+def check_delta_options(version: Any, as_of: Any) -> datetime | None:
+    """Validate ``version`` and ``as_of`` (given by the caller; both ``None`` is the latest
+    state) and return ``as_of`` as an aware UTC time."""
+    if version is not None and as_of is not None:
+        raise ValueError("give version or as_of, not both")
+    if version is not None and (
+        not isinstance(version, int) or isinstance(version, bool) or version < 0
+    ):
+        raise ValueError(f"version must be a non-negative integer, not {version!r}")
+    return None if as_of is None else _as_of_utc(as_of)
+
+
+def read_delta(
+    path: Path, *, version: int | None = None, as_of: Any = None
+) -> tuple[pa.Table, dict[str, Any]]:
+    """A Delta table's rows at ``version``, or as of a time (the newest version committed at or
+    before it), or at its latest version; and the provenance of what was read: the Delta
+    ``version``, that version's commit ``timestamp`` (UTC, ISO-8601, or ``None`` when the log
+    does not carry it) and the ``as_of`` asked for (UTC), if any."""
+    when = check_delta_options(version, as_of)
     try:
         from deltalake import DeltaTable
     except ImportError as exc:  # pragma: no cover - exercised only without deltalake
         raise ImportError(
             "reading a Delta table requires the 'deltalake' package: pip install deltalake"
         ) from exc
-    return DeltaTable(str(path)).to_pyarrow_table()
+    table = DeltaTable(str(path))
+    latest = table.version()
+    committed = {
+        int(h["version"]): int(h["timestamp"])
+        for h in table.history()
+        if h.get("version") is not None and h.get("timestamp") is not None
+    }
+    if version is not None:
+        if version > latest:
+            raise SourceError(
+                f"{path.name}: Delta version {version} does not exist (the latest is {latest})"
+            )
+        try:
+            table = DeltaTable(str(path), version=version)
+        except Exception as exc:  # the log no longer holds it (cleaned up) or is unreadable
+            raise SourceError(f"{path.name}: cannot read Delta version {version}: {exc}") from exc
+    elif when is not None:
+        try:
+            table.load_as_version(when)
+        except Exception as exc:
+            raise SourceError(
+                f"{path.name}: cannot read the table as of {when.isoformat()}: {exc}"
+            ) from exc
+        stamp = committed.get(table.version())
+        if stamp is not None and datetime.fromtimestamp(stamp / 1000, UTC) > when:
+            raise SourceError(
+                f"no version of {path.name} at or before {when.isoformat()} (the version "
+                f"{table.version()} was committed at "
+                f"{datetime.fromtimestamp(stamp / 1000, UTC).isoformat()})"
+            )
+    stamp = committed.get(table.version())
+    provenance = {
+        "format": "delta",
+        "version": table.version(),
+        "timestamp": None
+        if stamp is None
+        else datetime.fromtimestamp(stamp / 1000, UTC).isoformat(),
+        "as_of": None if when is None else when.isoformat(),
+    }
+    return table.to_pyarrow_table(), provenance
+
+
+def _read_delta(path: Path) -> pa.Table:
+    return read_delta(path)[0]
 
 
 def _read_files(paths: list[Path], threads: int | None) -> tuple[str, pa.Table]:
