@@ -3,8 +3,7 @@
 The checks, and their messages, are the reference checks: entities exist in the domain, the kind
 and its section agree, the gates are known. Beyond them: keys no field takes, a landing path that
 would leave the output directory, an invalid chaos section, a topic that matches no table, and
-simulation features that this runner does not perform are reported (the allow-list in
-``benchmarks/vs_spindle/pack_1to1/`` names each one).
+simulation features that this runner does not perform are reported.
 """
 
 from __future__ import annotations
