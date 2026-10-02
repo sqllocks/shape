@@ -666,7 +666,8 @@ def _build_parser(plugin_commands=()):
         aliases=["compare"],
         help="score synthetic data against reference data, per column and per table",
         description=(
-            "Compare SYNTHETIC with REFERENCE (a file, or a directory of one file per table) and "
+            "Compare SYNTHETIC with REFERENCE (a CSV, Parquet or JSONL file, or a directory of one "
+            "file per table; a profile is not a reference, use `shape diff`) and "
             "score every column 0-100, then every table and the whole. Exit 0 when every pass "
             "mark is met, 1 when not, 2 for bad input. Given a captured profile (REFERENCE.json) "
             "and a CSV file it certifies the CSV against the profile instead (--tolerance; exit "
@@ -714,9 +715,15 @@ def _build_parser(plugin_commands=()):
     ck.add_argument("contract", metavar="CONTRACT.json")
     ck.add_argument("--json", metavar="RESULT.json")
     ck.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
-    co = sub.add_parser("compatibility")
-    co.add_argument("before")
-    co.add_argument("after")
+    co = sub.add_parser(
+        "compatibility",
+        help="compare two Shape models (not profiles; use `shape diff` for those)",
+        description="Check whether AFTER is compatible with BEFORE. Both are Shape model "
+        "artifacts (`shape capture ... -o X.shape`) or model JSON; profiles written by "
+        "`shape profile` are compared with `shape diff`.",
+    )
+    co.add_argument("before", metavar="BEFORE", help="a model .shape or model JSON")
+    co.add_argument("after", metavar="AFTER", help="a model .shape or model JSON")
     co.add_argument("--mode", choices=("backward", "forward", "full"), default="backward")
     gp = sub.add_parser(
         "plan",

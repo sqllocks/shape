@@ -261,6 +261,7 @@ type = "forbidden"
 # Every top-level module except shape.builtins (a test fails when one is missing here: naming
 # the root "shape" would make import-linter skip its own subpackages).
 source_modules = [
+    "shape.__main__",
     "shape._callable",
     "shape.api",
     "shape.artifact",
