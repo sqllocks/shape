@@ -1,0 +1,189 @@
+"""Drug reference and the interim NDC directory.
+
+``DRUGS`` lists the drugs the clinical modules prescribe: generic name, strength, form, route,
+therapeutic class, DEA schedule, formulary tier, brand or generic, a 30-day quantity, an
+illustrative 30-day ingredient cost, and the *conditions that indicate it* (the coherence rule:
+a fill needs one of them on the member's problem list or on the linked encounter).
+
+The NDC directory here is an interim stand-in behind :class:`NdcDirectory`: its labeler codes sit
+in a synthetic range and its marketing dates are ours, so ``interim=True`` on every record.  The
+codes lane's FDA NDC asset replaces it, and acceptance 5 for drugs is only claimed against that
+asset (see the lane status file)."""
+
+from __future__ import annotations
+
+import zlib
+from dataclasses import dataclass
+from datetime import date
+from typing import Protocol
+
+FAR = date(9999, 12, 31)
+
+
+@dataclass(frozen=True, slots=True)
+class Drug:
+    key: str
+    name: str
+    strength: str
+    form: str
+    route: str
+    cls: str
+    schedule: str | None
+    tier: int
+    brand: bool
+    qty30: float  # units dispensed for a 30-day supply
+    cost30: float  # illustrative ingredient cost for 30 days, USD
+    indications: tuple[str, ...]
+    brand_name: str | None = None
+    sex: str | None = None
+    age_min: int = 0
+    age_max: int = 124
+    launch: date = date(2015, 1, 1)
+    mail: bool = True  # maintenance drug that may be mailed in 90-day fills
+    pa: bool = False  # prior authorisation or step therapy usually required
+
+
+def _d(key: str, name: str, strength: str, form: str, cls: str, ind: str, qty30: float,
+       cost30: float, *, tier: int = 1, route: str = "ORAL", sched: str | None = None,
+       brand: str | None = None, **kw: object) -> Drug:
+    return Drug(key, name, strength, form, route, cls, sched, tier, brand is not None, qty30,
+                cost30, tuple(ind.split()), brand_name=brand, **kw)  # type: ignore[arg-type]
+
+
+_ITEMS: tuple[Drug, ...] = (
+    # diabetes
+    _d("metformin", "metformin hydrochloride", "500 mg", "TABLET", "Biguanide antidiabetic", "dm2", 60, 6.0, age_min=10),
+    _d("metformin_er", "metformin hydrochloride", "500 mg", "TABLET, EXTENDED RELEASE", "Biguanide antidiabetic", "dm2", 60, 11.0, age_min=10),
+    _d("glipizide", "glipizide", "5 mg", "TABLET", "Sulfonylurea antidiabetic", "dm2", 60, 5.0, age_min=18),
+    _d("glimepiride", "glimepiride", "2 mg", "TABLET", "Sulfonylurea antidiabetic", "dm2", 30, 6.0, age_min=18),
+    _d("sitagliptin", "sitagliptin", "100 mg", "TABLET", "DPP-4 inhibitor", "dm2", 30, 540.0, tier=3, brand="Januvia", age_min=18),
+    _d("empagliflozin", "empagliflozin", "10 mg", "TABLET", "SGLT2 inhibitor", "dm2 hf ckd", 30, 590.0, tier=3, brand="Jardiance", age_min=18),
+    _d("dapagliflozin", "dapagliflozin", "10 mg", "TABLET", "SGLT2 inhibitor", "dm2 hf ckd", 30, 570.0, tier=3, brand="Farxiga", age_min=18),
+    _d("semaglutide", "semaglutide", "0.5 mg/dose", "INJECTION, SOLUTION", "GLP-1 receptor agonist", "dm2", 1, 940.0, tier=3, route="SUBCUTANEOUS", brand="Ozempic", age_min=18, launch=date(2018, 1, 15), pa=True),
+    _d("dulaglutide", "dulaglutide", "1.5 mg/0.5 mL", "INJECTION, SOLUTION", "GLP-1 receptor agonist", "dm2", 4, 880.0, tier=3, route="SUBCUTANEOUS", brand="Trulicity", age_min=18, pa=True),
+    _d("tirzepatide", "tirzepatide", "5 mg/0.5 mL", "INJECTION, SOLUTION", "GIP/GLP-1 receptor agonist", "dm2", 4, 1020.0, tier=3, route="SUBCUTANEOUS", brand="Mounjaro", age_min=18, launch=date(2022, 6, 1), pa=True),
+    _d("insulin_glargine", "insulin glargine", "100 units/mL", "INJECTION, SOLUTION", "Long-acting insulin", "dm1 dm2 gdm", 1, 360.0, tier=2, route="SUBCUTANEOUS", brand="Lantus"),
+    _d("insulin_lispro", "insulin lispro", "100 units/mL", "INJECTION, SOLUTION", "Rapid-acting insulin", "dm1 dm2", 1, 310.0, tier=2, route="SUBCUTANEOUS", brand="Humalog"),
+    _d("insulin_aspart", "insulin aspart", "100 units/mL", "INJECTION, SOLUTION", "Rapid-acting insulin", "dm1 dm2", 1, 300.0, tier=2, route="SUBCUTANEOUS", brand="Novolog"),
+    # blood pressure and heart
+    _d("lisinopril", "lisinopril", "10 mg", "TABLET", "ACE inhibitor", "htn hf dm_ckd ckd", 30, 4.0, age_min=18),
+    _d("losartan", "losartan potassium", "50 mg", "TABLET", "Angiotensin receptor blocker", "htn hf dm_ckd ckd", 30, 6.0, age_min=18),
+    _d("amlodipine", "amlodipine besylate", "5 mg", "TABLET", "Calcium channel blocker", "htn cad", 30, 4.0, age_min=18),
+    _d("hydrochlorothiazide", "hydrochlorothiazide", "25 mg", "TABLET", "Thiazide diuretic", "htn", 30, 4.0, age_min=18),
+    _d("chlorthalidone", "chlorthalidone", "25 mg", "TABLET", "Thiazide-like diuretic", "htn", 30, 9.0, age_min=18),
+    _d("metoprolol_succ", "metoprolol succinate", "50 mg", "TABLET, EXTENDED RELEASE", "Beta blocker", "htn hf cad afib", 30, 11.0, age_min=18),
+    _d("carvedilol", "carvedilol", "12.5 mg", "TABLET", "Beta blocker", "htn hf cad", 60, 9.0, age_min=18),
+    _d("spironolactone", "spironolactone", "25 mg", "TABLET", "Aldosterone antagonist", "htn hf", 30, 10.0, age_min=18),
+    _d("furosemide", "furosemide", "40 mg", "TABLET", "Loop diuretic", "hf ckd htn", 30, 5.0, age_min=18),
+    _d("labetalol", "labetalol hydrochloride", "200 mg", "TABLET", "Beta blocker", "pregnancy_htn htn", 60, 14.0, age_min=12),
+    _d("apixaban", "apixaban", "5 mg", "TABLET", "Anticoagulant", "afib", 60, 520.0, tier=3, brand="Eliquis", age_min=18),
+    _d("clopidogrel", "clopidogrel bisulfate", "75 mg", "TABLET", "Antiplatelet", "cad", 30, 8.0, age_min=18),
+    # lipids
+    _d("atorvastatin", "atorvastatin calcium", "20 mg", "TABLET", "HMG-CoA reductase inhibitor (statin)", "lipid cad dm2_statin", 30, 7.0, age_min=18),
+    _d("rosuvastatin", "rosuvastatin calcium", "10 mg", "TABLET", "HMG-CoA reductase inhibitor (statin)", "lipid cad dm2_statin", 30, 9.0, age_min=18),
+    _d("simvastatin", "simvastatin", "20 mg", "TABLET", "HMG-CoA reductase inhibitor (statin)", "lipid cad dm2_statin", 30, 6.0, age_min=18),
+    _d("pravastatin", "pravastatin sodium", "40 mg", "TABLET", "HMG-CoA reductase inhibitor (statin)", "lipid cad dm2_statin", 30, 8.0, age_min=18),
+    _d("ezetimibe", "ezetimibe", "10 mg", "TABLET", "Cholesterol absorption inhibitor", "lipid", 30, 12.0, age_min=18),
+    _d("fenofibrate", "fenofibrate", "145 mg", "TABLET", "Fibrate", "lipid", 30, 22.0, age_min=18),
+    # respiratory
+    _d("albuterol_hfa", "albuterol sulfate", "90 mcg/actuation", "AEROSOL, METERED", "Short-acting beta agonist", "asthma copd", 1, 28.0, route="RESPIRATORY (INHALATION)", mail=False),
+    _d("fluticasone_salmeterol", "fluticasone propionate/salmeterol", "250 mcg/50 mcg", "POWDER, METERED", "Inhaled corticosteroid/LABA", "asthma copd", 1, 95.0, tier=2, route="RESPIRATORY (INHALATION)", brand="Advair Diskus"),
+    _d("budesonide_formoterol", "budesonide/formoterol fumarate", "160 mcg/4.5 mcg", "AEROSOL, METERED", "Inhaled corticosteroid/LABA", "asthma copd", 1, 330.0, tier=3, route="RESPIRATORY (INHALATION)", brand="Symbicort"),
+    _d("tiotropium", "tiotropium bromide", "18 mcg", "CAPSULE", "Long-acting muscarinic antagonist", "copd", 30, 480.0, tier=3, route="RESPIRATORY (INHALATION)", brand="Spiriva HandiHaler", age_min=30),
+    _d("montelukast", "montelukast sodium", "10 mg", "TABLET", "Leukotriene receptor antagonist", "asthma", 30, 8.0),
+    _d("prednisone", "prednisone", "20 mg", "TABLET", "Systemic corticosteroid", "asthma_exac copd_exac", 10, 6.0, mail=False),
+    _d("azithromycin", "azithromycin", "250 mg", "TABLET", "Macrolide antibiotic", "uri_bacterial copd_exac pneumonia", 6, 9.0, mail=False),
+    _d("amoxicillin", "amoxicillin", "500 mg", "CAPSULE", "Penicillin antibiotic", "uri_bacterial strep", 21, 6.0, mail=False),
+    _d("amox_clav", "amoxicillin/clavulanate potassium", "875 mg/125 mg", "TABLET", "Penicillin antibiotic", "uri_bacterial pneumonia", 20, 14.0, mail=False),
+    _d("doxycycline", "doxycycline hyclate", "100 mg", "CAPSULE", "Tetracycline antibiotic", "uri_bacterial pneumonia", 20, 12.0, mail=False, age_min=8),
+    _d("cephalexin", "cephalexin", "500 mg", "CAPSULE", "Cephalosporin antibiotic", "skin_infection strep", 28, 10.0, mail=False),
+    _d("nitrofurantoin", "nitrofurantoin monohydrate/macrocrystals", "100 mg", "CAPSULE", "Urinary anti-infective", "uti", 10, 18.0, mail=False, sex="F"),
+    _d("oseltamivir", "oseltamivir phosphate", "75 mg", "CAPSULE", "Neuraminidase inhibitor", "flu", 10, 45.0, mail=False),
+    _d("benzonatate", "benzonatate", "100 mg", "CAPSULE", "Antitussive", "uri_viral cough", 21, 12.0, mail=False),
+    # behavioral
+    _d("sertraline", "sertraline hydrochloride", "50 mg", "TABLET", "SSRI antidepressant", "depression anxiety", 30, 6.0, age_min=6),
+    _d("escitalopram", "escitalopram oxalate", "10 mg", "TABLET", "SSRI antidepressant", "depression anxiety", 30, 7.0, age_min=12),
+    _d("fluoxetine", "fluoxetine hydrochloride", "20 mg", "CAPSULE", "SSRI antidepressant", "depression anxiety", 30, 7.0, age_min=8),
+    _d("bupropion_xl", "bupropion hydrochloride", "150 mg", "TABLET, EXTENDED RELEASE", "Antidepressant", "depression", 30, 15.0, age_min=18),
+    _d("trazodone", "trazodone hydrochloride", "50 mg", "TABLET", "Antidepressant", "depression insomnia", 30, 6.0, age_min=18),
+    _d("alprazolam", "alprazolam", "0.5 mg", "TABLET", "Benzodiazepine", "anxiety", 60, 8.0, sched="IV", age_min=18, mail=False),
+    _d("lorazepam", "lorazepam", "1 mg", "TABLET", "Benzodiazepine", "anxiety", 30, 9.0, sched="IV", age_min=18, mail=False),
+    _d("methylphenidate_er", "methylphenidate hydrochloride", "18 mg", "TABLET, EXTENDED RELEASE", "CNS stimulant", "adhd", 30, 120.0, sched="II", age_min=6, age_max=80, mail=False),
+    _d("lisdexamfetamine", "lisdexamfetamine dimesylate", "30 mg", "CAPSULE", "CNS stimulant", "adhd", 30, 380.0, sched="II", tier=3, brand="Vyvanse", age_min=6, age_max=80, mail=False),
+    _d("buprenorphine_naloxone", "buprenorphine/naloxone", "8 mg/2 mg", "FILM", "Opioid partial agonist/antagonist", "sud_opioid", 60, 160.0, sched="III", route="SUBLINGUAL", age_min=16, mail=False),
+    _d("quetiapine", "quetiapine fumarate", "100 mg", "TABLET", "Atypical antipsychotic", "bipolar schizophrenia", 30, 9.0, age_min=13),
+    _d("aripiprazole", "aripiprazole", "5 mg", "TABLET", "Atypical antipsychotic", "bipolar schizophrenia", 30, 12.0, age_min=13),
+    _d("lamotrigine", "lamotrigine", "100 mg", "TABLET", "Anticonvulsant/mood stabilizer", "bipolar epilepsy", 60, 10.0, age_min=13),
+    # oncology and supportive
+    _d("anastrozole", "anastrozole", "1 mg", "TABLET", "Aromatase inhibitor", "cancer_breast", 30, 14.0, sex="F", age_min=18),
+    _d("letrozole", "letrozole", "2.5 mg", "TABLET", "Aromatase inhibitor", "cancer_breast", 30, 18.0, sex="F", age_min=18),
+    _d("tamoxifen", "tamoxifen citrate", "20 mg", "TABLET", "Selective estrogen receptor modulator", "cancer_breast", 30, 12.0, age_min=18),
+    _d("capecitabine", "capecitabine", "500 mg", "TABLET", "Antimetabolite", "cancer_colon cancer_breast", 112, 900.0, tier=4, age_min=18, pa=True),
+    _d("bicalutamide", "bicalutamide", "50 mg", "TABLET", "Antiandrogen", "cancer_prostate", 30, 25.0, sex="M", age_min=18),
+    _d("abiraterone", "abiraterone acetate", "250 mg", "TABLET", "CYP17 inhibitor", "cancer_prostate", 120, 480.0, tier=4, sex="M", age_min=18, pa=True),
+    _d("ondansetron", "ondansetron hydrochloride", "4 mg", "TABLET", "Antiemetic", "nausea_chemo nausea_pregnancy gastroenteritis", 20, 9.0, mail=False),
+    # other chronic
+    _d("levothyroxine", "levothyroxine sodium", "50 mcg", "TABLET", "Thyroid hormone", "hypothyroid", 30, 10.0),
+    _d("omeprazole", "omeprazole", "20 mg", "CAPSULE, DELAYED RELEASE", "Proton pump inhibitor", "gerd", 30, 8.0),
+    _d("pantoprazole", "pantoprazole sodium", "40 mg", "TABLET, DELAYED RELEASE", "Proton pump inhibitor", "gerd", 30, 9.0),
+    _d("alendronate", "alendronate sodium", "70 mg", "TABLET", "Bisphosphonate", "osteoporosis", 4, 9.0, sex="F", age_min=45),
+    _d("tamsulosin", "tamsulosin hydrochloride", "0.4 mg", "CAPSULE", "Alpha-1 blocker", "bph", 30, 10.0, sex="M", age_min=40),
+    _d("norgestimate_ee", "norgestimate/ethinyl estradiol", "0.25 mg/0.035 mg", "KIT", "Oral contraceptive", "contraception", 28, 14.0, sex="F", age_min=13, age_max=50),
+    _d("prenatal_vitamin", "prenatal multivitamin with folic acid", "27 mg/1 mg", "TABLET", "Prenatal vitamin", "pregnancy", 30, 12.0, sex="F", age_min=12, age_max=55),
+    _d("gabapentin", "gabapentin", "300 mg", "CAPSULE", "Anticonvulsant", "neuropathy epilepsy", 90, 11.0, age_min=18),
+    _d("naproxen", "naproxen", "500 mg", "TABLET", "NSAID", "pain_acute osteoarthritis", 40, 9.0, age_min=12, mail=False),
+    _d("cyclobenzaprine", "cyclobenzaprine hydrochloride", "10 mg", "TABLET", "Skeletal muscle relaxant", "pain_acute", 30, 9.0, age_min=15, mail=False),
+    _d("tramadol", "tramadol hydrochloride", "50 mg", "TABLET", "Opioid analgesic", "pain_acute", 20, 8.0, sched="IV", age_min=18, mail=False),
+    _d("hydrocodone_apap", "hydrocodone bitartrate/acetaminophen", "5 mg/325 mg", "TABLET", "Opioid analgesic", "pain_acute fracture", 20, 8.0, sched="II", age_min=18, mail=False),
+)
+
+DRUGS: dict[str, Drug] = {d.key: d for d in _ITEMS}
+
+
+@dataclass(frozen=True, slots=True)
+class NdcRecord:
+    ndc: str  # 11 digits, 5-4-2
+    drug_key: str
+    package_units: float
+    marketing_start: date
+    marketing_end: date
+    interim: bool = True
+
+
+def format_ndc(ndc: str) -> str:
+    return f"{ndc[:5]}-{ndc[5:9]}-{ndc[9:]}"
+
+
+class NdcDirectory(Protocol):
+    def packages(self, drug_key: str, day: date) -> list[NdcRecord]: ...
+
+    def is_marketed(self, ndc: str, day: date) -> bool: ...
+
+
+class InterimNdcDirectory:
+    """Two packages per drug (a 30-day and a 90-day pack where it makes sense) in a synthetic
+    labeler range.  Not the FDA directory: records say ``interim=True``."""
+
+    def __init__(self) -> None:
+        self._by_drug: dict[str, list[NdcRecord]] = {}
+        self._by_ndc: dict[str, NdcRecord] = {}
+        for i, d in enumerate(DRUGS.values()):
+            h = zlib.crc32(d.key.encode())
+            labeler = 99000 + h % 900
+            product = 1000 + (h >> 10) % 8999
+            sizes = [d.qty30] + ([d.qty30 * 3] if d.mail else [])
+            for pkg, size in enumerate(sizes, start=1):
+                ndc = f"{labeler:05d}{product:04d}{pkg:02d}"
+                rec = NdcRecord(ndc, d.key, size, d.launch, FAR)
+                self._by_drug.setdefault(d.key, []).append(rec)
+                self._by_ndc[ndc] = rec
+
+    def packages(self, drug_key: str, day: date) -> list[NdcRecord]:
+        return [r for r in self._by_drug[drug_key] if r.marketing_start <= day <= r.marketing_end]
+
+    def is_marketed(self, ndc: str, day: date) -> bool:
+        rec = self._by_ndc.get(ndc)
+        return rec is not None and rec.marketing_start <= day <= rec.marketing_end
+
+    def record(self, ndc: str) -> NdcRecord | None:
+        return self._by_ndc.get(ndc)
