@@ -59,6 +59,8 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.strategies` | `scd2` | effective date, end date, current flag or version of a type 2 slowly changing dimension |
 | `shape.transforms` | `mask` | replaces personal data with synthetic values of the same format: `shape mask` (see [MASK.md](../MASK.md)) |
 | `shape.commands` | `ctgan` | `shape ctgan`: fit a CTGAN model on a table and sample rows (needs the `[ctgan]` extra) |
+| `shape.transforms` | `star` | `shape transform star`: tables to dimension and fact tables with surrogate keys and a date dimension |
+| `shape.transforms` | `cdm` | `shape transform cdm`: tables renamed to their Common Data Model entities |
 | `shape.distributions` | `normal` | `loc + scale * N(0,1)` |
 | `shape.distributions` | `uniform` | uniform on `[loc, loc + scale)` |
 | `shape.distributions` | `exponential` | `loc + scale * Exp(1)` |

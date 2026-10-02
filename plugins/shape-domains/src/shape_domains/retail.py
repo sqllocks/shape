@@ -39,6 +39,13 @@ def _reference_data() -> dict[str, pa.Table]:
     return out
 
 
+@cache
+def _transforms() -> dict[str, Any]:
+    text = resources.files(_PACKAGE).joinpath("data/retail/transforms.json").read_text("utf-8")
+    document: dict[str, Any] = json.loads(text)
+    return document
+
+
 class RetailDomain:
     """``shape.domains`` entry ``retail``."""
 
@@ -54,3 +61,13 @@ class RetailDomain:
             reference_data=_reference_data(),
             scale_presets={k: dict(v) for k, v in schema["generation"]["scales"].items()},
         )
+
+    def star_map(self) -> dict[str, Any]:
+        """How ``shape transform star`` reshapes this domain's tables into dimensions and facts."""
+        star: dict[str, Any] = _transforms()["star"]
+        return star
+
+    def cdm_entities(self) -> dict[str, str]:
+        """Table name to CDM entity name, for ``shape transform cdm``."""
+        entities: dict[str, str] = _transforms()["cdm_entities"]
+        return entities

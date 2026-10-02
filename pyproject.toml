@@ -200,6 +200,8 @@ ctgan = "shape.builtins.ctgan:CtganCommand"
 
 [project.entry-points."shape.transforms"]
 mask = "shape.builtins.transforms:Mask"
+star = "shape.builtins.dimensional:StarTransform"
+cdm = "shape.builtins.dimensional:CdmTransform"
 
 [project.entry-points."shape.distributions"]
 normal = "shape.builtins.distributions:Normal"
@@ -263,6 +265,7 @@ source_modules = [
     "shape.connectors",
     "shape.contracts",
     "shape.diff",
+    "shape.dimensional",
     "shape.drift",
     "shape.errors",
     "shape.fidelity",

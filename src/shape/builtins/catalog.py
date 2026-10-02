@@ -70,6 +70,8 @@ BUILTINS: tuple[tuple[str, str, str], ...] = (
     ("shape.strategies", "lifecycle", "shape.builtins.strategies.lifecycle:Lifecycle"),
     ("shape.commands", "ctgan", "shape.builtins.ctgan:CtganCommand"),
     ("shape.transforms", "mask", "shape.builtins.transforms:Mask"),
+    ("shape.transforms", "star", "shape.builtins.dimensional:StarTransform"),
+    ("shape.transforms", "cdm", "shape.builtins.dimensional:CdmTransform"),
     ("shape.distributions", "normal", "shape.builtins.distributions:Normal"),
     ("shape.distributions", "uniform", "shape.builtins.distributions:Uniform"),
     ("shape.distributions", "exponential", "shape.builtins.distributions:Exponential"),
