@@ -77,4 +77,3 @@ wrote /root/bench-out/rowcounts/shape.json
 negative control: the comparator finds a raised count, a dropped table, scale and schema
 37 schemas, 291 planned scales, 75 generated scales, 4944 table counts compared
 row counts equal the baseline's in every cell
-exit 0
