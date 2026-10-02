@@ -254,7 +254,7 @@ class FileStreamSource:
         schema: pa.Schema | None = opts.pop("schema", None)
         fmt = opts.pop("format", None)
         order = opts.pop("order", "file")
-        decode = {
+        decode: dict[str, Any] = {
             k: opts.pop(k)
             for k in ("event_time_field", "event_time_unit", "with_offsets", "on_error")
             if k in opts
