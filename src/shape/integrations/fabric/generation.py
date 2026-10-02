@@ -356,12 +356,13 @@ def _installed(domain: str) -> str:
     raise GenerationRequestError(f"no domain named {domain!r} (installed: {known})")
 
 
-def fit_rows(frame: Any, limit: int = MAX_RESPONSE_BYTES) -> Any:
+def fit_rows(frame: Any, limit: int | None = None) -> Any:
     """The leading rows of the DataFrame ``frame`` whose JSON form fits in ``limit`` bytes.
 
     The size of a row is estimated from the first rows (a probe of ``_PROBE_ROWS``), so
     the result is under the limit for data of an even width and cut with a margin otherwise
-    (the estimate is raised by 10%)."""
+    (the estimate is raised by 10%). ``limit`` defaults to :data:`MAX_RESPONSE_BYTES`."""
+    limit = MAX_RESPONSE_BYTES if limit is None else limit
     if len(frame) == 0:
         return frame
     probe = frame.head(_PROBE_ROWS)
