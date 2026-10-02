@@ -121,12 +121,33 @@ def _cmd_verify_signature(a):
     return 0
 
 
+def _profile_source(a):
+    """What ``shape profile`` reads. A folder is one table (its files are partitions) unless
+    ``--dataset`` asks for one table per file, named by the file's stem. A folder whose files
+    do not share their columns is refused: read as one table it would be a meaningless merge."""
+    if not os.path.isdir(a.src):
+        if a.dataset:
+            raise ValueError(f"--dataset needs a folder of table files, and {a.src} is not one")
+        return a.src
+    from shape.profile.reference.sources import folder_is_one_table, folder_tables
+
+    if a.dataset:
+        return {name: str(path) for name, path in folder_tables(a.src).items()}
+    if not folder_is_one_table(a.src):
+        raise ValueError(
+            f"the files in {a.src} do not share their columns, so the folder is not one table: "
+            "add --dataset to profile it as several tables (one per file, named by the file "
+            "name without its extension)"
+        )
+    return a.src
+
+
 def _cmd_profile(a):
     import shape
 
     if not a.output:
         raise ValueError("profile needs -o OUT.shape")
-    prof = shape.profile(a.src)
+    prof = shape.profile(_profile_source(a))
     content_id = shape.save(prof, a.output)
     key_id = _sign_output(a, a.output)
     if a.html:
@@ -468,6 +489,12 @@ def _build_parser(plugin_commands=()):
     pr.add_argument("src", metavar="SRC")
     pr.add_argument("-o", "--output", metavar="OUT")
     pr.add_argument("--sign", metavar="KEY", help="sign the written .shape with this private key")
+    pr.add_argument(
+        "--dataset",
+        action="store_true",
+        help="SRC is a folder of table files: profile one table per file, named by the file name "
+        "without its extension (without it a folder is one table)",
+    )
     pr.add_argument("--html", metavar="REPORT.html")
     pr.add_argument("--json", metavar="SUMMARY.json")
     sp = sub.add_parser(

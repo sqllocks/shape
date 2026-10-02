@@ -88,10 +88,10 @@ failOnDrift = False       # True: drift against the baseline also fails the gate
 
 HELPERS = """import json
 import os
-from datetime import UTC, datetime
 from pathlib import Path
 
 import shape
+from shape.integrations.run_folder import claim_run_folder
 from shape.kernel.dispatch import get_kernel
 
 KERNEL = get_kernel().NAME  # "rust" with a platform wheel, "python" with the pure-Python wheel
@@ -114,9 +114,7 @@ def _resolve(path: str) -> str:
 
 failOnDrift = _as_bool(failOnDrift)
 safe_name = str(tableName).replace(".", "_")
-stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-out_rel = f"{outputDir.strip('/')}/{safe_name}/{stamp}"
-out_dir = Path(FILES) / out_rel
+out_parent = f"{outputDir.strip('/')}/{safe_name}"  # one new folder per run is created below it
 MAX_LISTED = 100  # keep the exit value small (well under 1 MB)
 """
 
@@ -143,7 +141,8 @@ if baselinePath:
 passed = not violations
 """
 
-WRITE_ARTIFACTS = """out_dir.mkdir(parents=True, exist_ok=True)
+WRITE_ARTIFACTS = """out_dir = claim_run_folder(Path(FILES) / out_parent)  # a folder no other run owns
+out_rel = f"{out_parent}/{out_dir.name}"
 shape_file = out_dir / f"{safe_name}.shape"
 shape.save(profile, str(shape_file))
 (out_dir / f"{safe_name}.html").write_text(profile.to_html(), encoding="utf-8")
@@ -392,7 +391,8 @@ passed = not violations
 DISTRIBUTED_ARTIFACTS = """SUMMARY_KEYS = (
     "arrow_type", "kind", "count", "null_count", "distinct", "min", "max", "mean",
 )
-out_dir.mkdir(parents=True, exist_ok=True)
+out_dir = claim_run_folder(Path(FILES) / out_parent)  # a folder no other run owns
+out_rel = f"{out_parent}/{out_dir.name}"
 if mode == "exact":
     shape.save(profile, str(out_dir / f"{safe_name}.shape"))
     (out_dir / f"{safe_name}.html").write_text(profile.to_html(), encoding="utf-8")
@@ -626,11 +626,11 @@ failOnDrift = False       # True: drift against the baseline also fails the gate
 
 PROFILE_DOMAIN_HELPERS = """import json
 import os
-from datetime import UTC, datetime
 from pathlib import Path
 
 import shape
 from shape.integrations.fabric import generation
+from shape.integrations.run_folder import claim_run_folder
 from shape.kernel.dispatch import get_kernel
 
 KERNEL = get_kernel().NAME
@@ -657,9 +657,7 @@ generation.check_name(str(domain), "domain")
 if tablePrefix:
     generation.check_name(str(tablePrefix), "tablePrefix")
 safe_name = str(domain)
-stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-out_rel = f"{outputDir.strip('/')}/{safe_name}/{stamp}"
-out_dir = Path(FILES) / out_rel
+out_parent = f"{outputDir.strip('/')}/{safe_name}"  # one new folder per run is created below it
 """
 
 PROFILE_DOMAIN_PROFILE = """from deltalake import DeltaTable

@@ -42,12 +42,12 @@ HELPERS = """import inspect
 import json
 import math
 import tempfile
-from datetime import UTC, datetime
 from pathlib import Path
 
 import pyarrow as pa
 
 import shape
+from shape.integrations.run_folder import unique_run_name
 from shape.kernel.dispatch import get_kernel
 
 try:  # Synapse Spark pools predefine `mssparkutils`; newer runtimes also offer the import
@@ -123,8 +123,7 @@ def _json_safe(value):
 
 label = str(tableName) or str(sourcePath).rstrip("/").rsplit("/", 1)[-1]
 safe_name = "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in label) or "table"
-stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-out_root = f"{str(outputPath).rstrip('/')}/{safe_name}/{stamp}"
+out_parent = f"{str(outputPath).rstrip('/')}/{safe_name}"  # one new folder per run below it
 MAX_LISTED = 100  # keep the exit value small (well under 1 MB)
 
 # Exact mode only: the Arrow copy of the table lives in driver memory.
@@ -188,7 +187,8 @@ if mode == "exact":
 passed = not violations
 """
 
-ARTIFACTS = """SUMMARY_KEYS = (
+ARTIFACTS = """out_root = f"{out_parent}/{unique_run_name(out_parent, mssparkutils.fs.exists)}"
+SUMMARY_KEYS = (
     "arrow_type",
     "kind",
     "count",
@@ -435,13 +435,13 @@ linkedServiceName = ""  # optional: Synapse linked service that grants access to
 
 GEN_PROFILE_HELPERS = """import json
 import tempfile
-from datetime import UTC, datetime
 from pathlib import Path
 
 import pyarrow as pa
 
 import shape
 from shape.integrations.fabric import generation
+from shape.integrations.run_folder import unique_run_name
 from shape.kernel.dispatch import get_kernel
 
 try:  # Synapse Spark pools predefine `mssparkutils`; newer runtimes also offer the import
@@ -497,8 +497,7 @@ def _publish_text(text: str, url: str) -> None:
 
 
 safe_name = str(domain)
-stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-out_root = f"{str(outputPath).rstrip('/')}/{safe_name}/{stamp}"
+out_parent = f"{str(outputPath).rstrip('/')}/{safe_name}"  # one new folder per run below it
 MAX_LISTED = 100  # keep the exit value small (well under 1 MB)
 DRIVER_ROW_LIMIT = 20_000_000  # the Arrow copy of every table lives in driver memory
 """
@@ -543,7 +542,8 @@ if baselinePath:
 passed = not violations
 """
 
-GEN_PROFILE_ARTIFACTS = """local_shape = LOCAL / f"{safe_name}.shape"
+GEN_PROFILE_ARTIFACTS = """out_root = f"{out_parent}/{unique_run_name(out_parent, mssparkutils.fs.exists)}"
+local_shape = LOCAL / f"{safe_name}.shape"
 shape.save(profile, str(local_shape))
 artifact_path = f"{out_root}/{safe_name}.shape"
 _publish_file(local_shape, artifact_path)

@@ -7,8 +7,8 @@ reuses that script's storage and settings code). It calls the Shape CLI:
     shape check    profile.shape contract.json --json check.json
     shape diff     baseline.shape profile.shape --json diff.json      (when a baseline is given)
 
-and profiles the generated tables in process (``shape profile`` reads a folder as one table; a
-multi-table contract needs the tables profiled together as a dataset).
+and profiles the generated tables in process, together as a dataset (``shape profile --dataset
+data/`` does the same from the command line; without ``--dataset`` a folder is one table).
 
 ``contract.json`` is the contract the domain's own schema implies for the tables just generated
 (``shape.integrations.fabric.generation.contract_for_domain``: exact row counts, columns, types,
@@ -120,9 +120,9 @@ def evaluate(settings: dict[str, Any], work: Path, shape_cmd: list[str]) -> dict
         raise GateError(str(exc)) from exc
     contract_file.write_text(json.dumps(contract), encoding="utf-8")
 
-    # `shape profile <folder>` reads a folder as ONE table, so the tables are profiled together in
-    # process (a dict of tables: keys and relationships between them are detected), and saved as a
-    # dataset profile, which is what a multi-table contract is checked against.
+    # The tables are profiled together in process (a dict of tables: keys and relationships between
+    # them are detected), and saved as a dataset profile, which is what a multi-table contract is
+    # checked against. The guard below stays although `shape check` now refuses a mismatch itself.
     profile_tables = generation.profile_tables(data_dir, domain)
     if not profile_tables.is_dataset or set(profile_tables.tables) != set(counts):
         raise GateError("the profile does not hold the generated tables")  # never a vacuous check

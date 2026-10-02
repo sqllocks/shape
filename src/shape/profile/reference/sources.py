@@ -148,6 +148,59 @@ def _load_path(text: str, name: str | None, threads: int | None) -> tuple[str, l
     return name or _default_name(path), _to_cols(kind, table), table.num_rows
 
 
+def folder_tables(folder: str | Path) -> dict[str, Path]:
+    """A folder of table files as ``{table name: file}``: one table per file, named by its stem.
+
+    ``shape.profile(folder)`` reads a folder as *one* table (its files are partitions of it, as
+    is a Delta table); this is the other reading, for a folder that holds several tables, and
+    the sources ``shape.profile`` takes as a dict. Only the files directly in the folder count.
+    """
+    root = Path(folder)
+    if not root.is_dir():
+        raise SourceError(f"{folder} is not a directory")
+    files = sorted(
+        p
+        for p in root.iterdir()
+        if p.is_file() and p.suffix.lower() in _SUFFIXES and not p.name.startswith((".", "_"))
+    )
+    if not files:
+        raise SourceError(f"directory {folder} holds no {'/'.join(_SUFFIXES)} files")
+    named: dict[str, Path] = {}
+    for p in files:
+        if p.stem in named:
+            raise SourceError(
+                f"{named[p.stem].name} and {p.name} would both be the table {p.stem!r}"
+            )
+        named[p.stem] = p
+    return named
+
+
+def folder_is_one_table(folder: str | Path) -> bool:
+    """False when the files of a folder (read as one table) do not share their columns.
+
+    Only the ``.csv`` and ``.parquet`` files' column names are compared (a header or a footer is
+    read, not the data); other files and a Delta table count as one table.
+    """
+    root = Path(folder)
+    if (root / "_delta_log").is_dir():
+        return True
+    seen: set[tuple[str, ...]] = set()
+    for p in sorted(root.rglob("*")):
+        if not p.is_file() or p.name.startswith((".", "_")):
+            continue
+        suffix = p.suffix.lower()
+        if suffix == ".parquet":
+            seen.add(tuple(pq.read_schema(p).names))
+        elif suffix == ".csv":
+            import pyarrow.csv as pacsv  # type: ignore[import-untyped]
+
+            with pacsv.open_csv(p) as reader:
+                seen.add(tuple(reader.schema.names))
+        if len(seen) > 1:
+            return False
+    return True
+
+
 def _to_cols(kind: str, table: pa.Table) -> list[_Col]:
     # CSV keeps pandas.read_csv dtype semantics; everything else Table.to_pandas() semantics.
     cols = _csv_cols(table) if kind == "csv" else _arrow_cols(table)

@@ -5,6 +5,14 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Fixes (PF-06b): `shape check` / `shape.check` no longer passes a multi-table contract
+  (`{"tables": {...}}`) against a single-table profile without testing it: that is now a
+  `ContractError` (exit 2), and a profile table the contract does not name is an `extra_table`
+  violation (exit 1). `shape profile FOLDER --dataset` profiles one table per file (named by the file
+  name); a folder whose files do not share their columns is refused without it. Artifact folders
+  of the Fabric and Synapse notebooks are named to the microsecond and claimed exclusively
+  (`20260930T120000123456Z`, then `_2`, `_3` ...), so two runs in one second no longer overwrite
+  a baseline.
 - Fidelity tiers 1 to 3 (`docs/FIDELITY_TIERS.md`): `shape fidelity REFERENCE SYNTHETIC --tier 1|2|3`
   (tier 1: Gaussian-mixture fits, conditional profiles, adversarial AUC, temporal profiles and
   periodicity; tier 2: format preservation, string similarity, cardinality and anomaly-rate checks;
