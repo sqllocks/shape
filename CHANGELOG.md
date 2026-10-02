@@ -5,6 +5,11 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Stream API durations (`TumblingProfiler`, `SlidingProfiler`, `SessionProfiler`; issue #34):
+  a duration is a `timedelta` or a string with a unit (`"60s"`, `"5m"`). **Breaking:** a bare
+  `int` or `float` other than `0` now raises `ValueError` instead of being read as microseconds
+  (`60_000` was 60 ms and gave 360 windows for 6 minutes of events instead of 6). Snapshots and
+  checkpoints are unchanged and still restore. Spec: `docs/specs/STREAMING_SEMANTICS.md` §2.
 - `shape stream` (`docs/EMIT.md`): one table's rows as events in event-time order, on the `shape emit`
   runtime (same options, sinks, formats and delivery guarantees; `--table` required, `-t -s -m`,
   `--rate` 10, `--max-events` is the earliest N events). The flat-event encoder is vectorised

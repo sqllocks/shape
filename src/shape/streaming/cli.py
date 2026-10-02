@@ -21,12 +21,11 @@ one); rows that cannot take it are counted as ``rejected``, never coerced.
 from __future__ import annotations
 
 import json
-import math
 import os
-import re
 import sys
 import tempfile
 from collections.abc import Generator, Iterator, Mapping
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
@@ -42,26 +41,17 @@ from .runtime import (
     TumblingProfiler,
     WindowedProfiler,
     WindowProfile,
+    parse_duration,
     restore_profiler,
 )
 
 GROUP = "shape.stream_sources"
 WINDOWS = ("global", "tumbling", "sliding", "session")
-_UNIT_US = {"us": 1, "ms": 1_000, "s": 1_000_000, "m": 60_000_000, "h": 3_600_000_000}
-_UNIT_US["d"] = 24 * _UNIT_US["h"]
-_DURATION = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*(us|ms|s|m|h|d)?\s*$")
+duration_us = parse_duration
 
 
-def duration_us(text: str, what: str) -> int:
-    """``"500ms"``, ``"30s"``, ``"5m"``, ``"1h"``, ``"2d"`` or a bare number of seconds, as
-    whole microseconds."""
-    m = _DURATION.match(text)
-    if m is None:
-        raise ValueError(f"{what}: {text!r} is not a duration (examples: 500ms, 30s, 5m, 1h)")
-    us = round(float(m.group(1)) * _UNIT_US[m.group(2) or "s"])
-    if not math.isfinite(us):
-        raise ValueError(f"{what}: {text!r} is not a duration")
-    return int(us)
+def _duration(text: str, what: str) -> timedelta:
+    return timedelta(microseconds=parse_duration(text, what))
 
 
 def parse_option(text: str) -> tuple[str, Any]:
@@ -167,7 +157,7 @@ class _WindowFile:
 def _profiler(args: Any, schema: pa.Schema) -> WindowedProfiler:
     name = args.name
     top_n = args.top_n
-    lateness = duration_us(args.allowed_lateness, "--allowed-lateness")
+    lateness = _duration(args.allowed_lateness, "--allowed-lateness")
     if args.window == "global":
         return GlobalProfiler(schema, name=name, top_n=top_n)
     if EVENT_TIME not in schema.names:
@@ -176,17 +166,17 @@ def _profiler(args: Any, schema: pa.Schema) -> WindowedProfiler:
     if args.window == "session":
         if not args.gap:
             raise ValueError("--window session needs --gap")
-        return SessionProfiler(schema, duration_us(args.gap, "--gap"), **common)
+        return SessionProfiler(schema, _duration(args.gap, "--gap"), **common)
     if not args.size:
         raise ValueError(f"--window {args.window} needs --size")
-    size = duration_us(args.size, "--size")
+    size = _duration(args.size, "--size")
     if args.window == "tumbling":
         if args.slide:
             raise ValueError("--slide goes with --window sliding")
         return TumblingProfiler(schema, size, **common)
     if not args.slide:
         raise ValueError("--window sliding needs --slide")
-    return SlidingProfiler(schema, size, duration_us(args.slide, "--slide"), **common)
+    return SlidingProfiler(schema, size, _duration(args.slide, "--slide"), **common)
 
 
 def _checkpoint_schema(store: FileCheckpointStore) -> pa.Schema | None:
