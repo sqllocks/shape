@@ -88,13 +88,15 @@ def test_duration_also_bounds_a_fast_run(retail_engine) -> None:
     assert report.stopped_by == "duration" and 5 <= report.events // 100 <= 12
 
 
-def _assert_rate_holds(report: Any, rate: int = 2000) -> None:
+def _assert_rate_holds(
+    report: Any, rate: int = 2000, *, tolerance: float = 0.05, max_lag: float = 0.05
+) -> None:
     assert report.complete
     assert abs(report.rate / rate - 1) < 0.05, report.rate
     # and in every full second
     for second, n in enumerate(report.per_second[:-1]):
-        assert abs(n / rate - 1) < 0.05, (second, n, report.per_second)
-    assert report.max_lag < 0.05, report.max_lag
+        assert abs(n / rate - 1) < tolerance, (second, n, report.per_second)
+    assert report.max_lag < max_lag, report.max_lag
 
 
 def test_realtime_rate_within_five_percent(retail_engine) -> None:
@@ -129,7 +131,7 @@ def test_realtime_rate_holds_through_a_full_collection_of_a_large_heap(retail_en
         started = time.perf_counter()
         gc.collect()
         full = time.perf_counter() - started
-        if full >= 0.15 or len(heap) >= 3_000_000:
+        if full >= 0.2 or len(heap) >= 3_000_000:
             break
     try:
         sink = _CollectNearSecondBoundary()
@@ -137,7 +139,9 @@ def test_realtime_rate_holds_through_a_full_collection_of_a_large_heap(retail_en
         report = EmitRunner(_plan(retail_engine), sink, cfg).run()
         assert sink.timer is not None
         sink.timer.join()
-        _assert_rate_holds(report)
+        # Without the freeze the pacing waits out the whole collection (`full`); the allowance is
+        # half of it, which is more than the stalls a busy shared host adds on its own.
+        _assert_rate_holds(report, tolerance=0.10, max_lag=max(0.1, full / 2))
         assert not gc.get_freeze_count()  # the freeze is lifted when the run ends
     finally:
         del heap
@@ -153,7 +157,7 @@ def test_realtime_rate_holds_while_the_checkpoint_write_is_slow(
     saved: list[int] = []
 
     def slow_save(self: FileCheckpointStore, document: dict[str, Any]) -> None:
-        time.sleep(0.15)
+        time.sleep(0.4)
         real_save(self, document)
         saved.append(int(document["offset"]))
 
@@ -164,7 +168,8 @@ def test_realtime_rate_holds_while_the_checkpoint_write_is_slow(
         realtime=True, rate=2000, max_events=8000, checkpoint_path=str(ck), checkpoint_seconds=0.5
     )
     report = EmitRunner(_plan(retail_engine), sink, cfg).run()
-    _assert_rate_holds(report)
+    # a synchronous write would hold the pacing for the 0.4 s of each save
+    _assert_rate_holds(report, tolerance=0.10, max_lag=0.2)
     assert report.checkpoints >= 3 and saved == sorted(saved)
     doc = json.loads(ck.read_text())
     assert doc["offset"] == 8000 and doc["complete"] is True

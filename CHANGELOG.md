@@ -5,6 +5,10 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `shape emit --realtime`: a full garbage collection (cost grows with the host process's heap) and
+  a slow checkpoint `fsync` no longer stall the pacing, which showed up as a late batch and a short
+  second. Realtime runs freeze the existing objects while pacing and write checkpoints on a writer
+  thread; the checkpoint still never passes an undelivered event.
 - Emitters (`shape.emitters`): `console`, `file` and `jsonl` in core; `kafka` (`sqllocks-shape-kafka`),
   `eventhubs` (`sqllocks-shape-eventhubs`), `eventstream` and `eventhouse` (`sqllocks-shape-fabric`).
   Every message carries the idempotency key `<table>/<seq>`; delivery is at-least-once with

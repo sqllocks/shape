@@ -39,6 +39,10 @@ whole once, so its rows equal `shape generate`'s; the others are read chunk by c
 * `--realtime --rate N`: N events per second (default 100). Each batch is sent at its absolute due
   time, so the long-run rate equals N whatever the sleep overshoot. A sink that is too slow makes
   the run fall behind its schedule; no event is dropped, and the report shows the worst lag.
+  Housekeeping stays off the pacing path: a realtime run freezes the objects the process already
+  holds (so a garbage collection cannot stall the pacing for the cost of a large host heap) and
+  writes its checkpoints on a writer thread (so a slow `fsync` cannot delay a batch). The writer
+  only persists offsets that were delivered and flushed; the final checkpoint is synchronous.
 * `--burst START:DURATION:MULT` (repeatable, needs `--realtime`): from START seconds for DURATION
   seconds the rate is MULT times `--rate`. Bursts may not overlap.
 * `--max-events N`: stop when N events have been delivered *in all* (a position in the stream, so a
