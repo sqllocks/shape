@@ -1,0 +1,38 @@
+{
+ "rows": {
+  "customer": 50000,
+  "product_category": 50,
+  "promotion": 200,
+  "store": 150,
+  "address": 75000,
+  "product": 5000,
+  "order": 500000,
+  "order_line": 1250000,
+  "return": 85000
+ },
+ "largest_part": 500000,
+ "parts": {
+  "customer": 1,
+  "product_category": 1,
+  "promotion": 1,
+  "store": 1,
+  "address": 1,
+  "product": 1,
+  "order": 1,
+  "order_line": 3,
+  "return": 1
+ },
+ "mode": "local_mp",
+ "command_seconds": 2.5,
+ "cli_rows": {
+  "address": 75000,
+  "customer": 50000,
+  "order": 500000,
+  "order_line": 1250000,
+  "product": 5000,
+  "product_category": 50,
+  "promotion": 200,
+  "return": 85000,
+  "store": 150
+ }
+}

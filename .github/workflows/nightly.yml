@@ -104,7 +104,9 @@ jobs:
       - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait azurite eventhubs
       - run: docker compose -f ci/emulators/docker-compose.yml up -d kusto
       - run: pip install -e '.[dev]' -e plugins/shape-eventhubs -e plugins/shape-fabric
-      - run: python -m pytest -m emulator plugins/shape-fabric/tests -q
+      # the Kusto emulator tests: the emitter and the Eventhouse writer (the SQL writer's
+      # emulator tests run in sqlserver-e2e)
+      - run: python -m pytest -m emulator plugins/shape-fabric/tests/test_emulator.py plugins/shape-fabric/tests/test_kusto_emulator.py -q
       - if: always()
         run: docker compose -f ci/emulators/docker-compose.yml down -v
   emit-live:
@@ -138,9 +140,77 @@ jobs:
       - if: env.HAVE_LIVE == 'true' && env.EVENTHUBS_CONNECTION_STRING != ''
         run: python -m pytest -m live plugins/shape-eventhubs/tests -q
       - if: env.HAVE_LIVE == 'true' && env.FABRIC_EVENTSTREAM_CONNECTION_STRING != ''
-        run: python -m pytest -m live plugins/shape-fabric/tests -q -k eventstream
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live.py -q -k eventstream
       - if: env.HAVE_LIVE == 'true' && env.FABRIC_EVENTHOUSE_URI != ''
-        run: python -m pytest -m live plugins/shape-fabric/tests -q -k eventhouse
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live.py -q -k eventhouse
+  fabric-live:
+    # P6-07a: the Fabric writers (Lakehouse files, SQL database, Warehouse COPY INTO, Eventhouse,
+    # Eventstream) against real items. Runs only where the owner's O-02 secrets exist: every step is
+    # gated on its own secrets (a job-level check, never a skipif), and a missing variable fails its
+    # test by name. The real interactions are recorded as scrubbed tapes (SHAPE_RECORD_DIR) and
+    # uploaded for review; nothing is committed from here.
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      HAVE_ANY: ${{ secrets.FABRIC_CLIENT_ID != '' || secrets.FABRIC_EVENTHOUSE_URI != '' || secrets.FABRIC_EVENTSTREAM_CONNECTION_STRING != '' }}
+      FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+      FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
+      FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+      FABRIC_STAGING_PATH: ${{ secrets.FABRIC_STAGING_PATH }}
+      FABRIC_SQL_CONNECTION_STRING: ${{ secrets.FABRIC_SQL_CONNECTION_STRING }}
+      FABRIC_WAREHOUSE_CONNECTION_STRING: ${{ secrets.FABRIC_WAREHOUSE_CONNECTION_STRING }}
+      FABRIC_EVENTHOUSE_URI: ${{ secrets.FABRIC_EVENTHOUSE_URI }}
+      FABRIC_EVENTHOUSE_TOKEN: ${{ secrets.FABRIC_EVENTHOUSE_TOKEN }}
+      FABRIC_EVENTSTREAM_CONNECTION_STRING: ${{ secrets.FABRIC_EVENTSTREAM_CONNECTION_STRING }}
+      FABRIC_WORKSPACE_ID: ${{ secrets.FABRIC_WORKSPACE_ID }}
+      FABRIC_LAKEHOUSE_ID: ${{ secrets.FABRIC_LAKEHOUSE_ID }}
+      SHAPE_RECORD_DIR: ${{ github.workspace }}/live-tapes
+    steps:
+      - if: env.HAVE_ANY != 'true'
+        run: echo "no Fabric secrets configured; nothing to run"
+      - if: env.HAVE_ANY == 'true'
+        uses: actions/checkout@v4
+      - if: env.HAVE_ANY == 'true'
+        uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Microsoft ODBC Driver 18
+        if: env.HAVE_ANY == 'true'
+        run: |
+          curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/ubuntu/$(lsb_release -rs)/prod $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
+      - if: env.HAVE_ANY == 'true'
+        run: pip install -e '.[dev,azure]' -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e 'plugins/shape-fabric[entra]'
+      - if: env.HAVE_ANY == 'true'
+        run: mkdir -p "$SHAPE_RECORD_DIR"
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_STAGING_PATH != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k lakehouse
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_SQL_CONNECTION_STRING != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k sql_database
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_WAREHOUSE_CONNECTION_STRING != '' && env.FABRIC_STAGING_PATH != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k warehouse
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_EVENTHOUSE_URI != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k eventhouse
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_EVENTSTREAM_CONNECTION_STRING != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k eventstream
+      # P6-13: the scale router's Fabric sinks and the fabric_spark mode, on the same secrets.
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_STAGING_PATH != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k lakehouse
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_SQL_CONNECTION_STRING != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k sql_database
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_WAREHOUSE_CONNECTION_STRING != '' && env.FABRIC_STAGING_PATH != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k warehouse
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_EVENTHOUSE_URI != '' && env.FABRIC_EVENTHOUSE_TOKEN != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k kql
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_WORKSPACE_ID != '' && env.FABRIC_LAKEHOUSE_ID != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k fabric_spark
+      - if: always() && env.HAVE_ANY == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-live-tapes
+          path: live-tapes
+          if-no-files-found: ignore
   sqlserver-e2e:
     # P6-08: shape-sqlserver against a real SQL Server 2022 (ci/emulators/docker-compose.yml),
     # then T-22 parity of the database profiler against the pinned baseline on the same data.
@@ -165,9 +235,11 @@ jobs:
           source scripts/env.sh
           python -m venv "$SHAPE_VENV"
           "$SHAPE_VENV/bin/pip" install -U pip
-          "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-sqlserver
+          "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric
       - name: Emulator tests
         run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -m emulator plugins/shape-sqlserver/tests -q
+      - name: Fabric SQL writer against the real server (P6-07a)
+        run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -m emulator plugins/shape-fabric/tests/test_sql_emulator.py -q
       - name: Pinned baseline venv (plan section 1.2) with pyodbc
         run: |
           source scripts/env.sh && bash benchmarks/vs_spindle/setup_spindle.sh
@@ -176,3 +248,20 @@ jobs:
         run: source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/db_1to1/verify.py --mssql "$SHAPE_TEST_MSSQL;Database=tempdb"
       - if: always()
         run: docker compose -f ci/emulators/docker-compose.yml down -v
+  artifact-fuzz:
+    # P7-04: the artifact fuzzer (.shape containers, signatures, manifests, profile JSON,
+    # contracts, pack and GSL YAML) with a fresh seed. A finding prints its seed and iteration and
+    # uploads the offending input; replay with `scripts/fuzz_artifacts.py --seed N --iterations M`.
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install -e '.[dev]'
+      - run: python scripts/fuzz_artifacts.py --seed "$(date +%s)" --iterations 3000 --out fuzz-findings
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: fuzz-findings
+          path: fuzz-findings/

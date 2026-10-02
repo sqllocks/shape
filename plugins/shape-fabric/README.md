@@ -47,7 +47,36 @@ Sign-in: `token` option, `SHAPE_EVENTHOUSE_TOKEN`, or Microsoft Entra through `a
 (`pip install 'sqllocks-shape-fabric[entra]'`). A 429/503 is waited for (`Retry-After` honoured);
 400 (a malformed event, or streaming ingestion not enabled) and 401/403 stop the run.
 
+## Writers (Python API)
+
+Batch writers take Arrow `RecordBatch` iterators, one table per `write_table` call (or a mapping to
+`write_tables`), and a `credential` (any object with `get_token(scope)`, or a function
+`scope -> token`; `None` means the writer's default). A failure raises `WriteError`; its `.result`
+lists the tables completed before it. Nothing is reported written unless the destination accepted it.
+
+| writer | destination | notes |
+|---|---|---|
+| `LakehouseWriter(folder)` | Parquet/CSV/JSONL files in a local folder or OneLake (`abfss://`, `onelake://<ws>/<lakehouse>/Files/..`) | streamed; a file is complete or absent; landing-zone, manifest and done-flag helpers |
+| `SqlDatabaseWriter(connection_string)` | Fabric SQL database, Azure SQL, SQL Server | parameterised `INSERT`s, `batch_size` rows per trip, one transaction per table |
+| `WarehouseWriter(connection_string, staging_path)` | Fabric Warehouse | Parquet staged in OneLake, `COPY INTO`, rows loaded must equal rows staged, staging always removed |
+| `EventhouseWriter(uri)` | KQL table | the emitter's Kusto transport (retries, sign-in), a table's own columns |
+| `EventstreamWriter(uri)` | Eventstream | the emitter's transport, flat events with the `_shape_table`/`_shape_seq` key |
+
+`write_mode` (SQL, Warehouse, Eventhouse): `create` (default: an existing table is an error), `append`,
+`truncate`, `replace` (drops the old table). Names are quoted and checked, values are parameters; the
+one literal that cannot be a parameter (the `COPY INTO` location) is validated against a strict
+character set. `shape_fabric.sinks` has `Sink`-protocol adapters; `shape_fabric.onelake` builds
+OneLake paths.
+
+Profile a lakehouse straight from OneLake: `shape profile onelake://<workspace>/<lakehouse>/Tables/<table>`
+(Delta) or `.../Files/<path>`; authentication and `adlfs` handling are core's `abfss://` source.
+
 ## Tests
+
+Contract tests replay recorded interactions (`tests/fixtures/*.json`, made by `python -m
+shape_fabric.scenarios record <dir>`; secrets are scrubbed, and a test fails if a tape holds one).
+Emulator tests: `test_sql_emulator.py` (SQL Server), `test_kusto_emulator.py`. Live tests
+(`test_live_writers.py`, nightly `fabric-live` job) need the `FABRIC_*` secrets listed in the file.
 
 Contract tests run on every PR against in-memory fakes (`shape_fabric.testing`; the emitter
 contract is `shape.streaming.emit.contract`). `pytest -m emulator plugins/shape-fabric/tests` runs

@@ -1,5 +1,14 @@
 name: CI
-on: [push, pull_request]
+on:
+  # Full CI runs on the integration branches; lane branches are verified locally by the lead
+  # before they merge (the queue reached 179 runs when every lane push ran the full matrix).
+  push:
+    branches: [main, build/main-plan, lane/CI-FIX]
+  pull_request:
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 permissions: {contents: read}
 jobs:
   test:
@@ -72,7 +81,7 @@ jobs:
           python scripts/check_user_facing.py "${args[@]}"
       - run: python -m pytest -q tests/plugins/test_kit.py tests/plugins/test_plugin_kit_install.py
   stream-plugins:
-    # P3-04: the Kafka and Event Hubs stream sources, contract tests (in-memory broker and hub).
+    # P3-04, P5-02, P6-07a, P6-08: the Kafka, Event Hubs, SQL Server and Fabric plugins' contract tests.
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -82,8 +91,9 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: python -m pip install -U pip
-      - run: pip install -e '.[dev]' -e plugins/shape-kafka -e plugins/shape-eventhubs
-      - run: python -m pytest -q -m "not emulator and not live" plugins/shape-kafka/tests plugins/shape-eventhubs/tests
+      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-kafka -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e plugins/shape-fabric
+      # The plugins' contract tests (no external service); emulator and live runs are nightly.
+      - run: python -m pytest -q -m "not emulator and not live" plugins/shape-kafka/tests plugins/shape-eventhubs/tests plugins/shape-sqlserver/tests plugins/shape-fabric/tests
   rust:
     # T-27: cargo fmt / clippy -D warnings / cargo test for rust/shape-kernel.
     runs-on: ubuntu-latest

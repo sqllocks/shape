@@ -196,7 +196,7 @@ instruction.
 | D-05 | **Realism goes beyond Spindle.** All of Spindle's distributions and temporal patterns, plus the additions in P4-05: more families, mixtures, 80/20 helpers, date-specific holiday calendars, payday and period effects, and trends. | Owner decision. |
 | D-06 | **Spindle profiler parity is a hard requirement:** every field of Spindle's `ColumnProfile` and `TableProfile`, including distribution fitting, pattern detection, enum detection, and PK/FK detection including across tables. | Owner decision. |
 | D-07 | **Remove Shape's fake DP now; port Spindle's DP correctly later.** Phase 0 deletes `privacy/advanced.laplace`, which uses a fixed seed (SEC1). P4-11 ports Spindle's experimental `inference/tier3_research.DifferentialPrivacy` (Laplace and Gaussian mechanisms) with Spindle's API. Noise comes from OS randomness unless a seed is passed explicitly, and the docs describe it as Spindle does, as experimental. Keep k-anonymity, suppression, redaction, minimum-cohort enforcement and safe-profile parity. | Full parity (D-01), but never with deterministic noise. |
-| D-08 | **Delete the hub, the web app and 25 other unused or stub modules** (§8.1). Remote access is provided by the JSON bridge and the MCP plugin. | Not in Spindle; no dependents; security bugs. |
+| D-08 | **Delete the hub, the web app and 25 other unused or stub modules** (§8.1). Remote access is provided by the JSON bridge (`shape bridge`); the MCP server is a separate private commercial component (2026-10-02, §2.3). | Not in Spindle; no dependents; security bugs. |
 | D-09 | **Plugins are trusted, in-process code.** Delete the subprocess "capability sandbox" and its claims. | The sandbox is cosmetic (PL1–PL4). |
 | D-10 | **Copy Spindle's reference data** (name and street pools, ZIP locations, domain reference files) into `shape-domains`. Carry the GeoNames CC-BY-4.0 attribution into `THIRD_PARTY_NOTICES.md`. | Parity needs the same data. Spindle is MIT and has the same copyright holder. |
 | D-11 | **Holiday calendars are rule-based code:** fixed dates, the nth or last weekday of a month, Easter by computus, and observed-day shifts. US federal and US retail calendars ship in core, and other countries come as `shape.calendars` plugins. | Offline and deterministic. |
@@ -216,7 +216,7 @@ instruction.
 | T-05 | **Build backend:** maturin, with a mixed Python/Rust layout (`python-source = "src"`, `module-name = "shape._kernel"`). | Needed for T-02. |
 | T-06 | **Python 3.11–3.14.** Tests run on the full matrix on Linux, and on 3.11 plus 3.14 on macOS and Windows. | Current floor and current release. |
 | T-07 | **Core dependencies are `numpy>=2.0,<3` and `pyarrow>=14.0.1` (no upper bound).** Remove `pydantic` (unused) and `typing-extensions`. Move `cryptography` to `[sign]`, and make `shape.security` import `crypto` lazily. Remove the `pyarrow<24` pin. The install range must admit the Fabric UDF SDK, which pins `pyarrow>=19.0.1,<20` (`fabric-user-data-functions` 1.0.x), and Fabric runtimes' preinstalled pyarrow; 14.0.1 is the first release without CVE-2023-47248. The benchmark harness still pins pyarrow 25.0.1 in both venvs (§1), so every performance number uses the same pyarrow. CI tests both the newest pyarrow (main matrix) and 19.x (the `fabric-demo` job). | Import time, install size, Fabric UDF compatibility, and a fair Parquet comparison. |
-| T-08 | **Extras:** `[sign]`, `[scipy]`, `[kafka]`, `[eventhubs]`, `[fabric]`, `[sqlserver]`, `[domains]`, `[simulation]`, `[mcp]`, `[excel]`, `[delta]` and `[all]`. Each plugin extra depends on the matching `sqllocks-shape-*` distribution. `[dev]` adds pytest, pytest-cov, hypothesis, ruff, mypy, pip-audit, build, maturin, xxhash, import-linter, vulture, bandit and py-spy. | Mirrors Spindle's extras. |
+| T-08 | **Extras:** `[sign]`, `[scipy]`, `[kafka]`, `[eventhubs]`, `[fabric]`, `[sqlserver]`, `[domains]`, `[simulation]`, `[excel]`, `[delta]` and `[all]`. Each plugin extra depends on the matching `sqllocks-shape-*` distribution. `[dev]` adds pytest, pytest-cov, hypothesis, ruff, mypy, pip-audit, build, maturin, xxhash, import-linter, vulture, bandit and py-spy. | Mirrors Spindle's extras. |
 | T-09 | **First-party plugins live under `plugins/<dist-name>/`,** each with its own `pyproject.toml`. Their versions are kept in lockstep with core, and they are released together. | One CI and atomic API changes. |
 | T-10 | **Package and version.** `sqllocks-shape` is not on PyPI (confirmed 404 on 2026-09-29). The version is `0.9.0.devN` during the build and becomes **1.0.0 at G8**. | Nothing published yet. |
 | T-11 | **Shape model v2 and `.shape` format v2,** with one schema for every path. There is a read-only v1→v2 migrator, and v1 writing is removed. | Unpublished, so it can break freely. |
@@ -243,6 +243,7 @@ instruction.
 
 | Date | ID | Change | Reason |
 |---|---|---|---|
+| 2026-10-02 | P6-11, T-08, D-08, PR #48 | **The MCP server moves to a separate, private commercial component; it is not cancelled.** The `plugins/shape-mcp` skeleton (never published) is removed from this repository (sqllocks/shape#48), P6-11 keeps `shape bridge` (the JSON protocol the commercial MCP server builds on) and drops the `shape-mcp` deliverable and its MCP client e2e test, T-08 drops the `[mcp]` extra, and the first-party plugin list (T-09, §5, `scripts/check_plugin_skeletons.py`) has six distributions. No public MCP server is re-added. The skeleton stays in git history and was MIT licensed while public. | Owner. |
 | 2026-10-02 | G5 | **Phase 5 done (P5-01..P5-04); G5 waits only on the 1-hour realtime soak** (nightly `emit-rate-soak`, run by hand on build/main-plan because the scheduled nightly runs on `main`). STREAM-EMIT 14.27x in-process (lead), live fidelity within 0.0072 of `shape fidelity`. The G5-gated packages P6-04, P6-07a, P6-13 and P7-04 started in parallel before the soak result, under the owner's standing "whatever can run in parallel, do it" (as PF-02 started before G1); G5 is marked done only when the soak passes. | Lead. |
 | 2026-10-02 | SAC-01, issue #1 | **Owner's issue sqllocks/shape#1 (Shape as Code) built as work package SAC-01**: byte-reproducible `.shape` containers (fixed member timestamps, order and attributes; members **stored, not deflated**, because deflate output differs between zlib builds and only stored members give identical bytes across machines; git compresses them itself; old deflated artifacts still read), `shape cat` and `shape git-setup` (one changed line per changed property in `git diff`), `shape profile --name` and a kept name when overwriting an existing `.shape`, docs naming `shape profile safe` output as the committable artifact (`--json` and the raw `.shape` hold real values, lead decision kept), and a real-git e2e test. Artifact spec rules unchanged (writer convention 9 added). | Owner, issue #1; lead. |
 | 2026-10-02 | P5-01b | **Realtime pacing under load:** a realtime run `gc.freeze()`s the objects that exist when it starts and writes checkpoints on a writer thread, removing two stall sources that broke `test_realtime_rate_within_five_percent` inside the full suite. Test and ±5% criterion unchanged. A residual whole-process host stall (no Python thread runnable) can still exceed 50 ms on a busy VM; if CI shows it, the options are the owner's (a quiet runner for the realtime tests, or a restated CI criterion). | Lead. |
@@ -478,7 +479,7 @@ src/shape/
   cli/            main.py · commands/ · aliases.py
 plugins/
   shape-kafka/  shape-eventhubs/  shape-fabric/  shape-sqlserver/
-  shape-domains/  shape-simulation/  shape-mcp/
+  shape-domains/  shape-simulation/
 benchmarks/
   baselines/2026-09-29/         raw baseline JSON (committed, immutable)
   vs_spindle/                   setup_spindle.sh · run.py · results.schema.json · dump_schema.py ·
@@ -1668,7 +1669,7 @@ medium, and GEN-IN must be ≥10x at medium.
 - Acceptance: e2e test per subcommand.
 - Fixes: none.
 
-**P6-11 — JSON bridge and MCP**
+**P6-11 — JSON bridge**
 - Depends: G4, G5, P6-12, P6-13. The `demo_*` and `scale_*` commands need both.
 - Deliverables:
   - `shape bridge`: the JSON stdin/stdout protocol, in parity with Spindle's
@@ -1676,8 +1677,9 @@ medium, and GEN-IN must be ≥10x at medium.
     `validate`, `preview`, `profile_info`, `demo_list`, `demo_run`, `demo_status`,
     `demo_cleanup`, `scale_generate`, `stream`, `stream_status`, `stream_stop`,
     `scale_status` and `scale_cancel`.
-  - `shape-mcp`: the same commands as MCP tools, on the `mcp` SDK.
-- Acceptance: bridge parity tests per command, and an MCP client e2e test.
+  - The MCP server that exposes these commands as MCP tools is not in this repository: it moved
+    to a separate private commercial component (2026-10-02, §2.3), which builds on `shape bridge`.
+- Acceptance: bridge parity tests per command.
 - Fixes: none.
 
 **P6-12 — `shape demo`**
@@ -1945,7 +1947,7 @@ Spindle 3.0.1 commands and their Shape equivalents. Every row needs an e2e test 
 | `profile registry list\|save\|delete\|tag\|diff\|reindex\|validate` | `shape profile registry …` (`shape registry` stays the `.shape` artifact registry) | P6-10 |
 | `publish`, `notebook`, `deploy-notebook`, `setup-fabric` | `shape fabric publish\|notebook\|deploy-notebook\|setup` [originals] | P6-07c |
 | `demo init\|list\|run\|preflight\|cleanup\|status\|notebook\|report` | `shape demo …` | P6-12 |
-| `mcp_bridge` (JSON stdio, 17 commands) | `shape bridge`, plus the `shape-mcp` plugin | P6-11 |
+| `mcp_bridge` (JSON stdio, 17 commands) | `shape bridge` (the MCP server is a separate private commercial component) | P6-11 |
 | *(library)* scale router: `local_single`, `local_mp`, `fabric_spark` | `shape generate --scale-mode …`, plus the bridge `scale_*` commands | P6-13 |
 | *(library)* scenario packs and GSL | `shape pack run\|validate\|list` | P6-14 |
 | *(library)* fidelity tiers 1–3 (`advanced_profiler`, `tier2_profiler`, `tier3_research`) | `shape fidelity --tier 1\|2\|3`, `shape drift --psi`, `shape.privacy.dp`, the `bootstrap` strategy, the `[ctgan]` plugin | P4-11 |
@@ -2033,8 +2035,8 @@ Work packages are listed in execution order. The next work package is the first 
 | 65 | P6-04 | wip (lanes P6-04a and P6-04b, started before G5's 1-hour soak) | |
 | 66 | P6-05 | done | 3a85d86 |
 | 67 | P6-06 | done | e5d338f |
-| 68 | P6-07a | wip (lane/P6-07a, started before G5's 1-hour soak) | |
-| 69 | P6-07b | todo | |
+| 68 | P6-07a | done (contract tests on recorded interactions; 5 baseline defects fixed: destructive default mode, unescaped SQL/KQL identifiers, COPY INTO location, bulk-load cleanup and row counts; emulator/live tests nightly) | 98f6ac6 |
+| 69 | P6-07b | wip (lane/P6-07b) | |
 | 70 | P6-07c | todo | |
 | 71 | P6-08 | done (nightly SQL Server e2e pending) | 29eac3e |
 | 71a | P6-08b | done (rounds 1-2: FIX-1..FIX-9; real-server parity 11/11) | 515d26e |
@@ -2042,12 +2044,12 @@ Work packages are listed in execution order. The next work package is the first 
 | 73 | P6-10 | done | 1faff65 |
 | 74 | P6-11 | todo | |
 | 75 | P6-12 | todo | |
-| 76 | P6-13 | wip (lane/P6-13; P6-07a parts after it lands) | |
+| 76 | P6-13 | done (lead scale_1to1: local_single and local_mp pass T-21 at retail medium, negative controls flagged; baseline local_mp row-count defect fixed) | 693c897 |
 | 77 | P6-14 | done | 62160c9 |
 | 78 | P7-01 | done | b04bf32 |
 | 79 | P7-02 | done | d6e3a97 |
 | 80 | P7-03 | done | 06300e7 |
-| 81 | P7-04 | wip (lane/P7-04, started before G5's 1-hour soak) | |
+| 81 | P7-04 | done (threat model, nightly fuzzer, no high finding open; plugin security tests moved into the plugins' suites at integration) | d08fe3d |
 | 82 | P8-01 | todo | |
 | 83 | P8-02 | todo | |
 | 84 | P8-03 | todo | |

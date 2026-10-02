@@ -120,11 +120,16 @@ def git_setup(a: argparse.Namespace) -> int:
     the repository's ``.gitattributes``. Running it again changes nothing."""
     top = _git(["rev-parse", "--show-toplevel"], a.repo)
     patterns = a.pattern or [DEFAULT_PATTERN]
+    for p in patterns:
+        if not p or any(c.isspace() or c == "\x00" for c in p):
+            raise ValueError(f"invalid --pattern {p!r}: no whitespace or control characters")
     command = a.command or (DEFAULT_TEXTCONV if shutil.which("shape") else None)
     if command is None:
         command = f'"{sys.executable}" -m shape.cli.main cat'
     _git(["config", "--local", f"diff.{_DRIVER}.textconv", command], top)
     attrs = Path(top) / ".gitattributes"
+    if attrs.is_symlink():
+        raise ValueError(f"{attrs} is a symbolic link; refusing to write through it")
     existing = attrs.read_text(encoding="utf-8").splitlines() if attrs.exists() else []
     added = [p for p in patterns if not _has_rule(existing, p)]
     if added:

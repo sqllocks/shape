@@ -116,7 +116,9 @@ class _LazySink:
 
 def _target(fmt: str, output_dir: Path, table: str) -> Path:
     # Delta writes <output_dir>/<table>/ itself; files are <table>.<extension>.
-    return output_dir if fmt == "delta" else output_dir / f"{table}.{EXTENSIONS[fmt]}"
+    from shape.security.names import contained
+
+    return output_dir if fmt == "delta" else contained(output_dir, table, f".{EXTENSIONS[fmt]}")
 
 
 def _options(fmt: str, schema: GenSchema, table: str, options: Mapping[str, Any]) -> dict[str, Any]:

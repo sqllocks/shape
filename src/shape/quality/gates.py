@@ -680,7 +680,12 @@ class DistributionGate(ValidationGate):
             warnings.append(f"{key}: too few rows ({len(values)}) for KS test — skipped")
             return
         try:
-            dist = getattr(stats, dist_name)(**spec.get("params", {}))
+            factory = getattr(stats, str(dist_name), None)
+            # Only a distribution object: the name comes from a schema, and ``getattr`` would
+            # otherwise call any callable of scipy.stats with schema-chosen arguments (P7-04).
+            if not isinstance(factory, stats.rv_continuous | stats.rv_discrete):
+                raise ValueError(f"{dist_name!r} is not a scipy.stats distribution")
+            dist = factory(**spec.get("params", {}))
             ks, p = stats.kstest(values, dist.cdf)
         except Exception as exc:  # noqa: BLE001 - a bad name or parameters is a warning
             warnings.append(f"{key}: KS test failed — {exc}")
