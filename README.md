@@ -89,16 +89,20 @@ git diff                              # one changed line per changed property
   is the share-safe JSON, `shape profile safe orders.shape -o orders.safe.json`: sorted keys,
   one value per line, stable numbers, rare values suppressed. Check it with
   `shape profile validate --safe orders.safe.json` (exit 0 means no leak found).
+  A registry follows the same rule: `shape registry` refuses a raw profile (commit it with
+  `--safe`, or commit the safe JSON; `docs/REGISTRY.md`), and `shape profile registry` is a
+  private catalog of full profiles unless you save with `--safe` (`docs/PROFILE_REGISTRY.md`).
 - Signed files (`--sign KEY`) are reproducible too: the signature covers the manifest bytes,
   not the container.
 
 ## What's in early access
 
 Profiling, contracts (`check`) and drift (`diff`) are the supported surface, in Python
-and in the `shape` CLI. Generating data from a profile is planned but not in this release:
-`shape.generate()` raises `NotImplementedError` for a profile, and the legacy CLI commands
-`plan` and `query` exit 2 for one. Other legacy commands (such as `generate` and `fidelity`)
-are experimental and will change.
+and in the `shape` CLI. `shape.profile()` reads files, Arrow tables, DataFrames and a list of row
+dicts. Generating data from a profile works (`shape.generate(profile, n)`, `shape generate
+--from PROFILE.shape`), and `shape plan PROFILE.shape` lists what generation keeps. `shape.query`
+and `shape query` read Shape model files, not profiles, and exit 2 for a profile. Other legacy
+commands (such as `fidelity`) are experimental and will change.
 
 ## What a `.shape` file contains
 

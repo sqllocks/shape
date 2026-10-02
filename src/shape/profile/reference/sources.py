@@ -173,10 +173,24 @@ def load_columns(
         return name or "table", _arrow_cols(table), table.num_rows
     if isinstance(source, (str, Path)):
         return _load_path(str(source), name, threads)
+    if _is_row_dicts(source):
+        table = _rows_table(source)
+        return name or "table", _arrow_cols(table), table.num_rows
     raise SourceError(
         f"unsupported source type {type(source).__name__}; expected a path, glob, "
-        "pyarrow.Table, pandas.DataFrame or a dict of those"
+        "pyarrow.Table, pandas.DataFrame, a list of row dicts or a dict of those"
     )
+
+
+def _is_row_dicts(obj: Any) -> bool:
+    return isinstance(obj, (list, tuple)) and bool(obj) and all(isinstance(r, dict) for r in obj)
+
+
+def _rows_table(rows: Any) -> pa.Table:
+    try:
+        return pa.Table.from_pylist(list(rows))
+    except (pa.ArrowInvalid, pa.ArrowTypeError) as exc:
+        raise SourceError(f"cannot build a table from the row dicts: {exc}") from exc
 
 
 def _is_pandas(obj: Any) -> bool:
