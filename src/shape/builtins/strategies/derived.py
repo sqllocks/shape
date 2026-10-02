@@ -198,8 +198,12 @@ class Derived:
                 np.asarray(arrow_numpy(arrow_fill_null(pc.cast(wanted, pa.int64()), -1)))
                 - pool.start
             )
-            row = offset // pool.step
-            ok = (offset >= 0) & (offset % pool.step == 0) & (row < pool.count)
+            if pool.step == 1:  # the usual key: the offset is the row (no division)
+                row = offset
+                ok = (offset >= 0) & (row < pool.count)
+            else:
+                row = offset // pool.step
+                ok = (offset >= 0) & (offset % pool.step == 0) & (row < pool.count)
             position = arrow_array(np.where(ok, row, 0), mask=~ok | arrow_numpy(wanted.is_null()))
         else:
             position = pc.index_in(wanted, value_set=parent.column(key).combine_chunks())
