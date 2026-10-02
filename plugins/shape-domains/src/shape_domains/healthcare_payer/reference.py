@@ -96,10 +96,17 @@ DRG: dict[str, Drg] = {
         Drg("806", "Vaginal delivery without sterilization or D&C with CC", "M", 0.93, 2.7, 1, 7),
         Drg("788", "Cesarean section without sterilization without CC/MCC", "P", 1.00, 3.0, 2, 8),
         Drg("787", "Cesarean section without sterilization with CC", "P", 1.12, 3.5, 2, 10),
+        Drg("792", "Prematurity without major problems", "M", 1.55, 6.8, 3, 21),
         Drg("795", "Normal newborn", "M", 0.17, 2.1, 1, 5),
         Drg("582", "Mastectomy for malignancy without CC/MCC", "P", 1.25, 1.7, 1, 5),
         Drg("707", "Major male pelvic procedures without CC/MCC", "P", 1.55, 1.9, 1, 5),
         Drg("331", "Major small and large bowel procedures without CC/MCC", "P", 1.75, 5.4, 2, 16),
+        Drg("280", "Acute myocardial infarction, discharged alive with MCC", "M", 1.65, 4.5, 2, 16),
+        Drg("281", "Acute myocardial infarction, discharged alive with CC", "M", 0.97, 3.0, 1, 10),
+        Drg("282", "Acute myocardial infarction, discharged alive without CC/MCC", "M", 0.75, 2.1, 1, 7),
+        Drg("064", "Intracranial hemorrhage or cerebral infarction with MCC", "M", 1.85, 4.9, 2, 18),
+        Drg("065", "Intracranial hemorrhage or cerebral infarction with CC or tPA in 24 hours", "M", 1.00, 3.2, 1, 12),
+        Drg("066", "Intracranial hemorrhage or cerebral infarction without CC/MCC", "M", 0.70, 2.4, 1, 8),
         Drg("164", "Major chest procedures without CC/MCC", "P", 2.50, 4.0, 2, 12),
     )
 }
@@ -122,15 +129,18 @@ DRG_FAMILIES: dict[str, tuple[str, str, str]] = {
     "vaginal_delivery": ("806", "806", "807"),
     "cesarean": ("787", "787", "788"),
     "newborn": ("795", "795", "795"),
+    "premature": ("792", "792", "792"),
     "mastectomy": ("582", "582", "582"),
     "prostatectomy": ("707", "707", "707"),
     "colectomy": ("331", "331", "331"),
     "lobectomy": ("164", "164", "164"),
+    "mi": ("280", "281", "282"),
+    "stroke": ("064", "065", "066"),
 }
 
 MCC_CODES = frozenset({"J96.01", "J96.00", "R65.20", "A41.9", "I21.4", "J18.9", "J12.82", "I63.9"})
 CC_CODES = frozenset(
-    {"N17.9", "I50.22", "I50.9", "N18.4", "N18.5", "N18.6", "J44.1", "E11.65", "E10.10",
+    {"N17.9", "O72.1", "I50.22", "I50.9", "N18.4", "N18.5", "N18.6", "J44.1", "E11.65", "E10.10",
      "J96.00", "E11.621", "I48.91", "C78.00", "C79.51", "F33.2", "E66.01"}
 )
 

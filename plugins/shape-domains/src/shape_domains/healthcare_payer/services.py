@@ -127,9 +127,16 @@ _ITEMS: tuple[Service, ...] = (
     _s("OBS_HOURLY", "G0378", "Hospital observation service, per hour", "facility", 18.0, ("22", "23"), ("hospital",)),
     # --- facility (institutional outpatient) ---
     _s("HOSP_CLINIC_VISIT", "G0463", "Hospital outpatient clinic visit", "facility", 127.0, ("19", "22"), ("hospital",)),
-    _s("ED_FACILITY_3", None, "Emergency department facility fee, moderate", "facility", 250.0, ("23",), ("hospital",)),
-    _s("ED_FACILITY_4", None, "Emergency department facility fee, high", "facility", 420.0, ("23",), ("hospital",)),
-    _s("ED_FACILITY_5", None, "Emergency department facility fee, critical", "facility", 690.0, ("23",), ("hospital",)),
+    _s("ED_FACILITY_3", None, "Emergency department facility fee, moderate", "facility", 380.0, ("23",), ("hospital",)),
+    _s("ED_FACILITY_4", None, "Emergency department facility fee, high", "facility", 700.0, ("23",), ("hospital",)),
+    _s("ED_FACILITY_5", None, "Emergency department facility fee, critical", "facility", 1150.0, ("23",), ("hospital",)),
+    # --- facility-only lines (institutional claims) ---
+    _s("INPT_ROOM_BOARD", None, "Inpatient room and board, per diem", "facility", 1400.0, ("21",), ("hospital",)),
+    _s("INPT_ANCILLARY", None, "Inpatient ancillary services", "facility", 1800.0, ("21",), ("hospital",)),
+    _s("INPT_OPERATING_ROOM", None, "Inpatient operating room services", "facility", 3500.0, ("21",), ("hospital",)),
+    _s("ASC_FACILITY", None, "Ambulatory surgery center facility fee", "facility", 480.0, ("24",), ("hospital",)),
+    _s("OP_PROCEDURE_FACILITY", None, "Hospital outpatient procedure facility fee", "facility", 650.0, ("22", "19"), ("hospital",)),
+    _s("OP_INFUSION_FACILITY", None, "Hospital outpatient infusion facility fee", "facility", 320.0, ("22", "19"), ("hospital",)),
     # --- ambulance, DME ---
     _s("AMBULANCE_ALS", "A0427", "Ambulance service, ALS, emergency", "transport", 480.0, ("41",), ("ambulance",)),
     _s("AMBULANCE_BLS", "A0429", "Ambulance service, BLS, emergency", "transport", 400.0, ("41",), ("ambulance",)),

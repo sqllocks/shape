@@ -140,9 +140,9 @@ def build_members(
                 counts = cal.get("pop.child_count")
                 k = int(_pick(rng, counts))
                 for _ in range(k):
-                    c_age = min(max(0, age - 20 - int(rng.integers(0, 14))), 25)
-                    c_age = int(rng.integers(0, 26)) if c_age > 25 else c_age
-                    kid = make(lob, "F" if rng.random() < 0.49 else "M", min(c_age, 25), household,
+                    c_age = min(max(0, age - 20 - int(rng.integers(0, 14))), 24)
+                    c_age = int(rng.integers(0, 25)) if c_age > 24 else c_age
+                    kid = make(lob, "F" if rng.random() < 0.49 else "M", min(c_age, 24), household,
                                "19", f"{suffix:02d}", sub_idx, state, addr)
                     kid.last = sub.last
                     suffix += 1
@@ -214,10 +214,13 @@ def _eligibility(
         else:
             cur = start - timedelta(days=int(_span_len_years(rng) * 365))
         plan = plan_id
+        first = not new_hire
         while cur <= end:
-            # the span runs until a termination draw says otherwise
+            # the span runs until a termination draw says otherwise; a member found enrolled at
+            # the start of the window has an exponential remaining time (memoryless)
             years_to_term = rng.exponential(1.0 / max(term[lob], 1e-6))
-            stop = cur + timedelta(days=int(years_to_term * 365.25))
+            stop = (start if first else cur) + timedelta(days=int(years_to_term * 365.25))
+            first = False
             if stop >= end:
                 spans.append(Span(cur, None, plan))
                 break

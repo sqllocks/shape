@@ -22,10 +22,12 @@ from typing import Any, Protocol
 import numpy as np
 
 from .calibration import Calibration
+from .drugs import DRUGS
 from .icd10cm import ICD10CM, resolve
 from .model import Encounter, Member, Person, Svc, Therapy
 
 END_OF_DAYS = date(9999, 12, 31)
+FLAT = {m: 1.0 for m in range(1, 13)}
 
 
 class Module(Protocol):
@@ -183,7 +185,11 @@ class SimContext:
                   specialty: str, days_supply: int = 30, refills: int = 5, acute: bool = False,
                   encounter: Encounter | None = None, stop: date | None = None,
                   quantity: float | None = None) -> Therapy | None:
-        if day > self.end or day < self.start - timedelta(days=0):
+        drug = DRUGS[drug_key]
+        m = person.member
+        if day > self.end or drug.launch > day:
+            return None
+        if (drug.sex and drug.sex != m.sex) or not drug.age_min <= m.age(day) <= drug.age_max:
             return None
         for t in person.therapies:
             if t.drug_key == drug_key and t.stop is None and not t.acute and not acute:
@@ -205,8 +211,20 @@ class SimContext:
             for t in person.therapies
         )
 
-    def gamma_ok(self) -> bool:
-        return True
+    def poisson_days(self, person: Person, rate: float, lo: date, hi: date) -> list[date]:
+        return self.seasonal_dates(person, rate, FLAT, lo, hi)
+
+    def kill(self, person: Person, day: date) -> None:
+        """End the member's life (and coverage) on ``day``."""
+        m = person.member
+        if m.death is not None and m.death <= day:
+            return
+        m.death = day
+        for s in m.spans:
+            if s.end is None or s.end > day:
+                s.end = day
+                s.reason = "deceased"
+        m.spans = [s for s in m.spans if s.start <= day]
 
 
 def person_rng(seed: int, idx: int) -> np.random.Generator:

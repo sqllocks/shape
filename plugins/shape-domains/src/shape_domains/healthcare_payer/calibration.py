@@ -202,11 +202,11 @@ _RATES: tuple[Rate, ...] = (
     _r("mortality.annual", _by_band(0.0003, 0.001, 0.0026, 0.0055, 0.012, 0.025, 0.075), "all-cause annual probability of death", "CDC NCHS United States Life Tables 2021 (insured populations are healthier; scale 0.8)"),
     _r("mortality.insured_scale", 0.8, "multiplier for an insured population", "NCHS life tables vs insured cohort studies", "assumption"),
     # ---- prices and cost sharing ------------------------------------------------------------
-    _r("price.payer_multiplier", {"commercial_pro": 1.40, "commercial_facility": 2.20, "ma": 1.00, "medicaid": 0.72}, "allowed as a multiple of the Medicare-like base", "RAND Hospital Price Transparency Study (commercial 224% of Medicare overall; professional about 140%); Urban Institute Medicaid-to-Medicare fee index (72%)"),
+    _r("price.payer_multiplier", {"commercial_pro": 1.40, "commercial_facility": 2.40, "commercial_lab": 1.80, "ma": 1.00, "medicaid": 0.72}, "allowed as a multiple of the Medicare-like base", "RAND Hospital Price Transparency Study (commercial 224% of Medicare overall; professional about 140%); Urban Institute Medicaid-to-Medicare fee index (72%)"),
     _r("price.region_factor", {"high": 1.12, "mid": 1.00, "low": 0.92}, "regional price factor", "CMS PFS GPCI range (0.87-1.20 combined)", "assumption"),
     _r("price.noise_sigma", 0.08, "lognormal sigma of provider contracted-rate variation", "FAIR Health / Health Care Cost Institute price variation within a market", "assumption"),
     _r("price.billed_markup", {"commercial": 3.0, "ma": 2.5, "medicaid": 2.2}, "billed charge as a multiple of allowed", "Medicare cost report charge-to-cost ratios; HCCI charge markups", "assumption"),
-    _r("price.drg_base_rate", 6800.0, "Medicare-like operating base rate per DRG weight 1.0, USD", "CMS IPPS FY2023 national standardised amount (about $6.5-7k)"),
+    _r("price.drg_base_rate", 7800.0, "Medicare-like base rate per DRG weight 1.0, USD (operating, capital and typical add-ons)", "CMS IPPS FY2023 national standardised amount (about $6.5-7k) plus capital and IME/DSH add-ons (about 15-20%)"),
     _r("plan.oop_max_commercial", {2022: 8700, 2023: 9100, 2024: 9450}, "ACA out-of-pocket limit, individual, USD", "HealthCare.gov / CMS Notice of Benefit and Payment Parameters"),
     _r("plan.moop_ma", {2022: 7550, 2023: 8300, 2024: 8850}, "MA in-network MOOP limit, USD", "CMS Medicare Advantage rate announcements 2022-2024"),
     _r("plan.hsa_min_deductible", {2022: 1400, 2023: 1500, 2024: 1600}, "HDHP minimum deductible, individual, USD", "IRS Rev. Proc. 2021-25, 2022-24, 2023-23"),
@@ -233,6 +233,10 @@ _RATES: tuple[Rate, ...] = (
     _r("rx.copay_tier", {"commercial": (10, 35, 70, 0.25), "ma": (5, 15, 47, 0.25), "medicaid": (1, 2, 4, 0.0)}, "copay tier 1, 2, 3 USD and tier 4 coinsurance", "KFF Employer Health Benefits Survey 2022 (average $11/$33/$58); CMS Part D benefit parameters; state Medicaid copay rules", "assumption"),
     _r("rx.dispensing_fee", {"commercial": 1.50, "ma": 1.30, "medicaid": 10.00}, "dispensing fee, USD", "CMS Medicaid dispensing fee survey (about $10); PBM contracts", "assumption"),
     _r("rx.written_to_fill_days", (0, 3), "days between written and first fill", "Surescripts/PBM first-fill timing", "assumption"),
+    _r("rx.adherence_beta", {"antidiabetic": (5.0, 1.6), "statin": (4.6, 1.7), "antihypertensive": (5.0, 1.6), "inhaler": (3.2, 1.8), "antidepressant": (3.6, 1.9), "other": (4.5, 1.7)}, "Beta(a, b) of a member's refill adherence by drug group", "calibrated so the share of users with PDC >= 80% falls in the CMS Star Ratings / published range (rx.pdc_target)", "assumption"),
+    _r("rx.renew_prob", 0.92, "probability an expired prescription is renewed", "PBM persistence studies", "assumption"),
+    _r("rx.pa_first_reject", 0.45, "first fill of a prior-authorisation drug rejected for PA (code 75)", "CoverMyMeds Medication Access Report 2022", "assumption"),
+    _r("rx.pa_approved", 0.85, "PA requests approved", "CoverMyMeds Medication Access Report 2022 (about 80-90%)", "assumption"),
     _r("rx.ingredient_markup_brand_awp", 1.0, "ingredient cost multiplier on the catalogue price (all drugs)", "model unit", "assumption"),
 )
 

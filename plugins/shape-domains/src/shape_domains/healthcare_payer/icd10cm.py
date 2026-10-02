@@ -112,6 +112,7 @@ _RAW: list[tuple[str, str, dict[str, object]]] = [
     ("Z68.35", "Body mass index [BMI] 35.0-35.9, adult", {"age_min": 20}),
     ("Z68.41", "Body mass index [BMI] 40.0-44.9, adult", {"age_min": 20}),
     ("E03.9", "Hypothyroidism, unspecified", {}),
+    ("N40.1", "Benign prostatic hyperplasia with lower urinary tract symptoms", {"sex": "M", "age_min": 30}),
     ("K21.9", "Gastro-esophageal reflux disease without esophagitis", {}),
     # kidney
     ("N18.1", "Chronic kidney disease, stage 1", {}),
@@ -185,6 +186,9 @@ _RAW: list[tuple[str, str, dict[str, object]]] = [
     ("O72.1", "Other immediate postpartum hemorrhage", {"sex": "F", "age_min": 10, "age_max": 55}),
     ("Z37.0", "Single live birth", {"sex": "F", "age_min": 10, "age_max": 55}),
     ("Z39.2", "Encounter for routine postpartum follow-up", {"sex": "F", "age_min": 10, "age_max": 55}),
+    ("P07.37", "Preterm newborn, gestational age 34 completed weeks", {"age_max": 0}),
+    ("P07.38", "Preterm newborn, gestational age 35 completed weeks", {"age_max": 0}),
+    ("P07.39", "Preterm newborn, gestational age 36 completed weeks", {"age_max": 0}),
     ("Z38.00", "Single liveborn infant, delivered vaginally", {"age_max": 0}),
     ("Z38.01", "Single liveborn infant, delivered by cesarean", {"age_max": 0}),
     ("Z00.110", "Health examination for newborn under 8 days old", {"age_max": 0}),
