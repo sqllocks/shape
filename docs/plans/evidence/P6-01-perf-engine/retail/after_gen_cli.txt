@@ -1,0 +1,3 @@
+[medium] spindle  warm-up 1: 6.933s
+[medium] shape    warm-up 1: 0.578s
+[medium] spindle  run 1: 7.321s  cpu 8.18s  load 1.35
