@@ -154,6 +154,116 @@ def long_text_rule_baseline(scol: dict, n_nn: int) -> dict:
     return scol
 
 
+# Intentional difference from the baseline (owner decision of 2026-10-01, ISS2-bugs #46): an
+# integer column that holds identifiers stays text. The baseline (and pandas) reads ``02134`` as
+# the integer 2134; Shape keeps the text when some value has leading zeros, or when every value
+# is digits of one width of five or more and the column's name says it is an identifier. The
+# baseline has no text version of such a column to compare with (its own detectors turn numeric
+# text back into numbers), so for exactly the columns below the expectation is computed from the
+# file's text: dtype "string"; null count and rate, cardinality, uniqueness, minimum, maximum and
+# length statistics of the text; no mean, standard deviation, distribution, quantiles, outliers or
+# fit. The fields with no baseline (pattern, enum, value counts) are taken from Shape and not
+# compared; the baseline's correlation matrix loses the column (it is no longer numeric). Every
+# other column of the same files is still compared with the baseline as it is. Allow-list:
+# dataset -> columns. A full run fails if the rule did not apply to every listed column. ``zip`` of
+# D1 and ``zip5`` of the EDGE tables are fixed-width 5-digit ZIPs under an identifier name;
+# ``leading_zero`` of x_csv_numbers has 007 and 010. Probes for the rule itself:
+# tests/profile/test_identifier_columns.py.
+IDENTIFIER_RULE: dict[str, tuple[str, ...]] = {
+    "d1.csv": ("zip",),
+    "edge/x_csv_numbers.csv": ("leading_zero",),
+    **{f"edge/e{n}{v}.csv": ("zip5",) for n in (3, 15, 60, 130, 3000) for v in ("", "_uuidpk")},
+}
+IDENTIFIER_TALLY = {"applied": 0}
+IDENTIFIER_NOT_COMPARED = (
+    "is_enum",
+    "enum_values",
+    "value_counts_ext",
+    "value_counts_ext_order",
+    "pattern",
+)
+IDENTIFIER_NO_NUMBERS = (
+    "mean",
+    "std",
+    "distribution",
+    "distribution_params",
+    "quantiles",
+    "outlier_rate",
+    "fit_score",
+)
+
+
+def _text_column(ds: str, name: str):
+    """The column of the CSV as text, with the baseline's null tokens (pandas' NA values)."""
+    import pyarrow as pa
+    import pyarrow.csv as pacsv
+
+    from shape.profile.reference.readers import PANDAS_NA
+
+    return pacsv.read_csv(
+        DATA / ds,
+        convert_options=pacsv.ConvertOptions(
+            include_columns=[name],
+            column_types={name: pa.string()},
+            null_values=PANDAS_NA,
+            strings_can_be_null=True,
+            quoted_strings_can_be_null=True,
+        ),
+    )[name]
+
+
+def identifier_rule_expected(ds: str, name: str, scol: dict, pcol: dict) -> dict:
+    """The baseline column ``name`` of ``ds`` as the identifier rule defines it."""
+    import pyarrow.compute as pc
+
+    text = _text_column(ds, name)
+    nn = text.drop_null()
+    n_nn = len(nn)
+    lengths = pc.utf8_length(nn).to_numpy()
+    ordered = sorted(nn.unique().to_pylist())
+    cardinality = len(ordered)
+    out = dict(scol)
+    out.update(
+        dtype="string",
+        null_count=len(text) - n_nn,
+        cardinality=cardinality,
+        is_unique=cardinality == n_nn,
+        min_value=["str", ordered[0]],
+        max_value=["str", ordered[-1]],
+        string_length={
+            "min": float(lengths.min()),
+            "mean": round(float(lengths.mean()), 2),
+            "max": float(lengths.max()),
+            "p95": float(pcol["string_length"]["p95"]),
+        },
+    )
+    for f in IDENTIFIER_NO_NUMBERS:
+        out[f] = None
+    for f in IDENTIFIER_NOT_COMPARED:
+        out[f] = pcol[f]
+    IDENTIFIER_TALLY["applied"] += 1
+    return out
+
+
+def identifier_rule_baseline(ds: str, sp: dict, po: dict) -> dict:
+    """The baseline table of ``ds`` as the identifier rule defines it: the allow-listed columns
+    are replaced by their expectation from the file's text, and leave the correlation matrix."""
+    names = IDENTIFIER_RULE.get(ds)
+    if not names:
+        return sp
+    columns = dict(sp["columns"])
+    matrix = sp["correlation_matrix"]
+    for name in names:
+        columns[name] = identifier_rule_expected(ds, name, columns[name], po["columns"][name])
+        if matrix is not None:
+            matrix = {
+                k: {j: v for j, v in row.items() if j != name}
+                for k, row in matrix.items()
+                if k != name
+            } or None
+    return {**sp, "columns": columns, "correlation_matrix": matrix}
+
+
 ENUM_RULE_FIELDS = ("is_enum", "enum_values")
 ENUM_TALLY = {"flipped": 0, "kept": 0}
 
@@ -375,6 +485,8 @@ def main():
             print(f"{ds}: {'PASS' if not fails else f'{len(fails)} mismatches'}", flush=True)
             continue
         po = port_impl(ds)
+        if impl == "shape":
+            sp = identifier_rule_baseline(ds, sp, po)
         if "tables" in sp:
             ok = sp["relationships"] == po["relationships"]
             matrix["dataset.relationships"] = [1, int(ok), int(ok)]
@@ -426,7 +538,15 @@ def main():
         f"Intentional differences from the baseline, fields {', '.join(LONG_TEXT_RULE_FIELDS)} "
         f"(near-unique text, ISS-profile #37): {LONG_TEXT_TALLY['dropped']} columns list no values"
     )
+    expected = sum(len(v) for v in IDENTIFIER_RULE.values())
+    print(
+        "Intentional differences from the baseline, identifier columns kept as text "
+        f"(ISS2-bugs #46): {IDENTIFIER_TALLY['applied']} of {expected} allow-listed columns"
+    )
     missed = False
+    if wanted == ALL and impl == "shape" and IDENTIFIER_TALLY["applied"] != expected:
+        print("MISMATCH the identifier rule did not apply to every allow-listed column")
+        missed = True
     if wanted == ALL and not LONG_TEXT_TALLY["dropped"]:
         print("MISMATCH the near-unique text rule never dropped a list")
         missed = True

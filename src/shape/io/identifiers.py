@@ -301,7 +301,7 @@ def resolve_type(spec: Any) -> pa.DataType:
         except (ValueError, KeyError):
             pass
     raise ValueError(
-        f"unknown column type {spec!r}: use string, integer, float, boolean, date, datetime "
+        f"unknown Arrow type name {spec!r}: use string, integer, float, boolean, date, datetime "
         "or an Arrow type name such as int32"
     )
 

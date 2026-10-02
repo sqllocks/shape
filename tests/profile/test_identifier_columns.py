@@ -176,7 +176,7 @@ def test_string_columns_types_and_infer_off(tmp_path, kernel):
     assert _summary(path)["a"]["dtype"] == "integer"
     assert _summary(path, string_columns=["a"])["a"]["dtype"] == "string"
     assert _summary(path, types={"a": "string", "b": "string"})["b"]["dtype"] == "string"
-    with pytest.raises(ValueError, match="unknown column type"):
+    with pytest.raises(ValueError, match="unknown Arrow type name"):
         _summary(path, types={"a": "bogus"})
     off = _summary(_csv(tmp_path, "z,n\n" + "02134,5\n98101,6\n" * 10, "o.csv"), infer_types="off")
     assert off["z"]["dtype"] == "string"  # zeros are never dropped, even with inference off
@@ -407,3 +407,17 @@ def test_incremental_continue_reads_back_the_text(tmp_path):
 
     pacsv.write_csv(pa.table({"zip": ZIPS, "n": list(range(len(ZIPS)))}), tmp_path / "t.csv")
     assert read_tables(tmp_path)["t"]["zip"].to_pylist() == ZIPS
+
+
+def test_the_safe_profile_describes_an_identifier_as_text(tmp_path):
+    from shape.privacy.safe_profile import to_safe_profile  # noqa: PLC0415
+
+    prof = shape.profile(str(_ids(tmp_path)), name="ids")
+    safe = to_safe_profile(prof).to_dict()
+    cols = safe["columns"] if "columns" in safe else next(iter(safe["tables"].values()))["columns"]
+    for name in ("zip", "member_id", "npi"):
+        col = cols[name]
+        assert col["dtype"] == "string", name
+        assert col["mean"] is None and col["quantiles"] is None and col["bounds"] is None, name
+    assert cols["zip"]["string_length"]["min"] == cols["zip"]["string_length"]["max"] == 5
+    assert cols["amount"]["dtype"] == "integer"

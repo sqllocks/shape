@@ -106,6 +106,17 @@ regression test in `tests/profile/test_profile_issues.py`. Everything else is co
   Wide tables keep each column's 25 strongest correlations past 256 numeric columns; no dataset is
   that wide, so `correlation_matrix` is compared in full.
 
+* **Identifier columns stay text (#46).** A CSV integer column whose values have leading zeros, or
+  whose values are all digits of one width of five or more under an identifier name (`zip`, `npi`,
+  `member_id`, ...), is text in Shape; the baseline reads `02134` as 2134. `IDENTIFIER_RULE` lists
+  exactly the 12 columns this touches (`zip` of `d1.csv`, `zip5` of the ten `edge/e*.csv`,
+  `leading_zero` of `edge/x_csv_numbers.csv`), each with the Parquet file where the baseline sees the
+  same values as text (`d1.parquet`, `edge/e*.parquet`, and the new `edge/x_leading_zero_text.parquet`,
+  also verified on its own). `identifier_rule_baseline` swaps in the baseline's profile of that text
+  column and drops the column from the baseline's correlation matrix (it is no longer numeric); every
+  other column of the same files is compared as it is. A full run fails if the rule did not apply to
+  every listed column. Probes: `tests/profile/test_identifier_columns.py`.
+
 New fields (`nan_count`, `inf_count`, `pattern_rates`, `pattern_contains_rates`, `precision`, `scale`)
 are additive and not compared.
 

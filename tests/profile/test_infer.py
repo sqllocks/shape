@@ -10,6 +10,7 @@ from pathlib import Path
 
 import numpy as np
 import pyarrow as pa
+import pyarrow.csv as pacsv
 import pytest
 
 import shape
@@ -116,7 +117,18 @@ def test_dtype_of_every_column_matches_the_spindle_profiler(t22_data):
         cols = (
             next(iter(want["tables"].values()))["columns"] if "tables" in want else want["columns"]
         )
+        plain = pacsv.read_csv(path).schema if csv else None  # Arrow's own inference
         for name in table.column_names:
+            if (
+                csv
+                and pa.types.is_string(table[name].type)
+                and pa.types.is_integer(plain.field(name).type)
+            ):
+                # an integer column that holds identifiers is text (issue #46): the reader says so
+                # and the profile keeps it as text; the dtype emulation is for the other columns
+                assert cols[name]["dtype"] == "string", (path.name, name)
+                checked += 1
+                continue
             got = infer_column_type(table[name], source="csv" if csv else "arrow")
             assert got == cols[name]["dtype"], (path.name, name, got, cols[name]["dtype"])
             checked += 1
