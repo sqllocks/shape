@@ -101,8 +101,12 @@ def test_check_valid_and_invalid(tmp_path, capsys):
     assert _main("check", "subscription") == 0
     assert "ok  subscription" in capsys.readouterr().out
     bad = tmp_path / "bad.json"
-    bad.write_text(json.dumps({"format": "shape-behavior/1", "name": "bad", "states": {
-        "s": {"type": "initial", "transition": {"direct": "nowhere"}}}}), encoding="utf-8")  # fmt: skip
+    doc = {
+        "format": "shape-behavior/1",
+        "name": "bad",
+        "states": {"s": {"type": "initial", "transition": {"direct": "nowhere"}}},
+    }
+    bad.write_text(json.dumps(doc), encoding="utf-8")
     assert _main("check", str(bad)) == 1
     assert "nowhere" in capsys.readouterr().err
 

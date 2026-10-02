@@ -75,4 +75,22 @@ windows and when the population is split into two id ranges.
 
 ## Checks run in this session (all passed unless noted)
 
-See the final section, filled in at the last push.
+Environment: `$SHAPE_VENV` with `pip install -e ".[dev]" -e plugins/shape-behavior -e plugins/shape-domains -e plugins/shape-simulation`.
+
+* `ruff check` and `ruff format --check` (src tests plugins benchmarks/vs_spindle): clean.
+* `mypy` (core, 347 files): clean; `mypy --strict` on `plugins/shape-behavior/src`: clean.
+* `vulture` (core with whitelist, and the plugin, min-confidence 80), `lint-imports` (1 contract
+  kept), `check_user_facing.py` and `--wheel` on the built `sqllocks_shape_behavior` wheel, `check_plugin_skeletons.py`
+  (7 distributions, with `--build`: wheel builds), `check_requirements.py`, `check_conformance_coverage.py`: clean.
+  `check_secrets.py` lists `plugins/shape-fabric/tests/test_recorded.py` (not touched by this lane).
+* `bandit -q -r src -ll` and on the plugin: no findings (the only output is the existing B608 nosec warnings).
+* START (median of 10 `shape --version` runs, with the plugin installed): 66 ms (gate 300 ms).
+* Plugin tests `plugins/shape-behavior/tests`: all pass, including the `heavy` scale tests.
+* `python -m shape.plugins.kit sqllocks-shape-behavior`: OK (`shape.behaviors:subscription`,
+  `:equipment_maintenance`, `:healthcare_screening` and the `behave` command).
+* `pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`:
+  `SHAPE_KERNEL=rust`: 5213 passed, 16 skipped (scikit-learn not installed); `SHAPE_KERNEL=python`:
+  5213 passed, 16 skipped. (A first run without `sqllocks-shape-domains` installed failed 82 tests that need the retail domain; that was the environment, and the reruns above have it.)
+* Merged `origin/build/main-plan` (merge commit; the one conflict set was `scripts/check_plugin_skeletons.py`
+  and its test, now six base distributions plus `behavior`, and the §2.3 text, where both sides' rows were kept
+  and `[mcp]` stays removed from T-08 while the tzdata change stays in T-07).
