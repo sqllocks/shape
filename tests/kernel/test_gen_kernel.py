@@ -232,6 +232,46 @@ def test_template_strings(nat):
             m.template_strings(["", ""], [(0, 0)], [pa.array([1.5])], 1)  # float column
 
 
+def test_template_strings_integer_extremes_and_padding(nat):
+    ints = pa.array(
+        [0, 1, -1, 9, 10, -10, 99, 100, 12345, -12345, 2**63 - 1, -(2**63), -(2**63) + 1],
+        type=pa.int64(),
+    )
+    n = len(ints)
+    for width in (0, 1, 2, 5, 19, 20, 21, 25, 47, 48, 49, 60):
+        got = nat.template_strings(["<", ">"], [(0, width)], [ints], n)
+        _same(got, ref.template_strings(["<", ">"], [(0, width)], [ints], n))
+        want = [f"<{v:0{width}d}>" for v in ints.to_pylist()]
+        assert got.to_pylist() == want
+
+
+@pytest.mark.parametrize("n", [0, 1, 1000, 32_767, 32_768, 40_000, 70_000])
+@pytest.mark.parametrize("null_rows", ["none", "first", "last", "spread", "one_task", "all"])
+def test_template_strings_nulls_across_the_serial_and_parallel_paths(nat, n, null_rows):
+    """Rows of a million-row column are built in tasks; a null in any one of them, or none, must
+    land on the right row (the validity buffer is only built when there is a null)."""
+    rng = np.random.default_rng(n + 17)
+    values = rng.integers(-1000, 100_000, n).astype(object)
+    idx = np.arange(n)
+    mask = {
+        "none": np.zeros(n, bool),
+        "first": idx == 0,
+        "last": idx == n - 1,
+        "spread": idx % 7 == 3,
+        "one_task": (idx >= 20_000) & (idx < 20_010),
+        "all": np.ones(n, bool),
+    }[null_rows]
+    values[mask] = None
+    col = pa.array(values.tolist(), type=pa.int64())
+    texts = pa.array([f"s{i}" for i in range(n)], type=pa.string())
+    cols, lits, slots = [col, texts], ["k", "-", "!"], [(0, 4), (1, 0)]
+    got = nat.template_strings(lits, slots, cols, n)
+    _same(got, ref.template_strings(lits, slots, cols, n))
+    checked = pa.array(got)
+    assert checked.null_count == int(mask.sum())
+    assert checked.is_null().to_pylist() == mask.tolist()
+
+
 def test_join_strings(nat):
     a = pa.array(["a", None, "c", None])
     b = pa.array(["x", "y", None, None], type=pa.large_string())

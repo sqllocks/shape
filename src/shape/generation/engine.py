@@ -60,11 +60,12 @@ from shape.generation.compute import (
     plan_streamed_aggregates,
 )
 from shape.generation.correlation import THRESHOLD, apply_copula
-from shape.generation.early_rules import EarlyRules
+from shape.generation.early_rules import EarlyRules, StreamPlan, plan_streamed_rules
 from shape.generation.rng import RowStream
 from shape.generation.rules import (
     RuleViolation,
     fix_rule,
+    parse_comparison,
     repair_target,
     repaired_tables,
     validate_rules,
@@ -509,6 +510,9 @@ class Engine:
         # Both are on unless a test turns them off to compare with the plain order of the passes:
         self._early_rules = True  # repair rules on a helper thread when the order allows it
         self._stream_aggregates = True  # sum children as the child table's chunks are made
+        self._stream_rules = True  # repair rules chunk by chunk when the order allows it
+        self._repaired: dict[str, pa.Table] = {}  # tables repaired as their chunks were made
+        self._plan = StreamPlan({})
         # Cores that threads other than generation's (the writers of ``write_engine``) will use.
         self.reserved_cores = 0
         self.row_counts = calculate_row_counts(self.schema, self._overrides)
@@ -762,23 +766,79 @@ class Engine:
             return set()
         delivered: set[str] = set()
         by_table: dict[str, list[pa.RecordBatch]] = {}
+        repaired: dict[str, list[pa.RecordBatch]] = {}
         last = {job[0]: i for i, job in enumerate(jobs)}
+
+        def make(job: tuple[str, int, int, int]) -> tuple[pa.RecordBatch, pa.RecordBatch]:
+            batch = self.generate_chunk(job[0], job[2], job[3], chunk=job[1])
+            return batch, (
+                self._repair_chunk(job[0], batch, job[2])
+                if job[0] in self._plan.by_table
+                else batch
+            )
+
         with ThreadPoolExecutor(max_workers=threads, thread_name_prefix="shape-gen") as pool:
-            produced = pool.map(lambda j: self.generate_chunk(j[0], j[2], j[3], chunk=j[1]), jobs)
-            for i, (job, batch) in enumerate(zip(jobs, produced, strict=False)):
+            produced = pool.map(make, jobs)
+            for i, (job, (batch, final)) in enumerate(zip(jobs, produced, strict=False)):
                 name = job[0]
                 by_table.setdefault(name, []).append(batch)
+                if name in self._plan.by_table:
+                    repaired.setdefault(name, []).append(final)
                 for aggregate in (observers or {}).get(name, ()):
                     aggregate.feed(batch)
                 if on_batch is not None and name in streamed:
-                    on_batch(name, batch)
+                    on_batch(name, final)
                     if last[name] == i:
                         on_batch(name, None)
                         delivered.add(name)
         with self._lock:
             for name, parts in by_table.items():
                 self._tables.setdefault(name, pa.Table.from_batches(parts, schema=parts[0].schema))
+            for name, parts in repaired.items():
+                self._repaired.setdefault(
+                    name, pa.Table.from_batches(parts, schema=parts[0].schema)
+                )
         return delivered
+
+    # ---- rules applied to each chunk -----------------------------------------------------
+
+    def _repair_chunk(self, name: str, batch: pa.RecordBatch, row_start: int) -> pa.RecordBatch:
+        """``batch`` (rows ``row_start`` onwards of ``name``) with the rules of the stream plan
+        applied; the rows are the rows the whole-table repair gives."""
+        table = self._repair(name, pa.Table.from_batches([batch]), row_start)
+        if table.num_rows == 0:
+            return batch
+        arrays = [column.combine_chunks() for column in table.columns]
+        return pa.RecordBatch.from_arrays(arrays, schema=table.schema)
+
+    def _repair(self, name: str, table: pa.Table, row_start: int) -> pa.Table:
+        for _index, rule in self._plan.by_table[name]:
+            tables = {name: table}
+            if rule.type == "cross_table":
+                other = parse_comparison(rule.rule)[2].split(".", 1)[0]
+                tables[other] = self._final_table(other)
+            table = fix_rule(rule, tables, self.seed, row_start)[name]
+        return table
+
+    def _final_table(self, name: str) -> pa.Table:
+        """``name`` as generation leaves it: repaired, for a table of the stream plan."""
+        built = self.generate_table(name)
+        if name not in self._plan.by_table:
+            return built
+        with self._lock:
+            found = self._repaired.get(name)
+        if found is None:
+            found = self._repair(name, built, 0)
+            with self._lock:
+                found = self._repaired.setdefault(name, found)
+        return found
+
+    def _current(self, name: str) -> pa.Table | None:
+        """:meth:`_built`, repaired for a table of the stream plan (the rules that read it)."""
+        built = self._built(name)
+        if built is None or name not in self._plan.by_table:
+            return built
+        return self._final_table(name)
 
     # ---- services for strategies --------------------------------------------------------
 
@@ -811,17 +871,21 @@ class Engine:
 
     # ---- the run ------------------------------------------------------------------------
 
-    def _post_pass_tables(self) -> set[str]:
-        """The tables a post-pass can change: those with a ``computed`` column, those the rule
-        repair changes, and those with correlated columns."""
+    def _unstreamable_tables(self) -> set[str]:
+        """The tables a post-pass other than a rule repair changes: those with a ``computed``
+        column and those with correlated columns."""
         touched = {
             name
             for name, tdef in self.schema.tables.items()
             if any(c.strategy == "computed" for c in tdef.columns.values())
         }
-        touched |= repaired_tables(self.schema)
         touched |= {name for name, pairs in self.schema.correlated_columns.items() if pairs}
         return touched
+
+    def _post_pass_tables(self) -> set[str]:
+        """The tables a post-pass can change: those with a ``computed`` column, those the rule
+        repair changes, and those with correlated columns."""
+        return self._unstreamable_tables() | repaired_tables(self.schema)
 
     def generate(
         self,
@@ -852,9 +916,16 @@ class Engine:
         levels = dependency_levels(self.schema, order)
         flat = [n for level in levels for n in level]
         touched = self._post_pass_tables()
+        self._plan = (
+            plan_streamed_rules(self.schema, levels, self._unstreamable_tables())
+            if self._stream_rules and self.schema.business_rules
+            else StreamPlan({})
+        )
+        touched -= set(self._plan.by_table)
+        streamed_rules = self._plan.indices
         final_early = [n for n in flat if n not in touched]
         early = (
-            EarlyRules(self.schema, self.seed, self._built)
+            EarlyRules(self.schema, self.seed, self._current, streamed_rules)
             if self._early_rules and self.schema.business_rules
             else None
         )
@@ -876,7 +947,7 @@ class Engine:
             for name in level:
                 if name in touched or name in delivered:
                     continue
-                table = self.generate_table(name)
+                table = self._final_table(name)
                 if on_batch is not None:
                     for batch in table.to_batches():
                         on_batch(name, batch)
@@ -885,7 +956,7 @@ class Engine:
                     on_table(name, table)
             if early is not None:
                 early.advance()
-        tables = {name: self.generate_table(name) for name in flat}
+        tables = {name: self._final_table(name) for name in flat}
         rules_done = 0
         if early is not None:
             rules_done, repaired = early.finish()
@@ -914,7 +985,7 @@ class Engine:
 
         release(-1)
         for i, rule in enumerate(rules):
-            if i >= rules_done:
+            if i >= rules_done and i not in streamed_rules:
                 tables = fix_rule(rule, tables, self.seed)
             release(i)
         remaining = validate_rules(tables, self.schema) if rules else []

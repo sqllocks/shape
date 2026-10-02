@@ -18,16 +18,22 @@ The result is the one the plain order gives, because a rule runs early only when
 The generated tables themselves are never changed: strategies keep reading the values the plain
 order lets them read. The repaired tables are returned separately, to replace the generated ones
 when the compute phase starts.
+
+A repair is also a *row-local* step (see :func:`~shape.generation.rules.fix_rule`), so for most
+rules it need not wait for the whole table: :func:`plan_streamed_rules` finds the tables whose
+every rule can be applied to each chunk as the chunk is made, which makes such a table final at
+generation, so it is written while later tables are generated instead of after every post-pass.
 """
 
 from __future__ import annotations
 
 import threading
-from collections.abc import Callable
+from collections.abc import Callable, Collection
+from dataclasses import dataclass
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
-from shape.generation.rules import fix_rule, parse_comparison
+from shape.generation.rules import can_repair, fix_rule, parse_comparison
 from shape.generation.schema import BusinessRule, GenSchema
 
 
@@ -69,6 +75,8 @@ def _compute_inputs(schema: GenSchema) -> set[tuple[str, str]]:
 def _columns_of(rule: BusinessRule) -> tuple[list[tuple[str, str]], str | None] | None:
     """``([(table, column) the rule reads or rewrites], the table it rewrites)``, or ``None`` for
     a rule :func:`fix_rule` leaves alone."""
+    if not can_repair(rule):
+        return None
     if rule.type == "cross_column":
         left, _op, right = parse_comparison(rule.rule)
         if not rule.table or not left or not right:
@@ -89,8 +97,13 @@ class EarlyRules:
     call of :meth:`advance`; :meth:`finish` waits for it and returns what it did."""
 
     def __init__(
-        self, schema: GenSchema, seed: int, fetch: Callable[[str], pa.Table | None]
+        self,
+        schema: GenSchema,
+        seed: int,
+        fetch: Callable[[str], pa.Table | None],
+        skip: Collection[int] = (),
     ) -> None:
+        self._skip = frozenset(skip)  # rules applied elsewhere (streamed per chunk)
         self._schema = schema
         self._seed = seed
         self._fetch = fetch
@@ -131,8 +144,11 @@ class EarlyRules:
             return
         batch: list[BusinessRule] = []
         position = self.applied
-        while position < len(self._rules) and self._ready(self._rules[position]):
-            batch.append(self._rules[position])
+        while position < len(self._rules) and (
+            position in self._skip or self._ready(self._rules[position])
+        ):
+            if position not in self._skip:
+                batch.append(self._rules[position])
             position += 1
         if not batch or all(_columns_of(r) is None for r in batch):
             self.applied = position
@@ -171,3 +187,91 @@ class EarlyRules:
         if self._failed:
             return 0, {}
         return self.applied, dict(self.tables)
+
+
+# ---- repairs applied to each chunk ---------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class StreamPlan:
+    """The rules applied to each chunk, by table: ``(index in the schema's list, rule)`` in the
+    schema's order. A table is in the plan only when every rule that rewrites it is."""
+
+    by_table: dict[str, tuple[tuple[int, BusinessRule], ...]]
+
+    @property
+    def indices(self) -> frozenset[int]:
+        return frozenset(i for rules in self.by_table.values() for i, _ in rules)
+
+    def __bool__(self) -> bool:
+        return bool(self.by_table)
+
+
+def plan_streamed_rules(
+    schema: GenSchema, levels: list[list[str]], blocked: Collection[str] = ()
+) -> StreamPlan:
+    """The rules that can repair a chunk as it is made, with the same result as repairing the
+    whole table afterwards in schema order.
+
+    A table qualifies (all of its rules, or none) when ``blocked`` (tables a later pass changes
+    anyway: ``computed`` or correlated columns) does not name it, and for each of its rules
+
+    * the columns it reads and rewrites exist and none is ``computed``, and the compute phase
+      reads none it rewrites (the conditions of :class:`EarlyRules`);
+    * a ``cross_table`` rule reads a table of an earlier level, which is whole by then;
+    * no rule of another table rewrites a column it reads unless that rule comes before it and is
+      streamed too (it then reads the repaired column, as in the plain order), and no rule of
+      another table reads a column it rewrites unless that rule comes after it (it reads the
+      repaired column, as in the plain order).
+    """
+    level_of = {name: i for i, level in enumerate(levels) for name in level}
+    reads = _compute_inputs(schema)
+    rules = schema.business_rules
+    found: dict[int, tuple[list[tuple[str, str]], str]] = {}
+    for i, rule in enumerate(rules):
+        columns = _columns_of(rule)
+        if columns is not None and columns[1] is not None:
+            found[i] = (columns[0], columns[1])
+    rewrites = {i: cols[0] for i, (cols, _t) in found.items()}  # the rewritten (table, column)
+    ok: set[int] = set()
+    for i, (cols, table) in found.items():
+        tables = schema.tables
+        if table in blocked or table not in level_of:
+            continue
+        if any(
+            t not in tables
+            or c not in tables[t].columns
+            or tables[t].columns[c].strategy == "computed"
+            for t, c in cols
+        ):
+            continue
+        if rewrites[i] in reads:
+            continue
+        if rules[i].type == "cross_table":
+            other = cols[1][0]
+            if other == table or other not in level_of or level_of[other] >= level_of[table]:
+                continue
+        ok.add(i)
+    changed = True
+    while changed:
+        changed = False
+        for i in sorted(ok):
+            cols_i, table_i = found[i]
+            bad = {j for j in found if j != i and found[j][1] == table_i and j not in ok}
+            for j, (cols_j, table_j) in found.items():
+                if table_j == table_i:
+                    continue
+                if rewrites[j] in cols_i and not (j < i and j in ok):
+                    bad.add(j)
+                if rewrites[i] in cols_j and not i < j:
+                    bad.add(j)
+            if bad:
+                # all of a table's rules, or none: drop table_i
+                drop = {k for k in ok if found[k][1] == table_i}
+                ok -= drop
+                changed = True
+                break
+    by_table: dict[str, list[tuple[int, BusinessRule]]] = {}
+    for i in sorted(ok):
+        by_table.setdefault(found[i][1], []).append((i, rules[i]))
+    return StreamPlan({t: tuple(r) for t, r in by_table.items()})
