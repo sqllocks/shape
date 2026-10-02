@@ -169,7 +169,7 @@ def foreign_keys(raw: dict) -> list[tuple[str, str, str, str]]:
 
 
 def column_pool(
-    pools: "Pools",
+    pools: Pools,
     raw: dict,
     fk_parent: dict[tuple[str, str], tuple[str, str]],
     table: str,
@@ -382,7 +382,10 @@ def pattern_regex(fmt: str) -> str | None:
             return None
         out.append(re.escape(fmt[last : m.start()]))
         w = m.group(2)
-        out.append((r"\d" if m.group(1) == "seq" else "[A-Z0-9]") + (f"{{{w}}}" if w else "+"))
+        if m.group(1) == "seq":  # zero-padded to a minimum width: a longer number is not cut
+            out.append(r"\d" + (f"{{{w},}}" if w else "+"))
+        else:
+            out.append("[A-Z0-9]" + (f"{{{w}}}" if w else "+"))
         last = m.end()
     out.append(re.escape(fmt[last:]))
     return "".join(out)

@@ -12,9 +12,9 @@ has (Arrow IPC; row order and values are the baseline's). ``--check`` regenerate
 memory and compares it with the shipped files. Runs in the Shape venv; ``$SPINDLE_ROOT`` is read.
 
 One deliberate difference from the baseline's dump, ``OVERRIDES``: a column whose reference
-lookup cannot resolve is the empty string in the baseline (``capital_markets.industry.industry_name``
+lookup cannot resolve is the empty string in the baseline: ``capital_markets`` ``industry_name``
 names the nested field ``industries.industry_name``, which the baseline does not read, so it falls
-back to the missing ``name`` key and yields ``""`` for every row). The schema says so with
+back to the missing ``name`` key and yields ``""`` for every row. The schema says so with
 ``constant ""``; ``--check`` proves nothing else differs.
 """
 
