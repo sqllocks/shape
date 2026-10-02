@@ -134,6 +134,11 @@ class RollingTableWriter:
 
     def _open(self, schema: pa.Schema) -> None:
         now = self._now()
+        if self._part >= 1 and "{part}" not in self._template:
+            raise ValueError(
+                f"the path template {self._template!r} has no {{part}}: a second file would "
+                "replace the first"
+            )
         self._part = self._next_part(now)
         rel = self._render(self._part, now)
         self._pending = self._store.create(rel)

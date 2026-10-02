@@ -120,3 +120,18 @@ def test_shape_emit_through_the_plugin(monkeypatch, capsys, tmp_path):
     assert json.loads(ck.read_text())["offset"] == 1200
     assert main([*argv, "--checkpoint", str(ck), "--json"]) == 0  # a finished run is not repeated
     assert len(h.store.log) == 1200
+
+
+def test_every_message_can_carry_the_synthetic_header_and_poison_is_accepted():
+    batch = next(iter(contract.default_plan().blocks(0))).batch.slice(0, 5)
+    h = EmitterHarness()
+    h.make().emit(h.uri, [batch])
+    assert all(hd == [("shape-table", b"order_line")] for *_, hd in h.store.log)
+    h = EmitterHarness()
+    emitter = h.make()
+    emitter.emit(h.uri, [batch], synthetic=True)
+    assert all(
+        hd == [("shape-table", b"order_line"), ("shape-synthetic", b"true")]
+        for *_, hd in h.store.log
+    )
+    assert emitter.supports_synthetic and emitter.accepts_poison

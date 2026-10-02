@@ -21,7 +21,9 @@ _REF = ("env://", "file://", "kv://")
 _SECRET_KEYS = ("key", "secret", "password", "token", "sas", "connection_string")
 
 
-def add_to_arguments(parser: Any) -> None:
+def add_to_arguments(
+    parser: Any, *, with_format: bool = False, with_sink_config: bool = False
+) -> None:
     g = parser.add_argument_group(
         "targets (--to)",
         "Write to OneLake / ADLS Gen2 or a database instead of -o DIR. Examples: "
@@ -36,6 +38,14 @@ def add_to_arguments(parser: Any) -> None:
         metavar="URI",
         help="a target URI (repeatable: every target gets every table)",
     )
+    if with_format:
+        g.add_argument(
+            "--format",
+            "-f",
+            choices=("parquet", "csv", "tsv", "jsonl", "ipc"),
+            default="parquet",
+            help="the file format of abfss:// targets (default parquet)",
+        )
     g.add_argument(
         "--roll-rows", type=int, metavar="N", help="files: start a new file every N rows"
     )
@@ -54,6 +64,15 @@ def add_to_arguments(parser: Any) -> None:
         help="what to do with data already there (files: overwrite, append or fail; databases: "
         "create (the default; never touches an existing table), append, truncate or replace)",
     )
+    if with_sink_config:
+        g.add_argument(
+            "--sink-config",
+            action="append",
+            default=[],
+            metavar="SINK.KEY=VALUE",
+            help="an option of one sink, e.g. abfss.account_name=acct; a secret must be a "
+            "reference (env://NAME, file://PATH, kv://VAULT/NAME)",
+        )
     g.add_argument(
         "--manifest",
         action="store_true",
@@ -103,29 +122,36 @@ def sink_config(items: list[str] | None) -> dict[str, dict[str, Any]]:
     }
 
 
-def run_to(a: argparse.Namespace, engine: Any, started: float) -> int:
-    """Write the generated tables to every ``--to`` target."""
-    import json
-
-    from shape.generation.output import TargetOptions, write_targets
+def target_options(a: argparse.Namespace, fmt: str) -> Any:
+    """The :class:`~shape.generation.output.TargetOptions` the command line describes."""
+    from shape.generation.output import TargetOptions
     from shape.io.landing import parse_table_formats
-    from shape.runlog import current
 
-    if a.output:
-        raise ValueError("-o DIR and --to are two ways to say where: use one")
-    options = TargetOptions(
-        fmt="parquet" if a.format == "summary" else a.format,
-        formats=parse_table_formats(a.table_format),
-        path_template=a.path_template,
-        batch_date=a.batch_date,
+    return TargetOptions(
+        fmt=fmt,
+        formats=parse_table_formats(getattr(a, "table_format", None)),
+        path_template=getattr(a, "path_template", None),
+        batch_date=getattr(a, "batch_date", None),
         roll_rows=a.roll_rows,
         roll_seconds=a.roll_seconds,
         commit_rows=a.commit_rows,
         write_mode=a.write_mode,
         manifest=a.manifest,
-        partition_by=list(a.partition_by) if a.partition_by else None,
-        extra=sink_config(a.sink_config),
+        partition_by=list(a.partition_by) if getattr(a, "partition_by", None) else None,
+        extra=sink_config(getattr(a, "sink_config", None)),
     )
+
+
+def run_to(a: argparse.Namespace, engine: Any, started: float) -> int:
+    """Write the generated tables to every ``--to`` target."""
+    import json
+
+    from shape.generation.output import write_targets
+    from shape.runlog import current
+
+    if a.output:
+        raise ValueError("-o DIR and --to are two ways to say where: use one")
+    options = target_options(a, "parquet" if a.format == "summary" else a.format)
     written = write_targets(engine, list(a.to), options, chunk_rows=a.chunk_rows)
     seconds = time.perf_counter() - started
     per_target = {target: sum(rows.values()) for target, rows in written.items()}

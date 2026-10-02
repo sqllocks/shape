@@ -62,7 +62,7 @@ def add_options(em: Any, *, stream: bool = False) -> None:
         required=stream,
         help="the table to stream (required)" if stream else "stream only this table (repeatable)",
     )
-    em.add_argument("--sink", default="console", metavar="SINK", help=SINKS_HELP)
+    em.add_argument("--sink", default=None, metavar="SINK", help=SINKS_HELP)
     em.add_argument("-o", "--output", metavar="FILE", help="the file for --sink file")
     em.add_argument(
         "--envelope",
@@ -85,6 +85,18 @@ def add_options(em: Any, *, stream: bool = False) -> None:
         action="append",
         metavar="START:DURATION:MULT",
         help="from START seconds for DURATION seconds the rate is MULT times --rate (repeatable)",
+    )
+    rate.add_argument(
+        "--max-rate",
+        type=float,
+        metavar="N",
+        help="a hard cap: never more than N events per second, whatever else is set",
+    )
+    rate.add_argument(
+        "--speed",
+        metavar="FACTOR",
+        help="replay by event time, FACTOR times faster than the clock (60x: an hour in a "
+        "minute); needs events with a date or timestamp column, in time order (`shape stream`)",
     )
     rate.add_argument("--max-events", type=int, metavar="N", help="stop after N events in all")
     rate.add_argument("--duration", type=float, metavar="SECONDS", help="stop after SECONDS")
@@ -116,6 +128,49 @@ def add_options(em: Any, *, stream: bool = False) -> None:
         metavar="NAME",
         help="a shape.chaos mutator to apply to them (repeatable; default: value-anomaly)",
     )
+    fl = em.add_argument_group(
+        "faults and the answer key",
+        "Injected on top of --out-of-order and --anomaly-fraction; the same events every run.",
+    )
+    fl.add_argument(
+        "--duplicate-fraction",
+        type=float,
+        default=0.0,
+        metavar="F",
+        help="fraction of events delivered a second time later (at-least-once delivery)",
+    )
+    fl.add_argument(
+        "--duplicate-window",
+        type=int,
+        default=1000,
+        metavar="N",
+        help="a copy arrives 1 to N events later (default 1000)",
+    )
+    fl.add_argument(
+        "--poison-fraction",
+        type=float,
+        default=0.0,
+        metavar="F",
+        help="fraction of events delivered cut off, as invalid JSON (file, console, Kafka, "
+        "Event Hubs)",
+    )
+    fl.add_argument(
+        "--answer-key",
+        metavar="FILE",
+        help="write every injected fault (late, anomaly, duplicate, poison) to FILE as JSON lines",
+    )
+    fl.add_argument(
+        "--synthetic-header",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="mark every message of a transport that has headers (Kafka, Event Hubs, "
+        "Eventstream) as synthetic: header shape-synthetic (default: on)",
+    )
+    from shape.cli.landing import add_landing_arguments
+    from shape.cli.to import add_to_arguments
+
+    add_landing_arguments(em)
+    add_to_arguments(em, with_format=True, with_sink_config=True)
     dl = em.add_argument_group("delivery")
     dl.add_argument("--checkpoint", metavar="FILE", help="checkpoint file (see the description)")
     dl.add_argument("--checkpoint-every", type=int, default=10_000, metavar="N")
@@ -341,12 +396,30 @@ def _live_finish(a: argparse.Namespace, live: Any) -> tuple[dict[str, Any], int]
     return summary, (1 if a.live_fail and failures else 0)
 
 
-def _sink(a: argparse.Namespace, envelope: str, resuming: bool) -> Any:
-    from shape.streaming.emit import open_sink
+def _targets(a: argparse.Namespace) -> list[str]:
+    """Every destination named: ``--sink`` and each ``--to`` (``console`` when none)."""
+    named = ([a.sink] if a.sink else []) + list(a.to or [])
+    return named or ["console"]
 
-    return open_sink(
-        a.sink, output=a.output, envelope=envelope, resuming=resuming, choices=SINKS_HELP
-    )
+
+def _sink(a: argparse.Namespace, envelope: str, resuming: bool) -> Any:
+    from shape.cli.to import target_options
+    from shape.streaming.emit import FanOutSink, open_sink
+
+    options = target_options(a, a.format)
+    sinks = [
+        open_sink(
+            target,
+            output=a.output,
+            envelope=envelope,
+            resuming=resuming,
+            synthetic=a.synthetic_header,
+            table_options={"options": options},
+            choices=SINKS_HELP,
+        )
+        for target in _targets(a)
+    ]
+    return sinks[0] if len(sinks) == 1 else FanOutSink(sinks)
 
 
 def run(a: argparse.Namespace) -> int:
@@ -361,6 +434,7 @@ def run(a: argparse.Namespace) -> int:
         parse_burst,
         resolve_mutators,
     )
+    from shape.streaming.emit.rate import parse_speed
 
     if a.out_of_order < 0 or a.out_of_order > 1:
         raise ShapeError("--out-of-order must be between 0 and 1")
@@ -368,6 +442,15 @@ def run(a: argparse.Namespace) -> int:
         raise ShapeError("--anomaly-fraction must be between 0 and 1")
     if a.burst and not a.realtime:
         raise ShapeError("--burst needs --realtime")
+    if a.max_rate is not None and a.max_rate <= 0:
+        raise ShapeError("--max-rate must be a positive number of events per second")
+    try:
+        speed = parse_speed(a.speed) if a.speed else None
+    except ValueError as exc:
+        raise ShapeError(str(exc)) from exc
+    if speed is not None and a.realtime:
+        raise ShapeError("--speed paces by event time and --realtime by rate: choose one")
+    targets = _targets(a)
     schema = load_target(a.target, a.mode)
     engine = Engine(schema, scale=a.scale, seed=a.seed)
     injector = None
@@ -377,6 +460,11 @@ def run(a: argparse.Namespace) -> int:
         )
     elif a.anomaly_mutator:
         raise ShapeError("--anomaly-mutator needs --anomaly-fraction above 0")
+    answer_key = None
+    if a.answer_key:
+        from shape.streaming.emit.faults import AnswerKey
+
+        answer_key = AnswerKey(a.answer_key, append=False)
     plan = EventPlan(
         engine,
         tables=a.table,
@@ -385,9 +473,10 @@ def run(a: argparse.Namespace) -> int:
         anomaly=injector,
         envelope=a.envelope,
         by_event_time=getattr(a, "by_event_time", False),
+        answer_key=answer_key,
     )
     checkpoint = a.checkpoint or (
-        f"{a.output}.checkpoint" if a.sink == "file" and a.output else None
+        f"{a.output}.checkpoint" if "file" in targets and a.output else None
     )
     config = EmitConfig(
         realtime=a.realtime,
@@ -402,11 +491,30 @@ def run(a: argparse.Namespace) -> int:
         checkpoint_seconds=a.checkpoint_seconds,
         fresh=a.fresh,
         retries=a.retries,
+        speed=speed,
+        max_rate=a.max_rate,
     )
     # The sink is opened for appending exactly when a checkpoint says a run is to be continued.
     probe = EmitRunner(plan, _NullSink(), config)
     offset, complete = probe.load_offset()
+    if answer_key is not None and offset > 0:
+        answer_key.close()  # a resumed run adds to the file (read_answer_key drops repeats)
+        answer_key = AnswerKey(a.answer_key, append=True)
+        plan.answer_key = answer_key
+        if injector is not None:
+            injector.answer_key = answer_key
     sink = _sink(a, a.envelope, resuming=offset > 0)
+    if a.duplicate_fraction > 0 or a.poison_fraction > 0 or answer_key is not None:
+        from shape.streaming.emit.faults import FaultSink
+
+        sink = FaultSink(
+            sink,
+            seed=engine.seed,
+            duplicate_fraction=a.duplicate_fraction,
+            duplicate_window=a.duplicate_window,
+            poison_fraction=a.poison_fraction,
+            answer_key=answer_key,
+        )
     live = None
     if a.live_target:
         from shape.streaming.emit.live import TeeSink
@@ -424,7 +532,7 @@ def run(a: argparse.Namespace) -> int:
     finally:
         for s, handler in previous.items():
             signal.signal(s, handler)
-    out = sys.stderr if a.sink == "console" else sys.stdout
+    out = sys.stderr if "console" in targets else sys.stdout
     code = 0
     summary: dict[str, Any] | None = None
     if live is not None:
