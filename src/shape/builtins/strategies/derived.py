@@ -22,6 +22,7 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation import kernel_ops
 from shape.generation.arrowkit import array as arrow_array
 from shape.generation.arrowkit import fill_null as arrow_fill_null
 from shape.generation.arrowkit import to_numpy as arrow_numpy
@@ -48,10 +49,17 @@ def sample_days(
     s = stream(ctx, purpose)
     if dist == "log_normal":
         mean, sigma = float(params.get("mean", 2.0)), float(params.get("sigma", 0.8))
+        # exp, clip and rint in one native pass: the values of the NumPy steps below
+        fused = kernel_ops.lognormal(s, ctx.row_start, ctx.n_rows, mean, sigma, low, high, 0)
+        if fused is not None:
+            return fused.astype(np.int64)
         days = np.clip(np.exp(mean + sigma * s.normal(ctx.row_start, ctx.n_rows)), low, high)
     elif dist == "normal":
         mean, std = float(params.get("mean", 10.0)), float(params.get("std_dev", 3.0))
         days = np.clip(mean + std * s.normal(ctx.row_start, ctx.n_rows), low, high)
+    elif low == high:
+        # ``low + 0 * u`` is ``low`` for every uniform ``u``: no draw is needed
+        days = np.full(ctx.n_rows, low)
     else:
         days = low + (high - low) * s.uniform(ctx.row_start, ctx.n_rows)
     whole: npt.NDArray[np.int64] = np.rint(days).astype(np.int64)
@@ -75,7 +83,30 @@ def _timestamps(values: pa.Array, ctx: GenerationContext) -> pa.Array:
     )
 
 
+def _add_days_plain(values: pa.Array, days: npt.NDArray[np.int64]) -> pa.Array | None:
+    """:func:`_add_days` for an array without nulls, straight from its buffer (no casts), or
+    ``None`` when the checked route must decide (nulls, or a date that leaves the int32 range)."""
+    n = len(values)
+    t = values.type
+    if values.null_count or n == 0 or len(days) != n:
+        return None
+    if pa.types.is_date32(t):
+        base = np.frombuffer(values.buffers()[1], dtype=np.int32, count=n, offset=values.offset * 4)
+        shifted = base.astype(np.int64) + days
+        if int(shifted.min()) < -(2**31) or int(shifted.max()) >= 2**31:
+            return None
+        return pa.Array.from_buffers(t, n, [None, pa.py_buffer(shifted.astype(np.int32))])
+    if not pa.types.is_timestamp(t):
+        return None
+    base = np.frombuffer(values.buffers()[1], dtype=np.int64, count=n, offset=values.offset * 8)
+    shifted = base + days * (_SECONDS_PER_DAY * _TIMESTAMP_UNITS[t.unit])
+    return pa.Array.from_buffers(t, n, [None, pa.py_buffer(shifted)])
+
+
 def _add_days(values: pa.Array, days: npt.NDArray[np.int64]) -> pa.Array:
+    fast = _add_days_plain(values, days)
+    if fast is not None:
+        return fast
     t = values.type
     if pa.types.is_date32(t):
         unit_per_day = 1
