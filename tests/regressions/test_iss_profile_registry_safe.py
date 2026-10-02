@@ -158,3 +158,11 @@ def test_delete_removes_a_safe_entry(work: Path, capsys: pytest.CaptureFixture[s
 def test_safe_options_need_safe(work: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert _save("--k", "9") == 2
     assert "--safe" in capsys.readouterr().err
+
+
+def test_a_description_that_looks_like_personal_data_is_refused(
+    work: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert _save("--safe", "--description", "owner jane.doe@example.com") == 2
+    assert "leak" in capsys.readouterr().err
+    assert not list((work / "preg").rglob("*.safe.json"))

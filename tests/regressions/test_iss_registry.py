@@ -310,3 +310,20 @@ def test_tag_and_promote_still_work(orders: Path, capsys: pytest.CaptureFixture[
     capsys.readouterr()
     assert main(["registry", "reg", "checkout", "orders", "production", "-o", "p.bin"]) == 0
     assert (orders / "p.bin").read_bytes() == b"v1"
+
+
+def test_diff_of_two_raw_profiles_gives_the_drift(
+    work: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    rows = "\n".join(f"{i},user{i}@example.com,{50 + i % 40}" for i in range(500))
+    (work / "customers2.csv").write_text("id,email,age\n" + rows + "\n")
+    assert main(["profile", "customers2.csv", "-o", "cust2.shape"]) == 0
+    for f in ("cust.shape", "cust2.shape"):
+        assert main(["registry", "reg", "commit", "c", f, "--allow-raw"]) == 0
+    capsys.readouterr()
+    assert main(["registry", "reg", "diff", "c", "latest", "latest"]) == 0
+    assert _json_out(capsys)["same"] is True  # type: ignore[index]
+    first = LocalRegistry(work / "reg").log("c")[0]["content_id"]
+    assert main(["registry", "reg", "diff", "c", first, "latest"]) == 0
+    d = _json_out(capsys)
+    assert d["same"] is False and d["drift"]["drifted"] is True  # type: ignore[index]

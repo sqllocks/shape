@@ -81,6 +81,9 @@ git diff                              # one changed line per changed property
   is the share-safe JSON, `shape profile safe orders.shape -o orders.safe.json`: sorted keys,
   one value per line, stable numbers, rare values suppressed. Check it with
   `shape profile validate --safe orders.safe.json` (exit 0 means no leak found).
+  A registry follows the same rule: `shape registry` refuses a raw profile (commit it with
+  `--safe`, or commit the safe JSON; `docs/REGISTRY.md`), and `shape profile registry` is a
+  private catalog of full profiles unless you save with `--safe` (`docs/PROFILE_REGISTRY.md`).
 - Signed files (`--sign KEY`) are reproducible too: the signature covers the manifest bytes,
   not the container.
 

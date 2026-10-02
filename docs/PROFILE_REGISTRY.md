@@ -18,7 +18,8 @@ shape profile validate --safe orders.json           # the leak scanner (see PRIV
 
 ## The profile registry
 
-A directory of named, tagged profiles, one table profile per file:
+A directory of named, tagged profiles, one table profile per file (`name.shape`, or `name.safe.json`
+for the safe form below):
 
 ```
 <root>/<system>/<table>/<name>.shape      identity: system/table/name
@@ -48,9 +49,29 @@ Safeguards: every identity part is a plain name (letters, digits, `.`, `_`, `-`)
 leave the root; files and the index are written atomically; `save` refuses to replace an existing
 profile without `--overwrite`; `reindex` lists every file it could not read.
 
-A stored profile is a full Shape profile, as written by `shape profile -o`: it holds value
-ranges and enum values. Share the output of `shape profile safe` instead when a profile leaves
-your organisation.
+### Real values, and the safe form
 
-`shape registry` is unchanged: it is the content-addressed registry of `.shape` artifacts. The
-two stores are separate and are never merged.
+By default a stored profile is a full Shape profile, as written by `shape profile -o`: it holds
+**real values from the data** (up to 500 per column with their counts, and each column's minimum
+and maximum). The default root is under your home folder for that reason: this store is a private
+catalog, and `save` says so on stderr.
+
+For a registry that is shared or put under git, save the share-safe form:
+
+```bash
+shape profile registry save orders.csv --system crm --name 2026Q2 --safe [--k N] [--sensitive]
+```
+
+A safe entry is the output of `shape profile safe` (one table, no field that can hold a raw value
+or a value list), stored as `<system>/<table>/<name>.safe.json`. It is checked with the leak
+scanner when it is saved and again by `registry validate`, and
+`shape profile validate --safe` accepts the file. `list`, `tag`, `diff`, `validate --data`,
+`reindex` and `delete` work on it; the column fields that `diff` compares are the safe profile's
+(`mean`, `quantiles`, `categorical_weights`, ...). An identity has one form at a time: saving the
+other form needs `--overwrite` and replaces it. Relationships between tables are not kept in a
+safe entry. A description is free text and is scanned too: one that looks like personal data is
+refused.
+
+`shape registry` is a different store: the content-addressed registry of artifacts
+(`docs/REGISTRY.md`), which refuses a raw profile unless told otherwise. The two stores are
+separate and are never merged.

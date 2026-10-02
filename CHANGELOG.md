@@ -5,6 +5,24 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- CLI fixes (ISS-cli, `docs/CLI.md`, `docs/REGISTRY.md`): `python -m shape` works; `shape.profile`
+  accepts a list of row dicts and `examples/shape_as_code.py` runs (a test runs every example);
+  one error policy for the whole CLI: an expected error is `shape: error: MESSAGE` with exit
+  code 2 and no traceback (`--debug` or `SHAPE_DEBUG=1` shows it; a bug still raises), and a
+  missing file reads the same everywhere. `shape doctor` prints a readable report (Shape version,
+  kernel, each package with what needs it; `--json` for scripts; exit 1 when a required package is
+  missing). `shape profile` warns on a table with 0 rows (`--fail-on-empty` exits 2). `show` is
+  documented as the alias of `inspect`, and `capture` as the model-writing command.
+  `shape compatibility` and `shape fidelity` say what they expect instead of failing in a decoder.
+- **Registries no longer commit raw values by default.** `shape registry ROOT commit` refuses a raw
+  profile (`LocalRegistry.commit(..., allow_raw=False)` raises); `--safe` commits its share-safe
+  form, the output of `shape profile safe` commits as it is (leak-scanned first), and `--allow-raw`
+  keeps the old behaviour with a warning. `shape profile registry save --safe` stores the safe form
+  (`<name>.safe.json`) and a full save says on stderr that it holds real values. `shape registry`
+  also gained named arguments, `--meta KEY=VALUE` and `--business-date`, a readable `created` time in
+  `log`, `list`, `show`, `diff`, and `checkout -o OUT` (it no longer writes binary to a terminal).
+  **Behaviour change:** committing a raw profile to `shape registry` now exits 2.
+
 - `shape stream` (`docs/EMIT.md`): one table's rows as events in event-time order, on the `shape emit`
   runtime (same options, sinks, formats and delivery guarantees; `--table` required, `-t -s -m`,
   `--rate` 10, `--max-events` is the earliest N events). The flat-event encoder is vectorised
