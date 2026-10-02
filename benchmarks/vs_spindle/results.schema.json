@@ -71,7 +71,7 @@
       "type": "object",
       "required": ["kind", "median_s", "runs_s", "verifier"],
       "properties": {
-        "kind": {"enum": ["profile", "generate"]},
+        "kind": {"enum": ["profile", "generate", "stream"]},
         "dataset": {"type": "string"},
         "domain": {"type": "string"},
         "scale": {"type": "string"},

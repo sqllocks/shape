@@ -5,6 +5,12 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `shape stream` (`docs/EMIT.md`): one table's rows as events in event-time order, on the `shape emit`
+  runtime (same options, sinks, formats and delivery guarantees; `--table` required, `-t -s -m`,
+  `--rate` 10, `--max-events` is the earliest N events). The flat-event encoder is vectorised
+  (Arrow kernels, several threads for large batches) with byte-identical output. Harness:
+  `benchmarks/vs_spindle/stream_1to1/` (equivalence verifier, bench, negative control; wired into
+  `run.py --only stream`).
 - Live fidelity (`shape emit --live-target`, `docs/EMIT.md`): the emitted events are teed into the
   stream profiler and scored against a target as they go, with the score of `shape fidelity`
   (`score_prepared` is now its single scoring function), drift alerts (`score-low`, `score-drop`,

@@ -1,0 +1,1001 @@
+{
+ "workload": "stream:retail:order:medium",
+ "seeds": {
+  "reference": 42,
+  "baseline_spread": [
+   43,
+   44,
+   45,
+   46
+  ],
+  "shape": 1042
+ },
+ "field_map": {
+  "_spindle_table": "_shape_table",
+  "_spindle_seq": "_shape_seq",
+  "_spindle_event_time": "_shape_event_time"
+ },
+ "allowed": {
+  "ST-1": {
+   "what": "--anomaly-fraction",
+   "baseline": "the flag is accepted and silently ignored (its stream command passes no anomaly registry when the fraction is above 0): the output is identical with and without it, and the summary reports 0 anomalies",
+   "shape": "the flag is honoured: about that share of the events carry mutated values, the same ones on every run"
+  }
+ },
+ "runs": {
+  "whole table": {
+   "checks": {
+    "field_names_and_order": true,
+    "json_types": true,
+    "shape:consistent_field_order": true,
+    "shape:event_count": true,
+    "shape:seq_unique": true,
+    "shape:seq_in_range": true,
+    "shape:seq_covers_every_row": true,
+    "shape:table_field_constant": true,
+    "shape:has_event_time": true,
+    "shape:event_time_is_first_datetime_column": true,
+    "shape:events_in_event_time_order": true,
+    "baseline:consistent_field_order": true,
+    "baseline:event_count": true,
+    "baseline:seq_unique": true,
+    "baseline:seq_in_range": true,
+    "baseline:seq_covers_every_row": true,
+    "baseline:table_field_constant": true,
+    "baseline:has_event_time": true,
+    "baseline:event_time_is_first_datetime_column": true,
+    "baseline:events_in_event_time_order": true,
+    "baseline_seed_set:seed43.jsonl": true,
+    "baseline_seed_set:seed44.jsonl": true,
+    "baseline_seed_set:seed45.jsonl": true,
+    "baseline_seed_set:seed46.jsonl": true,
+    "T21:order_id": true,
+    "T21:customer_id": true,
+    "T21:store_id": true,
+    "T21:shipping_address_id": true,
+    "T21:promotion_id": true,
+    "T21:order_date": true,
+    "T21:status": true,
+    "T21:order_total": true,
+    "T21:_shape_table": true,
+    "T21:_shape_seq": true,
+    "T21:_shape_event_time": true
+   },
+   "field_names": {
+    "shape": [
+     "order_id",
+     "customer_id",
+     "store_id",
+     "shipping_address_id",
+     "promotion_id",
+     "order_date",
+     "status",
+     "order_total",
+     "_shape_table",
+     "_shape_seq",
+     "_shape_event_time"
+    ],
+    "baseline_mapped": [
+     "order_id",
+     "customer_id",
+     "store_id",
+     "shipping_address_id",
+     "promotion_id",
+     "order_date",
+     "status",
+     "order_total",
+     "_shape_table",
+     "_shape_seq",
+     "_shape_event_time"
+    ]
+   },
+   "ok": true,
+   "columns": {
+    "order_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 250000.5,
+       "impl": 250000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 500000.0,
+       "impl": 500000.0
+      },
+      "std": {
+       "spindle": 144337.56729711776,
+       "impl": 144337.56729711776,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 500000,
+      "impl": 500000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    },
+    "customer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0018259999999999943,
+     "ks_baseline": 0.003935999999999995,
+     "ks_tol": 0.007903999999999993,
+     "stats": {
+      "mean": {
+       "spindle": 18029.798536,
+       "impl": 18066.036708
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 50000.0,
+       "impl": 50000.0
+      },
+      "std": {
+       "spindle": 15825.660903838432,
+       "impl": 15839.614943979179,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 49963,
+      "impl": 49965
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    },
+    "store_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0010779999999999679,
+     "ks_baseline": 0.0015080000000000093,
+     "ks_tol": 0.004262000000000014,
+     "stats": {
+      "mean": {
+       "spindle": 14.683178,
+       "impl": 14.668998
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 150.0,
+       "impl": 150.0
+      },
+      "std": {
+       "spindle": 26.683755092196378,
+       "impl": 26.674122285016164,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 150,
+      "impl": 150
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    },
+    "shipping_address_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.223858,
+      "impl": 0.226914,
+      "baseline_max_abs_diff": 0.0023340000000000027,
+      "tol": 0.004168280170957802
+     },
+     "ks": 0.004058343154859201,
+     "ks_baseline": 0.006485088463751704,
+     "ks_tol": 0.011727632695627556,
+     "stats": {
+      "mean": {
+       "spindle": 37544.81519618833,
+       "impl": 37475.07004395371
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 75000.0,
+       "impl": 75000.0
+      },
+      "std": {
+       "spindle": 21626.3665701668,
+       "impl": 21701.02261241016,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 70299,
+      "impl": 70321
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    },
+    "promotion_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.700242,
+      "impl": 0.700198,
+      "baseline_max_abs_diff": 0.00042599999999992644,
+      "tol": 0.004581518759494497
+     },
+     "ks": 0.0038759209316038268,
+     "ks_baseline": 0.003989911526596668,
+     "ks_tol": 0.007984867289895002,
+     "stats": {
+      "mean": {
+       "spindle": 100.33462326276529,
+       "impl": 100.68316422171966
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 200.0,
+       "impl": 200.0
+      },
+      "std": {
+       "spindle": 57.75222132794364,
+       "impl": 57.847802416210556,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    },
+    "order_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.004170000000000007,
+     "ks_baseline": 0.006151999999999991,
+     "ks_tol": 0.011227999999999986,
+     "stats": {
+      "mean": {
+       "spindle": "2024-09-07 02:06:55.471775232",
+       "impl": "2024-09-04 21:09:57.111030272"
+      },
+      "min": {
+       "spindle": "2022-01-05 00:10:19",
+       "impl": "2022-01-04 10:17:37.677849088"
+      },
+      "max": {
+       "spindle": "2025-12-31 23:58:09",
+       "impl": "2025-12-31 23:56:06"
+      },
+      "std": {
+       "spindle": 343.207928235723,
+       "impl": 344.6202967541312,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 295828,
+      "impl": 297624
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0014100000000000223,
+     "tvd_baseline": 0.002582000000000027,
+     "tvd_tol": 0.00756939756606048,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true
+    },
+    "order_total": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.052810000000000024,
+     "ks_baseline": 0.40596400000000005,
+     "ks_tol": 0.6109460000000001,
+     "stats": {
+      "mean": {
+       "spindle": 111.13765372,
+       "impl": 108.15775208
+      },
+      "min": {
+       "spindle": 0.0,
+       "impl": 0.0
+      },
+      "max": {
+       "spindle": 6024.85,
+       "impl": 2555.04
+      },
+      "std": {
+       "spindle": 104.3209627151426,
+       "impl": 113.23398097159021,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 42950,
+      "impl": 45028
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    },
+    "_shape_table": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "spindle": 1,
+      "impl": 1,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0,
+     "tvd_baseline": 0.0,
+     "tvd_tol": 0.004787307364817191,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true
+    },
+    "_shape_seq": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 249999.5,
+       "impl": 249999.5
+      },
+      "min": {
+       "spindle": 0.0,
+       "impl": 0.0
+      },
+      "max": {
+       "spindle": 499999.0,
+       "impl": 499999.0
+      },
+      "std": {
+       "spindle": 144337.56729711776,
+       "impl": 144337.56729711776,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 500000,
+      "impl": 500000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    },
+    "_shape_event_time": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.004170000000000007,
+     "ks_baseline": 0.006151999999999991,
+     "ks_tol": 0.011227999999999986,
+     "stats": {
+      "mean": {
+       "spindle": "2024-09-07 02:06:55.471775232",
+       "impl": "2024-09-04 21:09:57.111030272"
+      },
+      "min": {
+       "spindle": "2022-01-05 00:10:19",
+       "impl": "2022-01-04 10:17:37.677849088"
+      },
+      "max": {
+       "spindle": "2025-12-31 23:58:09",
+       "impl": "2025-12-31 23:56:06"
+      },
+      "std": {
+       "spindle": 343.207928235723,
+       "impl": 344.6202967541312,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 295828,
+      "impl": 297624
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    }
+   }
+  },
+  "first 100000": {
+   "checks": {
+    "field_names_and_order": true,
+    "json_types": true,
+    "shape:consistent_field_order": true,
+    "shape:event_count": true,
+    "shape:seq_unique": true,
+    "shape:seq_in_range": true,
+    "shape:table_field_constant": true,
+    "shape:has_event_time": true,
+    "shape:event_time_is_first_datetime_column": true,
+    "shape:events_in_event_time_order": true,
+    "baseline:consistent_field_order": true,
+    "baseline:event_count": true,
+    "baseline:seq_unique": true,
+    "baseline:seq_in_range": true,
+    "baseline:table_field_constant": true,
+    "baseline:has_event_time": true,
+    "baseline:event_time_is_first_datetime_column": true,
+    "baseline:events_in_event_time_order": true,
+    "baseline_seed_set:seed43_max100000.jsonl": true,
+    "baseline_seed_set:seed44_max100000.jsonl": true,
+    "baseline_seed_set:seed45_max100000.jsonl": true,
+    "baseline_seed_set:seed46_max100000.jsonl": true,
+    "T21:order_id": true,
+    "T21:customer_id": true,
+    "T21:store_id": true,
+    "T21:shipping_address_id": true,
+    "T21:promotion_id": true,
+    "T21:order_date": true,
+    "T21:status": true,
+    "T21:order_total": true,
+    "T21:_shape_table": true,
+    "T21:_shape_seq": true,
+    "T21:_shape_event_time": true
+   },
+   "field_names": {
+    "shape": [
+     "order_id",
+     "customer_id",
+     "store_id",
+     "shipping_address_id",
+     "promotion_id",
+     "order_date",
+     "status",
+     "order_total",
+     "_shape_table",
+     "_shape_seq",
+     "_shape_event_time"
+    ],
+    "baseline_mapped": [
+     "order_id",
+     "customer_id",
+     "store_id",
+     "shipping_address_id",
+     "promotion_id",
+     "order_date",
+     "status",
+     "order_total",
+     "_shape_table",
+     "_shape_seq",
+     "_shape_event_time"
+    ]
+   },
+   "ok": true,
+   "columns": {
+    "order_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "ks": 0.005870000000000042,
+     "ks_baseline": 0.005810000000000037,
+     "ks_tol": 0.010715000000000056,
+     "stats": {
+      "mean": {
+       "spindle": 250240.59802,
+       "impl": 248907.06799
+      },
+      "min": {
+       "spindle": 6.0,
+       "impl": 3.0
+      },
+      "max": {
+       "spindle": 499994.0,
+       "impl": 499999.0
+      },
+      "std": {
+       "spindle": 144551.0630610114,
+       "impl": 144508.9937037599,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100000,
+      "impl": 100000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    },
+    "customer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "ks": 0.007669999999999996,
+     "ks_baseline": 0.009120000000000003,
+     "ks_tol": 0.015680000000000006,
+     "stats": {
+      "mean": {
+       "spindle": 18048.04382,
+       "impl": 17919.68425
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 5.0
+      },
+      "max": {
+       "spindle": 49999.0,
+       "impl": 49999.0
+      },
+      "std": {
+       "spindle": 15809.059482087472,
+       "impl": 15775.14842547581,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 21749,
+      "impl": 21732
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    },
+    "store_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "ks": 0.0031200000000000117,
+     "ks_baseline": 0.0046000000000000485,
+     "ks_tol": 0.008900000000000073,
+     "stats": {
+      "mean": {
+       "spindle": 14.70895,
+       "impl": 14.58436
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 150.0,
+       "impl": 150.0
+      },
+      "std": {
+       "spindle": 26.71335845410494,
+       "impl": 26.53166303476659,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 150,
+      "impl": 150
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    },
+    "shipping_address_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.22175,
+      "impl": 0.22244,
+      "baseline_max_abs_diff": 0.0028499999999999914,
+      "tol": 0.009289158667500519
+     },
+     "ks": 0.006198729320498114,
+     "ks_baseline": 0.015579762734606317,
+     "ks_tol": 0.025369644101909478,
+     "stats": {
+      "mean": {
+       "spindle": 37385.290253774496,
+       "impl": 37407.45092340141
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 3.0
+      },
+      "max": {
+       "spindle": 74997.0,
+       "impl": 74991.0
+      },
+      "std": {
+       "spindle": 21692.839879713905,
+       "impl": 21784.003107034743,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 26107,
+      "impl": 26121
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    },
+    "promotion_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.70257,
+      "impl": 0.69847,
+      "baseline_max_abs_diff": 0.003630000000000022,
+      "tol": 0.010221677824603943
+     },
+     "ks": 0.009999983508776622,
+     "ks_baseline": 0.011159299756819174,
+     "ks_tol": 0.018738949635228763,
+     "stats": {
+      "mean": {
+       "spindle": 99.99270416568605,
+       "impl": 100.80841044008888
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 200.0,
+       "impl": 200.0
+      },
+      "std": {
+       "spindle": 57.931231213433676,
+       "impl": 57.771729407254355,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    },
+    "order_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "ks": 0.016330000000000067,
+     "ks_baseline": 0.016679999999999917,
+     "ks_tol": 0.027019999999999877,
+     "stats": {
+      "mean": {
+       "spindle": "2023-03-20 18:51:54.875910912",
+       "impl": "2023-03-16 12:38:13.418024448"
+      },
+      "min": {
+       "spindle": "2022-01-05 00:10:19",
+       "impl": "2022-01-04 10:17:37.677849088"
+      },
+      "max": {
+       "spindle": "2023-10-24 10:39:12.072719872",
+       "impl": "2023-10-19 05:46:09.126779904"
+      },
+      "std": {
+       "spindle": 153.7704131585274,
+       "impl": 153.47152749590802,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 66259,
+      "impl": 66489
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0014699999999999783,
+     "tvd_baseline": 0.004190000000000011,
+     "tvd_tol": 0.016925687506432686,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true
+    },
+    "order_total": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "ks": 0.052669999999999995,
+     "ks_baseline": 0.40375000000000005,
+     "ks_tol": 0.6076250000000001,
+     "stats": {
+      "mean": {
+       "spindle": 111.26662259999999,
+       "impl": 108.2909552
+      },
+      "min": {
+       "spindle": 0.0,
+       "impl": 0.0
+      },
+      "max": {
+       "spindle": 5018.5,
+       "impl": 2555.04
+      },
+      "std": {
+       "spindle": 105.49075207704783,
+       "impl": 113.82137843881347,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 24794,
+      "impl": 25044
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    },
+    "_shape_table": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "distinct": {
+      "spindle": 1,
+      "impl": 1,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0,
+     "tvd_baseline": 0.0,
+     "tvd_tol": 0.010704744696916624,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true
+    },
+    "_shape_seq": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "ks": 0.005870000000000042,
+     "ks_baseline": 0.005810000000000037,
+     "ks_tol": 0.010715000000000056,
+     "stats": {
+      "mean": {
+       "spindle": 250239.59802,
+       "impl": 248906.06799
+      },
+      "min": {
+       "spindle": 5.0,
+       "impl": 2.0
+      },
+      "max": {
+       "spindle": 499993.0,
+       "impl": 499998.0
+      },
+      "std": {
+       "spindle": 144551.0630610114,
+       "impl": 144508.9937037599,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100000,
+      "impl": 100000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    },
+    "_shape_event_time": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "ks": 0.016330000000000067,
+     "ks_baseline": 0.016679999999999917,
+     "ks_tol": 0.027019999999999877,
+     "stats": {
+      "mean": {
+       "spindle": "2023-03-20 18:51:54.875910912",
+       "impl": "2023-03-16 12:38:13.418024448"
+      },
+      "min": {
+       "spindle": "2022-01-05 00:10:19",
+       "impl": "2022-01-04 10:17:37.677849088"
+      },
+      "max": {
+       "spindle": "2023-10-24 10:39:12.072719872",
+       "impl": "2023-10-19 05:46:09.126779904"
+      },
+      "std": {
+       "spindle": 153.7704131585274,
+       "impl": 153.47152749590802,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 66259,
+      "impl": 66489
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true
+    }
+   }
+  }
+ },
+ "probe": {
+  "id": "ST-1",
+  "what": "--anomaly-fraction",
+  "baseline": "the flag is accepted and silently ignored (its stream command passes no anomaly registry when the fraction is above 0): the output is identical with and without it, and the summary reports 0 anomalies",
+  "shape": "the flag is honoured: about that share of the events carry mutated values, the same ones on every run",
+  "baseline_identical_with_flag": true,
+  "shape_changed_share": 0.18933333333333333,
+  "shape_deterministic": true,
+  "ok": true
+ },
+ "verdict": "PASS",
+ "seconds": 43.3
+}
