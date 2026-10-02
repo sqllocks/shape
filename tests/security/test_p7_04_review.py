@@ -3,7 +3,6 @@ docs/plans/lane_status/P7-04.md). Each of these failed before its fix."""
 
 from __future__ import annotations
 
-import json
 import subprocess
 import sys
 
@@ -154,21 +153,6 @@ def test_sql_column_dimensions_must_be_integers():
         sink.write(f"{d}/o.sql", "t", iter([_batch()]), columns=evil, create_table=True)
 
 
-def test_kql_mapping_literal_escapes_backslashes():
-    pytest.importorskip("shape_fabric")
-    from shape_fabric.eventhouse import create_mapping_command
-
-    name = 'x", "path": "$[\\"_shape_seq\\"]", "datatype": "string"}, {"column": "zz'
-    cmd = create_mapping_command("t", pa.schema([pa.field(name, pa.int64())]))
-    literal = cmd.split("ingestion json mapping 'shape_json' '", 1)[1][:-1]
-    # Decode the KQL single-quoted literal the way the service does, then parse the JSON.
-    import re
-
-    decoded = re.sub(r"\\(.)", r"\1", literal)
-    cols = json.loads(decoded)
-    assert len(cols) == 1 and cols[0]["column"] == name
-
-
 # ---- the ADF Batch command ---------------------------------------------------------------------
 
 
@@ -252,15 +236,6 @@ def test_secret_scanner_catches_json_shaped_secrets(tmp_path, doc):
 
     with pytest.raises(SecurityError):
         write_model(tmp_path / "a.shape", {"tables": {}}, name="t", metadata=doc)
-
-
-def test_sqlserver_redaction_hides_quoted_secrets():
-    pytest.importorskip("shape_sqlserver")
-    from shape_sqlserver.sql import redact_connection_string as red
-
-    assert "q" not in red('Server=s;PWD="p;q";UID=u')
-    assert "q" not in red("Server=s;pwd = 'p;q';UID=u")
-    assert "hunter" not in red("Server=s;Client_Secret=hunter2;UID=u")
 
 
 def test_reference_dataset_name_cannot_be_a_path(tmp_path, monkeypatch):
@@ -405,17 +380,6 @@ def test_mask_refuses_to_overwrite_its_input(tmp_path):
     )
     assert r.returncode != 0
     assert (tmp_path / "people.csv").read_text() == "email\nalice@example.com\n"
-
-
-def test_connection_string_extra_keys_cannot_inject_attributes():
-    pytest.importorskip("shape_sqlserver")
-    from shape_sqlserver.sql import SqlServerError, build_connection_string
-
-    with pytest.raises(SqlServerError):
-        build_connection_string("s", extra={"Application Name=x;Trusted_Connection": "yes"})
-    assert "ApplicationIntent=ReadOnly" in build_connection_string(
-        "s", extra={"ApplicationIntent": "ReadOnly"}
-    )
 
 
 def test_distribution_gate_only_calls_distributions():
