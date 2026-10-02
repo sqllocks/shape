@@ -138,6 +138,8 @@ def discover(names: list[str]) -> list[Any]:
     mods = []
     for path in sorted(HERE.glob("files_case_*.py")):
         mod = importlib.import_module(path.stem)
+        if not hasattr(mod, "baseline_side"):  # a pattern case (P6-04b), run by verify_patterns.py
+            continue
         if names and mod.NAME not in names:
             continue
         mods.append(mod)

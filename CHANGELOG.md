@@ -12,6 +12,17 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `shape emit` command to `shape.streaming.emit.open_sink`. Harness:
   `benchmarks/vs_spindle/simulation_1to1/` (mechanism parity and T-21 per simulator, an allow-list
   of the defects fixed, negative controls).
+- `shape-simulation` (`docs/plugins/simulation.md`): the pattern simulators (clickstream, financial
+  reversals / fraud bursts / settlements, IoT drift / missing readings / alert storms / fleet status,
+  operational logs with distributed traces, pulse rideshare telemetry and marts) as Arrow/numpy
+  modules, and `shape simulate clickstream|financial|iot|operational-log|pulse`. A run is
+  reproducible from its seed (ids come from the seed; the clickstream window starts at
+  `start_time`); the financial `transactions` columns follow the configuration; log events that
+  start a trace carry its ids; `latency_spike_enabled` and `outage_enabled` are honoured and a run
+  without tracing has no trace ids; fractional durations count; IoT alerts do not depend on the
+  storm switch; readings per sensor and the domains' own column names are understood. Harness:
+  `benchmarks/vs_spindle/simulation_1to1/verify_patterns.py` (parity verifier, negative controls,
+  allow-list probes).
 - `shape stream` (`docs/EMIT.md`): one table's rows as events in event-time order, on the `shape emit`
   runtime (same options, sinks, formats and delivery guarantees; `--table` required, `-t -s -m`,
   `--rate` 10, `--max-events` is the earliest N events). The flat-event encoder is vectorised

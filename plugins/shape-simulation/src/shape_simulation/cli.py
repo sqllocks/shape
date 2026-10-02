@@ -25,6 +25,7 @@ SHAPE_API = "1.0"
 
 HANDLER_MODULES = [
     "shape_simulation.cli_batch",
+    "shape_simulation.cli_patterns",
 ]
 """The modules that add simulators to ``shape simulate``, one line each."""
 
@@ -33,7 +34,10 @@ class SimulateCommand:
     """``shape simulate KIND ...``."""
 
     name = "simulate"
-    help = "run a simulator (file drop, SCD2 drop, stream, hybrid, workflow, ...) on generated data"
+    help = (
+        "run a simulator: file drop, SCD2 drop, stream, hybrid, workflow, clickstream, financial, "
+        "iot, operational-log, pulse"
+    )
 
     def configure(self, parser: Any) -> None:
         sub = parser.add_subparsers(dest="simulate_cmd", required=True, metavar="KIND")
