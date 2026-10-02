@@ -3,6 +3,7 @@ Kusto emulator runs in ``test_eventhouse_emulator.py`` (nightly), a real Eventho
 ``test_live.py`` (needs secrets)."""
 
 import json
+import re
 
 import pyarrow as pa
 import pytest
@@ -170,12 +171,24 @@ def test_type_mapping_and_commands_quote_names():
     cmd = create_table_command("t'x", schema)
     assert cmd.startswith(".create-merge table ['t\\'x'] (['a b']:int, ['c\\'d']:long,")
     mapping = create_mapping_command("t", schema)
-    assert (
-        json.loads(mapping.split("'shape_json' '", 1)[1].rsplit("'", 1)[0].replace("\\'", "'"))[1][
-            "path"
-        ]
-        == '$["c\'d"]'
-    )
+    assert _mapping_doc(mapping)[1]["path"] == '$["c\'d"]'
+
+
+def _mapping_doc(command):
+    """The JSON a KQL engine reads out of the mapping command's string literal: the literal's
+    backslash escapes applied, as the service applies them."""
+    literal = command.split("'shape_json' '", 1)[1].rsplit("'", 1)[0]
+    return json.loads(re.sub(r"\\(.)", r"\1", literal))
+
+
+def test_mapping_survives_kql_unescaping_for_awkward_column_names():
+    # P5-02 left every JSON path as `$[\"x\"]` inside the literal; a KQL engine turns `\"` into
+    # `"`, which broke the document for every column. Names with quotes and backslashes too.
+    names = ["plain", 'say "hi"', "back\\slash", "it's"]
+    schema = pa.schema([(n, pa.string()) for n in names])
+    doc = _mapping_doc(create_mapping_command("t", schema))
+    assert [c["column"] for c in doc] == names
+    assert [json.loads(c["path"][1:].strip("[]"))  for c in doc] == names
 
 
 @pytest.mark.parametrize(
