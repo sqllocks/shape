@@ -87,10 +87,11 @@ git diff                              # one changed line per changed property
 ## What's in early access
 
 Profiling, contracts (`check`) and drift (`diff`) are the supported surface, in Python
-and in the `shape` CLI. Generating data from a profile is planned but not in this release:
-`shape.generate()` raises `NotImplementedError` for a profile, and the legacy CLI commands
-`plan` and `query` exit 2 for one. Other legacy commands (such as `generate` and `fidelity`)
-are experimental and will change.
+and in the `shape` CLI. `shape.profile()` reads files, Arrow tables, DataFrames and a list of row
+dicts. Generating data from a profile works (`shape.generate(profile, n)`, `shape generate
+--from PROFILE.shape`), and `shape plan PROFILE.shape` lists what generation keeps. `shape.query`
+and `shape query` read Shape model files, not profiles, and exit 2 for a profile. Other legacy
+commands (such as `fidelity`) are experimental and will change.
 
 ## What a `.shape` file contains
 
