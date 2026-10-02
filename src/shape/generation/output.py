@@ -12,7 +12,7 @@ from __future__ import annotations
 import queue
 import threading
 from collections.abc import Callable, Iterator, Mapping
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
@@ -94,11 +94,24 @@ class _LazySink:
         self._sink: Any = None
         self._lock = threading.Lock()
 
-    def write(self, *args: Any, **kwargs: Any) -> Any:
+    def _load(self) -> Any:
         with self._lock:
             if self._sink is None:
                 self._sink = _sink(self._fmt)
-        return self._sink.write(*args, **kwargs)
+            return self._sink
+
+    def preload(self) -> None:
+        """Import the sink now (run on a thread started for it, while generation begins)."""
+        self._load()
+
+    def write(self, *args: Any, **kwargs: Any) -> Any:
+        return self._load().write(*args, **kwargs)
+
+    def open_native(self, target: Path, schema: pa.Schema, options: dict[str, Any]) -> Any:
+        """The sink's native writer for ``target`` (``write_batch``, ``finish``, ``wait``), or
+        ``None`` when the sink has none or it cannot write this file."""
+        opener = getattr(self._load(), "open_native", None)
+        return None if opener is None else opener(target, schema, options)
 
 
 def _target(fmt: str, output_dir: Path, table: str) -> Path:
@@ -221,11 +234,21 @@ def _write_overlapped(
     """Generate the whole schema and write each table as soon as it is final: a table that no
     post-pass changes is written chunk by chunk while it is generated (``Engine.generate``'s
     ``on_batch``), and the others after the post-passes (``on_table``), so the writes overlap
-    the generation of the other tables and the post-passes."""
+    the generation of the other tables and the post-passes.
+
+    A table of a format with a native writer (Parquet with the native kernel) is written from the
+    thread that delivers it: the writer takes the batches and encodes them on its own threads, so
+    no table waits for another and no writer thread of ours is needed. Every other table goes to
+    ``max_workers`` writer threads, each writing one table from a queue."""
     sink = _LazySink(fmt)
+    threading.Thread(target=sink.preload, name="shape-sink", daemon=True).start()
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     queues: dict[str, queue.Queue[pa.RecordBatch | None]] = {}
+    native: dict[str, Any] = {}  # table to its native writer
+    pooled: set[str] = set()  # tables written by a writer thread
+    futures: list[Future[None]] = []
+    pools: list[ThreadPoolExecutor] = []
 
     def write(name: str, batches: Iterator[pa.RecordBatch], schema: pa.Schema | None) -> None:
         extra = {"schema": schema} if schema is not None else {}
@@ -237,31 +260,79 @@ def _write_overlapped(
             **_options(fmt, engine.schema, name, options),
         )
 
+    def submit(name: str, batches: Iterator[pa.RecordBatch], schema: pa.Schema | None) -> None:
+        if not pools:
+            pools.append(ThreadPoolExecutor(max_workers=max(1, max_workers)))
+        futures.append(pools[0].submit(write, name, batches, schema))
+
     def drain(pending: queue.Queue[pa.RecordBatch | None]) -> Iterator[pa.RecordBatch]:
         while (batch := pending.get()) is not None:
             yield batch
 
-    futures = []
-    with ThreadPoolExecutor(max_workers=max(1, max_workers)) as pool:
+    def route(name: str, schema: pa.Schema) -> Any:
+        """The native writer of ``name``, or ``None`` when a writer thread writes it."""
+        if name in pooled:
+            return None
+        if name not in native:
+            writer = sink.open_native(
+                _target(fmt, out, name), schema, _options(fmt, engine.schema, name, options)
+            )
+            if writer is None:
+                pooled.add(name)
+                return None
+            native[name] = writer
+        return native[name]
 
-        def on_batch(name: str, batch: pa.RecordBatch | None) -> None:
-            pending = queues.get(name)
-            if pending is None:
-                pending = queues[name] = queue.Queue()
-                futures.append(pool.submit(write, name, drain(pending), None))
-            pending.put(batch)
+    def on_batch(name: str, batch: pa.RecordBatch | None) -> None:
+        if batch is not None:
+            writer = route(name, batch.schema)
+            if writer is not None:
+                writer.write_batch(batch)
+                return
+        elif name in native:
+            native[name].finish()
+            return
+        pending = queues.get(name)
+        if pending is None:
+            pending = queues[name] = queue.Queue()
+            submit(name, drain(pending), None)
+        pending.put(batch)
 
-        def on_table(name: str, table: pa.Table) -> None:
-            futures.append(pool.submit(write, name, iter(table.to_batches()), table.schema))
+    def on_table(name: str, table: pa.Table) -> None:
+        writer = route(name, table.schema)
+        if writer is None:
+            submit(name, iter(table.to_batches()), table.schema)
+            return
+        for batch in table.to_batches():
+            writer.write_batch(batch)
+        writer.finish()
 
-        try:
-            result = engine.generate(on_table=on_table, on_batch=on_batch)
-        except BaseException:
-            for pending in queues.values():  # let the writers finish what they have
-                pending.put(None)
-            raise
-    for future in futures:
-        future.result()
+    def settle(raise_errors: bool) -> None:
+        """Wait for every native file and writer thread; the first error is raised."""
+        first: BaseException | None = None
+        for writer in native.values():
+            try:
+                writer.finish()
+                writer.wait()
+            except BaseException as exc:
+                first = first or exc
+        for pending in queues.values():  # let the writer threads finish what they have
+            pending.put(None)
+        for pool in pools:
+            pool.shutdown(wait=True)
+        for future in futures:
+            failure = future.exception()
+            if failure is not None:
+                first = first or failure
+        if first is not None and raise_errors:
+            raise first
+
+    try:
+        result = engine.generate(on_table=on_table, on_batch=on_batch)
+    except BaseException:
+        settle(raise_errors=False)
+        raise
+    settle(raise_errors=True)
     return _paths(fmt, out, list(result.generation_order))
 
 
