@@ -575,6 +575,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.emit import add_arguments as add_emit_arguments
 
     add_emit_arguments(sub)
+    from shape.cli.stream import add_arguments as add_stream_arguments
+
+    add_stream_arguments(sub)
     from shape.cli.mask import add_arguments as add_mask_arguments
 
     add_mask_arguments(sub)
@@ -827,6 +830,10 @@ def _dispatch(argv):
         from shape.cli.emit import run as run_emit
 
         return _run(run_emit, a)
+    if a.cmd == "stream":
+        from shape.cli.stream import run as run_stream
+
+        return _run(run_stream, a)
     if a.cmd == "from-ddl":
         return _run(_cmd_from_ddl, a)
     if a.cmd in ("continue", "time-travel"):

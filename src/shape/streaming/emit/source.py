@@ -16,28 +16,45 @@ checkpoint's offset and the events after it are the ones the first run would hav
   The draw is by row, so it does not depend on chunking.
 * ``anomaly``: see :mod:`shape.streaming.emit.anomaly`; applied to the rows before they are
   reordered.
+* ``by_event_time`` (``shape stream``): one table, delivered in the order of its event time
+  instead of its row order. The table is generated whole, its events are stably sorted by
+  ``_shape_event_time`` (a null time first, a tie in row order) and the ``out_of_order`` choice is
+  made on positions in that sequence. ``_shape_seq`` is still the row's position in the table, so
+  the idempotency key does not change; ``max_events`` takes the first events in time order.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import os
 from collections.abc import Iterator, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
 from shape.generation.rng import RowStream
 from shape.streaming.emit.anomaly import AnomalyInjector
-from shape.streaming.emit.formats import with_event_fields
+from shape.streaming.emit.formats import (
+    FIELD_SEQ,
+    FIELD_TABLE,
+    FIELD_TIME,
+    check_reserved,
+    event_columns,
+    event_time_column,
+    with_event_fields,
+)
 
 if TYPE_CHECKING:
     from shape.generation.engine import Engine
 
 BLOCK_TARGET = 8192
+TIMED_BLOCK_TARGET = 65536  # the whole table is in memory in event-time order: larger blocks
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,6 +70,11 @@ class EventBlock:
         return int(self.batch.num_rows)
 
 
+def _flat(column: Any) -> pa.Array:
+    """``column`` (an array or a chunked array) as one array."""
+    return column.combine_chunks() if isinstance(column, pa.ChunkedArray) else column
+
+
 class EventPlan:
     def __init__(
         self,
@@ -63,6 +85,7 @@ class EventPlan:
         ooo_window: int = 1000,
         anomaly: AnomalyInjector | None = None,
         envelope: str = "flat",
+        by_event_time: bool = False,
     ) -> None:
         if not 0.0 <= out_of_order <= 1.0:
             raise ValueError("out-of-order fraction must be between 0 and 1")
@@ -78,11 +101,15 @@ class EventPlan:
                 )
             wanted = set(tables)
             order = [t for t in order if t in wanted]
+        if by_event_time and len(order) != 1:
+            raise ShapeError("streaming in event-time order needs exactly one table (--table)")
         self.engine = engine
         self.tables = order
+        self.by_event_time = bool(by_event_time)
         self.out_of_order = float(out_of_order)
         self.ooo_window = int(ooo_window)
-        self.block_rows = self.ooo_window * max(1, BLOCK_TARGET // self.ooo_window)
+        target = TIMED_BLOCK_TARGET if by_event_time else BLOCK_TARGET
+        self.block_rows = self.ooo_window * max(1, target // self.ooo_window)
         self.anomaly = anomaly
         self.envelope = envelope
         self.counts = {t: int(engine.row_counts.get(t, 0)) for t in order}
@@ -93,6 +120,7 @@ class EventPlan:
             total += self.counts[t]
         self.total_events = total
         self._whole: dict[str, pa.Table] | None = None
+        self._timed: pa.RecordBatch | None = None
         self._touched = engine._post_pass_tables()
 
     # ---- identity -----------------------------------------------------------------------
@@ -111,6 +139,8 @@ class EventPlan:
             "mutators": [] if self.anomaly is None else [m.name for m in self.anomaly.mutators],
             "envelope": self.envelope,
         }
+        if self.by_event_time:
+            document["order"] = "event-time"
         blob = json.dumps(document, sort_keys=True, default=str).encode()
         return hashlib.sha256(blob).hexdigest()
 
@@ -148,10 +178,63 @@ class EventPlan:
         order = np.lexsort((index, position, window_of))
         return order
 
+    def _columns(self, table: str) -> tuple[pa.Schema, list[Any]]:
+        """The whole of ``table`` as ``(schema, columns)``, before the anomaly injection."""
+        if table in self._touched:
+            if self._whole is None:
+                self._rows(table, 0, 0)  # generates the post-pass tables
+            assert self._whole is not None
+            whole = self._whole[table]
+            return whole.schema, list(whole.columns)
+        batch = self.engine.generate_chunk(table, 0, self.counts[table])
+        return batch.schema, list(batch.columns)
+
+    def _time_ordered(self, table: str) -> pa.RecordBatch:
+        """Every event of ``table`` in event-time order (computed once)."""
+        if self._timed is not None:
+            return self._timed
+        if self.anomaly is not None:
+            batch = self.anomaly.apply(self._rows(table, 0, self.counts[table]), table, 0)
+            schema, columns = batch.schema, list(batch.columns)
+        else:
+            schema, columns = self._columns(table)
+        time_col = event_time_column(schema)
+        if time_col is None:
+            flat = [_flat(c) for c in columns]
+            self._timed = with_event_fields(pa.RecordBatch.from_arrays(flat, schema=schema), table, 0)
+            return self._timed
+        check_reserved(schema, table)
+        names = list(schema.names)
+        key = columns[names.index(time_col)]
+        if pa.types.is_date(key.type):
+            key = key.cast(pa.timestamp("ms"))
+        # Arrow's sort is stable and puts nulls last; a null time sorts first here.
+        order = pc.sort_indices(key)
+        nulls = int(key.null_count)
+        if nulls:
+            split = len(order) - nulls
+            order = pa.concat_arrays([order[split:], order[:split]])
+        # The permutation is the row position of each event, so ``_shape_seq`` needs no gather;
+        # the columns are gathered on several threads (the kernel releases the lock).
+        with ThreadPoolExecutor(max_workers=max(1, min(4, os.cpu_count() or 1))) as pool:
+            taken = list(pool.map(lambda c: _flat(c.take(order)), columns))
+        table_col, seq_col = event_columns(table, order)
+        self._timed = pa.RecordBatch.from_arrays(
+            [*taken, table_col, seq_col, taken[names.index(time_col)]],
+            names=[*names, FIELD_TABLE, FIELD_SEQ, FIELD_TIME],
+        )
+        return self._timed
+
     def block(self, table: str, index: int) -> EventBlock:
         """Block ``index`` of ``table`` (rows ``index * block_rows ..``) as events."""
         start = index * self.block_rows
         n = min(self.block_rows, self.counts[table] - start)
+        if self.by_event_time:
+            events = self._time_ordered(table).slice(start, n)
+            order = self._reorder(table, start, n)
+            if order is not None:
+                events = events.take(pa.array(order))
+            return EventBlock(self.starts[table] + start, table, events)
         batch = self._rows(table, start, n)
         if self.anomaly is not None:
             batch = self.anomaly.apply(batch, table, start)

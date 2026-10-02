@@ -41,6 +41,7 @@ DEFAULT_OUT = HERE / "results.json"
 SCHEMA_FILE = HERE / "results.schema.json"
 PROFILE = HERE / "profile_1to1"
 DOMAIN = HERE / "domain_1to1"
+STREAM = HERE / "stream_1to1"
 IMPL = "reference_port"
 
 # Workloads (section 3.4). Later work packages add their own (CLI gates, streaming, START).
@@ -57,6 +58,8 @@ FULL_PROFILE_DATASETS = [
     "mt",
 ]
 QUICK_DOMAINS = [("retail", ["small", "medium"])]
+QUICK_STREAM_SCALES = ["small", "medium"]
+FULL_STREAM_SCALES = ["medium"]  # STREAM-EMIT: retail order, medium
 FULL_DOMAINS = [("retail", ["medium", "large"])]  # every other domain at medium, from P6-01
 DATASET_IDS = {
     "d1.csv": "D1",
@@ -367,6 +370,78 @@ def domain_workloads(domain: str, scales: list[str], runs: int, out: dict) -> bo
     return ok
 
 
+def stream_workloads(scales: list[str], runs: int, out: dict) -> bool:
+    """STREAM-EMIT (section 3.4): ``shape stream`` against the baseline's stream command, one
+    table to a file. Verify (exit 0 required), time, then verify the timed output again.
+    Returns True if every verifier passed. Only ``spindle`` and ``shape`` have a record."""
+    ok = True
+    for scale in scales:
+        wid = f"stream:retail:order:{scale}"
+        vcmd = [str(SPINDLE_PY), str(STREAM / "verify.py"), "--scale", scale]
+        rc, _ = sh(vcmd, BENCH_OUT_DIR / "verify" / f"stream_{scale}.txt")
+        ver = verifier_record(vcmd, rc)
+        rec_sp: dict[str, Any] = {
+            "kind": "stream",
+            "domain": "retail",
+            "scale": scale,
+            "median_s": None,
+            "runs_s": [],
+            "verifier": None,
+        }
+        rec_im: dict[str, Any] = {
+            "kind": "stream",
+            "domain": "retail",
+            "scale": scale,
+            "verifier": ver,
+            "median_s": None,
+            "runs_s": [],
+            "speedup_vs_spindle": None,
+        }
+        if rc == 0:
+            report = BENCH_OUT_DIR / "bench" / f"stream_{scale}.json"
+            bcmd = [
+                str(SHAPE_PY),
+                str(STREAM / "bench.py"),
+                "--scale",
+                scale,
+                "--runs",
+                str(runs),
+                "--report",
+                str(report),
+            ]
+            brc, _ = sh(bcmd)
+            if brc != 0:
+                raise SystemExit(f"stream bench failed ({brc})")
+            v2 = [*vcmd, "--no-generate"]
+            rc2, _ = sh(v2, BENCH_OUT_DIR / "verify" / f"stream_{scale}_timed.txt")
+            rec_im["verifier"] = {**verifier_record(v2, rc2), "first_run": ver}
+            if rc2 == 0:
+                b = json.loads(report.read_text())
+                sp, sh_ = b["summary"]["spindle"], b["summary"]["shape"]
+                rec_sp.update(
+                    median_s=sp["total_s"],
+                    runs_s=sp["runs_total_s"],
+                    events=sp["events"],
+                    peak_rss_mb=sp["peak_rss_mb"],
+                )
+                rec_im.update(
+                    median_s=sh_["total_s"],
+                    runs_s=sh_["runs_total_s"],
+                    events=sh_["events"],
+                    peak_rss_mb=sh_["peak_rss_mb"],
+                    speedup_vs_spindle=sp["total_s"] / sh_["total_s"],
+                    cli_end_to_end_s=b.get("cli_end_to_end_s"),
+                    cli_speedup_vs_spindle=b.get("cli_speedup"),
+                )
+            else:
+                ok = False
+        else:
+            ok = False
+        out["spindle"]["workloads"][wid] = rec_sp
+        out["shape"]["workloads"][wid] = rec_im
+    return ok
+
+
 def other_domain_baselines(runs: int, out: dict) -> None:
     """--full: every other Spindle domain at medium, Spindle side only (reference_port supports
     retail only and reports ``unavailable``; shape stays null until P6-01)."""
@@ -446,7 +521,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--dry-run", action="store_true", help="print the workloads and exit")
     ap.add_argument(
         "--only",
-        choices=("all", "profile", "generate"),
+        choices=("all", "profile", "generate", "stream"),
         default="all",
         help="run one family of workloads (the gate for a phase needs only its own)",
     )
@@ -456,9 +531,11 @@ def main(argv: list[str] | None = None) -> int:
     runs = 3 if a.quick else 5
     datasets = QUICK_PROFILE_DATASETS if a.quick else FULL_PROFILE_DATASETS
     domains = QUICK_DOMAINS if a.quick else FULL_DOMAINS
+    stream_scales = QUICK_STREAM_SCALES if a.quick else FULL_STREAM_SCALES
     if a.dry_run:
         print(
             f"mode={mode} runs={runs}\nprofile: {datasets}\ngenerate: {domains}"
+            f"\nstream: retail order {stream_scales}"
             + ("\n+ every other domain at medium (Spindle only)" if a.full else "")
         )
         return 0
@@ -505,6 +582,8 @@ def main(argv: list[str] | None = None) -> int:
                 ok &= domain_workloads(dom, scales, runs, out)
             if a.full:
                 other_domain_baselines(runs, out)
+        if a.only in ("all", "stream"):
+            ok &= stream_workloads(stream_scales, runs, out)
     # kernel_microbench is written by kernel_bench.py; a full run must not drop it
     with contextlib.suppress(OSError, ValueError, KeyError):
         out["kernel_microbench"] = json.loads(Path(a.out).read_text())["kernel_microbench"]

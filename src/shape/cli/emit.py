@@ -34,12 +34,33 @@ def add_arguments(sub: Any) -> None:
         "timestamp column) _shape_event_time; (_shape_table, _shape_seq) is the idempotency key. "
         "Delivery is at-least-once: after a crash, run the same command again to resume.",
     )
+    add_options(em)
+
+
+def add_options(em: Any, *, stream: bool = False) -> None:
+    """The options of ``shape emit``, added to ``em``. ``shape stream`` (``cli/stream.py``) adds
+    the same ones (``stream=True``): with the short flags ``-t``, ``-s``, ``-m``, one required
+    ``--table`` and a default ``--rate`` of 10."""
+
+    def flags(long: str, short: str) -> tuple[str, ...]:
+        return (long, short) if stream else (long,)
+
+    rate_default = 10.0 if stream else 100.0
+
     em.add_argument("target", metavar="DOMAIN|SCHEMA.json", help="an installed domain or a schema")
-    em.add_argument("--mode", choices=("3nf", "star"), help="the schema mode of a domain")
-    em.add_argument("--scale", metavar="PRESET", help="the scale preset (see `shape presets`)")
+    em.add_argument(
+        *flags("--mode", "-m"), choices=("3nf", "star"), help="the schema mode of a domain"
+    )
+    em.add_argument(
+        *flags("--scale", "-s"), metavar="PRESET", help="the scale preset (see `shape presets`)"
+    )
     em.add_argument("--seed", type=int, help="the seed (default: the schema's)")
     em.add_argument(
-        "--table", action="append", metavar="NAME", help="stream only this table (repeatable)"
+        *flags("--table", "-t"),
+        action="append",
+        metavar="NAME",
+        required=stream,
+        help="the table to stream (required)" if stream else "stream only this table (repeatable)",
     )
     em.add_argument("--sink", default="console", metavar="SINK", help=SINKS_HELP)
     em.add_argument("-o", "--output", metavar="FILE", help="the file for --sink file")
@@ -56,7 +77,9 @@ def add_arguments(sub: Any) -> None:
         default=False,
         help="pace to --rate events per second (default: --no-realtime, as fast as possible)",
     )
-    rate.add_argument("--rate", type=float, default=100.0, metavar="N", help="events/s (100)")
+    rate.add_argument(
+        "--rate", type=float, default=rate_default, metavar="N", help=f"events/s ({rate_default:g})"
+    )
     rate.add_argument(
         "--burst",
         action="append",
@@ -374,6 +397,7 @@ def run(a: argparse.Namespace) -> int:
         ooo_window=a.ooo_window,
         anomaly=injector,
         envelope=a.envelope,
+        by_event_time=getattr(a, "by_event_time", False),
     )
     checkpoint = a.checkpoint or (
         f"{a.output}.checkpoint" if a.sink == "file" and a.output else None
@@ -426,7 +450,7 @@ def run(a: argparse.Namespace) -> int:
     else:
         note = " (already complete)" if report.already_complete else ""
         print(
-            f"shape emit: {report.events:,} events delivered, offset {report.end_offset:,}"
+            f"shape {a.cmd}: {report.events:,} events delivered, offset {report.end_offset:,}"
             f" of {report.total_events:,}, {report.stopped_by}{note}"
             + (f", {report.rate:,.0f} events/s" if report.events else ""),
             file=out,
@@ -434,7 +458,7 @@ def run(a: argparse.Namespace) -> int:
         if summary is not None:
             overall = summary["overall"]
             print(
-                "shape emit: live fidelity "
+                f"shape {a.cmd}: live fidelity "
                 + ("n/a" if overall is None else f"{overall:.2f}")
                 + f" over {len(summary['tables'])} tables, {summary['alert_count']} alerts"
                 + (f", FAILED: {'; '.join(summary['failures'])}" if summary["failures"] else ""),

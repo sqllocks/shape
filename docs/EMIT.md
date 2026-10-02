@@ -12,6 +12,38 @@ shape emit retail --realtime --rate 500 --burst 30:10:4 --out-of-order 0.05 \
       --anomaly-fraction 0.01 --sink file -o events.jsonl
 ```
 
+## `shape stream`: one table in event-time order
+
+`shape stream` is `shape emit` for **one table, earliest event first**. It is the same command
+underneath (`shape.cli.emit`, one runtime): the same options, sinks, envelopes, delivery guarantees,
+checkpoint and live fidelity; `shape stream` differs only in the shape of the stream.
+
+| | `shape emit` | `shape stream` |
+|---|---|---|
+| tables | every table of the schema, one after another in dependency order (`--table`, repeatable, selects) | exactly one: `--table NAME` is required |
+| order | row order within a table | **event-time order**: the table is generated whole and stably sorted by `_shape_event_time` (a null time first; equal times in row order); a table with no date or timestamp column stays in row order |
+| `--max-events N` | the first N events of the sequence (the first tables' rows) | the **N earliest events** |
+| `--out-of-order` | window positions in row order | window positions in the time-ordered sequence |
+| memory | bounded by a block (except a table a post-pass changes) | the whole table, as events |
+| `--rate` default | 100 | 10 |
+| short flags | none | `-t` (`--table`), `-s` (`--scale`), `-m` (`--mode`) |
+| delivery batch (not paced) | 1,000 events | 32,768 events |
+
+```bash
+shape stream retail --table order --scale medium --no-realtime --sink file -o orders.jsonl
+shape stream retail -t order -s small --max-events 1000          # the 1,000 earliest orders
+shape stream retail -t order --realtime --rate 500 --burst 30:10:4 --sink file -o orders.jsonl
+```
+
+`_shape_seq` is still the row's position in the table (so the idempotency key is the same as in
+`shape emit`), which makes the sequence of `_shape_seq` values of a time-ordered stream a permutation
+of the table's rows. A checkpoint of a `shape stream` run is not accepted by `shape emit` or the
+other way round (the order is part of the stream's identity).
+
+The events are written by an encoder that builds the JSON text of a batch column by column with
+Arrow kernels (on several threads for a batch of 16,384 events or more); its output is
+byte-identical to the row-by-row encoder it replaces (`tests/streaming/emit/test_stream.py`).
+
 ## Events
 
 A flat event (the default) is the row's columns plus:
