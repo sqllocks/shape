@@ -1,0 +1,4486 @@
+{
+ "domain": "capital_markets",
+ "scale": "small",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "exchange": {
+   "rows": {
+    "spindle": 3,
+    "impl": 3
+   },
+   "columns_spindle": [
+    "exchange_id",
+    "exchange_name",
+    "exchange_code",
+    "mic",
+    "timezone",
+    "trading_hours_start",
+    "trading_hours_end"
+   ],
+   "columns_impl": [
+    "exchange_id",
+    "exchange_name",
+    "exchange_code",
+    "mic",
+    "timezone",
+    "trading_hours_start",
+    "trading_hours_end"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "exchange_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "exchange_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "exchange_code": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "mic": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "timezone": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "trading_hours_start": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "trading_hours_end": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "exchange_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.9245008972987527
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 1.591739348379845,
+     "stats": {
+      "mean": {
+       "spindle": 2.0,
+       "impl": 2.0
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 3.0,
+       "impl": 3.0
+      },
+      "std": {
+       "spindle": 0.816496580927726,
+       "impl": 0.816496580927726,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 3
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "exchange_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.9245008972987527
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.5
+     },
+     "top10": [
+      {
+       "value": "NASDAQ Stock Market",
+       "spindle": 0.6666666666666666,
+       "impl": 0.3333333333333333
+      },
+      {
+       "value": "New York Stock Exchange",
+       "spindle": 0.3333333333333333,
+       "impl": 0.6666666666666666
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.3333333333333333,
+     "tvd_baseline": 0.9999999999999999,
+     "tvd_tol": 1.95441004761168,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "exchange_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.9245008972987527
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.5
+     },
+     "top10": [
+      {
+       "value": "NYSE",
+       "spindle": 0.6666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "AMEX",
+       "spindle": 0.3333333333333333,
+       "impl": 0.3333333333333333
+      },
+      {
+       "value": "NASDAQ",
+       "spindle": 0.0,
+       "impl": 0.6666666666666666
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.6666666666666666,
+     "tvd_baseline": 0.6666666666666666,
+     "tvd_tol": 1.95441004761168,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "mic": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.9245008972987527
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.5
+     },
+     "top10": [
+      {
+       "value": "XNAS",
+       "spindle": 0.6666666666666666,
+       "impl": 0.3333333333333333
+      },
+      {
+       "value": "XNYS",
+       "spindle": 0.3333333333333333,
+       "impl": 0.6666666666666666
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.3333333333333333,
+     "tvd_baseline": 0.9999999999999999,
+     "tvd_tol": 1.95441004761168,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "timezone": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.9245008972987527
+     },
+     "distinct": {
+      "spindle": 1,
+      "impl": 1,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "America/New_York",
+       "spindle": 1.0,
+       "impl": 1.0
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0,
+     "tvd_baseline": 0.0,
+     "tvd_tol": 1.95441004761168,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "trading_hours_start": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.9245008972987527
+     },
+     "distinct": {
+      "spindle": 1,
+      "impl": 1,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "09:30",
+       "spindle": 1.0,
+       "impl": 1.0
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0,
+     "tvd_baseline": 0.0,
+     "tvd_tol": 1.95441004761168,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "trading_hours_end": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.9245008972987527
+     },
+     "distinct": {
+      "spindle": 1,
+      "impl": 1,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "16:00",
+       "spindle": 1.0,
+       "impl": 1.0
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0,
+     "tvd_baseline": 0.0,
+     "tvd_tol": 1.95441004761168,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "sector": {
+   "rows": {
+    "spindle": 11,
+    "impl": 11
+   },
+   "columns_spindle": [
+    "sector_id",
+    "sector_name",
+    "sector_code"
+   ],
+   "columns_impl": [
+    "sector_id",
+    "sector_name",
+    "sector_code"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "sector_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "sector_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "sector_code": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "sector_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.6129089658756747
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.83125876397524,
+     "stats": {
+      "mean": {
+       "spindle": 6.0,
+       "impl": 6.0
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 11.0,
+       "impl": 11.0
+      },
+      "std": {
+       "spindle": 3.1622776601683795,
+       "impl": 3.1622776601683795,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 11,
+      "impl": 11
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "sector_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.6129089658756747
+     },
+     "distinct": {
+      "spindle": 6,
+      "impl": 8,
+      "ratio": 1.3333333333333333,
+      "baseline_max_ratio_dev": 0.33333333333333326
+     },
+     "top10": [
+      {
+       "value": "Health Care",
+       "spindle": 0.36363636363636365,
+       "impl": 0.18181818181818182
+      },
+      {
+       "value": "Materials",
+       "spindle": 0.18181818181818182,
+       "impl": 0.09090909090909091
+      },
+      {
+       "value": "Industrials",
+       "spindle": 0.18181818181818182,
+       "impl": 0.09090909090909091
+      },
+      {
+       "value": "Consumer Staples",
+       "spindle": 0.09090909090909091,
+       "impl": 0.2727272727272727
+      },
+      {
+       "value": "Financials",
+       "spindle": 0.09090909090909091,
+       "impl": 0.09090909090909091
+      },
+      {
+       "value": "Real Estate",
+       "spindle": 0.09090909090909091,
+       "impl": 0.0
+      },
+      {
+       "value": "Utilities",
+       "spindle": 0.0,
+       "impl": 0.09090909090909091
+      },
+      {
+       "value": "Consumer Discretionary",
+       "spindle": 0.0,
+       "impl": 0.09090909090909091
+      },
+      {
+       "value": "Energy",
+       "spindle": 0.0,
+       "impl": 0.09090909090909091
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.45454545454545453,
+     "tvd_baseline": 0.6363636363636364,
+     "tvd_tol": 1.7678304039350659,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "sector_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.6129089658756747
+     },
+     "distinct": {
+      "spindle": 9,
+      "impl": 7,
+      "ratio": 0.7777777777777778,
+      "baseline_max_ratio_dev": 0.33333333333333337
+     },
+     "top10": [
+      {
+       "value": "60",
+       "spindle": 0.18181818181818182,
+       "impl": 0.09090909090909091
+      },
+      {
+       "value": "10",
+       "spindle": 0.18181818181818182,
+       "impl": 0.0
+      },
+      {
+       "value": "50",
+       "spindle": 0.09090909090909091,
+       "impl": 0.09090909090909091
+      },
+      {
+       "value": "25",
+       "spindle": 0.09090909090909091,
+       "impl": 0.09090909090909091
+      },
+      {
+       "value": "35",
+       "spindle": 0.09090909090909091,
+       "impl": 0.2727272727272727
+      },
+      {
+       "value": "15",
+       "spindle": 0.09090909090909091,
+       "impl": 0.18181818181818182
+      },
+      {
+       "value": "40",
+       "spindle": 0.09090909090909091,
+       "impl": 0.0
+      },
+      {
+       "value": "45",
+       "spindle": 0.09090909090909091,
+       "impl": 0.0
+      },
+      {
+       "value": "30",
+       "spindle": 0.09090909090909091,
+       "impl": 0.18181818181818182
+      },
+      {
+       "value": "20",
+       "spindle": 0.0,
+       "impl": 0.09090909090909091
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.45454545454545453,
+     "tvd_baseline": 0.6363636363636364,
+     "tvd_tol": 2.1651412207095926,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "industry": {
+   "rows": {
+    "spindle": 61,
+    "impl": 61
+   },
+   "columns_spindle": [
+    "industry_id",
+    "sector_id",
+    "industry_name"
+   ],
+   "columns_impl": [
+    "industry_id",
+    "sector_id",
+    "industry_name"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "industry_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "sector_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "industry_name": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "industry_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.11496506119971747
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.3529942752413258,
+     "stats": {
+      "mean": {
+       "spindle": 31.0,
+       "impl": 31.0
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 61.0,
+       "impl": 61.0
+      },
+      "std": {
+       "spindle": 17.60681686165901,
+       "impl": 17.60681686165901,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 61,
+      "impl": 61
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "sector_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.11496506119971747
+     },
+     "ks": 0.08196721311475408,
+     "ks_baseline": 0.13114754098360654,
+     "ks_tol": 0.3529942752413258,
+     "stats": {
+      "mean": {
+       "spindle": 6.016393442622951,
+       "impl": 5.80327868852459
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 11.0,
+       "impl": 11.0
+      },
+      "std": {
+       "spindle": 3.159642038651849,
+       "impl": 2.9743144802207344,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 11,
+      "impl": 11
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "industry_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.11496506119971747
+     },
+     "distinct": {
+      "spindle": 1,
+      "impl": 1,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "",
+       "spindle": 1.0,
+       "impl": 1.0
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0,
+     "tvd_baseline": 0.0,
+     "tvd_tol": 0.433422443808568,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "company": {
+   "rows": {
+    "spindle": 100,
+    "impl": 100
+   },
+   "columns_spindle": [
+    "ticker",
+    "company_name",
+    "cik",
+    "exchange_code",
+    "sector_name",
+    "industry_name",
+    "market_cap_tier",
+    "founding_year",
+    "hq_state",
+    "website"
+   ],
+   "columns_impl": [
+    "ticker",
+    "company_name",
+    "cik",
+    "exchange_code",
+    "sector_name",
+    "industry_name",
+    "market_cap_tier",
+    "founding_year",
+    "hq_state",
+    "website"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "ticker": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "company_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "cik": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "exchange_code": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "sector_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "industry_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "market_cap_tier": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "founding_year": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "hq_state": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "website": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "ticker": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "FCX",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "NVDA",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "NWS",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "BMY",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "WM",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "DE",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "ABNB",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "UBER",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "APD",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "SEDG",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "CI",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "INTC",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "UPS",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "AMZN",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "DHR",
+       "spindle": 0.01,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.19,
+     "tvd_baseline": 0.2,
+     "tvd_tol": 2.3936536824085963,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "company_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Freeport-McMoRan Inc.",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "NVIDIA Corporation",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "News Corporation Class B",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "Bristol-Myers Squibb Company",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "Waste Management Inc.",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "Deere & Company",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "Airbnb Inc.",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "Uber Technologies Inc.",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "Air Products and Chemicals Inc.",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "SolarEdge Technologies Inc.",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "The Cigna Group",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "Intel Corporation",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "United Parcel Service Inc.",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "Amazon.com Inc.",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Danaher Corporation",
+       "spindle": 0.01,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.19,
+     "tvd_baseline": 0.2,
+     "tvd_tol": 2.3936536824085963,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "cik": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "0000831259",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0001045810",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0001564708",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0000014272",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0000823768",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0000315189",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0001559720",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0001543151",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0000002969",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0001419612",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "0001739940",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0000050863",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0001090727",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0001018724",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "0000313616",
+       "spindle": 0.01,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.19,
+     "tvd_baseline": 0.2,
+     "tvd_tol": 2.3936536824085963,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "exchange_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "NYSE",
+       "spindle": 0.66,
+       "impl": 0.69
+      },
+      {
+       "value": "NASDAQ",
+       "spindle": 0.34,
+       "impl": 0.31
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.02999999999999997,
+     "tvd_baseline": 0.020000000000000018,
+     "tvd_tol": 0.3385137501286538,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "sector_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 11,
+      "impl": 11,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Information Technology",
+       "spindle": 0.2,
+       "impl": 0.17
+      },
+      {
+       "value": "Health Care",
+       "spindle": 0.17,
+       "impl": 0.16
+      },
+      {
+       "value": "Consumer Discretionary",
+       "spindle": 0.14,
+       "impl": 0.12
+      },
+      {
+       "value": "Industrials",
+       "spindle": 0.13,
+       "impl": 0.13
+      },
+      {
+       "value": "Financials",
+       "spindle": 0.12,
+       "impl": 0.1
+      },
+      {
+       "value": "Consumer Staples",
+       "spindle": 0.07,
+       "impl": 0.1
+      },
+      {
+       "value": "Communication Services",
+       "spindle": 0.06,
+       "impl": 0.06
+      },
+      {
+       "value": "Materials",
+       "spindle": 0.04,
+       "impl": 0.05
+      },
+      {
+       "value": "Energy",
+       "spindle": 0.03,
+       "impl": 0.05
+      },
+      {
+       "value": "Real Estate",
+       "spindle": 0.02,
+       "impl": 0.03
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.08000000000000002,
+     "tvd_baseline": 0.09,
+     "tvd_tol": 0.7938851142601842,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "industry_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 43,
+      "impl": 39,
+      "ratio": 0.9069767441860465,
+      "baseline_max_ratio_dev": 0.04651162790697683
+     },
+     "top10": [
+      {
+       "value": "Semiconductors & Semiconductor Equipment",
+       "spindle": 0.09,
+       "impl": 0.08
+      },
+      {
+       "value": "Software",
+       "spindle": 0.07,
+       "impl": 0.06
+      },
+      {
+       "value": "Pharmaceuticals",
+       "spindle": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "Capital Markets",
+       "spindle": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "Hotels, Restaurants & Leisure",
+       "spindle": 0.04,
+       "impl": 0.04
+      },
+      {
+       "value": "Biotechnology",
+       "spindle": 0.04,
+       "impl": 0.04
+      },
+      {
+       "value": "Automobiles",
+       "spindle": 0.04,
+       "impl": 0.04
+      },
+      {
+       "value": "Health Care Providers & Services",
+       "spindle": 0.04,
+       "impl": 0.03
+      },
+      {
+       "value": "Chemicals",
+       "spindle": 0.03,
+       "impl": 0.04
+      },
+      {
+       "value": "Banks",
+       "spindle": 0.03,
+       "impl": 0.02
+      },
+      {
+       "value": "Aerospace & Defense",
+       "spindle": 0.03,
+       "impl": 0.04
+      },
+      {
+       "value": "Oil, Gas & Consumable Fuels",
+       "spindle": 0.02,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.12000000000000001,
+     "tvd_baseline": 0.15000000000000002,
+     "tvd_tol": 1.5696236870863474,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "market_cap_tier": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "large",
+       "spindle": 0.64,
+       "impl": 0.64
+      },
+      {
+       "value": "mega",
+       "spindle": 0.16,
+       "impl": 0.18
+      },
+      {
+       "value": "mid",
+       "spindle": 0.11,
+       "impl": 0.11
+      },
+      {
+       "value": "small",
+       "spindle": 0.09,
+       "impl": 0.07
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.01999999999999999,
+     "tvd_baseline": 0.050000000000000024,
+     "tvd_tol": 0.47873073648171927,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "founding_year": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.050000000000000044,
+     "ks_baseline": 0.040000000000000036,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 1944.46,
+       "impl": 1941.18
+      },
+      "min": {
+       "spindle": 1792.0,
+       "impl": 1792.0
+      },
+      "max": {
+       "spindle": 2013.0,
+       "impl": 2013.0
+      },
+      "std": {
+       "spindle": 52.850434246087325,
+       "impl": 54.79386462004665,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 73,
+      "impl": 75
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "hq_state": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 25,
+      "impl": 26,
+      "ratio": 1.04,
+      "baseline_max_ratio_dev": 0.040000000000000036
+     },
+     "top10": [
+      {
+       "value": "CA",
+       "spindle": 0.28,
+       "impl": 0.24
+      },
+      {
+       "value": "NY",
+       "spindle": 0.15,
+       "impl": 0.13
+      },
+      {
+       "value": "TX",
+       "spindle": 0.07,
+       "impl": 0.1
+      },
+      {
+       "value": "GA",
+       "spindle": 0.05,
+       "impl": 0.04
+      },
+      {
+       "value": "MI",
+       "spindle": 0.05,
+       "impl": 0.04
+      },
+      {
+       "value": "NC",
+       "spindle": 0.04,
+       "impl": 0.03
+      },
+      {
+       "value": "VA",
+       "spindle": 0.04,
+       "impl": 0.03
+      },
+      {
+       "value": "NJ",
+       "spindle": 0.03,
+       "impl": 0.03
+      },
+      {
+       "value": "IL",
+       "spindle": 0.03,
+       "impl": 0.05
+      },
+      {
+       "value": "WA",
+       "spindle": 0.03,
+       "impl": 0.04
+      },
+      {
+       "value": "CT",
+       "spindle": 0.03,
+       "impl": 0.04
+      },
+      {
+       "value": "OH",
+       "spindle": 0.01,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.13,
+     "tvd_baseline": 0.12000000000000002,
+     "tvd_tol": 1.1968268412042982,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "website": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "https://www.fcx.com",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "https://www.nvidia.com",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "https://www.newscorp.com",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "https://www.bms.com",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "https://www.wm.com",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "https://www.deere.com",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "https://www.airbnb.com",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "https://www.uber.com",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "https://www.airproducts.com",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "https://www.solaredge.com",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "https://www.thecignagroup.com",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "https://www.intel.com",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "https://www.ups.com",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "https://www.amazon.com",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "https://www.danaher.com",
+       "spindle": 0.01,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.19,
+     "tvd_baseline": 0.2,
+     "tvd_tol": 2.3936536824085963,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "daily_price": {
+   "rows": {
+    "spindle": 25200,
+    "impl": 25200
+   },
+   "columns_spindle": [
+    "price_id",
+    "ticker",
+    "trade_date",
+    "open",
+    "volume",
+    "high",
+    "low",
+    "close",
+    "adj_close"
+   ],
+   "columns_impl": [
+    "price_id",
+    "ticker",
+    "trade_date",
+    "open",
+    "volume",
+    "high",
+    "low",
+    "close",
+    "adj_close"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "price_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "ticker": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "trade_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "open": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "volume": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "high": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "low": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "close": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "adj_close": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "price_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0002805923615678203
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.017367300120453153,
+     "stats": {
+      "mean": {
+       "spindle": 12600.5,
+       "impl": 12600.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 25200.0,
+       "impl": 25200.0
+      },
+      "std": {
+       "spindle": 7274.613386061603,
+       "impl": 7274.613386061603,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 25200,
+      "impl": 25200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ticker": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0002805923615678203
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "LIN",
+       "spindle": 0.011468253968253968,
+       "impl": 0.009325396825396825
+      },
+      {
+       "value": "NFLX",
+       "spindle": 0.01138888888888889,
+       "impl": 0.01011904761904762
+      },
+      {
+       "value": "CRM",
+       "spindle": 0.01115079365079365,
+       "impl": 0.010238095238095239
+      },
+      {
+       "value": "SYK",
+       "spindle": 0.010992063492063492,
+       "impl": 0.010833333333333334
+      },
+      {
+       "value": "ICE",
+       "spindle": 0.010912698412698412,
+       "impl": 0.009960317460317461
+      },
+      {
+       "value": "ELV",
+       "spindle": 0.010912698412698412,
+       "impl": 0.010198412698412698
+      },
+      {
+       "value": "TGT",
+       "spindle": 0.010912698412698412,
+       "impl": 0.010515873015873017
+      },
+      {
+       "value": "NKE",
+       "spindle": 0.010873015873015873,
+       "impl": 0.009880952380952381
+      },
+      {
+       "value": "PANW",
+       "spindle": 0.010873015873015873,
+       "impl": 0.01119047619047619
+      },
+      {
+       "value": "SCHW",
+       "spindle": 0.010793650793650795,
+       "impl": 0.010277777777777778
+      },
+      {
+       "value": "TMO",
+       "spindle": 0.0,
+       "impl": 0.011468253968253968
+      },
+      {
+       "value": "GNRC",
+       "spindle": 0.010595238095238095,
+       "impl": 0.011428571428571429
+      },
+      {
+       "value": "TSLA",
+       "spindle": 0.00876984126984127,
+       "impl": 0.01130952380952381
+      },
+      {
+       "value": "BLK",
+       "spindle": 0.010317460317460317,
+       "impl": 0.01115079365079365
+      },
+      {
+       "value": "CL",
+       "spindle": 0.009960317460317461,
+       "impl": 0.010912698412698412
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.21781746031746035,
+     "tvd_baseline": 0.2253968253968254,
+     "tvd_tol": 0.3400952380952381,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "trade_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0002805923615678203
+     },
+     "ks": 0.0068253968253968456,
+     "ks_baseline": 0.010436507936507966,
+     "ks_tol": 0.01765476190476195,
+     "stats": {
+      "mean": {
+       "spindle": "2024-01-02 01:39:34.553834240",
+       "impl": "2024-01-01 03:21:35.585054208"
+      },
+      "min": {
+       "spindle": "2022-01-01 00:45:06.532583424",
+       "impl": "2022-01-01 00:44:28.437581056"
+      },
+      "max": {
+       "spindle": "2025-12-30 23:46:57.195396096",
+       "impl": "2025-12-30 20:25:21.488786944"
+      },
+      "std": {
+       "spindle": 422.8430861481565,
+       "impl": 420.8995032031073,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 25200,
+      "impl": 25200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "open": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0002805923615678203
+     },
+     "ks": 0.006666666666666668,
+     "ks_baseline": 0.009960317460317461,
+     "ks_tol": 0.017367300120453153,
+     "stats": {
+      "mean": {
+       "spindle": 111.08516071428572,
+       "impl": 110.67202896825397
+      },
+      "min": {
+       "spindle": 0.33,
+       "impl": 0.4
+      },
+      "max": {
+       "spindle": 8275.54,
+       "impl": 4705.53
+      },
+      "std": {
+       "spindle": 199.56620354050284,
+       "impl": 187.48119778037753,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 14348,
+      "impl": 14392
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "volume": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0002805923615678203
+     },
+     "ks": 0.0055952380952380976,
+     "ks_baseline": 0.008373015873015865,
+     "ks_tol": 0.017367300120453153,
+     "stats": {
+      "mean": {
+       "spindle": 4465699.085737751,
+       "impl": 4499378.09361513
+      },
+      "min": {
+       "spindle": 138073.28930143613,
+       "impl": 178959.85632166502
+      },
+      "max": {
+       "spindle": 81049424.2341762,
+       "impl": 123316898.01546621
+      },
+      "std": {
+       "spindle": 4179820.6768063125,
+       "impl": 4323105.855441548,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 25200,
+      "impl": 25200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "high": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0002805923615678203
+     },
+     "ks": 0.00646825396825397,
+     "ks_baseline": 0.009761904761904763,
+     "ks_tol": 0.017367300120453153,
+     "stats": {
+      "mean": {
+       "spindle": 116.68865634920634,
+       "impl": 116.18359761904763
+      },
+      "min": {
+       "spindle": 0.34,
+       "impl": 0.4
+      },
+      "max": {
+       "spindle": 8641.68,
+       "impl": 5143.64
+      },
+      "std": {
+       "spindle": 209.51410937256404,
+       "impl": 196.74370112819528,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 14586,
+      "impl": 14658
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "low": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0002805923615678203
+     },
+     "ks": 0.006626984126984134,
+     "ks_baseline": 0.009841269841269831,
+     "ks_tol": 0.017367300120453153,
+     "stats": {
+      "mean": {
+       "spindle": 105.53884404761905,
+       "impl": 105.19788492063493
+      },
+      "min": {
+       "spindle": 0.33,
+       "impl": 0.36
+      },
+      "max": {
+       "spindle": 7939.68,
+       "impl": 4475.52
+      },
+      "std": {
+       "spindle": 189.90500095756184,
+       "impl": 178.5226245370093,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 14028,
+      "impl": 14063
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "close": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0002805923615678203
+     },
+     "ks": 0.006666666666666668,
+     "ks_baseline": 0.01003968253968257,
+     "ks_tol": 0.017367300120453153,
+     "stats": {
+      "mean": {
+       "spindle": 109.96397936507938,
+       "impl": 109.60495238095237
+      },
+      "min": {
+       "spindle": 0.33,
+       "impl": 0.39
+      },
+      "max": {
+       "spindle": 8066.8,
+       "impl": 4726.03
+      },
+      "std": {
+       "spindle": 197.84338973268382,
+       "impl": 186.0294513239839,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 14248,
+      "impl": 14330
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "adj_close": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0002805923615678203
+     },
+     "ks": 0.006706349206349216,
+     "ks_baseline": 0.010039682539682543,
+     "ks_tol": 0.017367300120453153,
+     "stats": {
+      "mean": {
+       "spindle": 107.22198095238095,
+       "impl": 106.8693515873016
+      },
+      "min": {
+       "spindle": 0.32,
+       "impl": 0.39
+      },
+      "max": {
+       "spindle": 8014.91,
+       "impl": 4572.67
+      },
+      "std": {
+       "spindle": 193.0514402037717,
+       "impl": 181.3736661803214,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 14167,
+      "impl": 14161
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "dividend": {
+   "rows": {
+    "spindle": 150,
+    "impl": 150
+   },
+   "columns_spindle": [
+    "dividend_id",
+    "ticker",
+    "ex_date",
+    "amount",
+    "frequency",
+    "pay_date"
+   ],
+   "columns_impl": [
+    "dividend_id",
+    "ticker",
+    "ex_date",
+    "amount",
+    "frequency",
+    "pay_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "dividend_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "ticker": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "ex_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "amount": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "frequency": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "pay_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "dividend_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.22510593742416898,
+     "stats": {
+      "mean": {
+       "spindle": 75.5,
+       "impl": 75.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 150.0,
+       "impl": 150.0
+      },
+      "std": {
+       "spindle": 43.300307928081374,
+       "impl": 43.300307928081374,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 150,
+      "impl": 150
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ticker": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "spindle": 75,
+      "impl": 78,
+      "ratio": 1.04,
+      "baseline_max_ratio_dev": 0.040000000000000036
+     },
+     "top10": [
+      {
+       "value": "ISRG",
+       "spindle": 0.03333333333333333,
+       "impl": 0.0
+      },
+      {
+       "value": "ACN",
+       "spindle": 0.03333333333333333,
+       "impl": 0.05333333333333334
+      },
+      {
+       "value": "SHW",
+       "spindle": 0.02666666666666667,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "BKNG",
+       "spindle": 0.02666666666666667,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "V",
+       "spindle": 0.02666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "WMT",
+       "spindle": 0.02666666666666667,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "SBUX",
+       "spindle": 0.02666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "BA",
+       "spindle": 0.02,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "PLD",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "QCOM",
+       "spindle": 0.02,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "DIS",
+       "spindle": 0.006666666666666667,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "MA",
+       "spindle": 0.02,
+       "impl": 0.02666666666666667
+      },
+      {
+       "value": "CRM",
+       "spindle": 0.013333333333333334,
+       "impl": 0.02666666666666667
+      },
+      {
+       "value": "CAT",
+       "spindle": 0.0,
+       "impl": 0.02666666666666667
+      },
+      {
+       "value": "SPGI",
+       "spindle": 0.02,
+       "impl": 0.02666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.5066666666666666,
+     "tvd_baseline": 0.5866666666666668,
+     "tvd_tol": 1.6925687506432692,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ex_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "ks": 0.18,
+     "ks_baseline": 0.17333333333333334,
+     "ks_tol": 0.262,
+     "stats": {
+      "mean": {
+       "spindle": "2024-03-27 23:16:03.814686976",
+       "impl": "2023-11-15 19:11:45.546449408"
+      },
+      "min": {
+       "spindle": "2022-01-22 19:11:55.258067456",
+       "impl": "2022-01-07 23:28:38.372880896"
+      },
+      "max": {
+       "spindle": "2025-12-25 03:07:50.524749056",
+       "impl": "2025-12-14 04:27:39.681798912"
+      },
+      "std": {
+       "spindle": 409.1461155192771,
+       "impl": 408.50624708224234,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 150,
+      "impl": 150
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "ks": 0.1333333333333333,
+     "ks_baseline": 0.10666666666666669,
+     "ks_tol": 0.22510593742416898,
+     "stats": {
+      "mean": {
+       "spindle": 0.8256346666666667,
+       "impl": 0.7182339999999999
+      },
+      "min": {
+       "spindle": 0.1023,
+       "impl": 0.0791
+      },
+      "max": {
+       "spindle": 7.5987,
+       "impl": 3.8353
+      },
+      "std": {
+       "spindle": 0.8181220900726792,
+       "impl": 0.5991835438138579,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 149,
+      "impl": 148
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "frequency": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "quarterly",
+       "spindle": 0.7466666666666667,
+       "impl": 0.78
+      },
+      {
+       "value": "annual",
+       "spindle": 0.22666666666666666,
+       "impl": 0.20666666666666667
+      },
+      {
+       "value": "special",
+       "spindle": 0.02666666666666667,
+       "impl": 0.013333333333333334
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.033333333333333326,
+     "tvd_baseline": 0.059999999999999984,
+     "tvd_tol": 0.3385137501286538,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "pay_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "ks": 0.18,
+     "ks_baseline": 0.17333333333333334,
+     "ks_tol": 0.262,
+     "stats": {
+      "mean": {
+       "spindle": "2024-04-25 20:13:39.814686976",
+       "impl": "2023-12-14 20:38:09.546449408"
+      },
+      "min": {
+       "spindle": "2022-02-10 08:17:38.072275968",
+       "impl": "2022-02-12 16:36:05.534057984"
+      },
+      "max": {
+       "spindle": "2026-01-29 01:53:09.182243584",
+       "impl": "2026-01-18 08:08:32.262658048"
+      },
+      "std": {
+       "spindle": 409.82963131354586,
+       "impl": 408.9795124983611,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 150,
+      "impl": 150
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "split": {
+   "rows": {
+    "spindle": 5,
+    "impl": 5
+   },
+   "columns_spindle": [
+    "split_id",
+    "ticker",
+    "split_date",
+    "ratio_from",
+    "ratio_to"
+   ],
+   "columns_impl": [
+    "split_id",
+    "ticker",
+    "split_date",
+    "ratio_from",
+    "ratio_to"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "split_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "ticker": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "split_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "ratio_from": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "ratio_to": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "split_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.264911064067352
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 1.2329559975556372,
+     "stats": {
+      "mean": {
+       "spindle": 3.0,
+       "impl": 3.0
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5.0,
+       "impl": 5.0
+      },
+      "std": {
+       "spindle": 1.4142135623730951,
+       "impl": 1.4142135623730951,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ticker": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.264911064067352
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "D",
+       "spindle": 0.2,
+       "impl": 0.0
+      },
+      {
+       "value": "CMCSA",
+       "spindle": 0.2,
+       "impl": 0.0
+      },
+      {
+       "value": "LLY",
+       "spindle": 0.2,
+       "impl": 0.0
+      },
+      {
+       "value": "GM",
+       "spindle": 0.2,
+       "impl": 0.0
+      },
+      {
+       "value": "DUK",
+       "spindle": 0.2,
+       "impl": 0.0
+      },
+      {
+       "value": "WM",
+       "spindle": 0.0,
+       "impl": 0.2
+      },
+      {
+       "value": "APD",
+       "spindle": 0.0,
+       "impl": 0.2
+      },
+      {
+       "value": "PSA",
+       "spindle": 0.0,
+       "impl": 0.2
+      },
+      {
+       "value": "MRK",
+       "spindle": 0.0,
+       "impl": 0.2
+      },
+      {
+       "value": "UBER",
+       "spindle": 0.0,
+       "impl": 0.2
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 1.0,
+     "tvd_baseline": 1.0,
+     "tvd_tol": 2.3936536824085963,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "split_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.264911064067352
+     },
+     "ks": 0.6,
+     "ks_baseline": 0.8,
+     "ks_tol": 1.2329559975556372,
+     "stats": {
+      "mean": {
+       "spindle": "2025-04-06 20:54:54.916602624",
+       "impl": "2023-12-21 07:09:48.690854400"
+      },
+      "min": {
+       "spindle": "2024-03-11 23:17:12.277835776",
+       "impl": "2022-07-29 02:47:27.303886080"
+      },
+      "max": {
+       "spindle": "2025-11-28 10:47:36.179992832",
+       "impl": "2025-06-21 05:09:46.839657984"
+      },
+      "std": {
+       "spindle": 221.09714139514716,
+       "impl": 427.81902597589203,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ratio_from": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.264911064067352
+     },
+     "ks": 0.4,
+     "ks_baseline": 0.4,
+     "ks_tol": 1.2329559975556372,
+     "stats": {
+      "mean": {
+       "spindle": 2.6,
+       "impl": 2.0
+      },
+      "min": {
+       "spindle": 2.0,
+       "impl": 2.0
+      },
+      "max": {
+       "spindle": 4.0,
+       "impl": 2.0
+      },
+      "std": {
+       "spindle": 0.8,
+       "impl": 0.0,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 1
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ratio_to": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.264911064067352
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 1.2329559975556372,
+     "stats": {
+      "mean": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "std": {
+       "spindle": 0.0,
+       "impl": 0.0,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 1,
+      "impl": 1
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "earnings": {
+   "rows": {
+    "spindle": 400,
+    "impl": 400
+   },
+   "columns_spindle": [
+    "earnings_id",
+    "ticker",
+    "report_date",
+    "fiscal_quarter",
+    "eps_estimate",
+    "surprise_pct",
+    "eps_actual"
+   ],
+   "columns_impl": [
+    "earnings_id",
+    "ticker",
+    "report_date",
+    "fiscal_quarter",
+    "eps_estimate",
+    "surprise_pct",
+    "eps_actual"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "earnings_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "ticker": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "report_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "fiscal_quarter": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "eps_estimate": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "surprise_pct": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "eps_actual": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "earnings_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.01765555861478192
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.13784867119002345,
+     "stats": {
+      "mean": {
+       "spindle": 200.5,
+       "impl": 200.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 400.0,
+       "impl": 400.0
+      },
+      "std": {
+       "spindle": 115.46969299344309,
+       "impl": 115.46969299344309,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 400,
+      "impl": 400
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ticker": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.01765555861478192
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 99,
+      "ratio": 0.99,
+      "baseline_max_ratio_dev": 0.040000000000000036
+     },
+     "top10": [
+      {
+       "value": "CSCO",
+       "spindle": 0.025,
+       "impl": 0.0
+      },
+      {
+       "value": "GILD",
+       "spindle": 0.0225,
+       "impl": 0.0025
+      },
+      {
+       "value": "ADBE",
+       "spindle": 0.0225,
+       "impl": 0.0
+      },
+      {
+       "value": "CRM",
+       "spindle": 0.02,
+       "impl": 0.015
+      },
+      {
+       "value": "TGT",
+       "spindle": 0.02,
+       "impl": 0.015
+      },
+      {
+       "value": "HON",
+       "spindle": 0.02,
+       "impl": 0.015
+      },
+      {
+       "value": "ICE",
+       "spindle": 0.02,
+       "impl": 0.005
+      },
+      {
+       "value": "INTC",
+       "spindle": 0.02,
+       "impl": 0.0075
+      },
+      {
+       "value": "BMY",
+       "spindle": 0.0175,
+       "impl": 0.02
+      },
+      {
+       "value": "PLD",
+       "spindle": 0.0175,
+       "impl": 0.0
+      },
+      {
+       "value": "FCX",
+       "spindle": 0.005,
+       "impl": 0.025
+      },
+      {
+       "value": "ACN",
+       "spindle": 0.0125,
+       "impl": 0.0225
+      },
+      {
+       "value": "GM",
+       "spindle": 0.0075,
+       "impl": 0.0225
+      },
+      {
+       "value": "KO",
+       "spindle": 0.005,
+       "impl": 0.0225
+      },
+      {
+       "value": "CI",
+       "spindle": 0.0075,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.4325,
+     "tvd_baseline": 0.45249999999999996,
+     "tvd_tol": 1.1968268412042982,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "report_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.01765555861478192
+     },
+     "ks": 0.12,
+     "ks_baseline": 0.09750000000000003,
+     "ks_tol": 0.14825000000000005,
+     "stats": {
+      "mean": {
+       "spindle": "2023-11-06 16:13:25.073484800",
+       "impl": "2024-01-28 21:08:36.374145536"
+      },
+      "min": {
+       "spindle": "2022-01-02 13:52:26.514767360",
+       "impl": "2022-01-02 07:58:50.129760"
+      },
+      "max": {
+       "spindle": "2025-12-30 11:33:46.082936832",
+       "impl": "2025-12-29 18:52:36.226967040"
+      },
+      "std": {
+       "spindle": 416.9802022473399,
+       "impl": 431.9784643626188,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 400,
+      "impl": 400
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "fiscal_quarter": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.01765555861478192
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Q3",
+       "spindle": 0.2825,
+       "impl": 0.215
+      },
+      {
+       "value": "Q1",
+       "spindle": 0.2725,
+       "impl": 0.2375
+      },
+      {
+       "value": "Q4",
+       "spindle": 0.245,
+       "impl": 0.245
+      },
+      {
+       "value": "Q2",
+       "spindle": 0.2,
+       "impl": 0.3025
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.1025,
+     "tvd_baseline": 0.08499999999999996,
+     "tvd_tol": 0.23936536824085963,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "eps_estimate": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.01765555861478192
+     },
+     "ks": 0.044999999999999984,
+     "ks_baseline": 0.08999999999999997,
+     "ks_tol": 0.13784867119002345,
+     "stats": {
+      "mean": {
+       "spindle": 2.62135,
+       "impl": 2.5874
+      },
+      "min": {
+       "spindle": -1.44,
+       "impl": -3.05
+      },
+      "max": {
+       "spindle": 6.87,
+       "impl": 6.99
+      },
+      "std": {
+       "spindle": 1.509614413517571,
+       "impl": 1.543950368373284,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 277,
+      "impl": 291
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "surprise_pct": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.01765555861478192
+     },
+     "ks": 0.06999999999999995,
+     "ks_baseline": 0.07,
+     "ks_tol": 0.13784867119002345,
+     "stats": {
+      "mean": {
+       "spindle": 0.07837500000000001,
+       "impl": 0.20165
+      },
+      "min": {
+       "spindle": -7.68,
+       "impl": -8.0
+      },
+      "max": {
+       "spindle": 8.8,
+       "impl": 7.72
+      },
+      "std": {
+       "spindle": 2.4793410635439006,
+       "impl": 2.5183125853436064,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 323,
+      "impl": 324
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "eps_actual": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.01765555861478192
+     },
+     "ks": 0.065,
+     "ks_baseline": 0.10499999999999998,
+     "ks_tol": 0.15949999999999998,
+     "stats": {
+      "mean": {
+       "spindle": 2.70685,
+       "impl": 2.6477999999999997
+      },
+      "min": {
+       "spindle": -1.68,
+       "impl": -3.63
+      },
+      "max": {
+       "spindle": 7.12,
+       "impl": 7.44
+      },
+      "std": {
+       "spindle": 1.586218010709751,
+       "impl": 1.6124209003855041,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 281,
+      "impl": 285
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "insider_transaction": {
+   "rows": {
+    "spindle": 200,
+    "impl": 200
+   },
+   "columns_spindle": [
+    "txn_id",
+    "ticker",
+    "txn_date",
+    "insider_name",
+    "insider_title",
+    "txn_type",
+    "shares",
+    "price_per_share"
+   ],
+   "columns_impl": [
+    "txn_id",
+    "ticker",
+    "txn_date",
+    "insider_name",
+    "insider_title",
+    "txn_type",
+    "shares",
+    "price_per_share"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "txn_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "ticker": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "txn_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "insider_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "insider_title": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "txn_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "shares": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "price_per_share": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "txn_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.19494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 100.5,
+       "impl": 100.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 200.0,
+       "impl": 200.0
+      },
+      "std": {
+       "spindle": 57.73430522661548,
+       "impl": 57.73430522661548,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ticker": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 89,
+      "impl": 87,
+      "ratio": 0.9775280898876404,
+      "baseline_max_ratio_dev": 0.0674157303370787
+     },
+     "top10": [
+      {
+       "value": "ADBE",
+       "spindle": 0.03,
+       "impl": 0.0
+      },
+      {
+       "value": "ISRG",
+       "spindle": 0.025,
+       "impl": 0.0
+      },
+      {
+       "value": "TSLA",
+       "spindle": 0.025,
+       "impl": 0.0
+      },
+      {
+       "value": "BLK",
+       "spindle": 0.02,
+       "impl": 0.005
+      },
+      {
+       "value": "AMGN",
+       "spindle": 0.02,
+       "impl": 0.01
+      },
+      {
+       "value": "ABT",
+       "spindle": 0.02,
+       "impl": 0.015
+      },
+      {
+       "value": "AVGO",
+       "spindle": 0.02,
+       "impl": 0.025
+      },
+      {
+       "value": "SBUX",
+       "spindle": 0.02,
+       "impl": 0.015
+      },
+      {
+       "value": "D",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "WHR",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "SLB",
+       "spindle": 0.005,
+       "impl": 0.04
+      },
+      {
+       "value": "VZ",
+       "spindle": 0.015,
+       "impl": 0.03
+      },
+      {
+       "value": "DE",
+       "spindle": 0.01,
+       "impl": 0.03
+      },
+      {
+       "value": "MRK",
+       "spindle": 0.0,
+       "impl": 0.025
+      },
+      {
+       "value": "ABNB",
+       "spindle": 0.015,
+       "impl": 0.025
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.445,
+     "tvd_baseline": 0.51,
+     "tvd_tol": 1.596766165827722,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "txn_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.065,
+     "ks_baseline": 0.08000000000000002,
+     "ks_tol": 0.19494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": "2023-12-25 09:11:53.846267648",
+       "impl": "2023-12-22 19:38:50.855835136"
+      },
+      "min": {
+       "spindle": "2022-01-17 09:26:05.514541312",
+       "impl": "2022-01-02 19:32:31.467933952"
+      },
+      "max": {
+       "spindle": "2025-12-27 23:01:12.049620480",
+       "impl": "2025-12-27 18:13:03.757218048"
+      },
+      "std": {
+       "spindle": 428.020606454345,
+       "impl": 413.0363371908698,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "insider_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 200,
+      "impl": 200,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Eris Figueford",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Elijah Hammridge",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Elry Brayley",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Koisa SanPherson",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Troa Carroll",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Brittney Hofsen",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Adalyn Hale",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Reoa Clements",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Noard Rodgegate",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Siaya Whitaker",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Caion Conlsen",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "Bena Jenstein",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "Allison Whitebrook",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "Juie Sloansen",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "Grson Hooworth",
+       "spindle": 0.0,
+       "impl": 0.005
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "FIRST_NAMES+' '+LAST_NAMES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "insider_title": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 8,
+      "impl": 8,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Director",
+       "spindle": 0.215,
+       "impl": 0.255
+      },
+      {
+       "value": "CEO",
+       "spindle": 0.195,
+       "impl": 0.145
+      },
+      {
+       "value": "VP",
+       "spindle": 0.17,
+       "impl": 0.125
+      },
+      {
+       "value": "EVP",
+       "spindle": 0.11,
+       "impl": 0.115
+      },
+      {
+       "value": "CFO",
+       "spindle": 0.1,
+       "impl": 0.145
+      },
+      {
+       "value": "COO",
+       "spindle": 0.08,
+       "impl": 0.09
+      },
+      {
+       "value": "SVP",
+       "spindle": 0.065,
+       "impl": 0.085
+      },
+      {
+       "value": "CTO",
+       "spindle": 0.065,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.12000000000000002,
+     "tvd_baseline": 0.125,
+     "tvd_tol": 0.4787307364817192,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "txn_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "SELL",
+       "spindle": 0.535,
+       "impl": 0.475
+      },
+      {
+       "value": "BUY",
+       "spindle": 0.42,
+       "impl": 0.47
+      },
+      {
+       "value": "GRANT",
+       "spindle": 0.045,
+       "impl": 0.055
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.060000000000000026,
+     "tvd_baseline": 0.07000000000000002,
+     "tvd_tol": 0.293161507141752,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "shares": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.095,
+     "ks_baseline": 0.13999999999999999,
+     "ks_tol": 0.21199999999999997,
+     "stats": {
+      "mean": {
+       "spindle": 9482.496536465938,
+       "impl": 7851.041669339537
+      },
+      "min": {
+       "spindle": 100.0,
+       "impl": 100.0
+      },
+      "max": {
+       "spindle": 135300.31605639198,
+       "impl": 156955.12355396646
+      },
+      "std": {
+       "spindle": 17884.183754429443,
+       "impl": 14704.445930753549,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 199,
+      "impl": 199
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "price_per_share": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.10999999999999999,
+     "ks_baseline": 0.115,
+     "ks_tol": 0.19494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 85.04525,
+       "impl": 95.51940000000002
+      },
+      "min": {
+       "spindle": 4.24,
+       "impl": 4.42
+      },
+      "max": {
+       "spindle": 1998.69,
+       "impl": 653.27
+      },
+      "std": {
+       "spindle": 161.0101683836692,
+       "impl": 109.44364375622735,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 199,
+      "impl": 199
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "trade": {
+   "rows": {
+    "spindle": 100000,
+    "impl": 100000
+   },
+   "columns_spindle": [
+    "trade_id",
+    "ticker",
+    "timestamp",
+    "price",
+    "volume",
+    "side"
+   ],
+   "columns_impl": [
+    "trade_id",
+    "ticker",
+    "timestamp",
+    "price",
+    "volume",
+    "side"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "trade_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "ticker": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "timestamp": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "price": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "volume": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "side": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "trade_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.008718315467762154,
+     "stats": {
+      "mean": {
+       "spindle": 50000.5,
+       "impl": 50000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 100000.0,
+       "impl": 100000.0
+      },
+      "std": {
+       "spindle": 28867.513458037913,
+       "impl": 28867.513458037913,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100000,
+      "impl": 100000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ticker": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "FCX",
+       "spindle": 0.41548,
+       "impl": 0.00271
+      },
+      {
+       "value": "NVDA",
+       "spindle": 0.14531,
+       "impl": 0.00769
+      },
+      {
+       "value": "NWS",
+       "spindle": 0.07968,
+       "impl": 0.00499
+      },
+      {
+       "value": "BMY",
+       "spindle": 0.05158,
+       "impl": 0.00278
+      },
+      {
+       "value": "WM",
+       "spindle": 0.03634,
+       "impl": 0.00577
+      },
+      {
+       "value": "DE",
+       "spindle": 0.02855,
+       "impl": 0.0013
+      },
+      {
+       "value": "ABNB",
+       "spindle": 0.02303,
+       "impl": 0.00558
+      },
+      {
+       "value": "UBER",
+       "spindle": 0.01787,
+       "impl": 0.01527
+      },
+      {
+       "value": "APD",
+       "spindle": 0.0146,
+       "impl": 0.00094
+      },
+      {
+       "value": "SEDG",
+       "spindle": 0.01274,
+       "impl": 0.0
+      },
+      {
+       "value": "CI",
+       "spindle": 0.00122,
+       "impl": 0.41391
+      },
+      {
+       "value": "INTC",
+       "spindle": 0.00094,
+       "impl": 0.14804
+      },
+      {
+       "value": "UPS",
+       "spindle": 0.00642,
+       "impl": 0.07968
+      },
+      {
+       "value": "AMZN",
+       "spindle": 0.0,
+       "impl": 0.05065
+      },
+      {
+       "value": "DHR",
+       "spindle": 0.00046,
+       "impl": 0.03772
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.88997,
+     "tvd_baseline": 0.9014,
+     "tvd_tol": 1.3541,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "timestamp": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "ks": 0.003670000000000062,
+     "ks_baseline": 0.0034800000000000386,
+     "ks_tol": 0.008718315467762154,
+     "stats": {
+      "mean": {
+       "spindle": "2024-01-01 16:18:40.929404416",
+       "impl": "2024-01-02 19:33:46.584826624"
+      },
+      "min": {
+       "spindle": "2022-01-01 00:07:11.380710144",
+       "impl": "2022-01-01 00:45:04.546000896"
+      },
+      "max": {
+       "spindle": "2025-12-30 23:42:31.117925376",
+       "impl": "2025-12-30 23:53:10.768357888"
+      },
+      "std": {
+       "spindle": 421.6265037788394,
+       "impl": 422.19651146533334,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 100000,
+      "impl": 100000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "price": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "ks": 0.005960000000000021,
+     "ks_baseline": 0.007419999999999982,
+     "ks_tol": 0.013129999999999973,
+     "stats": {
+      "mean": {
+       "spindle": 113.25994789999999,
+       "impl": 111.7865759
+      },
+      "min": {
+       "spindle": 0.25,
+       "impl": 0.3
+      },
+      "max": {
+       "spindle": 10000.0,
+       "impl": 10000.0
+      },
+      "std": {
+       "spindle": 203.2542655890456,
+       "impl": 199.7477211658109,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 29547,
+      "impl": 29320
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "volume": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "ks": 0.003649999999999931,
+     "ks_baseline": 0.003899999999999959,
+     "ks_tol": 0.008718315467762154,
+     "stats": {
+      "mean": {
+       "spindle": 148.29853545072558,
+       "impl": 147.51688723674934
+      },
+      "min": {
+       "spindle": 1.0928103827647515,
+       "impl": 1.010775745812118
+      },
+      "max": {
+       "spindle": 6641.060868746898,
+       "impl": 4690.315144252865
+      },
+      "std": {
+       "spindle": 191.3620239916291,
+       "impl": 190.57511038338777,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100000,
+      "impl": 100000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "side": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "SELL",
+       "spindle": 0.50059,
+       "impl": 0.50109
+      },
+      {
+       "value": "BUY",
+       "spindle": 0.49941,
+       "impl": 0.49891
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0005000000000000282,
+     "tvd_baseline": 0.0020000000000000018,
+     "tvd_tol": 0.010704744696916624,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "spindle": [
+   "company",
+   "exchange",
+   "sector",
+   "daily_price",
+   "dividend",
+   "earnings",
+   "insider_transaction",
+   "industry",
+   "split",
+   "trade"
+  ],
+  "impl": [
+   "company",
+   "exchange",
+   "sector",
+   "daily_price",
+   "dividend",
+   "earnings",
+   "insider_transaction",
+   "industry",
+   "split",
+   "trade"
+  ]
+ },
+ "fk_integrity": {
+  "spindle": {
+   "industry.sector_id->sector.sector_id": {
+    "integrity": 1.0,
+    "n": 61
+   },
+   "daily_price.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 25200
+   },
+   "dividend.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 150
+   },
+   "split.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 5
+   },
+   "earnings.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 400
+   },
+   "insider_transaction.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 200
+   },
+   "trade.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 100000
+   }
+  },
+  "impl": {
+   "industry.sector_id->sector.sector_id": {
+    "integrity": 1.0,
+    "n": 61
+   },
+   "daily_price.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 25200
+   },
+   "dividend.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 150
+   },
+   "split.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 5
+   },
+   "earnings.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 400
+   },
+   "insider_transaction.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 200
+   },
+   "trade.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 100000
+   }
+  }
+ },
+ "fanout": {
+  "sector->industry.sector_id": {
+   "spindle": {
+    "p50": 5.0,
+    "p90": 8.0,
+    "p99": 8.9,
+    "max": 9,
+    "mean": 5.545454545454546,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 6.0,
+    "p90": 7.0,
+    "p99": 7.9,
+    "max": 8,
+    "mean": 5.545454545454546,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.09090909090909094,
+   "ks_baseline_max": 0.2727272727272728,
+   "ks_tol": 0.83125876397524,
+   "equivalent": true
+  },
+  "company->daily_price.ticker": {
+   "spindle": {
+    "p50": 251.5,
+    "p90": 271.1,
+    "p99": 287.02,
+    "max": 289,
+    "mean": 252.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 252.5,
+    "p90": 272.1,
+    "p99": 288.01,
+    "max": 289,
+    "mean": 252.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.05,
+   "ks_baseline_max": 0.10999999999999999,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "company->dividend.ticker": {
+   "spindle": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 5.0,
+    "max": 5,
+    "mean": 1.5,
+    "zero_frac": 0.25
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 5.030000000000015,
+    "max": 8,
+    "mean": 1.5,
+    "zero_frac": 0.22
+   },
+   "ks_counts": 0.04999999999999993,
+   "ks_baseline_max": 0.07999999999999996,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "company->split.ticker": {
+   "spindle": {
+    "p50": 0.0,
+    "p90": 0.0,
+    "p99": 1.0,
+    "max": 1,
+    "mean": 0.05,
+    "zero_frac": 0.95
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 0.0,
+    "p99": 1.0,
+    "max": 1,
+    "mean": 0.05,
+    "zero_frac": 0.95
+   },
+   "ks_counts": 0.0,
+   "ks_baseline_max": 0.0,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "company->earnings.ticker": {
+   "spindle": {
+    "p50": 4.0,
+    "p90": 7.0,
+    "p99": 9.010000000000005,
+    "max": 10,
+    "mean": 4.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 4.0,
+    "p90": 7.1000000000000085,
+    "p99": 9.010000000000005,
+    "max": 10,
+    "mean": 4.0,
+    "zero_frac": 0.01
+   },
+   "ks_counts": 0.040000000000000036,
+   "ks_baseline_max": 0.09999999999999998,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "company->insider_transaction.ticker": {
+   "spindle": {
+    "p50": 2.0,
+    "p90": 4.0,
+    "p99": 5.010000000000005,
+    "max": 6,
+    "mean": 2.0,
+    "zero_frac": 0.11
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 4.0,
+    "p99": 6.02000000000001,
+    "max": 8,
+    "mean": 2.0,
+    "zero_frac": 0.13
+   },
+   "ks_counts": 0.05999999999999994,
+   "ks_baseline_max": 0.08000000000000002,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "company->trade.ticker": {
+   "spindle": {
+    "p50": 115.0,
+    "p90": 1175.000000000001,
+    "p99": 14801.170000000138,
+    "max": 41548,
+    "mean": 1000.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 121.0,
+    "p90": 1179.9000000000008,
+    "p99": 15069.870000000135,
+    "max": 41391,
+    "mean": 1000.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.030000000000000027,
+   "ks_baseline_max": 0.06,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {
+  "company.ticker+company_name+cik+exchange_code+sector_name+industry_name+market_cap_tier+founding_year+hq_state+website in sp500_constituents": {
+   "impl": 1.0,
+   "spindle": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  }
+ },
+ "strategy_semantics": {
+  "dividend.pay_date - ex_date in [14,45] days": {
+   "impl": 1.0,
+   "spindle": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  }
+ },
+ "business_rules": {
+  "spindle_BusinessRulesEngine_violations": {},
+  "spindle_on_spindle": {}
+ },
+ "spindle_fidelity_comparator": {
+  "overall_impl": 85.7888350131076,
+  "overall_baseline_spindle_vs_spindle": [
+   85.2527232472239,
+   86.16132210947255,
+   84.76626051411826,
+   84.58187209711475
+  ],
+  "tables": {
+   "company": {
+    "impl": 81.80754954404975,
+    "baseline": [
+     81.61140441637012,
+     82.02657083925247,
+     82.24573923881184,
+     84.86758154573607
+    ],
+    "floor": 81.11140441637012,
+    "ok": true
+   },
+   "daily_price": {
+    "impl": 95.10831985881055,
+    "baseline": [
+     94.94248413020546,
+     95.20120425885847,
+     95.48800537818252,
+     94.87033974180267
+    ],
+    "floor": 94.37033974180267,
+    "ok": true
+   },
+   "dividend": {
+    "impl": 87.01362744875378,
+    "baseline": [
+     87.31262799193,
+     90.4279027419218,
+     87.80489108707776,
+     89.44033846826153
+    ],
+    "floor": 86.81262799193,
+    "ok": true
+   },
+   "earnings": {
+    "impl": 91.22782297355319,
+    "baseline": [
+     91.24355465611016,
+     92.08690158821824,
+     91.23302103866114,
+     92.69166645145012
+    ],
+    "floor": 90.73302103866114,
+    "ok": true
+   },
+   "exchange": {
+    "impl": 84.01360544217687,
+    "baseline": [
+     77.89115646258504,
+     77.21088435374149,
+     68.36734693877551,
+     68.36734693877551
+    ],
+    "floor": 67.86734693877551,
+    "ok": true
+   },
+   "industry": {
+    "impl": 93.93138302359633,
+    "baseline": [
+     93.71936737521217,
+     93.83253457021523,
+     93.36609878303575,
+     92.59575733538685
+    ],
+    "floor": 92.09575733538685,
+    "ok": true
+   },
+   "insider_transaction": {
+    "impl": 85.6531711451139,
+    "baseline": [
+     85.71040071625586,
+     84.93385866857031,
+     84.27263692721868,
+     82.80360105161155
+    ],
+    "floor": 82.30360105161155,
+    "ok": true
+   },
+   "sector": {
+    "impl": 79.70985875029943,
+    "baseline": [
+     80.0188288504702,
+     81.17155505390912,
+     78.83473158342402,
+     80.89881972902278
+    ],
+    "floor": 78.33473158342402,
+    "ok": true
+   },
+   "split": {
+    "impl": 65.87631536834748,
+    "baseline": [
+     66.48971792687101,
+     71.16427065374441,
+     72.52115825991375,
+     65.81275134608617
+    ],
+    "floor": 65.31275134608617,
+    "ok": true
+   },
+   "trade": {
+    "impl": 93.54669657637464,
+    "baseline": [
+     93.58768994622893,
+     93.55753836629391,
+     93.5289759060815,
+     93.47051836301421
+    ],
+    "floor": 92.97051836301421,
+    "ok": true
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 64,
+  "columns_equivalent": 64,
+  "flagged": [],
+  "passed": true,
+  "seconds": 7.541276454925537
+ }
+}
