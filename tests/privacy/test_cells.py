@@ -76,8 +76,9 @@ def test_released_histogram_bins_are_zero_or_at_least_k(counts, k, as_proportion
     n = sum(counts)
     if n == 0:
         return
+    given = [round(c / n, 6) for c in counts]
     if as_proportions:
-        bins, dropped = suppress_bins([round(c / n, 6) for c in counts], k, n)
+        bins, dropped = suppress_bins(given, k, n)
     else:
         bins, dropped = suppress_bins(counts, k, None, proportions=False)
     if bins is None:
@@ -88,7 +89,20 @@ def test_released_histogram_bins_are_zero_or_at_least_k(counts, k, as_proportion
             assert c >= k
     assert dropped == sum(1 for c, b in zip(counts, bins, strict=True) if c and not b)
     if as_proportions:
-        assert math.isclose(sum(bins), 1.0, abs_tol=1e-5)
+        # The released bins keep the total they were given, to the last of their 6 decimals
+        # (the given bins are rounded, so their own total is only near 1).
+        assert math.isclose(sum(bins), sum(given), abs_tol=1e-6)
+        assert all(b == 0 or b == round(b, 6) for b in bins)
+
+
+def test_renormalized_bins_do_not_accumulate_rounding():
+    # 21 bins rounded to 6 decimals: renormalizing them one by one drifted the total by 3e-6.
+    counts = [3, 4, 5, 9, 27, 31, 31, 31, 33, 33, 49, 51, 51, 53, 53, 55, 55, 60, 60, 60, 60]
+    n = sum(counts)
+    given = [round(c / n, 6) for c in counts]
+    bins, dropped = suppress_bins(given, 4, n)
+    assert dropped == 1 and bins is not None and bins[0] == 0
+    assert round(sum(bins), 6) == round(sum(given), 6)
 
 
 def test_k_of_one_or_no_base_passes_through():
