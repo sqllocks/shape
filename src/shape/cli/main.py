@@ -180,6 +180,10 @@ def _cmd_fidelity(a):
     """``shape fidelity REFERENCE SYNTHETIC``: 0 when every pass mark is met, 1 when not."""
     from pathlib import Path
 
+    if a.tier:
+        from shape.cli.tiers import run_fidelity
+
+        return run_fidelity(a)
     from shape.generation.report import Thresholds, compare_tables, render_report
     from shape.quality import load_tables
 
@@ -592,6 +596,10 @@ def _build_parser(plugin_commands=()):
         default=0.9,
         help="minimum certificate score, 0 to 1 (default 0.9); below it the exit code is 3",
     )
+    from shape.cli.tiers import add_drift_parser, add_fidelity_arguments
+
+    add_fidelity_arguments(fi)
+    add_drift_parser(sub)
     rg = sub.add_parser("registry")
     rg.add_argument("root")
     rg.add_argument("action", choices=("commit", "checkout", "tag", "promote", "log"))
@@ -804,7 +812,11 @@ def _dispatch(argv):
         result = validate_rows(rows, infer_rules(ref))
         _dump({"passed": result.passed, "violations": [asdict(v) for v in result.violations]})
         return 0 if result.passed else 2
-    if a.cmd in ("fidelity", "compare") and not str(a.reference).endswith(".json"):
+    if a.cmd == "drift":
+        from shape.cli.tiers import run_drift
+
+        return _run(run_drift, a)
+    if a.cmd in ("fidelity", "compare") and (a.tier or not str(a.reference).endswith(".json")):
         return _run(_cmd_fidelity, a)
     if a.cmd in ("fidelity", "compare"):
         from shape.generation import certify

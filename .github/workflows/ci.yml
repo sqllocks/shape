@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '${{ matrix.python }}', allow-prereleases: true}
       - run: python -m pip install -U pip
-      - run: pip install -e '.[dev,streaming]' -e plugins/shape-domains
+      - run: pip install -e '.[dev,streaming,advanced]' -e plugins/shape-domains
       # T-27 scope: src tests plugins benchmarks/vs_spindle rust (only the paths that exist yet).
       - run: ruff check src tests plugins benchmarks/vs_spindle
       - run: ruff format --check src tests plugins benchmarks/vs_spindle

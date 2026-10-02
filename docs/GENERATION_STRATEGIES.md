@@ -224,6 +224,16 @@ sampled uniformly; a dataset of records with `field` gives that field of a unifo
 (or `value`) with a `weight`, and a name is drawn in proportion to its weight. The column has the
 type of the values (`string`, `int64`, `float64`; a field that mixes types becomes `string`).
 
+### `bootstrap`
+`{"dataset": "people", "field": "income", "jitter": 0.01}`: `field` of a source row of a dataset of
+records, rows drawn with replacement. Every `bootstrap` column of a table that names the same
+dataset takes the same source row for a given row, so the columns keep the source's joint
+distribution. `jitter` (default 0.01, `0` for none) is the standard deviation of normal noise as a
+fraction of the source column's standard deviation; it applies to integer and float fields only (they
+become `float64`; a constant column and text are never jittered). Nulls stay null. The source rows are
+copied: a bootstrapped table contains the people of the source (`docs/FIDELITY_TIERS.md`). The
+library form, seeded with numpy's generator, is `shape.fidelity.bootstrap_table`.
+
 ### `record_sample` and `record_field`
 `record_sample` (`{"dataset": "places", "field": "city"}`) is the anchor of a group of columns that
 share one randomly chosen record: this column is that record's `field`. `record_field`
