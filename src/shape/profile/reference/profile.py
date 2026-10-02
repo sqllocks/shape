@@ -6,6 +6,7 @@ import copy
 import datetime as _dt
 import hashlib
 import math
+import warnings
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
@@ -15,7 +16,9 @@ import numpy as np
 from shape.artifact import codec
 from shape.artifact.io import ArtifactError, read_artifact, write_artifact
 
+from .column import MAX_VALUE_CHARS
 from .model import ColumnProfile, DatasetProfile, TableProfile
+from .readers import CsvFormat
 from .sources import SourceError, load_columns
 from .table import _profile_cols_table, profile_dataset_columns
 
@@ -48,6 +51,12 @@ _COLUMN_FIELDS = (
     "string_length",
     "outlier_rate",
     "fit_score",
+    "nan_count",
+    "inf_count",
+    "pattern_rates",
+    "pattern_contains_rates",
+    "precision",
+    "scale",
 )
 
 
@@ -106,7 +115,7 @@ def _tag_scalar(v: Any) -> list[Any] | None:
     if isinstance(v, float):
         return ["float", None if math.isnan(v) else float(v)]
     if isinstance(v, str):
-        return ["str", v]
+        return ["str", v if len(v) <= MAX_VALUE_CHARS else v[:MAX_VALUE_CHARS] + "\u2026"]
     if type_name == "Timestamp":
         return ["timestamp", str(v)]
     if isinstance(v, _dt.datetime):
@@ -129,7 +138,7 @@ def _column_dict(cp: ColumnProfile) -> dict[str, Any]:
 
 def table_to_dict(tp: TableProfile) -> dict[str, Any]:
     """A table profile as a JSON-ready dict."""
-    return {
+    out = {
         "name": tp.name,
         "row_count": tp.row_count,
         "primary_key": list(tp.primary_key),
@@ -137,6 +146,9 @@ def table_to_dict(tp: TableProfile) -> dict[str, Any]:
         "correlation_matrix": _clean(tp.correlation_matrix),
         "columns": {c: _column_dict(cp) for c, cp in tp.columns.items()},
     }
+    if tp.correlation_truncated:
+        out["correlation_truncated"] = True
+    return out
 
 
 def dataset_to_dict(dp: DatasetProfile) -> dict[str, Any]:
@@ -169,6 +181,12 @@ def _column_summary(col: dict[str, Any]) -> dict[str, Any]:
         "max": _plain(col["max_value"]),
         "mean": col["mean"],
         "std": col["std"],
+        "nan_count": col.get("nan_count", 0),
+        "inf_count": col.get("inf_count", 0),
+        "pattern_rates": col.get("pattern_rates"),
+        "pattern_contains_rates": col.get("pattern_contains_rates"),
+        "precision": col.get("precision"),
+        "scale": col.get("scale"),
     }
 
 
@@ -239,35 +257,71 @@ class Profile:
     __hash__ = None  # type: ignore[assignment]
 
 
-def profile(source: Any, *, name: str | None = None) -> Profile:
+def profile(
+    source: Any,
+    *,
+    name: str | None = None,
+    delimiter: str | None = None,
+    encoding: str | None = None,
+    quotechar: str | None = None,
+    header: bool = True,
+) -> Profile:
     """Profile a path, glob, directory, Delta table, Arrow table or DataFrame.
 
     Pass a ``dict`` of such sources to profile several tables and detect foreign keys.
+
+    CSV options: ``delimiter`` (default: sniffed among comma, semicolon, tab and pipe),
+    ``encoding`` (default UTF-8), ``quotechar`` (default ``"``) and ``header=False`` for a file
+    without a header row (columns are then ``f0``, ``f1``, ...).
     """
+    fmt = CsvFormat(delimiter, encoding, quotechar, header)
     with np.errstate(all="ignore"):  # inf / NaN inputs are data, not numpy warnings
-        return _profile(source, name)
+        return _profile(source, name, fmt)
 
 
-def _load_tables(sources: dict[str, Any]) -> dict[str, tuple[list[Any], int]]:
+def _load_tables(
+    sources: dict[str, Any], csv: CsvFormat | None = None
+) -> dict[str, tuple[list[Any], int]]:
     """Read every table, concurrently when there are several (the readers release the GIL), so
     the small tables' reads hide behind the largest one's. Errors surface in table order."""
     if len(sources) == 1:
         ((name, src),) = sources.items()
-        _, cols, rows = load_columns(src, name)
+        _, cols, rows = load_columns(src, name, None, csv)
+        _warn_delimiter(name, src, cols, csv)
         return {name: (cols, rows)}
     with ThreadPoolExecutor(max_workers=len(sources)) as ex:
-        futures = [(n, ex.submit(load_columns, src, n)) for n, src in sources.items()]
+        futures = [(n, ex.submit(load_columns, src, n, None, csv)) for n, src in sources.items()]
         loaded = [(n, f.result()) for n, f in futures]
+    for n, (_, cols, _rows) in loaded:
+        _warn_delimiter(n, sources[n], cols, csv)
     return {n: (cols, rows) for n, (_, cols, rows) in loaded}
 
 
-def _profile(source: Any, name: str | None) -> Profile:
+def _warn_delimiter(name: str, src: Any, cols: list[Any], csv: CsvFormat | None) -> None:
+    """A CSV that came out as one column whose name holds a likely delimiter was probably split
+    on the wrong one: say so instead of profiling it silently."""
+    if len(cols) != 1 or not isinstance(src, (str, Path)) or not str(src).lower().endswith(".csv"):
+        return
+    col_name = str(cols[0].name)
+    found = [d for d in (";", "\t", "|", ",") if d in col_name]
+    if found:
+        warnings.warn(
+            f"{name!r} was read as one column called {col_name!r}, which contains "
+            f"{found[0]!r}: the file may use that delimiter. Pass delimiter={found[0]!r} "
+            "(shape profile --delimiter).",
+            UserWarning,
+            stacklevel=4,
+        )
+
+
+def _profile(source: Any, name: str | None, csv: CsvFormat | None = None) -> Profile:
     if isinstance(source, dict):
         if not source:
             raise SourceError("an empty dict of tables cannot be profiled")
-        cols_by_t = _load_tables({str(k): v for k, v in source.items()})
+        cols_by_t = _load_tables({str(k): v for k, v in source.items()}, csv)
         return Profile(dataset_to_dict(profile_dataset_columns(cols_by_t)), name=name)
-    table_name, cols, rows = load_columns(source, name)
+    table_name, cols, rows = load_columns(source, name, None, csv)
+    _warn_delimiter(table_name, source, cols, csv)
     table = _profile_cols_table(table_name, cols, rows, None)
     return Profile(table_to_dict(table), name=name)
 

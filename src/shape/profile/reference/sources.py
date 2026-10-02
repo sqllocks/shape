@@ -11,7 +11,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.json as pajson  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
-from .readers import _arrow_cols, _Col, _csv_cols, read_csv
+from .readers import CsvFormat, _arrow_cols, _Col, _csv_cols, _csv_options, read_csv
 
 _SUFFIXES = (".csv", ".parquet", ".jsonl", ".ndjson")
 
@@ -43,7 +43,9 @@ def _read_delta(path: Path) -> pa.Table:
     return DeltaTable(str(path)).to_pyarrow_table()
 
 
-def _read_files(paths: list[Path], threads: int | None) -> tuple[str, pa.Table]:
+def _read_files(
+    paths: list[Path], threads: int | None, csv: CsvFormat | None = None
+) -> tuple[str, pa.Table]:
     kinds = {_kind(p) for p in paths}
     if len(kinds) != 1:
         raise SourceError(f"files of mixed types cannot be profiled as one table: {sorted(kinds)}")
@@ -51,7 +53,7 @@ def _read_files(paths: list[Path], threads: int | None) -> tuple[str, pa.Table]:
     tables: list[pa.Table] = []
     for p in paths:
         if kind == "csv":
-            tables.append(read_csv(p, threads))
+            tables.append(read_csv(p, threads, csv))
         elif kind == "parquet":
             tables.append(pq.read_table(p))
         else:
@@ -72,7 +74,7 @@ def _default_name(path: Path) -> str:
 
 
 def load_columns(
-    source: Any, name: str | None = None, threads: int | None = None
+    source: Any, name: str | None = None, threads: int | None = None, csv: CsvFormat | None = None
 ) -> tuple[str, list[_Col], int]:
     """-> (table name, columns, row count) for one table-shaped source."""
     if isinstance(source, pa.Table):
@@ -81,7 +83,7 @@ def load_columns(
         table = pa.Table.from_pandas(source, preserve_index=False)
         return name or "table", _arrow_cols(table), table.num_rows
     if isinstance(source, (str, Path)):
-        return _load_path(str(source), name, threads)
+        return _load_path(str(source), name, threads, csv)
     raise SourceError(
         f"unsupported source type {type(source).__name__}; expected a path, glob, "
         "pyarrow.Table, pandas.DataFrame or a dict of those"
@@ -118,14 +120,16 @@ def _load_remote(text: str, name: str | None) -> tuple[str, list[_Col], int]:
     )
 
 
-def _load_path(text: str, name: str | None, threads: int | None) -> tuple[str, list[_Col], int]:
+def _load_path(
+    text: str, name: str | None, threads: int | None, csv: CsvFormat | None = None
+) -> tuple[str, list[_Col], int]:
     if _is_url(text):
         return _load_remote(text, name)
     if any(ch in text for ch in "*?["):
         matches = sorted(Path(m) for m in _glob.glob(text, recursive=True) if Path(m).is_file())
         if not matches:
             raise FileNotFoundError(f"no files match {text!r}")
-        kind, table = _read_files(matches, threads)
+        kind, table = _read_files(matches, threads, csv)
         stem = Path(text.split("*")[0].split("?")[0].split("[")[0]).name or "table"
         return name or stem, _to_cols(kind, table), table.num_rows
     path = Path(text)
@@ -142,9 +146,9 @@ def _load_path(text: str, name: str | None, threads: int | None) -> tuple[str, l
         )
         if not files:
             raise SourceError(f"directory {text} holds no {'/'.join(_SUFFIXES)} files")
-        kind, table = _read_files(files, threads)
+        kind, table = _read_files(files, threads, csv)
         return name or path.name, _to_cols(kind, table), table.num_rows
-    kind, table = _read_files([path], threads)
+    kind, table = _read_files([path], threads, csv)
     return name or _default_name(path), _to_cols(kind, table), table.num_rows
 
 
@@ -175,7 +179,7 @@ def folder_tables(folder: str | Path) -> dict[str, Path]:
     return named
 
 
-def folder_is_one_table(folder: str | Path) -> bool:
+def folder_is_one_table(folder: str | Path, csv: CsvFormat | None = None) -> bool:
     """False when the files of a folder (read as one table) do not share their columns.
 
     Only the ``.csv`` and ``.parquet`` files' column names are compared (a header or a footer is
@@ -194,7 +198,11 @@ def folder_is_one_table(folder: str | Path) -> bool:
         elif suffix == ".csv":
             import pyarrow.csv as pacsv  # type: ignore[import-untyped]
 
-            with pacsv.open_csv(p) as reader:
+            f, po = _csv_options(p, csv)
+            ro = pacsv.ReadOptions(
+                encoding=f.encoding or "utf8", autogenerate_column_names=not f.header
+            )
+            with pacsv.open_csv(p, read_options=ro, parse_options=po) as reader:
                 seen.add(tuple(reader.schema.names))
         if len(seen) > 1:
             return False

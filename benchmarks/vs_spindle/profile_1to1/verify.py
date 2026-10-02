@@ -123,6 +123,13 @@ TABLE_RULES = ["row_count", "primary_key", "detected_fks", "correlation_matrix"]
 # uniqueness, and Shape must equal that. Allow-list: exactly these two fields. Nothing else is
 # derived from them (value_counts_ext keeps the same first 500 values for an enum or not, and no
 # other field reads is_enum), and every other field is still compared with the baseline as it is.
+# Intentional difference from the baseline (owner decision of 2026-10-01, ISS-profile #22): infinity
+# in a float column is a value to count, not an error. The baseline raises ValueError on the CSV
+# below (its whole-number test casts inf to an integer); Shape profiles the file and reports the
+# infinities in `inf_count`, outside every statistic. Allow-list: exactly this dataset and the
+# baseline error named here; for it the check is "Shape succeeds and counts the infinities".
+NONFINITE_RULE = {"edge/x_csv_inf.csv": "IntCastingNaNError"}
+
 ENUM_RULE_FIELDS = ("is_enum", "enum_values")
 ENUM_TALLY = {"flipped": 0, "kept": 0}
 
@@ -324,11 +331,18 @@ def main():
             # Spindle itself fails on this input: Shape must raise an error of the same category
             want = sp["__error__"]["category"]
             try:
-                port_impl(ds)
+                profiled = port_impl(ds)
                 got = None
             except Exception as exc:
+                profiled = None
                 got = sd.error_category(exc)
-            ok = got == want
+            if NONFINITE_RULE.get(ds) == sp["__error__"]["type"]:
+                cols = (profiled or {}).get("columns", {})
+                ok = any(c.get("inf_count", 0) > 0 for c in cols.values())
+                got = "profiled" if profiled is not None else got
+                want = "profiled with inf_count > 0"
+            else:
+                ok = got == want
             matrix["dataset.error_category"] = [1, int(ok), int(ok)]
             if not ok:
                 fails.append(

@@ -30,6 +30,9 @@ from .readers import (
 from .readers import (
     read_table as read_table,
 )
+from .readers import (
+    sniff_delimiter as sniff_delimiter,
+)
 
 __all__ = [
     "PANDAS_CSV",
@@ -42,4 +45,5 @@ __all__ = [
     "open_source",
     "read_batches",
     "read_table",
+    "sniff_delimiter",
 ]
