@@ -75,3 +75,9 @@ adds a format with the `shape.reports` entry-point group (`render(report) -> byt
 `docs/plugins/authoring.md`). The report is the mapping `FidelityReport.to_dict()` returns: the
 overall score, the verdict and its `failures`, the pass marks, and per table and column every
 metric above (non-finite numbers are `null`).
+
+## Live fidelity
+
+`shape emit --live-target ...` computes this same score on a running event stream and alerts when it
+drifts; at any moment it equals `shape fidelity` of the reference against the events delivered so
+far (`docs/EMIT.md`, "Live fidelity"; checked by `benchmarks/live_fidelity/run.py`).
