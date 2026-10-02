@@ -272,11 +272,9 @@ def test_engine_sniffs_the_delimiter(kernel, tmp_path):
 def test_decimal_precision_and_scale_are_recorded(kernel):
     values = pa.array([decimal.Decimal("1.10"), decimal.Decimal("2.25")] * 50, pa.decimal128(10, 2))
     p = shape.profile(pa.table({"amount": values, "n": pa.array([1, 2] * 50)}), name="t")
-    amount = p.summary()["columns"]["amount"]
-    assert (amount["precision"], amount["scale"]) == (10, 2)
-    assert p.to_dict()["columns"]["amount"]["scale"] == 2
-    n = p.summary()["columns"]["n"]
-    assert n["precision"] is None and n["scale"] is None
+    cols = p.to_dict()["columns"]
+    assert (cols["amount"]["precision"], cols["amount"]["scale"]) == (10, 2)
+    assert cols["n"]["precision"] is None and cols["n"]["scale"] is None
 
 
 def test_decimal_scale_change_is_visible(kernel):

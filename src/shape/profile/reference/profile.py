@@ -181,12 +181,6 @@ def _column_summary(col: dict[str, Any]) -> dict[str, Any]:
         "max": _plain(col["max_value"]),
         "mean": col["mean"],
         "std": col["std"],
-        "nan_count": col.get("nan_count", 0),
-        "inf_count": col.get("inf_count", 0),
-        "pattern_rates": col.get("pattern_rates"),
-        "pattern_contains_rates": col.get("pattern_contains_rates"),
-        "precision": col.get("precision"),
-        "scale": col.get("scale"),
     }
 
 

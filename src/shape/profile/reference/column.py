@@ -144,16 +144,22 @@ def detect_pattern(non_null: pa.Array, cardinality: int) -> str | None:
 # Rates of personal-data patterns (#2). ``pattern`` is one label gated at 90% of a 1,000-row
 # sample, so a column where 4% of the values are SSNs reports nothing. These rates are measured
 # on every distinct value (weighted by its count), up to ``_RATE_MAX_DISTINCT`` of them; beyond
-# that an evenly spaced sample of the distinct values stands in for all of them.
+# that an evenly spaced sample of the distinct values stands in for all of them. Whole-value rates
+# are taken for the personal-data families and for the detected ``pattern``; each family is first
+# narrowed by a plain substring every match must hold, which is far cheaper than the regex.
 _RATE_LABELS = {"mac": "mac_address", "postal": "postal_code", "currency": "currency_code"}
 _RATE_LABELS |= {"language": "language_code", "ipv4": "ip_address", "ipv6": "ip_address"}
+_RATE_LABELS |= {"ssn": "ssn", "email": "email", "iban": "iban"}
+_RATE_FAMILIES = ("email", "ssn", "ipv4", "ipv6", "iban")
+_NEEDS = {"email": "@", "ssn": "-", "ipv4": ".", "ipv6": ":"}
 _CONTAINS_RE = {
     "ssn": r"(?:^|\D)\d{3}-\d{2}-\d{4}(?:\D|$)",
     "email": r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}",
     "credit_card": r"(?:^|\D)\d(?:[ -]?\d){12,18}(?:\D|$)",
 }
+_CONTAINS_NEEDS = {"ssn": "-", "email": "@"}
 _CARD_RUN = re.compile(r"\d(?:[ -]?\d){12,18}")
-_RATE_MAX_DISTINCT = 200_000
+_RATE_MAX_DISTINCT = 50_000
 
 
 def _luhn(digits: str) -> bool:
@@ -174,17 +180,27 @@ def _has_card(text: str) -> bool:
     return False
 
 
-def _mask(uniq: pa.Array, pat: str) -> np.ndarray:
-    hit = pc.match_substring_regex(uniq, pat).fill_null(False)
-    return np.asarray(hit.to_numpy(zero_copy_only=False), dtype=bool)
+def _mask(uniq: pa.Array, pat: str, needs: str | None) -> np.ndarray:
+    """Which of ``uniq`` match the regex ``pat``; ``needs`` is a substring every match contains."""
+    if needs is None:
+        hit = pc.match_substring_regex(uniq, pat).fill_null(False)
+        return np.asarray(hit.to_numpy(zero_copy_only=False), dtype=bool)
+    cand = np.asarray(
+        pc.match_substring(uniq, needs).fill_null(False).to_numpy(zero_copy_only=False), dtype=bool
+    )
+    out = np.zeros(len(uniq), dtype=bool)
+    if cand.any():
+        hit = pc.match_substring_regex(uniq.filter(pa.array(cand)), pat).fill_null(False)
+        out[np.flatnonzero(cand)] = np.asarray(hit.to_numpy(zero_copy_only=False), dtype=bool)
+    return out
 
 
 def pattern_rates(
-    uniq: pa.Array, counts: np.ndarray, n_nn: int
+    uniq: pa.Array, counts: np.ndarray, n_nn: int, detected: str | None = None
 ) -> tuple[dict[str, float], dict[str, float]]:
     """``(whole, contains)``: the share of the non-null values that are entirely a pattern of each
-    family, and the share that contain an SSN, email address or card number. Zero rates are
-    left out."""
+    personal-data family (and of the detected ``pattern``), and the share that contain an SSN,
+    email address or card number. Zero rates are left out."""
     if n_nn == 0 or len(uniq) == 0:
         return {}, {}
     counts = np.asarray(counts, dtype=np.int64)
@@ -193,15 +209,19 @@ def pattern_rates(
         uniq = uniq.take(pa.array(pick))
         counts = counts[pick]
         n_nn = int(counts.sum())
+    keys = list(_RATE_FAMILIES)
+    for key, label in _RATE_LABELS.items():
+        if label == detected and key not in keys:
+            keys.append(key)
     whole: dict[str, float] = {}
-    for key, pat in _PATTERNS.items():
-        hit = int(counts[_mask(uniq, pat)].sum())
+    for key in keys:
+        hit = int(counts[_mask(uniq, _PATTERNS[key], _NEEDS.get(key))].sum())
         if hit:
-            label = _RATE_LABELS.get(key, key)
+            label = _RATE_LABELS[key]
             whole[label] = whole.get(label, 0.0) + hit / n_nn
     contains: dict[str, float] = {}
     for key, pat in _CONTAINS_RE.items():
-        mask = _mask(uniq, pat)
+        mask = _mask(uniq, pat, _CONTAINS_NEEDS.get(key))
         if key == "credit_card" and mask.any():
             keep = np.array([_has_card(t) for t in uniq.filter(pa.array(mask)).to_pylist()])
             mask = mask.copy()
@@ -892,7 +912,7 @@ def _profile_column(
     if stype == "string" and n_nn:
         pattern = detect_pattern(non_null, cardinality)
         if kind == "str":
-            rates, contains = pattern_rates(uniq, counts, n_nn)
+            rates, contains = pattern_rates(uniq, counts, n_nn, pattern)
         lens = pc.utf8_length(non_null).to_numpy()
         string_length = {
             "min": float(lens.min()),
