@@ -207,7 +207,8 @@ models:
       - {name: user_id, data_type: bigint, data_tests: [unique, not_null]}
 """
     relations = read_schema_yaml(text)
-    assert [r.name for r in select_relations(relations)] == ["dim_user"]
+    chosen, notes = select_relations(relations)
+    assert [r.name for r in chosen] == ["dim_user"] and notes == []
     with pytest.raises(DbtProjectError, match="nothing to import"):
         select_relations(relations, ["source"])
 
@@ -340,3 +341,70 @@ def test_the_cli_refuses_a_bad_input_with_exit_2(tmp_path, capsys):
     code = cli.run_command(default_host(), "from-dbt", [str(tmp_path / "missing")])
     assert code == 2
     assert "no such file" in capsys.readouterr().err
+
+
+def test_a_seed_with_the_name_of_a_source_is_the_same_table():
+    """After `shape dbt-seeds` the project has a seed for every source it was generated from; a
+    second `from-dbt` of the project must not see two tables (the seed block has no tests)."""
+    relations = read_schema_yaml(SCHEMA_YML) + read_schema_yaml(
+        "version: 2\nseeds:\n  - name: customers\n"
+        "    config: {column_types: {customer_id: bigint}}\n"
+    )
+    schema, notes = from_dbt(relations)
+    assert set(schema.tables) == {"customers", "orders"}
+    assert schema.tables["customers"].primary_key == ["customer_id"]  # the source's tests won
+    assert any("customers" in n and "seed" in n for n in notes if isinstance(n, str))
+
+
+def test_two_sources_of_one_name_are_refused():
+    two = (
+        "version: 2\nsources:\n"
+        "  - name: a\n    tables: [{name: t, columns: [{name: x}]}]\n"
+        "  - name: b\n    tables: [{name: t, columns: [{name: x}]}]\n"
+    )
+    with pytest.raises(DbtProjectError, match="two sources are named 't'"):
+        from_dbt(read_schema_yaml(two))
+
+
+def test_a_manifest_that_has_both_the_seeds_and_the_sources_imports(jaffle, tmp_path):
+    """The manifest of a project after `shape dbt-seeds`: a seed and a source per table. Made by
+    hand here; test_dbt_build.py imports the manifest dbt itself wrote."""
+    doc = manifest()
+    doc["sources"] = {
+        "source.p.raw.raw_customers": {
+            "resource_type": "source",
+            "source_name": "raw",
+            "name": "raw_customers",
+            "columns": {"customer_id": {"name": "customer_id", "data_type": "bigint"}},
+        }
+    }
+    schema, notes = from_dbt(read_manifest(doc))
+    assert set(schema.tables) == {"raw_customers", "raw_orders"}
+    assert any("raw_customers" in n for n in notes if isinstance(n, str))
+
+
+def test_a_source_relationships_test_belongs_to_the_child_table():
+    """The manifest dbt writes for a source test has no attached_node, and the test depends on
+    the parent as well as the child: the child is named by the test's `model` argument."""
+    doc = manifest()
+    for uid in [u for u in doc["nodes"] if u.startswith("test.")]:
+        del doc["nodes"][uid]
+    doc["nodes"]["test.p.rel"] = {
+        "resource_type": "test",
+        "attached_node": None,
+        "column_name": "customer_id",
+        "depends_on": {"nodes": ["seed.p.raw_customers", "seed.p.raw_orders"]},
+        "test_metadata": {
+            "name": "relationships",
+            "kwargs": {
+                "to": "ref('raw_customers')",
+                "field": "customer_id",
+                "model": "{{ get_where_subquery(ref('raw_orders')) }}",
+            },
+        },
+    }
+    by_name = {r.name: r for r in read_manifest(doc)}
+    assert [t.kind for t in by_name["raw_orders"].columns["customer_id"].tests] == ["relationships"]
+    assert "customer_id" not in by_name["raw_customers"].columns or not (
+        by_name["raw_customers"].columns["customer_id"].tests
+    )

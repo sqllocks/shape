@@ -202,6 +202,28 @@ def _manifest_test(node: Mapping[str, Any]) -> tuple[DbtTest, str | None] | None
     return DbtTest(_short(name), kwargs), (str(column) if column else None)
 
 
+def _tested_relation(
+    node: Mapping[str, Any], by_id: Mapping[str, DbtRelation]
+) -> DbtRelation | None:
+    """The relation a test node is about. dbt names it in ``attached_node`` for a model, but not
+    for a source test; the test's ``model`` argument (``get_where_subquery(source('raw', 't'))``)
+    says it for both. The test's ``depends_on`` is the last resort: a ``relationships`` test
+    depends on its parent as well as on the table it tests, so it is not reliable."""
+    attached = node.get("attached_node")
+    if attached and attached in by_id:
+        return by_id[str(attached)]
+    kwargs = (node.get("test_metadata") or {}).get("kwargs") or {}
+    target = ref_target(kwargs.get("model"))
+    if target is not None:
+        name, source = target
+        for rel in by_id.values():
+            if rel.name == name and (rel.kind == "source") == (source is not None):
+                if source is None or rel.source_name == source:
+                    return rel
+    deps = [d for d in (node.get("depends_on") or {}).get("nodes", []) if d in by_id]
+    return by_id[deps[-1]] if deps else None
+
+
 def read_manifest(path_or_doc: str | Path | Mapping[str, Any]) -> list[DbtRelation]:
     """The sources, seeds and models of a ``manifest.json`` (the file or its parsed form), with
     their tests. A model's columns come from its ``columns`` entry (so a model with a contract
@@ -238,10 +260,7 @@ def read_manifest(path_or_doc: str | Path | Mapping[str, Any]) -> list[DbtRelati
         if parsed is None:
             continue
         test, column = parsed
-        target_id = node.get("attached_node") or next(
-            (d for d in (node.get("depends_on") or {}).get("nodes", []) if d in by_id), None
-        )
-        rel = by_id.get(str(target_id)) if target_id else None
+        rel = _tested_relation(node, by_id)
         if rel is None:
             continue
         if column:

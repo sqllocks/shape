@@ -228,3 +228,36 @@ def test_the_cli_refuses_a_contract_without_a_profile(tmp_path, capsys):
         == 2
     )
     assert "need --profile" in capsys.readouterr().err
+
+
+def test_a_source_test_is_attributed_to_the_table_it_tests_not_to_its_parent():
+    """dbt gives a source test no attached_node, and a relationships test depends on its parent
+    as well as on its child: the `model` argument names the tested table."""
+    manifest = {
+        "nodes": {
+            "test.p.rel": {
+                "resource_type": "test",
+                "name": "source_relationships_raw_orders_customer_id",
+                "attached_node": None,
+                "column_name": "customer_id",
+                "depends_on": {
+                    "nodes": ["source.p.raw.customers", "source.p.raw.orders"],
+                },
+                "test_metadata": {
+                    "name": "relationships",
+                    "kwargs": {
+                        "to": "source('raw', 'customers')",
+                        "field": "customer_id",
+                        "model": "{{ get_where_subquery(source('raw', 'orders')) }}",
+                    },
+                },
+            }
+        }
+    }
+    results = {"results": [{"unique_id": "test.p.rel", "status": "fail", "failures": 2}]}
+    (failed,) = build_report(results, manifest)["dbt"]["failed"]
+    assert (failed["model"], failed["column"], failed["test"]) == (
+        "orders",
+        "customer_id",
+        "relationships",
+    )

@@ -140,6 +140,23 @@ def test_the_import_reads_the_keys_the_enums_and_the_types(built):
     assert (amount["type"], amount["precision"], amount["scale"]) == ("decimal", 10, 2)
 
 
+def test_the_manifest_dbt_wrote_gives_the_same_schema_as_the_yaml(built):
+    """The manifest after `dbt build` has the sources and a seed of each name; importing it must
+    give what the project's YAML files give (the sources win over the seeds of the same name)."""
+    from shape_dbt.fromdbt import from_dbt
+    from shape_dbt.project import read_manifest, read_project
+
+    project = built["project"]
+    from_manifest, _ = from_dbt(read_manifest(project / "target" / "manifest.json"))
+    from_yaml, _ = from_dbt(read_project([project / "models" / "staging" / "_sources.yml"]))
+    a, b = from_manifest.to_dict(), from_yaml.to_dict()
+    assert set(a["tables"]) == {"raw_customers", "raw_orders", "raw_payments"}
+    assert a["tables"] == b["tables"] and a["relationships"] == b["relationships"]
+    # and a project directory that already holds seeds (the second run of the workflow) too
+    again, _ = from_dbt(read_project([project / "target" / "manifest.json"]))
+    assert again.to_dict()["tables"] == b["tables"]
+
+
 def test_the_seeds_carry_a_block_of_column_types(built):
     doc = yaml.safe_load(
         (built["project"] / "seeds" / "_shape_seeds.yml").read_text(encoding="utf-8")

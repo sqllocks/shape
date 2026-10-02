@@ -22,7 +22,7 @@ dbt (`shape from-dbt`, `shape to-dbt-tests`, `shape dbt-seeds`, `shape dbt-repor
 reads and writes dbt's files and does not install dbt:
 
 ```bash
-pip install 'sqllocks-shape[dbt]'
+pip install sqllocks-shape-dbt
 ```
 
 For an offline/classified environment, build and approve wheels in a connected build enclave, transfer the wheelhouse and hashes through the organization's approved process, then install with `pip --no-index --find-links <wheelhouse> sqllocks-shape`. Shape does not require raw data to leave the environment.

@@ -38,14 +38,19 @@ def load_json(path: str | Path, what: str) -> Any:
 
 
 def _test_node(node: Mapping[str, Any]) -> dict[str, Any]:
+    from .project import ref_target
+
     meta = node.get("test_metadata") or {}
     namespace = meta.get("namespace")
     name = meta.get("name") or node.get("name")
     attached = str(node.get("attached_node") or "")
     model = attached.rsplit(".", 1)[-1] if attached else None
+    if model is None:  # a source test has no attached_node: the `model` argument names the table
+        target = ref_target((meta.get("kwargs") or {}).get("model"))
+        model = target[0] if target else None
     if model is None:
         deps = [d for d in (node.get("depends_on") or {}).get("nodes", []) if "." in d]
-        model = deps[0].rsplit(".", 1)[-1] if deps else None
+        model = deps[-1].rsplit(".", 1)[-1] if deps else None
     return {
         "test": f"{namespace}.{name}" if namespace else name,
         "model": model,

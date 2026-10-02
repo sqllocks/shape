@@ -4,7 +4,7 @@ Shape plugin: dbt integration. File-based and dbt-Core-generic: it reads and wri
 never imports or runs dbt (`dbt-core` is not a dependency).
 
 ```
-pip install sqllocks-shape-dbt          # or: pip install 'sqllocks-shape[dbt]'
+pip install sqllocks-shape-dbt
 
 shape from-dbt my_dbt_project -o shop.gen.json            # a dbt project as a generation schema
 shape to-dbt-tests contract.json --model orders -o models/_shape_tests.yml

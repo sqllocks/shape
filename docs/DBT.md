@@ -16,7 +16,7 @@ reads and writes dbt's files and never imports or runs dbt, so `dbt-core` is not
 Shape or of the plugin.
 
 ```bash
-pip install sqllocks-shape-dbt          # or: pip install 'sqllocks-shape[dbt]'
+pip install sqllocks-shape-dbt
 shape plugins list                      # from-dbt, to-dbt-tests, dbt-seeds, dbt-report, dbt-seeds (sink)
 ```
 
@@ -51,6 +51,8 @@ smart inference are the same (`--no-smart`, `--explain`, `--scale`, `--domain` w
   `--select source|seed|model` (repeatable) chooses. `manifest.json` (dbt's own, from `dbt parse`,
   `dbt compile` or `dbt docs generate`) and `schema.yml` / `sources.yml` give the same result;
   both the `tests:` and `data_tests:` keys, and test arguments inline or under `arguments:`, are read.
+  A seed that has the name of a source is the same table (a project whose sources are loaded as
+  seeds by `shape dbt-seeds`, as the sample's are): the source is kept, because its tests describe it.
 - **Decimals.** A `numeric(18,2)` column becomes `type: decimal` with `precision: 18` and `scale: 2`.
   In a profile the column stays `dtype: float` (the profiler's vocabulary does not have a decimal),
   and generation writes it as a double rounded to the scale. The seeds sink declares

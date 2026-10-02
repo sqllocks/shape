@@ -127,11 +127,19 @@ def _has(col: DbtColumn, kind: str) -> bool:
     return any(t.kind == kind for t in col.tests)
 
 
+_PREFERENCE = {"source": 0, "seed": 1, "model": 2}
+
+
 def select_relations(
     relations: Sequence[DbtRelation], kinds: Iterable[str] | None = None
-) -> list[DbtRelation]:
-    """The relations to generate: ``kinds`` (``source``, ``seed``, ``model``), or, when it is not
-    given, the sources and seeds, or the models when the project has neither."""
+) -> tuple[list[DbtRelation], list[str]]:
+    """The relations to generate, and notes about what was left out.
+
+    ``kinds`` (``source``, ``seed``, ``model``) picks what to generate; without it, the sources and
+    seeds, or the models when the project has neither. A seed that has the name of a source (a
+    project whose sources are loaded as seeds, as ``shape dbt-seeds`` does) is the same table: the
+    source is kept, because its tests describe it. Two relations of one kind with one name are
+    refused."""
     if kinds is not None:
         wanted = set(kinds)
         chosen = [r for r in relations if r.kind in wanted]
@@ -140,13 +148,20 @@ def select_relations(
             r for r in relations if r.kind == "model"
         ]
     seen: dict[str, DbtRelation] = {}
-    for r in chosen:
-        if r.name in seen:
+    notes: list[str] = []
+    for r in sorted(chosen, key=lambda r: _PREFERENCE.get(r.kind, 3)):
+        kept = seen.get(r.name)
+        if kept is None:
+            seen[r.name] = r
+        elif kept.kind == r.kind:
             raise DbtProjectError(
-                f"two {r.kind}s are named {r.name!r} (in {seen[r.name].source_name or 'the '}"
-                f"project and {r.source_name or 'the project'}); select one kind or rename one"
+                f"two {r.kind}s are named {r.name!r} (in {kept.source_name or 'the project'} and "
+                f"{r.source_name or 'the project'}); select one kind or rename one"
             )
-        seen[r.name] = r
+        else:
+            notes.append(
+                f"{r.name}: the {r.kind} is the {kept.kind} of the same name; kept the {kept.kind}"
+            )
     if not seen:
         raise DbtProjectError(
             "nothing to import: the dbt input has no "
@@ -156,7 +171,8 @@ def select_relations(
                 else "sources, seeds or models"
             )
         )
-    return list(seen.values())
+    order = {r.name: i for i, r in enumerate(chosen)}
+    return sorted(seen.values(), key=lambda r: order[r.name]), notes
 
 
 def _guess_type(col: DbtColumn, rel: DbtRelation, key: bool) -> str:
@@ -290,8 +306,9 @@ def from_dbt(
     relations = (
         items if items and all(isinstance(i, DbtRelation) for i in items) else read_project(items)
     )
-    chosen = select_relations(relations, kinds)
+    chosen, selection_notes = select_relations(relations, kinds)
     tables, fks, notes = _parse_tables(chosen)
+    notes = [*selection_notes, *notes]
     schema, annotations = schema_from_parsed(
         tables,
         fks,
