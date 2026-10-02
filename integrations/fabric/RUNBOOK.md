@@ -18,6 +18,10 @@ What you are building:
 | `shape_profile_distributed` | PySpark notebook (per-partition profile on the executors; or driver-only exact) | `notebooks/shape_profile_distributed.ipynb` |
 | `shape_udf` | User Data Functions item | `udf/function_app.py` |
 | `shape_gate_notebook`, `shape_gate_spark`, `shape_gate_udf` | Data pipelines | `pipelines/` |
+| `shape_generate` | Python notebook: a domain to lakehouse Delta tables, with its contract (PF-06) | `notebooks/shape_generate.ipynb` |
+| `shape_profile_domain` | Python notebook: profile the generated tables, check the domain's contract (PF-06) | `notebooks/shape_profile_domain.ipynb` |
+| `shape_generate_gate` | Data pipeline: generate, then profile, then check (PF-06) | `pipelines/shape_generate_gate.DataPipeline` |
+| `generateSample` | a function of `shape_udf`: rows of one table of a domain (PF-06) | `udf/function_app.py` |
 
 ## 1. Prerequisites
 
@@ -151,6 +155,7 @@ Do not wrap the last cell.
    | `diffProfiles` | `baselinePath` day 1, `currentPath` day 2, `failOnDrift = true` | error `Drift detected: N change(s): ...` |
    | `profileLakehouseTable` | `tableName = orders_day1`, `maxRows = 1000000` | result with `sampled` true only if the table has more rows |
    | `profileDataFrame` | a small DataFrame | summary |
+   | `generateSample` | `domain = retail`, `table = customer`, `rows = 100`, `seed = 7` (needs the domains wheel, section 12.1) | a 100-row DataFrame, the same on every call |
 
    **[VERIFY]** for each: that the connection object works as the tests assume
    (`connectToFiles().get_file_client(path)` with `get_file_properties().size`,
@@ -340,6 +345,7 @@ Not checked live by the builder; each is a risk until you confirm it.
 11. The real Shape API (lane L1) behaves like the stub the tests used: `shape.profile(table,
     name=...)`, `shape.check(p, contractPath)`, `shape.diff(base, cur)`, `shape.save/load`.
     If `pytest tests/demo/fabric` fails after the merge, that is the first thing to read.
+12. The generation items (PF-06): section 12.6.
 
 ## 11. Owner live dry-run checklist
 
@@ -362,4 +368,114 @@ seconds); do not extrapolate.
 - [ ] Pipeline `shape_gate_spark`: same
 - [ ] Pipeline `shape_gate_udf`: day 1 succeeds; day 2 fails at `CheckContract` with violations
 - [ ] Timings for each step recorded in `demo/LIVE_TIMINGS.md`
+- [ ] The generation checklist (section 12.7)
 - [ ] Anything in section 10 that needed a correction is written down (open an issue or tell the lead)
+
+
+## 12. Generating data in pipelines (PF-06)
+
+Everything here runs on the generation engine, so what a notebook or function generates is what
+`shape generate` writes for the same domain, scale and seed. **Built and tested locally
+(`pytest tests/demo/fabric/test_generate.py`), not run in a Fabric workspace.**
+
+### 12.1 Install the domains
+
+A domain is a plugin: next to the Shape wheel, upload the wheel `sqllocks_shape_domains-0.9.0-py3-none-any.whl`
+(`pip wheel --no-deps plugins/shape-domains`, or the release) to *Resources > builtin* of each
+notebook, or to the Environment. The install cell of both notebooks is
+`%pip install --find-links builtin "sqllocks-shape==0.9.0" "sqllocks-shape-domains==0.9.0"`. For
+`generateSample`, add the same wheel as a **private library** of `shape_udf` (it is
+`py3-none-any` and about 2 MB, far under the 28.6 MB limit). **[VERIFY]** that the UDF library
+resolver accepts a private library whose requirement `sqllocks-shape==0.9.0` is another private
+library (otherwise list `sqllocks-shape==0.9.0` as a public library, which works once it is on PyPI).
+
+### 12.2 `shape_generate`: a domain into Delta tables
+
+1. Import `shape_generate.ipynb`, attach the default lakehouse (`shape_demo`).
+2. Run it with the defaults (`domain = "retail"`, `scale = "small"`, `seed = 42`).
+   - Expected: nine Delta tables (`customer`, `address`, `product_category`, `product`, `store`,
+     `promotion`, `order`, `order_line`, `return`) under *Tables*, 21,750 rows in all; the exit
+     value lists each table with its row count and `contractPath = "shape/retail/contract.json"`.
+   - `Files/shape/retail/contract.json` is the contract that the domain's own schema implies for
+     these tables (exact row counts, required columns, no extra columns, types, `nullable: false`,
+     null-rate limits, primary-key uniqueness, enumerated values); `generation.json` records the run.
+3. Parameters: `domain`; `scale` (a preset of the domain: `small`, `medium`, ...; `shape presets`);
+   `seed` (the same seed always gives the same rows); `mode` (`3nf` or `star`; empty is the domain's
+   default); `tablePrefix` (tables are `<tablePrefix><table>`); `writeMode` (`overwrite` is repeatable,
+   `append` adds the rows again); `outputDir`. Names are checked: letters, digits and underscores only.
+4. The data is generated in the notebook's memory: a Python notebook with 8 vCores (64 GB) takes
+   `small` and `medium` comfortably; use a smaller scale, or `shape generate` on a Batch node
+   (ADF runbook), for more.
+5. Timestamps are stored as microseconds (Delta has no nanosecond type), so a table read back has
+   `timestamp[us]` where the engine's own output has `timestamp[ns]`; the values are equal.
+
+### 12.3 `shape_profile_domain`: profile, then check the contract
+
+1. Import `shape_profile_domain.ipynb`, attach `shape_demo`, run it after `shape_generate` with the
+   same `tablePrefix`.
+   - Expected: `"passed": true`, `"violations": []`, `rows` 21,750, a `tables` object with each
+     table's row count; the HTML report renders (all nine tables, with the relationships the
+     profiler detected); artifacts in `Files/shape/retail/<timestamp>/`.
+2. To see it fail: overwrite a table (for example delete rows from `customer`), run again. Expected:
+   `"passed": false` and a violation such as `customer:row_count.min`; a missing table makes the
+   notebook fail with an error naming it; it never passes without reading every table in the contract.
+3. `baselinePath` (an earlier `.shape` artifact) and `failOnDrift` work as in section 4.
+
+### 12.4 Pipeline `shape_generate_gate`
+
+`GenerateDomain` (notebook `shape_generate`) -> `ProfileAndCheck` (notebook `shape_profile_domain`,
+which is given the contract path the first notebook returned) -> `CheckGate` (If Condition on
+`passed`; **False** runs `FailGate`, error code `ShapeContractFailed`).
+
+- Import it as in section 7.1: add `--notebook shape_generate=<id> --notebook shape_profile_domain=<id>`
+  to the `bind` command. Or build it by hand as in 7.2 with the activities above.
+- Parameters: `domain`, `scale`, `seed`, `mode`, `tablePrefix`, `writeMode`, `outputDir`,
+  `baselinePath`, `failOnDrift`. The contract path is not a parameter: the second notebook reads it
+  from the first one's exit value, **[VERIFY]**:
+
+  ```
+  @json(activity('GenerateDomain').output.result.exitValue).contractPath
+  ```
+- The gate expression is `@json(activity('ProfileAndCheck').output.result.exitValue).passed`
+  (**[VERIFY]**, the same expression family as section 7.2).
+- Expected: with the defaults it succeeds and the If Condition takes the True branch. After
+  damaging a table between the two notebooks (or running only `shape_profile_domain` on a damaged
+  table) it fails at `FailGate`, with the violations in the message.
+
+### 12.5 `generateSample` (User Data Function)
+
+`generateSample(domain: str, table: str, rows: int = 10000, seed: int = 42) -> pd.DataFrame`.
+Test it from the portal, for example `domain = retail`, `table = customer`, `rows = 100`, `seed = 7`:
+
+- Expected: a 100-row DataFrame with the customer columns, identical on every call with the same
+  arguments; `rows = 0`, an unknown domain or table, or a name with characters other than letters,
+  digits and underscores gives an error that names the problem.
+- It generates the whole domain (the computed columns and business rules need the related tables) with
+  the other tables no larger than `rows`, and returns the one table. A table without foreign keys
+  (`customer`, `store`, ...) equals that table of a full run for the same seed and row count; for a child
+  table the parent keys are valid, but the parents are smaller than in a full run.
+- `rows` is capped at 500,000, and the response is cut to the leading rows that fit in 25 MB of JSON
+  (the response limit is 30 MB). Nothing says the cut happened except the row count: compare it with
+  `rows`.
+- The domain and table are looked up among the installed domains and the schema's tables; nothing the
+  caller writes is used to build a path or a statement.
+- **[VERIFY]** that a `pd.DataFrame` return of this size is serialized and returned within the limits
+  (30 MB response, 240 s), and the time of the first call (it imports the domain's reference data).
+
+### 12.6 Verify in the workspace on first run (PF-06)
+
+1. The two-wheel install line resolves in a notebook (section 12.1), and the exit value reports the kernel.
+2. The Delta tables the notebook writes under `/lakehouse/default/Tables` appear in the lakehouse
+   explorer and the SQL endpoint without a refresh step (a Python notebook writes the files itself).
+3. `/lakehouse/default/Files/...` is writable from the Python notebook for `contract.json`.
+4. Both exit-value expressions of section 12.4.
+5. `generateSample` returns a DataFrame this size through the portal and the Functions activity.
+
+### 12.7 Owner live dry-run checklist (PF-06)
+
+- [ ] The domains wheel is installed (notebooks and `shape_udf`)
+- [ ] `shape_generate` (defaults): nine tables, 21,750 rows, `contract.json` written; a second run with the same seed leaves the same tables
+- [ ] `shape_profile_domain`: `passed: true`; after damaging a table, `passed: false` with the named violation
+- [ ] Pipeline `shape_generate_gate`: succeeds with the defaults (both exit-value expressions **verified**); fails at `FailGate` on a damaged table
+- [ ] `generateSample` called from the portal and from a Functions activity: row count, determinism, and the errors above
+- [ ] Timings (generate, profile, `generateSample`) recorded in `demo/LIVE_TIMINGS.md`
