@@ -236,8 +236,11 @@ def chi2_sf(statistic: float, df: int) -> float:
 
 def ks_statistic(a: np.ndarray[Any, Any], b: np.ndarray[Any, Any]) -> float:
     """Two-sample Kolmogorov-Smirnov statistic: the largest gap between the empirical CDFs."""
-    a = np.sort(a)
-    b = np.sort(b)
+    return ks_sorted(np.sort(a), np.sort(b))
+
+
+def ks_sorted(a: np.ndarray[Any, Any], b: np.ndarray[Any, Any]) -> float:
+    """:func:`ks_statistic` of two samples that are already sorted."""
     pooled = np.concatenate([a, b])
     gap = (
         np.searchsorted(a, pooled, side="right") / a.size
@@ -327,10 +330,25 @@ def _datetime_from_strings(nn: pa.ChunkedArray) -> np.ndarray[Any, Any] | None:
 
 @dataclass(slots=True)
 class _Prepared:
+    """A prepared column: everything the score reads. A batch column fills ``non_null`` and
+    ``numbers``; a streamed one (``shape.streaming.emit.live``) fills the optional summary fields
+    instead, which then take the place of what would be computed from the values.
+
+    ``n_valid`` and ``distinct`` are computed on demand from ``non_null`` when unset, ``key_counts``
+    (the result of ``_keys``) likewise, ``mean`` and ``std`` come from ``numbers``, and
+    ``n_numbers`` (how many values ``numbers`` stands for) is its size."""
+
     kind: str
     n: int
     non_null: pa.ChunkedArray
     numbers: np.ndarray[Any, Any] | None = None  # numeric and datetime kinds
+    n_valid: int | None = None
+    distinct: int | None = None
+    key_counts: tuple[pa.Array, np.ndarray[Any, Any]] | None = None
+    mean: float | None = None
+    std: float | None = None
+    n_numbers: int | None = None
+    presorted: bool = False  # ``numbers`` is already sorted
 
 
 def _prepare(col: Any) -> _Prepared:
@@ -377,8 +395,17 @@ def _family(t: pa.DataType) -> str:
 def _keys(p: _Prepared) -> tuple[pa.Array, np.ndarray[Any, Any]]:
     """The distinct values of a column as strings tagged with their kind (so a number and the
     same text never count as one category), with how often each occurs."""
+    if p.key_counts is not None:
+        return p.key_counts
     counts = pc.value_counts(p.non_null.combine_chunks() if p.non_null.num_chunks else pa.array([]))
-    values = counts.field("values")
+    return keys_from_counts(counts.field("values"), counts.field("counts").to_numpy())
+
+
+def keys_from_counts(
+    values: pa.Array, counts: np.ndarray[Any, Any]
+) -> tuple[pa.Array, np.ndarray[Any, Any]]:
+    """``_keys`` for values already counted: ``values`` are the distinct values, ``counts`` how
+    often each occurs."""
     if pa.types.is_null(values.type):
         return pa.array([], pa.large_string()), np.zeros(0, dtype=np.float64)
     try:
@@ -389,7 +416,7 @@ def _keys(p: _Prepared) -> tuple[pa.Array, np.ndarray[Any, Any]]:
     keys = pc.binary_join_element_wise(
         pa.scalar(tag, pa.large_string()), text, pa.scalar("", pa.large_string())
     )
-    return keys, np.asarray(counts.field("counts").to_numpy(), dtype=np.float64)
+    return keys, np.asarray(counts, dtype=np.float64)
 
 
 def _chi2(
@@ -422,15 +449,52 @@ def _missing_column(name: str) -> ColumnFidelity:
     return ColumnFidelity(name, False, False, 1.0, 0.0, None, None, None, None, None, None, 0.0)
 
 
+def prepare_column(col: Any) -> _Prepared:
+    """A column's summary for :func:`score_prepared` (the public name of ``_prepare``)."""
+    return _prepare(col)
+
+
 def compare_column(name: str, real: Any, synth: Any) -> ColumnFidelity:
     """Score one synthetic column against its reference column."""
-    r, s = _prepare(real), _prepare(synth)
+    return score_prepared(name, _prepare(real), _prepare(synth))
+
+
+def _valid(p: _Prepared) -> int:
+    return len(p.non_null) if p.n_valid is None else p.n_valid
+
+
+def _distinct(p: _Prepared) -> int:
+    if p.distinct is not None:
+        return p.distinct
+    return int(pc.count_distinct(p.non_null, mode="only_valid").as_py())
+
+
+def _ordered(p: _Prepared) -> np.ndarray[Any, Any]:
+    assert p.numbers is not None
+    return p.numbers if p.presorted else np.sort(p.numbers)
+
+
+def _sampled(p: _Prepared) -> int:
+    assert p.numbers is not None
+    return int(p.numbers.size) if p.n_numbers is None else p.n_numbers
+
+
+def _moments(p: _Prepared) -> tuple[float, float]:
+    """``(mean, std)`` of a numeric or datetime column."""
+    if p.mean is not None and p.std is not None:
+        return p.mean, p.std
+    assert p.numbers is not None
+    return _mean(p.numbers), _std(p.numbers)
+
+
+def score_prepared(name: str, r: _Prepared, s: _Prepared) -> ColumnFidelity:
+    """Score a prepared synthetic column ``s`` against its prepared reference column ``r``."""
     dtype_match = r.kind == s.kind
-    real_null = (r.n - len(r.non_null)) / r.n if r.n > 0 else 0.0
-    synth_null = (s.n - len(s.non_null)) / s.n if s.n > 0 else 0.0
+    real_null = (r.n - _valid(r)) / r.n if r.n > 0 else 0.0
+    synth_null = (s.n - _valid(s)) / s.n if s.n > 0 else 0.0
     null_rate_delta = abs(real_null - synth_null)
-    real_card = int(pc.count_distinct(r.non_null, mode="only_valid").as_py())
-    synth_card = int(pc.count_distinct(s.non_null, mode="only_valid").as_py())
+    real_card = _distinct(r)
+    synth_card = _distinct(s)
     cardinality_ratio = synth_card / max(real_card, 1)
 
     mean_delta = std_ratio = ks = chi2_stat = chi2_p = overlap = None
@@ -442,8 +506,8 @@ def compare_column(name: str, real: Any, synth: Any) -> ColumnFidelity:
 
     if r.kind == s.kind and r.kind in (NUMERIC, DATETIME):
         assert r.numbers is not None and s.numbers is not None
-        real_mean, synth_mean = _mean(r.numbers), _mean(s.numbers)
-        real_std, synth_std = _std(r.numbers), _std(s.numbers)
+        real_mean, real_std = _moments(r)
+        synth_mean, synth_std = _moments(s)
         mean_delta = abs(real_mean - synth_mean) / max(real_std, _STD_FLOOR)
         std_ratio = synth_std / max(real_std, _STD_FLOOR)
         max_points += 20
@@ -451,8 +515,8 @@ def compare_column(name: str, real: Any, synth: Any) -> ColumnFidelity:
         max_points += 10
         points += 10 * max(0.0, 1.0 - abs(1.0 - std_ratio))
         max_points += 10
-        if r.numbers.size >= _MIN_KS_SAMPLE and s.numbers.size >= _MIN_KS_SAMPLE:
-            ks = ks_statistic(r.numbers, s.numbers)
+        if _sampled(r) >= _MIN_KS_SAMPLE and _sampled(s) >= _MIN_KS_SAMPLE:
+            ks = ks_sorted(_ordered(r), _ordered(s))
             points += 10 * (1.0 - ks)
         else:
             points += 5
