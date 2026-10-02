@@ -72,3 +72,14 @@ raising outside the handler.
 
 `tests/artifact/test_signing_keys.py` (31), `tests/security/test_signing_secrets.py` (4).
 
+
+## Merge of `origin/lane/P7-04`
+
+P7-04 touched `src/shape/artifact/io.py` (bounded manifest/signature reads), `signing.py`
+(`RecursionError` in the signature parse), `cli/main.py` (`--verify` sniffs content, not the file
+extension) and others. Merged with a merge commit (no rebase, no force-push). One textual
+conflict in `cli/main.py` (both sides added helpers next to `_verify_inputs`): kept both.
+One semantic conflict: P7-04's `test_verify_checks_artifacts_whatever_their_file_name` called
+`write_keypair(prefix)` expecting the old unencrypted default; it now passes a passphrase (the
+test only uses the public key; its assertions are unchanged). The nightly workflow, the fuzzer and
+the rest of P7-04 came in unchanged.
