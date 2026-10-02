@@ -26,7 +26,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PLUGINS = ROOT / "plugins"
 # T-09 / section 5 layout: the first-party distributions.
-EXPECTED = ("kafka", "eventhubs", "fabric", "sqlserver", "domains", "simulation", "mcp")
+EXPECTED = (
+    "kafka",
+    "eventhubs",
+    "fabric",
+    "sqlserver",
+    "domains",
+    "simulation",
+    "mcp",
+    "healthcare-codes",
+)
 
 
 def core_version() -> str:
@@ -68,9 +77,9 @@ def check_tree() -> list[str]:
                 problems.append(f"{where}: entry-point group {group!r} is not a plugin API group")
         if not (d / "LICENSE").is_file() or (d / "LICENSE").read_text(encoding="utf-8") != licence:
             problems.append(f"{where}: LICENSE must equal the repository LICENSE")
-        init = d / "src" / f"shape_{short}" / "__init__.py"
+        init = d / "src" / f"shape_{short.replace('-', '_')}" / "__init__.py"
         if not init.is_file() or "SHAPE_API" not in init.read_text(encoding="utf-8"):
-            problems.append(f"{where}: src/shape_{short}/__init__.py must declare SHAPE_API")
+            problems.append(f"{where}: {init.relative_to(d)} must declare SHAPE_API")
     return problems
 
 
@@ -97,7 +106,7 @@ def build_wheels(out: Path, *, isolated: bool) -> list[str]:
         if run.returncode != 0:
             problems.append(f"plugins/shape-{short}: build failed\n{run.stdout}{run.stderr}")
             continue
-        wheels = sorted(out.glob(f"sqllocks_shape_{short}-{version}-*.whl"))
+        wheels = sorted(out.glob(f"sqllocks_shape_{short.replace('-', '_')}-{version}-*.whl"))
         if len(wheels) != 1:
             problems.append(f"plugins/shape-{short}: expected one wheel, found {wheels}")
             continue
@@ -106,7 +115,7 @@ def build_wheels(out: Path, *, isolated: bool) -> list[str]:
             problems.append(f"{wheel.name}: must be a pure py3-none-any wheel")
         with zipfile.ZipFile(wheel) as z:
             names = set(z.namelist())
-        pkg = f"shape_{short}/__init__.py"
+        pkg = f"shape_{short.replace('-', '_')}/__init__.py"
         if pkg not in names:
             problems.append(f"{wheel.name}: missing {pkg}")
         if not any(n.endswith(".dist-info/licenses/LICENSE") for n in names):
