@@ -22,6 +22,8 @@ import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.kernel.reference.exact import all_whole
+
 from .reference.column import _all_parse_datetime, _coerce_datetime_strings
 from .reference.readers import _arrow_cols, _csv_cols
 
@@ -77,7 +79,7 @@ def infer_column_type(array: Any, source: str = "arrow") -> str:
         if n:
             vals = non_null.to_numpy()
             vals = vals[~np.isnan(vals)] if vals.dtype.kind == "f" else vals
-            if len(vals) and np.all(vals == vals.astype(np.int64)):
+            if len(vals) and all_whole(vals):
                 return "integer"
         return "float"
     if kind == "dt64":
@@ -96,7 +98,7 @@ def infer_column_type(array: Any, source: str = "arrow") -> str:
         return "boolean"
     if _try_cast(uniq, pa.float64()):
         u = pc.cast(uniq, pa.float64()).to_numpy()
-        return "integer" if np.all(u == u.astype(np.int64)) else "float"
+        return "integer" if all_whole(u) else "float"
     parsed = _coerce_datetime_strings(non_null, keep_nulls=True)
     if (parsed is not None and parsed.null_count == 0) or _all_parse_datetime(uniq):
         return "datetime"
