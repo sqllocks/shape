@@ -7,7 +7,6 @@ written rows and the negative controls. See ``verify.py`` for the rules.
 
 from __future__ import annotations
 
-import json
 import shutil
 from pathlib import Path
 from typing import Any
@@ -25,7 +24,8 @@ ALLOWED: dict[str, dict[str, str]] = {
         "what": "valid_from of an expired version",
         "baseline": "the state is built from the table, not from the snapshot, so the first time a "
         "record changes its expired row has no valid_from (null) although the snapshot gave it one",
-        "shape": "the expired row keeps the valid_from of the version it expires (the initial date, "
+        "shape": "the expired row keeps the valid_from of the version it expires (the initial "
+        "date, "
         "or the day the entity was inserted)",
     },
     "SCD-2": {
@@ -46,7 +46,8 @@ ALLOWED: dict[str, dict[str, str]] = {
         "what": "a business key that is not numeric",
         "baseline": "the first delta mixes text keys with the integer keys of the inserts, and the "
         "write fails with an Arrow conversion error after the snapshot is on disk",
-        "shape": "the run raises a ValueError that names the key column, before anything is written",
+        "shape": "the run raises a ValueError that names the key column, before anything is "
+        "written",
     },
     "SCD-3": {
         "what": "column order of the delta files",
@@ -128,12 +129,17 @@ def _result(res: Any, root: Path) -> dict[str, Any]:
 
 
 def baseline_side(job: dict[str, Any]) -> dict[str, Any]:
-    from sqllocks_spindle.simulation.scd2_file_drops import SCD2FileDropConfig, SCD2FileDropSimulator
+    from sqllocks_spindle.simulation.scd2_file_drops import (
+        SCD2FileDropConfig,
+        SCD2FileDropSimulator,
+    )
 
     if "inline" in job:
         tables = {n: pd.DataFrame(cols) for n, cols in job["inline"].items()}
     else:
-        tables = {t: pd.read_parquet(Path(job["input_dir"]) / f"{t}.parquet") for t in job["tables"]}
+        tables = {
+            t: pd.read_parquet(Path(job["input_dir"]) / f"{t}.parquet") for t in job["tables"]
+        }
     root = Path(job["out_dir"]) / "landing"
     cfg = SCD2FileDropConfig(base_path=str(root), **job["config"])
     return _result(SCD2FileDropSimulator(tables=tables, config=cfg).run(), root)
@@ -190,6 +196,7 @@ def _explain(
     def explain(path: str, base: pd.DataFrame, shape: pd.DataFrame) -> bool:
         if "/delta/" not in path or len(base) != len(shape):
             return False
+
         def whole(s: pd.Series) -> bool:
             return bool((s.dropna() % 1 == 0).all())
 
@@ -213,7 +220,8 @@ def _explain(
             if not (nb == ns).all():
                 return False
             # The baseline keeps the unrounded product, Shape rounds at every change: after k
-            # changes they differ by at most 0.5 * (1 + 1.2 + ... + 1.2^(k-1)), k at most the days run.
+            # changes they differ by at most 0.5 * (1 + 1.2 + ... + 1.2^(k-1)), k at most the
+            # days run.
             k = max(0, (day - first).days) if day is not None else 0
             bound = 0.5 * (1.2**k - 1) / 0.2
             gap = np.abs(base[c][~nb].to_numpy(dtype=float) - shape[c][~ns].to_numpy(dtype=float))
@@ -230,7 +238,10 @@ def _explain(
                 continue
             if kind.iloc[i] == "insert":  # SCD-2
                 good = bool(
-                    pd.isna(bv.iloc[i]) and sv.iloc[i] == day and pd.isna(bc.iloc[i]) and sc_.iloc[i] == True  # noqa: E712
+                    pd.isna(bv.iloc[i])
+                    and sv.iloc[i] == day
+                    and pd.isna(bc.iloc[i])
+                    and sc_.iloc[i] == True  # noqa: E712
                 )
                 seen["inserts"] = seen.get("inserts", 0) + int(good)
             else:  # SCD-1: an expired row whose valid_from the baseline lost
@@ -250,7 +261,9 @@ def chain_problems(frames: list[pd.DataFrame], key: str) -> dict[str, int]:
     current flag that is neither true nor false, a gap or overlap between an entity's versions
     (the valid_to of one must be the valid_from of the next), a last version that has an end, and
     an entity without exactly one current version."""
-    allrows = pd.concat([cmp.norm_frame(f.reindex(columns=frames[0].columns)) for f in frames], ignore_index=True)
+    allrows = pd.concat(
+        [cmp.norm_frame(f.reindex(columns=frames[0].columns)) for f in frames], ignore_index=True
+    )
     bad = {"no_valid_from": int(allrows["valid_from"].isna().sum())}
     bad["no_current_flag"] = int(allrows["is_current"].isna().sum())
     state = allrows.drop_duplicates(subset=[key, "valid_from"], keep="last")
@@ -261,13 +274,21 @@ def chain_problems(frames: list[pd.DataFrame], key: str) -> dict[str, int]:
         if int(cur.sum()) != 1:
             not_one_current += 1
         ends, starts = g["valid_to"].iloc[:-1].tolist(), g["valid_from"].iloc[1:].tolist()
-        gaps += sum(1 for e, s in zip(ends, starts, strict=True) if pd.isna(e) or pd.isna(s) or e != s)
+        gaps += sum(
+            1 for e, s in zip(ends, starts, strict=True) if pd.isna(e) or pd.isna(s) or e != s
+        )
         open_end += int(not pd.isna(g["valid_to"].iloc[-1]))
-    bad["version_gaps"], bad["not_exactly_one_current"], bad["last_version_closed"] = gaps, not_one_current, open_end
+    bad["version_gaps"], bad["not_exactly_one_current"], bad["last_version_closed"] = (
+        gaps,
+        not_one_current,
+        open_end,
+    )
     return bad
 
 
-def _frames(root: Path, result: dict[str, Any], entity: str) -> tuple[pd.DataFrame, list[pd.DataFrame]]:
+def _frames(
+    root: Path, result: dict[str, Any], entity: str
+) -> tuple[pd.DataFrame, list[pd.DataFrame]]:
     initial = cmp.read_frame(root / result["initial"])  # the first format
     deltas = [
         cmp.read_frame(root / d)
@@ -287,9 +308,7 @@ def _concat(initial: pd.DataFrame, deltas: list[pd.DataFrame]) -> pd.DataFrame:
 # ---- mechanism parity ---------------------------------------------------------------------
 
 
-def mechanism(
-    ctx: Any, checks: sc.Checks, name: str, params: dict[str, Any]
-) -> dict[str, Any]:
+def mechanism(ctx: Any, checks: sc.Checks, name: str, params: dict[str, Any]) -> dict[str, Any]:
     b = ctx.run("baseline", NAME, name, **params)
     s = ctx.run("shape", NAME, name, **params)
     if "error" in b or "error" in s:
@@ -303,13 +322,16 @@ def mechanism(
         name,
         _root(b),
         _root(s),
-        explain=_explain(seen, cfg.get("initial_load_date", "2024-01-01"), key, _inserted_days(_root(s), s, key)),
+        explain=_explain(
+            seen, cfg.get("initial_load_date", "2024-01-01"), key, _inserted_days(_root(s), s, key)
+        ),
         same_column_order=False,
     )
     checks.add(f"{name}: stats equal", b["stats"] == s["stats"], f"{s['stats']}")
     checks.add(
         f"{name}: initial snapshot has the same columns in the same order",
-        list(cmp.read_frame(_root(b) / b["initial"]).columns) == list(cmp.read_frame(_root(s) / s["initial"]).columns),
+        list(cmp.read_frame(_root(b) / b["initial"]).columns)
+        == list(cmp.read_frame(_root(s) / s["initial"]).columns),
         "",
     )
     return {"baseline": b, "shape": s, **seen}
@@ -329,22 +351,30 @@ def probes(ctx: Any, checks: sc.Checks, runs: dict[str, dict[str, Any]]) -> None
         key = {"customers": "customer_id", "orders_with_nulls": "order_id"}.get(name, "id")
         pb, ps = chain_problems([bi, *bd], key), chain_problems([si, *sd], key)
         checks.add(
-            f"{name}: Shape's version chain is consistent (no missing valid_from or is_current, no gaps, one current version per entity)",
+            f"{name}: Shape's version chain is consistent (no missing valid_from or "
+            f"is_current, no gaps, one current version per entity)",
             all(v == 0 for v in ps.values()),
             f"Shape {ps}",
         )
         if name == "customers":
             checks.add(
-                "SCD-1 / SCD-2 probe: the baseline's chain is broken, and the differences found are exactly those rows",
-                pb["no_valid_from"] > 0 and pb["no_current_flag"] > 0 and info.get("expired", 0) > 0 and info.get("inserts", 0) > 0,
-                f"baseline {pb}; explained expired rows {info.get('expired')}, inserts {info.get('inserts')}",
+                "SCD-1 / SCD-2 probe: the baseline's chain is broken, and the differences "
+                "found are exactly those rows",
+                pb["no_valid_from"] > 0
+                and pb["no_current_flag"] > 0
+                and info.get("expired", 0) > 0
+                and info.get("inserts", 0) > 0,
+                f"baseline {pb}; explained expired rows {info.get('expired')}, inserts "
+                f"{info.get('inserts')}",
             )
             order_b = [list(d.columns) for d in bd]
             order_s = [list(d.columns) for d in sd]
             snap = list(si.columns)
             checks.add(
-                "SCD-3 probe: baseline delta columns differ from the snapshot's, Shape's are the snapshot's plus _delta_type",
-                any(c != [*snap, "_delta_type"] for c in order_b) and all(c == [*snap, "_delta_type"] for c in order_s),
+                "SCD-3 probe: baseline delta columns differ from the snapshot's, Shape's are "
+                "the snapshot's plus _delta_type",
+                any(c != [*snap, "_delta_type"] for c in order_b)
+                and all(c == [*snap, "_delta_type"] for c in order_s),
                 f"baseline {order_b[0]}; Shape {order_s[0]}",
             )
 
@@ -359,9 +389,11 @@ def probe_scd4(checks: sc.Checks, info: dict[str, Any]) -> None:
     _, sd = _frames(_root(s), s, "order")
     frac = lambda ds: int(sum(((d["shipping_address_id"].dropna() % 1) != 0).sum() for d in ds))  # noqa: E731
     checks.add(
-        "SCD-4 probe: baseline has fractional shipping_address_id values after a change, Shape has none",
+        "SCD-4 probe: baseline has fractional shipping_address_id values after a change, "
+        "Shape has none",
         frac(bd) > 0 and frac(sd) == 0 and info.get("rounded_int_columns", 0) > 0,
-        f"fractional values: baseline {frac(bd)}, Shape {frac(sd)}; delta files explained {info.get('rounded_int_columns')}",
+        f"fractional values: baseline {frac(bd)}, Shape {frac(sd)}; delta files explained "
+        f"{info.get('rounded_int_columns')}",
     )
 
 
@@ -372,9 +404,11 @@ def probe_scd5(ctx: Any, checks: sc.Checks) -> None:
     wrote = any(trees.is_data(p) for p in trees.list_files(Path(b["out_dir"])))
     wrote_s = any(trees.is_data(p) for p in trees.list_files(Path(s["out_dir"])))
     checks.add(
-        "SCD-5 probe: baseline fails late (snapshot already written), Shape raises first and names the key column",
+        "SCD-5 probe: baseline fails late (snapshot already written), Shape raises first and "
+        "names the key column",
         "error" in b and wrote and "error" in s and not wrote_s and "business key" in s["error"],
-        f"baseline {b.get('error', '')[:70]} (snapshot written: {wrote}); Shape {s.get('error')} (written: {wrote_s})",
+        f"baseline {b.get('error', '')[:70]} (snapshot written: {wrote}); Shape "
+        f"{s.get('error')} (written: {wrote_s})",
     )
 
 
@@ -413,13 +447,19 @@ def t21(ctx: Any, checks: sc.Checks) -> None:
     skip = ("valid_from", "is_current")  # SCD-1 / SCD-2: shown by the version-chain probe
     result = cmp.t21_columns(parts(ref), [parts(f) for f, _ in spread], parts(shape), skip=skip)
     bad = [c for c, v in result.items() if not v.get("equivalent", False)]
-    checks.add(f"T-21 order: (a)-(e) on {len(result) - 1} columns (valid_from, is_current: SCD-1/2)", not bad, f"not equivalent: {bad}")
+    checks.add(
+        f"T-21 order: (a)-(e) on {len(result) - 1} columns (valid_from, is_current: SCD-1/2)",
+        not bad,
+        f"not equivalent: {bad}",
+    )
     for key in ("initial_rows", "total_deltas", "total_new", "total_updates"):
         ok, why = cmp.count_within(shape_stats[key], ref_stats[key], [st[key] for _, st in spread])
         checks.add(f"T-21 order: {key}", ok, why)
     checks.add(
-        "T-21 order: valid_from and is_current of Shape's rows are complete (no nulls where the baseline has them)",
-        int(cmp.norm_frame(shape)["valid_from"].isna().sum()) == 0 and int(shape["is_current"].isna().sum()) == 0,
+        "T-21 order: valid_from and is_current of Shape's rows are complete (no nulls where "
+        "the baseline has them)",
+        int(cmp.norm_frame(shape)["valid_from"].isna().sum()) == 0
+        and int(shape["is_current"].isna().sum()) == 0,
         "",
     )
 
@@ -431,7 +471,9 @@ def run(ctx: Any) -> sc.Checks:
     checks = sc.Checks(NAME)
     runs: dict[str, dict[str, Any]] = {}
     for name, (tables, config) in JOBS.items():
-        runs[name] = mechanism(ctx, checks, name, {"input_dir": str(ctx.exact_dir), "tables": tables, "config": config})
+        runs[name] = mechanism(
+            ctx, checks, name, {"input_dir": str(ctx.exact_dir), "tables": tables, "config": config}
+        )
     probes(ctx, checks, runs)
     probe_scd4(checks, runs.get("orders_with_nulls", {}))
     probe_scd5(ctx, checks)
@@ -467,7 +509,9 @@ def negative_controls(ctx: Any) -> sc.Checks:
             explain=_explain(seen, "2024-01-01", "customer_id", inserted),
             same_column_order=False,
         )
-        checks.add(f"caught: {label}", not probe.ok, "; ".join(c.name for c in probe.items if not c.ok))
+        checks.add(
+            f"caught: {label}", not probe.ok, "; ".join(c.name for c in probe.items if not c.ok)
+        )
 
     def delta_files(root: Path) -> list[Path]:
         return sorted(root.rglob("customer_delta.parquet"))
@@ -516,12 +560,24 @@ def negative_controls(ctx: Any) -> sc.Checks:
     # the chain invariant itself must flag a broken chain
     si, sd = _frames(_root(s), s, "customer")
     clean = chain_problems([si, *sd], "customer_id")
-    checks.add("control: untouched Shape chain is consistent", all(v == 0 for v in clean.values()), str(clean))
+    checks.add(
+        "control: untouched Shape chain is consistent",
+        all(v == 0 for v in clean.values()),
+        str(clean),
+    )
     broken = [d.copy() for d in sd]
     broken[0].loc[broken[0].index[0], "valid_from"] = None
-    checks.add("caught: a version without valid_from", chain_problems([si, *broken], "customer_id")["no_valid_from"] > 0, "")
+    checks.add(
+        "caught: a version without valid_from",
+        chain_problems([si, *broken], "customer_id")["no_valid_from"] > 0,
+        "",
+    )
     gap = [d.copy() for d in sd]
     j = gap[0].index[gap[0]["is_current"] == False][0]  # noqa: E712
     gap[0].loc[j, "valid_to"] = pd.Timestamp("2030-01-01")
-    checks.add("caught: a gap between versions", chain_problems([si, *gap], "customer_id")["version_gaps"] > 0, "")
+    checks.add(
+        "caught: a gap between versions",
+        chain_problems([si, *gap], "customer_id")["version_gaps"] > 0,
+        "",
+    )
     return checks

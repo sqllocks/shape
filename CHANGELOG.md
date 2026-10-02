@@ -5,6 +5,13 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `sqllocks-shape-simulation`: file-drop, SCD2-drop, stream, hybrid and workflow simulators and
+  `shape simulate file-drop|scd2|stream|hybrid|workflow` (`docs/SIMULATION_FILES_EVENTS.md`). The
+  stream emitter runs on the emit runtime (its pacing, sinks and encoders); the runtime accepts any
+  counted, resumable sequence of event blocks (`EventSequence`), and sink selection moved from the
+  `shape emit` command to `shape.streaming.emit.open_sink`. Harness:
+  `benchmarks/vs_spindle/simulation_1to1/` (mechanism parity and T-21 per simulator, an allow-list
+  of the defects fixed, negative controls).
 - `shape stream` (`docs/EMIT.md`): one table's rows as events in event-time order, on the `shape emit`
   runtime (same options, sinks, formats and delivery guarantees; `--table` required, `-t -s -m`,
   `--rate` 10, `--max-events` is the earliest N events). The flat-event encoder is vectorised

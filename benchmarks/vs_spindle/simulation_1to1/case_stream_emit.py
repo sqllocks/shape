@@ -49,7 +49,8 @@ ALLOWED: dict[str, dict[str, str]] = {
         "what": "replay window across emit() calls",
         "baseline": "the replay buffer survives between calls: a second emit() can send again "
         "events of the first call that are not among its own events",
-        "shape": "the window starts empty at every call: a replay is only ever of this call's events",
+        "shape": "the window starts empty at every call: a replay is only ever of this call's "
+        "events",
     },
 }
 
@@ -57,19 +58,44 @@ TABLES = ["customer", "order", "return"]
 JOBS: dict[str, dict[str, Any]] = {
     "mixed": {
         "tables": TABLES,
-        "config": {"out_of_order_probability": 0.1, "replay_enabled": True, "replay_probability": 0.05, "replay_burst_size": 5, "jitter_ms": 5.0, "max_events": 4000, "seed": 7},
+        "config": {
+            "out_of_order_probability": 0.1,
+            "replay_enabled": True,
+            "replay_probability": 0.05,
+            "replay_burst_size": 5,
+            "jitter_ms": 5.0,
+            "max_events": 4000,
+            "seed": 7,
+        },
     },
     "topics_all_events": {
         "tables": TABLES,
-        "config": {"topics": ["cust", "ord", "ret"], "envelope_schema_version": "2.3", "envelope_source": "myapp", "seed": 8},
+        "config": {
+            "topics": ["cust", "ord", "ret"],
+            "envelope_schema_version": "2.3",
+            "envelope_source": "myapp",
+            "seed": 8,
+        },
     },
     "single_topic": {
         "tables": TABLES,
-        "config": {"topics": ["everything"], "out_of_order_probability": 0.3, "max_events": 1500, "seed": 9},
+        "config": {
+            "topics": ["everything"],
+            "out_of_order_probability": 0.3,
+            "max_events": 1500,
+            "seed": 9,
+        },
     },
     "replay_heavy": {
         "tables": ["order", "return"],
-        "config": {"replay_enabled": True, "replay_probability": 0.5, "replay_burst_size": 150, "replay_window_minutes": 0.001, "max_events": 800, "seed": 10},
+        "config": {
+            "replay_enabled": True,
+            "replay_probability": 0.5,
+            "replay_burst_size": 150,
+            "replay_window_minutes": 0.001,
+            "max_events": 800,
+            "seed": 10,
+        },
     },
     "two_emits": {
         "tables": ["customer", "return"],
@@ -83,7 +109,12 @@ JOBS: dict[str, dict[str, Any]] = {
     },
 }
 T21_TABLES = ["order"]
-T21_CONFIG = {"out_of_order_probability": 0.1, "replay_enabled": True, "replay_probability": 0.02, "replay_burst_size": 5}
+T21_CONFIG = {
+    "out_of_order_probability": 0.1,
+    "replay_enabled": True,
+    "replay_probability": 0.02,
+    "replay_burst_size": 5,
+}
 SHAPE_ONLY_DATA = {"_shape_event_time"}
 DATETIME = re.compile(r"^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}")
 ISO_Z = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$")
@@ -116,7 +147,9 @@ def _run(job: dict[str, Any], side: str) -> dict[str, Any]:
     out = Path(job["out_dir"])
     tables = {t: read(Path(job["input_dir"]) / f"{t}.parquet") for t in job["tables"]}
     kind = job.get("sink_type", "file")
-    connection: dict[str, Any] = {} if job.get("default_path") else {"path": str(out / "events.jsonl"), "mode": "w"}
+    connection: dict[str, Any] = (
+        {} if job.get("default_path") else {"path": str(out / "events.jsonl"), "mode": "w"}
+    )
     cfg = StreamEmitConfig(sink_type=kind, sink_connection=connection, **_config_kwargs(job, side))
     if job.get("default_path"):
         os.chdir(out)
@@ -128,8 +161,19 @@ def _run(job: dict[str, Any], side: str) -> dict[str, Any]:
         emitter = StreamEmitter(tables=tables, config=cfg)
         for names in calls:
             r = emitter.emit(tables={n: tables[n] for n in names}) if names else emitter.emit()
-            results.append({"events_sent": r.events_sent, "replay_events_sent": r.replay_events_sent, "topics": sorted(r.topics_used), "schema_versions": r.schema_versions})
-    return {"results": results, "elapsed": time.time() - started, "stdout_lines": len([x for x in printed.getvalue().splitlines() if x.strip()])}
+            results.append(
+                {
+                    "events_sent": r.events_sent,
+                    "replay_events_sent": r.replay_events_sent,
+                    "topics": sorted(r.topics_used),
+                    "schema_versions": r.schema_versions,
+                }
+            )
+    return {
+        "results": results,
+        "elapsed": time.time() - started,
+        "stdout_lines": len([x for x in printed.getvalue().splitlines() if x.strip()]),
+    }
 
 
 def baseline_side(job: dict[str, Any]) -> dict[str, Any]:
@@ -144,7 +188,9 @@ def shape_side(job: dict[str, Any]) -> dict[str, Any]:
 
 
 def read_events(path: Path) -> list[dict[str, Any]]:
-    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return [
+        json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
+    ]
 
 
 def mapped(name: str) -> str:
@@ -189,13 +235,34 @@ def compare_events(
         return se
     kb, ks = [_key(e) for e in be], [_key(e) for e in se]
     first_bad = next((i for i, (x, y) in enumerate(zip(kb, ks, strict=True)) if x != y), None)
-    checks.add(f"{label}: same order of (table, row, replay) for every event", first_bad is None, f"first difference at event {first_bad}")
+    checks.add(
+        f"{label}: same order of (table, row, replay) for every event",
+        first_bad is None,
+        f"first difference at event {first_bad}",
+    )
     # envelope: the baseline's keys mapped, plus Shape's own (shapetable, shapeseq)
-    bad_keys = [i for i, (x, y) in enumerate(zip(be, se, strict=True)) if set(y) != set(x) | {"shapetable", "shapeseq"}]
-    checks.add(f"{label}: envelope fields (mapped baseline names + shapetable, shapeseq)", not bad_keys, f"first at {bad_keys[:3]}")
+    bad_keys = [
+        i
+        for i, (x, y) in enumerate(zip(be, se, strict=True))
+        if set(y) != set(x) | {"shapetable", "shapeseq"}
+    ]
+    checks.add(
+        f"{label}: envelope fields (mapped baseline names + shapetable, shapeseq)",
+        not bad_keys,
+        f"first at {bad_keys[:3]}",
+    )
     plain = ("specversion", "source", "type", "datacontenttype", "topic", "schemaversion")
-    bad_vals = [i for i, (x, y) in enumerate(zip(be, se, strict=True)) if any(x.get(k) != y.get(k) for k in plain)]
-    checks.add(f"{label}: envelope values equal (specversion, source, type, datacontenttype, topic, schemaversion)", not bad_vals, f"first at {bad_vals[:3]}")
+    bad_vals = [
+        i
+        for i, (x, y) in enumerate(zip(be, se, strict=True))
+        if any(x.get(k) != y.get(k) for k in plain)
+    ]
+    checks.add(
+        f"{label}: envelope values equal (specversion, source, type, datacontenttype, topic, "
+        f"schemaversion)",
+        not bad_vals,
+        f"first at {bad_vals[:3]}",
+    )
     forms = [
         i
         for i, y in enumerate(se)
@@ -203,7 +270,11 @@ def compare_events(
         or (y.get("replay") and not ISO_Z.match(y.get("replaytime", "")))
         or y.get("id") != f"{y.get('shapetable')}/{y.get('shapeseq')}"
     ]
-    checks.add(f"{label}: Shape time/replaytime are ISO-8601 UTC, id is <table>/<row>", not forms, f"first at {forms[:3]}")
+    checks.add(
+        f"{label}: Shape time/replaytime are ISO-8601 UTC, id is <table>/<row>",
+        not forms,
+        f"first at {forms[:3]}",
+    )
     if ids:
         seen: dict[tuple[str, int], str] = {}
         dup_ok = True
@@ -224,7 +295,9 @@ def compare_events(
             order_ok &= [k for k in y.get("data", {}) if k not in SHAPE_ONLY_DATA] == firsts[t]
     checks.add(f"{label}: data field names and order (mapped)", order_ok, "")
     bdf = pd.DataFrame([x["data"] for x in be])
-    sdf = pd.DataFrame([{k: v for k, v in y.get("data", {}).items() if k not in SHAPE_ONLY_DATA} for y in se])
+    sdf = pd.DataFrame(
+        [{k: v for k, v in y.get("data", {}).items() if k not in SHAPE_ONLY_DATA} for y in se]
+    )
     ok, why = cmp.frames_equal(bdf, sdf, same_order=False, ignore=ignore_data)
     checks.add(f"{label}: data values equal", ok, why)
     # the event time field Shape adds is the table's first date or timestamp column
@@ -232,32 +305,56 @@ def compare_events(
     for y in se:
         d = y.get("data", {})
         if "_shape_event_time" in d:
-            col = next((c for c, v in d.items() if isinstance(v, str) and DATETIME.match(v) and not c.startswith("_")), None)
+            col = next(
+                (
+                    c
+                    for c, v in d.items()
+                    if isinstance(v, str) and DATETIME.match(v) and not c.startswith("_")
+                ),
+                None,
+            )
             et_bad += col is None or d[col] != d["_shape_event_time"]
-    checks.add(f"{label}: _shape_event_time is the first date column's value", et_bad == 0, f"{et_bad} events")
+    checks.add(
+        f"{label}: _shape_event_time is the first date column's value",
+        et_bad == 0,
+        f"{et_bad} events",
+    )
     return se
 
 
 # ---- mechanism parity ---------------------------------------------------------------------
 
 
-def mechanism(ctx: Any, checks: sc.Checks, name: str, spec: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+def mechanism(
+    ctx: Any, checks: sc.Checks, name: str, spec: dict[str, Any]
+) -> tuple[dict[str, Any], dict[str, Any]]:
     params = {**spec, "input_dir": str(ctx.exact_dir)}
     b = ctx.run("baseline", NAME, name, **params)
     s = ctx.run("shape", NAME, name, **params)
     if "error" in b or "error" in s:
         checks.add(f"{name}: both ran", False, f"baseline {b.get('error')}; Shape {s.get('error')}")
         return b, s
-    bf = Path(b["out_dir"]) / ("spindle_events.jsonl" if spec.get("default_path") else "events.jsonl")
+    bf = Path(b["out_dir"]) / (
+        "spindle_events.jsonl" if spec.get("default_path") else "events.jsonl"
+    )
     sf = Path(s["out_dir"]) / ("events.jsonl" if spec.get("default_path") else "events.jsonl")
-    checks.add(f"{name}: the default event file is named events.jsonl (baseline's name mapped)", bf.exists() and sf.exists() and (not spec.get("default_path") or sc.NAME_MAP["spindle_events.jsonl"] == "events.jsonl"), f"{bf.name} / {sf.name}")
+    checks.add(
+        f"{name}: the default event file is named events.jsonl (baseline's name mapped)",
+        bf.exists()
+        and sf.exists()
+        and (not spec.get("default_path") or sc.NAME_MAP["spindle_events.jsonl"] == "events.jsonl"),
+        f"{bf.name} / {sf.name}",
+    )
     if bf.exists() and sf.exists():
         compare_events(checks, name, bf, sf)
     rb, rs = b["results"], s["results"]
     checks.add(
         f"{name}: results (events sent, replays, topics, schema versions) equal",
         [(r["events_sent"], r["replay_events_sent"], r["topics"], r["schema_versions"]) for r in rb]
-        == [(r["events_sent"], r["replay_events_sent"], r["topics"], r["schema_versions"]) for r in rs],
+        == [
+            (r["events_sent"], r["replay_events_sent"], r["topics"], r["schema_versions"])
+            for r in rs
+        ],
         f"{[(r['events_sent'], r['replay_events_sent']) for r in rs]}",
     )
     return b, s
@@ -268,26 +365,40 @@ def mechanism(ctx: Any, checks: sc.Checks, name: str, spec: dict[str, Any]) -> t
 
 def probe_se1(ctx: Any, checks: sc.Checks) -> None:
     """SE-1: burst windows. 300 paced events at 100/s; a window of 3x for the first 1.5 s."""
-    cfg = {"realtime": True, "rate_per_sec": 100.0, "max_events": 300, "burst_windows": [[0.0, 1.5, 3.0]], "seed": 1}
+    cfg = {
+        "realtime": True,
+        "rate_per_sec": 100.0,
+        "max_events": 300,
+        "burst_windows": [[0.0, 1.5, 3.0]],
+        "seed": 1,
+    }
     params = {"input_dir": str(ctx.exact_dir), "tables": ["order"], "config": cfg}
     b = ctx.run("baseline", NAME, "burst_baseline", **params)
     s = ctx.run("shape", NAME, "burst_shape", **params)
     eb, es = b.get("elapsed", 0.0), s.get("elapsed", 0.0)
     checks.add(
-        "SE-1 probe: the baseline ignores the burst window (paced at the base rate: about 3 s), Shape applies it (about 1 s)",
+        "SE-1 probe: the baseline ignores the burst window (paced at the base rate: about 3 "
+        "s), Shape applies it (about 1 s)",
         eb >= 2.9 and 0.8 <= es <= 1.9,
         f"baseline {eb:.2f} s, Shape {es:.2f} s for 300 events at 100/s with a 3x burst for 1.5 s",
     )
 
 
 def probe_se2(ctx: Any, checks: sc.Checks) -> None:
-    params = {"input_dir": str(ctx.exact_dir), "tables": ["return"], "sink_type": "eventstream", "config": {"max_events": 20, "seed": 1}}
+    params = {
+        "input_dir": str(ctx.exact_dir),
+        "tables": ["return"],
+        "sink_type": "eventstream",
+        "config": {"max_events": 20, "seed": 1},
+    }
     b = ctx.run("baseline", NAME, "eventstream", **params)
     s = ctx.run("shape", NAME, "eventstream", **params)
     checks.add(
-        "SE-2 probe: the baseline's eventstream sink prints the events on standard output, Shape raises",
+        "SE-2 probe: the baseline's eventstream sink prints the events on standard output, "
+        "Shape raises",
         "error" not in b and b["stdout_lines"] == 20 and "error" in s and "sink_type" in s["error"],
-        f"baseline error {b.get('error')} stdout lines {b.get('stdout_lines')}; Shape error {s.get('error')}",
+        f"baseline error {b.get('error')} stdout lines {b.get('stdout_lines')}; Shape error "
+        f"{s.get('error')}",
     )
 
 
@@ -295,7 +406,13 @@ def probe_se3_se4(ctx: Any, checks: sc.Checks) -> None:
     spec = {
         "tables": ["customer", "return"],
         "emit_tables": [["customer"], ["return"]],
-        "config": {"replay_enabled": True, "replay_probability": 0.9, "replay_burst_size": 5, "max_events": 40, "seed": 3},
+        "config": {
+            "replay_enabled": True,
+            "replay_probability": 0.9,
+            "replay_burst_size": 5,
+            "max_events": 40,
+            "seed": 3,
+        },
     }
     params = {**spec, "input_dir": str(ctx.exact_dir)}
     b = ctx.run("baseline", NAME, "replay_across_emits", **params)
@@ -306,7 +423,8 @@ def probe_se3_se4(ctx: Any, checks: sc.Checks) -> None:
     cs = {e["correlationid"] for e in se}
     primaries = sum(1 for e in be if not e.get("replay"))
     checks.add(
-        "SE-3 probe: every baseline event has its own correlation id (a replay repeats its original's), Shape's events share one",
+        "SE-3 probe: every baseline event has its own correlation id (a replay repeats its "
+        "original's), Shape's events share one",
         len(cb) == primaries and primaries > 1 and len(cs) == 1,
         f"baseline {len(cb)} ids for {primaries} primary events; Shape {len(cs)}",
     )
@@ -320,8 +438,16 @@ def probe_se3_se4(ctx: Any, checks: sc.Checks) -> None:
             primaries += not e.get("replay")
             if primaries > per_call:
                 second.append(e)
-        own = {(e["data"]["_shape_table"], e["data"]["_shape_seq"]) for e in second if not e.get("replay")}
-        return sum(1 for e in second if e.get("replay") and (e["data"]["_shape_table"], e["data"]["_shape_seq"]) not in own)
+        own = {
+            (e["data"]["_shape_table"], e["data"]["_shape_seq"])
+            for e in second
+            if not e.get("replay")
+        }
+        return sum(
+            1
+            for e in second
+            if e.get("replay") and (e["data"]["_shape_table"], e["data"]["_shape_seq"]) not in own
+        )
 
     fb, fs = foreign_replays(be), foreign_replays(se)
     checks.add(
@@ -339,13 +465,30 @@ def _data_frame(path: Path, mapped_names: bool) -> tuple[pd.DataFrame, int, int]
     rows = []
     for e in events:
         d = baseline_event(e)["data"] if mapped_names else e["data"]
-        rows.append({k: v for k, v in d.items() if k not in SHAPE_ONLY_DATA and k not in ("_shape_table", "_shape_seq")})
-    return pd.DataFrame(rows), len(events), sum(1 for e in events if e.get("replay") or e.get("_replay"))
+        rows.append(
+            {
+                k: v
+                for k, v in d.items()
+                if k not in SHAPE_ONLY_DATA and k not in ("_shape_table", "_shape_seq")
+            }
+        )
+    return (
+        pd.DataFrame(rows),
+        len(events),
+        sum(1 for e in events if e.get("replay") or e.get("_replay")),
+    )
 
 
 def t21(ctx: Any, checks: sc.Checks) -> None:
     def one(side: str, tool: str, seed: int) -> tuple[pd.DataFrame, int, int]:
-        r = ctx.run(side, NAME, f"t21_{side}_{seed}", input_dir=str(ctx.input_dir(tool, seed)), tables=T21_TABLES, config={**T21_CONFIG, "seed": seed})
+        r = ctx.run(
+            side,
+            NAME,
+            f"t21_{side}_{seed}",
+            input_dir=str(ctx.input_dir(tool, seed)),
+            tables=T21_TABLES,
+            config={**T21_CONFIG, "seed": seed},
+        )
         if "error" in r:
             raise RuntimeError(r["error"])
         return _data_frame(Path(r["out_dir"]) / "events.jsonl", side == "baseline")
@@ -355,7 +498,9 @@ def t21(ctx: Any, checks: sc.Checks) -> None:
     shape, shape_n, shape_r = one("shape", "shape", ctx.shape_seed)
     res = cmp.t21_columns(ref, [d for d, _, _ in spread], shape)
     bad = [c for c, v in res.items() if not v.get("equivalent", False)]
-    checks.add(f"T-21 events: (a)-(e) on {len(res) - 1} data fields", not bad, f"not equivalent: {bad}")
+    checks.add(
+        f"T-21 events: (a)-(e) on {len(res) - 1} data fields", not bad, f"not equivalent: {bad}"
+    )
     ok, why = cmp.count_within(shape_n, ref_n, [n for _, n, _ in spread])
     checks.add("T-21: events delivered (primary and replays)", ok, why)
     ok, why = cmp.count_within(shape_r, ref_r, [r for _, _, r in spread])
@@ -396,7 +541,9 @@ def negative_controls(ctx: Any) -> sc.Checks:
         path.write_text("\n".join(json.dumps(e) for e in events) + "\n", encoding="utf-8")
         probe = sc.Checks("probe")
         compare_events(probe, "tampered", bf, path)
-        checks.add(f"caught: {label}", not probe.ok, "; ".join(c.name for c in probe.items if not c.ok))
+        checks.add(
+            f"caught: {label}", not probe.ok, "; ".join(c.name for c in probe.items if not c.ok)
+        )
         shutil.rmtree(work)
 
     def drop(ev: list[dict[str, Any]]) -> None:
@@ -445,21 +592,44 @@ def negative_controls(ctx: Any) -> sc.Checks:
 
     # T-21 tampering
     def one(side: str, tool: str, seed: int) -> tuple[pd.DataFrame, int, int]:
-        r = ctx.run(side, NAME, f"neg_t21_{side}_{seed}", input_dir=str(ctx.input_dir(tool, seed)), tables=T21_TABLES, config={**T21_CONFIG, "seed": seed})
+        r = ctx.run(
+            side,
+            NAME,
+            f"neg_t21_{side}_{seed}",
+            input_dir=str(ctx.input_dir(tool, seed)),
+            tables=T21_TABLES,
+            config={**T21_CONFIG, "seed": seed},
+        )
         return _data_frame(Path(r["out_dir"]) / "events.jsonl", side == "baseline")
 
     ref, _, _ = one("baseline", "baseline", ctx.ref_seed)
     sp = [one("baseline", "baseline", sd)[0] for sd in ctx.seeds]
     shape, _, _ = one("shape", "shape", ctx.shape_seed)
     clean = cmp.t21_columns(ref, sp, shape)
-    checks.add("control: untouched Shape events pass T-21", all(v.get("equivalent") for v in clean.values()), str([c for c, v in clean.items() if not v.get("equivalent")]))
+    checks.add(
+        "control: untouched Shape events pass T-21",
+        all(v.get("equivalent") for v in clean.values()),
+        str([c for c, v in clean.items() if not v.get("equivalent")]),
+    )
     moved = shape.copy()
     moved["order_date"] = pd.to_datetime(moved["order_date"]) + pd.Timedelta(days=365)
-    checks.add("caught: every order_date a year later", not cmp.t21_columns(ref, sp, moved)["order_date"]["equivalent"], "KS")
+    checks.add(
+        "caught: every order_date a year later",
+        not cmp.t21_columns(ref, sp, moved)["order_date"]["equivalent"],
+        "KS",
+    )
     cat = shape.copy()
     cat["status"] = cat["status"].where(cat.index % 3 != 0, "unseen")
-    checks.add("caught: a third of status values replaced", not cmp.t21_columns(ref, sp, cat)["status"]["equivalent"], "TVD / vocabulary")
+    checks.add(
+        "caught: a third of status values replaced",
+        not cmp.t21_columns(ref, sp, cat)["status"]["equivalent"],
+        "TVD / vocabulary",
+    )
     nulls = shape.copy()
     nulls.loc[nulls.index % 4 == 0, "store_id"] = None
-    checks.add("caught: a quarter of store_id nulled", not cmp.t21_columns(ref, sp, nulls)["store_id"]["equivalent"], "null rate")
+    checks.add(
+        "caught: a quarter of store_id nulled",
+        not cmp.t21_columns(ref, sp, nulls)["store_id"]["equivalent"],
+        "null rate",
+    )
     return checks

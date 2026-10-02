@@ -42,26 +42,66 @@ CUSTOM = {
         {"name": "done", "is_terminal": True},
     ],
     "transitions": [
-        {"from_state": "new", "to_state": "work", "probability": 3.0, "dwell_hours_mean": 5.0, "dwell_hours_std": 2.0},
-        {"from_state": "new", "to_state": "done", "probability": 1.0, "dwell_hours_mean": 1.0, "dwell_hours_std": 0.1, "min_dwell_hours": 0.5},
-        {"from_state": "work", "to_state": "done", "probability": 1.0, "dwell_hours_mean": 8.0, "dwell_hours_std": 3.0},
-        {"from_state": "work", "to_state": "new", "probability": 0.5, "dwell_hours_mean": 2.0, "dwell_hours_std": 1.0},
+        {
+            "from_state": "new",
+            "to_state": "work",
+            "probability": 3.0,
+            "dwell_hours_mean": 5.0,
+            "dwell_hours_std": 2.0,
+        },
+        {
+            "from_state": "new",
+            "to_state": "done",
+            "probability": 1.0,
+            "dwell_hours_mean": 1.0,
+            "dwell_hours_std": 0.1,
+            "min_dwell_hours": 0.5,
+        },
+        {
+            "from_state": "work",
+            "to_state": "done",
+            "probability": 1.0,
+            "dwell_hours_mean": 8.0,
+            "dwell_hours_std": 3.0,
+        },
+        {
+            "from_state": "work",
+            "to_state": "new",
+            "probability": 0.5,
+            "dwell_hours_mean": 2.0,
+            "dwell_hours_std": 1.0,
+        },
     ],
 }
 JOBS: dict[str, dict[str, Any]] = {
     "order_fulfillment": {
         "preset": "order_fulfillment",
-        "config": {"entity_count": 2000, "seed": 7, "anomaly_skip_probability": 0.05, "anomaly_backward_probability": 0.05, "anomaly_stuck_probability": 0.03},
+        "config": {
+            "entity_count": 2000,
+            "seed": 7,
+            "anomaly_skip_probability": 0.05,
+            "anomaly_backward_probability": 0.05,
+            "anomaly_stuck_probability": 0.03,
+        },
     },
     "support_ticket": {
         "preset": "support_ticket",
-        "config": {"entity_count": 1500, "seed": 8, "start_time": "2025-03-01T08:30:00", "max_transitions_per_entity": 12, "entity_prefix": "ticket"},
+        "config": {
+            "entity_count": 1500,
+            "seed": 8,
+            "start_time": "2025-03-01T08:30:00",
+            "max_transitions_per_entity": 12,
+            "entity_prefix": "ticket",
+        },
     },
     "onboarding_no_anomalies": {
         "preset": "employee_onboarding",
         "config": {"entity_count": 3000, "seed": 9, "anomaly_enabled": False},
     },
-    "custom_graph": {"custom": CUSTOM, "config": {"entity_count": 1000, "seed": 10, "anomaly_skip_probability": 0.05}},
+    "custom_graph": {
+        "custom": CUSTOM,
+        "config": {"entity_count": 1000, "seed": 10, "anomaly_skip_probability": 0.05},
+    },
 }
 T21_JOB = {"preset": "order_fulfillment", "config": {"entity_count": 6000}}
 EVENT_VOLATILE = ("event_id",)
@@ -106,7 +146,9 @@ def shape_side(job: dict[str, Any]) -> dict[str, Any]:
     out = Path(job["out_dir"])
     if job.get("twice"):
         second = mod.WorkflowSimulator(cfg).run()
-        pd.DataFrame({"event_id": second.events.column("event_id").to_pylist()}).to_parquet(out / "ids_again.parquet")
+        pd.DataFrame({"event_id": second.events.column("event_id").to_pylist()}).to_parquet(
+            out / "ids_again.parquet"
+        )
     return _write(out, result.events.to_pandas(), result.entity_summary.to_pandas(), result)
 
 
@@ -121,18 +163,34 @@ def _frames(result: dict[str, Any]) -> tuple[pd.DataFrame, pd.DataFrame]:
 UUID4 = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
 
 
-def compare_outputs(checks: sc.Checks, label: str, b: dict[str, Any], s: dict[str, Any], *, dead_ends: tuple[str, ...] = (), first_initial: str = "") -> None:
+def compare_outputs(
+    checks: sc.Checks,
+    label: str,
+    b: dict[str, Any],
+    s: dict[str, Any],
+    *,
+    dead_ends: tuple[str, ...] = (),
+    first_initial: str = "",
+) -> None:
     be, bs = _frames(b)
     se, ss = _frames(s)
     ok, why = cmp.frames_equal(be, se, ignore=EVENT_VOLATILE, same_order=True)
     checks.add(f"{label}: events equal (event_id aside)", ok, why)
     ids = se["event_id"]
-    checks.add(f"{label}: Shape event_id are unique UUIDs", ids.is_unique and bool(ids.map(lambda v: bool(UUID4.match(v))).all()), f"{len(ids)} ids")
+    checks.add(
+        f"{label}: Shape event_id are unique UUIDs",
+        ids.is_unique and bool(ids.map(lambda v: bool(UUID4.match(v))).all()),
+        f"{len(ids)} ids",
+    )
     # summaries: the dead-end entities are WF-1; everything else must be equal
     zero_b = bs["total_transitions"] == 0
     zero_s = ss["total_transitions"] == 0
     rest_ok, rest_why = cmp.frames_equal(bs[~zero_b], ss[~zero_s], ignore=(), same_order=True)
-    checks.add(f"{label}: summaries equal for entities that moved", rest_ok and bool((zero_b == zero_s).all()), rest_why)
+    checks.add(
+        f"{label}: summaries equal for entities that moved",
+        rest_ok and bool((zero_b == zero_s).all()),
+        rest_why,
+    )
     if zero_b.any():
         explained = (
             bool((bs.loc[zero_b, ["initial_state", "final_state"]] == first_initial).all().all())
@@ -140,7 +198,12 @@ def compare_outputs(checks: sc.Checks, label: str, b: dict[str, Any], s: dict[st
             and bool((ss.loc[zero_s, "initial_state"] == ss.loc[zero_s, "final_state"]).all())
             and list(bs.loc[zero_b, "entity_id"]) == list(ss.loc[zero_s, "entity_id"])
         )
-        checks.add(f"{label}: WF-1: {int(zero_b.sum())} entities that never moved differ only in their initial state", explained, "")
+        checks.add(
+            f"{label}: WF-1: {int(zero_b.sum())} entities that never moved differ only in "
+            f"their initial state",
+            explained,
+            "",
+        )
     sb, ss_ = b["stats"], s["stats"]
     stat_ok = set(sb) == set(ss_) and all(
         (abs(sb[k] - ss_[k]) <= 1e-4) if isinstance(sb[k], float) else sb[k] == ss_[k] for k in sb
@@ -153,7 +216,11 @@ def compare_outputs(checks: sc.Checks, label: str, b: dict[str, Any], s: dict[st
             dist[state] = dist.get(state, 0) - n
         dist[first_initial] = dist.get(first_initial, 0) + n
         dist = {k: v for k, v in dist.items() if v}
-    checks.add(f"{label}: state_distribution equal", b["state_distribution"] == dist, str(s["state_distribution"]))
+    checks.add(
+        f"{label}: state_distribution equal",
+        b["state_distribution"] == dist,
+        str(s["state_distribution"]),
+    )
 
 
 # ---- run ----------------------------------------------------------------------------------
@@ -179,11 +246,19 @@ def t21(ctx: Any, checks: sc.Checks) -> None:
     checks.add(f"T-21 events: (a)-(e) on {len(res) - 1} columns", not bad, f"not equivalent: {bad}")
     res = cmp.t21_columns(sm_r, [m for _, m in sp], sm_s, skip=skip_s)
     bad = [c for c, v in res.items() if not v.get("equivalent", False)]
-    checks.add(f"T-21 entity summary: (a)-(e) on {len(res) - 1} columns", not bad, f"not equivalent: {bad}")
+    checks.add(
+        f"T-21 entity summary: (a)-(e) on {len(res) - 1} columns", not bad, f"not equivalent: {bad}"
+    )
     for key in ("total_events", "anomaly_count"):
-        ok, why = cmp.count_within(shape["stats"][key], ref["stats"][key], [r["stats"][key] for r in spread])
+        ok, why = cmp.count_within(
+            shape["stats"][key], ref["stats"][key], [r["stats"][key] for r in spread]
+        )
         checks.add(f"T-21: {key}", ok, why)
-    ok, why = cmp.count_within(shape["stats"]["mean_completion_hours"], ref["stats"]["mean_completion_hours"], [r["stats"]["mean_completion_hours"] for r in spread])
+    ok, why = cmp.count_within(
+        shape["stats"]["mean_completion_hours"],
+        ref["stats"]["mean_completion_hours"],
+        [r["stats"]["mean_completion_hours"] for r in spread],
+    )
     checks.add("T-21: mean_completion_hours", ok, why)
 
 
@@ -193,7 +268,9 @@ def run(ctx: Any) -> sc.Checks:
         b = ctx.run("baseline", NAME, name, **spec)
         s = ctx.run("shape", NAME, name, **spec)
         if "error" in b or "error" in s:
-            checks.add(f"{name}: both ran", False, f"baseline {b.get('error')}; Shape {s.get('error')}")
+            checks.add(
+                f"{name}: both ran", False, f"baseline {b.get('error')}; Shape {s.get('error')}"
+            )
             continue
         compare_outputs(checks, name, b, s, dead_ends=("parked",), first_initial="new")
     # WF-2: ids are random in the baseline and reproducible in Shape
@@ -235,11 +312,17 @@ def negative_controls(ctx: Any) -> sc.Checks:
         events.to_parquet(work / "events.parquet")
         summary.to_parquet(work / "summary.parquet")
         probe = sc.Checks("probe")
-        compare_outputs(probe, "tampered", b, {"out_dir": str(work), "stats": stats, "state_distribution": dist})
-        checks.add(f"caught: {label}", not probe.ok, "; ".join(c.name for c in probe.items if not c.ok))
+        compare_outputs(
+            probe, "tampered", b, {"out_dir": str(work), "stats": stats, "state_distribution": dist}
+        )
+        checks.add(
+            f"caught: {label}", not probe.ok, "; ".join(c.name for c in probe.items if not c.ok)
+        )
 
     def to_state(e: Any, m: Any, st: Any, d: Any) -> Any:
-        e.loc[e.index[3], "to_state"] = "returned" if e.loc[e.index[3], "to_state"] != "returned" else "shipped"
+        e.loc[e.index[3], "to_state"] = (
+            "returned" if e.loc[e.index[3], "to_state"] != "returned" else "shipped"
+        )
         return e, m, st, d
 
     def time_shift(e: Any, m: Any, st: Any, d: Any) -> Any:
@@ -254,7 +337,9 @@ def negative_controls(ctx: Any) -> sc.Checks:
         return e.iloc[1:], m, st, d
 
     def final(e: Any, m: Any, st: Any, d: Any) -> Any:
-        m.loc[m.index[5], "final_state"] = "cancelled" if m.loc[m.index[5], "final_state"] != "cancelled" else "delivered"
+        m.loc[m.index[5], "final_state"] = (
+            "cancelled" if m.loc[m.index[5], "final_state"] != "cancelled" else "delivered"
+        )
         return e, m, st, d
 
     def stat(e: Any, m: Any, st: Any, d: Any) -> Any:
@@ -279,7 +364,12 @@ def negative_controls(ctx: Any) -> sc.Checks:
 
     # T-21
     def one(side: str, seed: int) -> dict[str, Any]:
-        return ctx.run(side, NAME, f"neg_t21_{side}_{seed}", **{**T21_JOB, "config": {**T21_JOB["config"], "seed": seed}})
+        return ctx.run(
+            side,
+            NAME,
+            f"neg_t21_{side}_{seed}",
+            **{**T21_JOB, "config": {**T21_JOB["config"], "seed": seed}},
+        )
 
     ref = one("baseline", ctx.ref_seed)
     spread = [one("baseline", sd) for sd in ctx.seeds]
@@ -288,14 +378,36 @@ def negative_controls(ctx: Any) -> sc.Checks:
     ev_s, _ = _frames(shape)
     sp = [_frames(r)[0] for r in spread]
     clean = cmp.t21_columns(ev_r, sp, ev_s, skip=("event_id", "entity_id"))
-    checks.add("control: untouched Shape events pass T-21", all(v.get("equivalent") for v in clean.values()), str([c for c, v in clean.items() if not v.get("equivalent")]))
+    checks.add(
+        "control: untouched Shape events pass T-21",
+        all(v.get("equivalent") for v in clean.values()),
+        str([c for c, v in clean.items() if not v.get("equivalent")]),
+    )
     slow = ev_s.copy()
     slow["dwell_hours"] = slow["dwell_hours"] * 1.3
-    checks.add("caught: dwell times 30% longer", not cmp.t21_columns(ev_r, sp, slow, skip=("event_id", "entity_id"))["dwell_hours"]["equivalent"], "KS")
+    checks.add(
+        "caught: dwell times 30% longer",
+        not cmp.t21_columns(ev_r, sp, slow, skip=("event_id", "entity_id"))["dwell_hours"][
+            "equivalent"
+        ],
+        "KS",
+    )
     flipped = ev_s.copy()
     flipped["is_anomaly"] = flipped["is_anomaly"] | (flipped.index % 10 == 0)
-    checks.add("caught: a tenth of the events flagged as anomalies", not cmp.t21_columns(ev_r, sp, flipped, skip=("event_id", "entity_id"))["is_anomaly"]["equivalent"], "TVD")
+    checks.add(
+        "caught: a tenth of the events flagged as anomalies",
+        not cmp.t21_columns(ev_r, sp, flipped, skip=("event_id", "entity_id"))["is_anomaly"][
+            "equivalent"
+        ],
+        "TVD",
+    )
     states = ev_s.copy()
     states["to_state"] = states["to_state"].where(states.index % 4 != 0, "delivered")
-    checks.add("caught: a quarter of the to_state values changed", not cmp.t21_columns(ev_r, sp, states, skip=("event_id", "entity_id"))["to_state"]["equivalent"], "TVD")
+    checks.add(
+        "caught: a quarter of the to_state values changed",
+        not cmp.t21_columns(ev_r, sp, states, skip=("event_id", "entity_id"))["to_state"][
+            "equivalent"
+        ],
+        "TVD",
+    )
     return checks

@@ -37,7 +37,6 @@ from __future__ import annotations
 
 import argparse
 import importlib
-import json
 import subprocess
 import sys
 import time
@@ -51,7 +50,10 @@ import sim_common as sc  # noqa: E402
 from paths import BENCH_OUT_DIR, SHAPE_PY, SPINDLE_PY  # noqa: E402
 
 if not (sc.BASELINE_SEEDS == (43, 44, 45, 46) and sc.REF_SEED == 42 and sc.SHAPE_SEED == 1042):
-    sys.exit("the T-21 seed set is fixed (baseline 42 + 43-46, Shape 1042); a verdict from any other counts for nothing")
+    sys.exit(
+        "the T-21 seed set is fixed (baseline 42 + 43-46, Shape 1042); a verdict from any "
+        "other counts for nothing"
+    )
 
 
 class MissingInput(Exception):
@@ -73,7 +75,9 @@ class Ctx:
         import sim_compare
 
         gen = sim_compare.dv().generate
-        return gen.out_dir("spindle" if tool == "baseline" else "shape", sc.DOMAIN, self.scale, seed)
+        return gen.out_dir(
+            "spindle" if tool == "baseline" else "shape", sc.DOMAIN, self.scale, seed
+        )
 
     @property
     def exact_dir(self) -> Path:
@@ -90,7 +94,14 @@ class Ctx:
 
             shutil.rmtree(out)
         out.mkdir(parents=True)
-        job = {"sim": sim, "name": name, "side": side, "out_dir": str(out), "scale": self.scale, **params}
+        job = {
+            "sim": sim,
+            "name": name,
+            "side": side,
+            "out_dir": str(out),
+            "scale": self.scale,
+            **params,
+        }
         job_file = out.parent / f"{side}.job.json"
         sc.write_json(job_file, job)
         py = SPINDLE_PY if side == "baseline" else SHAPE_PY
@@ -107,7 +118,8 @@ class Ctx:
 
 
 def ensure_inputs(scale: str) -> list[str]:
-    """Generate the retail runs the cases read (the baseline at 42-46, Shape at 1042) when missing."""
+    """Generate the retail runs the cases read (the baseline at 42-46, Shape at 1042) when "
+    "missing."""
     import sim_compare
 
     dv = sim_compare.dv()
@@ -137,10 +149,24 @@ def discover(names: list[str]) -> list[Any]:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--scale", choices=["small", "medium"], default="small")
-    ap.add_argument("--case", action="append", default=[], metavar="NAME", help="run only this case (repeatable)")
-    ap.add_argument("--negative-control", action="store_true", help="tamper with Shape's output and require every change to be caught")
+    ap.add_argument(
+        "--case",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help="run only this case (repeatable)",
+    )
+    ap.add_argument(
+        "--negative-control",
+        action="store_true",
+        help="tamper with Shape's output and require every change to be caught",
+    )
     ap.add_argument("--list", action="store_true", help="list the cases and exit")
-    ap.add_argument("--out", default=None, help="report JSON (default: $BENCH_OUT_DIR/simulation/report_<scale>.json)")
+    ap.add_argument(
+        "--out",
+        default=None,
+        help="report JSON (default: $BENCH_OUT_DIR/simulation/report_<scale>.json)",
+    )
     a = ap.parse_args(argv)
     try:
         cases = discover(a.case)
@@ -178,7 +204,13 @@ def main(argv: list[str] | None = None) -> int:
     except MissingInput as exc:
         print(f"MISSING: {exc}", file=sys.stderr)
         return 2
-    out = Path(a.out) if a.out else BENCH_OUT_DIR / "simulation" / f"report_{a.scale}{'_negative' if a.negative_control else ''}.json"
+    out = (
+        Path(a.out)
+        if a.out
+        else BENCH_OUT_DIR
+        / "simulation"
+        / f"report_{a.scale}{'_negative' if a.negative_control else ''}.json"
+    )
     sc.write_json(out, report)
     label = "negative control" if a.negative_control else "verify"
     print(f"{label}: {'ALL PASSED' if not failed else 'FAILED'} ({report['seconds']}s) -> {out}")

@@ -4,7 +4,8 @@ from both the baseline venv and the Shape venv.
 
 Layout (one module per simulator, so lanes P6-04a and P6-04b do not touch each other's files):
 
-* ``verify.py``              the runner: discovers ``case_*.py``, runs every case, exits 1 on a failure;
+* ``verify.py``              the runner: discovers ``case_*.py``, runs every case, exits 1 on a
+                             failure;
 * ``baseline_worker.py``     runs one job on the baseline (baseline venv);
 * ``shape_worker.py``        runs one job on Shape (Shape venv);
 * ``sim_compare.py``         readers and comparers (pandas, scipy);

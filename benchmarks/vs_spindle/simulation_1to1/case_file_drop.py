@@ -147,7 +147,9 @@ def baseline_side(job: dict[str, Any]) -> dict[str, Any]:
     if "inline" in job:
         tables = {n: pd.DataFrame(cols) for n, cols in job["inline"].items()}
     else:
-        tables = {t: pd.read_parquet(Path(job["input_dir"]) / f"{t}.parquet") for t in job["tables"]}
+        tables = {
+            t: pd.read_parquet(Path(job["input_dir"]) / f"{t}.parquet") for t in job["tables"]
+        }
     root = Path(job["out_dir"]) / "landing"
     cfg = FileDropConfig(base_path=str(root), **job["config"])
     return _paths(FileDropSimulator(tables=tables, config=cfg).run(), root)
@@ -182,7 +184,11 @@ def _rows(root: Path, entity: str, only_seq: str | None = None) -> pd.DataFrame:
     """Every data row of ``entity`` under ``root``, files in path order."""
     parts = []
     for rel, path in trees.list_files(root).items():
-        if f"/{entity}/" in f"/{rel}" and trees.is_data(rel) and (only_seq is None or only_seq in rel):
+        if (
+            f"/{entity}/" in f"/{rel}"
+            and trees.is_data(rel)
+            and (only_seq is None or only_seq in rel)
+        ):
             parts.append(cmp.read_frame(path))
     return pd.concat(parts, ignore_index=True) if parts else pd.DataFrame()
 
@@ -247,9 +253,17 @@ def mechanism(
     overcount = len(b["listed"]) - len(set(b["listed"]))
     bad = []
     for entity in sb:
-        if entity not in ss or sb[entity]["rows_written"] != ss[entity]["rows_written"] or sb[entity]["formats"] != ss[entity]["formats"]:
+        if (
+            entity not in ss
+            or sb[entity]["rows_written"] != ss[entity]["rows_written"]
+            or sb[entity]["formats"] != ss[entity]["formats"]
+        ):
             bad.append(entity)
-    checks.add(f"{name}: stats rows_written and formats equal", not bad and set(sb) == set(ss), f"{sorted(sb)}; differ {bad}")
+    checks.add(
+        f"{name}: stats rows_written and formats equal",
+        not bad and set(sb) == set(ss),
+        f"{sorted(sb)}; differ {bad}",
+    )
     files_b = sum(v["files"] for v in sb.values()) - overcount
     files_s = sum(v["files"] for v in ss.values())
     checks.add(
@@ -259,7 +273,9 @@ def mechanism(
     )
     checks.add(
         f"{name}: files listed once (Shape)",
-        len(s["listed"]) == len(set(s["listed"])) == len(list(p for p in trees.list_files(_root(s)) if trees.is_data(p))),
+        len(s["listed"])
+        == len(set(s["listed"]))
+        == len(list(p for p in trees.list_files(_root(s)) if trees.is_data(p))),
         f"{len(s['listed'])} listed",
     )
     info = {**info, **seen, "overcount": overcount, "baseline": b, "shape": s}
@@ -273,8 +289,17 @@ def probe_fd2(ctx: Any, checks: sc.Checks) -> None:
     """FD-2: the baseline loses late rows when two slots send rows to one partition."""
     tables, config = COLLISIONS
     info = mechanism(ctx, checks, "late_collisions", COLLISIONS)
-    b = ctx.run("baseline", NAME, "late_collisions", input_dir=str(ctx.exact_dir), tables=tables, config=config)
-    s = ctx.run("shape", NAME, "late_collisions", input_dir=str(ctx.exact_dir), tables=tables, config=config)
+    b = ctx.run(
+        "baseline",
+        NAME,
+        "late_collisions",
+        input_dir=str(ctx.exact_dir),
+        tables=tables,
+        config=config,
+    )
+    s = ctx.run(
+        "shape", NAME, "late_collisions", input_dir=str(ctx.exact_dir), tables=tables, config=config
+    )
     lost = {}
     for table in tables:
         expected = len(_in_range(ctx, table, config["date_range_start"], config["date_range_end"]))
@@ -286,9 +311,12 @@ def probe_fd2(ctx: Any, checks: sc.Checks) -> None:
         f"(in range, baseline wrote, Shape wrote) per table: {lost}",
     )
     checks.add(
-        "FD-2 probe: baseline lists a replaced file twice; the replaced rows are the differences found",
-        info.get("overcount", 0) > 0 and info.get("lost_rows", 0) == sum(e - gb for e, gb, _ in lost.values()),
-        f"listed twice {info.get('overcount')}; lost rows seen as 00900 differences {info.get('lost_rows')}",
+        "FD-2 probe: baseline lists a replaced file twice; the replaced rows are the "
+        "differences found",
+        info.get("overcount", 0) > 0
+        and info.get("lost_rows", 0) == sum(e - gb for e, gb, _ in lost.values()),
+        f"listed twice {info.get('overcount')}; lost rows seen as 00900 differences "
+        f"{info.get('lost_rows')}",
     )
 
 
@@ -315,22 +343,39 @@ def probe_fd5(checks: sc.Checks, info: dict[str, Any]) -> None:
     checks.add(
         "FD-5 probe: baseline JSON Lines lose sub-millisecond precision, Shape's keep it",
         sb[1] > 0 and ss[1] == 0 and info.get("ms_truncated", 0) > 0,
-        f"customer files equal to their Parquet twin (equal, different): baseline {sb}, Shape {ss}; "
+        f"customer files equal to their Parquet twin (equal, different): baseline {sb}, Shape "
+        f"{ss}; "
         f"{info.get('ms_truncated', 0)} files explained",
     )
 
 
 def probe_fd1(ctx: Any, checks: sc.Checks) -> None:
     """FD-1: multi-file drops. The baseline raises; Shape's files hold the same rows, split."""
-    config = {**RANGE, "domain": "retail", "lateness_enabled": False, "multi_file_enabled": True, "multi_file_chunks": 4, "seed": 21}
+    config = {
+        **RANGE,
+        "domain": "retail",
+        "lateness_enabled": False,
+        "multi_file_enabled": True,
+        "multi_file_chunks": 4,
+        "seed": 21,
+    }
     params = {"input_dir": str(ctx.exact_dir), "tables": ["order"], "config": config}
     b = ctx.run("baseline", NAME, "multi_file", **params)
     s = ctx.run("shape", NAME, "multi_file", **params)
-    checks.add("FD-1 probe: baseline raises for multi_file_enabled", "error" in b and "empty" in b["error"], str(b.get("error")))
+    checks.add(
+        "FD-1 probe: baseline raises for multi_file_enabled",
+        "error" in b and "empty" in b["error"],
+        str(b.get("error")),
+    )
     if "error" in s:
         checks.add("FD-1 probe: Shape runs multi_file_enabled", False, s["error"])
         return
-    single = ctx.run("shape", NAME, "multi_file_off", **{**params, "config": {**config, "multi_file_enabled": False}})
+    single = ctx.run(
+        "shape",
+        NAME,
+        "multi_file_off",
+        **{**params, "config": {**config, "multi_file_enabled": False}},
+    )
     root, flat = _root(s), _root(single)
     split_ok, details = True, []
     import hashlib
@@ -355,7 +400,11 @@ def probe_fd1(ctx: Any, checks: sc.Checks) -> None:
         if not ok:
             split_ok = False
             details.append(rel)
-    checks.add("FD-1 probe: Shape splits each partition into near-equal files with checksums", split_ok, f"bad {details[:3]}")
+    checks.add(
+        "FD-1 probe: Shape splits each partition into near-equal files with checksums",
+        split_ok,
+        f"bad {details[:3]}",
+    )
     a = _rows(root, "order")
     c = _rows(flat, "order")
     ok, why = cmp.frames_equal(a, c, same_order=True)
@@ -363,23 +412,47 @@ def probe_fd1(ctx: Any, checks: sc.Checks) -> None:
 
 
 def probe_fd3(ctx: Any, checks: sc.Checks) -> None:
-    inline = {"t": {"item_id": list(range(1, 201)), "updated_count": [i % 7 for i in range(200)], "label": [f"x{i}" for i in range(200)]}}
-    config = {"domain": "retail", "date_range_start": "2022-01-01", "date_range_end": "2022-01-10", "lateness_enabled": False, "seed": 3}
+    inline = {
+        "t": {
+            "item_id": list(range(1, 201)),
+            "updated_count": [i % 7 for i in range(200)],
+            "label": [f"x{i}" for i in range(200)],
+        }
+    }
+    config = {
+        "domain": "retail",
+        "date_range_start": "2022-01-01",
+        "date_range_end": "2022-01-10",
+        "lateness_enabled": False,
+        "seed": 3,
+    }
     b, s = _both(ctx, "numeric_name_heuristic", inline=inline, config=config)
     nb = sum(1 for p in trees.list_files(_root(b)) if trees.is_data(p)) if "error" not in b else -1
     rows_s = len(_rows(_root(s), "t")) if "error" not in s else -1
     checks.add(
-        "FD-3 probe: baseline writes no data for an integer 'updated_count' column, Shape deals the rows out",
+        "FD-3 probe: baseline writes no data for an integer 'updated_count' column, Shape "
+        "deals the rows out",
         nb == 0 and rows_s == 200,
-        f"baseline data files {nb} (error {b.get('error')}); Shape rows {rows_s} (error {s.get('error')})",
+        f"baseline data files {nb} (error {b.get('error')}); Shape rows {rows_s} (error "
+        f"{s.get('error')})",
     )
 
 
 def probe_fd4(ctx: Any, checks: sc.Checks) -> None:
-    base = {"domain": "retail", "date_range_start": "2022-01-01", "date_range_end": "2022-01-05", "lateness_enabled": False, "seed": 3}
+    base = {
+        "domain": "retail",
+        "date_range_start": "2022-01-01",
+        "date_range_end": "2022-01-05",
+        "lateness_enabled": False,
+        "seed": 3,
+    }
     inline = {"t": {"id": list(range(10)), "created_at": ["2022-01-02"] * 10}}
     b, s = _both(ctx, "cadence_weekly", inline=inline, config={**base, "cadence": "weekly"})
-    manifest = next((p for p in trees.list_files(_root(b)) if p.endswith("_manifest.json")), None) if "error" not in b else None
+    manifest = (
+        next((p for p in trees.list_files(_root(b)) if p.endswith("_manifest.json")), None)
+        if "error" not in b
+        else None
+    )
     said = None
     if manifest:
         import json
@@ -394,7 +467,8 @@ def probe_fd4(ctx: Any, checks: sc.Checks) -> None:
     b, s = _both(ctx, "reversed_range", inline=inline, config=rev)
     nb = sum(1 for p in trees.list_files(_root(b)) if trees.is_data(p)) if "error" not in b else -1
     checks.add(
-        "FD-4 probe: baseline writes nothing for an end date before the start without an error, Shape raises",
+        "FD-4 probe: baseline writes nothing for an end date before the start without an "
+        "error, Shape raises",
         "error" not in b and nb == 0 and "error" in s and "before" in s["error"],
         f"baseline files {nb} error {b.get('error')}; Shape error {s.get('error')}",
     )
@@ -405,7 +479,14 @@ def probe_fd4(ctx: Any, checks: sc.Checks) -> None:
 
 def t21(ctx: Any, checks: sc.Checks) -> None:
     def run_one(side: str, tool: str, seed: int) -> Path:
-        r = ctx.run(side, NAME, f"t21_{side}_{seed}", input_dir=str(ctx.input_dir(tool, seed)), tables=T21_TABLES, config={**T21_CONFIG, "seed": seed})
+        r = ctx.run(
+            side,
+            NAME,
+            f"t21_{side}_{seed}",
+            input_dir=str(ctx.input_dir(tool, seed)),
+            tables=T21_TABLES,
+            config={**T21_CONFIG, "seed": seed},
+        )
         if "error" in r:
             raise RuntimeError(r["error"])
         return _root(r)
@@ -418,7 +499,11 @@ def t21(ctx: Any, checks: sc.Checks) -> None:
         fspread = [_rows(r, entity) for r in spread]
         result = cmp.t21_columns(fr, fspread, fs)
         bad = [c for c, v in result.items() if not v.get("equivalent", False)]
-        checks.add(f"T-21 {entity}: (a)-(e) on {len(result) - 1} columns", not bad, f"not equivalent: {bad}")
+        checks.add(
+            f"T-21 {entity}: (a)-(e) on {len(result) - 1} columns",
+            not bad,
+            f"not equivalent: {bad}",
+        )
         counts = len(fr), [len(f) for f in fspread], len(fs)
         ok, why = cmp.count_within(counts[2], counts[0], counts[1])
         checks.add(f"T-21 {entity}: rows written", ok, why)
@@ -463,7 +548,9 @@ def negative_controls(ctx: Any) -> sc.Checks:
         tamper(work)
         probe = sc.Checks("probe")
         trees.compare_trees(probe, "tampered", _root(b), work, ignore_columns=("_restated_at",))
-        checks.add(f"caught: {label}", not probe.ok, "; ".join(c.name for c in probe.items if not c.ok))
+        checks.add(
+            f"caught: {label}", not probe.ok, "; ".join(c.name for c in probe.items if not c.ok)
+        )
 
     def parquets(root: Path, entity: str) -> list[Path]:
         return sorted(p for p in root.rglob("*.parquet") if f"/{entity}/" in p.as_posix())
@@ -503,15 +590,56 @@ def negative_controls(ctx: Any) -> sc.Checks:
     caught("a missing _done flag", remove_flag)
     caught("a missing row", drop_row)
 
-    # T-21: a shifted date column, a changed category share and a raised null rate must fail (b)-(e).
-    ref = _rows(_root(ctx.run("baseline", NAME, "neg_t21_ref", input_dir=str(ctx.input_dir("baseline", ctx.ref_seed)), tables=T21_TABLES, config={**T21_CONFIG, "seed": ctx.ref_seed})), "order")
+    # T-21: a shifted date column, a changed category share and a raised null rate must fail
+    # (b)-(e).
+    ref = _rows(
+        _root(
+            ctx.run(
+                "baseline",
+                NAME,
+                "neg_t21_ref",
+                input_dir=str(ctx.input_dir("baseline", ctx.ref_seed)),
+                tables=T21_TABLES,
+                config={**T21_CONFIG, "seed": ctx.ref_seed},
+            )
+        ),
+        "order",
+    )
     spread = [
-        _rows(_root(ctx.run("baseline", NAME, f"neg_t21_{sd}", input_dir=str(ctx.input_dir("baseline", sd)), tables=T21_TABLES, config={**T21_CONFIG, "seed": sd})), "order")
+        _rows(
+            _root(
+                ctx.run(
+                    "baseline",
+                    NAME,
+                    f"neg_t21_{sd}",
+                    input_dir=str(ctx.input_dir("baseline", sd)),
+                    tables=T21_TABLES,
+                    config={**T21_CONFIG, "seed": sd},
+                )
+            ),
+            "order",
+        )
         for sd in ctx.seeds
     ]
-    shape = _rows(_root(ctx.run("shape", NAME, "neg_t21_shape", input_dir=str(ctx.input_dir("shape", ctx.shape_seed)), tables=T21_TABLES, config={**T21_CONFIG, "seed": ctx.shape_seed})), "order")
+    shape = _rows(
+        _root(
+            ctx.run(
+                "shape",
+                NAME,
+                "neg_t21_shape",
+                input_dir=str(ctx.input_dir("shape", ctx.shape_seed)),
+                tables=T21_TABLES,
+                config={**T21_CONFIG, "seed": ctx.shape_seed},
+            )
+        ),
+        "order",
+    )
     clean = cmp.t21_columns(ref, spread, shape)
-    checks.add("control: untouched Shape output passes T-21", all(v.get("equivalent") for v in clean.values()), str([c for c, v in clean.items() if not v.get("equivalent")]))
+    checks.add(
+        "control: untouched Shape output passes T-21",
+        all(v.get("equivalent") for v in clean.values()),
+        str([c for c, v in clean.items() if not v.get("equivalent")]),
+    )
     moved = shape.copy()
     moved["order_date"] = pd.to_datetime(moved["order_date"]) + pd.Timedelta(days=365)
     r = cmp.t21_columns(ref, spread, moved)
@@ -519,7 +647,11 @@ def negative_controls(ctx: Any) -> sc.Checks:
     cat = shape.copy()
     cat["status"] = cat["status"].where(cat.index % 3 != 0, "unseen")
     r = cmp.t21_columns(ref, spread, cat)
-    checks.add("caught: a third of status values replaced", not r["status"]["equivalent"], "TVD / vocabulary")
+    checks.add(
+        "caught: a third of status values replaced",
+        not r["status"]["equivalent"],
+        "TVD / vocabulary",
+    )
     nulls = shape.copy()
     nulls.loc[nulls.index % 4 == 0, "store_id"] = None
     r = cmp.t21_columns(ref, spread, nulls)
