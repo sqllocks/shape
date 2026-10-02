@@ -283,3 +283,25 @@ def test_the_cli_takes_reference_pairs(city_zip, ref_csv, tmp_path, capsys) -> N
     assert rc == 0
     pair = shape.load(str(out)).to_dict()["joint"]["reference_pairs"][0]
     assert pair["columns"] == ["city", "state", "zip"] and pair["mismatched"] == 520
+
+
+def test_a_dependency_that_disappears_is_reported_as_broken() -> None:
+    import numpy as np
+    import pyarrow as pa
+
+    rng = np.random.default_rng(4)
+    n = 3000
+    city = rng.integers(0, 60, n)
+    good = pa.table({"city": [f"c{i}" for i in city], "state": [f"s{i // 6}" for i in city]})
+    scrambled = pa.table({"city": good["city"], "state": [f"s{i}" for i in rng.integers(0, 10, n)]})
+    baseline, current = shape.profile(good), shape.profile(scrambled)
+    change = next(
+        c for c in shape.diff(baseline, current).changes if c["kind"] == "dependency_broken"
+    )
+    assert change["column"] == "city -> state"
+    assert change["baseline"] == 1.0 and change["current"] is None
+    assert change["detail"]["current_confidence_below"] == 0.8
+    assert "confidence 1.000 -> <0.800" in change["message"]
+    contract = {"fd": [{"determinant": "city", "dependent": "state", "min_confidence": 0.9}]}
+    assert shape.check(baseline, contract).passed
+    assert not shape.check(current, contract).passed
