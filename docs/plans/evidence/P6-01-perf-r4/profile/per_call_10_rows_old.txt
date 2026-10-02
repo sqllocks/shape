@@ -1,0 +1,8 @@
+employee.employment_status        62.8 us per call at n=10
+employee.email                    289.2 us per call at n=10
+employee.phone                    176.6 us per call at n=10
+employee.hire_date                151.6 us per call at n=10
+employee.department_id            60.4 us per call at n=10
+employee.employee_id              13.4 us per call at n=10
+compensation.base_salary          58.1 us per call at n=10
+claim.filing_date                 620.1 us per call at n=10

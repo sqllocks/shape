@@ -1,0 +1,16 @@
+financial: sum of column times (warm, 1 thread) 277.7 ms
+ 19.40 ms statement.total_withdrawals [distribution log_normal] n=65536
+ 19.15 ms statement.opening_balance [distribution log_normal] n=65536
+ 18.82 ms statement.fees_charged [distribution log_normal] n=65536
+ 18.21 ms statement.total_deposits [distribution log_normal] n=65536
+ 17.14 ms statement.closing_balance [correlated ] n=65536
+ 16.16 ms transaction.merchant_name [reference_data ] n=65536
+ 13.88 ms transaction.transaction_type [weighted_enum ] n=65536
+ 13.77 ms transaction.transaction_date [temporal ] n=65536
+ 13.08 ms transaction.amount [distribution log_normal] n=65536
+ 12.65 ms transaction.channel [weighted_enum ] n=65536
+ 11.47 ms transaction.status [weighted_enum ] n=65536
+  7.26 ms statement.account_id [foreign_key ] n=65536
+  6.97 ms transaction.category_id [foreign_key zipf] n=65536
+  6.68 ms loan_payment.payment_method [weighted_enum ] n=65536
+{'distribution': 99.1, 'weighted_enum': 66.3, 'temporal': 25.6, 'correlated': 24.1, 'foreign_key': 22.4, 'reference_data': 16.4, 'faker': 11.4, 'sequence': 3.6, 'formula': 3.3, 'pattern': 3.1, 'derived': 2.2, 'record_field': 0.2, 'self_referencing': 0.1, 'record_sample': 0.1, 'self_ref_field': 0.0}

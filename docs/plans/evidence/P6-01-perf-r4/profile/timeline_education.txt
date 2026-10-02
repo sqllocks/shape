@@ -1,0 +1,20 @@
+load 2.9 engine 0.4 write_engine 85.2 total 88.5 ms
+first gen starts at 2.5 ms, last gen ends 81.2 ms, write_engine returns 85.2
+wait total 0.0 ms, from 85.1 to 85.1
+gen busy per thread ms: {3: 3.7, 1: 50.0, 0: 53.7, 2: 68.3}
+sum gen 175.7 ms; sum open 3.4; wb 1.5; fin 1.7
+T0 |           ##############               #################################################           |
+T1 |         ######                           ########################### #########################     |
+T2 |         #############################   ################# #################################        |
+T3 |  #####                                                                                             |
+    0                                                                                        85 ms
+--- per table: first chunk start, last chunk end (ms from engine start), chunks, rows
+department                2.5 ->    6.2  chunks=1 rows=25 threads=[3]
+student                   7.7 ->   33.0  chunks=1 rows=20000 threads=[2]
+course                    8.3 ->   13.5  chunks=1 rows=300 threads=[1]
+instructor                9.6 ->   18.7  chunks=1 rows=150 threads=[0]
+course_section           19.6 ->   21.9  chunks=1 rows=600 threads=[0]
+enrollment               34.5 ->   59.6  chunks=5 rows=160000 threads=[0, 1, 2]
+academic_standing        53.2 ->   76.7  chunks=2 rows=40000 threads=[0, 2]
+financial_aid            59.7 ->   81.2  chunks=1 rows=14000 threads=[1]
+grade_appeal             69.6 ->   78.5  chunks=1 rows=3200 threads=[2]

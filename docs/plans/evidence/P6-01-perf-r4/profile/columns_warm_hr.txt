@@ -1,0 +1,16 @@
+hr: sum of column times (warm, 1 thread) 14.6 ms
+  1.20 ms compensation.base_salary [distribution log_normal] n=15000
+  1.17 ms employee.email [faker email] n=5000
+  0.90 ms compensation.change_reason [weighted_enum ] n=15000
+  0.89 ms employee.phone [faker phone_number] n=5000
+  0.85 ms time_off_request.status [weighted_enum ] n=25000
+  0.73 ms time_off_request.leave_type [weighted_enum ] n=25000
+  0.69 ms employee.manager_id [self_referencing ] n=5000
+  0.55 ms training_enrollment.status [weighted_enum ] n=20000
+  0.43 ms compensation.bonus_pct [distribution uniform] n=15000
+  0.37 ms performance_review.comments [faker sentence] n=12500
+  0.36 ms time_off_request.end_date [derived ] n=25000
+  0.34 ms time_off_request.hours_requested [distribution uniform] n=25000
+  0.33 ms employee.employment_status [weighted_enum ] n=5000
+  0.31 ms employee.employment_type [weighted_enum ] n=5000
+{'weighted_enum': 4.5, 'faker': 2.9, 'distribution': 2.4, 'foreign_key': 1.5, 'temporal': 1.0, 'self_referencing': 0.7, 'derived': 0.6, 'reference_data': 0.5, 'sequence': 0.3, 'correlated': 0.1, 'pattern': 0.1}

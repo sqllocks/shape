@@ -1,0 +1,477 @@
+{
+ "meta": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+  "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-10-02 19:50:21",
+  "impl": "shape",
+  "domain": "insurance",
+  "runs": 5,
+  "warmup": 1,
+  "ref_seed": 42,
+  "impl_seed": 1042,
+  "loadavg_start": 1.00830078125
+ },
+ "scales": {
+  "medium": {
+   "summary": {
+    "spindle": {
+     "total_s": 0.8947490300015488,
+     "gen_s": 0.4763697099988349,
+     "write_s": 0.41837932000271394,
+     "cpu_s": 0.8989099999999999,
+     "user_s": 0.535882,
+     "sys_s": 0.3381759999999999,
+     "minor_faults": 11837,
+     "import_s": 1.810842135000712,
+     "peak_rss_mb": 300.52734375,
+     "parquet_bytes": 7245680,
+     "rows": 212630,
+     "rows_per_s_total": 237642.05701305083,
+     "rows_per_s_generate": 446354.9959977935,
+     "runs_total_s": [
+      0.895,
+      1.107,
+      0.874,
+      0.92,
+      0.798
+     ],
+     "loadavg_before": [
+      1.00732421875,
+      1.0869140625,
+      1.0869140625,
+      1.07958984375,
+      1.07275390625
+     ],
+     "per_table_s_median": {
+      "agent": 0.0172527330032608,
+      "policy_type": 0.0023345920017163735,
+      "policyholder": 0.2442263209995872,
+      "policy": 0.0342316119968018,
+      "claim": 0.015330467002058867,
+      "coverage": 0.023195705998659832,
+      "premium_payment": 0.09949279300053604,
+      "underwriting": 0.02716533200145932,
+      "claim_payment": 0.017771550999896135,
+      "_compute_phase+business_rules": 0.00014218100113794208,
+      "_construct_domain+Spindle()": 0.01133471299908706
+     },
+     "row_counts": {
+      "agent": 100,
+      "policy_type": 30,
+      "policyholder": 10000,
+      "policy": 18000,
+      "claim": 5400,
+      "coverage": 45000,
+      "premium_payment": 108000,
+      "underwriting": 18000,
+      "claim_payment": 8100
+     }
+    },
+    "shape": {
+     "total_s": 0.06932845299888868,
+     "gen_s": 0.06932845299888868,
+     "write_s": 0.0,
+     "cpu_s": 0.17330299999999987,
+     "user_s": 0.13340799999999997,
+     "sys_s": 0.038701,
+     "minor_faults": 6462,
+     "import_s": 0.5287493920004636,
+     "peak_rss_mb": 142.77734375,
+     "parquet_bytes": 6646149,
+     "rows": 212630,
+     "rows_per_s_total": 3066994.730192644,
+     "rows_per_s_generate": 3066994.730192644,
+     "runs_total_s": [
+      0.078,
+      0.065,
+      0.065,
+      0.08,
+      0.069
+     ],
+     "loadavg_before": [
+      1.00732421875,
+      1.0869140625,
+      1.07958984375,
+      1.07275390625,
+      1.06689453125
+     ],
+     "per_table_s_median": {
+      "_construct_domain+Engine": 0.003949982001358876,
+      "_generate+write": 0.06550352300109807
+     },
+     "row_counts": {
+      "agent": 100,
+      "policy_type": 30,
+      "policyholder": 10000,
+      "policy": 18000,
+      "claim": 5400,
+      "coverage": 45000,
+      "premium_payment": 108000,
+      "underwriting": 18000,
+      "claim_payment": 8100
+     },
+     "numpy": "2.4.6",
+     "pyarrow": "25.0.1"
+    }
+   },
+   "raw": {
+    "spindle": [
+     {
+      "import_s": 1.794377441998222,
+      "gen_s": 0.4763697099988349,
+      "write_s": 0.41837932000271394,
+      "total_s": 0.8947490300015488,
+      "rows": {
+       "agent": 100,
+       "policy_type": 30,
+       "policyholder": 10000,
+       "policy": 18000,
+       "claim": 5400,
+       "coverage": 45000,
+       "premium_payment": 108000,
+       "underwriting": 18000,
+       "claim_payment": 8100
+      },
+      "per_table_s": {
+       "agent": 0.013483147999068024,
+       "policy_type": 0.0021071040027891286,
+       "policyholder": 0.2331475760001922,
+       "policy": 0.0342316119968018,
+       "claim": 0.015330467002058867,
+       "coverage": 0.023195705998659832,
+       "premium_payment": 0.09908693800025503,
+       "underwriting": 0.02716533200145932,
+       "claim_payment": 0.017771550999896135,
+       "_compute_phase+business_rules": 0.0001324359982390888,
+       "_construct_domain+Spindle()": 0.010717839999415446
+      },
+      "user_s": 0.5194860000000001,
+      "sys_s": 0.37942399999999993,
+      "minor_faults": 11839,
+      "major_faults": 0,
+      "cpu_s": 0.8989099999999999,
+      "peak_rss_mb": 300.45703125,
+      "parquet_bytes": 7245680,
+      "loadavg_before": 1.00732421875
+     },
+     {
+      "import_s": 1.8226801860000705,
+      "gen_s": 0.6399955980014056,
+      "write_s": 0.46660739599974477,
+      "total_s": 1.1066029940011504,
+      "rows": {
+       "agent": 100,
+       "policy_type": 30,
+       "policyholder": 10000,
+       "policy": 18000,
+       "claim": 5400,
+       "coverage": 45000,
+       "premium_payment": 108000,
+       "underwriting": 18000,
+       "claim_payment": 8100
+      },
+      "per_table_s": {
+       "agent": 0.025333587000204716,
+       "policy_type": 0.0023345920017163735,
+       "policyholder": 0.2958888270004536,
+       "policy": 0.05740371399951982,
+       "claim": 0.01850315100091393,
+       "coverage": 0.02320200199756073,
+       "premium_payment": 0.1465994310019596,
+       "underwriting": 0.04001316599897109,
+       "claim_payment": 0.01924023399988073,
+       "_compute_phase+business_rules": 0.00014218100113794208,
+       "_construct_domain+Spindle()": 0.01133471299908706
+      },
+      "user_s": 0.5783680000000002,
+      "sys_s": 0.49972199999999994,
+      "minor_faults": 12131,
+      "major_faults": 0,
+      "cpu_s": 1.07809,
+      "peak_rss_mb": 302.015625,
+      "parquet_bytes": 7245680,
+      "loadavg_before": 1.0869140625
+     },
+     {
+      "import_s": 1.6020967200020095,
+      "gen_s": 0.47067248599705636,
+      "write_s": 0.4028604390005057,
+      "total_s": 0.8735329249975621,
+      "rows": {
+       "agent": 100,
+       "policy_type": 30,
+       "policyholder": 10000,
+       "policy": 18000,
+       "claim": 5400,
+       "coverage": 45000,
+       "premium_payment": 108000,
+       "underwriting": 18000,
+       "claim_payment": 8100
+      },
+      "per_table_s": {
+       "agent": 0.0172527330032608,
+       "policy_type": 0.0026973169988195878,
+       "policyholder": 0.2338369450008031,
+       "policy": 0.034102048997738166,
+       "claim": 0.015307772999221925,
+       "coverage": 0.014565872003004188,
+       "premium_payment": 0.10327295999741182,
+       "underwriting": 0.026591339003061876,
+       "claim_payment": 0.007833394000044791,
+       "_compute_phase+business_rules": 0.00014490599642158486,
+       "_construct_domain+Spindle()": 0.015067197997268522
+      },
+      "user_s": 0.535882,
+      "sys_s": 0.32056700000000005,
+      "minor_faults": 11837,
+      "major_faults": 0,
+      "cpu_s": 0.856449,
+      "peak_rss_mb": 300.46875,
+      "parquet_bytes": 7245680,
+      "loadavg_before": 1.0869140625
+     },
+     {
+      "import_s": 1.8318444100004854,
+      "gen_s": 0.45335037400218425,
+      "write_s": 0.4663894250006706,
+      "total_s": 0.9197397990028549,
+      "rows": {
+       "agent": 100,
+       "policy_type": 30,
+       "policyholder": 10000,
+       "policy": 18000,
+       "claim": 5400,
+       "coverage": 45000,
+       "premium_payment": 108000,
+       "underwriting": 18000,
+       "claim_payment": 8100
+      },
+      "per_table_s": {
+       "agent": 0.013998768001329154,
+       "policy_type": 0.0020719060012197588,
+       "policyholder": 0.25409427199701895,
+       "policy": 0.03809467100290931,
+       "claim": 0.016787369997473434,
+       "coverage": 0.01388669800144271,
+       "premium_payment": 0.07760141000107978,
+       "underwriting": 0.01821305499834125,
+       "claim_payment": 0.00687558899880969,
+       "_compute_phase+business_rules": 0.0001326670026173815,
+       "_construct_domain+Spindle()": 0.011593967999942834
+      },
+      "user_s": 0.573642,
+      "sys_s": 0.32565599999999995,
+      "minor_faults": 11837,
+      "major_faults": 0,
+      "cpu_s": 0.8992979999999999,
+      "peak_rss_mb": 300.52734375,
+      "parquet_bytes": 7245680,
+      "loadavg_before": 1.07958984375
+     },
+     {
+      "import_s": 1.810842135000712,
+      "gen_s": 0.5019965430001321,
+      "write_s": 0.29607654800202,
+      "total_s": 0.7980730910021521,
+      "rows": {
+       "agent": 100,
+       "policy_type": 30,
+       "policyholder": 10000,
+       "policy": 18000,
+       "claim": 5400,
+       "coverage": 45000,
+       "premium_payment": 108000,
+       "underwriting": 18000,
+       "claim_payment": 8100
+      },
+      "per_table_s": {
+       "agent": 0.027743134000047576,
+       "policy_type": 0.002487440000550123,
+       "policyholder": 0.2442263209995872,
+       "policy": 0.03318043599938392,
+       "claim": 0.014842340002360288,
+       "coverage": 0.023766149999573827,
+       "premium_payment": 0.09949279300053604,
+       "underwriting": 0.02759149899793556,
+       "claim_payment": 0.01778114899934735,
+       "_compute_phase+business_rules": 0.00014751300113857724,
+       "_construct_domain+Spindle()": 0.010737767999671632
+      },
+      "user_s": 0.4622320000000002,
+      "sys_s": 0.3381759999999999,
+      "minor_faults": 11837,
+      "major_faults": 0,
+      "cpu_s": 0.800408,
+      "peak_rss_mb": 300.8359375,
+      "parquet_bytes": 7245680,
+      "loadavg_before": 1.07275390625
+     }
+    ],
+    "shape": [
+     {
+      "import_s": 0.6099284679985431,
+      "gen_s": 0.07825004099868238,
+      "write_s": 0.0,
+      "total_s": 0.07825004099868238,
+      "overlapped": true,
+      "rows": {
+       "agent": 100,
+       "policy_type": 30,
+       "policyholder": 10000,
+       "policy": 18000,
+       "claim": 5400,
+       "coverage": 45000,
+       "premium_payment": 108000,
+       "underwriting": 18000,
+       "claim_payment": 8100
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.004244918000040343,
+       "_generate+write": 0.07400512299864204
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.13790499999999994,
+      "sys_s": 0.041529999999999984,
+      "minor_faults": 6462,
+      "major_faults": 0,
+      "cpu_s": 0.179435,
+      "peak_rss_mb": 142.77734375,
+      "parquet_bytes": 6646149,
+      "loadavg_before": 1.00732421875
+     },
+     {
+      "import_s": 0.5053279549974832,
+      "gen_s": 0.06535883800097508,
+      "write_s": 0.0,
+      "total_s": 0.06535883800097508,
+      "overlapped": true,
+      "rows": {
+       "agent": 100,
+       "policy_type": 30,
+       "policyholder": 10000,
+       "policy": 18000,
+       "claim": 5400,
+       "coverage": 45000,
+       "premium_payment": 108000,
+       "underwriting": 18000,
+       "claim_payment": 8100
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.004047311002068454,
+       "_generate+write": 0.06131152699890663
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.114904,
+      "sys_s": 0.038701,
+      "minor_faults": 6755,
+      "major_faults": 0,
+      "cpu_s": 0.153605,
+      "peak_rss_mb": 143.80078125,
+      "parquet_bytes": 6646149,
+      "loadavg_before": 1.0869140625
+     },
+     {
+      "import_s": 0.5633887410003808,
+      "gen_s": 0.06541659200229333,
+      "write_s": 0.0,
+      "total_s": 0.06541659200229333,
+      "overlapped": true,
+      "rows": {
+       "agent": 100,
+       "policy_type": 30,
+       "policyholder": 10000,
+       "policy": 18000,
+       "claim": 5400,
+       "coverage": 45000,
+       "premium_payment": 108000,
+       "underwriting": 18000,
+       "claim_payment": 8100
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.003949982001358876,
+       "_generate+write": 0.06146661000093445
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.133374,
+      "sys_s": 0.016770999999999994,
+      "minor_faults": 6355,
+      "major_faults": 0,
+      "cpu_s": 0.15014500000000008,
+      "peak_rss_mb": 142.2578125,
+      "parquet_bytes": 6646149,
+      "loadavg_before": 1.07958984375
+     },
+     {
+      "import_s": 0.5147337520029396,
+      "gen_s": 0.0802152379983454,
+      "write_s": 0.0,
+      "total_s": 0.0802152379983454,
+      "overlapped": true,
+      "rows": {
+       "agent": 100,
+       "policy_type": 30,
+       "policyholder": 10000,
+       "policy": 18000,
+       "claim": 5400,
+       "coverage": 45000,
+       "premium_payment": 108000,
+       "underwriting": 18000,
+       "claim_payment": 8100
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.00392879900027765,
+       "_generate+write": 0.07628643899806775
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.15227599999999997,
+      "sys_s": 0.034869000000000004,
+      "minor_faults": 6250,
+      "major_faults": 0,
+      "cpu_s": 0.1871449999999999,
+      "peak_rss_mb": 142.1640625,
+      "parquet_bytes": 6646149,
+      "loadavg_before": 1.07275390625
+     },
+     {
+      "import_s": 0.5287493920004636,
+      "gen_s": 0.06932845299888868,
+      "write_s": 0.0,
+      "total_s": 0.06932845299888868,
+      "overlapped": true,
+      "rows": {
+       "agent": 100,
+       "policy_type": 30,
+       "policyholder": 10000,
+       "policy": 18000,
+       "claim": 5400,
+       "coverage": 45000,
+       "premium_payment": 108000,
+       "underwriting": 18000,
+       "claim_payment": 8100
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.003824929997790605,
+       "_generate+write": 0.06550352300109807
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.13340799999999997,
+      "sys_s": 0.039895,
+      "minor_faults": 6804,
+      "major_faults": 0,
+      "cpu_s": 0.17330299999999987,
+      "peak_rss_mb": 144.3515625,
+      "parquet_bytes": 6646149,
+      "loadavg_before": 1.06689453125
+     }
+    ]
+   }
+  }
+ }
+}

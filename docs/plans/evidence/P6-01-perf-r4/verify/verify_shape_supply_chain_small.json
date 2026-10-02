@@ -1,0 +1,5330 @@
+{
+ "domain": "supply_chain",
+ "scale": "small",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "warehouse": {
+   "rows": {
+    "spindle": 50,
+    "impl": 50
+   },
+   "columns_spindle": [
+    "warehouse_id",
+    "warehouse_name",
+    "warehouse_type",
+    "city",
+    "capacity_sqft",
+    "is_active",
+    "state",
+    "zip_code",
+    "lat",
+    "lng"
+   ],
+   "columns_impl": [
+    "warehouse_id",
+    "warehouse_name",
+    "warehouse_type",
+    "city",
+    "capacity_sqft",
+    "is_active",
+    "state",
+    "zip_code",
+    "lat",
+    "lng"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "warehouse_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "warehouse_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "warehouse_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "city": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "capacity_sqft": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "is_active": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "state": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "zip_code": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "lat": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "lng": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "warehouse_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.38989492070408105,
+     "stats": {
+      "mean": {
+       "spindle": 25.5,
+       "impl": 25.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 50.0,
+       "impl": 50.0
+      },
+      "std": {
+       "spindle": 14.430869689661812,
+       "impl": 14.430869689661812,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 50,
+      "impl": 50
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "warehouse_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "spindle": 50,
+      "impl": 50,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "DC-0001",
+       "spindle": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "DC-0002",
+       "spindle": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "DC-0003",
+       "spindle": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "DC-0004",
+       "spindle": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "DC-0005",
+       "spindle": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "DC-0006",
+       "spindle": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "DC-0007",
+       "spindle": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "DC-0008",
+       "spindle": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "DC-0009",
+       "spindle": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "DC-0010",
+       "spindle": 0.02,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "DC-{seq:4}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "warehouse_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Distribution Center",
+       "spindle": 0.42,
+       "impl": 0.34
+      },
+      {
+       "value": "Regional Hub",
+       "spindle": 0.28,
+       "impl": 0.28
+      },
+      {
+       "value": "Fulfillment Center",
+       "spindle": 0.18,
+       "impl": 0.08
+      },
+      {
+       "value": "Cold Storage",
+       "spindle": 0.08,
+       "impl": 0.1
+      },
+      {
+       "value": "Cross-Dock",
+       "spindle": 0.04,
+       "impl": 0.2
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.17999999999999997,
+     "tvd_baseline": 0.30000000000000004,
+     "tvd_tol": 0.7569397566060481,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "city": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "spindle": 48,
+      "impl": 50,
+      "ratio": 1.0416666666666667,
+      "baseline_max_ratio_dev": 0.04166666666666674
+     },
+     "top10": [
+      {
+       "value": "New York",
+       "spindle": 0.06,
+       "impl": 0.0
+      },
+      {
+       "value": "Venus",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Darrow",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Rifle",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Rosedale",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Blackwell",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Southbury",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Gladstone",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "New Milford",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Riverside",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Siletz",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "Pendergrass",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "Walterville",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "North Jackson",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "Jefferson City",
+       "spindle": 0.0,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.9999999999999998,
+     "tvd_baseline": 1.0,
+     "tvd_tol": 2.345292057134016,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "capacity_sqft": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "ks": 0.20000000000000007,
+     "ks_baseline": 0.17999999999999994,
+     "ks_tol": 0.38989492070408105,
+     "stats": {
+      "mean": {
+       "spindle": 80290.23802647674,
+       "impl": 105586.38771282164
+      },
+      "min": {
+       "spindle": 10000.0,
+       "impl": 10000.0
+      },
+      "max": {
+       "spindle": 474454.31286070927,
+       "impl": 500000.0
+      },
+      "std": {
+       "spindle": 85445.47068930411,
+       "impl": 96900.39027418918,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 50,
+      "impl": 49
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_active": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.5
+     },
+     "top10": [
+      {
+       "value": "true",
+       "spindle": 0.94,
+       "impl": 0.96
+      },
+      {
+       "value": "false",
+       "spindle": 0.06,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.020000000000000007,
+     "tvd_baseline": 0.060000000000000026,
+     "tvd_tol": 0.4787307364817192,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "state": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "spindle": 26,
+      "impl": 28,
+      "ratio": 1.0769230769230769,
+      "baseline_max_ratio_dev": 0.1923076923076923
+     },
+     "top10": [
+      {
+       "value": "CA",
+       "spindle": 0.16,
+       "impl": 0.06
+      },
+      {
+       "value": "NY",
+       "spindle": 0.1,
+       "impl": 0.04
+      },
+      {
+       "value": "PA",
+       "spindle": 0.08,
+       "impl": 0.02
+      },
+      {
+       "value": "AL",
+       "spindle": 0.06,
+       "impl": 0.02
+      },
+      {
+       "value": "FL",
+       "spindle": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "LA",
+       "spindle": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "CO",
+       "spindle": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "TX",
+       "spindle": 0.04,
+       "impl": 0.04
+      },
+      {
+       "value": "NM",
+       "spindle": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "IN",
+       "spindle": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "GA",
+       "spindle": 0.0,
+       "impl": 0.08
+      },
+      {
+       "value": "MO",
+       "spindle": 0.0,
+       "impl": 0.08
+      },
+      {
+       "value": "NC",
+       "spindle": 0.02,
+       "impl": 0.08
+      },
+      {
+       "value": "IL",
+       "spindle": 0.0,
+       "impl": 0.08
+      },
+      {
+       "value": "KY",
+       "spindle": 0.02,
+       "impl": 0.06
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.6200000000000001,
+     "tvd_baseline": 0.5800000000000001,
+     "tvd_tol": 1.7260882175254777,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "zip_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "spindle": 50,
+      "impl": 50,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "33960",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "70725",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "81650",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "21237",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "79506",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "06488",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "88422",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "18834",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "92509",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "46076",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "97380",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "30567",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "97489",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "44451",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "65108",
+       "spindle": 0.0,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.9999999999999999,
+     "tvd_baseline": 0.9999999999999999,
+     "tvd_tol": 2.393653682408596,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lat": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "ks": 0.14,
+     "ks_baseline": 0.20000000000000007,
+     "ks_tol": 0.38989492070408105,
+     "stats": {
+      "mean": {
+       "spindle": 38.134478,
+       "impl": 38.39427
+      },
+      "min": {
+       "spindle": 26.5747,
+       "impl": 29.4821
+      },
+      "max": {
+       "spindle": 48.1322,
+       "impl": 48.7458
+      },
+      "std": {
+       "spindle": 4.629146219608536,
+       "impl": 4.448636468278791,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 50,
+      "impl": 50
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lng": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "ks": 0.22000000000000003,
+     "ks_baseline": 0.26,
+     "ks_tol": 0.392,
+     "stats": {
+      "mean": {
+       "spindle": -93.93143199999999,
+       "impl": -90.28695199999999
+      },
+      "min": {
+       "spindle": -123.5399,
+       "impl": -124.2514
+      },
+      "max": {
+       "spindle": -70.962,
+       "impl": -71.1637
+      },
+      "std": {
+       "spindle": 16.839831116794965,
+       "impl": 15.278130297798091,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 50,
+      "impl": 50
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "supplier": {
+   "rows": {
+    "spindle": 200,
+    "impl": 200
+   },
+   "columns_spindle": [
+    "supplier_id",
+    "supplier_name",
+    "contact_name",
+    "contact_email",
+    "country",
+    "lead_time_days",
+    "reliability_score",
+    "is_active"
+   ],
+   "columns_impl": [
+    "supplier_id",
+    "supplier_name",
+    "contact_name",
+    "contact_email",
+    "country",
+    "lead_time_days",
+    "reliability_score",
+    "is_active"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "supplier_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "supplier_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "contact_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "contact_email": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "country": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "lead_time_days": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "reliability_score": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "is_active": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "supplier_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.19494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 100.5,
+       "impl": 100.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 200.0,
+       "impl": 200.0
+      },
+      "std": {
+       "spindle": 57.73430522661548,
+       "impl": 57.73430522661548,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "supplier_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 185,
+      "impl": 194,
+      "ratio": 1.0486486486486486,
+      "baseline_max_ratio_dev": 0.054054054054053946
+     },
+     "top10": [
+      {
+       "value": "Innovative Labs",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Clear Point LLC",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Walshham Labs",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Elite Raven",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Shepard Partners",
+       "spindle": 0.01,
+       "impl": 0.005
+      },
+      {
+       "value": "Vector Hawk Partners",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Mcmahon Holdings",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Staburg Associates",
+       "spindle": 0.01,
+       "impl": 0.005
+      },
+      {
+       "value": "Integral Tech",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "National Data Technologies",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Sierra Lynx Holdings",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Bargate Solutions",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Vital Pixel Global",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "VanTavish Holdings",
+       "spindle": 0.005,
+       "impl": 0.01
+      },
+      {
+       "value": "Fusion Storm Analytics",
+       "spindle": 0.0,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.8799999999999999,
+     "tvd_baseline": 0.9299999999999999,
+     "tvd_tol": 2.3021423945881616,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "contact_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 200,
+      "impl": 200,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Noien Shepgate",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Evia Dawgate",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Faith Denton",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Luane DeKay",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Suiel Steeldale",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Daine Housman",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Orika Wilfield",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Lunna Pinedwick",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Paer Weiss",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Moana Odonnell",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Doion Flowwick",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "Royn Nash",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "Auisha Olsonland",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "Remi Grifcroft",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "Clton Hatstein",
+       "spindle": 0.0,
+       "impl": 0.005
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "FIRST_NAMES+' '+LAST_NAMES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "contact_email": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 200,
+      "impl": 200,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "luin.zunigley@firstgroup.com",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "vanah.milford@blaclandco.com",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "kayden.willdale@heritagecapitalanaly.com",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "weika.pollard@heritagefalconcorp.com",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "maana.ayerworth@legacysystems.com",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "meor.quiwick@vanguardcorp.com",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "laane.ingland@dawsbergconsulting.com",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "mison.maloridge@rubyinsightllc.com",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "loey.chridale@silvasteinlogistics.com",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "siana.thomaridge@summitinternational.com",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "irora.castaneda@evergreensparklogist.com",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "heee.conleson@triadfalcondynamics.com",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "easton.lamshire@titanwave.com",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "carter.o'kenzie@irondatainc.com",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "feen.cordworth@fitzgateinternationa.com",
+       "spindle": 0.0,
+       "impl": 0.005
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "first.last@company(lower, no space/comma/dot, 20)+'.com'",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "country": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 9,
+      "impl": 9,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "United States",
+       "spindle": 0.41,
+       "impl": 0.375
+      },
+      {
+       "value": "China",
+       "spindle": 0.185,
+       "impl": 0.21
+      },
+      {
+       "value": "Japan",
+       "spindle": 0.095,
+       "impl": 0.09
+      },
+      {
+       "value": "Mexico",
+       "spindle": 0.085,
+       "impl": 0.095
+      },
+      {
+       "value": "Germany",
+       "spindle": 0.08,
+       "impl": 0.075
+      },
+      {
+       "value": "South Korea",
+       "spindle": 0.06,
+       "impl": 0.045
+      },
+      {
+       "value": "Taiwan",
+       "spindle": 0.055,
+       "impl": 0.035
+      },
+      {
+       "value": "India",
+       "spindle": 0.02,
+       "impl": 0.055
+      },
+      {
+       "value": "Canada",
+       "spindle": 0.01,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.07999999999999999,
+     "tvd_baseline": 0.10999999999999997,
+     "tvd_tol": 0.5077706251929807,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lead_time_days": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.065,
+     "ks_baseline": 0.12,
+     "ks_tol": 0.19494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 27.707167857589475,
+       "impl": 25.757567129134767
+      },
+      "min": {
+       "spindle": 2.841036104354551,
+       "impl": 4.295463113759599
+      },
+      "max": {
+       "spindle": 120.0,
+       "impl": 106.49764062576196
+      },
+      "std": {
+       "spindle": 21.58654744592266,
+       "impl": 19.184781813679415,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 198,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "reliability_score": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.06500000000000006,
+     "ks_baseline": 0.13,
+     "ks_tol": 0.197,
+     "stats": {
+      "mean": {
+       "spindle": 0.8018870409297186,
+       "impl": 0.8059786544355648
+      },
+      "min": {
+       "spindle": 0.6005165241254876,
+       "impl": 0.6013618812419391
+      },
+      "max": {
+       "spindle": 0.989776390971608,
+       "impl": 0.9852816243095572
+      },
+      "std": {
+       "spindle": 0.10734227244411253,
+       "impl": 0.11445893122141425,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_active": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "spindle": 0.9,
+       "impl": 0.895
+      },
+      {
+       "value": "false",
+       "spindle": 0.1,
+       "impl": 0.105
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0049999999999999975,
+     "tvd_baseline": 0.05000000000000002,
+     "tvd_tol": 0.2393653682408596,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "material": {
+   "rows": {
+    "spindle": 300,
+    "impl": 300
+   },
+   "columns_spindle": [
+    "material_id",
+    "material_name",
+    "category",
+    "unit_of_measure",
+    "unit_cost",
+    "reorder_point",
+    "is_hazardous"
+   ],
+   "columns_impl": [
+    "material_id",
+    "material_name",
+    "category",
+    "unit_of_measure",
+    "unit_cost",
+    "reorder_point",
+    "is_hazardous"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "material_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "material_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "category": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "unit_of_measure": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "unit_cost": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "reorder_point": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "is_hazardous": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "material_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "spindle": 150.5,
+       "impl": 150.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 300.0,
+       "impl": 300.0
+      },
+      "std": {
+       "spindle": 86.60205925188308,
+       "impl": 86.60205925188308,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 300,
+      "impl": 300
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "material_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "distinct": {
+      "spindle": 300,
+      "impl": 300,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "MAT-00001",
+       "spindle": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "MAT-00002",
+       "spindle": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "MAT-00003",
+       "spindle": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "MAT-00004",
+       "spindle": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "MAT-00005",
+       "spindle": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "MAT-00006",
+       "spindle": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "MAT-00007",
+       "spindle": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "MAT-00008",
+       "spindle": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "MAT-00009",
+       "spindle": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "MAT-00010",
+       "spindle": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "MAT-{seq:5}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "category": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "distinct": {
+      "spindle": 30,
+      "impl": 30,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Electronic Components",
+       "spindle": 0.08,
+       "impl": 0.06666666666666667
+      },
+      {
+       "value": "Aluminum",
+       "spindle": 0.06,
+       "impl": 0.04666666666666667
+      },
+      {
+       "value": "Semiconductors",
+       "spindle": 0.05,
+       "impl": 0.06333333333333334
+      },
+      {
+       "value": "Copper Wire",
+       "spindle": 0.05,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "Chemicals - Industrial",
+       "spindle": 0.04666666666666667,
+       "impl": 0.023333333333333334
+      },
+      {
+       "value": "Fasteners",
+       "spindle": 0.04666666666666667,
+       "impl": 0.03666666666666667
+      },
+      {
+       "value": "Plastics - ABS",
+       "spindle": 0.04666666666666667,
+       "impl": 0.05333333333333334
+      },
+      {
+       "value": "Circuit Boards",
+       "spindle": 0.04666666666666667,
+       "impl": 0.05
+      },
+      {
+       "value": "Steel Alloys",
+       "spindle": 0.043333333333333335,
+       "impl": 0.06
+      },
+      {
+       "value": "Paint and Coatings",
+       "spindle": 0.04,
+       "impl": 0.06
+      },
+      {
+       "value": "Chemicals - Specialty",
+       "spindle": 0.03,
+       "impl": 0.05
+      },
+      {
+       "value": "Glass",
+       "spindle": 0.02666666666666667,
+       "impl": 0.04
+      },
+      {
+       "value": "Packaging Materials",
+       "spindle": 0.03,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.16666666666666663,
+     "tvd_baseline": 0.18,
+     "tvd_tol": 0.7569397566060481,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "unit_of_measure": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "distinct": {
+      "spindle": 6,
+      "impl": 6,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "EA",
+       "spindle": 0.37666666666666665,
+       "impl": 0.37666666666666665
+      },
+      {
+       "value": "KG",
+       "spindle": 0.20333333333333334,
+       "impl": 0.19666666666666666
+      },
+      {
+       "value": "LB",
+       "spindle": 0.17,
+       "impl": 0.17333333333333334
+      },
+      {
+       "value": "LT",
+       "spindle": 0.09333333333333334,
+       "impl": 0.10333333333333333
+      },
+      {
+       "value": "M",
+       "spindle": 0.08666666666666667,
+       "impl": 0.07666666666666666
+      },
+      {
+       "value": "FT",
+       "spindle": 0.07,
+       "impl": 0.07333333333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.01666666666666667,
+     "tvd_baseline": 0.07666666666666669,
+     "tvd_tol": 0.3385137501286537,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "unit_cost": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.08333333333333331,
+     "ks_baseline": 0.07999999999999996,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "spindle": 94.12951338863255,
+       "impl": 96.03526236215967
+      },
+      "min": {
+       "spindle": 0.5102997387171146,
+       "impl": 0.4009863227143147
+      },
+      "max": {
+       "spindle": 2220.573970191444,
+       "impl": 2406.253245692232
+      },
+      "std": {
+       "spindle": 201.5806588808953,
+       "impl": 213.61847491507294,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 300,
+      "impl": 300
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "reorder_point": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.09,
+     "ks_baseline": 0.10000000000000003,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "spindle": 271.3374378395975,
+       "impl": 254.0522440291713
+      },
+      "min": {
+       "spindle": 11.067516600482378,
+       "impl": 14.704888820981608
+      },
+      "max": {
+       "spindle": 492.61545613261325,
+       "impl": 498.19181877207166
+      },
+      "std": {
+       "spindle": 136.31860081874365,
+       "impl": 144.48908676240134,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 300,
+      "impl": 300
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_hazardous": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "false",
+       "spindle": 0.8933333333333333,
+       "impl": 0.92
+      },
+      {
+       "value": "true",
+       "spindle": 0.10666666666666667,
+       "impl": 0.08
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0266666666666667,
+     "tvd_baseline": 0.04000000000000002,
+     "tvd_tol": 0.19544100476116794,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "purchase_order": {
+   "rows": {
+    "spindle": 2000,
+    "impl": 2000
+   },
+   "columns_spindle": [
+    "po_id",
+    "supplier_id",
+    "po_number",
+    "order_date",
+    "total_amount",
+    "status",
+    "priority",
+    "expected_delivery_date"
+   ],
+   "columns_impl": [
+    "po_id",
+    "supplier_id",
+    "po_number",
+    "order_date",
+    "total_amount",
+    "status",
+    "priority",
+    "expected_delivery_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "po_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "supplier_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "po_number": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "order_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "total_amount": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "priority": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "expected_delivery_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "po_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "spindle": 1000.5,
+       "impl": 1000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 2000.0,
+       "impl": 2000.0
+      },
+      "std": {
+       "spindle": 577.3501970208376,
+       "impl": 577.3501970208376,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "supplier_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.038000000000000034,
+     "ks_baseline": 0.030000000000000027,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "spindle": 23.056,
+       "impl": 22.013
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 199.0,
+       "impl": 200.0
+      },
+      "std": {
+       "spindle": 38.7106298579602,
+       "impl": 39.13655364234311,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 164,
+      "impl": 172
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "po_number": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "distinct": {
+      "spindle": 2000,
+      "impl": 2000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "PO-000001",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "PO-000002",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "PO-000003",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "PO-000004",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "PO-000005",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "PO-000006",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "PO-000007",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "PO-000008",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "PO-000009",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "PO-000010",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "PO-{seq:6}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "order_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.013000000000000012,
+     "ks_baseline": 0.030999999999999972,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "spindle": "2024-01-01 00:18:06.862285568",
+       "impl": "2023-12-31 11:22:44.650821120"
+      },
+      "min": {
+       "spindle": "2022-01-01 23:09:28.711694592",
+       "impl": "2022-01-01 14:28:56.244400896"
+      },
+      "max": {
+       "spindle": "2025-12-30 22:27:09.689271808",
+       "impl": "2025-12-30 08:14:52.856550912"
+      },
+      "std": {
+       "spindle": 426.23669086234963,
+       "impl": 428.39795257655777,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "total_amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.025000000000000022,
+     "ks_baseline": 0.0485000000000001,
+     "ks_tol": 0.07475000000000015,
+     "stats": {
+      "mean": {
+       "spindle": 26609.841537307348,
+       "impl": 23545.064278066955
+      },
+      "min": {
+       "spindle": 100.0,
+       "impl": 100.0
+      },
+      "max": {
+       "spindle": 3677083.838482984,
+       "impl": 904613.9812637082
+      },
+      "std": {
+       "spindle": 110232.41595996906,
+       "impl": 52813.998750887986,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 1998,
+      "impl": 1995
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Delivered",
+       "spindle": 0.3545,
+       "impl": 0.3475
+      },
+      {
+       "value": "Approved",
+       "spindle": 0.2965,
+       "impl": 0.306
+      },
+      {
+       "value": "Shipped",
+       "spindle": 0.198,
+       "impl": 0.1995
+      },
+      {
+       "value": "Pending",
+       "spindle": 0.1005,
+       "impl": 0.097
+      },
+      {
+       "value": "Cancelled",
+       "spindle": 0.0505,
+       "impl": 0.05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.01100000000000001,
+     "tvd_baseline": 0.02649999999999998,
+     "tvd_tol": 0.1196826841204298,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "priority": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Standard",
+       "spindle": 0.6185,
+       "impl": 0.5825
+      },
+      {
+       "value": "Expedited",
+       "spindle": 0.238,
+       "impl": 0.265
+      },
+      {
+       "value": "Critical",
+       "spindle": 0.0955,
+       "impl": 0.1035
+      },
+      {
+       "value": "Low",
+       "spindle": 0.048,
+       "impl": 0.049
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.036000000000000025,
+     "tvd_baseline": 0.02400000000000002,
+     "tvd_tol": 0.10704744696916627,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "expected_delivery_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.013000000000000012,
+     "ks_baseline": 0.030999999999999972,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "spindle": "2024-01-22 00:18:06.862285568",
+       "impl": "2024-01-21 11:22:44.650821120"
+      },
+      "min": {
+       "spindle": "2022-01-22 23:09:28.711694592",
+       "impl": "2022-01-22 14:28:56.244400896"
+      },
+      "max": {
+       "spindle": "2026-01-20 22:27:09.689271808",
+       "impl": "2026-01-20 08:14:52.856550912"
+      },
+      "std": {
+       "spindle": 426.23669086234963,
+       "impl": 428.39795257655777,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "purchase_order_line": {
+   "rows": {
+    "spindle": 6000,
+    "impl": 6000
+   },
+   "columns_spindle": [
+    "po_line_id",
+    "po_id",
+    "material_id",
+    "quantity_ordered",
+    "unit_price",
+    "quantity_received",
+    "line_total"
+   ],
+   "columns_impl": [
+    "po_line_id",
+    "po_id",
+    "material_id",
+    "quantity_ordered",
+    "unit_price",
+    "quantity_received",
+    "line_total"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "po_line_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "po_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "material_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "quantity_ordered": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "unit_price": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "quantity_received": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "line_total": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "po_line_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 3000.5,
+       "impl": 3000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 6000.0,
+       "impl": 6000.0
+      },
+      "std": {
+       "spindle": 1732.050783512616,
+       "impl": 1732.050783512616,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 6000,
+      "impl": 6000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "po_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.02400000000000002,
+     "ks_baseline": 0.03266666666666673,
+     "ks_tol": 0.0510000000000001,
+     "stats": {
+      "mean": {
+       "spindle": 1015.8908333333334,
+       "impl": 1004.8213333333333
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 2000.0,
+       "impl": 2000.0
+      },
+      "std": {
+       "spindle": 582.1416356145403,
+       "impl": 571.948440343669,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 1909,
+      "impl": 1900
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "material_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.013833333333333253,
+     "ks_baseline": 0.018833333333333258,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 38.54516666666667,
+       "impl": 37.641333333333336
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 299.0,
+       "impl": 299.0
+      },
+      "std": {
+       "spindle": 63.21146752480035,
+       "impl": 62.904226340966595,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 290,
+      "impl": 289
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "quantity_ordered": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.01216666666666677,
+     "ks_baseline": 0.016000000000000014,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 310.2707292454449,
+       "impl": 307.0810791928859
+      },
+      "min": {
+       "spindle": 2.613400174967078,
+       "impl": 2.3819360672910346
+      },
+      "max": {
+       "spindle": 10000.0,
+       "impl": 10000.0
+      },
+      "std": {
+       "spindle": 561.5711683018206,
+       "impl": 558.9021998192436,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5998,
+      "impl": 5999
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "unit_price": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.016000000000000014,
+     "ks_baseline": 0.018166666666666692,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 98.98602428479757,
+       "impl": 103.04530589850974
+      },
+      "min": {
+       "spindle": 0.18209609822643774,
+       "impl": 0.16862419587862362
+      },
+      "max": {
+       "spindle": 6344.484695685507,
+       "impl": 9475.404088551573
+      },
+      "std": {
+       "spindle": 258.7567086843076,
+       "impl": 278.37424389490195,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 6000,
+      "impl": 6000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "quantity_received": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.013500000000000068,
+     "ks_baseline": 0.014666666666666717,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 286.84257333333335,
+       "impl": 283.9973733333333
+      },
+      "min": {
+       "spindle": 2.27,
+       "impl": 2.34
+      },
+      "max": {
+       "spindle": 9934.06,
+       "impl": 9759.08
+      },
+      "std": {
+       "spindle": 520.7997916182807,
+       "impl": 516.6865942445517,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5579,
+      "impl": 5586
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "line_total": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.01649999999999996,
+     "ks_baseline": 0.01933333333333334,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 30086.21564975794,
+       "impl": 33620.092524985106
+      },
+      "min": {
+       "spindle": 5.09863897813526,
+       "impl": 6.331254758311731
+      },
+      "max": {
+       "spindle": 4709136.868047685,
+       "impl": 17292991.30496567
+      },
+      "std": {
+       "spindle": 144381.77107942197,
+       "impl": 254778.12780470215,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 6000,
+      "impl": 6000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "inventory": {
+   "rows": {
+    "spindle": 900,
+    "impl": 900
+   },
+   "columns_spindle": [
+    "inventory_id",
+    "warehouse_id",
+    "material_id",
+    "quantity_on_hand",
+    "last_counted_date",
+    "bin_location",
+    "quantity_reserved"
+   ],
+   "columns_impl": [
+    "inventory_id",
+    "warehouse_id",
+    "material_id",
+    "quantity_on_hand",
+    "last_counted_date",
+    "bin_location",
+    "quantity_reserved"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "inventory_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "warehouse_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "material_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "quantity_on_hand": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "last_counted_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "bin_location": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "quantity_reserved": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "inventory_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.007852375943375626
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.09189911412668231,
+     "stats": {
+      "mean": {
+       "spindle": 450.5,
+       "impl": 450.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 900.0,
+       "impl": 900.0
+      },
+      "std": {
+       "spindle": 259.80746076020733,
+       "impl": 259.80746076020733,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 900,
+      "impl": 900
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "warehouse_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.007852375943375626
+     },
+     "ks": 0.03888888888888886,
+     "ks_baseline": 0.02777777777777779,
+     "ks_tol": 0.09189911412668231,
+     "stats": {
+      "mean": {
+       "spindle": 9.423333333333334,
+       "impl": 9.87
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 50.0,
+       "impl": 50.0
+      },
+      "std": {
+       "spindle": 11.73388777099143,
+       "impl": 11.43958963910468,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 50,
+      "impl": 48
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "material_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.007852375943375626
+     },
+     "ks": 0.033333333333333326,
+     "ks_baseline": 0.04111111111111111,
+     "ks_tol": 0.09189911412668231,
+     "stats": {
+      "mean": {
+       "spindle": 150.4788888888889,
+       "impl": 153.9188888888889
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 300.0,
+       "impl": 300.0
+      },
+      "std": {
+       "spindle": 85.85479083823188,
+       "impl": 84.47602604611092,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 286,
+      "impl": 285
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "quantity_on_hand": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.007852375943375626
+     },
+     "ks": 0.034444444444444444,
+     "ks_baseline": 0.055555555555555525,
+     "ks_tol": 0.09189911412668231,
+     "stats": {
+      "mean": {
+       "spindle": 1287.9774500242684,
+       "impl": 1205.0388910148934
+      },
+      "min": {
+       "spindle": 1.4839498342198525,
+       "impl": 4.278506291397826
+      },
+      "max": {
+       "spindle": 50569.26238935515,
+       "impl": 49428.76894067686
+      },
+      "std": {
+       "spindle": 3045.7586268061227,
+       "impl": 2951.61789954395,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 900,
+      "impl": 900
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_counted_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.007852375943375626
+     },
+     "ks": 0.06666666666666665,
+     "ks_baseline": 0.061111111111111116,
+     "ks_tol": 0.09366666666666668,
+     "stats": {
+      "mean": {
+       "spindle": "2025-01-05 06:53:36.369019904",
+       "impl": "2024-12-22 22:07:26.155098624"
+      },
+      "min": {
+       "spindle": "2024-01-03 02:29:00.636643584",
+       "impl": "2024-01-01 01:40:57.419179008"
+      },
+      "max": {
+       "spindle": "2025-12-29 07:25:24.113356032",
+       "impl": "2025-12-29 21:05:26.057665024"
+      },
+      "std": {
+       "spindle": 212.6364902495515,
+       "impl": 209.0966678536275,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 900,
+      "impl": 900
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "bin_location": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.007852375943375626
+     },
+     "distinct": {
+      "spindle": 900,
+      "impl": 900,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "A01-R01-S01",
+       "spindle": 0.0011111111111111111,
+       "impl": 0.0011111111111111111
+      },
+      {
+       "value": "A02-R02-S02",
+       "spindle": 0.0011111111111111111,
+       "impl": 0.0011111111111111111
+      },
+      {
+       "value": "A03-R03-S03",
+       "spindle": 0.0011111111111111111,
+       "impl": 0.0011111111111111111
+      },
+      {
+       "value": "A04-R04-S04",
+       "spindle": 0.0011111111111111111,
+       "impl": 0.0011111111111111111
+      },
+      {
+       "value": "A05-R05-S05",
+       "spindle": 0.0011111111111111111,
+       "impl": 0.0011111111111111111
+      },
+      {
+       "value": "A06-R06-S06",
+       "spindle": 0.0011111111111111111,
+       "impl": 0.0011111111111111111
+      },
+      {
+       "value": "A07-R07-S07",
+       "spindle": 0.0011111111111111111,
+       "impl": 0.0011111111111111111
+      },
+      {
+       "value": "A08-R08-S08",
+       "spindle": 0.0011111111111111111,
+       "impl": 0.0011111111111111111
+      },
+      {
+       "value": "A09-R09-S09",
+       "spindle": 0.0011111111111111111,
+       "impl": 0.0011111111111111111
+      },
+      {
+       "value": "A10-R10-S10",
+       "spindle": 0.0011111111111111111,
+       "impl": 0.0011111111111111111
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "A{seq:2}-R{seq:2}-S{seq:2}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "quantity_reserved": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.007852375943375626
+     },
+     "ks": 0.0411111111111111,
+     "ks_baseline": 0.056666666666666754,
+     "ks_tol": 0.09189911412668231,
+     "stats": {
+      "mean": {
+       "spindle": 261.40476666666666,
+       "impl": 232.6852222222222
+      },
+      "min": {
+       "spindle": 0.06,
+       "impl": 0.01
+      },
+      "max": {
+       "spindle": 8182.63,
+       "impl": 11101.91
+      },
+      "std": {
+       "spindle": 652.3274014288727,
+       "impl": 695.8257693669966,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 883,
+      "impl": 869
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "shipment": {
+   "rows": {
+    "spindle": 2400,
+    "impl": 2400
+   },
+   "columns_spindle": [
+    "shipment_id",
+    "po_id",
+    "warehouse_id",
+    "shipment_number",
+    "carrier_name",
+    "shipping_method",
+    "ship_date",
+    "status",
+    "weight_kg",
+    "delivery_date"
+   ],
+   "columns_impl": [
+    "shipment_id",
+    "po_id",
+    "warehouse_id",
+    "shipment_number",
+    "carrier_name",
+    "shipping_method",
+    "ship_date",
+    "status",
+    "weight_kg",
+    "delivery_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "shipment_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "po_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "warehouse_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "shipment_number": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "carrier_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "shipping_method": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "ship_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "weight_kg": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "delivery_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "shipment_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0029456643830225145
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.056276484356042246,
+     "stats": {
+      "mean": {
+       "spindle": 1200.5,
+       "impl": 1200.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 2400.0,
+       "impl": 2400.0
+      },
+      "std": {
+       "spindle": 692.8202628868953,
+       "impl": 692.8202628868953,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 2400,
+      "impl": 2400
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "po_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0029456643830225145
+     },
+     "ks": 0.025833333333333375,
+     "ks_baseline": 0.027500000000000024,
+     "ks_tol": 0.056276484356042246,
+     "stats": {
+      "mean": {
+       "spindle": 1001.4116666666666,
+       "impl": 983.5133333333333
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 1999.0,
+       "impl": 2000.0
+      },
+      "std": {
+       "spindle": 576.3573874173519,
+       "impl": 569.8268704810455,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 1402,
+      "impl": 1400
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "warehouse_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0029456643830225145
+     },
+     "ks": 0.01416666666666666,
+     "ks_baseline": 0.02999999999999997,
+     "ks_tol": 0.056276484356042246,
+     "stats": {
+      "mean": {
+       "spindle": 9.817083333333333,
+       "impl": 9.922083333333333
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 50.0,
+       "impl": 50.0
+      },
+      "std": {
+       "spindle": 11.833017007215682,
+       "impl": 11.878314091642897,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 50,
+      "impl": 50
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "shipment_number": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0029456643830225145
+     },
+     "distinct": {
+      "spindle": 2400,
+      "impl": 2400,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "SHP-000001",
+       "spindle": 0.0004166666666666667,
+       "impl": 0.0004166666666666667
+      },
+      {
+       "value": "SHP-000002",
+       "spindle": 0.0004166666666666667,
+       "impl": 0.0004166666666666667
+      },
+      {
+       "value": "SHP-000003",
+       "spindle": 0.0004166666666666667,
+       "impl": 0.0004166666666666667
+      },
+      {
+       "value": "SHP-000004",
+       "spindle": 0.0004166666666666667,
+       "impl": 0.0004166666666666667
+      },
+      {
+       "value": "SHP-000005",
+       "spindle": 0.0004166666666666667,
+       "impl": 0.0004166666666666667
+      },
+      {
+       "value": "SHP-000006",
+       "spindle": 0.0004166666666666667,
+       "impl": 0.0004166666666666667
+      },
+      {
+       "value": "SHP-000007",
+       "spindle": 0.0004166666666666667,
+       "impl": 0.0004166666666666667
+      },
+      {
+       "value": "SHP-000008",
+       "spindle": 0.0004166666666666667,
+       "impl": 0.0004166666666666667
+      },
+      {
+       "value": "SHP-000009",
+       "spindle": 0.0004166666666666667,
+       "impl": 0.0004166666666666667
+      },
+      {
+       "value": "SHP-000010",
+       "spindle": 0.0004166666666666667,
+       "impl": 0.0004166666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "SHP-{seq:6}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "carrier_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0029456643830225145
+     },
+     "distinct": {
+      "spindle": 25,
+      "impl": 25,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "UPS",
+       "spindle": 0.09916666666666667,
+       "impl": 0.10083333333333333
+      },
+      {
+       "value": "FedEx",
+       "spindle": 0.09833333333333333,
+       "impl": 0.1075
+      },
+      {
+       "value": "USPS",
+       "spindle": 0.08125,
+       "impl": 0.07375
+      },
+      {
+       "value": "DHL Express",
+       "spindle": 0.0625,
+       "impl": 0.06375
+      },
+      {
+       "value": "XPO Logistics",
+       "spindle": 0.0625,
+       "impl": 0.056666666666666664
+      },
+      {
+       "value": "C.H. Robinson",
+       "spindle": 0.04791666666666667,
+       "impl": 0.04666666666666667
+      },
+      {
+       "value": "J.B. Hunt",
+       "spindle": 0.04583333333333333,
+       "impl": 0.042083333333333334
+      },
+      {
+       "value": "Werner Enterprises",
+       "spindle": 0.03875,
+       "impl": 0.037083333333333336
+      },
+      {
+       "value": "Old Dominion Freight",
+       "spindle": 0.03791666666666667,
+       "impl": 0.03375
+      },
+      {
+       "value": "Schneider National",
+       "spindle": 0.035833333333333335,
+       "impl": 0.042916666666666665
+      },
+      {
+       "value": "Knight-Swift",
+       "spindle": 0.034583333333333334,
+       "impl": 0.04375
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.04875,
+     "tvd_baseline": 0.05666666666666667,
+     "tvd_tol": 0.24430125595146,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "shipping_method": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0029456643830225145
+     },
+     "distinct": {
+      "spindle": 8,
+      "impl": 8,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Ground",
+       "spindle": 0.24208333333333334,
+       "impl": 0.23416666666666666
+      },
+      {
+       "value": "LTL Freight",
+       "spindle": 0.19625,
+       "impl": 0.2075
+      },
+      {
+       "value": "Full Truckload",
+       "spindle": 0.1725,
+       "impl": 0.16
+      },
+      {
+       "value": "Express Air",
+       "spindle": 0.12,
+       "impl": 0.11375
+      },
+      {
+       "value": "Economy Air",
+       "spindle": 0.095,
+       "impl": 0.09791666666666667
+      },
+      {
+       "value": "Ocean Container",
+       "spindle": 0.075,
+       "impl": 0.08875
+      },
+      {
+       "value": "Rail Intermodal",
+       "spindle": 0.057916666666666665,
+       "impl": 0.05416666666666667
+      },
+      {
+       "value": "White Glove",
+       "spindle": 0.04125,
+       "impl": 0.04375
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.030416666666666647,
+     "tvd_baseline": 0.035416666666666666,
+     "tvd_tol": 0.1381976597885342,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ship_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0029456643830225145
+     },
+     "ks": 0.030416666666666703,
+     "ks_baseline": 0.02958333333333335,
+     "ks_tol": 0.056276484356042246,
+     "stats": {
+      "mean": {
+       "spindle": "2023-12-28 07:29:46.705378560",
+       "impl": "2024-01-15 16:31:58.364159744"
+      },
+      "min": {
+       "spindle": "2022-01-01 04:10:20.080405504",
+       "impl": "2022-01-01 11:40:28.771627008"
+      },
+      "max": {
+       "spindle": "2025-12-29 01:30:32.246008576",
+       "impl": "2025-12-30 21:16:53.801821952"
+      },
+      "std": {
+       "spindle": 427.3602124967638,
+       "impl": 426.0590095956835,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 2400,
+      "impl": 2400
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0029456643830225145
+     },
+     "distinct": {
+      "spindle": 6,
+      "impl": 6,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Delivered",
+       "spindle": 0.5566666666666666,
+       "impl": 0.5504166666666667
+      },
+      {
+       "value": "In Transit",
+       "spindle": 0.19083333333333333,
+       "impl": 0.19333333333333333
+      },
+      {
+       "value": "Pending Pickup",
+       "spindle": 0.1075,
+       "impl": 0.10041666666666667
+      },
+      {
+       "value": "Delayed",
+       "spindle": 0.08083333333333333,
+       "impl": 0.08083333333333333
+      },
+      {
+       "value": "Returned",
+       "spindle": 0.034166666666666665,
+       "impl": 0.041666666666666664
+      },
+      {
+       "value": "Lost",
+       "spindle": 0.03,
+       "impl": 0.03333333333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.013333333333333322,
+     "tvd_baseline": 0.02583333333333333,
+     "tvd_tol": 0.1196826841204298,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "weight_kg": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0029456643830225145
+     },
+     "ks": 0.0279166666666667,
+     "ks_baseline": 0.03083333333333338,
+     "ks_tol": 0.056276484356042246,
+     "stats": {
+      "mean": {
+       "spindle": 476.88185015331237,
+       "impl": 467.46489103826974
+      },
+      "min": {
+       "spindle": 1.0183127036557886,
+       "impl": 0.5202214311102931
+      },
+      "max": {
+       "spindle": 27593.782076588468,
+       "impl": 22071.9790614866
+      },
+      "std": {
+       "spindle": 1322.0767847222307,
+       "impl": 1162.486538055247,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 2400,
+      "impl": 2400
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "delivery_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0029456643830225145
+     },
+     "ks": 0.030416666666666703,
+     "ks_baseline": 0.02958333333333335,
+     "ks_tol": 0.056276484356042246,
+     "stats": {
+      "mean": {
+       "spindle": "2024-01-02 07:29:46.705378560",
+       "impl": "2024-01-20 16:31:58.364159744"
+      },
+      "min": {
+       "spindle": "2022-01-06 04:10:20.080405504",
+       "impl": "2022-01-06 11:40:28.771627008"
+      },
+      "max": {
+       "spindle": "2026-01-03 01:30:32.246008576",
+       "impl": "2026-01-04 21:16:53.801821952"
+      },
+      "std": {
+       "spindle": 427.3602124967638,
+       "impl": 426.0590095956835,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 2400,
+      "impl": 2400
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "shipment_event": {
+   "rows": {
+    "spindle": 9600,
+    "impl": 9600
+   },
+   "columns_spindle": [
+    "event_id",
+    "shipment_id",
+    "event_type",
+    "event_timestamp",
+    "location",
+    "notes"
+   ],
+   "columns_impl": [
+    "event_id",
+    "shipment_id",
+    "event_type",
+    "event_timestamp",
+    "location",
+    "notes"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "event_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "shipment_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "event_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "event_timestamp": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "location": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "notes": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "event_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007365311997387874
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.028138242178021123,
+     "stats": {
+      "mean": {
+       "spindle": 4800.5,
+       "impl": 4800.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 9600.0,
+       "impl": 9600.0
+      },
+      "std": {
+       "spindle": 2771.2812770750406,
+       "impl": 2771.2812770750406,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 9600,
+      "impl": 9600
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "shipment_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007365311997387874
+     },
+     "ks": 0.01187500000000008,
+     "ks_baseline": 0.011041666666666616,
+     "ks_tol": 0.028138242178021123,
+     "stats": {
+      "mean": {
+       "spindle": 1198.9961458333332,
+       "impl": 1206.9744791666667
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 2400.0,
+       "impl": 2400.0
+      },
+      "std": {
+       "spindle": 696.2258241506933,
+       "impl": 696.8793735847358,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 2355,
+      "impl": 2342
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "event_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007365311997387874
+     },
+     "distinct": {
+      "spindle": 7,
+      "impl": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "In Transit",
+       "spindle": 0.2530208333333333,
+       "impl": 0.24458333333333335
+      },
+      {
+       "value": "Picked Up",
+       "spindle": 0.20166666666666666,
+       "impl": 0.19770833333333335
+      },
+      {
+       "value": "At Hub",
+       "spindle": 0.15114583333333334,
+       "impl": 0.14822916666666666
+      },
+      {
+       "value": "Out for Delivery",
+       "spindle": 0.14854166666666666,
+       "impl": 0.15395833333333334
+      },
+      {
+       "value": "Delivered",
+       "spindle": 0.1475,
+       "impl": 0.15572916666666667
+      },
+      {
+       "value": "Returned to Sender",
+       "spindle": 0.049791666666666665,
+       "impl": 0.049166666666666664
+      },
+      {
+       "value": "Exception",
+       "spindle": 0.04833333333333333,
+       "impl": 0.050625
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.01593749999999999,
+     "tvd_baseline": 0.014687500000000017,
+     "tvd_tol": 0.06463603682283015,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "event_timestamp": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007365311997387874
+     },
+     "ks": 0.00947916666666665,
+     "ks_baseline": 0.013854166666666667,
+     "ks_tol": 0.028138242178021123,
+     "stats": {
+      "mean": {
+       "spindle": "2023-12-29 20:32:20.801599488",
+       "impl": "2024-01-01 18:55:45.314553344"
+      },
+      "min": {
+       "spindle": "2022-01-01 00:36:07.257858304",
+       "impl": "2022-01-01 07:21:16.480743936"
+      },
+      "max": {
+       "spindle": "2025-12-30 21:41:54.354095360",
+       "impl": "2025-12-30 23:12:03.226935040"
+      },
+      "std": {
+       "spindle": 421.4690533256125,
+       "impl": 422.53834755873936,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 9600,
+      "impl": 9600
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "location": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007365311997387874
+     },
+     "distinct": {
+      "spindle": 99,
+      "impl": 99,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Sacramento",
+       "spindle": 0.012604166666666666,
+       "impl": 0.012291666666666666
+      },
+      {
+       "value": "Houston",
+       "spindle": 0.012291666666666666,
+       "impl": 0.010208333333333333
+      },
+      {
+       "value": "St. Petersburg",
+       "spindle": 0.0121875,
+       "impl": 0.012083333333333333
+      },
+      {
+       "value": "Lexington",
+       "spindle": 0.012083333333333333,
+       "impl": 0.009270833333333334
+      },
+      {
+       "value": "Henderson",
+       "spindle": 0.012083333333333333,
+       "impl": 0.011145833333333334
+      },
+      {
+       "value": "Milwaukee",
+       "spindle": 0.011875,
+       "impl": 0.010729166666666666
+      },
+      {
+       "value": "Chesapeake",
+       "spindle": 0.011770833333333333,
+       "impl": 0.0103125
+      },
+      {
+       "value": "Anchorage",
+       "spindle": 0.011770833333333333,
+       "impl": 0.009479166666666667
+      },
+      {
+       "value": "San Jose",
+       "spindle": 0.011770833333333333,
+       "impl": 0.010104166666666666
+      },
+      {
+       "value": "Baton Rouge",
+       "spindle": 0.0115625,
+       "impl": 0.009375
+      },
+      {
+       "value": "Jersey City",
+       "spindle": 0.009166666666666667,
+       "impl": 0.0128125
+      },
+      {
+       "value": "Scottsdale",
+       "spindle": 0.010625,
+       "impl": 0.011770833333333333
+      },
+      {
+       "value": "Norfolk",
+       "spindle": 0.010520833333333333,
+       "impl": 0.011666666666666667
+      },
+      {
+       "value": "New Orleans",
+       "spindle": 0.010520833333333333,
+       "impl": 0.0115625
+      },
+      {
+       "value": "Anaheim",
+       "spindle": 0.01,
+       "impl": 0.01125
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.04708333333333334,
+     "tvd_baseline": 0.06583333333333334,
+     "tvd_tol": 0.24307668054107157,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "notes": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.5927083333333333,
+      "impl": 0.5970833333333333,
+      "baseline_max_abs_diff": 0.018854166666666727,
+      "tol": 0.03545868817859233
+     },
+     "distinct": {
+      "spindle": 1716,
+      "impl": 1728,
+      "ratio": 1.006993006993007,
+      "baseline_max_ratio_dev": 0.015151515151515138
+     },
+     "top10": [
+      {
+       "value": "The performance department delivered all optimized requests promptly.",
+       "spindle": 0.0020460358056265983,
+       "impl": 0.0
+      },
+      {
+       "value": "The new quarterly initiative framework supports reliability objectives.",
+       "spindle": 0.0020460358056265983,
+       "impl": 0.0
+      },
+      {
+       "value": "The enhanced workflow platform enables seamless automation integration.",
+       "spindle": 0.0017902813299232737,
+       "impl": 0.0007755946225439503
+      },
+      {
+       "value": "Implementation of the streamlined inventory is scheduled for next quarter.",
+       "spindle": 0.0017902813299232737,
+       "impl": 0.0
+      },
+      {
+       "value": "Please review the technical system report and provide feedback.",
+       "spindle": 0.0017902813299232737,
+       "impl": 0.0007755946225439503
+      },
+      {
+       "value": "This plan requires preliminary compliance to be effective.",
+       "spindle": 0.0017902813299232737,
+       "impl": 0.0002585315408479835
+      },
+      {
+       "value": "Quality quality measures have been submitted across all departments.",
+       "spindle": 0.0017902813299232737,
+       "impl": 0.000517063081695967
+      },
+      {
+       "value": "Please review the quarterly system report and provide feedback.",
+       "spindle": 0.0017902813299232737,
+       "impl": 0.0
+      },
+      {
+       "value": "The essential report project exceeded security expectations.",
+       "spindle": 0.0017902813299232737,
+       "impl": 0.0
+      },
+      {
+       "value": "Quality workflow measures have been validated across all departments.",
+       "spindle": 0.0017902813299232737,
+       "impl": 0.001034126163391934
+      },
+      {
+       "value": "The review department validated all technical requests promptly.",
+       "spindle": 0.0002557544757033248,
+       "impl": 0.0025853154084798345
+      },
+      {
+       "value": "Our preliminary project strategy will improve acquisition significantly.",
+       "spindle": 0.001534526854219949,
+       "impl": 0.002326783867631851
+      },
+      {
+       "value": "We are committed to delivering automated system to all stakeholders.",
+       "spindle": 0.0,
+       "impl": 0.0018097207859358842
+      },
+      {
+       "value": "The critical budget initiative will drive profitability growth.",
+       "spindle": 0.0002557544757033248,
+       "impl": 0.0018097207859358842
+      },
+      {
+       "value": "The analysis shows estimated improvement in supply performance.",
+       "spindle": 0.0002557544757033248,
+       "impl": 0.0018097207859358842
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "distinct_ratio_tol": 0.022727272727272707,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "quality_inspection": {
+   "rows": {
+    "spindle": 720,
+    "impl": 720
+   },
+   "columns_spindle": [
+    "inspection_id",
+    "shipment_id",
+    "inspector_name",
+    "inspection_date",
+    "result",
+    "defect_count",
+    "notes"
+   ],
+   "columns_impl": [
+    "inspection_id",
+    "shipment_id",
+    "inspector_name",
+    "inspection_date",
+    "result",
+    "defect_count",
+    "notes"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "inspection_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "shipment_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "inspector_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "inspection_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "result": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "defect_count": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "notes": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "inspection_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00981410505819448
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.10274633312963642,
+     "stats": {
+      "mean": {
+       "spindle": 360.5,
+       "impl": 360.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 720.0,
+       "impl": 720.0
+      },
+      "std": {
+       "spindle": 207.84589643932512,
+       "impl": 207.84589643932512,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 720,
+      "impl": 720
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "shipment_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00981410505819448
+     },
+     "ks": 0.036111111111111094,
+     "ks_baseline": 0.04444444444444445,
+     "ks_tol": 0.10274633312963642,
+     "stats": {
+      "mean": {
+       "spindle": 1167.4541666666667,
+       "impl": 1158.736111111111
+      },
+      "min": {
+       "spindle": 4.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 2400.0,
+       "impl": 2398.0
+      },
+      "std": {
+       "spindle": 698.8492927737831,
+       "impl": 675.6565468132038,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 626,
+      "impl": 623
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "inspector_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00981410505819448
+     },
+     "distinct": {
+      "spindle": 720,
+      "impl": 720,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Keus Swansberg",
+       "spindle": 0.001388888888888889,
+       "impl": 0.0
+      },
+      {
+       "value": "Wiard Mccham",
+       "spindle": 0.001388888888888889,
+       "impl": 0.0
+      },
+      {
+       "value": "Moesa Kennedy",
+       "spindle": 0.001388888888888889,
+       "impl": 0.0
+      },
+      {
+       "value": "Diis Sheppdale",
+       "spindle": 0.001388888888888889,
+       "impl": 0.0
+      },
+      {
+       "value": "Feina Archford",
+       "spindle": 0.001388888888888889,
+       "impl": 0.0
+      },
+      {
+       "value": "Emdra Jordwell",
+       "spindle": 0.001388888888888889,
+       "impl": 0.0
+      },
+      {
+       "value": "Miane Vasridge",
+       "spindle": 0.001388888888888889,
+       "impl": 0.0
+      },
+      {
+       "value": "Toin Mortowood",
+       "spindle": 0.001388888888888889,
+       "impl": 0.0
+      },
+      {
+       "value": "Ivan Salinland",
+       "spindle": 0.001388888888888889,
+       "impl": 0.0
+      },
+      {
+       "value": "Koila DiConnell",
+       "spindle": 0.001388888888888889,
+       "impl": 0.0
+      },
+      {
+       "value": "Zaaya Hansstein",
+       "spindle": 0.0,
+       "impl": 0.001388888888888889
+      },
+      {
+       "value": "Ceee Villarreal",
+       "spindle": 0.0,
+       "impl": 0.001388888888888889
+      },
+      {
+       "value": "Ruar Graveberg",
+       "spindle": 0.0,
+       "impl": 0.001388888888888889
+      },
+      {
+       "value": "Iason Gentry",
+       "spindle": 0.0,
+       "impl": 0.001388888888888889
+      },
+      {
+       "value": "Wedra Silgate",
+       "spindle": 0.0,
+       "impl": 0.001388888888888889
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "FIRST_NAMES+' '+LAST_NAMES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "inspection_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00981410505819448
+     },
+     "ks": 0.07361111111111107,
+     "ks_baseline": 0.07222222222222224,
+     "ks_tol": 0.11033333333333337,
+     "stats": {
+      "mean": {
+       "spindle": "2024-01-18 16:01:39.615510016",
+       "impl": "2023-12-18 14:06:38.714435072"
+      },
+      "min": {
+       "spindle": "2022-01-01 15:40:15.618034176",
+       "impl": "2022-01-02 13:38:11.598105088"
+      },
+      "max": {
+       "spindle": "2025-12-22 17:50:08.987224832",
+       "impl": "2025-12-29 04:59:04.852828928"
+      },
+      "std": {
+       "spindle": 422.1689118046933,
+       "impl": 428.56533175448055,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 720,
+      "impl": 720
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "result": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00981410505819448
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Pass",
+       "spindle": 0.7583333333333333,
+       "impl": 0.7361111111111112
+      },
+      {
+       "value": "Fail",
+       "spindle": 0.09444444444444444,
+       "impl": 0.12222222222222222
+      },
+      {
+       "value": "Conditional Pass",
+       "spindle": 0.09305555555555556,
+       "impl": 0.09583333333333334
+      },
+      {
+       "value": "Pending Retest",
+       "spindle": 0.05416666666666667,
+       "impl": 0.04583333333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.03055555555555552,
+     "tvd_baseline": 0.030555555555555555,
+     "tvd_tol": 0.17841241161527713,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "defect_count": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00981410505819448
+     },
+     "ks": 0.06111111111111106,
+     "ks_baseline": 0.07777777777777772,
+     "ks_tol": 0.11866666666666659,
+     "stats": {
+      "mean": {
+       "spindle": 2.9881326395433008,
+       "impl": 2.5642252641721353
+      },
+      "min": {
+       "spindle": 0.0391275710273661,
+       "impl": 0.07509580422397247
+      },
+      "max": {
+       "spindle": 39.69770453538774,
+       "impl": 30.140713876826435
+      },
+      "std": {
+       "spindle": 4.231143363768896,
+       "impl": 3.0082001582044757,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 720,
+      "impl": 720
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "notes": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.4,
+      "impl": 0.40694444444444444,
+      "baseline_max_abs_diff": 0.033333333333333326,
+      "tol": 0.12909944487358055
+     },
+     "distinct": {
+      "spindle": 384,
+      "impl": 383,
+      "ratio": 0.9973958333333334,
+      "baseline_max_ratio_dev": 0.03385416666666674
+     },
+     "top10": [
+      {
+       "value": "Quality service measures have been implemented across all departments.",
+       "spindle": 0.006944444444444444,
+       "impl": 0.0
+      },
+      {
+       "value": "A comprehensive assessment plan was analyzed by the committee.",
+       "spindle": 0.006944444444444444,
+       "impl": 0.0
+      },
+      {
+       "value": "Regular schedule updates ensure secondary compliance with standards.",
+       "spindle": 0.004629629629629629,
+       "impl": 0.0
+      },
+      {
+       "value": "This margin requires estimated scalability to be effective.",
+       "spindle": 0.004629629629629629,
+       "impl": 0.00234192037470726
+      },
+      {
+       "value": "The primary report initiative will drive visibility growth.",
+       "spindle": 0.004629629629629629,
+       "impl": 0.00234192037470726
+      },
+      {
+       "value": "We are committed to delivering financial analysis to all stakeholders.",
+       "spindle": 0.004629629629629629,
+       "impl": 0.0
+      },
+      {
+       "value": "We need to streamlined the technical inventory before the deadline.",
+       "spindle": 0.004629629629629629,
+       "impl": 0.00468384074941452
+      },
+      {
+       "value": "The customized inventory was implemented by the scalability.",
+       "spindle": 0.004629629629629629,
+       "impl": 0.0
+      },
+      {
+       "value": "The technical deliverable platform enables seamless compliance integration.",
+       "spindle": 0.004629629629629629,
+       "impl": 0.0
+      },
+      {
+       "value": "The deliverable department distributed all projected requests promptly.",
+       "spindle": 0.004629629629629629,
+       "impl": 0.0
+      },
+      {
+       "value": "The milestone department evaluated all approved requests promptly.",
+       "spindle": 0.0,
+       "impl": 0.00702576112412178
+      },
+      {
+       "value": "Quality expense measures have been validated across all departments.",
+       "spindle": 0.0,
+       "impl": 0.00702576112412178
+      },
+      {
+       "value": "This resource requires automated growth to be effective.",
+       "spindle": 0.0,
+       "impl": 0.00702576112412178
+      },
+      {
+       "value": "Customer quality has been validated through our secondary program.",
+       "spindle": 0.0,
+       "impl": 0.00702576112412178
+      },
+      {
+       "value": "The comprehensive program was analyzed by the transparency.",
+       "spindle": 0.0023148148148148147,
+       "impl": 0.00468384074941452
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.8470053777430826,
+     "tvd_baseline": 0.8513075129761591,
+     "tvd_tol": 1.7480774889473267,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "demand_forecast": {
+   "rows": {
+    "spindle": 1800,
+    "impl": 1800
+   },
+   "columns_spindle": [
+    "forecast_id",
+    "material_id",
+    "forecast_date",
+    "forecast_quantity",
+    "confidence_level",
+    "forecast_method"
+   ],
+   "columns_impl": [
+    "forecast_id",
+    "material_id",
+    "forecast_date",
+    "forecast_quantity",
+    "confidence_level",
+    "forecast_method"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "forecast_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "material_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "forecast_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "forecast_quantity": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "confidence_level": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "forecast_method": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "forecast_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.003927279640823796
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0649824867840135,
+     "stats": {
+      "mean": {
+       "spindle": 900.5,
+       "impl": 900.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 1800.0,
+       "impl": 1800.0
+      },
+      "std": {
+       "spindle": 519.6151620831197,
+       "impl": 519.6151620831197,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 1800,
+      "impl": 1800
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "material_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.003927279640823796
+     },
+     "ks": 0.02944444444444444,
+     "ks_baseline": 0.02888888888888891,
+     "ks_tol": 0.0649824867840135,
+     "stats": {
+      "mean": {
+       "spindle": 151.36444444444444,
+       "impl": 153.69944444444445
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 300.0,
+       "impl": 300.0
+      },
+      "std": {
+       "spindle": 86.74559522741212,
+       "impl": 85.54605776826514,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 300,
+      "impl": 298
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "forecast_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.003927279640823796
+     },
+     "ks": 0.019444444444444486,
+     "ks_baseline": 0.023888888888888904,
+     "ks_tol": 0.0649824867840135,
+     "stats": {
+      "mean": {
+       "spindle": "2025-07-09 22:57:12.808978176",
+       "impl": "2025-07-12 19:48:07.826087424"
+      },
+      "min": {
+       "spindle": "2024-01-01 04:58:48.036483584",
+       "impl": "2024-01-01 11:47:14.480805120"
+      },
+      "max": {
+       "spindle": "2026-12-30 18:13:32.136762368",
+       "impl": "2026-12-29 18:42:10.244553984"
+      },
+      "std": {
+       "spindle": 315.30369860197266,
+       "impl": 316.22036926638043,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 1800,
+      "impl": 1800
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "forecast_quantity": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.003927279640823796
+     },
+     "ks": 0.024999999999999994,
+     "ks_baseline": 0.045555555555555544,
+     "ks_tol": 0.07033333333333332,
+     "stats": {
+      "mean": {
+       "spindle": 862.0640655872241,
+       "impl": 823.6848286652903
+      },
+      "min": {
+       "spindle": 6.774973390118497,
+       "impl": 2.6174136155010164
+      },
+      "max": {
+       "spindle": 16134.049020434979,
+       "impl": 16119.234722764291
+      },
+      "std": {
+       "spindle": 1434.3359262137856,
+       "impl": 1318.1514677693706,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 1800,
+      "impl": 1800
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "confidence_level": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.003927279640823796
+     },
+     "ks": 0.048888888888888926,
+     "ks_baseline": 0.05611111111111111,
+     "ks_tol": 0.08616666666666667,
+     "stats": {
+      "mean": {
+       "spindle": 0.7504479470980494,
+       "impl": 0.7389877754758671
+      },
+      "min": {
+       "spindle": 0.5008037213911499,
+       "impl": 0.5002349512044012
+      },
+      "max": {
+       "spindle": 0.9887813225110477,
+       "impl": 0.9896278827566012
+      },
+      "std": {
+       "spindle": 0.13962865685671483,
+       "impl": 0.1413873737329222,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 1800,
+      "impl": 1800
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "forecast_method": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.003927279640823796
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Moving Average",
+       "spindle": 0.29777777777777775,
+       "impl": 0.2861111111111111
+      },
+      {
+       "value": "Exponential Smoothing",
+       "spindle": 0.26,
+       "impl": 0.2538888888888889
+      },
+      {
+       "value": "ARIMA",
+       "spindle": 0.20666666666666667,
+       "impl": 0.19666666666666666
+      },
+      {
+       "value": "Machine Learning",
+       "spindle": 0.12944444444444445,
+       "impl": 0.16777777777777778
+      },
+      {
+       "value": "Manual",
+       "spindle": 0.10611111111111111,
+       "impl": 0.09555555555555556
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.03833333333333334,
+     "tvd_baseline": 0.031111111111111124,
+     "tvd_tol": 0.12615662610100803,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "spindle": [
+   "material",
+   "supplier",
+   "warehouse",
+   "demand_forecast",
+   "purchase_order",
+   "inventory",
+   "purchase_order_line",
+   "shipment",
+   "quality_inspection",
+   "shipment_event"
+  ],
+  "impl": [
+   "material",
+   "supplier",
+   "warehouse",
+   "demand_forecast",
+   "purchase_order",
+   "inventory",
+   "purchase_order_line",
+   "shipment",
+   "quality_inspection",
+   "shipment_event"
+  ]
+ },
+ "fk_integrity": {
+  "spindle": {
+   "purchase_order.supplier_id->supplier.supplier_id": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "purchase_order_line.po_id->purchase_order.po_id": {
+    "integrity": 1.0,
+    "n": 6000
+   },
+   "purchase_order_line.material_id->material.material_id": {
+    "integrity": 1.0,
+    "n": 6000
+   },
+   "inventory.warehouse_id->warehouse.warehouse_id": {
+    "integrity": 1.0,
+    "n": 900
+   },
+   "inventory.material_id->material.material_id": {
+    "integrity": 1.0,
+    "n": 900
+   },
+   "shipment.po_id->purchase_order.po_id": {
+    "integrity": 1.0,
+    "n": 2400
+   },
+   "shipment.warehouse_id->warehouse.warehouse_id": {
+    "integrity": 1.0,
+    "n": 2400
+   },
+   "shipment_event.shipment_id->shipment.shipment_id": {
+    "integrity": 1.0,
+    "n": 9600
+   },
+   "quality_inspection.shipment_id->shipment.shipment_id": {
+    "integrity": 1.0,
+    "n": 720
+   },
+   "demand_forecast.material_id->material.material_id": {
+    "integrity": 1.0,
+    "n": 1800
+   }
+  },
+  "impl": {
+   "purchase_order.supplier_id->supplier.supplier_id": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "purchase_order_line.po_id->purchase_order.po_id": {
+    "integrity": 1.0,
+    "n": 6000
+   },
+   "purchase_order_line.material_id->material.material_id": {
+    "integrity": 1.0,
+    "n": 6000
+   },
+   "inventory.warehouse_id->warehouse.warehouse_id": {
+    "integrity": 1.0,
+    "n": 900
+   },
+   "inventory.material_id->material.material_id": {
+    "integrity": 1.0,
+    "n": 900
+   },
+   "shipment.po_id->purchase_order.po_id": {
+    "integrity": 1.0,
+    "n": 2400
+   },
+   "shipment.warehouse_id->warehouse.warehouse_id": {
+    "integrity": 1.0,
+    "n": 2400
+   },
+   "shipment_event.shipment_id->shipment.shipment_id": {
+    "integrity": 1.0,
+    "n": 9600
+   },
+   "quality_inspection.shipment_id->shipment.shipment_id": {
+    "integrity": 1.0,
+    "n": 720
+   },
+   "demand_forecast.material_id->material.material_id": {
+    "integrity": 1.0,
+    "n": 1800
+   }
+  }
+ },
+ "fanout": {
+  "supplier->purchase_order.supplier_id": {
+   "spindle": {
+    "p50": 2.5,
+    "p90": 14.0,
+    "p99": 135.84999999999923,
+    "max": 487,
+    "mean": 10.0,
+    "zero_frac": 0.18
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 14.0,
+    "p99": 135.01999999999907,
+    "max": 523,
+    "mean": 10.0,
+    "zero_frac": 0.14
+   },
+   "ks_counts": 0.05500000000000005,
+   "ks_baseline_max": 0.06999999999999999,
+   "ks_tol": 0.19494746035204052,
+   "equivalent": true
+  },
+  "purchase_order->purchase_order_line.po_id": {
+   "spindle": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 8.0,
+    "max": 12,
+    "mean": 3.0,
+    "zero_frac": 0.0455
+   },
+   "impl": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 8.0,
+    "max": 10,
+    "mean": 3.0,
+    "zero_frac": 0.05
+   },
+   "ks_counts": 0.01100000000000001,
+   "ks_baseline_max": 0.016,
+   "ks_tol": 0.06164779987778185,
+   "equivalent": true
+  },
+  "material->purchase_order_line.material_id": {
+   "spindle": {
+    "p50": 6.0,
+    "p90": 28.200000000000045,
+    "p99": 260.2399999999989,
+    "max": 1209,
+    "mean": 20.0,
+    "zero_frac": 0.03333333333333333
+   },
+   "impl": {
+    "p50": 5.5,
+    "p90": 25.100000000000023,
+    "p99": 272.16999999999894,
+    "max": 1200,
+    "mean": 20.0,
+    "zero_frac": 0.03666666666666667
+   },
+   "ks_counts": 0.026666666666666672,
+   "ks_baseline_max": 0.053333333333333344,
+   "ks_tol": 0.15917393483798453,
+   "equivalent": true
+  },
+  "warehouse->inventory.warehouse_id": {
+   "spindle": {
+    "p50": 6.0,
+    "p90": 32.50000000000001,
+    "p99": 175.9999999999998,
+    "max": 225,
+    "mean": 18.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 7.5,
+    "p90": 30.40000000000002,
+    "p99": 160.76999999999975,
+    "max": 223,
+    "mean": 18.0,
+    "zero_frac": 0.04
+   },
+   "ks_counts": 0.12000000000000005,
+   "ks_baseline_max": 0.10000000000000003,
+   "ks_tol": 0.38989492070408105,
+   "equivalent": true
+  },
+  "material->inventory.material_id": {
+   "spindle": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 10,
+    "mean": 3.0,
+    "zero_frac": 0.04666666666666667
+   },
+   "impl": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 7.009999999999991,
+    "max": 9,
+    "mean": 3.0,
+    "zero_frac": 0.05
+   },
+   "ks_counts": 0.026666666666666672,
+   "ks_baseline_max": 0.039999999999999925,
+   "ks_tol": 0.15917393483798453,
+   "equivalent": true
+  },
+  "purchase_order->shipment.po_id": {
+   "spindle": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 4.0,
+    "max": 7,
+    "mean": 1.2,
+    "zero_frac": 0.299
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 5.0,
+    "max": 7,
+    "mean": 1.2,
+    "zero_frac": 0.3
+   },
+   "ks_counts": 0.009500000000000064,
+   "ks_baseline_max": 0.015000000000000013,
+   "ks_tol": 0.06164779987778185,
+   "equivalent": true
+  },
+  "warehouse->shipment.warehouse_id": {
+   "spindle": {
+    "p50": 18.0,
+    "p90": 95.10000000000002,
+    "p99": 451.41999999999933,
+    "max": 619,
+    "mean": 48.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 17.5,
+    "p90": 85.30000000000007,
+    "p99": 441.0399999999994,
+    "max": 590,
+    "mean": 48.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.08000000000000007,
+   "ks_baseline_max": 0.08000000000000007,
+   "ks_tol": 0.38989492070408105,
+   "equivalent": true
+  },
+  "shipment->shipment_event.shipment_id": {
+   "spindle": {
+    "p50": 4.0,
+    "p90": 7.0,
+    "p99": 9.0,
+    "max": 13,
+    "mean": 4.0,
+    "zero_frac": 0.01875
+   },
+   "impl": {
+    "p50": 4.0,
+    "p90": 7.0,
+    "p99": 9.0,
+    "max": 12,
+    "mean": 4.0,
+    "zero_frac": 0.024166666666666666
+   },
+   "ks_counts": 0.011249999999999982,
+   "ks_baseline_max": 0.01958333333333334,
+   "ks_tol": 0.056276484356042246,
+   "equivalent": true
+  },
+  "shipment->quality_inspection.shipment_id": {
+   "spindle": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 3,
+    "mean": 0.3,
+    "zero_frac": 0.7391666666666666
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 3,
+    "mean": 0.3,
+    "zero_frac": 0.7404166666666666
+   },
+   "ks_counts": 0.0012499999999999734,
+   "ks_baseline_max": 0.0050000000000000044,
+   "ks_tol": 0.056276484356042246,
+   "equivalent": true
+  },
+  "material->demand_forecast.material_id": {
+   "spindle": {
+    "p50": 6.0,
+    "p90": 9.0,
+    "p99": 13.0,
+    "max": 14,
+    "mean": 6.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 6.0,
+    "p90": 9.0,
+    "p99": 13.0,
+    "max": 16,
+    "mean": 6.0,
+    "zero_frac": 0.006666666666666667
+   },
+   "ks_counts": 0.02999999999999997,
+   "ks_baseline_max": 0.053333333333333344,
+   "ks_tol": 0.15917393483798453,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {
+  "warehouse.city+state+zip_code+lat+lng in us_zip_locations": {
+   "impl": 1.0,
+   "spindle": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  }
+ },
+ "strategy_semantics": {},
+ "business_rules": {
+  "spindle_BusinessRulesEngine_violations": {},
+  "spindle_on_spindle": {}
+ },
+ "spindle_fidelity_comparator": {
+  "overall_impl": 91.94507990778402,
+  "overall_baseline_spindle_vs_spindle": [
+   91.91291029062319,
+   91.78590352164704,
+   92.2003165161472,
+   91.63365722749224
+  ],
+  "tables": {
+   "demand_forecast": {
+    "impl": 97.58354148812715,
+    "baseline": [
+     98.23795613764656,
+     98.26124462400004,
+     98.0519112502595,
+     98.48057744366285
+    ],
+    "floor": 97.5519112502595,
+    "ok": true
+   },
+   "inventory": {
+    "impl": 98.25830244015603,
+    "baseline": [
+     97.18466977041089,
+     97.76337913872644,
+     97.38613956566276,
+     98.32757021806928
+    ],
+    "floor": 96.68466977041089,
+    "ok": true
+   },
+   "material": {
+    "impl": 96.5922447221484,
+    "baseline": [
+     95.8165225118664,
+     95.8146824252584,
+     96.59526723592982,
+     96.2093930586168
+    ],
+    "floor": 95.3146824252584,
+    "ok": true
+   },
+   "purchase_order": {
+    "impl": 98.16106354201514,
+    "baseline": [
+     98.59231163612428,
+     98.86441363664815,
+     98.62277524103425,
+     98.79010487232316
+    ],
+    "floor": 98.09231163612428,
+    "ok": true
+   },
+   "purchase_order_line": {
+    "impl": 97.65252992912158,
+    "baseline": [
+     99.02158444697719,
+     98.54683807664551,
+     98.41856870789516,
+     98.16611253877491
+    ],
+    "floor": 97.66611253877491,
+    "ok": false
+   },
+   "quality_inspection": {
+    "impl": 82.22517135634334,
+    "baseline": [
+     82.13137471074843,
+     82.43425807428208,
+     82.76217067474236,
+     82.4112222655397
+    ],
+    "floor": 81.63137471074843,
+    "ok": true
+   },
+   "shipment": {
+    "impl": 98.02526314403437,
+    "baseline": [
+     98.1565557371186,
+     96.57427329396022,
+     98.85734743132973,
+     99.4258621492126
+    ],
+    "floor": 96.07427329396022,
+    "ok": true
+   },
+   "shipment_event": {
+    "impl": 89.08178092606919,
+    "baseline": [
+     89.06090903806923,
+     89.09540631828717,
+     89.03531334265439,
+     89.06523969190732
+    ],
+    "floor": 88.53531334265439,
+    "ok": true
+   },
+   "supplier": {
+    "impl": 77.05555989644,
+    "baseline": [
+     76.2852979168597,
+     75.71937799756884,
+     76.56854615156838,
+     76.17552606726844
+    ],
+    "floor": 75.21937799756884,
+    "ok": true
+   },
+   "warehouse": {
+    "impl": 84.81534163338509,
+    "baseline": [
+     84.64192100041069,
+     84.7851616310936,
+     85.70512556039553,
+     79.28496396954719
+    ],
+    "floor": 78.78496396954719,
+    "ok": true
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 76,
+  "columns_equivalent": 76,
+  "flagged": [
+   "(h) fidelity purchase_order_line: 97.65 < floor 97.67"
+  ],
+  "passed": false,
+  "seconds": 26.63253402709961
+ }
+}

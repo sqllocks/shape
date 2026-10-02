@@ -1,0 +1,16 @@
+insurance: sum of column times (warm, 1 thread) 32.0 ms
+  3.69 ms premium_payment.status [weighted_enum ] n=65536
+  3.66 ms premium_payment.amount [distribution log_normal] n=65536
+  3.31 ms premium_payment.payment_method [weighted_enum ] n=65536
+  1.43 ms policyholder.email [faker email] n=10000
+  1.37 ms coverage.coverage_premium [distribution log_normal] n=45000
+  1.32 ms premium_payment.policy_id [foreign_key ] n=65536
+  1.24 ms coverage.coverage_type [weighted_enum ] n=45000
+  1.18 ms policyholder.phone [faker phone_number] n=10000
+  1.18 ms premium_payment.payment_date [temporal ] n=65536
+  1.03 ms coverage.coverage_limit [distribution log_normal] n=45000
+  0.89 ms policy.premium_amount [distribution log_normal] n=18000
+  0.68 ms policyholder.address_city [record_sample ] n=10000
+  0.67 ms policyholder.credit_score [distribution normal] n=10000
+  0.63 ms policy.policy_number [pattern ] n=18000
+{'weighted_enum': 10.5, 'distribution': 8.9, 'faker': 4.2, 'foreign_key': 2.6, 'temporal': 1.9, 'record_field': 1.0, 'pattern': 0.9, 'record_sample': 0.7, 'sequence': 0.6, 'reference_data': 0.5, 'derived': 0.2}

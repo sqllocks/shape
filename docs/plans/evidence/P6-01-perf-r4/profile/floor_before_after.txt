@@ -1,0 +1,18 @@
+== round-3 tree
+hr             floor   load_domain   6.8  Engine()  1.6  write_engine(generate+write)   24.0  total   32.4 ms
+hr             medium  load_domain   6.3  Engine()  1.5  write_engine(generate+write)   58.8  total   66.7 ms
+manufacturing  floor   load_domain   6.3  Engine()  1.6  write_engine(generate+write)   19.3  total   27.1 ms
+manufacturing  medium  load_domain   6.3  Engine()  1.6  write_engine(generate+write)   43.5  total   51.4 ms
+real_estate    floor   load_domain   8.5  Engine()  1.8  write_engine(generate+write)   25.4  total   35.6 ms
+real_estate    medium  load_domain   9.1  Engine()  1.7  write_engine(generate+write)   81.1  total   91.9 ms
+insurance      floor   load_domain   8.4  Engine()  1.7  write_engine(generate+write)   22.9  total   32.9 ms
+insurance      medium  load_domain   8.3  Engine()  1.6  write_engine(generate+write)   83.8  total   93.8 ms
+== final tree
+hr             floor   load_domain   2.5  Engine()  0.5  write_engine(generate+write)   19.3  total   22.3 ms
+hr             medium  load_domain   2.7  Engine()  0.5  write_engine(generate+write)   48.4  total   51.6 ms
+manufacturing  floor   load_domain   2.7  Engine()  0.4  write_engine(generate+write)   19.8  total   22.8 ms
+manufacturing  medium  load_domain   2.5  Engine()  0.5  write_engine(generate+write)   39.0  total   42.0 ms
+real_estate    floor   load_domain   3.3  Engine()  0.4  write_engine(generate+write)   20.9  total   24.7 ms
+real_estate    medium  load_domain   3.5  Engine()  0.4  write_engine(generate+write)   71.0  total   74.9 ms
+insurance      floor   load_domain   3.3  Engine()  0.4  write_engine(generate+write)   19.0  total   22.7 ms
+insurance      medium  load_domain   3.3  Engine()  0.5  write_engine(generate+write)   67.3  total   71.0 ms

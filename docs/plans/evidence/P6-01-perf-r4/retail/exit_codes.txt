@@ -1,0 +1,5 @@
+gen-in large before exit 0
+gen-in large after exit 0
+gen-cli before exit 0
+gen-cli after exit 0
+retail medium cli verify exit 0

@@ -1,0 +1,3691 @@
+{
+ "domain": "iot",
+ "scale": "medium",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "device_type": {
+   "rows": {
+    "spindle": 20,
+    "impl": 20
+   },
+   "columns_spindle": [
+    "type_id",
+    "type_name",
+    "manufacturer",
+    "category",
+    "protocol"
+   ],
+   "columns_impl": [
+    "type_id",
+    "type_name",
+    "manufacturer",
+    "category",
+    "protocol"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "type_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "type_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "manufacturer": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "category": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "protocol": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "type_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.6164779987778186,
+     "stats": {
+      "mean": {
+       "spindle": 10.5,
+       "impl": 10.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 20.0,
+       "impl": 20.0
+      },
+      "std": {
+       "spindle": 5.766281297335398,
+       "impl": 5.766281297335398,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 20,
+      "impl": 20
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "type_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "distinct": {
+      "spindle": 11,
+      "impl": 10,
+      "ratio": 0.9090909090909091,
+      "baseline_max_ratio_dev": 0.18181818181818188
+     },
+     "top10": [
+      {
+       "value": "Temperature Sensor Node",
+       "spindle": 0.2,
+       "impl": 0.05
+      },
+      {
+       "value": "Light Sensor",
+       "spindle": 0.1,
+       "impl": 0.15
+      },
+      {
+       "value": "Pressure Transmitter",
+       "spindle": 0.1,
+       "impl": 0.1
+      },
+      {
+       "value": "GPS Tracker",
+       "spindle": 0.1,
+       "impl": 0.0
+      },
+      {
+       "value": "Smart Power Meter",
+       "spindle": 0.1,
+       "impl": 0.15
+      },
+      {
+       "value": "Motion Detector",
+       "spindle": 0.1,
+       "impl": 0.0
+      },
+      {
+       "value": "Humidity Monitor",
+       "spindle": 0.1,
+       "impl": 0.05
+      },
+      {
+       "value": "Smart Thermostat",
+       "spindle": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Wind Speed Anemometer",
+       "spindle": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "Air Quality Monitor",
+       "spindle": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "Gas Detector",
+       "spindle": 0.0,
+       "impl": 0.15
+      },
+      {
+       "value": "Soil Moisture Sensor",
+       "spindle": 0.0,
+       "impl": 0.15
+      },
+      {
+       "value": "Industrial PLC Gateway",
+       "spindle": 0.0,
+       "impl": 0.1
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.5000000000000001,
+     "tvd_baseline": 0.6,
+     "tvd_tol": 1.7751810818109592,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "manufacturer": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "distinct": {
+      "spindle": 20,
+      "impl": 20,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.050000000000000044
+     },
+     "top10": [
+      {
+       "value": "Spartan Analytics",
+       "spindle": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Grand Node",
+       "spindle": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Spectrum Data Ventures",
+       "spindle": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Holloway Industries",
+       "spindle": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Barbfield Technologies",
+       "spindle": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Rosashire Networks",
+       "spindle": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Harbor Wind International",
+       "spindle": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Royal Stream Technologies",
+       "spindle": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Sky Wave Co",
+       "spindle": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Freeland Inc",
+       "spindle": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Epic Technologies",
+       "spindle": 0.0,
+       "impl": 0.05
+      },
+      {
+       "value": "Villawell Consulting",
+       "spindle": 0.0,
+       "impl": 0.05
+      },
+      {
+       "value": "Global LLC",
+       "spindle": 0.0,
+       "impl": 0.05
+      },
+      {
+       "value": "Platinum Solutions",
+       "spindle": 0.0,
+       "impl": 0.05
+      },
+      {
+       "value": "Hurley Holdings",
+       "spindle": 0.0,
+       "impl": 0.05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 1.0,
+     "tvd_baseline": 1.0,
+     "tvd_tol": 2.3936536824085963,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "category": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.19999999999999996
+     },
+     "top10": [
+      {
+       "value": "Industrial",
+       "spindle": 0.35,
+       "impl": 0.2
+      },
+      {
+       "value": "Consumer",
+       "spindle": 0.3,
+       "impl": 0.25
+      },
+      {
+       "value": "Medical",
+       "spindle": 0.15,
+       "impl": 0.1
+      },
+      {
+       "value": "Automotive",
+       "spindle": 0.1,
+       "impl": 0.2
+      },
+      {
+       "value": "Smart Home",
+       "spindle": 0.1,
+       "impl": 0.25
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.24999999999999994,
+     "tvd_baseline": 0.35,
+     "tvd_tol": 1.1968268412042982,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "protocol": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 4,
+      "ratio": 0.8,
+      "baseline_max_ratio_dev": 0.19999999999999996
+     },
+     "top10": [
+      {
+       "value": "MQTT",
+       "spindle": 0.45,
+       "impl": 0.4
+      },
+      {
+       "value": "AMQP",
+       "spindle": 0.2,
+       "impl": 0.15
+      },
+      {
+       "value": "HTTP",
+       "spindle": 0.2,
+       "impl": 0.4
+      },
+      {
+       "value": "Modbus",
+       "spindle": 0.1,
+       "impl": 0.0
+      },
+      {
+       "value": "CoAP",
+       "spindle": 0.05,
+       "impl": 0.05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.2,
+     "tvd_baseline": 0.39999999999999997,
+     "tvd_tol": 1.1968268412042982,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "location": {
+   "rows": {
+    "spindle": 100,
+    "impl": 100
+   },
+   "columns_spindle": [
+    "location_id",
+    "location_name",
+    "facility_type",
+    "city",
+    "state",
+    "zip_code",
+    "lat",
+    "lng"
+   ],
+   "columns_impl": [
+    "location_id",
+    "location_name",
+    "facility_type",
+    "city",
+    "state",
+    "zip_code",
+    "lat",
+    "lng"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "location_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "location_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "facility_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "city": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "state": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "zip_code": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "lat": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "lng": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "location_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 50.5,
+       "impl": 50.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "spindle": 28.86607004772212,
+       "impl": 28.86607004772212,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "location_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "LOC-0001",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0002",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0003",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0004",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0005",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0006",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0007",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0008",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0009",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0010",
+       "spindle": 0.01,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "LOC-{seq:4}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "facility_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Factory",
+       "spindle": 0.27,
+       "impl": 0.32
+      },
+      {
+       "value": "Office",
+       "spindle": 0.23,
+       "impl": 0.17
+      },
+      {
+       "value": "Residential",
+       "spindle": 0.19,
+       "impl": 0.11
+      },
+      {
+       "value": "Warehouse",
+       "spindle": 0.19,
+       "impl": 0.24
+      },
+      {
+       "value": "Field",
+       "spindle": 0.12,
+       "impl": 0.16
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.13999999999999999,
+     "tvd_baseline": 0.10000000000000002,
+     "tvd_tol": 0.5352372348458314,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "city": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 96,
+      "impl": 99,
+      "ratio": 1.03125,
+      "baseline_max_ratio_dev": 0.04166666666666674
+     },
+     "top10": [
+      {
+       "value": "Conrad",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Pittsburgh",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Chicago",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Columbia",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Canada",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Birmingham",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "River Falls",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Blanket",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Brookville",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Evansville",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Rich Square",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "Cresson",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Brady",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "El Sobrante",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Meridian",
+       "spindle": 0.0,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.9699999999999999,
+     "tvd_baseline": 0.9799999999999999,
+     "tvd_tol": 2.345292057134016,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "state": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 39,
+      "impl": 41,
+      "ratio": 1.0512820512820513,
+      "baseline_max_ratio_dev": 0.15384615384615385
+     },
+     "top10": [
+      {
+       "value": "TX",
+       "spindle": 0.09,
+       "impl": 0.08
+      },
+      {
+       "value": "NY",
+       "spindle": 0.09,
+       "impl": 0.04
+      },
+      {
+       "value": "PA",
+       "spindle": 0.07,
+       "impl": 0.09
+      },
+      {
+       "value": "KY",
+       "spindle": 0.05,
+       "impl": 0.02
+      },
+      {
+       "value": "IL",
+       "spindle": 0.05,
+       "impl": 0.01
+      },
+      {
+       "value": "MI",
+       "spindle": 0.05,
+       "impl": 0.02
+      },
+      {
+       "value": "CA",
+       "spindle": 0.04,
+       "impl": 0.09
+      },
+      {
+       "value": "MN",
+       "spindle": 0.04,
+       "impl": 0.04
+      },
+      {
+       "value": "AL",
+       "spindle": 0.03,
+       "impl": 0.02
+      },
+      {
+       "value": "IA",
+       "spindle": 0.03,
+       "impl": 0.02
+      },
+      {
+       "value": "GA",
+       "spindle": 0.01,
+       "impl": 0.04
+      },
+      {
+       "value": "VA",
+       "spindle": 0.0,
+       "impl": 0.03
+      },
+      {
+       "value": "MO",
+       "spindle": 0.01,
+       "impl": 0.03
+      },
+      {
+       "value": "SC",
+       "spindle": 0.0,
+       "impl": 0.03
+      },
+      {
+       "value": "OH",
+       "spindle": 0.01,
+       "impl": 0.03
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.33,
+     "tvd_baseline": 0.42000000000000004,
+     "tvd_tol": 1.494836245550064,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "zip_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 99,
+      "ratio": 0.99,
+      "baseline_max_ratio_dev": 0.010000000000000009
+     },
+     "top10": [
+      {
+       "value": "41519",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "35283",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "36476",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "50621",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "76432",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "47012",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "47737",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "61470",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "93606",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "72260",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "27869",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "76035",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "69123",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "94803",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "76665",
+       "spindle": 0.0,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.9999999999999998,
+     "tvd_baseline": 0.9999999999999998,
+     "tvd_tol": 2.3936536824085963,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lat": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.19,
+     "ks_baseline": 0.19000000000000006,
+     "ks_tol": 0.2870000000000001,
+     "stats": {
+      "mean": {
+       "spindle": 39.108363,
+       "impl": 38.702715
+      },
+      "min": {
+       "spindle": 24.7234,
+       "impl": 30.7126
+      },
+      "max": {
+       "spindle": 48.7722,
+       "impl": 61.2181
+      },
+      "std": {
+       "spindle": 5.082962890532549,
+       "impl": 4.84087341535337,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 99
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lng": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.12,
+     "ks_baseline": 0.15999999999999998,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": -89.761774,
+       "impl": -92.409983
+      },
+      "min": {
+       "spindle": -123.0445,
+       "impl": -149.9003
+      },
+      "max": {
+       "spindle": -70.6089,
+       "impl": -70.8243
+      },
+      "std": {
+       "spindle": 13.787030231283456,
+       "impl": 15.064162370348077,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 99
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "device": {
+   "rows": {
+    "spindle": 5000,
+    "impl": 5000
+   },
+   "columns_spindle": [
+    "device_id",
+    "device_type_id",
+    "location_id",
+    "serial_number",
+    "firmware_version",
+    "install_date",
+    "status",
+    "battery_level"
+   ],
+   "columns_impl": [
+    "device_id",
+    "device_type_id",
+    "location_id",
+    "serial_number",
+    "firmware_version",
+    "install_date",
+    "status",
+    "battery_level"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "device_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "device_type_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "location_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "serial_number": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "firmware_version": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "install_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "battery_level": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "device_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 2500.5,
+       "impl": 2500.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 1443.3756441065507,
+       "impl": 1443.3756441065507,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "device_type_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.009599999999999997,
+     "ks_baseline": 0.01859999999999995,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 4.5646,
+       "impl": 4.608
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 20.0,
+       "impl": 20.0
+      },
+      "std": {
+       "spindle": 4.7354225619262325,
+       "impl": 4.769395768857938,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 20,
+      "impl": 20
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "location_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.019199999999999995,
+     "ks_baseline": 0.015000000000000013,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 16.0172,
+       "impl": 16.6782
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "spindle": 22.609548959676307,
+       "impl": 23.065772147491614,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "serial_number": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "DEV-000001",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000002",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000003",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000004",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000005",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000006",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000007",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000008",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000009",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000010",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "DEV-{seq:6}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "firmware_version": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "v1.1.1",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v2.2.2",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v3.3.3",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v4.4.4",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v5.5.5",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v6.6.6",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v7.7.7",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v8.8.8",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v9.9.9",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v10.10.10",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "v{seq:1}.{seq:1}.{seq:1}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "install_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.010800000000000032,
+     "ks_baseline": 0.02200000000000002,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": "2022-10-03 05:35:15.971852800",
+       "impl": "2022-10-07 07:23:48.368129280"
+      },
+      "min": {
+       "spindle": "2020-01-01 11:55:28.400416512",
+       "impl": "2020-01-01 07:57:58.139566080"
+      },
+      "max": {
+       "spindle": "2025-06-29 04:00:29.906245632",
+       "impl": "2025-06-29 09:52:16.266063872"
+      },
+      "std": {
+       "spindle": 579.356908529774,
+       "impl": 581.7568262180146,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Active",
+       "spindle": 0.7238,
+       "impl": 0.724
+      },
+      {
+       "value": "Maintenance",
+       "spindle": 0.1072,
+       "impl": 0.0948
+      },
+      {
+       "value": "Inactive",
+       "spindle": 0.0938,
+       "impl": 0.1044
+      },
+      {
+       "value": "Decommissioned",
+       "spindle": 0.0752,
+       "impl": 0.0768
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.012399999999999994,
+     "tvd_baseline": 0.015600000000000017,
+     "tvd_tol": 0.06770275002573076,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "battery_level": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.028400000000000036,
+     "ks_baseline": 0.01980000000000004,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 49.50732799703237,
+       "impl": 50.462091088145705
+      },
+      "min": {
+       "spindle": 0.03726385868225712,
+       "impl": 0.007684456481560353
+      },
+      "max": {
+       "spindle": 99.98878333878277,
+       "impl": 99.99599634166934
+      },
+      "std": {
+       "spindle": 28.87696364867851,
+       "impl": 28.867224915451906,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "sensor": {
+   "rows": {
+    "spindle": 12500,
+    "impl": 12500
+   },
+   "columns_spindle": [
+    "sensor_id",
+    "device_id",
+    "sensor_type",
+    "unit_of_measure",
+    "min_range",
+    "max_range"
+   ],
+   "columns_impl": [
+    "sensor_id",
+    "device_id",
+    "sensor_type",
+    "unit_of_measure",
+    "min_range",
+    "max_range"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "sensor_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "device_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "sensor_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "unit_of_measure": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "min_range": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "max_range": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "sensor_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.024659119951112744,
+     "stats": {
+      "mean": {
+       "spindle": 6250.5,
+       "impl": 6250.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 12500.0,
+       "impl": 12500.0
+      },
+      "std": {
+       "spindle": 3608.439170888156,
+       "impl": 3608.439170888156,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 12500,
+      "impl": 12500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "device_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "ks": 0.007199999999999984,
+     "ks_baseline": 0.014399999999999968,
+     "ks_tol": 0.024659119951112744,
+     "stats": {
+      "mean": {
+       "spindle": 2501.38592,
+       "impl": 2501.31704
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 1449.9360828483968,
+       "impl": 1441.1891509047791,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4607,
+      "impl": 4597
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "sensor_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "distinct": {
+      "spindle": 8,
+      "impl": 8,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Temperature",
+       "spindle": 0.1844,
+       "impl": 0.17328
+      },
+      {
+       "value": "Humidity",
+       "spindle": 0.14824,
+       "impl": 0.1464
+      },
+      {
+       "value": "Pressure",
+       "spindle": 0.13832,
+       "impl": 0.14328
+      },
+      {
+       "value": "Vibration",
+       "spindle": 0.11952,
+       "impl": 0.12048
+      },
+      {
+       "value": "Proximity",
+       "spindle": 0.1128,
+       "impl": 0.11296
+      },
+      {
+       "value": "Flow",
+       "spindle": 0.09976,
+       "impl": 0.10208
+      },
+      {
+       "value": "Light",
+       "spindle": 0.09912,
+       "impl": 0.09832
+      },
+      {
+       "value": "Level",
+       "spindle": 0.09784,
+       "impl": 0.1032
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.013760000000000015,
+     "tvd_baseline": 0.012160000000000011,
+     "tvd_tol": 0.06055518052848384,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "unit_of_measure": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "distinct": {
+      "spindle": 8,
+      "impl": 8,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "C",
+       "spindle": 0.18224,
+       "impl": 0.18512
+      },
+      {
+       "value": "%RH",
+       "spindle": 0.15064,
+       "impl": 0.1452
+      },
+      {
+       "value": "Pa",
+       "spindle": 0.13744,
+       "impl": 0.14248
+      },
+      {
+       "value": "mm/s",
+       "spindle": 0.11768,
+       "impl": 0.1176
+      },
+      {
+       "value": "cm",
+       "spindle": 0.10928,
+       "impl": 0.10728
+      },
+      {
+       "value": "lux",
+       "spindle": 0.1028,
+       "impl": 0.10368
+      },
+      {
+       "value": "m",
+       "spindle": 0.10032,
+       "impl": 0.09832
+      },
+      {
+       "value": "L/min",
+       "spindle": 0.0996,
+       "impl": 0.10032
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.00952,
+     "tvd_baseline": 0.014079999999999988,
+     "tvd_tol": 0.06055518052848384,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "min_range": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "ks": 0.009199999999999986,
+     "ks_baseline": 0.012160000000000004,
+     "ks_tol": 0.024659119951112744,
+     "stats": {
+      "mean": {
+       "spindle": -25.051362289097767,
+       "impl": -25.000185958579948
+      },
+      "min": {
+       "spindle": -49.99863357607733,
+       "impl": -49.99112324609799
+      },
+      "max": {
+       "spindle": -0.003046664035693425,
+       "impl": -0.004489292416195667
+      },
+      "std": {
+       "spindle": 14.380685492335267,
+       "impl": 14.443848950465206,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 12500,
+      "impl": 12500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "max_range": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "ks": 0.006400000000000017,
+     "ks_baseline": 0.010720000000000007,
+     "ks_tol": 0.024659119951112744,
+     "stats": {
+      "mean": {
+       "spindle": 275.10407867233994,
+       "impl": 275.60230578305834
+      },
+      "min": {
+       "spindle": 50.03376050203027,
+       "impl": 50.02936114405875
+      },
+      "max": {
+       "spindle": 499.9717559826671,
+       "impl": 499.98836204659364
+      },
+      "std": {
+       "spindle": 129.70519458501326,
+       "impl": 130.60216470369085,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 12500,
+      "impl": 12500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "reading": {
+   "rows": {
+    "spindle": 250000,
+    "impl": 250000
+   },
+   "columns_spindle": [
+    "reading_id",
+    "sensor_id",
+    "reading_value",
+    "reading_timestamp",
+    "quality_flag"
+   ],
+   "columns_impl": [
+    "reading_id",
+    "sensor_id",
+    "reading_value",
+    "reading_timestamp",
+    "quality_flag"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "reading_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "sensor_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "reading_value": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "reading_timestamp": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "quality_flag": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "reading_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.828421467886284e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.005513946847600939,
+     "stats": {
+      "mean": {
+       "spindle": 125000.5,
+       "impl": 125000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 250000.0,
+       "impl": 250000.0
+      },
+      "std": {
+       "spindle": 72168.78364812587,
+       "impl": 72168.78364812587,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 250000,
+      "impl": 250000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "sensor_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.828421467886284e-05
+     },
+     "ks": 0.002711999999999992,
+     "ks_baseline": 0.0032599999999999296,
+     "ks_tol": 0.0068899999999998945,
+     "stats": {
+      "mean": {
+       "spindle": 803.398504,
+       "impl": 804.043208
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 12500.0,
+       "impl": 12500.0
+      },
+      "std": {
+       "spindle": 2031.044519678129,
+       "impl": 2030.0865997186104,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 11090,
+      "impl": 11078
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "reading_value": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.828421467886284e-05
+     },
+     "ks": 0.0020680000000000143,
+     "ks_baseline": 0.002980000000000038,
+     "ks_tol": 0.006470000000000057,
+     "stats": {
+      "mean": {
+       "spindle": 25.02926223830623,
+       "impl": 25.002155179734917
+      },
+      "min": {
+       "spindle": -40.78701900951678,
+       "impl": -42.76880490539088
+      },
+      "max": {
+       "spindle": 90.59907148066972,
+       "impl": 97.48247126599917
+      },
+      "std": {
+       "spindle": 15.000251541394483,
+       "impl": 15.011324488450304,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 250000,
+      "impl": 250000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "reading_timestamp": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.828421467886284e-05
+     },
+     "ks": 0.0019799999999999818,
+     "ks_baseline": 0.0030400000000000427,
+     "ks_tol": 0.006560000000000064,
+     "stats": {
+      "mean": {
+       "spindle": "2024-12-31 05:32:14.197387776",
+       "impl": "2024-12-31 02:14:06.103217152"
+      },
+      "min": {
+       "spindle": "2024-01-01 00:02:43.427641600",
+       "impl": "2024-01-01 00:04:15.085940992"
+      },
+      "max": {
+       "spindle": "2025-12-30 23:57:58.039930880",
+       "impl": "2025-12-30 23:59:38.401346048"
+      },
+      "std": {
+       "spindle": 210.9307469792181,
+       "impl": 210.59748253268583,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 250000,
+      "impl": 250000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "quality_flag": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.828421467886284e-05
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Good",
+       "spindle": 0.900588,
+       "impl": 0.900092
+      },
+      {
+       "value": "Suspect",
+       "spindle": 0.069232,
+       "impl": 0.069664
+      },
+      {
+       "value": "Bad",
+       "spindle": 0.03018,
+       "impl": 0.030244
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0004960000000000277,
+     "tvd_baseline": 0.001876000000000039,
+     "tvd_tol": 0.008291859587312052,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "alert": {
+   "rows": {
+    "spindle": 2500,
+    "impl": 2500
+   },
+   "columns_spindle": [
+    "alert_id",
+    "device_id",
+    "alert_type",
+    "severity",
+    "triggered_at",
+    "acknowledged",
+    "resolved_at"
+   ],
+   "columns_impl": [
+    "alert_id",
+    "device_id",
+    "alert_type",
+    "severity",
+    "triggered_at",
+    "acknowledged",
+    "resolved_at"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "alert_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "device_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "alert_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "severity": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "triggered_at": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "acknowledged": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "resolved_at": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "alert_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.05513946847600938,
+     "stats": {
+      "mean": {
+       "spindle": 1250.5,
+       "impl": 1250.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 2500.0,
+       "impl": 2500.0
+      },
+      "std": {
+       "spindle": 721.6877787520029,
+       "impl": 721.6877787520029,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 2500,
+      "impl": 2500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "device_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.012799999999999923,
+     "ks_baseline": 0.021199999999999997,
+     "ks_tol": 0.05513946847600938,
+     "stats": {
+      "mean": {
+       "spindle": 147.5832,
+       "impl": 162.5968
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 4975.0,
+       "impl": 4974.0
+      },
+      "std": {
+       "spindle": 528.0764526825259,
+       "impl": 564.8690558260029,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 424,
+      "impl": 434
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "alert_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Threshold",
+       "spindle": 0.2912,
+       "impl": 0.29
+      },
+      {
+       "value": "Anomaly",
+       "spindle": 0.2508,
+       "impl": 0.2572
+      },
+      {
+       "value": "Connectivity",
+       "spindle": 0.1956,
+       "impl": 0.1952
+      },
+      {
+       "value": "Battery",
+       "spindle": 0.158,
+       "impl": 0.152
+      },
+      {
+       "value": "Maintenance",
+       "spindle": 0.1044,
+       "impl": 0.1056
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.007599999999999989,
+     "tvd_baseline": 0.02519999999999998,
+     "tvd_tol": 0.10704744696916627,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "severity": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Medium",
+       "spindle": 0.41,
+       "impl": 0.4036
+      },
+      {
+       "value": "Low",
+       "spindle": 0.2928,
+       "impl": 0.3
+      },
+      {
+       "value": "High",
+       "spindle": 0.1984,
+       "impl": 0.2036
+      },
+      {
+       "value": "Critical",
+       "spindle": 0.0988,
+       "impl": 0.0928
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.01239999999999998,
+     "tvd_baseline": 0.021200000000000004,
+     "tvd_tol": 0.09574614729634384,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "triggered_at": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.04999999999999999,
+     "ks_baseline": 0.028800000000000048,
+     "ks_tol": 0.05513946847600938,
+     "stats": {
+      "mean": {
+       "spindle": "2024-12-23 06:50:36.615891712",
+       "impl": "2025-01-06 19:37:16.136448"
+      },
+      "min": {
+       "spindle": "2024-01-01 00:19:28.392210944",
+       "impl": "2024-01-01 03:57:41.329220096"
+      },
+      "max": {
+       "spindle": "2025-12-30 22:43:22.605386496",
+       "impl": "2025-12-30 21:36:18.137513984"
+      },
+      "std": {
+       "spindle": 210.22640361655746,
+       "impl": 209.31437661865675,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 2500,
+      "impl": 2500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "acknowledged": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "spindle": 0.7052,
+       "impl": 0.6984
+      },
+      {
+       "value": "false",
+       "spindle": 0.2948,
+       "impl": 0.3016
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0068000000000000005,
+     "tvd_baseline": 0.009600000000000025,
+     "tvd_tol": 0.06770275002573076,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "resolved_at": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.2576,
+      "impl": 0.2524,
+      "baseline_max_abs_diff": 0.012399999999999994,
+      "tol": 0.06184532965390353
+     },
+     "ks": 0.055869298998173444,
+     "ks_baseline": 0.044435155236372204,
+     "ks_tol": 0.06865273285455831,
+     "stats": {
+      "mean": {
+       "spindle": "2024-12-26 02:36:56.207655424",
+       "impl": "2025-01-14 02:14:20.457947904"
+      },
+      "min": {
+       "spindle": "2024-01-03 00:19:28.392210944",
+       "impl": "2024-01-02 20:47:21.083308032"
+      },
+      "max": {
+       "spindle": "2026-01-02 19:27:50.487693056",
+       "impl": "2026-01-05 19:35:22.955211008"
+      },
+      "std": {
+       "spindle": 209.48180685867047,
+       "impl": 209.01702552524074,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 1856,
+      "impl": 1869
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "maintenance_log": {
+   "rows": {
+    "spindle": 7500,
+    "impl": 7500
+   },
+   "columns_spindle": [
+    "log_id",
+    "device_id",
+    "maintenance_type",
+    "performed_date",
+    "performed_by",
+    "notes"
+   ],
+   "columns_impl": [
+    "log_id",
+    "device_id",
+    "maintenance_type",
+    "performed_date",
+    "performed_by",
+    "notes"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "log_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "device_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "maintenance_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "performed_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "performed_by": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "notes": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "log_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0009427461855506871
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0318347869675969,
+     "stats": {
+      "mean": {
+       "spindle": 3750.5,
+       "impl": 3750.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 7500.0,
+       "impl": 7500.0
+      },
+      "std": {
+       "spindle": 2165.0634902160878,
+       "impl": 2165.0634902160878,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 7500,
+      "impl": 7500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "device_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0009427461855506871
+     },
+     "ks": 0.021466666666666634,
+     "ks_baseline": 0.025466666666666637,
+     "ks_tol": 0.04019999999999996,
+     "stats": {
+      "mean": {
+       "spindle": 2537.1512,
+       "impl": 2487.8750666666665
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 1455.479155308849,
+       "impl": 1456.0836467702197,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 3866,
+      "impl": 3883
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "maintenance_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0009427461855506871
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Preventive",
+       "spindle": 0.3470666666666667,
+       "impl": 0.3484
+      },
+      {
+       "value": "Corrective",
+       "spindle": 0.2517333333333333,
+       "impl": 0.24666666666666667
+      },
+      {
+       "value": "Calibration",
+       "spindle": 0.20813333333333334,
+       "impl": 0.20186666666666667
+      },
+      {
+       "value": "Firmware Update",
+       "spindle": 0.19306666666666666,
+       "impl": 0.20306666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.011333333333333306,
+     "tvd_baseline": 0.01626666666666668,
+     "tvd_tol": 0.05527906391541368,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "performed_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0009427461855506871
+     },
+     "ks": 0.011733333333333346,
+     "ks_baseline": 0.020000000000000018,
+     "ks_tol": 0.03200000000000003,
+     "stats": {
+      "mean": {
+       "spindle": "2024-06-29 05:21:58.596046336",
+       "impl": "2024-07-02 23:33:19.442011392"
+      },
+      "min": {
+       "spindle": "2023-01-01 00:41:02.066784256",
+       "impl": "2023-01-01 03:15:52.137223936"
+      },
+      "max": {
+       "spindle": "2025-12-30 23:20:04.382393600",
+       "impl": "2025-12-30 22:35:30.687102976"
+      },
+      "std": {
+       "spindle": 318.5705119917312,
+       "impl": 315.94962966436793,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 7500,
+      "impl": 7500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "performed_by": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0009427461855506871
+     },
+     "distinct": {
+      "spindle": 7499,
+      "impl": 7498,
+      "ratio": 0.9998666488865182,
+      "baseline_max_ratio_dev": 0.0002667022269635666
+     },
+     "top10": [
+      {
+       "value": "Koisha Sheridge",
+       "spindle": 0.0002666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Saita Hebcroft",
+       "spindle": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Inila Harrwick",
+       "spindle": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Siard Foxwick",
+       "spindle": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Tiix Myersham",
+       "spindle": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Hiesa Gross",
+       "spindle": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Seth Mahoney",
+       "spindle": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Niene Librook",
+       "spindle": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Jadra Hess",
+       "spindle": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Teas Stokes",
+       "spindle": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Alfred Huanridge",
+       "spindle": 0.0,
+       "impl": 0.0002666666666666667
+      },
+      {
+       "value": "Neus Stevewick",
+       "spindle": 0.0,
+       "impl": 0.0002666666666666667
+      },
+      {
+       "value": "Edson Tanner",
+       "spindle": 0.0,
+       "impl": 0.00013333333333333334
+      },
+      {
+       "value": "Chisha Pottsland",
+       "spindle": 0.0,
+       "impl": 0.00013333333333333334
+      },
+      {
+       "value": "Soan Mcdonton",
+       "spindle": 0.0,
+       "impl": 0.00013333333333333334
+      }
+     ],
+     "vocab_overlap": 0.0006666666666666666,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "FIRST_NAMES+' '+LAST_NAMES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "notes": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.30093333333333333,
+      "impl": 0.29706666666666665,
+      "baseline_max_abs_diff": 0.01093333333333335,
+      "tol": 0.037449740739843335
+     },
+     "distinct": {
+      "spindle": 1851,
+      "impl": 1858,
+      "ratio": 1.003781739600216,
+      "baseline_max_ratio_dev": 0.012425715829281536
+     },
+     "top10": [
+      {
+       "value": "The automated program initiative will drive efficiency growth.",
+       "spindle": 0.0019073049780659929,
+       "impl": 0.00037936267071320183
+      },
+      {
+       "value": "Regular assessment updates ensure standardized compliance with standards.",
+       "spindle": 0.0019073049780659929,
+       "impl": 0.00037936267071320183
+      },
+      {
+       "value": "Customer inventory has been restructured through our preliminary program.",
+       "spindle": 0.0017165744802593935,
+       "impl": 0.00037936267071320183
+      },
+      {
+       "value": "Customer report has been distributed through our primary program.",
+       "spindle": 0.0015258439824527943,
+       "impl": 0.0007587253414264037
+      },
+      {
+       "value": "The projected system platform enables seamless security integration.",
+       "spindle": 0.0015258439824527943,
+       "impl": 0.00018968133535660092
+      },
+      {
+       "value": "The sustainable resource platform enables seamless productivity integration.",
+       "spindle": 0.0015258439824527943,
+       "impl": 0.0009484066767830046
+      },
+      {
+       "value": "The analysis shows annual improvement in compliance performance.",
+       "spindle": 0.0015258439824527943,
+       "impl": 0.0
+      },
+      {
+       "value": "This demand requires enhanced scalability to be effective.",
+       "spindle": 0.0015258439824527943,
+       "impl": 0.00037936267071320183
+      },
+      {
+       "value": "A comprehensive framework plan was approved by the committee.",
+       "spindle": 0.0015258439824527943,
+       "impl": 0.0007587253414264037
+      },
+      {
+       "value": "Our workflow team delivered innovative integrated solutions daily.",
+       "spindle": 0.0013351134846461949,
+       "impl": 0.0009484066767830046
+      },
+      {
+       "value": "The analysis shows pending improvement in process performance.",
+       "spindle": 0.0005721914934197979,
+       "impl": 0.0018968133535660092
+      },
+      {
+       "value": "The assessment department submitted all automated requests promptly.",
+       "spindle": 0.0005721914934197979,
+       "impl": 0.0017071320182094083
+      },
+      {
+       "value": "A comprehensive inventory plan was submitted by the committee.",
+       "spindle": 0.0005721914934197979,
+       "impl": 0.0017071320182094083
+      },
+      {
+       "value": "The analysis shows integrated improvement in revenue performance.",
+       "spindle": 0.0009536524890329964,
+       "impl": 0.0017071320182094083
+      },
+      {
+       "value": "Regular report updates ensure quarterly compliance with standards.",
+       "spindle": 0.00038146099561319857,
+       "impl": 0.0015174506828528073
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "command": {
+   "rows": {
+    "spindle": 15000,
+    "impl": 15000
+   },
+   "columns_spindle": [
+    "command_id",
+    "device_id",
+    "command_type",
+    "issued_at",
+    "status",
+    "issued_by"
+   ],
+   "columns_impl": [
+    "command_id",
+    "device_id",
+    "command_type",
+    "issued_at",
+    "status",
+    "issued_by"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "command_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "device_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "command_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "issued_at": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "issued_by": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "command_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.022510593742416898,
+     "stats": {
+      "mean": {
+       "spindle": 7500.5,
+       "impl": 7500.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 15000.0,
+       "impl": 15000.0
+      },
+      "std": {
+       "spindle": 4330.127009299689,
+       "impl": 4330.127009299689,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 15000,
+      "impl": 15000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "device_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.009333333333333305,
+     "ks_baseline": 0.009133333333333327,
+     "ks_tol": 0.022510593742416898,
+     "stats": {
+      "mean": {
+       "spindle": 2497.002933333333,
+       "impl": 2511.4778666666666
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 1445.0335460897538,
+       "impl": 1447.73551780362,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4760,
+      "impl": 4753
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "command_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Configure",
+       "spindle": 0.25366666666666665,
+       "impl": 0.25666666666666665
+      },
+      {
+       "value": "Update",
+       "spindle": 0.20333333333333334,
+       "impl": 0.20013333333333333
+      },
+      {
+       "value": "Reboot",
+       "spindle": 0.1982,
+       "impl": 0.19833333333333333
+      },
+      {
+       "value": "Calibrate",
+       "spindle": 0.1974,
+       "impl": 0.19833333333333333
+      },
+      {
+       "value": "Reset",
+       "spindle": 0.1474,
+       "impl": 0.14653333333333332
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.004066666666666691,
+     "tvd_baseline": 0.014133333333333331,
+     "tvd_tol": 0.043701937223683165,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "issued_at": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.01100000000000001,
+     "ks_baseline": 0.010600000000000054,
+     "ks_tol": 0.022510593742416898,
+     "stats": {
+      "mean": {
+       "spindle": "2025-01-01 10:37:20.582511360",
+       "impl": "2024-12-30 12:11:29.980819968"
+      },
+      "min": {
+       "spindle": "2024-01-01 00:22:50.176340736",
+       "impl": "2024-01-01 00:11:26.960788992"
+      },
+      "max": {
+       "spindle": "2025-12-30 20:18:06.702812416",
+       "impl": "2025-12-30 22:45:32.288797952"
+      },
+      "std": {
+       "spindle": 210.94414265208843,
+       "impl": 210.7713994004015,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 15000,
+      "impl": 15000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Executed",
+       "spindle": 0.5455333333333333,
+       "impl": 0.5510666666666667
+      },
+      {
+       "value": "Acknowledged",
+       "spindle": 0.2064,
+       "impl": 0.1994
+      },
+      {
+       "value": "Sent",
+       "spindle": 0.14746666666666666,
+       "impl": 0.15106666666666665
+      },
+      {
+       "value": "Failed",
+       "spindle": 0.1006,
+       "impl": 0.09846666666666666
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.009133333333333361,
+     "tvd_baseline": 0.013133333333333372,
+     "tvd_tol": 0.039088200952233594,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "issued_by": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "distinct": {
+      "spindle": 14998,
+      "impl": 14996,
+      "ratio": 0.9998666488865182,
+      "baseline_max_ratio_dev": 0.00033337778370445825
+     },
+     "top10": [
+      {
+       "value": "Miane Newmastein",
+       "spindle": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Ryan Litson",
+       "spindle": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Pierce Lyoman",
+       "spindle": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Caita DelMillan",
+       "spindle": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Reginald Wadewick",
+       "spindle": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Riane Yorkcroft",
+       "spindle": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Aaliyah Lozwood",
+       "spindle": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Elena Carlsgate",
+       "spindle": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Siey Boonecroft",
+       "spindle": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Ilron Wheelford",
+       "spindle": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Jein Aguway",
+       "spindle": 0.0,
+       "impl": 0.00013333333333333334
+      },
+      {
+       "value": "Wedra Haney",
+       "spindle": 0.0,
+       "impl": 0.00013333333333333334
+      },
+      {
+       "value": "Kodra Bargate",
+       "spindle": 0.0,
+       "impl": 0.00013333333333333334
+      },
+      {
+       "value": "Hooa Morsbrook",
+       "spindle": 0.0,
+       "impl": 0.00013333333333333334
+      },
+      {
+       "value": "Rinor Reidsen",
+       "spindle": 0.0,
+       "impl": 6.666666666666667e-05
+      }
+     ],
+     "vocab_overlap": 0.00046666666666666666,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "FIRST_NAMES+' '+LAST_NAMES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "spindle": [
+   "device_type",
+   "location",
+   "device",
+   "alert",
+   "command",
+   "maintenance_log",
+   "sensor",
+   "reading"
+  ],
+  "impl": [
+   "device_type",
+   "location",
+   "device",
+   "alert",
+   "command",
+   "maintenance_log",
+   "sensor",
+   "reading"
+  ]
+ },
+ "fk_integrity": {
+  "spindle": {
+   "device.device_type_id->device_type.type_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "device.location_id->location.location_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "sensor.device_id->device.device_id": {
+    "integrity": 1.0,
+    "n": 12500
+   },
+   "reading.sensor_id->sensor.sensor_id": {
+    "integrity": 1.0,
+    "n": 250000
+   },
+   "alert.device_id->device.device_id": {
+    "integrity": 1.0,
+    "n": 2500
+   },
+   "maintenance_log.device_id->device.device_id": {
+    "integrity": 1.0,
+    "n": 7500
+   },
+   "command.device_id->device.device_id": {
+    "integrity": 1.0,
+    "n": 15000
+   }
+  },
+  "impl": {
+   "device.device_type_id->device_type.type_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "device.location_id->location.location_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "sensor.device_id->device.device_id": {
+    "integrity": 1.0,
+    "n": 12500
+   },
+   "reading.sensor_id->sensor.sensor_id": {
+    "integrity": 1.0,
+    "n": 250000
+   },
+   "alert.device_id->device.device_id": {
+    "integrity": 1.0,
+    "n": 2500
+   },
+   "maintenance_log.device_id->device.device_id": {
+    "integrity": 1.0,
+    "n": 7500
+   },
+   "command.device_id->device.device_id": {
+    "integrity": 1.0,
+    "n": 15000
+   }
+  }
+ },
+ "fanout": {
+  "device_type->device.device_type_id": {
+   "spindle": {
+    "p50": 93.5,
+    "p90": 515.9000000000004,
+    "p99": 1571.4199999999987,
+    "max": 1758,
+    "mean": 250.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 98.0,
+    "p90": 529.1000000000005,
+    "p99": 1538.8099999999988,
+    "max": 1710,
+    "mean": 250.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.10000000000000003,
+   "ks_baseline_max": 0.15000000000000002,
+   "ks_tol": 0.6164779987778186,
+   "equivalent": true
+  },
+  "location->device.location_id": {
+   "spindle": {
+    "p50": 14.0,
+    "p90": 85.60000000000014,
+    "p99": 558.1500000000032,
+    "max": 1167,
+    "mean": 50.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 16.0,
+    "p90": 93.60000000000005,
+    "p99": 546.0800000000031,
+    "max": 1148,
+    "mean": 50.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.08000000000000002,
+   "ks_baseline_max": 0.10000000000000003,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "device->sensor.device_id": {
+   "spindle": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 12,
+    "mean": 2.5,
+    "zero_frac": 0.0786
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 11,
+    "mean": 2.5,
+    "zero_frac": 0.0806
+   },
+   "ks_counts": 0.00880000000000003,
+   "ks_baseline_max": 0.005600000000000049,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  },
+  "sensor->reading.sensor_id": {
+   "spindle": {
+    "p50": 3.0,
+    "p90": 15.0,
+    "p99": 186.01000000000022,
+    "max": 37084,
+    "mean": 20.0,
+    "zero_frac": 0.1128
+   },
+   "impl": {
+    "p50": 3.0,
+    "p90": 15.0,
+    "p99": 176.01000000000022,
+    "max": 37683,
+    "mean": 20.0,
+    "zero_frac": 0.11376
+   },
+   "ks_counts": 0.009439999999999948,
+   "ks_baseline_max": 0.007519999999999999,
+   "ks_tol": 0.024659119951112744,
+   "equivalent": true
+  },
+  "device->alert.device_id": {
+   "spindle": {
+    "p50": 0.0,
+    "p90": 0.0,
+    "p99": 5.0,
+    "max": 664,
+    "mean": 0.5,
+    "zero_frac": 0.9152
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 0.0,
+    "p99": 4.0,
+    "max": 682,
+    "mean": 0.5,
+    "zero_frac": 0.9132
+   },
+   "ks_counts": 0.0020000000000000018,
+   "ks_baseline_max": 0.0030000000000000027,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  },
+  "device->maintenance_log.device_id": {
+   "spindle": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 5.0,
+    "max": 8,
+    "mean": 1.5,
+    "zero_frac": 0.2268
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 5.0,
+    "max": 7,
+    "mean": 1.5,
+    "zero_frac": 0.2234
+   },
+   "ks_counts": 0.010800000000000032,
+   "ks_baseline_max": 0.02200000000000002,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  },
+  "device->command.device_id": {
+   "spindle": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 8.0,
+    "max": 12,
+    "mean": 3.0,
+    "zero_frac": 0.048
+   },
+   "impl": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 8.0,
+    "max": 12,
+    "mean": 3.0,
+    "zero_frac": 0.0494
+   },
+   "ks_counts": 0.007600000000000051,
+   "ks_baseline_max": 0.009399999999999992,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {
+  "location.city+state+zip_code+lat+lng in us_zip_locations": {
+   "impl": 1.0,
+   "spindle": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  }
+ },
+ "strategy_semantics": {
+  "alert.resolved_at - triggered_at in [0,7] days": {
+   "impl": 0.7476,
+   "spindle": [
+    0.7424,
+    0.7548,
+    0.7508,
+    0.7516,
+    0.7444
+   ],
+   "floor": 0.7373999999999999
+  }
+ },
+ "business_rules": {
+  "spindle_BusinessRulesEngine_violations": {},
+  "spindle_on_spindle": {}
+ },
+ "spindle_fidelity_comparator": {
+  "overall_impl": 91.95316917907246,
+  "overall_baseline_spindle_vs_spindle": [
+   91.63144305930659,
+   91.62535520673791,
+   91.85242879003178,
+   91.84571075372804
+  ],
+  "tables": {
+   "alert": {
+    "impl": 98.76128806432959,
+    "baseline": [
+     99.07270465864701,
+     99.28574182635587,
+     99.31812068603656,
+     99.57730910007903
+    ],
+    "floor": 98.57270465864701,
+    "ok": true
+   },
+   "command": {
+    "impl": 90.32729921070604,
+    "baseline": [
+     89.68227776445839,
+     89.84941228781956,
+     89.59554406893209,
+     90.32585707052449
+    ],
+    "floor": 89.09554406893209,
+    "ok": true
+   },
+   "device": {
+    "impl": 99.06528277682494,
+    "baseline": [
+     98.96519525303549,
+     99.70343270420096,
+     99.4385961856149,
+     99.02324882503447
+    ],
+    "floor": 98.46519525303549,
+    "ok": true
+   },
+   "device_type": {
+    "impl": 78.02597402597402,
+    "baseline": [
+     77.53418700813658,
+     76.62337662337663,
+     77.1621521335807,
+     77.60549859497227
+    ],
+    "floor": 76.12337662337663,
+    "ok": true
+   },
+   "location": {
+    "impl": 85.61380404798598,
+    "baseline": [
+     84.84891353291196,
+     83.94621578469312,
+     85.49122482338237,
+     84.26034921331487
+    ],
+    "floor": 83.44621578469312,
+    "ok": true
+   },
+   "maintenance_log": {
+    "impl": 84.74823724737162,
+    "baseline": [
+     84.1373945625701,
+     84.339471645661,
+     84.75886338083299,
+     84.69214753600635
+    ],
+    "floor": 83.6373945625701,
+    "ok": true
+   },
+   "reading": {
+    "impl": 99.95375561093637,
+    "baseline": [
+     99.06839381631531,
+     99.49536508941542,
+     99.25312175834812,
+     99.51863033531785
+    ],
+    "floor": 98.56839381631531,
+    "ok": true
+   },
+   "sensor": {
+    "impl": 99.12971244845107,
+    "baseline": [
+     99.74247787837793,
+     99.75982569238062,
+     99.8018072835265,
+     99.76264535457494
+    ],
+    "floor": 99.24247787837793,
+    "ok": false
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 51,
+  "columns_equivalent": 51,
+  "flagged": [
+   "(h) fidelity sensor: 99.13 < floor 99.24"
+  ],
+  "passed": false,
+  "seconds": 46.60252070426941
+ }
+}

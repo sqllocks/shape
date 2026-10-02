@@ -1,0 +1,20 @@
+load 3.9 engine 0.6 write_engine 61.4 total 65.9 ms
+first gen starts at 3.0 ms, last gen ends 56.8 ms, write_engine returns 61.4
+wait total 0.3 ms, from 60.9 to 61.2
+gen busy per thread ms: {3: 11.5, 1: 37.4, 2: 34.1, 0: 23.9}
+sum gen 106.9 ms; sum open 3.7; wb 5.3; fin 2.2
+T0 |                                 #######################################                            |
+T1 |                               #############################################################        |
+T2 |                            #######################################################                 |
+T3 |    #####  ## ############                                                                          |
+    0                                                                                        61 ms
+--- per table: first chunk start, last chunk end (ms from engine start), chunks, rows
+position                  3.0 ->    6.1  chunks=1 rows=80 threads=[3]
+department                7.3 ->    8.4  chunks=1 rows=30 threads=[3]
+employee                  8.8 ->   16.1  chunks=1 rows=5000 threads=[3]
+time_off_request         17.3 ->   34.5  chunks=1 rows=25000 threads=[2]
+training                 19.3 ->   25.8  chunks=1 rows=100 threads=[1]
+compensation             20.6 ->   38.3  chunks=1 rows=15000 threads=[0]
+performance_review       25.9 ->   56.8  chunks=1 rows=12500 threads=[1]
+training_enrollment      34.6 ->   51.5  chunks=1 rows=20000 threads=[2]
+termination              38.3 ->   44.5  chunks=1 rows=750 threads=[0]

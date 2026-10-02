@@ -1,0 +1,14 @@
+hr after bench exit 0
+real_estate after bench exit 0
+pulse after bench exit 0
+supply_chain after bench exit 0
+insurance after bench exit 0
+capital_markets after bench exit 0
+education after bench exit 0
+financial after bench exit 0
+healthcare after bench exit 0
+iot after bench exit 0
+manufacturing after bench exit 0
+marketing after bench exit 0
+telecom after bench exit 0
+retail after bench exit 0

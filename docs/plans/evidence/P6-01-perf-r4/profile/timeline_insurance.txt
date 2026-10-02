@@ -1,0 +1,20 @@
+load 3.4 engine 0.4 write_engine 79.2 total 83.0 ms
+first gen starts at 2.1 ms, last gen ends 74.2 ms, write_engine returns 79.2
+wait total 1.6 ms, from 77.4 to 79.1
+gen busy per thread ms: {3: 3.5, 1: 47.8, 2: 40.2, 0: 40.6}
+sum gen 132.1 ms; sum open 3.0; wb 0.9; fin 3.0
+T0 |                                          ###################################################       |
+T1 |          ####             #############       ########################################  ##         |
+T2 |         ##############                   #####################################                     |
+T3 |  #####                                                                                             |
+    0                                                                                        79 ms
+--- per table: first chunk start, last chunk end (ms from engine start), chunks, rows
+agent                     2.1 ->    5.6  chunks=1 rows=100 threads=[3]
+policyholder              7.6 ->   18.5  chunks=1 rows=10000 threads=[2]
+policy_type               8.2 ->   11.3  chunks=1 rows=30 threads=[1]
+policy                   21.7 ->   32.3  chunks=1 rows=18000 threads=[1]
+premium_payment          33.5 ->   52.5  chunks=4 rows=108000 threads=[0, 1, 2]
+coverage                 48.2 ->   63.1  chunks=2 rows=45000 threads=[1, 2]
+underwriting             52.5 ->   74.2  chunks=1 rows=18000 threads=[0]
+claim                    54.8 ->   69.5  chunks=1 rows=5400 threads=[1]
+claim_payment            70.7 ->   72.8  chunks=1 rows=8100 threads=[1]

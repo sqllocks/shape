@@ -1,0 +1,477 @@
+{
+ "meta": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+  "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-10-02 20:26:44",
+  "impl": "shape",
+  "domain": "telecom",
+  "runs": 5,
+  "warmup": 1,
+  "ref_seed": 42,
+  "impl_seed": 1042,
+  "loadavg_start": 1.25390625
+ },
+ "scales": {
+  "medium": {
+   "summary": {
+    "spindle": {
+     "total_s": 4.64548425799876,
+     "gen_s": 3.5779518819981604,
+     "write_s": 1.0675323760005995,
+     "cpu_s": 4.6135779999999995,
+     "user_s": 3.287717,
+     "sys_s": 1.316575,
+     "minor_faults": 67775,
+     "import_s": 1.7285512529997504,
+     "peak_rss_mb": 511.140625,
+     "parquet_bytes": 46441082,
+     "rows": 1468060,
+     "rows_per_s_total": 316018.72236941545,
+     "rows_per_s_generate": 410307.36254064436,
+     "runs_total_s": [
+      4.513,
+      4.547,
+      4.645,
+      5.045,
+      4.827
+     ],
+     "loadavg_before": [
+      1.455078125,
+      1.41845703125,
+      1.353515625,
+      1.3251953125,
+      1.2744140625
+     ],
+     "per_table_s_median": {
+      "device_model": 0.0068399029987631366,
+      "plan": 0.0023226640005304944,
+      "subscriber": 0.30859857899849885,
+      "billing": 0.11598514900106238,
+      "churn_indicator": 0.01410992299861391,
+      "service_line": 0.0707575859996723,
+      "payment": 0.07736121299967635,
+      "network_event": 0.1486301739969349,
+      "usage_record": 2.9020568749983795,
+      "_compute_phase+business_rules": 0.002279324999108212,
+      "_construct_domain+Spindle()": 0.010991966002620757
+     },
+     "row_counts": {
+      "device_model": 40,
+      "plan": 20,
+      "subscriber": 20000,
+      "billing": 120000,
+      "churn_indicator": 20000,
+      "service_line": 36000,
+      "payment": 120000,
+      "network_event": 72000,
+      "usage_record": 1080000
+     }
+    },
+    "shape": {
+     "total_s": 0.3620418909995351,
+     "gen_s": 0.3620418909995351,
+     "write_s": 0.0,
+     "cpu_s": 1.0114319999999999,
+     "user_s": 0.8419969999999999,
+     "sys_s": 0.16744799999999999,
+     "minor_faults": 31902,
+     "import_s": 0.5439831080002477,
+     "peak_rss_mb": 242.75390625,
+     "parquet_bytes": 45850107,
+     "rows": 1468060,
+     "rows_per_s_total": 4054945.1223639897,
+     "rows_per_s_generate": 4054945.1223639897,
+     "runs_total_s": [
+      0.379,
+      0.319,
+      0.34,
+      0.366,
+      0.362
+     ],
+     "loadavg_before": [
+      1.41845703125,
+      1.353515625,
+      1.3251953125,
+      1.2744140625,
+      1.251953125
+     ],
+     "per_table_s_median": {
+      "_construct_domain+Engine": 0.004664654003136093,
+      "_generate+write": 0.35817730400231085
+     },
+     "row_counts": {
+      "device_model": 40,
+      "plan": 20,
+      "subscriber": 20000,
+      "billing": 120000,
+      "churn_indicator": 20000,
+      "service_line": 36000,
+      "payment": 120000,
+      "network_event": 72000,
+      "usage_record": 1080000
+     },
+     "numpy": "2.4.6",
+     "pyarrow": "25.0.1"
+    }
+   },
+   "raw": {
+    "spindle": [
+     {
+      "import_s": 1.7826882890003617,
+      "gen_s": 3.3927558430004865,
+      "write_s": 1.1198977029998787,
+      "total_s": 4.512653546000365,
+      "rows": {
+       "device_model": 40,
+       "plan": 20,
+       "subscriber": 20000,
+       "billing": 120000,
+       "churn_indicator": 20000,
+       "service_line": 36000,
+       "payment": 120000,
+       "network_event": 72000,
+       "usage_record": 1080000
+      },
+      "per_table_s": {
+       "device_model": 0.006837498000095366,
+       "plan": 0.0022932589999982156,
+       "subscriber": 0.28932465800244245,
+       "billing": 0.11328339999818127,
+       "churn_indicator": 0.01410992299861391,
+       "service_line": 0.07015327600311139,
+       "payment": 0.05699020399697474,
+       "network_event": 0.08328852900012862,
+       "usage_record": 2.744129079001141,
+       "_compute_phase+business_rules": 0.0017444110017095227,
+       "_construct_domain+Spindle()": 0.010601605998090236
+      },
+      "user_s": 3.224406,
+      "sys_s": 1.302702,
+      "minor_faults": 66909,
+      "major_faults": 0,
+      "cpu_s": 4.527108,
+      "peak_rss_mb": 511.296875,
+      "parquet_bytes": 46441082,
+      "loadavg_before": 1.455078125
+     },
+     {
+      "import_s": 1.672607219999918,
+      "gen_s": 3.514679250001791,
+      "write_s": 1.0323252369998954,
+      "total_s": 4.547004487001686,
+      "rows": {
+       "device_model": 40,
+       "plan": 20,
+       "subscriber": 20000,
+       "billing": 120000,
+       "churn_indicator": 20000,
+       "service_line": 36000,
+       "payment": 120000,
+       "network_event": 72000,
+       "usage_record": 1080000
+      },
+      "per_table_s": {
+       "device_model": 0.0065866109980561305,
+       "plan": 0.002467795002303319,
+       "subscriber": 0.29969253499803017,
+       "billing": 0.10946946300100535,
+       "churn_indicator": 0.01375066800028435,
+       "service_line": 0.06775163999918732,
+       "payment": 0.08022156800143421,
+       "network_event": 0.1486301739969349,
+       "usage_record": 2.773063890002959,
+       "_compute_phase+business_rules": 0.0020529399989754893,
+       "_construct_domain+Spindle()": 0.010991966002620757
+      },
+      "user_s": 3.1945909999999995,
+      "sys_s": 1.315737,
+      "minor_faults": 68789,
+      "major_faults": 0,
+      "cpu_s": 4.5103279999999994,
+      "peak_rss_mb": 511.2109375,
+      "parquet_bytes": 46441082,
+      "loadavg_before": 1.41845703125
+     },
+     {
+      "import_s": 1.584490942001139,
+      "gen_s": 3.5779518819981604,
+      "write_s": 1.0675323760005995,
+      "total_s": 4.64548425799876,
+      "rows": {
+       "device_model": 40,
+       "plan": 20,
+       "subscriber": 20000,
+       "billing": 120000,
+       "churn_indicator": 20000,
+       "service_line": 36000,
+       "payment": 120000,
+       "network_event": 72000,
+       "usage_record": 1080000
+      },
+      "per_table_s": {
+       "device_model": 0.0068399029987631366,
+       "plan": 0.002133321002474986,
+       "subscriber": 0.30859857899849885,
+       "billing": 0.11598514900106238,
+       "churn_indicator": 0.013681428998097545,
+       "service_line": 0.0707575859996723,
+       "payment": 0.060034346002794337,
+       "network_event": 0.08491893199970946,
+       "usage_record": 2.9020568749983795,
+       "_compute_phase+business_rules": 0.002279324999108212,
+       "_construct_domain+Spindle()": 0.010666436999599682
+      },
+      "user_s": 3.297003,
+      "sys_s": 1.316575,
+      "minor_faults": 67561,
+      "major_faults": 0,
+      "cpu_s": 4.6135779999999995,
+      "peak_rss_mb": 511.140625,
+      "parquet_bytes": 46441082,
+      "loadavg_before": 1.353515625
+     },
+     {
+      "import_s": 1.7518139869971492,
+      "gen_s": 3.908687896997435,
+      "write_s": 1.1366228840015538,
+      "total_s": 5.045310780998989,
+      "rows": {
+       "device_model": 40,
+       "plan": 20,
+       "subscriber": 20000,
+       "billing": 120000,
+       "churn_indicator": 20000,
+       "service_line": 36000,
+       "payment": 120000,
+       "network_event": 72000,
+       "usage_record": 1080000
+      },
+      "per_table_s": {
+       "device_model": 0.008417675002419855,
+       "plan": 0.0023902329994598404,
+       "subscriber": 0.3334580580012698,
+       "billing": 0.12474292399929254,
+       "churn_indicator": 0.01667710000037914,
+       "service_line": 0.08457799799725763,
+       "payment": 0.08511411500148824,
+       "network_event": 0.15293709600155125,
+       "usage_record": 3.0811154499970144,
+       "_compute_phase+business_rules": 0.0023702170001342893,
+       "_construct_domain+Spindle()": 0.01688703099716804
+      },
+      "user_s": 3.430647,
+      "sys_s": 1.6159499999999998,
+      "minor_faults": 68009,
+      "major_faults": 0,
+      "cpu_s": 5.046597,
+      "peak_rss_mb": 509.2265625,
+      "parquet_bytes": 46441082,
+      "loadavg_before": 1.3251953125
+     },
+     {
+      "import_s": 1.7285512529997504,
+      "gen_s": 3.7874626259981596,
+      "write_s": 1.0399141410016455,
+      "total_s": 4.827376766999805,
+      "rows": {
+       "device_model": 40,
+       "plan": 20,
+       "subscriber": 20000,
+       "billing": 120000,
+       "churn_indicator": 20000,
+       "service_line": 36000,
+       "payment": 120000,
+       "network_event": 72000,
+       "usage_record": 1080000
+      },
+      "per_table_s": {
+       "device_model": 0.00748342400038382,
+       "plan": 0.0023226640005304944,
+       "subscriber": 0.3526521879975917,
+       "billing": 0.16694134000135818,
+       "churn_indicator": 0.025059503001102712,
+       "service_line": 0.08695508999880985,
+       "payment": 0.07736121299967635,
+       "network_event": 0.15020694399936474,
+       "usage_record": 2.903953936001926,
+       "_compute_phase+business_rules": 0.0031417729987879284,
+       "_construct_domain+Spindle()": 0.011384550998627674
+      },
+      "user_s": 3.287717,
+      "sys_s": 1.448792,
+      "minor_faults": 67775,
+      "major_faults": 0,
+      "cpu_s": 4.736509,
+      "peak_rss_mb": 510.90625,
+      "parquet_bytes": 46441082,
+      "loadavg_before": 1.2744140625
+     }
+    ],
+    "shape": [
+     {
+      "import_s": 0.5439831080002477,
+      "gen_s": 0.3793660099981935,
+      "write_s": 0.0,
+      "total_s": 0.3793660099981935,
+      "overlapped": true,
+      "rows": {
+       "device_model": 40,
+       "plan": 20,
+       "subscriber": 20000,
+       "billing": 120000,
+       "churn_indicator": 20000,
+       "service_line": 36000,
+       "payment": 120000,
+       "network_event": 72000,
+       "usage_record": 1080000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.01782268199895043,
+       "_generate+write": 0.36154332799924305
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.8419969999999999,
+      "sys_s": 0.169435,
+      "minor_faults": 31836,
+      "major_faults": 0,
+      "cpu_s": 1.0114319999999999,
+      "peak_rss_mb": 242.40234375,
+      "parquet_bytes": 45850107,
+      "loadavg_before": 1.41845703125
+     },
+     {
+      "import_s": 0.5130834110022988,
+      "gen_s": 0.3191165270000056,
+      "write_s": 0.0,
+      "total_s": 0.3191165270000056,
+      "overlapped": true,
+      "rows": {
+       "device_model": 40,
+       "plan": 20,
+       "subscriber": 20000,
+       "billing": 120000,
+       "churn_indicator": 20000,
+       "service_line": 36000,
+       "payment": 120000,
+       "network_event": 72000,
+       "usage_record": 1080000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.0044266329969104845,
+       "_generate+write": 0.3146898940030951
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.7959090000000001,
+      "sys_s": 0.174928,
+      "minor_faults": 31627,
+      "major_faults": 0,
+      "cpu_s": 0.9708370000000002,
+      "peak_rss_mb": 241.6640625,
+      "parquet_bytes": 45850107,
+      "loadavg_before": 1.353515625
+     },
+     {
+      "import_s": 0.5546940389976953,
+      "gen_s": 0.3395898529997794,
+      "write_s": 0.0,
+      "total_s": 0.3395898529997794,
+      "overlapped": true,
+      "rows": {
+       "device_model": 40,
+       "plan": 20,
+       "subscriber": 20000,
+       "billing": 120000,
+       "churn_indicator": 20000,
+       "service_line": 36000,
+       "payment": 120000,
+       "network_event": 72000,
+       "usage_record": 1080000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.0067570879982667975,
+       "_generate+write": 0.3328327650015126
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.7890170000000002,
+      "sys_s": 0.16466799999999998,
+      "minor_faults": 31953,
+      "major_faults": 0,
+      "cpu_s": 0.9536850000000001,
+      "peak_rss_mb": 243.05859375,
+      "parquet_bytes": 45850107,
+      "loadavg_before": 1.3251953125
+     },
+     {
+      "import_s": 0.5564414639993629,
+      "gen_s": 0.3663554720005777,
+      "write_s": 0.0,
+      "total_s": 0.3663554720005777,
+      "overlapped": true,
+      "rows": {
+       "device_model": 40,
+       "plan": 20,
+       "subscriber": 20000,
+       "billing": 120000,
+       "churn_indicator": 20000,
+       "service_line": 36000,
+       "payment": 120000,
+       "network_event": 72000,
+       "usage_record": 1080000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.004664654003136093,
+       "_generate+write": 0.3616908179974416
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.8664750000000001,
+      "sys_s": 0.147792,
+      "minor_faults": 32130,
+      "major_faults": 0,
+      "cpu_s": 1.014267,
+      "peak_rss_mb": 243.66015625,
+      "parquet_bytes": 45850107,
+      "loadavg_before": 1.2744140625
+     },
+     {
+      "import_s": 0.5140368699976534,
+      "gen_s": 0.3620418909995351,
+      "write_s": 0.0,
+      "total_s": 0.3620418909995351,
+      "overlapped": true,
+      "rows": {
+       "device_model": 40,
+       "plan": 20,
+       "subscriber": 20000,
+       "billing": 120000,
+       "churn_indicator": 20000,
+       "service_line": 36000,
+       "payment": 120000,
+       "network_event": 72000,
+       "usage_record": 1080000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.003864586997224251,
+       "_generate+write": 0.35817730400231085
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.8494100000000001,
+      "sys_s": 0.16744799999999999,
+      "minor_faults": 31902,
+      "major_faults": 0,
+      "cpu_s": 1.016858,
+      "peak_rss_mb": 242.75390625,
+      "parquet_bytes": 45850107,
+      "loadavg_before": 1.251953125
+     }
+    ]
+   }
+  }
+ }
+}

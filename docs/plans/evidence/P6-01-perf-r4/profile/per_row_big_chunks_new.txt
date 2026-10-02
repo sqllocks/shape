@@ -1,0 +1,13 @@
+  32.1 ns/row  premium_payment.payment_method [weighted_enum] 
+  26.6 ns/row  premium_payment.status [weighted_enum] 
+  24.5 ns/row  premium_payment.amount [distribution] log_normal
+  10.6 ns/row  premium_payment.policy_id [foreign_key] 
+  10.3 ns/row  premium_payment.payment_date [temporal] uniform
+   4.4 ns/row  premium_payment.payment_id [sequence] 
+  95.3 ns/row  usage_record.destination [faker] phone_number
+  27.8 ns/row  usage_record.data_mb [distribution] log_normal
+  25.8 ns/row  usage_record.record_type [weighted_enum] 
+  22.9 ns/row  usage_record.duration_seconds [distribution] log_normal
+  11.6 ns/row  usage_record.line_id [foreign_key] 
+  10.1 ns/row  usage_record.record_date [temporal] uniform
+   4.4 ns/row  usage_record.record_id [sequence] 

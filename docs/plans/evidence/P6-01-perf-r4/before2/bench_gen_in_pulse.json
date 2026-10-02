@@ -1,0 +1,387 @@
+{
+ "meta": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+  "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-10-02 20:29:31",
+  "impl": "shape",
+  "domain": "pulse",
+  "runs": 5,
+  "warmup": 1,
+  "ref_seed": 42,
+  "impl_seed": 1042,
+  "loadavg_start": 1.103515625
+ },
+ "scales": {
+  "medium": {
+   "summary": {
+    "spindle": {
+     "total_s": 2.5023281139983737,
+     "gen_s": 2.1080536849985947,
+     "write_s": 0.40581895300056203,
+     "cpu_s": 2.47609,
+     "user_s": 1.45595,
+     "sys_s": 0.973189,
+     "minor_faults": 29687,
+     "import_s": 1.7421712930008653,
+     "peak_rss_mb": 411.99609375,
+     "parquet_bytes": 15452480,
+     "rows": 560000,
+     "rows_per_s_total": 223791.5950619272,
+     "rows_per_s_generate": 265647.88363080675,
+     "runs_total_s": [
+      2.147,
+      2.155,
+      2.77,
+      2.502,
+      2.847
+     ],
+     "loadavg_before": [
+      1.09521484375,
+      1.08740234375,
+      1.080078125,
+      1.0732421875,
+      1.06689453125
+     ],
+     "per_table_s_median": {
+      "driver": 0.03308579699660186,
+      "rider": 0.17308920300274622,
+      "trip": 1.6745006700002705,
+      "vehicle": 0.012059459997544764,
+      "_compute_phase+business_rules": 0.18616399500024272,
+      "_construct_domain+Spindle()": 0.01112066299901926
+     },
+     "row_counts": {
+      "driver": 5000,
+      "rider": 50000,
+      "trip": 500000,
+      "vehicle": 5000
+     }
+    },
+    "shape": {
+     "total_s": 0.26859542700185557,
+     "gen_s": 0.26859542700185557,
+     "write_s": 0.0,
+     "cpu_s": 0.7591239999999998,
+     "user_s": 0.5735739999999999,
+     "sys_s": 0.18555,
+     "minor_faults": 48230,
+     "import_s": 0.4945960869990813,
+     "peak_rss_mb": 305.68359375,
+     "parquet_bytes": 15371502,
+     "rows": 560000,
+     "rows_per_s_total": 2084920.0831558881,
+     "rows_per_s_generate": 2084920.0831558881,
+     "runs_total_s": [
+      0.253,
+      0.283,
+      0.268,
+      0.275,
+      0.269
+     ],
+     "loadavg_before": [
+      1.09521484375,
+      1.080078125,
+      1.0732421875,
+      1.06689453125,
+      1.0615234375
+     ],
+     "per_table_s_median": {
+      "_construct_domain+Engine": 0.004690435001975857,
+      "_generate+write": 0.26394935800271924
+     },
+     "row_counts": {
+      "driver": 5000,
+      "rider": 50000,
+      "trip": 500000,
+      "vehicle": 5000
+     },
+     "numpy": "2.4.6",
+     "pyarrow": "25.0.1"
+    }
+   },
+   "raw": {
+    "spindle": [
+     {
+      "import_s": 1.7421712930008653,
+      "gen_s": 1.7763786600007734,
+      "write_s": 0.3702437039974029,
+      "total_s": 2.1466223639981763,
+      "rows": {
+       "driver": 5000,
+       "rider": 50000,
+       "trip": 500000,
+       "vehicle": 5000
+      },
+      "per_table_s": {
+       "driver": 0.040174370999011444,
+       "rider": 0.22756833400126197,
+       "trip": 1.3144861879991367,
+       "vehicle": 0.011225089998333715,
+       "_compute_phase+business_rules": 0.16892008600189,
+       "_construct_domain+Spindle()": 0.014004591001139488
+      },
+      "user_s": 1.3460569999999996,
+      "sys_s": 0.806501,
+      "minor_faults": 29915,
+      "major_faults": 0,
+      "cpu_s": 2.1525579999999995,
+      "peak_rss_mb": 412.109375,
+      "parquet_bytes": 15452480,
+      "loadavg_before": 1.09521484375
+     },
+     {
+      "import_s": 1.7602193519996945,
+      "gen_s": 1.6723620129996561,
+      "write_s": 0.4827711559992167,
+      "total_s": 2.155133168998873,
+      "rows": {
+       "driver": 5000,
+       "rider": 50000,
+       "trip": 500000,
+       "vehicle": 5000
+      },
+      "per_table_s": {
+       "driver": 0.03238949900332955,
+       "rider": 0.16368524199788226,
+       "trip": 1.2453785360012262,
+       "vehicle": 0.012059459997544764,
+       "_compute_phase+business_rules": 0.20807992400295916,
+       "_construct_domain+Spindle()": 0.01076935199671425
+      },
+      "user_s": 1.4584329999999999,
+      "sys_s": 0.7132489999999999,
+      "minor_faults": 29687,
+      "major_faults": 0,
+      "cpu_s": 2.171682,
+      "peak_rss_mb": 411.99609375,
+      "parquet_bytes": 15452480,
+      "loadavg_before": 1.08740234375
+     },
+     {
+      "import_s": 1.606041600000026,
+      "gen_s": 2.3638527000002796,
+      "write_s": 0.40581895300056203,
+      "total_s": 2.7696716530008416,
+      "rows": {
+       "driver": 5000,
+       "rider": 50000,
+       "trip": 500000,
+       "vehicle": 5000
+      },
+      "per_table_s": {
+       "driver": 0.03190993400130537,
+       "rider": 0.1594627339982253,
+       "trip": 1.9451727840023523,
+       "vehicle": 0.015454461998160696,
+       "_compute_phase+business_rules": 0.20124702400062233,
+       "_construct_domain+Spindle()": 0.010605761999613605
+      },
+      "user_s": 1.444807,
+      "sys_s": 1.311011,
+      "minor_faults": 29682,
+      "major_faults": 0,
+      "cpu_s": 2.7558179999999997,
+      "peak_rss_mb": 411.91796875,
+      "parquet_bytes": 15452480,
+      "loadavg_before": 1.080078125
+     },
+     {
+      "import_s": 1.748524560000078,
+      "gen_s": 2.1080536849985947,
+      "write_s": 0.39427442899977905,
+      "total_s": 2.5023281139983737,
+      "rows": {
+       "driver": 5000,
+       "rider": 50000,
+       "trip": 500000,
+       "vehicle": 5000
+      },
+      "per_table_s": {
+       "driver": 0.03308579699660186,
+       "rider": 0.1921824300006847,
+       "trip": 1.6745006700002705,
+       "vehicle": 0.010879834000661504,
+       "_compute_phase+business_rules": 0.18616399500024272,
+       "_construct_domain+Spindle()": 0.011240959000133444
+      },
+      "user_s": 1.502901,
+      "sys_s": 0.973189,
+      "minor_faults": 30793,
+      "major_faults": 0,
+      "cpu_s": 2.47609,
+      "peak_rss_mb": 408.6015625,
+      "parquet_bytes": 15452480,
+      "loadavg_before": 1.0732421875
+     },
+     {
+      "import_s": 1.7173949899988656,
+      "gen_s": 2.188744011997187,
+      "write_s": 0.6584546080011933,
+      "total_s": 2.8471986199983803,
+      "rows": {
+       "driver": 5000,
+       "rider": 50000,
+       "trip": 500000,
+       "vehicle": 5000
+      },
+      "per_table_s": {
+       "driver": 0.033616091997828335,
+       "rider": 0.17308920300274622,
+       "trip": 1.7710522300003504,
+       "vehicle": 0.020051799998327624,
+       "_compute_phase+business_rules": 0.17981402399891522,
+       "_construct_domain+Spindle()": 0.01112066299901926
+      },
+      "user_s": 1.45595,
+      "sys_s": 1.396606,
+      "minor_faults": 29415,
+      "major_faults": 0,
+      "cpu_s": 2.852556,
+      "peak_rss_mb": 412.05859375,
+      "parquet_bytes": 15452480,
+      "loadavg_before": 1.06689453125
+     }
+    ],
+    "shape": [
+     {
+      "import_s": 0.4866362279972236,
+      "gen_s": 0.2531641370005673,
+      "write_s": 0.0,
+      "total_s": 0.2531641370005673,
+      "overlapped": true,
+      "rows": {
+       "driver": 5000,
+       "rider": 50000,
+       "trip": 500000,
+       "vehicle": 5000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.004690435001975857,
+       "_generate+write": 0.24847370199859142
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.5341230000000001,
+      "sys_s": 0.153831,
+      "minor_faults": 49144,
+      "major_faults": 0,
+      "cpu_s": 0.6879540000000002,
+      "peak_rss_mb": 308.92578125,
+      "parquet_bytes": 15371502,
+      "loadavg_before": 1.09521484375
+     },
+     {
+      "import_s": 0.5089054650015896,
+      "gen_s": 0.28257560299971374,
+      "write_s": 0.0,
+      "total_s": 0.28257560299971374,
+      "overlapped": true,
+      "rows": {
+       "driver": 5000,
+       "rider": 50000,
+       "trip": 500000,
+       "vehicle": 5000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.006368562000716338,
+       "_generate+write": 0.2762070409989974
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.5659830000000001,
+      "sys_s": 0.19578500000000001,
+      "minor_faults": 48230,
+      "major_faults": 0,
+      "cpu_s": 0.761768,
+      "peak_rss_mb": 305.68359375,
+      "parquet_bytes": 15371502,
+      "loadavg_before": 1.080078125
+     },
+     {
+      "import_s": 0.49250263499925495,
+      "gen_s": 0.2675566270008858,
+      "write_s": 0.0,
+      "total_s": 0.2675566270008858,
+      "overlapped": true,
+      "rows": {
+       "driver": 5000,
+       "rider": 50000,
+       "trip": 500000,
+       "vehicle": 5000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.004348238002421567,
+       "_generate+write": 0.2632083889984642
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.5873940000000001,
+      "sys_s": 0.219203,
+      "minor_faults": 48018,
+      "major_faults": 0,
+      "cpu_s": 0.8065970000000001,
+      "peak_rss_mb": 304.49609375,
+      "parquet_bytes": 15371502,
+      "loadavg_before": 1.0732421875
+     },
+     {
+      "import_s": 0.6226463010025327,
+      "gen_s": 0.2748501589994703,
+      "write_s": 0.0,
+      "total_s": 0.2748501589994703,
+      "overlapped": true,
+      "rows": {
+       "driver": 5000,
+       "rider": 50000,
+       "trip": 500000,
+       "vehicle": 5000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.0050605300020833965,
+       "_generate+write": 0.2697896289973869
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.5735739999999999,
+      "sys_s": 0.18555,
+      "minor_faults": 48226,
+      "major_faults": 0,
+      "cpu_s": 0.7591239999999998,
+      "peak_rss_mb": 305.515625,
+      "parquet_bytes": 15371502,
+      "loadavg_before": 1.06689453125
+     },
+     {
+      "import_s": 0.4945960869990813,
+      "gen_s": 0.26859542700185557,
+      "write_s": 0.0,
+      "total_s": 0.26859542700185557,
+      "overlapped": true,
+      "rows": {
+       "driver": 5000,
+       "rider": 50000,
+       "trip": 500000,
+       "vehicle": 5000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.004646068999136332,
+       "_generate+write": 0.26394935800271924
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.583299,
+      "sys_s": 0.166536,
+      "minor_faults": 48427,
+      "major_faults": 0,
+      "cpu_s": 0.749835,
+      "peak_rss_mb": 306.12109375,
+      "parquet_bytes": 15371502,
+      "loadavg_before": 1.0615234375
+     }
+    ]
+   }
+  }
+ }
+}
