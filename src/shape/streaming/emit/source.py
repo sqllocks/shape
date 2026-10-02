@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 from collections.abc import Iterator, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -45,6 +44,7 @@ from shape.streaming.emit.formats import (
     FIELD_TABLE,
     FIELD_TIME,
     check_reserved,
+    encoder_threads,
     event_columns,
     event_time_column,
     with_event_fields,
@@ -146,14 +146,18 @@ class EventPlan:
 
     # ---- rows ---------------------------------------------------------------------------
 
-    def _rows(self, table: str, start: int, n: int) -> pa.RecordBatch:
-        if table not in self._touched:
-            return self.engine.generate_chunk(table, start, n)
+    def _whole_tables(self) -> dict[str, pa.Table]:
+        """The tables a post-pass changes, generated whole (once)."""
         if self._whole is None:
             self._whole = {
                 t: tab for t, tab in self.engine.generate().tables.items() if t in self._touched
             }
-        tab = self._whole[table].slice(start, n)
+        return self._whole
+
+    def _rows(self, table: str, start: int, n: int) -> pa.RecordBatch:
+        if table not in self._touched:
+            return self.engine.generate_chunk(table, start, n)
+        tab = self._whole_tables()[table].slice(start, n)
         return pa.RecordBatch.from_arrays(
             [c.combine_chunks() for c in tab.columns], schema=tab.schema
         )
@@ -181,10 +185,7 @@ class EventPlan:
     def _columns(self, table: str) -> tuple[pa.Schema, list[Any]]:
         """The whole of ``table`` as ``(schema, columns)``, before the anomaly injection."""
         if table in self._touched:
-            if self._whole is None:
-                self._rows(table, 0, 0)  # generates the post-pass tables
-            assert self._whole is not None
-            whole = self._whole[table]
+            whole = self._whole_tables()[table]
             return whole.schema, list(whole.columns)
         batch = self.engine.generate_chunk(table, 0, self.counts[table])
         return batch.schema, list(batch.columns)
@@ -218,7 +219,7 @@ class EventPlan:
             order = pa.concat_arrays([order[split:], order[:split]])
         # The permutation is the row position of each event, so ``_shape_seq`` needs no gather;
         # the columns are gathered on several threads (the kernel releases the lock).
-        with ThreadPoolExecutor(max_workers=max(1, min(4, os.cpu_count() or 1))) as pool:
+        with ThreadPoolExecutor(max_workers=encoder_threads()) as pool:
             taken = list(pool.map(lambda c: _flat(c.take(order)), columns))
         table_col, seq_col = event_columns(table, order)
         self._timed = pa.RecordBatch.from_arrays(

@@ -361,3 +361,24 @@ def test_stream_resumes_from_its_checkpoint(tmp_path: Path) -> None:
     assert len(out.read_bytes().splitlines()) == 3000
     assert main(args) == 0
     assert out.read_bytes() == whole.read_bytes()
+
+
+@pytest.mark.parametrize("threads", ["1", "3", "4"])
+def test_large_batches_encode_identically_on_any_thread_count(monkeypatch, threads: str) -> None:
+    from shape.streaming.emit import formats
+
+    monkeypatch.setenv("SHAPE_THREADS", threads)
+    n = formats.PARALLEL_ROWS + 1234
+    batch = with_event_fields(_random_batch(random.Random(5), n), "t", 0)
+    assert encode_batch(batch) == _encode_batch_rows(batch, "flat", "shape")
+
+
+def test_a_batch_the_kernels_cannot_take_falls_back_to_the_row_encoder(monkeypatch) -> None:
+    from shape.streaming.emit import formats
+
+    def refuse(batch):
+        raise pa.ArrowNotImplementedError("no kernel")
+
+    monkeypatch.setattr(formats, "_encode_flat", refuse)
+    batch = with_event_fields(_random_batch(random.Random(6), 20), "t", 0)
+    assert encode_batch(batch) == _encode_batch_rows(batch, "flat", "shape")

@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import base64
 import json
-import os
 from collections.abc import Iterator, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, NamedTuple
@@ -236,21 +235,27 @@ def _encode_flat(batch: pa.RecordBatch) -> bytes:
 
 
 PARALLEL_ROWS = 16384  # a batch of at least this many events is encoded on several threads
+MAX_THREADS = 4
 _pool: ThreadPoolExecutor | None = None
+_pool_size = 1
 
 
-def _encode_parallel(batch: pa.RecordBatch) -> bytes:
-    """:func:`_encode_flat` of slices of ``batch`` on a thread pool (Arrow's kernels release the
-    interpreter lock), joined in order."""
-    global _pool
-    if _pool is None:
-        _pool = ThreadPoolExecutor(max_workers=max(1, min(4, os.cpu_count() or 1)))
-    parts = _pool._max_workers
-    step = -(-batch.num_rows // parts)
-    futures = [
-        _pool.submit(_encode_flat, batch.slice(i, step)) for i in range(0, batch.num_rows, step)
-    ]
-    return b"".join(f.result() for f in futures)
+def encoder_threads() -> int:
+    """Threads for encoding and sorting: ``SHAPE_THREADS`` (every core when unset), up to 4."""
+    from shape.generation.engine import worker_threads
+
+    return min(MAX_THREADS, worker_threads())
+
+
+def _encode_parallel(batch: pa.RecordBatch, size: int) -> bytes:
+    """:func:`_encode_flat` of ``size`` slices of ``batch`` on a thread pool (Arrow's kernels
+    release the interpreter lock), joined in order."""
+    global _pool, _pool_size
+    if _pool is None or _pool_size != size:
+        _pool, _pool_size = ThreadPoolExecutor(max_workers=size), size
+    step = -(-batch.num_rows // size)
+    parts = [batch.slice(i, step) for i in range(0, batch.num_rows, step)]
+    return b"".join(_pool.map(_encode_flat, parts))
 
 
 def encode_batch(batch: pa.RecordBatch, envelope: str = "flat", source: str = "shape") -> bytes:
@@ -260,9 +265,11 @@ def encode_batch(batch: pa.RecordBatch, envelope: str = "flat", source: str = "s
     if batch.num_rows == 0:
         return b""
     if envelope == "flat":
-        if batch.num_rows >= PARALLEL_ROWS:
-            return _encode_parallel(batch)
-        return _encode_flat(batch)
+        try:
+            threads = encoder_threads() if batch.num_rows >= PARALLEL_ROWS else 1
+            return _encode_parallel(batch, threads) if threads > 1 else _encode_flat(batch)
+        except (pa.ArrowCapacityError, pa.ArrowNotImplementedError):
+            pass  # a batch or a type the kernels cannot take: the row encoder can
     return _encode_batch_rows(batch, envelope, source)
 
 
