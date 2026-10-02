@@ -56,6 +56,10 @@ DEFAULT_THRESHOLDS: dict[str, Any] = {
     "uniqueness_rate": 0.05,  # absolute change of distinct values per row, for unique-like columns
     "temporal_tvd": 0.20,  # total variation distance of the hour-of-day / day-of-week mix
     "min_rows": 30,  # fewer non-null values than this: no distribution comparison
+    "dependency_confidence": 0.02,  # absolute drop of an approximate functional dependency
+    "placeholder_share": 0.01,  # absolute rise of the share of rows holding a placeholder value
+    "implausible_rate": 0.02,  # absolute rise of the share of implausible rows
+    "association_shift": 0.2,  # absolute change of an association measure (V, U, eta, |r|)
 }
 
 KIND_SEVERITY: dict[str, str] = {
@@ -80,6 +84,10 @@ KIND_SEVERITY: dict[str, str] = {
     "outlier_rate_change": "low",
     "hour_of_day_change": "low",
     "day_of_week_change": "low",
+    "dependency_broken": "high",
+    "placeholder_surge": "medium",
+    "implausible_rate_change": "medium",
+    "association_shift": "low",
 }
 
 _NUMERIC = ("integer", "float")
@@ -227,6 +235,8 @@ class View:
     dow: list[float] | None = None
     span_days: float | None = None
     origin: str = "profile"  # "profile" (the reference profiler) or "engine" (profile engine)
+    placeholders: list[dict[str, Any]] = field(default_factory=list)  # sentinel values (#47)
+    top_values: dict[str, float] | None = None  # share of the non-null values, most frequent first
 
     @property
     def unique_rate(self) -> float | None:
@@ -364,6 +374,8 @@ def view_of_profile_column(col: Mapping[str, Any], rows: int) -> View:
         length_mean=_number(length.get("mean")) if dtype == "string" else None,
         outlier_rate=_number(col.get("outlier_rate")),
         distribution=col.get("distribution"),
+        placeholders=list(col.get("placeholders") or ()),
+        top_values=col.get("value_counts_ext"),
     )
     if dtype == "datetime":
         view.hour = col.get("hour_histogram")
@@ -457,6 +469,7 @@ def _normalise(counts: Any) -> list[float] | None:
 class TableView:
     rows: int
     columns: dict[str, View]
+    joint: Mapping[str, Any] | None = None  # the profile's joint analysis (#47)
 
 
 def _profile_tables(obj: Any) -> dict[str, TableView]:
@@ -464,7 +477,9 @@ def _profile_tables(obj: Any) -> dict[str, TableView]:
     for name, table in obj.tables.items():
         rows = int(table["row_count"])
         out[name] = TableView(
-            rows, {c: view_of_profile_column(col, rows) for c, col in table["columns"].items()}
+            rows,
+            {c: view_of_profile_column(col, rows) for c, col in table["columns"].items()},
+            table.get("joint"),
         )
     return out
 
@@ -875,6 +890,10 @@ def diff_records(
             >= SEVERITY_RANK[policy.for_column(scope, col)["min_severity"]]
         ):
             out.append((scope, col, record))
+    from .joint import diff_joint
+
+    for tname, bt, ct in pairs:
+        out.extend(diff_joint(tname if dataset else None, bt, ct, policy))
     return out
 
 
