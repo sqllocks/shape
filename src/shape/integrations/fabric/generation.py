@@ -252,8 +252,8 @@ def contract_for_domain(
 
 def profile_tables(folder: str | Path, name: str | None = None) -> Any:
     """Profile the Parquet files of ``folder`` together, one table per file (named by the file),
-    as a dataset profile: what a multi-table contract is checked against. ``shape profile`` on a
-    folder would read it as a single table."""
+    as a dataset profile: what a multi-table contract is checked against (``shape profile
+    --dataset FOLDER`` is the command-line form; without ``--dataset`` a folder is one table)."""
     files = sorted(Path(folder).glob("*.parquet"))
     if not files:
         raise GenerationRequestError(f"no Parquet files in {folder}")

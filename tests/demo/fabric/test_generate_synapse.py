@@ -90,6 +90,9 @@ class FakeFs:
             Path(url[len("file:") :]) if url.startswith("file:") else Path(_local(self.root, url))
         )
 
+    def exists(self, url):
+        return self._path(url).exists()
+
     def head(self, url, max_bytes=65536):
         return self._path(url).read_text(encoding="utf-8")[:max_bytes]
 
