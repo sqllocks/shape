@@ -1,8 +1,9 @@
 """Shared machinery of the simulation parity harness (P6-04): running the baseline, and the
 comparison rules (T-21's, applied to simulators).
 
-Used by the pattern cases (``names.PATTERN_CASES``) and by ``verify_patterns.py``; runs in the Shape venv (numpy, scipy and
-pyarrow). The baseline runs in its own venv through ``pattern_worker.py``.
+Used by the pattern cases (``names.PATTERN_CASES``) and by ``verify_patterns.py``; runs in the
+Shape venv (numpy, scipy and pyarrow). The baseline runs in its own venv through
+``pattern_worker.py``.
 
 The comparison rules, per output table of a simulator (the reference baseline seed is 42, its
 own spread comes from seeds 43-46 against it, Shape runs at seed 1042; the set is fixed and has

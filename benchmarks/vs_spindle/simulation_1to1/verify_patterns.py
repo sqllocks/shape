@@ -3,8 +3,9 @@ financial, IoT, operational log, pulse) against the pinned baseline (T-21 applie
 one case module per simulator. (``verify.py`` is the other lane's runner, for the file-drop, stream
 and workflow simulators; the two share this directory, ``paths.py`` and the seed set.)
 
-    source scripts/env.sh && python benchmarks/vs_spindle/simulation_1to1/verify_patterns.py [--quick]
-        [--only NAME ...] [--no-controls | --controls-only]
+    source scripts/env.sh
+    python benchmarks/vs_spindle/simulation_1to1/verify_patterns.py [--quick] [--only NAME ...]
+        [--no-controls | --controls-only]
 
 Runs in the Shape venv. The baseline runs in its own venv (``pattern_worker.py``) at the fixed
 seeds 42 (reference) and 43-46 (its own spread); Shape runs at 1042 (the set has no option, and a
