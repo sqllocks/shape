@@ -12,6 +12,10 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   a CloudEvents envelope, backpressure, at-least-once delivery and a checkpoint on shutdown
   (`kill -9` then restart, deduplicated on the key, equals an uninterrupted run).
   `shape.streaming.emit` holds the runtime.
+- Chaos engineering (`docs/CHAOS.md`): `shape.chaos` injects deterministic data-quality faults in six
+  categories (schema, value, file, referential, temporal, volume) through a seeded `ChaosEngine` and
+  as `shape.chaos` plugins, and `shape.chaos.inject_anomalies` corrupts a chosen fraction of the
+  rows of a batch without changing its schema (the entry point for `--anomaly-fraction`).
 - Fidelity tiers 1 to 3 (`docs/FIDELITY_TIERS.md`): `shape fidelity REFERENCE SYNTHETIC --tier 1|2|3`
   (tier 1: Gaussian-mixture fits, conditional profiles, adversarial AUC, temporal profiles and
   periodicity; tier 2: format preservation, string similarity, cardinality and anomaly-rate checks;
