@@ -289,6 +289,12 @@ def _generate(a: argparse.Namespace, engine: Any) -> int:
 
     run = current()
     started = time.perf_counter()
+    from shape.cli.landing import landing_requested
+
+    if landing_requested(a) and a.format == "summary":
+        raise ValueError(
+            "the landing options write files: give --format (csv, parquet, jsonl, ...)"
+        )
     if a.format == "summary":
         result = engine.generate()
         seconds = time.perf_counter() - started
@@ -301,8 +307,6 @@ def _generate(a: argparse.Namespace, engine: Any) -> int:
         return 0
     if not a.output:
         raise ValueError(f"--format {a.format} writes files: give -o DIR")
-    from shape.cli.landing import landing_requested
-
     if landing_requested(a):
         return _generate_landing(a, engine, started)
     paths = write_engine(engine, a.format, a.output, **_sink_options(a))

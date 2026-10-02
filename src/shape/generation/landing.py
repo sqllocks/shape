@@ -79,11 +79,6 @@ def write_landing(
         if not target.is_relative_to(base):
             raise ValueError(f"path template {template!r} leaves the output directory")
         plan.append((name, fmt, target))
-    paths = [p for _, _, p in plan]
-    if len(set(paths)) != len(paths):
-        raise ValueError(
-            f"path template {template!r} gives two tables the same file: put {{table}} in it"
-        )
     host = default_host()
     landed: list[LandedFile] = []
     for name, fmt, target in plan:

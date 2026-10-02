@@ -23,9 +23,9 @@ that can change). A corruption is active in batches ``start_batch`` to ``end_bat
 adds ``step`` to its rate for every batch after the start. Rows are never reordered or removed, so a
 position in the log is a position in the output.
 
-Determinism: every corruption draws from its own generator, seeded by ``(seed, batch, position of
-the corruption, table, column)``, so a seed gives the same corruption and the same log, and adding
-a corruption does not change the others.
+Determinism: every corruption draws from its own generator, seeded by ``(seed, batch, kind, table,
+column)`` (and, for the same kind twice, its occurrence), so a seed gives the same corruption and
+the same log, and adding a corruption of another kind does not change the others.
 
 The six categories of :mod:`shape.chaos.categories` (schema, value, file, referential, temporal and
 volume) are the scheduler's randomised mutators, bound to the baseline's draw order; this module is
@@ -662,7 +662,11 @@ def corrupt_tables(
     """
     run = _Run(tables, seed, batch, keys or {}, references or {})
     rows_in = {n: t.num_rows for n, t in tables.items()}
-    for pos, c in enumerate(corruptions):
+    seen: dict[tuple[str, str | None, str | None], int] = {}
+    for c in corruptions:
+        occurrence = seen.get((c.kind, c.table, c.column), 0)
+        seen[(c.kind, c.table, c.column)] = occurrence + 1
+        pos = zlib.crc32(f"{c.kind}:{occurrence}".encode())
         if not c.active(batch):
             continue
         for table in _targets(run, c):
