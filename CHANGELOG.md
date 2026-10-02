@@ -30,6 +30,9 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `shape.generation.incremental`. Zero rates change nothing, no row is both updated and deleted,
   inserted rows never reference a parent deleted in the same delta, and every snapshot keeps all its
   foreign keys.
+- Profile files and the profile registry (`docs/PROFILE_REGISTRY.md`): `shape profile export|import|list|validate` and
+  `shape profile registry list|save|delete|tag|diff|reindex|validate` (named, tagged `.shape` profiles under
+  `system/table/name`; `shape registry` keeps its meaning).
 - Fidelity tiers 1 to 3 (`docs/FIDELITY_TIERS.md`): `shape fidelity REFERENCE SYNTHETIC --tier 1|2|3`
   (tier 1: Gaussian-mixture fits, conditional profiles, adversarial AUC, temporal profiles and
   periodicity; tier 2: format preservation, string similarity, cardinality and anomaly-rate checks;

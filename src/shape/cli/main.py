@@ -463,7 +463,9 @@ def _build_parser(plugin_commands=()):
         "profile",
         help="profile a file, glob, directory or Delta table",
         epilog="also: `shape profile safe PROFILE.shape -o SAFE.json` writes the share-safe "
-        "form; `shape profile validate --safe ARTIFACT` scans it for leaks",
+        "form; `shape profile validate --safe ARTIFACT` scans it for leaks; "
+        "`shape profile export|import|list|validate` and `shape profile registry "
+        "list|save|delete|tag|diff|reindex|validate` manage profiles and the profile registry",
     )
     pr.add_argument("src", metavar="SRC")
     pr.add_argument("-o", "--output", metavar="OUT")
@@ -747,9 +749,17 @@ def _dispatch(argv):
         print(f"shape {_version()}")
         return 0
     if argv[:1] == ["profile"] and argv[1:2] in (["safe"], ["validate"]):
+        from shape.cli import profiles
+
+        if profiles.routes(argv[1:]):
+            return profiles.main(argv[1:])
         from shape.privacy.cli import main as privacy_main
 
         return privacy_main(argv[1:])
+    if argv[:1] == ["profile"] and argv[1:2] in (["export"], ["import"], ["list"], ["registry"]):
+        from shape.cli import profiles
+
+        return profiles.main(argv[1:])
     parser = _build_parser()
     builtin = {
         n
