@@ -32,11 +32,11 @@ flat event), ``token``, ``max_request_bytes`` (default 3,000,000; the service li
 from __future__ import annotations
 
 import os
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from typing import Any, NamedTuple
 from urllib.parse import parse_qs, unquote, urlsplit
 
-import pyarrow as pa
+import pyarrow as pa  # type: ignore[import-untyped,unused-ignore]
 
 from shape.errors import ShapeError
 from shape.streaming.emit.formats import FIELD_TABLE, encode_events

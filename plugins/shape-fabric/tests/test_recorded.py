@@ -89,7 +89,11 @@ def test_an_extra_request_is_a_mismatch():
 
 # --- the scrubber ------------------------------------------------------------------------
 
-JWT = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwczovL3N0b3JhZ2UuYXp1cmUuY29tIiwic3ViIjoiYWJjIn0.c2lnbmF0dXJlLXNpZ25hdHVyZS1zaWduYXR1cmU"
+JWT = (
+    "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9."
+    "eyJhdWQiOiJodHRwczovL3N0b3JhZ2UuYXp1cmUuY29tIiwic3ViIjoiYWJjIn0."
+    "c2lnbmF0dXJlLXNpZ25hdHVyZS1zaWduYXR1cmU"
+)
 ACCOUNT_KEY = "dGhpcy1pcy1ub3QtYS1yZWFsLWtleS1idXQtbG9va3MtbGlrZS1vbmUtMTIzNDU2Nzg5MDEyMzQ1Njc4OTA="
 SECRETS = [
     f"Authorization: Bearer {JWT}",
@@ -140,7 +144,9 @@ def test_recording_scrubs_tokens_so_a_tape_does_not_depend_on_them():
     tape = Tape(channel="http", scenario="s")
     transport = TapeTransport(tape, kusto)
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {JWT}"}
-    body = json.dumps({"db": "db1", "csl": ".show tables | where TableName == 'x' | count"}).encode()
+    body = json.dumps(
+        {"db": "db1", "csl": ".show tables | where TableName == 'x' | count"}
+    ).encode()
     transport("POST", "https://kql.example.test/v1/rest/mgmt", headers, body, 5)
     text = json.dumps(tape.steps)
     assert JWT not in text and find_secrets(text) == []
@@ -163,5 +169,9 @@ def test_odbc_parameters_are_scrubbed_too():
     server = FakeSqlServer()
     tape = Tape(channel="odbc", scenario="s")
     cursor = TapeConnection(tape, server.connect("x")).cursor()
-    cursor.execute("SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?", "dbo", "Server=s;PWD=hunter2hunter2")
+    cursor.execute(
+        "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?",
+        "dbo",
+        "Server=s;PWD=hunter2hunter2",
+    )
     assert find_secrets(json.dumps(tape.steps)) == []

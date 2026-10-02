@@ -46,12 +46,22 @@ class ReplayMismatch(AssertionError):
 
 REDACTED = "<redacted>"
 _JWT = r"eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]*"
-_KEYS = r"(?:pwd|password|accountkey|sharedaccesskey|sharedaccesssignature|sig|client_secret|secret)"
+_KEYS = (
+    r"(?:pwd|password|accountkey|sharedaccesskey|sharedaccesssignature|sig|client_secret|secret)"
+)
 _PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"(?i)(bearer\s+)(?!<redacted>)[A-Za-z0-9._~+/=-]{8,}"), rf"\1{REDACTED}"),
     (re.compile(_JWT), REDACTED),
-    (re.compile(rf"(?i)\b({_KEYS})(\s*[=:]\s*)(?!<redacted>)(\{{[^}}]*\}}|[^;&\s\"',]+)"), rf"\1\2{REDACTED}"),
-    (re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(-----END [A-Z ]*PRIVATE KEY-----|$)"), REDACTED),
+    (
+        re.compile(rf"(?i)\b({_KEYS})(\s*[=:]\s*)(?!<redacted>)(\{{[^}}]*\}}|[^;&\s\"',]+)"),
+        rf"\1\2{REDACTED}",
+    ),
+    (
+        re.compile(
+            r"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(-----END [A-Z ]*PRIVATE KEY-----|$)"
+        ),
+        REDACTED,
+    ),
     (re.compile(r"\b[A-Za-z0-9_.~-]{3}8Q~[A-Za-z0-9_.~-]{20,}"), REDACTED),  # Entra client secret
     (re.compile(r"[A-Za-z0-9+/]{64,}={0,2}"), REDACTED),  # a long base64 blob (a storage key)
 ]
@@ -146,7 +156,8 @@ class Tape:
     def assert_done(self) -> None:
         if self.replaying and self._pos != len(self.steps):
             raise ReplayMismatch(
-                f"{self.scenario}: {len(self.steps) - self._pos} recorded request(s) were never made"
+                f"{self.scenario}: {len(self.steps) - self._pos} recorded request(s) "
+                "were never made"
             )
 
     def document(self, source: str, result: Any = None) -> dict[str, Any]:

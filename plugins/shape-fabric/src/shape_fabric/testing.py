@@ -18,10 +18,11 @@ from decimal import Decimal
 from typing import Any
 from urllib.parse import parse_qs, unquote, urlsplit
 
-import pyarrow as pa
-import pyarrow.parquet as pq
-
-from shape_eventhubs.testing import EmitterHarness as _HubHarness
+import pyarrow as pa  # type: ignore[import-untyped,unused-ignore]
+import pyarrow.parquet as pq  # type: ignore[import-untyped,unused-ignore]
+from shape_eventhubs.testing import (
+    EmitterHarness as _HubHarness,  # type: ignore[import-untyped,unused-ignore]
+)
 
 from .eventhouse import EventhouseEmitter
 from .eventstream import EventstreamEmitter
@@ -249,7 +250,9 @@ class FakeSqlServer:
         self.tables = copy.deepcopy(self._committed[0])
         self.schemas = set(self._committed[1])
 
-    def connect(self, connection_string: str, credential: Any = None, **_kw: Any) -> FakeSqlConnection:
+    def connect(
+        self, connection_string: str, credential: Any = None, **_kw: Any
+    ) -> FakeSqlConnection:
         self.connections += 1
         return FakeSqlConnection(self)
 
@@ -291,7 +294,8 @@ class FakeSqlCursor:
     def executemany(self, sql: str, rows: Any) -> None:
         rows = [tuple(r) for r in rows]
         self.server.statements.append(sql)
-        match = re.match(rf"INSERT INTO {_NAME}\.{_NAME} \((.*)\) VALUES \(([?, ]*)\)$", sql)
+        pattern = rf"INSERT INTO {_NAME}\.{_NAME} \((.*)\) VALUES \(([?, ]*)\)$"  # nosec B608
+        match = re.match(pattern, sql)
         if not match:
             raise RuntimeError(f"the fake does not understand: {sql[:80]}")
         table = self._table(match.group(1), match.group(2))
@@ -375,13 +379,18 @@ class FakeSqlCursor:
                 raise RuntimeError(f"column '{name}' is BIT but got {type(value).__name__}")
 
     def _copy(self, text: str) -> None:
-        match = re.match(rf"COPY INTO {_NAME}\.{_NAME} FROM '((?:[^']|'')*)' WITH \(FILE_TYPE = 'PARQUET'\)$", text)
+        match = re.match(
+            rf"COPY INTO {_NAME}\.{_NAME} FROM '((?:[^']|'')*)' WITH \(FILE_TYPE = 'PARQUET'\)$",
+            text,
+        )
         if not match:
             raise RuntimeError(f"the fake does not understand: {text[:80]}")
         table = self._table(match.group(1), match.group(2))
         url = urlsplit(match.group(3).replace("''", "'"))
         if url.netloc != "onelake.dfs.fabric.microsoft.com":
-            raise RuntimeError("COPY INTO reads OneLake as https://onelake.dfs.fabric.microsoft.com/")
+            raise RuntimeError(
+                "COPY INTO reads OneLake as https://onelake.dfs.fabric.microsoft.com/"
+            )
         folder = url.path.strip("/")
         loaded = 0
         for path in self.server.files.find(folder):
@@ -433,7 +442,9 @@ def sample_batch(start: int = 0, n: int = 4) -> pa.RecordBatch:
         [
             pa.array(ids, pa.int64()),
             pa.array(names, pa.string()),
-            pa.array(["a", "b", "a", None][:n] + ["b"] * max(0, n - 4), pa.string()).dictionary_encode(),
+            pa.array(
+                ["a", "b", "a", None][:n] + ["b"] * max(0, n - 4), pa.string()
+            ).dictionary_encode(),
             pa.array([Decimal(i) / 4 for i in ids], pa.decimal128(12, 2)),
             pa.array([float(i) / 3 if i % 4 else float("nan") for i in ids], pa.float64()),
             pa.array([i % 2 == 0 for i in ids], pa.bool_()),

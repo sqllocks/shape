@@ -69,7 +69,9 @@ class OneLakePath:
 
     def join(self, *parts: str) -> OneLakePath:
         segs = [segment(p, "path segment") for part in parts for p in part.split("/") if p]
-        return OneLakePath(self.workspace, self.item, "/".join([*self.path.split("/"), *segs]).strip("/"))
+        return OneLakePath(
+            self.workspace, self.item, "/".join([*self.path.split("/"), *segs]).strip("/")
+        )
 
     def abfss(self) -> str:
         tail = f"/{self.path}" if self.path else ""

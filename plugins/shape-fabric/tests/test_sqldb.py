@@ -7,14 +7,15 @@ from decimal import Decimal
 
 import pyarrow as pa
 import pytest
-from shape_fabric.testing import sample_batch, sample_schema
-from shape_fabric import SqlDatabaseWriter, WriteError
-from shape_fabric import _tsql
-from shape_fabric.testing import FakeSqlServer
+from shape_fabric import SqlDatabaseWriter, WriteError, _tsql
+from shape_fabric.testing import FakeSqlServer, sample_schema
 
 from shape.errors import ShapeError
 
-CS = "Driver={ODBC Driver 18 for SQL Server};Server=db.example.test;Database=d;UID=u;PWD=hunter2hunter2"
+CS = (
+    "Driver={ODBC Driver 18 for SQL Server};Server=db.example.test;Database=d;"
+    "UID=u;PWD=hunter2hunter2"
+)
 
 
 def writer(server, **kw):
@@ -159,7 +160,11 @@ def test_bad_names_are_refused_before_anything_runs(name, batches):
 
 def test_time_zones_are_converted_to_the_utc_instant():
     batch = pa.RecordBatch.from_arrays(
-        [pa.array([dt.datetime(2026, 1, 1)], pa.timestamp("us")).cast(pa.timestamp("us", "Asia/Tokyo"))],
+        [
+            pa.array([dt.datetime(2026, 1, 1)], pa.timestamp("us")).cast(
+                pa.timestamp("us", "Asia/Tokyo")
+            )
+        ],
         names=["t"],
     )
     server = FakeSqlServer()
@@ -176,7 +181,8 @@ def test_create_ddl_types_for_sql_database_and_warehouse():
     assert "[segment] NVARCHAR(MAX) NULL" in ddl and "[raw] VARBINARY(MAX) NULL" in ddl
     assert "[u] TINYINT NULL" in ddl
     wh = SqlDatabaseWriter(
-        "Server=x.datawarehouse.fabric.microsoft.com;Database=w;UID=u;PWD=p", connect=FakeSqlServer().connect
+        "Server=x.datawarehouse.fabric.microsoft.com;Database=w;UID=u;PWD=p",
+        connect=FakeSqlServer().connect,
     )
     assert wh.db.warehouse
     ddl = wh.create_ddl("t", schema, primary_key=["id"])
@@ -231,7 +237,11 @@ def test_fast_executemany_is_used_only_when_row_zero_is_the_widest():
     w.write_table("one", [widest_first])
     w.write_table("two", [widest_later])
     assert flags == [True, False]
-    assert [r[0] for r in server.rows("dbo", "two")] == ["a", "abcdef", "bb"]  # nothing cut or reordered
+    assert [r[0] for r in server.rows("dbo", "two")] == [
+        "a",
+        "abcdef",
+        "bb",
+    ]  # nothing cut or reordered
 
 
 def test_schema_is_created_when_missing_and_an_empty_table_needs_a_schema(batches):
@@ -262,13 +272,20 @@ def test_the_destination_never_shows_the_password():
 
 def test_ado_net_connection_strings_become_odbc():
     cs = (
-        'Data Source=tcp:abc.datawarehouse.fabric.microsoft.com,1433;Initial Catalog=wh;'
-        'User ID=app;Password="p;w=1";Encrypt=True;Connect Timeout=45;Authentication=Active Directory Default'
+        "Data Source=tcp:abc.datawarehouse.fabric.microsoft.com,1433;Initial Catalog=wh;"
+        'User ID=app;Password="p;w=1";Encrypt=True;Connect Timeout=45;'
+        "Authentication=Active Directory Default"
     )
     out = _tsql.normalize_connection_string(cs)
-    assert out.startswith("Driver={ODBC Driver 18 for SQL Server};Server=abc.datawarehouse.fabric.microsoft.com,1433;")
+    assert out.startswith(
+        "Driver={ODBC Driver 18 for SQL Server};Server=abc.datawarehouse.fabric.microsoft.com,1433;"
+    )
     assert "Database=wh" in out and "UID=app" in out and "PWD={p;w=1}" in out
-    assert "Encrypt=yes" in out and "Connection Timeout=45" in out and "Authentication=ActiveDirectoryDefault" in out
+    assert (
+        "Encrypt=yes" in out
+        and "Connection Timeout=45" in out
+        and "Authentication=ActiveDirectoryDefault" in out
+    )
     assert _tsql.is_warehouse(out)
     assert _tsql.normalize_connection_string(CS) == CS  # ODBC strings pass through
     with pytest.raises(ShapeError):

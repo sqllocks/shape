@@ -56,7 +56,9 @@ def test_landing_zone_layout():
         "/_control/_SUCCESS_2026-02-03"
     )
     assert onelake.quarantine(base, "retail", "run1").endswith("/quarantine/retail/run1")
-    assert onelake.landing_zone("/tmp/x", "d", "e", "2026-01-01") == "/tmp/x/landing/d/e/dt=2026-01-01"
+    assert (
+        onelake.landing_zone("/tmp/x", "d", "e", "2026-01-01") == "/tmp/x/landing/d/e/dt=2026-01-01"
+    )
 
 
 @pytest.mark.parametrize("bad", ["..", "a/../b", "a\\b", "a\x00b", "a?b", "a#b", ""])

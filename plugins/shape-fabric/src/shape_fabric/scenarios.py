@@ -21,9 +21,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import pyarrow as pa
+import pyarrow as pa  # type: ignore[import-untyped,unused-ignore]
 
-from .errors import WriteError
 from .eventhouse import EventhouseEmitter
 from .eventhouse_writer import EventhouseWriter
 from .recording import Tape, TapeConnection, TapeTransport, jsonable, replay_tape, save
@@ -32,8 +31,13 @@ from .testing import FakeKusto, FakeSqlServer, MemoryFS, sample_batch, sample_ba
 from .warehouse import WarehouseWriter
 
 KQL_URI = "eventhouse://kql.example.test/db1"
-FAKE_TOKEN = "fake-access-token-for-the-contract-scenarios"  # not a credential: the fake service ignores it
-SQL_CS = "Driver={ODBC Driver 18 for SQL Server};Server=db.example.test;Database=d;UID=app;PWD=example-password"
+FAKE_TOKEN = (
+    "fake-access-token-for-the-contract-scenarios"  # not a credential: the fake service ignores it
+)
+SQL_CS = (
+    "Driver={ODBC Driver 18 for SQL Server};Server=db.example.test;Database=d;"
+    "UID=app;PWD=example-password"
+)
 WH_CS = (
     "Driver={ODBC Driver 18 for SQL Server};Server=wh.datawarehouse.fabric.microsoft.com;"
     "Database=wh;UID=app;PWD=example-password"
@@ -115,7 +119,9 @@ def _kusto_busy_once() -> FakeKusto:
 
 
 def _kusto_forbidden() -> Any:
-    def forbidden(method: str, url: str, headers: dict[str, str], body: bytes, timeout: float) -> Any:
+    def forbidden(
+        method: str, url: str, headers: dict[str, str], body: bytes, timeout: float
+    ) -> Any:
         return 403, {}, b"Forbidden: principal has no ingestor role"
 
     return forbidden
@@ -218,7 +224,10 @@ SCENARIOS: dict[str, Scenario] = {
             _kusto_busy_once,
         ),
         Scenario(
-            "eventhouse_replace_in_small_requests", "http", eventhouse_replace_in_small_requests, _kusto
+            "eventhouse_replace_in_small_requests",
+            "http",
+            eventhouse_replace_in_small_requests,
+            _kusto,
         ),
         Scenario("eventhouse_not_authorised", "http", eventhouse_not_authorised, _kusto_forbidden),
         Scenario("eventhouse_emit_events", "http", eventhouse_emit_events, _kusto),

@@ -12,9 +12,14 @@ from shape_fabric.warehouse import chunked, copy_into_sql, copy_literal, staging
 
 from shape.errors import ShapeError
 
-CS = "Driver={ODBC Driver 18 for SQL Server};Server=w.datawarehouse.fabric.microsoft.com;Database=wh;UID=u;PWD=pw"
+CS = (
+    "Driver={ODBC Driver 18 for SQL Server};Server=w.datawarehouse.fabric.microsoft.com;"
+    "Database=wh;UID=u;PWD=pw"
+)
 STAGING = "onelake://Analytics/Sales/Files"
-HTTPS = "https://onelake.dfs.fabric.microsoft.com/Analytics/Sales.Lakehouse/Files/staging/run000000001"
+HTTPS = (
+    "https://onelake.dfs.fabric.microsoft.com/Analytics/Sales.Lakehouse/Files/staging/run000000001"
+)
 
 
 def make(**kw):
@@ -159,7 +164,9 @@ def test_the_copy_location_cannot_inject_sql():
 
 def test_awkward_table_names_get_safe_staging_folders_and_stay_apart(batches):
     assert staging_slug("a b'c") != staging_slug("a_b_c")
-    assert set(staging_slug("x; DROP--")) <= set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-")
+    assert set(staging_slug("x; DROP--")) <= set(
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-"
+    )
     w, server, fs = make()
     assert w.write_table("o'brien; DROP TABLE x;--", batches) == 7
     assert ("dbo", "o'brien; DROP TABLE x;--") in server.tables

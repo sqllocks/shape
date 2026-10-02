@@ -17,7 +17,7 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 import pyarrow.types as pat  # type: ignore[import-untyped]
-from shape_sqlserver.sql import (
+from shape_sqlserver.sql import (  # type: ignore[import-untyped,unused-ignore]
     DEFAULT_DRIVER,
     SqlServerError,
     build_connection_string,
@@ -56,7 +56,7 @@ def ident(name: str) -> str:
         raise ShapeError(str(exc)) from None
     if len(name) > MAX_IDENT:
         raise ShapeError(f"a SQL name is at most {MAX_IDENT} characters: {name[:40]!r}...")
-    return quoted
+    return str(quoted)
 
 
 def qualified(schema: str, table: str) -> str:
@@ -154,6 +154,29 @@ def create_table_sql(
     body = ",\n".join(lines)
     # every name went through ident(); there are no values in this statement
     return f"CREATE TABLE {qualified(schema_name, table)} (\n{body}\n)"  # nosec B608
+
+
+def drop_table_sql(schema_name: str, table: str, *, if_exists: bool = False) -> str:
+    clause = "IF EXISTS " if if_exists else ""
+    return f"DROP TABLE {clause}{qualified(schema_name, table)}"  # nosec B608 - quoted names only
+
+
+def truncate_sql(schema_name: str, table: str) -> str:
+    return f"TRUNCATE TABLE {qualified(schema_name, table)}"  # nosec B608 - quoted names only
+
+
+def count_sql(schema_name: str, table: str) -> str:
+    return f"SELECT COUNT(*) FROM {qualified(schema_name, table)}"  # nosec B608 - quoted names only
+
+
+def create_schema_sql(schema_name: str) -> str:
+    """``CREATE SCHEMA`` must be alone in its batch, hence ``EXEC``; the name is quoted and its
+    quotes doubled for the string literal."""
+    quoted = ident(schema_name).replace("'", "''")
+    return (
+        "IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = ?) "
+        f"EXEC('CREATE SCHEMA {quoted}')"  # nosec B608 - quoted name only
+    )
 
 
 def insert_sql(schema_name: str, table: str, names: Sequence[str]) -> str:
@@ -276,21 +299,25 @@ def normalize_connection_string(cs: str, driver: str = DEFAULT_DRIVER) -> str:
     extra: dict[str, str] = {}
     if "authentication" in parts:
         extra["Authentication"] = parts["authentication"].replace(" ", "")
-    return build_connection_string(
-        server,
-        parts.get("initial catalog") or parts.get("database"),
-        user=parts.get("user id") or parts.get("uid") or parts.get("user"),
-        password=parts.get("password") or parts.get("pwd"),
-        driver=driver,
-        encrypt=True if encrypt is None else encrypt,
-        trust_server_certificate=bool(trust),
-        timeout=int(timeout) if timeout and timeout.isdigit() else 30,
-        extra=extra,
+    return str(
+        build_connection_string(
+            server,
+            parts.get("initial catalog") or parts.get("database"),
+            user=parts.get("user id") or parts.get("uid") or parts.get("user"),
+            password=parts.get("password") or parts.get("pwd"),
+            driver=driver,
+            encrypt=True if encrypt is None else encrypt,
+            trust_server_certificate=bool(trust),
+            timeout=int(timeout) if timeout and timeout.isdigit() else 30,
+            extra=extra,
+        )
     )
 
 
 def is_warehouse(connection_string: str | None) -> bool:
-    return bool(connection_string) and any(h in str(connection_string).lower() for h in WAREHOUSE_HOSTS)
+    return bool(connection_string) and any(
+        h in str(connection_string).lower() for h in WAREHOUSE_HOSTS
+    )
 
 
 _LOGIN_KEYS = re.compile(r"(^|;)\s*(uid|pwd|user id|password|authentication)\s*=", re.IGNORECASE)

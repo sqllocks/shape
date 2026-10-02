@@ -33,7 +33,9 @@ from typing import Any
 from urllib.parse import unquote, urlsplit
 
 import pyarrow as pa  # type: ignore[import-untyped]
-from shape_sqlserver.sql import build_connection_string
+from shape_sqlserver.sql import (
+    build_connection_string,  # type: ignore[import-untyped,unused-ignore]
+)
 
 from shape.errors import ShapeError
 
@@ -66,7 +68,7 @@ def connection_string_for(uri: str, options: dict[str, Any], scheme: str) -> str
         raise ShapeError(
             f"give connection_string, or a URI of the form {scheme}://<host>/<database>: {uri!r}"
         )
-    return build_connection_string(parts.netloc, database)
+    return str(build_connection_string(parts.netloc, database))
 
 
 class LakehouseSink:

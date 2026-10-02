@@ -52,7 +52,9 @@ def token_for(credential: Any, scope: str) -> str:
     except AuthError:
         raise
     except Exception as exc:
-        raise AuthError(f"the credential could not give a token for {scope}: {_brief(exc)}") from exc
+        raise AuthError(
+            f"the credential could not give a token for {scope}: {_brief(exc)}"
+        ) from exc
     raise AuthError("a credential needs get_token(scope) or must be a function scope -> token")
 
 

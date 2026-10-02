@@ -24,12 +24,11 @@ and to OneLake.
 from __future__ import annotations
 
 import re
-import time
 import uuid
 import warnings
 import zlib
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from typing import Any
+from typing import Any, BinaryIO
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
@@ -69,9 +68,7 @@ def staging_slug(table: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.]", "_", table)[:60] + f"-{zlib.crc32(table.encode()):08x}"
 
 
-def chunked(
-    batches: Iterable[pa.RecordBatch], chunk_rows: int
-) -> Iterator[list[pa.RecordBatch]]:
+def chunked(batches: Iterable[pa.RecordBatch], chunk_rows: int) -> Iterator[list[pa.RecordBatch]]:
     """``batches`` regrouped into lists of at most ``chunk_rows`` rows (batches are sliced)."""
     group: list[pa.RecordBatch] = []
     size = 0
@@ -182,9 +179,7 @@ class WarehouseWriter:
             raise
         except Exception as exc:
             undo(db, sname, table, created)
-            raise WriteError(
-                f"loading {sname}.{table} failed: {_tsql.redact(str(exc))}"
-            ) from exc
+            raise WriteError(f"loading {sname}.{table} failed: {_tsql.redact(str(exc))}") from exc
         finally:
             self._cleanup(folder)
 
@@ -206,7 +201,11 @@ class WarehouseWriter:
         staged = 0
         for index, group in enumerate(chunked(normalized(), chunk_rows)):
             path = folder.join(f"chunk_{index:06d}.parquet").abfss()
-            self.storage.write(path, lambda h, g=group: write_batches(h, "parquet", g, schema))
+
+            def put(handle: BinaryIO, g: list[pa.RecordBatch] = group) -> None:
+                write_batches(handle, "parquet", g, schema)
+
+            self.storage.write(path, put)
             staged += sum(b.num_rows for b in group)
         return staged
 
@@ -222,12 +221,12 @@ class WarehouseWriter:
         db = self.db
         before = None
         if mode == "append" and not created:
-            before = int(db.execute(f"SELECT COUNT(*) FROM {_tsql.qualified(schema_name, table)}").fetchone()[0])  # nosec B608
+            before = int(db.execute(_tsql.count_sql(schema_name, table)).fetchone()[0])
         cursor = db.execute(copy_into_sql(schema_name, table, folder.https() + "/"))
         reported = getattr(cursor, "rowcount", -1)
         if isinstance(reported, int) and reported >= 0:
             return reported
-        count = int(db.execute(f"SELECT COUNT(*) FROM {_tsql.qualified(schema_name, table)}").fetchone()[0])  # nosec B608
+        count = int(db.execute(_tsql.count_sql(schema_name, table)).fetchone()[0])
         return count - (before or 0)
 
     def _cleanup(self, folder: onelake.OneLakePath) -> None:

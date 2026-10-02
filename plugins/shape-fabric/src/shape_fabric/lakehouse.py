@@ -150,7 +150,9 @@ class LakehouseWriter:
                 raise
             except Exception as exc:
                 result.elapsed_seconds = time.monotonic() - start
-                raise WriteError(f"writing {table!r} to {self.folder} failed: {exc}", result) from exc
+                raise WriteError(
+                    f"writing {table!r} to {self.folder} failed: {exc}", result
+                ) from exc
         result.elapsed_seconds = time.monotonic() - start
         return result
 
@@ -167,9 +169,7 @@ class LakehouseWriter:
         return path
 
     # -------------------------------------------------------------- layout
-    def landing_zone(
-        self, domain: str, entity: str, dt: str, hour: str | int | None = None
-    ) -> str:
+    def landing_zone(self, domain: str, entity: str, dt: str, hour: str | int | None = None) -> str:
         return onelake.landing_zone(self.folder, domain, entity, dt, hour)
 
     def manifest_path(self, domain: str, entity: str, dt: str) -> str:

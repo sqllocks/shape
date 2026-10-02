@@ -188,7 +188,7 @@ def test_mapping_survives_kql_unescaping_for_awkward_column_names():
     schema = pa.schema([(n, pa.string()) for n in names])
     doc = _mapping_doc(create_mapping_command("t", schema))
     assert [c["column"] for c in doc] == names
-    assert [json.loads(c["path"][1:].strip("[]"))  for c in doc] == names
+    assert [json.loads(c["path"][1:].strip("[]")) for c in doc] == names
 
 
 @pytest.mark.parametrize(

@@ -73,7 +73,10 @@ class Storage:
             raise
 
     def write_bytes(self, path: str, data: bytes) -> None:
-        self.write(path, lambda handle: handle.write(data))
+        def put(handle: BinaryIO) -> None:
+            handle.write(data)
+
+        self.write(path, put)
 
     def read_bytes(self, path: str) -> bytes:
         if is_remote(path):

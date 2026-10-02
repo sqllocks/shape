@@ -3,13 +3,11 @@
 import io
 import json
 
-import pyarrow as pa
 import pyarrow.csv as pacsv
 import pyarrow.parquet as pq
 import pytest
-from shape_fabric.testing import sample_batch, sample_schema
 from shape_fabric import LakehouseWriter, WriteError
-from shape_fabric.testing import MemoryFS
+from shape_fabric.testing import MemoryFS, sample_batch, sample_schema
 
 from shape.errors import ShapeError
 
@@ -52,7 +50,9 @@ def test_onelake_short_and_long_forms_write_the_same_file(batches):
 def test_the_same_input_gives_the_same_bytes(tmp_path, batches):
     LakehouseWriter(str(tmp_path / "a"), format="jsonl").write_table("t", batches)
     LakehouseWriter(str(tmp_path / "b"), format="jsonl").write_table("t", batches)
-    assert (tmp_path / "a/t/part-0001.jsonl").read_bytes() == (tmp_path / "b/t/part-0001.jsonl").read_bytes()
+    assert (tmp_path / "a/t/part-0001.jsonl").read_bytes() == (
+        tmp_path / "b/t/part-0001.jsonl"
+    ).read_bytes()
 
 
 def test_batches_are_streamed_not_collected(tmp_path):
@@ -130,7 +130,9 @@ def test_landing_zone_manifest_and_done_flag_go_to_onelake_too(batches):
     w = LakehouseWriter(ONELAKE, filesystem=fs)
     part = w.landing_zone("retail", "order", "2026-02-03", 4)
     w.write_table("order", batches, directory=part)
-    w.write_manifest(w.manifest_path("retail", "order", "2026-02-03"), {"rows": 7, "b": 1, "a": [1]})
+    w.write_manifest(
+        w.manifest_path("retail", "order", "2026-02-03"), {"rows": 7, "b": 1, "a": [1]}
+    )
     w.write_done_flag(w.done_flag_path("retail", "order", "2026-02-03"))
     base = "Analytics/Sales.Lakehouse/Files/raw/landing/retail/order"
     assert sorted(fs.files) == [

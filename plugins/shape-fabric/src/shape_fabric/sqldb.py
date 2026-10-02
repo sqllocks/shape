@@ -104,14 +104,7 @@ class SqlConnection:
     def ensure_schema(self, schema_name: str) -> None:
         if schema_name.lower() == "dbo":
             return
-        quoted = _tsql.ident(schema_name).replace("'", "''")
-        # CREATE SCHEMA must be alone in its batch, hence EXEC; the name is quoted and its
-        # quotes doubled for the string literal
-        self.execute(
-            "IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = ?) "
-            f"EXEC('CREATE SCHEMA {quoted}')",
-            schema_name,
-        )
+        self.execute(_tsql.create_schema_sql(schema_name), schema_name)
         self.get().commit()
 
     def commit(self) -> None:
@@ -125,7 +118,9 @@ class SqlConnection:
             pass
 
 
-def _peek(batches: Iterable[pa.RecordBatch]) -> tuple[pa.RecordBatch | None, Iterator[pa.RecordBatch]]:
+def _peek(
+    batches: Iterable[pa.RecordBatch],
+) -> tuple[pa.RecordBatch | None, Iterator[pa.RecordBatch]]:
     it = iter(batches)
     return next(it, None), it
 
@@ -150,11 +145,11 @@ def prepare_table(
             "or replace to write into it"
         )
     if mode == "replace" and exists:
-        db.execute(f"DROP TABLE {_tsql.qualified(schema_name, table)}")
+        db.execute(_tsql.drop_table_sql(schema_name, table))
         db.commit()
         exists = False
     if exists and mode == "truncate":
-        db.execute(f"TRUNCATE TABLE {_tsql.qualified(schema_name, table)}")
+        db.execute(_tsql.truncate_sql(schema_name, table))
         db.commit()
     if exists:
         return False
@@ -205,7 +200,7 @@ def undo(db: SqlConnection, schema_name: str, table: str, created: bool) -> None
     db.rollback()
     if created:
         try:
-            db.execute(f"DROP TABLE IF EXISTS {_tsql.qualified(schema_name, table)}")
+            db.execute(_tsql.drop_table_sql(schema_name, table, if_exists=True))
             db.commit()
         except Exception:  # noqa: S110  # nosec B110 - the original error is the one to report
             pass
@@ -301,9 +296,7 @@ class SqlDatabaseWriter:
             raise
         except Exception as exc:
             undo(db, sname, table, created)
-            raise WriteError(
-                f"writing {sname}.{table} failed: {_tsql.redact(str(exc))}"
-            ) from exc
+            raise WriteError(f"writing {sname}.{table} failed: {_tsql.redact(str(exc))}") from exc
 
     def _insert(
         self,

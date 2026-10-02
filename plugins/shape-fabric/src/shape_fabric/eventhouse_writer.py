@@ -129,7 +129,9 @@ class EventhouseWriter:
             exists = False
         if mode == "truncate" and exists:
             client.mgmt(f".clear table {q(name)} data")
-        client.prepare(name, schema, create="strict" if not exists and mode == "create" else "merge")
+        client.prepare(
+            name, schema, create="strict" if not exists and mode == "create" else "merge"
+        )
 
     def row_count(self, kql_table: str) -> int:
         """The rows currently visible in a KQL table (streaming ingestion is visible within

@@ -70,7 +70,9 @@ class EventstreamWriter:
         except Exception as exc:
             raise WriteError(f"sending {table!r} to {self.uri} failed: {exc}") from exc
 
-    def write_tables(self, tables: Mapping[str, Iterable[pa.RecordBatch]], **options: Any) -> WriteResult:
+    def write_tables(
+        self, tables: Mapping[str, Iterable[pa.RecordBatch]], **options: Any
+    ) -> WriteResult:
         start = time.monotonic()
         result = WriteResult(self.destination)
         for table, batches in tables.items():
