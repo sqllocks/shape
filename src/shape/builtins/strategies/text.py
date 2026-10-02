@@ -20,6 +20,7 @@ SHAPE_API = "1.0"
 
 _TOKEN = re.compile(r"\{(\w+)(?::(\d+))?\}")
 RANDOM_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+DIGIT_ALPHABET = "0123456789"
 
 
 def _as_slot_column(column: pa.Array, width: int) -> pa.Array:
@@ -39,7 +40,9 @@ class Pattern:
     """A string built from ``spec['format']``.
 
     Tokens are ``{seq}`` or ``{seq:6}`` (the 1-based row number of the table, zero-padded to the
-    width), ``{random:4}`` (that many characters from ``A-Z0-9``; 4 without a width) and
+    width), ``{random:4}`` (that many characters from ``A-Z0-9``; 4 without a width),
+    ``{digits:5}`` (that many random digits, leading zeros included: an identifier such as a ZIP
+    code or an NPI; 4 without a width) and
     ``{name}`` or ``{name:3}`` (the value of another column of the same row, zero-padded).
     Text outside tokens is literal; a token naming no column is left as written. A null in a
     referenced column makes the row null. Numbers of non-integer type are formatted by Arrow.
@@ -65,14 +68,14 @@ class Pattern:
                     ctx.row_start + 1, ctx.row_start + ctx.n_rows + 1, dtype=np.int64
                 )
                 columns.append(arrow_array(numbers))
-            elif token == "random":
+            elif token in ("random", "digits"):
                 columns.append(
                     kernel_ops.random_strings(
                         stream(ctx, f"random{n_random}"),
                         ctx.row_start,
                         ctx.n_rows,
                         width or 4,
-                        RANDOM_ALPHABET,
+                        RANDOM_ALPHABET if token == "random" else DIGIT_ALPHABET,
                     )
                 )
                 n_random += 1

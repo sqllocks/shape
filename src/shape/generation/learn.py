@@ -207,6 +207,31 @@ def _is_covered_enum(col: ColumnProfile) -> bool:
     return values is not None and len(values) > 0 and len(values) >= col.cardinality
 
 
+def _text_enum(values: Mapping[str, float]) -> dict[str, Any]:
+    """A value-set generator of text labels. Labels that all read as numbers (ZIP codes) are kept
+    as text: without ``output_type`` the strategy would make them numbers and drop the zeros."""
+    gen: dict[str, Any] = {"strategy": "weighted_enum", "values": dict(values)}
+    try:
+        for key in values:
+            float(key)
+    except (TypeError, ValueError):
+        return gen
+    gen["output_type"] = "string"
+    return gen
+
+
+def _digit_identifier_width(col: ColumnProfile) -> int | None:
+    """The width of a text column whose every value is digits of one width (an identifier whose
+    leading zeros are part of the value), else ``None``."""
+    if col.dtype != "string" or (col.pattern_rates or {}).get("digits", 0.0) < 0.999:
+        return None
+    length = col.string_length or {}
+    low, high = length.get("min"), length.get("max")
+    if low is None or low != high or low < 1:
+        return None
+    return int(low)
+
+
 def guess_provider(column_name: str) -> str:
     """A faker provider guessed from a column name."""
     lower = column_name.lower().strip()
@@ -372,6 +397,12 @@ class SchemaBuilder:
             return {"strategy": "foreign_key", "ref": f"{col.fk_ref_table}.{key}"}
         if col.pattern == "uuid":
             return {"strategy": "uuid"}
+        width = _digit_identifier_width(col)
+        if width is not None:  # a ZIP, NPI or member number: text of digits, zeros and all
+            values = col.value_counts_ext or col.enum_values
+            if col.is_enum and values and _is_covered_enum(col):
+                return _text_enum(values)
+            return {"strategy": "pattern", "format": f"{{digits:{width}}}"}
         if col.pattern == "email":
             return {"strategy": "faker", "provider": "email"}
         if col.pattern == "phone":
@@ -394,7 +425,14 @@ class SchemaBuilder:
         if col.is_enum and not (numeric and not _is_covered_enum(col)):  # truncated_enum
             values = col.value_counts_ext if col.value_counts_ext else col.enum_values
             if values:
-                return {"strategy": "weighted_enum", "values": dict(values)}
+                return (
+                    _text_enum(values)
+                    if col.dtype == "string"
+                    else {
+                        "strategy": "weighted_enum",
+                        "values": dict(values),
+                    }
+                )
         if col.dtype == "boolean":
             return {"strategy": "weighted_enum", "values": {"true": 0.5, "false": 0.5}}
         if numeric:

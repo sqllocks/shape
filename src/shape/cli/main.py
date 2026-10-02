@@ -124,11 +124,25 @@ def _cmd_verify_signature(a):
 def _csv_format(a):
     from shape.profile.reference.readers import CsvFormat
 
+    names = getattr(a, "string_columns", None)
+    types_file = getattr(a, "types", None)
+    types: dict[str, str] = {}
+    if types_file:
+        with open(types_file, encoding="utf-8") as fh:
+            loaded = json.load(fh)
+        if not isinstance(loaded, dict) or not all(
+            isinstance(k, str) and isinstance(v, str) for k, v in loaded.items()
+        ):
+            raise ValueError(f"--types {types_file} must hold a JSON object of column: type")
+        types = loaded
     return CsvFormat(
         getattr(a, "delimiter", None),
         getattr(a, "encoding", None),
         getattr(a, "quotechar", None),
         getattr(a, "header", True),
+        tuple(n.strip() for n in names.split(",") if n.strip()) if names else (),
+        tuple(types.items()),
+        getattr(a, "infer_types", "auto"),
     )
 
 
@@ -179,6 +193,9 @@ def _cmd_profile(a):
         encoding=fmt.encoding,
         quotechar=fmt.quotechar,
         header=fmt.header,
+        string_columns=fmt.string_columns,
+        types=dict(fmt.types),
+        infer_types=fmt.infer_types,
     )
     content_id = shape.save(prof, a.output)
     key_id = _sign_output(a, a.output)
@@ -569,6 +586,26 @@ def _build_parser(plugin_commands=()):
         action=argparse.BooleanOptionalAction,
         default=True,
         help="the CSV's first row is a header (--no-header: columns are named f0, f1, ...)",
+    )
+    pr.add_argument(
+        "--string-columns",
+        metavar="NAMES",
+        help="comma-separated CSV columns to keep as text (ZIP, NPI, NDC, member numbers); "
+        "digits with leading zeros, or of one fixed width under an identifier name, are text "
+        "already",
+    )
+    pr.add_argument(
+        "--types",
+        metavar="FILE.json",
+        help='a JSON object of CSV column types, e.g. {"amount": "float", "zip": "string"} '
+        "(string, integer, float, boolean, date, datetime)",
+    )
+    pr.add_argument(
+        "--infer-types",
+        choices=("auto", "off"),
+        default="auto",
+        help="auto (default): infer CSV column types, keeping identifiers as text; "
+        "off: read every column as text",
     )
     pr.add_argument("--html", metavar="REPORT.html")
     pr.add_argument("--json", metavar="SUMMARY.json")

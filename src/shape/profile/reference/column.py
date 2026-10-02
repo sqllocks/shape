@@ -219,6 +219,9 @@ def pattern_rates(
         if hit:
             label = _RATE_LABELS[key]
             whole[label] = whole.get(label, 0.0) + hit / n_nn
+    digits = int(counts[_mask(uniq, r"^[0-9]+$", None)].sum())
+    if digits:  # identifiers (ZIP, NPI, member numbers): generation keeps their width and zeros
+        whole["digits"] = digits / n_nn
     contains: dict[str, float] = {}
     for key, pat in _CONTAINS_RE.items():
         mask = _mask(uniq, pat, _CONTAINS_NEEDS.get(key))
@@ -783,7 +786,7 @@ def _profile_column(
         stype = "string"
     else:  # str
         stype = "string"
-        if n_nn:
+        if n_nn and not c.keep_text:
             # the six words have at most 62 spellings in all: more distinct values cannot match
             if (
                 cardinality <= _MAX_BOOL_SPELLINGS

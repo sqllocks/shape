@@ -7,6 +7,7 @@ import datetime as _dt
 import hashlib
 import math
 import warnings
+from collections.abc import Iterable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
@@ -262,6 +263,9 @@ def profile(
     encoding: str | None = None,
     quotechar: str | None = None,
     header: bool = True,
+    string_columns: Iterable[str] = (),
+    types: Mapping[str, str] | None = None,
+    infer_types: str = "auto",
 ) -> Profile:
     """Profile a path, glob, directory, Delta table, Arrow table or DataFrame.
 
@@ -270,8 +274,23 @@ def profile(
     CSV options: ``delimiter`` (default: sniffed among comma, semicolon, tab and pipe),
     ``encoding`` (default UTF-8), ``quotechar`` (default ``"``) and ``header=False`` for a file
     without a header row (columns are then ``f0``, ``f1``, ...).
+
+    Identifiers are not numbers: a CSV column of digits with leading zeros (``02134``), or of one
+    fixed width of five or more digits whose name says it is an identifier (``zip``, ``npi``,
+    ``member_id``), is read as text, so ``00000`` stays ``00000``. ``string_columns`` keeps more
+    columns as text, ``types`` (``{"amount": "float"}``; string, integer, float, boolean, date,
+    datetime) sets column types, and ``infer_types="off"`` reads every column as text. An integer
+    column that only looks like an identifier is reported as a warning.
     """
-    fmt = CsvFormat(delimiter, encoding, quotechar, header)
+    fmt = CsvFormat(
+        delimiter,
+        encoding,
+        quotechar,
+        header,
+        tuple(string_columns),
+        tuple((types or {}).items()),
+        infer_types,
+    )
     with np.errstate(all="ignore"):  # inf / NaN inputs are data, not numpy warnings
         return _profile(source, name, fmt)
 

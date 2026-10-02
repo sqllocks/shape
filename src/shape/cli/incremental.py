@@ -113,9 +113,9 @@ def read_tables(directory: str | Path) -> dict[str, pa.Table]:
     for pattern, fmt in _READ_PATTERNS:
         for file in sorted(path.glob(pattern)):
             if fmt == "csv":
-                import pyarrow.csv as pacsv  # type: ignore[import-untyped]
+                from shape.io.identifiers import read_csv_keeping_identifiers
 
-                tables[file.stem] = pacsv.read_csv(file)
+                tables[file.stem] = read_csv_keeping_identifiers(file)
             elif fmt == "parquet":
                 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 

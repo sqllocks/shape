@@ -33,12 +33,12 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
-import pyarrow.csv as pacsv  # type: ignore[import-untyped]
 import pyarrow.json as pajson  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 import shape
 from shape.integrations.fabric import generation
+from shape.io.identifiers import read_csv_keeping_identifiers
 
 __all__ = [
     "LAKEHOUSE_ALIAS",
@@ -173,7 +173,7 @@ def _table_from_bytes(data: bytes, path: str) -> pa.Table:
         if suffix == ".parquet":
             return pq.read_table(buf)
         if suffix == ".csv":
-            return pacsv.read_csv(buf)
+            return read_csv_keeping_identifiers(buf)
         if suffix in (".jsonl", ".ndjson"):
             return pajson.read_json(buf)
     except Exception as e:

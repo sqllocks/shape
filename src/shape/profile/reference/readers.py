@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import os
 import re
+import warnings
+from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,6 +17,12 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 import pyarrow.csv as pacsv  # type: ignore[import-untyped]
 
 from shape.io import sniff_delimiter
+from shape.io.identifiers import (
+    Suspect,
+    identifier_columns,
+    resolve_type,
+    suspect_message,
+)
 from shape.kernel.dispatch import get_kernel
 
 # threading
@@ -72,6 +80,9 @@ PANDAS_NA = [
 ]
 
 
+TEXT_MARK = b"shape.keep_text"  # field metadata: the CSV reader fixed this column as text
+
+
 @dataclass
 class _Col:
     name: str
@@ -80,6 +91,9 @@ class _Col:
     tz: str | None = None  # dt64 only: the Parquet column's time zone (arr holds UTC instants)
     # file sources only: fail where the reference profiler fails on the same file (P1-08)
     strict: bool = False
+    # The reader was told this column is text (an identifier, or named in ``string_columns``):
+    # its digits are not re-typed as numbers, dates or booleans by the profiler's own detectors.
+    keep_text: bool = False
 
 
 def _is_string_view(typ: pa.DataType) -> bool:
@@ -137,6 +151,13 @@ def _csv_cols(t: pa.Table) -> list[_Col]:
             out.append(_Col(name, "str", _date_text(col)))
         else:
             out.append(_Col(name, "str", pc.cast(col, pa.string()) if typ != pa.string() else col))
+    for i, c in enumerate(out):
+        if (
+            c.kind == "str"
+            and t.schema.field(i).metadata
+            and TEXT_MARK in t.schema.field(i).metadata
+        ):
+            c.keep_text = True
     return out
 
 
@@ -212,6 +233,12 @@ class CsvFormat:
     encoding: str | None = None
     quotechar: str | None = None
     header: bool = True
+    # Columns read as text whatever they look like (``--string-columns zip,npi``).
+    string_columns: tuple[str, ...] = ()
+    # Column types by name (``--types FILE.json``): string, integer, float, boolean, date, datetime.
+    types: tuple[tuple[str, str], ...] = ()
+    # "auto": integer columns that hold identifiers stay text; "off": every column is text.
+    infer_types: str = "auto"
 
 
 def _csv_options(path: str | Path, fmt: CsvFormat | None) -> tuple[CsvFormat, Any]:
@@ -227,6 +254,22 @@ def _csv_options(path: str | Path, fmt: CsvFormat | None) -> tuple[CsvFormat, An
 def read_csv(
     path: str | Path, threads: int | None = None, fmt: CsvFormat | None = None
 ) -> pa.Table:
+    table, _found = read_csv_detect(path, threads, fmt, warn=True)
+    return table
+
+
+def read_csv_detect(
+    path: str | Path,
+    threads: int | None = None,
+    fmt: CsvFormat | None = None,
+    *,
+    force_text: Iterable[str] = (),
+    warn: bool = False,
+) -> tuple[pa.Table, dict[str, str]]:
+    """The CSV as an Arrow table, and ``{column: reason}`` for the integer columns that hold
+    identifiers and were read as text instead (leading zeros, or a fixed width and an identifier
+    name; ``shape.io.identifiers``). ``force_text`` names more columns to keep as text; with
+    ``warn`` the integer columns that only look like identifiers are reported as a warning."""
     n = _n_threads(threads)
     f, po = _csv_options(path, fmt)
     ro = pacsv.ReadOptions(
@@ -235,6 +278,14 @@ def read_csv(
         encoding=f.encoding or "utf8",
         autogenerate_column_names=not f.header,
     )
+    if f.infer_types not in ("auto", "off"):
+        raise ValueError(f"infer_types must be 'auto' or 'off', not {f.infer_types!r}")
+    typed = {k: resolve_type(v) for k, v in f.types}
+    for name in (*f.string_columns, *force_text):
+        typed[name] = pa.string()
+    if f.infer_types == "off":
+        names = pacsv.open_csv(path, read_options=ro, parse_options=po).schema.names
+        typed = {**dict.fromkeys(names, pa.string()), **typed}
     co = pacsv.ConvertOptions(
         null_values=PANDAS_NA,
         strings_can_be_null=True,
@@ -242,10 +293,54 @@ def read_csv(
         true_values=["True", "TRUE", "true"],
         false_values=["False", "FALSE", "false"],
         timestamp_parsers=["@@never%Y"],  # pandas.read_csv does not parse datetimes
+        column_types=typed,
     )
     table = pacsv.read_csv(path, read_options=ro, parse_options=po, convert_options=co)
-    table = _refine_integers(path, table, ro, po, co)
-    return _mixed_chunk_columns(table)
+    found: dict[str, str] = {}
+    suspects: list[Suspect] = []
+    explicit = {n for n in typed if n in {*f.string_columns, *force_text, *dict(f.types)}}
+    # "auto" looks at the integer columns; "off" read everything as text, so every column that
+    # was not named is looked at (the check only ever finds digits with leading zeros there)
+    looked = table.schema
+    if f.infer_types == "off":
+        looked = pa.schema([pa.field(n, pa.int64()) for n in table.column_names])
+    found = identifier_columns(
+        path,
+        looked,
+        read_options=ro,
+        parse_options=po,
+        null_values=PANDAS_NA,
+        skip=explicit if f.infer_types == "off" else typed,
+        on_suspect=suspects.append if f.infer_types == "auto" else None,
+    )
+    if found and f.infer_types == "auto":
+        names = list(found)
+        text = pacsv.read_csv(
+            path,
+            read_options=ro,
+            parse_options=po,
+            convert_options=pacsv.ConvertOptions(
+                null_values=PANDAS_NA,
+                strings_can_be_null=True,
+                quoted_strings_can_be_null=True,
+                include_columns=names,
+                column_types=dict.fromkeys(names, pa.string()),
+            ),
+        )
+        for name in names:
+            table = table.set_column(table.schema.get_field_index(name), name, text[name])
+    if warn and suspects:
+        message = suspect_message(suspects, option="--string-columns")
+        if message:
+            warnings.warn(f"{Path(path).name}: {message}", UserWarning, stacklevel=4)
+    table = _mixed_chunk_columns(_refine_integers(path, table, ro, po, co))
+    declared = {n for n, t in f.types if pa.types.is_string(resolve_type(t))}
+    marked = ({*f.string_columns, *force_text, *declared} | set(found)) & set(table.column_names)
+    for name in marked:
+        i = table.schema.get_field_index(name)
+        field = pa.field(name, table.schema.field(i).type, metadata={TEXT_MARK: b"1"})
+        table = table.set_column(i, field, table.column(i))
+    return table, found
 
 
 def _chunk_rows(ncols: int) -> int:

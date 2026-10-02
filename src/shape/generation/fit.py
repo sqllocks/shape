@@ -274,6 +274,8 @@ def _fit_column(
         elif col.dtype == "boolean":
             gen["output_type"] = "bool"
             gen["values"] = {str(k).lower(): v for k, v in gen["values"].items()}
+        elif col.dtype == "string":
+            gen["output_type"] = "string"  # labels that read as numbers (02134) stay text
         return "enum", gen
 
     if strategy in ("distribution", "empirical"):
@@ -282,6 +284,8 @@ def _fit_column(
             gen["output_type"] = "int64"
         return ("empirical" if strategy == "empirical" else "distribution"), gen
 
+    if strategy == "pattern":  # fixed-width digits (an identifier): the format is the profile's
+        return "pattern", gen
     if strategy == "faker":
         provider = str(gen.get("provider"))
         gen = {k: v for k, v in gen.items() if k != "max_length"}
