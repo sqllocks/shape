@@ -92,13 +92,11 @@ def series_equal(
         y = pd.to_datetime(bv).astype("datetime64[ns]").to_numpy()
         bad = int((np.abs(x.astype("int64") - y.astype("int64")) > dt_tol_ns).sum())
         return f"{bad} instants differ" if bad else None
-    try:
-        x = pd.to_numeric(av).to_numpy(dtype=np.float64)
-        y = pd.to_numeric(bv).to_numpy(dtype=np.float64)
+    xs, ys = pd.to_numeric(av, errors="coerce"), pd.to_numeric(bv, errors="coerce")
+    if xs.notna().all() and ys.notna().all():  # numbers, not text that happens to parse
+        x, y = xs.to_numpy(dtype=np.float64), ys.to_numpy(dtype=np.float64)
         bad = int((~np.isclose(x, y, rtol=rtol, atol=0.0)).sum())
         return f"{bad} numbers differ" if bad else None
-    except (TypeError, ValueError):
-        pass
     bad = int((av.astype(str).to_numpy() != bv.astype(str).to_numpy()).sum())
     return f"{bad} values differ" if bad else None
 

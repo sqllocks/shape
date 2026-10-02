@@ -133,6 +133,12 @@ class SCD2FileDropSimulator:
                 raise ValueError(
                     f"table {entity!r} has no business key column {cfg.business_key_column!r}"
                 )
+            key_type = table.schema.field(cfg.business_key_column).type
+            if not (pa.types.is_integer(key_type) or pa.types.is_floating(key_type)):
+                raise ValueError(
+                    f"the business key column {cfg.business_key_column!r} of table {entity!r} "
+                    "must be numeric (new entities get the next integer key)"
+                )
             if table.num_rows == 0:
                 raise ValueError(f"table {entity!r} has no rows to version")
             schema = self._versioned_schema(table.schema)

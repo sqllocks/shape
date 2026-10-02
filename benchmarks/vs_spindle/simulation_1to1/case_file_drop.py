@@ -503,7 +503,7 @@ def negative_controls(ctx: Any) -> sc.Checks:
     caught("a missing _done flag", remove_flag)
     caught("a missing row", drop_row)
 
-    # T-21: a Shape column scaled 1.5x and one with a changed category share must fail (a)-(e).
+    # T-21: a shifted date column, a changed category share and a raised null rate must fail (b)-(e).
     ref = _rows(_root(ctx.run("baseline", NAME, "neg_t21_ref", input_dir=str(ctx.input_dir("baseline", ctx.ref_seed)), tables=T21_TABLES, config={**T21_CONFIG, "seed": ctx.ref_seed})), "order")
     spread = [
         _rows(_root(ctx.run("baseline", NAME, f"neg_t21_{sd}", input_dir=str(ctx.input_dir("baseline", sd)), tables=T21_TABLES, config={**T21_CONFIG, "seed": sd})), "order")
@@ -512,10 +512,10 @@ def negative_controls(ctx: Any) -> sc.Checks:
     shape = _rows(_root(ctx.run("shape", NAME, "neg_t21_shape", input_dir=str(ctx.input_dir("shape", ctx.shape_seed)), tables=T21_TABLES, config={**T21_CONFIG, "seed": ctx.shape_seed})), "order")
     clean = cmp.t21_columns(ref, spread, shape)
     checks.add("control: untouched Shape output passes T-21", all(v.get("equivalent") for v in clean.values()), str([c for c, v in clean.items() if not v.get("equivalent")]))
-    scaled = shape.copy()
-    scaled["order_total"] = scaled["order_total"] * 1.5
-    r = cmp.t21_columns(ref, spread, scaled)
-    checks.add("caught: order_total scaled by 1.5", not r["order_total"]["equivalent"], "KS")
+    moved = shape.copy()
+    moved["order_date"] = pd.to_datetime(moved["order_date"]) + pd.Timedelta(days=365)
+    r = cmp.t21_columns(ref, spread, moved)
+    checks.add("caught: every order_date a year later", not r["order_date"]["equivalent"], "KS")
     cat = shape.copy()
     cat["status"] = cat["status"].where(cat.index % 3 != 0, "unseen")
     r = cmp.t21_columns(ref, spread, cat)
