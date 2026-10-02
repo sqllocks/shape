@@ -1986,7 +1986,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 30 | PF-03 | done | a726dd4 |
 | 31 | PF-04 | done (fsspec test requirement fixed at integration, c033f48) | b98dbac |
 | 32 | PF-05 | wip (merged; CI image build and 500 MB check pending) | 6d2e22a |
-| 33 | PF-06 | todo | |
+| 33 | PF-06 | wip (lane/PF-06) | |
 | 34 | P3-01 | done | 37386f3 |
 | 35 | P3-02 | done | 500367f |
 | 36 | P3-03 | done | 43f5d88 |
@@ -2008,27 +2008,27 @@ Work packages are listed in execution order. The next work package is the first 
 | 51 | P4-09 | done (retail per table equal to the baseline comparator, max diff 0.00000; G3, G4 fixed) | 9fd7caa |
 | 52 | P4-10 | done (two §6.5 rounds; lead GEN-CLI 2.10 GHz: medium 10.57x, large 31.64x; evidence P4-10-lead/) | 5fdf9b2 |
 | 53 | P4-11 | done (retail medium tiers 1-3: 0 mismatches over 9 tables; AUC/GMM max diff 0.017 <= 0.02; DP distinct unseeded) | f85b99d |
-| 54 | P5-01 | todo | |
+| 54 | P5-01 | wip (lane/P5-01) | |
 | 55 | P5-02 | todo | |
 | 56 | P5-03 | todo | |
 | 57 | P5-04 | todo | |
-| 58 | P6-01a | todo | |
+| 58 | P6-01a | wip (lane/P6-01a) | |
 | 59 | P6-01b | todo | |
 | 60 | P6-01c | todo | |
 | 61 | P6-01d | todo | |
 | 62 | P6-01e | todo | |
-| 63 | P6-02 | todo | |
-| 64 | P6-03 | todo | |
+| 63 | P6-02 | wip (lane/P6-02) | |
+| 64 | P6-03 | wip (lane/P6-03) | |
 | 65 | P6-04 | todo | |
-| 66 | P6-05 | todo | |
-| 67 | P6-06 | todo | |
+| 66 | P6-05 | wip (lane/P6-05) | |
+| 67 | P6-06 | wip (lane/P6-06) | |
 | 68 | P6-07a | todo | |
 | 69 | P6-07b | todo | |
 | 70 | P6-07c | todo | |
 | 71 | P6-08 | done (nightly SQL Server e2e pending) | 29eac3e |
 | 71a | P6-08b | done (rounds 1-2: FIX-1..FIX-9; real-server parity 11/11) | 515d26e |
 | 72 | P6-09 | done (CI bench-quick verify_1to1 green on c7bd366, run 36850390984) | 3859a3c |
-| 73 | P6-10 | todo | |
+| 73 | P6-10 | wip (lane/P6-10) | |
 | 74 | P6-11 | todo | |
 | 75 | P6-12 | todo | |
 | 76 | P6-13 | todo | |
