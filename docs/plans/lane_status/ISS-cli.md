@@ -142,6 +142,27 @@ them: the registry entry has no separate field). Tests: `test_iss_registry.py`.
   and use `shape diff`. Scoring data against a profile has no defined semantics in the plan
   (it would need its own acceptance criteria), so it is not invented here.
 
-## Checks run in this session (final)
+## Results (final tree, commit before this status edit; run in this session)
 
-See the last section, "Results".
+- `ruff check` and `ruff format --check` (src tests plugins benchmarks/vs_spindle): clean.
+- `mypy` (strict): no issues in 311 source files. `vulture src/shape scripts/vulture_whitelist.py
+  --min-confidence 80`: nothing. `lint-imports`: 1 kept, 0 broken (`shape.__main__` added to the
+  contract's module list, which `tests/plugins/test_builtins.py` requires). `check_user_facing`:
+  clean. `bandit -q -r src -ll`: exit 0. `check_requirements`, `check_secrets`,
+  `check_plugin_skeletons`, `check_conformance_coverage`: OK.
+- START: `shape --version` 41-76 ms over 5 runs (≤ 300 ms); `python -m shape --version` 41-71 ms.
+- `SHAPE_KERNEL=rust pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`:
+  4598 passed, 46 deselected. Same with `SHAPE_KERNEL=python`: 4598 passed, 46 deselected.
+  `pytest tests/demo --ignore=tests/demo/fabric`: 133 passed. (The first full run found one
+  failure, the import-contract module list; fixed and re-run in full.)
+- Not run: the Fabric demo tests, emulator and live tests, the `heavy` marker, `make check`'s
+  coverage threshold run and the vs-baseline benchmark harness (none of the changes touch them).
+
+## Left for the lead / owner
+
+- `fidelity` with a `.shape` profile as the reference (issue #30): refused with a clear message;
+  it needs a defined meaning first.
+- `shape capture`: kept (writes models, documented); whether to deprecate it is the owner's call.
+- #27.5 (content id differs by source format for a date column's min/max tag): documented, not
+  changed.
+- Registry commits carry no separate author/message field (`--meta` is the way).
