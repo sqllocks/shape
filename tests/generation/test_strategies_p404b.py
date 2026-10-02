@@ -253,8 +253,26 @@ def test_the_comparison_can_fail(generated):
 PROVIDER_NAMES = sorted(providers.PROVIDERS)
 
 
-def _text_engine(strategy: str, provider: str, rows: int, seed: int = 11, **extra: Any) -> Engine:
-    case = cases_mod._case(strategy, cases_mod._text(strategy, provider, **extra), rows=rows)
+def _text_engine(
+    strategy: str,
+    provider: str,
+    rows: int,
+    seed: int = 11,
+    options: Mapping[str, Any] | None = None,
+    **extra: Any,
+) -> Engine:
+    """``options`` are extra keys of the generator (``domains``, ``range``)."""
+    generators = (
+        {cases_mod.TARGET: {"strategy": strategy, "provider": provider, **options}}
+        if options
+        else None
+    )
+    case = cases_mod._case(
+        strategy,
+        cases_mod._text(strategy, provider, **extra),
+        rows=rows,
+        shape_generators=generators,
+    )
     return _engine(cases_mod.schema_for(case, "shape"), seed)
 
 
@@ -288,24 +306,31 @@ def test_faker_serves_the_native_providers_identically():
 
 
 def test_native_value_shapes():
-    def col(provider: str, rows: int = 20_000) -> list[str]:
-        return _text_engine("native", provider, rows).generate_table("t").column("x").to_pylist()
+    def col(provider: str, rows: int = 20_000, **options: Any) -> list[str]:
+        engine = _text_engine("native", provider, rows, options=options or None)
+        return engine.generate_table("t").column("x").to_pylist()
 
-    ssn = col("ssn")
+    # the explicit opt-ins give the baseline's realistic values (see strategy_1to1/differences.py)
+    ssn = col("ssn", range="assignable")
     areas = np.array([int(v[:3]) for v in ssn])
     assert areas.min() >= 1 and areas.max() <= 899 and not (areas == 666).any()
     assert all(1 <= int(v[4:6]) <= 99 and 1 <= int(v[7:]) <= 9999 for v in ssn)
-    phones = col("phone_number")
+    phones = col("phone_number", range="assignable")
     assert all(re.fullmatch(r"\([2-9]\d\d\) [2-9]\d\d-[1-9]\d{3}", v) for v in phones)
     area = np.array([int(v[1:4]) for v in phones])
     assert area.min() >= 200 and area.max() <= 998
     assert min(int(v[-4:]) for v in phones) >= 1000
-    emails = col("email")
+    emails = col("email", domains="realistic")
     assert all(re.fullmatch(r"[a-z]+\.[a-z']+[1-9]\d{0,2}@[\w.-]+", v) for v in emails)
     assert max(int(re.search(r"(\d+)@", v).group(1)) for v in emails) <= 998
-    stems = {c.removesuffix(".com").split("@")[1] for c in col("company_email", 5_000)}
+    stems = {
+        c.removesuffix(".com").split("@")[1]
+        for c in col("company_email", 5_000, domains="realistic")
+    }
     assert all(len(s) <= 20 and s == s.lower() and " " not in s for s in stems)
-    assert {v.split("/")[2] for v in col("uri", 5_000)} <= set(POOLS["uri_domains"])
+    assert {v.split("/")[2] for v in col("uri", 5_000, domains="realistic")} <= set(
+        POOLS["uri_domains"]
+    )
     assert set(col("state_abbr")) <= set(POOLS["us_states"])
     assert set(col("pystr", 3_000)) and all(len(v) == 12 for v in col("word", 3_000))
 
