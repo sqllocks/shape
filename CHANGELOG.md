@@ -5,6 +5,11 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Emitters (`shape.emitters`): `console`, `file` and `jsonl` in core; `kafka` (`sqllocks-shape-kafka`),
+  `eventhubs` (`sqllocks-shape-eventhubs`), `eventstream` and `eventhouse` (`sqllocks-shape-fabric`).
+  Every message carries the idempotency key `<table>/<seq>`; delivery is at-least-once with
+  backpressure and a checkpoint that never passes an undelivered event. The contract each emitter
+  meets is `shape.streaming.emit.contract` (`docs/EMIT.md`).
 - `shape emit`: the emitter runtime (`docs/EMIT.md`). Streams a domain's or schema's rows as
   JSON-lines events with the idempotency key `(_shape_table, _shape_seq)`: realtime pacing
   (`--rate`, `--burst START:DURATION:MULT`) or as fast as possible (the default), `--out-of-order`,

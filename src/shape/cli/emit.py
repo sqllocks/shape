@@ -19,7 +19,8 @@ from typing import Any
 
 SINKS_HELP = (
     "console (events on standard output, the default), file (JSON lines in --output), or the URI "
-    "of an installed emitter"
+    "of an emitter: file:///PATH, jsonl:///DIR, kafka://, eventhubs://, eventstream://, "
+    "eventhouse:// (the last four come with their plugins)"
 )
 
 
@@ -122,7 +123,7 @@ def _sink(a: argparse.Namespace, envelope: str, resuming: bool) -> Any:
     for name in host.names("shape.emitters"):
         emitter = host.try_get("shape.emitters", name)
         if emitter is not None and scheme and scheme in getattr(emitter, "schemes", ()):
-            return EmitterSink(emitter, a.sink)
+            return EmitterSink(emitter, a.sink, envelope=envelope, resuming=resuming)
     raise ShapeError(f"unknown sink {a.sink!r}: {SINKS_HELP}")
 
 
