@@ -95,3 +95,14 @@ off; an override for that day and category always fires; otherwise one draw is c
 
 `apply_all` runs schema, value, temporal, volume then referential. Its `ChaosResult` carries the
 mutated `table`, the mutated `tables` (the referential result) and every event.
+
+### As plugins
+
+The six mutators are registered built-ins of the `shape.chaos` plugin group (`schema`, `value`,
+`file`, `referential`, `temporal`, `volume`). A plugin's `mutate(batch, seed)` takes one
+`RecordBatch` and returns a batch and a `ChaosReport`, so it uses the category defaults
+(`moderate`, a day past the breaking-change day). `ChaosReport.rows_affected` is the sum of the
+rows of the mutations performed. `schema`, `value` (`wrong_types`) and `volume` change the
+schema or the row count by design, `file` returns the corrupted bytes of the batch's CSV
+rendering as a single `payload` column, and `referential` sees one table, so only duplicate keys
+can fire (call `ReferentialChaosMutator` with a dict of tables for orphan keys).

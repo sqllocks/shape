@@ -16,6 +16,7 @@ this directory hard-codes a machine path.
 | `domain_1to1/` | Domain generation: `generate.py`, `verify.py` (T-21), `bench.py`, and the retail reference port |
 | `profile_1to1/` | Profiling: `datasets.py`, `verify.py` (T-22), `bench.py`, the reference port, `spindle_dump.py`, `spindle_cli_profile.py` |
 | `verify_1to1/` | `shape verify` (P6-09): `verify.py` runs both `verify` CLIs on mutated retail output and compares exit codes and, gate by gate, pass/fail, errors, warnings and details |
+| `chaos_1to1/` | `shape.chaos` (P6-02): `verify.py` runs each chaos mutator, each sub-mutation and the engine schedule in both tools on the same input, config and seeds; mutation types exactly, rates within a derived statistical tolerance (documented in its docstring); `--negative-control` proves it fails on a deliberately wrong rate |
 | `dump_schema.py` | Serialize every Spindle domain schema (3nf, star) to `$BENCH_OUT_DIR/schemas/` |
 | `check_coverage.py` | Every Spindle file must be mapped to a work package in `docs/plans/spindle_coverage.tsv` |
 

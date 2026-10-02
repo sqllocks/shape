@@ -224,6 +224,14 @@ us_federal = "shape.builtins.calendars:UsFederalCalendar"
 us_retail = "shape.builtins.calendars:UsRetailCalendar"
 composite = "shape.builtins.calendars:CompositeCalendar"
 
+[project.entry-points."shape.chaos"]
+schema = "shape.builtins.chaos:SchemaChaos"
+value = "shape.builtins.chaos:ValueChaos"
+file = "shape.builtins.chaos:FileChaos"
+referential = "shape.builtins.chaos:ReferentialChaos"
+temporal = "shape.builtins.chaos:TemporalChaos"
+volume = "shape.builtins.chaos:VolumeChaos"
+
 [project.entry-points."shape.reports"]
 json = "shape.builtins.reports:JsonReport"
 md = "shape.builtins.reports:MarkdownReport"

@@ -213,10 +213,19 @@ class SchemaChaosMutator(Mutator):
         table = data
         events: list[MutationEvent] = []
         for k in chosen:
-            action = actions[int(k)]
-            table, ev = getattr(self, "_" + action)(table, rng)
+            table, ev = self.apply_one(actions[int(k)], table, rng)
             events.extend(ev)
         return table, events
+
+    def apply_one(
+        self, action: str, table: pa.Table, rng: np.random.Generator
+    ) -> tuple[pa.Table, list[MutationEvent]]:
+        """Run one named action (a member of :data:`SCHEMA_ACTIONS`)."""
+        method = {"reorder": "_reorder_columns"}.get(action, "_" + action)
+        if action not in SCHEMA_ACTIONS:
+            raise ValueError(f"unknown schema mutation {action!r}")
+        out: tuple[pa.Table, list[MutationEvent]] = getattr(self, method)(table, rng)
+        return out
 
     @staticmethod
     def _add_column(
