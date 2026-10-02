@@ -54,6 +54,7 @@ jobs:
       - run: docker compose -f ci/emulators/docker-compose.yml config --quiet
   azurite-e2e:
     # PF-01: the abfss:// source against Azurite (blob endpoint) with the real adlfs.
+    # ISS2-sinks: the abfss:// sink (write, read back, rolling files, errors, the CLI).
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -61,7 +62,7 @@ jobs:
         with: {python-version: '3.11'}
       - run: pip install -e '.[dev,azure]' azure-storage-blob
       - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait azurite
-      - run: python -m pytest -q -m emulator tests/builtins/test_cloud_sources_azurite.py
+      - run: python -m pytest -q -m emulator tests/builtins/test_cloud_sources_azurite.py tests/builtins/test_abfss_sink_azurite.py tests/builtins/test_abfss_sink_azurite.py
       - if: always()
         run: docker compose -f ci/emulators/docker-compose.yml down -v
   kafka-e2e:

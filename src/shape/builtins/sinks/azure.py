@@ -17,7 +17,8 @@ Options: ``format`` (``parquet`` (default), ``csv``, ``tsv``, ``jsonl``, ``ipc``
 (``{table: format}``); ``path_template``, ``batch_date``; ``roll_rows`` / ``roll_seconds`` (a new
 file every N rows or seconds; see :mod:`shape.builtins.sinks._roll`); ``mode`` (``overwrite``,
 ``append``, ``fail``); ``manifest`` (write ``_SUCCESS`` in each folder after its files);
-``streaming`` (a stream: every flush starts a new numbered file); ``retries``; ``spool_bytes``; the credential options of the source.
+``streaming`` (a stream: every flush starts a new numbered file); ``retries``;
+``spool_bytes``; the credential options of the source.
 
 Atomic publish: a file is spooled while it is written, uploaded to ``_shape_tmp/`` and renamed to
 its final name, so a reader never sees a partial file (:mod:`shape.io.store`).

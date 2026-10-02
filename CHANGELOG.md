@@ -5,6 +5,14 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Sinks for OneLake, ADLS Gen2 and databases (`docs/SINKS.md`): `shape generate --to URI` and
+  `shape emit/stream --to URI` (repeatable) write to `abfss://` (Parquet, CSV, TSV, JSONL, IPC in
+  dated Hive-style folders, rolling files, atomic publish), `delta+abfss://` (a Delta commit per
+  micro-batch), `mssql://` (SQL Server, Azure SQL, Fabric Warehouse), `postgresql://` (`COPY`) and
+  `mysql://` (`sqllocks-shape-databases`). Local Parquet/CSV/JSONL and Delta sinks take
+  `roll_rows`/`roll_seconds`/`commit_rows` so readers see rows while a stream runs. `shape emit`
+  gains `--speed 60x` (virtual clock), `--max-rate`, `--duplicate-fraction`, `--poison-fraction`,
+  `--answer-key` and the synthetic marker (`--synthetic-header`).
 - `shape generate --scale-mode local_single|local_mp|fabric_spark` and `shape jobs list|status|cancel|resume`
   (`docs/SCALE.md`): the scale router with sinks (memory, Parquet part files, Lakehouse, Warehouse,
   SQL Database, KQL), a durable job store (submit, status, cancel, resume), the `fabric_spark` router

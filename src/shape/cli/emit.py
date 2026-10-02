@@ -175,7 +175,10 @@ def add_options(em: Any, *, stream: bool = False) -> None:
     dl.add_argument("--checkpoint", metavar="FILE", help="checkpoint file (see the description)")
     dl.add_argument("--checkpoint-every", type=int, default=10_000, metavar="N")
     dl.add_argument(
-        "--checkpoint-seconds", type=float, default=1.0, metavar="S", help="at least this often"
+        "--checkpoint-seconds",
+        type=float,
+        metavar="S",
+        help="at least this often (default 1; 30 with a table target, so files are not tiny)",
     )
     dl.add_argument("--fresh", action="store_true", help="ignore an existing checkpoint")
     dl.add_argument("--batch-events", type=int, metavar="N", help="events per delivery")
@@ -396,6 +399,15 @@ def _live_finish(a: argparse.Namespace, live: Any) -> tuple[dict[str, Any], int]
     return summary, (1 if a.live_fail and failures else 0)
 
 
+def _checkpoint_seconds(a: argparse.Namespace, targets: list[str]) -> float:
+    if a.checkpoint_seconds is not None:
+        return float(a.checkpoint_seconds)
+    from shape.io.targets import scheme_of, sink_names_by_scheme
+
+    table_targets = {t for t in targets if (scheme_of(t) or "") in sink_names_by_scheme()}
+    return 30.0 if table_targets else 1.0
+
+
 def _targets(a: argparse.Namespace) -> list[str]:
     """Every destination named: ``--sink`` and each ``--to`` (``console`` when none)."""
     named = ([a.sink] if a.sink else []) + list(a.to or [])
@@ -488,7 +500,7 @@ def run(a: argparse.Namespace) -> int:
         queue_batches=a.queue_batches,
         checkpoint_path=checkpoint,
         checkpoint_every=a.checkpoint_every,
-        checkpoint_seconds=a.checkpoint_seconds,
+        checkpoint_seconds=_checkpoint_seconds(a, targets),
         fresh=a.fresh,
         retries=a.retries,
         speed=speed,

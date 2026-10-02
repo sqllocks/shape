@@ -262,7 +262,6 @@ def test_virtual_clock_scales_event_time_and_never_goes_back() -> None:
 def stream_deadlines(**config: Any) -> tuple[list[float], Any]:
     plan = EventPlan(make_engine(), tables=["order"], by_event_time=True)
     waits: list[float] = []
-    state = {"now": 0.0}
 
     def sleep_until(_stop: Any, deadline: float) -> None:
         waits.append(deadline)
