@@ -99,7 +99,7 @@ def _resolve(a: argparse.Namespace) -> Path:
     if path.is_file():
         return path
     if a.root:
-        domain, _, pack_id = a.target.partition("/")
+        domain, _, pack_id = str(a.target).partition("/")
         if pack_id and Path(a.root).is_dir():
             from shape.scenario.loader import PackLoader
 
