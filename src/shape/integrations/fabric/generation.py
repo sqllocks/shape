@@ -297,18 +297,19 @@ def write_delta_tables(
     ``mode`` is ``overwrite`` or ``append``. Returns ``[{"table", "deltaTable", "rows"}]`` in
     generation order. In a Fabric notebook ``tables_dir`` is ``/lakehouse/default/Tables``.
     """
-    from shape.builtins.sinks.delta import DeltaSink
+    from shape.plugins.host import default_host
 
     if prefix:
         check_name(prefix, "tablePrefix")
     if mode not in ("overwrite", "append"):
         raise GenerationRequestError(f"mode must be 'overwrite' or 'append', got {mode!r}")
+    sink = default_host().get("shape.sinks", "delta")  # built-ins load through the registry
     base = Path(tables_dir)
     written: list[dict[str, Any]] = []
     for name in result.generation_order:
         table = delta_ready(result.tables[name])
         delta_name = f"{prefix}{check_name(name, 'table')}"
-        DeltaSink().write(
+        sink.write(
             str(base),
             delta_name,
             iter(table.to_batches()),
