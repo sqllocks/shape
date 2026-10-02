@@ -1,8 +1,8 @@
 """Runs one job of a case on Shape (Shape venv).
 
-    $SHAPE_VENV/bin/python shape_worker.py JOB.json
+    $SHAPE_VENV/bin/python files_shape_worker.py JOB.json
 
-The job names a simulator; the worker imports ``case_<simulator>`` and calls its
+The job names a simulator; the worker imports ``files_case_<simulator>`` and calls its
 ``shape_side(job)``. The returned dict (or the exception, as ``{"error": ...}``) is written to
 ``<out_dir>/_result.json``.
 """
@@ -20,12 +20,12 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
 warnings.simplefilter("ignore")
-import sim_common as sc  # noqa: E402
+import files_common as sc  # noqa: E402
 
 
 def main() -> int:
     job = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
-    mod = importlib.import_module(f"case_{job['sim']}")
+    mod = importlib.import_module(f"files_case_{job['sim']}")
     try:
         result = mod.shape_side(job)
     except Exception as exc:  # a simulator that raises is a result: a case may expect it

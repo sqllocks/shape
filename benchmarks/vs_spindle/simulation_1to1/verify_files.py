@@ -1,18 +1,18 @@
 """Simulation parity verifier: Shape's simulators against the pinned baseline's (P6-04).
 
 Runs in the *baseline* venv (it needs pandas and scipy); each side's code runs in its own venv,
-through ``baseline_worker.py`` and ``shape_worker.py``:
+through ``files_baseline_worker.py`` and ``files_shape_worker.py``:
 
-    source scripts/env.sh && "$SPINDLE_PY" benchmarks/vs_spindle/simulation_1to1/verify.py \\
+    source scripts/env.sh && "$SPINDLE_PY" benchmarks/vs_spindle/simulation_1to1/verify_files.py \\
         [--scale small|medium] [--case NAME ...] [--negative-control] [--out REPORT.json]
 
-Every ``case_<simulator>.py`` in this directory is one case (a module per simulator, so the lanes
-that port different simulators never edit the same file). A case runs two kinds of check:
+Every ``files_case_<simulator>.py`` in this directory is one case (a module per simulator, so the
+lanes that port different simulators never edit the same file). A case runs two kinds of check:
 
 * **Mechanism parity (exact).** Both tools get the *same* input tables (the baseline's retail at
   seed 42), the same configuration and the same seed. The simulators draw their random numbers in
   the same order, so the outputs must be equal: the same files, the same rows in the same order,
-  the same manifests. The harness maps the baseline's names to Shape's (``sim_common.NAME_MAP``,
+  the same manifests. The harness maps the baseline's names to Shape's (``files_common.NAME_MAP``,
   D-13) before it compares and records the map in the report. Wall-clock and random values (ids,
   times) are checked for form, never for equality.
 * **T-21 parity.** Each tool simulates its own generated retail tables, the baseline at the
@@ -46,7 +46,7 @@ from typing import Any
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
-import sim_common as sc  # noqa: E402
+import files_common as sc  # noqa: E402
 from paths import BENCH_OUT_DIR, SHAPE_PY, SPINDLE_PY  # noqa: E402
 
 if not (sc.BASELINE_SEEDS == (43, 44, 45, 46) and sc.REF_SEED == 42 and sc.SHAPE_SEED == 1042):
@@ -72,9 +72,9 @@ class Ctx:
 
     def input_dir(self, tool: str, seed: int) -> Path:
         """The retail tables a tool generated at ``seed`` (Parquet, ``<table>.parquet``)."""
-        import sim_compare
+        import files_compare
 
-        gen = sim_compare.dv().generate
+        gen = files_compare.dv().generate
         return gen.out_dir(
             "spindle" if tool == "baseline" else "shape", sc.DOMAIN, self.scale, seed
         )
@@ -105,7 +105,9 @@ class Ctx:
         job_file = out.parent / f"{side}.job.json"
         sc.write_json(job_file, job)
         py = SPINDLE_PY if side == "baseline" else SHAPE_PY
-        worker = HERE / ("baseline_worker.py" if side == "baseline" else "shape_worker.py")
+        worker = HERE / (
+            "files_baseline_worker.py" if side == "baseline" else "files_shape_worker.py"
+        )
         proc = subprocess.run([str(py), str(worker), str(job_file)], capture_output=True, text=True)
         result_file = out / "_result.json"
         if proc.returncode != 0 or not result_file.exists():
@@ -120,9 +122,9 @@ class Ctx:
 def ensure_inputs(scale: str) -> list[str]:
     """Generate the retail runs the cases read (the baseline at 42-46, Shape at 1042) when "
     "missing."""
-    import sim_compare
+    import files_compare
 
-    dv = sim_compare.dv()
+    dv = files_compare.dv()
     raw = dv.load_schema_json(sc.DOMAIN)
     tables = list(raw["tables"])
     runs = [("spindle", s) for s in (sc.REF_SEED, *sc.BASELINE_SEEDS)] + [("shape", sc.SHAPE_SEED)]
@@ -134,7 +136,7 @@ def ensure_inputs(scale: str) -> list[str]:
 
 def discover(names: list[str]) -> list[Any]:
     mods = []
-    for path in sorted(HERE.glob("case_*.py")):
+    for path in sorted(HERE.glob("files_case_*.py")):
         mod = importlib.import_module(path.stem)
         if names and mod.NAME not in names:
             continue

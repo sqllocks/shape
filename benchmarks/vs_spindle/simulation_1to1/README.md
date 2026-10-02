@@ -2,29 +2,29 @@
 
 ```bash
 source scripts/env.sh
-"$SPINDLE_PY" benchmarks/vs_spindle/simulation_1to1/verify.py                   # every case, small
-"$SPINDLE_PY" benchmarks/vs_spindle/simulation_1to1/verify.py --case file_drop  # one case
-"$SPINDLE_PY" benchmarks/vs_spindle/simulation_1to1/verify.py --negative-control
+"$SPINDLE_PY" benchmarks/vs_spindle/simulation_1to1/verify_files.py                   # every case, small
+"$SPINDLE_PY" benchmarks/vs_spindle/simulation_1to1/verify_files.py --case file_drop  # one case
+"$SPINDLE_PY" benchmarks/vs_spindle/simulation_1to1/verify_files.py --negative-control
 ```
 
 Exit 0 when every check passed, 1 when a check failed, 2 when an input or a worker is missing.
 The verifier runs in the baseline venv; each side's code runs in its own venv through
-`baseline_worker.py` and `shape_worker.py`. The retail inputs are the ones `domain_1to1/generate.py`
+`files_baseline_worker.py` and `files_shape_worker.py`. The retail inputs are the ones `domain_1to1/generate.py`
 makes (generated here when missing).
 
-* `verify.py`: the runner. It discovers `case_*.py`; a case module defines `NAME`, `ALLOWED`,
+* `verify_files.py`: the runner of this lane. It discovers `files_case_*.py`; a case module defines `NAME`, `ALLOWED`,
   `baseline_side(job)`, `shape_side(job)`, `run(ctx)` and `negative_controls(ctx)`.
-* `sim_common.py`: the fixed seeds (T-21: the baseline at 42 with 43-46 as its own spread, Shape at
+* `files_common.py`: the fixed seeds (T-21: the baseline at 42 with 43-46 as its own spread, Shape at
   1042; there is no option for another set), `NAME_MAP` (the baseline's names and the Shape names
   they stand for, D-13, recorded in the report), `Checks`.
-* `sim_compare.py`: frame equality (columns by name, numbers to a relative tolerance, dates by
+* `files_compare.py`: frame equality (columns by name, numbers to a relative tolerance, dates by
   instant, nulls equal), `t21_columns` (T-21 (a)-(e) through `domain_1to1/verify.py`'s
   `compare_column`) and `count_within` (a random count within max(5 sigma, 1.5 x the baseline's
   range)).
-* `sim_trees.py`: comparing the directory trees two file drops wrote.
-* `case_file_drop.py`, `case_scd2_file_drops.py`, `case_stream_emit.py`, `case_hybrid.py`,
-  `case_state_machine.py`: lane P6-04a. The cases of lane P6-04b (clickstream, financial, iot,
-  operational_log, pulse) are further `case_*.py` files.
+* `files_trees.py`: comparing the directory trees two file drops wrote.
+* `files_case_file_drop.py`, `files_case_scd2_file_drops.py`, `files_case_stream_emit.py`,
+  `files_case_hybrid.py`, `files_case_state_machine.py`: lane P6-04a. The cases of lane P6-04b
+  (clickstream, financial, iot, operational_log, pulse) are `case_*.py` files run by `verify.py`.
 
 ## What a case checks
 

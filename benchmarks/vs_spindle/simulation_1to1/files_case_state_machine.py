@@ -11,9 +11,9 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+import files_common as sc
+import files_compare as cmp
 import pandas as pd
-import sim_common as sc
-import sim_compare as cmp
 
 NAME = "state_machine"
 

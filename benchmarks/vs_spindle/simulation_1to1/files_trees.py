@@ -15,9 +15,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import files_common as sc
+import files_compare as cmp
 import pandas as pd
-import sim_common as sc
-import sim_compare as cmp
 
 DATA_SUFFIXES = {".parquet", ".csv", ".jsonl"}
 UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")

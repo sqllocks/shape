@@ -2,7 +2,7 @@
 
 Mechanism parity (same input, same seed: the same rows in the same deltas, apart from the
 allow-listed version columns), the version-chain invariant that shows the defects, T-21 on the
-written rows and the negative controls. See ``verify.py`` for the rules.
+written rows and the negative controls. See ``verify_files.py`` for the rules.
 """
 
 from __future__ import annotations
@@ -11,11 +11,11 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+import files_common as sc
+import files_compare as cmp
+import files_trees as trees
 import numpy as np
 import pandas as pd
-import sim_common as sc
-import sim_compare as cmp
-import sim_trees as trees
 
 NAME = "scd2_file_drops"
 

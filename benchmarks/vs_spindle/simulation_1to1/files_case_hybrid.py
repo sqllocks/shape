@@ -3,7 +3,8 @@
 A file drop and a stream of the same tables. Mechanism parity (the drop's tree and the stream's
 events equal, the run id aside), the allow-list probes, T-21 on both sides' output and the
 negative controls. The drop and the stream themselves are verified in depth by their own cases
-(``case_file_drop``, ``case_stream_emit``); this case checks that they are composed the same way.
+(``files_case_file_drop``, ``files_case_stream_emit``); this case checks that they are
+composed the same way.
 """
 
 from __future__ import annotations
@@ -14,12 +15,12 @@ import shutil
 from pathlib import Path
 from typing import Any
 
-import case_file_drop as fd
-import case_stream_emit as se
+import files_case_file_drop as fd
+import files_case_stream_emit as se
+import files_common as sc
+import files_compare as cmp
+import files_trees as trees
 import pandas as pd
-import sim_common as sc
-import sim_compare as cmp
-import sim_trees as trees
 
 NAME = "hybrid"
 

@@ -2,7 +2,7 @@
 
 Mechanism parity (same tables, configuration and seed: the same events in the same order, the same
 replays), the allow-list probes, T-21 on the event multiset and the negative controls. The
-baseline's names are mapped to Shape's (``sim_common.NAME_MAP``) before the events are compared.
+baseline's names are mapped to Shape's (``files_common.NAME_MAP``) before the events are compared.
 """
 
 from __future__ import annotations
@@ -17,9 +17,9 @@ import time
 from pathlib import Path
 from typing import Any
 
+import files_common as sc
+import files_compare as cmp
 import pandas as pd
-import sim_common as sc
-import sim_compare as cmp
 
 NAME = "stream_emit"
 

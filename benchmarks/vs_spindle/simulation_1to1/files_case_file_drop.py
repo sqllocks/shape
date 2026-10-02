@@ -1,7 +1,7 @@
 """Case: the file-drop simulator (``shape_simulation.file_drop``) against the baseline's.
 
 Mechanism parity (same input, same seed: identical trees), the allow-list probes, T-21 on the
-written rows, and the negative controls. See ``verify.py`` for the rules.
+written rows, and the negative controls. See ``verify_files.py`` for the rules.
 """
 
 from __future__ import annotations
@@ -10,10 +10,10 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+import files_common as sc
+import files_compare as cmp
+import files_trees as trees
 import pandas as pd
-import sim_common as sc
-import sim_compare as cmp
-import sim_trees as trees
 
 NAME = "file_drop"
 
