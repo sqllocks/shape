@@ -314,3 +314,57 @@ def test_parquet_sink_with_no_batches_still_writes_a_file(tmp_path):
     target = tmp_path / "t.parquet"
     ParquetSink().write(str(target), "t", iter(()), schema=pa.schema([("id", pa.int64())]))
     assert pq.read_table(target).num_rows == 0
+
+
+# ---- work too small for threads is built on the calling thread -----------------------------
+
+
+def _generating_threads(
+    monkeypatch, rows: dict[str, int], threads: str | None, **engine_kw
+) -> set[str]:
+    """The names of the threads that make chunks while ``Engine.generate`` runs the schema."""
+    seen: set[str] = set()
+    original = Engine.generate_chunk
+
+    def spy(self, *args, **kwargs):
+        seen.add(threading.current_thread().name)
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(Engine, "generate_chunk", spy)
+    if threads is None:
+        monkeypatch.delenv(THREADS_ENV, raising=False)
+    else:
+        monkeypatch.setenv(THREADS_ENV, threads)
+    if worker_threads() < 2:
+        pytest.skip("needs a machine with more than one core")
+    Engine(schema(rows), strategies=STRATEGIES, **engine_kw).generate()
+    return seen
+
+
+def test_small_work_does_not_start_threads(monkeypatch) -> None:
+    rows = {"customer": 40, "order": 120, "order_line": 300}
+    assert _generating_threads(monkeypatch, rows, None) == {threading.current_thread().name}
+
+
+def test_large_work_still_does(monkeypatch) -> None:
+    rows = {"customer": 2_000, "order": 20_000, "order_line": 200_000}
+    seen = _generating_threads(monkeypatch, rows, None)
+    assert any(name.startswith("shape-gen") for name in seen)
+
+
+def test_the_caller_who_sets_threads_or_chunks_gets_them(monkeypatch) -> None:
+    rows = {"customer": 40, "order": 120, "order_line": 9_000}
+    assert _generating_threads(monkeypatch, rows, None) == {threading.current_thread().name}
+    assert any(n.startswith("shape-gen") for n in _generating_threads(monkeypatch, rows, "2"))
+    seen = _generating_threads(monkeypatch, rows, None, chunk_rows=2_000)
+    assert any(n.startswith("shape-gen") for n in seen)
+
+
+def test_small_levels_give_the_same_tables(monkeypatch) -> None:
+    rows = {"customer": 40, "order": 120, "order_line": 300}
+    monkeypatch.delenv(THREADS_ENV, raising=False)
+    small = Engine(schema(rows), strategies=STRATEGIES).generate().tables
+    monkeypatch.setenv(THREADS_ENV, "3")
+    threaded = Engine(schema(rows), strategies=STRATEGIES, chunk_rows=50).generate().tables
+    for name, table in small.items():
+        assert table.equals(threaded[name]), name

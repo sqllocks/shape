@@ -15,53 +15,102 @@ use super::rng::{below, for_row_chunks};
 const TASK_ROWS: usize = 16_384;
 const PAR_MIN_ROWS: usize = 32_768;
 
+/// Row validity of a run of rows: `None` while every row is valid (the usual case, which then
+/// costs nothing per row), else one flag per row.
+struct Validity(Option<Vec<bool>>);
+
+impl Validity {
+    #[inline]
+    fn push(&mut self, row: usize, valid: bool) {
+        match &mut self.0 {
+            Some(flags) => flags.push(valid),
+            None if !valid => {
+                let mut flags = vec![true; row];
+                flags.push(false);
+                self.0 = Some(flags);
+            }
+            None => {}
+        }
+    }
+}
+
 /// Build a `string` array of `n` rows. `f(i, buf)` appends row `i`'s bytes (valid UTF-8) to `buf`
 /// and returns whether the row is valid (a null row appends nothing).
 pub fn build_utf8(
     n: usize,
     f: &(impl Fn(usize, &mut Vec<u8>) -> bool + Sync),
 ) -> Result<StringArray, String> {
-    let n_tasks = n.div_ceil(TASK_ROWS);
-    let run = |t: usize| {
-        let (lo, hi) = (t * TASK_ROWS, ((t + 1) * TASK_ROWS).min(n));
-        let mut bytes: Vec<u8> = Vec::with_capacity((hi - lo) * 16);
-        let mut ends: Vec<usize> = Vec::with_capacity(hi - lo);
-        let mut valid: Vec<bool> = Vec::with_capacity(hi - lo);
-        for i in lo..hi {
-            valid.push(f(i, &mut bytes));
-            ends.push(bytes.len());
+    let too_big = || String::from("string output exceeds 2 GiB: use smaller chunks");
+    if n < PAR_MIN_ROWS || !crate::can_par() {
+        // One pass straight into the final buffers.
+        let mut values: Vec<u8> = Vec::with_capacity(n * 16);
+        let mut offsets: Vec<i32> = Vec::with_capacity(n + 1);
+        let mut validity = Validity(None);
+        offsets.push(0);
+        for i in 0..n {
+            validity.push(i, f(i, &mut values));
+            offsets.push(values.len() as i32); // checked once, below
         }
-        (bytes, ends, valid)
-    };
-    let parts: Vec<_> = if n >= PAR_MIN_ROWS && crate::can_par() {
-        (0..n_tasks).into_par_iter().map(run).collect()
-    } else {
-        (0..n_tasks).map(run).collect()
-    };
+        if i32::try_from(values.len()).is_err() {
+            return Err(too_big());
+        }
+        return finish_utf8(offsets, values, validity.0);
+    }
+    let n_tasks = n.div_ceil(TASK_ROWS);
+    let parts: Vec<_> = (0..n_tasks)
+        .into_par_iter()
+        .map(|t| {
+            let (lo, hi) = (t * TASK_ROWS, ((t + 1) * TASK_ROWS).min(n));
+            let mut bytes: Vec<u8> = Vec::with_capacity((hi - lo) * 16);
+            let mut ends: Vec<usize> = Vec::with_capacity(hi - lo);
+            let mut valid = Validity(None);
+            for i in lo..hi {
+                valid.push(i - lo, f(i, &mut bytes));
+                ends.push(bytes.len());
+            }
+            (bytes, ends, valid.0)
+        })
+        .collect();
     let total: usize = parts.iter().map(|p| p.0.len()).sum();
     if i32::try_from(total).is_err() {
-        return Err("string output exceeds 2 GiB: use smaller chunks".into());
+        return Err(too_big());
     }
     let mut values: Vec<u8> = Vec::with_capacity(total);
     let mut offsets: Vec<i32> = Vec::with_capacity(n + 1);
-    let mut validity: Vec<bool> = Vec::with_capacity(n);
+    let mut validity = Validity(None);
     offsets.push(0);
     let mut base = 0usize;
+    let mut row = 0usize;
     for (bytes, ends, valid) in parts {
         offsets.extend(ends.iter().map(|e| (base + e) as i32));
         base += bytes.len();
         values.extend_from_slice(&bytes);
-        validity.extend(valid);
+        match valid {
+            Some(flags) => {
+                for flag in flags {
+                    validity.push(row, flag);
+                    row += 1;
+                }
+            }
+            None => row += ends.len(),
+        }
+        if let Some(flags) = &mut validity.0 {
+            // keep the flags aligned with the rows when a later task is all valid
+            flags.resize(row, true);
+        }
     }
-    let nulls = if validity.iter().all(|v| *v) {
-        None
-    } else {
-        Some(NullBuffer::from(validity))
-    };
+    finish_utf8(offsets, values, validity.0)
+}
+
+fn finish_utf8(
+    offsets: Vec<i32>,
+    values: Vec<u8>,
+    validity: Option<Vec<bool>>,
+) -> Result<StringArray, String> {
     StringArray::try_new(
         OffsetBuffer::new(ScalarBuffer::from(offsets)),
         Buffer::from_vec(values),
-        nulls,
+        validity.map(NullBuffer::from),
     )
     .map_err(|e| e.to_string())
 }
@@ -95,6 +144,14 @@ impl<'a> Col<'a> {
         self.len() == 0
     }
 
+    pub fn null_count(&self) -> usize {
+        match self {
+            Col::S32(a) => a.null_count(),
+            Col::S64(a) => a.null_count(),
+            Col::Int(a) => a.null_count(),
+        }
+    }
+
     #[inline]
     pub fn is_null(&self, i: usize) -> bool {
         match self {
@@ -111,12 +168,50 @@ impl<'a> Col<'a> {
         match self {
             Col::S32(a) => buf.extend_from_slice(a.value(i).as_bytes()),
             Col::S64(a) => buf.extend_from_slice(a.value(i).as_bytes()),
-            Col::Int(a) => {
-                use std::io::Write;
-                let _ = write!(buf, "{:0width$}", a.value(i));
-            }
+            Col::Int(a) => write_int(buf, a.value(i), width),
         }
     }
+}
+
+/// Append `v` in decimal, zero-padded to `width` with the sign counting towards the width: the
+/// bytes of `format!("{:0width$}", v)`, without the formatting machinery (about three times
+/// faster, which matters for the million-row phone and address columns).
+#[inline]
+pub fn write_int(buf: &mut Vec<u8>, v: i64, width: usize) {
+    // Digits go at the end of a scratch array that is all '0': the padding is the zeros in front
+    // of them, so the row is one slice.
+    const SCRATCH: usize = 48;
+    let mut scratch = [b'0'; SCRATCH];
+    let mut at = SCRATCH;
+    let mut rest = v.unsigned_abs();
+    loop {
+        at -= 1;
+        scratch[at] = b'0' + (rest % 10) as u8;
+        rest /= 10;
+        if rest == 0 {
+            break;
+        }
+    }
+    let negative = v < 0;
+    let used = SCRATCH - at + usize::from(negative);
+    if width > used {
+        let pad = width - used;
+        if pad >= at {
+            // a width beyond the scratch array: not a case of any template, but still right
+            if negative {
+                buf.push(b'-');
+            }
+            buf.resize(buf.len() + pad, b'0');
+            buf.extend_from_slice(&scratch[at..]);
+            return;
+        }
+        at -= pad;
+    }
+    if negative {
+        at -= 1;
+        scratch[at] = b'-';
+    }
+    buf.extend_from_slice(&scratch[at..]);
 }
 
 fn check_lengths(cols: &[Col<'_>]) -> Result<usize, String> {
@@ -145,14 +240,17 @@ pub fn template(
     if !cols.is_empty() && check_lengths(cols)? != n_rows {
         return Err("n_rows must equal the column length".into());
     }
+    // Most inputs have no nulls: then no row needs the per-column check.
+    let may_be_null = slots.iter().any(|(c, _)| cols[*c].null_count() > 0);
+    let literals: Vec<&[u8]> = literals.iter().map(String::as_bytes).collect();
     build_utf8(n_rows, &|i, buf| {
-        if slots.iter().any(|(c, _)| cols[*c].is_null(i)) {
+        if may_be_null && slots.iter().any(|(c, _)| cols[*c].is_null(i)) {
             return false;
         }
-        buf.extend_from_slice(literals[0].as_bytes());
+        buf.extend_from_slice(literals[0]);
         for (k, (c, w)) in slots.iter().enumerate() {
             cols[*c].write(i, *w, buf);
-            buf.extend_from_slice(literals[k + 1].as_bytes());
+            buf.extend_from_slice(literals[k + 1]);
         }
         true
     })
@@ -379,4 +477,74 @@ pub fn random_chars(
         None,
     )
     .map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{build_utf8, write_int};
+    use arrow_array::Array;
+
+    /// The rows `build_utf8` must give for `f`: row `i` is `"r{i}"`, null where `null(i)`.
+    fn check(n: usize, null: impl Fn(usize) -> bool + Sync) {
+        let built = build_utf8(n, &|i, buf: &mut Vec<u8>| {
+            if null(i) {
+                return false;
+            }
+            buf.extend_from_slice(format!("r{i}").as_bytes());
+            true
+        })
+        .unwrap();
+        assert_eq!(built.len(), n);
+        for i in 0..n {
+            assert_eq!(built.is_null(i), null(i), "row {i} validity");
+            if !null(i) {
+                assert_eq!(built.value(i), format!("r{i}"), "row {i}");
+            }
+        }
+        assert_eq!(built.null_count(), (0..n).filter(|i| null(*i)).count());
+    }
+
+    #[test]
+    fn build_utf8_serial_and_parallel_paths_agree_with_the_rows() {
+        for n in [0, 1, 5, 1000, 32_767, 32_768, 40_000, 100_000] {
+            check(n, |_| false); // no nulls
+            check(n, |i| i == 0); // first row null
+            check(n, |i| i + 1 == n); // last row null
+            check(n, |i| i % 7 == 3); // spread
+            check(n, |i| (20_000..20_010).contains(&i)); // inside one task only
+            check(n, |_| true); // all null
+        }
+    }
+
+    #[test]
+    fn write_int_equals_the_format_machinery() {
+        let values = [
+            0i64,
+            1,
+            9,
+            10,
+            99,
+            100,
+            12_345,
+            -1,
+            -9,
+            -10,
+            -42,
+            -12_345,
+            i64::MAX,
+            i64::MIN,
+            i64::MIN + 1,
+        ];
+        for v in values {
+            for width in [0usize, 1, 2, 3, 5, 10, 19, 20, 25, 40, 47, 48, 60] {
+                let mut got = Vec::new();
+                write_int(&mut got, v, width);
+                assert_eq!(
+                    String::from_utf8(got).unwrap(),
+                    format!("{v:0width$}"),
+                    "value {v} width {width}"
+                );
+            }
+        }
+    }
 }

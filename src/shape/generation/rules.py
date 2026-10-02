@@ -226,7 +226,7 @@ def _replace(
     return table.set_column(table.column_names.index(column), column, fixed)
 
 
-def _fix_cross_column(rule: BusinessRule, tables: Tables, seed: int) -> Tables:
+def _fix_cross_column(rule: BusinessRule, tables: Tables, seed: int, row_start: int) -> Tables:
     if not rule.table or rule.table not in tables:
         return tables
     table = tables[rule.table]
@@ -239,7 +239,7 @@ def _fix_cross_column(rule: BusinessRule, tables: Tables, seed: int) -> Tables:
     n = table.num_rows
     lv, rv = _numpy(lcol), _numpy(rcol)
     stream = RowStream(seed, rule.table, left, f"fix:{rule.name}")
-    u = stream.uniform(0, n)
+    u = stream.uniform(row_start, n)
     if _is_temporal(lcol):
         days = (1 + np.floor(u * 29)).astype("timedelta64[D]").astype("timedelta64[us]")
         if op == "<":
@@ -260,7 +260,7 @@ def _fix_cross_column(rule: BusinessRule, tables: Tables, seed: int) -> Tables:
     return {**tables, rule.table: _replace(table, left, mask, np.where(mask, new, lv))}
 
 
-def _fix_cross_table(rule: BusinessRule, tables: Tables, seed: int) -> Tables:
+def _fix_cross_table(rule: BusinessRule, tables: Tables, seed: int, row_start: int) -> Tables:
     parts = _cross_table_parts(rule, tables)
     if parts is None:
         return tables
@@ -280,7 +280,7 @@ def _fix_cross_table(rule: BusinessRule, tables: Tables, seed: int) -> Tables:
         new = right_vals + offset
     elif op == "<=":
         mask = lv > right_vals
-        u = RowStream(seed, ltable, lcol, f"fix:{rule.name}").uniform(0, lt.num_rows)
+        u = RowStream(seed, ltable, lcol, f"fix:{rule.name}").uniform(row_start, lt.num_rows)
         new = np.round(right_vals * (0.3 + u * 0.7), 2)
     else:
         return tables
@@ -289,15 +289,27 @@ def _fix_cross_table(rule: BusinessRule, tables: Tables, seed: int) -> Tables:
     return {**tables, ltable: _replace(lt, lcol, mask, np.where(mask, new, lv))}
 
 
+# The comparisons :func:`fix_rule` repairs, by rule type; a rule with another operator, such as
+# ``high >= low`` on one table, is validated but never changes a table.
+_REPAIRED_OPS = {"cross_column": ("<", ">"), "cross_table": (">=", ">", "<=")}
+
+
+def can_repair(rule: BusinessRule) -> bool:
+    """Whether :func:`fix_rule` can change a table for ``rule`` (its type and operator are ones it
+    repairs); a rule it cannot repair is only ever validated."""
+    return parse_comparison(rule.rule)[1] in _REPAIRED_OPS.get(rule.type, ())
+
+
 def repair_target(rule: BusinessRule) -> str | None:
     """The table :func:`fix_rule` can change for ``rule``: the table a ``cross_column`` rule names,
-    the table on the left of a ``cross_table`` rule, none for any other rule."""
+    the table on the left of a ``cross_table`` rule, none for any other rule (or for a comparison
+    it does not repair)."""
+    if not can_repair(rule):
+        return None
     if rule.type == "cross_column":
         return rule.table or None
-    if rule.type == "cross_table":
-        left = parse_comparison(rule.rule)[0]
-        return left.split(".", 1)[0] if "." in left else None
-    return None
+    left = parse_comparison(rule.rule)[0]
+    return left.split(".", 1)[0] if "." in left else None
 
 
 def repaired_tables(schema: GenSchema) -> set[str]:
@@ -305,12 +317,18 @@ def repaired_tables(schema: GenSchema) -> set[str]:
     return {t for t in map(repair_target, schema.business_rules) if t}
 
 
-def fix_rule(rule: BusinessRule, tables: Tables, seed: int) -> Tables:
-    """``tables`` with the violations of one rule repaired (the inputs are not changed)."""
+def fix_rule(rule: BusinessRule, tables: Tables, seed: int, row_start: int = 0) -> Tables:
+    """``tables`` with the violations of one rule repaired (the inputs are not changed).
+
+    A repair looks at one row of the table it rewrites and, for ``cross_table``, at the row of the
+    other table its ``via`` key names, and draws from a row-addressed stream. So the rewritten
+    table may be a part of the whole table, rows ``row_start`` onwards of it, and the repaired
+    rows are the rows the whole table has (the other table of a ``cross_table`` rule is always
+    the whole one)."""
     if rule.type == "cross_table":
-        return _fix_cross_table(rule, tables, seed)
+        return _fix_cross_table(rule, tables, seed, row_start)
     if rule.type == "cross_column":
-        return _fix_cross_column(rule, tables, seed)
+        return _fix_cross_column(rule, tables, seed, row_start)
     return tables
 
 
