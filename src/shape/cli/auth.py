@@ -18,7 +18,7 @@ import argparse
 from typing import Any
 
 from shape.security import credrefs
-from shape.security.redact import has_password
+from shape.security.redact import holds_secret
 
 AUTH_MODES = ("cli", "msi", "spn", "sql", "device-code", "fabric")
 _REFERENCE_HELP = "a credential reference: env://NAME, file://PATH or kv://VAULT/SECRET"
@@ -71,11 +71,11 @@ def _check_secret(flag: str, value: str) -> None:
 
 def check_connection_string(value: str, *, flag: str = "--connection-string") -> str:
     """``value`` when it is a reference or a connection string without a password."""
-    if not credrefs.is_reference(value) and has_password(value):
+    if not credrefs.is_reference(value) and holds_secret(value):
         raise ValueError(
-            f"{flag} must not hold a password (it would show in the process list and in shell "
-            "history): put the whole string in an environment variable and pass env://NAME, "
-            "or use --sql-user with --sql-password env://NAME"
+            f"{flag} must not hold a password or key (it would show in the process list and in "
+            "shell history): put the whole string in an environment variable and pass "
+            "env://NAME, or use --sql-user with --sql-password env://NAME"
         )
     return value
 

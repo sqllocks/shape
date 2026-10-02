@@ -348,13 +348,14 @@ def _sink(a: argparse.Namespace, envelope: str, resuming: bool) -> Any:
     from shape.errors import ShapeError
     from shape.streaming.emit import EmitterSink, FileSink, StdoutSink
 
+    scheme = a.sink.split("://", 1)[0] if "://" in a.sink else ""
+    auth_options = _auth_options(a, scheme)  # refuses --auth for a sink that has no sign-in
     if a.sink == "console":
         return StdoutSink(envelope=envelope)
     if a.sink == "file":
         if not a.output:
             raise ShapeError("--sink file needs --output FILE")
         return FileSink(a.output, envelope=envelope, append=resuming)
-    scheme = a.sink.split("://", 1)[0] if "://" in a.sink else ""
     from shape.plugins.host import default_host
 
     host = default_host()
@@ -362,7 +363,7 @@ def _sink(a: argparse.Namespace, envelope: str, resuming: bool) -> Any:
         emitter = host.try_get("shape.emitters", name)
         if emitter is not None and scheme and scheme in getattr(emitter, "schemes", ()):
             return EmitterSink(
-                emitter, a.sink, envelope=envelope, resuming=resuming, **_auth_options(a, scheme)
+                emitter, a.sink, envelope=envelope, resuming=resuming, **auth_options
             )
     raise ShapeError(f"unknown sink {a.sink!r}: {SINKS_HELP}")
 

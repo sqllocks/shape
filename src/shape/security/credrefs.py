@@ -2,33 +2,35 @@
 
 A reference names where a secret lives instead of holding it, so a command line, a config file
 or a log never carries the secret itself. ``env://`` and ``file://`` are built in. ``kv://`` is a
-secret store (a key vault) and needs a resolver the host registers with
-:func:`register_resolver`: core ships no cloud SDK, so without one ``kv://`` fails with a clear
-message. The same references serve signing keys and, later, cloud credentials.
+secret store (a key vault): core ships no cloud SDK, so it needs a resolver, which the Fabric
+plugin provides (Azure Key Vault) or a host registers with :func:`register_resolver`; without one
+``kv://`` fails with a clear message. The same references serve signing keys and cloud sign-in.
 
 ``file://`` refuses a secret file that other users can read (see :func:`resolve_reference`): on
 POSIX a file with any group or world permission bit set is an error, not a warning, because a
 warning is read after the secret has already been exposed. ``kv://`` is looked up in the
-``shape.credential_resolvers`` entry-point group the first time it is needed (the Fabric plugin
-provides Azure Key Vault there); an explicit :func:`register_resolver` always wins.
+Fabric plugin's ``shape_fabric.keyvault`` (Azure Key Vault) when that package is installed; an
+explicit :func:`register_resolver` always wins.
 
 Errors name the reference and the missing piece, never a value.
 """
 
 from __future__ import annotations
 
+import importlib
 import os
 import stat
 import sys
 from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import IO, Any
+from typing import IO
 
 Resolver = Callable[[str], str]
 
 _RESOLVERS: dict[str, Resolver] = {}
-RESOLVER_GROUP = "shape.credential_resolvers"
-_PROVIDED: dict[str, Any] = {}
+# Schemes a plugin provides, as (module, function): ``kv://`` is Azure Key Vault from the Fabric
+# plugin. The module is imported only when such a reference is resolved, and only if installed.
+_PROVIDERS: dict[str, tuple[str, str]] = {"kv": ("shape_fabric.keyvault", "resolve")}
 _LOADED: dict[str, Resolver | None] = {}
 
 
@@ -94,32 +96,19 @@ def _no_kv(_: str) -> str:
 _BUILTIN: dict[str, Resolver] = {"env": _resolve_env, "file": _resolve_file, "kv": _no_kv}
 
 
-def _provided() -> dict[str, Any]:
-    """The entry points of the resolver group by scheme (nothing is imported), read once."""
-    if _PROVIDED:
-        return _PROVIDED
-    try:
-        from importlib.metadata import entry_points
-
-        for ep in entry_points(group=RESOLVER_GROUP):
-            _PROVIDED.setdefault(ep.name, ep)
-    except Exception:  # noqa: BLE001 - broken package metadata must not break resolution
-        pass
-    _PROVIDED.setdefault("", None)  # marks the scan as done even when nothing was found
-    return _PROVIDED
-
-
 def _discover(scheme: str) -> Resolver | None:
-    """The resolver an installed package provides for ``scheme``, loaded on first use."""
-    ep = _provided().get(scheme) if scheme else None
-    if ep is None:
+    """The resolver of a package that provides ``scheme`` (``_PROVIDERS``), when it is installed;
+    imported on first use and remembered."""
+    spec = _PROVIDERS.get(scheme)
+    if spec is None:
         return None
     if scheme not in _LOADED:
+        found: Resolver | None = None
         try:
-            loaded = ep.load()
-            _LOADED[scheme] = loaded if callable(loaded) else None
+            found = getattr(importlib.import_module(spec[0]), spec[1])
         except Exception:  # noqa: BLE001 - reported as "no resolver" by the caller
-            _LOADED[scheme] = None
+            found = None
+        _LOADED[scheme] = found if callable(found) else None
     return _LOADED[scheme]
 
 
@@ -143,7 +132,7 @@ def _resolver_for(scheme: str) -> Resolver | None:
 
 
 def _known(scheme: str) -> bool:
-    return scheme in _RESOLVERS or scheme in _BUILTIN or _provided().get(scheme) is not None
+    return scheme in _RESOLVERS or scheme in _BUILTIN
 
 
 def scheme_of(text: str) -> str | None:

@@ -41,6 +41,8 @@ def _safe(text: str) -> str:
     from shape.security.redact import redact_text
 
     return redact_text(text)
+
+
 ACTIVE = ("submitted", "running")
 FINAL = ("succeeded", "failed", "cancelled")
 RESUMABLE = ("failed", "cancelled")

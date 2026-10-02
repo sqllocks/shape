@@ -29,11 +29,6 @@ onelake = ["sqllocks-shape[azure]==0.9.0"]
 eventstream = "shape_fabric:EventstreamEmitter"
 eventhouse = "shape_fabric:EventhouseEmitter"
 
-# kv:// credential references (Azure Key Vault). Not a plugin-API group: core reads it directly
-# when a kv:// reference is used (shape.security.credrefs).
-[project.entry-points."shape.credential_resolvers"]
-kv = "shape_fabric.keyvault:resolve"
-
 [project.entry-points."shape.sources"]
 onelake = "shape_fabric:LakehouseSource"
 

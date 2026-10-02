@@ -2,9 +2,9 @@
 
 Entra and managed identity are ``FakeIdentity`` (a stand-in for ``azure.identity``), Key Vault is
 ``FakeKeyVault`` (an HTTP transport), the notebook identity is a fake ``notebookutils``. The token
-requests each mode makes are pinned by tapes (``fixtures/auth_*.json``, ``fixtures/keyvault_*.json``,
-replayed in ``test_recorded.py``); the tests here check behaviour and, above all, that a secret
-reaches nothing but the place that needs it.
+requests each mode makes are pinned by tapes (``fixtures/auth_*.json`` and
+``fixtures/keyvault_*.json``, replayed in ``test_recorded.py``); the tests here check behaviour
+and, above all, that a secret reaches nothing but the place that needs it.
 """
 
 from __future__ import annotations
@@ -136,9 +136,7 @@ def test_msi_in_a_notebook_uses_the_notebook_identity_first(identity, notebook):
     assert identity.calls == []  # the managed identity endpoint was never touched
 
 
-def test_msi_falls_back_to_the_managed_identity_when_the_notebook_has_none(
-    identity, monkeypatch
-):
+def test_msi_falls_back_to_the_managed_identity_when_the_notebook_has_none(identity, monkeypatch):
     class Broken:
         def getToken(self, audience):  # noqa: N802
             raise RuntimeError("no token service")
@@ -256,7 +254,7 @@ def test_client_secret_from_a_file(identity, secret_file, no_notebook):
 
 def test_client_secret_from_key_vault(identity, monkeypatch, no_notebook):
     vault = FakeKeyVault({("vault-one", "spn-secret"): SECRET})
-    monkeypatch.setattr(keyvault, "default_credential", lambda: (lambda scope: "tok-" + "y" * 20))
+    monkeypatch.setattr(keyvault, "default_credential", lambda: lambda scope: "tok-" + "y" * 20)
     monkeypatch.setattr(keyvault, "urllib_transport", vault)
     assert _spn_with("kv://vault-one/spn-secret", identity) == [SECRET]
     method, url, headers = vault.requests[0]
@@ -267,7 +265,7 @@ def test_client_secret_from_key_vault(identity, monkeypatch, no_notebook):
     assert headers["Authorization"].startswith("Bearer tok-")
 
 
-def test_the_kv_scheme_is_provided_by_this_plugin_through_its_entry_point():
+def test_the_kv_scheme_is_provided_by_this_plugin():
     assert credrefs.is_reference("kv://vault-one/x")
     assert credrefs._discover("kv") is keyvault.resolve
 
@@ -460,6 +458,7 @@ def test_a_credential_is_passed_to_the_driver_as_a_token_and_the_login_is_not(mo
 
 def test_sql_sign_in_never_runs_a_process(monkeypatch):
     """No subprocess, no shell: the password cannot reach a command line from this code."""
+
     def forbidden(*a, **k):
         raise AssertionError("a process was started")
 
@@ -540,3 +539,32 @@ def test_the_committed_tapes_of_these_scenarios_hold_no_secret():
         text = path.read_text()
         for secret in (*ALL_SECRETS, FAKE_ENTRA_TOKEN, "fake-client-secret"):
             assert secret not in text, path.name
+
+
+def test_a_connection_string_with_a_login_is_redacted_wherever_a_writer_shows_it(monkeypatch):
+    """The destination, the result summary and a failing statement's error all show the server
+    and database, never the login's password."""
+    from shape_fabric import SqlDatabaseWriter, WarehouseWriter
+    from shape_fabric.errors import WriteError
+    from shape_fabric.testing import MemoryFS, sample_batches
+
+    monkeypatch.setenv("SHAPE_TEST_PW", SECRET)
+    conn = auth.writer_options(_settings(), connection_string=CS)["connection_string"]
+    server = FakeSqlServer()
+    with SqlDatabaseWriter(conn, connect=server.connect) as writer:
+        assert "Server=db.example.test" in writer.destination
+        written = writer.write_table("customer", sample_batches())
+        assert written
+        for shown in (writer.destination, repr(writer)):
+            assert "S3cr3t" not in shown and "odd=chars" not in shown
+        server.fail = lambda sql, params: (_ for _ in ()).throw(RuntimeError(f"driver: {conn}"))
+        with pytest.raises(WriteError) as err:
+            writer.write_table("other", sample_batches(), write_mode="append")
+        assert "S3cr3t" not in str(err.value) and "odd=chars" not in str(err.value)
+    wh = WarehouseWriter(
+        conn.replace("db.example.test", "x.datawarehouse.fabric.microsoft.com"),
+        "onelake://ws/lh/Files/stage",
+        connect=server.connect,
+        filesystem=MemoryFS(),
+    )
+    assert "S3cr3t" not in wh.destination and "odd=chars" not in wh.destination

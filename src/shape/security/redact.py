@@ -22,7 +22,9 @@ _PAIR = re.compile(
 )
 _BEARER = re.compile(r"(?i)\b(bearer\s+)[A-Za-z0-9._~+/=-]{8,}")
 _JWT = re.compile(r"eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]*")
-_PEM = re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(?:-----END [A-Z ]*PRIVATE KEY-----|$)")
+_PEM = re.compile(
+    r"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(?:-----END [A-Z ]*PRIVATE KEY-----|$)"
+)
 _URL_USER = re.compile(r"(\b[a-z][a-z0-9+.-]*://[^/\s:@]+:)[^/\s@]+(@)")
 
 
@@ -35,6 +37,13 @@ def redact_text(text: str) -> str:
     return _PAIR.sub(lambda m: f"{m.group(1)}{m.group(2)}{MASK}", text)
 
 
-def has_password(connection_string: str) -> bool:
-    """Whether ``connection_string`` carries a password (``PWD=`` or ``Password=``)."""
-    return re.search(r"(?i)\b(pwd|password)\s*=", connection_string) is not None
+def holds_secret(connection_string: str) -> bool:
+    """Whether ``connection_string`` carries a password or key (``PWD=``, ``Password=``,
+    ``AccountKey=``, ``SharedAccessKey=``, ``SharedAccessSignature=``)."""
+    return (
+        re.search(
+            r"(?i)\b(pwd|password|accountkey|sharedaccesskey|sharedaccesssignature)\s*=",
+            connection_string,
+        )
+        is not None
+    )

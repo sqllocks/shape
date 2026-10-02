@@ -54,7 +54,9 @@ def auth_options(
     string with its login), or ``None`` when no sign-in was asked for."""
     if not auth:
         return None
-    options: dict[str, Any] = _auth_module().writer_options(auth, connection_string=connection_string)
+    options: dict[str, Any] = _auth_module().writer_options(
+        auth, connection_string=connection_string
+    )
     return options
 
 

@@ -77,7 +77,11 @@ class KeyVaultResolver:
         url = f"https://{vault}{_SUFFIX}{path}?api-version={API_VERSION}"
         try:
             status, _headers, body = self._transport(
-                "GET", url, {"Authorization": f"Bearer {token}", "Accept": "application/json"}, b"", 30.0
+                "GET",
+                url,
+                {"Authorization": f"Bearer {token}", "Accept": "application/json"},
+                b"",
+                30.0,
             )
         except OSError as exc:
             raise CredentialReferenceError(
@@ -99,9 +103,7 @@ def resolve(rest: str) -> str:
     return KeyVaultResolver()(rest)
 
 
-def register(
-    credential: Any = None, transport: Transport | None = None
-) -> KeyVaultResolver:
+def register(credential: Any = None, transport: Transport | None = None) -> KeyVaultResolver:
     """Install a resolver with this ``credential`` / ``transport`` as ``kv://`` (an explicit
     registration beats the entry point; see :func:`shape.security.credrefs.register_resolver`)."""
     from shape.security.credrefs import register_resolver

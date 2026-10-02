@@ -267,7 +267,9 @@ def _auth_tokens(auth: Mapping[str, Any]) -> tuple[str, str]:
         ) from exc
     credential = mod.build_credential(mod.AuthSettings.from_mapping(auth))
     if credential is None:
-        raise ValueError("--auth sql is a database login: fabric_spark signs in to the Fabric service")
+        raise ValueError(
+            "--auth sql is a database login: fabric_spark signs in to the Fabric service"
+        )
     return (
         str(base.token_for(credential, FABRIC_API_SCOPE)),
         str(base.token_for(credential, base.SCOPE_STORAGE)),

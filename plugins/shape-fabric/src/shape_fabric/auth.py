@@ -58,7 +58,9 @@ class AuthSettings:
 
     def __post_init__(self) -> None:
         if self.mode not in AUTH_MODES:
-            raise AuthError(f"unknown --auth mode {self.mode!r}; choose one of {', '.join(AUTH_MODES)}")
+            raise AuthError(
+                f"unknown --auth mode {self.mode!r}; choose one of {', '.join(AUTH_MODES)}"
+            )
 
     @classmethod
     def from_mapping(cls, data: Mapping[str, Any] | None) -> AuthSettings:
@@ -67,13 +69,22 @@ class AuthSettings:
         unknown = sorted(set(data) - {f for f in cls.__dataclass_fields__})
         if unknown:
             raise AuthError(f"unknown authentication setting(s): {', '.join(unknown)}")
-        return cls(**{k: (v or None) if k != "mode" else (v or DEFAULT_MODE) for k, v in data.items()})
+        values: dict[str, Any] = {
+            k: (v or None) if k != "mode" else (v or DEFAULT_MODE) for k, v in data.items()
+        }
+        return cls(**values)
 
     def __repr__(self) -> str:
-        shown = {"mode": self.mode, "tenant_id": self.tenant_id, "client_id": self.client_id,
-                 "sql_user": self.sql_user}
+        shown = {
+            "mode": self.mode,
+            "tenant_id": self.tenant_id,
+            "client_id": self.client_id,
+            "sql_user": self.sql_user,
+        }
         secrets = {k: "***" for k in SECRET_SETTINGS if getattr(self, k)}
-        return f"AuthSettings({', '.join(f'{k}={v!r}' for k, v in {**shown, **secrets}.items() if v)})"
+        return (
+            f"AuthSettings({', '.join(f'{k}={v!r}' for k, v in {**shown, **secrets}.items() if v)})"
+        )
 
 
 def resolve_secret(value: str | None, what: str) -> str | None:
@@ -208,10 +219,14 @@ def build_credential(settings: AuthSettings) -> Any | None:
     if mode == "fabric":
         utils = _notebookutils()
         if utils is None or not hasattr(utils, "credentials"):
-            raise AuthError("--auth fabric works inside a Fabric notebook only (notebookutils is missing)")
+            raise AuthError(
+                "--auth fabric works inside a Fabric notebook only (notebookutils is missing)"
+            )
         return NotebookIdentity(utils)
     if mode == "spn":
-        missing = [n for n in ("tenant_id", "client_id", "client_secret") if not getattr(settings, n)]
+        missing = [
+            n for n in ("tenant_id", "client_id", "client_secret") if not getattr(settings, n)
+        ]
         if missing:
             raise AuthError(f"--auth spn needs {', '.join(m.replace('_', '-') for m in missing)}")
         secret = resolve_secret(settings.client_secret, "client secret")
@@ -274,7 +289,9 @@ def _odbc(connection_string: str) -> str:
 
     parts = urlsplit(connection_string)
     if parts.scheme in ("sql-database", "warehouse") and parts.netloc:
-        from shape_sqlserver.sql import build_connection_string  # type: ignore[import-untyped,unused-ignore]
+        from shape_sqlserver.sql import (  # type: ignore[import-untyped,unused-ignore]
+            build_connection_string,
+        )
 
         return str(build_connection_string(parts.netloc, unquote(parts.path.lstrip("/"))))
     return connection_string
@@ -298,7 +315,9 @@ def writer_options(
         assert password is not None
         user = resolve_secret(cfg.sql_user, "SQL user")
         assert user is not None
-        return {"connection_string": connection_string_with_login(connection_string, user, password)}
+        return {
+            "connection_string": connection_string_with_login(connection_string, user, password)
+        }
     return {"credential": build_credential(cfg)}
 
 

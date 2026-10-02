@@ -20,7 +20,9 @@ from .readers import _arrow_cols, _Col, _csv_cols, read_csv
 
 _SUFFIXES = (".csv", ".parquet", ".jsonl", ".ndjson")
 
-_SOURCE_OPTIONS: ContextVar[dict[str, Any]] = ContextVar("shape_source_options", default={})
+_SOURCE_OPTIONS: ContextVar[dict[str, Any] | None] = ContextVar(
+    "shape_source_options", default=None
+)
 
 
 @contextmanager
@@ -28,7 +30,7 @@ def source_options(**options: Any) -> Iterator[None]:
     """Options (a ``credential``) every cloud source opened inside the block receives: how
     ``shape profile --auth`` reaches a ``shape.sources`` plugin without changing ``profile``'s
     signature."""
-    token = _SOURCE_OPTIONS.set({**_SOURCE_OPTIONS.get(), **options})
+    token = _SOURCE_OPTIONS.set({**(_SOURCE_OPTIONS.get() or {}), **options})
     try:
         yield
     finally:
@@ -127,7 +129,7 @@ def _load_remote(text: str, name: str | None) -> tuple[str, list[_Col], int]:
         source = host.try_get(rec.group, rec.name)
         if source is None or not source.can_open(text):
             continue
-        options = _SOURCE_OPTIONS.get()
+        options = _SOURCE_OPTIONS.get() or {}
         schema = source.schema(text, **options)
         table = pa.Table.from_batches(list(source.read(text, **options)), schema=schema)
         stem = PurePosixPath(urlparse(text).path).stem
