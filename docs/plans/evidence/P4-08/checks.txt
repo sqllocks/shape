@@ -1,19 +1,10 @@
 == ruff check
-E501 Line too long (103 > 100)
- --> tests/demo/core/test_generate_from_profile.py:1:101
-  |
-1 | """``shape.generate`` on a profile generates data (P4-08; it raised ``NotImplementedError`` before)."""
-  |                                                                                                     ^^^
-2 |
-3 | import pandas as pd
-  |
-
-Found 1 error.
-exit 1
+All checks passed!
+exit 0
 == ruff format --check
-562 files already formatted
+565 files already formatted
 == mypy (strict)
-Success: no issues found in 252 source files
+Success: no issues found in 254 source files
 == vulture
 exit 0
 == lint-imports
@@ -27,8 +18,4 @@ exit 0
 == START (test_version_stays_light)
 .                                                                        [100%]
 1 passed in 0.33s
-/tmp/claude-0/final.sh: line 10: /usr/bin/time: No such file or directory
-/tmp/claude-0/final.sh: line 10: /usr/bin/time: No such file or directory
-/tmp/claude-0/final.sh: line 10: /usr/bin/time: No such file or directory
-/tmp/claude-0/final.sh: line 10: /usr/bin/time: No such file or directory
-/tmp/claude-0/final.sh: line 10: /usr/bin/time: No such file or directory
+shape version wall s: [0.062, 0.058, 0.06, 0.077, 0.072, 0.061, 0.06]

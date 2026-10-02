@@ -1,5 +1,5 @@
 rust exit 0
-python exit 1
+python exit 0
 domains exit 0
 learn verify exit 0
 fixture check exit 0
