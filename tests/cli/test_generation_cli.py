@@ -201,10 +201,10 @@ def test_star_mode(capsys, tmp_path):
     assert any(tmp_path.glob("*.parquet"))
 
 
-def test_generate_from_is_reserved(capsys):
+def test_generate_from_a_missing_profile_exits_2(capsys):
     code, _, err = run(capsys, "generate", "--from", "x.shape")
     assert code == 2
-    assert "not available yet" in err
+    assert "x.shape" in err
 
 
 def test_demo_rows_still_work(capsys):

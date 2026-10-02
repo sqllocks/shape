@@ -248,13 +248,12 @@ _OUTPUT_TYPES: dict[str, pa.DataType] = {
     "float64": pa.float64(),
     "bool": pa.bool_(),
     "string": pa.string(),
-    "date32": pa.date32(),
 }
 
 
 def cast_output(value: Any, name: str, where: str) -> pa.Array:
     """A strategy's output as the Arrow type its generator's ``output_type`` names (``int64``,
-    ``float64``, ``bool``, ``string`` or ``date32``); floats are rounded before they become
+    ``float64``, ``bool`` or ``string``); floats are rounded before they become
     integers."""
     target = _OUTPUT_TYPES.get(name)
     if target is None:

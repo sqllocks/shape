@@ -14,6 +14,9 @@ and ``tests/generation/test_learn.py`` read it):
   500) is not an enum; the baseline draws only those 500 values.
 * ``exponential``: a column fitted as an exponential distribution is generated as one; the baseline
   has no exponential generator and draws a clipped normal.
+* ``enum_pattern``: a string column of currency or language codes whose few values are all
+  listed in the profile keeps those values; the baseline draws any code of a faker provider, so the
+  column's vocabulary is lost (and the generated column needs the optional ``faker`` package).
 * ``shifted_lognormal``: a log-normal fit with a material location shift is generated from the
   column's quantiles; the baseline drops the shift and draws values nowhere near the column's.
 
@@ -34,6 +37,13 @@ DIFFERENCES: dict[str, str] = {
         "a numeric column whose profile lists fewer values than it has distinct ones is generated "
         "from its distribution; the baseline draws only the listed values (the 500 most "
         "frequent), so the rest of the column's values never occur"
+    ),
+    "enum_pattern": (
+        "a currency or language code column whose profile lists every value is generated from "
+        "those values and weights; the baseline draws any code of a faker provider (which needs "
+        "the optional faker package), so the column's own vocabulary is lost. Other patterns "
+        "(e-mail, phone, ip address...) are never turned into value lists: the schema would "
+        "carry personal data"
     ),
     "shifted_lognormal": (
         "a log-normal fit whose location shift is more than 2% of the column's level is generated "
@@ -94,6 +104,8 @@ _PATTERN_PROVIDERS: dict[str, str] = {
     "currency_code": "currency_code",
     "language_code": "language_code",
 }
+
+_CODE_PATTERNS = ("currency_code", "language_code")
 
 _COLUMN_TYPES = {
     "integer": "integer",
@@ -362,6 +374,13 @@ class SchemaBuilder:
         if col.pattern == "phone":
             return {"strategy": "faker", "provider": "phone_number"}
         if col.pattern in _PATTERN_PROVIDERS:
+            if (
+                col.pattern in _CODE_PATTERNS
+                and col.is_enum
+                and col.dtype == "string"
+                and _is_covered_enum(col)
+            ):
+                return {"strategy": "weighted_enum", "values": dict(col.value_counts_ext or {})}
             return {"strategy": "faker", "provider": _PATTERN_PROVIDERS[col.pattern]}
         if col.pattern == "date":
             return {"strategy": "temporal", "type": "date"}

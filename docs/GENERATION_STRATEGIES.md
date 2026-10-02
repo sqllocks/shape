@@ -40,7 +40,7 @@ schema, `row_counts`, `key_pool(table)`) and `column_def` (the column: `type`, `
    `table.column`: `require(spec, key, ctx, "strategy")`, `where(ctx)`.
 5. **Types.** A strategy returns its natural type and the engine does not cast: integers
    (`sequence`) as `int64`; numeric draws as `float64`; text as `string`. The one exception is a
-   generator that asks for it: `"output_type": "int64"` (or `float64`, `bool`, `string`, `date32`) casts the
+   generator that asks for it: `"output_type": "int64"` (or `float64`, `bool`, `string`) casts the
    strategy's output (floats are rounded first), which is how a profile's integer and boolean
    columns keep their type (`shape.generation.engine.cast_output`).
 

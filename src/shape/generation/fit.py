@@ -249,7 +249,6 @@ def _fit_column(
         gen = dict(gen)
         gen.pop("type", None)
         midnight = col.hour_histogram is not None and col.hour_histogram[0] >= 0.999
-        date_only = midnight and col.dtype == "date"
         profiles = dict(gen.get("profiles") or {})
         month = _month_weights(col)
         if month is not None:
@@ -257,12 +256,10 @@ def _fit_column(
         if midnight:
             profiles.pop("hour_of_day", None)
             gen["granularity"] = "day"
-        if date_only:
-            gen["output_type"] = "date32"
         if profiles:
             gen["pattern"] = "seasonal"
             gen["profiles"] = profiles
-        return ("temporal_midnight" if midnight and not date_only else "temporal"), gen
+        return ("temporal_midnight" if midnight and col.dtype != "date" else "temporal"), gen
 
     if strategy == "weighted_enum":
         gen = dict(gen)
@@ -281,8 +278,6 @@ def _fit_column(
 
     if strategy == "faker":
         provider = str(gen.get("provider"))
-        if col.is_enum and _is_covered(col) and col.dtype == "string":
-            return "enum", {"strategy": "weighted_enum", "values": dict(col.value_counts_ext or {})}
         gen = {k: v for k, v in gen.items() if k != "max_length"}
         if provider == "postcode" and (col.string_length or {}).get("min", 0) >= 10:
             gen["provider"] = provider = "zip_plus4"
@@ -310,6 +305,13 @@ def _plan_column(
                 add(f, status, reason)
                 present.discard(f)
 
+    if kind == "temporal_midnight":
+        mark(
+            ("dtype",),
+            _A,
+            "every value is a midnight, generated as a midnight timestamp; profiling a timestamp "
+            "column of midnights reports `date`",
+        )
     mark(("name", "dtype", "is_primary_key", "is_foreign_key", "fk_ref_table"), _P, "kept as it is")
     mark(
         ("null_count", "null_rate"),
@@ -356,7 +358,11 @@ def _plan_column(
             _P,
             "uuid4 strings are unique, 36 characters",
         )
-        mark(("enum_values", "value_counts_ext", "value_counts_ext_order"), _P, "unique values")
+        mark(
+            ("enum_values", "value_counts_ext", "value_counts_ext_order", "min_value", "max_value"),
+            _N,
+            "random uuids: the particular values (and the smallest and largest) are not reproduced",
+        )
     elif kind == "foreign_key":
         mark(
             (
@@ -450,13 +456,6 @@ def _plan_column(
         )
         mark(("fit_score",), _N, "a goodness of fit is measured again, not generated")
     elif kind in ("temporal", "temporal_midnight"):
-        if kind == "temporal_midnight":
-            mark(
-                ("dtype",),
-                _A,
-                "midnight timestamps; profiling an Arrow timestamp column of "
-                "midnights reports `date`",
-            )
         mark(("hour_histogram", "dow_histogram"), _P, "drawn with the profile's weights")
         mark(
             ("temporal_histogram",),

@@ -25,6 +25,14 @@ from shape.generation.learn import DIFFERENCES  # noqa: E402
 def _explain(shape_col: dict[str, Any], base_col: dict[str, Any]) -> str | None:
     """The name of the deliberate difference that explains two columns, or ``None``."""
     sg, bg = shape_col["generator"], base_col["generator"]
+    if (
+        base_col["type"] == "string"
+        and bg.get("strategy") == "faker"
+        and bg.get("provider") in ("currency_code", "language_code")
+        and sg.get("strategy") == "weighted_enum"
+        and all(shape_col[k] == base_col[k] for k in shape_col if k != "generator")
+    ):
+        return "enum_pattern"
     numeric = base_col["type"] in ("integer", "decimal")
     same_rest = all(shape_col[k] == base_col[k] for k in shape_col if k != "generator")
     if not (numeric and same_rest):
