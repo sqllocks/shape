@@ -256,11 +256,15 @@ from shape.generation.engine import Engine
 result = Engine(load_domain("retail").schema, scale="medium", seed=1).generate()
 ```
 
-The `sqllocks-shape-domains` package (`pip install sqllocks-shape[domains]`) ships `retail`: nine
+The `sqllocks-shape-domains` package (`pip install sqllocks-shape[domains]`) ships `retail`, `capital_markets`,
+`education` and `financial` (each also in `star` mode; see the package's README for their tables). `retail` is nine
 tables (customer, address, product_category, product, store, promotion, order, order_line, return),
 the row counts of the `small`, `medium`, `large` and `xlarge` presets, and its reference data. Its
 uniform dates are `timestamp[ns]` (`temporal` with `unit: "ns"`) and the seasonal ones
-`timestamp[us]`.
+`timestamp[us]`; the other domains follow the same rule (every non-seasonal `temporal` column is `ns`,
+including the `trading_days` pattern of `capital_markets`, which is uniform). `financial` reads the ZIP
+locations that `retail` ships. In `capital_markets`, `industry.industry_name` is the empty string for
+every row, as in the reference output it is checked against (its schema says `constant ""`).
 
 ## Writers
 
