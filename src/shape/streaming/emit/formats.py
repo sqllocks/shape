@@ -46,7 +46,9 @@ def with_event_fields(batch: pa.RecordBatch, table: str, seq_start: int) -> pa.R
     ``_shape_table``, ``_shape_seq`` and, if the table has one, ``_shape_event_time``."""
     clash = [n for n in _RESERVED if n in batch.schema.names]
     if clash:
-        raise ShapeSchemaError(f"table {table!r} has a column named {clash[0]!r}, which is reserved")
+        raise ShapeSchemaError(
+            f"table {table!r} has a column named {clash[0]!r}, which is reserved"
+        )
     n = batch.num_rows
     time_col = event_time_column(batch.schema)
     arrays = list(batch.columns)
@@ -93,7 +95,7 @@ def _dumps(obj: Any) -> str:
 
 
 def encode_batch(batch: pa.RecordBatch, envelope: str = "flat", source: str = "shape") -> bytes:
-    """``batch`` of flat events as JSON lines (UTF-8), one event per line, each ending in ``\\n``."""
+    """``batch`` of flat events as UTF-8 JSON lines, one per line, each ending in a newline."""
     if envelope not in ENVELOPES:
         raise ValueError(f"unknown envelope {envelope!r}; choose from {', '.join(ENVELOPES)}")
     if batch.num_rows == 0:

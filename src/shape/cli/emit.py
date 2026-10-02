@@ -95,6 +95,9 @@ def add_arguments(sub: Any) -> None:
     dl = em.add_argument_group("delivery")
     dl.add_argument("--checkpoint", metavar="FILE", help="checkpoint file (see the description)")
     dl.add_argument("--checkpoint-every", type=int, default=10_000, metavar="N")
+    dl.add_argument(
+        "--checkpoint-seconds", type=float, default=1.0, metavar="S", help="at least this often"
+    )
     dl.add_argument("--fresh", action="store_true", help="ignore an existing checkpoint")
     dl.add_argument("--batch-events", type=int, metavar="N", help="events per delivery")
     dl.add_argument("--queue-batches", type=int, default=8, metavar="N", help="buffer depth")
@@ -159,7 +162,9 @@ def run(a: argparse.Namespace) -> int:
         anomaly=injector,
         envelope=a.envelope,
     )
-    checkpoint = a.checkpoint or (f"{a.output}.checkpoint" if a.sink == "file" and a.output else None)
+    checkpoint = a.checkpoint or (
+        f"{a.output}.checkpoint" if a.sink == "file" and a.output else None
+    )
     config = EmitConfig(
         realtime=a.realtime,
         rate=a.rate,
@@ -170,6 +175,7 @@ def run(a: argparse.Namespace) -> int:
         queue_batches=a.queue_batches,
         checkpoint_path=checkpoint,
         checkpoint_every=a.checkpoint_every,
+        checkpoint_seconds=a.checkpoint_seconds,
         fresh=a.fresh,
         retries=a.retries,
     )
@@ -179,7 +185,7 @@ def run(a: argparse.Namespace) -> int:
     sink = _sink(a, a.envelope, resuming=offset > 0)
     runner = EmitRunner(plan, sink, config)
 
-    def stop(signum: int, frame: Any) -> None:
+    def stop(_signum: int, _frame: Any) -> None:
         runner.request_stop()
 
     previous = {s: signal.signal(s, stop) for s in (signal.SIGINT, signal.SIGTERM)}

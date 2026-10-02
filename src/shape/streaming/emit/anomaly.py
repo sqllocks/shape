@@ -117,9 +117,7 @@ class AnomalyStats:
 class AnomalyInjector:
     """Applies mutators to a fraction of the rows of each block."""
 
-    def __init__(
-        self, fraction: float, mutators: Sequence[ChaosMutator], seed: int
-    ) -> None:
+    def __init__(self, fraction: float, mutators: Sequence[ChaosMutator], seed: int) -> None:
         if not 0.0 <= fraction <= 1.0:
             raise ValueError("anomaly fraction must be between 0 and 1")
         if fraction > 0 and not mutators:

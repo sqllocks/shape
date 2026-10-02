@@ -80,6 +80,7 @@ class EmitReport:
     stopped_by: str = ""  # complete | max-events | duration | stop-request | error
     elapsed: float = 0.0
     rate: float = 0.0  # delivered events per second between first and last delivery
+    max_queue_depth: int = 0  # the most batches waiting between the generator and the sink
     max_lag: float = 0.0  # realtime: the most seconds a batch was sent after its due time
     per_second: list[int] = field(default_factory=list)  # events delivered in each second
     checkpoints: int = 0
@@ -213,9 +214,7 @@ class EmitRunner:
             except (OSError, ConnectionError, TimeoutError) as exc:
                 attempt += 1
                 if attempt > cfg.retries:
-                    raise ShapeError(
-                        f"delivery failed after {cfg.retries} retries: {exc}"
-                    ) from exc
+                    raise ShapeError(f"delivery failed after {cfg.retries} retries: {exc}") from exc
                 report.retries += 1
                 time.sleep(cfg.retry_backoff * (2 ** (attempt - 1)))
 
@@ -264,6 +263,7 @@ class EmitRunner:
                 if item is _END:
                     break
                 start, batch = item
+                report.max_queue_depth = max(report.max_queue_depth, q.qsize() + 1)
                 n = int(batch.num_rows)
                 now = time.perf_counter()
                 if t0 is None:

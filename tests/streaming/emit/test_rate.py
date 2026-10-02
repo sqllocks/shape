@@ -13,7 +13,8 @@ def test_parse_burst() -> None:
 
 
 @pytest.mark.parametrize(
-    "spec", ["", "1:2", "1:2:3:4", "a:1:2", "-1:1:2", "1:0:2", "1:1:0", "1:1:-2", "1:1:nan", "1:inf:2"]
+    "spec",
+    ["", "1:2", "1:2:3:4", "a:1:2", "-1:1:2", "1:0:2", "1:1:0", "1:1:-2", "1:1:nan", "1:inf:2"],
 )
 def test_parse_burst_rejects(spec: str) -> None:
     with pytest.raises(ValueError):

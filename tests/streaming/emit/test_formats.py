@@ -27,9 +27,13 @@ def _batch() -> pa.RecordBatch:
         {
             "id": pa.array([1, 2, 3], pa.int64()),
             "x": pa.array([1.5, float("nan"), float("inf")], pa.float64()),
-            "when": pa.array([dt.datetime(2024, 1, 2, 3, 4, 5, 678901), None, dt.datetime(2000, 1, 1)]),
+            "when": pa.array(
+                [dt.datetime(2024, 1, 2, 3, 4, 5, 678901), None, dt.datetime(2000, 1, 1)]
+            ),
             "day": pa.array([dt.date(2024, 5, 6), None, dt.date(1999, 12, 31)]),
-            "amount": pa.array([decimal.Decimal("1.10"), None, decimal.Decimal("-3.25")], pa.decimal128(9, 2)),
+            "amount": pa.array(
+                [decimal.Decimal("1.10"), None, decimal.Decimal("-3.25")], pa.decimal128(9, 2)
+            ),
             "raw": pa.array([b"\x00\x01", None, b"abc"]),
             "s": pa.array(["a", "é", None]),
         }
