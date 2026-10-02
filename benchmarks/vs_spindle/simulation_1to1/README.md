@@ -10,7 +10,8 @@ source scripts/env.sh
 Exit 0 when every check passed, 1 when a check failed, 2 when an input or a worker is missing.
 The verifier runs in the baseline venv; each side's code runs in its own venv through
 `files_baseline_worker.py` and `files_shape_worker.py`. The retail inputs are the ones `domain_1to1/generate.py`
-makes (generated here when missing).
+makes (generated here when missing), at `small`: the baseline slices a whole frame once per
+time slot, so a medium table would take it hours.
 
 * `verify_files.py`: the runner of this lane. It discovers `files_case_*.py`; a case module defines `NAME`, `ALLOWED`,
   `baseline_side(job)`, `shape_side(job)`, `run(ctx)` and `negative_controls(ctx)`.

@@ -4,7 +4,7 @@ Runs in the *baseline* venv (it needs pandas and scipy); each side's code runs i
 through ``files_baseline_worker.py`` and ``files_shape_worker.py``:
 
     source scripts/env.sh && "$SPINDLE_PY" benchmarks/vs_spindle/simulation_1to1/verify_files.py \\
-        [--scale small|medium] [--case NAME ...] [--negative-control] [--out REPORT.json]
+        [--case NAME ...] [--negative-control] [--out REPORT.json]
 
 Every ``files_case_<simulator>.py`` in this directory is one case (a module per simulator, so the
 lanes that port different simulators never edit the same file). A case runs two kinds of check:
@@ -150,7 +150,13 @@ def discover(names: list[str]) -> list[Any]:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--scale", choices=["small", "medium"], default="small")
+    ap.add_argument(
+        "--scale",
+        choices=["small"],
+        default="small",
+        help="retail scale of the inputs (small: the baseline slices a frame once per slot, so a "
+        "medium table would take it hours)",
+    )
     ap.add_argument(
         "--case",
         action="append",
