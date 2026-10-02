@@ -543,6 +543,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.learn import add_arguments as add_learn_arguments
 
     add_learn_arguments(sub)
+    from shape.cli.incremental import add_arguments as add_incremental_arguments
+
+    add_incremental_arguments(sub)
     fi = sub.add_parser(
         "fidelity",
         aliases=["compare"],
@@ -773,6 +776,10 @@ def _dispatch(argv):
         return _run(run_generation, a)
     if a.cmd == "from-ddl":
         return _run(_cmd_from_ddl, a)
+    if a.cmd in ("continue", "time-travel"):
+        from shape.cli.incremental import run as run_incremental
+
+        return _run(run_incremental, a)
     if a.cmd == "learn":
         from shape.cli.learn import run as run_learn
 
