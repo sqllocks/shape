@@ -28,6 +28,9 @@ _KIND_TYPES = {
 }
 
 
+_RELATIONSHIP_KEYS = ("name", "parent", "child", "parent_columns", "child_columns")
+
+
 class GateSchemaError(ValueError):
     """A document is not a usable gate schema."""
 
@@ -126,7 +129,15 @@ class GateSchema:
                 )
             tables[tname] = TableSpec(tname, columns, tuple(t.get("primary_key") or ()))
         rels: list[RelationshipSpec] = []
-        for r in doc.get("relationships") or ():
+        for i, r in enumerate(doc.get("relationships") or ()):
+            if not isinstance(r, Mapping):
+                raise GateSchemaError(f"relationships[{i}]: must be an object, not {r!r}")
+            for key in _RELATIONSHIP_KEYS:
+                if key not in r:
+                    raise GateSchemaError(
+                        f'relationships[{i}]: missing required key "{key}" (a {FORMAT} '
+                        f"relationship needs {', '.join(_RELATIONSHIP_KEYS)}; got {sorted(r)})"
+                    )
             try:
                 rels.append(
                     RelationshipSpec(
@@ -138,8 +149,8 @@ class GateSchema:
                         str(r.get("type", "one_to_many")),
                     )
                 )
-            except (KeyError, TypeError) as exc:
-                raise GateSchemaError(f"invalid relationship {r!r}: {exc!r}") from exc
+            except TypeError as exc:
+                raise GateSchemaError(f"relationships[{i}]: invalid value: {exc}") from exc
         return cls(tables, tuple(rels))
 
     @classmethod

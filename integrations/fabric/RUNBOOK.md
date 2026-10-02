@@ -97,6 +97,17 @@ python integrations/fabric/pipelines/build_pipelines.py
    and the pure wheel otherwise. The printed line `Shape 0.9.0, kernel: rust` (and the
    `kernel` key of the exit value) says which one you got; `python` means the pure wheel.
    Without outbound access to PyPI add `--no-index`; numpy and pyarrow come from the runtime. **[VERIFY]**
+   **In a pipeline run this cell does nothing unless the activity enables it:** Microsoft
+   documents that inline `%pip` is disabled by default in notebook pipeline runs, and that a
+   Python notebook cannot attach an Environment (so section 5 does not help here). The shipped
+   pipelines `shape_gate_notebook` and `shape_generate_gate` therefore pass the Boolean
+   notebook-activity parameter `_inlineInstallationEnabled = true` on every notebook that has
+   a `%pip` cell (`pytest tests/demo/fabric/test_inline_install.py` enforces it). Limits from
+   the same page: not supported in High Concurrency mode (do not set a session tag on the
+   activity), not supported in a reference run (`notebookutils.notebook.run`), and libraries
+   are installed again on every run, so keep the pinned `==` versions and the `builtin`
+   wheels. **[VERIFY]** (section 10, item 13). For a pipeline that must not install at run
+   time, use the PySpark notebook with the Environment (pipeline (a2), section 5).
 4. The first cell, `%%configure {"vCores": 8}`, is a cell magic that must run before the
    session starts. The default is 2 vCores; Shape's parallel speed-ups need more. **[VERIFY]**
    If the session does not start with 8 vCores, run **Stop session**, then run the cell again
@@ -208,6 +219,9 @@ Environment must be published in **Full** mode)
    parameter, with dynamic content:
    `tableName` (String) `@pipeline().parameters.tableName`, likewise `contractPath`,
    `baselinePath`, `outputDir`, and `failOnDrift` (Bool) `@pipeline().parameters.failOnDrift`.
+   For `shape_profile` (not for `shape_profile_spark`) add one more base parameter,
+   `_inlineInstallationEnabled` (**Bool**) `true`: without it the notebook's `%pip install` cell
+   is skipped in a pipeline run and `import shape` fails. **[VERIFY]**
 4. Add an **If Condition** activity named `CheckGate`, connected from `ProfileTable` **On
    success**. Expression (dynamic content), **[VERIFY]**:
 
@@ -309,7 +323,7 @@ Notebook exit value (compact, well under 1 MB):
 |---|---|
 | Exit value says `"kernel": "python"` but you wanted Rust | the platform wheel is not in *Resources > builtin* (or does not match: Linux x86_64, Python 3.11+); upload it next to the pure wheel and rerun the install cell |
 | `ModuleNotFoundError: shape` in a Spark executor (distributed notebook) | Shape is not installed on the executors: attach the Environment and publish it; in Quick mode check the session started after the publish |
-| `ModuleNotFoundError: shape` in the Python notebook | the `%pip install` cell did not run or the wheel is not in *Resources > builtin*; kernel must be Python, not PySpark |
+| `ModuleNotFoundError: shape` in the Python notebook | the `%pip install` cell did not run or the wheel is not in *Resources > builtin*; kernel must be Python, not PySpark. In a **pipeline run** inline `%pip` is off unless the notebook activity passes the Boolean parameter `_inlineInstallationEnabled = true` (section 4) |
 | `pip` complains about `pyarrow`/`numpy` versions | Shape needs `numpy>=2,<3` and `pyarrow>=14`. In the Python notebook `%pip install "pyarrow>=14"` and restart the kernel; in the Environment see `environment.yml` |
 | Session has 2 vCores | the `%%configure` cell must run first in a fresh session; stop the session and rerun |
 | Pipeline gets no exit value / the If Condition fails to evaluate | the `exit` call is inside `try`/`except`, is not the last statement, or the notebook failed earlier; open the Notebook activity output. Do not add code after `exit` |
@@ -346,6 +360,15 @@ Not checked live by the builder; each is a risk until you confirm it.
     name=...)`, `shape.check(p, contractPath)`, `shape.diff(base, cur)`, `shape.save/load`.
     If `pytest tests/demo/fabric` fails after the merge, that is the first thing to read.
 12. The generation items (PF-06): section 12.6.
+13. **`_inlineInstallationEnabled` (issue #7).** Run `shape_gate_notebook` from the pipeline (not
+    interactively): the `%pip install --find-links builtin ...` cell must install Shape (the
+    run output shows `Shape <version>, kernel: ...`) with the Boolean base parameter
+    `_inlineInstallationEnabled = true`; without it the run must fail at `import shape`
+    (that is the documented default, which confirms the parameter is what turns it on). Also
+    check that the builtin wheels install in a pipeline run, that the parameter is accepted as
+    a Boolean in the imported definition, and that no High Concurrency session tag is set.
+    If a pipeline run still cannot install, run the gate with the PySpark notebook and the
+    Environment (pipeline (a2)) instead.
 
 ## 11. Owner live dry-run checklist
 
@@ -359,6 +382,7 @@ seconds); do not extrapolate.
 - [ ] `shape_profile` on `orders_day2` with the day-1 baseline: `passed: false`, expected violations, `drifted: true`
 - [ ] Environment `shape-env` published on Runtime 2.0 (Quick); version check ok
 - [ ] `shape_profile_spark` day 1 and day 2 give the same exit JSON as the Python notebook
+- [ ] Pipeline run of `shape_profile` installs Shape with `_inlineInstallationEnabled = true` (section 10, item 13); without the parameter it fails at `import shape`
 - [ ] `shape_profile` exit value reports `"kernel": "rust"` with the platform wheel uploaded (and `python` with only the pure wheel)
 - [ ] `shape_profile_distributed` (`distributed`) on a large table: finishes, `rows` equals the table's count, `checked: false`, `<table>.profile.json` written; with a contract set it fails with the explanatory error
 - [ ] `shape_profile_distributed` (`exact`) equals `shape_profile_spark` on day 1 and day 2
@@ -382,8 +406,11 @@ Everything here runs on the generation engine, so what a notebook or function ge
 
 A domain is a plugin: next to the Shape wheel, upload the wheel `sqllocks_shape_domains-0.9.0-py3-none-any.whl`
 (`pip wheel --no-deps plugins/shape-domains`, or the release) to *Resources > builtin* of each
-notebook, or to the Environment. The install cell of both notebooks is
+notebook (a Python notebook cannot attach an Environment). The install cell of both notebooks is
 `%pip install --find-links builtin "sqllocks-shape==0.9.0" "sqllocks-shape-domains==0.9.0"`. For
+Both notebooks run from the pipeline `shape_generate_gate`, which passes
+`_inlineInstallationEnabled = true` to each of them (inline `%pip` is off in pipeline runs
+otherwise; see section 4). For
 `generateSample`, add the same wheel as a **private library** of `shape_udf` (it is
 `py3-none-any` and about 2 MB, far under the 28.6 MB limit). **[VERIFY]** that the UDF library
 resolver accepts a private library whose requirement `sqllocks-shape==0.9.0` is another private
@@ -466,6 +493,7 @@ Test it from the portal, for example `domain = retail`, `table = customer`, `row
 ### 12.6 Verify in the workspace on first run (PF-06)
 
 1. The two-wheel install line resolves in a notebook (section 12.1), and the exit value reports the kernel.
+   In the pipeline run both notebooks install with `_inlineInstallationEnabled = true` (section 10, item 13).
 2. The Delta tables the notebook writes under `/lakehouse/default/Tables` appear in the lakehouse
    explorer and the SQL endpoint without a refresh step (a Python notebook writes the files itself).
 3. `/lakehouse/default/Files/...` is writable from the Python notebook for `contract.json`.

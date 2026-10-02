@@ -2,6 +2,11 @@
 
 ``uri`` is a path or ``file://`` URI. When it names an existing directory (or ends with a
 separator) the file is ``<table>.<extension>`` inside it.
+
+With the option ``path_template`` (and ``batch_date``, ``YYYY-MM-DD``, when the template has a date
+token) ``uri`` is the landing root and the file is the template filled for the table, for example
+``{table}/ingest_date={date}/{table}_{yyyymmdd}.{ext}`` (see :mod:`shape.io.landing`). Folders are
+created as needed.
 """
 
 from __future__ import annotations
@@ -17,6 +22,7 @@ import pyarrow.csv as pacsv  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.builtins.sources.files import local_path
+from shape.io.landing import render_path
 
 
 class _FileSink:
@@ -24,8 +30,17 @@ class _FileSink:
     schemes = ("file",)
     extension = ""
 
-    def _target(self, uri: str, table: str) -> Path:
+    def _target(self, uri: str, table: str, options: dict[str, Any] | None = None) -> Path:
         path = local_path(uri)
+        template = (options or {}).get("path_template")
+        if template:
+            root = path.resolve()
+            name = render_path(template, table, self.extension, (options or {}).get("batch_date"))
+            target = (root / name).resolve()
+            if not target.is_relative_to(root):
+                raise ValueError(f"path template {template!r} leaves the landing root")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            return target
         if path.is_dir() or uri.endswith(("/", "\\")):
             path.mkdir(parents=True, exist_ok=True)
             from shape.security.names import contained
@@ -35,7 +50,7 @@ class _FileSink:
         return path
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
-        target = self._target(uri, table)
+        target = self._target(uri, table, options)
         rows = 0
         writer: Any = None
         try:

@@ -430,11 +430,13 @@ class TemporalConsistencyGate(ValidationGate):
         date_range = config.get("date_range", {})
 
         if date_range:
+            checked = 0
             for tname, table in context.tables.items():
                 for cname in table.column_names:
                     col = _column(table, cname)
                     if not pa.types.is_timestamp(col.type):
                         continue
+                    checked += 1
                     col = col.drop_null()
                     if len(col) == 0:
                         continue
@@ -453,6 +455,11 @@ class TemporalConsistencyGate(ValidationGate):
                         if after > 0:
                             errors.append(f"{key}: {after:,} dates after {date_range['end']}")
                             details.setdefault(key, {})["after_range"] = after
+            if not checked:
+                warnings.append(
+                    "date_range checked nothing: no column has a timestamp type "
+                    "(CSV and JSONL dates load as text; convert them first)"
+                )
 
         for spec in config.get("no_future", []):
             parts = spec.split(".", 1)
@@ -463,6 +470,7 @@ class TemporalConsistencyGate(ValidationGate):
                 continue
             col = _column(context.tables[tname], cname)
             if not pa.types.is_timestamp(col.type):
+                warnings.append(f"{spec}: not a timestamp column ({col.type}); not checked")
                 continue
             now = datetime.now(UTC) if col.type.tz else datetime.now()
             future = _count_true(pc.greater(col.drop_null(), _timestamp_scalar(now, col.type)))

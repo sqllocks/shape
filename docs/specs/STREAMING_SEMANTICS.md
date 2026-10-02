@@ -19,6 +19,8 @@ All windows are half-open, `[start, end)`, in microseconds since the epoch, and 
 - **Session** (`gap`): a session extends while consecutive events are less than `gap` apart, and covers `[first event, last event + gap)`. An event that falls between two sessions closer than `gap` to both merges them.
 - **Global**: one window over the whole stream, emitted at the end of the stream. It needs no event time and equals bounded batch profiling of the same rows.
 
+**Durations** (`size`, `slide`, `gap`, `offset`, `allowed_lateness`) are a `timedelta`, or a string with a unit: `"500ms"`, `"60s"`, `"5m"`, `"1h"`, `"2d"`, `"250us"` (a bare numeric string is seconds, as on the command line). A bare `int` or `float` is refused with an error that says how to write it, except `0`, which is the same in every unit. Integers used to mean microseconds, so `60_000` was 60 *milliseconds*; refusing them is the choice that cannot change an existing caller's results without a word. For microseconds write `timedelta(microseconds=n)` or `"nus"`. Snapshots keep their whole-microsecond fields (`size_us`, `allowed_lateness_us`, ...) unchanged, and older snapshots still restore.
+
 A closed window yields a `WindowProfile`: its kind, bounds, row count and the profile engine's table entry (the same layout as a batch profile, with `mode: "bounded"` error models).
 
 ## 3. Watermarks, allowed lateness and late data
