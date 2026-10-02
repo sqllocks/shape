@@ -352,6 +352,8 @@ shape generate retail --scale medium --seed 42 --format parquet -o out/
 shape generate retail --dry-run              # the plan: order, rows, memory; generates nothing
 shape from-ddl tables.sql -o shop.gen.json && shape generate shop.gen.json -f csv -o out/
 shape validate shop.gen.json                 # a schema file, or a contract; exit 0, 1 or 2
+shape continue retail --input out/ -o delta/ # the next inserts, updates and deletes (docs/INCREMENTAL.md)
+shape time-travel retail --months 12 -o snaps/   # monthly snapshots of an evolving dataset
 ```
 
 Start-up and exit are kept short, because they are part of what a run costs (retail `medium` takes
