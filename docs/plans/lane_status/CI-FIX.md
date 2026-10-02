@@ -4,8 +4,8 @@ Branch: `lane/CI-FIX`. No gate, tolerance or decision was changed; no test was s
 retried or marked. `python scripts/check_user_facing.py` is clean (D-13).
 
 Status: items 1, 2, 3, 4, 6 and 7 are fixed. Item 5 (macOS realtime pacing) is **not** a runtime
-defect; the evidence is below and the decision is the owner's. The green run id is recorded at the
-end once every job on the final head has finished.
+defect; the owner decided (2026-10-02) to run the realtime-timing tests on Linux only (below). The
+green run ids are recorded at the end.
 
 ## Root causes and fixes
 
@@ -55,11 +55,27 @@ host. Not done, deliberately: raising the pacing thread's QoS class (`pthread_se
 tried, because no evidence here says it would beat the contention and the criterion should not
 depend on an undocumented scheduler hint.
 
-For the owner (§0.4), as in P5-01b: run the realtime rate tests on a quiet runner (a larger or
-self-hosted macOS runner, or Spotlight indexing disabled for the workspace with
-`mdutil -a -i off` in a step), or restate the criterion for a shared macOS runner in terms the host
-cannot violate. Until then these two tests stay red on `macos-latest` and are reported, not
-changed.
+### Owner decision (2026-10-02): realtime-timing tests run on Linux only
+
+Implemented exactly that, with no change to any assertion, tolerance or duration:
+
+* `pyproject.toml` registers the marker `realtime`: "wall-clock pacing assertions; run on Linux CI
+  runners and the nightly soak".
+* Marked tests (all in `tests/streaming/emit`): in `test_runtime.py`
+  `test_duration_stops_a_realtime_run`, `test_duration_also_bounds_a_fast_run`,
+  `test_realtime_rate_within_five_percent`,
+  `test_realtime_rate_holds_through_a_full_collection_of_a_large_heap`,
+  `test_realtime_rate_holds_while_the_checkpoint_write_is_slow`, `test_bursts`,
+  `test_realtime_resume_starts_its_own_clock`,
+  `test_slow_sink_in_realtime_falls_behind_without_dropping`; in `test_soak.py`
+  `test_realtime_rate_holds_at_10000_events_per_second` (also `heavy`).
+* `ci.yml`: the macOS matrix entries add `and not realtime` to the `-m` selection of both pytest
+  steps that can reach those tests (the main suite and the `-m heavy` step, which runs the soak).
+  Linux and Windows run them; the nightly `emit-rate-soak` is unchanged; local runs
+  (`pytest -m "not emulator and not live and not heavy"`) still run them. Nothing is skipped
+  anywhere else.
+* `pacing-diagnostic.yml` (a probe only) was removed. `scripts/pacing_diagnostic.py` is kept: run
+  it by hand (`python scripts/pacing_diagnostic.py`) on a suspect runner to print scheduler stalls.
 
 ## Local checks (builder VM, Python 3.11, numpy 2.4.6 / scipy 1.17.1)
 

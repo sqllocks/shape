@@ -17,6 +17,7 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.dimensional.files import FORMATS, write_table
+from shape.security.names import contained
 
 
 def entity_name(table: str, names: Mapping[str, str] | None = None) -> str:
@@ -123,7 +124,7 @@ def write_cdm_folder(
     root.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []
     for entity, data in _entities(tables, names).values():
-        folder = root / entity
+        folder = contained(root, entity)
         folder.mkdir(exist_ok=True)
         path = folder / f"{entity}.{fmt}"
         write_table(data, path, fmt)

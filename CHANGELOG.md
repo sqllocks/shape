@@ -5,6 +5,12 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `shape generate --scale-mode local_single|local_mp|fabric_spark` and `shape jobs list|status|cancel|resume`
+  (`docs/SCALE.md`): the scale router with sinks (memory, Parquet part files, Lakehouse, Warehouse,
+  SQL Database, KQL), a durable job store (submit, status, cancel, resume), the `fabric_spark` router
+  with its `shape_spark_worker` notebook, a per-chunk-file process option, `ChunkedGenerator` and
+  `MultiStoreWriter`. Row counts are exact in every mode. Harness: `benchmarks/vs_spindle/scale_1to1/`
+  (T-21 for retail at medium, with negative controls).
 - `shape stream` (`docs/EMIT.md`): one table's rows as events in event-time order, on the `shape emit`
   runtime (same options, sinks, formats and delivery guarantees; `--table` required, `-t -s -m`,
   `--rate` 10, `--max-events` is the earliest N events). The flat-event encoder is vectorised
