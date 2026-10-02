@@ -117,8 +117,90 @@ Options of an emitter (a Kafka `config`, a connection string, a token) are keywo
 `emit`; see each plugin's README. Sign-in material belongs in environment variables or an options
 file, never in the URI.
 
+## Live fidelity
+
+`shape emit --live-target TARGET` scores the events against a target *while they are delivered*,
+and raises an alert when the score drifts. The score is the one `shape fidelity` gives
+(`docs/FIDELITY.md`): at any moment the live score is `shape fidelity` of the target against the
+events delivered so far, computed without keeping the events.
+
+```bash
+shape emit retail --scale medium --sink file -o events.jsonl \
+      --live-target retail --live-alerts alerts.jsonl --live-report live.json
+shape emit retail --scale medium --anomaly-fraction 0.05 --live-target retail --live-fail --sink file -o e.jsonl
+```
+
+What it is made of: a tee (`shape.streaming.emit.live.TeeSink`) sits in front of the sink. An event
+reaches the tee only after the sink's `send` returned, so a batch the runtime retries is counted
+once. A worker thread feeds each table's events to the stream profiler (`shape.streaming.runtime`,
+bounded mode: the same profiler as `shape stream-profile`) and to the score accumulators, and
+compares them with the target. Nothing the live side does can fail or slow a delivery beyond the
+overhead below: a failure inside it switches it off and raises a `live-error` alert.
+
+**The target** (`--live-target`) is reference data: a file or a directory of one file per table
+(Parquet, CSV or JSONL, read as `shape fidelity` reads them), or a domain or schema file, from which
+the reference is generated (`--live-target-seed`, default the stream's seed plus 1;
+`--live-target-scale`, default the stream's). Only the tables the stream emits are compared. A
+`.shape` profile is not a target: the score needs the reference's distributions (the
+Kolmogorov-Smirnov statistic, value overlap), which a profile does not hold.
+
+**Exact and bounded.** Per column the live side keeps running moments (mean, spread, null rate:
+exact), the values for the Kolmogorov-Smirnov statistic (all of them up to `--live-sample`, 100,000
+per numeric column; then a uniform reservoir sample), the distinct values (exact up to
+`--live-key-cap`, 250,000; then the profiler's HyperLogLog, about 0.8% error) and the value counts of
+categorical columns (exact up to `--live-key-cap` distinct values; then the profiler's top-500
+table, which can move the overlap and chi-squared points of a column with more categories than
+that). Columns that used a bound are listed under `approximate` in the report. Text whose every
+value is a number, or 95% of whose values are ISO dates, is scored as numbers or dates, as the
+comparator does. A live run that resumed from a checkpoint scores only the events *it* delivered.
+
+### Alerts
+
+Alerts go to standard error as one line each, to the `--live-alerts FILE` as JSON lines (appended),
+and are in the report. An alert is raised when its condition becomes true and a `recovered` alert
+when it stops being true; a condition that stays true is not repeated.
+
+```json
+{"format":"shape-live-alert-v1","kind":"score-low","level":"error","table":"order_line","column":null,
+ "score":58.54,"threshold":70.0,"events":14400,"time":"2026-10-02T10:18:22+00:00",
+ "message":"table order_line: live score 58.54 < 70 after 14,400 events"}
+```
+
+| kind | level | raised when |
+|---|---|---|
+| `score-low` | error | a table's live score is below `--live-min-table-score` (70), or the overall score is below `--live-min-score` (85); the overall is judged once every table is |
+| `score-drop` | warning | a table's (or the overall) score is `--live-drop` points (5) or more below the best it had reached |
+| `column-low` | warning | a column's score is below `--live-min-column-score` (off unless given) |
+| `live-error` | error | the live side failed and was switched off (the stream goes on) |
+| `recovered` | info | an earlier alert's condition no longer holds (`table` and `column` name it) |
+
+The defaults are the `shape fidelity` pass marks. The alerts judge a table only once
+`--live-min-events` (1,000) of its events were seen (or all of a smaller table) and
+`--live-min-progress` (0.5) of the target table's rows: a table that is half emitted scores lower
+than the finished one (distinct counts grow with the rows), and that is not drift. The score in the
+report is never gated. Scores are computed every `--live-interval` events (50,000) and at least
+`--live-interval-seconds` (2) apart, and once more at the end.
+
+Exit codes: `shape emit` exits **0** when the run completed, whatever alerts were raised; with
+`--live-fail` it exits **1** when the run ends with a live pass mark missed (the final overall or
+a table below its mark, over the tables that were emitted) or an error alert other than `score-low`
+still active (`live-error`); **2** is bad input (an unknown target, `--live-profile` with
+`--no-live-profile`, a threshold out of range), as everywhere else in `shape emit`.
+
+Outputs: `--live-report FILE` (`.json`: the live summary with the alerts and the score trajectory
+and the fidelity report; `.md` or `.html`: the fidelity report), `--live-profile FILE` (the stream
+profiler's bounded profile of each table, JSON). `--json` adds a `live` object to the run report.
+
+### Overhead
+
+The tee costs CPU on the thread that feeds it and on the stream profiler. `--no-live-profile` leaves
+the profiler out. The measured events per second with and without the tee are in
+`docs/plans/evidence/P5-03/live_fidelity.json` (`benchmarks/live_fidelity/run.py`, section
+`overhead`); the numbers are summarised in `docs/plans/lane_status/P5-03.md`.
+
 ## Limits
 
 * The first block of a table with post-passes waits for the whole schema to generate.
 * Event order across tables is fixed (table by table); there is no interleaving.
 * Rate accuracy depends on the sink keeping up; `max_lag` in the report says whether it did.
+* Live fidelity compares what *this run* delivered with the target, and the target must be data (see above).

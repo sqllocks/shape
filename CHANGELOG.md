@@ -11,6 +11,11 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `campus`, `telecom_bundle`; `shape presets --composites`); `generate`, `describe` and `presets` take a
   composite as a target, and `shape.api.generate("enterprise")` returns its tables. `retail` is a packaged
   domain like the other thirteen.
+- Live fidelity (`shape emit --live-target`, `docs/EMIT.md`): the emitted events are teed into the
+  stream profiler and scored against a target as they go, with the score of `shape fidelity`
+  (`score_prepared` is now its single scoring function), drift alerts (`score-low`, `score-drop`,
+  `column-low`, `live-error`; stderr, a JSON-lines file and the report), `--live-fail` exit code 1.
+  `GlobalProfiler.peek()` reads a running profile. Harness: `benchmarks/live_fidelity/run.py`.
 - Emitters (`shape.emitters`): `console`, `file` and `jsonl` in core; `kafka` (`sqllocks-shape-kafka`),
   `eventhubs` (`sqllocks-shape-eventhubs`), `eventstream` and `eventhouse` (`sqllocks-shape-fabric`).
   Every message carries the idempotency key `<table>/<seq>`; delivery is at-least-once with
