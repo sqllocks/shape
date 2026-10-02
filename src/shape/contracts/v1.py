@@ -201,7 +201,13 @@ def _check_table(
 
 
 def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResult:
-    """Check ``profile`` against a v1 contract (a dict, or the path to a JSON file)."""
+    """Check ``profile`` against a v1 contract (a dict, or the path to a JSON file).
+
+    The contract and the profile must describe the same tables. A ``tables`` contract against a
+    single-table profile raises :class:`ContractError`; against a dataset, a table the contract
+    names and the profile lacks is a ``table_exists`` violation. Every rule is optional (§12.3), so
+    a profile table the contract does not name is not checked.
+    """
     contract = _load_contract(contract)
     _validate_contract(contract)
     if profile.is_dataset:
@@ -224,6 +230,14 @@ def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResul
                     v["rule"] = f"{tname}:{v['rule']}"
                 violations.append(v)
         return CheckResult(passed=not violations, violations=violations)
+    if "tables" in contract:
+        # A multi-table contract has nothing to say about one table: checking it would pass
+        # without testing a single rule.
+        raise ContractError(
+            "the contract has a 'tables' object but the profile is a single table "
+            f"({profile.name!r}): profile the tables together as a dataset, one table per file "
+            "(`shape profile --dataset FOLDER`, or `shape.profile({name: source, ...})`)"
+        )
     violations = _check_table(next(iter(profile.tables.values())), contract)
     return CheckResult(passed=not violations, violations=violations)
 

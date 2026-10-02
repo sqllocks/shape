@@ -14,6 +14,16 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   instead of at level barriers, longest path first, on the calling thread while the work is small.
   The first generation in a process raises glibc's allocation thresholds (`mallopt`, Linux; left
   alone when `MALLOC_*` or `GLIBC_TUNABLES` is set; `SHAPE_MEMORY_POOL=default` turns it off).
+- Emitters (`shape.emitters`): `console`, `file` and `jsonl` in core; `kafka` (`sqllocks-shape-kafka`),
+  `eventhubs` (`sqllocks-shape-eventhubs`), `eventstream` and `eventhouse` (`sqllocks-shape-fabric`).
+  Every message carries the idempotency key `<table>/<seq>`; delivery is at-least-once with
+  backpressure and a checkpoint that never passes an undelivered event. The contract each emitter
+  meets is `shape.streaming.emit.contract` (`docs/EMIT.md`).
+- `shape pack run|validate|list` and `shape.scenario` (`docs/SCENARIO_PACKS.md`): scenario packs (YAML that
+  bundles a domain, a `file_drop`, `stream` or `hybrid` simulation, chaos, validation gates and landing
+  paths) and generation specs (GSL, `*.gsl.yaml`), with a run manifest written next to every run.
+  Shape ships no packs of its own. Landing paths cannot leave the output directory; unknown gates fail
+  instead of passing; chaos in a pack or spec is applied.
 - `shape emit`: the emitter runtime (`docs/EMIT.md`). Streams a domain's or schema's rows as
   JSON-lines events with the idempotency key `(_shape_table, _shape_seq)`: realtime pacing
   (`--rate`, `--burst START:DURATION:MULT`) or as fast as possible (the default), `--out-of-order`,
@@ -44,6 +54,14 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `system/table/name`; `shape registry` keeps its meaning).
 - Generation start-up: `import shape` now selects Arrow's system memory pool for the whole process (`ARROW_DEFAULT_MEMORY_POOL=system` when `pyarrow` is not loaded yet; otherwise transparent huge pages are switched off for the process on Linux), which removes a 10 to 13 ms stall at the first allocation and about a fifth of the time of a medium run on a virtual machine; `SHAPE_MEMORY_POOL=default` turns it off (`docs/GENERATION_ENGINE.md`). The text providers build their name pools from the file bytes (10 to 20 ms less on the first name column). Generated values are unchanged.
 - Generation speed of the domains (no generated value changes; every table of all 14 domains, 3nf and star, small and medium, hashes the same): business rules that cannot repair anything (`high >= low`) no longer hold their table back for the post-passes, and a table whose rules are row-local is repaired chunk by chunk and written while later tables are generated; the native kernel formats integers without the formatting machinery (a phone number column 2x faster), gathers pool strings in one sized pass (sentences 5x faster), and draws Zipf foreign keys, Poisson and negative-binomial counts with a native binary search (`cdf_search`, 2x faster); e-mail slugs skip the Unicode case tables when the text is ASCII (2.5 ms less on the first e-mail column of a process); a column whose longest value fits `max_length` is not sliced.
+- Fixes (PF-06b): `shape check` / `shape.check` no longer passes a multi-table contract
+  (`{"tables": {...}}`) against a single-table profile without testing it: that is now a
+  `ContractError` (exit 2), and a table the contract names that the profile lacks is a
+  `table_exists` violation (exit 1). A contract may still check only some of a dataset's tables. `shape profile FOLDER --dataset` profiles one table per file (named by the file
+  name); a folder whose files do not share their columns is refused without it. Artifact folders
+  of the Fabric and Synapse notebooks are named to the microsecond and claimed exclusively
+  (`20260930T120000123456Z`, then `_2`, `_3` ...), so two runs in one second no longer overwrite
+  a baseline.
 - Fidelity tiers 1 to 3 (`docs/FIDELITY_TIERS.md`): `shape fidelity REFERENCE SYNTHETIC --tier 1|2|3`
   (tier 1: Gaussian-mixture fits, conditional profiles, adversarial AUC, temporal profiles and
   periodicity; tier 2: format preservation, string similarity, cardinality and anomaly-rate checks;

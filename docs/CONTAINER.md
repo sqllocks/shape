@@ -24,7 +24,8 @@ echo $?    # 0 when the profile was written
   identity is picked up by `DefaultAzureCredential`, and a service principal can be passed with
   `-e AZURE_CLIENT_ID -e AZURE_TENANT_ID -e AZURE_CLIENT_SECRET`.
 - `shape plugins list` and `shape plugins doctor` work as on any install; add third-party
-  plugins in a derived image with `pip install`.
+  plugins in a derived image with `pip install`. Domains are plugins: the generate-then-check
+  gate of `integrations/adf/` needs `sqllocks-shape-domains` in a derived image (see its runbook).
 
 ## How the image is built and published
 
