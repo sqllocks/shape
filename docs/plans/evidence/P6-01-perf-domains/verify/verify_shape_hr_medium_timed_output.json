@@ -1,0 +1,4048 @@
+{
+ "domain": "hr",
+ "scale": "medium",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "department": {
+   "rows": {
+    "spindle": 30,
+    "impl": 30
+   },
+   "columns_spindle": [
+    "department_id",
+    "department_name",
+    "cost_center",
+    "is_active"
+   ],
+   "columns_impl": [
+    "department_id",
+    "department_name",
+    "cost_center",
+    "is_active"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "department_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "department_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "cost_center": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "is_active": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "department_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.23174059571793568
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.5033521782192557,
+     "stats": {
+      "mean": {
+       "spindle": 15.5,
+       "impl": 15.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 30.0,
+       "impl": 30.0
+      },
+      "std": {
+       "spindle": 8.65544144839919,
+       "impl": 8.65544144839919,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 30,
+      "impl": 30
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "department_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.23174059571793568
+     },
+     "distinct": {
+      "spindle": 16,
+      "impl": 15,
+      "ratio": 0.9375,
+      "baseline_max_ratio_dev": 0.5
+     },
+     "top10": [
+      {
+       "value": "Sales",
+       "spindle": 0.13333333333333333,
+       "impl": 0.13333333333333333
+      },
+      {
+       "value": "Marketing",
+       "spindle": 0.1,
+       "impl": 0.1
+      },
+      {
+       "value": "Engineering",
+       "spindle": 0.1,
+       "impl": 0.06666666666666667
+      },
+      {
+       "value": "Operations",
+       "spindle": 0.1,
+       "impl": 0.1
+      },
+      {
+       "value": "Data Analytics",
+       "spindle": 0.1,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "Information Technology",
+       "spindle": 0.1,
+       "impl": 0.0
+      },
+      {
+       "value": "Finance & Accounting",
+       "spindle": 0.06666666666666667,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "Project Management Office",
+       "spindle": 0.03333333333333333,
+       "impl": 0.06666666666666667
+      },
+      {
+       "value": "Legal",
+       "spindle": 0.03333333333333333,
+       "impl": 0.0
+      },
+      {
+       "value": "Health & Safety",
+       "spindle": 0.03333333333333333,
+       "impl": 0.0
+      },
+      {
+       "value": "Customer Service",
+       "spindle": 0.03333333333333333,
+       "impl": 0.13333333333333333
+      },
+      {
+       "value": "Compliance",
+       "spindle": 0.03333333333333333,
+       "impl": 0.1
+      },
+      {
+       "value": "Procurement",
+       "spindle": 0.03333333333333333,
+       "impl": 0.06666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.3666666666666667,
+     "tvd_baseline": 0.6000000000000001,
+     "tvd_tol": 1.7480774889473265,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "cost_center": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.23174059571793568
+     },
+     "distinct": {
+      "spindle": 30,
+      "impl": 30,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "CC-0001",
+       "spindle": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0002",
+       "spindle": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0003",
+       "spindle": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0004",
+       "spindle": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0005",
+       "spindle": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0006",
+       "spindle": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0007",
+       "spindle": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0008",
+       "spindle": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0009",
+       "spindle": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0010",
+       "spindle": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "CC-{seq:4}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_active": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.23174059571793568
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "spindle": 0.9,
+       "impl": 0.9333333333333333
+      },
+      {
+       "value": "false",
+       "spindle": 0.1,
+       "impl": 0.06666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.03333333333333333,
+     "tvd_baseline": 0.06666666666666667,
+     "tvd_tol": 0.6180387232371032,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "position": {
+   "rows": {
+    "spindle": 80,
+    "impl": 80
+   },
+   "columns_spindle": [
+    "position_id",
+    "position_title",
+    "pay_grade",
+    "is_exempt",
+    "min_salary",
+    "max_salary"
+   ],
+   "columns_impl": [
+    "position_id",
+    "position_title",
+    "pay_grade",
+    "is_exempt",
+    "min_salary",
+    "max_salary"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "position_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "position_title": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "pay_grade": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "is_exempt": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "min_salary": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "max_salary": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "position_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.3082389993889093,
+     "stats": {
+      "mean": {
+       "spindle": 40.5,
+       "impl": 40.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 80.0,
+       "impl": 80.0
+      },
+      "std": {
+       "spindle": 23.092206477510977,
+       "impl": 23.092206477510977,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 80,
+      "impl": 80
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "position_title": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "distinct": {
+      "spindle": 51,
+      "impl": 50,
+      "ratio": 0.9803921568627451,
+      "baseline_max_ratio_dev": 0.1568627450980392
+     },
+     "top10": [
+      {
+       "value": "Data Scientist",
+       "spindle": 0.05,
+       "impl": 0.0125
+      },
+      {
+       "value": "Sales Representative",
+       "spindle": 0.05,
+       "impl": 0.025
+      },
+      {
+       "value": "Training Specialist",
+       "spindle": 0.0375,
+       "impl": 0.025
+      },
+      {
+       "value": "Account Executive",
+       "spindle": 0.0375,
+       "impl": 0.0125
+      },
+      {
+       "value": "Security Specialist",
+       "spindle": 0.0375,
+       "impl": 0.0125
+      },
+      {
+       "value": "Accountant",
+       "spindle": 0.0375,
+       "impl": 0.0375
+      },
+      {
+       "value": "Data Engineer",
+       "spindle": 0.025,
+       "impl": 0.0125
+      },
+      {
+       "value": "Compliance Officer",
+       "spindle": 0.025,
+       "impl": 0.0375
+      },
+      {
+       "value": "Scrum Master",
+       "spindle": 0.025,
+       "impl": 0.0
+      },
+      {
+       "value": "Logistics Coordinator",
+       "spindle": 0.025,
+       "impl": 0.0125
+      },
+      {
+       "value": "Administrative Assistant",
+       "spindle": 0.0125,
+       "impl": 0.0375
+      },
+      {
+       "value": "Senior Accountant",
+       "spindle": 0.0,
+       "impl": 0.0375
+      },
+      {
+       "value": "Technical Support Specialist",
+       "spindle": 0.025,
+       "impl": 0.0375
+      },
+      {
+       "value": "Graphic Designer",
+       "spindle": 0.0125,
+       "impl": 0.0375
+      },
+      {
+       "value": "Procurement Specialist",
+       "spindle": 0.0125,
+       "impl": 0.0375
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.4624999999999999,
+     "tvd_baseline": 0.5625,
+     "tvd_tol": 1.9111792024713428,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "pay_grade": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "distinct": {
+      "spindle": 7,
+      "impl": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "G3",
+       "spindle": 0.2375,
+       "impl": 0.3125
+      },
+      {
+       "value": "G2",
+       "spindle": 0.2125,
+       "impl": 0.1625
+      },
+      {
+       "value": "G4",
+       "spindle": 0.2125,
+       "impl": 0.1875
+      },
+      {
+       "value": "G5",
+       "spindle": 0.1625,
+       "impl": 0.0875
+      },
+      {
+       "value": "G1",
+       "spindle": 0.1,
+       "impl": 0.1875
+      },
+      {
+       "value": "G7",
+       "spindle": 0.0375,
+       "impl": 0.0125
+      },
+      {
+       "value": "G6",
+       "spindle": 0.0375,
+       "impl": 0.05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.17500000000000002,
+     "tvd_baseline": 0.175,
+     "tvd_tol": 0.7080523079119723,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_exempt": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "spindle": 0.625,
+       "impl": 0.7125
+      },
+      {
+       "value": "false",
+       "spindle": 0.375,
+       "impl": 0.2875
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.08750000000000002,
+     "tvd_baseline": 0.08750000000000002,
+     "tvd_tol": 0.37846987830302403,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "min_salary": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "ks": 0.11249999999999993,
+     "ks_baseline": 0.125,
+     "ks_tol": 0.3082389993889093,
+     "stats": {
+      "mean": {
+       "spindle": 74754.16363281265,
+       "impl": 78574.53512959833
+      },
+      "min": {
+       "spindle": 32036.271559988054,
+       "impl": 30657.73104064174
+      },
+      "max": {
+       "spindle": 118677.33105068424,
+       "impl": 118051.1064764808
+      },
+      "std": {
+       "spindle": 24810.11643494131,
+       "impl": 25226.474569069964,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 80,
+      "impl": 80
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "max_salary": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "ks": 0.13749999999999996,
+     "ks_baseline": 0.13749999999999996,
+     "ks_tol": 0.3082389993889093,
+     "stats": {
+      "mean": {
+       "spindle": 115161.07949999999,
+       "impl": 122126.73162499999
+      },
+      "min": {
+       "spindle": 45679.97,
+       "impl": 49940.87
+      },
+      "max": {
+       "spindle": 200698.2,
+       "impl": 207006.52
+      },
+      "std": {
+       "spindle": 38950.56835509223,
+       "impl": 40745.33161806946,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 80,
+      "impl": 80
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "employee": {
+   "rows": {
+    "spindle": 5000,
+    "impl": 5000
+   },
+   "columns_spindle": [
+    "employee_id",
+    "department_id",
+    "position_id",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "hire_date",
+    "manager_id",
+    "employment_status",
+    "employment_type"
+   ],
+   "columns_impl": [
+    "employee_id",
+    "department_id",
+    "position_id",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "hire_date",
+    "manager_id",
+    "employment_status",
+    "employment_type"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "employee_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "department_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "position_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "first_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "last_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "email": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "phone": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "hire_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "manager_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "employment_status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "employment_type": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 2500.5,
+       "impl": 2500.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 1443.3756441065507,
+       "impl": 1443.3756441065507,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "department_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.022199999999999998,
+     "ks_baseline": 0.015799999999999925,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 5.5206,
+       "impl": 5.205
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 30.0,
+       "impl": 30.0
+      },
+      "std": {
+       "spindle": 6.709901313730329,
+       "impl": 6.317513355743698,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 30,
+      "impl": 30
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "position_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.013600000000000001,
+     "ks_baseline": 0.012199999999999989,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 11.7088,
+       "impl": 11.7158
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 80.0,
+       "impl": 80.0
+      },
+      "std": {
+       "spindle": 16.93461551261203,
+       "impl": 16.89669288233647,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 80,
+      "impl": 80
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "first_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 3177,
+      "impl": 3165,
+      "ratio": 0.996222851746931,
+      "baseline_max_ratio_dev": 0.017626691847654974
+     },
+     "top10": [
+      {
+       "value": "Raria",
+       "spindle": 0.0012,
+       "impl": 0.0
+      },
+      {
+       "value": "Neoa",
+       "spindle": 0.001,
+       "impl": 0.0002
+      },
+      {
+       "value": "Walter",
+       "spindle": 0.001,
+       "impl": 0.0004
+      },
+      {
+       "value": "Selyn",
+       "spindle": 0.001,
+       "impl": 0.0002
+      },
+      {
+       "value": "Lason",
+       "spindle": 0.001,
+       "impl": 0.0006
+      },
+      {
+       "value": "Jeaya",
+       "spindle": 0.001,
+       "impl": 0.0
+      },
+      {
+       "value": "Deien",
+       "spindle": 0.001,
+       "impl": 0.0002
+      },
+      {
+       "value": "Naomi",
+       "spindle": 0.001,
+       "impl": 0.0002
+      },
+      {
+       "value": "Remi",
+       "spindle": 0.001,
+       "impl": 0.0004
+      },
+      {
+       "value": "Hazel",
+       "spindle": 0.001,
+       "impl": 0.0002
+      },
+      {
+       "value": "Clis",
+       "spindle": 0.0004,
+       "impl": 0.0012
+      },
+      {
+       "value": "Nuella",
+       "spindle": 0.0,
+       "impl": 0.0012
+      },
+      {
+       "value": "Veron",
+       "spindle": 0.0002,
+       "impl": 0.0012
+      },
+      {
+       "value": "Neus",
+       "spindle": 0.0,
+       "impl": 0.0012
+      },
+      {
+       "value": "Siina",
+       "spindle": 0.0004,
+       "impl": 0.0012
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "distinct_ratio_tol": 0.02644003777148246,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 3145,
+      "impl": 3157,
+      "ratio": 1.0038155802861686,
+      "baseline_max_ratio_dev": 0.007313195548489748
+     },
+     "top10": [
+      {
+       "value": "Carroll",
+       "spindle": 0.0012,
+       "impl": 0.0
+      },
+      {
+       "value": "Colman",
+       "spindle": 0.0012,
+       "impl": 0.0004
+      },
+      {
+       "value": "Mcdanwell",
+       "spindle": 0.001,
+       "impl": 0.0
+      },
+      {
+       "value": "Potwell",
+       "spindle": 0.001,
+       "impl": 0.0002
+      },
+      {
+       "value": "Nolaburg",
+       "spindle": 0.001,
+       "impl": 0.0004
+      },
+      {
+       "value": "Harveley",
+       "spindle": 0.001,
+       "impl": 0.0
+      },
+      {
+       "value": "Mitchwell",
+       "spindle": 0.001,
+       "impl": 0.0
+      },
+      {
+       "value": "Hoovefield",
+       "spindle": 0.001,
+       "impl": 0.0004
+      },
+      {
+       "value": "Frankstein",
+       "spindle": 0.001,
+       "impl": 0.0006
+      },
+      {
+       "value": "Sulliburg",
+       "spindle": 0.001,
+       "impl": 0.0002
+      },
+      {
+       "value": "Hornway",
+       "spindle": 0.0,
+       "impl": 0.0012
+      },
+      {
+       "value": "Jeffeberg",
+       "spindle": 0.0,
+       "impl": 0.0012
+      },
+      {
+       "value": "Brown",
+       "spindle": 0.0002,
+       "impl": 0.0012
+      },
+      {
+       "value": "Stason",
+       "spindle": 0.0004,
+       "impl": 0.0012
+      },
+      {
+       "value": "Vaughn",
+       "spindle": 0.0,
+       "impl": 0.001
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "gedra.mirstein40@doctor.com",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "asria.ballwick43@mail.ru",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "niron.popeford701@icloud.com",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "ziane.cannocroft830@workmail.com",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "ine.frankland232@techie.com",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "jinna.cookwick246@verizon.net",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "geos.maxwson731@mailfence.com",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "ziin.fieldbrook853@runbox.com",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "hiin.coleworth592@cox.net",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "juria.mcmillan350@post.com",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "ashton.underidge517@web.de",
+       "spindle": 0.0,
+       "impl": 0.0002
+      },
+      {
+       "value": "veana.johton382@msn.com",
+       "spindle": 0.0,
+       "impl": 0.0002
+      },
+      {
+       "value": "muos.cunniwood106@icloud.com",
+       "spindle": 0.0,
+       "impl": 0.0002
+      },
+      {
+       "value": "ludra.grimwood29@comcast.net",
+       "spindle": 0.0,
+       "impl": 0.0002
+      },
+      {
+       "value": "mais.walter90@virginmedia.com",
+       "spindle": 0.0,
+       "impl": 0.0002
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "phone": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0822,
+      "impl": 0.0846,
+      "baseline_max_abs_diff": 0.00180000000000001,
+      "tol": 0.027466918283637135
+     },
+     "distinct": {
+      "spindle": 4589,
+      "impl": 4577,
+      "ratio": 0.9973850512094138,
+      "baseline_max_ratio_dev": 0.0019612115929397156
+     },
+     "top10": [
+      {
+       "value": "(212) 766-1242",
+       "spindle": 0.00021791239921551536,
+       "impl": 0.0
+      },
+      {
+       "value": "(460) 714-7463",
+       "spindle": 0.00021791239921551536,
+       "impl": 0.0
+      },
+      {
+       "value": "(715) 915-1097",
+       "spindle": 0.00021791239921551536,
+       "impl": 0.0
+      },
+      {
+       "value": "(732) 715-8425",
+       "spindle": 0.00021791239921551536,
+       "impl": 0.0
+      },
+      {
+       "value": "(793) 515-6931",
+       "spindle": 0.00021791239921551536,
+       "impl": 0.0
+      },
+      {
+       "value": "(638) 771-2120",
+       "spindle": 0.00021791239921551536,
+       "impl": 0.0
+      },
+      {
+       "value": "(309) 978-6146",
+       "spindle": 0.00021791239921551536,
+       "impl": 0.0
+      },
+      {
+       "value": "(817) 362-9803",
+       "spindle": 0.00021791239921551536,
+       "impl": 0.0
+      },
+      {
+       "value": "(328) 592-2206",
+       "spindle": 0.00021791239921551536,
+       "impl": 0.0
+      },
+      {
+       "value": "(652) 642-5186",
+       "spindle": 0.00021791239921551536,
+       "impl": 0.0
+      },
+      {
+       "value": "(953) 626-4024",
+       "spindle": 0.0,
+       "impl": 0.00021848372296263927
+      },
+      {
+       "value": "(245) 839-3981",
+       "spindle": 0.0,
+       "impl": 0.00021848372296263927
+      },
+      {
+       "value": "(345) 558-7576",
+       "spindle": 0.0,
+       "impl": 0.00021848372296263927
+      },
+      {
+       "value": "(691) 607-4815",
+       "spindle": 0.0,
+       "impl": 0.00021848372296263927
+      },
+      {
+       "value": "(609) 902-3592",
+       "spindle": 0.0,
+       "impl": 0.00021848372296263927
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "(AAA) EEE-SSSS, AAA/EEE 200..998, SSSS 1000..9998",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "hire_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.02240000000000003,
+     "ks_baseline": 0.030000000000000027,
+     "ks_tol": 0.04700000000000004,
+     "stats": {
+      "mean": {
+       "spindle": "2020-07-27 06:57:34.257852928",
+       "impl": "2020-06-29 05:36:04.804080896"
+      },
+      "min": {
+       "spindle": "2015-01-02 10:37:49.039497216",
+       "impl": "2015-01-01 07:25:51.420446976"
+      },
+      "max": {
+       "spindle": "2025-12-29 22:46:44.640774400",
+       "impl": "2025-12-30 20:13:31.258949888"
+      },
+      "std": {
+       "spindle": 1136.8273623222694,
+       "impl": 1155.2890998108744,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "manager_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.001,
+      "impl": 0.001,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0031606961258558216
+     },
+     "ks": 0.009809809809809777,
+     "ks_baseline": 0.018618618618618576,
+     "ks_tol": 0.039009001449697725,
+     "stats": {
+      "mean": {
+       "spindle": 1107.267067067067,
+       "impl": 1106.837837837838
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 3335.0,
+       "impl": 3335.0
+      },
+      "std": {
+       "spindle": 1102.8053378360416,
+       "impl": 1101.4558827258227,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 2148,
+      "impl": 2128
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employment_status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Active",
+       "spindle": 0.827,
+       "impl": 0.8238
+      },
+      {
+       "value": "Terminated",
+       "spindle": 0.0952,
+       "impl": 0.1016
+      },
+      {
+       "value": "On Leave",
+       "spindle": 0.0504,
+       "impl": 0.0468
+      },
+      {
+       "value": "Retired",
+       "spindle": 0.0274,
+       "impl": 0.0278
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.006799999999999983,
+     "tvd_baseline": 0.008799999999999954,
+     "tvd_tol": 0.06770275002573076,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employment_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Full-Time",
+       "spindle": 0.7622,
+       "impl": 0.7462
+      },
+      {
+       "value": "Part-Time",
+       "spindle": 0.1178,
+       "impl": 0.1276
+      },
+      {
+       "value": "Contract",
+       "spindle": 0.0758,
+       "impl": 0.074
+      },
+      {
+       "value": "Temporary",
+       "spindle": 0.0442,
+       "impl": 0.0522
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.017800000000000007,
+     "tvd_baseline": 0.01679999999999998,
+     "tvd_tol": 0.06770275002573076,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "compensation": {
+   "rows": {
+    "spindle": 15000,
+    "impl": 15000
+   },
+   "columns_spindle": [
+    "compensation_id",
+    "employee_id",
+    "effective_date",
+    "base_salary",
+    "bonus_pct",
+    "change_reason"
+   ],
+   "columns_impl": [
+    "compensation_id",
+    "employee_id",
+    "effective_date",
+    "base_salary",
+    "bonus_pct",
+    "change_reason"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "compensation_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "employee_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "effective_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "base_salary": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "bonus_pct": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "change_reason": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "compensation_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.022510593742416898,
+     "stats": {
+      "mean": {
+       "spindle": 7500.5,
+       "impl": 7500.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 15000.0,
+       "impl": 15000.0
+      },
+      "std": {
+       "spindle": 4330.127009299689,
+       "impl": 4330.127009299689,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 15000,
+      "impl": 15000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.01093333333333324,
+     "ks_baseline": 0.021199999999999997,
+     "ks_tol": 0.0338,
+     "stats": {
+      "mean": {
+       "spindle": 2520.0758666666666,
+       "impl": 2510.2674
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 1445.3005108434195,
+       "impl": 1437.519689290286,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4740,
+      "impl": 4746
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "effective_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.011066666666666669,
+     "ks_baseline": 0.014066666666666672,
+     "ks_tol": 0.02310000000000001,
+     "stats": {
+      "mean": {
+       "spindle": "2020-06-21 19:52:57.055915264",
+       "impl": "2020-07-05 08:57:55.949555968"
+      },
+      "min": {
+       "spindle": "2015-01-01 05:55:15.040438016",
+       "impl": "2015-01-01 11:45:23.012325120"
+      },
+      "max": {
+       "spindle": "2025-12-30 18:50:48.858898432",
+       "impl": "2025-12-30 22:40:06.869413120"
+      },
+      "std": {
+       "spindle": 1157.6812293386406,
+       "impl": 1158.6992568709736,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 15000,
+      "impl": 15000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "base_salary": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.012866666666666693,
+     "ks_baseline": 0.011333333333333417,
+     "ks_tol": 0.022510593742416898,
+     "stats": {
+      "mean": {
+       "spindle": 68180.29393024454,
+       "impl": 67670.9952441984
+      },
+      "min": {
+       "spindle": 28000.0,
+       "impl": 28000.0
+      },
+      "max": {
+       "spindle": 350000.0,
+       "impl": 350000.0
+      },
+      "std": {
+       "spindle": 35139.931577516414,
+       "impl": 34974.8381392422,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 14032,
+      "impl": 14035
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "bonus_pct": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.012733333333333346,
+     "ks_baseline": 0.017133333333333334,
+     "ks_tol": 0.027700000000000002,
+     "stats": {
+      "mean": {
+       "spindle": 12.60546620980266,
+       "impl": 12.511470059190467
+      },
+      "min": {
+       "spindle": 0.0016677596405334505,
+       "impl": 0.0008369447048794942
+      },
+      "max": {
+       "spindle": 24.99743952836079,
+       "impl": 24.99691593226735
+      },
+      "std": {
+       "spindle": 7.1646883260704115,
+       "impl": 7.206055309709714,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 15000,
+      "impl": 15000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "change_reason": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Annual Review",
+       "spindle": 0.40026666666666666,
+       "impl": 0.4034
+      },
+      {
+       "value": "Promotion",
+       "spindle": 0.24913333333333335,
+       "impl": 0.25253333333333333
+      },
+      {
+       "value": "Market Adjustment",
+       "spindle": 0.14986666666666668,
+       "impl": 0.14426666666666665
+      },
+      {
+       "value": "New Hire",
+       "spindle": 0.12173333333333333,
+       "impl": 0.12206666666666667
+      },
+      {
+       "value": "Transfer",
+       "spindle": 0.079,
+       "impl": 0.07773333333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.006866666666666667,
+     "tvd_baseline": 0.009133333333333313,
+     "tvd_tol": 0.043701937223683165,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "performance_review": {
+   "rows": {
+    "spindle": 12500,
+    "impl": 12500
+   },
+   "columns_spindle": [
+    "review_id",
+    "employee_id",
+    "reviewer_id",
+    "review_date",
+    "review_period_year",
+    "rating",
+    "comments"
+   ],
+   "columns_impl": [
+    "review_id",
+    "employee_id",
+    "reviewer_id",
+    "review_date",
+    "review_period_year",
+    "rating",
+    "comments"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "review_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "employee_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "reviewer_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "review_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "review_period_year": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "rating": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "comments": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "review_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.024659119951112744,
+     "stats": {
+      "mean": {
+       "spindle": 6250.5,
+       "impl": 6250.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 12500.0,
+       "impl": 12500.0
+      },
+      "std": {
+       "spindle": 3608.439170888156,
+       "impl": 3608.439170888156,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 12500,
+      "impl": 12500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "ks": 0.006480000000000041,
+     "ks_baseline": 0.01191999999999993,
+     "ks_tol": 0.024659119951112744,
+     "stats": {
+      "mean": {
+       "spindle": 2504.84264,
+       "impl": 2497.1852
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 1441.8156197093408,
+       "impl": 1444.9333361027284,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4596,
+      "impl": 4607
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "reviewer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "ks": 0.008640000000000092,
+     "ks_baseline": 0.012160000000000004,
+     "ks_tol": 0.024659119951112744,
+     "stats": {
+      "mean": {
+       "spindle": 2511.2712,
+       "impl": 2511.14464
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 2.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 1434.8103622327794,
+       "impl": 1437.113691438249,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4601,
+      "impl": 4565
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "review_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "ks": 0.008000000000000007,
+     "ks_baseline": 0.013200000000000045,
+     "ks_tol": 0.024659119951112744,
+     "stats": {
+      "mean": {
+       "spindle": "2022-12-30 01:42:00.798915840",
+       "impl": "2023-01-01 11:36:49.879051776"
+      },
+      "min": {
+       "spindle": "2020-01-01 04:23:23.520121344",
+       "impl": "2020-01-01 00:33:06.702924032"
+      },
+      "max": {
+       "spindle": "2025-12-30 22:32:48.935895296",
+       "impl": "2025-12-30 15:38:19.527983104"
+      },
+      "std": {
+       "spindle": 633.6271131699544,
+       "impl": 636.4925518138292,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 12500,
+      "impl": 12500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "review_period_year": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "ks": 0.004720000000000002,
+     "ks_baseline": 0.011440000000000006,
+     "ks_tol": 0.024659119951112744,
+     "stats": {
+      "mean": {
+       "spindle": 2022.24104,
+       "impl": 2022.2348
+      },
+      "min": {
+       "spindle": 2020.0,
+       "impl": 2020.0
+      },
+      "max": {
+       "spindle": 2024.0,
+       "impl": 2024.0
+      },
+      "std": {
+       "spindle": 1.3834087315034556,
+       "impl": 1.3900176113992226,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "rating": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "ks": 0.002799999999999997,
+     "ks_baseline": 0.018000000000000016,
+     "ks_tol": 0.029000000000000026,
+     "stats": {
+      "mean": {
+       "spindle": 3.24432,
+       "impl": 3.24496
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5.0,
+       "impl": 5.0
+      },
+      "std": {
+       "spindle": 0.9610763432735197,
+       "impl": 0.9673854445876265,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "comments": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.20488,
+      "impl": 0.20136,
+      "baseline_max_abs_diff": 0.008720000000000006,
+      "tol": 0.025526784803417763
+     },
+     "distinct": {
+      "spindle": 1988,
+      "impl": 1994,
+      "ratio": 1.0030181086519114,
+      "baseline_max_ratio_dev": 0.0025150905432596016
+     },
+     "top10": [
+      {
+       "value": "The optimized report project exceeded productivity expectations.",
+       "spindle": 0.001609819901398531,
+       "impl": 0.00020034057898427325
+      },
+      {
+       "value": "Please review the estimated schedule report and provide feedback.",
+       "spindle": 0.001509206157561123,
+       "impl": 0.0007011920264449565
+      },
+      {
+       "value": "The product department documented all comprehensive requests promptly.",
+       "spindle": 0.001509206157561123,
+       "impl": 0.0005008514474606832
+      },
+      {
+       "value": "The new integrated strategy framework supports growth objectives.",
+       "spindle": 0.0014085924137237148,
+       "impl": 0.0006010217369528198
+      },
+      {
+       "value": "Quality expense measures have been validated across all departments.",
+       "spindle": 0.0012073649260488982,
+       "impl": 0.000801362315937093
+      },
+      {
+       "value": "We are committed to delivering essential inventory to all stakeholders.",
+       "spindle": 0.0012073649260488982,
+       "impl": 0.0007011920264449565
+      },
+      {
+       "value": "Our report team completed innovative integrated solutions daily.",
+       "spindle": 0.0012073649260488982,
+       "impl": 0.0006010217369528198
+      },
+      {
+       "value": "Budget allocation for financial inventory has been optimized.",
+       "spindle": 0.0012073649260488982,
+       "impl": 0.0007011920264449565
+      },
+      {
+       "value": "Budget allocation for technical revenue has been evaluated.",
+       "spindle": 0.0012073649260488982,
+       "impl": 0.0003005108684764099
+      },
+      {
+       "value": "The initiative department approved all approved requests promptly.",
+       "spindle": 0.0012073649260488982,
+       "impl": 0.0007011920264449565
+      },
+      {
+       "value": "The framework department verified all customized requests promptly.",
+       "spindle": 0.0005030687191870409,
+       "impl": 0.0013022137633977762
+      },
+      {
+       "value": "The customized process initiative will drive optimization growth.",
+       "spindle": 0.00040245497534963277,
+       "impl": 0.0012020434739056396
+      },
+      {
+       "value": "We need to updated the automated margin before the deadline.",
+       "spindle": 0.0006036824630244491,
+       "impl": 0.0012020434739056396
+      },
+      {
+       "value": "A comprehensive process plan was delivered by the committee.",
+       "spindle": 0.0007042962068618574,
+       "impl": 0.0012020434739056396
+      },
+      {
+       "value": "Budget allocation for quarterly report has been delivered.",
+       "spindle": 0.0005030687191870409,
+       "impl": 0.0012020434739056396
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "time_off_request": {
+   "rows": {
+    "spindle": 25000,
+    "impl": 25000
+   },
+   "columns_spindle": [
+    "request_id",
+    "employee_id",
+    "leave_type",
+    "start_date",
+    "hours_requested",
+    "status",
+    "end_date"
+   ],
+   "columns_impl": [
+    "request_id",
+    "employee_id",
+    "leave_type",
+    "start_date",
+    "hours_requested",
+    "status",
+    "end_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "request_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "employee_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "leave_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "start_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "hours_requested": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "end_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "request_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.01743663093552431,
+     "stats": {
+      "mean": {
+       "spindle": 12500.5,
+       "impl": 12500.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 25000.0,
+       "impl": 25000.0
+      },
+      "std": {
+       "spindle": 7216.87835909682,
+       "impl": 7216.87835909682,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 25000,
+      "impl": 25000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.006319999999999992,
+     "ks_baseline": 0.00880000000000003,
+     "ks_tol": 0.01743663093552431,
+     "stats": {
+      "mean": {
+       "spindle": 2504.15784,
+       "impl": 2507.77032
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 1436.3069671788598,
+       "impl": 1439.8028230723462,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4972,
+      "impl": 4967
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "leave_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "distinct": {
+      "spindle": 7,
+      "impl": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "PTO",
+       "spindle": 0.4494,
+       "impl": 0.44384
+      },
+      {
+       "value": "Sick",
+       "spindle": 0.25348,
+       "impl": 0.25428
+      },
+      {
+       "value": "Personal",
+       "spindle": 0.1176,
+       "impl": 0.119
+      },
+      {
+       "value": "Parental",
+       "spindle": 0.0574,
+       "impl": 0.062
+      },
+      {
+       "value": "Unpaid",
+       "spindle": 0.05048,
+       "impl": 0.04952
+      },
+      {
+       "value": "Bereavement",
+       "spindle": 0.041,
+       "impl": 0.04228
+      },
+      {
+       "value": "Jury Duty",
+       "spindle": 0.03064,
+       "impl": 0.02908
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.00808000000000001,
+     "tvd_baseline": 0.007879999999999983,
+     "tvd_tol": 0.04005348706874727,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "start_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.006039999999999934,
+     "ks_baseline": 0.00928000000000001,
+     "ks_tol": 0.01743663093552431,
+     "stats": {
+      "mean": {
+       "spindle": "2022-12-26 15:37:35.939115264",
+       "impl": "2022-12-29 17:56:04.805780224"
+      },
+      "min": {
+       "spindle": "2020-01-01 00:28:01.576569344",
+       "impl": "2020-01-01 00:28:48.645154048"
+      },
+      "max": {
+       "spindle": "2025-12-30 21:37:23.807102976",
+       "impl": "2025-12-30 22:35:08.414797056"
+      },
+      "std": {
+       "spindle": 631.3884143718263,
+       "impl": 632.2809298850045,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 25000,
+      "impl": 25000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "hours_requested": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.0064800000000000135,
+     "ks_baseline": 0.007199999999999984,
+     "ks_tol": 0.01743663093552431,
+     "stats": {
+      "mean": {
+       "spindle": 42.07129243089276,
+       "impl": 42.07068663182595
+      },
+      "min": {
+       "spindle": 4.000559222017801,
+       "impl": 4.011938428952649
+      },
+      "max": {
+       "spindle": 79.9978320369861,
+       "impl": 79.99638308585959
+      },
+      "std": {
+       "spindle": 21.90787058447449,
+       "impl": 21.9816318441766,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 25000,
+      "impl": 25000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Approved",
+       "spindle": 0.746,
+       "impl": 0.7502
+      },
+      {
+       "value": "Pending",
+       "spindle": 0.10068,
+       "impl": 0.10304
+      },
+      {
+       "value": "Denied",
+       "spindle": 0.0834,
+       "impl": 0.07964
+      },
+      {
+       "value": "Cancelled",
+       "spindle": 0.06992,
+       "impl": 0.06712
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0065599999999999895,
+     "tvd_baseline": 0.007040000000000032,
+     "tvd_tol": 0.030277590264241917,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "end_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.006319999999999992,
+     "ks_baseline": 0.009120000000000017,
+     "ks_tol": 0.01743663093552431,
+     "stats": {
+      "mean": {
+       "spindle": "2023-01-03 03:14:12.803115264",
+       "impl": "2023-01-06 05:52:20.165780480"
+      },
+      "min": {
+       "spindle": "2020-01-03 15:26:03.042759168",
+       "impl": "2020-01-03 00:28:48.645154048"
+      },
+      "max": {
+       "spindle": "2026-01-12 20:40:30.457148416",
+       "impl": "2026-01-12 06:10:03.790867968"
+      },
+      "std": {
+       "spindle": 631.3668165626825,
+       "impl": 632.292971478453,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 25000,
+      "impl": 25000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "training": {
+   "rows": {
+    "spindle": 100,
+    "impl": 100
+   },
+   "columns_spindle": [
+    "training_id",
+    "course_name",
+    "category",
+    "duration_hours",
+    "is_mandatory"
+   ],
+   "columns_impl": [
+    "training_id",
+    "course_name",
+    "category",
+    "duration_hours",
+    "is_mandatory"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "training_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "course_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "category": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "duration_hours": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "is_mandatory": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "training_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 50.5,
+       "impl": 50.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "spindle": 28.86607004772212,
+       "impl": 28.86607004772212,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "course_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 42,
+      "impl": 47,
+      "ratio": 1.119047619047619,
+      "baseline_max_ratio_dev": 0.04761904761904767
+     },
+     "top10": [
+      {
+       "value": "Fire Safety & Emergency Procedures",
+       "spindle": 0.07,
+       "impl": 0.01
+      },
+      {
+       "value": "Data Privacy & GDPR Compliance",
+       "spindle": 0.06,
+       "impl": 0.02
+      },
+      {
+       "value": "New Employee Orientation",
+       "spindle": 0.06,
+       "impl": 0.06
+      },
+      {
+       "value": "Code of Conduct Review",
+       "spindle": 0.05,
+       "impl": 0.03
+      },
+      {
+       "value": "Python Programming Basics",
+       "spindle": 0.04,
+       "impl": 0.01
+      },
+      {
+       "value": "Workplace Harassment Prevention",
+       "spindle": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "Quality Management Systems",
+       "spindle": 0.04,
+       "impl": 0.01
+      },
+      {
+       "value": "Leadership Essentials",
+       "spindle": 0.04,
+       "impl": 0.01
+      },
+      {
+       "value": "First Aid & CPR Certification",
+       "spindle": 0.04,
+       "impl": 0.01
+      },
+      {
+       "value": "Effective Communication Skills",
+       "spindle": 0.03,
+       "impl": 0.02
+      },
+      {
+       "value": "Cybersecurity Awareness",
+       "spindle": 0.02,
+       "impl": 0.06
+      },
+      {
+       "value": "Conflict Resolution Workshop",
+       "spindle": 0.0,
+       "impl": 0.06
+      },
+      {
+       "value": "Financial Literacy for Managers",
+       "spindle": 0.02,
+       "impl": 0.04
+      },
+      {
+       "value": "Stress Management & Wellness",
+       "spindle": 0.0,
+       "impl": 0.04
+      },
+      {
+       "value": "Business Writing Skills",
+       "spindle": 0.0,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.42999999999999994,
+     "tvd_baseline": 0.41000000000000003,
+     "tvd_tol": 1.551264883747923,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "category": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 7,
+      "impl": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Compliance",
+       "spindle": 0.26,
+       "impl": 0.27
+      },
+      {
+       "value": "Technical",
+       "spindle": 0.22,
+       "impl": 0.16
+      },
+      {
+       "value": "Leadership",
+       "spindle": 0.18,
+       "impl": 0.17
+      },
+      {
+       "value": "Safety",
+       "spindle": 0.13,
+       "impl": 0.14
+      },
+      {
+       "value": "Soft Skills",
+       "spindle": 0.1,
+       "impl": 0.15
+      },
+      {
+       "value": "Onboarding",
+       "spindle": 0.07,
+       "impl": 0.06
+      },
+      {
+       "value": "Diversity",
+       "spindle": 0.04,
+       "impl": 0.05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.08,
+     "tvd_baseline": 0.13,
+     "tvd_tol": 0.6333012368467129,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "duration_hours": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.24000000000000005,
+     "ks_baseline": 0.17999999999999994,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 17.884914493647535,
+       "impl": 22.044208513287877
+      },
+      "min": {
+       "spindle": 0.5390210999645715,
+       "impl": 1.421500770783385
+      },
+      "max": {
+       "spindle": 39.17334725047743,
+       "impl": 39.63583698618316
+      },
+      "std": {
+       "spindle": 10.930230129545462,
+       "impl": 11.021170727471464,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_mandatory": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "false",
+       "spindle": 0.59,
+       "impl": 0.64
+      },
+      {
+       "value": "true",
+       "spindle": 0.41,
+       "impl": 0.36
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.05000000000000002,
+     "tvd_baseline": 0.060000000000000026,
+     "tvd_tol": 0.3385137501286538,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "training_enrollment": {
+   "rows": {
+    "spindle": 20000,
+    "impl": 20000
+   },
+   "columns_spindle": [
+    "enrollment_id",
+    "employee_id",
+    "training_id",
+    "enrollment_date",
+    "status",
+    "score",
+    "completion_date"
+   ],
+   "columns_impl": [
+    "enrollment_id",
+    "employee_id",
+    "training_id",
+    "enrollment_date",
+    "status",
+    "score",
+    "completion_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "enrollment_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "employee_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "training_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "enrollment_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "score": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "completion_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "enrollment_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 10000.5,
+       "impl": 10000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 20000.0,
+       "impl": 20000.0
+      },
+      "std": {
+       "spindle": 5773.502684679379,
+       "impl": 5773.502684679379,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 20000,
+      "impl": 20000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.00660000000000005,
+     "ks_baseline": 0.010299999999999976,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 2502.13475,
+       "impl": 2506.0871
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 1449.2969836070306,
+       "impl": 1447.9440812108699,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4896,
+      "impl": 4897
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "training_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.0046999999999999265,
+     "ks_baseline": 0.010949999999999904,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 13.50495,
+       "impl": 13.62975
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "spindle": 20.70562183315198,
+       "impl": 20.834633784578504,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "enrollment_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.010050000000000003,
+     "ks_baseline": 0.007599999999999996,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": "2023-01-03 08:15:49.638995456",
+       "impl": "2023-01-09 12:25:17.020089856"
+      },
+      "min": {
+       "spindle": "2020-01-01 05:17:51.401204992",
+       "impl": "2020-01-01 02:13:50.092323072"
+      },
+      "max": {
+       "spindle": "2025-12-30 23:22:25.555347712",
+       "impl": "2025-12-30 23:56:45.273105920"
+      },
+      "std": {
+       "spindle": 633.2800691516553,
+       "impl": 629.4157613523112,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 20000,
+      "impl": 20000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Completed",
+       "spindle": 0.6568,
+       "impl": 0.6497
+      },
+      {
+       "value": "In Progress",
+       "spindle": 0.1438,
+       "impl": 0.1496
+      },
+      {
+       "value": "Enrolled",
+       "spindle": 0.1005,
+       "impl": 0.1
+      },
+      {
+       "value": "Dropped",
+       "spindle": 0.06765,
+       "impl": 0.07005
+      },
+      {
+       "value": "Failed",
+       "spindle": 0.03125,
+       "impl": 0.03065
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.008199999999999997,
+     "tvd_baseline": 0.01205000000000002,
+     "tvd_tol": 0.0378469878303024,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "score": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.24965,
+      "impl": 0.2487,
+      "baseline_max_abs_diff": 0.006849999999999995,
+      "tol": 0.021640522030440947
+     },
+     "ks": 0.010832262482663599,
+     "ks_baseline": 0.007866660988341462,
+     "ks_tol": 0.02249822762292111,
+     "stats": {
+      "mean": {
+       "spindle": 74.95811575713256,
+       "impl": 74.85672835228257
+      },
+      "min": {
+       "spindle": 50.00615601183305,
+       "impl": 50.00207483856175
+      },
+      "max": {
+       "spindle": 99.99970908304994,
+       "impl": 99.99476118693198
+      },
+      "std": {
+       "spindle": 14.417786179252785,
+       "impl": 14.40444631559136,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 15007,
+      "impl": 15026
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "completion_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.1492,
+      "impl": 0.14875,
+      "baseline_max_abs_diff": 0.007300000000000001,
+      "tol": 0.01781427517470189
+     },
+     "ks": 0.008965161578944114,
+     "ks_baseline": 0.009404195600134946,
+     "ks_tol": 0.02113228396612471,
+     "stats": {
+      "mean": {
+       "spindle": "2023-02-17 08:24:46.236718336",
+       "impl": "2023-02-21 01:45:49.588436992"
+      },
+      "min": {
+       "spindle": "2020-01-06 05:20:16.208786944",
+       "impl": "2020-01-10 17:16:52.500113920"
+      },
+      "max": {
+       "spindle": "2026-03-28 15:24:58.084632832",
+       "impl": "2026-03-26 09:22:56.404875008"
+      },
+      "std": {
+       "spindle": 634.1070417110457,
+       "impl": 630.560372553638,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 17016,
+      "impl": 17025
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "termination": {
+   "rows": {
+    "spindle": 750,
+    "impl": 750
+   },
+   "columns_spindle": [
+    "termination_id",
+    "employee_id",
+    "termination_date",
+    "termination_type",
+    "reason",
+    "eligible_for_rehire"
+   ],
+   "columns_impl": [
+    "termination_id",
+    "employee_id",
+    "termination_date",
+    "termination_type",
+    "reason",
+    "eligible_for_rehire"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "termination_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "employee_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "termination_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "termination_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "reason": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "eligible_for_rehire": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "termination_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.009421802925680964
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.10067043564385114,
+     "stats": {
+      "mean": {
+       "spindle": 375.5,
+       "impl": 375.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 750.0,
+       "impl": 750.0
+      },
+      "std": {
+       "spindle": 216.5061584959344,
+       "impl": 216.5061584959344,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 750,
+      "impl": 750
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.009421802925680964
+     },
+     "ks": 0.03199999999999997,
+     "ks_baseline": 0.05199999999999999,
+     "ks_tol": 0.10067043564385114,
+     "stats": {
+      "mean": {
+       "spindle": 2422.144,
+       "impl": 2434.7626666666665
+      },
+      "min": {
+       "spindle": 9.0,
+       "impl": 2.0
+      },
+      "max": {
+       "spindle": 4999.0,
+       "impl": 4999.0
+      },
+      "std": {
+       "spindle": 1450.854110032202,
+       "impl": 1439.3386257836928,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 685,
+      "impl": 681
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "termination_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.009421802925680964
+     },
+     "ks": 0.034666666666666665,
+     "ks_baseline": 0.05066666666666669,
+     "ks_tol": 0.10067043564385114,
+     "stats": {
+      "mean": {
+       "spindle": "2022-12-21 05:54:41.739711232",
+       "impl": "2022-12-18 11:00:40.993559040"
+      },
+      "min": {
+       "spindle": "2020-01-01 06:54:32.894147840",
+       "impl": "2020-01-01 22:04:32.350522112"
+      },
+      "max": {
+       "spindle": "2025-12-30 11:05:01.073206272",
+       "impl": "2025-12-28 20:48:49.146519040"
+      },
+      "std": {
+       "spindle": 633.7178081580064,
+       "impl": 641.829577889317,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 750,
+      "impl": 750
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "termination_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.009421802925680964
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Voluntary",
+       "spindle": 0.5733333333333334,
+       "impl": 0.596
+      },
+      {
+       "value": "Involuntary",
+       "spindle": 0.23466666666666666,
+       "impl": 0.22133333333333333
+      },
+      {
+       "value": "Layoff",
+       "spindle": 0.09466666666666666,
+       "impl": 0.10133333333333333
+      },
+      {
+       "value": "Retirement",
+       "spindle": 0.06666666666666667,
+       "impl": 0.056
+      },
+      {
+       "value": "End of Contract",
+       "spindle": 0.030666666666666665,
+       "impl": 0.025333333333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.02933333333333331,
+     "tvd_baseline": 0.04800000000000003,
+     "tvd_tol": 0.195441004761168,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "reason": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.009421802925680964
+     },
+     "distinct": {
+      "spindle": 8,
+      "impl": 8,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Better Opportunity",
+       "spindle": 0.2946666666666667,
+       "impl": 0.276
+      },
+      {
+       "value": "Performance",
+       "spindle": 0.14133333333333334,
+       "impl": 0.172
+      },
+      {
+       "value": "Relocation",
+       "spindle": 0.13466666666666666,
+       "impl": 0.116
+      },
+      {
+       "value": "Conduct",
+       "spindle": 0.09466666666666666,
+       "impl": 0.06533333333333333
+      },
+      {
+       "value": "Other",
+       "spindle": 0.09333333333333334,
+       "impl": 0.07466666666666667
+      },
+      {
+       "value": "Restructuring",
+       "spindle": 0.088,
+       "impl": 0.09733333333333333
+      },
+      {
+       "value": "Personal",
+       "spindle": 0.08266666666666667,
+       "impl": 0.12
+      },
+      {
+       "value": "Retirement",
+       "spindle": 0.07066666666666667,
+       "impl": 0.07866666666666666
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.08533333333333332,
+     "tvd_baseline": 0.07466666666666666,
+     "tvd_tol": 0.24721548929484133,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "eligible_for_rehire": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.009421802925680964
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "spindle": 0.6986666666666667,
+       "impl": 0.7013333333333334
+      },
+      {
+       "value": "false",
+       "spindle": 0.30133333333333334,
+       "impl": 0.2986666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0026666666666666783,
+     "tvd_baseline": 0.010666666666666685,
+     "tvd_tol": 0.12360774464742066,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "spindle": [
+   "department",
+   "position",
+   "training",
+   "employee",
+   "compensation",
+   "performance_review",
+   "termination",
+   "time_off_request",
+   "training_enrollment"
+  ],
+  "impl": [
+   "department",
+   "position",
+   "training",
+   "employee",
+   "compensation",
+   "performance_review",
+   "termination",
+   "time_off_request",
+   "training_enrollment"
+  ]
+ },
+ "fk_integrity": {
+  "spindle": {
+   "employee.department_id->department.department_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "employee.position_id->position.position_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "compensation.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 15000
+   },
+   "performance_review.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 12500
+   },
+   "time_off_request.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 25000
+   },
+   "training_enrollment.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 20000
+   },
+   "training_enrollment.training_id->training.training_id": {
+    "integrity": 1.0,
+    "n": 20000
+   },
+   "termination.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 750
+   },
+   "employee.manager_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 4995
+   }
+  },
+  "impl": {
+   "employee.department_id->department.department_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "employee.position_id->position.position_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "compensation.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 15000
+   },
+   "performance_review.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 12500
+   },
+   "time_off_request.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 25000
+   },
+   "training_enrollment.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 20000
+   },
+   "training_enrollment.training_id->training.training_id": {
+    "integrity": 1.0,
+    "n": 20000
+   },
+   "termination.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 750
+   },
+   "employee.manager_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 4995
+   }
+  }
+ },
+ "fanout": {
+  "department->employee.department_id": {
+   "spindle": {
+    "p50": 55.0,
+    "p90": 318.8000000000002,
+    "p99": 1506.900000000001,
+    "max": 1823,
+    "mean": 166.66666666666666,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 51.5,
+    "p90": 347.20000000000016,
+    "p99": 1522.220000000001,
+    "max": 1836,
+    "mean": 166.66666666666666,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.2333333333333333,
+   "ks_baseline_max": 0.19999999999999998,
+   "ks_tol": 0.5033521782192557,
+   "equivalent": true
+  },
+  "position->employee.position_id": {
+   "spindle": {
+    "p50": 17.0,
+    "p90": 101.90000000000008,
+    "p99": 783.7199999999948,
+    "max": 1441,
+    "mean": 62.5,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 18.0,
+    "p90": 99.30000000000028,
+    "p99": 785.2399999999953,
+    "max": 1373,
+    "mean": 62.5,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.050000000000000044,
+   "ks_baseline_max": 0.09999999999999998,
+   "ks_tol": 0.3082389993889093,
+   "equivalent": true
+  },
+  "employee->compensation.employee_id": {
+   "spindle": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 8.0,
+    "max": 12,
+    "mean": 3.0,
+    "zero_frac": 0.052
+   },
+   "impl": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 8.0,
+    "max": 12,
+    "mean": 3.0,
+    "zero_frac": 0.0508
+   },
+   "ks_counts": 0.0028000000000000247,
+   "ks_baseline_max": 0.0066000000000000225,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  },
+  "employee->performance_review.employee_id": {
+   "spindle": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 11,
+    "mean": 2.5,
+    "zero_frac": 0.0808
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 11,
+    "mean": 2.5,
+    "zero_frac": 0.0786
+   },
+   "ks_counts": 0.0043999999999999595,
+   "ks_baseline_max": 0.011399999999999966,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  },
+  "employee->time_off_request.employee_id": {
+   "spindle": {
+    "p50": 5.0,
+    "p90": 8.0,
+    "p99": 11.0,
+    "max": 15,
+    "mean": 5.0,
+    "zero_frac": 0.0056
+   },
+   "impl": {
+    "p50": 5.0,
+    "p90": 8.0,
+    "p99": 11.0,
+    "max": 15,
+    "mean": 5.0,
+    "zero_frac": 0.0066
+   },
+   "ks_counts": 0.008000000000000007,
+   "ks_baseline_max": 0.012399999999999967,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  },
+  "employee->training_enrollment.employee_id": {
+   "spindle": {
+    "p50": 4.0,
+    "p90": 7.0,
+    "p99": 9.0,
+    "max": 12,
+    "mean": 4.0,
+    "zero_frac": 0.0208
+   },
+   "impl": {
+    "p50": 4.0,
+    "p90": 7.0,
+    "p99": 9.0,
+    "max": 14,
+    "mean": 4.0,
+    "zero_frac": 0.0206
+   },
+   "ks_counts": 0.009399999999999964,
+   "ks_baseline_max": 0.013000000000000012,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  },
+  "training->training_enrollment.training_id": {
+   "spindle": {
+    "p50": 51.0,
+    "p90": 306.60000000000036,
+    "p99": 2426.160000000016,
+    "max": 5610,
+    "mean": 200.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 50.5,
+    "p90": 323.6,
+    "p99": 2499.890000000016,
+    "max": 5558,
+    "mean": 200.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.06,
+   "ks_baseline_max": 0.09000000000000002,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "employee->termination.employee_id": {
+   "spindle": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 3,
+    "mean": 0.15,
+    "zero_frac": 0.863
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 3,
+    "mean": 0.15,
+    "zero_frac": 0.8638
+   },
+   "ks_counts": 0.0010000000000000009,
+   "ks_baseline_max": 0.0041999999999999815,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {},
+ "strategy_semantics": {
+  "time_off_request.end_date - start_date in [1,14] days": {
+   "impl": 1.0,
+   "spindle": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "training_enrollment.completion_date - enrollment_date in [1,90] days": {
+   "impl": 0.85125,
+   "spindle": [
+    0.8508,
+    0.8491,
+    0.8581,
+    0.84675,
+    0.85025
+   ],
+   "floor": 0.84175
+  }
+ },
+ "business_rules": {
+  "spindle_BusinessRulesEngine_violations": {},
+  "spindle_on_spindle": {}
+ },
+ "spindle_fidelity_comparator": {
+  "overall_impl": 93.55926666572607,
+  "overall_baseline_spindle_vs_spindle": [
+   93.50274470343994,
+   93.8751721811548,
+   93.76627724886363,
+   93.61910086597565
+  ],
+  "tables": {
+   "compensation": {
+    "impl": 99.62378495520709,
+    "baseline": [
+     99.73076467618786,
+     99.48118730771056,
+     99.49772629852897,
+     99.59015907164617
+    ],
+    "floor": 98.98118730771056,
+    "ok": true
+   },
+   "department": {
+    "impl": 89.41964285714286,
+    "baseline": [
+     86.98979591836735,
+     89.57270408163265,
+     88.94604037267081,
+     88.96103896103897
+    ],
+    "floor": 86.48979591836735,
+    "ok": true
+   },
+   "employee": {
+    "impl": 80.85684507900481,
+    "baseline": [
+     81.05540910881653,
+     80.92658367713328,
+     80.9915716696922,
+     81.32453974504257
+    ],
+    "floor": 80.42658367713328,
+    "ok": true
+   },
+   "performance_review": {
+    "impl": 95.68613343409741,
+    "baseline": [
+     95.47273092117713,
+     95.4782559604758,
+     95.47058215048273,
+     95.50027378526015
+    ],
+    "floor": 94.97058215048273,
+    "ok": true
+   },
+   "position": {
+    "impl": 89.77146838596029,
+    "baseline": [
+     89.89664841164654,
+     90.60153497257045,
+     90.71395372216766,
+     90.82128990227466
+    ],
+    "floor": 89.39664841164654,
+    "ok": true
+   },
+   "termination": {
+    "impl": 98.21558696936374,
+    "baseline": [
+     98.4469740626537,
+     98.4156192400497,
+     98.45969628971433,
+     98.48767629030108
+    ],
+    "floor": 97.9156192400497,
+    "ok": true
+   },
+   "time_off_request": {
+    "impl": 98.90402533295087,
+    "baseline": [
+     99.5061297547383,
+     99.81993292230045,
+     99.38331678699306,
+     99.00462804661854
+    ],
+    "floor": 98.50462804661854,
+    "ok": true
+   },
+   "training": {
+    "impl": 89.81538478946065,
+    "baseline": [
+     91.35898158522275,
+     91.76736378322175,
+     91.46473950623452,
+     89.15085417015145
+    ],
+    "floor": 88.65085417015145,
+    "ok": true
+   },
+   "training_enrollment": {
+    "impl": 99.74052818834697,
+    "baseline": [
+     99.06726789214933,
+     98.81336768529853,
+     98.96886844328843,
+     99.73144782144736
+    ],
+    "floor": 98.31336768529853,
+    "ok": true
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 59,
+  "columns_equivalent": 59,
+  "flagged": [],
+  "passed": true,
+  "seconds": 17.15326428413391
+ }
+}

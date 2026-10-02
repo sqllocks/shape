@@ -1,0 +1,14 @@
+hr               before    82.0 ms (min   68.8)  now    62.8 ms (min   55.8)  -23.4%  cpu-model unchanged
+real_estate      before   114.7 ms (min   98.6)  now    85.0 ms (min   77.7)  -25.9%  cpu-model unchanged
+pulse            before   404.5 ms (min  364.9)  now   255.9 ms (min  235.8)  -36.7%  cpu-model unchanged
+supply_chain     before   146.2 ms (min  118.7)  now   102.6 ms (min   98.4)  -29.9%  cpu-model unchanged
+insurance        before   116.6 ms (min   94.8)  now    95.4 ms (min   85.6)  -18.2%  cpu-model unchanged
+capital_markets  before   224.7 ms (min  218.5)  now   164.9 ms (min  142.3)  -26.6%  cpu-model unchanged
+education        before   122.1 ms (min  109.3)  now   102.5 ms (min   87.7)  -16.1%  cpu-model unchanged
+financial        before   491.6 ms (min  452.2)  now   377.2 ms (min  355.9)  -23.3%  cpu-model unchanged
+healthcare       before   437.5 ms (min  421.4)  now   385.0 ms (min  338.9)  -12.0%  cpu-model unchanged
+iot              before   127.6 ms (min  111.4)  now    91.1 ms (min   74.2)  -28.6%  cpu-model unchanged
+manufacturing    before    74.0 ms (min   63.2)  now    58.3 ms (min   43.2)  -21.3%  cpu-model unchanged
+marketing        before   224.3 ms (min  213.8)  now   162.0 ms (min  145.8)  -27.8%  cpu-model unchanged
+telecom          before   503.1 ms (min  459.6)  now   334.9 ms (min  297.6)  -33.4%  cpu-model unchanged
+retail           before   518.1 ms (min  489.9)  now   458.8 ms (min  434.0)  -11.4%  cpu-model unchanged

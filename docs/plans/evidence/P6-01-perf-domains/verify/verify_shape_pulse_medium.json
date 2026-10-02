@@ -1,0 +1,2702 @@
+{
+ "domain": "pulse",
+ "scale": "medium",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "rider": {
+   "rows": {
+    "spindle": 50000,
+    "impl": 50000
+   },
+   "columns_spindle": [
+    "rider_id",
+    "full_name",
+    "email",
+    "phone",
+    "home_city_id",
+    "rating",
+    "joined_at",
+    "payment_default"
+   ],
+   "columns_impl": [
+    "rider_id",
+    "full_name",
+    "email",
+    "phone",
+    "home_city_id",
+    "rating",
+    "joined_at",
+    "payment_default"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "rider_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "full_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "email": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "phone": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "home_city_id": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "rating": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "joined_at": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "payment_default": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "rider_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.012329559975556372,
+     "stats": {
+      "mean": {
+       "spindle": 25000.5,
+       "impl": 25000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 50000.0,
+       "impl": 50000.0
+      },
+      "std": {
+       "spindle": 14433.756726853893,
+       "impl": 14433.756726853893,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 50000,
+      "impl": 50000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "full_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "distinct": {
+      "spindle": 49952,
+      "impl": 49962,
+      "ratio": 1.0002001921844972,
+      "baseline_max_ratio_dev": 0.00022021140294681274
+     },
+     "top10": [
+      {
+       "value": "Fenah Burgridge",
+       "spindle": 4e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Jeion Macdonald",
+       "spindle": 4e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Joisha Sutwick",
+       "spindle": 4e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Harold Masberg",
+       "spindle": 4e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "August Brown",
+       "spindle": 4e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Beix Vazquland",
+       "spindle": 4e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Naane Roth",
+       "spindle": 4e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Jain Terstein",
+       "spindle": 4e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Felicia Ochsen",
+       "spindle": 4e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Evlyn Lutzsen",
+       "spindle": 4e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Thne Jones",
+       "spindle": 0.0,
+       "impl": 4e-05
+      },
+      {
+       "value": "Zoe Maciaworth",
+       "spindle": 0.0,
+       "impl": 4e-05
+      },
+      {
+       "value": "Dresa Henburg",
+       "spindle": 0.0,
+       "impl": 4e-05
+      },
+      {
+       "value": "Kaen Huffford",
+       "spindle": 0.0,
+       "impl": 4e-05
+      },
+      {
+       "value": "Doan Warrley",
+       "spindle": 0.0,
+       "impl": 4e-05
+      }
+     ],
+     "vocab_overlap": 0.00178,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "FIRST_NAMES+' '+LAST_NAMES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.02858,
+      "impl": 0.02944,
+      "baseline_max_abs_diff": 0.0012199999999999989,
+      "tol": 0.005269078059774784
+     },
+     "distinct": {
+      "spindle": 48571,
+      "impl": 48528,
+      "ratio": 0.9991146980708653,
+      "baseline_max_ratio_dev": 0.0012558934343538386
+     },
+     "top10": [
+      {
+       "value": "laita.logaland439@sbcglobal.net",
+       "spindle": 2.0588416956620205e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "draya.houswood823@virginmedia.com",
+       "spindle": 2.0588416956620205e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "asdra.avilwell49@cox.net",
+       "spindle": 2.0588416956620205e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "ildra.doushire435@earthlink.net",
+       "spindle": 2.0588416956620205e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "jook.stcarthy535@techie.com",
+       "spindle": 2.0588416956620205e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "diila.huber862@workmail.com",
+       "spindle": 2.0588416956620205e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "jonathon.armscroft310@cox.net",
+       "spindle": 2.0588416956620205e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "neesa.domifield588@email.com",
+       "spindle": 2.0588416956620205e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "asdra.frederick344@comcast.net",
+       "spindle": 2.0588416956620205e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "iae.laneley316@post.com",
+       "spindle": 2.0588416956620205e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "karter.chendale49@live.com",
+       "spindle": 0.0,
+       "impl": 2.0606660072535444e-05
+      },
+      {
+       "value": "doora.densen27@me.com",
+       "spindle": 0.0,
+       "impl": 2.0606660072535444e-05
+      },
+      {
+       "value": "brie.hoopcroft932@rediffmail.com",
+       "spindle": 0.0,
+       "impl": 2.0606660072535444e-05
+      },
+      {
+       "value": "oscar.rittdale986@yahoo.com",
+       "spindle": 0.0,
+       "impl": 2.0606660072535444e-05
+      },
+      {
+       "value": "ianna.samley784@sky.com",
+       "spindle": 0.0,
+       "impl": 2.0606660072535444e-05
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "phone": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "distinct": {
+      "spindle": 50000,
+      "impl": 50000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "(991) 381-1626",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(835) 312-6944",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(562) 271-6541",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(207) 589-3724",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(816) 982-5491",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(598) 295-5231",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(876) 365-8414",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(739) 606-4347",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(371) 910-3658",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(234) 333-2631",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(976) 980-2184",
+       "spindle": 0.0,
+       "impl": 2e-05
+      },
+      {
+       "value": "(890) 410-8124",
+       "spindle": 0.0,
+       "impl": 2e-05
+      },
+      {
+       "value": "(620) 463-2561",
+       "spindle": 0.0,
+       "impl": 2e-05
+      },
+      {
+       "value": "(510) 331-3190",
+       "spindle": 0.0,
+       "impl": 2e-05
+      },
+      {
+       "value": "(773) 806-8037",
+       "spindle": 0.0,
+       "impl": 2e-05
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "(AAA) EEE-SSSS, AAA/EEE 200..998, SSSS 1000..9998",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "home_city_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "ks": 0.0048200000000000465,
+     "ks_baseline": 0.005680000000000018,
+     "ks_tol": 0.012329559975556372,
+     "stats": {
+      "mean": {
+       "spindle": 2.47156,
+       "impl": 2.47636
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "spindle": 1.143044691339757,
+       "impl": 1.1414206719698046,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "rating": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "ks": 0.0020600000000000063,
+     "ks_baseline": 0.004899999999999904,
+     "ks_tol": 0.012329559975556372,
+     "stats": {
+      "mean": {
+       "spindle": 4.77765,
+       "impl": 4.77735
+      },
+      "min": {
+       "spindle": 4.5,
+       "impl": 4.5
+      },
+      "max": {
+       "spindle": 5.0,
+       "impl": 5.0
+      },
+      "std": {
+       "spindle": 0.1513825534861928,
+       "impl": 0.15113430285676388,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 6,
+      "impl": 6
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "joined_at": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "ks": 0.007960000000000023,
+     "ks_baseline": 0.008379999999999999,
+     "ks_tol": 0.014569999999999998,
+     "stats": {
+      "mean": {
+       "spindle": "2025-05-30 10:19:17.046039552",
+       "impl": "2025-06-02 02:00:37.188813824"
+      },
+      "min": {
+       "spindle": "2024-06-01 00:01:28.109210624",
+       "impl": "2024-06-01 00:08:58.203361024"
+      },
+      "max": {
+       "spindle": "2026-05-31 23:45:02.778354944",
+       "impl": "2026-05-31 23:56:24.933398016"
+      },
+      "std": {
+       "spindle": 211.09973556304004,
+       "impl": 210.44705184996667,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 50000,
+      "impl": 50000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "payment_default": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "card",
+       "spindle": 0.68074,
+       "impl": 0.68038
+      },
+      {
+       "value": "wallet",
+       "spindle": 0.2691,
+       "impl": 0.27062
+      },
+      {
+       "value": "cash",
+       "spindle": 0.05016,
+       "impl": 0.049
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0015200000000000248,
+     "tvd_baseline": 0.0037400000000000107,
+     "tvd_tol": 0.0185411616971131,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "driver": {
+   "rows": {
+    "spindle": 5000,
+    "impl": 5000
+   },
+   "columns_spindle": [
+    "driver_id",
+    "full_name",
+    "email",
+    "phone",
+    "home_city_id",
+    "rating",
+    "status",
+    "onboarded_at",
+    "is_active"
+   ],
+   "columns_impl": [
+    "driver_id",
+    "full_name",
+    "email",
+    "phone",
+    "home_city_id",
+    "rating",
+    "status",
+    "onboarded_at",
+    "is_active"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "driver_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "full_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "email": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "phone": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "home_city_id": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "rating": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "onboarded_at": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "is_active": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "driver_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 2500.5,
+       "impl": 2500.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 1443.3756441065507,
+       "impl": 1443.3756441065507,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "full_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 4999,
+      "impl": 5000,
+      "ratio": 1.0002000400080016,
+      "baseline_max_ratio_dev": 0.0002000400080015563
+     },
+     "top10": [
+      {
+       "value": "Arel McCallum",
+       "spindle": 0.0004,
+       "impl": 0.0
+      },
+      {
+       "value": "Noisha Fletcroft",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "Noasha Farmeberg",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "Flne Churwood",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "Sawyer Braun",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "Jessica Strsen",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "Raella Valgate",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "Wayne Terrell",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "Monor DaLaughlin",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "Nanna Marsdale",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "Juika Holmes",
+       "spindle": 0.0,
+       "impl": 0.0002
+      },
+      {
+       "value": "Eric Bell",
+       "spindle": 0.0,
+       "impl": 0.0002
+      },
+      {
+       "value": "Nichole Rollins",
+       "spindle": 0.0,
+       "impl": 0.0002
+      },
+      {
+       "value": "Laie Wells",
+       "spindle": 0.0,
+       "impl": 0.0002
+      },
+      {
+       "value": "Jae Hart",
+       "spindle": 0.0,
+       "impl": 0.0002
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "FIRST_NAMES+' '+LAST_NAMES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0222,
+      "impl": 0.0202,
+      "baseline_max_abs_diff": 0.0052,
+      "tol": 0.01473334992457588
+     },
+     "distinct": {
+      "spindle": 4889,
+      "impl": 4899,
+      "ratio": 1.0020454080589078,
+      "baseline_max_ratio_dev": 0.005318060953160231
+     },
+     "top10": [
+      {
+       "value": "ashley.busburg320@charter.net",
+       "spindle": 0.00020454080589077522,
+       "impl": 0.0
+      },
+      {
+       "value": "jonathon.hansen533@cox.net",
+       "spindle": 0.00020454080589077522,
+       "impl": 0.0
+      },
+      {
+       "value": "iaira.gilmoburg98@tutanota.com",
+       "spindle": 0.00020454080589077522,
+       "impl": 0.0
+      },
+      {
+       "value": "tristan.grossworth685@verizon.net",
+       "spindle": 0.00020454080589077522,
+       "impl": 0.0
+      },
+      {
+       "value": "sana.lamstein412@doctor.com",
+       "spindle": 0.00020454080589077522,
+       "impl": 0.0
+      },
+      {
+       "value": "bresa.andebrook345@outlook.co.uk",
+       "spindle": 0.00020454080589077522,
+       "impl": 0.0
+      },
+      {
+       "value": "nory.bennett49@doctor.com",
+       "spindle": 0.00020454080589077522,
+       "impl": 0.0
+      },
+      {
+       "value": "hiin.moodyton184@email.com",
+       "spindle": 0.00020454080589077522,
+       "impl": 0.0
+      },
+      {
+       "value": "trya.reillberg18@runbox.com",
+       "spindle": 0.00020454080589077522,
+       "impl": 0.0
+      },
+      {
+       "value": "luina.watsshire333@zoho.com",
+       "spindle": 0.00020454080589077522,
+       "impl": 0.0
+      },
+      {
+       "value": "daer.sutton860@verizon.net",
+       "spindle": 0.0,
+       "impl": 0.00020412329046744235
+      },
+      {
+       "value": "curtis.jacobwell659@frontier.com",
+       "spindle": 0.0,
+       "impl": 0.00020412329046744235
+      },
+      {
+       "value": "mury.mulwood601@verizon.net",
+       "spindle": 0.0,
+       "impl": 0.00020412329046744235
+      },
+      {
+       "value": "beea.solomon528@comcast.net",
+       "spindle": 0.0,
+       "impl": 0.00020412329046744235
+      },
+      {
+       "value": "muer.chang111@yahoo.co.uk",
+       "spindle": 0.0,
+       "impl": 0.00020412329046744235
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "phone": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "(743) 607-5409",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "(734) 653-5324",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "(939) 374-1266",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "(204) 207-6603",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "(962) 380-7841",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "(615) 794-2904",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "(304) 228-1233",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "(262) 268-4314",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "(631) 805-2389",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "(605) 549-9340",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "(233) 860-9148",
+       "spindle": 0.0,
+       "impl": 0.0002
+      },
+      {
+       "value": "(834) 246-8245",
+       "spindle": 0.0,
+       "impl": 0.0002
+      },
+      {
+       "value": "(203) 880-3124",
+       "spindle": 0.0,
+       "impl": 0.0002
+      },
+      {
+       "value": "(437) 510-9260",
+       "spindle": 0.0,
+       "impl": 0.0002
+      },
+      {
+       "value": "(829) 990-3525",
+       "spindle": 0.0,
+       "impl": 0.0002
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "(AAA) EEE-SSSS, AAA/EEE 200..998, SSSS 1000..9998",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "home_city_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.02080000000000004,
+     "ks_baseline": 0.020199999999999996,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 2.448,
+       "impl": 2.506
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "spindle": 1.1393401599171338,
+       "impl": 1.141562087667596,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "rating": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.01699999999999996,
+     "ks_baseline": 0.021399999999999975,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 4.843939999999999,
+       "impl": 4.8463199999999995
+      },
+      "min": {
+       "spindle": 4.6,
+       "impl": 4.6
+      },
+      "max": {
+       "spindle": 5.0,
+       "impl": 5.0
+      },
+      "std": {
+       "spindle": 0.11962974713673862,
+       "impl": 0.12001023956313071,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "offline",
+       "spindle": 0.4542,
+       "impl": 0.4442
+      },
+      {
+       "value": "available",
+       "spindle": 0.2952,
+       "impl": 0.3058
+      },
+      {
+       "value": "on_trip",
+       "spindle": 0.129,
+       "impl": 0.1288
+      },
+      {
+       "value": "enroute",
+       "spindle": 0.1216,
+       "impl": 0.1212
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.010600000000000005,
+     "tvd_baseline": 0.018199999999999987,
+     "tvd_tol": 0.06770275002573076,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "onboarded_at": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.0252,
+     "ks_baseline": 0.015599999999999947,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": "2025-06-02 07:43:30.688687616",
+       "impl": "2025-05-26 01:36:26.833782016"
+      },
+      "min": {
+       "spindle": "2024-06-01 03:35:23.806730240",
+       "impl": "2024-06-01 00:35:11.764249088"
+      },
+      "max": {
+       "spindle": "2026-05-31 22:19:05.263123200",
+       "impl": "2026-05-31 22:23:06.816675072"
+      },
+      "std": {
+       "spindle": 210.3871872435873,
+       "impl": 210.8028016604662,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_active": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "spindle": 0.8856,
+       "impl": 0.8846
+      },
+      {
+       "value": "false",
+       "spindle": 0.1144,
+       "impl": 0.1154
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0010000000000000009,
+     "tvd_baseline": 0.013200000000000045,
+     "tvd_tol": 0.04787307364817192,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "vehicle": {
+   "rows": {
+    "spindle": 5000,
+    "impl": 5000
+   },
+   "columns_spindle": [
+    "vehicle_id",
+    "driver_id",
+    "make",
+    "model",
+    "year",
+    "color",
+    "license_plate",
+    "capacity",
+    "vehicle_class",
+    "city_id"
+   ],
+   "columns_impl": [
+    "vehicle_id",
+    "driver_id",
+    "make",
+    "model",
+    "year",
+    "color",
+    "license_plate",
+    "capacity",
+    "vehicle_class",
+    "city_id"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "vehicle_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "driver_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "make": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "model": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "year": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "color": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "license_plate": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "capacity": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "vehicle_class": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "city_id": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "vehicle_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 2500.5,
+       "impl": 2500.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 1443.3756441065507,
+       "impl": 1443.3756441065507,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "driver_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.013999999999999901,
+     "ks_baseline": 0.02040000000000003,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 2517.7594,
+       "impl": 2519.5946
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 4998.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 1441.5066896520598,
+       "impl": 1439.5610480458408,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 3136,
+      "impl": 3162
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "make": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 8,
+      "impl": 8,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Toyota",
+       "spindle": 0.216,
+       "impl": 0.2248
+      },
+      {
+       "value": "Honda",
+       "spindle": 0.1782,
+       "impl": 0.1838
+      },
+      {
+       "value": "Ford",
+       "spindle": 0.1226,
+       "impl": 0.1222
+      },
+      {
+       "value": "Tesla",
+       "spindle": 0.1016,
+       "impl": 0.096
+      },
+      {
+       "value": "Nissan",
+       "spindle": 0.0988,
+       "impl": 0.0968
+      },
+      {
+       "value": "Kia",
+       "spindle": 0.0962,
+       "impl": 0.0954
+      },
+      {
+       "value": "Chevrolet",
+       "spindle": 0.0958,
+       "impl": 0.0976
+      },
+      {
+       "value": "Hyundai",
+       "spindle": 0.0908,
+       "impl": 0.0834
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0162,
+     "tvd_baseline": 0.024000000000000007,
+     "tvd_tol": 0.09574614729634384,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "model": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 8,
+      "impl": 8,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Camry",
+       "spindle": 0.16,
+       "impl": 0.1588
+      },
+      {
+       "value": "Civic",
+       "spindle": 0.1378,
+       "impl": 0.14
+      },
+      {
+       "value": "Corolla",
+       "spindle": 0.1218,
+       "impl": 0.1262
+      },
+      {
+       "value": "Model 3",
+       "spindle": 0.1202,
+       "impl": 0.123
+      },
+      {
+       "value": "Elantra",
+       "spindle": 0.1202,
+       "impl": 0.1138
+      },
+      {
+       "value": "Accord",
+       "spindle": 0.1194,
+       "impl": 0.1198
+      },
+      {
+       "value": "Fusion",
+       "spindle": 0.1172,
+       "impl": 0.1118
+      },
+      {
+       "value": "Altima",
+       "spindle": 0.1034,
+       "impl": 0.1066
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.013000000000000005,
+     "tvd_baseline": 0.023799999999999988,
+     "tvd_tol": 0.09574614729634384,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "year": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.009000000000000008,
+     "ks_baseline": 0.024599999999999955,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 2020.383,
+       "impl": 2020.3618
+      },
+      "min": {
+       "spindle": 2017.0,
+       "impl": 2017.0
+      },
+      "max": {
+       "spindle": 2024.0,
+       "impl": 2024.0
+      },
+      "std": {
+       "spindle": 1.9784617762291998,
+       "impl": 1.963186379333353,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 8,
+      "impl": 8
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "color": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 7,
+      "impl": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "White",
+       "spindle": 0.2558,
+       "impl": 0.2586
+      },
+      {
+       "value": "Black",
+       "spindle": 0.218,
+       "impl": 0.2112
+      },
+      {
+       "value": "Silver",
+       "spindle": 0.1762,
+       "impl": 0.1858
+      },
+      {
+       "value": "Gray",
+       "spindle": 0.1472,
+       "impl": 0.136
+      },
+      {
+       "value": "Blue",
+       "spindle": 0.0978,
+       "impl": 0.1008
+      },
+      {
+       "value": "Red",
+       "spindle": 0.063,
+       "impl": 0.0642
+      },
+      {
+       "value": "Other",
+       "spindle": 0.042,
+       "impl": 0.0434
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.017999999999999974,
+     "tvd_baseline": 0.017800000000000003,
+     "tvd_tol": 0.0895623198216277,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "license_plate": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "000001",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "000002",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "000003",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "000004",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "000005",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "000006",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "000007",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "000008",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "000009",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "000010",
+       "spindle": 0.0002,
+       "impl": 0.0002
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "{seq:6}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "capacity": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.007800000000000029,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 4.3652,
+       "impl": 4.3652
+      },
+      "min": {
+       "spindle": 4.0,
+       "impl": 4.0
+      },
+      "max": {
+       "spindle": 6.0,
+       "impl": 6.0
+      },
+      "std": {
+       "spindle": 0.7726764911656107,
+       "impl": 0.7726764911656107,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "vehicle_class": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "standard",
+       "spindle": 0.6284,
+       "impl": 0.6248
+      },
+      {
+       "value": "xl",
+       "spindle": 0.1594,
+       "impl": 0.1584
+      },
+      {
+       "value": "premium",
+       "spindle": 0.1158,
+       "impl": 0.119
+      },
+      {
+       "value": "ev",
+       "spindle": 0.0964,
+       "impl": 0.0978
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.004599999999999951,
+     "tvd_baseline": 0.01299999999999999,
+     "tvd_tol": 0.06770275002573076,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "city_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.030200000000000005,
+     "ks_baseline": 0.03320000000000001,
+     "ks_tol": 0.05180000000000001,
+     "stats": {
+      "mean": {
+       "spindle": 2.44,
+       "impl": 2.51
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "spindle": 1.1317243480636086,
+       "impl": 1.143984265626062,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "trip": {
+   "rows": {
+    "spindle": 500000,
+    "impl": 500000
+   },
+   "columns_spindle": [
+    "trip_id",
+    "rider_id",
+    "driver_id",
+    "requested_at",
+    "status",
+    "distance_mi",
+    "surge_mult",
+    "rating_given",
+    "city_id",
+    "duration_min",
+    "fare",
+    "tip",
+    "payment_type"
+   ],
+   "columns_impl": [
+    "trip_id",
+    "rider_id",
+    "driver_id",
+    "requested_at",
+    "status",
+    "distance_mi",
+    "surge_mult",
+    "rating_given",
+    "city_id",
+    "duration_min",
+    "fare",
+    "tip",
+    "payment_type"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "trip_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "rider_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "driver_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "requested_at": {
+     "spindle": "timestamp[us]",
+     "impl": "timestamp[us]"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "distance_mi": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "surge_mult": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "rating_given": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "city_id": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "duration_min": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "fare": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "tip": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "payment_type": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "trip_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 250000.5,
+       "impl": 250000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 500000.0,
+       "impl": 500000.0
+      },
+      "std": {
+       "spindle": 144337.56729711776,
+       "impl": 144337.56729711776,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 500000,
+      "impl": 500000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "rider_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0012299999999999534,
+     "ks_baseline": 0.005442000000000058,
+     "ks_tol": 0.010163000000000087,
+     "stats": {
+      "mean": {
+       "spindle": 5840.91058,
+       "impl": 5835.91891
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 50000.0,
+       "impl": 50000.0
+      },
+      "std": {
+       "spindle": 11350.610940158598,
+       "impl": 11356.471556446324,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 44540,
+      "impl": 44541
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "driver_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0012179999999999969,
+     "ks_baseline": 0.0015220000000000233,
+     "ks_tol": 0.004283000000000035,
+     "stats": {
+      "mean": {
+       "spindle": 242.587538,
+       "impl": 242.51671
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 693.8581332787694,
+       "impl": 691.145087787489,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4986,
+      "impl": 4981
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "requested_at": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.013343999999999967,
+     "ks_baseline": 0.018508000000000024,
+     "ks_tol": 0.02976200000000004,
+     "stats": {
+      "mean": {
+       "spindle": "2025-09-27 11:05:45.356883712",
+       "impl": "2025-09-30 07:24:04.966647552"
+      },
+      "min": {
+       "spindle": "2024-06-01 06:47:17",
+       "impl": "2024-06-03 09:40:52"
+      },
+      "max": {
+       "spindle": "2026-06-01 23:45:02.778353920",
+       "impl": "2026-06-01 23:56:24.933398016"
+      },
+      "std": {
+       "spindle": 172.9844015127573,
+       "impl": 173.2527365808906,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 272936,
+      "impl": 270820
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "completed",
+       "spindle": 0.860176,
+       "impl": 0.86055
+      },
+      {
+       "value": "cancelled",
+       "spindle": 0.099798,
+       "impl": 0.09959
+      },
+      {
+       "value": "no_driver",
+       "spindle": 0.040026,
+       "impl": 0.03986
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0003739999999999924,
+     "tvd_baseline": 0.0010040000000000014,
+     "tvd_tol": 0.0058632301428350395,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "distance_mi": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0019539999999999003,
+     "ks_baseline": 0.0019839999999999858,
+     "ks_tol": 0.004975999999999979,
+     "stats": {
+      "mean": {
+       "spindle": 5.17444632,
+       "impl": 5.1770812
+      },
+      "min": {
+       "spindle": 0.4,
+       "impl": 0.4
+      },
+      "max": {
+       "spindle": 60.0,
+       "impl": 60.0
+      },
+      "std": {
+       "spindle": 4.097751628764054,
+       "impl": 4.094831090168014,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 3639,
+      "impl": 3656
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "surge_mult": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0013219999999999343,
+     "ks_baseline": 0.0010279999999999179,
+     "ks_tol": 0.0038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 1.1844393999999998,
+       "impl": 1.1836204
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 3.5,
+       "impl": 3.5
+      },
+      "std": {
+       "spindle": 0.40240661988545867,
+       "impl": 0.40169668744444487,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 6,
+      "impl": 6
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "rating_given": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.180396,
+      "impl": 0.179994,
+      "baseline_max_abs_diff": 0.0011180000000000079,
+      "tol": 0.0038451694785015655
+     },
+     "ks": 0.0006292073378965715,
+     "ks_baseline": 0.001043216007437342,
+     "ks_tol": 0.00430618128553371,
+     "stats": {
+      "mean": {
+       "spindle": 4.508997027832954,
+       "impl": 4.507869454613747
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5.0,
+       "impl": 5.0
+      },
+      "std": {
+       "spindle": 0.9551503083814418,
+       "impl": 0.9574542070804895,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "city_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.00692799999999999,
+     "ks_baseline": 0.02226800000000001,
+     "ks_tol": 0.03540200000000002,
+     "stats": {
+      "mean": {
+       "spindle": 2.502564,
+       "impl": 2.502662
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "spindle": 1.13585449151905,
+       "impl": 1.146209803550816,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "duration_min": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0015839999999999743,
+     "ks_baseline": 0.0023420000000000107,
+     "ks_tol": 0.005513000000000016,
+     "stats": {
+      "mean": {
+       "spindle": 17.0861638,
+       "impl": 17.078498739999997
+      },
+      "min": {
+       "spindle": 0.96,
+       "impl": 0.96
+      },
+      "max": {
+       "spindle": 250.01,
+       "impl": 251.82
+      },
+      "std": {
+       "spindle": 13.978002356401632,
+       "impl": 13.922374061302131,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 9936,
+      "impl": 9889
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "fare": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.001096000000000097,
+     "ks_baseline": 0.0022440000000000238,
+     "ks_tol": 0.005366000000000036,
+     "stats": {
+      "mean": {
+       "spindle": 20.76881052,
+       "impl": 20.752930260000003
+      },
+      "min": {
+       "spindle": 3.54,
+       "impl": 3.54
+      },
+      "max": {
+       "spindle": 562.74,
+       "impl": 565.5
+      },
+      "std": {
+       "spindle": 16.53281976554324,
+       "impl": 16.453711786432155,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 11406,
+      "impl": 11371
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "tip": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0017419999999999658,
+     "ks_baseline": 0.0021779999999999577,
+     "ks_tol": 0.005266999999999937,
+     "stats": {
+      "mean": {
+       "spindle": 2.2852428799999998,
+       "impl": 2.2813068199999997
+      },
+      "min": {
+       "spindle": 0.0,
+       "impl": 0.0
+      },
+      "max": {
+       "spindle": 120.08,
+       "impl": 121.08
+      },
+      "std": {
+       "spindle": 2.492599344581737,
+       "impl": 2.4787495994596727,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 2558,
+      "impl": 2546
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "payment_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "card",
+       "spindle": 0.680868,
+       "impl": 0.679464
+      },
+      {
+       "value": "wallet",
+       "spindle": 0.27409,
+       "impl": 0.276324
+      },
+      {
+       "value": "cash",
+       "spindle": 0.045042,
+       "impl": 0.044212
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0022340000000000415,
+     "tvd_baseline": 0.01321200000000003,
+     "tvd_tol": 0.021818000000000046,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "spindle": [
+   "driver",
+   "rider",
+   "trip",
+   "vehicle"
+  ],
+  "impl": [
+   "driver",
+   "rider",
+   "trip",
+   "vehicle"
+  ]
+ },
+ "fk_integrity": {
+  "spindle": {
+   "vehicle.driver_id->driver.driver_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "trip.rider_id->rider.rider_id": {
+    "integrity": 1.0,
+    "n": 500000
+   },
+   "trip.driver_id->driver.driver_id": {
+    "integrity": 1.0,
+    "n": 500000
+   }
+  },
+  "impl": {
+   "vehicle.driver_id->driver.driver_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "trip.rider_id->rider.rider_id": {
+    "integrity": 1.0,
+    "n": 500000
+   },
+   "trip.driver_id->driver.driver_id": {
+    "integrity": 1.0,
+    "n": 500000
+   }
+  }
+ },
+ "fanout": {
+  "driver->vehicle.driver_id": {
+   "spindle": {
+    "p50": 1.0,
+    "p90": 2.0,
+    "p99": 4.0,
+    "max": 7,
+    "mean": 1.0,
+    "zero_frac": 0.3728
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 2.0,
+    "p99": 4.0,
+    "max": 5,
+    "mean": 1.0,
+    "zero_frac": 0.3676
+   },
+   "ks_counts": 0.006399999999999961,
+   "ks_baseline_max": 0.010399999999999965,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  },
+  "rider->trip.rider_id": {
+   "spindle": {
+    "p50": 2.0,
+    "p90": 9.0,
+    "p99": 265.01000000000204,
+    "max": 400,
+    "mean": 10.0,
+    "zero_frac": 0.1092
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 9.0,
+    "p99": 264.01000000000204,
+    "max": 400,
+    "mean": 10.0,
+    "zero_frac": 0.10918
+   },
+   "ks_counts": 0.0023800000000000487,
+   "ks_baseline_max": 0.014400000000000024,
+   "ks_tol": 0.023600000000000038,
+   "equivalent": true
+  },
+  "driver->trip.driver_id": {
+   "spindle": {
+    "p50": 9.0,
+    "p90": 63.0,
+    "p99": 974.2400000000052,
+    "max": 106533,
+    "mean": 100.0,
+    "zero_frac": 0.0028
+   },
+   "impl": {
+    "p50": 9.0,
+    "p90": 63.100000000000364,
+    "p99": 935.1600000000035,
+    "max": 106149,
+    "mean": 100.0,
+    "zero_frac": 0.0038
+   },
+   "ks_counts": 0.007199999999999998,
+   "ks_baseline_max": 0.01419999999999999,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {},
+ "strategy_semantics": {
+  "vehicle.city_id == lookup driver.home_city_id via driver_id": {
+   "impl": 1.0,
+   "spindle": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "trip.city_id == lookup rider.home_city_id via rider_id": {
+   "impl": 1.0,
+   "spindle": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "trip.payment_type == lookup rider.payment_default via rider_id": {
+   "impl": 1.0,
+   "spindle": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  }
+ },
+ "business_rules": {
+  "spindle_BusinessRulesEngine_violations": {},
+  "spindle_on_spindle": {}
+ },
+ "spindle_fidelity_comparator": {
+  "overall_impl": 89.52151462016624,
+  "overall_baseline_spindle_vs_spindle": [
+   89.02596808356658,
+   88.96792457570032,
+   88.8648022354946,
+   88.7577761035122
+  ],
+  "tables": {
+   "driver": {
+    "impl": 80.50015782715374,
+    "baseline": [
+     80.66608229383544,
+     80.67211916668886,
+     80.48967081587138,
+     80.4682885332728
+    ],
+    "floor": 79.9682885332728,
+    "ok": true
+   },
+   "rider": {
+    "impl": 78.46668158994291,
+    "baseline": [
+     78.46877816723868,
+     78.47947034674975,
+     78.45045432666252,
+     78.44379904558133
+    ],
+    "floor": 77.94379904558133,
+    "ok": true
+   },
+   "trip": {
+    "impl": 99.44644995539336,
+    "baseline": [
+     97.53939403014465,
+     97.4458323806278,
+     97.51220045728527,
+     97.56227210060425
+    ],
+    "floor": 96.9458323806278,
+    "ok": true
+   },
+   "vehicle": {
+    "impl": 99.672769108175,
+    "baseline": [
+     99.42961784304755,
+     99.27427640873488,
+     99.0068833421592,
+     98.55674473459037
+    ],
+    "floor": 98.05674473459037,
+    "ok": true
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 40,
+  "columns_equivalent": 40,
+  "flagged": [],
+  "passed": true,
+  "seconds": 122.71694040298462
+ }
+}

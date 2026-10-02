@@ -1,0 +1,5042 @@
+{
+ "domain": "financial",
+ "scale": "medium",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "branch": {
+   "rows": {
+    "spindle": 200,
+    "impl": 200
+   },
+   "columns_spindle": [
+    "branch_id",
+    "branch_name",
+    "city",
+    "opened_date",
+    "is_active",
+    "state",
+    "zip_code",
+    "lat",
+    "lng"
+   ],
+   "columns_impl": [
+    "branch_id",
+    "branch_name",
+    "city",
+    "opened_date",
+    "is_active",
+    "state",
+    "zip_code",
+    "lat",
+    "lng"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "branch_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "branch_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "city": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "opened_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "is_active": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "state": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "zip_code": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "lat": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "lng": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "branch_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.19494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 100.5,
+       "impl": 100.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 200.0,
+       "impl": 200.0
+      },
+      "std": {
+       "spindle": 57.73430522661548,
+       "impl": 57.73430522661548,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "branch_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 30,
+      "impl": 30,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.033333333333333326
+     },
+     "top10": [
+      {
+       "value": "Downtown Financial Center",
+       "spindle": 0.07,
+       "impl": 0.1
+      },
+      {
+       "value": "Market Street Branch",
+       "spindle": 0.065,
+       "impl": 0.03
+      },
+      {
+       "value": "University Branch",
+       "spindle": 0.06,
+       "impl": 0.035
+      },
+      {
+       "value": "Main Street Branch",
+       "spindle": 0.06,
+       "impl": 0.075
+      },
+      {
+       "value": "Maple Avenue Branch",
+       "spindle": 0.055,
+       "impl": 0.015
+      },
+      {
+       "value": "Eastside Branch",
+       "spindle": 0.05,
+       "impl": 0.035
+      },
+      {
+       "value": "North Park Branch",
+       "spindle": 0.045,
+       "impl": 0.015
+      },
+      {
+       "value": "Midtown Branch",
+       "spindle": 0.045,
+       "impl": 0.035
+      },
+      {
+       "value": "Westside Branch",
+       "spindle": 0.045,
+       "impl": 0.065
+      },
+      {
+       "value": "Tech Corridor Branch",
+       "spindle": 0.035,
+       "impl": 0.025
+      },
+      {
+       "value": "Airport Business Center",
+       "spindle": 0.025,
+       "impl": 0.06
+      },
+      {
+       "value": "Oak Plaza Branch",
+       "spindle": 0.03,
+       "impl": 0.06
+      },
+      {
+       "value": "Cedar Hill Branch",
+       "spindle": 0.015,
+       "impl": 0.045
+      },
+      {
+       "value": "Commerce Center Branch",
+       "spindle": 0.02,
+       "impl": 0.04
+      },
+      {
+       "value": "Sunset Boulevard Branch",
+       "spindle": 0.01,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.25500000000000006,
+     "tvd_baseline": 0.23500000000000001,
+     "tvd_tol": 0.9270580848556551,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "city": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 190,
+      "impl": 197,
+      "ratio": 1.0368421052631578,
+      "baseline_max_ratio_dev": 0.021052631578947434
+     },
+     "top10": [
+      {
+       "value": "Cincinnati",
+       "spindle": 0.015,
+       "impl": 0.0
+      },
+      {
+       "value": "Austin",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "Springfield",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "Las Vegas",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Colorado Springs",
+       "spindle": 0.01,
+       "impl": 0.005
+      },
+      {
+       "value": "Houston",
+       "spindle": 0.01,
+       "impl": 0.005
+      },
+      {
+       "value": "Charlottesville",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Moraga",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Jacksonville",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Sunburst",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "Phoenix",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Daggett",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "Black Diamond",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "Osprey",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "Troy",
+       "spindle": 0.005,
+       "impl": 0.005
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.9149999999999999,
+     "tvd_baseline": 0.95,
+     "tvd_tol": 2.333045017513126,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "opened_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.065,
+     "ks_baseline": 0.09499999999999997,
+     "ks_tol": 0.19494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": "2012-05-25 04:23:35.123794432",
+       "impl": "2012-06-22 05:46:48.475809280"
+      },
+      "min": {
+       "spindle": "2000-01-07 00:04:09.070463360",
+       "impl": "2000-01-02 10:55:58.955725952"
+      },
+      "max": {
+       "spindle": "2024-12-02 05:55:25.527060224",
+       "impl": "2024-07-02 05:32:34.224352"
+      },
+      "std": {
+       "spindle": 2522.0541227991584,
+       "impl": 2646.9272019228283,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_active": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "spindle": 0.885,
+       "impl": 0.895
+      },
+      {
+       "value": "false",
+       "spindle": 0.115,
+       "impl": 0.105
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.010000000000000009,
+     "tvd_baseline": 0.04500000000000002,
+     "tvd_tol": 0.2393653682408596,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "state": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 44,
+      "impl": 46,
+      "ratio": 1.0454545454545454,
+      "baseline_max_ratio_dev": 0.045454545454545414
+     },
+     "top10": [
+      {
+       "value": "TX",
+       "spindle": 0.085,
+       "impl": 0.08
+      },
+      {
+       "value": "CA",
+       "spindle": 0.06,
+       "impl": 0.065
+      },
+      {
+       "value": "NY",
+       "spindle": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "VA",
+       "spindle": 0.05,
+       "impl": 0.025
+      },
+      {
+       "value": "IL",
+       "spindle": 0.05,
+       "impl": 0.035
+      },
+      {
+       "value": "FL",
+       "spindle": 0.045,
+       "impl": 0.04
+      },
+      {
+       "value": "OH",
+       "spindle": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "PA",
+       "spindle": 0.04,
+       "impl": 0.04
+      },
+      {
+       "value": "WV",
+       "spindle": 0.035,
+       "impl": 0.015
+      },
+      {
+       "value": "LA",
+       "spindle": 0.03,
+       "impl": 0.015
+      },
+      {
+       "value": "IN",
+       "spindle": 0.005,
+       "impl": 0.06
+      },
+      {
+       "value": "MI",
+       "spindle": 0.025,
+       "impl": 0.045
+      },
+      {
+       "value": "SC",
+       "spindle": 0.015,
+       "impl": 0.03
+      },
+      {
+       "value": "WI",
+       "spindle": 0.02,
+       "impl": 0.025
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.25,
+     "tvd_baseline": 0.3,
+     "tvd_tol": 1.1227230955528666,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "zip_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 199,
+      "impl": 200,
+      "ratio": 1.0050251256281406,
+      "baseline_max_ratio_dev": 0.005025125628140614
+     },
+     "top10": [
+      {
+       "value": "22906",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "59482",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "54156",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "10118",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "72431",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "30273",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "58454",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "45250",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "26320",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "93230",
+       "spindle": 0.005,
+       "impl": 0.0
+      },
+      {
+       "value": "49821",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "98010",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "34229",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "48083",
+       "spindle": 0.0,
+       "impl": 0.005
+      },
+      {
+       "value": "84663",
+       "spindle": 0.0,
+       "impl": 0.005
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.9949999999999999,
+     "tvd_baseline": 0.9999999999999998,
+     "tvd_tol": 2.3876620492757534,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lat": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.08999999999999997,
+     "ks_baseline": 0.09500000000000003,
+     "ks_tol": 0.19494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 38.0162095,
+       "impl": 38.689884
+      },
+      "min": {
+       "spindle": 26.5557,
+       "impl": 21.2941
+      },
+      "max": {
+       "spindle": 55.9169,
+       "impl": 61.1089
+      },
+      "std": {
+       "spindle": 4.802943608440532,
+       "impl": 5.567747185850306,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 198,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lng": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.07500000000000001,
+     "ks_baseline": 0.07999999999999996,
+     "ks_tol": 0.19494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": -90.5266205,
+       "impl": -92.83496599999998
+      },
+      "min": {
+       "spindle": -130.0247,
+       "impl": -162.7211
+      },
+      "max": {
+       "spindle": -69.5233,
+       "impl": -70.5978
+      },
+      "std": {
+       "spindle": 13.611709168735194,
+       "impl": 16.876596218323886,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 198,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "transaction_category": {
+   "rows": {
+    "spindle": 40,
+    "impl": 40
+   },
+   "columns_spindle": [
+    "category_id",
+    "category_name",
+    "parent_category_id",
+    "level"
+   ],
+   "columns_impl": [
+    "category_id",
+    "category_name",
+    "parent_category_id",
+    "level"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "category_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "category_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "parent_category_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "level": {
+     "spindle": "int64",
+     "impl": "int64"
+    }
+   },
+   "columns": {
+    "category_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.17455300054711176
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.43591577338810766,
+     "stats": {
+      "mean": {
+       "spindle": 20.5,
+       "impl": 20.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 40.0,
+       "impl": 40.0
+      },
+      "std": {
+       "spindle": 11.543396380615196,
+       "impl": 11.543396380615196,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 40,
+      "impl": 40
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "category_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.17455300054711176
+     },
+     "distinct": {
+      "spindle": 21,
+      "impl": 18,
+      "ratio": 0.8571428571428571,
+      "baseline_max_ratio_dev": 0.33333333333333326
+     },
+     "top10": [
+      {
+       "value": "Groceries",
+       "spindle": 0.15,
+       "impl": 0.075
+      },
+      {
+       "value": "Payroll Deposit",
+       "spindle": 0.1,
+       "impl": 0.05
+      },
+      {
+       "value": "Dining & Restaurants",
+       "spindle": 0.075,
+       "impl": 0.0
+      },
+      {
+       "value": "Online Shopping",
+       "spindle": 0.075,
+       "impl": 0.075
+      },
+      {
+       "value": "ATM Withdrawal",
+       "spindle": 0.075,
+       "impl": 0.075
+      },
+      {
+       "value": "Entertainment",
+       "spindle": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Gas & Fuel",
+       "spindle": 0.05,
+       "impl": 0.15
+      },
+      {
+       "value": "Clothing & Apparel",
+       "spindle": 0.05,
+       "impl": 0.025
+      },
+      {
+       "value": "Check Deposit",
+       "spindle": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Peer Transfer",
+       "spindle": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Auto & Transport",
+       "spindle": 0.0,
+       "impl": 0.125
+      },
+      {
+       "value": "Rent & Mortgage",
+       "spindle": 0.0,
+       "impl": 0.075
+      },
+      {
+       "value": "Education",
+       "spindle": 0.025,
+       "impl": 0.05
+      },
+      {
+       "value": "Utilities",
+       "spindle": 0.0,
+       "impl": 0.05
+      },
+      {
+       "value": "Healthcare",
+       "spindle": 0.025,
+       "impl": 0.05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.525,
+     "tvd_baseline": 0.525,
+     "tvd_tol": 1.7343668655843327,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "parent_category_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.2,
+      "impl": 0.2,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.447213595499958
+     },
+     "ks": 0.3125,
+     "ks_baseline": 0.34375,
+     "ks_tol": 0.517625,
+     "stats": {
+      "mean": {
+       "spindle": 3.71875,
+       "impl": 5.15625
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 8.0,
+       "impl": 8.0
+      },
+      "std": {
+       "spindle": 2.2670792746395083,
+       "impl": 2.237596017492881,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 8,
+      "impl": 8
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "level": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.17455300054711176
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.43591577338810766,
+     "stats": {
+      "mean": {
+       "spindle": 1.8,
+       "impl": 1.8
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 2.0,
+       "impl": 2.0
+      },
+      "std": {
+       "spindle": 0.4000000000000001,
+       "impl": 0.4000000000000001,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "customer": {
+   "rows": {
+    "spindle": 50000,
+    "impl": 50000
+   },
+   "columns_spindle": [
+    "customer_id",
+    "primary_branch_id",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "date_of_birth",
+    "credit_tier",
+    "customer_since",
+    "is_active"
+   ],
+   "columns_impl": [
+    "customer_id",
+    "primary_branch_id",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "date_of_birth",
+    "credit_tier",
+    "customer_since",
+    "is_active"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "customer_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "primary_branch_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "first_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "last_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "email": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "phone": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "date_of_birth": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "credit_tier": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "customer_since": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "is_active": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "customer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.012329559975556372,
+     "stats": {
+      "mean": {
+       "spindle": 25000.5,
+       "impl": 25000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 50000.0,
+       "impl": 50000.0
+      },
+      "std": {
+       "spindle": 14433.756726853893,
+       "impl": 14433.756726853893,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 50000,
+      "impl": 50000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "primary_branch_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "ks": 0.0046800000000000175,
+     "ks_baseline": 0.0042400000000000215,
+     "ks_tol": 0.012329559975556372,
+     "stats": {
+      "mean": {
+       "spindle": 17.72094,
+       "impl": 17.48252
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 200.0,
+       "impl": 200.0
+      },
+      "std": {
+       "spindle": 34.38360983835758,
+       "impl": 33.94753620588098,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "first_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "distinct": {
+      "spindle": 4999,
+      "impl": 5000,
+      "ratio": 1.0002000400080016,
+      "baseline_max_ratio_dev": 0.0002000400080015563
+     },
+     "top10": [
+      {
+       "value": "Iaus",
+       "spindle": 0.00042,
+       "impl": 0.00016
+      },
+      {
+       "value": "Rodney",
+       "spindle": 0.00042,
+       "impl": 0.0003
+      },
+      {
+       "value": "Very",
+       "spindle": 0.00042,
+       "impl": 0.00016
+      },
+      {
+       "value": "Sheryl",
+       "spindle": 0.0004,
+       "impl": 0.00012
+      },
+      {
+       "value": "Trisa",
+       "spindle": 0.0004,
+       "impl": 0.00028
+      },
+      {
+       "value": "Tene",
+       "spindle": 0.0004,
+       "impl": 0.00012
+      },
+      {
+       "value": "Debra",
+       "spindle": 0.00038,
+       "impl": 0.00014
+      },
+      {
+       "value": "Roor",
+       "spindle": 0.00038,
+       "impl": 0.00022
+      },
+      {
+       "value": "Caia",
+       "spindle": 0.00038,
+       "impl": 0.00026
+      },
+      {
+       "value": "Weel",
+       "spindle": 0.00038,
+       "impl": 0.0001
+      },
+      {
+       "value": "Erok",
+       "spindle": 8e-05,
+       "impl": 0.00046
+      },
+      {
+       "value": "Dinna",
+       "spindle": 0.00028,
+       "impl": 0.00046
+      },
+      {
+       "value": "Inth",
+       "spindle": 0.00016,
+       "impl": 0.00044
+      },
+      {
+       "value": "Jenor",
+       "spindle": 0.00022,
+       "impl": 0.00044
+      },
+      {
+       "value": "Koesa",
+       "spindle": 0.00016,
+       "impl": 0.00044
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.00039999999999995595
+     },
+     "top10": [
+      {
+       "value": "Acevewick",
+       "spindle": 0.00048,
+       "impl": 0.00032
+      },
+      {
+       "value": "Massey",
+       "spindle": 0.00044,
+       "impl": 0.00016
+      },
+      {
+       "value": "Macias",
+       "spindle": 0.00042,
+       "impl": 8e-05
+      },
+      {
+       "value": "Bartlburg",
+       "spindle": 0.00042,
+       "impl": 0.00018
+      },
+      {
+       "value": "Welton",
+       "spindle": 0.00042,
+       "impl": 0.00018
+      },
+      {
+       "value": "Macison",
+       "spindle": 0.0004,
+       "impl": 0.00018
+      },
+      {
+       "value": "Schmicroft",
+       "spindle": 0.0004,
+       "impl": 0.00016
+      },
+      {
+       "value": "Princwood",
+       "spindle": 0.0004,
+       "impl": 0.00016
+      },
+      {
+       "value": "Hawkiway",
+       "spindle": 0.0004,
+       "impl": 0.00014
+      },
+      {
+       "value": "Bealey",
+       "spindle": 0.0004,
+       "impl": 0.00018
+      },
+      {
+       "value": "Newmagate",
+       "spindle": 0.00016,
+       "impl": 0.0005
+      },
+      {
+       "value": "Montgford",
+       "spindle": 0.00022,
+       "impl": 0.00046
+      },
+      {
+       "value": "Cruz",
+       "spindle": 6e-05,
+       "impl": 0.00044
+      },
+      {
+       "value": "StNally",
+       "spindle": 0.0002,
+       "impl": 0.00044
+      },
+      {
+       "value": "Flowers",
+       "spindle": 0.00016,
+       "impl": 0.00042
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.02984,
+      "impl": 0.03108,
+      "baseline_max_abs_diff": 0.0009800000000000017,
+      "tol": 0.005380480870702916
+     },
+     "distinct": {
+      "spindle": 48508,
+      "impl": 48446,
+      "ratio": 0.9987218603117012,
+      "baseline_max_ratio_dev": 0.0010101426568813743
+     },
+     "top10": [
+      {
+       "value": "krisa.greeshire305@outlook.com",
+       "spindle": 2.0615156262884473e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "carlos.chrley144@mail.ru",
+       "spindle": 2.0615156262884473e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "iris.hufman958@earthlink.net",
+       "spindle": 2.0615156262884473e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "hoea.mccwick349@mail.com",
+       "spindle": 2.0615156262884473e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "brnor.riggs402@yandex.com",
+       "spindle": 2.0615156262884473e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "sia.beawood581@charter.net",
+       "spindle": 2.0615156262884473e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "debra.galfield88@inbox.com",
+       "spindle": 2.0615156262884473e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "orea.coloncroft763@outlook.co.uk",
+       "spindle": 2.0615156262884473e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "evea.mezaman16@rediffmail.com",
+       "spindle": 2.0615156262884473e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "arion.procway39@icloud.com",
+       "spindle": 2.0615156262884473e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "kiea.lucerman307@rocketmail.com",
+       "spindle": 0.0,
+       "impl": 2.064153903315031e-05
+      },
+      {
+       "value": "waia.floydwick110@live.com",
+       "spindle": 0.0,
+       "impl": 2.064153903315031e-05
+      },
+      {
+       "value": "diol.gilmore937@msn.com",
+       "spindle": 0.0,
+       "impl": 2.064153903315031e-05
+      },
+      {
+       "value": "soea.walsh963@yahoo.com",
+       "spindle": 0.0,
+       "impl": 2.064153903315031e-05
+      },
+      {
+       "value": "alnor.shoham723@mail.com",
+       "spindle": 0.0,
+       "impl": 2.064153903315031e-05
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "phone": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.09888,
+      "impl": 0.09838,
+      "baseline_max_abs_diff": 0.00316000000000001,
+      "tol": 0.009439425067237942
+     },
+     "distinct": {
+      "spindle": 45056,
+      "impl": 45081,
+      "ratio": 1.0005548650568181,
+      "baseline_max_ratio_dev": 0.0035067471590909394
+     },
+     "top10": [
+      {
+       "value": "(295) 573-8541",
+       "spindle": 2.2194602272727273e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(451) 670-1889",
+       "spindle": 2.2194602272727273e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(735) 497-2827",
+       "spindle": 2.2194602272727273e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(680) 429-8587",
+       "spindle": 2.2194602272727273e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(599) 396-6759",
+       "spindle": 2.2194602272727273e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(209) 581-4893",
+       "spindle": 2.2194602272727273e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(908) 940-4309",
+       "spindle": 2.2194602272727273e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(942) 607-5531",
+       "spindle": 2.2194602272727273e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(529) 400-4053",
+       "spindle": 2.2194602272727273e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(444) 213-2826",
+       "spindle": 2.2194602272727273e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(960) 287-8776",
+       "spindle": 0.0,
+       "impl": 2.2182294092855082e-05
+      },
+      {
+       "value": "(573) 442-6818",
+       "spindle": 0.0,
+       "impl": 2.2182294092855082e-05
+      },
+      {
+       "value": "(681) 622-8958",
+       "spindle": 0.0,
+       "impl": 2.2182294092855082e-05
+      },
+      {
+       "value": "(626) 779-6374",
+       "spindle": 0.0,
+       "impl": 2.2182294092855082e-05
+      },
+      {
+       "value": "(619) 323-1709",
+       "spindle": 0.0,
+       "impl": 2.2182294092855082e-05
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "(AAA) EEE-SSSS, AAA/EEE 200..998, SSSS 1000..9998",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "date_of_birth": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "ks": 0.005800000000000027,
+     "ks_baseline": 0.005180000000000018,
+     "ks_tol": 0.012329559975556372,
+     "stats": {
+      "mean": {
+       "spindle": "1975-07-08 14:21:38.740908256",
+       "impl": "1975-08-31 14:54:47.223118944"
+      },
+      "min": {
+       "spindle": "1945-01-01 00:32:13.870723968",
+       "impl": "1945-01-01 00:03:31.633969024"
+      },
+      "max": {
+       "spindle": "2005-12-30 06:17:33.098098176",
+       "impl": "2005-12-30 16:37:54.783628032"
+      },
+      "std": {
+       "spindle": 6433.8386989134115,
+       "impl": 6455.900909663913,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 50000,
+      "impl": 50000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "credit_tier": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Good",
+       "spindle": 0.35116,
+       "impl": 0.35078
+      },
+      {
+       "value": "Fair",
+       "spindle": 0.27926,
+       "impl": 0.27768
+      },
+      {
+       "value": "Excellent",
+       "spindle": 0.22048,
+       "impl": 0.22016
+      },
+      {
+       "value": "Poor",
+       "spindle": 0.1491,
+       "impl": 0.15138
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.002280000000000032,
+     "tvd_baseline": 0.005100000000000007,
+     "tvd_tol": 0.021409489393833258,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "customer_since": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "ks": 0.006040000000000045,
+     "ks_baseline": 0.008140000000000036,
+     "ks_tol": 0.014210000000000054,
+     "stats": {
+      "mean": {
+       "spindle": "2017-10-12 04:35:50.391572992",
+       "impl": "2017-10-01 04:24:25.093097984"
+      },
+      "min": {
+       "spindle": "2010-01-01 01:52:09.089649920",
+       "impl": "2010-01-01 09:06:09.182765056"
+      },
+      "max": {
+       "spindle": "2025-06-29 21:57:23.774336",
+       "impl": "2025-06-29 23:58:40.828585984"
+      },
+      "std": {
+       "spindle": 1640.6778738354124,
+       "impl": 1640.054662450345,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 50000,
+      "impl": 50000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_active": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "spindle": 0.87984,
+       "impl": 0.88146
+      },
+      {
+       "value": "false",
+       "spindle": 0.12016,
+       "impl": 0.11854
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0016200000000000311,
+     "tvd_baseline": 0.002840000000000037,
+     "tvd_tol": 0.01513879513212096,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "account": {
+   "rows": {
+    "spindle": 110000,
+    "impl": 110000
+   },
+   "columns_spindle": [
+    "account_id",
+    "customer_id",
+    "account_type",
+    "opened_date",
+    "current_balance",
+    "currency",
+    "status"
+   ],
+   "columns_impl": [
+    "account_id",
+    "customer_id",
+    "account_type",
+    "opened_date",
+    "current_balance",
+    "currency",
+    "status"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "account_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "customer_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "account_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "opened_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "current_balance": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "currency": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "account_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 6.428214245977364e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0083125876397524,
+     "stats": {
+      "mean": {
+       "spindle": 55000.5,
+       "impl": 55000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 110000.0,
+       "impl": 110000.0
+      },
+      "std": {
+       "spindle": 31754.264804117258,
+       "impl": 31754.264804117258,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 110000,
+      "impl": 110000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "customer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 6.428214245977364e-05
+     },
+     "ks": 0.003799999999999998,
+     "ks_baseline": 0.003854545454545444,
+     "ks_tol": 0.0083125876397524,
+     "stats": {
+      "mean": {
+       "spindle": 24990.19459090909,
+       "impl": 24956.191072727273
+      },
+      "min": {
+       "spindle": 2.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 50000.0,
+       "impl": 50000.0
+      },
+      "std": {
+       "spindle": 14387.274632329458,
+       "impl": 14434.388224201395,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 44398,
+      "impl": 44481
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "account_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 6.428214245977364e-05
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Checking",
+       "spindle": 0.4491545454545455,
+       "impl": 0.4505181818181818
+      },
+      {
+       "value": "Savings",
+       "spindle": 0.29868181818181816,
+       "impl": 0.29953636363636366
+      },
+      {
+       "value": "Money Market",
+       "spindle": 0.10128181818181818,
+       "impl": 0.09987272727272727
+      },
+      {
+       "value": "CD",
+       "spindle": 0.0805090909090909,
+       "impl": 0.0792
+      },
+      {
+       "value": "Investment",
+       "spindle": 0.07037272727272727,
+       "impl": 0.07087272727272727
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.002718181818181828,
+     "tvd_baseline": 0.0038363636363636378,
+     "tvd_tol": 0.016138009834645084,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "opened_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 6.428214245977364e-05
+     },
+     "ks": 0.004436363636363655,
+     "ks_baseline": 0.003945454545454585,
+     "ks_tol": 0.0083125876397524,
+     "stats": {
+      "mean": {
+       "spindle": "2020-04-03 07:15:27.543582464",
+       "impl": "2020-03-28 02:41:48.058385664"
+      },
+      "min": {
+       "spindle": "2015-01-01 00:02:17.023806208",
+       "impl": "2015-01-01 00:00:00.593570048"
+      },
+      "max": {
+       "spindle": "2025-06-29 23:30:04.854601728",
+       "impl": "2025-06-29 21:03:36.052226048"
+      },
+      "std": {
+       "spindle": 1106.8374547387834,
+       "impl": 1110.4485482193013,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 110000,
+      "impl": 110000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "current_balance": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 6.428214245977364e-05
+     },
+     "ks": 0.003672727272727272,
+     "ks_baseline": 0.0038363636363636378,
+     "ks_tol": 0.0083125876397524,
+     "stats": {
+      "mean": {
+       "spindle": 24753.149542346917,
+       "impl": 24987.469193056088
+      },
+      "min": {
+       "spindle": 1.2953158139300591,
+       "impl": 2.7766056883279866
+      },
+      "max": {
+       "spindle": 5000000.0,
+       "impl": 5000000.0
+      },
+      "std": {
+       "spindle": 104563.37296468891,
+       "impl": 105642.86446707997,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 109992,
+      "impl": 109995
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "currency": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 6.428214245977364e-05
+     },
+     "distinct": {
+      "spindle": 1,
+      "impl": 1,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "USD",
+       "spindle": 1.0,
+       "impl": 1.0
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0,
+     "tvd_baseline": 0.0,
+     "tvd_tol": 0.010206573595935148,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 6.428214245977364e-05
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Active",
+       "spindle": 0.8495272727272727,
+       "impl": 0.8495
+      },
+      {
+       "value": "Dormant",
+       "spindle": 0.08056363636363637,
+       "impl": 0.07946363636363636
+      },
+      {
+       "value": "Closed",
+       "spindle": 0.05016363636363636,
+       "impl": 0.05113636363636364
+      },
+      {
+       "value": "Frozen",
+       "spindle": 0.019745454545454545,
+       "impl": 0.0199
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0011272727272726955,
+     "tvd_baseline": 0.002363636363636356,
+     "tvd_tol": 0.01443427480473062,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "card": {
+   "rows": {
+    "spindle": 88000,
+    "impl": 88000
+   },
+   "columns_spindle": [
+    "card_id",
+    "account_id",
+    "card_type",
+    "card_network",
+    "last_four",
+    "issued_date",
+    "is_active",
+    "expiry_date"
+   ],
+   "columns_impl": [
+    "card_id",
+    "account_id",
+    "card_type",
+    "card_network",
+    "last_four",
+    "issued_date",
+    "is_active",
+    "expiry_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "card_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "account_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "card_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "card_network": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "last_four": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "issued_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "is_active": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "expiry_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "card_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.035258676397361e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.00929375551570545,
+     "stats": {
+      "mean": {
+       "spindle": 44000.5,
+       "impl": 44000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 88000.0,
+       "impl": 88000.0
+      },
+      "std": {
+       "spindle": 25403.411842703335,
+       "impl": 25403.411842703335,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 88000,
+      "impl": 88000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "account_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.035258676397361e-05
+     },
+     "ks": 0.004875000000000018,
+     "ks_baseline": 0.006738636363636363,
+     "ks_tol": 0.012107954545454545,
+     "stats": {
+      "mean": {
+       "spindle": 55068.59921590909,
+       "impl": 54916.52672727273
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 2.0
+      },
+      "max": {
+       "spindle": 109997.0,
+       "impl": 109999.0
+      },
+      "std": {
+       "spindle": 31741.131187777148,
+       "impl": 31714.946627237336,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 60573,
+      "impl": 60595
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "card_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.035258676397361e-05
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Debit",
+       "spindle": 0.552965909090909,
+       "impl": 0.5489318181818181
+      },
+      {
+       "value": "Credit",
+       "spindle": 0.3466590909090909,
+       "impl": 0.34954545454545455
+      },
+      {
+       "value": "Prepaid",
+       "spindle": 0.100375,
+       "impl": 0.10152272727272728
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.004034090909090904,
+     "tvd_baseline": 0.005306818181818135,
+     "tvd_tol": 0.013975926483325752,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "card_network": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.035258676397361e-05
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Visa",
+       "spindle": 0.5186363636363637,
+       "impl": 0.5226477272727272
+      },
+      {
+       "value": "Mastercard",
+       "spindle": 0.23922727272727273,
+       "impl": 0.2383409090909091
+      },
+      {
+       "value": "Amex",
+       "spindle": 0.151125,
+       "impl": 0.14786363636363636
+      },
+      {
+       "value": "Discover",
+       "spindle": 0.09101136363636364,
+       "impl": 0.09114772727272727
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0041477272727272335,
+     "tvd_baseline": 0.0032272727272727245,
+     "tvd_tol": 0.016138009834645084,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_four": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.035258676397361e-05
+     },
+     "distinct": {
+      "spindle": 88000,
+      "impl": 88000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "0001",
+       "spindle": 1.1363636363636363e-05,
+       "impl": 1.1363636363636363e-05
+      },
+      {
+       "value": "0002",
+       "spindle": 1.1363636363636363e-05,
+       "impl": 1.1363636363636363e-05
+      },
+      {
+       "value": "0003",
+       "spindle": 1.1363636363636363e-05,
+       "impl": 1.1363636363636363e-05
+      },
+      {
+       "value": "0004",
+       "spindle": 1.1363636363636363e-05,
+       "impl": 1.1363636363636363e-05
+      },
+      {
+       "value": "0005",
+       "spindle": 1.1363636363636363e-05,
+       "impl": 1.1363636363636363e-05
+      },
+      {
+       "value": "0006",
+       "spindle": 1.1363636363636363e-05,
+       "impl": 1.1363636363636363e-05
+      },
+      {
+       "value": "0007",
+       "spindle": 1.1363636363636363e-05,
+       "impl": 1.1363636363636363e-05
+      },
+      {
+       "value": "0008",
+       "spindle": 1.1363636363636363e-05,
+       "impl": 1.1363636363636363e-05
+      },
+      {
+       "value": "0009",
+       "spindle": 1.1363636363636363e-05,
+       "impl": 1.1363636363636363e-05
+      },
+      {
+       "value": "0010",
+       "spindle": 1.1363636363636363e-05,
+       "impl": 1.1363636363636363e-05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "{seq:4}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "issued_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.035258676397361e-05
+     },
+     "ks": 0.005738636363636362,
+     "ks_baseline": 0.006159090909090836,
+     "ks_tol": 0.011238636363636255,
+     "stats": {
+      "mean": {
+       "spindle": "2022-09-29 00:03:04.353222144",
+       "impl": "2022-10-03 00:57:11.182559232"
+      },
+      "min": {
+       "spindle": "2020-01-01 00:09:53.457850368",
+       "impl": "2020-01-01 00:38:47.360114944"
+      },
+      "max": {
+       "spindle": "2025-06-29 23:49:20.031949568",
+       "impl": "2025-06-29 21:58:25.746844928"
+      },
+      "std": {
+       "spindle": 578.7942073442275,
+       "impl": 580.3707094349505,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 88000,
+      "impl": 88000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_active": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.035258676397361e-05
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "spindle": 0.8993068181818182,
+       "impl": 0.9010340909090909
+      },
+      {
+       "value": "false",
+       "spindle": 0.10069318181818182,
+       "impl": 0.09896590909090909
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0017272727272727093,
+     "tvd_baseline": 0.0004318181818182207,
+     "tvd_tol": 0.011411296188932734,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "expiry_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.035258676397361e-05
+     },
+     "ks": 0.005738636363636362,
+     "ks_baseline": 0.006159090909090836,
+     "ks_tol": 0.011238636363636255,
+     "stats": {
+      "mean": {
+       "spindle": "2025-09-28 00:03:04.353222144",
+       "impl": "2025-10-02 00:57:11.182559232"
+      },
+      "min": {
+       "spindle": "2022-12-31 00:09:53.457850368",
+       "impl": "2022-12-31 00:38:47.360114944"
+      },
+      "max": {
+       "spindle": "2028-06-28 23:49:20.031949568",
+       "impl": "2028-06-28 21:58:25.746844928"
+      },
+      "std": {
+       "spindle": 578.7942073442275,
+       "impl": 580.3707094349505,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 88000,
+      "impl": 88000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "transaction": {
+   "rows": {
+    "spindle": 500000,
+    "impl": 500000
+   },
+   "columns_spindle": [
+    "transaction_id",
+    "account_id",
+    "category_id",
+    "transaction_type",
+    "amount",
+    "transaction_date",
+    "channel",
+    "merchant_name",
+    "status"
+   ],
+   "columns_impl": [
+    "transaction_id",
+    "account_id",
+    "category_id",
+    "transaction_type",
+    "amount",
+    "transaction_date",
+    "channel",
+    "merchant_name",
+    "status"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "transaction_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "account_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "category_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "transaction_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "amount": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "transaction_date": {
+     "spindle": "timestamp[us]",
+     "impl": "timestamp[us]"
+    },
+    "channel": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "merchant_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "transaction_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 250000.5,
+       "impl": 250000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 500000.0,
+       "impl": 500000.0
+      },
+      "std": {
+       "spindle": 144337.56729711776,
+       "impl": 144337.56729711776,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 500000,
+      "impl": 500000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "account_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0016579999999999373,
+     "ks_baseline": 0.005730000000000013,
+     "ks_tol": 0.01059500000000002,
+     "stats": {
+      "mean": {
+       "spindle": 10047.737802,
+       "impl": 10144.123034
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 110000.0,
+       "impl": 110000.0
+      },
+      "std": {
+       "spindle": 21593.340934859574,
+       "impl": 21770.54473797697,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 64442,
+      "impl": 64676
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "category_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0008739999999999304,
+     "ks_baseline": 0.0011760000000000104,
+     "ks_tol": 0.0038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 5.608102,
+       "impl": 5.596262
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 40.0,
+       "impl": 40.0
+      },
+      "std": {
+       "spindle": 7.782045101231167,
+       "impl": 7.756152243693776,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 40,
+      "impl": 40
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "transaction_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "spindle": 7,
+      "impl": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Deposit",
+       "spindle": 0.24925,
+       "impl": 0.250652
+      },
+      {
+       "value": "Payment",
+       "spindle": 0.2203,
+       "impl": 0.219908
+      },
+      {
+       "value": "Withdrawal",
+       "spindle": 0.199858,
+       "impl": 0.199074
+      },
+      {
+       "value": "Transfer",
+       "spindle": 0.180512,
+       "impl": 0.180034
+      },
+      {
+       "value": "Interest",
+       "spindle": 0.050218,
+       "impl": 0.050092
+      },
+      {
+       "value": "Refund",
+       "spindle": 0.04997,
+       "impl": 0.050098
+      },
+      {
+       "value": "Fee",
+       "spindle": 0.049892,
+       "impl": 0.050142
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0017800000000000003,
+     "tvd_baseline": 0.0022280000000000078,
+     "tvd_tol": 0.00895623198216277,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0023220000000000462,
+     "ks_baseline": 0.0021020000000000483,
+     "ks_tol": 0.0051530000000000725,
+     "stats": {
+      "mean": {
+       "spindle": 206.15951981361454,
+       "impl": 204.72922384901906
+      },
+      "min": {
+       "spindle": 0.07000397666506686,
+       "impl": 0.0682794566768324
+      },
+      "max": {
+       "spindle": 69482.72812771826,
+       "impl": 49433.95018294846
+      },
+      "std": {
+       "spindle": 601.3600741155825,
+       "impl": 572.5771545370073,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 500000,
+      "impl": 500000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "transaction_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0016920000000000268,
+     "ks_baseline": 0.0015119999999999578,
+     "ks_tol": 0.004267999999999937,
+     "stats": {
+      "mean": {
+       "spindle": "2024-01-05 14:28:15.301577216",
+       "impl": "2024-01-06 07:23:02.016594944"
+      },
+      "min": {
+       "spindle": "2022-01-01 00:11:06.552282112",
+       "impl": "2022-01-01 00:05:22.008602880"
+      },
+      "max": {
+       "spindle": "2025-12-31 23:57:25.637594880",
+       "impl": "2025-12-31 23:55:02.151150080"
+      },
+      "std": {
+       "spindle": 421.4988856516589,
+       "impl": 422.0355295267062,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 500000,
+      "impl": 500000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "channel": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "spindle": 6,
+      "impl": 6,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Online",
+       "spindle": 0.34931,
+       "impl": 0.35005
+      },
+      {
+       "value": "Mobile",
+       "spindle": 0.30022,
+       "impl": 0.300192
+      },
+      {
+       "value": "ATM",
+       "spindle": 0.149458,
+       "impl": 0.149484
+      },
+      {
+       "value": "Branch",
+       "spindle": 0.120446,
+       "impl": 0.12002
+      },
+      {
+       "value": "Phone",
+       "spindle": 0.050476,
+       "impl": 0.05003
+      },
+      {
+       "value": "Wire",
+       "spindle": 0.03009,
+       "impl": 0.030224
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0008999999999999668,
+     "tvd_baseline": 0.003243999999999978,
+     "tvd_tol": 0.008291859587312052,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "merchant_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.300004,
+      "impl": 0.299582,
+      "baseline_max_abs_diff": 0.00031199999999997896,
+      "tol": 0.004582593152179233
+     },
+     "distinct": {
+      "spindle": 50,
+      "impl": 50,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Amazon",
+       "spindle": 0.07000611432065326,
+       "impl": 0.0702951666005157
+      },
+      {
+       "value": "Walmart",
+       "spindle": 0.05965176943868251,
+       "impl": 0.05996133737282594
+      },
+      {
+       "value": "Starbucks",
+       "spindle": 0.039931656752324296,
+       "impl": 0.03964775319880414
+      },
+      {
+       "value": "Target",
+       "spindle": 0.039768798678849596,
+       "impl": 0.0400103937934205
+      },
+      {
+       "value": "McDonald's",
+       "spindle": 0.0360973491277093,
+       "impl": 0.036418253100291544
+      },
+      {
+       "value": "Costco Wholesale",
+       "spindle": 0.035951634009337194,
+       "impl": 0.036069889694439604
+      },
+      {
+       "value": "Shell",
+       "spindle": 0.030160172343841964,
+       "impl": 0.030027783409335568
+      },
+      {
+       "value": "Kroger",
+       "spindle": 0.03006874324996143,
+       "impl": 0.030067759537875955
+      },
+      {
+       "value": "Netflix",
+       "spindle": 0.029760170058114616,
+       "impl": 0.029733673320788443
+      },
+      {
+       "value": "Uber",
+       "spindle": 0.026440151086577636,
+       "impl": 0.026235762073504677
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.004878370025557613,
+     "tvd_baseline": 0.006666124884745916,
+     "tvd_tol": 0.02393653682408596,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Completed",
+       "spindle": 0.920314,
+       "impl": 0.919316
+      },
+      {
+       "value": "Pending",
+       "spindle": 0.039732,
+       "impl": 0.040314
+      },
+      {
+       "value": "Failed",
+       "spindle": 0.019992,
+       "impl": 0.02025
+      },
+      {
+       "value": "Reversed",
+       "spindle": 0.019962,
+       "impl": 0.02012
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0009979999999999711,
+     "tvd_baseline": 0.000568000000000006,
+     "tvd_tol": 0.006770275002573076,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "loan": {
+   "rows": {
+    "spindle": 20000,
+    "impl": 20000
+   },
+   "columns_spindle": [
+    "loan_id",
+    "customer_id",
+    "loan_type",
+    "principal_amount",
+    "interest_rate",
+    "term_months",
+    "origination_date",
+    "status",
+    "outstanding_balance"
+   ],
+   "columns_impl": [
+    "loan_id",
+    "customer_id",
+    "loan_type",
+    "principal_amount",
+    "interest_rate",
+    "term_months",
+    "origination_date",
+    "status",
+    "outstanding_balance"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "loan_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "customer_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "loan_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "principal_amount": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "interest_rate": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "term_months": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "origination_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "outstanding_balance": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "loan_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 10000.5,
+       "impl": 10000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 20000.0,
+       "impl": 20000.0
+      },
+      "std": {
+       "spindle": 5773.502684679379,
+       "impl": 5773.502684679379,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 20000,
+      "impl": 20000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "customer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.012899999999999995,
+     "ks_baseline": 0.012750000000000011,
+     "ks_tol": 0.02112500000000002,
+     "stats": {
+      "mean": {
+       "spindle": 24904.67355,
+       "impl": 25177.0689
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 49998.0,
+       "impl": 49998.0
+      },
+      "std": {
+       "spindle": 14482.761286059382,
+       "impl": 14434.155755244323,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 16478,
+      "impl": 16458
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "loan_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Mortgage",
+       "spindle": 0.34845,
+       "impl": 0.34895
+      },
+      {
+       "value": "Auto",
+       "spindle": 0.2493,
+       "impl": 0.2519
+      },
+      {
+       "value": "Personal",
+       "spindle": 0.2002,
+       "impl": 0.20525
+      },
+      {
+       "value": "Student",
+       "spindle": 0.1203,
+       "impl": 0.1146
+      },
+      {
+       "value": "Business",
+       "spindle": 0.08175,
+       "impl": 0.0793
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.008150000000000018,
+     "tvd_baseline": 0.00605,
+     "tvd_tol": 0.0378469878303024,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "principal_amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.00545000000000001,
+     "ks_baseline": 0.009200000000000014,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 73745.20562457976,
+       "impl": 74178.99815356561
+      },
+      "min": {
+       "spindle": 1000.0,
+       "impl": 1000.0
+      },
+      "max": {
+       "spindle": 2000000.0,
+       "impl": 2000000.0
+      },
+      "std": {
+       "spindle": 119688.24742565375,
+       "impl": 123554.19180673533,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 19966,
+      "impl": 19970
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "interest_rate": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.010199999999999987,
+     "ks_baseline": 0.0116,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 10.222406493865492,
+       "impl": 10.244436272691386
+      },
+      "min": {
+       "spindle": 2.500005040006651,
+       "impl": 2.500205231041838
+      },
+      "max": {
+       "spindle": 17.999704802661192,
+       "impl": 17.999637623188903
+      },
+      "std": {
+       "spindle": 4.446399042887661,
+       "impl": 4.496099170839191,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 20000,
+      "impl": 20000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "term_months": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.0044999999999999485,
+     "ks_baseline": 0.007299999999999973,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 146.3718,
+       "impl": 145.4742
+      },
+      "min": {
+       "spindle": 12.0,
+       "impl": 12.0
+      },
+      "max": {
+       "spindle": 360.0,
+       "impl": 360.0
+      },
+      "std": {
+       "spindle": 126.42316625033561,
+       "impl": 125.79844329068624,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 9,
+      "impl": 9
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "origination_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.008300000000000085,
+     "ks_baseline": 0.012499999999999956,
+     "ks_tol": 0.020749999999999935,
+     "stats": {
+      "mean": {
+       "spindle": "2021-10-04 02:03:04.440686080",
+       "impl": "2021-10-01 04:40:27.636558848"
+      },
+      "min": {
+       "spindle": "2018-01-01 01:16:55.926445312",
+       "impl": "2018-01-01 03:02:19.467962112"
+      },
+      "max": {
+       "spindle": "2025-06-29 18:05:18.810196224",
+       "impl": "2025-06-29 21:57:15.371389952"
+      },
+      "std": {
+       "spindle": 792.678250844413,
+       "impl": 789.0691692442024,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 20000,
+      "impl": 20000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Current",
+       "spindle": 0.7824,
+       "impl": 0.77925
+      },
+      {
+       "value": "Paid Off",
+       "spindle": 0.09545,
+       "impl": 0.10335
+      },
+      {
+       "value": "Delinquent",
+       "spindle": 0.0629,
+       "impl": 0.0609
+      },
+      {
+       "value": "Forbearance",
+       "spindle": 0.03035,
+       "impl": 0.0277
+      },
+      {
+       "value": "Default",
+       "spindle": 0.0289,
+       "impl": 0.0288
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.007899999999999992,
+     "tvd_baseline": 0.007400000000000004,
+     "tvd_tol": 0.0378469878303024,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "outstanding_balance": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.00714999999999999,
+     "ks_baseline": 0.012350000000000028,
+     "ks_tol": 0.020525000000000043,
+     "stats": {
+      "mean": {
+       "spindle": 38800.053738999995,
+       "impl": 38184.252269
+      },
+      "min": {
+       "spindle": 108.38,
+       "impl": 112.9
+      },
+      "max": {
+       "spindle": 1637117.85,
+       "impl": 1778078.93
+      },
+      "std": {
+       "spindle": 71852.35055863354,
+       "impl": 70930.64132127636,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 19948,
+      "impl": 19967
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "loan_payment": {
+   "rows": {
+    "spindle": 240000,
+    "impl": 240000
+   },
+   "columns_spindle": [
+    "payment_id",
+    "loan_id",
+    "payment_date",
+    "payment_amount",
+    "payment_method",
+    "principal_portion",
+    "interest_portion"
+   ],
+   "columns_impl": [
+    "payment_id",
+    "loan_id",
+    "payment_date",
+    "payment_amount",
+    "payment_method",
+    "principal_portion",
+    "interest_portion"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "payment_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "loan_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "payment_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "payment_amount": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "payment_method": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "principal_portion": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "interest_portion": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "payment_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.9462721168578566e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.005627648435604224,
+     "stats": {
+      "mean": {
+       "spindle": 120000.5,
+       "impl": 120000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 240000.0,
+       "impl": 240000.0
+      },
+      "std": {
+       "spindle": 69282.03230215369,
+       "impl": 69282.03230215369,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 240000,
+      "impl": 240000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "loan_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.9462721168578566e-05
+     },
+     "ks": 0.0029291666666666494,
+     "ks_baseline": 0.0035041666666666416,
+     "ks_tol": 0.007256249999999962,
+     "stats": {
+      "mean": {
+       "spindle": 9981.416275,
+       "impl": 9999.485479166668
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 20000.0,
+       "impl": 20000.0
+      },
+      "std": {
+       "spindle": 5769.065895738534,
+       "impl": 5774.182373448857,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 20000,
+      "impl": 20000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "payment_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.9462721168578566e-05
+     },
+     "ks": 0.0024333333333333984,
+     "ks_baseline": 0.002679166666666677,
+     "ks_tol": 0.006018750000000015,
+     "stats": {
+      "mean": {
+       "spindle": "2024-01-01 12:16:06.124069632",
+       "impl": "2023-12-31 08:52:49.294475520"
+      },
+      "min": {
+       "spindle": "2022-01-01 00:04:08.245007872",
+       "impl": "2022-01-01 00:01:47.538106880"
+      },
+      "max": {
+       "spindle": "2025-12-30 23:55:11.130827520",
+       "impl": "2025-12-30 23:52:10.735945984"
+      },
+      "std": {
+       "spindle": 421.3772303399144,
+       "impl": 421.4321369970808,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 240000,
+      "impl": 240000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "payment_amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.9462721168578566e-05
+     },
+     "ks": 0.0036166666666667124,
+     "ks_baseline": 0.0027750000000000274,
+     "ks_tol": 0.006162500000000041,
+     "stats": {
+      "mean": {
+       "spindle": 1809.381457870154,
+       "impl": 1800.229389408813
+      },
+      "min": {
+       "spindle": 50.0,
+       "impl": 50.0
+      },
+      "max": {
+       "spindle": 50000.0,
+       "impl": 50000.0
+      },
+      "std": {
+       "spindle": 2348.1843836094913,
+       "impl": 2318.5215860906333,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 239740,
+      "impl": 239730
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "payment_method": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.9462721168578566e-05
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Auto-debit",
+       "spindle": 0.5511291666666667,
+       "impl": 0.5503125
+      },
+      {
+       "value": "Online",
+       "spindle": 0.25104583333333336,
+       "impl": 0.24894583333333334
+      },
+      {
+       "value": "Check",
+       "spindle": 0.09939166666666667,
+       "impl": 0.0996875
+      },
+      {
+       "value": "Branch",
+       "spindle": 0.06879583333333333,
+       "impl": 0.07091666666666667
+      },
+      {
+       "value": "Phone",
+       "spindle": 0.0296375,
+       "impl": 0.0301375
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0029166666666666854,
+     "tvd_baseline": 0.0025583333333333257,
+     "tvd_tol": 0.010925484305920791,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "principal_portion": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.9462721168578566e-05
+     },
+     "ks": 0.0033958333333333757,
+     "ks_baseline": 0.002679166666666677,
+     "ks_tol": 0.006018750000000015,
+     "stats": {
+      "mean": {
+       "spindle": 904.827122375,
+       "impl": 900.7174185833334
+      },
+      "min": {
+       "spindle": 15.01,
+       "impl": 15.11
+      },
+      "max": {
+       "spindle": 34413.44,
+       "impl": 33699.16
+      },
+      "std": {
+       "spindle": 1228.7457205728024,
+       "impl": 1210.4159935712569,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 133001,
+      "impl": 132511
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "interest_portion": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.9462721168578566e-05
+     },
+     "ks": 0.003166666666666762,
+     "ks_baseline": 0.0028166666666666895,
+     "ks_tol": 0.006225000000000034,
+     "stats": {
+      "mean": {
+       "spindle": 904.5543354951541,
+       "impl": 899.5119708254796
+      },
+      "min": {
+       "spindle": 15.090000000000003,
+       "impl": 15.030000000000001
+      },
+      "max": {
+       "spindle": 34629.6,
+       "impl": 34283.57
+      },
+      "std": {
+       "spindle": 1219.151763571913,
+       "impl": 1204.260264266742,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 239984,
+      "impl": 239986
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "fraud_flag": {
+   "rows": {
+    "spindle": 10000,
+    "impl": 10000
+   },
+   "columns_spindle": [
+    "flag_id",
+    "transaction_id",
+    "flag_type",
+    "risk_score",
+    "flagged_date",
+    "resolution"
+   ],
+   "columns_impl": [
+    "flag_id",
+    "transaction_id",
+    "flag_type",
+    "risk_score",
+    "flagged_date",
+    "resolution"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "flag_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "transaction_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "flag_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "risk_score": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "flagged_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "resolution": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "flag_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.02756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 5000.5,
+       "impl": 5000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 10000.0,
+       "impl": 10000.0
+      },
+      "std": {
+       "spindle": 2886.751331514372,
+       "impl": 2886.751331514372,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 10000,
+      "impl": 10000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "transaction_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "ks": 0.008600000000000024,
+     "ks_baseline": 0.018199999999999994,
+     "ks_tol": 0.029299999999999993,
+     "stats": {
+      "mean": {
+       "spindle": 249547.5995,
+       "impl": 250467.2626
+      },
+      "min": {
+       "spindle": 7.0,
+       "impl": 5.0
+      },
+      "max": {
+       "spindle": 499962.0,
+       "impl": 499993.0
+      },
+      "std": {
+       "spindle": 144464.1782973395,
+       "impl": 143870.74498640245,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 9899,
+      "impl": 9915
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "flag_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "distinct": {
+      "spindle": 6,
+      "impl": 6,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Unusual Amount",
+       "spindle": 0.2964,
+       "impl": 0.3033
+      },
+      {
+       "value": "Unusual Location",
+       "spindle": 0.2478,
+       "impl": 0.2539
+      },
+      {
+       "value": "Rapid Succession",
+       "spindle": 0.1546,
+       "impl": 0.1476
+      },
+      {
+       "value": "Velocity Check",
+       "spindle": 0.1031,
+       "impl": 0.0988
+      },
+      {
+       "value": "Account Takeover",
+       "spindle": 0.102,
+       "impl": 0.0986
+      },
+      {
+       "value": "Card Not Present",
+       "spindle": 0.0961,
+       "impl": 0.0978
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.014700000000000005,
+     "tvd_baseline": 0.021399999999999995,
+     "tvd_tol": 0.058632301428350395,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "risk_score": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "ks": 0.01200000000000001,
+     "ks_baseline": 0.016699999999999993,
+     "ks_tol": 0.02756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 0.7487666207994019,
+       "impl": 0.7511670986407601
+      },
+      "min": {
+       "spindle": 0.5000040368104475,
+       "impl": 0.5000635784228691
+      },
+      "max": {
+       "spindle": 0.9999949728005588,
+       "impl": 0.9998890195615507
+      },
+      "std": {
+       "spindle": 0.14500976071330135,
+       "impl": 0.14500786448528213,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 10000,
+      "impl": 10000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "flagged_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "ks": 0.014900000000000024,
+     "ks_baseline": 0.019500000000000017,
+     "ks_tol": 0.03125000000000003,
+     "stats": {
+      "mean": {
+       "spindle": "2023-12-23 17:33:44.877224448",
+       "impl": "2024-01-01 03:25:28.549966336"
+      },
+      "min": {
+       "spindle": "2022-01-01 01:23:41.509230848",
+       "impl": "2022-01-01 13:24:58.416211968"
+      },
+      "max": {
+       "spindle": "2025-12-30 12:53:59.048175872",
+       "impl": "2025-12-30 23:39:33.719111936"
+      },
+      "std": {
+       "spindle": 422.96955895593567,
+       "impl": 421.9571295280359,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 10000,
+      "impl": 10000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "resolution": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "False Positive",
+       "spindle": 0.5425,
+       "impl": 0.5387
+      },
+      {
+       "value": "Under Review",
+       "spindle": 0.1989,
+       "impl": 0.2072
+      },
+      {
+       "value": "Confirmed Fraud",
+       "spindle": 0.1536,
+       "impl": 0.1503
+      },
+      {
+       "value": "Customer Verified",
+       "spindle": 0.105,
+       "impl": 0.1038
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.008300000000000009,
+     "tvd_baseline": 0.012900000000000009,
+     "tvd_tol": 0.04787307364817192,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "statement": {
+   "rows": {
+    "spindle": 660000,
+    "impl": 660000
+   },
+   "columns_spindle": [
+    "statement_id",
+    "account_id",
+    "statement_date",
+    "opening_balance",
+    "total_deposits",
+    "total_withdrawals",
+    "fees_charged",
+    "closing_balance"
+   ],
+   "columns_impl": [
+    "statement_id",
+    "account_id",
+    "statement_date",
+    "opening_balance",
+    "total_deposits",
+    "total_withdrawals",
+    "fees_charged",
+    "closing_balance"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "statement_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "account_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "statement_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "opening_balance": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "total_deposits": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "total_withdrawals": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "fees_charged": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "closing_balance": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "statement_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.0713730992414988e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0033935996932599557,
+     "stats": {
+      "mean": {
+       "spindle": 330000.5,
+       "impl": 330000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 660000.0,
+       "impl": 660000.0
+      },
+      "std": {
+       "spindle": 190525.5888323578,
+       "impl": 190525.5888323578,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 660000,
+      "impl": 660000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "account_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.0713730992414988e-05
+     },
+     "ks": 0.0015106060606061011,
+     "ks_baseline": 0.0016636363636363671,
+     "ks_tol": 0.004495454545454551,
+     "stats": {
+      "mean": {
+       "spindle": 55013.49624848485,
+       "impl": 54969.48649848485
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 110000.0,
+       "impl": 110000.0
+      },
+      "std": {
+       "spindle": 31751.75955306936,
+       "impl": 31741.957612192095,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 109731,
+      "impl": 109724
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "statement_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.0713730992414988e-05
+     },
+     "ks": 0.0018303030303030154,
+     "ks_baseline": 0.001959090909090855,
+     "ks_tol": 0.004938636363636282,
+     "stats": {
+      "mean": {
+       "spindle": "2024-09-29 22:39:20.610569216",
+       "impl": "2024-09-30 10:21:06.347439616"
+      },
+      "min": {
+       "spindle": "2024-01-01 00:02:27.890051584",
+       "impl": "2024-01-01 00:03:43.531176960"
+      },
+      "max": {
+       "spindle": "2025-06-29 23:59:48.978545408",
+       "impl": "2025-06-29 23:57:44.222042112"
+      },
+      "std": {
+       "spindle": 157.66238300819452,
+       "impl": 157.70744527196572,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 660000,
+      "impl": 660000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "opening_balance": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.0713730992414988e-05
+     },
+     "ks": 0.0009424242424242446,
+     "ks_baseline": 0.002165151515151509,
+     "ks_tol": 0.005247727272727263,
+     "stats": {
+      "mean": {
+       "spindle": 9240.713789798789,
+       "impl": 9186.403223093253
+      },
+      "min": {
+       "spindle": 2.192619474343387,
+       "impl": 2.776762384157613
+      },
+      "max": {
+       "spindle": 2000000.0,
+       "impl": 2000000.0
+      },
+      "std": {
+       "spindle": 26780.857974392304,
+       "impl": 26475.460120075008,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 659992,
+      "impl": 659992
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "total_deposits": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.0713730992414988e-05
+     },
+     "ks": 0.0016045454545454696,
+     "ks_baseline": 0.0018939393939394478,
+     "ks_tol": 0.004840909090909172,
+     "stats": {
+      "mean": {
+       "spindle": 3716.4144428787536,
+       "impl": 3691.620973717165
+      },
+      "min": {
+       "spindle": 3.457386710602294,
+       "impl": 6.462183020089748
+      },
+      "max": {
+       "spindle": 430448.08860667894,
+       "impl": 388659.96843999356
+      },
+      "std": {
+       "spindle": 6573.532155522113,
+       "impl": 6487.60045892775,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 660000,
+      "impl": 660000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "total_withdrawals": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.0713730992414988e-05
+     },
+     "ks": 0.0012696969696969762,
+     "ks_baseline": 0.002106060606060556,
+     "ks_tol": 0.005159090909090834,
+     "stats": {
+      "mean": {
+       "spindle": 3049.3429991152025,
+       "impl": 3031.427883336882
+      },
+      "min": {
+       "spindle": 4.686473017690268,
+       "impl": 5.011878903219206
+      },
+      "max": {
+       "spindle": 494173.40365918435,
+       "impl": 431346.81082164485
+      },
+      "std": {
+       "spindle": 5552.72440347393,
+       "impl": 5354.843698957511,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 660000,
+      "impl": 660000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "fees_charged": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.0713730992414988e-05
+     },
+     "ks": 0.001689393939393935,
+     "ks_baseline": 0.0021287878787878967,
+     "ks_tol": 0.005193181818181845,
+     "stats": {
+      "mean": {
+       "spindle": 12.191183123560178,
+       "impl": 12.160775249487202
+      },
+      "min": {
+       "spindle": 0.06044488759020541,
+       "impl": 0.04171219121585219
+      },
+      "max": {
+       "spindle": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "spindle": 15.92010184592801,
+       "impl": 15.902148955149125,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 659996,
+      "impl": 659993
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "closing_balance": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.0713730992414988e-05
+     },
+     "ks": 0.0009227272727272418,
+     "ks_baseline": 0.002257575757575736,
+     "ks_tol": 0.005386363636363604,
+     "stats": {
+      "mean": {
+       "spindle": 9240.81680110606,
+       "impl": 9187.090872469696
+      },
+      "min": {
+       "spindle": 2.47,
+       "impl": 3.02
+      },
+      "max": {
+       "spindle": 2259243.31,
+       "impl": 2261082.08
+      },
+      "std": {
+       "spindle": 27010.308078546565,
+       "impl": 26678.201598294283,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 491297,
+      "impl": 490290
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "spindle": [
+   "branch",
+   "transaction_category",
+   "customer",
+   "account",
+   "loan",
+   "card",
+   "loan_payment",
+   "statement",
+   "transaction",
+   "fraud_flag"
+  ],
+  "impl": [
+   "branch",
+   "transaction_category",
+   "customer",
+   "account",
+   "loan",
+   "card",
+   "loan_payment",
+   "statement",
+   "transaction",
+   "fraud_flag"
+  ]
+ },
+ "fk_integrity": {
+  "spindle": {
+   "customer.primary_branch_id->branch.branch_id": {
+    "integrity": 1.0,
+    "n": 50000
+   },
+   "account.customer_id->customer.customer_id": {
+    "integrity": 1.0,
+    "n": 110000
+   },
+   "card.account_id->account.account_id": {
+    "integrity": 1.0,
+    "n": 88000
+   },
+   "transaction.account_id->account.account_id": {
+    "integrity": 1.0,
+    "n": 500000
+   },
+   "transaction.category_id->transaction_category.category_id": {
+    "integrity": 1.0,
+    "n": 500000
+   },
+   "loan.customer_id->customer.customer_id": {
+    "integrity": 1.0,
+    "n": 20000
+   },
+   "loan_payment.loan_id->loan.loan_id": {
+    "integrity": 1.0,
+    "n": 240000
+   },
+   "fraud_flag.transaction_id->transaction.transaction_id": {
+    "integrity": 1.0,
+    "n": 10000
+   },
+   "statement.account_id->account.account_id": {
+    "integrity": 1.0,
+    "n": 660000
+   },
+   "transaction_category.parent_category_id->transaction_category.category_id": {
+    "integrity": 1.0,
+    "n": 32
+   }
+  },
+  "impl": {
+   "customer.primary_branch_id->branch.branch_id": {
+    "integrity": 1.0,
+    "n": 50000
+   },
+   "account.customer_id->customer.customer_id": {
+    "integrity": 1.0,
+    "n": 110000
+   },
+   "card.account_id->account.account_id": {
+    "integrity": 1.0,
+    "n": 88000
+   },
+   "transaction.account_id->account.account_id": {
+    "integrity": 1.0,
+    "n": 500000
+   },
+   "transaction.category_id->transaction_category.category_id": {
+    "integrity": 1.0,
+    "n": 500000
+   },
+   "loan.customer_id->customer.customer_id": {
+    "integrity": 1.0,
+    "n": 20000
+   },
+   "loan_payment.loan_id->loan.loan_id": {
+    "integrity": 1.0,
+    "n": 240000
+   },
+   "fraud_flag.transaction_id->transaction.transaction_id": {
+    "integrity": 1.0,
+    "n": 10000
+   },
+   "statement.account_id->account.account_id": {
+    "integrity": 1.0,
+    "n": 660000
+   },
+   "transaction_category.parent_category_id->transaction_category.category_id": {
+    "integrity": 1.0,
+    "n": 32
+   }
+  }
+ },
+ "fanout": {
+  "branch->customer.primary_branch_id": {
+   "spindle": {
+    "p50": 39.5,
+    "p90": 301.19999999999976,
+    "p99": 3550.299999999975,
+    "max": 15415,
+    "mean": 250.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 37.5,
+    "p90": 292.59999999999985,
+    "p99": 3753.9999999999764,
+    "max": 15359,
+    "mean": 250.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.04500000000000001,
+   "ks_baseline_max": 0.06,
+   "ks_tol": 0.19494746035204052,
+   "equivalent": true
+  },
+  "customer->account.customer_id": {
+   "spindle": {
+    "p50": 2.0,
+    "p90": 4.0,
+    "p99": 6.0,
+    "max": 13,
+    "mean": 2.2,
+    "zero_frac": 0.11204
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 4.0,
+    "p99": 6.0,
+    "max": 10,
+    "mean": 2.2,
+    "zero_frac": 0.11038
+   },
+   "ks_counts": 0.002080000000000082,
+   "ks_baseline_max": 0.0050000000000000044,
+   "ks_tol": 0.012329559975556372,
+   "equivalent": true
+  },
+  "account->card.account_id": {
+   "spindle": {
+    "p50": 1.0,
+    "p90": 2.0,
+    "p99": 3.0,
+    "max": 6,
+    "mean": 0.8,
+    "zero_frac": 0.44933636363636364
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 2.0,
+    "p99": 3.0,
+    "max": 8,
+    "mean": 0.8,
+    "zero_frac": 0.4491363636363636
+   },
+   "ks_counts": 0.00023636363636359015,
+   "ks_baseline_max": 0.0013999999999999568,
+   "ks_tol": 0.0083125876397524,
+   "equivalent": true
+  },
+  "account->transaction.account_id": {
+   "spindle": {
+    "p50": 1.0,
+    "p90": 4.0,
+    "p99": 121.0,
+    "max": 200,
+    "mean": 4.545454545454546,
+    "zero_frac": 0.41416363636363634
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 4.0,
+    "p99": 120.0,
+    "max": 200,
+    "mean": 4.545454545454546,
+    "zero_frac": 0.41203636363636365
+   },
+   "ks_counts": 0.0021272727272727,
+   "ks_baseline_max": 0.011772727272727268,
+   "ks_tol": 0.019659090909090904,
+   "equivalent": true
+  },
+  "transaction_category->transaction.category_id": {
+   "spindle": {
+    "p50": 2804.0,
+    "p90": 21541.00000000001,
+    "p99": 149412.27999999994,
+    "max": 197323,
+    "mean": 12500.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 2892.0,
+    "p90": 21394.00000000001,
+    "p99": 149407.27999999994,
+    "max": 197084,
+    "mean": 12500.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.05,
+   "ks_baseline_max": 0.05000000000000002,
+   "ks_tol": 0.43591577338810766,
+   "equivalent": true
+  },
+  "customer->loan.customer_id": {
+   "spindle": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 5,
+    "mean": 0.4,
+    "zero_frac": 0.67044
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 6,
+    "mean": 0.4,
+    "zero_frac": 0.67084
+   },
+   "ks_counts": 0.0007399999999999629,
+   "ks_baseline_max": 0.0010799999999999699,
+   "ks_tol": 0.012329559975556372,
+   "equivalent": true
+  },
+  "loan->loan_payment.loan_id": {
+   "spindle": {
+    "p50": 12.0,
+    "p90": 17.0,
+    "p99": 21.0,
+    "max": 27,
+    "mean": 12.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 12.0,
+    "p90": 17.0,
+    "p99": 21.0,
+    "max": 31,
+    "mean": 12.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.003950000000000009,
+   "ks_baseline_max": 0.006500000000000061,
+   "ks_tol": 0.019494746035204052,
+   "equivalent": true
+  },
+  "transaction->fraud_flag.transaction_id": {
+   "spindle": {
+    "p50": 0.0,
+    "p90": 0.0,
+    "p99": 1.0,
+    "max": 2,
+    "mean": 0.02,
+    "zero_frac": 0.980202
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 0.0,
+    "p99": 1.0,
+    "max": 3,
+    "mean": 0.02,
+    "zero_frac": 0.98017
+   },
+   "ks_counts": 3.4000000000089514e-05,
+   "ks_baseline_max": 3.799999999998249e-05,
+   "ks_tol": 0.0038989492070408104,
+   "equivalent": true
+  },
+  "account->statement.account_id": {
+   "spindle": {
+    "p50": 6.0,
+    "p90": 9.0,
+    "p99": 12.0,
+    "max": 20,
+    "mean": 6.0,
+    "zero_frac": 0.0024454545454545454
+   },
+   "impl": {
+    "p50": 6.0,
+    "p90": 9.0,
+    "p99": 12.0,
+    "max": 20,
+    "mean": 6.0,
+    "zero_frac": 0.002509090909090909
+   },
+   "ks_counts": 0.0015363636363636413,
+   "ks_baseline_max": 0.00239090909090911,
+   "ks_tol": 0.0083125876397524,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {
+  "branch.city+state+zip_code+lat+lng in us_zip_locations": {
+   "impl": 1.0,
+   "spindle": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  }
+ },
+ "strategy_semantics": {},
+ "business_rules": {
+  "spindle_BusinessRulesEngine_violations": {},
+  "spindle_on_spindle": {}
+ },
+ "spindle_fidelity_comparator": {
+  "overall_impl": 94.17416095723001,
+  "overall_baseline_spindle_vs_spindle": [
+   94.08436016414431,
+   94.40204143253331,
+   94.54696936812208,
+   94.42644797313025
+  ],
+  "tables": {
+   "account": {
+    "impl": 97.85497840366845,
+    "baseline": [
+     97.10074461267638,
+     97.8603138373713,
+     97.78866957664108,
+     97.38258430614336
+    ],
+    "floor": 96.60074461267638,
+    "ok": true
+   },
+   "branch": {
+    "impl": 84.59358706419675,
+    "baseline": [
+     86.6039528120171,
+     86.0318660929438,
+     86.06652943326142,
+     85.4073215698637
+    ],
+    "floor": 84.9073215698637,
+    "ok": false
+   },
+   "card": {
+    "impl": 99.56233861072852,
+    "baseline": [
+     99.64743308243865,
+     99.52989402651617,
+     99.62863887721281,
+     99.61303767114492
+    ],
+    "floor": 99.02989402651617,
+    "ok": true
+   },
+   "customer": {
+    "impl": 82.7410506543367,
+    "baseline": [
+     82.7571399413469,
+     82.74632150359768,
+     82.43610119847385,
+     82.78780407921826
+    ],
+    "floor": 81.93610119847385,
+    "ok": true
+   },
+   "fraud_flag": {
+    "impl": 99.69229226235262,
+    "baseline": [
+     97.94241932926845,
+     99.58846032672743,
+     99.81202822316048,
+     98.69603530367381
+    ],
+    "floor": 97.44241932926845,
+    "ok": true
+   },
+   "loan": {
+    "impl": 98.73387574572149,
+    "baseline": [
+     99.22776144828234,
+     99.72738884373346,
+     99.68891336883186,
+     98.94806549050824
+    ],
+    "floor": 98.44806549050824,
+    "ok": true
+   },
+   "loan_payment": {
+    "impl": 98.89149767642654,
+    "baseline": [
+     99.31563313269794,
+     99.29555065061027,
+     99.94083144834792,
+     99.92592291110677
+    ],
+    "floor": 98.79555065061027,
+    "ok": true
+   },
+   "statement": {
+    "impl": 99.78424548330742,
+    "baseline": [
+     99.78843554166575,
+     99.70301487194149,
+     99.58689977184375,
+     99.63911112305874
+    ],
+    "floor": 99.08689977184375,
+    "ok": true
+   },
+   "transaction": {
+    "impl": 97.4978407382956,
+    "baseline": [
+     96.32623595640358,
+     96.22248419383604,
+     96.68460273147983,
+     96.2713758407467
+    ],
+    "floor": 95.72248419383604,
+    "ok": true
+   },
+   "transaction_category": {
+    "impl": 82.38990293326606,
+    "baseline": [
+     82.13384578464596,
+     83.31511997805556,
+     83.8364790519678,
+     85.59322143583802
+    ],
+    "floor": 81.63384578464596,
+    "ok": true
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 77,
+  "columns_equivalent": 77,
+  "flagged": [
+   "(h) fidelity branch: 84.59 < floor 84.91"
+  ],
+  "passed": false,
+  "seconds": 156.8744831085205
+ }
+}

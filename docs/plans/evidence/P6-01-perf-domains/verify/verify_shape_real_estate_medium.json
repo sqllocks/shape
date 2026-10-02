@@ -1,0 +1,4811 @@
+{
+ "domain": "real_estate",
+ "scale": "medium",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "neighborhood": {
+   "rows": {
+    "spindle": 50,
+    "impl": 50
+   },
+   "columns_spindle": [
+    "neighborhood_id",
+    "neighborhood_name",
+    "city",
+    "median_income",
+    "walk_score",
+    "state",
+    "zip_code"
+   ],
+   "columns_impl": [
+    "neighborhood_id",
+    "neighborhood_name",
+    "city",
+    "median_income",
+    "walk_score",
+    "state",
+    "zip_code"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "neighborhood_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "neighborhood_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "city": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "median_income": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "walk_score": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "state": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "zip_code": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "neighborhood_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.38989492070408105,
+     "stats": {
+      "mean": {
+       "spindle": 25.5,
+       "impl": 25.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 50.0,
+       "impl": 50.0
+      },
+      "std": {
+       "spindle": 14.430869689661812,
+       "impl": 14.430869689661812,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 50,
+      "impl": 50
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "neighborhood_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "spindle": 30,
+      "impl": 30,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.06666666666666665
+     },
+     "top10": [
+      {
+       "value": "Eastside",
+       "spindle": 0.1,
+       "impl": 0.08
+      },
+      {
+       "value": "Downtown",
+       "spindle": 0.08,
+       "impl": 0.0
+      },
+      {
+       "value": "Arts District",
+       "spindle": 0.06,
+       "impl": 0.0
+      },
+      {
+       "value": "Sunset Hills",
+       "spindle": 0.06,
+       "impl": 0.02
+      },
+      {
+       "value": "Midtown",
+       "spindle": 0.06,
+       "impl": 0.08
+      },
+      {
+       "value": "Coral Springs",
+       "spindle": 0.04,
+       "impl": 0.04
+      },
+      {
+       "value": "Northgate",
+       "spindle": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "Southpark",
+       "spindle": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "Kensington",
+       "spindle": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "Maple Grove",
+       "spindle": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "Lakewood",
+       "spindle": 0.0,
+       "impl": 0.08
+      },
+      {
+       "value": "Yorktown",
+       "spindle": 0.0,
+       "impl": 0.06
+      },
+      {
+       "value": "Uptown",
+       "spindle": 0.0,
+       "impl": 0.06
+      },
+      {
+       "value": "Old Town",
+       "spindle": 0.02,
+       "impl": 0.06
+      },
+      {
+       "value": "Mission Bay",
+       "spindle": 0.0,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.54,
+     "tvd_baseline": 0.56,
+     "tvd_tol": 1.8541161697113102,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "city": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "spindle": 48,
+      "impl": 50,
+      "ratio": 1.0416666666666667,
+      "baseline_max_ratio_dev": 0.04166666666666674
+     },
+     "top10": [
+      {
+       "value": "Pittsburgh",
+       "spindle": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "Chicago",
+       "spindle": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "Ary",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "West Springfield",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Lame Deer",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Dorset",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Pickford",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Warren",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Calabasas",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Derrick City",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "La Belle",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "Carpenter",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "Partlow",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "Baltimore",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "Brant Lake",
+       "spindle": 0.0,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.9999999999999999,
+     "tvd_baseline": 1.0,
+     "tvd_tol": 2.345292057134016,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "median_income": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "ks": 0.19999999999999996,
+     "ks_baseline": 0.24000000000000005,
+     "ks_tol": 0.38989492070408105,
+     "stats": {
+      "mean": {
+       "spindle": 67132.9223595453,
+       "impl": 78285.68073515901
+      },
+      "min": {
+       "spindle": 25000.0,
+       "impl": 25000.0
+      },
+      "max": {
+       "spindle": 185435.40486906932,
+       "impl": 182216.31386867035
+      },
+      "std": {
+       "spindle": 28818.715437878916,
+       "impl": 41737.23212957573,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 48,
+      "impl": 49
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "walk_score": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "ks": 0.14,
+     "ks_baseline": 0.21999999999999997,
+     "ks_tol": 0.38989492070408105,
+     "stats": {
+      "mean": {
+       "spindle": 50.81632985611104,
+       "impl": 56.04127963764014
+      },
+      "min": {
+       "spindle": 10.21522323204354,
+       "impl": 11.393711068614083
+      },
+      "max": {
+       "spindle": 99.74913640373053,
+       "impl": 99.70585318053904
+      },
+      "std": {
+       "spindle": 26.62844143340546,
+       "impl": 26.14040209379059,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 50,
+      "impl": 50
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "state": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "spindle": 25,
+      "impl": 32,
+      "ratio": 1.28,
+      "baseline_max_ratio_dev": 0.1200000000000001
+     },
+     "top10": [
+      {
+       "value": "MI",
+       "spindle": 0.12,
+       "impl": 0.0
+      },
+      {
+       "value": "KY",
+       "spindle": 0.08,
+       "impl": 0.06
+      },
+      {
+       "value": "PA",
+       "spindle": 0.08,
+       "impl": 0.04
+      },
+      {
+       "value": "OK",
+       "spindle": 0.08,
+       "impl": 0.02
+      },
+      {
+       "value": "NY",
+       "spindle": 0.08,
+       "impl": 0.08
+      },
+      {
+       "value": "VA",
+       "spindle": 0.06,
+       "impl": 0.02
+      },
+      {
+       "value": "MS",
+       "spindle": 0.06,
+       "impl": 0.0
+      },
+      {
+       "value": "IL",
+       "spindle": 0.06,
+       "impl": 0.02
+      },
+      {
+       "value": "NM",
+       "spindle": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "TX",
+       "spindle": 0.04,
+       "impl": 0.06
+      },
+      {
+       "value": "AR",
+       "spindle": 0.0,
+       "impl": 0.06
+      },
+      {
+       "value": "OR",
+       "spindle": 0.0,
+       "impl": 0.06
+      },
+      {
+       "value": "NC",
+       "spindle": 0.02,
+       "impl": 0.04
+      },
+      {
+       "value": "MA",
+       "spindle": 0.02,
+       "impl": 0.04
+      },
+      {
+       "value": "FL",
+       "spindle": 0.02,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.52,
+     "tvd_baseline": 0.5599999999999999,
+     "tvd_tol": 1.692568750643269,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "zip_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "spindle": 50,
+      "impl": 50,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "41712",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "01090",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "59043",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "05251",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "49774",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "48397",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "91372",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "15264",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "16727",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "48473",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "63447",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "82054",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "22534",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "21223",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "12815",
+       "spindle": 0.0,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.9999999999999999,
+     "tvd_baseline": 0.9999999999999999,
+     "tvd_tol": 2.393653682408596,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "agent": {
+   "rows": {
+    "spindle": 100,
+    "impl": 100
+   },
+   "columns_spindle": [
+    "agent_id",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "license_number",
+    "brokerage",
+    "years_experience",
+    "specialization"
+   ],
+   "columns_impl": [
+    "agent_id",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "license_number",
+    "brokerage",
+    "years_experience",
+    "specialization"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "agent_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "first_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "last_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "email": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "phone": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "license_number": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "brokerage": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "years_experience": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "specialization": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "agent_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 50.5,
+       "impl": 50.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "spindle": 28.86607004772212,
+       "impl": 28.86607004772212,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "first_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 99,
+      "impl": 99,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.010101010101010166
+     },
+     "top10": [
+      {
+       "value": "Miiel",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Tryn",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Isana",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Yolanda",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Naina",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Soth",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Orria",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Teo",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Clard",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Pam",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Meesa",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "Teix",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Grant",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Fla",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Krne",
+       "spindle": 0.0,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.9899999999999999,
+     "tvd_baseline": 0.9999999999999998,
+     "tvd_tol": 2.3816553427805527,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 99,
+      "ratio": 0.99,
+      "baseline_max_ratio_dev": 0.020000000000000018
+     },
+     "top10": [
+      {
+       "value": "VanDonald",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Boyton",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Jennwood",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Blaibrook",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Coxham",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Pracroft",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Matbrook",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "McPherson",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Weaveworth",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Dougherty",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Finleberg",
+       "spindle": 0.01,
+       "impl": 0.02
+      },
+      {
+       "value": "Comptdale",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Chrisberg",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Bergwick",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Grahridge",
+       "spindle": 0.0,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.9899999999999998,
+     "tvd_baseline": 0.9899999999999999,
+     "tvd_tol": 2.3936536824085963,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "tryn.vandonald139@outlook.com",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "isana.boyton184@mail.ru",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "yolanda.jennwood183@me.com",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "naina.blaibrook336@outlook.co.uk",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "soth.coxham891@verizon.net",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "orria.pracroft37@hotmail.com",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "teo.matbrook727@outlook.co.uk",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "clard.mcpherson763@hushmail.com",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "pam.weaveworth140@frontier.com",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "judith.dougherty65@gmx.com",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "teix.comptdale650@gmx.com",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "grant.chrisberg542@rediffmail.com",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "fla.bergwick348@rediffmail.com",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "krne.grahridge191@techie.com",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "jiok.barson699@lawyer.com",
+       "spindle": 0.0,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "phone": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "(711) 893-2514",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "(439) 750-8281",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "(408) 376-6995",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "(697) 893-3950",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "(329) 372-9023",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "(772) 361-8459",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "(918) 869-3781",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "(946) 908-9033",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "(527) 914-1963",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "(703) 424-1760",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "(315) 872-1530",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "(480) 910-7563",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "(325) 673-6739",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "(850) 543-7521",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "(737) 909-5441",
+       "spindle": 0.0,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "(AAA) EEE-SSSS, AAA/EEE 200..998, SSSS 1000..9998",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "license_number": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "RE-000001",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "RE-000002",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "RE-000003",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "RE-000004",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "RE-000005",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "RE-000006",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "RE-000007",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "RE-000008",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "RE-000009",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "RE-000010",
+       "spindle": 0.01,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "RE-{seq:6}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "brokerage": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 98,
+      "impl": 98,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.030612244897959218
+     },
+     "top10": [
+      {
+       "value": "Maple Nexus",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Clay Systems",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Onyx Link Systems",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Elite Wing",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Coastal Commerce Industries",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Crystal Cedar",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Midwest Steel",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Coastal Analytics",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Fusion Craft International",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Kochfield Technologies",
+       "spindle": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Global Ice International",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "Solar Analytics",
+       "spindle": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "Empire Industries",
+       "spindle": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Premier Sage Ventures",
+       "spindle": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "Horizon Vault Consulting",
+       "spindle": 0.0,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.96,
+     "tvd_baseline": 0.95,
+     "tvd_tol": 2.3695962509005764,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "years_experience": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.09999999999999999,
+     "ks_baseline": 0.17000000000000004,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 14.836464070366139,
+       "impl": 15.7067670804655
+      },
+      "min": {
+       "spindle": 1.0023986641669245,
+       "impl": 1.2769276691095734
+      },
+      "max": {
+       "spindle": 29.800398808905754,
+       "impl": 29.656125385203765
+      },
+      "std": {
+       "spindle": 8.07801700653396,
+       "impl": 7.861696251402368,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "specialization": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Residential",
+       "spindle": 0.48,
+       "impl": 0.45
+      },
+      {
+       "value": "Commercial",
+       "spindle": 0.19,
+       "impl": 0.22
+      },
+      {
+       "value": "Luxury",
+       "spindle": 0.13,
+       "impl": 0.11
+      },
+      {
+       "value": "Investment",
+       "spindle": 0.12,
+       "impl": 0.12
+      },
+      {
+       "value": "New Construction",
+       "spindle": 0.08,
+       "impl": 0.1
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.04999999999999999,
+     "tvd_baseline": 0.07999999999999997,
+     "tvd_tol": 0.5352372348458314,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "property": {
+   "rows": {
+    "spindle": 10000,
+    "impl": 10000
+   },
+   "columns_spindle": [
+    "property_id",
+    "neighborhood_id",
+    "property_type",
+    "address",
+    "bedrooms",
+    "bathrooms",
+    "sqft",
+    "lot_size_sqft",
+    "year_built",
+    "assessed_value"
+   ],
+   "columns_impl": [
+    "property_id",
+    "neighborhood_id",
+    "property_type",
+    "address",
+    "bedrooms",
+    "bathrooms",
+    "sqft",
+    "lot_size_sqft",
+    "year_built",
+    "assessed_value"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "property_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "neighborhood_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "property_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "address": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "bedrooms": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "bathrooms": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "sqft": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "lot_size_sqft": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "year_built": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "assessed_value": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "property_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.02756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 5000.5,
+       "impl": 5000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 10000.0,
+       "impl": 10000.0
+      },
+      "std": {
+       "spindle": 2886.751331514372,
+       "impl": 2886.751331514372,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 10000,
+      "impl": 10000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "neighborhood_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "ks": 0.007400000000000018,
+     "ks_baseline": 0.01100000000000001,
+     "ks_tol": 0.02756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 7.4409,
+       "impl": 7.4001
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 50.0,
+       "impl": 50.0
+      },
+      "std": {
+       "spindle": 10.331771735283352,
+       "impl": 10.190565243891037,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 50,
+      "impl": 50
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "property_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "distinct": {
+      "spindle": 15,
+      "impl": 15,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Single Family",
+       "spindle": 0.2063,
+       "impl": 0.1996
+      },
+      {
+       "value": "Condo",
+       "spindle": 0.1514,
+       "impl": 0.1567
+      },
+      {
+       "value": "Townhouse",
+       "spindle": 0.1243,
+       "impl": 0.1184
+      },
+      {
+       "value": "Multi-Family",
+       "spindle": 0.0754,
+       "impl": 0.0828
+      },
+      {
+       "value": "Ranch",
+       "spindle": 0.068,
+       "impl": 0.0672
+      },
+      {
+       "value": "Colonial",
+       "spindle": 0.0623,
+       "impl": 0.0615
+      },
+      {
+       "value": "Duplex",
+       "spindle": 0.0504,
+       "impl": 0.0515
+      },
+      {
+       "value": "Contemporary",
+       "spindle": 0.0449,
+       "impl": 0.0466
+      },
+      {
+       "value": "Cape Cod",
+       "spindle": 0.0406,
+       "impl": 0.0394
+      },
+      {
+       "value": "Bungalow",
+       "spindle": 0.0402,
+       "impl": 0.0385
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.022500000000000006,
+     "tvd_baseline": 0.026800000000000004,
+     "tvd_tol": 0.0927058084855655,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "address": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "distinct": {
+      "spindle": 9999,
+      "impl": 9999,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.00010001000100012813
+     },
+     "top10": [
+      {
+       "value": "7302 Upper West Ct",
+       "spindle": 0.0002,
+       "impl": 0.0
+      },
+      {
+       "value": "3177 Old Main Ct",
+       "spindle": 0.0001,
+       "impl": 0.0
+      },
+      {
+       "value": "7730 Big Woodside Dr",
+       "spindle": 0.0001,
+       "impl": 0.0
+      },
+      {
+       "value": "3878 Big Cliff Ln",
+       "spindle": 0.0001,
+       "impl": 0.0
+      },
+      {
+       "value": "190 Big Hawk Rd",
+       "spindle": 0.0001,
+       "impl": 0.0
+      },
+      {
+       "value": "3918 Holly Ct",
+       "spindle": 0.0001,
+       "impl": 0.0
+      },
+      {
+       "value": "8884 Old Innovation Pl",
+       "spindle": 0.0001,
+       "impl": 0.0
+      },
+      {
+       "value": "9126 Upper Countryside Blvd",
+       "spindle": 0.0001,
+       "impl": 0.0
+      },
+      {
+       "value": "159 Little Maplewood Ln",
+       "spindle": 0.0001,
+       "impl": 0.0
+      },
+      {
+       "value": "5051 Big Diamond Pl",
+       "spindle": 0.0001,
+       "impl": 0.0
+      },
+      {
+       "value": "7246 Upper West Cir",
+       "spindle": 0.0,
+       "impl": 0.0002
+      },
+      {
+       "value": "5236 Lower Bridge Ave",
+       "spindle": 0.0,
+       "impl": 0.0001
+      },
+      {
+       "value": "6736 Big Eastwood Blvd",
+       "spindle": 0.0,
+       "impl": 0.0001
+      },
+      {
+       "value": "6631 Big Ivory Rd",
+       "spindle": 0.0,
+       "impl": 0.0001
+      },
+      {
+       "value": "5670 Short Kennedy Ln",
+       "spindle": 0.0,
+       "impl": 0.0001
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "number(100..9998)+' '+STREET_NAMES+' '+_STREET_SUFFIXES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "bedrooms": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "ks": 0.012799999999999923,
+     "ks_baseline": 0.010199999999999987,
+     "ks_tol": 0.02756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 3.2312,
+       "impl": 3.2057
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 6.0,
+       "impl": 6.0
+      },
+      "std": {
+       "spindle": 1.2190761091908904,
+       "impl": 1.2109448831387828,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 6,
+      "impl": 6
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "bathrooms": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "ks": 0.005899999999999905,
+     "ks_baseline": 0.013299999999999979,
+     "ks_tol": 0.02756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 2.18845,
+       "impl": 2.194
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "spindle": 0.7497076746972783,
+       "impl": 0.7561507786149533,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 7,
+      "impl": 7
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "sqft": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "ks": 0.014000000000000012,
+     "ks_baseline": 0.014800000000000035,
+     "ks_tol": 0.02756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 1595.799749591341,
+       "impl": 1608.8837788333942
+      },
+      "min": {
+       "spindle": 500.0,
+       "impl": 500.0
+      },
+      "max": {
+       "spindle": 7714.381512352876,
+       "impl": 7130.817982458059
+      },
+      "std": {
+       "spindle": 657.3297489018657,
+       "impl": 676.8643458023037,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 9958,
+      "impl": 9969
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lot_size_sqft": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "ks": 0.007599999999999996,
+     "ks_baseline": 0.01759999999999995,
+     "ks_tol": 0.028399999999999925,
+     "stats": {
+      "mean": {
+       "spindle": 5890.870484918317,
+       "impl": 5890.862440542548
+      },
+      "min": {
+       "spindle": 1000.0,
+       "impl": 1000.0
+      },
+      "max": {
+       "spindle": 47002.73977710849,
+       "impl": 49217.65931347821
+      },
+      "std": {
+       "spindle": 3850.6174879205087,
+       "impl": 3879.117054426712,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 9954,
+      "impl": 9952
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "year_built": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "ks": 0.01429999999999998,
+     "ks_baseline": 0.019600000000000062,
+     "ks_tol": 0.031400000000000095,
+     "stats": {
+      "mean": {
+       "spindle": 1987.4834471835486,
+       "impl": 1987.6545064231402
+      },
+      "min": {
+       "spindle": 1950.0018841845367,
+       "impl": 1950.001164337106
+      },
+      "max": {
+       "spindle": 2024.9997239513623,
+       "impl": 2024.9963543556155
+      },
+      "std": {
+       "spindle": 21.832802533079377,
+       "impl": 21.762583430828816,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 10000,
+      "impl": 10000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "assessed_value": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "ks": 0.007299999999999973,
+     "ks_baseline": 0.01670000000000002,
+     "ks_tol": 0.02756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 252686.13897186736,
+       "impl": 254524.61733271217
+      },
+      "min": {
+       "spindle": 50000.0,
+       "impl": 50000.0
+      },
+      "max": {
+       "spindle": 2994245.825587465,
+       "impl": 4859671.069089011
+      },
+      "std": {
+       "spindle": 201959.2207172122,
+       "impl": 210414.64691851626,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 9763,
+      "impl": 9740
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "listing": {
+   "rows": {
+    "spindle": 15000,
+    "impl": 15000
+   },
+   "columns_spindle": [
+    "listing_id",
+    "property_id",
+    "agent_id",
+    "list_date",
+    "list_price",
+    "status",
+    "days_on_market",
+    "mls_number"
+   ],
+   "columns_impl": [
+    "listing_id",
+    "property_id",
+    "agent_id",
+    "list_date",
+    "list_price",
+    "status",
+    "days_on_market",
+    "mls_number"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "listing_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "property_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "agent_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "list_date": {
+     "spindle": "timestamp[us]",
+     "impl": "timestamp[us]"
+    },
+    "list_price": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "days_on_market": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "mls_number": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "listing_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.022510593742416898,
+     "stats": {
+      "mean": {
+       "spindle": 7500.5,
+       "impl": 7500.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 15000.0,
+       "impl": 15000.0
+      },
+      "std": {
+       "spindle": 4330.127009299689,
+       "impl": 4330.127009299689,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 15000,
+      "impl": 15000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "property_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.016133333333333333,
+     "ks_baseline": 0.020400000000000085,
+     "ks_tol": 0.03260000000000013,
+     "stats": {
+      "mean": {
+       "spindle": 5046.282866666666,
+       "impl": 5011.541066666667
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 10000.0,
+       "impl": 10000.0
+      },
+      "std": {
+       "spindle": 2892.7799834391913,
+       "impl": 2868.6973157015937,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 7801,
+      "impl": 7753
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "agent_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.0043333333333333,
+     "ks_baseline": 0.007133333333333325,
+     "ks_tol": 0.022510593742416898,
+     "stats": {
+      "mean": {
+       "spindle": 9.378133333333333,
+       "impl": 9.2578
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "spindle": 16.913448746945598,
+       "impl": 16.438779531745453,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "list_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.011133333333333328,
+     "ks_baseline": 0.012866666666666693,
+     "ks_tol": 0.022510593742416898,
+     "stats": {
+      "mean": {
+       "spindle": "2023-01-02 21:08:50.314181888",
+       "impl": "2022-12-26 17:41:02.022012672"
+      },
+      "min": {
+       "spindle": "2020-01-01 02:50:14.136668928",
+       "impl": "2020-01-01 00:22:23.572353024"
+      },
+      "max": {
+       "spindle": "2025-12-31 19:05:28.850287104",
+       "impl": "2025-12-31 17:07:02.823333120"
+      },
+      "std": {
+       "spindle": 628.5140988277863,
+       "impl": 636.4153725442399,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 15000,
+      "impl": 15000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "list_price": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.006200000000000011,
+     "ks_baseline": 0.010666666666666658,
+     "ks_tol": 0.022510593742416898,
+     "stats": {
+      "mean": {
+       "spindle": 342712.644624772,
+       "impl": 344300.26895643043
+      },
+      "min": {
+       "spindle": 50000.0,
+       "impl": 50000.0
+      },
+      "max": {
+       "spindle": 5000000.0,
+       "impl": 5000000.0
+      },
+      "std": {
+       "spindle": 274187.7714395193,
+       "impl": 276438.94482415746,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 14885,
+      "impl": 14873
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Sold",
+       "spindle": 0.4596,
+       "impl": 0.44606666666666667
+      },
+      {
+       "value": "Active",
+       "spindle": 0.19173333333333334,
+       "impl": 0.20273333333333332
+      },
+      {
+       "value": "Expired",
+       "spindle": 0.14846666666666666,
+       "impl": 0.15126666666666666
+      },
+      {
+       "value": "Withdrawn",
+       "spindle": 0.10266666666666667,
+       "impl": 0.10046666666666666
+      },
+      {
+       "value": "Pending",
+       "spindle": 0.09753333333333333,
+       "impl": 0.09946666666666666
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.01573333333333333,
+     "tvd_baseline": 0.01613333333333334,
+     "tvd_tol": 0.043701937223683165,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "days_on_market": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.009533333333333338,
+     "ks_baseline": 0.011799999999999977,
+     "ks_tol": 0.022510593742416898,
+     "stats": {
+      "mean": {
+       "spindle": 46.052359665945346,
+       "impl": 45.800493149111574
+      },
+      "min": {
+       "spindle": 1.6447579533191365,
+       "impl": 1.942336701425286
+      },
+      "max": {
+       "spindle": 365.0,
+       "impl": 365.0
+      },
+      "std": {
+       "spindle": 42.92631614390301,
+       "impl": 41.85649459653499,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 14978,
+      "impl": 14986
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "mls_number": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "distinct": {
+      "spindle": 15000,
+      "impl": 15000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "MLS-0000001",
+       "spindle": 6.666666666666667e-05,
+       "impl": 6.666666666666667e-05
+      },
+      {
+       "value": "MLS-0000002",
+       "spindle": 6.666666666666667e-05,
+       "impl": 6.666666666666667e-05
+      },
+      {
+       "value": "MLS-0000003",
+       "spindle": 6.666666666666667e-05,
+       "impl": 6.666666666666667e-05
+      },
+      {
+       "value": "MLS-0000004",
+       "spindle": 6.666666666666667e-05,
+       "impl": 6.666666666666667e-05
+      },
+      {
+       "value": "MLS-0000005",
+       "spindle": 6.666666666666667e-05,
+       "impl": 6.666666666666667e-05
+      },
+      {
+       "value": "MLS-0000006",
+       "spindle": 6.666666666666667e-05,
+       "impl": 6.666666666666667e-05
+      },
+      {
+       "value": "MLS-0000007",
+       "spindle": 6.666666666666667e-05,
+       "impl": 6.666666666666667e-05
+      },
+      {
+       "value": "MLS-0000008",
+       "spindle": 6.666666666666667e-05,
+       "impl": 6.666666666666667e-05
+      },
+      {
+       "value": "MLS-0000009",
+       "spindle": 6.666666666666667e-05,
+       "impl": 6.666666666666667e-05
+      },
+      {
+       "value": "MLS-0000010",
+       "spindle": 6.666666666666667e-05,
+       "impl": 6.666666666666667e-05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "MLS-{seq:7}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "showing": {
+   "rows": {
+    "spindle": 75000,
+    "impl": 75000
+   },
+   "columns_spindle": [
+    "showing_id",
+    "listing_id",
+    "agent_id",
+    "showing_date",
+    "feedback",
+    "buyer_interest_level"
+   ],
+   "columns_impl": [
+    "showing_id",
+    "listing_id",
+    "agent_id",
+    "showing_date",
+    "feedback",
+    "buyer_interest_level"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "showing_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "listing_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "agent_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "showing_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "feedback": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "buyer_interest_level": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "showing_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428027561675014e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.010067043564385115,
+     "stats": {
+      "mean": {
+       "spindle": 37500.5,
+       "impl": 37500.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 75000.0,
+       "impl": 75000.0
+      },
+      "std": {
+       "spindle": 21650.635092686465,
+       "impl": 21650.635092686465,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 75000,
+      "impl": 75000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "listing_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428027561675014e-05
+     },
+     "ks": 0.005466666666666675,
+     "ks_baseline": 0.005213333333333348,
+     "ks_tol": 0.010067043564385115,
+     "stats": {
+      "mean": {
+       "spindle": 7492.413813333334,
+       "impl": 7526.59364
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 15000.0,
+       "impl": 15000.0
+      },
+      "std": {
+       "spindle": 4342.744056836092,
+       "impl": 4331.748802117325,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 14893,
+      "impl": 14892
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "agent_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428027561675014e-05
+     },
+     "ks": 0.005120000000000013,
+     "ks_baseline": 0.005333333333333301,
+     "ks_tol": 0.010067043564385115,
+     "stats": {
+      "mean": {
+       "spindle": 13.77608,
+       "impl": 13.69776
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "spindle": 20.9430941641137,
+       "impl": 20.84572052762229,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "showing_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428027561675014e-05
+     },
+     "ks": 0.0050000000000000044,
+     "ks_baseline": 0.005213333333333292,
+     "ks_tol": 0.010067043564385115,
+     "stats": {
+      "mean": {
+       "spindle": "2022-12-30 12:04:53.507896576",
+       "impl": "2023-01-01 23:32:17.619089920"
+      },
+      "min": {
+       "spindle": "2020-01-01 00:28:49.111841280",
+       "impl": "2020-01-01 00:08:13.223759872"
+      },
+      "max": {
+       "spindle": "2025-12-30 23:53:08.440552192",
+       "impl": "2025-12-30 23:50:39.591439104"
+      },
+      "std": {
+       "spindle": 633.6704811401843,
+       "impl": 631.9482463108634,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 75000,
+      "impl": 75000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "feedback": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.24956,
+      "impl": 0.24949333333333334,
+      "baseline_max_abs_diff": 0.002066666666666661,
+      "tol": 0.011173773054195554
+     },
+     "distinct": {
+      "spindle": 2000,
+      "impl": 2000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Budget allocation for optimized assessment has been approved.",
+       "spindle": 0.0008883677131638328,
+       "impl": 0.0004974417282546902
+      },
+      {
+       "value": "Customer resource has been validated through our optimized program.",
+       "spindle": 0.0007995309418474495,
+       "impl": 0.0005862706083001705
+      },
+      {
+       "value": "We need to processed the preliminary budget before the deadline.",
+       "spindle": 0.0007817635875841728,
+       "impl": 0.0004974417282546902
+      },
+      {
+       "value": "Implementation of the primary quality is scheduled for next quarter.",
+       "spindle": 0.0007817635875841728,
+       "impl": 0.0005685048322910744
+      },
+      {
+       "value": "Budget allocation for integrated deliverable has been finalized.",
+       "spindle": 0.0007817635875841728,
+       "impl": 0.0004974417282546902
+      },
+      {
+       "value": "The primary report initiative will drive visibility growth.",
+       "spindle": 0.0007817635875841728,
+       "impl": 0.0005507390562819784
+      },
+      {
+       "value": "A comprehensive process plan was distributed by the committee.",
+       "spindle": 0.0007639962333208962,
+       "impl": 0.0005685048322910744
+      },
+      {
+       "value": "Quality demand measures have been restructured across all departments.",
+       "spindle": 0.0007462288790576195,
+       "impl": 0.00044414440022740194
+      },
+      {
+       "value": "We are committed to delivering financial assessment to all stakeholders.",
+       "spindle": 0.0007462288790576195,
+       "impl": 0.0004974417282546902
+      },
+      {
+       "value": "Regular project updates ensure detailed compliance with standards.",
+       "spindle": 0.0007462288790576195,
+       "impl": 0.0005507390562819784
+      },
+      {
+       "value": "Quality budget measures have been reviewed across all departments.",
+       "spindle": 0.0005685553364248529,
+       "impl": 0.0007994599204093235
+      },
+      {
+       "value": "This compliance requires technical revenue to be effective.",
+       "spindle": 0.00035534708526553313,
+       "impl": 0.0007816941444002274
+      },
+      {
+       "value": "The revised milestone project exceeded efficiency expectations.",
+       "spindle": 0.0006573921077412362,
+       "impl": 0.0007639283683911313
+      },
+      {
+       "value": "This supply requires approved automation to be effective.",
+       "spindle": 0.0005685553364248529,
+       "impl": 0.0007639283683911313
+      },
+      {
+       "value": "The innovative revenue initiative will drive compliance growth.",
+       "spindle": 0.0004086491480553631,
+       "impl": 0.0007639283683911313
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "buyer_interest_level": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428027561675014e-05
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Medium",
+       "spindle": 0.35008,
+       "impl": 0.34918666666666665
+      },
+      {
+       "value": "Low",
+       "spindle": 0.29834666666666665,
+       "impl": 0.30057333333333336
+      },
+      {
+       "value": "High",
+       "spindle": 0.20141333333333333,
+       "impl": 0.19950666666666667
+      },
+      {
+       "value": "None",
+       "spindle": 0.15016,
+       "impl": 0.15073333333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0028000000000000386,
+     "tvd_baseline": 0.004453333333333337,
+     "tvd_tol": 0.017480774889473267,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "offer": {
+   "rows": {
+    "spindle": 22500,
+    "impl": 22500
+   },
+   "columns_spindle": [
+    "offer_id",
+    "listing_id",
+    "offer_date",
+    "offer_amount",
+    "status",
+    "contingencies"
+   ],
+   "columns_impl": [
+    "offer_id",
+    "listing_id",
+    "offer_date",
+    "offer_amount",
+    "status",
+    "contingencies"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "offer_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "listing_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "offer_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "offer_amount": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "contingencies": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "offer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003142626966790769
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.01837982282533646,
+     "stats": {
+      "mean": {
+       "spindle": 11250.5,
+       "impl": 11250.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 22500.0,
+       "impl": 22500.0
+      },
+      "std": {
+       "spindle": 6495.190521968287,
+       "impl": 6495.190521968287,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 22500,
+      "impl": 22500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "listing_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003142626966790769
+     },
+     "ks": 0.0074222222222222745,
+     "ks_baseline": 0.008444444444444477,
+     "ks_tol": 0.01837982282533646,
+     "stats": {
+      "mean": {
+       "spindle": 7487.3552,
+       "impl": 7521.579377777778
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 14998.0,
+       "impl": 14999.0
+      },
+      "std": {
+       "spindle": 4328.932162437813,
+       "impl": 4316.557642150777,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 11722,
+      "impl": 11693
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "offer_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003142626966790769
+     },
+     "ks": 0.007244444444444442,
+     "ks_baseline": 0.009688888888888914,
+     "ks_tol": 0.01837982282533646,
+     "stats": {
+      "mean": {
+       "spindle": "2023-01-04 01:16:01.903899392",
+       "impl": "2022-12-31 06:02:35.369277440"
+      },
+      "min": {
+       "spindle": "2020-01-01 01:56:55.256514304",
+       "impl": "2020-01-01 02:50:49.070842880"
+      },
+      "max": {
+       "spindle": "2025-12-30 22:03:10.828461824",
+       "impl": "2025-12-30 22:16:03.087581952"
+      },
+      "std": {
+       "spindle": 630.9054772608303,
+       "impl": 633.3018746513401,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 22500,
+      "impl": 22500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "offer_amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003142626966790769
+     },
+     "ks": 0.007333333333333358,
+     "ks_baseline": 0.008888888888888946,
+     "ks_tol": 0.01837982282533646,
+     "stats": {
+      "mean": {
+       "spindle": 310963.56414451665,
+       "impl": 312396.32931811415
+      },
+      "min": {
+       "spindle": 40000.0,
+       "impl": 40000.0
+      },
+      "max": {
+       "spindle": 4751024.866762366,
+       "impl": 3486647.8079318083
+      },
+      "std": {
+       "spindle": 247875.24846398964,
+       "impl": 244604.1292944271,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 22380,
+      "impl": 22395
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003142626966790769
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Accepted",
+       "spindle": 0.30293333333333333,
+       "impl": 0.2972
+      },
+      {
+       "value": "Rejected",
+       "spindle": 0.2552,
+       "impl": 0.2531555555555556
+      },
+      {
+       "value": "Countered",
+       "spindle": 0.196,
+       "impl": 0.20146666666666666
+      },
+      {
+       "value": "Pending",
+       "spindle": 0.14853333333333332,
+       "impl": 0.14728888888888889
+      },
+      {
+       "value": "Withdrawn",
+       "spindle": 0.09733333333333333,
+       "impl": 0.10088888888888889
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.009022222222222182,
+     "tvd_baseline": 0.011955555555555532,
+     "tvd_tol": 0.03568248232305543,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "contingencies": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003142626966790769
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Inspection",
+       "spindle": 0.3035555555555556,
+       "impl": 0.2984
+      },
+      {
+       "value": "Financing",
+       "spindle": 0.27884444444444445,
+       "impl": 0.2838222222222222
+      },
+      {
+       "value": "Appraisal",
+       "spindle": 0.2128,
+       "impl": 0.2185777777777778
+      },
+      {
+       "value": "None",
+       "spindle": 0.2048,
+       "impl": 0.1992
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.010755555555555574,
+     "tvd_baseline": 0.016399999999999998,
+     "tvd_tol": 0.031915382432114614,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "transaction": {
+   "rows": {
+    "spindle": 6000,
+    "impl": 6000
+   },
+   "columns_spindle": [
+    "transaction_id",
+    "listing_id",
+    "buyer_agent_id",
+    "seller_agent_id",
+    "sale_price",
+    "close_date",
+    "commission_rate"
+   ],
+   "columns_impl": [
+    "transaction_id",
+    "listing_id",
+    "buyer_agent_id",
+    "seller_agent_id",
+    "sale_price",
+    "close_date",
+    "commission_rate"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "transaction_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "listing_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "buyer_agent_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "seller_agent_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "sale_price": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "close_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "commission_rate": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "transaction_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 3000.5,
+       "impl": 3000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 6000.0,
+       "impl": 6000.0
+      },
+      "std": {
+       "spindle": 1732.050783512616,
+       "impl": 1732.050783512616,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 6000,
+      "impl": 6000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "listing_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.018333333333333368,
+     "ks_baseline": 0.019166666666666665,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 7485.998,
+       "impl": 7397.538333333333
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 14996.0,
+       "impl": 14999.0
+      },
+      "std": {
+       "spindle": 4323.244580134539,
+       "impl": 4339.3286643823785,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4952,
+      "impl": 4938
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "buyer_agent_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.011166666666666714,
+     "ks_baseline": 0.014500000000000013,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 11.420666666666667,
+       "impl": 11.230166666666667
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "spindle": 18.856149471429443,
+       "impl": 18.693114328692147,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "seller_agent_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.0076666666666667105,
+     "ks_baseline": 0.017166666666666663,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 10.9655,
+       "impl": 11.068833333333334
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "spindle": 18.34257278618969,
+       "impl": 18.57510238569061,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "sale_price": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.02299999999999991,
+     "ks_baseline": 0.019333333333333313,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 343119.9704024502,
+       "impl": 348627.6072548554
+      },
+      "min": {
+       "spindle": 50000.0,
+       "impl": 50000.0
+      },
+      "max": {
+       "spindle": 3364285.2208033614,
+       "impl": 2949151.416587165
+      },
+      "std": {
+       "spindle": 277408.6110788989,
+       "impl": 278633.51201178395,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5951,
+      "impl": 5957
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "close_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.01333333333333342,
+     "ks_baseline": 0.016333333333333422,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": "2023-02-10 12:21:59.469860608",
+       "impl": "2023-02-08 08:17:35.602146304"
+      },
+      "min": {
+       "spindle": "2020-03-01 05:11:18.538658304",
+       "impl": "2020-03-01 01:12:02.417990912"
+      },
+      "max": {
+       "spindle": "2025-12-30 23:13:35.912523008",
+       "impl": "2025-12-30 21:28:56.962054912"
+      },
+      "std": {
+       "spindle": 615.91625706477,
+       "impl": 613.4872212713332,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 6000,
+      "impl": 6000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "commission_rate": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.019166666666666665,
+     "ks_baseline": 0.026833333333333376,
+     "ks_tol": 0.042250000000000065,
+     "stats": {
+      "mean": {
+       "spindle": 4.228339312513008,
+       "impl": 4.256016560576462
+      },
+      "min": {
+       "spindle": 2.5000394737940907,
+       "impl": 2.500467123280364
+      },
+      "max": {
+       "spindle": 5.9998419051111815,
+       "impl": 5.999741450681992
+      },
+      "std": {
+       "spindle": 1.0119273365734918,
+       "impl": 1.0061864625618693,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 6000,
+      "impl": 6000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "inspection": {
+   "rows": {
+    "spindle": 6000,
+    "impl": 6000
+   },
+   "columns_spindle": [
+    "inspection_id",
+    "transaction_id",
+    "inspection_date",
+    "inspector_name",
+    "inspection_type",
+    "result",
+    "findings_count"
+   ],
+   "columns_impl": [
+    "inspection_id",
+    "transaction_id",
+    "inspection_date",
+    "inspector_name",
+    "inspection_type",
+    "result",
+    "findings_count"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "inspection_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "transaction_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "inspection_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "inspector_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "inspection_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "result": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "findings_count": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "inspection_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 3000.5,
+       "impl": 3000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 6000.0,
+       "impl": 6000.0
+      },
+      "std": {
+       "spindle": 1732.050783512616,
+       "impl": 1732.050783512616,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 6000,
+      "impl": 6000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "transaction_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.018500000000000072,
+     "ks_baseline": 0.01633333333333331,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 2983.585666666667,
+       "impl": 3006.0758333333333
+      },
+      "min": {
+       "spindle": 2.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5999.0,
+       "impl": 6000.0
+      },
+      "std": {
+       "spindle": 1724.3084638953733,
+       "impl": 1734.6528517494903,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 3832,
+      "impl": 3809
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "inspection_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.01883333333333337,
+     "ks_baseline": 0.013500000000000068,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": "2023-01-27 18:38:43.569740032",
+       "impl": "2023-01-17 09:49:49.359279872"
+      },
+      "min": {
+       "spindle": "2020-03-01 10:09:42.646675456",
+       "impl": "2020-03-01 03:03:22.494441984"
+      },
+      "max": {
+       "spindle": "2025-12-30 05:35:34.861114624",
+       "impl": "2025-12-30 20:54:47.898288128"
+      },
+      "std": {
+       "spindle": 614.368887939223,
+       "impl": 617.0133887951334,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 6000,
+      "impl": 6000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "inspector_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "distinct": {
+      "spindle": 6000,
+      "impl": 6000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0001666666666666483
+     },
+     "top10": [
+      {
+       "value": "Peer Hannberg",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Devin Corstein",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Kane Klein",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Jaok Merway",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Willow Osbway",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Wanda Palmeford",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Cesar Quinberg",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Hook Penwood",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Ria Arnshire",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Vary Peaton",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Coia Ochofield",
+       "spindle": 0.0,
+       "impl": 0.00016666666666666666
+      },
+      {
+       "value": "Asane Eatonworth",
+       "spindle": 0.0,
+       "impl": 0.00016666666666666666
+      },
+      {
+       "value": "Sidra Guerra",
+       "spindle": 0.0,
+       "impl": 0.00016666666666666666
+      },
+      {
+       "value": "Haora Bearley",
+       "spindle": 0.0,
+       "impl": 0.00016666666666666666
+      },
+      {
+       "value": "Edion Warshire",
+       "spindle": 0.0,
+       "impl": 0.00016666666666666666
+      }
+     ],
+     "vocab_overlap": 0.0005,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "FIRST_NAMES+' '+LAST_NAMES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "inspection_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "distinct": {
+      "spindle": 10,
+      "impl": 10,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "General Home Inspection",
+       "spindle": 0.18283333333333332,
+       "impl": 0.1785
+      },
+      {
+       "value": "Roof Inspection",
+       "spindle": 0.13266666666666665,
+       "impl": 0.13833333333333334
+      },
+      {
+       "value": "Electrical Inspection",
+       "spindle": 0.11566666666666667,
+       "impl": 0.11633333333333333
+      },
+      {
+       "value": "Plumbing Inspection",
+       "spindle": 0.11183333333333334,
+       "impl": 0.1225
+      },
+      {
+       "value": "HVAC Inspection",
+       "spindle": 0.10716666666666666,
+       "impl": 0.10883333333333334
+      },
+      {
+       "value": "Pest/Termite Inspection",
+       "spindle": 0.09933333333333333,
+       "impl": 0.089
+      },
+      {
+       "value": "Foundation Inspection",
+       "spindle": 0.08883333333333333,
+       "impl": 0.088
+      },
+      {
+       "value": "Radon Testing",
+       "spindle": 0.07,
+       "impl": 0.06616666666666667
+      },
+      {
+       "value": "Mold Inspection",
+       "spindle": 0.0485,
+       "impl": 0.048
+      },
+      {
+       "value": "Septic System Inspection",
+       "spindle": 0.043166666666666666,
+       "impl": 0.044333333333333336
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.019833333333333345,
+     "tvd_baseline": 0.04049999999999998,
+     "tvd_tol": 0.097720502380584,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "result": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Pass",
+       "spindle": 0.587,
+       "impl": 0.5951666666666666
+      },
+      {
+       "value": "Conditional",
+       "spindle": 0.30466666666666664,
+       "impl": 0.30683333333333335
+      },
+      {
+       "value": "Fail",
+       "spindle": 0.10833333333333334,
+       "impl": 0.098
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.010333333333333347,
+     "tvd_baseline": 0.016333333333333366,
+     "tvd_tol": 0.05352372348458313,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "findings_count": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.017000000000000015,
+     "ks_baseline": 0.018333333333333313,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 7.501203570709819,
+       "impl": 7.610753599123159
+      },
+      "min": {
+       "spindle": 0.00023019950970759595,
+       "impl": 0.0034567493074905142
+      },
+      "max": {
+       "spindle": 14.992063730470765,
+       "impl": 14.99823983629485
+      },
+      "std": {
+       "spindle": 4.285787150182617,
+       "impl": 4.303553115946382,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 6000,
+      "impl": 6000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "appraisal": {
+   "rows": {
+    "spindle": 6000,
+    "impl": 6000
+   },
+   "columns_spindle": [
+    "appraisal_id",
+    "transaction_id",
+    "appraisal_date",
+    "appraised_value",
+    "appraiser_name",
+    "condition_rating"
+   ],
+   "columns_impl": [
+    "appraisal_id",
+    "transaction_id",
+    "appraisal_date",
+    "appraised_value",
+    "appraiser_name",
+    "condition_rating"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "appraisal_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "transaction_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "appraisal_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "appraised_value": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "appraiser_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "condition_rating": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "appraisal_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 3000.5,
+       "impl": 3000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 6000.0,
+       "impl": 6000.0
+      },
+      "std": {
+       "spindle": 1732.050783512616,
+       "impl": 1732.050783512616,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 6000,
+      "impl": 6000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "transaction_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.015,
+     "ks_baseline": 0.015666666666666607,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 2988.7115,
+       "impl": 2987.6143333333334
+      },
+      "min": {
+       "spindle": 2.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5999.0,
+       "impl": 5999.0
+      },
+      "std": {
+       "spindle": 1734.3240381392832,
+       "impl": 1710.2499071562286,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 3778,
+      "impl": 3794
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "appraisal_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.01799999999999996,
+     "ks_baseline": 0.025500000000000023,
+     "ks_tol": 0.040250000000000036,
+     "stats": {
+      "mean": {
+       "spindle": "2023-01-22 01:30:13.204589568",
+       "impl": "2023-01-31 07:58:04.047609856"
+      },
+      "min": {
+       "spindle": "2020-03-01 03:57:01.227957248",
+       "impl": "2020-03-01 03:10:55.235422976"
+      },
+      "max": {
+       "spindle": "2025-12-30 17:52:32.116118016",
+       "impl": "2025-12-30 13:02:01.513612032"
+      },
+      "std": {
+       "spindle": 616.8229545217945,
+       "impl": 609.7637613628431,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 6000,
+      "impl": 6000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "appraised_value": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.01783333333333334,
+     "ks_baseline": 0.01883333333333337,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 338938.75898651173,
+       "impl": 338513.7930742916
+      },
+      "min": {
+       "spindle": 50000.0,
+       "impl": 50000.0
+      },
+      "max": {
+       "spindle": 3798448.47180122,
+       "impl": 5000000.0
+      },
+      "std": {
+       "spindle": 268518.1158476449,
+       "impl": 274229.34341097885,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5942,
+      "impl": 5938
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "appraiser_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "distinct": {
+      "spindle": 6000,
+      "impl": 6000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Cael Weibrook",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Feene Dominshire",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Krard Ramsey",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Vincent Decker",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Lanna Booneworth",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Prisha Osbway",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Kristine Cunnford",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Wear Palwell",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Wine Silgate",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Marcia Miranton",
+       "spindle": 0.00016666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Soth Cunnman",
+       "spindle": 0.0,
+       "impl": 0.00016666666666666666
+      },
+      {
+       "value": "Taila Mccawell",
+       "spindle": 0.0,
+       "impl": 0.00016666666666666666
+      },
+      {
+       "value": "Wie Valdcroft",
+       "spindle": 0.0,
+       "impl": 0.00016666666666666666
+      },
+      {
+       "value": "Evie Smagate",
+       "spindle": 0.0,
+       "impl": 0.00016666666666666666
+      },
+      {
+       "value": "Laona SanConnell",
+       "spindle": 0.0,
+       "impl": 0.00016666666666666666
+      }
+     ],
+     "vocab_overlap": 0.00016666666666666666,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "FIRST_NAMES+' '+LAST_NAMES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "condition_rating": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Good",
+       "spindle": 0.5031666666666667,
+       "impl": 0.498
+      },
+      {
+       "value": "Fair",
+       "spindle": 0.29533333333333334,
+       "impl": 0.295
+      },
+      {
+       "value": "Excellent",
+       "spindle": 0.15066666666666667,
+       "impl": 0.15916666666666668
+      },
+      {
+       "value": "Poor",
+       "spindle": 0.050833333333333335,
+       "impl": 0.04783333333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.008500000000000008,
+     "tvd_baseline": 0.00983333333333333,
+     "tvd_tol": 0.06180387232371033,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "spindle": [
+   "agent",
+   "neighborhood",
+   "property",
+   "listing",
+   "offer",
+   "showing",
+   "transaction",
+   "appraisal",
+   "inspection"
+  ],
+  "impl": [
+   "agent",
+   "neighborhood",
+   "property",
+   "listing",
+   "offer",
+   "showing",
+   "transaction",
+   "appraisal",
+   "inspection"
+  ]
+ },
+ "fk_integrity": {
+  "spindle": {
+   "property.neighborhood_id->neighborhood.neighborhood_id": {
+    "integrity": 1.0,
+    "n": 10000
+   },
+   "listing.property_id->property.property_id": {
+    "integrity": 1.0,
+    "n": 15000
+   },
+   "listing.agent_id->agent.agent_id": {
+    "integrity": 1.0,
+    "n": 15000
+   },
+   "showing.listing_id->listing.listing_id": {
+    "integrity": 1.0,
+    "n": 75000
+   },
+   "showing.agent_id->agent.agent_id": {
+    "integrity": 1.0,
+    "n": 75000
+   },
+   "offer.listing_id->listing.listing_id": {
+    "integrity": 1.0,
+    "n": 22500
+   },
+   "transaction.listing_id->listing.listing_id": {
+    "integrity": 1.0,
+    "n": 6000
+   },
+   "transaction.buyer_agent_id->agent.agent_id": {
+    "integrity": 1.0,
+    "n": 6000
+   },
+   "transaction.seller_agent_id->agent.agent_id": {
+    "integrity": 1.0,
+    "n": 6000
+   },
+   "inspection.transaction_id->transaction.transaction_id": {
+    "integrity": 1.0,
+    "n": 6000
+   },
+   "appraisal.transaction_id->transaction.transaction_id": {
+    "integrity": 1.0,
+    "n": 6000
+   }
+  },
+  "impl": {
+   "property.neighborhood_id->neighborhood.neighborhood_id": {
+    "integrity": 1.0,
+    "n": 10000
+   },
+   "listing.property_id->property.property_id": {
+    "integrity": 1.0,
+    "n": 15000
+   },
+   "listing.agent_id->agent.agent_id": {
+    "integrity": 1.0,
+    "n": 15000
+   },
+   "showing.listing_id->listing.listing_id": {
+    "integrity": 1.0,
+    "n": 75000
+   },
+   "showing.agent_id->agent.agent_id": {
+    "integrity": 1.0,
+    "n": 75000
+   },
+   "offer.listing_id->listing.listing_id": {
+    "integrity": 1.0,
+    "n": 22500
+   },
+   "transaction.listing_id->listing.listing_id": {
+    "integrity": 1.0,
+    "n": 6000
+   },
+   "transaction.buyer_agent_id->agent.agent_id": {
+    "integrity": 1.0,
+    "n": 6000
+   },
+   "transaction.seller_agent_id->agent.agent_id": {
+    "integrity": 1.0,
+    "n": 6000
+   },
+   "inspection.transaction_id->transaction.transaction_id": {
+    "integrity": 1.0,
+    "n": 6000
+   },
+   "appraisal.transaction_id->transaction.transaction_id": {
+    "integrity": 1.0,
+    "n": 6000
+   }
+  }
+ },
+ "fanout": {
+  "neighborhood->property.neighborhood_id": {
+   "spindle": {
+    "p50": 59.5,
+    "p90": 342.1000000000001,
+    "p99": 2437.129999999996,
+    "max": 3448,
+    "mean": 200.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 54.0,
+    "p90": 359.9000000000001,
+    "p99": 2400.4099999999958,
+    "max": 3425,
+    "mean": 200.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.08000000000000002,
+   "ks_baseline_max": 0.10000000000000003,
+   "ks_tol": 0.38989492070408105,
+   "equivalent": true
+  },
+  "property->listing.property_id": {
+   "spindle": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 5.0,
+    "max": 8,
+    "mean": 1.5,
+    "zero_frac": 0.2199
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 5.0,
+    "max": 8,
+    "mean": 1.5,
+    "zero_frac": 0.2247
+   },
+   "ks_counts": 0.004799999999999999,
+   "ks_baseline_max": 0.008700000000000041,
+   "ks_tol": 0.02756973423800469,
+   "equivalent": true
+  },
+  "agent->listing.agent_id": {
+   "spindle": {
+    "p50": 23.5,
+    "p90": 211.9000000000001,
+    "p99": 2177.2900000000172,
+    "max": 5473,
+    "mean": 150.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 21.5,
+    "p90": 190.50000000000028,
+    "p99": 2073.970000000018,
+    "max": 5536,
+    "mean": 150.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.07,
+   "ks_baseline_max": 0.09,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "listing->showing.listing_id": {
+   "spindle": {
+    "p50": 5.0,
+    "p90": 8.0,
+    "p99": 11.0,
+    "max": 15,
+    "mean": 5.0,
+    "zero_frac": 0.0071333333333333335
+   },
+   "impl": {
+    "p50": 5.0,
+    "p90": 8.0,
+    "p99": 11.0,
+    "max": 15,
+    "mean": 5.0,
+    "zero_frac": 0.0072
+   },
+   "ks_counts": 0.004266666666666669,
+   "ks_baseline_max": 0.0070666666666666655,
+   "ks_tol": 0.022510593742416898,
+   "equivalent": true
+  },
+  "agent->showing.agent_id": {
+   "spindle": {
+    "p50": 188.0,
+    "p90": 1176.5000000000011,
+    "p99": 9165.710000000061,
+    "max": 20819,
+    "mean": 750.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 190.0,
+    "p90": 1172.7000000000012,
+    "p99": 9309.90000000006,
+    "max": 20784,
+    "mean": 750.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.05999999999999994,
+   "ks_baseline_max": 0.07,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "listing->offer.listing_id": {
+   "spindle": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 5.0,
+    "max": 8,
+    "mean": 1.5,
+    "zero_frac": 0.21853333333333333
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 5.0,
+    "max": 9,
+    "mean": 1.5,
+    "zero_frac": 0.22046666666666667
+   },
+   "ks_counts": 0.0044000000000000705,
+   "ks_baseline_max": 0.007466666666666677,
+   "ks_tol": 0.022510593742416898,
+   "equivalent": true
+  },
+  "listing->transaction.listing_id": {
+   "spindle": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 6,
+    "mean": 0.4,
+    "zero_frac": 0.6698666666666667
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 5,
+    "mean": 0.4,
+    "zero_frac": 0.6708
+   },
+   "ks_counts": 0.0009333333333332305,
+   "ks_baseline_max": 0.0033333333333332993,
+   "ks_tol": 0.022510593742416898,
+   "equivalent": true
+  },
+  "agent->transaction.buyer_agent_id": {
+   "spindle": {
+    "p50": 12.5,
+    "p90": 87.20000000000002,
+    "p99": 784.5600000000059,
+    "max": 1929,
+    "mean": 60.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 12.5,
+    "p90": 84.50000000000004,
+    "p99": 787.1900000000062,
+    "max": 1994,
+    "mean": 60.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.06000000000000005,
+   "ks_baseline_max": 0.09999999999999998,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "agent->transaction.seller_agent_id": {
+   "spindle": {
+    "p50": 12.5,
+    "p90": 71.70000000000023,
+    "p99": 806.0800000000062,
+    "max": 2002,
+    "mean": 60.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 11.5,
+    "p90": 96.2000000000001,
+    "p99": 813.760000000006,
+    "max": 1978,
+    "mean": 60.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.04999999999999999,
+   "ks_baseline_max": 0.1,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "transaction->inspection.transaction_id": {
+   "spindle": {
+    "p50": 1.0,
+    "p90": 2.0,
+    "p99": 4.0,
+    "max": 8,
+    "mean": 1.0,
+    "zero_frac": 0.36133333333333334
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 2.0,
+    "p99": 4.0,
+    "max": 6,
+    "mean": 1.0,
+    "zero_frac": 0.36516666666666664
+   },
+   "ks_counts": 0.0044999999999999485,
+   "ks_baseline_max": 0.006833333333333358,
+   "ks_tol": 0.03559237385438553,
+   "equivalent": true
+  },
+  "transaction->appraisal.transaction_id": {
+   "spindle": {
+    "p50": 1.0,
+    "p90": 2.0,
+    "p99": 4.0,
+    "max": 7,
+    "mean": 1.0,
+    "zero_frac": 0.37033333333333335
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 2.0,
+    "p99": 4.0,
+    "max": 7,
+    "mean": 1.0,
+    "zero_frac": 0.36766666666666664
+   },
+   "ks_counts": 0.0043333333333333,
+   "ks_baseline_max": 0.007833333333333359,
+   "ks_tol": 0.03559237385438553,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {
+  "neighborhood.city+state+zip_code in us_zip_locations": {
+   "impl": 1.0,
+   "spindle": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  }
+ },
+ "strategy_semantics": {},
+ "business_rules": {
+  "spindle_BusinessRulesEngine_violations": {},
+  "spindle_on_spindle": {}
+ },
+ "spindle_fidelity_comparator": {
+  "overall_impl": 89.70675365204436,
+  "overall_baseline_spindle_vs_spindle": [
+   89.93628004662094,
+   89.82917887927293,
+   90.01556859666354,
+   89.7910465565256
+  ],
+  "tables": {
+   "agent": {
+    "impl": 67.79483599754649,
+    "baseline": [
+     67.793282222707,
+     67.81237117333929,
+     67.55390524667229,
+     67.70723548099659
+    ],
+    "floor": 67.05390524667229,
+    "ok": true
+   },
+   "appraisal": {
+    "impl": 90.1508274635943,
+    "baseline": [
+     90.2149371502382,
+     89.94635191124969,
+     90.04428628389469,
+     90.10624064760736
+    ],
+    "floor": 89.44635191124969,
+    "ok": true
+   },
+   "inspection": {
+    "impl": 91.18572840883395,
+    "baseline": [
+     88.71186594248334,
+     91.65428476089639,
+     90.52291317389509,
+     90.19482278895713
+    ],
+    "floor": 88.21186594248334,
+    "ok": true
+   },
+   "listing": {
+    "impl": 98.97933325390807,
+    "baseline": [
+     99.06591898970056,
+     99.18550247039995,
+     98.85751185381915,
+     99.03218532295858
+    ],
+    "floor": 98.35751185381915,
+    "ok": true
+   },
+   "neighborhood": {
+    "impl": 72.75279750601037,
+    "baseline": [
+     76.77615150626721,
+     74.75437247342042,
+     75.9858396969772,
+     75.4433799944384
+    ],
+    "floor": 74.25437247342042,
+    "ok": false
+   },
+   "offer": {
+    "impl": 99.27783873103404,
+    "baseline": [
+     99.36773560349691,
+     97.85939587764017,
+     99.74391189902941,
+     99.15617689084279
+    ],
+    "floor": 97.35939587764017,
+    "ok": true
+   },
+   "property": {
+    "impl": 92.74768675908157,
+    "baseline": [
+     93.1465980529662,
+     92.93962999358287,
+     92.80089723877964,
+     92.45830880188053
+    ],
+    "floor": 91.95830880188053,
+    "ok": true
+   },
+   "showing": {
+    "impl": 95.10319292344336,
+    "baseline": [
+     95.16769749405347,
+     95.05193044474511,
+     95.13620757097222,
+     94.76362241626846
+    ],
+    "floor": 94.26362241626846,
+    "ok": true
+   },
+   "transaction": {
+    "impl": 99.36854182494702,
+    "baseline": [
+     99.18233345767545,
+     99.25877080818263,
+     99.49464440593219,
+     99.25744666478049
+    ],
+    "floor": 98.68233345767545,
+    "ok": true
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 66,
+  "columns_equivalent": 66,
+  "flagged": [
+   "(h) fidelity neighborhood: 72.75 < floor 74.25"
+  ],
+  "passed": false,
+  "seconds": 57.55650854110718
+ }
+}

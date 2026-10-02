@@ -1,0 +1,5 @@
+retail small verify BEFORE exit 0
+retail medium verify BEFORE exit 0
+retail GEN-CLI before exit 0
+retail GEN-CLI after exit 0
+retail medium CLI verify AFTER exit 0
