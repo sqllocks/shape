@@ -142,12 +142,25 @@ def _profile_source(a):
     return a.src
 
 
+def _profile_name(a):
+    """``--name``, else the name of the profile ``-o`` is about to overwrite (so a versioned
+    ``.shape`` keeps its name when the input file changes), else None: the input's own name."""
+    if a.name:
+        return a.name
+    if _artifact_kind(a.output) == "profile":
+        import zipfile
+
+        with zipfile.ZipFile(a.output) as z:
+            return str(json.loads(z.read("manifest.json")).get("name") or "") or None
+    return None
+
+
 def _cmd_profile(a):
     import shape
 
     if not a.output:
         raise ValueError("profile needs -o OUT.shape")
-    prof = shape.profile(_profile_source(a))
+    prof = shape.profile(_profile_source(a), name=_profile_name(a))
     content_id = shape.save(prof, a.output)
     key_id = _sign_output(a, a.output)
     if a.html:
@@ -183,7 +196,11 @@ def _cmd_stream_profile(a):
 
 def _cmd_inspect(a):
     """Print what a .shape artifact holds: a profile or a Shape model."""
-    if _artifact_kind(a.shape) == "profile":
+    if a.pretty:
+        from shape.cli.gitcmds import render
+
+        sys.stdout.write(render(a.shape, "json"))
+    elif _artifact_kind(a.shape) == "profile":
         import shape
 
         prof = shape.load(a.shape)
@@ -456,6 +473,8 @@ def _stream_profile_arguments(parser):
 
 
 def _build_parser(plugin_commands=()):
+    from shape.cli import gitcmds
+
     p = argparse.ArgumentParser(prog="shape", description="Shape as Code")
     p.add_argument("--version", "-V", action="store_true", help="print the version and exit")
     g = p.add_argument_group("run logging and metrics (before the command)")
@@ -497,6 +516,12 @@ def _build_parser(plugin_commands=()):
         help="SRC is a folder of table files: profile one table per file, named by the file name "
         "without its extension (without it a folder is one table)",
     )
+    pr.add_argument(
+        "--name",
+        metavar="NAME",
+        help="the profile's name (default: the input's file name, or, when -o overwrites a "
+        "profile, that profile's name, so re-profiling a versioned file keeps a stable name)",
+    )
     pr.add_argument("--html", metavar="REPORT.html")
     pr.add_argument("--json", metavar="SUMMARY.json")
     sp = sub.add_parser(
@@ -514,6 +539,12 @@ def _build_parser(plugin_commands=()):
         sh = sub.add_parser(name, help="print a .shape artifact's manifest and contents")
         sh.add_argument("shape")
         sh.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
+        sh.add_argument(
+            "--pretty",
+            action="store_true",
+            help="pretty-printed JSON with sorted keys, one value per line (git-diffable)",
+        )
+    gitcmds.add_parsers(sub)
     fd = sub.add_parser(
         "from-ddl",
         help="read SQL CREATE TABLE DDL into a generation schema",
@@ -856,6 +887,10 @@ def _dispatch(argv):
         from shape.cli.transform import run as run_transform
 
         return _run(run_transform, a)
+    if a.cmd in ("cat", "git-setup"):
+        from shape.cli.gitcmds import run as run_gitcmds
+
+        return _run(run_gitcmds, a)
     if a.cmd == "profile":
         return _run(_cmd_profile, a)
     if a.cmd == "stream-profile":
