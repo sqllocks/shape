@@ -25,6 +25,7 @@ Deduplication on offset needs positions the consumer can compare:
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable, Iterator, Mapping
 from typing import Any, Protocol
 
@@ -33,6 +34,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from .checkpoint import CheckpointError, FileCheckpointStore
+from .messages import partition_of
 from .runtime import WindowedProfiler, WindowProfile, restore_profiler
 
 CHECKPOINT_FORMAT = "shape-stream-checkpoint-v1"
@@ -72,6 +74,8 @@ class StreamConsumer:
         offset_column: str | None = None,
         partition_column: str | None = None,
         max_attempts: int = 5,
+        partition_idle_timeout: float | None = None,
+        clock: Callable[[], float] = time.monotonic,
         retry_on: tuple[type[BaseException], ...] = (ConnectionError, TimeoutError),
         on_reconnect: Callable[[int, BaseException], None] | None = None,
         options: Mapping[str, Any] | None = None,
@@ -88,6 +92,10 @@ class StreamConsumer:
         self.offset_column = offset_column
         self.partition_column = partition_column
         self.max_attempts = max_attempts
+        self.partition_idle_timeout = partition_idle_timeout
+        self._clock = clock
+        self._last_heard: dict[str, float] = {}  # partition -> when (clock) it last delivered
+        self._started: float | None = None
         self.retry_on = retry_on
         self.on_reconnect = on_reconnect
         self.options = dict(options or {})
@@ -202,6 +210,28 @@ class StreamConsumer:
             return batch.filter(pa.array(fresh)), reached
         return batch, reached
 
+    # ------------------------------------------------------------ partitions
+    def _note_partitions(self, offset: Any, batch: pa.RecordBatch) -> str | None:
+        """Tell the profiler which partitions the stream has (the keys of a ``{partition: next
+        offset}`` position) so its watermark waits for each of them, and return the partition this
+        batch came from (``None`` when the source did not say). With ``partition_idle_timeout`` a
+        partition that has delivered nothing for that many seconds stops holding the watermark."""
+        value = getattr(offset, "value", None)
+        if isinstance(value, Mapping) and value:
+            self.profiler.register_partitions(str(p) for p in value)
+        origin = partition_of(batch)
+        timeout = self.partition_idle_timeout
+        if timeout is not None:
+            now = self._clock()
+            if self._started is None:
+                self._started = now
+            if origin is not None:
+                self._last_heard[origin] = now
+            for p in self.profiler.partitions:
+                if p != origin and now - self._last_heard.get(p, self._started) > timeout:
+                    self.profiler.set_idle(p)
+        return origin
+
     # ------------------------------------------------------------------- run
     def run(self) -> Iterator[WindowProfile]:
         """Consume until the source is exhausted, yielding each window as it closes."""
@@ -217,7 +247,8 @@ class StreamConsumer:
                     if fresh is None:
                         continue
                     stalled = 0
-                    closed = self.profiler.process(fresh)
+                    origin = self._note_partitions(offset, batch)
+                    closed = self.profiler.process(fresh, origin)
                     for p, v in reached.items():
                         self.positions[p] = max(self.positions.get(p, -1), v)
                     value = getattr(offset, "value", None)

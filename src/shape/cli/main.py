@@ -417,7 +417,23 @@ def _stream_profile_arguments(parser):
         "--allowed-lateness",
         default="0s",
         metavar="DURATION",
-        help="how far behind the newest event time a row may arrive and still count (default: 0s)",
+        help="how far behind the watermark a row may arrive and still count (default: 0s). The "
+        "watermark is kept per partition, so reading partitions at different speeds loses "
+        "nothing by default; rows that are still late are counted and reported",
+    )
+    parser.add_argument(
+        "--max-partition-skew",
+        default="10m",
+        metavar="DURATION",
+        help="how far (event time) a partition may trail the newest event before windows stop "
+        "waiting for it (default: 10m); bounds the number of open windows",
+    )
+    parser.add_argument(
+        "--partition-idle-timeout",
+        type=float,
+        metavar="SECONDS",
+        help="with --follow, a partition that delivers nothing for this long stops holding "
+        "windows open (default: 30; 0 turns it off)",
     )
     parser.add_argument(
         "--event-time",
