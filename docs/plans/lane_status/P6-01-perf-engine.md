@@ -169,7 +169,7 @@ sitting).
 | supply_chain | 112.6 ms | 77.6 ms | -31.1% | 100.0 ms | 67.3 ms | 0.215 | 0.154 |
 | telecom | 414.5 ms | 259.5 ms | -37.4% | 381.9 ms | 238.6 ms | 0.894 | 0.728 |
 
-Shape's CPU-seconds fell 5-35% (pulse only 3%: its rule repair and page faults remain). Unrounded raw runs: `old_vs_new/old_vs_new_medium.json`.
+Shape's CPU-seconds fell 9-33% (pulse only 3%: its rule repair and page faults remain). Unrounded raw runs: `old_vs_new/old_vs_new_medium.json`.
 
 ### Retail (must not regress): GEN-IN medium and large, GEN-CLI medium and large, before and after
 
@@ -216,11 +216,11 @@ kernel in a worktree (`PYTHONPATH`), the "after" rows with the final tree, on th
 | Chunk size (min rows 16k / 8k, max 64k, a width-aware split of wide tables like healthcare's `patient`) | within noise, base best or tied |
 | `sys.setswitchinterval` 1 ms to 50 us | within noise |
 | Reserved core 0 instead of 1 with the native encoder | equal or slower (iot +10%, marketing +5%) |
-| Spawn threshold 12k..100k cells | flat; 400k +9% (retail), 1.6M +25% (marketing): 50k chosen |
+| Spawn threshold 12k..100k cells | flat; against 100k, 400k was +8% (retail) and +7% (marketing), 1.6M +35% (education) and +31% (marketing): 50k chosen |
 | A minimum plan size for worker threads (1M..8M cells) | helps manufacturing 5%, hurts education +30%, supply_chain +20% |
 | Aggregate feeding on a helper thread | no gain (retail +4%) |
 | Dropping all table dependencies (child chunks start at once, parents' columns made on demand) | retail +42%, healthcare +13%, the rest equal: the DAG is not the limiter |
-| glibc `hugetlb=1/2` (transparent huge pages for malloc) | +5% / +20% slower |
+| glibc `hugetlb=1/2` (transparent huge pages for malloc; setting `GLIBC_TUNABLES` also makes `tune_malloc` stand aside) | retail +5% / +22% slower |
 | Encoder `write_batch_size`, page row limit, page bytes | within 3% |
 | Encoder without statistics (-13% of encode CPU) or without dictionary | not adopted: changes the files' features, outside T-17 |
 | zstd, lz4 | T-17 is snappy |

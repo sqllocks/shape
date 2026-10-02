@@ -25,7 +25,7 @@ from typing import Any
 # Cells (rows x columns) of queued work that a worker thread is added for, from two threads on. A
 # cell costs about 30 to 100 ns on the machines measured, so this is a few milliseconds of work.
 # Measured with the same runs interleaved: 12,000 to 100,000 are within noise of each other, and
-# 400,000 or more is slower (retail +9%, education +8%, marketing +25% at 1.6 million).
+# 400,000 is 7-8% slower (retail, marketing) and 1.6 million 31-35% slower (marketing, education).
 SPAWN_CELLS = 50_000
 
 
