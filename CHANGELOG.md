@@ -10,6 +10,11 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   Every message carries the idempotency key `<table>/<seq>`; delivery is at-least-once with
   backpressure and a checkpoint that never passes an undelivered event. The contract each emitter
   meets is `shape.streaming.emit.contract` (`docs/EMIT.md`).
+- `shape pack run|validate|list` and `shape.scenario` (`docs/SCENARIO_PACKS.md`): scenario packs (YAML that
+  bundles a domain, a `file_drop`, `stream` or `hybrid` simulation, chaos, validation gates and landing
+  paths) and generation specs (GSL, `*.gsl.yaml`), with a run manifest written next to every run.
+  Shape ships no packs of its own. Landing paths cannot leave the output directory; unknown gates fail
+  instead of passing; chaos in a pack or spec is applied.
 - `shape emit`: the emitter runtime (`docs/EMIT.md`). Streams a domain's or schema's rows as
   JSON-lines events with the idempotency key `(_shape_table, _shape_seq)`: realtime pacing
   (`--rate`, `--burst START:DURATION:MULT`) or as fast as possible (the default), `--out-of-order`,

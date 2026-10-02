@@ -1,0 +1,33 @@
+# retail_chaos.gsl.yaml
+version: 1
+name: retail_chaos_pipeline
+
+schema:
+  type: domain
+  domain: retail
+
+scenario:
+  pack: tutorial_custom_pack.yaml
+  scale: small
+  seed: 99
+
+chaos:
+  enabled: true
+  intensity: stormy
+  config:
+    warmup_days: 7
+    escalation: gradual
+    breaking_change_day: 20
+
+outputs:
+  lakehouse:
+    mode: tables_and_files
+    tables: [customer, order]
+    landing_zone:
+      root: Files/landing/retail
+  eventstream:
+    enabled: false
+
+validation:
+  gates: [schema_conformance, referential_integrity]
+  drift_policy: quarantine_on_breaking_change

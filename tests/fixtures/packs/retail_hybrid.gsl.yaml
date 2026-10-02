@@ -1,0 +1,25 @@
+# retail_hybrid.gsl.yaml
+version: 1
+name: retail_hybrid_ingest
+
+schema:
+  type: domain
+  domain: retail
+
+scenario:
+  pack: tutorial_custom_pack.yaml
+  scale: fabric_demo
+  seed: 42
+
+outputs:
+  lakehouse:
+    mode: files_only
+    landing_zone:
+      root: Files/landing/retail
+  eventstream:
+    enabled: true
+    endpoint_secret_ref: kv://my-workspace/eventstream_conn
+    topic_prefix: retail
+
+validation:
+  gates: [schema_conformance]
