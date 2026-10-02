@@ -33,6 +33,18 @@ jobs:
             benchmarks/vs_spindle/results.json
             ${{ github.workspace }}/bench-out/verify/
             ${{ github.workspace }}/bench-out/spindle_freeze.txt
+  emit-rate-soak:
+    # P5-01 / G5: the emitter's realtime rate holds within 5% at 10,000 events/s for one hour
+    # (CI runs the same test for 10 minutes in the heavy step).
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install -e '.[dev]'
+      - run: python -m pytest -q -s -m heavy tests/streaming/emit/test_soak.py
+        env: {SHAPE_RATE_SOAK_SECONDS: "3600"}
   emulator-compose:
     # The emulator-backed test jobs (Kafka, Event Hubs + Azurite, SQL Server) arrive with the
     # work packages that own those connectors; until then, keep the compose file valid.
