@@ -17,6 +17,7 @@ import pyarrow.csv as pacsv  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.builtins.sources.files import local_path
+from shape.plugins.schemes import require_scheme
 
 
 class _FileSink:
@@ -33,6 +34,7 @@ class _FileSink:
         return path
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+        require_scheme(self, uri)
         target = self._target(uri, table)
         rows = 0
         writer: Any = None

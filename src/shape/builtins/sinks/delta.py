@@ -12,13 +12,16 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.builtins.sources.files import local_path
+from shape.plugins.schemes import require_scheme
 
 
 class DeltaSink:
     name = "delta"
     schemes = ("file",)
+    extension = ""  # no file extension: a directory per table
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+        require_scheme(self, uri)
         try:
             from deltalake import write_deltalake
         except ImportError as exc:

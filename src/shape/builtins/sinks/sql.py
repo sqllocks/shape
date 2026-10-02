@@ -23,6 +23,7 @@ import pyarrow.types as pat  # type: ignore[import-untyped]
 
 import shape
 from shape.builtins.sources.files import local_path
+from shape.plugins.schemes import require_scheme
 
 DIALECTS = ("tsql", "tsql-fabric-warehouse", "postgres", "mysql")
 DEFAULT_BATCH_ROWS = 1000
@@ -163,6 +164,7 @@ class SqlSink:
 
     name = "sql"
     schemes = ("file",)
+    extension = "sql"
 
     def _target(self, uri: str, table: str) -> Path:
         path = local_path(uri)
@@ -173,6 +175,7 @@ class SqlSink:
         return path
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+        require_scheme(self, uri)
         dialect = str(options.get("sql_dialect", "tsql"))
         if dialect not in DIALECTS:
             raise ValueError(
