@@ -1,7 +1,7 @@
 """The supply_chain domain: warehouses, suppliers, materials, purchase orders and lines, inventory,
-shipments and their events, quality inspections and demand forecasts (10 tables), with the reference
-data it draws from (carrier names, material categories, shipping methods; the ZIP locations are the
-retail domain's)."""
+shipments and their events, quality inspections and demand forecasts (10 tables), with the
+reference data it draws from (carrier names, material categories, shipping methods; the ZIP
+locations are the retail domain's)."""
 
 from __future__ import annotations
 

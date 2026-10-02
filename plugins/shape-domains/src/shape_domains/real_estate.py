@@ -1,6 +1,6 @@
-"""The real_estate domain: neighborhoods, agents, properties, listings, showings, offers, transactions,
-inspections and appraisals (9 tables), with the reference data it draws from (inspection items,
-neighborhoods, property types; the ZIP locations are the retail domain's)."""
+"""The real_estate domain: neighborhoods, agents, properties, listings, showings, offers,
+transactions, inspections and appraisals (9 tables), with the reference data it draws from
+(inspection items, neighborhoods, property types; the ZIP locations are the retail domain's)."""
 
 from __future__ import annotations
 

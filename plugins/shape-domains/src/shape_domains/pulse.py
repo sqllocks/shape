@@ -1,5 +1,5 @@
-"""The pulse domain: a ride-hailing service (riders, drivers, vehicles and trips, 4 tables); its values
-are all generated, so it ships no reference data."""
+"""The pulse domain: a ride-hailing service (riders, drivers, vehicles and trips, 4 tables); its
+values are all generated, so it ships no reference data."""
 
 from __future__ import annotations
 

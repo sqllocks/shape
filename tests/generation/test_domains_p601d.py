@@ -1,5 +1,5 @@
-"""P6-01d: the pulse, real_estate, supply_chain and telecom domains (``shape.domains`` entries) through
-the engine.
+"""P6-01d: the pulse, real_estate, supply_chain and telecom domains (``shape.domains`` entries)
+through the engine.
 
 The plugin ships each domain's schema (3nf and star) and reference datasets. These tests check what
 it hands the engine and what the engine makes of it: the tables, column order and row counts of the
@@ -14,7 +14,6 @@ import json
 import sys
 from pathlib import Path
 
-import pyarrow as pa
 import pyarrow.compute as pc
 import pytest
 
