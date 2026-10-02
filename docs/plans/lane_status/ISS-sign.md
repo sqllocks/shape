@@ -83,3 +83,15 @@ One semantic conflict: P7-04's `test_verify_checks_artifacts_whatever_their_file
 `write_keypair(prefix)` expecting the old unencrypted default; it now passes a passphrase (the
 test only uses the public key; its assertions are unchanged). The nightly workflow, the fuzzer and
 the rest of P7-04 came in unchanged.
+
+## Checks run (final head, after the P7-04 merge)
+
+ruff check + format --check (src tests plugins benchmarks/vs_spindle): clean. mypy (strict): no
+issues in 312 files. vulture (min-confidence 80): clean. lint-imports: 1 kept, 0 broken.
+`check_user_facing.py`: clean. `bandit -q -r src -ll`: no findings (only existing `nosec`
+warnings). START (median of 10 `shape --version`): 46.3 ms (budget 300 ms).
+`pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`:
+SHAPE_KERNEL=rust 4619 passed, 3 skipped; SHAPE_KERNEL=python 4619 passed, 3 skipped (the skips are
+P7-04 tests needing `shape_sqlserver`, a plugin not installed in this venv; installed:
+`.[dev,advanced,sign]` and `-e plugins/shape-domains`). `pytest tests/artifact tests/security`:
+all pass.
