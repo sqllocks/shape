@@ -19,6 +19,9 @@ retail = "shape_domains.retail:RetailDomain"
 capital_markets = "shape_domains.capital_markets:CapitalMarketsDomain"
 education = "shape_domains.education:EducationDomain"
 financial = "shape_domains.financial:FinancialDomain"
+healthcare = "shape_domains.healthcare:HealthcareDomain"
+hr = "shape_domains.hr:HrDomain"
+insurance = "shape_domains.insurance:InsuranceDomain"
 
 [tool.setuptools.packages.find]
 where = ["src"]

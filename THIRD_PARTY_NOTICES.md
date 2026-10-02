@@ -41,8 +41,8 @@ WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH 
 
 ## Domain reference data (SQLLocks)
 
-The reference data of the `capital_markets`, `education`, `financial` and `retail` domains in
-`plugins/shape-domains` (names, catalogs, exchange and sector lists, index memberships, constituents)
+The reference data of the `capital_markets`, `education`, `financial`, `healthcare`, `hr`, `insurance` and `retail` domains in
+`plugins/shape-domains` (names, catalogs, exchange and sector lists, index memberships, constituents, medical and claim code lists)
 is copied from the reference data of release 3.0.1 (commit 422e78df2267e73bb2fa976267e48cb437861e2f)
 of an earlier SQLLocks data-generation library, which is released under the MIT license with the
 same copyright holder as Shape:

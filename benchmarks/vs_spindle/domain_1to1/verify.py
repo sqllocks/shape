@@ -287,6 +287,7 @@ class Pools:
             "last_name": lambda: n.LAST_NAMES,
             "city": lambda: nat._US_CITIES,
             "state_abbr": lambda: nat._US_STATES,
+            "sentence": lambda: n.SENTENCES,
         }
         fn = table.get(provider)
         return {str(x) for x in fn()} if fn else None
