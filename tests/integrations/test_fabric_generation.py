@@ -17,6 +17,17 @@ import shape
 from shape.integrations.fabric import generation, udf
 
 DOMAIN = "retail"
+RETAIL_TABLES = {  # rows at the "small" scale
+    "customer": 1000,
+    "address": 1500,
+    "product_category": 50,
+    "product": 500,
+    "store": 150,
+    "promotion": 200,
+    "order": 5000,
+    "order_line": 12500,
+    "return": 850,
+}
 
 
 @pytest.fixture(scope="module")
@@ -286,15 +297,34 @@ def test_generate_sample_returns_the_asked_rows_of_one_table():
     assert not table.equals(generation.generate_sample(DOMAIN, "customer", rows=250, seed=4))
 
 
+def test_the_sample_keeps_integer_columns_with_nulls_as_integers():
+    frame = udf.generate_sample(DOMAIN, "order_line", rows=400, seed=1)
+    assert frame["promotion_id"].isna().any()  # the column has nulls
+    assert str(frame["promotion_id"].dtype) == "Int64"
+    assert str(frame["order_id"].dtype) == "Int64"
+    assert '"promotion_id"' in frame.head(1).to_json(orient="split")
+    assert "." not in json.dumps(frame["order_id"].head(5).tolist())  # 7, not 7.0
+    back = pa.Table.from_pandas(frame, preserve_index=False)
+    assert back.schema.field("promotion_id").type == pa.int64()
+
+
 def test_a_child_table_sample_keeps_its_foreign_keys_valid():
     sample = generation.generate_sample(DOMAIN, "order_line", rows=300, seed=1)
     assert sample.num_rows == 300
-    parents = generation.sample_row_counts(
+    counts = generation.sample_row_counts(
         generation.generate_domain(DOMAIN, row_counts={"customer": 1}).schema, "order_line", 300
     )
-    assert parents["order_line"] == 300 and parents["order"] <= 300
-    assert max(sample["order_id"].to_pylist()) <= parents["order"]
-    assert min(sample["order_id"].to_pylist()) >= 1
+    assert counts["order_line"] == 300 and counts["order"] == 5000  # the context keeps its size
+    assert 1 <= min(sample["order_id"].to_pylist()) <= max(sample["order_id"].to_pylist()) <= 5000
+
+
+@pytest.mark.parametrize("seed", [42, 1042])
+@pytest.mark.parametrize("table", list(RETAIL_TABLES))
+def test_a_sample_at_the_scale_count_is_that_table_of_a_full_run(table, seed):
+    full = generation.generate_domain(DOMAIN, scale="small", seed=seed)
+    sample = generation.generate_sample(DOMAIN, table, rows=RETAIL_TABLES[table], seed=seed)
+    assert full.tables[table].num_rows == RETAIL_TABLES[table]
+    assert sample.equals(full.tables[table])
 
 
 def test_the_sample_of_a_table_equals_its_slice_of_the_same_run_for_a_root_table():

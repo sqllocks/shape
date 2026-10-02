@@ -450,10 +450,11 @@ Test it from the portal, for example `domain = retail`, `table = customer`, `row
 - Expected: a 100-row DataFrame with the customer columns, identical on every call with the same
   arguments; `rows = 0`, an unknown domain or table, or a name with characters other than letters,
   digits and underscores gives an error that names the problem.
-- It generates the whole domain (the computed columns and business rules need the related tables) with
-  the other tables no larger than `rows`, and returns the one table. A table without foreign keys
-  (`customer`, `store`, ...) equals that table of a full run for the same seed and row count; for a child
-  table the parent keys are valid, but the parents are smaller than in a full run.
+- It generates the whole domain at its default scale (the computed columns and business rules need the
+  related tables), with the requested table at `rows` rows, and returns that one table. With `rows` equal to
+  the table's count at that scale (`customer` 1,000, `order` 5,000, `order_line` 12,500, ... for `retail`) it
+  is exactly that table of a full run with the same seed: the tests assert this for all nine retail tables.
+  With another `rows` the foreign keys are valid and the context tables are unchanged.
 - `rows` is capped at 500,000, and the response is cut to the leading rows that fit in 25 MB of JSON
   (the response limit is 30 MB). Nothing says the cut happened except the row count: compare it with
   `rows`.

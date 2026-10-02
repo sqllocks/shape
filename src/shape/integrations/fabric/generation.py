@@ -323,21 +323,29 @@ def write_delta_tables(
 
 
 def sample_row_counts(schema: GenSchema, table: str, rows: int) -> dict[str, int]:
-    """Row counts for a one-table sample: ``rows`` for ``table`` and, for every other table, its
-    count at the schema's scale preset but at most ``rows`` (so a small sample stays small and
-    every foreign key still has a parent)."""
+    """Row counts for a one-table sample: ``rows`` for ``table`` and every other table at its count
+    at the schema's scale preset (at most :data:`MAX_SAMPLE_ROWS`).
+
+    The other tables are the sample's context: the foreign keys of ``table`` draw from their parents
+    and its computed columns and business rules read its children, so they are generated as the
+    domain generates them. With ``rows`` equal to the table's count at that preset, the sample is
+    exactly that table of a full run with the same seed."""
     from shape.generation.engine import calculate_row_counts
 
     counts = calculate_row_counts(schema)
-    return {name: (rows if name == table else min(count, rows)) for name, count in counts.items()}
+    return {
+        name: (rows if name == table else min(count, MAX_SAMPLE_ROWS))
+        for name, count in counts.items()
+    }
 
 
 def generate_sample(domain: str, table: str, rows: int = 10_000, seed: int = 42) -> pa.Table:
     """``rows`` rows of ``table`` from an installed domain, as an Arrow table.
 
-    The whole domain is generated (the compute and rule passes need the related tables) with the
-    other tables no larger than ``rows``, and only ``table`` is returned. ``rows`` is capped at
-    :data:`MAX_SAMPLE_ROWS`; :func:`fit_rows` caps it further for a response size.
+    The whole domain is generated at its default scale (the compute and rule passes need the related
+    tables; see :func:`sample_row_counts`), with ``table`` at ``rows`` rows, and only ``table`` is
+    returned. ``rows`` is capped at :data:`MAX_SAMPLE_ROWS`; :func:`fit_rows` caps it further for a
+    response size.
     """
     from shape.generation.domains import load_domain
 
@@ -384,6 +392,23 @@ def fit_rows(frame: Any, limit: int | None = None) -> Any:
     return frame if len(frame) <= fits else frame.head(fits)
 
 
+def _nullable_types(arrow_type: Any) -> Any:
+    """pandas' nullable dtype for an Arrow integer or boolean type, so a column with nulls keeps its
+    integers (``1, <NA>``, not ``1.0, NaN``); ``None`` leaves every other type to pandas."""
+    import pandas as pd  # type: ignore[import-untyped]
+
+    if pa.types.is_boolean(arrow_type):
+        return pd.BooleanDtype()
+    if pa.types.is_integer(arrow_type):
+        unsigned = "U" if pa.types.is_unsigned_integer(arrow_type) else ""
+        return pd.api.types.pandas_dtype(f"{unsigned}Int{arrow_type.bit_width}")
+    return None
+
+
 def sample_to_pandas(domain: str, table: str, rows: int = 10_000, seed: int = 42) -> Any:
-    """:func:`generate_sample` as a pandas DataFrame, cut to fit :data:`MAX_RESPONSE_BYTES`."""
-    return fit_rows(generate_sample(domain, table, rows, seed).to_pandas())
+    """:func:`generate_sample` as a pandas DataFrame, cut to fit :data:`MAX_RESPONSE_BYTES`.
+
+    Integer and boolean columns use pandas' nullable dtypes, so a column that has nulls keeps its
+    integer values and its Arrow type when the frame is converted back."""
+    sample = generate_sample(domain, table, rows, seed)
+    return fit_rows(sample.to_pandas(types_mapper=_nullable_types))
