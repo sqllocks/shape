@@ -753,6 +753,7 @@ class Engine:
         is ready, then ``None`` when the table is whole. ``observers`` (child table to aggregates)
         are fed every chunk of their table, in row order. Returns the tables it delivered."""
         todo = [n for n in names if n not in self._tables]
+        todo = self._heaviest_first(todo)
         workers = worker_threads(self.reserved_cores)
         jobs = []
         for name in todo:
@@ -801,6 +802,18 @@ class Engine:
                     name, pa.Table.from_batches(parts, schema=parts[0].schema)
                 )
         return delivered
+
+    def _heaviest_first(self, names: list[str]) -> list[str]:
+        """``names`` with the tables that hold the most values (rows times columns) first, ties in
+        their order. A big table is made, and its file written, while the smaller ones are made,
+        so the file that finishes last is a small one: longest-first scheduling. (Tables are
+        returned in the order of the schema's levels whatever the order they are made in.)"""
+        return sorted(
+            names,
+            key=lambda n: (
+                -self.row_counts.get(n, DEFAULT_ROWS) * len(self.schema.tables[n].columns)
+            ),
+        )
 
     def _small_level(self, jobs: list[tuple[str, int, int, int]]) -> bool:
         """Whether the level is too small for threads to pay: a level of at most
@@ -960,7 +973,7 @@ class Engine:
                 [n for n in level if n in final_early] if on_batch else (),
                 observers,
             )
-            for name in level:
+            for name in self._heaviest_first(level):
                 if name in touched or name in delivered:
                     continue
                 table = self._final_table(name)

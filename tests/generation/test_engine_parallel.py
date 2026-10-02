@@ -366,3 +366,22 @@ def test_small_levels_give_the_same_tables(monkeypatch) -> None:
     threaded = Engine(schema(rows), strategies=STRATEGIES, chunk_rows=50).generate().tables
     for name, table in small.items():
         assert table.equals(threaded[name]), name
+
+
+def test_the_heaviest_table_of_a_level_is_made_and_handed_over_first(monkeypatch) -> None:
+    from shape.generation.engine import dependency_levels
+
+    monkeypatch.delenv(THREADS_ENV, raising=False)
+    rows = {"customer": 40, "order": 120, "order_line": 300}
+    engine = Engine(schema(rows), strategies=STRATEGIES)
+    assert engine._heaviest_first(["customer", "order", "order_line"]) == [
+        "order_line",
+        "order",
+        "customer",
+    ]
+    # ties keep their order
+    engine.row_counts = dict.fromkeys(engine.row_counts, 10)
+    assert engine._heaviest_first(["order", "customer"]) == ["order", "customer"]
+    # and the tables, and their order in the result, do not change
+    result = Engine(schema(rows), strategies=STRATEGIES).generate()
+    assert list(result.tables) == [n for level in dependency_levels(result.schema) for n in level]
