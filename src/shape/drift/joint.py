@@ -157,7 +157,12 @@ def _dependencies(
             continue
         if det not in ct.columns or dep not in ct.columns:
             continue  # a removed column is a column change already
-        emit(det, dep, float(b["confidence"]), "dependency", cur.get(key))
+        found = cur.get(key)
+        if found is None:
+            analysed = set(cj.get("columns", ()))
+            if det not in analysed or dep not in analysed or ct.columns[det].unique_like:
+                continue  # not measured now, or the determinant became a key (holds trivially)
+        emit(det, dep, float(b["confidence"]), "dependency", found)
     for key, c in cur.items():
         det, dep = key[0][0], key[1]
         if key in base or len(key[0]) != 1 or _skipped(policy, table, [det, dep]):

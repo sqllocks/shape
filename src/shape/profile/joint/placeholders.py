@@ -137,14 +137,14 @@ def _kind(value: str) -> str | None:
     low = value.strip().lower()
     if low in _LITERALS:
         return "text_literal"
-    if _REPEATED_DIGIT.match(low) and low.lstrip("-") not in ("0", "00"):
-        return "repeated_digits"
     if len(low) >= 3 and low.strip("0") == "":
         return "zeros"
     if low in _NUMBERS:
         return "numeric_sentinel"
     if low in _DATES or _ZERO_DATE.match(low) or _ZERO_TIME.match(low):
         return "date_sentinel"
+    if _REPEATED_DIGIT.match(low):
+        return "repeated_digits"
     if _REPEATED_CHAR.match(low):
         return "repeated_letters"
     return None
