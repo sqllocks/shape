@@ -5,6 +5,13 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `shape emit`: the emitter runtime (`docs/EMIT.md`). Streams a domain's or schema's rows as
+  JSON-lines events with the idempotency key `(_shape_table, _shape_seq)`: realtime pacing
+  (`--rate`, `--burst START:DURATION:MULT`) or as fast as possible (the default), `--out-of-order`,
+  `--anomaly-fraction` (through the `shape.chaos` mutator protocol), `--max-events`, `--duration`,
+  a CloudEvents envelope, backpressure, at-least-once delivery and a checkpoint on shutdown
+  (`kill -9` then restart, deduplicated on the key, equals an uninterrupted run).
+  `shape.streaming.emit` holds the runtime.
 - Fidelity tiers 1 to 3 (`docs/FIDELITY_TIERS.md`): `shape fidelity REFERENCE SYNTHETIC --tier 1|2|3`
   (tier 1: Gaussian-mixture fits, conditional profiles, adversarial AUC, temporal profiles and
   periodicity; tier 2: format preservation, string similarity, cardinality and anomaly-rate checks;
