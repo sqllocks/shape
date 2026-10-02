@@ -67,7 +67,7 @@ _TYPE_ALIASES: dict[str, str] = {
     **dict.fromkeys(("uuid", "uniqueidentifier"), "uuid"),
     **dict.fromkeys(("bytes", "binary", "varbinary", "blob", "bytea"), "bytea"),
 }
-_TYPE_SPEC = re.compile(r"^\s*([a-z_ ]+?)\s*(?:\(\s*(\d+|max)\s*(?:,\s*(\d+)\s*)?\))?\s*$")
+_TYPE_SPEC = re.compile(r"^\s*([a-z_][a-z0-9_ ]*?)\s*(?:\(\s*(\d+|max)\s*(?:,\s*(\d+)\s*)?\))?\s*$")
 _ZONE_WORDS = re.compile(r"\s+(?:with|without)(?:\s+local)?\s+time\s+zone|\s+unsigned", re.I)
 
 

@@ -171,6 +171,12 @@ class ToDbtTests(_Guarded):
         parser.add_argument(
             "--packages-out", metavar="packages.yml", help="also write the packages the tests need"
         )
+        parser.add_argument(
+            "--merge",
+            metavar="schema.yml",
+            help="add the tests to the entries of this existing schema.yml (dbt allows one entry "
+            "per model; use -o with the same path to update it in place; comments are lost)",
+        )
 
     def execute(self, args: Any) -> int:
         from .totests import bounds_from_profile, compile_tests, contract_from_profile
@@ -203,7 +209,16 @@ class ToDbtTests(_Guarded):
             args_style=args.args_style,
         )
         out = Path(args.output)
-        _write(out, compiled.yaml())
+        if args.merge:
+            import yaml
+
+            from .totests import merge_schema_docs, render_yaml
+
+            base = yaml.safe_load(Path(args.merge).read_text(encoding="utf-8")) or {}
+            merged = merge_schema_docs(base, compiled.doc, tests_key=args.tests_key)
+            _write(out, render_yaml(merged, compiled.packages))
+        else:
+            _write(out, compiled.yaml())
         print(f"Wrote {out}")
         if args.packages_out and compiled.packages:
             _write(Path(args.packages_out), compiled.packages_yml())

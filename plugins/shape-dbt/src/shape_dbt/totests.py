@@ -11,7 +11,7 @@ output needs (``packages.yml``).
 | ``unique: true`` | ``unique`` |
 | ``allowed_values`` | ``accepted_values`` |
 | ``min`` / ``max`` (numbers) | ``dbt_utils.accepted_range`` |
-| ``max_null_rate`` | ``dbt_expectations.expect_column_values_to_not_be_null`` with ``mostly`` |
+| ``max_null_rate`` | ``dbt_utils.not_null_proportion`` (``at_least`` is one minus the rate) |
 | ``row_count`` ``min`` / ``max`` | ``dbt_expectations.expect_table_row_count_to_be_between`` |
 | ``required_columns`` | ``dbt_expectations.expect_column_to_exist`` |
 | ``allow_extra_columns: false`` | ``dbt_expectations.expect_table_columns_to_match_set`` |
@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import copy
 import math
+import re
 from collections.abc import Iterable, Mapping
 from typing import Any
 
@@ -47,7 +48,7 @@ NULL_RATE_PLACES = 9
 _QUANTILES = {"p25": 0.25, "p50": 0.5, "p75": 0.75}
 _EXPECT = "dbt_expectations."
 _RANGE = "dbt_utils.accepted_range"
-_NOT_NULL_MOSTLY = _EXPECT + "expect_column_values_to_not_be_null"
+_NOT_NULL_SHARE = "dbt_utils.not_null_proportion"
 _ROW_COUNT = _EXPECT + "expect_table_row_count_to_be_between"
 _EXISTS = _EXPECT + "expect_column_to_exist"
 _MATCH_SET = _EXPECT + "expect_table_columns_to_match_set"
@@ -55,6 +56,7 @@ _MEAN = _EXPECT + "expect_column_mean_to_be_between"
 _STDEV = _EXPECT + "expect_column_stdev_to_be_between"
 _QUANTILE = _EXPECT + "expect_column_quantile_values_to_be_between"
 _TAG = "shape"
+_KEY_NAME = re.compile(r"(^|_)(id|key|uuid|guid)$", re.IGNORECASE)
 
 
 def _is_number(v: Any) -> bool:
@@ -138,7 +140,16 @@ def not_expressible(contract: Mapping[str, Any]) -> list[str]:
 
 
 def _plain(tagged: Any) -> Any:
-    return tagged[1] if isinstance(tagged, list) and len(tagged) == 2 else None
+    """The profile stores a minimum or maximum type-tagged: ``["int", 5]``, and a decimal as
+    text, ``["Decimal", "1.50"]``."""
+    if not (isinstance(tagged, list) and len(tagged) == 2):
+        return None
+    if tagged[0] == "Decimal":
+        try:
+            return float(tagged[1])
+        except (TypeError, ValueError):
+            return None
+    return tagged[1]
 
 
 def _round_out(value: float, *, up: bool) -> float | int:
@@ -165,11 +176,14 @@ def _column_contract(col: Mapping[str, Any], margin: float, null_slack: float) -
         rules["nullable"] = False
     elif col.get("null_rate") is not None:
         rules["max_null_rate"] = round(min(1.0, float(col["null_rate"]) + null_slack), 6)
-    if col.get("is_unique"):
+    # A small sample makes any column of names unique: only a key is stated as unique.
+    if col.get("is_unique") and (col.get("is_primary_key") or _KEY_NAME.search(str(col.get("name")))):
         rules["unique"] = True
     lo, hi = _plain(col.get("min_value")), _plain(col.get("max_value"))
     if col["dtype"] in ("integer", "float") and _is_number(lo) and _is_number(hi):
         rules["min"], rules["max"] = _widen(lo, hi, margin)
+        if col["dtype"] == "integer":
+            rules["min"], rules["max"] = math.floor(rules["min"]), math.ceil(rules["max"])
     enum = col.get("enum_values")
     if col["dtype"] == "string" and col.get("is_enum") and isinstance(enum, dict) and enum:
         rules["allowed_values"] = sorted(enum)
@@ -232,6 +246,8 @@ def bounds_from_profile(
                 continue
             if not _is_number(std) or std <= 0:
                 continue
+            if col.get("is_primary_key") or (col["dtype"] == "integer" and col.get("is_unique")):
+                continue  # the mean of a key says nothing about the data
             quantiles = col.get("quantiles") or {}
             per_col[cname] = {
                 "mean": [_r(mean - k * std), _r(mean + k * std)],
@@ -306,8 +322,8 @@ def _column_tests(
             args["max_value"] = numeric["max"]
         add(_RANGE, args)
     if "max_null_rate" in rules:
-        mostly = round(1 - float(rules["max_null_rate"]), NULL_RATE_PLACES)
-        add(_NOT_NULL_MOSTLY, {"mostly": mostly})
+        at_least = round(1 - float(rules["max_null_rate"]), NULL_RATE_PLACES)
+        add(_NOT_NULL_SHARE, {"at_least": at_least})
     for key in NOT_EXPRESSIBLE:
         if key in rules:
             meta[key] = rules[key]
@@ -453,6 +469,86 @@ def compile_tests(
     return Compiled(doc, notes, packages)
 
 
+def _test_key(test: Any) -> tuple[str, str]:
+    """A test's name and arguments, without its config: ``not_null`` and ``{not_null: {config:
+    ...}}`` are one test, and so are an inline argument and the same one under ``arguments``."""
+    import json
+
+    if isinstance(test, str):
+        return test, "{}"
+    (name, body), = test.items()
+    args: dict[str, Any] = {}
+    if isinstance(body, Mapping):
+        args = {k: v for k, v in body.items() if k not in ("config", "arguments", "name")}
+        args.update(body.get("arguments") or {})
+    return str(name), json.dumps(args, sort_keys=True, default=str)
+
+
+def _same_test(a: Any, b: Any) -> bool:
+    return _test_key(a) == _test_key(b)
+
+
+def _merge_tests(base: dict[str, Any], extra: Mapping[str, Any], key: str) -> None:
+    present = base.get("data_tests") if "data_tests" in base else base.get("tests")
+    target_key = "data_tests" if "data_tests" in base else ("tests" if "tests" in base else key)
+    merged = list(present or [])
+    for t in extra.get(key) or []:
+        if not any(_same_test(t, m) for m in merged):
+            merged.append(copy.deepcopy(t))
+    if merged:
+        base[target_key] = merged
+
+
+def _merge_entry(base: dict[str, Any], extra: Mapping[str, Any], key: str) -> None:
+    _merge_tests(base, extra, key)
+    cols: list[dict[str, Any]] = base.setdefault("columns", [])
+    by_name = {c.get("name"): c for c in cols}
+    for ec in extra.get("columns") or []:
+        target = by_name.get(ec["name"])
+        if target is None:
+            cols.append(copy.deepcopy(ec))
+            continue
+        _merge_tests(target, ec, key)
+        if ec.get("meta"):
+            target.setdefault("meta", {}).update(copy.deepcopy(ec["meta"]))
+    if not cols:
+        del base["columns"]
+
+
+def merge_schema_docs(
+    base: Mapping[str, Any], compiled: Mapping[str, Any], *, tests_key: str = "data_tests"
+) -> dict[str, Any]:
+    """``compiled`` tests added to the entries of an existing ``schema.yml`` document (dbt allows
+    one entry per model, seed or source table, so tests for a model that is already described
+    cannot go in a second file). A test that is already there is not added twice; the key the
+    file uses for its tests (``tests`` or ``data_tests``) is kept. The result is a new document;
+    comments in a file written back from it are lost."""
+    out = copy.deepcopy(dict(base))
+    out.setdefault("version", 2)
+    for section in ("models", "seeds", "snapshots"):
+        for entry in compiled.get(section) or []:
+            items: list[dict[str, Any]] = out.setdefault(section, [])
+            target = next((i for i in items if i.get("name") == entry["name"]), None)
+            if target is None:
+                items.append(copy.deepcopy(entry))
+            else:
+                _merge_entry(target, entry, tests_key)
+    for src in compiled.get("sources") or []:
+        sources: list[dict[str, Any]] = out.setdefault("sources", [])
+        base_src = next((s for s in sources if s.get("name") == src["name"]), None)
+        if base_src is None:
+            sources.append(copy.deepcopy(src))
+            continue
+        tables: list[dict[str, Any]] = base_src.setdefault("tables", [])
+        for entry in src.get("tables") or []:
+            target = next((t for t in tables if t.get("name") == entry["name"]), None)
+            if target is None:
+                tables.append(copy.deepcopy(entry))
+            else:
+                _merge_entry(target, entry, tests_key)
+    return out
+
+
 def render_yaml(doc: Mapping[str, Any], packages: Iterable[str] = ()) -> str:
     import yaml
 
@@ -504,8 +600,8 @@ def _read_column(
             for src, dst in (("min_value", "min"), ("max_value", "max")):
                 if src in args:
                     rules[dst] = args[src]
-        elif kind == _NOT_NULL_MOSTLY:
-            rules["max_null_rate"] = round(1 - float(args.get("mostly", 1.0)), NULL_RATE_PLACES)
+        elif kind == _NOT_NULL_SHARE:
+            rules["max_null_rate"] = round(1 - float(args.get("at_least", 1.0)), NULL_RATE_PLACES)
         elif kind == _EXISTS:
             exists = True
         elif kind == _MEAN:
@@ -549,7 +645,7 @@ def _read_relation(rel: DbtRelation, *, use_meta: bool) -> tuple[dict[str, Any],
     if columns:
         contract["columns"] = columns
     if required:
-        contract["required_columns"] = required
+        contract["required_columns"] = sorted(required)
     return contract, bounds
 
 

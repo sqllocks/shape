@@ -104,8 +104,16 @@ def _is_number(v: Any) -> bool:
 
 
 def _plain(tagged: Any) -> Any:
-    """``["int", 5]`` -> ``5`` (the profile stores min/max type-tagged)."""
-    return tagged[1] if isinstance(tagged, list) and len(tagged) == 2 else None
+    """``["int", 5]`` -> ``5`` (the profile stores min/max type-tagged). A decimal is stored as
+    text (``["Decimal", "1.50"]``); it is compared as the number it is."""
+    if not (isinstance(tagged, list) and len(tagged) == 2):
+        return None
+    if tagged[0] == "Decimal" and isinstance(tagged[1], str):
+        try:
+            return float(tagged[1])
+        except ValueError:
+            return tagged[1]
+    return tagged[1]
 
 
 def _key(value: Any) -> str:
