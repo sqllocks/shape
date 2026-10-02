@@ -32,14 +32,17 @@ POLICY = {
     "secureOutput": False,
 }
 
-# The container command. ADF passes the pipeline's values in activity.json (extendedProperties),
-# so nothing user-supplied is spliced into the shell command. VERIFY IN THE WORKSPACE ON FIRST
-# RUN: the pool needs Docker (a container-enabled VM image), and the task user must be allowed to
-# run it (autoUserSpecification below).
+# The container command. ADF passes the pipeline's values in activity.json (extendedProperties).
+# The one value spliced into the shell command is the image name: it is wrapped in single quotes
+# after every single quote is removed from it, so the shell reads it as one word whatever the
+# parameter holds (P7-04: it was concatenated raw, a command injection through ``image``).
+# VERIFY IN THE WORKSPACE ON FIRST RUN: the pool needs Docker (a container-enabled VM image), and
+# the task user must be allowed to run it (autoUserSpecification below).
 COMMAND = (
     '@concat(\'docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp '
     '-v "$AZ_BATCH_TASK_WORKING_DIR:/work" -w /work \', '
-    "pipeline().parameters.image, ' python /work/run_gate.py --activity /work/activity.json')"
+    "'''', replace(pipeline().parameters.image, '''', ''), '''', "
+    "' python /work/run_gate.py --activity /work/activity.json')"
 )
 
 # The one expression the gate hinges on: the Lookup reads gate.json (written by run_gate.py).

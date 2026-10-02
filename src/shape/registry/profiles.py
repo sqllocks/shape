@@ -144,10 +144,9 @@ class ProfileRegistry:
 
     @staticmethod
     def _manifest(path: Path) -> dict[str, Any]:
-        import zipfile
+        from shape.artifact.io import read_manifest_bytes
 
-        with zipfile.ZipFile(path) as z:
-            m = json.loads(z.read("manifest.json"))
+        m = json.loads(read_manifest_bytes(path))
         if not isinstance(m, dict):
             raise ProfileRegistryError(f"{path} has no manifest")
         return m

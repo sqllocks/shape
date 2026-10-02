@@ -169,7 +169,7 @@ def decode_messages(
             obj = json.loads(body)
             if not isinstance(obj, dict):
                 raise ValueError("the message is not a JSON object")
-        except (ValueError, UnicodeDecodeError) as exc:
+        except (ValueError, UnicodeDecodeError, RecursionError) as exc:
             stats.undecodable += 1
             if on_error == "raise":
                 raise StreamSourceError(

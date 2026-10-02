@@ -11,6 +11,8 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.json as pajson  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
+from shape.security.jsondepth import check_json_file
+
 from .readers import _arrow_cols, _Col, _csv_cols, read_csv
 
 _SUFFIXES = (".csv", ".parquet", ".jsonl", ".ndjson")
@@ -55,6 +57,7 @@ def _read_files(paths: list[Path], threads: int | None) -> tuple[str, pa.Table]:
         elif kind == "parquet":
             tables.append(pq.read_table(p))
         else:
+            check_json_file(p)
             tables.append(pajson.read_json(p))
     table = tables[0] if len(tables) == 1 else _concat(tables)
     return kind, table

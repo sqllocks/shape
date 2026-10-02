@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
+from shape.security.names import contained
+
 FORMATS = ("csv", "parquet")
 _READ = {".csv": "csv", ".parquet": "parquet", ".jsonl": "jsonl", ".ndjson": "jsonl"}
 
@@ -49,7 +51,7 @@ def write_tables(tables: Mapping[str, pa.Table], out_dir: str | Path, fmt: str) 
     root.mkdir(parents=True, exist_ok=True)
     written = []
     for name, table in tables.items():
-        path = root / f"{name}.{fmt}"
+        path = contained(root, name, f".{fmt}")
         write_table(table, path, fmt)
         written.append(path)
     return written

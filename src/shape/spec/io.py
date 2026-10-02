@@ -13,10 +13,12 @@ def load_contract(path):
     raw = p.read_text(encoding="utf-8")
     if p.suffix.lower() in {".yaml", ".yml"}:
         try:
-            import yaml
+            import yaml  # noqa: F401
         except ImportError as e:
             raise RuntimeError("YAML support requires the dev/yaml extra") from e
-        obj = yaml.safe_load(raw)
+        from shape.security.yamlsafe import safe_load_yaml
+
+        obj = safe_load_yaml(raw)
     else:
         obj = json.loads(raw)
     return ShapeContract.from_dict(obj)

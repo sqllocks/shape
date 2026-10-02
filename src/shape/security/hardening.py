@@ -19,15 +19,19 @@ MAX_DEPTH = 64
 MAX_STRING = 1_000_000
 MAX_CONTAINER = 1_000_000
 SECRET_PATTERNS = (
-    ("private_key", re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----")),
+    ("private_key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
     ("aws_access_key", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
     ("github_token", re.compile(r"\bgh[pousr]_[A-Za-z0-9_]{30,}\b")),
     ("azure_connection", re.compile(r"Endpoint=sb://[^;\s]+;SharedAccessKeyName=")),
+    ("storage_account_key", re.compile(r"(?i)\bAccountKey=[A-Za-z0-9+/=]{20,}")),
+    ("shared_access_key", re.compile(r"(?i)\bSharedAccessKey=[A-Za-z0-9+/=]{20,}")),
+    ("sas_signature", re.compile(r"[?&]sig=[A-Za-z0-9%+/=]{20,}")),
+    ("jwt", re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}")),
     ("generic_bearer", re.compile(r"\bBearer\s+[A-Za-z0-9._~+/=-]{20,}\b", re.I)),
     (
         "password_assignment",
         re.compile(
-            r'(?i)\b(?:password|passwd|pwd|secret|api[_-]?key)\s*[:=]\s*["\']?[^"\'\s,}]{8,}'
+            r"(?i)(?:\b|_)(?:password|passwd|pwd|secret|api[_-]?key)[\"']?\s*[:=]\s*[\"']?[^\"'\s,}]{8,}"
         ),
     ),
 )

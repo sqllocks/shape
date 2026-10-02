@@ -1,11 +1,139 @@
-# Threat Model
+# Threat model
 
-Protected assets include source data, sensitive profile evidence, synthetic outputs, credentials, signing/encryption keys, history and reference assets.
+Version of 2026-10-02 (P7-04). It covers everything built up to Phase 7: the profile engine, the
+`.shape` container and signing, the generation engine, the emit runtime and its emitters (Kafka,
+Event Hubs, Fabric), `shape stream`, live fidelity, scenario packs and GSL, chaos, `shape mask`,
+incremental generation, the profile registry, generation inside pipelines (Fabric, Synapse and ADF
+notebooks, the Fabric UDF), the SQL Server plugin, contracts and `shape git-setup`.
 
-Trust boundaries: input datasets; `.shape` artifacts; Packs/reference assets; plugins; connectors; filesystem; network services; CI/release pipeline.
+Every control named here has a test that enforces it; a control without one is listed as a
+residual risk. The review that produced this version, with every finding, is in
+`docs/plans/lane_status/P7-04.md`.
 
-Primary threats: raw-value leakage, re-identification, artifact traversal/bombs/corruption, malicious plugins, dependency compromise, secret exfiltration, tampered reference data, ambiguous geographic resolution, denial of service through cardinality/nesting, replay/checkpoint corruption, downgrade/format confusion and forged provenance.
+## Assets
 
-Controls implemented in the reference today: artifact path/size/hash validation (the `.shape` reader fails closed), optional Ed25519 signing of artifacts (`shape sign`, `--sign`, `--verify`; see `docs/SIGNING.md`; a forged artifact with rewritten hashes fails verification, enforced by `tests/artifact/test_signing.py`), authenticated encryption, sensitivity labels, and secret scanning. Plugins are **trusted, in-process code** (see `docs/plugins/trust-model.md`). Release-policy enforcement, bounded profiling and signing of artifacts by default (signing is opt-in today) are in progress (see `docs/plans/COMPLETION_PLAN.md`).
+- Source data and the real values inside a full-fidelity profile (`.shape`, `--json`).
+- Safe profiles (`shape profile safe`): the artifact that is meant to be shared and committed.
+- Synthetic output: files, tables, event streams.
+- Credentials: connection strings, SAS tokens, SASL and SQL passwords, Entra tokens, Ed25519
+  private keys, AES-GCM keys.
+- The integrity of artifacts, packs, reference datasets, the registry and the baseline-free
+  release pipeline.
+- The machine Shape runs on (files it can write, commands it can start).
 
-Deployment controls still required: OS/container confinement of the whole process, secret manager/KMS/HSM, egress policy, RBAC, audit logging, dependency provenance, backup/recovery, target-service authentication and independent assessment.
+## Trust boundaries and who is trusted
+
+| Boundary | Trusted? |
+|---|---|
+| The user running the CLI and its arguments | Yes. A self-inflicted argument is not an attack (`--command` of `git-setup`, output paths chosen with `-o`). |
+| Installed plugins | Yes, in-process code (`docs/plugins/trust-model.md`). No sandbox. |
+| `.shape` files, profile and safe-profile JSON, contracts, generation schemas, scenario packs, GSL YAML, DDL, DB and stream payloads, reference datasets, JSONL/CSV inputs | **No.** Anyone can hand a user one of these. This is where the review looked hardest. |
+| Pipeline parameters (ADF, Fabric notebook parameters) | Partly. They come from whoever can trigger a pipeline, so they are not spliced into shell or code. |
+| Remote services (Kafka, Event Hubs, Eventhouse, SQL Server, ADLS) | Their responses are untrusted input; Shape sends only what the schema and profile produce, quoted for the target. |
+| CI and release pipeline | Out of scope of the code; see deployment controls. |
+
+## Threats and controls by surface
+
+Each row: the threat, the control, the test that enforces it.
+
+### `.shape` container, manifests, signatures
+
+| Threat | Control | Test |
+|---|---|---|
+| Path traversal and unsafe member names | `_safe()` rejects absolute, `..`, `.`, backslash, NUL, drive and empty parts on read and write; members are never extracted to disk | `tests/security/test_ga_security.py`, `tests/validation/test_fuzz_artifact.py` |
+| Zip bombs, oversized or many members | member count, per-member, total and ratio limits; the manifest is capped at 4 MiB; fails closed with `ArtifactError` | `tests/security/test_ga_security.py` |
+| A bomb read outside the limits (a kind sniff, the registry's manifest read, a signature member) | one bounded reader, `read_manifest_bytes`; the signature member's size is checked before it is read | `tests/security/test_p7_04_review.py` (bomb, signature cases) |
+| Tampering with hashes | content hashes plus the content id are checked on read | `tests/artifact/test_artifact.py` |
+| Forged artifact with rewritten hashes | Ed25519 signature over the exact manifest bytes with a domain prefix; stripped, wrong-key and re-signed files fail (`shape verify`, `--verify`) | `tests/artifact/test_signing.py` |
+| `--verify` skipped by renaming the file | the CLI decides by content (a zip with a manifest), not by extension | `tests/security/test_p7_04_review.py` |
+| Stored (uncompressed) members of the reproducible container | the readers accept every compression method and apply the same limits | `tests/artifact/test_container_reproducible.py` |
+| Non-reproducible bytes hiding a change in git | fixed timestamps, order, attributes, stored members | `tests/artifact/test_container_reproducible.py` |
+| Malformed anything | the artifact fuzzer (below) | `tests/validation/test_fuzz_smoke.py` and the nightly job |
+
+### Parsing of untrusted documents
+
+| Threat | Control | Test |
+|---|---|---|
+| Unsafe YAML (object construction) | `yaml.safe_load` only, through one loader | `tests/security/test_p7_04_review.py`, grep gate below |
+| YAML alias bomb, huge or deeply nested YAML | `shape.security.yamlsafe`: 4 MiB cap, expanded-size cap, recursive aliases refused, `RecursionError` turned into a rejection; used by packs, GSL, contracts and schema files | `tests/security/test_p7_04_review.py` |
+| Deeply nested or oversized profile JSON | `validate_structure` (depth 64, 1M items) on `read_model` and on profile load | `tests/security/test_ga_security.py`, fuzzer |
+| Quadratic regex on a long string in a safe profile | the e-mail pattern starts only at the start of a local-part run | `tests/validation/test_fuzz_smoke.py` |
+| Cubic regex on DDL, quadratic regex on rule text | names exclude bare spaces; rule text is capped | `tests/security/test_p7_04_review.py` |
+| A JSONL file that crashes pyarrow (segfault on deep nesting) | a per-line depth check before pyarrow reads a file | `tests/security/test_p7_04_review.py` |
+| A poison stream message stops the consumer | `RecursionError` is a decode failure, skipped or raised per `on_error` | `tests/security/test_p7_04_review.py` |
+| Pattern widths that exhaust memory | `{random:N}`-style widths are bounded | `tests/security/test_p7_04_review.py` |
+| Deserialization | no pickle, marshal or `eval` on data anywhere in `src` or the plugins; the formula strategy is an `ast` allow-list; `shape query` is a regex-limited dictionary walk | `bandit -r src` (P7-04 review), `tests/validation/test_requirements.py` |
+
+### Paths: where Shape writes
+
+| Threat | Control | Test |
+|---|---|---|
+| A table name in a schema, profile or artifact used as a file name (`../x`, `/abs/x`) | `shape.security.names`: refused when the schema is parsed, and checked again at every sink and writer (files, SQL, Excel, Delta, CDM, dimensional, `jsonl://` emitter, incremental) | `tests/security/test_p7_04_review.py` |
+| Pack landing paths, topic and event names | `unsafe_path` and `unsafe_name`; the runner re-checks containment | `tests/scenario`, `tests/packs` |
+| Registry names and refs | name regexes plus a resolved-root check; objects are written atomically and verified on checkout; no fixed temp name | `tests/registry/test_local_registry.py`, `tests/security/test_p7_04_review.py` |
+| Reference dataset name used as a path to read a JSON file | the name must be a plain name | `tests/security/test_p7_04_review.py` |
+| `shape git-setup` writing through a symlinked `.gitattributes`, or a pattern that adds attribute lines | the symlink is refused, a pattern with whitespace is refused; the command is stored as one escaped git config value, git runs with an argument list | `tests/security/test_p7_04_review.py`, `tests/cli/test_shape_as_code.py` |
+| `shape mask` overwriting its inputs | it refuses, and writes only inside `-o` | `tests/security/test_p7_04_review.py` |
+| Key files | private key created with `O_EXCL` and mode 0600; never overwritten | `tests/artifact/test_signing.py` |
+
+### Injection into sinks and generated code
+
+| Threat | Control | Test |
+|---|---|---|
+| SQL injection through identifiers and values in the SQL sink | identifiers quoted per dialect, values escaped per dialect, DDL dimensions must be integers | `tests/generation/test_writers.py`, `tests/security/test_p7_04_review.py` |
+| KQL injection in the Eventhouse writer | `_q()` escapes names; the ingestion mapping literal escapes backslashes and quotes | `plugins/shape-fabric/tests`, `tests/security/test_p7_04_review.py` |
+| SQL injection in the SQL Server plugin | catalog queries use parameters; identifiers go through `quote_ident`; connection-string values are brace-quoted | `plugins/shape-sqlserver/tests` |
+| Command injection through a pipeline parameter | the ADF Batch command single-quotes the image after stripping quotes; the notebooks and the Fabric UDF embed no parameter in code or SQL | `tests/security/test_p7_04_review.py`, `tests/demo/fabric` |
+| Spreadsheet formula injection in CSV or Excel output | **not** mitigated (residual risk R3) | |
+
+### Secrets
+
+| Threat | Control | Test |
+|---|---|---|
+| Secrets stored in an artifact | `enforce_no_secrets` on every write: private keys, cloud keys, SAS signatures, JWTs, bearer tokens, `password`/`secret`/`api_key` assignments in JSON or text | `tests/security/test_p7_04_review.py`, `tests/security/test_ga_security.py` |
+| Secrets in errors and logs | connection strings are redacted (quoted values and client secrets included); the run log holds no arguments or URIs; `Credentials.__repr__` masks the secret | `plugins/shape-sqlserver/tests`, `tests/security/test_p7_04_review.py` |
+| Key misuse | AES-256-GCM with a fresh 96-bit nonce and the header as AAD; Ed25519 verification fails closed on any error | `tests/artifact/test_secure.py`, `tests/security/test_crypto.py` |
+
+### Privacy of profiles
+
+Raw-value leakage, re-identification and small cells are handled by the safe profile, the leak
+validator and k-anonymity (`docs/PRIVACY_MODEL.md`, `tests/privacy`). A full-fidelity `.shape`
+and `--json` hold real values by design; the docs name `shape profile safe` output as the
+committable artifact.
+
+### Network surfaces
+
+Emitters (Kafka, Event Hubs, Fabric Eventstream and Eventhouse), `shape stream` sources, SQL Server
+and ADLS access are outbound only; Shape opens no listening socket. Credentials come from the
+environment, an options file or Entra, never from a profile or pack. Zero-network behaviour of the
+offline commands is enforced by `tests/security/test_zero_network.py`.
+
+## The artifact fuzzer
+
+`shape.validation.fuzz` (driver `scripts/fuzz_artifacts.py`) mutates valid seeds for `.shape`
+containers, signatures, manifests, profile artifacts, safe-profile JSON, contracts and pack and GSL
+YAML. A target may accept an input or raise one of its documented rejection types
+(`ShapeError`, `ValueError`, `BadZipFile`); any other exception or a run over five seconds is a
+finding. It is deterministic per seed. A short seeded run is in the normal test suite
+(`tests/validation/test_fuzz_smoke.py`); the nightly workflow (`artifact-fuzz`) runs it with a
+fresh seed and uploads each finding's input.
+
+## Residual risks (accepted, with reasons)
+
+- **R1. Plugins are trusted code.** There is no sandbox; confinement is a deployment control.
+- **R2. An unreasonable scale is a resource request, not a defect.** A profile that states
+  `row_count: 10**12` makes `generate` try to produce it. Cap it with the deployment (memory and
+  time limits) or `--rows`.
+- **R3. Formula injection in CSV and Excel output.** Synthetic strings that start with `=`, `+`,
+  `-` or `@` are written as they are. Open untrusted synthetic output as text.
+- **R4. `--command` of `git-setup` is run by git through a shell**, as the user chose.
+- **R5. The secret scanner is best effort.** It matches known shapes, not every secret.
+- **R6. URIs are echoed.** A URI with credentials in its userinfo or query string appears in
+  stdout and checkpoints; pass credentials through the environment or an options file.
+- **R7. Signing is opt-in.** An unsigned artifact has only accident-level integrity.
+
+## Deployment controls still required
+
+OS and container confinement of the whole process, a secret manager or KMS, egress policy, access
+control, audit logging, dependency provenance and pinning of CI actions, backup and recovery,
+target-service authentication and independent assessment.

@@ -77,6 +77,9 @@ def add_arguments(sub: Any) -> None:
         help="TABLE=N (repeatable): rows of one table of the schema; N: with no target, print "
         "N demo rows as JSON lines; with --from, the rows of a one-table profile",
     )
+    from shape.cli.scale import add_arguments as add_scale_arguments
+
+    add_scale_arguments(ge)
     sql = ge.add_argument_group("sql output (--format sql)")
     sql.add_argument("--sql-dialect", choices=SQL_DIALECTS, default="tsql", help="default: tsql")
     sql.add_argument("--schema-name", metavar="NAME", help="qualify tables with this schema")
@@ -220,6 +223,8 @@ def _demo_rows(a: argparse.Namespace, n: int) -> int:
 def cmd_generate(a: argparse.Namespace) -> int:
     """``shape generate``: 0 generated (or the plan is sound), 1 a dry run found problems."""
     bare, per_table = _rows_arg(a)
+    if a.scale_mode and a.from_profile:
+        raise ValueError("--scale-mode does not combine with --from")
     if a.from_profile:
         if per_table:
             raise ValueError("--rows TABLE=N is for a schema; with --from give --rows N")
@@ -233,6 +238,10 @@ def cmd_generate(a: argparse.Namespace) -> int:
             "--rows N prints demo rows and takes no target; give --rows TABLE=N to set the rows "
             "of one table"
         )
+    if a.scale_mode:
+        from shape.cli.scale import run_scale
+
+        return run_scale(a)
     from shape.cli.lifecycle import quick_exit_allowed
 
     if quick_exit_allowed:

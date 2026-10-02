@@ -39,6 +39,7 @@ import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 import shape
 from shape.integrations.fabric import generation
+from shape.security.jsondepth import check_json_depth
 
 __all__ = [
     "LAKEHOUSE_ALIAS",
@@ -175,6 +176,7 @@ def _table_from_bytes(data: bytes, path: str) -> pa.Table:
         if suffix == ".csv":
             return pacsv.read_csv(buf)
         if suffix in (".jsonl", ".ndjson"):
+            check_json_depth(data)
             return pajson.read_json(buf)
     except Exception as e:
         raise _fail(f"Could not parse {path!r} as {suffix[1:]}: {e}") from e
