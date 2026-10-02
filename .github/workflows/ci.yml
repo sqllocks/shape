@@ -123,8 +123,21 @@ jobs:
         with: {distribution: temurin, java-version: '17'}
       - run: sudo apt-get update -q && sudo apt-get install -y -q unixodbc
       - run: python -m pip install -U pip
-      - run: pip install -e '.[dev]' -r tests/demo/fabric/requirements.txt
+      - run: pip install -e '.[dev]' -e plugins/shape-dbt -r tests/demo/fabric/requirements.txt
       - run: python -m pytest -q tests/demo/fabric tests/demo/content
+  dbt:
+    # ISS2-dbt: the dbt plugin's tests, and the sample jaffle-shop project end to end against
+    # DuckDB: `shape from-dbt`, generate, load as seeds, `dbt build`, profile the outputs, and run
+    # a compiled test set (dbt_utils, dbt_expectations from the package hub) in dbt. dbt is
+    # installed in this job only: sqllocks-shape and the plugin never depend on dbt-core.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -U pip
+      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-dbt dbt-duckdb
+      - run: python -m pytest -q plugins/shape-dbt/tests
   pure-wheel:
     # PF-03: the T-29 pure wheel is py3-none-any and under 28.6 MB, and the UDF helpers and
     # function_app.py pass on Python 3.11 with only PyPI numpy, pyarrow and pandas under them

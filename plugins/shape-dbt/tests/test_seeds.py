@@ -223,11 +223,15 @@ def test_the_cli_refuses_a_bad_row_count_and_a_bad_schema(tmp_path, project, cap
 
     schema = tmp_path / "s.json"
     schema.write_text("{", encoding="utf-8")
-    assert cli.run_command(default_host(), "dbt-seeds", [str(schema), "--project", str(project)]) == 2
+    assert (
+        cli.run_command(default_host(), "dbt-seeds", [str(schema), "--project", str(project)]) == 2
+    )
     from_dbt = cli.run_command(default_host(), "from-dbt", [str(jaffle), "-o", str(schema)])
     assert from_dbt == 0
     code = cli.run_command(
-        default_host(), "dbt-seeds", [str(schema), "--project", str(project), "--rows", "raw_orders=x"]
+        default_host(),
+        "dbt-seeds",
+        [str(schema), "--project", str(project), "--rows", "raw_orders=x"],
     )
     assert code == 2 and "bad row count" in capsys.readouterr().err
 

@@ -49,7 +49,9 @@ def test_each_rule_becomes_its_test():
         "dbt_expectations.expect_table_columns_to_match_set",
     ]
     cols = {c["name"]: c for c in entry["columns"]}
-    tests = {n: [next(iter(t)) for t in c["data_tests"]] for n, c in cols.items() if "data_tests" in c}
+    tests = {
+        n: [next(iter(t)) for t in c["data_tests"]] for n, c in cols.items() if "data_tests" in c
+    }
     assert tests["customer_id"] == ["not_null", "unique", "dbt_expectations.expect_column_to_exist"]
     assert tests["email"] == ["dbt_utils.not_null_proportion"]
     assert tests["status"] == ["accepted_values"]
@@ -124,9 +126,9 @@ def test_the_round_trip_from_the_tests_alone_gives_what_dbt_can_express():
     }
     assert back == expected
     # and what is lost is exactly what NOT_EXPRESSIBLE names
-    lost = {
-        k for rules in CONTRACT["columns"].values() for k in rules
-    } - {k for rules in back["columns"].values() for k in rules}
+    lost = {k for rules in CONTRACT["columns"].values() for k in rules} - {
+        k for rules in back["columns"].values() for k in rules
+    }
     assert lost == {"dtype", "pattern", "distribution"}
     assert lost <= set(NOT_EXPRESSIBLE)
 
@@ -167,9 +169,15 @@ def test_text_bounds_are_not_compiled_and_are_kept_as_meta():
 
 
 def test_rules_that_say_nothing_normalise_away():
-    assert normalize_contract(
-        {"columns": {"a": {"nullable": True, "unique": False}, "b": {}}, "allow_extra_columns": True}
-    ) == {}
+    assert (
+        normalize_contract(
+            {
+                "columns": {"a": {"nullable": True, "unique": False}, "b": {}},
+                "allow_extra_columns": True,
+            }
+        )
+        == {}
+    )
 
 
 _names = st.sampled_from(["a", "b", "c", "d_1", "id"])
@@ -196,7 +204,9 @@ _rules = st.fixed_dictionaries(
 _contracts = st.fixed_dictionaries(
     {},
     optional={
-        "row_count": st.fixed_dictionaries({}, optional={"min": st.integers(0, 10**6), "max": st.integers(0, 10**9)}),
+        "row_count": st.fixed_dictionaries(
+            {}, optional={"min": st.integers(0, 10**6), "max": st.integers(0, 10**9)}
+        ),
         "columns": st.dictionaries(_names, _rules, max_size=4),
         "required_columns": st.lists(_names, unique=True, max_size=3),
         "allow_extra_columns": st.booleans(),
@@ -275,7 +285,11 @@ def test_a_single_table_profile_gives_a_single_table_contract():
     contract = contract_from_profile(profile)
     assert "tables" not in contract and contract["required_columns"] == ["a"]
     assert shape.check(profile, contract).passed
-    assert bounds_from_profile(profile)["a"]["mean"][0] < 2 < bounds_from_profile(profile)["a"]["mean"][1]
+    assert (
+        bounds_from_profile(profile)["a"]["mean"][0]
+        < 2
+        < bounds_from_profile(profile)["a"]["mean"][1]
+    )
 
 
 def test_merging_adds_tests_to_an_existing_entry_without_repeating_any():
@@ -308,7 +322,12 @@ models:
 def test_merging_adds_a_new_model_and_new_columns():
     base = {"version": 2, "models": [{"name": "a", "columns": [{"name": "x"}]}]}
     doc = compile_tests(
-        {"tables": {"a": {"columns": {"y": {"nullable": False}}}, "b": {"columns": {"z": {"unique": True}}}}}
+        {
+            "tables": {
+                "a": {"columns": {"y": {"nullable": False}}},
+                "b": {"columns": {"z": {"unique": True}}},
+            }
+        }
     ).doc
     merged = merge_schema_docs(base, doc)
     assert [m["name"] for m in merged["models"]] == ["a", "b"]
@@ -360,7 +379,12 @@ def test_the_cli_refuses_bad_input_with_exit_2(tmp_path, capsys):
     out = str(tmp_path / "s.yml")
     host = default_host()
     assert cli.run_command(host, "to-dbt-tests", [str(src), "-o", out]) == 2  # no model
-    assert cli.run_command(host, "to-dbt-tests", [str(src), "-o", out, "--model", "m", "--distribution"]) == 2
+    assert (
+        cli.run_command(
+            host, "to-dbt-tests", [str(src), "-o", out, "--model", "m", "--distribution"]
+        )
+        == 2
+    )
     bad = tmp_path / "bad.json"
     bad.write_text("{", encoding="utf-8")
     assert cli.run_command(host, "to-dbt-tests", [str(bad), "-o", out, "--model", "m"]) == 2

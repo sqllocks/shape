@@ -67,7 +67,7 @@ class DbtRelation:
 
 def _yaml() -> Any:
     try:
-        import yaml
+        import yaml  # type: ignore[import-untyped]
     except ImportError as exc:  # pragma: no cover - pyyaml is a dependency of the plugin
         raise DbtProjectError("reading schema.yml needs PyYAML: pip install pyyaml") from exc
     return yaml
@@ -104,7 +104,7 @@ def _split_test(entry: Any) -> DbtTest | None:
     if isinstance(entry, str):
         return DbtTest(entry.strip())
     if isinstance(entry, Mapping) and len(entry) == 1:
-        (name, body), = entry.items()
+        ((name, body),) = entry.items()
         args: dict[str, Any] = {}
         if isinstance(body, Mapping):
             args = {k: v for k, v in body.items() if k not in _TEST_CONFIG_KEYS}
@@ -278,7 +278,8 @@ def read_project(inputs: Iterable[str | Path]) -> list[DbtRelation]:
                 if f.suffix in (".yml", ".yaml")
                 and f.is_file()
                 and not skipped & set(f.relative_to(p).parts)
-                and f.name not in ("dbt_project.yml", "packages.yml", "profiles.yml", "selectors.yml")
+                and f.name
+                not in ("dbt_project.yml", "packages.yml", "profiles.yml", "selectors.yml")
             )
         elif p.is_file():
             paths.append(p)

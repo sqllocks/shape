@@ -94,18 +94,25 @@ def built(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Any]:
         shutil.copy(override, project / "packages.yml")
     host = default_host()
     gen = work / "jaffle.gen.json"
-    assert cli.run_command(host, "from-dbt", [str(project), "--select", "source", "-o", str(gen)]) == 0
+    assert (
+        cli.run_command(host, "from-dbt", [str(project), "--select", "source", "-o", str(gen)]) == 0
+    )
     assert (
         cli.run_command(
             host,
             "dbt-seeds",
             [
                 str(gen),
-                "--project", str(project),
-                "--rows", ROWS,
-                "--seed", "11",
-                "--dialect", "duckdb",
-                "--metadata", str(work / "jaffle.gen.dbt-meta.json"),
+                "--project",
+                str(project),
+                "--rows",
+                ROWS,
+                "--seed",
+                "11",
+                "--dialect",
+                "duckdb",
+                "--metadata",
+                str(work / "jaffle.gen.dbt-meta.json"),
             ],
         )  # fmt: skip
         == 0

@@ -249,7 +249,9 @@ def test_bind_replaces_every_placeholder(tmp_path):
             "--notebook", "shape_profile_spark=33333333-3333-3333-3333-333333333333",
             "--notebook", "shape_generate=55555555-5555-5555-5555-555555555555",
             "--notebook", "shape_profile_domain=66666666-6666-6666-6666-666666666666",
+            "--notebook", "shape_profile_dbt=77777777-7777-7777-7777-777777777777",
             "--function-set", "44444444-4444-4444-4444-444444444444",
+            "--dbt-job", "88888888-8888-8888-8888-888888888888",
         ],
         check=True, capture_output=True,
     )  # fmt: skip

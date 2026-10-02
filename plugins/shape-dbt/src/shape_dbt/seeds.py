@@ -112,7 +112,9 @@ def column_type(
     try:
         names = DIALECTS[dialect]
     except KeyError:
-        raise SeedError(f"unknown dialect {dialect!r}; choose one of {', '.join(DIALECTS)}") from None
+        raise SeedError(
+            f"unknown dialect {dialect!r}; choose one of {', '.join(DIALECTS)}"
+        ) from None
     info = info or {}
     declared = str(info.get("type") or "").lower()
     if declared in ("decimal", "numeric") and info.get("precision"):
@@ -159,9 +161,13 @@ def _local(uri: str) -> Path:
 
 
 def _update_properties(
-    path: Path, name: str, types: Mapping[str, str], description: str, column_docs: Mapping[str, str]
+    path: Path,
+    name: str,
+    types: Mapping[str, str],
+    description: str,
+    column_docs: Mapping[str, str],
 ) -> None:
-    import yaml
+    import yaml  # type: ignore[import-untyped]
 
     doc: dict[str, Any] = {"version": 2, "seeds": []}
     if path.is_file():
@@ -253,9 +259,7 @@ class DbtSeedsSink:
         finally:
             with contextlib.suppress(OSError):
                 tmp.unlink()
-        types = {
-            f.name: column_type(f.type, columns.get(f.name), dialect=dialect) for f in schema
-        }
+        types = {f.name: column_type(f.type, columns.get(f.name), dialect=dialect) for f in schema}
         _update_properties(
             seeds / SEEDS_FILE,
             table,

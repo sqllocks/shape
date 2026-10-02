@@ -159,7 +159,9 @@ def build_report(
             "warned": warned,
         },
         "shape": {
-            "contract": None if check is None else {"passed": not violations, "violations": violations},
+            "contract": None
+            if check is None
+            else {"passed": not violations, "violations": violations},
             "drift": None
             if drift is None
             else {"drifted": bool(changes), "changes": changes, "fail_on_drift": fail_on_drift},
@@ -204,25 +206,44 @@ def render_markdown(report: Mapping[str, Any]) -> str:
         f"{s['drift_changes']} change(s)"
     )
     if report["dbt"]["failed"]:
-        lines += ["", "## dbt failures", "", "| status | model | column | test | message |", "|---|---|---|---|---|"]
+        lines += [
+            "",
+            "## dbt failures",
+            "",
+            "| status | model | column | test | message |",
+            "|---|---|---|---|---|",
+        ]
         for f in report["dbt"]["failed"]:
             lines.append(
                 f"| {f['status']} | {_cell(f.get('model'))} | {_cell(f.get('column'))} | "
                 f"{_cell(f.get('test') or f['name'])} | {_cell(f.get('message'))} |"
             )
     if contract and contract["violations"]:
-        lines += ["", "## Contract violations", "", "| column | rule | expected | observed |", "|---|---|---|---|"]
+        lines += [
+            "",
+            "## Contract violations",
+            "",
+            "| column | rule | expected | observed |",
+            "|---|---|---|---|",
+        ]
         for v in contract["violations"]:
             lines.append(
                 f"| {_cell(v.get('column'))} | {_cell(v.get('rule'))} | "
                 f"{_cell(v.get('expected'))} | {_cell(v.get('observed'))} |"
             )
     if drift and drift["changes"]:
-        lines += ["", "## Drift", "", "| column | kind | severity | baseline | current |", "|---|---|---|---|---|"]
+        lines += [
+            "",
+            "## Drift",
+            "",
+            "| column | kind | severity | baseline | current |",
+            "|---|---|---|---|---|",
+        ]
         for c in drift["changes"]:
             lines.append(
-                f"| {_cell(c.get('column'))} | {_cell(c.get('kind'))} | {_cell(c.get('severity'))} | "
-                f"{_cell(c.get('baseline'))} | {_cell(c.get('current'))} |"
+                f"| {_cell(c.get('column'))} | {_cell(c.get('kind'))} | "
+                f"{_cell(c.get('severity'))} | {_cell(c.get('baseline'))} | "
+                f"{_cell(c.get('current'))} |"
             )
     if report["by_column"]:
         lines += ["", "## Columns flagged by more than one check", ""]

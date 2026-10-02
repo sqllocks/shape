@@ -109,9 +109,9 @@ def test_a_contract_violation_fails_the_report_even_when_dbt_is_green():
 def test_drift_fails_only_when_asked():
     assert build_report(GREEN, MANIFEST, drift=DRIFT)["ok"] is True
     assert build_report(GREEN, MANIFEST, drift=DRIFT, fail_on_drift=True)["ok"] is False
-    assert build_report(GREEN, MANIFEST, drift={"drifted": False, "changes": []}, fail_on_drift=True)[
-        "ok"
-    ]
+    assert build_report(
+        GREEN, MANIFEST, drift={"drifted": False, "changes": []}, fail_on_drift=True
+    )["ok"]
 
 
 def test_one_column_flagged_by_dbt_and_shape_is_shown_together():
@@ -122,7 +122,10 @@ def test_one_column_flagged_by_dbt_and_shape_is_shown_together():
 
 
 def test_a_single_table_check_meets_the_dbt_findings_through_the_table_name():
-    check = {"passed": False, "violations": [{"column": "status", "rule": "r", "expected": 1, "observed": 2}]}
+    check = {
+        "passed": False,
+        "violations": [{"column": "status", "rule": "r", "expected": 1, "observed": 2}],
+    }
     assert build_report(RED, MANIFEST, check=check, table="orders")["by_column"]
     assert not build_report(RED, MANIFEST, check=check)["by_column"]
 
@@ -180,10 +183,10 @@ def test_the_cli_reports_and_sets_the_exit_code(tmp_path, capsys):
 
 def test_the_cli_computes_the_check_and_the_drift_from_profiles(tmp_path):
     import pyarrow as pa
-    from shape.plugins import cli
-    from shape.plugins.host import default_host
 
     import shape
+    from shape.plugins import cli
+    from shape.plugins.host import default_host
 
     base = shape.profile(pa.table({"amount": [1.0, 2.0, 3.0] * 30}), name="orders")
     now = shape.profile(pa.table({"amount": [10.0, 20.0, 30.0] * 30}), name="orders")

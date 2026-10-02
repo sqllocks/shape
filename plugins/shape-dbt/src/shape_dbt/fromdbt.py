@@ -5,7 +5,7 @@ only turns what dbt knows into the parsed tables that builder takes.
 
 | dbt | generation schema |
 |---|---|
-| ``unique`` + ``not_null`` on one column, or ``dbt_utils.unique_combination_of_columns`` | primary key |
+| ``unique`` + ``not_null`` on one column; ``unique_combination_of_columns`` | primary key |
 | ``not_null`` (or a ``not_null`` constraint) | ``nullable: false`` |
 | ``relationships`` (``to``, ``field``) | foreign key and relationship |
 | ``accepted_values`` | ``weighted_enum`` (equal weights, or a profile's frequencies) |
@@ -36,7 +36,16 @@ from .project import DbtColumn, DbtProjectError, DbtRelation, ref_target
 # dbt ``data_type`` (any adapter's spelling) to the SQL type the schema builder knows.
 _TYPE_ALIASES: dict[str, str] = {
     **dict.fromkeys(
-        ("varchar", "char", "nvarchar", "nchar", "text", "string", "character varying", "character"),
+        (
+            "varchar",
+            "char",
+            "nvarchar",
+            "nchar",
+            "text",
+            "string",
+            "character varying",
+            "character",
+        ),
         "varchar",
     ),
     **dict.fromkeys(("json", "jsonb", "variant", "object", "array", "struct", "map"), "varchar"),
@@ -87,11 +96,15 @@ def parse_data_type(data_type: str | None) -> tuple[str | None, int | None, int 
     if base == "decimal":
         scale = int(m.group(3)) if m.group(3) is not None else 0
         # NUMBER(38,0) and DECIMAL(10,0) hold whole numbers: they are integer columns
-        return ("bigint", None, None, None) if first is not None and scale == 0 else (
-            base,
-            None,
-            first,
-            scale if first is not None else None,
+        return (
+            ("bigint", None, None, None)
+            if first is not None and scale == 0
+            else (
+                base,
+                None,
+                first,
+                scale if first is not None else None,
+            )
         )
     return base, first if base == "varchar" else None, None, None
 
@@ -137,7 +150,11 @@ def select_relations(
     if not seen:
         raise DbtProjectError(
             "nothing to import: the dbt input has no "
-            + ("tables of kind " + ", ".join(sorted(kinds)) if kinds else "sources, seeds or models")
+            + (
+                "tables of kind " + ", ".join(sorted(kinds))
+                if kinds
+                else "sources, seeds or models"
+            )
         )
     return list(seen.values())
 
@@ -169,9 +186,7 @@ def _parse_tables(
     types: dict[tuple[str, str], str] = {}
     for rel in rels:
         combos = _unique_combos(rel)
-        single = [
-            c.name for c in rel.columns.values() if _has(c, "unique") and _has(c, "not_null")
-        ]
+        single = [c.name for c in rel.columns.values() if _has(c, "unique") and _has(c, "not_null")]
         pk = single[:1] if single else (combos[0] if combos else [])
         if len(single) > 1:
             notes.append(
@@ -215,15 +230,14 @@ def _parse_tables(
                 fks.append(ParsedForeignKey(rel.name, col.name, target[0], str(parent_col)))
         tables.append(pt)
     # A key column dbt gives no type for takes its parent's type.
+    by_name = {pt.name: pt for pt in tables}
     for fk in fks:
         parent = types.get((fk.parent_table, fk.parent_column))
-        for t in tables:
-            if t.name == fk.child_table:
-                for c in t.columns:
-                    if c.name == fk.child_column and parent and not names[t.name].columns[
-                        c.name
-                    ].data_type:
-                        c.base_type = c.raw_type = parent
+        child = by_name[fk.child_table]
+        if parent and not names[child.name].columns[fk.child_column].data_type:
+            for parsed in child.columns:
+                if parsed.name == fk.child_column:
+                    parsed.base_type = parsed.raw_type = parent
     return tables, fks, notes
 
 
@@ -274,9 +288,7 @@ def from_dbt(
 
     items = list(inputs)
     relations = (
-        items
-        if items and all(isinstance(i, DbtRelation) for i in items)
-        else read_project(items)
+        items if items and all(isinstance(i, DbtRelation) for i in items) else read_project(items)
     )
     chosen = select_relations(relations, kinds)
     tables, fks, notes = _parse_tables(chosen)

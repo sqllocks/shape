@@ -21,5 +21,10 @@ def test_the_sink_conforms(tmp_path):
 
 
 def test_the_commands_conform(tmp_path):
-    for cmd in (shape_dbt.FromDbt(), shape_dbt.ToDbtTests(), shape_dbt.DbtSeeds(), shape_dbt.DbtReport()):
+    for cmd in (
+        shape_dbt.FromDbt(),
+        shape_dbt.ToDbtTests(),
+        shape_dbt.DbtSeeds(),
+        shape_dbt.DbtReport(),
+    ):
         kit.check_common(cmd, "shape.commands")

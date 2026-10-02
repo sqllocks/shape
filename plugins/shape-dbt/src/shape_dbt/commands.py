@@ -145,9 +145,14 @@ class ToDbtTests(_Guarded):
         parser.add_argument("-o", "--output", metavar="schema.yml", required=True)
         parser.add_argument("--model", help="the dbt model, for a contract of one table")
         parser.add_argument(
-            "--kind", choices=("models", "seeds", "sources"), default="models", help="default: models"
+            "--kind",
+            choices=("models", "seeds", "sources"),
+            default="models",
+            help="default: models",
         )
-        parser.add_argument("--source-name", default="raw", help="the dbt source, for --kind sources")
+        parser.add_argument(
+            "--source-name", default="raw", help="the dbt source, for --kind sources"
+        )
         parser.add_argument(
             "--tests-key",
             choices=("data_tests", "tests"),
@@ -210,7 +215,7 @@ class ToDbtTests(_Guarded):
         )
         out = Path(args.output)
         if args.merge:
-            import yaml
+            import yaml  # type: ignore[import-untyped]
 
             from .totests import merge_schema_docs, render_yaml
 

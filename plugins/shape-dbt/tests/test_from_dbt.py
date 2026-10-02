@@ -239,7 +239,11 @@ def manifest() -> dict:
                 "name": "raw_customers",
                 "description": "One row per customer.",
                 "columns": {
-                    "customer_id": {"name": "customer_id", "data_type": "bigint", "description": "pk"},
+                    "customer_id": {
+                        "name": "customer_id",
+                        "data_type": "bigint",
+                        "description": "pk",
+                    },
                     "tier": {"name": "tier", "data_type": "varchar"},
                 },
             },
