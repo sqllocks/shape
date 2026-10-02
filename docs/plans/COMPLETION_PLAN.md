@@ -2018,8 +2018,8 @@ Work packages are listed in execution order. The next work package is the first 
 | 53 | P4-11 | done (retail medium tiers 1-3: 0 mismatches over 9 tables; AUC/GMM max diff 0.017 <= 0.02; DP distinct unseeded) | f85b99d |
 | 54 | P5-01 | done | 33f57a7 |
 | 55 | P5-02 | done | 2d0a1d3 |
-| 56 | P5-03 | todo | |
-| 57 | P5-04 | todo | |
+| 56 | P5-03 | done | 19e8e6a |
+| 57 | P5-04 | wip (lane/P5-04; built, lead verification next) | |
 | 58 | P6-01a | wip (lane/P6-01a merged into lane/P6-01-int; T-21 seed-1042 misses accepted as chance (owner); GEN-IN round 3 in lane/P6-01-perf-domains and lane/P6-01-perf-engine) | |
 | 59 | P6-01b | wip (built, merged into lane/P6-01-int; T-21 seed-1042 misses accepted as chance (owner); GEN-IN round 3) | |
 | 60 | P6-01c | wip (built, merged into lane/P6-01-int; T-21 seed-1042 misses accepted as chance (owner); GEN-IN round 3) | |
