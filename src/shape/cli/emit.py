@@ -100,7 +100,7 @@ def add_arguments(sub: Any) -> None:
     )
     dl.add_argument("--fresh", action="store_true", help="ignore an existing checkpoint")
     dl.add_argument("--batch-events", type=int, metavar="N", help="events per delivery")
-    dl.add_argument("--queue-batches", type=int, default=8, metavar="N", help="buffer depth")
+    dl.add_argument("--queue-batches", type=int, metavar="N", help="buffer depth")
     dl.add_argument("--retries", type=int, default=3, metavar="N", help="per failed delivery")
     em.add_argument("--json", action="store_true", help="print the run report as JSON")
 

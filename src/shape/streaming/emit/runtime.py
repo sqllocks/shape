@@ -53,13 +53,21 @@ class EmitConfig:
     max_events: int | None = None
     duration: float | None = None
     batch_events: int | None = None  # events per ``send``; default: see ``effective_batch``
-    queue_batches: int = 8
+    queue_batches: int | None = None  # default: 8, or about a second of batches when realtime
     checkpoint_path: str | None = None
     checkpoint_every: int = 10_000
     checkpoint_seconds: float = 1.0
     fresh: bool = False  # ignore an existing checkpoint
     retries: int = 3
     retry_backoff: float = 0.1
+
+    def effective_queue(self) -> int:
+        if self.queue_batches is not None:
+            return self.queue_batches
+        if self.realtime:
+            # A second of batches: the generator may stall for a block without delaying the pacing.
+            return max(8, -(-int(self.rate) // self.effective_batch()))
+        return 8
 
     def effective_batch(self) -> int:
         if self.batch_events is not None:
@@ -106,7 +114,7 @@ class EmitRunner:
         self.sink = sink
         self.config = config or EmitConfig()
         cfg = self.config
-        if cfg.queue_batches < 1:
+        if cfg.queue_batches is not None and cfg.queue_batches < 1:
             raise ValueError("queue_batches must be at least 1")
         if cfg.batch_events is not None and cfg.batch_events < 1:
             raise ValueError("batch_events must be at least 1")
@@ -236,7 +244,7 @@ class EmitRunner:
             self.sink.close()
             return report
 
-        q: queue.Queue[Any] = queue.Queue(maxsize=cfg.queue_batches)
+        q: queue.Queue[Any] = queue.Queue(maxsize=cfg.effective_queue())
         errors: list[BaseException] = []
         producer = threading.Thread(
             target=self._producer, args=(q, offset, errors), name="shape-emit-gen", daemon=True
