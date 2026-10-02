@@ -282,7 +282,9 @@ class Jobs:
             return {**self.describe(record), "cancelled": True}
         running[1].set()
         running[0].join(timeout=30)
-        return {**self.describe(self.store.get(job_id)), "cancelled": True}
+        final = self.store.get(job_id)
+        # A run that finished before it saw the request is a success, not a cancellation.
+        return {**self.describe(final), "cancelled": final.status == "cancelled"}
 
     @staticmethod
     def describe(record: JobRecord) -> dict[str, Any]:

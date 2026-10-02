@@ -435,3 +435,19 @@ def test_default_jobs_dir_follows_the_environment(monkeypatch, tmp_path):
     assert default_jobs_dir() == tmp_path / "j"
     monkeypatch.delenv("SHAPE_JOBS_DIR")
     assert default_jobs_dir() == type(tmp_path)(os.path.expanduser("~")) / ".shape" / "jobs"
+
+
+def test_cancel_of_a_run_that_finished_first_reports_it_was_not_cancelled(store):
+    jobs = Jobs(store)
+    gate = threading.Event()
+
+    def run(request, cancel, progress, resume):
+        gate.wait(5)  # ignores the cancel request: it finishes first
+        return {"rows_generated": 3}
+
+    job = jobs.start_local({}, run)
+    timer = threading.Timer(0.05, gate.set)
+    timer.start()
+    out = jobs.cancel(job["job_id"])
+    timer.join()
+    assert out["status"] == "succeeded" and out["cancelled"] is False
