@@ -3,8 +3,8 @@
     source scripts/env.sh && "$SPINDLE_PY" benchmarks/vs_spindle/domain_1to1/rate_check.py \\
         --domain composite_enterprise --scale small --n 30 --out rates.json
 
-``verify.py`` clause (f) takes every strategy-semantics rate of Shape's seed 1042 and fails it when it
-is below the minimum of the baseline's seeds 42-46 minus 0.005. This computes the same rates
+``verify.py`` clause (f) takes every strategy-semantics rate of Shape's seed 1042 and fails it when
+it is below the minimum of the baseline's seeds 42-46 minus 0.005. This computes the same rates
 (``verify.semantic_rates``) for baseline seeds 42..42+n and Shape seeds 1042..1041+n, and reports
 per rate: mean and sd of each tool, two-sample Mann-Whitney and KS, the verifier's floor
 (seeds 42-46), and the share of fresh baseline seeds (47 onward, not among those that set the floor)
