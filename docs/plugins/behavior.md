@@ -273,12 +273,13 @@ file per window, so memory stays bounded), `OUT/entities.parquet` and `OUT/run.j
 modules and digests, counts, import report). Exit codes: 0 success, 1 invalid module, 2 usage
 error.
 
-## 8. Calibration against an external generator (optional, `[VERIFY]`)
+## 8. Domain packs on the engine
 
-A plugin stub, `shape_behavior.external`, documents how to run an external generator in a
-container and read its CSV/FHIR/CPCDS output for calibration. It does not ship or require any
-such generator. See the module docstring; `[VERIFY]` marks everything not runnable in the build
-environment (no container runtime).
+A domain pack (claims, invoices, work orders) ships module documents and turns the event table
+into its tables. It uses the engine through the public names of section 3 only:
+`load_module` / `Module`, `Population`, `Simulator` and the `EVENT_SCHEMA` columns. Clinical
+modules for the healthcare payer pack are written on this API in the healthcare payer domain pack; Shape
+ships no terminology, so a pack supplies (or asks the user for) the code sets it needs.
 
 ## 9. Limits
 
@@ -286,3 +287,48 @@ environment (no container runtime).
 * One event per state entry; durations of procedures and encounters are not modelled.
 * Active condition/medication sets hold up to 64 distinct codes each.
 * Guards on non-age conditions are polled, so an event can occur up to one `poll` late.
+
+## 10. The `shape.behaviors` plugin group
+
+A behavior module is also a plugin of the entry-point group `shape.behaviors` (plugin API v1,
+protocol `Behavior`; `docs/plugins/api-v1.md`), so `shape plugins list` shows it, the engine can
+load it by name and `python -m shape.plugins.kit DISTRIBUTION` checks it.
+
+| Member | Meaning |
+|---|---|
+| `name` | The registry key; also the entry-point name. |
+| `version` | The module's own version string. |
+| `states` | The state names the module uses. |
+| `attributes` | The entity attributes it reads or writes. |
+| `events` | The event kinds it emits (`kind` column of section 5). |
+| `simulate(population, seed, years)` | Runs that many entities for that many years from 2020-01-01 and returns the event table; deterministic per seed. |
+
+`shape_behavior.behaviors.behavior(document)` (or the class `ModuleBehavior`) wraps a module
+document into such an object, filling the members from the document; the engine runs a registered
+behavior that has a `module` (all of those wrapped this way). `shape behave run NAME` accepts the
+name of any registered behavior next to files and example names.
+
+The three built-in examples register this way (`shape.behaviors:subscription`,
+`:equipment_maintenance`, `:healthcare_screening`). A third party does the same in its own
+distribution; `examples/behavior-plugin` is a complete one (installed from outside the repository
+by `tests/plugins/test_plugin_kit_install.py`):
+
+```toml
+[project.entry-points."shape.behaviors"]
+library_loans = "shape_example_behavior:LibraryLoans"
+```
+
+```python
+from shape_behavior.behaviors import ModuleBehavior
+
+SHAPE_API = "1.0"
+
+class LibraryLoans(ModuleBehavior):
+    def __init__(self) -> None:
+        super().__init__(DOCUMENT, version="0.1.0")      # DOCUMENT: a module document
+```
+
+`shape.plugins.kit.check_behavior` loads the object, checks the members above, runs a small
+population twice per seed, and requires the events to be identical, non-empty, and only of
+declared kinds and states (rows of the engine itself, with an empty `state`, are the
+`entity_end` events of a population lifetime).

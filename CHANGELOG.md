@@ -5,6 +5,14 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `sqllocks-shape-behavior` and the plugin group `shape.behaviors` (`docs/plugins/behavior.md`):
+  declarative state-machine modules run by a simulator on a virtual clock (deterministic per seed,
+  resumable, vectorized across entities), an event stream as Arrow tables, an extension point for
+  domain events, an importer for Generic Module Framework JSON modules that you download, three
+  example modules (subscription lifecycle, equipment maintenance, a small healthcare example) and
+  `shape behave run|check|import-gmf|examples`. Plugin API v1 gains the `Behavior` protocol,
+  `shape.plugins.kit.check_behavior` and `examples/behavior-plugin`.
+
 - `shape generate --scale-mode local_single|local_mp|fabric_spark` and `shape jobs list|status|cancel|resume`
   (`docs/SCALE.md`): the scale router with sinks (memory, Parquet part files, Lakehouse, Warehouse,
   SQL Database, KQL), a durable job store (submit, status, cancel, resume), the `fabric_spark` router

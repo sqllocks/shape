@@ -86,7 +86,7 @@ def test_the_guard_makes_entities_wait_until_they_are_adults():
         if (start - b).days / 365.25 >= 8.5:
             assert eid in first_visit
     for eid, when in first_visit.items():
-        assert (when - born[eid]).days / 365.25 >= 18 - 1e-6
+        assert (when - born[eid]).total_seconds() / 86_400 / 365.25 >= 18 - 1e-6
 
 
 def test_unsupported_elements_are_reported_not_silently_dropped():
