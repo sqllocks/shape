@@ -66,7 +66,9 @@ def run_once(tool: str, domain: str, scale: str, threads: int | None) -> dict:
     """One fresh-process run; the output replaces the tool's layout directory afterwards."""
     impl = "spindle" if tool == "spindle" else "shape"
     seed = REF_SEED if tool == "spindle" else IMPL_SEED
-    final = generate.out_dir(impl, domain, scale, seed)
+    # CLI runs live next to the API runs (``<impl>-cli``), never in their place: the API reference
+    # runs record the generation order of the tables, a CLI run only the files it wrote.
+    final = generate.out_dir(f"{impl}-cli", domain, scale, seed)
     tmp = final.with_name(final.name + f".tmp{os.getpid()}")
     shutil.rmtree(tmp, ignore_errors=True)  # no cache between runs
     load = wait_for_quiet()

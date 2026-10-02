@@ -2050,7 +2050,7 @@ Work packages are listed in execution order. The next work package is the first 
 | G2 | done (lead, Oct 1: out-of-tree example plugin adds a source, a detector and a command with no core change, tests/plugins/test_plugin_kit_install.py 7 passed; `shape plugins list` shows all 72 built-ins; G1 gates pass, see G1) |
 | GF | todo |
 | G3 | done (lead, 8:55 AM EDT Oct 1, on 7ef6a6e: stream_prof verify stream == batch bounded rel 1e-9 PASS and identical across 3 processes PASS; STREAM-PROF 115.7% default / 101.7% SHAPE_THREADS=1 (gate 80%), docs/plans/evidence/G3/stream-prof-lead.json; S2-S5 regression tests pass in both kernels; P3-01..P3-05 done) |
-| G4 | todo |
+| G4 | done (lead, 1:00 AM EDT Oct 2, 4 vCPU Xeon 2.10 GHz, equivalence first: retail T-21 PASS at small, medium and large (60/60 columns); P4-11 acceptance passed (0 mismatches); GEN-IN medium 14.18x, large 31.09x; GEN-CLI medium 10.57x, large 31.64x; LEARN-CLI 15.28x; tests/generation + tests/regressions 1643 passed (every strategy); G-bugs G1-G8 each have a regression test; evidence docs/plans/evidence/G4/, P4-10-lead/) |
 | G5 | todo |
 | G6 | todo |
 | G7 | todo |

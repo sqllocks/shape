@@ -598,12 +598,21 @@ def main(argv: list[str] | None = None) -> int:
         help="report JSON (default: $BENCH_OUT_DIR/verify/<impl>_<domain>_<scale>.json)",
     )
     ap.add_argument(
+        "--cli",
+        action="store_true",
+        help="compare the CLI runs bench_cli.py wrote (spindle-cli seed 42 against <impl>-cli); "
+        "the baseline seeds stay the API runs",
+    )
+    ap.add_argument(
         "--no-generate",
         action="store_true",
         help="do not generate missing run directories (exit 2 instead)",
     )
     a = ap.parse_args(argv)
     domain, scale, impl = a.domain, a.scale, a.impl
+    ref = "spindle-cli" if a.cli else "spindle"
+    if a.cli:
+        impl = f"{impl}-cli"
     out = Path(a.out) if a.out else BENCH_OUT_DIR / "verify" / f"{impl}_{domain}_{scale}.json"
     t0 = time.time()
 
@@ -611,15 +620,17 @@ def main(argv: list[str] | None = None) -> int:
     tables = list(raw["tables"])
     fks = foreign_keys(raw)
 
-    runs = [("spindle", s) for s in (REF_SEED, *BASELINE_SEEDS)] + [(impl, IMPL_SEED)]
+    runs = [(ref, REF_SEED)] + [("spindle", s) for s in BASELINE_SEEDS] + [(impl, IMPL_SEED)]
     for who, seed in runs:
         d = generate.out_dir(who, domain, scale, seed)
+        if who.endswith("-cli") and not generate.is_complete(d, tables):
+            return _fail_missing(f"{d} is missing: run bench_cli.py first ({who}, seed {seed})")
         if not generate.is_complete(d, tables) and not a.no_generate:
             ensure_run(who, domain, scale, seed, tables)
         if not generate.is_complete(d, tables):
             return _fail_missing(f"{d} is missing or incomplete (impl {who}, seed {seed})")
 
-    SP, sp_types, sp_order = load_run("spindle", domain, scale, REF_SEED, tables)
+    SP, sp_types, sp_order = load_run(ref, domain, scale, REF_SEED, tables)
     IM, im_types, im_order = load_run(impl, domain, scale, IMPL_SEED, tables)
     pools = Pools(domain)
     schema = rebuild_schema(raw)
