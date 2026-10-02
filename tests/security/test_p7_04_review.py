@@ -179,7 +179,7 @@ def test_verify_checks_artifacts_whatever_their_file_name(tmp_path):
     from shape.artifact import sign_artifact, write_model
     from shape.artifact.signing import generate_keypair, write_keypair
 
-    write_keypair(tmp_path / "trusted")
+    write_keypair(tmp_path / "trusted", "test-passphrase")  # only the public key is used here
     sk, _ = generate_keypair()  # the attacker's key
     forged = tmp_path / "forged.bin"
     write_model(forged, {"tables": {}}, name="t")

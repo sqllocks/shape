@@ -21,6 +21,7 @@ from shape.artifact import (
     write_model,
 )
 from shape.artifact.io import ArtifactError, canonical_json, read_artifact, write_artifact
+from shape.artifact.keys import UnencryptedKeyWarning
 from shape.artifact.signing import (
     generate_keypair,
     key_id,
@@ -208,7 +209,9 @@ def test_damaged_artifact_is_not_signed(tmp_path):
 
 def test_key_files(tmp_path):
     prefix = tmp_path / "k"
-    priv, pub = write_keypair(prefix)
+    # the raw (unencrypted) form still works when asked for, with a warning (issue #38)
+    with pytest.warns(UnencryptedKeyWarning):
+        priv, pub = write_keypair(prefix, unencrypted=True)
     if os.name == "posix":
         assert stat.S_IMODE(priv.stat().st_mode) == 0o600
     sk, pk = load_private_key(priv), load_public_key(pub)
@@ -216,7 +219,7 @@ def test_key_files(tmp_path):
     sign_artifact(p, sk)
     verify_artifact(p, pk)
     with pytest.raises(FileExistsError):  # never overwrites a key
-        write_keypair(prefix)
+        write_keypair(prefix, unencrypted=True)
     bad = tmp_path / "bad.pub"
     bad.write_text("AAAA\n")
     with pytest.raises(ValueError):
@@ -231,7 +234,7 @@ def _cli(*args):
 
 def test_cli_sign_verify_flags(tmp_path):
     prefix = tmp_path / "k"
-    r = _cli("keygen", str(prefix))
+    r = _cli("keygen", str(prefix), "--no-passphrase")
     assert r.returncode == 0, r.stderr
     csv = tmp_path / "d.csv"
     csv.write_text("a,b\n1,x\n2,y\n3,x\n")

@@ -5,6 +5,9 @@ from .io import (
     ArtifactFormatError as ArtifactFormatError,
 )
 from .io import (
+    ArtifactNotVerifiedWarning as ArtifactNotVerifiedWarning,
+)
+from .io import (
     ArtifactSignatureError as ArtifactSignatureError,
 )
 from .io import (
@@ -16,6 +19,7 @@ from .io import (
 
 __all__ = [
     "ArtifactError",
+    "ArtifactNotVerifiedWarning",
     "ArtifactFormatError",
     "ArtifactSignatureError",
     "canonical_json",

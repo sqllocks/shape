@@ -63,3 +63,31 @@ def public_key_from_private(private_key: bytes) -> bytes:
         .public_key()
         .public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
     )
+
+
+def encrypt_private_key_pem(private_key: bytes, passphrase: bytes) -> bytes:
+    """The key as an encrypted PKCS#8 PEM (``ENCRYPTED PRIVATE KEY``): PBES2 with a key derived
+    from ``passphrase`` and a random salt, as OpenSSL reads it."""
+    if not passphrase:
+        raise ValueError("passphrase must not be empty")
+    return Ed25519PrivateKey.from_private_bytes(private_key).private_bytes(
+        serialization.Encoding.PEM,
+        serialization.PrivateFormat.PKCS8,
+        serialization.BestAvailableEncryption(passphrase),
+    )
+
+
+def load_private_key_pem(data: bytes, passphrase: bytes | None) -> bytes:
+    """The raw 32 bytes of an Ed25519 key in PKCS#8 PEM, encrypted (``passphrase`` required) or
+    not. Raises ``ValueError`` without any key or passphrase text when it cannot be read."""
+    try:
+        key = serialization.load_pem_private_key(data, password=passphrase or None)
+    except Exception:  # the library's error types vary; none of their text is passed on
+        raise ValueError(
+            "cannot decrypt the private key: wrong passphrase or damaged key"
+        ) from None
+    if not isinstance(key, Ed25519PrivateKey):
+        raise ValueError("the private key is not an Ed25519 key")
+    return key.private_bytes(
+        serialization.Encoding.Raw, serialization.PrivateFormat.Raw, serialization.NoEncryption()
+    )
