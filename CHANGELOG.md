@@ -5,6 +5,15 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Incremental data (`docs/INCREMENTAL.md`): `shape continue DOMAIN --input DIR -o OUT` writes the next
+  batch of inserts, updates and soft deletes for existing data (`--inserts`, `--update-fraction`,
+  `--delete-fraction`, `--transitions`, `--seed`, `--as-of`; rows tagged `_shape_delta_type` and
+  `_shape_delta_timestamp`), and `shape time-travel DOMAIN -o OUT` writes monthly snapshots of a
+  dataset that grows, churns and changes with seasonality (`--months`, `--growth-rate`,
+  `--churn-rate`, `--update-fraction`, `--seasonality`, `--start-date`). Python:
+  `shape.generation.incremental`. Zero rates change nothing, no row is both updated and deleted,
+  inserted rows never reference a parent deleted in the same delta, and every snapshot keeps all its
+  foreign keys.
 - Fidelity tiers 1 to 3 (`docs/FIDELITY_TIERS.md`): `shape fidelity REFERENCE SYNTHETIC --tier 1|2|3`
   (tier 1: Gaussian-mixture fits, conditional profiles, adversarial AUC, temporal profiles and
   periodicity; tier 2: format preservation, string similarity, cardinality and anomaly-rate checks;

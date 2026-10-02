@@ -182,6 +182,51 @@ def test_state_transitions():
 # ---- the trust fixes ----------------------------------------------------------------------
 
 
+def test_cont_chain_a_row_moves_one_state_per_update():
+    data = tables()
+    # pending -> shipped and shipped -> done: a pending row must end `shipped`, not `done`.
+    transitions = {"child.status": {"pending": {"shipped": 1.0}, "shipped": {"done": 1.0}}}
+    cfg = ContinueConfig(
+        insert_count=0,
+        update_fraction=1.0,
+        delete_fraction=0.0,
+        seed=2,
+        state_transitions=transitions,
+    )
+    delta = ContinueEngine().continue_from(data, schema(), cfg)
+    before = dict(
+        zip(
+            data["child"].column("child_id").to_pylist(),
+            data["child"].column("status").to_pylist(),
+            strict=True,
+        )
+    )
+    after = dict(
+        zip(
+            delta.updates["child"].column("child_id").to_pylist(),
+            delta.updates["child"].column("status").to_pylist(),
+            strict=True,
+        )
+    )
+    pending = [k for k, v in before.items() if v == "pending"]
+    assert pending and {after[k] for k in pending} == {"shipped"}
+
+
+def test_booleans_are_never_flipped():
+    data = tables()
+    flags = pa.array(np.random.default_rng(0).random(N_CHILD) < 0.5)
+    data["child"] = data["child"].append_column("active", flags)
+    cfg = ContinueConfig(insert_count=100, update_fraction=1.0, delete_fraction=0.0, seed=1)
+    delta = ContinueEngine().continue_from(data, schema(), cfg)
+    index = {k: i for i, k in enumerate(data["child"].column("child_id").to_pylist())}
+    for k, flag in zip(
+        delta.updates["child"].column("child_id").to_pylist(),
+        delta.updates["child"].column("active").to_pylist(),
+        strict=True,
+    ):
+        assert flag == flags[index[k]].as_py()
+
+
 def test_cont_zero_fraction_changes_no_rows():
     cfg = ContinueConfig(insert_count=0, update_fraction=0.0, delete_fraction=0.0, seed=1)
     delta = ContinueEngine().continue_from(tables(), schema(), cfg)
@@ -367,6 +412,25 @@ def test_tt_orphans_repair_keeps_the_skew_of_the_relationship():
     # Proportional to the children each parent has (90 of 98): about 37 of the 40; uniform over the
     # 10 parents would give about 4.
     assert (repaired[98:] == 1).sum() >= 30
+
+
+def test_tt_orphans_repair_when_every_child_lost_its_parent():
+    parent = pa.table({"parent_id": pa.array([1, 2, 3], pa.int64())})
+    child = pa.table(
+        {
+            "child_id": pa.array(range(6), pa.int64()),
+            "parent_id": pa.array([99, 98, None, 99, 97, 96], pa.int64()),
+        }
+    )
+    current = {"parent": parent, "child": child}
+    keys_ = {"parent": ["parent_id"], "child": ["child_id"]}
+    fks = {"parent": {}, "child": {"parent_id": ("parent", "parent_id")}}
+    TimeTravelEngine._repair_orphans(
+        current, ["parent", "child"], keys_, fks, np.random.default_rng(1)
+    )
+    repaired = current["child"].column("parent_id").to_pylist()
+    assert repaired[2] is None  # a null foreign key is not an orphan
+    assert all(v in (1, 2, 3) for i, v in enumerate(repaired) if i != 2)
 
 
 def test_tt_rounding_integer_updates_do_not_drift_down():

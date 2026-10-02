@@ -807,12 +807,17 @@ class TimeTravelEngine:
                 bad = np.flatnonzero(np.asarray(orphan.to_numpy(zero_copy_only=False)))
                 if len(bad) == 0:
                     continue
-                survivors = array.filter(known)
-                source = survivors if len(survivors) else pool
-                picks = source.take(pa.array(rng.choice(len(source), size=len(bad), replace=True)))
-                values = np.asarray(array.to_pylist(), dtype=object)
-                values[bad] = np.asarray(picks.to_pylist(), dtype=object)
-                current[name] = _replace(table, col, pa.array(values.tolist(), type=array.type))
+                valid_rows = np.flatnonzero(np.asarray(known.to_numpy(zero_copy_only=False)))
+                if len(valid_rows):
+                    source = np.arange(len(array))
+                    source[bad] = valid_rows[rng.choice(len(valid_rows), size=len(bad))]
+                    repaired = array.take(pa.array(source))
+                else:  # every child lost its parent: draw uniformly from the parent's keys
+                    values = np.asarray(array.to_pylist(), dtype=object)
+                    picks = pool.take(pa.array(rng.choice(len(pool), size=len(bad))))
+                    values[bad] = np.asarray(picks.to_pylist(), dtype=object)
+                    repaired = pa.array(values.tolist(), type=array.type)
+                current[name] = _replace(table, col, repaired)
 
 
 def _snapshot(when: dt.date, month: int, tables: Mapping[str, pa.Table]) -> Snapshot:
