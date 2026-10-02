@@ -28,16 +28,20 @@ The tee never changes what is delivered: events go to the real sink first, are c
 Alerts (``docs/EMIT.md``) are edge-triggered: one alert when a condition becomes true, one
 ``recovered`` alert when it stops being true.
 
-* ``score-low`` (error): a table's score is below ``min_table_score``, or the overall score of the
-  tables seen so far is below ``min_score``.
+* ``score-low`` (error): a table's score is below ``min_table_score``, or the overall score is
+  below ``min_score`` (the overall is judged once every table is, because a few tables' mean is not
+  the overall).
 * ``column-low`` (warning): a column's score is below ``min_column_score`` (off by default).
 * ``score-drop`` (warning): a table's (or the overall) score fell ``drop`` points below the best it
   had reached.
 * ``live-error`` (error): the live side failed and was switched off.
 
-A table is judged only once ``min_events`` of its events were seen. Tables are streamed one after
-the other, so the overall live score covers the tables that have started; the final overall score,
-after the last event, is that of ``shape fidelity`` on the same events.
+The alerts judge a table only once ``min_events`` of its events were seen and ``min_progress`` of
+the target table's rows: a table that is half emitted scores lower than the finished one (distinct
+counts grow with the rows), and that is not drift. The score itself is never gated: at any moment it
+is ``shape fidelity`` of the target against the events delivered so far. Tables are streamed one
+after the other, so the overall live score covers the tables that have started; after the last
+event it is that of ``shape fidelity`` on all the events.
 """
 
 from __future__ import annotations
@@ -82,7 +86,8 @@ class LiveConfig:
     chunk_rows: int = 8192  # events gathered per table before they are counted
     interval_events: int = 50_000  # evaluate after this many events ...
     interval_seconds: float = 2.0  # ... and at least this long after the last evaluation
-    min_events: int = 1000  # events of a table before the table is judged
+    min_events: int = 1000  # events of a table before the alerts judge it ...
+    min_progress: float = 0.5  # ... and this share of the target table's rows
     min_score: float = cmp.DEFAULT_THRESHOLD
     min_table_score: float = cmp.DEFAULT_TABLE_THRESHOLD
     min_column_score: float | None = None
@@ -96,6 +101,8 @@ class LiveConfig:
                 raise ValueError(f"{name} must be at least 1")
         if self.interval_seconds < 0 or self.drop < 0:
             raise ValueError("interval_seconds and drop must be 0 or more")
+        if not 0.0 <= self.min_progress <= 1.0:
+            raise ValueError("min_progress must be between 0 and 1")
 
 
 # ---- accumulators -----------------------------------------------------------------------------
@@ -631,7 +638,7 @@ class LiveSnapshot:
     tables: dict[str, float]  # the tables that have started
     pending: tuple[str, ...]  # tables with no event yet
     judged: dict[str, float]  # the tables with at least min_events: what the alerts look at
-    judged_overall: float | None  # mean over ``judged``
+    judged_overall: float | None  # mean over ``judged`` once every table is in it, else None
     report: cmp.FidelityReport
 
     def to_dict(self) -> dict[str, Any]:
@@ -765,7 +772,8 @@ class LiveFidelity:
         judged = {
             n: t
             for n, t in tables.items()
-            if self._tables.get(n) is not None and self._tables[n].rows >= cfg.min_events
+            if self._tables.get(n) is not None
+            and self._tables[n].rows >= max(cfg.min_events, cfg.min_progress * self.target.rows[n])
         }
         started = {
             n: t.score for n, t in tables.items() if self._tables.get(n) is not None and t.present
@@ -781,7 +789,8 @@ class LiveFidelity:
             cmp.Thresholds(cfg.min_score, cfg.min_table_score, cfg.min_column_score),
         )
         pending = tuple(n for n in self.expected if n not in started)
-        judged_overall = float(np.mean(list(scores.values()))) if scores else None
+        every = len(scores) == len(self.expected)
+        judged_overall = float(np.mean(list(scores.values()))) if scores and every else None
         return LiveSnapshot(self.events, overall, started, pending, scores, judged_overall, report)
 
     def evaluate(self) -> LiveSnapshot:
@@ -899,6 +908,37 @@ class LiveFidelity:
             self._fail(exc)
             raise
 
+    def verdict(self) -> list[str]:
+        """Why the run fails its live pass marks (empty: it does not): the final score of a table
+        that has started or of the whole is below a mark, an error alert is still active at the
+        end, or the live side failed. Tables that never started are not judged (a run that
+        stopped early did not emit them)."""
+        out: list[str] = []
+        if self.failed is not None:
+            out.append(f"live fidelity failed: {self.failed}")
+        snap = self.last
+        if snap is None:
+            return out
+        cfg = self.config
+        if snap.overall is not None and snap.overall < cfg.min_score:
+            out.append(f"overall score {snap.overall:.2f} < {cfg.min_score:g}")
+        for name, score in snap.tables.items():
+            if score < cfg.min_table_score:
+                out.append(f"table {name}: score {score:.2f} < {cfg.min_table_score:g}")
+            if cfg.min_column_score is not None:
+                for c in snap.report.tables[name].columns.values():
+                    if c.present and c.score < cfg.min_column_score:
+                        out.append(
+                            f"table {name}: column {c.column_name} score {c.score:.2f} "
+                            f"< {cfg.min_column_score:g}"
+                        )
+        out.extend(
+            a.message
+            for a in self._active.values()
+            if a.level == "error" and a.kind != KIND_SCORE_LOW
+        )
+        return out
+
     def approximate(self) -> dict[str, list[str]]:
         """Columns that used a bound (a sample, a sketch) instead of the exact value."""
         out: dict[str, list[str]] = {}
@@ -932,6 +972,7 @@ class LiveFidelity:
             "failed": self.failed,
             "observe_seconds": self.observe_seconds,
             "thresholds": {
+                "min_progress": self.config.min_progress,
                 "min_score": self.config.min_score,
                 "min_table_score": self.config.min_table_score,
                 "min_column_score": self.config.min_column_score,
