@@ -147,7 +147,11 @@ def _read_artifact(
             # so it is checked before anything in the manifest is trusted.
             from .signing import verify_manifest_signature
 
-            sig = z.read(SIGNATURE_MEMBER) if SIGNATURE_MEMBER in names else None
+            sig = None
+            if SIGNATURE_MEMBER in names:
+                if z.getinfo(SIGNATURE_MEMBER).file_size > _MAX_SIGNATURE_BYTES:
+                    raise ArtifactError("signature too large")
+                sig = z.read(SIGNATURE_MEMBER)
             verify_manifest_signature(rawm, sig, verify_key)
         if not isinstance(m, dict):
             raise ArtifactError("manifest must be object")

@@ -25,6 +25,7 @@ from urllib.parse import unquote, urlsplit
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
+from shape.security.names import is_safe_name
 from shape.streaming.emit.formats import ENVELOPES, FIELD_TABLE, encode_batch
 from shape.streaming.emit.sinks import repair_tail
 
@@ -182,7 +183,7 @@ class JsonlEmitter:
             for i in range(1, len(names) + 1):
                 if i == len(names) or names[i] != names[start]:
                     table = str(names[start])
-                    if "/" in table or table in ("", ".", ".."):
+                    if not is_safe_name(table):
                         raise ShapeError(f"table name {table!r} cannot name a file")
                     f = self._files.get(directory / f"{table}.jsonl", resuming)
                     f.write(encode_batch(batch.slice(start, i - start), envelope))

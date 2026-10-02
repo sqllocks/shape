@@ -112,8 +112,21 @@ def spread_query(
 
 # --- connection strings ------------------------------------------------------------------
 
-_SECRET_KEYS = ("pwd", "password", "accesstoken", "access token")
-_PAIR = re.compile(r"(?P<key>[^=;{}]+)=(?P<value>\{(?:[^}]|\}\})*\}|[^;]*)")
+_SECRET_KEYS = (
+    "pwd",
+    "password",
+    "accesstoken",
+    "access token",
+    "client_secret",
+    "clientsecret",
+    "sharedaccesskey",
+    "accountkey",
+    "sas",
+)
+# A value is a brace-quoted ODBC value, a quoted string (which may hold ``;``), or runs to ``;``.
+_PAIR = re.compile(
+    r"(?P<key>[^=;{}]+)=(?P<value>\{(?:[^}]|\}\})*\}|\"[^\"]*\"|'[^']*'|[^;]*)"
+)
 
 
 def _escape_value(value: str) -> str:

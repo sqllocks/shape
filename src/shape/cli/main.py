@@ -83,6 +83,21 @@ def _sign_output(a, path):
     return None
 
 
+def _looks_like_artifact(path):
+    """True for a path the readers will treat as a Shape artifact. The readers sniff content, not
+    the file name, so ``--verify`` must too: deciding by extension let a forged ``x.bin`` or
+    ``x.SHAPE`` through unverified (P7-04)."""
+    import zipfile
+
+    if path.lower().endswith(".shape"):
+        return True
+    try:
+        with zipfile.ZipFile(path) as z:
+            return "manifest.json" in z.namelist()
+    except (OSError, zipfile.BadZipFile):
+        return False
+
+
 def _verify_inputs(a):
     """``--verify PUBKEY``: every .shape input must carry a valid signature by that key."""
     from shape.artifact.signing import load_public_key, verify_artifact
@@ -90,7 +105,7 @@ def _verify_inputs(a):
     key = load_public_key(a.verify)
     for name in ("shape", "before", "after", "target", "observed"):
         path = getattr(a, name, None)
-        if isinstance(path, str) and path.endswith(".shape"):
+        if isinstance(path, str) and _looks_like_artifact(path):
             verify_artifact(path, key)
 
 

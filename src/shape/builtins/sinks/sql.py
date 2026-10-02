@@ -114,6 +114,13 @@ def _quote(name: str, dialect: str) -> str:
     return "[" + name.replace("]", "]]") + "]"
 
 
+def _dimension(value: Any, what: str) -> int:
+    """A length, precision or scale goes into DDL text: it must be a non-negative integer."""
+    if isinstance(value, bool) or not isinstance(value, int | float) or value != int(value) or value < 0:
+        raise ValueError(f"column {what} must be a non-negative integer, got {value!r}")
+    return int(value)
+
+
 def _column_type(field: pa.Field, meta: Mapping[str, Any], dialect: str) -> str:
     logical = str(meta.get("type") or _logical_type(field.type))
     table = _TYPES[dialect]
@@ -126,7 +133,9 @@ def _column_type(field: pa.Field, meta: Mapping[str, Any], dialect: str) -> str:
     if scale is None:
         scale = arrow_type.scale if pat.is_decimal(arrow_type) else 2
     return template.format(
-        length=meta.get("max_length") or 255, precision=precision or 18, scale=scale
+        length=_dimension(meta.get("max_length") or 255, "max_length"),
+        precision=_dimension(precision or 18, "precision"),
+        scale=_dimension(scale, "scale"),
     )
 
 
@@ -168,7 +177,9 @@ class SqlSink:
         path = local_path(uri)
         if path.is_dir() or uri.endswith(("/", "\\")):
             path.mkdir(parents=True, exist_ok=True)
-            return path / f"{table}.sql"
+            from shape.security.names import contained
+
+            return contained(path, table, ".sql")
         path.parent.mkdir(parents=True, exist_ok=True)
         return path
 

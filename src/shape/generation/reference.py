@@ -30,6 +30,7 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
+from shape.security.names import is_safe_name
 from shape.generation.arrowkit import array as arrow_array
 
 REFERENCE_PATH_ENV = "SHAPE_REFERENCE_PATH"
@@ -158,6 +159,9 @@ def load_dataset(name: str) -> Dataset:
     if found is not None:
         return found
     searched = []
+    if not is_safe_name(name):
+        # A dataset name is a file stem in the search path, never a path (P7-04).
+        raise DatasetNotFoundError(f"reference dataset name {name!r} is not a plain name")
     for directory in _directories():
         candidate = directory / f"{name}.json"
         searched.append(str(candidate))

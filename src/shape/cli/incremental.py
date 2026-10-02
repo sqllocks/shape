@@ -137,7 +137,9 @@ def write_tables(tables: dict[str, pa.Table], fmt: str, directory: Path) -> list
     directory.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []
     for name, table in tables.items():
-        target = directory / f"{name}.{fmt}"
+        from shape.security.names import contained
+
+        target = contained(directory, name, f".{fmt}")
         sink.write(str(target), name, iter(table.to_batches()), schema=table.schema)
         written.append(target)
     return written

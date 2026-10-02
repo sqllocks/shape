@@ -21,6 +21,7 @@ from typing import Any
 
 from shape.errors import ShapeSchemaError
 from shape.schemacheck import validate as _validate_document
+from shape.security.names import is_safe_name
 
 SCHEMA_VERSION = 1
 
@@ -309,6 +310,8 @@ class GenSchema:
         )
         tables: dict[str, Table] = {}
         for tname, t in doc["tables"].items():
+            if not is_safe_name(tname):
+                raise GenSchemaError(f"tables.{tname!r}: a table name must be a plain name, not a path")
             columns = {
                 cname: Column(
                     name=cname,
