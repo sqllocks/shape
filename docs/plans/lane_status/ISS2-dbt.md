@@ -66,4 +66,29 @@ path was not run here** (the hub index lists `metaplane/dbt_expectations` and `d
 
 ## Checks run in this session
 
-(filled in below after the final runs)
+All run on the final tree (after the merge of `origin/build/main-plan` 521310f), in `~/.venvs/shape` unless noted.
+
+| Check | Result |
+|---|---|
+| `ruff check src tests plugins benchmarks/vs_spindle` | All checks passed |
+| `ruff format --check src tests plugins benchmarks/vs_spindle` | 882 files already formatted |
+| `mypy` (strict, `packages=["shape"]`) | no issues in 347 source files |
+| `mypy --strict --explicit-package-bases plugins/shape-dbt/src` | no issues in 7 source files |
+| `vulture src/shape scripts/vulture_whitelist.py --min-confidence 80` | no output (the new public `ParsedTable` etc. are used by the plugin; no whitelist entry needed) |
+| `lint-imports` | 1 contract kept, 0 broken |
+| `python scripts/check_user_facing.py` | clean; also `--wheel` on all 7 plugin wheels built by `check_plugin_skeletons.py --build ... --no-isolation` (including `sqllocks_shape_dbt-0.9.0`): clean |
+| `python scripts/check_plugin_skeletons.py` (and `--build`) | OK, 7 distributions, 7 wheels, pure `py3-none-any`, no tests inside |
+| `bandit -q -r src -ll` | no findings (only the existing `nosec` notices) |
+| START: median of 10 runs of `shape --version` | 52 ms (min 48, max 67; limit 300 ms); the plugin's commands are listed without importing it |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric` | 5211 passed, 2 failed, 46 deselected: the two were `tests/plugins/test_plugin_kit_install.py` tests that hard-coded six plugin distributions; updated to seven (3 lines) and re-run: 7 passed under `SHAPE_KERNEL=rust` and under `python` |
+| the same with `SHAPE_KERNEL=python` | 5211 passed, the same 2 failed (same fix), 46 deselected |
+| `pytest tests/demo/fabric` (`~/.venvs/shape-fabric`, unixODBC installed) | 233 passed (includes the 16 new tests of `test_dbt.py`; `test_pipelines.py` bind test updated) |
+| `pytest -m "not dbt" plugins/shape-dbt/tests` | 108 passed, 7 deselected |
+| `pytest plugins/shape-dbt/tests` with `dbt-duckdb` (dbt 1.12.5) and `SHAPE_DBT_PACKAGES_FILE` (local package copies) | 115 passed, including the 7 `dbt` tests |
+| `python -m shape.plugins.kit sqllocks-shape-dbt` | OK: 5 plugins conform to plugin API 1.0 |
+| `python scripts/check_requirements.py`, `check_conformance_coverage.py` | OK (89 requirements; 32 normative statements, 32 tests) |
+| `python scripts/check_secrets.py` | **exits 1 on `plugins/shape-fabric/tests/test_recorded.py`, unchanged by this lane** (the same on the integration tree; not mine, not fixed) |
+| Not run | `cargo` checks (no Rust changed); `pytest -m heavy` (nothing in this lane is heavy); `tests/demo/content` (needs `$SPINDLE_ROOT`); the CI `dbt` job itself and `dbt deps` from the hub (see Environment); everything live in Fabric |
+
+Reproduce the acceptance test: `pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-dbt dbt-duckdb
+&& pytest -m dbt plugins/shape-dbt/tests`.
