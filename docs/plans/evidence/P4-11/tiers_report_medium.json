@@ -1,0 +1,189 @@
+{
+ "dp_distinct_noises_of_1000_unseeded_calls": 1000,
+ "numpy": {
+  "baseline": "2.4.6",
+  "shape": "2.4.6"
+ },
+ "passed": true,
+ "scale": "medium",
+ "sklearn": {
+  "baseline": "1.9.1",
+  "shape": "1.9.1"
+ },
+ "tables": {
+  "address": {
+   "baseline_tier1_s": 8.379709189999971,
+   "fields_compared": 621,
+   "loose_fields": {
+    "/address/tier1/adversarial/accuracy": 0.0002000800320128837,
+    "/address/tier1/adversarial/auc_roc": 2.665470079077359e-05,
+    "/address/tier1/adversarial/top_features/address_id": 0.001138906496980105,
+    "/address/tier1/adversarial/top_features/address_type": 9.119228408723066e-06,
+    "/address/tier1/adversarial/top_features/city": 0.0001687343911744299,
+    "/address/tier1/adversarial/top_features/customer_id": 5.615383147361541e-06,
+    "/address/tier1/adversarial/top_features/is_primary": 2.0143383613034653e-06,
+    "/address/tier1/adversarial/top_features/lat": 0.004760936461371268,
+    "/address/tier1/adversarial/top_features/lng": 0.0030813432761889747,
+    "/address/tier1/adversarial/top_features/state": 0.002542904356725023,
+    "/address/tier1/adversarial/top_features/street": 2.4582562621722204e-05,
+    "/address/tier1/adversarial/top_features/zip_code": 0.004321369662325075
+   },
+   "max_loose_diff": 0.004760936461371268,
+   "max_tight_relative_diff": 0.0,
+   "mismatches": [],
+   "rows": 75000,
+   "shape_total_s": 12.992546686999958
+  },
+  "customer": {
+   "baseline_tier1_s": 4.136431894999987,
+   "fields_compared": 400,
+   "loose_fields": {
+    "/customer/tier1/adversarial/accuracy": 0.00019996000799843427,
+    "/customer/tier1/adversarial/auc_roc": 7.581891638330784e-05,
+    "/customer/tier1/adversarial/top_features/customer_id": 0.0010752650720101259,
+    "/customer/tier1/adversarial/top_features/email": 0.0023774215706977575,
+    "/customer/tier1/adversarial/top_features/first_name": 0.0036795981255392796,
+    "/customer/tier1/adversarial/top_features/gender": 7.21850265891144e-07,
+    "/customer/tier1/adversarial/top_features/is_active": 1.1545040718265523e-05,
+    "/customer/tier1/adversarial/top_features/last_name": 0.0016177833717652412,
+    "/customer/tier1/adversarial/top_features/loyalty_tier": 0.002934200554328383,
+    "/customer/tier1/adversarial/top_features/signup_date": 0.0010732913352725637
+   },
+   "max_loose_diff": 0.0036795981255392796,
+   "max_tight_relative_diff": 0.0,
+   "mismatches": [],
+   "rows": 50000,
+   "shape_total_s": 4.469125886999791
+  },
+  "order": {
+   "baseline_tier1_s": 75.47349104699992,
+   "fields_compared": 662,
+   "loose_fields": {
+    "/order/tier1/adversarial/accuracy": 1.2002401450494915e-07,
+    "/order/tier1/adversarial/auc_roc": 1.422403882589407e-05,
+    "/order/tier1/adversarial/top_features/customer_id": 0.00010118195468282248,
+    "/order/tier1/adversarial/top_features/order_date": 0.00010107451035656283,
+    "/order/tier1/adversarial/top_features/order_id": 6.049848122469115e-17,
+    "/order/tier1/adversarial/top_features/order_total": 6.573517771779613e-16,
+    "/order/tier1/adversarial/top_features/promotion_id": 2.461051968882799e-07,
+    "/order/tier1/adversarial/top_features/shipping_address_id": 3.535495225540086e-07,
+    "/order/tier1/adversarial/top_features/status": 1.5285082227700642e-15,
+    "/order/tier1/adversarial/top_features/store_id": 1.7759231585312563e-16
+   },
+   "max_loose_diff": 0.00010118195468282248,
+   "max_tight_relative_diff": 8.374068142910753e-11,
+   "mismatches": [],
+   "rows": 500000,
+   "shape_total_s": 69.44114289900017
+  },
+  "order_line": {
+   "baseline_tier1_s": 225.73500656199985,
+   "fields_compared": 559,
+   "loose_fields": {
+    "/order_line/tier1/adversarial/accuracy": 0.00019996000799848979,
+    "/order_line/tier1/adversarial/auc_roc": 2.8788493815490312e-06,
+    "/order_line/tier1/adversarial/top_features/discount_percent": 4.218847493575595e-15,
+    "/order_line/tier1/adversarial/top_features/line_total": 7.676151381197371e-17,
+    "/order_line/tier1/adversarial/top_features/order_id": 1.8470428256054208e-15,
+    "/order_line/tier1/adversarial/top_features/order_line_id": 3.8580157911643377e-16,
+    "/order_line/tier1/adversarial/top_features/product_id": 7.049003927089847e-07,
+    "/order_line/tier1/adversarial/top_features/promotion_id": 3.96238175603969e-07,
+    "/order_line/tier1/adversarial/top_features/unit_price": 3.086622228087865e-07
+   },
+   "max_loose_diff": 0.00019996000799848979,
+   "max_tight_relative_diff": 0.0,
+   "mismatches": [],
+   "rows": 1250000,
+   "shape_total_s": 197.70384916000012
+  },
+  "product": {
+   "baseline_tier1_s": 4.774490259999993,
+   "fields_compared": 66634,
+   "loose_fields": {
+    "/product/tier1/adversarial/accuracy": 0.0002000800320127727,
+    "/product/tier1/adversarial/auc_roc": 0.00020812963587557576,
+    "/product/tier1/adversarial/top_features/category_id": 4.188316360398403e-14,
+    "/product/tier1/adversarial/top_features/cost": 0.0011063886542301837,
+    "/product/tier1/adversarial/top_features/product_id": 1.2047949152216297e-07,
+    "/product/tier1/adversarial/top_features/product_name": 0.0010235007470080493,
+    "/product/tier1/adversarial/top_features/product_status": 2.3579023641223662e-07,
+    "/product/tier1/adversarial/top_features/unit_price": 8.27725965190651e-05
+   },
+   "max_loose_diff": 0.0011063886542301837,
+   "max_tight_relative_diff": 0.0,
+   "mismatches": [],
+   "rows": 5000,
+   "shape_total_s": 2.557178348999969
+  },
+  "product_category": {
+   "baseline_tier1_s": 0.49962333000007675,
+   "fields_compared": 4691,
+   "loose_fields": {
+    "/product_category/tier1/adversarial/auc_roc": 0.005947231833909994,
+    "/product_category/tier1/adversarial/top_features/category_id": 0.013031700880777541,
+    "/product_category/tier1/adversarial/top_features/category_name": 0.00558826909072252,
+    "/product_category/tier1/adversarial/top_features/level": 0.003806503237885423,
+    "/product_category/tier1/adversarial/top_features/parent_category_id": 0.022426473209385567
+   },
+   "max_loose_diff": 0.022426473209385567,
+   "max_tight_relative_diff": 0.0,
+   "mismatches": [],
+   "rows": 50,
+   "shape_total_s": 0.36988692600016293
+  },
+  "promotion": {
+   "baseline_tier1_s": 0.5266579760000241,
+   "fields_compared": 8875,
+   "loose_fields": {
+    "/promotion/tier1/adversarial/accuracy": 0.002506265664160401,
+    "/promotion/tier1/adversarial/auc_roc": 0.0037127793866488235,
+    "/promotion/tier1/adversarial/top_features/discount_pct": 0.00243853534603565,
+    "/promotion/tier1/adversarial/top_features/end_date": 0.002479568201222193,
+    "/promotion/tier1/adversarial/top_features/promo_name": 0.001408251855103515,
+    "/promotion/tier1/adversarial/top_features/promo_type": 0.005497750216311312,
+    "/promotion/tier1/adversarial/top_features/promotion_id": 0.004256103052957427,
+    "/promotion/tier1/adversarial/top_features/start_date": 0.0026909318736436094
+   },
+   "max_loose_diff": 0.005497750216311312,
+   "max_tight_relative_diff": 0.0,
+   "mismatches": [],
+   "rows": 200,
+   "shape_total_s": 0.4423001089999161
+  },
+  "return": {
+   "baseline_tier1_s": 8.079318482999952,
+   "fields_compared": 374,
+   "loose_fields": {
+    "/return/tier1/adversarial/accuracy": 0.0007987598158640807,
+    "/return/tier1/adversarial/auc_roc": 0.0016843958802943426,
+    "/return/tier1/adversarial/top_features/order_id": 0.005472934067731083,
+    "/return/tier1/adversarial/top_features/reason": 0.002545761012813945,
+    "/return/tier1/adversarial/top_features/refund_amount": 0.0053874268222857125,
+    "/return/tier1/adversarial/top_features/return_date": 7.298844703484964e-05,
+    "/return/tier1/adversarial/top_features/return_id": 0.002704256705294214
+   },
+   "max_loose_diff": 0.005472934067731083,
+   "max_tight_relative_diff": 9.147552020656254e-11,
+   "mismatches": [],
+   "rows": 85000,
+   "shape_total_s": 5.59274500399988
+  },
+  "store": {
+   "baseline_tier1_s": 0.40175714099996185,
+   "fields_compared": 6764,
+   "loose_fields": {
+    "/store/tier1/adversarial/auc_roc": 0.001733333333333309,
+    "/store/tier1/adversarial/top_features/city": 0.004947808890456984,
+    "/store/tier1/adversarial/top_features/state": 0.0005063882738043368,
+    "/store/tier1/adversarial/top_features/store_id": 0.005610484369459073,
+    "/store/tier1/adversarial/top_features/store_name": 0.0011690637528068426,
+    "/store/tier1/adversarial/top_features/store_type": 5.967448757360216e-16
+   },
+   "max_loose_diff": 0.005610484369459073,
+   "max_tight_relative_diff": 0.0,
+   "mismatches": [],
+   "rows": 150,
+   "shape_total_s": 0.3335057029999007
+  }
+ }
+}

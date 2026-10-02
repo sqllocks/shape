@@ -112,7 +112,7 @@ def main(argv: list[str] | None = None) -> int:
         from tiers_common import compare
 
         want = json.loads(FIXTURE.read_text())
-        d = compare(got, want, spread={k: (v[0], v[1]) for k, v in want.get("spread", {}).items()})
+        d = compare(got["tables"], want["tables"], spread=want.get("spread"))
         for line in d.mismatches[:20]:
             print(line)
         print(
