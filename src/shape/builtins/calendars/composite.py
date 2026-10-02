@@ -16,6 +16,9 @@ import numpy as np
 import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import to_numpy as arrow_numpy
+
 from .effects import (
     Event,
     Payday,
@@ -95,7 +98,7 @@ class RuleCalendar:
 
     def lift(self, start: date, end: date) -> pa.Array:
         _check_range(start, end)
-        return pa.array(self.factors(start, end))
+        return arrow_array(self.factors(start, end))
 
 
 class _Shifted:
@@ -134,11 +137,11 @@ class CompositeCalendar:
         for component in self.components:
             out *= component.factors(start, end)
         for plugin in self.plugins:
-            out *= np.asarray(plugin.lift(start, end).to_numpy(zero_copy_only=False))
+            out *= np.asarray(arrow_numpy(plugin.lift(start, end)))
         return out
 
     def lift(self, start: date, end: date) -> pa.Array:
-        return pa.array(self.factors(start, end))
+        return arrow_array(self.factors(start, end))
 
 
 def _named_calendar(name: str, options: Mapping[str, Any]) -> Any:

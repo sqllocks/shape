@@ -32,6 +32,8 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.generation.keypos import dense_start, first_rows
 from shape.generation.rng import RowStream
 from shape.generation.schema import BusinessRule, GenSchema
@@ -78,8 +80,8 @@ def _numpy(arr: pa.ChunkedArray | pa.Array) -> npt.NDArray[Any]:
     """Floats (NaN for null) for numeric columns, ``datetime64[us]`` (NaT for null) for temporal
     ones."""
     if _is_temporal(arr):
-        return np.asarray(pc.cast(arr, pa.timestamp("us")).to_numpy(zero_copy_only=False))
-    return np.asarray(pc.cast(arr, pa.float64()).to_numpy(zero_copy_only=False), dtype=np.float64)
+        return np.asarray(arrow_numpy(pc.cast(arr, pa.timestamp("us"))))
+    return np.asarray(arrow_numpy(pc.cast(arr, pa.float64())), dtype=np.float64)
 
 
 def _evaluable(arr: pa.ChunkedArray | pa.Array) -> bool:
@@ -215,12 +217,12 @@ def _replace(
 ) -> pa.Table:
     """``table`` with ``column`` set to ``values`` where ``mask``, keeping the column's type."""
     old = table[column]
-    new = pa.array(values, from_pandas=True)
+    new = arrow_array(values, from_pandas=True)
     if pa.types.is_integer(old.type):
         new = pc.cast(pc.round(pc.cast(new, pa.float64())), old.type)
     else:
         new = pc.cast(new, old.type)
-    fixed = pc.if_else(pa.array(mask), new, old.combine_chunks() if old.num_chunks else old)
+    fixed = pc.if_else(arrow_array(mask), new, old.combine_chunks() if old.num_chunks else old)
     return table.set_column(table.column_names.index(column), column, fixed)
 
 

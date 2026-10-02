@@ -24,6 +24,7 @@ import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
 from shape.generation.rng import RowStream
 
 THRESHOLD = 0.5
@@ -100,5 +101,5 @@ def apply_copula(
             continue
         ranks = np.argsort(np.argsort(z[:, i], kind="stable"), kind="stable")
         ascending = pc.take(col, pc.sort_indices(col))
-        out = out.set_column(out.column_names.index(c), c, pc.take(ascending, pa.array(ranks)))
+        out = out.set_column(out.column_names.index(c), c, pc.take(ascending, arrow_array(ranks)))
     return out

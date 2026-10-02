@@ -14,6 +14,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 from shape.builtins.distributions import Normal as _NormalDistribution
 from shape.builtins.distributions import Uniform as _UniformDistribution
 from shape.generation import kernel_ops
+from shape.generation.arrowkit import array as arrow_array
 from shape.generation.strategy_kit import stream
 from shape.location import location_from_spec, scope_from_specs
 from shape.plugins.api.v1 import GenerationContext
@@ -29,7 +30,7 @@ class Constant:
     name = "constant"
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
-        return pa.array([spec["value"]] * ctx.n_rows)
+        return arrow_array([spec["value"]] * ctx.n_rows)
 
 
 class Sequence:
@@ -40,7 +41,7 @@ class Sequence:
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         start, step = int(spec.get("start", 1)), int(spec.get("step", 1))
         index = np.arange(ctx.row_start, ctx.row_start + ctx.n_rows, dtype=np.int64)
-        return pa.array(start + index * step)
+        return arrow_array(start + index * step)
 
 
 class Choice:
@@ -65,7 +66,7 @@ class Choice:
             ctx.row_start,
             ctx.n_rows,
         )
-        return pa.array(values).take(pa.array(picks))
+        return arrow_array(values).take(arrow_array(picks))
 
 
 class Uniform:
@@ -123,9 +124,9 @@ class AddressStrategy:
         if field_name is not None:
             if field_name not in columns:
                 raise ValueError(f"unknown address field {field_name!r}")
-            return pa.array(columns[field_name])
+            return arrow_array(columns[field_name])
         return pa.StructArray.from_arrays(
-            [pa.array(v) for v in columns.values()], names=list(columns)
+            [arrow_array(v) for v in columns.values()], names=list(columns)
         )
 
 

@@ -258,6 +258,18 @@ def test_version_stays_light():
     assert done.returncode == 0, done.stdout + done.stderr
 
 
+def test_generate_parquet_never_imports_pandas(tmp_path):
+    """Writing retail Parquet takes no pandas import (about 0.16 s of every run)."""
+    code = (
+        "import sys; from shape.cli.main import main; "
+        "code = main(['generate', 'retail', '--scale', 'small', '-f', 'parquet', "
+        f"'-o', {str(tmp_path)!r}]); "
+        "sys.exit(code or (1 if 'pandas' in sys.modules else 0))"
+    )
+    done = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    assert done.returncode == 0, done.stdout + done.stderr
+
+
 def test_output_dir_is_created(capsys, tmp_path):
     out = Path(tmp_path) / "deep" / "er"
     assert run(capsys, "generate", "retail", "--scale", "small", "-f", "csv", "-o", out)[0] == 0

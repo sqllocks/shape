@@ -13,6 +13,8 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.generation import kernel_ops
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.generation.strategy_kit import StrategyError, stream, where
 from shape.plugins.api.v1 import GenerationContext
 
@@ -136,7 +138,7 @@ class Temporal:
     def _microseconds(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         start, end = _range(spec, ctx)
         if spec.get("pattern", "uniform") != "seasonal":
-            return pa.array(
+            return arrow_array(
                 _uniform(start, end, ctx).astype("datetime64[us]"), type=pa.timestamp("us")
             )
         profiles = dict(spec.get("profiles") or {})
@@ -149,7 +151,7 @@ class Temporal:
         hours = self._hours(hour_profile, ctx)
         if not month_w and not dow_w:
             if not hour_profile:
-                return pa.array(
+                return arrow_array(
                     _uniform(start, end, ctx).astype("datetime64[us]"), type=pa.timestamp("us")
                 )
             first = start // _DAY_US
@@ -164,8 +166,8 @@ class Temporal:
                 raise StrategyError(f"temporal range must end after it starts ({where(ctx)})")
             days = _day_weights(first, n_days, _weights(month_w, _MONTHS), _weights(dow_w, _DOW))
         return kernel_ops.temporal_sample(
-            pa.array(days),
-            pa.array(hours),
+            arrow_array(days),
+            arrow_array(hours),
             first,
             stream(ctx, "t"),
             ctx.row_start,
@@ -183,7 +185,7 @@ class Temporal:
                     f"temporal bimodal hours need peaks and a positive std_dev ({where(ctx)})"
                 )
             return np.asarray(
-                kernel_ops.hour_weights_peaks(peaks, std).to_numpy(zero_copy_only=False),
+                arrow_numpy(kernel_ops.hour_weights_peaks(peaks, std)),
                 dtype=np.float64,
             )
         if profile and all(str(k).isdigit() for k in profile):

@@ -16,6 +16,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape.generation import kernel_ops
+from shape.generation.arrowkit import array as arrow_array
 from shape.generation.engine import EngineContext
 from shape.generation.permutation import permute
 from shape.generation.reference import Dataset, DatasetNotFoundError, load_dataset
@@ -58,10 +59,10 @@ class ReferenceData:
         field = spec.get("field")
         if not ds.records:
             idx = _uniform_rows(stream(ctx, "v"), ctx.row_start, ctx.n_rows, len(ds))
-            return pc.take(ds.column(Dataset.VALUE), pa.array(idx))
+            return pc.take(ds.column(Dataset.VALUE), arrow_array(idx))
         if field and field in ds.fields:
             idx = _uniform_rows(stream(ctx, "v"), ctx.row_start, ctx.n_rows, len(ds))
-            return pc.take(ds.column(field), pa.array(idx))
+            return pc.take(ds.column(field), arrow_array(idx))
         names = next((f for f in ("name", "value") if f in ds.fields), None)
         if names is None:
             raise StrategyError(
@@ -83,7 +84,7 @@ class ReferenceData:
         picks = kernel_ops.alias_draw(
             kernel_ops.alias_table(weights), stream(ctx, "v"), ctx.row_start, ctx.n_rows
         )
-        return pc.take(ds.column(names), pa.array(picks))
+        return pc.take(ds.column(names), arrow_array(picks))
 
 
 def _record_rows(
@@ -141,7 +142,7 @@ class RecordSample:
                 f"{list(ds.fields)} ({where(ctx)})"
             )
         rows = _record_rows(ds, bool(spec.get("unique", False)), ctx, ctx.column)
-        return pc.take(ds.column(field), pa.array(rows))
+        return pc.take(ds.column(field), arrow_array(rows))
 
 
 class RecordField:
@@ -171,7 +172,7 @@ class RecordField:
                 f"{list(ds.fields)} ({where(ctx)})"
             )
         rows = _record_rows(ds, bool(anchor.generator.get("unique", False)), ctx, anchor.name)
-        return pc.take(ds.column(field), pa.array(rows))
+        return pc.take(ds.column(field), arrow_array(rows))
 
 
 __all__ = ["SHAPE_API", "RecordField", "RecordSample", "ReferenceData"]

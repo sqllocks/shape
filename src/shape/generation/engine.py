@@ -52,6 +52,8 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape.errors import ShapeSchemaError
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import scalar as arrow_scalar
 from shape.generation.compute import apply_compute_phase
 from shape.generation.correlation import THRESHOLD, apply_copula
 from shape.generation.rng import RowStream
@@ -300,7 +302,7 @@ class RangeKeys(KeyPool):
         return self.count
 
     def take(self, indices: npt.NDArray[np.integer[Any]]) -> pa.Array:
-        return pa.array(self.start + np.asarray(indices, dtype=np.int64) * self.step)
+        return arrow_array(self.start + np.asarray(indices, dtype=np.int64) * self.step)
 
 
 @dataclass(frozen=True, slots=True)
@@ -313,7 +315,7 @@ class ArrayKeys(KeyPool):
         return len(self.values)
 
     def take(self, indices: npt.NDArray[np.integer[Any]]) -> pa.Array:
-        return pc.take(self.values, pa.array(np.asarray(indices, dtype=np.int64)))
+        return pc.take(self.values, arrow_array(np.asarray(indices, dtype=np.int64)))
 
 
 @dataclass(frozen=True, slots=True)
@@ -676,7 +678,7 @@ class Engine:
     def _as_array(value: Any, where: str, n_rows: int) -> pa.Array:
         arr = value.combine_chunks() if isinstance(value, pa.ChunkedArray) else value
         if not isinstance(arr, pa.Array):
-            arr = pa.array(arr)
+            arr = arrow_array(arr)
         if len(arr) != n_rows:
             raise ValueError(f"strategy for {where} returned {len(arr)} values, expected {n_rows}")
         return arr
@@ -685,7 +687,7 @@ class Engine:
         self, arr: pa.Array, table: str, col: Column, row_start: int, n_rows: int
     ) -> pa.Array:
         u = RowStream(self.seed, table, col.name, "null").uniform(row_start, n_rows)
-        return pc.if_else(pa.array(u < col.null_rate), pa.scalar(None, type=arr.type), arr)
+        return pc.if_else(arrow_array(u < col.null_rate), arrow_scalar(None, type=arr.type), arr)
 
     def iter_chunks(self, table: str, chunk_rows: int | None = None) -> Iterator[pa.RecordBatch]:
         """``table`` as consecutive record batches of ``chunk_rows`` (default: the engine's),
