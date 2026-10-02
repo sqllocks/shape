@@ -1,29 +1,30 @@
 """Write what the pipeline generation artifacts produce as one run directory, for ``verify.py``.
 
     source scripts/env.sh
-    P=benchmarks/vs_spindle/domain_1to1/pipeline_run.py
-    BENCH_OUT_DIR=$HOME/bench-out-pf06 "$FABRIC_VENV/bin/python" $P --path notebook --seed 1042
-    BENCH_OUT_DIR=$HOME/bench-out-pf06 "$FABRIC_VENV/bin/python" $P --path udf --seed 1042
-    BENCH_OUT_DIR=$HOME/bench-out-pf06 "$SPINDLE_PY" benchmarks/vs_spindle/domain_1to1/verify.py \\
-        --domain retail --scale small --impl shape
+    D=benchmarks/vs_spindle/domain_1to1
+    export BENCH_OUT_DIR=$HOME/bench-out-pf06
+    "$FABRIC_VENV/bin/python" $D/pipeline_run.py --path notebook --seed 1042
+    "$SPINDLE_PY" $D/verify.py --domain retail --scale small --impl shape
+    "$FABRIC_VENV/bin/python" $D/pipeline_run.py --path udf --seed 1042
+    "$SPINDLE_PY" $D/verify.py --domain retail --scale small --impl shape
 
 The run goes to ``$BENCH_OUT_DIR/shape/<domain>/<scale>/seed<N>/`` (the layout ``generate.py``
 writes), so use a ``BENCH_OUT_DIR`` of its own: it replaces a run of the product path there.
 
-* ``notebook``: executes the code cells of ``integrations/fabric/notebooks/shape_generate.ipynb`` against
-  a scratch directory standing in for the lakehouse (Delta tables written with ``deltalake``), reads
-  the Delta tables back and writes them as Parquet. Delta stores timestamps as microseconds, so the
-  tables read back carry ``timestamp[us]`` where the engine's own columns are ``timestamp[ns]``; by
-  default each such column is cast back to the unit the engine declares (the values are the Delta
-  ones). ``--delta-types`` keeps what Delta stores, which makes clause (a) of T-21 (identical Arrow
-  types) fail on those columns; the report says which.
-* ``udf``: calls ``shape.integrations.fabric.udf.generate_sample`` (the code behind ``generateSample``)
-  once per table with ``rows`` equal to the table's count at the scale, and writes each DataFrame as
-  Parquet. A DataFrame has pandas types (``str`` for strings, no ``large_string``), which the verifier
-  normalizes; timestamps come back as ``timestamp[us]`` and are cast to the engine's unit as above.
+* ``notebook``: executes the code cells of ``integrations/fabric/notebooks/shape_generate.ipynb``
+  against a scratch directory standing in for the lakehouse (Delta tables written with
+  ``deltalake``), reads the Delta tables back and writes them as Parquet. Delta stores timestamps
+  as microseconds, so the tables read back carry ``timestamp[us]`` where the engine's own columns
+  are ``timestamp[ns]``; by default each such column is cast back to the unit the engine declares
+  (the values are the Delta ones). ``--delta-types`` keeps what Delta stores: T-21 then fails on
+  those columns (clause (b-e) type, and (h) fidelity), which is the cost of Delta's precision.
+* ``udf``: calls ``shape.integrations.fabric.udf.generate_sample`` (the code behind
+  ``generateSample``) once per table with ``rows`` equal to the table's count at the scale, and
+  writes each DataFrame as Parquet; timestamps are cast to the engine's unit as above.
 
-Needs the ``fabric-demo`` environment: ``pip install -e '.[dev]' -r tests/demo/fabric/requirements.txt``
-(``deltalake``, ``nbformat``) and the domains plugin. Exit codes: 0 ok, 2 unsupported domain.
+Needs the ``fabric-demo`` environment (``pip install -e '.[dev]'
+-r tests/demo/fabric/requirements.txt``: ``deltalake``, ``nbformat``, the domains plugin).
+Exit codes: 0 ok, 2 unsupported domain.
 """
 
 from __future__ import annotations
