@@ -57,6 +57,7 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.strategies` | `self_ref_field` | a field of that hierarchy (the level) |
 | `shape.strategies` | `lifecycle` | a phase label from weighted phases |
 | `shape.strategies` | `scd2` | effective date, end date, current flag or version of a type 2 slowly changing dimension |
+| `shape.transforms` | `mask` | replaces personal data with synthetic values of the same format: `shape mask` (see [MASK.md](../MASK.md)) |
 | `shape.commands` | `ctgan` | `shape ctgan`: fit a CTGAN model on a table and sample rows (needs the `[ctgan]` extra) |
 | `shape.distributions` | `normal` | `loc + scale * N(0,1)` |
 | `shape.distributions` | `uniform` | uniform on `[loc, loc + scale)` |
