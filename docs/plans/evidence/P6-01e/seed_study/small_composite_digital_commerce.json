@@ -1,0 +1,155 @@
+{
+ "domain": "composite_digital_commerce",
+ "scale": "small",
+ "impl": "shape",
+ "seeds": [
+  "1042",
+  "1043",
+  "1044",
+  "1045",
+  "1046",
+  "1047",
+  "1048",
+  "1049"
+ ],
+ "findings_per_seed": {
+  "1042": 5,
+  "1043": 1,
+  "1044": 2,
+  "1045": 5,
+  "1046": 2,
+  "1047": 1,
+  "1048": 3,
+  "1049": 3
+ },
+ "by_finding": {
+  "(b-e) marketing_contact.last_name: failed ['distinct_ratio']": {
+   "seeds": [
+    "1045"
+   ],
+   "count": 1
+  },
+  "(h) fidelity financial_account:": {
+   "seeds": [
+    "1042"
+   ],
+   "count": 1
+  },
+  "(h) fidelity financial_fraud_flag:": {
+   "seeds": [
+    "1043",
+    "1047"
+   ],
+   "count": 2
+  },
+  "(h) fidelity financial_transaction_category:": {
+   "seeds": [
+    "1048"
+   ],
+   "count": 1
+  },
+  "(h) fidelity marketing_campaign:": {
+   "seeds": [
+    "1042",
+    "1044",
+    "1045",
+    "1046"
+   ],
+   "count": 4
+  },
+  "(h) fidelity marketing_campaign_type:": {
+   "seeds": [
+    "1049"
+   ],
+   "count": 1
+  },
+  "(h) fidelity marketing_industry:": {
+   "seeds": [
+    "1042",
+    "1044"
+   ],
+   "count": 2
+  },
+  "(h) fidelity marketing_lead:": {
+   "seeds": [
+    "1042"
+   ],
+   "count": 1
+  },
+  "(h) fidelity marketing_lead_source:": {
+   "seeds": [
+    "1045",
+    "1046",
+    "1049"
+   ],
+   "count": 3
+  },
+  "(h) fidelity marketing_web_visit:": {
+   "seeds": [
+    "1042"
+   ],
+   "count": 1
+  },
+  "(h) fidelity retail_order:": {
+   "seeds": [
+    "1045",
+    "1048"
+   ],
+   "count": 2
+  },
+  "(h) fidelity retail_order_line:": {
+   "seeds": [
+    "1045",
+    "1048"
+   ],
+   "count": 2
+  },
+  "(h) fidelity retail_product_category:": {
+   "seeds": [
+    "1049"
+   ],
+   "count": 1
+  }
+ },
+ "systematic": [],
+ "flagged": {
+  "1042": [
+   "(h) fidelity financial_account: 95.72 < floor 95.72",
+   "(h) fidelity marketing_campaign: 96.28 < floor 96.93",
+   "(h) fidelity marketing_industry: 80.20 < floor 82.35",
+   "(h) fidelity marketing_lead: 98.37 < floor 98.42",
+   "(h) fidelity marketing_web_visit: 92.64 < floor 92.71"
+  ],
+  "1043": [
+   "(h) fidelity financial_fraud_flag: 96.56 < floor 96.71"
+  ],
+  "1044": [
+   "(h) fidelity marketing_campaign: 96.88 < floor 96.93",
+   "(h) fidelity marketing_industry: 82.08 < floor 82.35"
+  ],
+  "1045": [
+   "(b-e) marketing_contact.last_name: failed ['distinct_ratio']",
+   "(h) fidelity marketing_campaign: 96.91 < floor 96.93",
+   "(h) fidelity marketing_lead_source: 79.25 < floor 83.05",
+   "(h) fidelity retail_order: 94.22 < floor 95.69",
+   "(h) fidelity retail_order_line: 91.79 < floor 93.29"
+  ],
+  "1046": [
+   "(h) fidelity marketing_campaign: 96.80 < floor 96.93",
+   "(h) fidelity marketing_lead_source: 78.47 < floor 83.05"
+  ],
+  "1047": [
+   "(h) fidelity financial_fraud_flag: 96.54 < floor 96.71"
+  ],
+  "1048": [
+   "(h) fidelity financial_transaction_category: 84.05 < floor 85.13",
+   "(h) fidelity retail_order: 93.68 < floor 95.69",
+   "(h) fidelity retail_order_line: 91.21 < floor 93.29"
+  ],
+  "1049": [
+   "(h) fidelity marketing_campaign_type: 78.20 < floor 78.53",
+   "(h) fidelity marketing_lead_source: 80.97 < floor 83.05",
+   "(h) fidelity retail_product_category: 85.71 < floor 86.18"
+  ]
+ }
+}
