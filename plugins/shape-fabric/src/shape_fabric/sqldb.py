@@ -12,10 +12,13 @@ already there:
 ``replace``   drop the table and create it again (destroys the old rows)
 
 Rows are sent as parameterised ``INSERT`` statements, ``batch_size`` rows per round trip (default
-5,000). A table is written in one transaction: a failure rolls back its rows, and a table this
-call created is dropped again. (``replace`` has already dropped the old table by then; ``create``
-and the other modes lose nothing.) A failure stops the run with :class:`WriteError`, whose
-``result`` lists the tables that were completed.
+5,000). A table is written in one transaction by default: a failure rolls back its rows, and a
+table this call created is dropped again. With ``commit_rows=N`` the writer instead commits after
+every ``N`` rows (rounded up to a whole ``batch_size`` round trip) while it consumes the batches,
+so a reader sees the rows as they arrive (streaming use); a failure then rolls back only the open
+chunk, and the rows already committed, and the table, stay. (``replace`` has already dropped
+the old table by then; ``create`` and the other modes lose nothing.) A failure stops the run
+with :class:`WriteError`, whose ``result`` lists the tables that were completed.
 
 Names are quoted and checked; values are never part of a statement. ``connection_string`` may be
 the ODBC form or the ADO.NET form the Fabric portal shows. ``credential`` (see
@@ -263,6 +266,7 @@ class SqlDatabaseWriter:
         *,
         write_mode: str = "create",
         batch_size: int = DEFAULT_BATCH_SIZE,
+        commit_rows: int | None = None,
         schema_name: str | None = None,
         columns: Mapping[str, Mapping[str, Any]] | None = None,
         primary_key: Sequence[str] = (),
@@ -273,6 +277,10 @@ class SqlDatabaseWriter:
         mode = check_mode(write_mode)
         if isinstance(batch_size, bool) or not isinstance(batch_size, int) or batch_size < 1:
             raise ShapeError("batch_size must be a positive integer")
+        if commit_rows is not None and (
+            isinstance(commit_rows, bool) or not isinstance(commit_rows, int) or commit_rows < 1
+        ):
+            raise ShapeError("commit_rows must be a positive integer")
         sname = schema_name or self.schema_name
         _tsql.qualified(sname, table)  # validates both names before anything runs
         first, rest = _peek(batches)
@@ -284,18 +292,19 @@ class SqlDatabaseWriter:
         use_schema = _tsql.normalize_schema(use_schema)
         created = False
         db = self.db
+        committed = [0]  # rows already committed by this call (commit_rows only)
         try:
             created = prepare_table(
                 db, sname, table, mode, use_schema, columns=columns, primary_key=primary_key
             )
-            rows = self._insert(sname, table, first, rest, batch_size)
+            rows = self._insert(sname, table, first, rest, batch_size, commit_rows, committed)
             db.commit()
             return rows
         except ShapeError:
-            undo(db, sname, table, created)
+            undo(db, sname, table, created and not committed[0])
             raise
         except Exception as exc:
-            undo(db, sname, table, created)
+            undo(db, sname, table, created and not committed[0])
             raise WriteError(f"writing {sname}.{table} failed: {_tsql.redact(str(exc))}") from exc
 
     def _insert(
@@ -305,12 +314,15 @@ class SqlDatabaseWriter:
         first: pa.RecordBatch | None,
         rest: Iterator[pa.RecordBatch],
         batch_size: int,
+        commit_rows: int | None = None,
+        committed: list[int] | None = None,
     ) -> int:
         if first is None:
             return 0
         cursor = self.db.get().cursor()
         sql = _tsql.insert_sql(schema_name, table, first.schema.names)
         rows = 0
+        pending = 0
 
         def batches() -> Iterator[pa.RecordBatch]:
             yield first
@@ -328,6 +340,12 @@ class SqlDatabaseWriter:
                     cursor.fast_executemany = fast
                 cursor.executemany(sql, _tsql.rows_as_params(piece))
                 rows += piece.num_rows
+                pending += piece.num_rows
+                if commit_rows is not None and pending >= commit_rows:
+                    self.db.commit()
+                    pending = 0
+                    if committed is not None:
+                        committed[0] = rows
         return rows
 
     def write_tables(
