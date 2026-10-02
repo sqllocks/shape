@@ -394,14 +394,17 @@ class TestSmartInference:
             "source_column": "price",
             "rule": "multiply",
             "params": {"factor_min": 0.30, "factor_max": 0.70},
+            "output_type": "decimal",  # ISS-gen: the declared DECIMAL(p,s) is kept
         }
         assert schema.tables["products"].columns["margin"].generator == {
             "strategy": "formula",
             "expression": "price - cost",
+            "output_type": "decimal",
         }
         assert schema.tables["order_lines"].columns["line_total"].generator == {
             "strategy": "formula",
             "expression": "quantity * unit_price",
+            "output_type": "decimal",
         }
         assert (
             schema.tables["orders"].columns["tax_amount"].generator["source_column"] == "subtotal"

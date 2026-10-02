@@ -9,10 +9,13 @@ import pytest
 
 from shape.cli.main import main
 
-DDL = """\
-CREATE TABLE customer (customer_id INT PRIMARY KEY, email VARCHAR(100), segment VARCHAR(20), created_at DATETIME);
-CREATE TABLE orders (order_id INT PRIMARY KEY, customer_id INT NOT NULL REFERENCES customer(customer_id), total DECIMAL(10,2), status VARCHAR(20));
-"""
+DDL = (
+    "CREATE TABLE customer (customer_id INT PRIMARY KEY, email VARCHAR(100), "
+    "segment VARCHAR(20), created_at DATETIME);\n"
+    "CREATE TABLE orders (order_id INT PRIMARY KEY, "
+    "customer_id INT NOT NULL REFERENCES customer(customer_id), "
+    "total DECIMAL(10,2), status VARCHAR(20));\n"
+)
 
 
 @pytest.fixture
