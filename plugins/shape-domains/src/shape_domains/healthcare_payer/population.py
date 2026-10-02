@@ -301,7 +301,7 @@ def build_members(
                     state,
                     addr,
                 )
-                if age >= 65 and rng.random() < 0.6:
+                if age >= 65 and rng.random() < cal.get("elig.dual_share_medicaid_65"):
                     m.dual = True
     members = members[:n] if len(members) > n else members
     # plan and group per household

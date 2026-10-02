@@ -94,6 +94,19 @@ def _age(birth: date, day: date) -> int:
     return day.year - birth.year - ((day.month, day.day) < (birth.month, birth.day))
 
 
+def _covered_all(spans: list[dict[str, Any]], year: int) -> bool:
+    """True when the member's coverage spans leave no gap in ``year``."""
+    lo, hi = date(year, 1, 1), date(year, 12, 31)
+    cur = lo
+    for s in sorted(spans, key=lambda r: r["coverage_start"]):
+        end = s["coverage_end"] or date(9999, 1, 1)
+        if s["coverage_start"] <= cur <= end:
+            cur = end + timedelta(days=1)
+            if cur > hi:
+                return True
+    return False
+
+
 # ---- (1) age and sex edits ----------------------------------------------------------------------
 def check_age_sex(data: HealthcarePayerData) -> Check:
     members = _members(data)
@@ -156,6 +169,7 @@ def check_coherence(data: HealthcarePayerData) -> Check:
             continue
         for code, _ in dx[row["claim_id"]]:
             member_dx[row["member_id"]].add(code)
+    members_by_id = _members(data)
     orders = {r["rx_order_id"]: r for r in data.tables["rx_order"].to_pylist()}
     key_of_ndc = {r["ndc"]: r["drug_key"] for r in data.tables["drug_reference"].to_pylist()}
     rx = data.tables["pharmacy_claim"].to_pylist()
@@ -213,6 +227,22 @@ def check_coherence(data: HealthcarePayerData) -> Check:
         "Long-acting insulin",
         "Rapid-acting insulin",
     )
+    elig_by_member: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for e in data.tables["eligibility"].to_pylist():
+        elig_by_member[e["member_id"]].append(e)
+    years = range(data.simulation.start.year, data.simulation.end.year + 1)
+    dm_years = {
+        (m, y)
+        for m in dm_members
+        for y in years
+        if _covered_all(elig_by_member[m], y) and _age_ok(members_by_id[m], y)
+    }
+    a1c_by_year: Counter[tuple[str, int]] = Counter()
+    for r in lines:
+        c = claims.get(r["claim_id"])
+        if c and r["service_key"] == "LAB_HBA1C":
+            a1c_by_year[(c["member_id"], r["service_date"].year)] += 1
+    a1c_rate = sum(a1c_by_year[k] for k in dm_years) / len(dm_years) if dm_years else None
     n_dm = len(dm_members)
     with_drug = sum(1 for m in dm_members if fills_by_member[m] & set(anti))
     with_a1c = sum(1 for m in dm_members if keys_by_member[m]["LAB_HBA1C"])
@@ -230,12 +260,16 @@ def check_coherence(data: HealthcarePayerData) -> Check:
         "diabetic_with_hba1c": round(with_a1c / n_dm, 3) if n_dm else None,
         "diabetic_with_eye_exam": round(with_eye / n_dm, 3) if n_dm else None,
         "diabetic_with_foot_exam": round(with_foot / n_dm, 3) if n_dm else None,
+        "hba1c_per_diabetic_member_year": round(a1c_rate, 2) if a1c_rate is not None else None,
+        "hba1c_per_year_target": data.simulation.cal.get("dm.hba1c_per_year"),
     }
     notes: list[str] = []
     ok = link_bad == 0 and support_bad == 0
     if n_dm >= 30:
         ok = ok and with_a1c / n_dm >= 0.80 and with_drug / n_dm >= 0.55
         ok = ok and 0.25 <= with_eye / n_dm <= 0.95
+        target = float(data.simulation.cal.get("dm.hba1c_per_year"))
+        ok = ok and a1c_rate is not None and 0.6 * target <= a1c_rate <= 1.4 * target
     return Check("2", "diagnosis, procedure and drug agree", ok, metrics, notes)
 
 
@@ -689,6 +723,54 @@ def check_financial(data: HealthcarePayerData) -> Check:
 
 
 # ---- (7) LOS and DRG; readmissions -----------------------------------------------------------
+def _age_ok(member: dict[str, Any], year: int) -> bool:
+    return bool(year - member["birth_date"].year >= 18)
+
+
+def check_pharmacy(data: HealthcarePayerData) -> Check:
+    """Pharmacy dynamics against the table: generic share, adherence, rejects, reversals,
+    mail order."""
+    cal = data.simulation.cal
+    rx = data.tables["pharmacy_claim"].to_pylist()
+    paid = [r for r in rx if r["claim_status"] == "paid"]
+    generic = sum(r["brand_generic"] == "G" for r in paid) / len(paid)
+    pdc = data.tables["rx_adherence"].to_pylist()
+    adherent = sum(r["adherent_pdc_80"] for r in pdc) / len(pdc)
+    by_lob_rej: dict[str, list[int]] = defaultdict(lambda: [0, 0])
+    for r in rx:
+        if r["transaction_code"] == "B1":
+            by_lob_rej[r["line_of_business"]][1] += 1
+            by_lob_rej[r["line_of_business"]][0] += r["claim_status"] == "rejected"
+    reject = {k: v[0] / v[1] for k, v in by_lob_rej.items() if v[1] >= 500}
+    reversal = sum(r["claim_status"] == "reversed" for r in rx) / len(paid)
+    ninety: defaultdict[str, list[int]] = defaultdict(lambda: [0, 0])
+    for r in paid:
+        if r["days_supply"] >= 90:
+            ninety[r["line_of_business"]][1] += 1
+            ninety[r["line_of_business"]][0] += r["mail_order"]
+    mail = {k: v[0] / v[1] for k, v in ninety.items() if v[1] >= 100}
+    t_generic = float(cal.get("rx.generic_dispense_rate"))
+    t_pdc = float(cal.get("rx.pdc_target"))
+    t_reject = cal.get("rx.reject_rate")
+    t_rev = float(cal.get("rx.reversal_rate"))
+    ok = abs(generic - t_generic) <= 0.06 and abs(adherent - t_pdc) <= 0.2
+    ok = ok and all(0.4 * t_reject[k] <= v <= 2.0 * t_reject[k] for k, v in reject.items())
+    ok = ok and 0.5 * t_rev <= reversal <= 1.6 * t_rev
+    return Check(
+        "P",
+        "pharmacy dynamics (generic share, adherence, rejects, reversals)",
+        ok,
+        {
+            "generic_share": round(generic, 3),
+            "share_pdc_80_or_more": round(adherent, 3),
+            "reject_rate_by_lob": {k: round(v, 4) for k, v in reject.items()},
+            "reversal_rate": round(reversal, 4),
+            "mail_share_of_90_day_fills": {k: round(v, 3) for k, v in mail.items()},
+            "targets": {"generic": t_generic, "pdc": t_pdc, "reject": t_reject, "reversal": t_rev},
+        },
+    )
+
+
 def check_los_drg(data: HealthcarePayerData) -> Check:
     dx = _dx_by_claim(data)
     claims = [
@@ -762,6 +844,7 @@ def run_all(data: HealthcarePayerData) -> list[Check]:
         check_codes(data),
         check_financial(data),
         check_los_drg(data),
+        check_pharmacy(data),
     ]
 
 

@@ -1,4 +1,4 @@
-"""The tables meet the standard-outputs contract (a snapshot of the standards lane's input contract).
+"""The tables meet the standard-outputs contract (a snapshot of the standards input contract).
 
 The snapshot is ``standards_contract_snapshot.json``, taken from the standards lane's
 ``contract.py``.  The check is the contract's own rule: every required column exists, optional

@@ -14,7 +14,7 @@ from .care_events import EVENT_MODULES
 from .chronic import CHRONIC_MODULES
 from .cohort import CohortModule
 from .directory import ProviderDirectory
-from .engine import SimContext, new_person
+from .engine import Module, SimContext, new_person
 from .model import Member, Person, Plan, Span
 from .population import DEFAULT_STATES, assign_pcp, build_members, load_zip_reference
 
@@ -41,7 +41,10 @@ def simulate(
     states: tuple[str, ...] = DEFAULT_STATES,
     lob_mix: dict[str, float] | None = None,
     calibration: Calibration | None = None,
+    engine: str = "native",
 ) -> Simulation:
+    if engine not in ("native", "behavior"):
+        raise ValueError(f"engine must be 'native' or 'behavior', not {engine!r}")
     cal = calibration or Calibration()
     zips = load_zip_reference(states)
     members, plans = build_members(n_members, cal, seed, start, end, states, zips, lob_mix)
@@ -113,7 +116,18 @@ def simulate(
     k = float(cal.get("util.frailty_shape"))
     # E[frailty ** 0.5] for a gamma(k, 1/k) frailty, so the mean utilisation does not depend on k
     ctx.frailty_norm = math.gamma(k + 0.5) / (math.gamma(k) * math.sqrt(k))
-    mods = [CohortModule()] + [c() for c in CHRONIC_MODULES] + [c() for c in EVENT_MODULES]
+    mods: list[Module]
+    if engine == "behavior":
+        from . import behavior_engine as be
+
+        if not be.available():
+            raise RuntimeError("engine='behavior' needs the sqllocks-shape-behavior plugin")
+        events = be.run_events(members, cal, seed, start, end)
+        chronic = [c() for c in CHRONIC_MODULES if c.name not in be.NATIVE_REPLACED]
+        mods = [CohortModule(be.KEYS), *chronic, be.BehaviorPathways(events)]
+        mods += [c() for c in EVENT_MODULES]
+    else:
+        mods = [CohortModule()] + [c() for c in CHRONIC_MODULES] + [c() for c in EVENT_MODULES]
     ctx.modules = {m.name: m for m in mods}
     # the cohort assigns conditions first; modules then see them in start()
     for m in list(members):

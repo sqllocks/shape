@@ -333,7 +333,7 @@ class DiabetesModule(ChronicBase):
         labs = tuple(
             k
             for k, days, p in (
-                ("LAB_HBA1C", 75, 0.8),
+                ("LAB_HBA1C", 60, 0.92),
                 ("LAB_LIPID_PANEL", 330, 0.6),
                 ("LAB_CMP", 200, 0.5),
             )

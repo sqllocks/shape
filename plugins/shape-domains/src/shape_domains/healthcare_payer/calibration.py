@@ -149,8 +149,8 @@ _RATES: tuple[Rate, ...] = (
     ),
     _r(
         "elig.dual_share_medicaid_65",
-        0.06,
-        "Medicaid members that are also Medicare (65+)",
+        0.6,
+        "Medicaid members aged 65+ that are also Medicare (dually eligible)",
         "MACPAC Dually eligible beneficiaries data book",
         "assumption",
     ),
@@ -643,12 +643,6 @@ _RATES: tuple[Rate, ...] = (
         "age at which advanced maternal age is coded",
         "ACOG Committee Opinion 2022 (35 and older)",
     ),
-    _r(
-        "preg.medicaid_births_share",
-        0.41,
-        "Medicaid financed share of births",
-        "CDC NVSS / KFF Births Financed by Medicaid (about 41%)",
-    ),
     # ---- cancer (annual incidence per 100,000, selected age bands) ---------------------------
     _r(
         "cancer.breast_f_incidence",
@@ -982,13 +976,6 @@ _RATES: tuple[Rate, ...] = (
         0.60,
         "share of maintenance users with PDC >= 80% (acceptable band 0.40-0.80)",
         "CMS Part D Star Ratings adherence measures (national averages 80-88% for statin/RAS/diabetes among continuous users); commercial about 55-65% of new users",
-        "assumption",
-    ),
-    _r(
-        "rx.refill_delay_days",
-        (0.0, 0.7),
-        "lognormal (mu, sigma) of days late for a refill",
-        "pharmacy refill timing studies",
         "assumption",
     ),
     _r(

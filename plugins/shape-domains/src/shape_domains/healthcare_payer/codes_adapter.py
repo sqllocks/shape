@@ -44,7 +44,7 @@ class AssetCodes:
 
     @classmethod
     def load(cls, *systems: str) -> AssetCodes:
-        """Load ``icd10cm`` and any of ``icd10pcs hcpcs2 ndc pos hcc mce_edits ccsr`` that are built."""
+        """Load icd10cm and any other built assets (pcs, hcpcs2, ndc, pos, hcc, edits)."""
         try:
             import shape_healthcare_codes as sc
         except ImportError as exc:  # pragma: no cover - exercised where the plugin is absent
@@ -62,9 +62,12 @@ class AssetCodes:
             "ccsr",
         )
         loaded: dict[str, Any] = {}
+        from shape_healthcare_codes.store import read_table
+
+        plain = {"hcc", "mce_edits", "ccsr"}  # tables that are not code sets (no base columns)
         for name in wanted:
             try:
-                loaded[name] = sc.load(sc.CodeSystem(name))
+                loaded[name] = read_table(name) if name in plain else sc.load(sc.CodeSystem(name))
             except sc.AssetMissing:
                 loaded[name] = None
         if loaded.get("icd10cm") is None:
@@ -73,7 +76,7 @@ class AssetCodes:
         if loaded.get("mce_edits") is not None:
             from shape_healthcare_codes.validators import EditIndex
 
-            edits = EditIndex.from_table(loaded["mce_edits"].table)
+            edits = EditIndex.from_table(loaded["mce_edits"])
         return cls(
             loaded["icd10cm"],
             loaded.get("icd10pcs"),
@@ -86,7 +89,7 @@ class AssetCodes:
             sc,
         )
 
-    # ---- single-code checks -----------------------------------------------------------------------
+    # ---- single-code checks -----------------------------------------------------------------
     def icd_ok(self, code: str, day: dt.date) -> bool:
         return bool(self.mod.icd10cm_valid_billable(self.icd, code, day))
 
@@ -106,7 +109,7 @@ class AssetCodes:
 
         return list(age_sex_violations(self.edits, code, age, sex))
 
-    # ---- seeds ----------------------------------------------------------------------------------------
+    # ---- seeds ------------------------------------------------------------------------------
     def cross_check_seeds(self) -> list[str]:
         """Disagreements between the seed code sets and the assets (empty: they agree)."""
         from .icd10cm import FAR, ICD10CM
@@ -151,24 +154,24 @@ class AssetCodes:
         return problems
 
     def _hcc_problems(self, mapping: dict[str, int]) -> list[str]:
-        table = self.hcc.table
-        cols = set(table.column_names)
-        if not {"code", "model", "category"} <= cols:
+        table = self.hcc
+        if not {"code", "model", "hcc"} <= set(table.column_names):
             return []
         by: dict[str, set[str]] = defaultdict(set)
         for r in table.to_pylist():
-            if str(r["model"]).upper().startswith("V28"):
-                by[r["code"]].add(str(r["category"]).lstrip("HCC").strip())
+            if str(r["model"]).upper().endswith("V28") and str(r["model"]).startswith("CMS-HCC"):
+                by[r["code"]].add(str(r["hcc"]).strip())
         out = []
         for code, hcc in mapping.items():
             norm = self.mod.normalize_code(code)
             if str(hcc) not in by.get(norm, set()):
                 out.append(
-                    f"hcc {code}: seed maps to V28 HCC {hcc}, asset has {sorted(by.get(norm, set()))}"
+                    f"hcc {code}: seed maps to V28 HCC {hcc}, "
+                    f"asset has {sorted(by.get(norm, set()))}"
                 )
         return out
 
-    # ---- tables ---------------------------------------------------------------------------------------
+    # ---- tables -----------------------------------------------------------------------------
     def validate_tables(self, tables: dict[str, Any]) -> dict[str, Any]:
         """Check generated tables against the assets; the counts are the evidence for item 5."""
         claims = {r["claim_id"]: r for r in tables["medical_claim"].to_pylist()}
@@ -218,7 +221,7 @@ class AssetCodes:
         return out
 
 
-# ---------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------
 def _digits(value: Any) -> float | None:
     try:
         return float(str(value).replace(",", ""))
@@ -244,7 +247,9 @@ class FdaNdcDirectory:
         for key, drug in DRUGS.items():
             generic = drug.name.lower().split("/")[0].split()[0]
             want_strength = _digits(drug.strength.split()[0])
-            form_root = drug.form.split(",")[0].lower()
+            forms = [f.strip().lower() for f in drug.form.split(",")]
+            brand_word = (drug.brand_name or "").lower().split()[:1]
+            check_strength = "/dose" not in drug.strength  # pens: the asset lists per-mL strengths
             found: list[NdcRecord] = []
             for r in rows:
                 if not r.get(name_col) or generic not in str(r[name_col]).lower():
@@ -252,12 +257,12 @@ class FdaNdcDirectory:
                 if (
                     drug.brand
                     and drug.brand_name
-                    and drug.brand_name.lower() not in str(r.get("proprietary_name", "")).lower()
+                    and brand_word[0] not in str(r.get("proprietary_name", "")).lower()
                 ):
                     continue
-                if form_root not in str(r.get("dosage_form", "")).lower():
+                if not any(f in str(r.get("dosage_form", "")).lower() for f in forms):
                     continue
-                if want_strength is not None and "strength" in cols:
+                if check_strength and want_strength is not None and "strength" in cols:
                     have = _digits(str(r["strength"]).split()[0]) if r.get("strength") else None
                     if have is not None and abs(have - want_strength) > 1e-9:
                         continue

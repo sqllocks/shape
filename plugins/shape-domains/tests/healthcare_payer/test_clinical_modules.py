@@ -52,7 +52,13 @@ def test_pregnancy_prenatal_delivery_postpartum_and_newborn(data):
         for m in members.values()
         if m["relationship_code"] == "19" and m["birth_date"] >= date(2022, 1, 2)
     ]
-    delivered_on = {d["service_from_date"] for d in deliveries}
+    # a delivery whose own claim was denied still has a baby whose stay was paid
+    delivered_on = {
+        r["service_from_date"]
+        for r in data.tables["medical_claim"].to_pylist()
+        if r["facility_type"] == "inpatient"
+        and r["drg_code"] in ("805", "806", "807", "786", "787", "788")
+    }
     newborn_stays = [
         r
         for r in _paid(data)
@@ -64,9 +70,10 @@ def test_pregnancy_prenatal_delivery_postpartum_and_newborn(data):
         and all(r["service_from_date"] in delivered_on for r in newborn_stays[:50])
     )
     assert any(m["birth_date"] in delivered_on for m in babies)
-    assert Counter(dx[r["claim_id"]][0] for r in newborn_stays) <= Counter(
-        {"Z38.00": 1, "Z38.01": 1}
-    ).keys() | set(Counter(dx[r["claim_id"]][0] for r in newborn_stays))
+    assert all(
+        dx[r["claim_id"]][0][:3] in ("Z38", "P07") or dx[r["claim_id"]][0][0] == "P"
+        for r in newborn_stays
+    )
 
 
 def test_gestational_weeks_increase_across_the_visits_of_a_pregnancy(data):

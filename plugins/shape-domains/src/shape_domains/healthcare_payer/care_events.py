@@ -111,7 +111,7 @@ class PregnancyModule:
             if (
                 d < delivery - timedelta(days=3)
                 and ctx.start <= d <= ctx.end
-                and rng.random() < 0.93
+                and rng.random() < min(1.0, ctx.cal.get("preg.prenatal_visits") / 13.0)
             ):
                 ctx.schedule(person, d, self.name, "prenatal", w=w, info=info)
         if ctx.start <= delivery <= ctx.end:
@@ -125,7 +125,9 @@ class PregnancyModule:
     ) -> None:
         getattr(self, f"on_{kind}")(ctx, person, day, **payload)
 
-    def _codes(self, person: Person, week: int, info: dict[str, Any], day: date) -> list[str]:
+    def _codes(
+        self, ctx: SimContext, person: Person, week: int, info: dict[str, Any], day: date
+    ) -> list[str]:
         tri = 1 if week < 14 else 2 if week < 28 else 3
         age = person.age(day)
         supervision = f"Z34.0{tri}" if info["first"] else f"Z34.8{tri}"
@@ -134,7 +136,7 @@ class PregnancyModule:
             out.append("O14.03" if info["severe"] else "O13.3")
         if info["gdm"] and week >= 26:
             out.append("O24.410" if not info["gdm_insulin"] else "O24.419")
-        if age >= 35:
+        if age >= ctx.cal.get("preg.high_risk_age"):
             out.append(f"O09.52{tri}" if not info["first"] else "O09.90")
         out.append(supervision)
         out.append("Z3A.01" if week < 8 else f"Z3A.{min(week, 42):02d}")
@@ -144,7 +146,7 @@ class PregnancyModule:
         self, ctx: SimContext, person: Person, day: date, w: int, info: dict[str, Any]
     ) -> None:
         rng = person.rng
-        codes = self._codes(person, w, info, day)
+        codes = self._codes(ctx, person, w, info, day)
         spec = "obgyn" if rng.random() < 0.85 else pcp_specialty(ctx, person)
         labs: tuple[str, ...] = ()
         if w == 8 or (w == 12 and not person.last_done.get("LAB_PRENATAL_PANEL")):
@@ -229,7 +231,7 @@ class PregnancyModule:
             secondary.insert(0, "O14.03" if info["severe"] else "O13.3")
         if info["gdm"]:
             secondary.insert(0, "O24.419" if info["gdm_insulin"] else "O24.410")
-        if person.age(day) >= 35:
+        if person.age(day) >= ctx.cal.get("preg.high_risk_age"):
             secondary.insert(0, "O09.90")
         if rng.random() < 0.04:
             secondary.insert(0, "O72.1")

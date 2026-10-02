@@ -28,6 +28,18 @@ class HealthcarePayerCommand:
             p.add_argument("--from", dest="start", default="2022-01-01")
             p.add_argument("--to", dest="end", default="2024-12-31")
             p.add_argument(
+                "--engine",
+                choices=("native", "behavior"),
+                default="native",
+                help="run diabetes, hypertension and lipid on the behavior engine",
+            )
+            p.add_argument(
+                "--ndc",
+                choices=("interim", "fda"),
+                default="interim",
+                help="NDC directory: the synthetic one, or the FDA asset of the codes plugin",
+            )
+            p.add_argument(
                 "--cpt-table", help="licensed CPT / revenue / type-of-bill CSV (table,key,value)"
             )
 
@@ -73,12 +85,22 @@ class HealthcarePayerCommand:
         from .generate import generate
 
         lic = load_licensed(args.cpt_table) if args.cpt_table else None
+        ndc = None
+        if args.ndc == "fda":
+            from .codes_adapter import AssetCodes, CodesUnavailable, FdaNdcDirectory
+
+            assets = AssetCodes.load()
+            if assets.ndc is None:
+                raise CodesUnavailable("the ndc asset is not built")
+            ndc = FdaNdcDirectory(assets.ndc.table)
         return generate(
             args.members,
             seed=args.seed,
             start=date.fromisoformat(args.start),
             end=date.fromisoformat(args.end),
             licensed=lic,
+            ndc=ndc,
+            engine=args.engine,
         )
 
     def _generate(self, args: Any) -> int:

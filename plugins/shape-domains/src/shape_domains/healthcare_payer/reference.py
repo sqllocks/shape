@@ -27,7 +27,7 @@ class Pos:
 POS: dict[str, Pos] = {
     p.code: p
     for p in (
-        Pos("02", "Telehealth provided other than in patient's home", False, date(2022, 1, 1)),
+        Pos("02", "Telehealth", False, date(2017, 1, 1)),
         Pos("10", "Telehealth provided in patient's home", False, date(2022, 1, 1)),
         Pos("11", "Office", False),
         Pos("12", "Home", False),

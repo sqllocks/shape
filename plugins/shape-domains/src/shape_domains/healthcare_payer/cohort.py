@@ -169,6 +169,10 @@ class Prevalence:
 class CohortModule:
     name = "cohort"
 
+    def __init__(self, skip_incident: frozenset[str] = frozenset()) -> None:
+        # conditions whose onset another engine (behavior documents) drives
+        self.skip_incident = skip_incident
+
     def start(self, ctx: SimContext, person: Person) -> None:
         prev = Prevalence(ctx)
         m = person.member
@@ -194,7 +198,7 @@ class CohortModule:
         # incident conditions during the window
         years = max(0.0, (ctx.end - ctx.start).days / 365.25)
         for key in ORDER:
-            if person.has(key) or key == "obesity":
+            if person.has(key) or key == "obesity" or key in self.skip_incident:
                 continue
             h = prev.incidence(key, age, m.sex)
             if key == "dm" and person.has("obesity"):

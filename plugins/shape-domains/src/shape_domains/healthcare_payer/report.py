@@ -91,7 +91,8 @@ def _provider(ix: TimelineIndex, npi: str | None, blind: bool) -> str:
         return ""
     p = ix.provider[npi]
     name = SPECIALTY[p["specialty_key"]].name if p["specialty_key"] in SPECIALTY else p["specialty"]
-    return escape(name if blind else f"{p['name']} · {name} · NPI {npi}")
+    who = f"{p['first_name']} {p['last_name']}" if p["first_name"] else p["org_name"]
+    return escape(name if blind else f"{who} · {name} · NPI {npi}")
 
 
 def render_member(
@@ -152,7 +153,7 @@ def render_member(
                 + (f" <span class='code'>[{escape(code)}]</span>" if code else "")
             )
         pcs = ", ".join(
-            f"<span class='code'>{r['procedure_code']}</span>" for r in ix.pcs[first["claim_id"]]
+            f"<span class='code'>{r['icd10pcs_code']}</span>" for r in ix.pcs[first["claim_id"]]
         )
         stay = ""
         if kind == "inpatient":

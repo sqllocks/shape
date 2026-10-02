@@ -78,7 +78,7 @@ def test_hcpcs_pcs_and_pos_gaps_are_reported():
 
 
 def test_validate_tables_counts_invalid_diagnoses_and_unmarketed_fills(small):
-    assets = _assets(drop={"Z00.00"})
+    assets = _assets(drop={"E78.5"})
     assets.ndc = SimpleNamespace(
         table=SimpleNamespace(
             to_pylist=lambda: [
@@ -88,7 +88,7 @@ def test_validate_tables_counts_invalid_diagnoses_and_unmarketed_fills(small):
         )
     )
     out = assets.validate_tables(small.tables)
-    assert out["icd10cm_not_valid_billable_on_date"] > 0 and "Z00.00" in " ".join(out["examples"])
+    assert out["icd10cm_not_valid_billable_on_date"] > 0 and "E78.5" in " ".join(out["examples"])
     assert (
         out["fills"] > 0 and out["ndc_not_marketed_on_fill_date"] == out["fills"]
     )  # all start in 2030
@@ -147,3 +147,34 @@ def test_fda_directory_matches_drugs_by_name_strength_and_form():
     )
     assert all(not r.interim for r in d.all_packages()) and d.source.startswith("FDA")
     assert set(d._by_drug) <= set(DRUGS) and FAR.year == 9999
+
+
+def _real_assets():
+    import pytest
+
+    pytest.importorskip("shape_healthcare_codes")
+    try:
+        return AssetCodes.load()
+    except Exception as exc:  # assets not fetched in this environment
+        pytest.skip(f"codes assets not available: {exc}")
+
+
+def test_seeds_agree_with_the_real_assets():
+    assert _real_assets().cross_check_seeds() == []
+
+
+def test_generated_tables_pass_against_the_real_assets_with_the_fda_directory():
+    from shape_domains.healthcare_payer.generate import generate
+
+    assets = _real_assets()
+    if assets.ndc is None:
+        import pytest
+
+        pytest.skip("ndc asset not built")
+    data = generate(300, seed=5, ndc=FdaNdcDirectory(assets.ndc.table))
+    result = assets.validate_tables(data.tables)
+    assert result["fills"] > 500
+    assert result["icd10cm_not_valid_billable_on_date"] == 0
+    assert result["age_sex_edit_violations"] == 0
+    assert result["icd10pcs_not_valid"] == 0 and result["hcpcs_not_in_asset"] == []
+    assert result["ndc_not_marketed_on_fill_date"] == 0

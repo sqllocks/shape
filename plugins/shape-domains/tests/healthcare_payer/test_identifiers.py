@@ -42,7 +42,7 @@ def test_every_identifier_in_the_generated_tables_is_synthetic(data):
         assert r["member_id"].startswith("SYN") and r["subscriber_id"].startswith("SYS")
         assert ids.is_never_issued_ssn(r["ssn"])
         assert r["email"].endswith(("@example.com", "@example.org", "@example.net"))
-        assert "-555-" in r["phone"]
+        assert len(r["phone"]) == 10 and r["phone"][3:6] == "555" and r["phone"][6:8] == "01"
     npis = set(t["provider"].column("npi").to_pylist())
     assert all(ids.npi_is_never_assigned(n) for n in npis)
     assert len(npis) == t["provider"].num_rows

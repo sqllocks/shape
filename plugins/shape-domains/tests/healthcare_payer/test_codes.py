@@ -38,9 +38,11 @@ def test_the_october_changes_are_honoured():
         resolve("obesity_class1", date(2024, 9, 30)) == "E66.9"
         and resolve("obesity_class1", date(2024, 10, 1)) == "E66.811"
     )
-    assert not ICD10CM["U07.1"].valid_on(date(2020, 3, 31)) and ICD10CM["U07.1"].valid_on(
-        date(2020, 4, 1)
+    assert not ICD10CM["U07.1"].valid_on(date(2020, 9, 30)) and ICD10CM["U07.1"].valid_on(
+        date(2020, 10, 1)
     )
+    assert ICD10CM["E78.01"].valid_on(date(2025, 9, 30))  # a header from FY2026
+    assert not ICD10CM["E78.01"].valid_on(date(2025, 10, 1))
 
 
 def test_category_headers_are_not_billable_and_every_concept_resolves():

@@ -83,6 +83,7 @@ def generate(
     calibration: Calibration | None = None,
     licensed: LicensedTables | None = None,
     ndc: NdcDirectory | None = None,
+    engine: str = "native",
 ) -> HealthcarePayerData:
     """A population of ``n_members`` over ``start``..``end`` (each member covered for part of it).
 
@@ -96,6 +97,7 @@ def generate(
         states=states,
         lob_mix=lob_mix,
         calibration=calibration,
+        engine=engine,
     )
     cb = ClaimsBuilder(sim.persons, sim.plans, sim.directory, sim.cal, seed, start, end, lic)
     cb.run()

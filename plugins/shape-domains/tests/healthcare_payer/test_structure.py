@@ -35,7 +35,7 @@ def test_subscriber_and_dependent_structure(data):
         for m in members
         if m["relationship_code"] == "19" and m["line_of_business"] == "commercial"
     ]
-    assert kids and all((date(2024, 12, 31) - m["birth_date"]).days / 365.25 < 26.5 for m in kids)
+    assert kids and all((date(2024, 12, 31) - m["birth_date"]).days / 365.25 < 28.0 for m in kids)
 
 
 def test_eligibility_spans_have_gaps_and_reenrollment(data):

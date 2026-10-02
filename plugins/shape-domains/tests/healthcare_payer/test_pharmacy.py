@@ -20,7 +20,7 @@ def test_fields_and_ndc_format(data):
         assert r["days_supply"] in (3, 5, 7, 10, 20, 25, 28, 30, 90) or r["days_supply"] > 0
         assert r["brand_generic"] in ("B", "G") and r["daw_code"] in ("0", "1")
         assert r["pharmacy_type"] in ("retail", "mail")
-        assert r["dea_schedule"] in (None, "II", "III", "IV")
+        assert r["dea_schedule"] in (None, "CII", "CIII", "CIV")
     assert Counter(r["pharmacy_type"] for r in rows).keys() == {"retail", "mail"}
     g = sum(1 for r in rows if r["brand_generic"] == "G" and r["claim_status"] == "paid") / sum(
         1 for r in rows if r["claim_status"] == "paid"
@@ -128,7 +128,7 @@ def test_mail_order_is_used_for_ninety_day_maintenance_fills(data):
 def test_controlled_substances_are_not_refilled(data):
     orders = {r["rx_order_id"]: r for r in data.tables["rx_order"].to_pylist()}
     for f in data.tables["pharmacy_claim"].to_pylist():
-        if f["dea_schedule"] == "II":
+        if f["dea_schedule"] == "CII":
             assert orders[f["rx_order_id"]]["refills_authorized"] == 0
 
 
@@ -138,4 +138,4 @@ def test_drug_reference_attributes(data):
         assert r["source"] == "interim-synthetic" and len(r["ndc"]) == 11
         assert r["ndc_formatted"] == f"{r['ndc'][:5]}-{r['ndc'][5:9]}-{r['ndc'][9:]}"
         assert r["therapeutic_class"] and r["dose_form"] and r["route"] and r["strength"]
-    assert {r["dea_schedule"] for r in ref} >= {None, "II", "IV"}
+    assert {r["dea_schedule"] for r in ref} >= {None, "CII", "CIV"}
