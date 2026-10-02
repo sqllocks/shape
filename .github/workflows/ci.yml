@@ -85,7 +85,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: python -m pip install -U pip
-      - run: pip install -e '.[dev]' -e plugins/shape-kafka -e plugins/shape-eventhubs
+      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-kafka -e plugins/shape-eventhubs
       - run: python -m pytest -q -m "not emulator and not live" plugins/shape-kafka/tests plugins/shape-eventhubs/tests
   rust:
     # T-27: cargo fmt / clippy -D warnings / cargo test for rust/shape-kernel.
