@@ -23,7 +23,6 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
-import generate  # noqa: E402
 import verify  # noqa: E402
 from paths import SPINDLE_ROOT  # noqa: E402
 
@@ -64,9 +63,7 @@ def main(argv: list[str] | None = None) -> int:
         "scale": args.scale,
         "impl": args.impl,
         "floor": floor,
-        "baseline": {
-            str(s): {t: base[s].tables[t].score for t in tables} for s in BASELINE_SEEDS
-        },
+        "baseline": {str(s): {t: base[s].tables[t].score for t in tables} for s in BASELINE_SEEDS},
         "impl_seeds": {},
     }
     for seed in IMPL_SEEDS:
