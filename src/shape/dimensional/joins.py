@@ -58,7 +58,7 @@ def left_join(
     left_on: str,
     right_on: str,
     *,
-    suffix: str,
+    suffix: str | None,
     right_prefix: str = "",
     drop_right_key: bool = True,
     single_match: bool = False,
@@ -66,9 +66,9 @@ def left_join(
     """``left`` plus the columns of ``right``, matched on ``left_on == right_on``.
 
     The right key column is dropped when ``drop_right_key`` (it equals the left key) and kept
-    otherwise. A right column that has the name of a left column takes
-    ``suffix``; ``right_prefix`` is put in front of every right column first. A name still
-    colliding afterwards is a ValueError. With ``single_match`` a left row matching several right
+    otherwise. A right column that has the name of a left column takes ``suffix`` (``None``: an
+    error); ``right_prefix`` is put in front of every right column first. A name still colliding
+    afterwards is a ValueError. With ``single_match`` a left row matching several right
     rows is an error (the join would repeat it).
     """
     left_rows, right_rows, matched = match_indices(left[left_on], right[right_on])
@@ -84,10 +84,12 @@ def left_join(
     arrays = list(taken.columns)
     for name in right_cols:
         new = f"{right_prefix}{name}"
-        if new in out_names:
+        if new in out_names and suffix is not None:
             new = f"{new}{suffix}"
         if new in out_names:
-            raise ValueError(f"joined column {new!r} collides with an existing column")
+            raise ValueError(
+                f"joined column {new!r} collides with an existing column; give the join a prefix"
+            )
         out_names.append(new)
         arrays.append(right[name].take(idx))
     return pa.table(arrays, names=out_names)

@@ -32,11 +32,11 @@ def read_tables(path: str | Path) -> dict[str, pa.Table]:
 
 def write_table(table: pa.Table, path: Path, fmt: str) -> None:
     if fmt == "parquet":
-        import pyarrow.parquet as pq
+        import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
         pq.write_table(table, path)
     elif fmt == "csv":
-        import pyarrow.csv as pacsv
+        import pyarrow.csv as pacsv  # type: ignore[import-untyped]
 
         pacsv.write_csv(table, path)
     else:

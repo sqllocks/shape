@@ -56,10 +56,30 @@ def run_case(label: str, source: Path, fmt: str, root: Path, maps: tuple[Path, P
     case = root / f"{label}-{fmt}"
     shutil.rmtree(case, ignore_errors=True)
     _baseline("--input", str(source), "--out", str(case / "baseline"), "--format", fmt)
-    _shape("transform", "star", str(source), "--map", str(maps[0]), "-o", str(case / "shape/star"),
-           "--format", fmt)
-    _shape("transform", "cdm", str(source), "--map", str(maps[1]), "--model-name", "ShapeRetail",
-           "-o", str(case / "shape/cdm"), "--format", fmt)
+    _shape(
+        "transform",
+        "star",
+        str(source),
+        "--map",
+        str(maps[0]),
+        "-o",
+        str(case / "shape/star"),
+        "--format",
+        fmt,
+    )
+    _shape(
+        "transform",
+        "cdm",
+        str(source),
+        "--map",
+        str(maps[1]),
+        "--model-name",
+        "ShapeRetail",
+        "-o",
+        str(case / "shape/cdm"),
+        "--format",
+        fmt,
+    )
     star = (compare_star if fmt == "parquet" else compare_star_csv)(
         case / "shape/star", case / "baseline/star"
     )
@@ -67,12 +87,16 @@ def run_case(label: str, source: Path, fmt: str, root: Path, maps: tuple[Path, P
     bad = [f"{label}/{fmt} star: {line}" for line in star[0]]
     bad += [f"{label}/{fmt} cdm: {line}" for line in cdm[0]]
     tables = len(list((case / "baseline/star").glob(f"*.{fmt}")))
-    print(f"{label} / {fmt}: {tables} star tables, {len(list((case / 'baseline/cdm').glob('*/*')))} "
-          f"CDM entities compared, {len(bad)} unexplained")
+    print(
+        f"{label} / {fmt}: {tables} star tables, {len(list((case / 'baseline/cdm').glob('*/*')))} "
+        f"CDM entities compared, {len(bad)} unexplained"
+    )
     for rules in (star[1], cdm[1]):
         for rule, where in rules.items():
-            print(f"  allowed [{rule}]: {'; '.join(sorted(set(where))[:4])}"
-                  f"{' ...' if len(set(where)) > 4 else ''}")
+            print(
+                f"  allowed [{rule}]: {'; '.join(sorted(set(where))[:4])}"
+                f"{' ...' if len(set(where)) > 4 else ''}"
+            )
     return bad
 
 
@@ -86,10 +110,30 @@ def main(argv: list[str]) -> int:
     root.mkdir(parents=True)
     maps = _maps(root)
     shape_in, base_in = root / "input-shape", root / "input-baseline"
-    _shape("generate", "retail", "--scale", a.scale, "--seed", str(a.seed), "-f", "parquet",
-           "-o", str(shape_in))
-    _baseline("--generate", "retail", "--scale", a.scale, "--seed", str(a.seed),
-              "--input", str(base_in), "--out", str(root / "scratch"))
+    _shape(
+        "generate",
+        "retail",
+        "--scale",
+        a.scale,
+        "--seed",
+        str(a.seed),
+        "-f",
+        "parquet",
+        "-o",
+        str(shape_in),
+    )
+    _baseline(
+        "--generate",
+        "retail",
+        "--scale",
+        a.scale,
+        "--seed",
+        str(a.seed),
+        "--input",
+        str(base_in),
+        "--out",
+        str(root / "scratch"),
+    )
     failures: list[str] = []
     for label, source in (("shape-data", shape_in), ("baseline-data", base_in)):
         for fmt in ("parquet", "csv"):

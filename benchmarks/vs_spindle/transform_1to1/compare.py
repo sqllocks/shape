@@ -85,7 +85,11 @@ def compare_tables(
                 continue
         s_cells, b_cells = _cells(shape[s_field.name]), _cells(base[b_field.name])
         if [_num(x) for x in s_cells] != [_num(x) for x in b_cells]:
-            first = next(i for i, (x, y) in enumerate(zip(s_cells, b_cells)) if _num(x) != _num(y))
+            first = next(
+                i
+                for i, (x, y) in enumerate(zip(s_cells, b_cells, strict=True))
+                if _num(x) != _num(y)
+            )
             bad.append(f"{col}: row {first}: {s_cells[first]!r} != {b_cells[first]!r}")
     return bad
 
@@ -190,7 +194,7 @@ def compare_star_csv(shape_dir: Path, base_dir: Path) -> tuple[list[str], dict[s
         if len(s_rows) != len(b_rows):
             bad.append(f"{fname}: {len(s_rows)} rows != {len(b_rows)}")
             continue
-        for i, (x, y) in enumerate(zip(s_rows, b_rows)):
+        for i, (x, y) in enumerate(zip(s_rows, b_rows, strict=True)):
             if x != y:
                 j = next(k for k in range(len(x)) if x[k] != y[k])
                 bad.append(f"{fname}: row {i} column {s_names[j]}: {x[j]!r} != {y[j]!r}")
@@ -229,7 +233,7 @@ def _compare_entity(
     if [a["name"] for a in s_attrs] != [a["name"] for a in b_attrs]:
         return bad + [f"entity {b['name']}: attributes differ in names or order"]
     rel = b["partitions"][0]["location"]
-    for sa, ba in zip(s_attrs, b_attrs):
+    for sa, ba in zip(s_attrs, b_attrs, strict=True):
         if sa == ba:
             continue
         if (
@@ -259,7 +263,7 @@ def compare_cdm(
         bad.append(f"model.json header: {s_model} != {b_model}")
     if len(s_entities) != len(b_entities):
         bad.append(f"entity count {len(s_entities)} != {len(b_entities)}")
-    for s, b in zip(s_entities, b_entities):
+    for s, b in zip(s_entities, b_entities, strict=False):
         bad += _compare_entity(s, b, shape_dir, fmt, allowed)
     for b in b_entities:
         rel = b["partitions"][0]["location"]
@@ -267,9 +271,7 @@ def compare_cdm(
             bad.append(f"{rel}: missing")
             continue
         if fmt == "parquet":
-            bad += compare_tables(
-                b["name"], _read(shape_dir / rel), _read(base_dir / rel), allowed
-            )
+            bad += compare_tables(b["name"], _read(shape_dir / rel), _read(base_dir / rel), allowed)
         else:
             s_names, s_rows = _csv_rows(shape_dir / rel)
             b_names, b_rows = _csv_rows(base_dir / rel)

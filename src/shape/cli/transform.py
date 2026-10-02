@@ -143,7 +143,7 @@ def _cdm(a: argparse.Namespace) -> dict[str, Any]:
 def run(a: argparse.Namespace) -> int:
     info = _star(a) if a.transform == "star" else _cdm(a)
     if a.json:
-        print(json.dumps(info, indent=2, sort_keys=True))
+        print(json.dumps(info, indent=2))
     elif a.transform == "star":
         print(f"star schema written to {info['output']}/ ({info['format']})")
         for table, stats in info["tables"].items():

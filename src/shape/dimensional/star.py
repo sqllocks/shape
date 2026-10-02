@@ -120,7 +120,9 @@ class StarMap:
             keys = dict(f.get("dimension_keys") or {})
             for column, dim in keys.items():
                 if dim not in dims:
-                    raise ValueError(f"{where}: column {column!r} maps to unknown dimension {dim!r}")
+                    raise ValueError(
+                        f"{where}: column {column!r} maps to unknown dimension {dim!r}"
+                    )
             targets = list(keys.values())
             dup = sorted({d for d in targets if targets.count(d) > 1})
             if dup:
@@ -192,7 +194,7 @@ def _build_dimension(
         right = _need(tables, j.table, f"{where} enrich")
         _need_column(df, j.left, f"{where} enrich from {j.table!r}")
         _need_column(right, j.right, f"{where} enrich from {j.table!r}")
-        df = left_join(df, right, j.left, j.right, suffix=f"_{j.table}", right_prefix=j.prefix)
+        df = left_join(df, right, j.left, j.right, suffix=None, right_prefix=j.prefix)
     df = _select(df, spec.columns, where)
     _need_column(df, spec.natural_key, f"{where} natural key")
     df = first_occurrence(df, spec.natural_key)
