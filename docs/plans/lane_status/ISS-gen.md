@@ -1,6 +1,6 @@
 # ISS-gen: owner issues about generation (lane/ISS-gen)
 
-Status: **built; awaiting lead verification.** Issues #9, #10, #11, #12, #17, #18, #19, #24 (generation
+Status: **built, lead decisions of 2026-10-02 applied; awaiting lead verification.** Issues #9, #10, #11, #12, #17, #18, #19, #24 (generation
 side), #25 and #26. Every issue was reproduced on this branch first; the evidence is below. No gate,
 tolerance, D-xx or T-xx decision was changed, and no test was skipped or disabled. Issues were not
 commented on, labelled or closed. Two perf lanes edit generation hot paths: this lane stays in strategy
@@ -140,15 +140,41 @@ semantics and validation (see "Hot paths").
 - Not done: street names are not per reference place when the reference has none (the issue's point 5
   asks for the pool; that is what is drawn, independent of the place).
 
-## Decisions and proposals for the owner (nothing here changes a D-xx or T-xx)
-1. `uniform` temporal now includes a date `end` (above). A one-day shortcut `"date": ...` was not added.
-2. `shape generate --rows N` demo path kept (labelled).
-3. `from-ddl` FK `null_rate` is inert; propose writing it on the column.
-4. `shape mask` still maps e-mail to real providers.
-5. `THIRD_PARTY_NOTICES.md` and D-10 say GeoNames is CC-BY-4.0; `load_geonames_postal` records
-   `CC-BY-3.0` and `docs/EXTERNAL_REFERENCE_ASSETS.md` says CC BY 3.0. They should agree (not changed).
-6. The `faker` package is not installed by `.[advanced]` here; two tests need it and skip without it
-   (one runs only the schema half).
+## Decisions of the lead (2026-10-02) and how they were applied (nothing here changes a D-xx or T-xx)
+1. `uniform` temporal now includes a date `end` (above): **kept as built.** No one-day `"date"` shortcut.
+2. `shape generate --rows N` demo path (labelled): **kept as built.**
+3. **`from-ddl` FK `null_rate`: applied.** `ddl_infer._fk_distributions` sets `col.null_rate = 0.15` on
+   a nullable foreign key (the engine reads it there) and no longer writes it into the generator. Test:
+   `tests/generation/test_iss_gen_fk_null_rate.py` (the column has 0.15 and the generator has none; 20,000
+   generated rows have a null rate of 0.15 +- 0.02, a NOT NULL FK has none, and every non-null value is
+   a parent key; `validate()` no longer warns about it). `ddl_1to1/verify.py` differed from the baseline
+   in 13 columns of 5 cases (the generator key, and the column's `null_rate`), so the harness has a
+   new entry **F11** with exactly those 13 columns x 2 paths (smart mode); `verify.py` exits 0, 28/28.
+   An assertion in `tests/generation/test_ddl.py` that encoded the inert key was updated.
+4. **`shape mask` e-mails: applied.** `_mask_values._email` draws the domain from `example.com`,
+   `.org`, `.net` (RFC 2606). Test: `tests/builtins/test_mask.py::test_replacement_emails_use_reserved_example_domains`.
+   The `mask_1to1` harness gets the probe `_email_domain_probe` and **MASK-A6**: every Shape replacement
+   e-mail must be at a reserved domain (no allowance), and an allow-list `baseline_real_email_domains`
+   names the columns where the baseline writes other domains. **Finding:** that list is empty for both
+   cases: the pinned baseline's faker (40.40.0) already writes `example.com/.org/.net` addresses, so for
+   mask this is a change from Shape's own earlier behaviour (real mail providers), not a difference
+   from the baseline. The probe is self-checking (it fails if the list and the output disagree). The
+   other checks are unchanged and pass: format preserved, same value -> same replacement, no original
+   value written back (and the four negative controls are caught).
+5. **GeoNames licence: applied, CC BY 4.0 everywhere.** Checked 2026-10-02 at
+   https://download.geonames.org/export/zip/readme.txt: "This work is licensed under a Creative
+   Commons Attribution 4.0 License." The readme's own "see" link still names the 3.0 URL
+   (`creativecommons.org/licenses/by/3.0/`); the text, which is the statement of the licence, says 4.0.
+   https://www.geonames.org/export/ (and /about.html) say only "creative commons attribution license"
+   with no version. Changed: `load_geonames_postal` provenance (`CC-BY-4.0`, was `CC-BY-3.0`),
+   `docs/EXTERNAL_REFERENCE_ASSETS.md`, `THIRD_PARTY_NOTICES.md` (now cites the readme URL and the date and
+   notes the stale link), and the assertion in `tests/location/test_reference.py`. `plugins/shape-domains/README.md`
+   already said CC BY 4.0. **The plan's D-10 text (line 201) and §12 (line 2247) say CC-BY-4.0, so
+   they agree with this: nothing to report to the lead and the plan was not edited.**
+6. **`faker` in the `dev` extra: applied** (`faker>=24`; not core, not `advanced`). Core imports it
+   only lazily inside `providers._faker_pool` (`importlib.import_module("faker")`, with an install
+   hint on `ImportError`); nothing else in `src` imports it at module level. The two `faker` tests in
+   `test_iss_gen_spec_keys.py` ran in this session: 14 passed, none skipped.
 
 ## Hot paths
 No change to `engine.py` hot loops: `_column` returns as before; the new code is `finalize` (called on
@@ -157,19 +183,20 @@ batches and tables that leave the engine, a no-op unless a column declares `deci
 `address_rows.py` (new), `__init__.py` (the `address` class). Expect small merge work with
 `lane/P6-01-perf-r4` in `engine.py` and `temporal.py`.
 
-## Results (this session, on the merge of origin/build/main-plan f3b9be6)
-- ruff check and format --check (src tests plugins benchmarks/vs_spindle), mypy strict (307 files),
-  vulture, lint-imports (1 kept), `check_user_facing` clean, `bandit -q -r src -ll` (only the existing
-  nosec warnings). No Rust change, so cargo was not run.
-- START: median of 10 runs of `shape --version` 46.9 ms (gate 300).
-- `pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`:
-  SHAPE_KERNEL=rust 4565 passed; SHAPE_KERNEL=python 4565 passed (`-e plugins/shape-domains` and
-  `.[advanced]` installed, plus `faker`, which `.[advanced]` does not include).
-- `pytest -m heavy --ignore=tests/demo/fabric`: 42 passed. Without the ignore, collection fails on
-  `tests/demo/fabric` (`nbformat` not installed here), as it would before this lane.
-- Harness, with the run directories deleted first so nothing stale is read: `strategy_1to1/baseline.py`,
-  `baseline_p404b.py`, `relational_baseline.py --check` all match; `export_retail.py --check` matches
-  (needs `PYTHONPATH=src` for the baseline interpreter); `domain_1to1/verify.py --domain retail
-  --scale medium --impl shape` PASS 60/60 (one column deliberate, `customer.email`);
-  `ddl_1to1/verify.py` 28/28 apart from the listed differences (F1-F10).
+## Results (this session, on the merge of origin/build/main-plan 7d94089 and the decisions above)
+The container was new: `$SHAPE_VENV`, the pinned Spindle checkout (`setup_spindle.sh`), `-e plugins/shape-domains` and
+`-e ".[dev,advanced]"` (with `faker` from the `dev` extra) were installed first. The merge had one
+conflict, `src/shape/cli/generation.py` `cmd_generate`: both sides kept (my `_rows_arg`/`--rows TABLE=N`
+and the new `--scale-mode` branch; `--scale-mode` with `--rows` still raises through `run_scale`).
+- ruff check and format --check (src tests plugins benchmarks/vs_spindle) clean; mypy strict, 332 files, no
+  issues; vulture (`src/shape scripts/vulture_whitelist.py --min-confidence 80`) clean; lint-imports 1 kept, 0 broken;
+  `check_user_facing` clean; `bandit -q -r src -ll` shows only the existing nosec warnings. No Rust change.
+- START: median of 10 runs of `shape --version` 45.2 ms (gate 300).
+- `pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`: SHAPE_KERNEL=rust
+  4849 passed (507 s); SHAPE_KERNEL=python 4849 passed (835 s). `pytest -m heavy --ignore=tests/demo/fabric`:
+  42 passed.
+- Harness, run directories deleted first: `strategy_1to1/baseline.py`, `baseline_p404b.py` and
+  `relational_baseline.py --check` all match; `domain_1to1/verify.py --domain retail --scale small --impl shape`
+  60/60 PASS; `ddl_1to1/verify.py` 28/28 apart from the listed differences (F1 to F11), exit 0;
+  `mask_1to1/verify.py` d2 (1,000,000 rows) PASS and cat PASS, exit 0.
 - Not run: `tests/demo/fabric` (needs unixODBC and nbformat), emulator and live tests.
