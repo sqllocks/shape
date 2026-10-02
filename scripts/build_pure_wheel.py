@@ -48,7 +48,7 @@ FORBIDDEN_SUFFIXES = {
     ".pyx",
     ".rs",
 }
-DEMO_REQUIRES = ["numpy>=2.0,<3", "pyarrow>=14.0.1"]
+DEMO_REQUIRES = ["numpy>=2.0,<3", "pyarrow>=14.0.1", "tzdata; sys_platform == 'win32'"]
 # packages the demo wheel is tested against in a clean environment (DM-03)
 VERIFY_PACKAGES = ["numpy", "pyarrow", "pandas", "deltalake", "pytest"]
 FIXED_TIME = (2026, 1, 1, 0, 0, 0)  # reproducible archives
