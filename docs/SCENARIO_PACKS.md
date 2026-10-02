@@ -50,7 +50,9 @@ validation:
 
 The timing fields (cadence, partitioning, rates, jitter, replay, done flags, `lateness`,
 `duplicates`, `backfill`, `failure_injection`) describe the landing pattern for a consumer. A run
-does not simulate a clock: it writes the data once. Validation warns when `lateness`, `duplicates`,
+does not simulate a clock: it writes the data once. To produce that behaviour (late arrivals,
+duplicates, a backfill, replays, an event rate) use the simulators of `sqllocks-shape-simulation`
+(`shape simulate`, `docs/SIMULATION_FILES_EVENTS.md`), which write through the same file sinks. Validation warns when `lateness`, `duplicates`,
 `backfill` or `failure_injection` is enabled, because nothing would happen. Use `chaos` for
 faults.
 

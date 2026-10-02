@@ -342,24 +342,11 @@ def _live_finish(a: argparse.Namespace, live: Any) -> tuple[dict[str, Any], int]
 
 
 def _sink(a: argparse.Namespace, envelope: str, resuming: bool) -> Any:
-    from shape.errors import ShapeError
-    from shape.streaming.emit import EmitterSink, FileSink, StdoutSink
+    from shape.streaming.emit import open_sink
 
-    if a.sink == "console":
-        return StdoutSink(envelope=envelope)
-    if a.sink == "file":
-        if not a.output:
-            raise ShapeError("--sink file needs --output FILE")
-        return FileSink(a.output, envelope=envelope, append=resuming)
-    scheme = a.sink.split("://", 1)[0] if "://" in a.sink else ""
-    from shape.plugins.host import default_host
-
-    host = default_host()
-    for name in host.names("shape.emitters"):
-        emitter = host.try_get("shape.emitters", name)
-        if emitter is not None and scheme and scheme in getattr(emitter, "schemes", ()):
-            return EmitterSink(emitter, a.sink, envelope=envelope, resuming=resuming)
-    raise ShapeError(f"unknown sink {a.sink!r}: {SINKS_HELP}")
+    return open_sink(
+        a.sink, output=a.output, envelope=envelope, resuming=resuming, choices=SINKS_HELP
+    )
 
 
 def run(a: argparse.Namespace) -> int:
