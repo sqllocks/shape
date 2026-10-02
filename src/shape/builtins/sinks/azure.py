@@ -25,6 +25,7 @@ its final name, so a reader never sees a partial file (:mod:`shape.io.store`).
 
 from __future__ import annotations
 
+import os
 from collections.abc import Iterable, Mapping
 from typing import Any
 
@@ -89,7 +90,7 @@ class AbfssSink:
 
     def _store(self, uri: str, options: Mapping[str, Any]) -> FsspecStore:
         loc = azure.parse(uri)
-        opts = dict(options)
+        opts = _with_environment_keys(options)
         fs = azure._filesystem(loc, opts)
         where = f"abfss://{loc.container}" + (f"@{loc.host}" if loc.host else "")
         kwargs: dict[str, Any] = {}
@@ -130,6 +131,29 @@ class AbfssSink:
             writer.abort()
             raise
         return int(writer.close(schema=options.get("schema")))
+
+
+_ENV_KEYS = (
+    ("account_key", "AZURE_STORAGE_ACCOUNT_KEY"),
+    ("sas_token", "AZURE_STORAGE_SAS_TOKEN"),
+    ("connection_string", "AZURE_STORAGE_CONNECTION_STRING"),
+)
+
+
+def _with_environment_keys(options: Mapping[str, Any]) -> dict[str, Any]:
+    """``options``, plus a storage key from the standard environment variables when none of the
+    credential options is given (so a secret never has to be on a command line)."""
+    opts = dict(options)
+    if any(opts.get(k) for k in ("token", "credential", "account_key", "sas_token", "filesystem")):
+        return opts
+    if opts.get("connection_string"):
+        return opts
+    for key, variable in _ENV_KEYS:
+        value = os.environ.get(variable)
+        if value:
+            opts[key] = value
+            break
+    return opts
 
 
 _CONTROL = frozenset(

@@ -100,6 +100,9 @@ def add_arguments(sub: Any) -> None:
     from shape.cli.landing import add_landing_arguments
 
     add_landing_arguments(ge, default_template=DEFAULT_TEMPLATE)
+    from shape.cli.to import add_to_arguments
+
+    add_to_arguments(ge)
 
     de = sub.add_parser(
         "describe",
@@ -202,6 +205,8 @@ def cmd_generate(a: argparse.Namespace) -> int:
     """``shape generate``: 0 generated (or the plan is sound), 1 a dry run found problems."""
     if a.scale_mode and a.from_profile:
         raise ValueError("--scale-mode does not combine with --from")
+    if a.to and a.scale_mode:
+        raise ValueError("--to does not combine with --scale-mode (use --sink there)")
     if a.from_profile:
         return _generate_from_profile(a)
     if a.target is None:
@@ -298,6 +303,10 @@ def _generate(a: argparse.Namespace, engine: Any) -> int:
 
     run = current()
     started = time.perf_counter()
+    if a.to:
+        from shape.cli.to import run_to
+
+        return run_to(a, engine, started)
     from shape.cli.landing import landing_requested
 
     if landing_requested(a) and a.format == "summary":
