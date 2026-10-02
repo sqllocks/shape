@@ -421,7 +421,8 @@ class TestSmartInference:
         gen = schema.tables["orders"].columns["customer_id"].generator
         assert gen["distribution"] == "pareto"
         assert gen["params"] == {"alpha": 1.16, "max_per_parent": 50}
-        assert gen["null_rate"] == 0.15
+        assert "null_rate" not in gen  # a column property now (ISS-gen)
+        assert schema.tables["orders"].columns["customer_id"].null_rate == 0.15
 
     def test_row_counts_and_ratios(self) -> None:
         schema, _ = smart(RETAIL)

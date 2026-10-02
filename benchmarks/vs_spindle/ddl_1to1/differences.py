@@ -2,8 +2,8 @@
 
 P4-01b made Shape's ``from-ddl`` equal the baseline's in every field. The owner then decided
 (2026-10-01) to fix five behaviours that would harm users' trust (F1 to F5), and the lead three
-more (F6 to F8, round 2). Each fix changes a known, small set of fields, listed here by input,
-mode and field. ``verify.py`` accepts a difference **only**
+more (F6 to F8, round 2); ISS-gen added F9 to F11. Each fix changes a known, small set of
+fields, listed here by input, mode and field. ``verify.py`` accepts a difference **only**
 when it is listed: every other field must still equal the baseline, and an entry that no longer
 matches a difference fails the run (so the list cannot go stale).
 
@@ -80,6 +80,12 @@ FIXES: dict[str, str] = {
         "A text column's `faker` generator passes max_nb_chars to the provider as `args` "
         "(ISS-gen, owner issue 9). The baseline writes it as a top-level key, which the "
         "strategy ignores, so the provider's own default length (200) was used."
+    ),
+    "F11": (
+        "A nullable foreign key's 0.15 null rate (annotation FK-04) is written on the column "
+        "(`null_rate`), where the engine reads it, not in the generator (ISS-gen, lead decision "
+        "2026-10-02). The baseline puts it in the generator, where it is ignored, so the declared "
+        "rate never took effect: a foreign key that was documented as nullable had no nulls."
     ),
 }
 
@@ -439,6 +445,26 @@ ALLOWED: list[Field | Note] = [
         for c in ("feedback_score", "tax_rate")
     ),
     Field("F9", "smart_retail", "tables.products.columns.rating.generator.max", PLAIN),
+    # F11 entries: a nullable FK's null rate moves from the generator to the column
+    *(
+        Field("F11", case, f"tables.{table}.columns.{column}.{where}", SMART)
+        for case, table, column in (
+            ("adventureworks_sample", "products", "category_id"),
+            ("e2e_cli__inline", "orders", "customer_id"),
+            ("fix_cases", "ansi_order", "customer_id"),
+            ("fix_cases", "catalog_item", "invoice_id"),
+            ("fix_cases", "my_order", "customer_id"),
+            ("plural_fks", "item", "box_id"),
+            ("plural_fks", "item", "bus_id"),
+            ("plural_fks", "item", "category_id"),
+            ("plural_fks", "item", "company_id"),
+            ("plural_fks", "item", "status_id"),
+            ("smart_retail", "audit_log", "customer_id"),
+            ("smart_retail", "orders", "approved_by"),
+            ("smart_retail", "orders", "shipping_address_id"),
+        )
+        for where in ("generator.null_rate", "null_rate")
+    ),
     # F10 entries
     *(
         Field("F10", case, f"tables.{table}.columns.{column}.generator.{key}", modes)
