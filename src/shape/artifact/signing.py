@@ -18,13 +18,12 @@ import binascii
 import hashlib
 import json
 import os
-import shutil
 import tempfile
 import zipfile
 from pathlib import Path
 from typing import Any
 
-from .io import SIGNATURE_MEMBER, ArtifactSignatureError, read_artifact
+from .io import ArtifactSignatureError, read_artifact, write_container
 
 ALGORITHM = "Ed25519"
 # Domain separation: a signature over a manifest is never valid for any other message.
@@ -155,35 +154,27 @@ def sign_artifact(
     read_artifact(path)
     with zipfile.ZipFile(path) as src:
         manifest_bytes = src.read("manifest.json")
-        sig = sign_ed25519(_message(manifest_bytes), private_key)
-        member = json.dumps(
-            {
-                "algorithm": ALGORITHM,
-                "key_id": key_id(public_key),
-                "signature": base64.b64encode(sig).decode(),
-            },
-            sort_keys=True,
-            separators=(",", ":"),
-        ).encode()
-        target = Path(out if out is not None else path)
-        fd, tmp_name = tempfile.mkstemp(dir=target.parent or ".", suffix=".tmp")
-        os.close(fd)
-        try:
-            with zipfile.ZipFile(
-                tmp_name, "w", compression=zipfile.ZIP_DEFLATED, allowZip64=True
-            ) as dst:
-                for info in src.infolist():
-                    if info.filename == SIGNATURE_MEMBER:
-                        continue
-                    zi = zipfile.ZipInfo(info.filename, info.date_time)
-                    zi.compress_type = info.compress_type
-                    zi.external_attr = info.external_attr
-                    with src.open(info) as r, dst.open(zi, "w", force_zip64=True) as w:
-                        shutil.copyfileobj(r, w)
-                dst.writestr(SIGNATURE_MEMBER, member)
-        except BaseException:
-            Path(tmp_name).unlink(missing_ok=True)
-            raise
+    sig = sign_ed25519(_message(manifest_bytes), private_key)
+    member = json.dumps(
+        {
+            "algorithm": ALGORITHM,
+            "key_id": key_id(public_key),
+            "signature": base64.b64encode(sig).decode(),
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+    _, components = read_artifact(path)
+    target = Path(out if out is not None else path)
+    fd, tmp_name = tempfile.mkstemp(dir=target.parent or ".", suffix=".tmp")
+    os.close(fd)
+    try:
+        # The signature covers the manifest bytes only; the container is rebuilt in the canonical
+        # layout, so a signed file is as reproducible as an unsigned one.
+        write_container(tmp_name, manifest_bytes, components, member)
+    except BaseException:
+        Path(tmp_name).unlink(missing_ok=True)
+        raise
     # Replace only after the source is closed: Windows cannot replace a file that is open.
     try:
         os.replace(tmp_name, target)

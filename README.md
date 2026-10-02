@@ -28,7 +28,7 @@ print(drift.drifted, drift.changes)
 ```
 
 ```bash
-shape profile customers.csv -o customers.shape --html report.html --json summary.json
+shape profile customers.csv -o customers.shape --name customers --html report.html --json summary.json
 shape check customers.shape contract.json          # exit code 1 if the contract fails
 shape diff customers.shape customers_next.shape --fail-on-drift
 ```
@@ -42,6 +42,47 @@ with a `tables` object is checked against such a dataset profile only; against a
 shape --version
 shape inspect customers.shape                        # what a .shape file holds
 ```
+
+## Version-controlling shapes
+
+A shape can live in git like code: re-profiling unchanged data gives a **byte-identical**
+`.shape` (fixed container, no timestamps), so `git status` stays clean, and a real change gives a
+readable diff.
+
+```bash
+shape git-setup                       # once per repository
+shape profile orders.csv -o orders.shape --name orders
+git add .gitattributes orders.shape && git commit -m "orders shape"
+# next run, after the data changed:
+shape profile orders.csv -o orders.shape
+git diff                              # one changed line per changed property
+```
+
+```diff
+-columns.email.null_rate: 0.0474
++columns.email.null_rate: 0.2
+-columns.status.cardinality: 3
++columns.status.cardinality: 4
++columns.status.enum_values.lost: 0.2512
+```
+
+- `shape git-setup` writes `diff.shape.textconv = shape cat` to the repository's local git
+  config and `*.shape diff=shape` to `.gitattributes`; running it again changes nothing.
+  `--pattern '*.safe.json'` adds more patterns. `shape cat FILE` prints the same text form
+  (one `path: value` line per property, sorted, nothing volatile); `shape inspect --pretty FILE`
+  prints it as indented JSON with sorted keys. For drift that is judged rather than listed, use
+  `shape diff OLD.shape NEW.shape`.
+- **The name is stable.** `--name NAME` sets the profile name. Without it, `-o` over an existing
+  profile keeps that profile's name; otherwise the name is the input's file name. Re-profiling
+  `orders_w2.csv` over `orders.shape` therefore does not show a rename.
+- **What to commit.** A `.shape` file, its `--json` summary and its HTML report hold real values
+  (up to 500 per column, and each column's minimum and maximum). They are pipeline-internal:
+  commit them only to a repository that is as private as the data. The git-committable artifact
+  is the share-safe JSON, `shape profile safe orders.shape -o orders.safe.json`: sorted keys,
+  one value per line, stable numbers, rare values suppressed. Check it with
+  `shape profile validate --safe orders.safe.json` (exit 0 means no leak found).
+- Signed files (`--sign KEY`) are reproducible too: the signature covers the manifest bytes,
+  not the container.
 
 ## What's in early access
 
