@@ -310,6 +310,13 @@ shape from-ddl tables.sql -o shop.gen.json && shape generate shop.gen.json -f cs
 shape validate shop.gen.json                 # a schema file, or a contract; exit 0, 1 or 2
 ```
 
+Start-up and exit are kept short, because they are part of what a run costs (retail `medium` takes
+about 0.65 s end to end, of which the imports are about 0.2 s): `generate` imports pandas never (see
+`shape.generation.arrowkit`), loads a sink on a writer thread, and, run as the program with no
+`--log-json` or `--metrics`, switches the garbage collector off (the imports make the objects it would
+walk, and generation makes no reference cycles) and ends the process as soon as the last file is
+closed and the output flushed, instead of freeing the tables and unloading the modules.
+
 A target is an installed domain or the path of a generation schema file. `--mode star` picks a
 domain's star schema (a domain that has none exits 2; a schema file has the one mode it was
 written in). `--scale` must be one of the schema's presets (`shape presets`), `--seed` defaults to

@@ -12,6 +12,7 @@ A *target* is the name of an installed domain (``retail``) or the path of a gene
 from __future__ import annotations
 
 import argparse
+import gc
 import json
 import time
 from pathlib import Path
@@ -202,6 +203,12 @@ def cmd_generate(a: argparse.Namespace) -> int:
         return _demo_rows(a)
     if a.rows is not None:
         raise ValueError("--rows prints demo rows and takes no target")
+    from shape.cli.lifecycle import quick_exit_allowed
+
+    if quick_exit_allowed:
+        # A process that ends when the files are written: the collector would only walk the
+        # objects the imports make (about 10 ms), and generation makes no reference cycles.
+        gc.disable()
     from shape.generation.engine import Engine
     from shape.runlog import current
 
