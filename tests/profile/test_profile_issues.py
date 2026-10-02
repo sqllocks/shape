@@ -326,6 +326,15 @@ def test_wide_table_correlation_is_bounded(kernel):
     assert safe.tables["w"].to_dict()["correlation_truncated"] is True
 
 
+def test_wide_table_safe_json_stays_small_per_column(kernel):
+    rng = np.random.default_rng(0)
+    k = 300
+    table = pa.table({f"c{i}": rng.integers(0, 1000, 500) for i in range(k)})
+    safe = to_safe_profile(shape.profile(table, name="w"), SafeConfig())
+    assert len(safe.to_json()) < 3500 * k  # about 2 KB per column (docs/PROFILING_NOTES.md)
+    assert len(safe.to_json(compact=True)) < 1500 * k
+
+
 def test_narrow_table_keeps_the_full_matrix(kernel):
     rng = np.random.default_rng(0)
     d = shape.profile(pa.table({f"c{i}": rng.normal(size=50) for i in range(30)}), name="n")
