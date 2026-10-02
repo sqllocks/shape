@@ -1,0 +1,14 @@
+[local_single] shape generate --scale-mode local_single ...
+[local_single] 1,965,400 rows in 3.02s; parts per table {'customer': 1, 'product_category': 1, 'promotion': 1, 'store': 1, 'address': 1, 'product': 1, 'order': 1, 'order_line': 3, 'return': 1}
+[local_single] domain_1to1/verify.py --impl shape: exit 0 (/root/bench-out/scale_1to1/local_single/t21_report.json)
+[local_mp] shape generate --scale-mode local_mp ...
+[local_mp] 1,965,400 rows in 2.5s; parts per table {'customer': 1, 'product_category': 1, 'promotion': 1, 'store': 1, 'address': 1, 'product': 1, 'order': 1, 'order_line': 3, 'return': 1}
+[local_mp] domain_1to1/verify.py --impl shape: exit 0 (/root/bench-out/scale_1to1/local_mp/t21_report.json)
+negative controls (each must be flagged):
+  negative control numeric: comparison exit 1 (flagged)
+  negative control categorical: comparison exit 1 (flagged)
+  negative control fk: comparison exit 1 (flagged)
+  negative control rows: comparison exit 1 (flagged)
+  negative control baseline_local_mp: rows differing from the preset {'order': (500000, 786160), 'order_line': (1250000, 1965400)}; exit 1
+PASS: local_single, local_mp (negative controls flagged)
+EXIT 0
