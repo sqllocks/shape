@@ -247,6 +247,7 @@ source_modules = [
     "shape.api",
     "shape.artifact",
     "shape.capture",
+    "shape.chaos",
     "shape.cli",
     "shape.connectors",
     "shape.contracts",
