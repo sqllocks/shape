@@ -25,6 +25,10 @@ insurance = "shape_domains.insurance:InsuranceDomain"
 iot = "shape_domains.iot:IotDomain"
 manufacturing = "shape_domains.manufacturing:ManufacturingDomain"
 marketing = "shape_domains.marketing:MarketingDomain"
+pulse = "shape_domains.pulse:PulseDomain"
+real_estate = "shape_domains.real_estate:RealEstateDomain"
+supply_chain = "shape_domains.supply_chain:SupplyChainDomain"
+telecom = "shape_domains.telecom:TelecomDomain"
 
 [tool.setuptools.packages.find]
 where = ["src"]

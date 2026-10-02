@@ -12,7 +12,7 @@ tools under the same conditions.
 | `generate.py` | Writes one run of a domain as Parquet, for `--impl spindle\|reference_port\|shape`, into `$BENCH_OUT_DIR/<impl>/<domain>/<scale>/seed<N>/`. Each impl runs in its own venv. |
 | `verify.py` | Equivalence verifier (T-21 clauses (a)-(h)); reads Parquet only, in the Spindle venv. Tables, FKs and business rules come from `../dump_schema.py`. Exits 1 unless every clause holds, 2 if a required run directory is missing. |
 | `export_retail.py` | Writes the `shape-domains` plugin's retail data (the schema, from the baseline's dump, and the four reference datasets, from the baseline checkout); `--check` proves the shipped files equal what it would write. |
-| `export_domains.py` | The same for `capital_markets`, `education`, `financial`, `healthcare`, `hr` and `insurance` (3nf and star schemas, every reference file of the baseline's domain); `--check` proves the shipped files equal what it would write. One documented schema difference (`OVERRIDES`). |
+| `export_domains.py` | The same for every non-retail domain (`capital_markets` to `telecom`; 3nf and star schemas, every reference file of the baseline's domain); `--check` proves the shipped files equal what it would write. One documented schema difference (`OVERRIDES`). |
 | `bench.py` | Benchmark harness: every run is a fresh process (median of `--runs`), timing generate + write through `generate.py`. |
 
 The recorded results quoted below (`verify_*` reports for small, medium and large, the

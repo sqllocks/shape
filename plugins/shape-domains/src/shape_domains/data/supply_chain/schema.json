@@ -1,0 +1,1504 @@
+{
+ "schema_version": 1,
+ "model": {
+  "name": "supply_chain_3nf",
+  "description": "Supply chain domain — 3nf schema",
+  "domain": "supply_chain",
+  "schema_mode": "3nf",
+  "locale": "en_US",
+  "seed": 42,
+  "date_range": {
+   "start": "2022-01-01",
+   "end": "2025-12-31"
+  }
+ },
+ "tables": {
+  "warehouse": {
+   "name": "warehouse",
+   "description": "Distribution centers with locations",
+   "cdm_mapping": null,
+   "primary_key": [
+    "warehouse_id"
+   ],
+   "columns": {
+    "warehouse_id": {
+     "name": "warehouse_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "warehouse_name": {
+     "name": "warehouse_name",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "DC-{seq:4}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "warehouse_type": {
+     "name": "warehouse_type",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Distribution Center": 0.4,
+       "Regional Hub": 0.25,
+       "Cross-Dock": 0.15,
+       "Cold Storage": 0.12,
+       "Fulfillment Center": 0.08
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "city": {
+     "name": "city",
+     "type": "string",
+     "generator": {
+      "strategy": "record_sample",
+      "dataset": "us_zip_locations",
+      "field": "city"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "state": {
+     "name": "state",
+     "type": "string",
+     "generator": {
+      "strategy": "record_field",
+      "dataset": "us_zip_locations",
+      "field": "state"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 2,
+     "precision": null,
+     "scale": null
+    },
+    "zip_code": {
+     "name": "zip_code",
+     "type": "string",
+     "generator": {
+      "strategy": "record_field",
+      "dataset": "us_zip_locations",
+      "field": "zip"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 10,
+     "precision": null,
+     "scale": null
+    },
+    "lat": {
+     "name": "lat",
+     "type": "float",
+     "generator": {
+      "strategy": "record_field",
+      "dataset": "us_zip_locations",
+      "field": "lat"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "lng": {
+     "name": "lng",
+     "type": "float",
+     "generator": {
+      "strategy": "record_field",
+      "dataset": "us_zip_locations",
+      "field": "lng"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "capacity_sqft": {
+     "name": "capacity_sqft",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 11.0,
+      "sigma": 0.8,
+      "min": 10000,
+      "max": 500000,
+      "round": 0
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "is_active": {
+     "name": "is_active",
+     "type": "boolean",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "true": 0.94,
+       "false": 0.06
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "supplier": {
+   "name": "supplier",
+   "description": "Material and product suppliers",
+   "cdm_mapping": null,
+   "primary_key": [
+    "supplier_id"
+   ],
+   "columns": {
+    "supplier_id": {
+     "name": "supplier_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "supplier_name": {
+     "name": "supplier_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "company"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 200,
+     "precision": null,
+     "scale": null
+    },
+    "contact_name": {
+     "name": "contact_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "contact_email": {
+     "name": "contact_email",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "company_email"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 255,
+     "precision": null,
+     "scale": null
+    },
+    "country": {
+     "name": "country",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "United States": 0.35,
+       "China": 0.2,
+       "Germany": 0.1,
+       "Mexico": 0.1,
+       "Japan": 0.08,
+       "South Korea": 0.05,
+       "India": 0.05,
+       "Taiwan": 0.04,
+       "Canada": 0.03
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "lead_time_days": {
+     "name": "lead_time_days",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 3.0,
+      "sigma": 0.7,
+      "min": 1,
+      "max": 120,
+      "round": 0
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "reliability_score": {
+     "name": "reliability_score",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 0.6,
+      "max": 0.99,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "is_active": {
+     "name": "is_active",
+     "type": "boolean",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "true": 0.9,
+       "false": 0.1
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "material": {
+   "name": "material",
+   "description": "Raw materials and components",
+   "cdm_mapping": null,
+   "primary_key": [
+    "material_id"
+   ],
+   "columns": {
+    "material_id": {
+     "name": "material_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "material_name": {
+     "name": "material_name",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "MAT-{seq:5}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 200,
+     "precision": null,
+     "scale": null
+    },
+    "category": {
+     "name": "category",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "material_categories"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "unit_of_measure": {
+     "name": "unit_of_measure",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "EA": 0.4,
+       "KG": 0.2,
+       "LB": 0.15,
+       "LT": 0.1,
+       "M": 0.08,
+       "FT": 0.07
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    },
+    "unit_cost": {
+     "name": "unit_cost",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 3.5,
+      "sigma": 1.5,
+      "min": 0.01,
+      "max": 50000.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "reorder_point": {
+     "name": "reorder_point",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 10,
+      "max": 500,
+      "round": 0
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "is_hazardous": {
+     "name": "is_hazardous",
+     "type": "boolean",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "true": 0.08,
+       "false": 0.92
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "purchase_order": {
+   "name": "purchase_order",
+   "description": "Purchase orders to suppliers",
+   "cdm_mapping": null,
+   "primary_key": [
+    "po_id"
+   ],
+   "columns": {
+    "po_id": {
+     "name": "po_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "po_number": {
+     "name": "po_number",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "PO-{seq:6}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    },
+    "supplier_id": {
+     "name": "supplier_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "supplier.supplier_id",
+      "distribution": "zipf",
+      "alpha": 1.2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "order_date": {
+     "name": "order_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2022-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "expected_delivery_date": {
+     "name": "expected_delivery_date",
+     "type": "date",
+     "generator": {
+      "strategy": "derived",
+      "source": "order_date",
+      "operation": "add_days",
+      "days": 21
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "total_amount": {
+     "name": "total_amount",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 9.0,
+      "sigma": 1.5,
+      "min": 100.0,
+      "max": 5000000.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "status": {
+     "name": "status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Approved": 0.3,
+       "Shipped": 0.2,
+       "Delivered": 0.35,
+       "Cancelled": 0.05,
+       "Pending": 0.1
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "priority": {
+     "name": "priority",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Standard": 0.6,
+       "Expedited": 0.25,
+       "Critical": 0.1,
+       "Low": 0.05
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "purchase_order_line": {
+   "name": "purchase_order_line",
+   "description": "Purchase order line items",
+   "cdm_mapping": null,
+   "primary_key": [
+    "po_line_id"
+   ],
+   "columns": {
+    "po_line_id": {
+     "name": "po_line_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "po_id": {
+     "name": "po_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "purchase_order.po_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "material_id": {
+     "name": "material_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "material.material_id",
+      "distribution": "zipf",
+      "alpha": 1.1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "quantity_ordered": {
+     "name": "quantity_ordered",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 5.0,
+      "sigma": 1.2,
+      "min": 1,
+      "max": 10000,
+      "round": 0
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "quantity_received": {
+     "name": "quantity_received",
+     "type": "integer",
+     "generator": {
+      "strategy": "correlated",
+      "source_column": "quantity_ordered",
+      "operation": "multiply",
+      "params": {
+       "factor_min": 0.85,
+       "factor_max": 1.0
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "unit_price": {
+     "name": "unit_price",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 3.5,
+      "sigma": 1.5,
+      "min": 0.1,
+      "max": 50000.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "line_total": {
+     "name": "line_total",
+     "type": "float",
+     "generator": {
+      "strategy": "formula",
+      "expression": "quantity_ordered * unit_price"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "inventory": {
+   "name": "inventory",
+   "description": "Stock levels by warehouse and material",
+   "cdm_mapping": null,
+   "primary_key": [
+    "inventory_id"
+   ],
+   "columns": {
+    "inventory_id": {
+     "name": "inventory_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "warehouse_id": {
+     "name": "warehouse_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "warehouse.warehouse_id",
+      "distribution": "zipf",
+      "alpha": 1.1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "material_id": {
+     "name": "material_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "material.material_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "quantity_on_hand": {
+     "name": "quantity_on_hand",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 6.0,
+      "sigma": 1.5,
+      "min": 0,
+      "max": 100000,
+      "round": 0
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "quantity_reserved": {
+     "name": "quantity_reserved",
+     "type": "integer",
+     "generator": {
+      "strategy": "correlated",
+      "source_column": "quantity_on_hand",
+      "operation": "multiply",
+      "params": {
+       "factor_min": 0.0,
+       "factor_max": 0.4
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "last_counted_date": {
+     "name": "last_counted_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2024-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "bin_location": {
+     "name": "bin_location",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "A{seq:2}-R{seq:2}-S{seq:2}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "shipment": {
+   "name": "shipment",
+   "description": "Inbound and outbound shipments",
+   "cdm_mapping": null,
+   "primary_key": [
+    "shipment_id"
+   ],
+   "columns": {
+    "shipment_id": {
+     "name": "shipment_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "shipment_number": {
+     "name": "shipment_number",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "SHP-{seq:6}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    },
+    "po_id": {
+     "name": "po_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "purchase_order.po_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "warehouse_id": {
+     "name": "warehouse_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "warehouse.warehouse_id",
+      "distribution": "zipf",
+      "alpha": 1.1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "carrier_name": {
+     "name": "carrier_name",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "carrier_names"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "shipping_method": {
+     "name": "shipping_method",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "shipping_methods"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "ship_date": {
+     "name": "ship_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2022-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "delivery_date": {
+     "name": "delivery_date",
+     "type": "date",
+     "generator": {
+      "strategy": "derived",
+      "source": "ship_date",
+      "operation": "add_days",
+      "days": 5
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "status": {
+     "name": "status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "In Transit": 0.2,
+       "Delivered": 0.55,
+       "Pending Pickup": 0.1,
+       "Delayed": 0.08,
+       "Returned": 0.04,
+       "Lost": 0.03
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "weight_kg": {
+     "name": "weight_kg",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 5.0,
+      "sigma": 1.5,
+      "min": 0.5,
+      "max": 50000.0,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "shipment_event": {
+   "name": "shipment_event",
+   "description": "Shipment tracking events",
+   "cdm_mapping": null,
+   "primary_key": [
+    "event_id"
+   ],
+   "columns": {
+    "event_id": {
+     "name": "event_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "shipment_id": {
+     "name": "shipment_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "shipment.shipment_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "event_type": {
+     "name": "event_type",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Picked Up": 0.2,
+       "In Transit": 0.25,
+       "At Hub": 0.15,
+       "Out for Delivery": 0.15,
+       "Delivered": 0.15,
+       "Exception": 0.05,
+       "Returned to Sender": 0.05
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "event_timestamp": {
+     "name": "event_timestamp",
+     "type": "datetime",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2022-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "location": {
+     "name": "location",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "city"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 200,
+     "precision": null,
+     "scale": null
+    },
+    "notes": {
+     "name": "notes",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "sentence"
+     },
+     "nullable": true,
+     "null_rate": 0.6,
+     "max_length": 500,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "quality_inspection": {
+   "name": "quality_inspection",
+   "description": "QA inspection results",
+   "cdm_mapping": null,
+   "primary_key": [
+    "inspection_id"
+   ],
+   "columns": {
+    "inspection_id": {
+     "name": "inspection_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "shipment_id": {
+     "name": "shipment_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "shipment.shipment_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "inspector_name": {
+     "name": "inspector_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "inspection_date": {
+     "name": "inspection_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2022-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "result": {
+     "name": "result",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Pass": 0.75,
+       "Fail": 0.1,
+       "Conditional Pass": 0.1,
+       "Pending Retest": 0.05
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "defect_count": {
+     "name": "defect_count",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 0.5,
+      "sigma": 1.0,
+      "min": 0,
+      "max": 100,
+      "round": 0
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "notes": {
+     "name": "notes",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "sentence"
+     },
+     "nullable": true,
+     "null_rate": 0.4,
+     "max_length": 500,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "demand_forecast": {
+   "name": "demand_forecast",
+   "description": "Forecasted demand by period",
+   "cdm_mapping": null,
+   "primary_key": [
+    "forecast_id"
+   ],
+   "columns": {
+    "forecast_id": {
+     "name": "forecast_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "material_id": {
+     "name": "material_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "material.material_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "forecast_date": {
+     "name": "forecast_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2024-01-01",
+      "end": "2026-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "forecast_quantity": {
+     "name": "forecast_quantity",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 6.0,
+      "sigma": 1.2,
+      "min": 1,
+      "max": 50000,
+      "round": 0
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "confidence_level": {
+     "name": "confidence_level",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 0.5,
+      "max": 0.99,
+      "round": 2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "forecast_method": {
+     "name": "forecast_method",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Moving Average": 0.3,
+       "Exponential Smoothing": 0.25,
+       "ARIMA": 0.2,
+       "Machine Learning": 0.15,
+       "Manual": 0.1
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  }
+ },
+ "relationships": [
+  {
+   "name": "po_supplier",
+   "parent": "supplier",
+   "child": "purchase_order",
+   "parent_columns": [
+    "supplier_id"
+   ],
+   "child_columns": [
+    "supplier_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "po_line_po",
+   "parent": "purchase_order",
+   "child": "purchase_order_line",
+   "parent_columns": [
+    "po_id"
+   ],
+   "child_columns": [
+    "po_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "po_line_material",
+   "parent": "material",
+   "child": "purchase_order_line",
+   "parent_columns": [
+    "material_id"
+   ],
+   "child_columns": [
+    "material_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "inventory_warehouse",
+   "parent": "warehouse",
+   "child": "inventory",
+   "parent_columns": [
+    "warehouse_id"
+   ],
+   "child_columns": [
+    "warehouse_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "inventory_material",
+   "parent": "material",
+   "child": "inventory",
+   "parent_columns": [
+    "material_id"
+   ],
+   "child_columns": [
+    "material_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "shipment_po",
+   "parent": "purchase_order",
+   "child": "shipment",
+   "parent_columns": [
+    "po_id"
+   ],
+   "child_columns": [
+    "po_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "shipment_warehouse",
+   "parent": "warehouse",
+   "child": "shipment",
+   "parent_columns": [
+    "warehouse_id"
+   ],
+   "child_columns": [
+    "warehouse_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "shipment_event_shipment",
+   "parent": "shipment",
+   "child": "shipment_event",
+   "parent_columns": [
+    "shipment_id"
+   ],
+   "child_columns": [
+    "shipment_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "quality_inspection_shipment",
+   "parent": "shipment",
+   "child": "quality_inspection",
+   "parent_columns": [
+    "shipment_id"
+   ],
+   "child_columns": [
+    "shipment_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "demand_forecast_material",
+   "parent": "material",
+   "child": "demand_forecast",
+   "parent_columns": [
+    "material_id"
+   ],
+   "child_columns": [
+    "material_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  }
+ ],
+ "business_rules": [
+  {
+   "name": "received_leq_ordered",
+   "type": "column_comparison",
+   "rule": "",
+   "table": "purchase_order_line",
+   "via": null,
+   "when": null
+  },
+  {
+   "name": "shipment_delivery_after_ship",
+   "type": "column_comparison",
+   "rule": "",
+   "table": "shipment",
+   "via": null,
+   "when": null
+  }
+ ],
+ "generation": {
+  "scale": "small",
+  "scales": {
+   "fabric_demo": {
+    "purchase_order": 200
+   },
+   "small": {
+    "purchase_order": 2000
+   },
+   "medium": {
+    "purchase_order": 20000
+   },
+   "large": {
+    "purchase_order": 200000
+   },
+   "xlarge": {
+    "purchase_order": 2000000
+   },
+   "warehouse": {
+    "purchase_order": 20000000
+   },
+   "xxl": {
+    "purchase_order": 200000000
+   },
+   "xxxl": {
+    "purchase_order": 1000000000
+   }
+  },
+  "derived_counts": {
+   "warehouse": {
+    "fixed": 50
+   },
+   "supplier": {
+    "fixed": 200
+   },
+   "material": {
+    "fixed": 300
+   },
+   "purchase_order_line": {
+    "per_parent": "purchase_order",
+    "ratio": 3.0
+   },
+   "inventory": {
+    "per_parent": "material",
+    "ratio": 3.0
+   },
+   "shipment": {
+    "per_parent": "purchase_order",
+    "ratio": 1.2
+   },
+   "shipment_event": {
+    "per_parent": "shipment",
+    "ratio": 4.0
+   },
+   "quality_inspection": {
+    "per_parent": "shipment",
+    "ratio": 0.3
+   },
+   "demand_forecast": {
+    "per_parent": "material",
+    "ratio": 6.0
+   }
+  },
+  "output": {}
+ },
+ "correlated_columns": {}
+}

@@ -289,7 +289,6 @@ class Pools:
             "sentence": lambda: n.SENTENCES,
             "city": lambda: nat._US_CITIES,
             "state_abbr": lambda: nat._US_STATES,
-            "sentence": lambda: n.SENTENCES,
         }
         fn = table.get(provider)
         return {str(x) for x in fn()} if fn else None
@@ -330,6 +329,18 @@ class Pools:
                 return float(ok.mean())
 
             return email, "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS"
+        if st == "faker" and gen.get("provider") == "company_email":
+            stems = {
+                str(c).lower().replace(" ", "").replace(",", "").replace(".", "")[:20]
+                for c in self.names.COMPANY_NAMES
+            }
+
+            def company_email(s: pd.Series) -> float:
+                ex = s.dropna().astype(str).str.extract(r"^([^.@]+)\.([^@]+)@([^@]+)\.com$")
+                ok = ex[0].isin(self.first_l) & ex[1].isin(self.last_l) & ex[2].isin(stems)
+                return float(ok.mean())
+
+            return company_email, "first.last@company(lower, no space/comma/dot, 20)+'.com'"
         if st == "faker" and gen.get("provider") == "street_address":
             suffixes = set(self.native._STREET_SUFFIXES.tolist())
 
@@ -623,7 +634,10 @@ def semantic_rates(T: dict[str, pd.DataFrame], raw: dict) -> dict[str, float]:
                 both_nan = pd.isna(got) & pd.isna(mine)
                 eq = np.zeros(len(df), dtype=bool)
                 ok = ~(pd.isna(got) | pd.isna(mine))
-                eq[ok] = got[ok].astype(float) == mine[ok].astype(float)
+                if pd.api.types.is_numeric_dtype(src) and pd.api.types.is_numeric_dtype(df[cn]):
+                    eq[ok] = got[ok].astype(float) == mine[ok].astype(float)
+                else:  # a text lookup (pulse ``trip.payment_type``): exact equality
+                    eq[ok] = got[ok].astype(str) == mine[ok].astype(str)
                 out[f"{tn}.{cn} == lookup {s_tab}.{s_col} via {via}"] = float(
                     (eq | both_nan).mean()
                 )
