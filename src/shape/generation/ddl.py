@@ -698,11 +698,16 @@ class DdlParser:
             length = col.max_length or 255
             if length <= 10:
                 return {"strategy": "pattern", "format": "{seq:6}"}
-            return {"strategy": "faker", "provider": "text", "max_nb_chars": min(length, 200)}
+            # `args` are the provider's keyword arguments; a top-level key is ignored
+            return {
+                "strategy": "faker",
+                "provider": "text",
+                "args": {"max_nb_chars": min(length, 200)},
+            }
         if base in TYPE_MAP:
             gen = TYPE_MAP[base]
             return None if gen is None else copy.deepcopy(gen)
-        return {"strategy": "faker", "provider": "text", "max_nb_chars": 50}
+        return {"strategy": "faker", "provider": "text", "args": {"max_nb_chars": 50}}
 
     @staticmethod
     def _table_for_singular(candidate: str, names: dict[str, str]) -> str | None:

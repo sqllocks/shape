@@ -76,6 +76,11 @@ FIXES: dict[str, str] = {
         "to what the type holds (DECIMAL(3,1) never gets 100), where the baseline's default "
         "bound does not fit."
     ),
+    "F10": (
+        "A text column's `faker` generator passes max_nb_chars to the provider as `args` "
+        "(ISS-gen, owner issue 9). The baseline writes it as a top-level key, which the "
+        "strategy ignores, so the provider's own default length (200) was used."
+    ),
 }
 
 
@@ -434,4 +439,54 @@ ALLOWED: list[Field | Note] = [
         for c in ("feedback_score", "tax_rate")
     ),
     Field("F9", "smart_retail", "tables.products.columns.rating.generator.max", PLAIN),
+    # F10 entries
+    *(
+        Field("F10", case, f"tables.{table}.columns.{column}.generator.{key}", modes)
+        for case, table, column, modes in (
+            ("adventureworks_sample", "addresses", "address_line1", BOTH),
+            ("adventureworks_sample", "customers", "account_number", BOTH),
+            ("adventureworks_sample", "customers", "territory", PLAIN),
+            ("adventureworks_sample", "inventory_log", "reason", PLAIN),
+            ("adventureworks_sample", "product_categories", "name", SMART),
+            ("adventureworks_sample", "products", "color", SMART),
+            ("ddl_parser__comment_ddl", "dim_branch", "region", PLAIN),
+            ("ddl_parser__comment_ddl", "dim_product", "default_note", BOTH),
+            ("e2e_cli__inline", "customer", "name", BOTH),
+            ("e2e_ddl_pipeline__sql_server_ddl", "product", "category", PLAIN),
+            ("fix_cases", "catalog_item", "title", BOTH),
+            ("fix_cases", "invoice", "model", PLAIN),
+            ("fix_cases_round2", "Receipt", "Memo", BOTH),
+            ("fix_cases_round2", "Vendor", "Name", BOTH),
+            ("fix_cases_round2", "client", "name", BOTH),
+            ("plural_fks", "boxes", "label", BOTH),
+            ("plural_fks", "bus", "label", BOTH),
+            ("quoted_and_exotic", "Customer", "AccountNumber", BOTH),
+            ("quoted_and_exotic", "Customer", "Flag", BOTH),
+            ("quoted_and_exotic", "Customer", "ModifiedDate", BOTH),
+            ("quoted_and_exotic", "Customer", "Rate", BOTH),
+            ("smart_inference__ddl_plural", "categories", "name", BOTH),
+            ("smart_inference__ddl_plural", "orders", "payment_method", PLAIN),
+            ("smart_inference__ddl_plural", "products", "category", PLAIN),
+            ("smart_inference__ddl_plural", "products", "name", BOTH),
+            ("smart_retail", "addresses", "street", BOTH),
+            ("smart_retail", "audit_log", "action", BOTH),
+            ("smart_retail", "customers", "loyalty_tier", BOTH),
+            ("smart_retail", "dim_store", "region", PLAIN),
+            ("smart_retail", "products", "sku", SMART),
+            ("adventureworks_sample", "product_categories", "name", PLAIN),
+            ("adventureworks_sample", "products", "color", PLAIN),
+            ("adventureworks_sample", "products", "name", BOTH),
+            ("adventureworks_sample", "products", "product_number", BOTH),
+            ("quoted_and_exotic", "Customer", "Score", BOTH),
+            ("quoted_and_exotic", "Sales Order", "Payload", BOTH),
+            ("quoted_and_exotic", "line", "long_text", BOTH),
+            ("smart_retail", "order_returns", "reason", PLAIN),
+            ("smart_retail", "orders", "payment_method", PLAIN),
+            ("smart_retail", "products", "category", PLAIN),
+            ("smart_retail", "products", "sku", PLAIN),
+            ("adventureworks_sample", "sales_orders", "payment_method", PLAIN),
+            ("adventureworks_sample", "sales_orders", "territory", PLAIN),
+        )
+        for key in ("args", "max_nb_chars")
+    ),
 ]

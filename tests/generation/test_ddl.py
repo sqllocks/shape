@@ -123,7 +123,13 @@ class TestTables:
         ]
         assert (cols["a"].precision, cols["a"].scale, cols["a"].max_length) == (18, 2, None)
         assert cols["b"].max_length == 40
-        assert cols["g"].generator == {"strategy": "faker", "provider": "text", "max_nb_chars": 50}
+        assert cols["g"].generator == {
+            "strategy": "faker",
+            "provider": "text",
+            "args": {
+                "max_nb_chars": 50
+            },  # ISS-gen: `args` reach the provider; a top-level key did not
+        }
 
     def test_binary_columns_are_left_out(self) -> None:
         schema = parse("CREATE TABLE t (id INT PRIMARY KEY, blob VARBINARY(100), raw BYTEA);")
@@ -226,8 +232,8 @@ class TestGenerators:
             .columns
         )
         assert cols["a"].generator == {"strategy": "pattern", "format": "{seq:6}"}
-        assert cols["b"].generator["max_nb_chars"] == 200
-        assert cols["c"].generator["max_nb_chars"] == 60
+        assert cols["b"].generator["args"]["max_nb_chars"] == 200
+        assert cols["c"].generator["args"]["max_nb_chars"] == 60
 
     def test_generators_are_not_shared_between_columns(self) -> None:
         cols = parse("CREATE TABLE t (a BIT, b BIT);").tables["t"].columns

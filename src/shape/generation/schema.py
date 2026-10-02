@@ -20,6 +20,7 @@ from importlib import resources
 from typing import Any
 
 from shape.errors import ShapeSchemaError
+from shape.generation.spec_keys import unknown_keys
 from shape.schemacheck import validate as _validate_document
 
 SCHEMA_VERSION = 1
@@ -52,6 +53,13 @@ STRATEGY_REQUIRED_KEYS: dict[str, frozenset[str]] = {
     "composite_foreign_key": frozenset({"ref_table", "ref_columns"}),
     "composite_fk_field": frozenset({"source_column", "ref_column"}),
     "native": frozenset(),
+    "address": frozenset(),
+    "bootstrap": frozenset({"dataset", "field"}),
+    "constant": frozenset({"value"}),
+    "choice": frozenset({"values"}),
+    "empirical": frozenset({"quantiles"}),
+    "normal": frozenset({"mean", "stddev"}),
+    "uniform": frozenset({"low", "high"}),
 }
 
 MODES = ("3nf", "star")
@@ -506,6 +514,8 @@ class GenSchema:
                         out.append(
                             Issue("warning", f"Strategy '{c.strategy}' expects key '{key}'", where)
                         )
+                for _, message in unknown_keys(c.strategy, c.generator):
+                    out.append(Issue("warning", message, where))
         return out
 
 

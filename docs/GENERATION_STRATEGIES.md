@@ -50,6 +50,15 @@ schema, `row_counts`, `key_pool(table)`) and `column_def` (the column: `type`, `
    digits. `shape from-ddl` writes them for `DECIMAL(p,s)`, `DATETIME` (3 digits) and
    `DATETIME2(n)` columns.
 
+### Unknown keys
+
+`GenSchema.validate()` warns about a key in a generator that its strategy does not read, with a "did
+you mean" hint for a close name (`sigmaa` for `sigma`), and says so when the key is a **column**
+property: `scale`, `null_rate`, `precision`, `max_length` and `nullable` belong on the column, so
+a `scale` in a `distribution` generator was ignored and the numbers kept 14 decimal places. The keys
+of every built-in strategy are in `shape.generation.spec_keys` (a test checks that no strategy reads
+a key that is missing there); a strategy or distribution family from a plugin is not checked.
+
 ### Helpers
 
 | Module | Function | Use |
