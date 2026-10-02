@@ -168,6 +168,8 @@ def build_connection_string(
     parts["TrustServerCertificate"] = "yes" if trust_server_certificate else "no"
     parts["Connection Timeout"] = str(int(timeout))
     for key, value in (extra or {}).items():
+        if not key or any(ch in key for ch in ";={}") or key != key.strip():
+            raise SqlServerError(f"invalid connection-string key {key!r}")
         parts[key] = _escape_value(value)
     return ";".join(f"{k}={v}" for k, v in parts.items())
 

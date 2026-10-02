@@ -405,3 +405,27 @@ def test_mask_refuses_to_overwrite_its_input(tmp_path):
     )
     assert r.returncode != 0
     assert (tmp_path / "people.csv").read_text() == "email\nalice@example.com\n"
+
+
+def test_connection_string_extra_keys_cannot_inject_attributes():
+    pytest.importorskip("shape_sqlserver")
+    from shape_sqlserver.sql import SqlServerError, build_connection_string
+
+    with pytest.raises(SqlServerError):
+        build_connection_string("s", extra={"Application Name=x;Trusted_Connection": "yes"})
+    assert "ApplicationIntent=ReadOnly" in build_connection_string(
+        "s", extra={"ApplicationIntent": "ReadOnly"}
+    )
+
+
+def test_distribution_gate_only_calls_distributions():
+    import pyarrow as pa
+    from scipy import stats
+
+    from shape.quality.gates import DistributionGate
+
+    warnings: list[str] = []
+    details: dict[str, object] = {}
+    col = pa.chunked_array([pa.array([float(i) for i in range(500)])])
+    DistributionGate._ks(stats, "t.x", {"name": "kstest"}, col, 0.05, warnings, details)
+    assert details == {} and "not a scipy.stats distribution" in warnings[0]
