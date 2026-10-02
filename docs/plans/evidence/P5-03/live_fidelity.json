@@ -132,7 +132,7 @@
             "score": 65.6008,
             "threshold": 70.0,
             "events": 20400,
-            "time": "2026-10-02T10:22:58.476834+00:00",
+            "time": "2026-10-02T10:37:39.808520+00:00",
             "message": "table address: live score 65.60 < 70 after 20,400 events"
           },
           {
@@ -144,7 +144,7 @@
             "score": 62.7871,
             "threshold": 70.0,
             "events": 20400,
-            "time": "2026-10-02T10:22:58.476834+00:00",
+            "time": "2026-10-02T10:37:39.808520+00:00",
             "message": "table customer: live score 62.79 < 70 after 20,400 events"
           },
           {
@@ -156,7 +156,7 @@
             "score": 74.3502,
             "threshold": 85.0,
             "events": 21750,
-            "time": "2026-10-02T10:22:58.514208+00:00",
+            "time": "2026-10-02T10:37:39.842202+00:00",
             "message": "overall: live score 74.35 < 85 after 21,750 events"
           }
         ],
@@ -176,10 +176,10 @@
       "failures": [],
       "clean": {
         "events": 1965400,
-        "live_overall": 92.11032090922713,
+        "live_overall": 92.1103216259272,
         "fidelity_overall": 92.11650329164581,
-        "overall_diff": 0.006182382418685961,
-        "max_table_diff": 0.034004615229733304,
+        "overall_diff": 0.0061816657186142265,
+        "max_table_diff": 0.033998362136742344,
         "worst_table": "order",
         "tables": {
           "address": {
@@ -191,11 +191,11 @@
             "fidelity": 85.68479399308549
           },
           "order": {
-            "live": 98.38087997593145,
+            "live": 98.38088622902444,
             "fidelity": 98.41488459116118
           },
           "order_line": {
-            "live": 96.5362215265998,
+            "live": 96.53622172380746,
             "fidelity": 96.55785835313841
           },
           "product": {
@@ -245,19 +245,19 @@
           {
             "events": 491400,
             "tables": 7,
-            "max_table_diff": 0.004678504617345425,
+            "max_table_diff": 0.004683763892614934,
             "worst_table": "order"
           },
           {
             "events": 1081400,
             "tables": 8,
-            "max_table_diff": 0.034004615229733304,
+            "max_table_diff": 0.033998362136742344,
             "worst_table": "order"
           },
           {
             "events": 1671400,
             "tables": 8,
-            "max_table_diff": 0.034004615229733304,
+            "max_table_diff": 0.033998362136742344,
             "worst_table": "order"
           }
         ],
@@ -266,10 +266,10 @@
       },
       "anomaly": {
         "events": 1965400,
-        "live_overall": 75.61673528749367,
+        "live_overall": 75.61673517086041,
         "fidelity_overall": 75.62306657890164,
-        "overall_diff": 0.006331291407974504,
-        "max_table_diff": 0.035589219472356604,
+        "overall_diff": 0.006331408041233999,
+        "max_table_diff": 0.03558832352223362,
         "worst_table": "order",
         "tables": {
           "address": {
@@ -281,11 +281,11 @@
             "fidelity": 69.49764781012283
           },
           "order": {
-            "live": 89.53613917428537,
+            "live": 89.53614007023549,
             "fidelity": 89.57172839375772
           },
           "order_line": {
-            "live": 71.78662519915699,
+            "live": 71.7866232535075,
             "fidelity": 71.80801760235653
           },
           "product": {
@@ -319,7 +319,7 @@
             "score": 66.4727,
             "threshold": 70.0,
             "events": 40000,
-            "time": "2026-10-02T10:25:19.652501+00:00",
+            "time": "2026-10-02T10:39:08.886803+00:00",
             "message": "table customer: live score 66.47 < 70 after 40,000 events"
           },
           {
@@ -331,7 +331,7 @@
             "score": 61.9683,
             "threshold": 70.0,
             "events": 100000,
-            "time": "2026-10-02T10:25:21.050585+00:00",
+            "time": "2026-10-02T10:39:09.980567+00:00",
             "message": "table address: live score 61.97 < 70 after 100,000 events"
           },
           {
@@ -343,7 +343,7 @@
             "score": 66.5727,
             "threshold": 70.0,
             "events": 1260400,
-            "time": "2026-10-02T10:26:17.408012+00:00",
+            "time": "2026-10-02T10:39:42.936506+00:00",
             "message": "table order_line: live score 66.57 < 70 after 1,260,400 events"
           },
           {
@@ -355,7 +355,7 @@
             "score": 74.9068,
             "threshold": 85.0,
             "events": 1940400,
-            "time": "2026-10-02T10:27:00.773034+00:00",
+            "time": "2026-10-02T10:40:03.741966+00:00",
             "message": "overall: live score 74.91 < 85 after 1,940,400 events"
           }
         ],
@@ -387,7 +387,7 @@
       "control": {
         "fraction": 0.2,
         "alerts": 4,
-        "overall_drop": 16.49358562173346
+        "overall_drop": 16.49358645506679
       }
     },
     {
@@ -478,7 +478,7 @@
             "score": 64.764,
             "threshold": 70.0,
             "events": 20300,
-            "time": "2026-10-02T10:27:16.882701+00:00",
+            "time": "2026-10-02T10:40:19.251284+00:00",
             "message": "table driver: live score 64.76 < 70 after 20,300 events"
           },
           {
@@ -490,7 +490,7 @@
             "score": 65.789,
             "threshold": 70.0,
             "events": 20300,
-            "time": "2026-10-02T10:27:16.882701+00:00",
+            "time": "2026-10-02T10:40:19.251284+00:00",
             "message": "table rider: live score 65.79 < 70 after 20,300 events"
           },
           {
@@ -502,7 +502,7 @@
             "score": 69.6566,
             "threshold": 70.0,
             "events": 20300,
-            "time": "2026-10-02T10:27:16.882701+00:00",
+            "time": "2026-10-02T10:40:19.251284+00:00",
             "message": "table trip: live score 69.66 < 70 after 20,300 events"
           },
           {
@@ -514,7 +514,7 @@
             "score": 69.8752,
             "threshold": 70.0,
             "events": 22600,
-            "time": "2026-10-02T10:27:16.938418+00:00",
+            "time": "2026-10-02T10:40:19.304139+00:00",
             "message": "table vehicle: live score 69.88 < 70 after 22,600 events"
           },
           {
@@ -526,7 +526,7 @@
             "score": 67.6851,
             "threshold": 85.0,
             "events": 22600,
-            "time": "2026-10-02T10:27:16.938418+00:00",
+            "time": "2026-10-02T10:40:19.304139+00:00",
             "message": "overall: live score 67.69 < 85 after 22,600 events"
           }
         ],
@@ -613,7 +613,7 @@
             "score": 68.2947,
             "threshold": 70.0,
             "events": 20400,
-            "time": "2026-10-02T10:27:19.204843+00:00",
+            "time": "2026-10-02T10:40:21.713177+00:00",
             "message": "table fleet: live score 68.29 < 70 after 20,400 events"
           },
           {
@@ -625,7 +625,7 @@
             "score": 70.5873,
             "threshold": 85.0,
             "events": 20400,
-            "time": "2026-10-02T10:27:19.204843+00:00",
+            "time": "2026-10-02T10:40:21.713177+00:00",
             "message": "overall: live score 70.59 < 85 after 20,400 events"
           }
         ],
@@ -645,10 +645,10 @@
       "failures": [],
       "clean": {
         "events": 244000,
-        "live_overall": 99.48914484018434,
+        "live_overall": 99.48914793917933,
         "fidelity_overall": 99.49273548884958,
-        "overall_diff": 0.00359064866523795,
-        "max_table_diff": 0.0071812973304759,
+        "overall_diff": 0.0035875496702431064,
+        "max_table_diff": 0.007175099340500424,
         "worst_table": "reading",
         "tables": {
           "fleet": {
@@ -656,7 +656,7 @@
             "fidelity": 99.07227686377882
           },
           "reading": {
-            "live": 99.90601281658985,
+            "live": 99.90601901457983,
             "fidelity": 99.91319411392033
           }
         },
@@ -674,19 +674,19 @@
           {
             "events": 61000,
             "tables": 2,
-            "max_table_diff": 1.4210854715202004e-13,
+            "max_table_diff": 2.654811723346029e-06,
             "worst_table": "reading"
           },
           {
             "events": 135000,
             "tables": 2,
-            "max_table_diff": 0.0018390450637610911,
+            "max_table_diff": 0.0018387994547310882,
             "worst_table": "reading"
           },
           {
             "events": 208000,
             "tables": 2,
-            "max_table_diff": 0.0011310350350868248,
+            "max_table_diff": 0.001148221493338042,
             "worst_table": "reading"
           }
         ],
@@ -695,10 +695,10 @@
       },
       "anomaly": {
         "events": 244000,
-        "live_overall": 72.32760214786896,
+        "live_overall": 72.32761107644038,
         "fidelity_overall": 72.33138926272909,
-        "overall_diff": 0.003787114860131169,
-        "max_table_diff": 0.007574229720290759,
+        "overall_diff": 0.003778186288712959,
+        "max_table_diff": 0.007556372577425918,
         "worst_table": "reading",
         "tables": {
           "fleet": {
@@ -706,7 +706,7 @@
             "fidelity": 68.37489491149401
           },
           "reading": {
-            "live": 76.28030938424389,
+            "live": 76.28032724138676,
             "fidelity": 76.28788361396418
           }
         },
@@ -720,7 +720,7 @@
             "score": 68.3749,
             "threshold": 70.0,
             "events": 20000,
-            "time": "2026-10-02T10:27:26.374887+00:00",
+            "time": "2026-10-02T10:40:28.908062+00:00",
             "message": "table fleet: live score 68.37 < 70 after 20,000 events"
           },
           {
@@ -732,7 +732,7 @@
             "score": 67.5721,
             "threshold": 70.0,
             "events": 140000,
-            "time": "2026-10-02T10:27:27.336645+00:00",
+            "time": "2026-10-02T10:40:29.877168+00:00",
             "message": "table reading: live score 67.57 < 70 after 140,000 events"
           },
           {
@@ -744,7 +744,7 @@
             "score": 67.9735,
             "threshold": 85.0,
             "events": 140000,
-            "time": "2026-10-02T10:27:27.336645+00:00",
+            "time": "2026-10-02T10:40:29.877168+00:00",
             "message": "overall: live score 67.97 < 85 after 140,000 events"
           }
         ],
@@ -764,7 +764,7 @@
       "control": {
         "fraction": 0.2,
         "alerts": 3,
-        "overall_drop": 27.16154269231538
+        "overall_drop": 27.161536862738956
       }
     }
   ],
@@ -774,59 +774,96 @@
     "repeats": 3,
     "file": {
       "events_per_second": {
-        "none": 106435.61479427938,
-        "tee": 62158.30112396347,
-        "tee+profile": 54960.539578660675
+        "none": 100900.41620608463,
+        "tee": 68528.73919859553,
+        "tee+profile": 61118.979323827654
       },
       "all_runs": {
         "none": [
-          105036.9285139288,
-          114288.25494108528,
-          106435.61479427938
+          100900.41620608463,
+          103366.29818817259,
+          100482.14178297807
         ],
         "tee": [
-          67406.26574216833,
-          61345.45845095092,
-          62158.30112396347
+          68528.73919859553,
+          71970.07463790111,
+          64859.38309883895
         ],
         "tee+profile": [
-          62749.702420032205,
-          54960.539578660675,
-          52224.116571199156
+          71975.17094405407,
+          60364.49033906535,
+          61118.979323827654
         ]
       },
       "overhead_percent": {
-        "tee": 41.60009199542453,
-        "tee+profile": 48.362641879892024
+        "tee": 32.082798292299785,
+        "tee+profile": 39.426434873177485
       }
     },
     "null": {
       "events_per_second": {
-        "none": 1499262.1843509523,
-        "tee": 301348.7729557472,
-        "tee+profile": 163572.16285698308
+        "none": 1463584.7288703388,
+        "tee": 356723.1248512344,
+        "tee+profile": 182583.18470479685
       },
       "all_runs": {
         "none": [
-          1370921.3297793285,
-          1499262.1843509523,
-          1566027.9764642392
+          1742776.0034840659,
+          1463584.7288703388,
+          1210053.7285097118
         ],
         "tee": [
-          291328.70082950505,
-          315802.6304554968,
-          301348.7729557472
+          356723.1248512344,
+          388592.59204630804,
+          321822.9352096609
         ],
         "tee+profile": [
-          163572.16285698308,
-          136370.34398697093,
-          170590.28970834104
+          192556.09601718996,
+          161822.35042941567,
+          182583.18470479685
         ]
       },
       "overhead_percent": {
-        "tee": 79.90019516925223,
-        "tee+profile": 89.08982267649235
+        "tee": 75.62675273835568,
+        "tee+profile": 87.5249323730152
       }
+    }
+  },
+  "realtime": {
+    "workload": "retail:medium",
+    "target_rate": 10000,
+    "none": {
+      "events": 200000,
+      "rate": 9999.949440975954,
+      "rate_error_percent": -0.0005055902404627055,
+      "worst_second_error_percent": 0.5000000000000004,
+      "max_lag_seconds": 0.008075623000422638,
+      "cpu_seconds": 6.112478807000002,
+      "cpu_percent_of_one_core": 28.808740722461884,
+      "live_events": null,
+      "live_score": null
+    },
+    "tee": {
+      "events": 200000,
+      "rate": 9999.374821978754,
+      "rate_error_percent": -0.006251780212462865,
+      "worst_second_error_percent": 1.0000000000000009,
+      "max_lag_seconds": 0.1469048889998703,
+      "cpu_seconds": 10.218073762000017,
+      "cpu_percent_of_one_core": 47.7211978224789,
+      "live_events": 200000,
+      "live_score": 88.005980898062
+    },
+    "tee+profile": {
+      "events": 200000,
+      "rate": 10000.24711015825,
+      "rate_error_percent": 0.002471101582512958,
+      "worst_second_error_percent": 36.00000000000001,
+      "max_lag_seconds": 0.4496796649996213,
+      "cpu_seconds": 11.104415505999896,
+      "cpu_percent_of_one_core": 51.69753136383168,
+      "live_events": 200000,
+      "live_score": 88.005980898062
     }
   },
   "passed": true

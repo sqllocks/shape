@@ -1021,7 +1021,7 @@ class TeeSink:
         live: LiveFidelity,
         *,
         threaded: bool = True,
-        queue_batches: int = 64,
+        queue_batches: int = 256,
     ) -> None:
         self.inner = inner
         self.live = live
