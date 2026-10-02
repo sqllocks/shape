@@ -18,5 +18,8 @@ sim = Simulator([load_module("subscription")], Population(size=10_000, start="20
 events = sim.run_until("2027-01-01")  # a pyarrow.Table
 ```
 
+Behavior modules are plugins of the entry-point group `shape.behaviors`: `shape plugins list`
+shows them, and `python -m shape.plugins.kit sqllocks-shape-behavior` checks them.
+
 Full reference: `docs/plugins/behavior.md` in the repository. Its version always equals core's
 (`sqllocks-shape`) and it is released together with core. It depends only on numpy and pyarrow.
