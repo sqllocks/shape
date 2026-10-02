@@ -12,3 +12,5 @@ pyspark>=4.0
 delta-spark>=4.0
 fabric-user-data-functions
 pytest
+# PF-06: the generation notebooks and generateSample need an installed domain (run from the repo root).
+-e plugins/shape-domains

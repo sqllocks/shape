@@ -132,3 +132,75 @@ Record timings as measured (pool size, rows, seconds); do not extrapolate.
 - [ ] A user-assigned identity: `managedIdentityClientId` set, reads and writes succeed
 - [ ] `baselineUrl` + `failOnDrift = true`: drift fails the gate
 - [ ] Anything in section 6 that needed a correction is written down (open an issue or tell the lead)
+
+## 8. Generating data in a pipeline: `shape_generate_gate_batch` (PF-06)
+
+Built and tested locally: `pytest tests/demo/fabric/test_generate_adf.py -q` runs the script against
+the real Shape CLI with local storage, and evaluates the pipeline's expressions on the gate documents it
+writes. **Not run in a Data Factory or on a Batch pool** (the same limits as sections 1 to 7).
+
+```
+Custom activity GenerateAndCheck --Completed--> Lookup ReadGate --Succeeded--> If CheckGate
+  (Batch node: docker run <shape image>          (reads gate.json from ADLS)    passed -> done
+   python run_generate_gate.py)                                                  else   -> Fail
+```
+
+`batch/run_generate_gate.py` (it imports `run_gate.py`, so upload both to `shape-batch`) calls the Shape CLI:
+`shape generate <domain> --scale S --seed N [--mode M] --format parquet`; profiles the folder of tables in
+process, as one dataset (`shape profile` on a folder reads it as a single table, which a multi-table contract
+cannot be checked against); `shape check` against the contract that the domain's own schema implies for exactly those
+tables (exact row counts, required columns, no extra columns, types, nullability, primary-key uniqueness,
+enumerated values), and, with `baselineUrl`, `shape diff`. It **exits with the gate's exit code**
+(0 passed, 1 the generated data broke the contract or drifted with `failOnDrift`, 2 an error), so the
+Custom activity fails exactly when the gate does. It writes `data/<table>.parquet`, `contract.json`,
+`profile.shape`, `summary.json` and `gate.json` to
+`abfss://<outputFileSystem>@<storageAccount>.dfs.core.windows.net/<outputFolder>/<RunId>/`, even when the
+gate failed (an error gate has only `gate.json`). `gate.json` has the keys of section "How the gate
+works" plus `domain`, `tables` (rows per table) and `contractUrl`.
+
+1. The image must carry the domain. The PF-05 image installs `sqllocks-shape` only, and a domain is a
+   plugin (`sqllocks-shape-domains`), so without it the script exits 2 with `no domain named 'retail'
+   (installed: none installed)`. Build a derived image and use it as the `image` parameter:
+
+   ```dockerfile
+   FROM ghcr.io/sqllocks/shape:0.9.0
+   USER root
+   RUN pip install --no-cache-dir "sqllocks-shape-domains==0.9.0"
+   USER shape
+   ```
+
+   (Before the domains package is on PyPI, `pip install` the wheel built with `pip wheel --no-deps
+   plugins/shape-domains` instead.) **[VERIFY]** that the derived image runs `shape generate retail` as the
+   non-root user, and the image size stays reasonable (the plugin is about 2 MB).
+2. Parameters: `domain`, `scale`, `seed`, `mode` (`3nf`, `star` or empty), `baselineUrl`, `failOnDrift`,
+   `storageAccount`, `outputFileSystem`, `outputFolder`, `image`, `scriptsFolder`,
+   `managedIdentityClientId`. Settings travel in `activity.json`, so nothing user-supplied is spliced
+   into the shell command except the image name; the domain, scale and mode are also validated by the
+   script (letters, digits and underscores only), and a scale with more than `maxRows` rows (50,000,000 by
+   default; not a pipeline parameter) is refused before anything is generated.
+3. **Expected, defaults** (`retail`, `small`, seed 42): Custom activity Succeeded (exit 0); nine tables, 21,750
+   rows, under `<outputFolder>/<RunId>/data/`; `CheckGate` takes the true branch.
+4. **Expected, a broken table** (for example replace one parquet file under `data/` and rerun the
+   check by hand, or lower `maxRows` to see exit 2): Custom activity **Failed** (exit 1 or 2); `FailGate`
+   fails the pipeline with `Shape generated data broke the contract of <domain>: [<violations>]` (or the
+   error).
+5. The data is generated and profiled on the Batch node: size the pool for `scale` (the node's disk holds
+   the Parquet files, its memory the profile).
+
+### 8.1 Verify in the workspace on first run (PF-06)
+
+1. Everything in section 6, for the second Custom activity.
+2. The image has the domains (step 1 above), and `shape generate --format parquet` writes under
+   the task's working directory as the container user.
+3. Uploading about 20 files per run through `adlfs` with the pool's managed identity.
+4. The Lookup reads `gate.json` whose `tables` is an object (it is read as `firstRow`); the message
+   expression uses only `firstRow.error` and `firstRow.violations`.
+
+### 8.2 Live dry-run checklist (PF-06)
+
+- [ ] `run_generate_gate.py` and `run_gate.py` uploaded to `shape-batch`; the derived image (step 1) has `sqllocks-shape-domains`
+- [ ] Defaults: pipeline Succeeded; nine Parquet tables, `contract.json`, `profile.shape`, `summary.json`, `gate.json` in ADLS; a second run with the same seed writes the same tables
+- [ ] A bad domain (`nope`): exit 2, `gate.json.error` names it, the pipeline fails with that message
+- [ ] A broken table (edit one Parquet file and rerun the check, or use a test image): exit 1, `FailGate` shows the violations
+- [ ] `baselineUrl` + `failOnDrift = true` with another seed: drift fails the gate
+- [ ] Timings (generate, profile, upload) recorded; anything in section 8.1 that needed a correction is written down

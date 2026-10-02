@@ -12,6 +12,7 @@ tools under the same conditions.
 | `generate.py` | Writes one run of a domain as Parquet, for `--impl spindle\|reference_port\|shape`, into `$BENCH_OUT_DIR/<impl>/<domain>/<scale>/seed<N>/`. Each impl runs in its own venv. |
 | `verify.py` | Equivalence verifier (T-21 clauses (a)-(h)); reads Parquet only, in the Spindle venv. Tables, FKs and business rules come from `../dump_schema.py`. Exits 1 unless every clause holds, 2 if a required run directory is missing. |
 | `export_retail.py` | Writes the `shape-domains` plugin's retail data (the schema, from the baseline's dump, and the four reference datasets, from the baseline checkout); `--check` proves the shipped files equal what it would write. |
+| `pipeline_run.py` | Writes what the Fabric generate notebook and the `generateSample` function produce (run in the `fabric-demo` environment) as a run directory, so `verify.py --impl shape` checks the pipeline path against T-21. Use a `BENCH_OUT_DIR` of its own: it replaces the product path's run. |
 | `bench.py` | Benchmark harness: every run is a fresh process (median of `--runs`), timing generate + write through `generate.py`. |
 
 The recorded results quoted below (`verify_*` reports for small, medium and large, the
