@@ -250,7 +250,7 @@ def probes(ctx: h.Context) -> list[Report]:
         ["transaction_id", "account_id", "amount", "transaction_date"]
     )
     tables = {"transaction": renamed, "account": data["account"]}
-    cfg = {"reversal_probability": 0.2, "settlement_batch_hours": 4.0}
+    cfg = {"reversal_probability": 0.2, "settlement_batch_hours": 4.0, "duration_hours": 24.0}
     truth, _ = _windows(data, {"duration_hours": 24.0, "settlement_batch_hours": 4.0})
     rep = Report("SIM-6 financial domain column names")
     theirs = h.baseline_once(SIM, cfg, tables, 5, "domain-names")

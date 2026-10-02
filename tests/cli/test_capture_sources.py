@@ -113,16 +113,17 @@ def test_a_dataset_folder_is_one_table_per_file(
     folder = tmp_path / "ds"
     folder.mkdir()
     pq.write_table(orders(), folder / "orders.parquet")
-    pq.write_table(pa.table({"cid": pa.array(range(5)), "name": pa.array(list("abcde"))}), folder / "customers.parquet")
+    pq.write_table(
+        pa.table({"cid": pa.array(range(5)), "name": pa.array(list("abcde"))}),
+        folder / "customers.parquet",
+    )
     doc = model(capsys, str(folder), "--dataset")
     assert sorted(doc["tables"]) == ["customers", "orders"]
     assert doc["tables"]["orders"]["rows"] == N
     out = tmp_path / "ds.shape"
     assert run(capsys, "capture", str(folder), "--dataset", "-o", str(out))[0] == 0
     # a folder whose files do not share their columns is not one table
-    with pytest.raises(SystemExit) as exc:
-        main(["capture", str(folder)])
-    assert exc.value.code == 2
+    assert main(["capture", str(folder)]) == 2
 
 
 def test_dataset_compatibility_names_the_table(
@@ -132,7 +133,9 @@ def test_dataset_compatibility_names_the_table(
     for folder, cust in ((before, ["cid", "name"]), (after, ["cid"])):
         folder.mkdir()
         pq.write_table(orders(), folder / "orders.parquet")
-        pq.write_table(pa.table({c: pa.array(range(5)) for c in cust}), folder / "customers.parquet")
+        pq.write_table(
+            pa.table({c: pa.array(range(5)) for c in cust}), folder / "customers.parquet"
+        )
     for folder in (before, after):
         assert run(capsys, "capture", str(folder), "--dataset", "-o", f"{folder}.shape")[0] == 0
     code, out = run(capsys, "compatibility", f"{before}.shape", f"{after}.shape")
@@ -151,7 +154,9 @@ CHANGES = {
 }
 
 
-def compat(capsys: pytest.CaptureFixture[str], base: Path, today: Path) -> tuple[int, dict[str, Any]]:
+def compat(
+    capsys: pytest.CaptureFixture[str], base: Path, today: Path
+) -> tuple[int, dict[str, Any]]:
     code, out = run(capsys, "compatibility", str(base), str(today))
     return code, json.loads(out)
 
@@ -159,7 +164,16 @@ def compat(capsys: pytest.CaptureFixture[str], base: Path, today: Path) -> tuple
 def test_unchanged_feed_is_compatible(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     for name in ("base", "today"):
         pq.write_table(orders(), tmp_path / f"{name}.parquet")
-        assert run(capsys, "capture", str(tmp_path / f"{name}.parquet"), "-o", str(tmp_path / f"{name}.shape"))[0] == 0
+        assert (
+            run(
+                capsys,
+                "capture",
+                str(tmp_path / f"{name}.parquet"),
+                "-o",
+                str(tmp_path / f"{name}.shape"),
+            )[0]
+            == 0
+        )
     code, report = compat(capsys, tmp_path / "base.shape", tmp_path / "today.shape")
     assert code == 0 and report["compatible"] and report["issues"] == []
 
@@ -196,15 +210,11 @@ def test_delta_version_and_as_of_are_honoured(
     assert "qty" not in latest["columns"] and "qty" in v0["columns"]
     assert model(capsys, str(delta), "--version", "1") == latest
     assert model(capsys, str(delta), "--as-of", "2999-01-01T00:00:00Z") == latest
-    with pytest.raises(SystemExit) as exc:
-        main(["capture", str(delta), "--version", "9"])
-    assert exc.value.code == 2
+    assert main(["capture", str(delta), "--version", "9"]) == 2
 
 
 def test_version_needs_a_delta_table(tmp_path: Path, feeds: dict[str, Path]) -> None:
-    with pytest.raises(SystemExit) as exc:
-        main(["capture", str(feeds["parquet"]), "--version", "0"])
-    assert exc.value.code == 2
+    assert main(["capture", str(feeds["parquet"]), "--version", "0"]) == 2
 
 
 def test_an_empty_parquet_feed_keeps_its_columns(

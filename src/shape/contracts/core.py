@@ -160,7 +160,9 @@ def compatibility(before: Any, after: Any, mode: str = "backward") -> Compatibil
     old_model, new_model = model_of(before), model_of(after)
     many = len(old_model["tables"]) != 1 or len(new_model["tables"]) != 1
 
-    def one(oc: dict[str, Any], nc: dict[str, Any], direction: str, at: str) -> list[CompatibilityIssue]:
+    def one(
+        oc: dict[str, Any], nc: dict[str, Any], direction: str, at: str
+    ) -> list[CompatibilityIssue]:
         issues = []
         for n, c in oc.items():
             if n not in nc:

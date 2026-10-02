@@ -66,9 +66,15 @@ bursts (`fraud_burst_enabled`, `fraud_burst_probability` per hour, `fraud_burst_
 `transaction_date`. `transactions` is the original rows followed by the reversals and the fraud
 events; **its columns follow the configuration, not the run** (a run with no fraud burst still
 has the fraud columns, null), so a stream's schema does not change between runs.
-`duration_hours` is the window to simulate from the earliest transaction: set it to the span of the
-transactions you want settled. `settlements` count and total the transactions in each window exactly; a partial or failed batch
-carries a failure reason.
+**The default window is the whole period.** `duration_hours` is unset by default, and the window
+is then the span of the transactions (first to last transaction time) plus one settlement batch,
+the lag a transaction waits to settle, so the last transactions settle too. A table that covers
+months gets settlements, fraud-burst chances and clearing for every month; `stats["duration_hours"]`
+reports the window used. Set `duration_hours` to override it (the window starts at the earliest
+transaction). Without a time column the default is 24 hours. The lag itself is unchanged: a
+transaction settles when its batch ends, and the share of settled, partial and failed batches
+follows `settlement_success_rate`. `settlements` count and total the transactions in each window
+exactly; a partial or failed batch carries a failure reason.
 
 ### IoT
 
