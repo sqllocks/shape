@@ -250,6 +250,25 @@ jobs:
         run: source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/db_1to1/verify.py --mssql "$SHAPE_TEST_MSSQL;Database=tempdb"
       - if: always()
         run: docker compose -f ci/emulators/docker-compose.yml down -v
+  databases-e2e:
+    # ISS2-sinks: the PostgreSQL (COPY) and MySQL sinks against real servers
+    # (ci/emulators/docker-compose.yml), drivers installed through the plugin's extras.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SHAPE_TEST_POSTGRES: "postgresql://shape@localhost:5432/shape"
+      SHAPE_TEST_MYSQL: "mysql://shape@localhost:3306/shape"
+      SHAPE_POSTGRES_PASSWORD: shape_emulator
+      SHAPE_MYSQL_PASSWORD: shape_emulator
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait postgres mysql
+      - run: pip install -e '.[dev]' -e 'plugins/shape-databases[postgres,mysql]'
+      - run: python -m pytest -m emulator plugins/shape-databases/tests -q
+      - if: always()
+        run: docker compose -f ci/emulators/docker-compose.yml down -v
   artifact-fuzz:
     # P7-04: the artifact fuzzer (.shape containers, signatures, manifests, profile JSON,
     # contracts, pack and GSL YAML) with a fresh seed. A finding prints its seed and iteration and

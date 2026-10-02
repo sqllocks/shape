@@ -26,7 +26,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PLUGINS = ROOT / "plugins"
 # T-09 / section 5 layout: the first-party distributions.
-EXPECTED = ("kafka", "eventhubs", "fabric", "sqlserver", "domains", "simulation", "mcp")
+EXPECTED = (
+    "kafka",
+    "eventhubs",
+    "fabric",
+    "sqlserver",
+    "databases",
+    "domains",
+    "simulation",
+    "mcp",
+)
 
 
 def core_version() -> str:
