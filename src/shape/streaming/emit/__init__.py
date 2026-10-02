@@ -18,8 +18,15 @@ from shape.streaming.emit.formats import (
     read_events,
 )
 from shape.streaming.emit.rate import Burst, RateSchedule, parse_burst
-from shape.streaming.emit.runtime import EmitConfig, EmitReport, EmitRunner
-from shape.streaming.emit.sinks import EmitterSink, EventSink, FileSink, MemorySink, StdoutSink
+from shape.streaming.emit.runtime import EmitConfig, EmitReport, EmitRunner, EventSequence
+from shape.streaming.emit.sinks import (
+    EmitterSink,
+    EventSink,
+    FileSink,
+    MemorySink,
+    StdoutSink,
+    open_sink,
+)
 from shape.streaming.emit.source import EventBlock, EventPlan
 
 __all__ = [
@@ -36,6 +43,7 @@ __all__ = [
     "EmitterSink",
     "EventBlock",
     "EventPlan",
+    "EventSequence",
     "EventSink",
     "FileSink",
     "MemorySink",
@@ -45,6 +53,7 @@ __all__ = [
     "decode_line",
     "encode_batch",
     "event_key",
+    "open_sink",
     "parse_burst",
     "read_events",
     "resolve_mutators",
