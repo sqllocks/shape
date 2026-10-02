@@ -5,7 +5,6 @@ from collections import Counter, defaultdict
 
 import numpy as np
 from helpers import T0
-
 from shape_behavior import Population, SimConfig, Simulator, load_module
 
 

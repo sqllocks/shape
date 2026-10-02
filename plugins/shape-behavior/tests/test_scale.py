@@ -3,7 +3,6 @@
 import pyarrow as pa
 import pytest
 from helpers import T0
-
 from shape_behavior import Population, SimConfig, Simulator, load_module
 
 pytestmark = pytest.mark.heavy

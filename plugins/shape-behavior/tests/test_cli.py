@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pyarrow.parquet as pq
 import pytest
-
 from shape_behavior import EVENT_SCHEMA
 from shape_behavior.cli import BehaveCommand
 
