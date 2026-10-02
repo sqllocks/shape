@@ -112,8 +112,21 @@ def spread_query(
 
 # --- connection strings ------------------------------------------------------------------
 
-_SECRET_KEYS = ("pwd", "password", "accesstoken", "access token")
-_PAIR = re.compile(r"(?P<key>[^=;{}]+)=(?P<value>\{(?:[^}]|\}\})*\}|[^;]*)")
+_SECRET_KEYS = (
+    "pwd",
+    "password",
+    "accesstoken",
+    "access token",
+    "client_secret",
+    "clientsecret",
+    "sharedaccesskey",
+    "accountkey",
+    "sas",
+)
+# A value is a brace-quoted ODBC value, a quoted string (which may hold ``;``), or runs to ``;``.
+_PAIR = re.compile(
+    r"(?P<key>[^=;{}]+)=(?P<value>\s*\{(?:[^}]|\}\})*\}|\s*\"[^\"]*\"|\s*'[^']*'|[^;]*)"
+)
 
 
 def _escape_value(value: str) -> str:
@@ -155,6 +168,8 @@ def build_connection_string(
     parts["TrustServerCertificate"] = "yes" if trust_server_certificate else "no"
     parts["Connection Timeout"] = str(int(timeout))
     for key, value in (extra or {}).items():
+        if not key or any(ch in key for ch in ";={}") or key != key.strip():
+            raise SqlServerError(f"invalid connection-string key {key!r}")
         parts[key] = _escape_value(value)
     return ";".join(f"{k}={v}" for k, v in parts.items())
 

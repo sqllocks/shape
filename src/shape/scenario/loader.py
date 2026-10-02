@@ -314,10 +314,17 @@ def read_yaml(path: Path, what: str) -> Any:
 
     if not path.is_file():
         raise FileNotFoundError(f"{what} not found: {path}")
+    from shape.security.yamlsafe import MAX_BYTES, safe_load_yaml
+
+    if path.stat().st_size > MAX_BYTES:
+        raise PackError(f"{what} {path} is larger than {MAX_BYTES} bytes")
     try:
-        return yaml.safe_load(path.read_text(encoding="utf-8"))
+        return safe_load_yaml(path.read_text(encoding="utf-8"))
     except yaml.YAMLError as exc:
         raise PackError(f"{what} {path} is not valid YAML: {exc}") from exc
+    except (ValueError, UnicodeDecodeError) as exc:
+        # Too many aliases, too deep, or not UTF-8: a rejection, not a crash (P7-04).
+        raise PackError(f"{what} {path} cannot be parsed: {exc}") from exc
 
 
 # ---- the loader ----------------------------------------------------------------------------

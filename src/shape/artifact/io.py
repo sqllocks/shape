@@ -178,6 +178,25 @@ def read_artifact(path: Any, *args: Any, **kwargs: Any) -> ArtifactRead:
         raise ArtifactError(f"corrupt .shape archive: {type(e).__name__}: {e}") from e
 
 
+MAX_MANIFEST_BYTES = 4 * 1024 * 1024
+
+
+def read_manifest_bytes(path: Any) -> bytes:
+    """The raw ``manifest.json`` of a container, read within ``MAX_MANIFEST_BYTES``.
+
+    For the callers that only need the manifest (a kind sniff, a name): a bare
+    ``ZipFile.read`` would inflate a hostile member of any size into memory (P7-04)."""
+    with zipfile.ZipFile(path) as z:
+        info = z.getinfo("manifest.json")
+        if info.file_size > MAX_MANIFEST_BYTES:
+            raise ArtifactError("manifest too large")
+        with z.open(info) as fh:
+            raw = fh.read(MAX_MANIFEST_BYTES + 1)
+    if len(raw) > MAX_MANIFEST_BYTES:
+        raise ArtifactError("manifest too large")
+    return raw
+
+
 def _read_artifact(
     path: Any,
     max_member_bytes: int = 512 * 1024 * 1024,
@@ -198,7 +217,7 @@ def _read_artifact(
         if "manifest.json" not in names:
             raise ArtifactError("missing manifest")
         mi = z.getinfo("manifest.json")
-        if mi.file_size > 4 * 1024 * 1024:
+        if mi.file_size > MAX_MANIFEST_BYTES:
             raise ArtifactError("manifest too large")
         if mi.compress_size and mi.file_size / mi.compress_size > max_ratio:
             raise ArtifactError("manifest compression ratio limit")
@@ -212,7 +231,11 @@ def _read_artifact(
             # so it is checked before anything in the manifest is trusted.
             from .signing import verify_manifest_signature
 
-            sig = z.read(SIGNATURE_MEMBER) if SIGNATURE_MEMBER in names else None
+            sig = None
+            if SIGNATURE_MEMBER in names:
+                if z.getinfo(SIGNATURE_MEMBER).file_size > _MAX_SIGNATURE_BYTES:
+                    raise ArtifactError("signature too large")
+                sig = z.read(SIGNATURE_MEMBER)
             verify_manifest_signature(rawm, sig, verify_key)
             from .signing import key_id
 

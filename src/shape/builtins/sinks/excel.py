@@ -41,7 +41,9 @@ class ExcelSink:
         path = local_path(uri)
         if path.is_dir() or uri.endswith(("/", "\\")):
             path.mkdir(parents=True, exist_ok=True)
-            target = path / f"{table}.xlsx"
+            from shape.security.names import contained
+
+            target = contained(path, table, ".xlsx")
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
             target = path
