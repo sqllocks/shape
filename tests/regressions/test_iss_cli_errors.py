@@ -21,7 +21,7 @@ def work(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     (tmp_path / "obj.json").write_text('{"a": 1}')
     (tmp_path / "junk.shape").write_text("x")
     assert main(["profile", "people.csv", "-o", "p.shape"]) == 0
-    assert main(["registry", "reg", "commit", "people", "p.shape"]) == 0
+    assert main(["registry", "reg", "commit", "people", "p.shape", "--safe"]) == 0
     return tmp_path
 
 
@@ -34,7 +34,6 @@ COMMANDS = {
     "compatibility-bad-json": ["compatibility", "bad.json", "bad.json"],
     "registry-checkout-unknown-ref": ["registry", "reg", "checkout", "people", "nope"],
     "registry-commit-missing-file": ["registry", "reg", "commit", "x", "nope.shape"],
-    "registry-commit-no-path": ["registry", "reg", "commit", "x"],
     "registry-tag-unknown-ref": ["registry", "reg", "tag", "people", "v1", "nope"],
     "registry-promote-unknown-ref": ["registry", "reg", "promote", "people", "nope", "prod"],
     "registry-bad-name": ["registry", "reg", "commit", "bad/name", "p.shape"],
@@ -125,3 +124,12 @@ def test_programming_errors_still_raise(work: Path, monkeypatch: pytest.MonkeyPa
     monkeypatch.setattr(cli, "_cmd_inspect", boom)
     with pytest.raises(ZeroDivisionError):
         main(["inspect", "p.shape"])
+
+
+def test_registry_commit_without_a_path_is_a_usage_error(
+    work: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    with pytest.raises(SystemExit) as exc:
+        main(["registry", "reg", "commit", "x"])
+    assert exc.value.code == 2
+    assert "ARTIFACT" in capsys.readouterr().err

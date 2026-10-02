@@ -748,12 +748,9 @@ def _build_parser(plugin_commands=()):
 
     add_fidelity_arguments(fi)
     add_drift_parser(sub)
-    rg = sub.add_parser("registry")
-    rg.add_argument("root")
-    rg.add_argument("action", choices=("commit", "checkout", "tag", "promote", "log"))
-    rg.add_argument("name")
-    rg.add_argument("arg1", nargs="?")
-    rg.add_argument("arg2", nargs="?")
+    from shape.cli.registry import add_arguments as add_registry_arguments
+
+    add_registry_arguments(sub)
     for rec in plugin_commands:  # listed in --help only; the plugin loads when it is run
         sub.add_parser(rec.name, help=f"(plugin {rec.source})", add_help=False)
     return p
@@ -1080,27 +1077,9 @@ def _dispatch(argv):
         _dump(cert.to_dict())
         return 0 if cert.score >= a.threshold else 3
     if a.cmd == "registry":
-        from shape.registry import LocalRegistry
+        from shape.cli.registry import run as run_registry
 
-        r = LocalRegistry(a.root)
-        if a.action == "commit":
-            if not a.arg1:
-                raise ValueError("registry commit needs the path of the artifact to commit")
-            _dump({"content_id": r.commit(a.name, open(a.arg1, "rb").read())})
-        elif a.action == "checkout":
-            data = r.checkout(a.name, a.arg1 or "latest")
-            if a.arg2:
-                open(a.arg2, "wb").write(data)
-                _dump({"written": a.arg2})
-            else:
-                sys.stdout.buffer.write(data)
-        elif a.action == "tag":
-            _dump({"content_id": r.tag(a.name, a.arg1, a.arg2 or "latest")})
-        elif a.action == "promote":
-            _dump({"content_id": r.promote(a.name, a.arg1, a.arg2)})
-        else:
-            _dump(r.log(a.name))
-        return 0
+        return run_registry(a)
     from shape.privacy.measure import k_anonymity
     from shape.profile.dependencies import candidate_key, functional_dependency
 
