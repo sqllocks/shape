@@ -10,7 +10,7 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from shape.scale.sinks.base import BaseSink, Sink, SinkError
+from shape.scale.sinks.base import BaseSink, FabricConnectionProfile, Sink, SinkError
 
 SINK_NAMES = ("memory", "parquet", "lakehouse", "warehouse", "sql_database", "kql")
 
@@ -117,4 +117,13 @@ def redact(config: Mapping[str, Mapping[str, Any]]) -> dict[str, dict[str, Any]]
     return {sink: {k: one(k, v) for k, v in cfg.items()} for sink, cfg in config.items()}
 
 
-__all__ = ["SINK_NAMES", "BaseSink", "Sink", "SinkError", "build_sink", "build_sinks", "redact"]
+__all__ = [
+    "SINK_NAMES",
+    "BaseSink",
+    "FabricConnectionProfile",
+    "Sink",
+    "SinkError",
+    "build_sink",
+    "build_sinks",
+    "redact",
+]

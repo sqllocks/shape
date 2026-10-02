@@ -8,6 +8,7 @@ holding every table until the end. The router calls a sink from one thread at a 
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
@@ -63,3 +64,12 @@ def sink_name(sink: object) -> str:
     """A sink's name for messages: its ``name`` attribute, else its class name."""
     name = getattr(sink, "name", None)
     return name if isinstance(name, str) and name else type(sink).__name__
+
+
+@dataclass(frozen=True)
+class FabricConnectionProfile:
+    """The sign-in a Fabric-backed sink shares: a bearer ``token`` and the ``endpoint`` it is for.
+    The token is left out of ``repr`` so it does not reach a log line."""
+
+    token: str = field(repr=False)
+    endpoint: str

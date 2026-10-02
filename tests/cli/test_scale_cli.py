@@ -164,7 +164,7 @@ def test_bad_scale_arguments_exit_2(capsys, schema_file, extra, text):
 
 def test_scale_mode_needs_a_target(capsys):
     code, _, err = run(capsys, "generate", "--scale-mode", "local_mp")
-    assert code == 2 and "needs a domain or a generation schema file" in err
+    assert code == 2 and "name a domain or a schema file" in err
 
 
 def test_a_failing_sink_exits_1_and_names_the_job_to_resume(capsys, tmp_path, schema_file):

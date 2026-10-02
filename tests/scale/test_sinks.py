@@ -287,3 +287,10 @@ def test_redact_masks_secrets_and_connection_string_passwords():
     assert "hunter2" not in json.dumps(out) and "s3cret" not in json.dumps(out)
     assert out["warehouse"]["auth"] == "spn" and out["parquet"] == {"output_dir": "/data"}
     assert "Server=x" in out["warehouse"]["connection_string"]
+
+
+def test_connection_profile_keeps_its_token_out_of_repr():
+    from shape.scale.sinks import FabricConnectionProfile
+
+    profile = FabricConnectionProfile(token="tok-9", endpoint="https://x")
+    assert "tok-9" not in repr(profile) and profile.token == "tok-9"
