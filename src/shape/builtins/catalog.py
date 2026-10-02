@@ -57,6 +57,8 @@ BUILTINS: tuple[tuple[str, str, str], ...] = (
     ),
     ("shape.strategies", "record_sample", "shape.builtins.strategies.reference_data:RecordSample"),
     ("shape.strategies", "record_field", "shape.builtins.strategies.reference_data:RecordField"),
+    ("shape.strategies", "hierarchy", "shape.builtins.strategies.hierarchy:Hierarchy"),
+    ("shape.strategies", "hierarchy_field", "shape.builtins.strategies.hierarchy:HierarchyField"),
     ("shape.strategies", "bootstrap", "shape.builtins.strategies.bootstrap:Bootstrap"),
     ("shape.strategies", "temporal", "shape.builtins.strategies.temporal:Temporal"),
     ("shape.strategies", "foreign_key", "shape.builtins.strategies.keys:ForeignKey"),
