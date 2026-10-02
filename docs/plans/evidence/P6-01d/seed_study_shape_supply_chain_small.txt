@@ -1,0 +1,15 @@
+generating shape supply_chain/small/seed1043
+generating shape supply_chain/small/seed1044
+generating shape supply_chain/small/seed1045
+generating shape supply_chain/small/seed1046
+generating shape supply_chain/small/seed1047
+generating shape supply_chain/small/seed1048
+generating shape supply_chain/small/seed1049
+1042 below floor: ['purchase_order_line']
+1043 below floor: none
+1044 below floor: ['purchase_order_line']
+1045 below floor: ['material']
+1046 below floor: ['material']
+1047 below floor: ['material']
+1048 below floor: ['material']
+1049 below floor: none
