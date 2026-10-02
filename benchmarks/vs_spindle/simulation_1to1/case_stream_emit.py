@@ -172,7 +172,15 @@ def _key(e: dict[str, Any]) -> tuple[str, int, bool]:
     return data.get("_shape_table"), data.get("_shape_seq"), bool(e.get("replay", False))
 
 
-def compare_events(checks: sc.Checks, label: str, b_path: Path, s_path: Path, *, ids: bool = True) -> list[dict[str, Any]]:
+def compare_events(
+    checks: sc.Checks,
+    label: str,
+    b_path: Path,
+    s_path: Path,
+    *,
+    ids: bool = True,
+    ignore_data: tuple[str, ...] = (),
+) -> list[dict[str, Any]]:
     """The events of Shape's file equal the baseline's, in the same order, field by field."""
     be = [baseline_event(e) for e in read_events(b_path)]
     se = read_events(s_path)
@@ -217,7 +225,7 @@ def compare_events(checks: sc.Checks, label: str, b_path: Path, s_path: Path, *,
     checks.add(f"{label}: data field names and order (mapped)", order_ok, "")
     bdf = pd.DataFrame([x["data"] for x in be])
     sdf = pd.DataFrame([{k: v for k, v in y.get("data", {}).items() if k not in SHAPE_ONLY_DATA} for y in se])
-    ok, why = cmp.frames_equal(bdf, sdf, same_order=False)
+    ok, why = cmp.frames_equal(bdf, sdf, same_order=False, ignore=ignore_data)
     checks.add(f"{label}: data values equal", ok, why)
     # the event time field Shape adds is the table's first date or timestamp column
     et_bad = 0
