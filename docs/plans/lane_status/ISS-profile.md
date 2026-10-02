@@ -59,9 +59,34 @@ above.
 * Not allow-listed because no dataset triggers them: `std = null` for a single value, 256-character cuts, the
   correlation cap (no dataset has more than 256 numeric columns). New fields are additive and not compared.
 
-## Checks run in this session
+## Existing tests changed (intentional behaviour changes, no test skipped, xfailed or loosened elsewhere)
 
-(see the end of the file for the suite results)
+* `tests/demo/core/test_artifact.py::test_nan_and_infinity_round_trip` pinned `std == "NaN"` and `min == -inf` for a column
+  with NaN and infinity (#22 removes both). It still round-trips the profile through a `.shape`, now asserting the counts
+  and the finite statistics; the codec's own NaN/infinity encoding stays covered by the next test in that file.
+* `tests/profile/test_enum_rule.py::test_top_values_are_kept_for_every_column`: a unique 700-value *text* column no longer
+  lists its top 500 (#37); the same check on a unique numeric column keeps asserting 500.
+* `tests/generation/test_fit.py::test_the_plan_covers_every_field_of_every_column` (unchanged) needed the new column fields
+  in `generation/fit.py` (`COLUMN_FIELDS`, each "not modelled" with a reason) and `generation/learn.py` (they are carried
+  into the loaded profile). ISS-gen may touch the `precision`/`scale` plan lines when generation honours decimals.
+* `summary()` keeps its specified key set (a test pins it): the new fields are in `to_dict()` and the `.shape` only.
+
+## Checks run in this session (final tree, after merging `origin/build/main-plan`, which only changed CI workflows)
+
+* `ruff check` and `ruff format --check` (src, tests, plugins, benchmarks/vs_spindle): clean. `mypy` (strict): no issues in
+  307 files. `vulture src/shape scripts/vulture_whitelist.py --min-confidence 80`: clean. `lint-imports`: 1 kept, 0 broken.
+  `python scripts/check_user_facing.py`: clean. `bandit -q -r src -ll`: no findings (only the existing `nosec` notes).
+* Rust: no Rust file changed, so `cargo fmt/clippy/test` were not re-run.
+* START: median of 10 runs of `shape --version`, 45 ms (limit 300 ms).
+* Profile parity `verify.py --impl shape`: exit 0, 49/49 PASS under `SHAPE_KERNEL=rust` and under `SHAPE_KERNEL=python`.
+* `pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`: 4,561 passed under each kernel
+  (`.[advanced]` and `-e plugins/shape-domains` installed first).
+* `pytest -m heavy tests/kernel tests/profile`: see the last line of this file.
+* Cost of the new per-column work (in-process, same file, with and without `pattern_rates`, best of 3, machine loaded by
+  another run): d1.csv 0.09 s to 0.13 s, d2.csv 2.17 s to 2.35 s, d4.parquet unchanged within noise. The first version of
+  the rates cost 3x on d1; the substring prefilters and the 50,000-distinct cap brought it here. The tracked G1 benchmarks
+  (T-19, PROF-IN/PROF-CLI) were **not** re-run in this session: the lead should run them on the merged tree before G1 is
+  re-judged.
 
 ## Proposals for the lead / owner (not built)
 
