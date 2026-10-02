@@ -83,6 +83,15 @@ def test_pattern_rates_cover_many_distinct_values(kernel):
     assert _col(values)["pattern_contains_rates"]["ssn"] == pytest.approx(6 / 3006, abs=1e-5)
 
 
+def test_pattern_rates_above_the_distinct_cap_are_estimated_from_a_sample(kernel, monkeypatch):
+    from shape.profile.reference import column
+
+    monkeypatch.setattr(column, "_RATE_MAX_DISTINCT", 200)
+    rng = random.Random(5)
+    values = [f"note {i}" if i % 10 else f"ssn {_ssn(rng)}" for i in range(2000)]  # 10% SSNs
+    assert _col(values)["pattern_contains_rates"]["ssn"] == pytest.approx(0.1, abs=0.03)
+
+
 def test_safe_profile_keeps_a_sparse_pii_column_pattern_only(kernel, tmp_path):
     values = _mixed(0.01)  # three categories and 1% SSNs
     clean = ["gift", "fragile", "leave at door", "box"] * 1000

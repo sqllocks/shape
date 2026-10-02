@@ -13,7 +13,7 @@ A full profile holds value-bearing evidence (exact minimum and maximum, every en
 - numeric extremes become winsorized `bounds` taken from the quantile fingerprint (p1/p99, or p0.5/p99.5 when widened);
 - a category with fewer rows than the minimum cohort `k` (default 5, `--k N`; 11 with `--sensitive`; `--column-k COLUMN=N` per column) is folded into one `__OTHER__` bucket;
 - literal category labels are kept only for a low-entropy set of letters-only labels; numeric and date categories become a coarse histogram, and anything else gets hashed keys;
-- a column whose detected pattern is personal data (email, SSN, card, phone, IP, IBAN, postal code), or that has nearly one distinct value per row, keeps its pattern and length distribution only. Detection is by value and is defence in depth, not a completeness guarantee;
+- a column whose detected pattern is personal data (email, SSN, card, phone, IP, IBAN, postal code), or that has nearly one distinct value per row, keeps its pattern and length distribution only. Detection is by value and is defence in depth, not a completeness guarantee; the profile also records, per text column, the share of values that are wholly each pattern (`pattern_rates`) and the share that contain an SSN, email address or card number inside text (`pattern_contains_rates`), measured on every distinct value (up to 200,000 per column), and a column where any of those families (SSN, email, card, IP, IBAN) reaches 0.1% (`pii_pattern_floor`) is pattern-only too, however few the values are;
 - a `redaction_manifest` records, per column, what was actually suppressed.
 
 `--unsafe-full-fidelity` is the one opt-out: it turns the controls off and stamps the artifact `unsafe`.

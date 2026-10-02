@@ -814,7 +814,9 @@ def _profile_column(
     value_counts_ext = None
     # a text column whose values are (nearly) all different has no frequencies to report: its top
     # values would be an arbitrary few of them, stored whole (#37)
-    arbitrary_top = kind == "str" and cardinality > top_n and cardinality >= 0.95 * n_nn
+    arbitrary_top = (
+        kind == "str" and stype == "string" and cardinality > top_n and cardinality >= 0.95 * n_nn
+    )
     if n_nn and not arbitrary_top:
         if num_top is not None:
             top_keys = _pa(num_top["keys"])
