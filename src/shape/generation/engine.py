@@ -42,7 +42,6 @@ import os
 import threading
 import time
 from collections.abc import Callable, Collection, Hashable, Iterator, Mapping
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from typing import Any, TypeVar
 
@@ -70,6 +69,7 @@ from shape.generation.rules import (
     validate_rules,
 )
 from shape.generation.runtime import generation_memory
+from shape.generation.scheduler import Chunk, run_tables
 from shape.generation.schema import Column, GenSchema, Issue, Table
 from shape.plugins.api.v1 import GenerationContext
 
@@ -732,53 +732,104 @@ class Engine:
                 self._tables[table] = built
         return built
 
-    def _generate_level(
+    def _plan_chunks(self, names: Collection[str], workers: int) -> dict[str, list[Chunk]]:
+        """The chunks of every table of ``names`` that is not built yet (a built table has none):
+        about two per worker thread, but never below the first or above the second of
+        ``_PARALLEL_CHUNK_ROWS``; one thread works in chunks of ``chunk_rows``."""
+        planned: dict[str, list[Chunk]] = {}
+        for name in names:
+            if name in self._tables:
+                planned[name] = []
+                continue
+            total = self.row_counts.get(name, DEFAULT_ROWS)
+            width = max(1, len(self.schema.tables[name].columns))
+            if workers <= 1:
+                size = self.chunk_rows
+            else:
+                low, high = _PARALLEL_CHUNK_ROWS
+                size = max(low, min(high, -(-total // (workers * 2))))
+                if self._chunk_rows_given:
+                    size = min(size, self.chunk_rows)
+            starts = range(0, total, size) if total else [0]
+            planned[name] = [
+                Chunk(name, i, start, rows := min(size, total - start), rows * width)
+                for i, start in enumerate(starts)
+            ]
+        return planned
+
+    def _generate_tables(
         self,
-        names: list[str],
-        on_batch: Callable[[str, pa.RecordBatch | None], None] | None = None,
-        streamed: Collection[str] = (),
-        observers: Mapping[str, list[StreamedAggregate]] | None = None,
-    ) -> set[str]:
-        """Generate every table of ``names`` that is not built yet, their chunks spread over
-        :func:`worker_threads` threads. A chunk depends only on its row range and on the tables of
-        earlier levels, so the tables are the same as when built one chunk after another.
+        order: list[str],
+        on_batch: Callable[[str, pa.RecordBatch | None], None] | None,
+        on_table: Callable[[str, pa.Table], None] | None,
+        streamed: Collection[str],
+        touched: Collection[str],
+        observers: Mapping[str, list[StreamedAggregate]],
+        early: EarlyRules | None,
+    ) -> None:
+        """Generate every table that is not built yet. A table starts when the tables it points
+        at are complete (:func:`~shape.generation.scheduler.run_tables`); its chunks are made on
+        :func:`worker_threads` threads, or on this thread while the work is small. A chunk
+        depends only on its row range and on the tables it points at, so the tables are the same
+        as when built one chunk after another.
 
         ``on_batch`` receives each chunk of the tables in ``streamed``, in row order as soon as it
         is ready, then ``None`` when the table is whole. ``observers`` (child table to aggregates)
-        are fed every chunk of their table, in row order. Returns the tables it delivered."""
-        todo = [n for n in names if n not in self._tables]
+        are fed every chunk of their table, in row order. A table no post-pass changes (not in
+        ``touched``) is handed to ``on_batch``, or else to ``on_table``, when it is whole."""
         workers = worker_threads(self.reserved_cores)
-        jobs = []
-        for name in todo:
-            total = self.row_counts.get(name, DEFAULT_ROWS)
-            low, high = _PARALLEL_CHUNK_ROWS
-            size = max(low, min(high, -(-total // (workers * 2))))
-            if self._chunk_rows_given:
-                size = min(size, self.chunk_rows)
-            starts = range(0, total, size) if total else [0]
-            jobs += [(name, i, start, min(size, total - start)) for i, start in enumerate(starts)]
-        threads = min(workers, len(jobs))
-        if threads <= 1:
-            return set()
-        delivered: set[str] = set()
-        by_table: dict[str, list[pa.RecordBatch]] = {}
-        last = {job[0]: i for i, job in enumerate(jobs)}
-        with ThreadPoolExecutor(max_workers=threads, thread_name_prefix="shape-gen") as pool:
-            produced = pool.map(lambda j: self.generate_chunk(j[0], j[2], j[3], chunk=j[1]), jobs)
-            for i, (job, batch) in enumerate(zip(jobs, produced, strict=False)):
-                name = job[0]
-                by_table.setdefault(name, []).append(batch)
-                for aggregate in (observers or {}).get(name, ()):
-                    aggregate.feed(batch)
-                if on_batch is not None and name in streamed:
-                    on_batch(name, batch)
-                    if last[name] == i:
-                        on_batch(name, None)
-                        delivered.add(name)
-        with self._lock:
-            for name, parts in by_table.items():
-                self._tables.setdefault(name, pa.Table.from_batches(parts, schema=parts[0].schema))
-        return delivered
+        graph = _dependency_graph(self.schema)
+        planned = self._plan_chunks(order, workers)
+        arrived: dict[str, dict[int, pa.RecordBatch]] = {name: {} for name in order}
+        handed = dict.fromkeys(order, 0)
+        streaming = set(streamed) if on_batch is not None else set()
+
+        def run(chunk: Chunk) -> pa.RecordBatch:
+            return self.generate_chunk(chunk.table, chunk.start, chunk.rows, chunk=chunk.index)
+
+        def on_chunk(chunk: Chunk, batch: pa.RecordBatch) -> None:
+            name = chunk.table
+            got = arrived[name]
+            got[chunk.index] = batch
+            while handed[name] in got:  # in row order, whichever chunk was made first
+                ready = got[handed[name]]
+                handed[name] += 1
+                for aggregate in observers.get(name, ()):
+                    aggregate.feed(ready)
+                if on_batch is not None and name in streaming:
+                    on_batch(name, ready)
+
+        def on_done(name: str) -> None:
+            parts = arrived.pop(name)
+            if parts:
+                batches = [parts[i] for i in sorted(parts)]
+                with self._lock:
+                    self._tables.setdefault(
+                        name, pa.Table.from_batches(batches, schema=batches[0].schema)
+                    )
+            delivered = name in streaming and bool(planned[name])
+            if delivered and on_batch is not None:
+                on_batch(name, None)
+            if not delivered and name not in touched:
+                table = self.generate_table(name)
+                if on_batch is not None:
+                    for batch in table.to_batches():
+                        on_batch(name, batch)
+                    on_batch(name, None)
+                elif on_table is not None:
+                    on_table(name, table)
+            if early is not None:
+                early.poll()
+
+        run_tables(
+            order,
+            {name: graph.get(name, set()) for name in order},
+            planned,
+            run,
+            on_chunk,
+            on_done,
+            workers,
+        )
 
     # ---- services for strategies --------------------------------------------------------
 
@@ -849,8 +900,7 @@ class Engine:
         self.schema.validate_or_raise()
         started = time.perf_counter()
         order = self.order
-        levels = dependency_levels(self.schema, order)
-        flat = [n for level in levels for n in level]
+        flat = [n for level in dependency_levels(self.schema, order) for n in level]
         touched = self._post_pass_tables()
         final_early = [n for n in flat if n not in touched]
         early = (
@@ -866,25 +916,7 @@ class Engine:
         observers: dict[str, list[StreamedAggregate]] = {}
         for aggregate in aggregates:
             observers.setdefault(aggregate.child, []).append(aggregate)
-        for level in levels:
-            delivered = self._generate_level(
-                level,
-                on_batch,
-                [n for n in level if n in final_early] if on_batch else (),
-                observers,
-            )
-            for name in level:
-                if name in touched or name in delivered:
-                    continue
-                table = self.generate_table(name)
-                if on_batch is not None:
-                    for batch in table.to_batches():
-                        on_batch(name, batch)
-                    on_batch(name, None)
-                elif on_table is not None:
-                    on_table(name, table)
-            if early is not None:
-                early.advance()
+        self._generate_tables(flat, on_batch, on_table, final_early, touched, observers, early)
         tables = {name: self.generate_table(name) for name in flat}
         rules_done = 0
         if early is not None:

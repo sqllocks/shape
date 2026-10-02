@@ -5,6 +5,13 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Faster generation, engine-wide (`docs/GENERATION_ENGINE.md`, "Threads and overlapped writing"; no
+  generated value changes). Parquet files are written by a native writer in the kernel
+  (`shape._kernel.ParquetOut`, the `parquet` crate of arrow-rs) that encodes every column of every
+  row group on the kernel's thread pool, in parallel with generation, and appends the groups in row
+  order; pyarrow's writer is the fallback (pure-Python kernel, another codec, a nested column,
+  `SHAPE_PARQUET_WRITER=pyarrow`). Tables start as soon as the tables they point at are complete
+  instead of at level barriers, longest path first, on the calling thread while the work is small.
 - `shape emit`: the emitter runtime (`docs/EMIT.md`). Streams a domain's or schema's rows as
   JSON-lines events with the idempotency key `(_shape_table, _shape_seq)`: realtime pacing
   (`--rate`, `--burst START:DURATION:MULT`) or as fast as possible (the default), `--out-of-order`,

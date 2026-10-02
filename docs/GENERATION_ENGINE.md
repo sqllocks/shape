@@ -27,7 +27,8 @@ domain plugin, a profile fit, a DDL file or a hand-written JSON file. It holds
   relationships, ties broken by name. A cycle raises `CircularDependencyError`, a reference to an
   undefined table `MissingTableError`; a self-reference is not a cycle.
 * **Levels**: `dependency_levels(schema)` groups the order into levels of tables that do not depend
-  on each other. The engine generates, and returns, tables level by level.
+  on each other (the dry run reports them). The engine does not wait for a level: a table starts as
+  soon as the tables it points at are complete (see "Threads and overlapped writing").
 * **Row counts**: `calculate_row_counts(schema, overrides)`: the current preset, then `fixed`,
   `per_parent` x `ratio` and `per_year` counts in the order the schema lists them, then overrides,
   then 100 for any table still without a count.
@@ -285,7 +286,7 @@ print(format_summary(result))                                   # the `summary` 
 |---|---|---|
 | `csv`, `tsv` | `<table>.csv`, `<table>.tsv` | header row, nulls are empty fields |
 | `jsonl` | `<table>.jsonl` | dates and times ISO 8601; decimals are exact strings |
-| `parquet` | `<table>.parquet` | snappy, dictionary encoding on (T-17); options `row_group_rows` (262,144: a table streamed while it is generated is encoded as its chunks arrive; a larger group would wait for a million rows) and `dictionary_page_bytes` (131,072: a column whose dictionary outgrows it stops using one) |
+| `parquet` | `<table>.parquet` | snappy, dictionary encoding on (T-17); options `row_group_rows` (262,144: a table streamed while it is generated is encoded as its chunks arrive; a larger group would wait for a million rows; a group closes at the first batch boundary at or past it) and `dictionary_page_bytes` (131,072: a column whose dictionary outgrows it stops using one). With the native kernel the file is written by `shape._kernel.ParquetOut`, which encodes every column of every row group as its own task on the kernel's thread pool while the caller goes on, and appends the finished groups in row order; the pure-Python kernel, another `compression`, a nested column type or `SHAPE_PARQUET_WRITER=pyarrow` use pyarrow's writer (one thread). The two write equal tables; the bytes differ |
 | `sql` | `<table>.sql` | see below |
 | `excel` | `<table>.xlsx` | extra `[excel]`; refuses a table over 1,048,575 rows |
 | `delta` | `<dir>/<table>/` | extra `[delta]`; `mode` (`overwrite`, `append`), `partition_by` |
@@ -298,11 +299,18 @@ post-pass changes run while the rest is still being generated.
 
 ## Threads and overlapped writing
 
-`Engine.generate()` generates a dependency level at a time and spreads the chunks of the level's
-tables over `SHAPE_THREADS` threads (unset or `0`: every core; `1`: one). A chunk of rows depends on
-its row range and on earlier levels only, so the tables are the same for any thread count and any
-`chunk_rows`; chunks are about 32k to 131k rows unless `chunk_rows` is given. Numpy, Arrow and the
-native kernel release the interpreter lock, which is what the threads share.
+`Engine.generate()` schedules chunks, not levels (`shape.generation.scheduler`). A table starts as
+soon as the tables it points at (foreign keys and relationships) are complete, so a child does not
+wait for an unrelated slow table of the level before it, and the chunks that are ready are taken
+longest-path-first (the table with the most work behind it goes first). `SHAPE_THREADS` is the most
+threads used (unset or `0`: every core; `1`: one). The calling thread runs the chunks itself while
+the queued work is small (under about 100,000 cells, rows times columns, which is a few
+milliseconds): a pool costs more than it gains on a table of a few thousand rows, each thread's first
+calls being cold. Worker threads are added when the queue holds enough work for two or more. A chunk
+of rows depends on its row range and on the tables it points at only, so the tables are the same for
+any thread count, order and `chunk_rows`; chunks are about 32k to 131k rows unless `chunk_rows` is
+given. Numpy, Arrow and the native kernel release the interpreter lock, which is what the threads
+share.
 
 ```python
 engine.generate(on_table=..., on_batch=...)
@@ -315,8 +323,9 @@ the last rule repair that can change it and the copula, and `on_table(name, tabl
 (and receives every table when there is no `on_batch`). Both callbacks run on the calling thread:
 hand the data to a writer. `write_engine` does exactly that.
 
-`write_engine` leaves one core to the writer threads (a Parquet file is encoded by one thread, and with
-every core generating, the encoder of the largest table is what a run waits for): `SHAPE_THREADS`
+`write_engine` leaves one core to the writers (a file in any other format, or a Parquet file through
+pyarrow, is encoded by one thread, and with every core generating, the encoder of the largest table
+is what a run waits for): `SHAPE_THREADS`
 unset means every core less one while writing, and exactly `SHAPE_THREADS` when set. Two passes run
 while the tables are still being made, and give what the plain order of the passes gives (tests compare
 them): a `sum_children` or `count_children` column over a `sequence` key is accumulated as the child

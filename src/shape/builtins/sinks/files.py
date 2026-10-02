@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,7 @@ import pyarrow.csv as pacsv  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.builtins.sources.files import local_path
+from shape.kernel.dispatch import get_kernel
 
 
 class _FileSink:
@@ -114,22 +116,55 @@ class _ParquetRowGroups:
             self._writer.close()
 
 
+PARQUET_WRITER_ENV = "SHAPE_PARQUET_WRITER"
+_NATIVE_CODECS = {"snappy", "none", "uncompressed"}
+
+
+def _native_writer(schema: pa.Schema, options: dict[str, Any]) -> Any:
+    """The native writer class when it can write this file, else ``None``: the pure-Python kernel
+    has none, the native one writes snappy or no compression and flat columns only, and
+    ``SHAPE_PARQUET_WRITER=pyarrow`` turns it off."""
+    if os.environ.get(PARQUET_WRITER_ENV, "auto").strip().lower() == "pyarrow":
+        return None
+    cls = getattr(get_kernel(), "ParquetOut", None)
+    if cls is None or not schema.names:
+        return None
+    if str(options.get("compression", "snappy")).lower() not in _NATIVE_CODECS:
+        return None
+    return cls
+
+
 class ParquetSink(_FileSink):
     name = "parquet"
     extension = "parquet"
 
     def _open(self, target: Path, schema: pa.Schema, options: dict[str, Any]) -> Any:
-        # T-17: snappy, dictionary encoding on.
+        # T-17: snappy, dictionary encoding on. The native writer encodes the row groups and
+        # columns of the file on several threads; pyarrow's writer (the twin) on one.
+        row_group_rows = int(options.get("row_group_rows", ROW_GROUP_ROWS))
+        use_dictionary = options.get("use_dictionary", True)
+        dictionary_bytes = int(options.get("dictionary_page_bytes", DICTIONARY_PAGE_BYTES))
+        native = _native_writer(schema, options)
+        if native is not None and isinstance(use_dictionary, bool):
+            try:
+                return native(
+                    str(target),
+                    schema,
+                    row_group_rows=row_group_rows,
+                    compression=str(options.get("compression", "snappy")).lower(),
+                    use_dictionary=use_dictionary,
+                    dictionary_page_bytes=dictionary_bytes,
+                )
+            except ValueError:  # a type the native writer does not do
+                pass
         writer = pq.ParquetWriter(
             str(target),
             schema,
             compression=options.get("compression", "snappy"),
-            use_dictionary=options.get("use_dictionary", True),
-            dictionary_pagesize_limit=int(
-                options.get("dictionary_page_bytes", DICTIONARY_PAGE_BYTES)
-            ),
+            use_dictionary=use_dictionary,
+            dictionary_pagesize_limit=dictionary_bytes,
         )
-        return _ParquetRowGroups(writer, int(options.get("row_group_rows", ROW_GROUP_ROWS)))
+        return _ParquetRowGroups(writer, row_group_rows)
 
 
 class IpcSink(_FileSink):

@@ -124,6 +124,13 @@ class EarlyRules:
         rewritten = columns[0]
         return rewritten not in self._reads
 
+    def poll(self) -> None:
+        """:meth:`advance` unless the helper thread is still on its last batch (it is asked
+        again at the next table; :meth:`finish` waits for it)."""
+        thread = self._thread
+        if thread is None or not thread.is_alive():
+            self.advance()
+
     def advance(self) -> None:
         """Wait for the helper thread, then start it on every further rule that can run now."""
         self._join()
