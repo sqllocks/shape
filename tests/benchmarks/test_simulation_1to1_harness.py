@@ -8,21 +8,39 @@ and every allow-list entry has a probe in a case module.
 
 from __future__ import annotations
 
+import importlib
 import re
 import sys
 from pathlib import Path
+from types import ModuleType
 
 import numpy as np
 import pyarrow as pa
 import pytest
 
 BENCH = Path(__file__).resolve().parents[2] / "benchmarks" / "vs_spindle" / "simulation_1to1"
-sys.path.insert(0, str(BENCH.parent))
-sys.path.insert(0, str(BENCH))
 
-import harness as h  # noqa: E402
-import names  # noqa: E402
-import verify  # noqa: E402
+
+def _load(*modules: str) -> list[ModuleType]:
+    """Import the harness modules from their directory. Other harnesses have modules called
+    ``harness``, ``names`` or ``verify`` too, so the names are cleared while these load and the
+    other modules put back afterwards (these stay available as ``sim1to1_<name>``)."""
+    saved_path = list(sys.path)
+    taken = ("harness", "names", "verify", "paths")
+    stale = {m: sys.modules.pop(m) for m in taken if m in sys.modules}
+    sys.path[:0] = [str(BENCH.parent), str(BENCH)]
+    try:
+        loaded = [importlib.import_module(m) for m in modules]
+        for m in taken:
+            if m in sys.modules:
+                sys.modules[f"sim1to1_{m}"] = sys.modules.pop(m)
+    finally:
+        sys.path[:] = saved_path
+        sys.modules.update(stale)
+    return loaded
+
+
+h, names, verify = _load("harness", "names", "verify")
 
 
 def table(seed: int, n: int = 3000, bias: float = 0.0) -> pa.Table:
