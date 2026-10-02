@@ -5,6 +5,34 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `shape emit`: the emitter runtime (`docs/EMIT.md`). Streams a domain's or schema's rows as
+  JSON-lines events with the idempotency key `(_shape_table, _shape_seq)`: realtime pacing
+  (`--rate`, `--burst START:DURATION:MULT`) or as fast as possible (the default), `--out-of-order`,
+  `--anomaly-fraction` (through the `shape.chaos` mutator protocol), `--max-events`, `--duration`,
+  a CloudEvents envelope, backpressure, at-least-once delivery and a checkpoint on shutdown
+  (`kill -9` then restart, deduplicated on the key, equals an uninterrupted run).
+  `shape.streaming.emit` holds the runtime.
+- Chaos engineering (`docs/CHAOS.md`): `shape.chaos` injects deterministic data-quality faults in six
+  categories (schema, value, file, referential, temporal, volume) through a seeded `ChaosEngine` and
+  as `shape.chaos` plugins, and `shape.chaos.inject_anomalies` corrupts a chosen fraction of the
+  rows of a batch without changing its schema (the entry point for `--anomaly-fraction`).
+- `shape mask PATH -o DIR` (and the `mask` built-in of `shape.transforms`): replaces personal data
+  in CSV or Parquet files with synthetic values of the same format (`docs/MASK.md`). Columns are
+  found from their names and from the value patterns of Shape's profile engine; null positions,
+  types and every other column are kept, the same value gets the same replacement everywhere so
+  keys and the columns that refer to them still match, and no original value is written back.
+- Incremental data (`docs/INCREMENTAL.md`): `shape continue DOMAIN --input DIR -o OUT` writes the next
+  batch of inserts, updates and soft deletes for existing data (`--inserts`, `--update-fraction`,
+  `--delete-fraction`, `--transitions`, `--seed`, `--as-of`; rows tagged `_shape_delta_type` and
+  `_shape_delta_timestamp`), and `shape time-travel DOMAIN -o OUT` writes monthly snapshots of a
+  dataset that grows, churns and changes with seasonality (`--months`, `--growth-rate`,
+  `--churn-rate`, `--update-fraction`, `--seasonality`, `--start-date`). Python:
+  `shape.generation.incremental`. Zero rates change nothing, no row is both updated and deleted,
+  inserted rows never reference a parent deleted in the same delta, and every snapshot keeps all its
+  foreign keys.
+- Profile files and the profile registry (`docs/PROFILE_REGISTRY.md`): `shape profile export|import|list|validate` and
+  `shape profile registry list|save|delete|tag|diff|reindex|validate` (named, tagged `.shape` profiles under
+  `system/table/name`; `shape registry` keeps its meaning).
 - Generation start-up: `import shape` now selects Arrow's system memory pool for the whole process (`ARROW_DEFAULT_MEMORY_POOL=system` when `pyarrow` is not loaded yet; otherwise transparent huge pages are switched off for the process on Linux), which removes a 10 to 13 ms stall at the first allocation and about a fifth of the time of a medium run on a virtual machine; `SHAPE_MEMORY_POOL=default` turns it off (`docs/GENERATION_ENGINE.md`). The text providers build their name pools from the file bytes (10 to 20 ms less on the first name column). Generated values are unchanged.
 - Fidelity tiers 1 to 3 (`docs/FIDELITY_TIERS.md`): `shape fidelity REFERENCE SYNTHETIC --tier 1|2|3`
   (tier 1: Gaussian-mixture fits, conditional profiles, adversarial AUC, temporal profiles and

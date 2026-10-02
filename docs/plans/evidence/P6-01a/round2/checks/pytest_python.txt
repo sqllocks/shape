@@ -90,4 +90,4 @@ tests/kernel/test_exact_kernel.py::test_numeric_stats_with_infinities
     np.subtract(b, diff * (1 - t), out=res, where=t >= 0.5, casting="unsafe", dtype=res.dtype)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-3928 passed, 45 deselected, 14 warnings in 760.88s (0:12:40)
+3928 passed, 45 deselected, 14 warnings in 762.70s (0:12:42)

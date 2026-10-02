@@ -57,7 +57,10 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.strategies` | `self_ref_field` | a field of that hierarchy (the level) |
 | `shape.strategies` | `lifecycle` | a phase label from weighted phases |
 | `shape.strategies` | `scd2` | effective date, end date, current flag or version of a type 2 slowly changing dimension |
+| `shape.transforms` | `mask` | replaces personal data with synthetic values of the same format: `shape mask` (see [MASK.md](../MASK.md)) |
 | `shape.commands` | `ctgan` | `shape ctgan`: fit a CTGAN model on a table and sample rows (needs the `[ctgan]` extra) |
+| `shape.transforms` | `star` | `shape transform star`: tables to dimension and fact tables with surrogate keys and a date dimension |
+| `shape.transforms` | `cdm` | `shape transform cdm`: tables renamed to their Common Data Model entities |
 | `shape.distributions` | `normal` | `loc + scale * N(0,1)` |
 | `shape.distributions` | `uniform` | uniform on `[loc, loc + scale)` |
 | `shape.distributions` | `exponential` | `loc + scale * Exp(1)` |
@@ -80,6 +83,12 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.calendars` | `us_federal` | the eleven US federal holidays on their observed days |
 | `shape.calendars` | `us_retail` | Black Friday, Cyber Monday, Christmas Eve and the gift holidays |
 | `shape.calendars` | `composite` | any mix of holiday calendars, custom events, paydays, month-end and quarter-end effects and trends (`with_spec`) |
+| `shape.chaos` | `schema` | adds, reorders and (past the breaking-change day) drops, renames or retypes columns |
+| `shape.chaos` | `value` | nulls, out-of-range numbers, junk text in number columns, encoding damage, future dates, negated amounts |
+| `shape.chaos` | `file` | corrupts the bytes of the batch's CSV rendering (truncation, byte damage, partial write, empty, garbage header, swapped delimiter, poison JSON, stray BOM) |
+| `shape.chaos` | `referential` | duplicate primary keys (orphan foreign keys need a second table: use `shape.chaos`) |
+| `shape.chaos` | `temporal` | late arrivals, swapped timestamps, timezone shifts, daylight-saving boundary values |
+| `shape.chaos` | `volume` | a 10x spike, an empty batch or a single row |
 | `shape.reports` | `json` | the fidelity report as indented JSON with sorted keys |
 | `shape.reports` | `md` | the fidelity report as Markdown |
 | `shape.reports` | `html` | the fidelity report as one self-contained HTML page (inline styles, no scripts) |

@@ -103,7 +103,9 @@ def test_cli_validate_flags_the_full_profile_and_unsafe_export(orders, tmp_path,
 
 
 def test_cli_input_errors_exit_2(orders, tmp_path, capsys):
-    assert main(["profile", "validate", str(orders)]) == 2  # --safe is required
+    # P6-10: without --safe, `profile validate` is the structural check (valid profile: 0)
+    assert main(["profile", "validate", str(orders)]) == 0
+    assert main(["profile", "validate", str(tmp_path / "nope.json")]) == 1
     assert main(["profile", "safe", str(tmp_path / "nope.shape"), "-o", str(tmp_path / "o")]) == 2
     assert main(["profile", "safe", str(orders), "-o", str(tmp_path / "o"), "--column-k", "x"]) == 2
     assert main(["profile", "validate", "--safe", str(tmp_path / "nope.json")]) == 1

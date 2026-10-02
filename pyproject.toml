@@ -198,6 +198,11 @@ lifecycle = "shape.builtins.strategies.lifecycle:Lifecycle"
 [project.entry-points."shape.commands"]
 ctgan = "shape.builtins.ctgan:CtganCommand"
 
+[project.entry-points."shape.transforms"]
+mask = "shape.builtins.transforms:Mask"
+star = "shape.builtins.dimensional:StarTransform"
+cdm = "shape.builtins.dimensional:CdmTransform"
+
 [project.entry-points."shape.distributions"]
 normal = "shape.builtins.distributions:Normal"
 uniform = "shape.builtins.distributions:Uniform"
@@ -224,6 +229,14 @@ us_federal = "shape.builtins.calendars:UsFederalCalendar"
 us_retail = "shape.builtins.calendars:UsRetailCalendar"
 composite = "shape.builtins.calendars:CompositeCalendar"
 
+[project.entry-points."shape.chaos"]
+schema = "shape.builtins.chaos:SchemaChaos"
+value = "shape.builtins.chaos:ValueChaos"
+file = "shape.builtins.chaos:FileChaos"
+referential = "shape.builtins.chaos:ReferentialChaos"
+temporal = "shape.builtins.chaos:TemporalChaos"
+volume = "shape.builtins.chaos:VolumeChaos"
+
 [project.entry-points."shape.reports"]
 json = "shape.builtins.reports:JsonReport"
 md = "shape.builtins.reports:MarkdownReport"
@@ -248,10 +261,12 @@ source_modules = [
     "shape.api",
     "shape.artifact",
     "shape.capture",
+    "shape.chaos",
     "shape.cli",
     "shape.connectors",
     "shape.contracts",
     "shape.diff",
+    "shape.dimensional",
     "shape.drift",
     "shape.errors",
     "shape.fidelity",

@@ -463,7 +463,9 @@ def _build_parser(plugin_commands=()):
         "profile",
         help="profile a file, glob, directory or Delta table",
         epilog="also: `shape profile safe PROFILE.shape -o SAFE.json` writes the share-safe "
-        "form; `shape profile validate --safe ARTIFACT` scans it for leaks",
+        "form; `shape profile validate --safe ARTIFACT` scans it for leaks; "
+        "`shape profile export|import|list|validate` and `shape profile registry "
+        "list|save|delete|tag|diff|reindex|validate` manage profiles and the profile registry",
     )
     pr.add_argument("src", metavar="SRC")
     pr.add_argument("-o", "--output", metavar="OUT")
@@ -543,6 +545,18 @@ def _build_parser(plugin_commands=()):
     from shape.cli.learn import add_arguments as add_learn_arguments
 
     add_learn_arguments(sub)
+    from shape.cli.emit import add_arguments as add_emit_arguments
+
+    add_emit_arguments(sub)
+    from shape.cli.mask import add_arguments as add_mask_arguments
+
+    add_mask_arguments(sub)
+    from shape.cli.incremental import add_arguments as add_incremental_arguments
+
+    add_incremental_arguments(sub)
+    from shape.cli.transform import add_arguments as add_transform_arguments
+
+    add_transform_arguments(sub)
     fi = sub.add_parser(
         "fidelity",
         aliases=["compare"],
@@ -735,9 +749,17 @@ def _dispatch(argv):
         print(f"shape {_version()}")
         return 0
     if argv[:1] == ["profile"] and argv[1:2] in (["safe"], ["validate"]):
+        from shape.cli import profiles
+
+        if profiles.routes(argv[1:]):
+            return profiles.main(argv[1:])
         from shape.privacy.cli import main as privacy_main
 
         return privacy_main(argv[1:])
+    if argv[:1] == ["profile"] and argv[1:2] in (["export"], ["import"], ["list"], ["registry"]):
+        from shape.cli import profiles
+
+        return profiles.main(argv[1:])
     parser = _build_parser()
     builtin = {
         n
@@ -771,12 +793,28 @@ def _dispatch(argv):
         from shape.cli.generation import run as run_generation
 
         return _run(run_generation, a)
+    if a.cmd == "emit":
+        from shape.cli.emit import run as run_emit
+
+        return _run(run_emit, a)
     if a.cmd == "from-ddl":
         return _run(_cmd_from_ddl, a)
+    if a.cmd in ("continue", "time-travel"):
+        from shape.cli.incremental import run as run_incremental
+
+        return _run(run_incremental, a)
     if a.cmd == "learn":
         from shape.cli.learn import run as run_learn
 
         return _run(run_learn, a)
+    if a.cmd == "mask":
+        from shape.cli.mask import run as run_mask
+
+        return _run(run_mask, a)
+    if a.cmd == "transform":
+        from shape.cli.transform import run as run_transform
+
+        return _run(run_transform, a)
     if a.cmd == "profile":
         return _run(_cmd_profile, a)
     if a.cmd == "stream-profile":
