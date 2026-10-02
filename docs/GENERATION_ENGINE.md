@@ -290,6 +290,16 @@ rules or correlations need whole tables). With a post-pass it generates the whol
 table as soon as it is final (see "Threads and overlapped writing"), so the writes of the tables no
 post-pass changes run while the rest is still being generated.
 
+## Daily batches
+
+Row addressing makes an incremental run cheap: a day's rows are rows `i x N .. (i + 1) x N - 1` of a
+table whose row count is the total so far, so keys are stable and a foreign key can reach every
+earlier day. `shape.generation.batches.BatchGenerator` does this (and `shape continue --daily-rows`
+is its command line); the worked example, with daily orders referencing customers, regenerating one
+day on its own and the determinism guarantee (same seed and date, same bytes), is in
+[INCREMENTAL.md](INCREMENTAL.md#daily-batches). The files can be written in a dated
+[landing layout](LANDING.md).
+
 ## Threads and overlapped writing
 
 `Engine.generate()` generates a dependency level at a time and spreads the chunks of the level's

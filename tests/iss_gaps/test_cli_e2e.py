@@ -89,8 +89,8 @@ def test_a_dated_template_without_a_date_is_an_error(capsys, schema_file, tmp_pa
 
 def test_a_misspelt_table_format_is_an_error(capsys, schema_file, tmp_path) -> None:
     code, _, err = run(
-        capsys, "generate", schema_file, "--format", "csv", "--table-format", "orders=csv", "--batch-date",
-        "2026-08-04", "-o", tmp_path,
+        capsys, "generate", schema_file, "--format", "csv", "--table-format", "orders=csv",
+        "--batch-date", "2026-08-04", "-o", tmp_path,
     )  # fmt: skip
     assert code == 2 and "orders" in err
 

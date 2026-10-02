@@ -291,7 +291,6 @@ class _Run:
         self,
         table: str,
         corruption: Corruption,
-        seed_pos: int,
         rows: np.ndarray,
         column: str | None,
         before: list[Any] | None,
@@ -399,9 +398,7 @@ def _duplicates(run: _Run, c: Corruption, pos: int, table: str) -> None:
     out = pa.concat_tables([t, t.take(pa.array(source))])
     run.tables[table] = out
     dest = np.arange(n, n + len(source), dtype=np.int64)
-    run.record(
-        table, c, pos, dest, None, None, None, [{"source_row": int(s)} for s in source.tolist()]
-    )
+    run.record(table, c, dest, None, None, None, [{"source_row": int(s)} for s in source.tolist()])
 
 
 def _orphan_keys(run: _Run, c: Corruption, pos: int, table: str, column: str) -> None:
@@ -433,7 +430,7 @@ def _orphan_keys(run: _Run, c: Corruption, pos: int, table: str, column: str) ->
             cells[r] = v
         new = pa.array(cells, type=pa.string())
     run.tables[table] = _put(t, i, new)
-    run.record(table, c, pos, rows, column, before, _cells(new, rows))
+    run.record(table, c, rows, column, before, _cells(new, rows))
 
 
 def _date_shift(run: _Run, c: Corruption, pos: int, table: str, column: str) -> None:
@@ -468,7 +465,6 @@ def _date_shift(run: _Run, c: Corruption, pos: int, table: str, column: str) -> 
     run.record(
         table,
         c,
-        pos,
         rows,
         column,
         before,
@@ -495,7 +491,7 @@ def _negative_amounts(run: _Run, c: Corruption, pos: int, table: str, column: st
     flipped = pc.if_else(pa.array(flip), pc.negate(col), col)
     before = _cells(col, rows)
     run.tables[table] = _put(t, i, flipped.cast(col.type))
-    run.record(table, c, pos, rows, column, before, _cells(flipped, rows))
+    run.record(table, c, rows, column, before, _cells(flipped, rows))
 
 
 def _vary(value: str, mode: int) -> str:
@@ -530,7 +526,7 @@ def _case_whitespace(run: _Run, c: Corruption, pos: int, table: str, column: str
         cells[r] = _vary(cells[r], int(modes[r]))
     new = pa.array(cells, type=col.type)
     run.tables[table] = _put(t, i, new)
-    run.record(table, c, pos, rows, column, before, [cells[r] for r in rows.tolist()])
+    run.record(table, c, rows, column, before, [cells[r] for r in rows.tolist()])
 
 
 def _pii_value(kind: str, rng: np.random.Generator) -> str:
@@ -562,7 +558,6 @@ def _pii_fill(run: _Run, c: Corruption, pos: int, table: str, column: str) -> No
     run.record(
         table,
         c,
-        pos,
         rows,
         column,
         before,
@@ -614,7 +609,6 @@ def _null_creep(run: _Run, c: Corruption, pos: int, table: str, column: str) -> 
     run.record(
         table,
         c,
-        pos,
         rows,
         column,
         before,

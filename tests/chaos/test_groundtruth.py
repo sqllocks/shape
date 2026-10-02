@@ -163,7 +163,7 @@ def test_date_shift_defaults_to_every_date_column() -> None:
 
 def test_negative_amounts_flip_positive_values_only() -> None:
     outcome = run("negative_amounts=0.1@order.amount")
-    for (row, _), rec in log_cells(outcome, "order").items():
+    for rec in log_cells(outcome, "order").values():
         assert rec["before"] > 0 and rec["after"] == -rec["before"]
 
 

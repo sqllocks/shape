@@ -8,7 +8,7 @@ import pyarrow as pa
 import pyarrow.csv as pacsv
 import pyarrow.parquet as pq
 import pytest
-from iss_gaps_schemas import daily_gen_schema
+from iss_gaps_schemas import daily_gen_schema, daily_schema
 
 from shape.builtins.sinks import CsvSink, ParquetSink
 from shape.generation.batches import BatchGenerator
@@ -232,7 +232,6 @@ def test_the_fast_path_equals_the_whole_table_slice() -> None:
 
 
 def test_a_schema_with_a_post_pass_still_batches() -> None:
-    from iss_gaps_schemas import daily_schema  # noqa: F401  (documented companion)
     from shape.generation.schema import GenSchema
 
     doc = daily_schema()
