@@ -34,6 +34,7 @@ EXPECTED = (
     "domains",
     "simulation",
     "healthcare-codes",
+    "behavior",
 )
 
 

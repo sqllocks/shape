@@ -141,6 +141,8 @@ def test_skeleton_tree_follows_the_lockstep_rules():
         "sqlserver",
         "domains",
         "simulation",
+        "healthcare-codes",
+        "behavior",
     }
 
 
@@ -148,11 +150,71 @@ def test_skeleton_check_catches_version_drift(monkeypatch):
     script = _script()
     monkeypatch.setattr(script, "core_version", lambda: "9.9.9")
     problems = script.check_tree()
-    assert len(problems) >= 6 and all("9.9.9" in p for p in problems if "version" in p)
+    assert len(problems) >= 8 and all("9.9.9" in p for p in problems if "version" in p)
 
 
 def test_every_skeleton_builds_a_pure_wheel(tmp_path):
     script = _script()
     assert script.build_wheels(tmp_path, isolated=not _pip_args()) == []
-    assert len(list(tmp_path.glob("*.whl"))) == 6
+    assert len(list(tmp_path.glob("*.whl"))) == 8
     assert not list((ROOT / "plugins").rglob("build")), "build left files in the source tree"
+
+
+# -- a behavior plugin installed from outside the tree (issue 49) ---------------------------
+
+BEHAVIOR_EXAMPLE = ROOT / "examples" / "behavior-plugin"
+
+
+@pytest.fixture(scope="module")
+def behavior_outside(tmp_path_factory):
+    base = tmp_path_factory.mktemp("behavior-outside")
+    site, work = base / "site", base / "work"
+    work.mkdir()
+    src = base / "plugin-src"
+    shutil.copytree(
+        BEHAVIOR_EXAMPLE, src, ignore=shutil.ignore_patterns("build", "*.egg-info", "__pycache__")
+    )
+    done = subprocess.run(
+        [sys.executable, "-m", "pip", "install", "-q", "--no-deps", "--target", str(site)]
+        + _pip_args()
+        + [str(src)],
+        capture_output=True,
+        text=True,
+    )
+    assert done.returncode == 0, done.stdout + done.stderr
+    return site, work
+
+
+def test_outside_behavior_plugin_passes_the_kit(behavior_outside):
+    pytest.importorskip("shape_behavior")
+    r = run(behavior_outside, "-m", "shape.plugins.kit", "shape-example-behavior")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "shape.behaviors:library_loans: ok\n" in r.stdout
+
+
+def test_outside_behavior_plugin_is_listed_and_runs(behavior_outside):
+    pytest.importorskip("shape_behavior")
+    site, work = behavior_outside
+    listed = shape(behavior_outside, "plugins", "list", "--json")
+    assert listed.returncode == 0, listed.stderr
+    rows = {(x["group"], x["name"]): x for x in json.loads(listed.stdout)}
+    assert rows[("shape.behaviors", "library_loans")]["source"] == "shape-example-behavior"
+    out = work / "out"
+    ran = shape(
+        behavior_outside,
+        "behave", "run", "library_loans",
+        "--population", "300", "--years", "2", "--seed", "4", "-o", str(out),
+    )  # fmt: skip
+    assert ran.returncode == 0, ran.stdout + ran.stderr
+    manifest = json.loads((out / "run.json").read_text(encoding="utf-8"))
+    assert manifest["modules"][0]["name"] == "library_loans" and manifest["events"] > 300
+
+
+def test_outside_behavior_plugin_own_tests_pass(behavior_outside):
+    pytest.importorskip("shape_behavior")
+    site, work = behavior_outside
+    tests = work / "tests"
+    shutil.copytree(BEHAVIOR_EXAMPLE / "tests", tests)
+    r = run(behavior_outside, "-m", "pytest", "-q", "-p", "no:cacheprovider", str(tests), cwd=work)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "2 passed" in r.stdout
