@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date
 
 import numpy as np
 
@@ -33,9 +33,14 @@ class Simulation:
 
 
 def simulate(
-    n_members: int = 2000, *, seed: int = 42, start: date = date(2022, 1, 1),
-    end: date = date(2024, 12, 31), states: tuple[str, ...] = DEFAULT_STATES,
-    lob_mix: dict[str, float] | None = None, calibration: Calibration | None = None,
+    n_members: int = 2000,
+    *,
+    seed: int = 42,
+    start: date = date(2022, 1, 1),
+    end: date = date(2024, 12, 31),
+    states: tuple[str, ...] = DEFAULT_STATES,
+    lob_mix: dict[str, float] | None = None,
+    calibration: Calibration | None = None,
 ) -> Simulation:
     cal = calibration or Calibration()
     zips = load_zip_reference(states)
@@ -64,17 +69,41 @@ def simulate(
         suffix = next_suffix[mm.household] = next_suffix[mm.household] + 1
         sex = "F" if rng_newborn.random() < 0.49 else "M"
         from .names import FEMALE, MALE
+
         pool = FEMALE if sex == "F" else MALE
         first = pool[int(rng_newborn.integers(0, len(pool)))]
         baby = Member(
-            idx, identifiers.member_id(idx + 1), mm.subscriber_id, f"{suffix:02d}", "19", first, mm.last,
-            sex, day, mm.lob, mm.household, mm.state, mm.zip, mm.city, mm.street, mm.lat, mm.lon,
-            identifiers.ssn(rng_newborn), identifiers.email(first, mm.last, idx), mm.phone,
-            spans=[Span(day, span.end, span.plan_id, span.reason)], frailty=1.0, group_id=mm.group_id,
+            idx,
+            identifiers.member_id(idx + 1),
+            mm.subscriber_id,
+            f"{suffix:02d}",
+            "19",
+            first,
+            mm.last,
+            sex,
+            day,
+            mm.lob,
+            mm.household,
+            mm.state,
+            mm.zip,
+            mm.city,
+            mm.street,
+            mm.lat,
+            mm.lon,
+            identifiers.ssn(rng_newborn),
+            identifiers.email(first, mm.last, idx),
+            mm.phone,
+            spans=[Span(day, span.end, span.plan_id, span.reason)],
+            frailty=1.0,
+            group_id=mm.group_id,
         )
         baby.cob = False
         members.append(baby)
-        ids = [p.idx for p in directory.providers if p.specialty == "pediatrics" and p.state == mm.state]
+        ids = [
+            p.idx
+            for p in directory.providers
+            if p.specialty == "pediatrics" and p.state == mm.state
+        ]
         baby.pcp = ids[int(rng_newborn.integers(0, len(ids)))] if ids else None
         person = new_person(baby, seed)
         pending.append(person)
@@ -95,6 +124,9 @@ def simulate(
             baby = pending.pop(0)
             persons.append(baby)
             ctx.run(baby)
-    stats = {"members": len(members), "encounters": sum(len(p.encounters) for p in persons),
-             "therapies": sum(len(p.therapies) for p in persons)}
+    stats = {
+        "members": len(members),
+        "encounters": sum(len(p.encounters) for p in persons),
+        "therapies": sum(len(p.therapies) for p in persons),
+    }
     return Simulation(members, persons, plans, directory, cal, start, end, seed, stats)

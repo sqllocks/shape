@@ -15,7 +15,7 @@ class Provider:
     npi: str
     name: str
     specialty: str
-    taxonomy: str
+    taxonomy: str  # always empty: the NUCC code comes from the bring-your-own table
     kind: str  # individual | organization
     state: str
     zip: str
@@ -140,7 +140,9 @@ class Encounter:
     eid: int
     member: int
     day: date
-    setting: str  # office | telehealth | urgent | ed | inpatient | outpatient_hospital | lab | imaging | asc | dialysis | transport | dme
+    # office | telehealth | urgent | ed | inpatient | outpatient_hospital | lab | imaging | asc
+    # | dialysis | transport | dme
+    setting: str
     specialty: str
     dx: list[tuple[str, str]]  # (ICD-10-CM, present-on-admission flag or "")
     services: list[Svc]

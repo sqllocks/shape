@@ -21,33 +21,81 @@ from .engine import SimContext
 from .model import Cond, Person
 
 ORDER = (
-    "obesity", "dm", "htn", "lipid", "ckd", "cad", "hf", "afib", "asthma", "copd", "depression",
-    "anxiety", "adhd", "sud_opioid", "sud_alcohol", "bipolar", "schizophrenia", "hypothyroid",
-    "gerd", "osteoporosis", "bph", "autoimmune",
+    "obesity",
+    "dm",
+    "htn",
+    "lipid",
+    "ckd",
+    "cad",
+    "hf",
+    "afib",
+    "asthma",
+    "copd",
+    "depression",
+    "anxiety",
+    "adhd",
+    "sud_opioid",
+    "sud_alcohol",
+    "bipolar",
+    "schizophrenia",
+    "hypothyroid",
+    "gerd",
+    "osteoporosis",
+    "bph",
+    "autoimmune",
 )
 # condition -> [(parent condition, odds-ratio key table, key)]
 PARENTS: dict[str, tuple[tuple[str, str, str], ...]] = {
     "dm": (("obesity", "cluster.obesity_or", "dm"),),
     "htn": (("obesity", "cluster.obesity_or", "htn"), ("dm", "cluster.dm_or", "htn")),
     "lipid": (("obesity", "cluster.obesity_or", "lipid"), ("dm", "cluster.dm_or", "lipid")),
-    "ckd": (("dm", "cluster.dm_or", "ckd"), ("htn", "cluster.htn_or", "ckd"),
-            ("obesity", "cluster.obesity_or", "ckd")),
+    "ckd": (
+        ("dm", "cluster.dm_or", "ckd"),
+        ("htn", "cluster.htn_or", "ckd"),
+        ("obesity", "cluster.obesity_or", "ckd"),
+    ),
     "cad": (("dm", "cluster.dm_or", "cad"), ("htn", "cluster.htn_or", "cad")),
     "hf": (("dm", "cluster.dm_or", "hf"), ("htn", "cluster.htn_or", "hf")),
     "afib": (("htn", "cluster.htn_or", "afib"),),
     "asthma": (("obesity", "cluster.obesity_or", "asthma"),),
-    "depression": (("obesity", "cluster.obesity_or", "depression"), ("dm", "cluster.dm_or", "depression")),
+    "depression": (
+        ("obesity", "cluster.obesity_or", "depression"),
+        ("dm", "cluster.dm_or", "depression"),
+    ),
     "anxiety": (("depression", "", ""),),
 }
 _ANXIETY_GIVEN_DEPRESSION_OR = 4.0
-FLOOR = {"htn": 0.004, "dm": 0.003, "lipid": 0.006, "ckd": 0.002, "asthma": 0.0015,
-         "depression": 0.006, "anxiety": 0.006, "adhd": 0.002, "copd": 0.002, "hf": 0.002,
-         "cad": 0.003, "afib": 0.002, "obesity": 0.0, "hypothyroid": 0.004, "gerd": 0.006,
-         "autoimmune": 0.0008, "sud_opioid": 0.0005, "sud_alcohol": 0.0008, "bipolar": 0.0003, "schizophrenia": 0.0002,
-         "osteoporosis": 0.003, "bph": 0.004}
+FLOOR = {
+    "htn": 0.004,
+    "dm": 0.003,
+    "lipid": 0.006,
+    "ckd": 0.002,
+    "asthma": 0.0015,
+    "depression": 0.006,
+    "anxiety": 0.006,
+    "adhd": 0.002,
+    "copd": 0.002,
+    "hf": 0.002,
+    "cad": 0.003,
+    "afib": 0.002,
+    "obesity": 0.0,
+    "hypothyroid": 0.004,
+    "gerd": 0.006,
+    "autoimmune": 0.0008,
+    "sud_opioid": 0.0005,
+    "sud_alcohol": 0.0008,
+    "bipolar": 0.0003,
+    "schizophrenia": 0.0002,
+    "osteoporosis": 0.003,
+    "bph": 0.004,
+}
 _CENTERS = (9, 26, 40, 50, 60, 70, 80)
-_SCALAR = {"bipolar": "cond.bipolar", "schizophrenia": "cond.schizophrenia", "gerd": "cond.gerd",
-           "autoimmune": "cond.autoimmune"}
+_SCALAR = {
+    "bipolar": "cond.bipolar",
+    "schizophrenia": "cond.schizophrenia",
+    "gerd": "cond.gerd",
+    "autoimmune": "cond.autoimmune",
+}
 
 
 def _sigmoid(x: float) -> float:
@@ -135,10 +183,14 @@ class CohortModule:
                 target *= 0.35  # kidney disease without its main causes is rarer
             parents = self._parents(ctx, prev, key, age, m.sex, flags)
             base = solve_base(round(target, 6), tuple(parents[0]))
-            shift = sum(math.log(orr) for on, (_, orr) in zip(parents[1], parents[0], strict=True) if on)
+            shift = sum(
+                math.log(orr) for on, (_, orr) in zip(parents[1], parents[0], strict=True) if on
+            )
             if rng.random() < _sigmoid(base + shift):
                 flags.add(key)
-                self._assign(ctx, person, key, ctx.start - timedelta(days=int(rng.integers(30, 3650))))
+                self._assign(
+                    ctx, person, key, ctx.start - timedelta(days=int(rng.integers(30, 3650)))
+                )
         # incident conditions during the window
         years = max(0.0, (ctx.end - ctx.start).days / 365.25)
         for key in ORDER:
@@ -155,11 +207,17 @@ class CohortModule:
                 continue
             t = rng.exponential(1.0 / h)
             if t < years:
-                ctx.schedule(person, ctx.start + timedelta(days=int(t * 365.25) + 1), self.name,
-                             "incident", key=key)
+                ctx.schedule(
+                    person,
+                    ctx.start + timedelta(days=int(t * 365.25) + 1),
+                    self.name,
+                    "incident",
+                    key=key,
+                )
 
-    def _parents(self, ctx: SimContext, prev: Prevalence, key: str, age: int, sex: str,
-                 flags: set[str]) -> tuple[list[tuple[float, float]], list[bool]]:
+    def _parents(
+        self, ctx: SimContext, prev: Prevalence, key: str, age: int, sex: str, flags: set[str]
+    ) -> tuple[list[tuple[float, float]], list[bool]]:
         out: list[tuple[float, float]] = []
         on: list[bool] = []
         for parent, table, k in PARENTS.get(key, ()):
@@ -171,7 +229,9 @@ class CohortModule:
             on.append(parent in flags)
         return out, on
 
-    def handle(self, ctx: SimContext, person: Person, day: date, kind: str, payload: dict[str, Any]) -> None:
+    def handle(
+        self, ctx: SimContext, person: Person, day: date, kind: str, payload: dict[str, Any]
+    ) -> None:
         key = payload["key"]
         if kind != "incident" or person.has(key):
             return
@@ -181,7 +241,9 @@ class CohortModule:
             module.onboard(ctx, person, day, True, key)
 
     # ---- condition details ---------------------------------------------------------------------
-    def _assign(self, ctx: SimContext, person: Person, key: str, onset: date, incident: bool = False) -> None:
+    def _assign(
+        self, ctx: SimContext, person: Person, key: str, onset: date, incident: bool = False
+    ) -> None:
         rng = person.rng
         m = person.member
         age = m.age(onset)
@@ -190,17 +252,24 @@ class CohortModule:
         if key == "obesity":
             data["coded"] = bool(rng.random() < ctx.cal.get("cond.obesity_coded"))
             r = rng.random()
-            data["cls"] = "obesity_class1" if r < 0.55 else "obesity_class2" if r < 0.85 else "obesity_class3"
+            data["cls"] = (
+                "obesity_class1" if r < 0.55 else "obesity_class2" if r < 0.85 else "obesity_class3"
+            )
             data["z68"] = bool(rng.random() < 0.35)
         elif key == "dm":
             share = ctx.cal.get("cond.dm1_share")
-            t1 = rng.random() < (share["child"] if age < 18 else share["adult"] * (0.3 if age >= 45 else 1.0))
+            t1 = rng.random() < (
+                share["child"] if age < 18 else share["adult"] * (0.3 if age >= 45 else 1.0)
+            )
             data["type"] = "E10" if t1 else "E11"
             comp = []
             if not incident:
-                for k, p in (("neuropathy", 0.10 + 0.002 * max(0, age - 40)),
-                             ("retinopathy", 0.06 + 0.002 * max(0, age - 40)),
-                             ("angiopathy", 0.03), ("ulcer", 0.015)):
+                for k, p in (
+                    ("neuropathy", 0.10 + 0.002 * max(0, age - 40)),
+                    ("retinopathy", 0.06 + 0.002 * max(0, age - 40)),
+                    ("angiopathy", 0.03),
+                    ("ulcer", 0.015),
+                ):
                     if rng.random() < p:
                         comp.append(k)
             data["complications"] = comp
@@ -210,16 +279,30 @@ class CohortModule:
             cond.code = "E78.5" if r < 0.58 else "E78.2" if r < 0.80 else "E78.00"
         elif key == "ckd":
             diabetic = person.has("dm")
-            probs = [0.15, 0.22, 0.38, 0.18, 0.05, 0.02] if age < 65 else [0.08, 0.17, 0.48, 0.20, 0.05, 0.02]
+            probs = (
+                [0.15, 0.22, 0.38, 0.18, 0.05, 0.02]
+                if age < 65
+                else [0.08, 0.17, 0.48, 0.20, 0.05, 0.02]
+            )
             stage = int(rng.choice([1, 2, 3, 4, 5, 6], p=probs))
             if incident:
                 stage = int(rng.choice([1, 2, 3], p=[0.25, 0.4, 0.35]))
             cond.stage = stage
-            data["sub"] = ["a", "b", ""][int(rng.choice(3, p=[0.45, 0.35, 0.20]))] if stage == 3 else ""
+            data["sub"] = (
+                ["a", "b", ""][int(rng.choice(3, p=[0.45, 0.35, 0.20]))] if stage == 3 else ""
+            )
             data["diabetic"] = diabetic
         elif key == "asthma":
             r = rng.random()
-            cond.code = "J45.909" if r < 0.45 else "J45.20" if r < 0.60 else "J45.30" if r < 0.80 else "J45.40"
+            cond.code = (
+                "J45.909"
+                if r < 0.45
+                else "J45.20"
+                if r < 0.60
+                else "J45.30"
+                if r < 0.80
+                else "J45.40"
+            )
         elif key == "copd":
             data["smoker"] = bool(rng.random() < 0.45)
         elif key == "depression":
@@ -232,17 +315,41 @@ class CohortModule:
             data["systolic"] = bool(rng.random() < 0.5)
         elif key == "autoimmune":
             r = rng.random()
-            cond.code, data["specialty"] = (("M06.9", "rheumatology") if r < 0.40 else ("L40.0", "dermatology") if r < 0.65 else ("K50.90", "gastroenterology") if r < 0.85 else ("K51.90", "gastroenterology"))
+            cond.code, data["specialty"] = (
+                ("M06.9", "rheumatology")
+                if r < 0.40
+                else ("L40.0", "dermatology")
+                if r < 0.65
+                else ("K50.90", "gastroenterology")
+                if r < 0.85
+                else ("K51.90", "gastroenterology")
+            )
         person.conds[key] = cond
 
 
 # condition key -> the module that manages it
 CONDITION_MODULE: dict[str, str] = {
-    "dm": "diabetes", "htn": "htn", "lipid": "lipid", "ckd": "ckd", "asthma": "resp_chronic",
-    "copd": "resp_chronic", "depression": "behavioral", "anxiety": "behavioral",
-    "adhd": "behavioral", "sud_opioid": "behavioral", "sud_alcohol": "behavioral",
-    "bipolar": "behavioral", "schizophrenia": "behavioral", "hypothyroid": "simple",
-    "gerd": "simple", "osteoporosis": "simple", "bph": "simple", "autoimmune": "simple", "cad": "cardiac", "hf": "cardiac",
-    "afib": "cardiac", "obesity": "",
+    "dm": "diabetes",
+    "htn": "htn",
+    "lipid": "lipid",
+    "ckd": "ckd",
+    "asthma": "resp_chronic",
+    "copd": "resp_chronic",
+    "depression": "behavioral",
+    "anxiety": "behavioral",
+    "adhd": "behavioral",
+    "sud_opioid": "behavioral",
+    "sud_alcohol": "behavioral",
+    "bipolar": "behavioral",
+    "schizophrenia": "behavioral",
+    "hypothyroid": "simple",
+    "gerd": "simple",
+    "osteoporosis": "simple",
+    "bph": "simple",
+    "autoimmune": "simple",
+    "cad": "cardiac",
+    "hf": "cardiac",
+    "afib": "cardiac",
+    "obesity": "",
 }
 assert set(BANDS)  # the band names are shared with the calibration table

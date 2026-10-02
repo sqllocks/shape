@@ -12,14 +12,21 @@ import pyarrow as pa  # type: ignore[import-untyped]
 from . import identifiers
 from .calibration import Calibration, band
 from .model import Member, Plan, Span
-from .names import FEMALE, MALE, SURNAMES
+from .names import FEMALE, MALE, STREETS, SUFFIXES, SURNAMES
 
 DEFAULT_STATES = ("TX", "CA", "FL", "NY", "IL", "PA", "OH", "GA", "NC", "MI")
-_STATE_WEIGHT = {"TX": 9.0, "CA": 12.0, "FL": 7.0, "NY": 6.0, "IL": 4.0, "PA": 4.0, "OH": 3.6,
-                 "GA": 3.3, "NC": 3.2, "MI": 3.0}
-_STREETS = ("Main", "Oak", "Maple", "Cedar", "Elm", "Washington", "Lake", "Hill", "Park", "Pine",
-            "Sunset", "Church", "Highland", "Franklin", "Jefferson", "River", "Mill", "Spring")
-_SUFFIX = ("St", "Ave", "Rd", "Dr", "Ln", "Blvd", "Ct", "Way")
+_STATE_WEIGHT = {
+    "TX": 9.0,
+    "CA": 12.0,
+    "FL": 7.0,
+    "NY": 6.0,
+    "IL": 4.0,
+    "PA": 4.0,
+    "OH": 3.6,
+    "GA": 3.3,
+    "NC": 3.2,
+    "MI": 3.0,
+}
 
 
 def load_zip_reference(states: Sequence[str]) -> dict[str, list[tuple[str, str, float, float]]]:
@@ -32,8 +39,12 @@ def load_zip_reference(states: Sequence[str]) -> dict[str, list[tuple[str, str, 
         table = pa.ipc.open_file(handle).read_all()
     out: dict[str, list[tuple[str, str, float, float]]] = {s: [] for s in states}
     for z, city, st, lat, lon in zip(
-        table["zip"].to_pylist(), table["city"].to_pylist(), table["state"].to_pylist(),
-        table["lat"].to_pylist(), table["lng"].to_pylist(), strict=True,
+        table["zip"].to_pylist(),
+        table["city"].to_pylist(),
+        table["state"].to_pylist(),
+        table["lat"].to_pylist(),
+        table["lng"].to_pylist(),
+        strict=True,
     ):
         if st in out:
             out[st].append((city, z, lat, lon))
@@ -49,8 +60,36 @@ def build_plans() -> dict[str, Plan]:
         Plan("COM-PPO-1", "commercial", "PPO", "", 1500, 6000, 0.20, 30, 60, 300, 75, 0),
         Plan("COM-PPO-2", "commercial", "PPO", "", 3000, 8000, 0.30, 40, 80, 350, 90, 0),
         Plan("COM-EPO-1", "commercial", "EPO", "", 750, 5500, 0.20, 25, 50, 250, 60, 0),
-        Plan("COM-HMO-1", "commercial", "HMO", "", 0, 4500, 0.10, 20, 45, 250, 50, 250, pcp_required=True),
-        Plan("COM-HDHP-1", "commercial", "HDHP", "", 1650, 7000, 0.20, 0, 0, 0, 0, 0, family_multiple=2.0),
+        Plan(
+            "COM-HMO-1",
+            "commercial",
+            "HMO",
+            "",
+            0,
+            4500,
+            0.10,
+            20,
+            45,
+            250,
+            50,
+            250,
+            pcp_required=True,
+        ),
+        Plan(
+            "COM-HDHP-1",
+            "commercial",
+            "HDHP",
+            "",
+            1650,
+            7000,
+            0.20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            family_multiple=2.0,
+        ),
         Plan("MA-HMO-1", "ma", "MA-HMO", "", 0, 6700, 0.20, 0, 40, 90, 40, 350, pcp_required=True),
         Plan("MA-PPO-1", "ma", "MA-PPO", "", 0, 7500, 0.20, 5, 45, 90, 45, 350),
         Plan("MCD-MCO-1", "medicaid", "MCO", "", 0, 1000, 0.0, 0, 0, 0, 0, 0),
@@ -65,12 +104,21 @@ _MA_PLANS = ("MA-HMO-1", "MA-PPO-1")
 
 def _pick(rng: np.random.Generator, weights: dict[str, float]) -> str:
     keys = list(weights)
-    return keys[int(rng.choice(len(keys), p=np.asarray(list(weights.values())) / sum(weights.values())))]
+    return keys[
+        int(rng.choice(len(keys), p=np.asarray(list(weights.values())) / sum(weights.values())))
+    ]
 
 
 def _age_from_band(rng: np.random.Generator, weights: dict[str, float]) -> int:
-    edges = {"0-17": (0, 17), "18-34": (18, 34), "35-44": (35, 44), "45-54": (45, 54),
-             "55-64": (55, 64), "65-74": (65, 74), "75+": (75, 94)}
+    edges = {
+        "0-17": (0, 17),
+        "18-34": (18, 34),
+        "35-44": (35, 44),
+        "45-54": (45, 54),
+        "55-64": (55, 64),
+        "65-74": (65, 74),
+        "75+": (75, 94),
+    }
     lo, hi = edges[_pick(rng, {k: v for k, v in weights.items() if v > 0})]
     return int(rng.integers(lo, hi + 1))
 
@@ -85,8 +133,14 @@ def _frailty(rng: np.random.Generator, shape: float) -> float:
 
 
 def build_members(
-    n: int, cal: Calibration, seed: int, start: date, end: date, states: Sequence[str],
-    zips: dict[str, list[tuple[str, str, float, float]]], lob_mix: dict[str, float] | None = None,
+    n: int,
+    cal: Calibration,
+    seed: int,
+    start: date,
+    end: date,
+    states: Sequence[str],
+    zips: dict[str, list[tuple[str, str, float, float]]],
+    lob_mix: dict[str, float] | None = None,
 ) -> tuple[list[Member], dict[str, Plan]]:
     plans = build_plans()
     rng = np.random.default_rng([seed, 1])
@@ -99,17 +153,43 @@ def build_members(
     household = 0
     group_ids = {lob: [f"GRP{lob[:3].upper()}{i:04d}" for i in range(1, 41)] for lob in mix}
 
-    def make(lob: str, sex: str, age: int, hh: int, rel: str, suffix: str, sub_idx: int,
-             state: str, addr: tuple[str, str, str, float, float]) -> Member:
+    def make(
+        lob: str,
+        sex: str,
+        age: int,
+        hh: int,
+        rel: str,
+        suffix: str,
+        sub_idx: int,
+        state: str,
+        addr: tuple[str, str, str, float, float],
+    ) -> Member:
         idx = len(members)
         pool = FEMALE if sex == "F" else MALE
         first = pool[int(rng.integers(0, len(pool)))]
         last = SURNAMES[int(rng.integers(0, len(SURNAMES)))]
         street, city, zp, lat, lon = addr
         m = Member(
-            idx, identifiers.member_id(idx + 1), identifiers.subscriber_id(sub_idx + 1), suffix,
-            rel, first, last, sex, _dob(rng, start, age), lob, hh, state, zp, city, street, lat,
-            lon, identifiers.ssn(rng), identifiers.email(first, last, idx), identifiers.phone(rng),
+            idx,
+            identifiers.member_id(idx + 1),
+            identifiers.subscriber_id(sub_idx + 1),
+            suffix,
+            rel,
+            first,
+            last,
+            sex,
+            _dob(rng, start, age),
+            lob,
+            hh,
+            state,
+            zp,
+            city,
+            street,
+            lat,
+            lon,
+            identifiers.ssn(rng),
+            identifiers.email(first, last, idx),
+            identifiers.phone(rng),
             frailty=_frailty(rng, shape),
         )
         members.append(m)
@@ -122,8 +202,17 @@ def build_members(
         lob = _pick(rng, hh_mix)
         state = str(rng.choice(np.asarray(states), p=state_w))
         city, zp, lat, lon = zips[state][int(rng.integers(0, len(zips[state])))]
-        street = f"{int(rng.integers(1, 9999))} {_STREETS[int(rng.integers(0, len(_STREETS)))]} {_SUFFIX[int(rng.integers(0, len(_SUFFIX)))]}"
-        addr = (street, city, zp, lat + float(rng.uniform(-0.002, 0.002)), lon + float(rng.uniform(-0.002, 0.002)))
+        number = int(rng.integers(1, 9999))
+        name = STREETS[int(rng.integers(0, len(STREETS)))]
+        street_suffix = SUFFIXES[int(rng.integers(0, len(SUFFIXES)))]
+        street = f"{number} {name} {street_suffix}"
+        addr = (
+            street,
+            city,
+            zp,
+            lat + float(rng.uniform(-0.002, 0.002)),
+            lon + float(rng.uniform(-0.002, 0.002)),
+        )
         sub_idx = len(members)
         if lob == "commercial":
             age = _age_from_band(rng, cal.get("pop.age_commercial_subscriber"))
@@ -142,33 +231,76 @@ def build_members(
                 for _ in range(k):
                     c_age = min(max(0, age - 20 - int(rng.integers(0, 14))), 24)
                     c_age = int(rng.integers(0, 25)) if c_age > 24 else c_age
-                    kid = make(lob, "F" if rng.random() < 0.49 else "M", min(c_age, 24), household,
-                               "19", f"{suffix:02d}", sub_idx, state, addr)
+                    kid = make(
+                        lob,
+                        "F" if rng.random() < 0.49 else "M",
+                        min(c_age, 24),
+                        household,
+                        "19",
+                        f"{suffix:02d}",
+                        sub_idx,
+                        state,
+                        addr,
+                    )
                     kid.last = sub.last
                     suffix += 1
         elif lob == "ma":
             if rng.random() < cal.get("pop.ma_disabled_share"):
                 age = int(rng.integers(40, 65))
             else:
-                age = {"65-69": (65, 69), "70-74": (70, 74), "75-79": (75, 79), "80-84": (80, 84),
-                       "85+": (85, 95)}[_pick(rng, cal.get("pop.ma_age"))]
-                age = int(rng.integers(age[0], age[1] + 1)) if isinstance(age, tuple) else age
+                lo_hi = {
+                    "65-69": (65, 69),
+                    "70-74": (70, 74),
+                    "75-79": (75, 79),
+                    "80-84": (80, 84),
+                    "85+": (85, 95),
+                }[_pick(rng, cal.get("pop.ma_age"))]
+                age = int(rng.integers(lo_hi[0], lo_hi[1] + 1))
             sex = "F" if rng.random() < female[lob] else "M"
             make(lob, sex, age, household, "18", "01", sub_idx, state, addr)
         else:
             roll = rng.random()
-            if roll < cal.get("pop.medicaid_child_share") * 0.55:  # a case with a parent and children
+            if (
+                roll < cal.get("pop.medicaid_child_share") * 0.55
+            ):  # a case with a parent and children
                 p_age = int(rng.integers(20, 45))
-                sub = make(lob, "F" if rng.random() < 0.8 else "M", p_age, household, "18", "01",
-                           sub_idx, state, addr)
+                sub = make(
+                    lob,
+                    "F" if rng.random() < 0.8 else "M",
+                    p_age,
+                    household,
+                    "18",
+                    "01",
+                    sub_idx,
+                    state,
+                    addr,
+                )
                 for k in range(int(rng.integers(1, 4))):
-                    kid = make(lob, "F" if rng.random() < 0.49 else "M", int(rng.integers(0, 18)),
-                               household, "19", f"{k + 2:02d}", sub_idx, state, addr)
+                    kid = make(
+                        lob,
+                        "F" if rng.random() < 0.49 else "M",
+                        int(rng.integers(0, 18)),
+                        household,
+                        "19",
+                        f"{k + 2:02d}",
+                        sub_idx,
+                        state,
+                        addr,
+                    )
                     kid.last = sub.last
             else:
                 age = _age_from_band(rng, cal.get("pop.age_medicaid_adult"))
-                m = make(lob, "F" if rng.random() < female[lob] else "M", age, household, "18",
-                         "01", sub_idx, state, addr)
+                m = make(
+                    lob,
+                    "F" if rng.random() < female[lob] else "M",
+                    age,
+                    household,
+                    "18",
+                    "01",
+                    sub_idx,
+                    state,
+                    addr,
+                )
                 if age >= 65 and rng.random() < 0.6:
                     m.dual = True
     members = members[:n] if len(members) > n else members
@@ -180,12 +312,14 @@ def build_members(
     for hh, group in by_hh.items():
         lob = group[0].lob
         if lob == "commercial":
-            plan_of[hh] = str(rng.choice(np.asarray(_COMMERCIAL_PLANS), p=np.asarray(_COMMERCIAL_WEIGHT)))
+            plan_of[hh] = str(
+                rng.choice(np.asarray(_COMMERCIAL_PLANS), p=np.asarray(_COMMERCIAL_WEIGHT))
+            )
         elif lob == "ma":
             plan_of[hh] = str(rng.choice(np.asarray(_MA_PLANS), p=np.asarray([0.55, 0.45])))
         else:
             plan_of[hh] = "MCD-MCO-1"
-    for hh, group in by_hh.items():
+    for group in by_hh.values():
         gid = group_ids[group[0].lob][int(rng.integers(0, 40))]
         for m in group:
             m.group_id = gid
@@ -198,8 +332,13 @@ def _span_len_years(rng: np.random.Generator) -> float:
 
 
 def _eligibility(
-    members: list[Member], by_hh: dict[int, list[Member]], plan_of: dict[int, str],
-    cal: Calibration, rng: np.random.Generator, start: date, end: date,
+    members: list[Member],
+    by_hh: dict[int, list[Member]],
+    plan_of: dict[int, str],
+    cal: Calibration,
+    rng: np.random.Generator,
+    start: date,
+    end: date,
 ) -> None:
     term = cal.get("elig.annual_term")
     reenroll = cal.get("elig.reenroll_prob")
@@ -207,6 +346,7 @@ def _eligibility(
     cob = cal.get("elig.cob_prob")
     mort = cal.get("mortality.annual")
     scale = float(cal.get("mortality.insured_scale"))
+
     def spans_for(lob: str, plan_id: str, new_hire: bool) -> list[Span]:
         spans: list[Span] = []
         if new_hire:

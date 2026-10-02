@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """Clinician-readable member timelines (HTML).
 
 One page per member: who they are, their coverage, the problem list with the diagnoses behind it,
@@ -54,7 +55,9 @@ class TimelineIndex:
         self.eligibility: dict[str, list[dict[str, Any]]] = defaultdict(list)
         for r in tables["eligibility"].to_pylist():
             self.eligibility[r["member_id"]].append(r)
-        self.claims: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(lambda: defaultdict(list))
+        self.claims: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(
+            lambda: defaultdict(list)
+        )
         for r in tables["medical_claim"].to_pylist():
             self.claims[r["member_id"]][r["claim_root_id"]].append(r)
         self.dx: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -87,11 +90,13 @@ def _provider(ix: TimelineIndex, npi: str | None, blind: bool) -> str:
     if not npi or npi not in ix.provider:
         return ""
     p = ix.provider[npi]
-    name = SPECIALTY[p["specialty"]].name if p["specialty"] in SPECIALTY else p["specialty"]
+    name = SPECIALTY[p["specialty_key"]].name if p["specialty_key"] in SPECIALTY else p["specialty"]
     return escape(name if blind else f"{p['name']} · {name} · NPI {npi}")
 
 
-def render_member(ix: TimelineIndex, member_id: str, *, blind: bool = False, label: str | None = None) -> str:
+def render_member(
+    ix: TimelineIndex, member_id: str, *, blind: bool = False, label: str | None = None
+) -> str:
     m = ix.members[member_id]
     title = label or (f"Member {member_id}" if not blind else "Patient")
     rows: list[tuple[date, int, str]] = []
@@ -101,7 +106,11 @@ def render_member(ix: TimelineIndex, member_id: str, *, blind: bool = False, lab
     for root, versions in ix.claims[member_id].items():
         versions = sorted(versions, key=lambda r: r["claim_version"])
         first = versions[0]
-        last = [v for v in versions if v["claim_frequency_code"] != "8"][-1] if any(v["claim_frequency_code"] != "8" for v in versions) else versions[-1]
+        last = (
+            [v for v in versions if v["claim_frequency_code"] != "8"][-1]
+            if any(v["claim_frequency_code"] != "8" for v in versions)
+            else versions[-1]
+        )
         dup = [v for v in versions if v["duplicate_of_claim_id"]]
         if dup:
             continue
@@ -109,17 +118,26 @@ def render_member(ix: TimelineIndex, member_id: str, *, blind: bool = False, lab
         for v in versions:
             tag = {"1": "original", "7": "replacement", "8": "void"}[v["claim_frequency_code"]]
             if v["claim_version"] == 1 and v["claim_status"] == "denied":
-                lifecycle.append(f"denied (CARC {v['denial_carc']}{('/' + v['denial_rarc']) if v['denial_rarc'] else ''})")
+                lifecycle.append(
+                    f"denied (CARC {v['denial_carc']}{('/' + v['denial_rarc']) if v['denial_rarc'] else ''})"
+                )
             elif v["claim_version"] > 1:
                 lifecycle.append(f"{tag}: {v['claim_status']}")
-        voided = any(v["claim_frequency_code"] == "8" for v in versions) and not any(v["claim_version"] == 3 for v in versions)
+        voided = any(v["claim_frequency_code"] == "8" for v in versions) and not any(
+            v["claim_version"] == 3 for v in versions
+        )
         paid = last["claim_status"] in ("paid",) and not voided
         day = first["admission_date"] or first["service_from_date"]
         lines = ix.lines[first["claim_id"]]
         dxs = sorted(ix.dx[first["claim_id"]], key=lambda r: r["sequence"])
         for d in dxs:
-            e = problems.setdefault(d["diagnosis_code"], [first["service_from_date"], first["service_from_date"], 0])
-            e[0], e[1] = min(e[0], first["service_from_date"]), max(e[1], first["service_from_date"])
+            e = problems.setdefault(
+                d["diagnosis_code"], [first["service_from_date"], first["service_from_date"], 0]
+            )
+            e[0], e[1] = (
+                min(e[0], first["service_from_date"]),
+                max(e[1], first["service_from_date"]),
+            )
             e[2] += 1
         kind = first["facility_type"] or "professional"
         css = "ip" if kind == "inpatient" else "ed" if kind == "emergency" else ""
@@ -129,38 +147,62 @@ def render_member(ix: TimelineIndex, member_id: str, *, blind: bool = False, lab
             desc = s.desc if s else ln["service_key"]
             code = ln["procedure_code"] if ln["code_system"] != "SHAPE-SVC" else ""
             units = f" ×{ln['units']}" if ln["units"] and ln["units"] > 1 else ""
-            what.append(f"{escape(desc)}{units}" + (f" <span class='code'>[{escape(code)}]</span>" if code else ""))
-        pcs = ", ".join(f"<span class='code'>{r['procedure_code']}</span>" for r in ix.pcs[first["claim_id"]])
+            what.append(
+                f"{escape(desc)}{units}"
+                + (f" <span class='code'>[{escape(code)}]</span>" if code else "")
+            )
+        pcs = ", ".join(
+            f"<span class='code'>{r['procedure_code']}</span>" for r in ix.pcs[first["claim_id"]]
+        )
         stay = ""
         if kind == "inpatient":
             drg = DRG.get(first["drg_code"] or "")
-            stay = (f"<div><b>Inpatient stay</b> {first['admission_date']} → {first['discharge_date']} "
-                    f"({first['length_of_stay']} d) · DRG <span class='code'>{first['drg_code']}</span> "
-                    f"{escape(drg.title) if drg else ''}"
-                    f"{' · died in hospital' if first['patient_discharge_status'] == '20' else ''}</div>")
+            stay = (
+                f"<div><b>Inpatient stay</b> {first['admission_date']} → {first['discharge_date']} "
+                f"({first['length_of_stay']} d) · DRG <span class='code'>{first['drg_code']}</span> "
+                f"{escape(drg.title) if drg else ''}"
+                f"{' · died in hospital' if first['patient_status_code'] == '20' else ''}</div>"
+            )
             if pcs:
                 stay += f"<div>Procedures (ICD-10-PCS): {pcs}</div>"
         dx_html = "".join(
             f"<span class='chip' title='{escape(_dx_text(d['diagnosis_code']))}'><span class='code'>{d['diagnosis_code']}</span>"
-            f"{'·' + d['present_on_admission'] if d['present_on_admission'] else ''}</span>" for d in dxs
+            f"{'·' + d['poa_indicator'] if d['poa_indicator'] else ''}</span>"
+            for d in dxs
         )
         dx_names = "; ".join(escape(_dx_text(d["diagnosis_code"])) for d in dxs[:3])
-        status = ("<span class='ok'>paid</span>" if paid else "<span class='dn'>not paid</span>")
+        status = "<span class='ok'>paid</span>" if paid else "<span class='dn'>not paid</span>"
         chips = "".join(f"<span class='chip'>{escape(c)}</span>" for c in lifecycle)
         money = ""
         if paid:
-            money = (f"allowed {_money(last['allowed_amount'])} · plan {_money(last['paid_amount'])} · "
-                     f"member {_money(last['member_responsibility'])}")
-            totals[first["service_from_date"].year][0] += last["allowed_amount"]
-            totals[first["service_from_date"].year][1] += last["paid_amount"]
+            money = (
+                f"allowed {_money(last['total_allowed'])} · plan {_money(last['total_paid'])} · "
+                f"member {_money(last['member_responsibility'])}"
+            )
+            totals[first["service_from_date"].year][0] += last["total_allowed"]
+            totals[first["service_from_date"].year][1] += last["total_paid"]
             totals[first["service_from_date"].year][2] += last["member_responsibility"]
-        prov = _provider(ix, first["rendering_provider_npi"] or first["billing_provider_npi"], blind)
-        auth = f" · prior auth {escape(first['prior_auth_number'])}" if first["prior_auth_number"] and not blind else (" · prior authorization on file" if first["prior_auth_number"] else "")
-        label_k = {"professional": "Professional", "inpatient": "Inpatient", "emergency": "Emergency dept", "outpatient_hospital": "Hospital outpatient",
-                   "asc": "Surgery center", "dialysis": "Dialysis"}[kind]
-        html = (f"<tr class='{css}'><td class='n'>{day}</td><td>{label_k}<br><span class='meta'>{prov}</span></td>"
-                f"<td>{stay}<div>{'; '.join(what)}</div><div class='meta'>{dx_names}</div><div>{dx_html}</div></td>"
-                f"<td>{status}<br>{chips}<div class='meta'>{money}{auth}</div></td></tr>")
+        prov = _provider(
+            ix, first["rendering_npi"] or first["attending_npi"] or first["billing_npi"], blind
+        )
+        auth = (
+            f" · prior auth {escape(first['prior_auth_number'])}"
+            if first["prior_auth_number"] and not blind
+            else (" · prior authorization on file" if first["prior_auth_number"] else "")
+        )
+        label_k = {
+            "professional": "Professional",
+            "inpatient": "Inpatient",
+            "emergency": "Emergency dept",
+            "outpatient_hospital": "Hospital outpatient",
+            "asc": "Surgery center",
+            "dialysis": "Dialysis",
+        }[kind]
+        html = (
+            f"<tr class='{css}'><td class='n'>{day}</td><td>{label_k}<br><span class='meta'>{prov}</span></td>"
+            f"<td>{stay}<div>{'; '.join(what)}</div><div class='meta'>{dx_names}</div><div>{dx_html}</div></td>"
+            f"<td>{status}<br>{chips}<div class='meta'>{money}{auth}</div></td></tr>"
+        )
         rows.append((day, 0, html))
         final_status[root] = last["claim_status"]
     for f in ix.rx[member_id]:
@@ -171,31 +213,51 @@ def render_member(ix: TimelineIndex, member_id: str, *, blind: bool = False, lab
         else:
             status = f"<span class='ok'>paid</span> patient {_money(f['patient_pay'])} · plan {_money(f['plan_paid'])}"
         drug = ix.drug.get(f["ndc"])
-        name = f"{f['drug_name']} {f['strength']} {f['dosage_form'].lower()}"
+        name = f"{f['drug_name']} {f['strength']} {f['dose_form'].lower()}"
         sched = f" · C-{f['dea_schedule']}" if f["dea_schedule"] else ""
         bg = {"B": "brand", "G": "generic"}[f["brand_generic"]]
         prescriber = _provider(ix, f["prescriber_npi"], blind)
-        rows.append((f["fill_date"], 1, (
-            f"<tr class='rx'><td class='n'>{f['fill_date']}</td><td>Pharmacy<br><span class='meta'>{f['pharmacy_type']}</span></td>"
-            f"<td><b>{escape(name)}</b> · {f['quantity_dispensed']:g} for {f['days_supply']} days · {bg} · tier {f['formulary_tier']}{sched}"
-            f"<div class='meta'>{escape(f['therapeutic_class'])} · fill #{f['fill_number']} · written {f['date_written']}"
-            f"{' · prescriber ' + prescriber if prescriber else ''}</div></td><td>{status}</td></tr>")))
+        rows.append(
+            (
+                f["fill_date"],
+                1,
+                (
+                    f"<tr class='rx'><td class='n'>{f['fill_date']}</td><td>Pharmacy<br><span class='meta'>{f['pharmacy_type']}</span></td>"
+                    f"<td><b>{escape(name)}</b> · {f['quantity']:g} for {f['days_supply']} days · {bg} · tier {f['formulary_tier']}{sched}"
+                    f"<div class='meta'>{escape(f['therapeutic_class'])} · fill #{f['refill_number']} · written {f['written_date']}"
+                    f"{' · prescriber ' + prescriber if prescriber else ''}</div></td><td>{status}</td></tr>"
+                ),
+            )
+        )
         del drug
     rows.sort(key=lambda r: (r[0], r[1]))
     last_day = max((r[0] for r in rows), default=date(2024, 12, 31))
     age = _age(m["birth_date"], last_day)
     plans = []
-    for e in sorted(ix.eligibility[member_id], key=lambda e: e["effective_date"]):
-        p = ix.plans[e["plan_id"]]
-        plans.append(f"<tr><td>{e['effective_date']}</td><td>{e['termination_date'] or 'ongoing'}</td><td>{escape(e['line_of_business'])} {escape(e['product'])}</td>"
-                     f"<td>{escape(e['termination_reason'] or '')}</td><td class='n'>{_money(p['deductible'])}</td><td class='n'>{_money(p['oop_max'])}</td></tr>")
+    for el in sorted(ix.eligibility[member_id], key=lambda x: x["coverage_start"]):
+        p = ix.plans[el["plan_id"]]
+        plans.append(
+            f"<tr><td>{el['coverage_start']}</td><td>{el['coverage_end'] or 'ongoing'}</td><td>{escape(el['line_of_business'])} {escape(el['product'])}</td>"
+            f"<td>{escape(el['termination_reason'] or '')}</td><td class='n'>{_money(p['deductible'])}</td><td class='n'>{_money(p['oop_max'])}</td></tr>"
+        )
     prob_rows = "".join(
         f"<tr><td class='code'>{c}</td><td>{escape(ICD10CM[c].desc) if c in ICD10CM else ''}</td><td>{v[0]}</td><td>{v[1]}</td><td class='n'>{v[2]}</td></tr>"
         for c, v in sorted(problems.items(), key=lambda kv: -kv[1][2])[:30]
     )
-    risk = "".join(f"<tr><td>{r['risk_year']}</td><td class='n'>{r['raf_concurrent']}</td><td>{escape(r['hcc_concurrent'] or '—')}</td></tr>" for r in sorted(ix.risk[member_id], key=lambda r: r["risk_year"]))
-    adh = "".join(f"<tr><td>{r['measurement_year']}</td><td>{escape(r['therapeutic_group'])}</td><td class='n'>{r['pdc']:.2f}</td><td class='n'>{r['gap_days']}</td><td>{'abandoned' if r['abandoned_flag'] else ''}</td></tr>" for r in sorted(ix.adherence[member_id], key=lambda r: (r["measurement_year"], r["therapeutic_group"])))
-    cost = "".join(f"<tr><td>{y}</td><td class='n'>{_money(v[0])}</td><td class='n'>{_money(v[1])}</td><td class='n'>{_money(v[2])}</td></tr>" for y, v in sorted(totals.items()))
+    risk = "".join(
+        f"<tr><td>{r['risk_year']}</td><td class='n'>{r['raf_concurrent']}</td><td>{escape(r['hcc_concurrent'] or '—')}</td></tr>"
+        for r in sorted(ix.risk[member_id], key=lambda r: r["risk_year"])
+    )
+    adh = "".join(
+        f"<tr><td>{r['measurement_year']}</td><td>{escape(r['therapeutic_group'])}</td><td class='n'>{r['pdc']:.2f}</td><td class='n'>{r['gap_days']}</td><td>{'abandoned' if r['abandoned_flag'] else ''}</td></tr>"
+        for r in sorted(
+            ix.adherence[member_id], key=lambda r: (r["measurement_year"], r["therapeutic_group"])
+        )
+    )
+    cost = "".join(
+        f"<tr><td>{y}</td><td class='n'>{_money(v[0])}</td><td class='n'>{_money(v[1])}</td><td class='n'>{_money(v[2])}</td></tr>"
+        for y, v in sorted(totals.items())
+    )
     body_rows = []
     year = None
     for day, _, html in rows:
@@ -203,27 +265,34 @@ def render_member(ix: TimelineIndex, member_id: str, *, blind: bool = False, lab
             year = day.year
             body_rows.append(f"<tr><th colspan='4'>{year}</th></tr>")
         body_rows.append(html)
-    ident = (f"<div class='card'><b>Age / sex</b>{age} / {escape(m['sex'])}</div>" if blind else
-             f"<div class='card'><b>Member</b>{escape(m['first_name'])} {escape(m['last_name'])}<br><span class='code'>{escape(member_id)}</span></div>"
-             f"<div class='card'><b>Age / sex</b>{age} / {escape(m['sex'])} (born {m['birth_date']})</div>"
-             f"<div class='card'><b>Residence</b>{escape(m['city'])}, {escape(m['state'])} {escape(m['zip'])}</div>"
-             f"<div class='card'><b>Subscriber / relationship</b><span class='code'>{escape(m['subscriber_id'])}-{escape(m['member_suffix'])}</span> · code {escape(m['relationship_code'])}</div>")
+    ident = (
+        f"<div class='card'><b>Age / sex</b>{age} / {escape(m['sex'])}</div>"
+        if blind
+        else f"<div class='card'><b>Member</b>{escape(m['first_name'])} {escape(m['last_name'])}<br><span class='code'>{escape(member_id)}</span></div>"
+        f"<div class='card'><b>Age / sex</b>{age} / {escape(m['sex'])} (born {m['birth_date']})</div>"
+        f"<div class='card'><b>Residence</b>{escape(m['city'])}, {escape(m['state'])} {escape(m['zip'])}</div>"
+        f"<div class='card'><b>Subscriber / relationship</b><span class='code'>{escape(m['subscriber_id'])}-{escape(m['member_suffix'])}</span> · code {escape(m['relationship_code'])}</div>"
+    )
     if blind:
         ident += f"<div class='card'><b>Coverage</b>{escape(m['line_of_business'])}</div>"
-    return (f"<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
-            f"<title>{escape(title)} timeline</title><style>{_CSS}</style></head><body><main>"
-            f"<h1>{escape(title)}</h1><p class='meta'>Member timeline: diagnoses, procedures, fills and costs in date order.</p>"
-            f"<div class='grid'>{ident}</div>"
-            f"<h2>Coverage</h2><div class='wrap'><table><tr><th>From</th><th>To</th><th>Plan</th><th>Ended because</th><th class='n'>Deductible</th><th class='n'>OOP max</th></tr>{''.join(plans)}</table></div>"
-            f"<h2>Problem list (diagnoses seen on claims)</h2><div class='wrap'><table><tr><th>Code</th><th>Description</th><th>First</th><th>Last</th><th class='n'>Claims</th></tr>{prob_rows}</table></div>"
-            f"<h2>Risk</h2><div class='wrap'><table><tr><th>Year</th><th class='n'>RAF</th><th>HCC categories</th></tr>{risk}</table></div>"
-            f"<h2>Timeline</h2><div class='wrap'><table><tr><th>Date</th><th>Setting</th><th>What happened</th><th>Outcome</th></tr>{''.join(body_rows)}</table></div>"
-            f"<h2>Cost by year (paid claims)</h2><div class='wrap'><table><tr><th>Year</th><th class='n'>Allowed</th><th class='n'>Plan paid</th><th class='n'>Member</th></tr>{cost}</table></div>"
-            f"<h2>Medication adherence</h2><div class='wrap'><table><tr><th>Year</th><th>Group</th><th class='n'>PDC</th><th class='n'>Gap days</th><th></th></tr>{adh}</table></div>"
-            f"</main></body></html>")
+    return (
+        f"<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
+        f"<title>{escape(title)} timeline</title><style>{_CSS}</style></head><body><main>"
+        f"<h1>{escape(title)}</h1><p class='meta'>Member timeline: diagnoses, procedures, fills and costs in date order.</p>"
+        f"<div class='grid'>{ident}</div>"
+        f"<h2>Coverage</h2><div class='wrap'><table><tr><th>From</th><th>To</th><th>Plan</th><th>Ended because</th><th class='n'>Deductible</th><th class='n'>OOP max</th></tr>{''.join(plans)}</table></div>"
+        f"<h2>Problem list (diagnoses seen on claims)</h2><div class='wrap'><table><tr><th>Code</th><th>Description</th><th>First</th><th>Last</th><th class='n'>Claims</th></tr>{prob_rows}</table></div>"
+        f"<h2>Risk</h2><div class='wrap'><table><tr><th>Year</th><th class='n'>RAF</th><th>HCC categories</th></tr>{risk}</table></div>"
+        f"<h2>Timeline</h2><div class='wrap'><table><tr><th>Date</th><th>Setting</th><th>What happened</th><th>Outcome</th></tr>{''.join(body_rows)}</table></div>"
+        f"<h2>Cost by year (paid claims)</h2><div class='wrap'><table><tr><th>Year</th><th class='n'>Allowed</th><th class='n'>Plan paid</th><th class='n'>Member</th></tr>{cost}</table></div>"
+        f"<h2>Medication adherence</h2><div class='wrap'><table><tr><th>Year</th><th>Group</th><th class='n'>PDC</th><th class='n'>Gap days</th><th></th></tr>{adh}</table></div>"
+        f"</main></body></html>"
+    )
 
 
-def write_timelines(tables: dict[str, Any], directory: str | Path, member_ids: list[str], *, blind: bool = False) -> list[Path]:
+def write_timelines(
+    tables: dict[str, Any], directory: str | Path, member_ids: list[str], *, blind: bool = False
+) -> list[Path]:
     out = Path(directory)
     out.mkdir(parents=True, exist_ok=True)
     ix = TimelineIndex(tables)
@@ -243,7 +312,7 @@ def pick_rich_members(tables: dict[str, Any], n: int = 10) -> list[str]:
             counts[r["member_id"]] += 1
     lob = {r["member_id"]: r["line_of_business"] for r in tables["member"].to_pylist()}
     by_lob: dict[str, list[str]] = defaultdict(list)
-    for mid, c in sorted(counts.items(), key=lambda kv: -kv[1]):
+    for mid, _count in sorted(counts.items(), key=lambda kv: -kv[1]):
         by_lob[lob[mid]].append(mid)
     out: list[str] = []
     while len(out) < n and any(by_lob.values()):

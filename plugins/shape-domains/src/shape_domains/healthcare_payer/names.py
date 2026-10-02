@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """Small name pools for members and organisations (common US given names and surnames)."""
 
 from __future__ import annotations
@@ -32,3 +33,25 @@ ORG_ADJ = (
     "North South East West Central Valley River Lake Summit Harbor Prairie Cedar Maple Oak Pine "
     "Meadow Ridge Bay Mountain Sunrise Liberty Heritage Pioneer Evergreen Lakeside Hillcrest"
 ).split()
+
+STREETS = (
+    "Main",
+    "Oak",
+    "Maple",
+    "Cedar",
+    "Elm",
+    "Washington",
+    "Lake",
+    "Hill",
+    "Park",
+    "Pine",
+    "Sunset",
+    "Church",
+    "Highland",
+    "Franklin",
+    "Jefferson",
+    "River",
+    "Mill",
+    "Spring",
+)
+SUFFIXES = ("St", "Ave", "Rd", "Dr", "Ln", "Blvd", "Ct", "Way")

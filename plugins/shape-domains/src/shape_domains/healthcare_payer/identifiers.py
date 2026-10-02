@@ -1,8 +1,8 @@
 """Synthetic identifiers that can never belong to a real person.
 
-* NPI: 10 digits, Luhn check digit over the ``80840`` prefix, first digit ``9`` (NPPES assigns only
-  ``1`` and ``2``, so a ``9`` NPI is never assigned).  The ``NpiSource`` seam lets the codes lane's
-  generator replace this one without touching callers.
+* NPI: 10 digits, Luhn check digit over the ``80840`` prefix, leading ``99`` (CMS issued NPIs with a
+  first digit of 1 or 2, so a ``99`` NPI is never assigned; the same rule as the codes lane's
+  ``generate_synthetic_npis``).  The ``NpiSource`` seam lets another generator replace this one.
 * Member and subscriber ids carry the letters ``SYN``: no payer issues them.
 * SSN: area ``900``-``999`` (never issued), group and serial non-zero.
 * E-mail: ``example.com`` / ``example.org`` / ``example.net`` (reserved by RFC 2606).
@@ -16,7 +16,7 @@ from typing import Protocol
 import numpy as np
 
 NPI_PREFIX = "80840"
-SYNTHETIC_NPI_LEAD = "9"
+SYNTHETIC_NPI_LEAD = "99"
 EMAIL_DOMAINS = ("example.com", "example.org", "example.net")
 
 
@@ -39,7 +39,7 @@ def npi_is_valid(npi: str) -> bool:
 
 
 def npi_is_never_assigned(npi: str) -> bool:
-    return npi_is_valid(npi) and npi[0] == SYNTHETIC_NPI_LEAD
+    return npi_is_valid(npi) and npi.startswith(SYNTHETIC_NPI_LEAD)
 
 
 class NpiSource(Protocol):
@@ -50,7 +50,7 @@ class SyntheticNpis:
     """Never-assigned NPIs: ``9`` + 8 digits drawn without repeats + check digit."""
 
     def npi(self, n: int) -> str:
-        body = SYNTHETIC_NPI_LEAD + f"{(n * 7919 + 10_000_019) % 100_000_000:08d}"
+        body = SYNTHETIC_NPI_LEAD + f"{(n * 7919 + 1_000_003) % 10_000_000:07d}"
         return body + str(npi_check_digit(body))
 
 

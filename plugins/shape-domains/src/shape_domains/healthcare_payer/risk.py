@@ -13,7 +13,17 @@ from collections.abc import Iterable
 
 from .reference import HCC_HIERARCHY, HCC_LABEL, HCC_OF, HCC_WEIGHT
 
-_DEMO = ((0, 0.25), (18, 0.22), (45, 0.30), (55, 0.40), (65, 0.45), (70, 0.55), (75, 0.66), (80, 0.78), (85, 0.90))
+_DEMO = (
+    (0, 0.25),
+    (18, 0.22),
+    (45, 0.30),
+    (55, 0.40),
+    (65, 0.45),
+    (70, 0.55),
+    (75, 0.66),
+    (80, 0.78),
+    (85, 0.90),
+)
 
 
 def demographic_factor(age: int, sex: str) -> float:

@@ -1,0 +1,797 @@
+{
+ "source": "lane/HC-standards plugins/shape-healthcare-standards/src/shape_healthcare_standards/contract.py (snapshot)",
+ "tables": {
+  "member": [
+   {
+    "name": "member_id",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "subscriber_id",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "relationship_code",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "first_name",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "last_name",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "birth_date",
+    "type": "date32[day]",
+    "required": true
+   },
+   {
+    "name": "sex",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "member_suffix",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "middle_name",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "address_line1",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "address_line2",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "city",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "state",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "zip",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "phone",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "race",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "ethnicity",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "language",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "marital_status",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "deceased_date",
+    "type": "date32[day]",
+    "required": false
+   }
+  ],
+  "eligibility": [
+   {
+    "name": "member_id",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "plan_id",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "coverage_start",
+    "type": "date32[day]",
+    "required": true
+   },
+   {
+    "name": "coverage_end",
+    "type": "date32[day]",
+    "required": true
+   },
+   {
+    "name": "eligibility_id",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "group_id",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "group_name",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "plan_name",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "plan_type",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "coverage_level",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "insurance_line",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "payer_id",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "payer_name",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "pcp_npi",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "cob_flag",
+    "type": "bool",
+    "required": false
+   },
+   {
+    "name": "termination_reason",
+    "type": "string",
+    "required": false
+   }
+  ],
+  "provider": [
+   {
+    "name": "npi",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "entity_type",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "last_name",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "first_name",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "org_name",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "taxonomy_code",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "specialty",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "tax_id",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "address_line1",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "city",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "state",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "zip",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "network_status",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "ncpdp_id",
+    "type": "string",
+    "required": false
+   }
+  ],
+  "medical_claim": [
+   {
+    "name": "claim_id",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "claim_type",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "member_id",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "billing_npi",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "service_from_date",
+    "type": "date32[day]",
+    "required": true
+   },
+   {
+    "name": "service_to_date",
+    "type": "date32[day]",
+    "required": true
+   },
+   {
+    "name": "total_billed",
+    "type": "double",
+    "required": true
+   },
+   {
+    "name": "claim_frequency_code",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "rendering_npi",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "facility_npi",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "attending_npi",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "place_of_service",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "type_of_bill",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "admission_date",
+    "type": "date32[day]",
+    "required": false
+   },
+   {
+    "name": "discharge_date",
+    "type": "date32[day]",
+    "required": false
+   },
+   {
+    "name": "admission_type_code",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "patient_status_code",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "drg_code",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "received_date",
+    "type": "date32[day]",
+    "required": false
+   },
+   {
+    "name": "adjudication_date",
+    "type": "date32[day]",
+    "required": false
+   },
+   {
+    "name": "claim_status",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "total_allowed",
+    "type": "double",
+    "required": false
+   },
+   {
+    "name": "total_paid",
+    "type": "double",
+    "required": false
+   },
+   {
+    "name": "member_copay",
+    "type": "double",
+    "required": false
+   },
+   {
+    "name": "member_coinsurance",
+    "type": "double",
+    "required": false
+   },
+   {
+    "name": "member_deductible",
+    "type": "double",
+    "required": false
+   },
+   {
+    "name": "prior_auth_number",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "original_claim_id",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "payer_claim_number",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "plan_id",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "payer_id",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "payer_name",
+    "type": "string",
+    "required": false
+   }
+  ],
+  "medical_claim_line": [
+   {
+    "name": "claim_id",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "line_number",
+    "type": "int64",
+    "required": true
+   },
+   {
+    "name": "procedure_code",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "service_date",
+    "type": "date32[day]",
+    "required": true
+   },
+   {
+    "name": "billed_amount",
+    "type": "double",
+    "required": true
+   },
+   {
+    "name": "units",
+    "type": "double",
+    "required": false
+   },
+   {
+    "name": "modifier_1",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "modifier_2",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "modifier_3",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "modifier_4",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "revenue_code",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "place_of_service",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "diagnosis_pointers",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "allowed_amount",
+    "type": "double",
+    "required": false
+   },
+   {
+    "name": "paid_amount",
+    "type": "double",
+    "required": false
+   },
+   {
+    "name": "copay",
+    "type": "double",
+    "required": false
+   },
+   {
+    "name": "coinsurance",
+    "type": "double",
+    "required": false
+   },
+   {
+    "name": "deductible",
+    "type": "double",
+    "required": false
+   },
+   {
+    "name": "line_status",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "denial_carc",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "denial_rarc",
+    "type": "string",
+    "required": false
+   }
+  ],
+  "claim_diagnosis": [
+   {
+    "name": "claim_id",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "sequence",
+    "type": "int64",
+    "required": true
+   },
+   {
+    "name": "icd10_code",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "diagnosis_type",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "poa_indicator",
+    "type": "string",
+    "required": false
+   }
+  ],
+  "claim_procedure": [
+   {
+    "name": "claim_id",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "sequence",
+    "type": "int64",
+    "required": true
+   },
+   {
+    "name": "icd10pcs_code",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "procedure_date",
+    "type": "date32[day]",
+    "required": false
+   }
+  ],
+  "pharmacy_claim": [
+   {
+    "name": "rx_claim_id",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "member_id",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "ndc",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "fill_date",
+    "type": "date32[day]",
+    "required": true
+   },
+   {
+    "name": "quantity",
+    "type": "double",
+    "required": true
+   },
+   {
+    "name": "days_supply",
+    "type": "int64",
+    "required": true
+   },
+   {
+    "name": "pharmacy_npi",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "prescriber_npi",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "written_date",
+    "type": "date32[day]",
+    "required": false
+   },
+   {
+    "name": "rx_number",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "refill_number",
+    "type": "int64",
+    "required": false
+   },
+   {
+    "name": "daw_code",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "drug_name",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "pharmacy_ncpdp_id",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "ingredient_cost",
+    "type": "double",
+    "required": false
+   },
+   {
+    "name": "dispensing_fee",
+    "type": "double",
+    "required": false
+   },
+   {
+    "name": "patient_pay",
+    "type": "double",
+    "required": false
+   },
+   {
+    "name": "plan_paid",
+    "type": "double",
+    "required": false
+   },
+   {
+    "name": "claim_status",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "reject_code",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "mail_order",
+    "type": "bool",
+    "required": false
+   },
+   {
+    "name": "formulary_tier",
+    "type": "int64",
+    "required": false
+   },
+   {
+    "name": "plan_id",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "bin_number",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "pcn",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "group_id",
+    "type": "string",
+    "required": false
+   }
+  ],
+  "drug_reference": [
+   {
+    "name": "ndc",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "drug_name",
+    "type": "string",
+    "required": true
+   },
+   {
+    "name": "generic_name",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "strength",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "dose_form",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "route",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "rxnorm_code",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "therapeutic_class",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "brand_generic",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "dea_schedule",
+    "type": "string",
+    "required": false
+   },
+   {
+    "name": "labeler",
+    "type": "string",
+    "required": false
+   }
+  ]
+ },
+ "keys": {
+  "member": [
+   "member_id"
+  ],
+  "provider": [
+   "npi"
+  ],
+  "medical_claim": [
+   "claim_id"
+  ],
+  "medical_claim_line": [
+   "claim_id",
+   "line_number"
+  ],
+  "claim_diagnosis": [
+   "claim_id",
+   "sequence"
+  ],
+  "claim_procedure": [
+   "claim_id",
+   "sequence"
+  ],
+  "pharmacy_claim": [
+   "rx_claim_id"
+  ],
+  "drug_reference": [
+   "ndc"
+  ]
+ }
+}

@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """The blinded clinician review kit (acceptance item 8).
 
 Item 8 is a human step: practising clinicians or claims analysts try to tell generated member
@@ -94,16 +95,35 @@ class KitResult:
 
 
 def _load_tables(path: Path) -> dict[str, Any]:
-    names = ("member", "eligibility", "plan", "provider", "medical_claim", "medical_claim_line",
-             "claim_diagnosis", "claim_procedure", "pharmacy_claim", "drug_reference", "member_risk", "rx_adherence")
+    names = (
+        "member",
+        "eligibility",
+        "plan",
+        "provider",
+        "medical_claim",
+        "medical_claim_line",
+        "claim_diagnosis",
+        "claim_procedure",
+        "pharmacy_claim",
+        "drug_reference",
+        "member_risk",
+        "rx_adherence",
+    )
     return {n: pq.read_table(path / f"{n}.parquet") for n in names}
 
 
 _LEAKS = re.compile(r"SYN\d|SYS\d|\b9\d{9}\b|@example|synthetic", re.I)
 
 
-def build_kit(tables: dict[str, Any], directory: str | Path, *, n_synthetic: int = 20,
-              real_tables: str | Path | None = None, n_real: int = 20, seed: int = 7) -> KitResult:
+def build_kit(
+    tables: dict[str, Any],
+    directory: str | Path,
+    *,
+    n_synthetic: int = 20,
+    real_tables: str | Path | None = None,
+    n_real: int = 20,
+    seed: int = 7,
+) -> KitResult:
     out = Path(directory)
     cases_dir = out / "cases"
     cases_dir.mkdir(parents=True, exist_ok=True)
@@ -128,22 +148,45 @@ def build_kit(tables: dict[str, Any], directory: str | Path, *, n_synthetic: int
         kind, mid, ix = picks[i]
         case = f"case-{n:03d}"
         html = render_member(ix, mid, blind=True, label=f"Patient {case}")
-        if _LEAKS.search(html):
-            raise RuntimeError(f"{case}: the blinded page still carries an identifier ({_LEAKS.search(html).group(0)!r})")  # type: ignore[union-attr]
+        leak = _LEAKS.search(html)
+        if leak:
+            raise RuntimeError(
+                f"{case}: the blinded page still carries an identifier ({leak.group(0)!r})"
+            )
         (cases_dir / f"{case}.html").write_text(html, encoding="utf-8")
         key_rows.append({"case_id": case, "truth": kind})
-        sheet_rows.append({"case_id": case, "reviewer_id": "", "judgement": "", "confidence": "", "implausible_items": "", "notes": ""})
+        sheet_rows.append(
+            {
+                "case_id": case,
+                "reviewer_id": "",
+                "judgement": "",
+                "confidence": "",
+                "implausible_items": "",
+                "notes": "",
+            }
+        )
     for name, rows in (("KEY_DO_NOT_SHARE.csv", key_rows), ("scoring_sheet.csv", sheet_rows)):
         with (out / name).open("w", encoding="utf-8", newline="") as handle:
             w = csv.DictWriter(handle, fieldnames=list(rows[0]))
             w.writeheader()
             w.writerows(rows)
     syn = sum(1 for k, _, _ in picks if k == "generated")
-    comp = (f"{syn} generated and {len(picks) - syn} real cases." if real_tables is not None else
-            f"{syn} generated cases and **no real cases yet**: add a de-identified real sample "
-            f"(`--real-tables DIR`) and rebuild before the review; with generated cases only, no judgement can be scored.")
-    (out / "README.md").write_text(README.format(composition=comp, min_reviewers=MIN_REVIEWERS, min_cases=MIN_CASES_PER_REVIEWER,
-                                                 acc=PASS_ACCURACY, alpha=PASS_ALPHA), encoding="utf-8")
+    comp = (
+        f"{syn} generated and {len(picks) - syn} real cases."
+        if real_tables is not None
+        else f"{syn} generated cases and **no real cases yet**: add a de-identified real sample "
+        f"(`--real-tables DIR`) and rebuild before the review; with generated cases only, no judgement can be scored."
+    )
+    (out / "README.md").write_text(
+        README.format(
+            composition=comp,
+            min_reviewers=MIN_REVIEWERS,
+            min_cases=MIN_CASES_PER_REVIEWER,
+            acc=PASS_ACCURACY,
+            alpha=PASS_ALPHA,
+        ),
+        encoding="utf-8",
+    )
     return KitResult(out, len(picks), syn, len(picks) - syn)
 
 
@@ -164,9 +207,20 @@ def score(key_path: str | Path, sheet_paths: list[str | Path]) -> dict[str, Any]
     n = sum(len(v) for v in per.values())
     correct = sum(sum(v) for v in per.values())
     reviewers = len(per)
-    enough = reviewers >= MIN_REVIEWERS and all(len(v) >= MIN_CASES_PER_REVIEWER for v in per.values())
+    enough = reviewers >= MIN_REVIEWERS and all(
+        len(v) >= MIN_CASES_PER_REVIEWER for v in per.values()
+    )
     acc = correct / n if n else None
     p = binomial_sf(correct, n) if n else None
-    passed = bool(enough and acc is not None and acc <= PASS_ACCURACY and p is not None and p >= PASS_ALPHA)
-    return {"reviewers": reviewers, "judgements": n, "accuracy": acc, "p_value_above_chance": p,
-            "enough_data": enough, "pass": passed, "per_reviewer_accuracy": {k: sum(v) / len(v) for k, v in per.items()}}
+    passed = bool(
+        enough and acc is not None and acc <= PASS_ACCURACY and p is not None and p >= PASS_ALPHA
+    )
+    return {
+        "reviewers": reviewers,
+        "judgements": n,
+        "accuracy": acc,
+        "p_value_above_chance": p,
+        "enough_data": enough,
+        "pass": passed,
+        "per_reviewer_accuracy": {k: sum(v) / len(v) for k, v in per.items()},
+    }

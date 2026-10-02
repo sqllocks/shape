@@ -1,12 +1,11 @@
-"""``shape healthcare-payer``: generate the domain's tables, the quality report, member timelines and
-the review kit."""
+"""``shape healthcare-payer``: generate the domain's tables, the quality report, member
+timelines and the review kit."""
 
 from __future__ import annotations
 
 import argparse
 import json
 from datetime import date
-from pathlib import Path
 from typing import Any
 
 SHAPE_API = "1.0"
@@ -22,11 +21,15 @@ class HealthcarePayerCommand:
         sub = parser.add_subparsers(dest="hcp_cmd", required=True, metavar="ACTION")
 
         def common(p: argparse.ArgumentParser) -> None:
-            p.add_argument("--members", type=int, default=2000, help="members to simulate (default 2000)")
+            p.add_argument(
+                "--members", type=int, default=2000, help="members to simulate (default 2000)"
+            )
             p.add_argument("--seed", type=int, default=42)
             p.add_argument("--from", dest="start", default="2022-01-01")
             p.add_argument("--to", dest="end", default="2024-12-31")
-            p.add_argument("--cpt-table", help="licensed CPT / revenue / type-of-bill CSV (table,key,value)")
+            p.add_argument(
+                "--cpt-table", help="licensed CPT / revenue / type-of-bill CSV (table,key,value)"
+            )
 
         g = sub.add_parser("generate", help="write the tables")
         common(g)
@@ -47,13 +50,17 @@ class HealthcarePayerCommand:
         common(k)
         k.add_argument("-o", "--out", required=True)
         k.add_argument("--cases", type=int, default=20)
-        k.add_argument("--real-tables", help="directory of de-identified real tables (Parquet, same schema)")
+        k.add_argument(
+            "--real-tables", help="directory of de-identified real tables (Parquet, same schema)"
+        )
         k.set_defaults(run=self._kit)
         s = sub.add_parser("kit-score", help="score filled review sheets against the key")
         s.add_argument("--key", required=True)
         s.add_argument("sheets", nargs="+")
         s.set_defaults(run=self._score)
-        c = sub.add_parser("calibration", help="print the calibration table (every rate and its source)")
+        c = sub.add_parser(
+            "calibration", help="print the calibration table (every rate and its source)"
+        )
         c.set_defaults(run=self._calibration)
 
     def run(self, args: Any) -> int:
@@ -66,13 +73,21 @@ class HealthcarePayerCommand:
         from .generate import generate
 
         lic = load_licensed(args.cpt_table) if args.cpt_table else None
-        return generate(args.members, seed=args.seed, start=date.fromisoformat(args.start),
-                        end=date.fromisoformat(args.end), licensed=lic)
+        return generate(
+            args.members,
+            seed=args.seed,
+            start=date.fromisoformat(args.start),
+            end=date.fromisoformat(args.end),
+            licensed=lic,
+        )
 
     def _generate(self, args: Any) -> int:
         data = self._data(args)
         paths = data.write(args.out, args.format)
-        print(f"wrote {len(paths)} tables to {args.out}: " + ", ".join(f"{n} ({t.num_rows})" for n, t in data.tables.items()))
+        print(
+            f"wrote {len(paths)} tables to {args.out}: "
+            + ", ".join(f"{n} ({t.num_rows})" for n, t in data.tables.items())
+        )
         return 0
 
     def _quality(self, args: Any) -> int:
@@ -80,7 +95,16 @@ class HealthcarePayerCommand:
 
         checks = quality.run_all(self._data(args))
         if args.json:
-            print(json.dumps([{"item": c.item, "title": c.title, "passed": c.passed, "metrics": c.metrics} for c in checks], default=str, indent=2))
+            print(
+                json.dumps(
+                    [
+                        {"item": c.item, "title": c.title, "passed": c.passed, "metrics": c.metrics}
+                        for c in checks
+                    ],
+                    default=str,
+                    indent=2,
+                )
+            )
         else:
             print(quality.render_markdown(checks))
         return 0 if all(c.passed for c in checks) else 1
@@ -98,10 +122,18 @@ class HealthcarePayerCommand:
         from . import kit
 
         data = self._data(args)
-        res = kit.build_kit(data.tables, args.out, n_synthetic=args.cases, real_tables=args.real_tables)
-        print(f"kit in {res.directory}: {res.cases} cases ({res.synthetic} generated, {res.real} real)")
+        res = kit.build_kit(
+            data.tables, args.out, n_synthetic=args.cases, real_tables=args.real_tables
+        )
+        print(
+            f"kit in {res.directory}: {res.cases} cases "
+            f"({res.synthetic} generated, {res.real} real)"
+        )
         if res.real == 0:
-            print("no real cases: the blinded review is [VERIFY] until a de-identified real sample is added")
+            print(
+                "no real cases: the blinded review is [VERIFY] until a de-identified real "
+                "sample is added"
+            )
         return 0
 
     @staticmethod

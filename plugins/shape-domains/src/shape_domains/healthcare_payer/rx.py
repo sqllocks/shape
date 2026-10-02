@@ -11,7 +11,7 @@ fill date.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Any
 
@@ -69,15 +69,25 @@ class Fill:
 
 
 GROUP_OF = {
-    "Biguanide antidiabetic": "antidiabetic", "Sulfonylurea antidiabetic": "antidiabetic", "DPP-4 inhibitor": "antidiabetic",
-    "SGLT2 inhibitor": "antidiabetic", "GLP-1 receptor agonist": "antidiabetic", "GIP/GLP-1 receptor agonist": "antidiabetic",
-    "Long-acting insulin": "insulin", "Rapid-acting insulin": "insulin",
-    "ACE inhibitor": "ras", "Angiotensin receptor blocker": "ras",
+    "Biguanide antidiabetic": "antidiabetic",
+    "Sulfonylurea antidiabetic": "antidiabetic",
+    "DPP-4 inhibitor": "antidiabetic",
+    "SGLT2 inhibitor": "antidiabetic",
+    "GLP-1 receptor agonist": "antidiabetic",
+    "GIP/GLP-1 receptor agonist": "antidiabetic",
+    "Long-acting insulin": "insulin",
+    "Rapid-acting insulin": "insulin",
+    "ACE inhibitor": "ras",
+    "Angiotensin receptor blocker": "ras",
     "HMG-CoA reductase inhibitor (statin)": "statin",
-    "Inhaled corticosteroid/LABA": "inhaler", "Long-acting muscarinic antagonist": "inhaler",
-    "SSRI antidepressant": "antidepressant", "Antidepressant": "antidepressant",
-    "Calcium channel blocker": "antihypertensive", "Thiazide diuretic": "antihypertensive",
-    "Thiazide-like diuretic": "antihypertensive", "Beta blocker": "antihypertensive",
+    "Inhaled corticosteroid/LABA": "inhaler",
+    "Long-acting muscarinic antagonist": "inhaler",
+    "SSRI antidepressant": "antidepressant",
+    "Antidepressant": "antidepressant",
+    "Calcium channel blocker": "antihypertensive",
+    "Thiazide diuretic": "antihypertensive",
+    "Thiazide-like diuretic": "antihypertensive",
+    "Beta blocker": "antihypertensive",
     "Aldosterone antagonist": "antihypertensive",
 }
 ADHERENCE_GROUP = {"ras": "antihypertensive", "insulin": "antidiabetic"}
@@ -90,9 +100,19 @@ def _cents(x: float) -> int:
 
 
 class RxBuilder:
-    def __init__(self, persons: list[Person], plans: dict[str, Plan], directory: ProviderDirectory,
-                 cal: Calibration, seed: int, start: date, end: date,
-                 ndc: NdcDirectory | None = None, ind: Any = None, fam: Any = None) -> None:
+    def __init__(
+        self,
+        persons: list[Person],
+        plans: dict[str, Plan],
+        directory: ProviderDirectory,
+        cal: Calibration,
+        seed: int,
+        start: date,
+        end: date,
+        ndc: NdcDirectory | None = None,
+        ind: Any = None,
+        fam: Any = None,
+    ) -> None:
         self.persons = persons
         self.plans = plans
         self.dir = directory
@@ -108,7 +128,7 @@ class RxBuilder:
         self.rx_oop: dict[tuple[int, int, str], int] = {}
         self.stats: dict[str, int] = {"uncovered_fills": 0, "no_ndc": 0}
 
-    # ---- fills ------------------------------------------------------------------------------------
+    # ---- fills ----------------------------------------------------------------------------
     def build(self) -> None:
         for p in self.persons:
             for ti, th in enumerate(p.therapies):
@@ -124,23 +144,45 @@ class RxBuilder:
         later = [s.start for s in m.spans if s.start > day]
         return min(later) if later else None
 
-    def _order(self, p: Person, th: Therapy, ti: int, written: date, rng: np.random.Generator,
-               prescriber: int | None = None) -> Order:
+    def _order(
+        self,
+        p: Person,
+        th: Therapy,
+        ti: int,
+        written: date,
+        rng: np.random.Generator,
+        prescriber: int | None = None,
+    ) -> Order:
         drug = DRUGS[th.drug_key]
         qty = th.quantity if th.quantity is not None else _quantity(drug, th.days_supply)
         refills = 0 if drug.schedule == "II" else th.refills
         pid = prescriber if prescriber is not None else self.dir.pick(p, th.specialty, written)
-        order = Order(len(self.orders) + 1, p.member.idx, written, drug, qty, th.days_supply, refills,
-                      th.daw, pid, th.indication, th.dx, ti, th.acute, th.encounter_id)
+        order = Order(
+            len(self.orders) + 1,
+            p.member.idx,
+            written,
+            drug,
+            qty,
+            th.days_supply,
+            refills,
+            th.daw,
+            pid,
+            th.indication,
+            th.dx,
+            ti,
+            th.acute,
+            th.encounter_id,
+        )
         self.orders.append(order)
         return order
 
     def _series(self, p: Person, th: Therapy, ti: int, rng: np.random.Generator) -> None:
         m = p.member
         drug = DRUGS[th.drug_key]
-        lob = m.lob
         group = GROUP_OF.get(drug.cls, "other")
-        agroup = ADHERENCE_GROUP.get(group, group if group in self.cal.get("rx.adherence_beta") else "other")
+        agroup = ADHERENCE_GROUP.get(
+            group, group if group in self.cal.get("rx.adherence_beta") else "other"
+        )
         a, b = self.cal.get("rx.adherence_beta")[agroup]
         adh = float(rng.beta(a, b))
         ongoing = th.start < self.start
@@ -151,10 +193,16 @@ class RxBuilder:
             if rng.random() < 0.05:
                 return
             day = written + timedelta(days=int(rng.integers(lo, hi + 1)))
-            self._fill_one(p, th, ti, self._order(p, th, ti, written, rng), day, 0, rng, primary=True)
+            self._fill_one(
+                p, th, ti, self._order(p, th, ti, written, rng), day, 0, rng, primary=True
+            )
             return
         generic = not drug.brand
-        if not ongoing and rng.random() < self.cal.get("rx.primary_nonadherence")["generic" if generic else "brand"]:
+        if (
+            not ongoing
+            and rng.random()
+            < self.cal.get("rx.primary_nonadherence")["generic" if generic else "brand"]
+        ):
             order = self._order(p, th, ti, written, rng)
             day = written + timedelta(days=int(rng.integers(lo, hi + 1)))
             if day <= self.end and self._covered(m, day) and rng.random() < 0.4:
@@ -181,11 +229,19 @@ class RxBuilder:
             if used > order.refills:
                 if rng.random() > self.cal.get("rx.renew_prob"):
                     break
-                order = self._order(p, th, ti, day - timedelta(days=int(rng.integers(0, 8))), rng,
-                                    prescriber=order.prescriber)
+                order = self._order(
+                    p,
+                    th,
+                    ti,
+                    day - timedelta(days=int(rng.integers(0, 8))),
+                    rng,
+                    prescriber=order.prescriber,
+                )
                 used = 0
                 fill_no = 0
-            fill = self._fill_one(p, th, ti, order, day, fill_no, rng, primary=(not ongoing and fill_no == 0))
+            fill = self._fill_one(
+                p, th, ti, order, day, fill_no, rng, primary=(not ongoing and fill_no == 0)
+            )
             used += 1
             fill_no += 1
             if fill is None:
@@ -212,8 +268,17 @@ class RxBuilder:
             p.flags[key] = self.dir.pick_pharmacy(p, mail).idx
         return int(p.flags[key])
 
-    def _fill_one(self, p: Person, th: Therapy, ti: int, order: Order, day: date, fill_no: int,
-                  rng: np.random.Generator, primary: bool = False) -> Fill | None:
+    def _fill_one(
+        self,
+        p: Person,
+        th: Therapy,
+        ti: int,
+        order: Order,
+        day: date,
+        fill_no: int,
+        rng: np.random.Generator,
+        primary: bool = False,
+    ) -> Fill | None:
         m = p.member
         if day > self.end:
             return None
@@ -223,8 +288,11 @@ class RxBuilder:
             return None
         plan = self.plans[span.plan_id]
         drug = order.drug
-        mail = (order.days_supply >= 90 and drug.mail
-                and rng.random() < min(0.9, self.cal.get("rx.mail_share")[m.lob] / 0.30))
+        mail = (
+            order.days_supply >= 90
+            and drug.mail
+            and rng.random() < min(0.9, self.cal.get("rx.mail_share")[m.lob] / 0.30)
+        )
         packs = self.ndc.packages(drug.key, day)
         if not packs:
             self.stats["no_ndc"] += 1
@@ -245,23 +313,65 @@ class RxBuilder:
             day = day + timedelta(days=int(rng.integers(1, 5)))
             if day > self.end or not self._covered(m, day):
                 return None
-        fill = Fill(len(self.fills) + 1, order, m, plan, day, fill_no, want, order.days_supply,
-                    self._pharmacy(p, mail), mail, pack.ndc, "paid", tier=min(drug.tier, 4), primary=primary)
+        fill = Fill(
+            len(self.fills) + 1,
+            order,
+            m,
+            plan,
+            day,
+            fill_no,
+            want,
+            order.days_supply,
+            self._pharmacy(p, mail),
+            mail,
+            pack.ndc,
+            "paid",
+            tier=min(drug.tier, 4),
+            primary=primary,
+        )
         self.fills.append(fill)
         if rng.random() < self.cal.get("rx.reversal_rate"):
-            rev = Fill(len(self.fills) + 1, order, m, plan, day + timedelta(days=int(rng.integers(7, 15))),
-                       fill_no, want, order.days_supply, fill.pharmacy, mail, pack.ndc, "reversed",
-                       tier=fill.tier, txn="B2", pair=fill)
+            rev = Fill(
+                len(self.fills) + 1,
+                order,
+                m,
+                plan,
+                day + timedelta(days=int(rng.integers(7, 15))),
+                fill_no,
+                want,
+                order.days_supply,
+                fill.pharmacy,
+                mail,
+                pack.ndc,
+                "reversed",
+                tier=fill.tier,
+                txn="B2",
+                pair=fill,
+            )
             self.fills.append(rev)
             if rng.random() < 0.4:  # re-dispensed after the reversal
-                self.fills.append(Fill(
-                    len(self.fills) + 1, order, m, plan, rev.day + timedelta(days=int(rng.integers(1, 6))),
-                    fill_no, want, order.days_supply, fill.pharmacy, mail, pack.ndc, "paid", tier=fill.tier,
-                ))
+                self.fills.append(
+                    Fill(
+                        len(self.fills) + 1,
+                        order,
+                        m,
+                        plan,
+                        rev.day + timedelta(days=int(rng.integers(1, 6))),
+                        fill_no,
+                        want,
+                        order.days_supply,
+                        fill.pharmacy,
+                        mail,
+                        pack.ndc,
+                        "paid",
+                        tier=fill.tier,
+                    )
+                )
         return fill
 
-    def _add_reject(self, p: Person, order: Order, day: date, fill_no: int, code: str,
-                    rng: np.random.Generator) -> None:
+    def _add_reject(
+        self, p: Person, order: Order, day: date, fill_no: int, code: str, rng: np.random.Generator
+    ) -> None:
         span = p.member.span_on(day)
         if span is None or day > self.end:
             return
@@ -270,11 +380,26 @@ class RxBuilder:
         if not packs:
             return
         pack = min(packs, key=lambda r: abs(r.package_units - order.quantity))
-        self.fills.append(Fill(len(self.fills) + 1, order, p.member, plan, day, fill_no, order.quantity,
-                               order.days_supply, self._pharmacy(p, False), False, pack.ndc, "rejected",
-                               code, tier=min(order.drug.tier, 4)))
+        self.fills.append(
+            Fill(
+                len(self.fills) + 1,
+                order,
+                p.member,
+                plan,
+                day,
+                fill_no,
+                order.quantity,
+                order.days_supply,
+                self._pharmacy(p, False),
+                False,
+                pack.ndc,
+                "rejected",
+                code,
+                tier=min(order.drug.tier, 4),
+            )
+        )
 
-    # ---- costs ------------------------------------------------------------------------------------
+    # ---- costs ----------------------------------------------------------------------------
     def _cost(self) -> None:
         from .claims import Accum
 
@@ -308,13 +433,23 @@ class RxBuilder:
             fa = self.fam.setdefault(kf, Accum())
             ded = 0
             if plan.product == "HDHP":
-                room = max(0, min(_cents(plan.deductible) - a.ded,
-                                  _cents(plan.deductible * plan.family_multiple) - fa.ded))
+                room = max(
+                    0,
+                    min(
+                        _cents(plan.deductible) - a.ded,
+                        _cents(plan.deductible * plan.family_multiple) - fa.ded,
+                    ),
+                )
                 ded = min(total, room)
                 pay = ded + int(round((total - ded) * plan.coinsurance))
             pay = min(pay, total)
-            oop_room = max(0, min(_cents(plan.oop_max) - a.oop,
-                                  _cents(plan.oop_max * plan.family_multiple) - fa.oop))
+            oop_room = max(
+                0,
+                min(
+                    _cents(plan.oop_max) - a.oop,
+                    _cents(plan.oop_max * plan.family_multiple) - fa.oop,
+                ),
+            )
             if pay > oop_room:
                 ded = min(ded, oop_room)
                 pay = oop_room
@@ -327,7 +462,12 @@ class RxBuilder:
             f.paid = total - pay
         for f in self.fills:
             if f.status == "reversed" and f.pair is not None:
-                f.ingredient, f.fee, f.patient, f.paid = f.pair.ingredient, f.pair.fee, f.pair.patient, f.pair.paid
+                f.ingredient, f.fee, f.patient, f.paid = (
+                    f.pair.ingredient,
+                    f.pair.fee,
+                    f.pair.patient,
+                    f.pair.paid,
+                )
 
     def run(self) -> None:
         self.build()
@@ -380,12 +520,22 @@ class RxBuilder:
             if run:
                 gaps.append(run)
             last_cover = fills[-1].day + timedelta(days=fills[-1].days_supply)
-            rows.append({
-                "member_idx": idx, "year": year, "therapeutic_group": group, "first_fill_date": period_start,
-                "period_days": n_days, "days_covered": days_covered, "pdc": days_covered / n_days,
-                "fills": len(fills), "gap_days": int(n_days - days_covered), "max_gap_days": max(gaps) if gaps else 0,
-                "early_refills": early, "abandoned": bool(last_cover + timedelta(days=60) < period_end),
-            })
+            rows.append(
+                {
+                    "member_idx": idx,
+                    "year": year,
+                    "therapeutic_group": group,
+                    "first_fill_date": period_start,
+                    "period_days": n_days,
+                    "days_covered": days_covered,
+                    "pdc": days_covered / n_days,
+                    "fills": len(fills),
+                    "gap_days": int(n_days - days_covered),
+                    "max_gap_days": max(gaps) if gaps else 0,
+                    "early_refills": early,
+                    "abandoned": bool(last_cover + timedelta(days=60) < period_end),
+                }
+            )
         return rows
 
 

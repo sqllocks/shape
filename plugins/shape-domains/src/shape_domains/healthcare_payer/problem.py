@@ -15,8 +15,12 @@ def dm_codes(person: Person) -> list[str]:
         out.append("E11.22")
     comp = c.data.get("complications", [])
     if not t1:
-        for key, code in (("neuropathy", "E11.42"), ("retinopathy", "E11.319"),
-                          ("angiopathy", "E11.51"), ("ulcer", "E11.621")):
+        for key, code in (
+            ("neuropathy", "E11.42"),
+            ("retinopathy", "E11.319"),
+            ("angiopathy", "E11.51"),
+            ("ulcer", "E11.621"),
+        ):
             if key in comp:
                 out.append(code)
     if c.data.get("hyperglycemia"):
@@ -32,7 +36,8 @@ def dm_status_codes(person: Person) -> list[str]:
         return ["Z79.4"]
     if person.conds["dm"].data["type"] == "E11" and any(
         t.drug_key in ("metformin", "metformin_er", "glipizide", "glimepiride", "sitagliptin")
-        and t.stop is None for t in person.therapies
+        and t.stop is None
+        for t in person.therapies
     ):
         return ["Z79.84"]
     return []
@@ -42,7 +47,13 @@ def ckd_codes(person: Person) -> list[str]:
     c = person.conds["ckd"]
     stage = c.stage
     if stage == 3:
-        return ["N18.31" if c.data.get("sub") == "a" else "N18.32" if c.data.get("sub") == "b" else "ckd3"]
+        return [
+            "N18.31"
+            if c.data.get("sub") == "a"
+            else "N18.32"
+            if c.data.get("sub") == "b"
+            else "ckd3"
+        ]
     return {1: ["N18.1"], 2: ["N18.2"], 4: ["N18.4"], 5: ["N18.5"], 6: ["N18.6", "Z99.2"]}[stage]
 
 
@@ -88,9 +99,17 @@ def problem_codes(person: Person, day: date) -> list[str]:
         if person.age(day) >= 20 and person.conds["obesity"].data.get("z68"):
             out.append(_OBESITY_Z[cls])
     for key, concept in (
-        ("depression", None), ("anxiety", None), ("adhd", None), ("sud_opioid", "F11.20"),
-        ("sud_alcohol", "F10.20"), ("bipolar", "F31.9"), ("schizophrenia", "F20.9"),
-        ("hypothyroid", "E03.9"), ("gerd", "K21.9"), ("osteoporosis", "M81.0"), ("bph", "N40.1"),
+        ("depression", None),
+        ("anxiety", None),
+        ("adhd", None),
+        ("sud_opioid", "F11.20"),
+        ("sud_alcohol", "F10.20"),
+        ("bipolar", "F31.9"),
+        ("schizophrenia", "F20.9"),
+        ("hypothyroid", "E03.9"),
+        ("gerd", "K21.9"),
+        ("osteoporosis", "M81.0"),
+        ("bph", "N40.1"),
         ("autoimmune", None),
     ):
         if person.has(key):
@@ -101,18 +120,48 @@ def problem_codes(person: Person, day: date) -> list[str]:
 # the diagnosis prefixes (ICD-10-CM) that support a drug indication: the coherence rule the
 # acceptance tests check for every order and fill
 INDICATION_DX: dict[str, tuple[str, ...]] = {
-    "dm1": ("E10", "Z79.4"), "dm2": ("E11", "R73.03"), "dm2_statin": ("E11",), "gdm": ("O24",),
-    "htn": ("I10", "I11", "I12", "I13"), "hf": ("I50", "I11"), "cad": ("I25",), "afib": ("I48",),
-    "dm_ckd": ("E11", "N18", "I12"), "ckd": ("N18", "I12", "E11"), "lipid": ("E78",),
-    "asthma": ("J45",), "copd": ("J44",), "asthma_exac": ("J45",), "copd_exac": ("J44",),
-    "depression": ("F32", "F33"), "anxiety": ("F41",), "adhd": ("F90",), "sud_opioid": ("F11",),
-    "bipolar": ("F31",), "schizophrenia": ("F20",), "cancer_breast": ("C50", "Z85.3"),
-    "cancer_prostate": ("C61", "Z85.46"), "cancer_colon": ("C18", "Z85.038"), "nausea_chemo": ("C",),
-    "nausea_pregnancy": ("Z34", "O"), "pregnancy": ("Z34", "O09", "Z3A"), "pregnancy_htn": ("O13", "O14"),
-    "hypothyroid": ("E03",), "gerd": ("K21",), "osteoporosis": ("M81",), "bph": ("N40",),
-    "uri_bacterial": ("J06", "J20", "J01", "H66", "J18"), "strep": ("J02",), "pneumonia": ("J18", "J12"),
-    "flu": ("J10", "J11"), "cough": ("R05",), "uri_viral": ("J06", "J20"), "uti": ("N39",),
-    "skin_infection": ("L03",), "gastroenteritis": ("A08",), "insomnia": ("G47",),
+    "dm1": ("E10", "Z79.4"),
+    "dm2": ("E11", "R73.03"),
+    "dm2_statin": ("E11",),
+    "gdm": ("O24",),
+    "htn": ("I10", "I11", "I12", "I13"),
+    "hf": ("I50", "I11"),
+    "cad": ("I25",),
+    "afib": ("I48",),
+    "dm_ckd": ("E11", "N18", "I12"),
+    "ckd": ("N18", "I12", "E11"),
+    "lipid": ("E78",),
+    "asthma": ("J45",),
+    "copd": ("J44",),
+    "asthma_exac": ("J45",),
+    "copd_exac": ("J44",),
+    "depression": ("F32", "F33"),
+    "anxiety": ("F41",),
+    "adhd": ("F90",),
+    "sud_opioid": ("F11",),
+    "bipolar": ("F31",),
+    "schizophrenia": ("F20",),
+    "cancer_breast": ("C50", "Z85.3"),
+    "cancer_prostate": ("C61", "Z85.46"),
+    "cancer_colon": ("C18", "Z85.038"),
+    "nausea_chemo": ("C",),
+    "nausea_pregnancy": ("Z34", "O"),
+    "pregnancy": ("Z34", "O09", "Z3A"),
+    "pregnancy_htn": ("O13", "O14"),
+    "hypothyroid": ("E03",),
+    "gerd": ("K21",),
+    "osteoporosis": ("M81",),
+    "bph": ("N40",),
+    "uri_bacterial": ("J06", "J20", "J01", "H66", "J18"),
+    "strep": ("J02",),
+    "pneumonia": ("J18", "J12"),
+    "flu": ("J10", "J11"),
+    "cough": ("R05",),
+    "uri_viral": ("J06", "J20"),
+    "uti": ("N39",),
+    "skin_infection": ("L03",),
+    "gastroenteritis": ("A08",),
+    "insomnia": ("G47",),
     "pain_acute": ("M", "S", "R", "G89"),
     "autoimmune": ("M06", "L40", "K50", "K51"),
 }

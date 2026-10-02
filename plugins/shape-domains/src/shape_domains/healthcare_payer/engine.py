@@ -28,6 +28,10 @@ from .model import Encounter, Member, Person, Svc, Therapy
 
 END_OF_DAYS = date(9999, 12, 31)
 FLAT = {m: 1.0 for m in range(1, 13)}
+MORBIDITY_SLOPE = 1.8
+# mean number of chronic conditions per member by line of business (measured on the simulated
+# populations), so the multiplier keeps each line's own ED and admission rates
+MEAN_CONDITIONS = {"commercial": 1.4, "ma": 3.0, "medicaid": 1.3}
 
 
 class Module(Protocol):
@@ -43,7 +47,9 @@ class Module(Protocol):
 class BehaviorAdapter(Protocol):
     """What a behaviour engine must offer for a module to run on it."""
 
-    def schedule(self, person: Person, day: date, module: str, kind: str, **payload: Any) -> None: ...
+    def schedule(
+        self, person: Person, day: date, module: str, kind: str, **payload: Any
+    ) -> None: ...
 
     def now(self) -> date: ...
 
@@ -77,8 +83,8 @@ class SimContext:
     def run(self, person: Person) -> None:
         self._queue = []
         self.current = person
-        for module in self.modules.values():
-            module.start(self, person)
+        for mod in self.modules.values():
+            mod.start(self, person)
         while self._queue:
             ordinal, _, module, kind, payload = heapq.heappop(self._queue)
             day = date.fromordinal(ordinal)
@@ -107,11 +113,27 @@ class SimContext:
         gap = max(floor, int(person.rng.exponential(mean_days)))
         return after + timedelta(days=gap)
 
+    def morbidity(self, person: Person) -> float:
+        """Acute-care multiplier from the member's number of chronic conditions (mean about 1):
+        admissions and ED visits concentrate in the sick (AHRQ MEPS / HCUP: the top decile by
+        comorbidity burden carries about half of admissions)."""
+        n = sum(1 for k in person.conds if not k.startswith("cancer"))
+        mean = MEAN_CONDITIONS[person.member.lob]
+        return (1.0 + MORBIDITY_SLOPE * n) / (1.0 + MORBIDITY_SLOPE * mean)
+
     def seasonal_dates(
-        self, person: Person, annual_rate: float, weights: dict[int, float], lo: date, hi: date
+        self,
+        person: Person,
+        annual_rate: float,
+        weights: dict[int, float],
+        lo: date,
+        hi: date,
+        morbid: bool = False,
     ) -> list[date]:
         """Poisson event dates between lo and hi, month-weighted (mean weight 1 over a year)."""
         norm = sum(weights.values()) / 12.0
+        if morbid:
+            annual_rate *= self.morbidity(person)
         out: list[date] = []
         cur = date(lo.year, lo.month, 1)
         while cur <= hi:
@@ -119,7 +141,14 @@ class SimContext:
             a, b = max(cur, lo), min(nxt - timedelta(days=1), hi)
             if b >= a:
                 frac = ((b - a).days + 1) / 365.25
-                lam = annual_rate * weights[cur.month] / norm * frac * person.member.frailty ** 0.5 / self.frailty_norm
+                lam = (
+                    annual_rate
+                    * weights[cur.month]
+                    / norm
+                    * frac
+                    * person.member.frailty**0.5
+                    / self.frailty_norm
+                )
                 for _ in range(int(person.rng.poisson(lam))):
                     out.append(self.rand_day(person, a, b))
             cur = nxt
@@ -148,8 +177,13 @@ class SimContext:
         return code
 
     def dx_list(
-        self, person: Person, day: date, primary: list[str], extra: list[str] | None = None,
-        capture: float = 0.65, limit: int = 6,
+        self,
+        person: Person,
+        day: date,
+        primary: list[str],
+        extra: list[str] | None = None,
+        capture: float = 0.65,
+        limit: int = 6,
     ) -> list[tuple[str, str]]:
         """Ordered diagnosis codes: the reason first, then problem-list codes that get coded."""
         seen: list[str] = []
@@ -167,9 +201,18 @@ class SimContext:
         return [(c, "") for c in seen[:limit]]
 
     # ---- emitting ----------------------------------------------------------------------------
-    def encounter(self, person: Person, day: date, setting: str, specialty: str,
-                  dx: list[tuple[str, str]], services: list[Svc], module: str, reason: str,
-                  **kw: Any) -> Encounter | None:
+    def encounter(
+        self,
+        person: Person,
+        day: date,
+        setting: str,
+        specialty: str,
+        dx: list[tuple[str, str]],
+        services: list[Svc],
+        module: str,
+        reason: str,
+        **kw: Any,
+    ) -> Encounter | None:
         if not dx:
             return None
         if day < self.start or day > self.end:
@@ -177,15 +220,37 @@ class SimContext:
         provider = kw.pop("provider", None)
         if provider is None:
             provider = self.directory.pick(person, specialty, day)
-        enc = Encounter(next(self._eid), person.member.idx, day, setting, specialty, dx, services,
-                        module, reason, provider=provider, **kw)
+        enc = Encounter(
+            next(self._eid),
+            person.member.idx,
+            day,
+            setting,
+            specialty,
+            dx,
+            services,
+            module,
+            reason,
+            provider=provider,
+            **kw,
+        )
         person.encounters.append(enc)
         return enc
 
-    def prescribe(self, person: Person, day: date, drug_key: str, indication: str, dx: str,
-                  specialty: str, days_supply: int = 30, refills: int = 5, acute: bool = False,
-                  encounter: Encounter | None = None, stop: date | None = None,
-                  quantity: float | None = None) -> Therapy | None:
+    def prescribe(
+        self,
+        person: Person,
+        day: date,
+        drug_key: str,
+        indication: str,
+        dx: str,
+        specialty: str,
+        days_supply: int = 30,
+        refills: int = 5,
+        acute: bool = False,
+        encounter: Encounter | None = None,
+        stop: date | None = None,
+        quantity: float | None = None,
+    ) -> Therapy | None:
         drug = DRUGS[drug_key]
         m = person.member
         if day > self.end or drug.launch > day:
@@ -197,8 +262,20 @@ class SimContext:
                 return t  # already on it
         dx = resolve(dx, day)
         daw = "0" if person.rng.random() < 0.97 else "1"
-        t = Therapy(drug_key, day, stop, indication, dx, specialty, days_supply, refills, daw,
-                    acute, encounter.eid if encounter else None, quantity)
+        t = Therapy(
+            drug_key,
+            day,
+            stop,
+            indication,
+            dx,
+            specialty,
+            days_supply,
+            refills,
+            daw,
+            acute,
+            encounter.eid if encounter else None,
+            quantity,
+        )
         person.therapies.append(t)
         return t
 
@@ -213,8 +290,10 @@ class SimContext:
             for t in person.therapies
         )
 
-    def poisson_days(self, person: Person, rate: float, lo: date, hi: date) -> list[date]:
-        return self.seasonal_dates(person, rate, FLAT, lo, hi)
+    def poisson_days(
+        self, person: Person, rate: float, lo: date, hi: date, morbid: bool = False
+    ) -> list[date]:
+        return self.seasonal_dates(person, rate, FLAT, lo, hi, morbid)
 
     def kill(self, person: Person, day: date) -> None:
         """End the member's life (and coverage) on ``day``."""
