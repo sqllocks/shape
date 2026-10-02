@@ -1,0 +1,206 @@
+{
+ "domain": "insurance",
+ "scale": "small",
+ "impl": "shape",
+ "floor": {
+  "agent": 77.00433324509245,
+  "policyholder": 70.7443075638036,
+  "policy_type": 83.36355889205701,
+  "policy": 98.32537862569517,
+  "coverage": 96.12954896712372,
+  "claim": 95.45696200404737,
+  "claim_payment": 97.3370025449511,
+  "premium_payment": 97.88702652634731,
+  "underwriting": 89.7459856096691
+ },
+ "baseline": {
+  "43": {
+   "agent": 77.75015643254542,
+   "policyholder": 71.2443075638036,
+   "policy_type": 87.07365279701096,
+   "policy": 98.96088163439116,
+   "coverage": 98.0646251408278,
+   "claim": 97.78239008284139,
+   "claim_payment": 98.32587641137727,
+   "premium_payment": 99.57797134315422,
+   "underwriting": 90.58493215958391
+  },
+  "44": {
+   "agent": 78.08255135369967,
+   "policyholder": 71.45254789081265,
+   "policy_type": 86.16632546473063,
+   "policy": 98.98994585172797,
+   "coverage": 97.67568336147995,
+   "claim": 96.34687459712421,
+   "claim_payment": 98.62471485134742,
+   "premium_payment": 98.38702652634731,
+   "underwriting": 90.34156070782622
+  },
+  "45": {
+   "agent": 77.50433324509245,
+   "policyholder": 71.32882101095142,
+   "policy_type": 83.86355889205701,
+   "policy": 98.82537862569517,
+   "coverage": 97.88113680234525,
+   "claim": 99.1280562873088,
+   "claim_payment": 97.8370025449511,
+   "premium_payment": 98.54674561528772,
+   "underwriting": 90.2459856096691
+  },
+  "46": {
+   "agent": 78.14398485212396,
+   "policyholder": 71.47368834005341,
+   "policy_type": 85.06424542960926,
+   "policy": 99.1549497264707,
+   "coverage": 96.62954896712372,
+   "claim": 95.95696200404737,
+   "claim_payment": 98.33972273922794,
+   "premium_payment": 99.06978496525919,
+   "underwriting": 90.35033431349234
+  }
+ },
+ "impl_seeds": {
+  "1042": {
+   "scores": {
+    "agent": 77.73205239329192,
+    "policyholder": 71.55743291418285,
+    "policy_type": 84.59007970156529,
+    "policy": 98.84691520206063,
+    "coverage": 97.02756704064532,
+    "claim": 95.41727711042242,
+    "claim_payment": 97.47024475185563,
+    "premium_payment": 98.50619285802635,
+    "underwriting": 90.30892745852516
+   },
+   "below_floor": [
+    "claim"
+   ],
+   "shortfall": {
+    "claim": 0.0396848936249512
+   }
+  },
+  "1043": {
+   "scores": {
+    "agent": 78.03888166715471,
+    "policyholder": 71.16418058414752,
+    "policy_type": 84.42762165324773,
+    "policy": 99.08847563525504,
+    "coverage": 98.16200681075635,
+    "claim": 96.89270991622779,
+    "claim_payment": 97.04005520676273,
+    "premium_payment": 98.20979027237969,
+    "underwriting": 89.98342715692547
+   },
+   "below_floor": [
+    "claim_payment"
+   ],
+   "shortfall": {
+    "claim_payment": 0.2969473381883745
+   }
+  },
+  "1044": {
+   "scores": {
+    "agent": 77.59693670244937,
+    "policyholder": 71.53538959719236,
+    "policy_type": 80.17236594500909,
+    "policy": 98.71848812831892,
+    "coverage": 97.83871209684568,
+    "claim": 98.5275946111882,
+    "claim_payment": 98.42688089597266,
+    "premium_payment": 98.80222486500573,
+    "underwriting": 89.83719054454559
+   },
+   "below_floor": [
+    "policy_type"
+   ],
+   "shortfall": {
+    "policy_type": 3.1911929470479237
+   }
+  },
+  "1045": {
+   "scores": {
+    "agent": 78.40834090221969,
+    "policyholder": 71.34545304959045,
+    "policy_type": 86.22873418761549,
+    "policy": 99.16076702699618,
+    "coverage": 97.77521649925886,
+    "claim": 97.0043407422367,
+    "claim_payment": 98.20232312147564,
+    "premium_payment": 99.23582773527939,
+    "underwriting": 91.02050644749897
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1046": {
+   "scores": {
+    "agent": 77.83823906371211,
+    "policyholder": 71.44710072977423,
+    "policy_type": 84.35305396461645,
+    "policy": 99.19967081813684,
+    "coverage": 97.13904426176524,
+    "claim": 95.93889438847503,
+    "claim_payment": 98.98204498563918,
+    "premium_payment": 97.85518411097705,
+    "underwriting": 90.52499531360957
+   },
+   "below_floor": [
+    "premium_payment"
+   ],
+   "shortfall": {
+    "premium_payment": 0.031842415370263666
+   }
+  },
+  "1047": {
+   "scores": {
+    "agent": 77.7779994097988,
+    "policyholder": 71.46485327730942,
+    "policy_type": 88.4896737154678,
+    "policy": 98.80309085323512,
+    "coverage": 97.9637899829062,
+    "claim": 97.36245786862065,
+    "claim_payment": 97.88366436128683,
+    "premium_payment": 98.42252779948701,
+    "underwriting": 90.27571177433687
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1048": {
+   "scores": {
+    "agent": 77.51016920782523,
+    "policyholder": 71.0270008812138,
+    "policy_type": 85.80230982812172,
+    "policy": 98.87049285405892,
+    "coverage": 97.206038301789,
+    "claim": 98.37061660176502,
+    "claim_payment": 98.75839541586413,
+    "premium_payment": 98.99894467884161,
+    "underwriting": 90.13707712853686
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1049": {
+   "scores": {
+    "agent": 76.8549138789863,
+    "policyholder": 71.52863278984502,
+    "policy_type": 86.2630921742485,
+    "policy": 98.92923193633158,
+    "coverage": 97.47678550805901,
+    "claim": 98.67134305315184,
+    "claim_payment": 97.61873243403514,
+    "premium_payment": 98.29127807587226,
+    "underwriting": 89.59377170908334
+   },
+   "below_floor": [
+    "agent",
+    "underwriting"
+   ],
+   "shortfall": {
+    "agent": 0.1494193661061587,
+    "underwriting": 0.1522139005857639
+   }
+  }
+ }
+}

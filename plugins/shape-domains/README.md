@@ -8,6 +8,9 @@ Shape plugin: industry domains with their reference data (`shape.domains`).
 | `capital_markets` | exchange, sector, industry, company, daily_price, dividend, earnings, insider_transaction, split, trade | exchanges, GICS sectors, index memberships, 123 S&P 500 constituents |
 | `education` | department, course, instructor, student, course_section, academic_standing, enrollment, financial_aid, grade_appeal | aid types, course catalog, department names |
 | `financial` | branch, transaction_category, customer, account, loan, card, loan_payment, statement, transaction, fraud_flag | branch, merchant and transaction category names; the retail ZIP locations |
+| `healthcare` | provider, facility, patient, encounter, diagnosis, procedure, medication, claim, claim_line | CPT and ICD-10 codes, insurance plans, medication names, specialties; the retail ZIP locations |
+| `hr` | department, position, employee, compensation, performance_review, time_off_request, training, training_enrollment, termination | department names, position titles, training courses |
+| `insurance` | agent, policyholder, policy_type, policy, coverage, claim, claim_payment, premium_payment, underwriting | claim categories, peril types, policy types; the retail ZIP locations |
 
 ```python
 from shape.generation.domains import load_domain
@@ -17,8 +20,8 @@ domain = load_domain("retail")  # schema + reference data registered
 tables = Engine(domain.schema, scale="medium", seed=1).generate().tables
 ```
 
-Scales: `small`, `medium`, `large` and `xlarge` (and the other presets in the schema). `capital_markets`, `education`
-and `financial` also offer a `star` schema (`load_domain(name, mode="star")`). The ZIP locations are
+Scales: `small`, `medium`, `large` and `xlarge` (and the other presets in the schema). `capital_markets`, `education`,
+`financial`, `healthcare`, `hr` and `insurance` also offer a `star` schema (`load_domain(name, mode="star")`). The ZIP locations are
 derived from GeoNames (CC BY 4.0), and the other reference data is carried over under the MIT license;
 see `THIRD_PARTY_NOTICES.md` in the repository.
 
