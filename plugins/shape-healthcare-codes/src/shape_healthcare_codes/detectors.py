@@ -28,6 +28,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 from shape.plugins.api.v1 import Detection
 from shape_healthcare_codes.npi import check_digit
 
+SHAPE_API = "1.0"
 _SAMPLE = 1000
 _MIN_RATE = 0.9
 

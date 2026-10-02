@@ -127,3 +127,19 @@ def test_helpers():
     assert fiscal_year(dt.date(2026, 9, 30)) == 2026 and fiscal_year(dt.date(2026, 10, 1)) == 2027
     assert fy_start(2027) == dt.date(2026, 10, 1) and fy_end(2027) == dt.date(2027, 9, 30)
     assert default_releases(2018)[-1].id == "FY2018"
+
+
+def test_validity_table_lists_each_release_for_a_code():
+    cs = CodeSet("x", _table(RELS))
+    rows = cs.validity_table(["A009"]).to_pylist()
+    assert [(r["release"], r["valid"], r["leaf"]) for r in rows] == [
+        ("R0", True, True),
+        ("R1", True, True),
+        ("R2", False, False),
+    ]
+    assert rows[1]["effective"] == dt.date(2021, 4, 1)
+    with pytest.raises(ValueError, match="no release masks"):
+        CodeSet(
+            "x",
+            cs.table.select(["code", "short_desc", "long_desc", "leaf", "valid_from", "valid_to"]),
+        ).validity_table()

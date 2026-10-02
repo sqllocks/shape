@@ -225,14 +225,37 @@ class CodeSet:
         else:
             lo, hi = self.table.column("valid_from"), self.table.column("valid_to")
             day = pa.scalar(on, pa.date32())
+            # an empty bound is open: a null comparison counts as true
             keep = pc.and_(
-                pc.or_(pc.is_null(lo), pc.less_equal(lo, day)),
-                pc.or_(pc.is_null(hi), pc.greater_equal(hi, day)),
+                pc.fill_null(pc.less_equal(lo, day), True),
+                pc.fill_null(pc.greater_equal(hi, day), True),
             )
             if leaf_only:
                 keep = pc.and_(keep, self.table.column("leaf"))
         out = codes.filter(keep)
         return out.combine_chunks() if isinstance(out, pa.ChunkedArray) else out
+
+    def validity_table(self, codes: Sequence[str] | None = None) -> pa.Table:
+        """The per-release validity of ``codes`` (default: every code) as a long table:
+        ``code``, ``release``, ``effective``, ``valid``, ``leaf``. Needs the release masks."""
+        if not self._masked:
+            raise ValueError(f"{self.system}: no release masks; use valid_from / valid_to")
+        t = self.select(codes) if codes is not None else self.table
+        vm = t.column("valid_mask").to_pylist()
+        lm = t.column("leaf_mask").to_pylist() if "leaf_mask" in t.column_names else vm
+        names = t.column("code").to_pylist()
+        width = max(
+            (m.bit_length() for m in self.table.column("valid_mask").to_pylist()), default=0
+        )
+        out: dict[str, list[Any]] = {k: [] for k in "code release effective valid leaf".split()}
+        for code, v, lf in zip(names, vm, lm, strict=True):
+            for k, rel in enumerate(self.releases[:width]):
+                out["code"].append(code)
+                out["release"].append(rel.id)
+                out["effective"].append(rel.effective)
+                out["valid"].append(bool(v >> k & 1))
+                out["leaf"].append(bool(lf >> k & 1))
+        return pa.table(out)
 
     def column(self, name: str) -> pa.ChunkedArray:
         return self.table.column(name)

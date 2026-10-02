@@ -35,8 +35,10 @@ def run(
     subset: bool = False,
 ) -> list[Path]:
     """Build ``asset`` and write it (a builder may write more than one asset, e.g. RxNorm)."""
-    from shape_healthcare_codes.store import write_asset
+    from shape_healthcare_codes.store import user_dir, write_asset
 
+    if download_dir is None:
+        download_dir = (data_dir or user_dir()) / "downloads"
     if asset not in BUILDERS:
         raise KeyError(
             f"{asset!r} has no builder (bring-your-own or unknown); fetchable: {sorted(BUILDERS)}"

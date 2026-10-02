@@ -60,3 +60,21 @@ def test_random_ten_digit_numbers_are_not_npis():
 def test_integer_columns_are_read_as_strings():
     ints = pa.array([int(n) for n in generate_synthetic_npis(40)])
     assert d.NpiDetector().detect(ints, "rendering_npi") is not None
+
+
+def test_the_installed_distribution_passes_the_plugin_kit_with_samples():
+    from shape.plugins.kit import check_installed
+
+    neg = [["alice", "bob"], ["12345", "67890"]]
+    samples = {
+        "shape.detectors:icd10": {"positives": [ICD], "negatives": neg},
+        "shape.detectors:ndc": {"positives": [NDC], "negatives": neg},
+        "shape.detectors:npi": {"positives": [generate_synthetic_npis(40)], "negatives": neg},
+        "shape.detectors:hcpcs": {"positives": [HCPCS], "negatives": neg},
+        "shape.detectors:cpt": {"positives": [["0001F", "0002F", "0100T"] * 10], "negatives": neg},
+        "shape.detectors:mbi": {"positives": [MBI], "negatives": neg},
+        "shape.detectors:member_id": {"positives": [MEMBER], "negatives": neg},
+        "shape.commands:healthcare-codes": {"argv": ["list"]},
+    }
+    lines = check_installed("sqllocks-shape-healthcare-codes", samples)
+    assert len(lines) == 8 and not any("shared rules only" in x for x in lines)

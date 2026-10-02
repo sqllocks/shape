@@ -12,7 +12,10 @@ valid on the date of service, and licensed for the way they are used.
   **bring-your-own**: you supply the file, a loader reads it, and nothing licensed is shipped.
 * **Validators**: ICD-10-CM valid and billable on a date of service, NDC valid and marketed on a
   fill date, NPI check digit with a synthetic never-assigned range, age and sex edits.
-* **Detectors**: `shape profile` recognizes ICD-10, NDC, NPI, HCPCS, CPT and member-id columns.
+* **Detectors** (`shape.detectors`): ICD-10, NDC, NPI, HCPCS, CPT, Medicare MBI and member-id
+  columns.
+* **Wheel size**: the wheel is about 0.7 MB (a 0.6 MB starter subset of ICD-10-CM and the code).
+  The full sets are built on your machine with `shape healthcare-codes fetch`.
 
 `THIRD_PARTY_NOTICES.md` records, for every asset, the source URL, release, licence (quoted from
 the source's own page, with the date it was read), and whether it is shipped, fetched or
