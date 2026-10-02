@@ -1,7 +1,9 @@
-"""``shape simulate``: run a pattern simulator and write its tables (or stream them as events).
+"""The ``shape simulate`` sub-commands of the pattern simulators (P6-04b): ``clickstream``,
+``financial``, ``iot``, ``operational-log`` and ``pulse``. Each runs its simulator and writes its
+tables (or streams one as events).
 
-Nothing heavy loads at import time (T-18): the command imports Arrow, the simulators and the
-generation engine when it runs.
+Nothing heavy loads at import time (T-18): the handlers import Arrow, the simulators and the
+generation engine when they run.
 
     shape simulate clickstream --set users=500 --set duration_hours=12 -o out/
     shape simulate iot --domain iot --scale small --seed 7 -o out/ --format csv
@@ -14,6 +16,7 @@ generation schema file; default: the pattern's own domain) at ``--scale`` and ``
 
 from __future__ import annotations
 
+import argparse
 import ast
 import dataclasses
 import json
@@ -22,7 +25,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-SHAPE_API = "1.0"
 FORMATS = ("parquet", "csv", "jsonl")
 
 
@@ -136,23 +138,20 @@ def build_config(pattern: Pattern, pairs: list[str], seed: int | None) -> Any:
     return cls(**values)
 
 
-class SimulateCommand:
-    """``shape simulate``: run a pattern simulator."""
-
-    name = "simulate"
-    help = "run a pattern simulator (clickstream, financial, iot, operational-log, pulse)"
-
-    def configure(self, parser: Any) -> None:
-        parser.add_argument("pattern", choices=sorted(PATTERNS), help="the simulator to run")
-        parser.add_argument(
-            "--domain",
-            metavar="DOMAIN|SCHEMA.json",
-            help="for financial, iot and pulse: the domain (or generation schema file) that "
-            "supplies the base tables (default: the pattern's own domain)",
-        )
-        parser.add_argument("--scale", metavar="PRESET", help="scale preset of the base tables")
-        parser.add_argument("--seed", type=int, help="random seed (default: the configuration's)")
-        parser.add_argument(
+def register(sub: Any) -> None:
+    """Add one sub-command per pattern to the ``shape simulate`` parser."""
+    for pattern in PATTERNS.values():
+        p = sub.add_parser(pattern.name, help=pattern.help, description=pattern.help.capitalize())
+        if pattern.domain is not None:
+            p.add_argument(
+                "--domain",
+                metavar="DOMAIN|SCHEMA.json",
+                help=f"the domain (or generation schema file) that supplies the base tables "
+                f"(default: {pattern.domain})",
+            )
+            p.add_argument("--scale", metavar="PRESET", help="scale preset of the base tables")
+        p.add_argument("--seed", type=int, help="random seed (default: the configuration's)")
+        p.add_argument(
             "--set",
             dest="settings",
             action="append",
@@ -160,74 +159,63 @@ class SimulateCommand:
             metavar="KEY=VALUE",
             help="a setting of the simulator's configuration (repeatable), e.g. users=500",
         )
-        parser.add_argument("-o", "--output", metavar="DIR", help="write every table here")
-        parser.add_argument(
+        p.add_argument("-o", "--output", metavar="DIR", help="write every table here")
+        p.add_argument(
             "--format", choices=FORMATS, default="parquet", help="file format (default parquet)"
         )
-        parser.add_argument(
+        p.add_argument(
             "--events",
             metavar="TABLE",
             help="print this table's rows as JSON-lines stream events (_shape_table, _shape_seq, "
             "_shape_event_time) on standard output",
         )
-        parser.add_argument("--json", action="store_true", help="print the summary as JSON")
+        p.add_argument("--json", action="store_true", help="print the summary as JSON")
+        p.set_defaults(run=_run, pattern=pattern.name)
 
-    def run(self, args: Any) -> int:
-        try:
-            return self._run(args)
-        except (ValueError, KeyError, TypeError, OSError) as exc:
-            print(f"shape: error: {exc}", file=sys.stderr)
-            return 2
-        except Exception as exc:
-            from shape.errors import ShapeError
 
-            if isinstance(exc, ShapeError):
-                print(f"shape: error: {exc}", file=sys.stderr)
-                return 2
-            raise
+def _run(args: argparse.Namespace) -> int:
+    """Run the pattern named by ``args.pattern``; exit code 0 done, 2 for input it cannot use."""
+    from shape.errors import ShapeError
 
-    def _base_tables(self, pattern: Pattern, args: Any, seed: int | None) -> Any:
-        if pattern.domain is None:
-            return None
-        from pathlib import Path
+    try:
+        return _simulate(args)
+    except (ValueError, KeyError, TypeError, OSError, ShapeError) as exc:
+        print(f"shape: error: {exc}", file=sys.stderr)
+        return 2
 
-        from shape.api import generate
 
-        target = args.domain or pattern.domain
-        if Path(target).is_file() or target.lower().endswith(".json"):
-            document = json.loads(Path(target).read_text(encoding="utf-8"))
-            return generate(document, scale=args.scale, seed=seed).tables
-        return generate(target, scale=args.scale, seed=seed).tables
+def _simulate(args: argparse.Namespace) -> int:
+    pattern = PATTERNS[args.pattern]
+    config = build_config(pattern, args.settings, args.seed)
+    base = None
+    if pattern.domain is not None:
+        from shape_simulation.cli import generate_tables
 
-    def _run(self, args: Any) -> int:
-        pattern = PATTERNS[args.pattern]
-        if args.domain and pattern.domain is None:
-            raise ValueError(f"{pattern.name} generates its own data; --domain does not apply")
-        config = build_config(pattern, args.settings, args.seed)
-        result = pattern.run(config, self._base_tables(pattern, args, config.seed))
-        tables = result.table_map()
-        if args.events:
-            from shape.streaming.emit.formats import encode_batch
+        base = generate_tables(args.domain or pattern.domain, args.scale, config.seed)
+    result = pattern.run(config, base)
+    tables = result.table_map()
+    if args.events:
+        from shape.streaming.emit.formats import encode_batch
 
-            if args.events not in tables:
-                raise ValueError(f"no table {args.events!r}; the result has {', '.join(tables)}")
-            sys.stdout.flush()
-            sys.stdout.buffer.write(encode_batch(result.events(args.events)))
-            sys.stdout.buffer.flush()
-        paths = result.write(args.output, args.format) if args.output else {}
-        summary = {
-            "pattern": pattern.name,
-            "seed": config.seed,
-            "tables": {name: table.num_rows for name, table in tables.items()},
-            "files": {name: str(path) for name, path in paths.items()},
-            "stats": result.stats,
-        }
-        if args.json:
-            print(
-                json.dumps(summary, indent=2, default=str),
-                file=sys.stderr if args.events else sys.stdout,
-            )
-        elif not args.events:
-            for name, rows in summary["tables"].items():
-                print(f"{name}: {rows} rows")
-        return 0
+        if args.events not in tables:
+            raise ValueError(f"no table {args.events!r}; the result has {', '.join(tables)}")
+        sys.stdout.flush()
+        sys.stdout.buffer.write(encode_batch(result.events(args.events)))
+        sys.stdout.buffer.flush()
+    paths = result.write(args.output, args.format) if args.output else {}
+    summary = {
+        "pattern": pattern.name,
+        "seed": config.seed,
+        "tables": {name: table.num_rows for name, table in tables.items()},
+        "files": {name: str(path) for name, path in paths.items()},
+        "stats": result.stats,
+    }
+    if args.json:
+        print(
+            json.dumps(summary, indent=2, default=str),
+            file=sys.stderr if args.events else sys.stdout,
+        )
+    elif not args.events:
+        for name, rows in summary["tables"].items():
+            print(f"{name}: {rows} rows")
+    return 0

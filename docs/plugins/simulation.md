@@ -1,6 +1,8 @@
 # Simulation patterns (`shape-simulation`)
 
-`sqllocks-shape-simulation` generates the kinds of data a plain table generator does not: web
+`sqllocks-shape-simulation` also holds the file-drop, stream and workflow simulators, described in
+[SIMULATION_FILES_EVENTS.md](../SIMULATION_FILES_EVENTS.md). This page covers the pattern
+simulators: it generates the kinds of data a plain table generator does not: web
 sessions, financial anomalies, IoT telemetry, service logs and traces, and a rideshare's live
 telemetry and finance marts. Each simulator takes a configuration (and, where it layers
 anomalies on existing data, Arrow tables) and returns Arrow tables and summary statistics.
@@ -10,7 +12,7 @@ pip install 'sqllocks-shape[simulation]'
 ```
 
 Nothing is imported until a simulator runs. `shape plugins list` shows
-`shape.commands:simulate`.
+`shape.commands:simulate`; the command has one sub-command per simulator.
 
 ## The simulators
 

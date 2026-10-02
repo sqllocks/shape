@@ -13,7 +13,7 @@ package loads no simulator, and none of Arrow or NumPy):
   reversals and fraud bursts, sensor drift and alert storms, service logs and traces, rideshare
   telemetry and marts), which take a configuration and, where they layer on existing data, Arrow
   tables, and return Arrow tables and summary statistics;
-* ``simulate``: ``shape simulate``, the command that runs the pattern simulators.
+* ``cli``, ``cli_batch``, ``cli_patterns``: ``shape simulate``, the command that runs them.
 """
 
 from __future__ import annotations
@@ -50,7 +50,7 @@ _EXPORTS: dict[str, str] = {
     "SCD2FileDropConfig": "shape_simulation.scd2_file_drops",
     "SCD2FileDropResult": "shape_simulation.scd2_file_drops",
     "SCD2FileDropSimulator": "shape_simulation.scd2_file_drops",
-    "SimulateCommand": "shape_simulation.simulate",
+    "SimulateCommand": "shape_simulation.cli",
     "StateDefinition": "shape_simulation.state_machine",
     "StreamEmitConfig": "shape_simulation.stream_emit",
     "StreamEmitResult": "shape_simulation.stream_emit",
@@ -100,6 +100,7 @@ __all__ = [
 ]
 
 if TYPE_CHECKING:
+    from shape_simulation.cli import SimulateCommand
     from shape_simulation.clickstream_patterns import (
         ClickstreamConfig,
         ClickstreamResult,
@@ -132,7 +133,6 @@ if TYPE_CHECKING:
         SCD2FileDropResult,
         SCD2FileDropSimulator,
     )
-    from shape_simulation.simulate import SimulateCommand
     from shape_simulation.state_machine import (
         StateDefinition,
         TransitionRule,

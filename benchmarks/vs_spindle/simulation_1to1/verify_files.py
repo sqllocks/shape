@@ -1,18 +1,18 @@
 """Simulation parity verifier: Shape's simulators against the pinned baseline's (P6-04).
 
 Runs in the *baseline* venv (it needs pandas and scipy); each side's code runs in its own venv,
-through ``baseline_worker.py`` and ``shape_worker.py``:
+through ``files_baseline_worker.py`` and ``files_shape_worker.py``:
 
-    source scripts/env.sh && "$SPINDLE_PY" benchmarks/vs_spindle/simulation_1to1/verify.py \\
+    source scripts/env.sh && "$SPINDLE_PY" benchmarks/vs_spindle/simulation_1to1/verify_files.py \\
         [--scale small|medium] [--case NAME ...] [--negative-control] [--out REPORT.json]
 
-Every ``case_<simulator>.py`` in this directory is one case (a module per simulator, so the lanes
-that port different simulators never edit the same file). A case runs two kinds of check:
+Every ``files_case_<simulator>.py`` in this directory is one case (a module per simulator, so the
+lanes that port different simulators never edit the same file). A case runs two kinds of check:
 
 * **Mechanism parity (exact).** Both tools get the *same* input tables (the baseline's retail at
   seed 42), the same configuration and the same seed. The simulators draw their random numbers in
   the same order, so the outputs must be equal: the same files, the same rows in the same order,
-  the same manifests. The harness maps the baseline's names to Shape's (``sim_common.NAME_MAP``,
+  the same manifests. The harness maps the baseline's names to Shape's (``files_common.NAME_MAP``,
   D-13) before it compares and records the map in the report. Wall-clock and random values (ids,
   times) are checked for form, never for equality.
 * **T-21 parity.** Each tool simulates its own generated retail tables, the baseline at the
@@ -37,7 +37,6 @@ from __future__ import annotations
 
 import argparse
 import importlib
-import json
 import subprocess
 import sys
 import time
@@ -47,11 +46,14 @@ from typing import Any
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
-import sim_common as sc  # noqa: E402
+import files_common as sc  # noqa: E402
 from paths import BENCH_OUT_DIR, SHAPE_PY, SPINDLE_PY  # noqa: E402
 
 if not (sc.BASELINE_SEEDS == (43, 44, 45, 46) and sc.REF_SEED == 42 and sc.SHAPE_SEED == 1042):
-    sys.exit("the T-21 seed set is fixed (baseline 42 + 43-46, Shape 1042); a verdict from any other counts for nothing")
+    sys.exit(
+        "the T-21 seed set is fixed (baseline 42 + 43-46, Shape 1042); a verdict from any "
+        "other counts for nothing"
+    )
 
 
 class MissingInput(Exception):
@@ -70,10 +72,12 @@ class Ctx:
 
     def input_dir(self, tool: str, seed: int) -> Path:
         """The retail tables a tool generated at ``seed`` (Parquet, ``<table>.parquet``)."""
-        import sim_compare
+        import files_compare
 
-        gen = sim_compare.dv().generate
-        return gen.out_dir("spindle" if tool == "baseline" else "shape", sc.DOMAIN, self.scale, seed)
+        gen = files_compare.dv().generate
+        return gen.out_dir(
+            "spindle" if tool == "baseline" else "shape", sc.DOMAIN, self.scale, seed
+        )
 
     @property
     def exact_dir(self) -> Path:
@@ -90,11 +94,20 @@ class Ctx:
 
             shutil.rmtree(out)
         out.mkdir(parents=True)
-        job = {"sim": sim, "name": name, "side": side, "out_dir": str(out), "scale": self.scale, **params}
+        job = {
+            "sim": sim,
+            "name": name,
+            "side": side,
+            "out_dir": str(out),
+            "scale": self.scale,
+            **params,
+        }
         job_file = out.parent / f"{side}.job.json"
         sc.write_json(job_file, job)
         py = SPINDLE_PY if side == "baseline" else SHAPE_PY
-        worker = HERE / ("baseline_worker.py" if side == "baseline" else "shape_worker.py")
+        worker = HERE / (
+            "files_baseline_worker.py" if side == "baseline" else "files_shape_worker.py"
+        )
         proc = subprocess.run([str(py), str(worker), str(job_file)], capture_output=True, text=True)
         result_file = out / "_result.json"
         if proc.returncode != 0 or not result_file.exists():
@@ -107,10 +120,11 @@ class Ctx:
 
 
 def ensure_inputs(scale: str) -> list[str]:
-    """Generate the retail runs the cases read (the baseline at 42-46, Shape at 1042) when missing."""
-    import sim_compare
+    """Generate the retail runs the cases read (the baseline at 42-46, Shape at 1042) when "
+    "missing."""
+    import files_compare
 
-    dv = sim_compare.dv()
+    dv = files_compare.dv()
     raw = dv.load_schema_json(sc.DOMAIN)
     tables = list(raw["tables"])
     runs = [("spindle", s) for s in (sc.REF_SEED, *sc.BASELINE_SEEDS)] + [("shape", sc.SHAPE_SEED)]
@@ -122,7 +136,7 @@ def ensure_inputs(scale: str) -> list[str]:
 
 def discover(names: list[str]) -> list[Any]:
     mods = []
-    for path in sorted(HERE.glob("case_*.py")):
+    for path in sorted(HERE.glob("files_case_*.py")):
         mod = importlib.import_module(path.stem)
         if not hasattr(mod, "baseline_side"):  # a pattern case (P6-04b), run by verify_patterns.py
             continue
@@ -139,10 +153,24 @@ def discover(names: list[str]) -> list[Any]:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--scale", choices=["small", "medium"], default="small")
-    ap.add_argument("--case", action="append", default=[], metavar="NAME", help="run only this case (repeatable)")
-    ap.add_argument("--negative-control", action="store_true", help="tamper with Shape's output and require every change to be caught")
+    ap.add_argument(
+        "--case",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help="run only this case (repeatable)",
+    )
+    ap.add_argument(
+        "--negative-control",
+        action="store_true",
+        help="tamper with Shape's output and require every change to be caught",
+    )
     ap.add_argument("--list", action="store_true", help="list the cases and exit")
-    ap.add_argument("--out", default=None, help="report JSON (default: $BENCH_OUT_DIR/simulation/report_<scale>.json)")
+    ap.add_argument(
+        "--out",
+        default=None,
+        help="report JSON (default: $BENCH_OUT_DIR/simulation/report_<scale>.json)",
+    )
     a = ap.parse_args(argv)
     try:
         cases = discover(a.case)
@@ -180,7 +208,13 @@ def main(argv: list[str] | None = None) -> int:
     except MissingInput as exc:
         print(f"MISSING: {exc}", file=sys.stderr)
         return 2
-    out = Path(a.out) if a.out else BENCH_OUT_DIR / "simulation" / f"report_{a.scale}{'_negative' if a.negative_control else ''}.json"
+    out = (
+        Path(a.out)
+        if a.out
+        else BENCH_OUT_DIR
+        / "simulation"
+        / f"report_{a.scale}{'_negative' if a.negative_control else ''}.json"
+    )
     sc.write_json(out, report)
     label = "negative control" if a.negative_control else "verify"
     print(f"{label}: {'ALL PASSED' if not failed else 'FAILED'} ({report['seconds']}s) -> {out}")

@@ -1,4 +1,4 @@
-"""Readers and comparers of the simulation parity harness (pandas, scipy; runs in the baseline venv).
+"""Readers and comparers of the simulation parity harness (pandas, scipy; baseline venv).
 
 * ``frames_equal``: two frames hold the same values (columns by name, numbers to a relative
   tolerance, dates by instant, nulls equal), whatever file format or dtype they were read from;
@@ -61,8 +61,12 @@ def norm_series(s: pd.Series) -> pd.Series:
     if s.dtype == object or str(s.dtype) in ("str", "string"):
         nn = s.dropna()
         head = list(nn.head(50))
-        if head and all(isinstance(v, str) for v in head) and all(DATETIME_RE.match(v) for v in head):
-            parsed = pd.to_datetime(s, errors="coerce", utc=True)
+        if (
+            head
+            and all(isinstance(v, str) for v in head)
+            and all(DATETIME_RE.match(v) for v in head)
+        ):
+            parsed = pd.to_datetime(s, errors="coerce", utc=True, format="ISO8601")
             return parsed.dt.tz_localize(None).astype("datetime64[ns]")
         if head and all(hasattr(v, "year") and hasattr(v, "day") for v in head):
             return pd.to_datetime(s, errors="coerce").astype("datetime64[ns]")
@@ -73,9 +77,7 @@ def norm_frame(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame({c: norm_series(df[c]) for c in df.columns})
 
 
-def series_equal(
-    a: pd.Series, b: pd.Series, rtol: float = 1e-9, dt_tol_ns: int = 0
-) -> str | None:
+def series_equal(a: pd.Series, b: pd.Series, rtol: float = 1e-9, dt_tol_ns: int = 0) -> str | None:
     """None when equal, else what differs. Instants may differ by ``dt_tol_ns`` nanoseconds."""
     if len(a) != len(b):
         return f"length {len(a)} vs {len(b)}"
@@ -92,13 +94,11 @@ def series_equal(
         y = pd.to_datetime(bv).astype("datetime64[ns]").to_numpy()
         bad = int((np.abs(x.astype("int64") - y.astype("int64")) > dt_tol_ns).sum())
         return f"{bad} instants differ" if bad else None
-    try:
-        x = pd.to_numeric(av).to_numpy(dtype=np.float64)
-        y = pd.to_numeric(bv).to_numpy(dtype=np.float64)
+    xs, ys = pd.to_numeric(av, errors="coerce"), pd.to_numeric(bv, errors="coerce")
+    if xs.notna().all() and ys.notna().all():  # numbers, not text that happens to parse
+        x, y = xs.to_numpy(dtype=np.float64), ys.to_numpy(dtype=np.float64)
         bad = int((~np.isclose(x, y, rtol=rtol, atol=0.0)).sum())
         return f"{bad} numbers differ" if bad else None
-    except (TypeError, ValueError):
-        pass
     bad = int((av.astype(str).to_numpy() != bv.astype(str).to_numpy()).sum())
     return f"{bad} values differ" if bad else None
 
