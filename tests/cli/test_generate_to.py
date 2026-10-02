@@ -148,3 +148,21 @@ def test_to_delta_local_commits_per_micro_batch(
     code, _, _ = run(capsys, "generate", schema_file, "-f", "delta", "-o", tmp_path / "d")
     assert code == 0
     assert deltalake.DeltaTable(str(tmp_path / "d" / "order")).to_pyarrow_table().num_rows == 1200
+
+
+def test_to_postgresql_routes_to_the_database_sink(
+    capsys: Any, schema_file: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pytest.importorskip("shape_databases")
+    from shape_databases import PostgresSink
+    from shape_databases.testing import FakeServer
+
+    server = FakeServer("postgres")
+    monkeypatch.setattr(PostgresSink, "default_connect", lambda self, **p: server.connect(**p))
+    code, out, err = run(
+        capsys, "generate", schema_file, "--to", "postgresql://shape@db.example/shape", "--json"
+    )
+    assert code == 0, err
+    assert json.loads(out)["targets"]["postgresql://shape@db.example/shape"] == ROWS
+    assert len(server.committed_rows("customer")) == 40
+    assert len(server.committed_rows("order_line")) == 3100
