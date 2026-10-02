@@ -21,7 +21,7 @@
         },
         "typeProperties": {
           "command": {
-            "value": "@concat('docker run --rm --user \"$(id -u):$(id -g)\" -e HOME=/tmp -v \"$AZ_BATCH_TASK_WORKING_DIR:/work\" -w /work ', pipeline().parameters.image, ' python /work/run_generate_gate.py --activity /work/activity.json')",
+            "value": "@concat('docker run --rm --user \"$(id -u):$(id -g)\" -e HOME=/tmp -v \"$AZ_BATCH_TASK_WORKING_DIR:/work\" -w /work ', '''', replace(pipeline().parameters.image, '''', ''), '''', ' python /work/run_generate_gate.py --activity /work/activity.json')",
             "type": "Expression"
           },
           "resourceLinkedService": {

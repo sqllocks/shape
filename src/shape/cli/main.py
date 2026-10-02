@@ -28,10 +28,11 @@ def _artifact_kind(path):
     """The ``kind`` in a ``.shape`` manifest, or None when ``path`` is not a Shape artifact."""
     import zipfile
 
+    from shape.artifact.io import read_manifest_bytes
+
     try:
-        with zipfile.ZipFile(path) as z:
-            return json.loads(z.read("manifest.json")).get("kind")
-    except (OSError, ValueError, KeyError, zipfile.BadZipFile):
+        return json.loads(read_manifest_bytes(path)).get("kind")
+    except (OSError, ValueError, KeyError, AttributeError, zipfile.BadZipFile, RecursionError):
         return None
 
 
@@ -47,12 +48,40 @@ def _write_json(path, obj):
         fh.write("\n")
 
 
+_VERIFIED = set()  # inputs ``--verify`` has checked in this run
+
+
+def _notices_to_stderr():
+    """Route "artifact not verified" notices to stderr as ``shape: note: ...``, once per message,
+    without importing the artifact modules (they load only for commands that read artifacts).
+    Returns what to restore."""
+    import warnings
+
+    previous = warnings.showwarning
+    seen = set()
+
+    def show(message, category, filename, lineno, file=None, line=None):
+        if category.__name__ != "ArtifactNotVerifiedWarning":
+            return previous(message, category, filename, lineno, file, line)
+        text = str(message)
+        if any(text.startswith(f"{p} ") for p in _VERIFIED):
+            return  # --verify already checked this file; the command's own read has no key
+        if text not in seen:
+            seen.add(text)
+            print(f"shape: note: {text}", file=sys.stderr)
+
+    warnings.showwarning = show
+    return previous
+
+
 def _run(fn, a):
     """Run a profile/check/diff command: 0 ok, 1 failed check or drift, 2 input error."""
+    import warnings
     import zipfile
 
     from shape.errors import ShapeError
 
+    restore = _notices_to_stderr()
     try:
         return fn(a)
     except (
@@ -62,6 +91,7 @@ def _run(fn, a):
         NotImplementedError,
         KeyError,
         ShapeError,
+        RecursionError,
         zipfile.BadZipFile,
     ) as exc:
         # The artifact modules are not imported by the commands that never touch an artifact; an
@@ -72,15 +102,72 @@ def _run(fn, a):
             return 1
         print(f"shape: error: {exc}", file=sys.stderr)
         return 2
+    finally:
+        warnings.showwarning = restore
 
 
 def _sign_output(a, path):
     """Sign the artifact just written when ``--sign KEY`` was given."""
     if getattr(a, "sign", None):
-        from shape.artifact.signing import load_private_key, sign_artifact
+        from shape.artifact.signing import sign_artifact
 
-        return sign_artifact(path, load_private_key(a.sign))
+        return sign_artifact(path, _private_key(a.sign, a))
     return None
+
+
+def _private_key(source, a):
+    """The private key behind ``source`` (a file, ``-``, ``env://``, ``file://`` or ``kv://``). An
+    encrypted key's passphrase comes from ``--passphrase-env``, ``--passphrase-stdin``,
+    ``SHAPE_KEY_PASSPHRASE`` or a prompt, and is only asked for when the key is encrypted."""
+    from shape.artifact.keys import STDIN, load_private_key, read_passphrase
+
+    use_stdin = bool(getattr(a, "passphrase_stdin", False))
+    if use_stdin and source == STDIN:
+        raise ValueError("the key and the passphrase cannot both come from standard input")
+
+    def passphrase():
+        return read_passphrase(
+            env=getattr(a, "passphrase_env", None),
+            use_stdin=use_stdin,
+            prompt="Private key passphrase: ",
+        )
+
+    return load_private_key(source, passphrase)
+
+
+def _add_passphrase_args(parser):
+    parser.add_argument(
+        "--passphrase-env",
+        metavar="VAR",
+        help="read the private key passphrase from this environment variable "
+        "(default: SHAPE_KEY_PASSPHRASE, then a prompt)",
+    )
+    parser.add_argument(
+        "--passphrase-stdin",
+        action="store_true",
+        help="read the private key passphrase from the first line of standard input",
+    )
+
+
+_KEY_HELP = (
+    "private key: a file, - (standard input), env://VAR, file://PATH or kv://... "
+    "(an encrypted key asks for its passphrase)"
+)
+
+
+def _looks_like_artifact(path):
+    """True for a path the readers will treat as a Shape artifact. The readers sniff content, not
+    the file name, so ``--verify`` must too: deciding by extension let a forged ``x.bin`` or
+    ``x.SHAPE`` through unverified (P7-04)."""
+    import zipfile
+
+    if path.lower().endswith(".shape"):
+        return True
+    try:
+        with zipfile.ZipFile(path) as z:
+            return "manifest.json" in z.namelist()
+    except (OSError, zipfile.BadZipFile):
+        return False
 
 
 def _verify_inputs(a):
@@ -90,24 +177,64 @@ def _verify_inputs(a):
     key = load_public_key(a.verify)
     for name in ("shape", "before", "after", "target", "observed"):
         path = getattr(a, name, None)
-        if isinstance(path, str) and path.endswith(".shape"):
+        if isinstance(path, str) and _looks_like_artifact(path):
             verify_artifact(path, key)
+            _VERIFIED.add(path)
 
 
 def _cmd_keygen(a):
+    import warnings
+
+    from shape.artifact.keys import (
+        KeyFilePermissionWarning,
+        UnencryptedKeyWarning,
+        read_passphrase,
+    )
     from shape.artifact.signing import key_id, load_public_key, write_keypair
 
-    priv, pub = write_keypair(a.prefix)
+    if a.no_passphrase and (a.passphrase_env or a.passphrase_stdin):
+        raise ValueError("--no-passphrase cannot be combined with a passphrase option")
+    passphrase = None
+    if not a.no_passphrase:
+        passphrase = read_passphrase(
+            env=a.passphrase_env,
+            use_stdin=a.passphrase_stdin,
+            prompt="New private key passphrase: ",
+            confirm=True,
+        )
+        if passphrase is None:
+            raise ValueError(
+                "keygen protects the private key with a passphrase: set SHAPE_KEY_PASSPHRASE, "
+                "use --passphrase-env VAR or --passphrase-stdin, or run it in a terminal; "
+                "--no-passphrase writes an UNENCRYPTED key"
+            )
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        priv, pub = write_keypair(a.prefix, passphrase, unencrypted=a.no_passphrase)
+    for w in caught:
+        if issubclass(w.category, UnencryptedKeyWarning):
+            print(
+                f"shape: WARNING: {priv} is an UNENCRYPTED private key. Anyone who can read it "
+                "can sign as you. Prefer a passphrase (omit --no-passphrase).",
+                file=sys.stderr,
+            )
+        elif issubclass(w.category, KeyFilePermissionWarning):
+            print(f"shape: warning: {w.message}", file=sys.stderr)
     _dump(
-        {"private_key": str(priv), "public_key": str(pub), "key_id": key_id(load_public_key(pub))}
+        {
+            "encrypted": passphrase is not None,
+            "key_id": key_id(load_public_key(pub)),
+            "private_key": str(priv),
+            "public_key": str(pub),
+        }
     )
     return 0
 
 
 def _cmd_sign(a):
-    from shape.artifact.signing import load_private_key, sign_artifact
+    from shape.artifact.signing import sign_artifact
 
-    kid = sign_artifact(a.shape, load_private_key(a.key), a.output)
+    kid = sign_artifact(a.shape, _private_key(a.key, a), a.output)
     _dump({"signed": a.output or a.shape, "key_id": kid})
     return 0
 
@@ -148,10 +275,9 @@ def _profile_name(a):
     if a.name:
         return a.name
     if _artifact_kind(a.output) == "profile":
-        import zipfile
+        from shape.artifact.io import read_manifest_bytes
 
-        with zipfile.ZipFile(a.output) as z:
-            return str(json.loads(z.read("manifest.json")).get("name") or "") or None
+        return str(json.loads(read_manifest_bytes(a.output)).get("name") or "") or None
     return None
 
 
@@ -208,8 +334,9 @@ def _cmd_inspect(a):
     elif str(a.shape).endswith(".shape"):
         from shape.artifact import read_model
 
-        manifest, model = read_model(a.shape)
-        _dump({"kind": "model", "manifest": manifest, "shape": model})
+        read = read_model(a.shape)
+        manifest, model = read
+        _dump({"kind": "model", "manifest": manifest, "shape": model, "signature": read.signature})
     else:
         with open(a.shape, encoding="utf-8") as fh:
             _dump(json.load(fh))
@@ -317,7 +444,10 @@ def _cmd_verify_gates(a):
     return 1 if (not result.passed or (a.strict and has_warnings)) else 0
 
 
-_VERIFY_HELP = "require every .shape input to be signed by this public key (exit 1 if not)"
+_VERIFY_HELP = (
+    "require every .shape input to be signed by this public key: a file, - (standard input), "
+    "env://VAR, file://PATH or kv://... (exit 1 if not)"
+)
 
 
 def _cmd_from_ddl(a):
@@ -498,7 +628,8 @@ def _build_parser(plugin_commands=()):
     c = sub.add_parser("capture")
     c.add_argument("csv")
     c.add_argument("-o", "--output")
-    c.add_argument("--sign", metavar="KEY", help="sign the written .shape with this private key")
+    c.add_argument("--sign", metavar="KEY", help="sign the written .shape; KEY: " + _KEY_HELP)
+    _add_passphrase_args(c)
     pr = sub.add_parser(
         "profile",
         help="profile a file, glob, directory or Delta table",
@@ -509,7 +640,8 @@ def _build_parser(plugin_commands=()):
     )
     pr.add_argument("src", metavar="SRC")
     pr.add_argument("-o", "--output", metavar="OUT")
-    pr.add_argument("--sign", metavar="KEY", help="sign the written .shape with this private key")
+    pr.add_argument("--sign", metavar="KEY", help="sign the written .shape; KEY: " + _KEY_HELP)
+    _add_passphrase_args(pr)
     pr.add_argument(
         "--dataset",
         action="store_true",
@@ -566,10 +698,21 @@ def _build_parser(plugin_commands=()):
     )
     fd.add_argument("--explain", action="store_true", help="print the inference report")
     kg = sub.add_parser("keygen", help="generate an Ed25519 signing key pair")
-    kg.add_argument("prefix", help="writes PREFIX.key (private, mode 0600) and PREFIX.pub")
+    kg.add_argument(
+        "prefix",
+        help="writes PREFIX.key (private, passphrase-protected, mode 0600 where the OS has "
+        "mode bits) and PREFIX.pub",
+    )
+    kg.add_argument(
+        "--no-passphrase",
+        action="store_true",
+        help="write an UNENCRYPTED private key (warns; keep the file out of reach)",
+    )
+    _add_passphrase_args(kg)
     sg = sub.add_parser("sign", help="sign a .shape artifact")
     sg.add_argument("shape", metavar="ARTIFACT.shape")
-    sg.add_argument("--key", required=True, metavar="PRIVATE.key")
+    sg.add_argument("--key", required=True, metavar="KEY", help=_KEY_HELP)
+    _add_passphrase_args(sg)
     sg.add_argument("-o", "--output", metavar="OUT.shape", help="default: sign in place")
     va = sub.add_parser(
         "validate",
@@ -774,6 +917,7 @@ def main(argv=None):
 
 
 def _main(argv):
+    _VERIFIED.clear()
     opts, argv = _split_global(sys.argv[1:] if argv is None else argv)
     if not (opts["log_json"] or opts["metrics"]):
         return _dispatch(argv)

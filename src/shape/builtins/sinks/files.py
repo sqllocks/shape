@@ -43,7 +43,9 @@ class _FileSink:
             return target
         if path.is_dir() or uri.endswith(("/", "\\")):
             path.mkdir(parents=True, exist_ok=True)
-            return path / f"{table}.{self.extension}"
+            from shape.security.names import contained
+
+            return contained(path, table, f".{self.extension}")
         path.parent.mkdir(parents=True, exist_ok=True)
         return path
 

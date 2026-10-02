@@ -24,6 +24,10 @@ from pathlib import Path
 from typing import Any
 
 from .io import ArtifactSignatureError, read_artifact, write_container
+from .keys import Passphrase, PassphraseSource
+from .keys import load_private_key as _load_private_key
+from .keys import load_public_key as _load_public_key
+from .keys import write_keypair as _write_keypair
 
 ALGORITHM = "Ed25519"
 # Domain separation: a signature over a manifest is never valid for any other message.
@@ -54,46 +58,31 @@ def generate_keypair() -> tuple[bytes, bytes]:
     return bytes(sk), bytes(pk)
 
 
-def _decode_key(text: str, what: str) -> bytes:
-    try:
-        raw = base64.b64decode("".join(text.split()), validate=True)
-    except (binascii.Error, ValueError) as e:
-        raise ValueError(f"{what} is not a base64-encoded Ed25519 key") from e
-    if len(raw) != _KEY_BYTES:
-        raise ValueError(f"{what} must decode to {_KEY_BYTES} bytes, got {len(raw)}")
-    return raw
+def write_keypair(
+    prefix: str | os.PathLike[str],
+    passphrase: Passphrase = None,
+    *,
+    unencrypted: bool = False,
+) -> tuple[Path, Path]:
+    """Generate a key pair and write ``<prefix>.key`` (private, mode 0600 where the OS has mode
+    bits) and ``<prefix>.pub``.
+
+    The private key is encrypted with ``passphrase`` (PKCS#8 PEM). Without one, ``unencrypted=True``
+    must ask for the raw form explicitly, and a warning follows. Never overwrites a file."""
+    _require_crypto()
+    return _write_keypair(prefix, passphrase, unencrypted=unencrypted, generate=generate_keypair)
 
 
-def write_keypair(prefix: str | os.PathLike[str]) -> tuple[Path, Path]:
-    """Generate a key pair and write ``<prefix>.key`` (private, mode 0600) and ``<prefix>.pub``.
-
-    Never overwrites an existing file."""
-    sk, pk = generate_keypair()
-    priv, pub = Path(f"{prefix}.key"), Path(f"{prefix}.pub")
-    fd = os.open(priv, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-    try:
-        with os.fdopen(fd, "w", encoding="ascii") as fh:
-            fh.write(base64.b64encode(sk).decode() + "\n")
-    except BaseException:
-        priv.unlink(missing_ok=True)
-        raise
-    try:
-        with open(pub, "x", encoding="ascii") as fh:
-            fh.write(base64.b64encode(pk).decode() + "\n")
-    except BaseException:
-        priv.unlink(missing_ok=True)
-        raise
-    return priv, pub
+def load_private_key(source: str | os.PathLike[str], passphrase: PassphraseSource = None) -> bytes:
+    """The private key behind ``source``: a file path, ``-`` (standard input), ``env://NAME``,
+    ``file://PATH`` or ``kv://...``. An encrypted key needs ``passphrase`` (a value, or a callable
+    asked only when the key is encrypted)."""
+    return _load_private_key(source, passphrase)
 
 
-def load_private_key(path: str | os.PathLike[str]) -> bytes:
-    return _decode_key(Path(path).read_text(encoding="ascii"), f"private key file {path}")
-
-
-def load_public_key(path: str | os.PathLike[str]) -> bytes:
-    """A public key file written by :func:`write_keypair`."""
-    text = Path(path).read_text(encoding="ascii")
-    return _decode_key(text, f"public key file {path}")
+def load_public_key(source: str | os.PathLike[str]) -> bytes:
+    """A public key from a file written by :func:`write_keypair`, or any other key source."""
+    return _load_public_key(source)
 
 
 def public_key_of(private_key: bytes) -> bytes:
@@ -122,8 +111,8 @@ def verify_manifest_signature(
             raise ValueError("unsupported signature algorithm")
         sig = base64.b64decode(str(doc["signature"]), validate=True)
         kid = doc.get("key_id")
-    except (ValueError, KeyError, binascii.Error) as e:
-        raise ArtifactSignatureError(f"malformed signature: {e}") from e
+    except (ValueError, KeyError, binascii.Error, RecursionError) as e:
+        raise ArtifactSignatureError(f"malformed signature: {type(e).__name__}") from e
     if kid != key_id(public_key):
         raise ArtifactSignatureError("artifact is signed by a different key than the trusted key")
     _require_crypto()
@@ -151,7 +140,7 @@ def sign_artifact(
     from shape.security.crypto import sign_ed25519
 
     public_key = public_key_of(private_key)
-    read_artifact(path)
+    read_artifact(path, notice=False)
     with zipfile.ZipFile(path) as src:
         manifest_bytes = src.read("manifest.json")
     sig = sign_ed25519(_message(manifest_bytes), private_key)
@@ -164,7 +153,7 @@ def sign_artifact(
         sort_keys=True,
         separators=(",", ":"),
     ).encode()
-    _, components = read_artifact(path)
+    _, components = read_artifact(path, notice=False)
     target = Path(out if out is not None else path)
     fd, tmp_name = tempfile.mkstemp(dir=target.parent or ".", suffix=".tmp")
     os.close(fd)

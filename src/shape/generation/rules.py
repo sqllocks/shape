@@ -38,6 +38,7 @@ from shape.generation.keypos import dense_start, first_rows
 from shape.generation.rng import RowStream
 from shape.generation.schema import BusinessRule, GenSchema
 
+MAX_RULE_CHARS = 2000
 _COMPARISON = re.compile(r"^(.+?)\s*(>=|<=|>|<|==)\s*(.+)$")
 
 Tables = dict[str, pa.Table]
@@ -65,7 +66,10 @@ class RuleViolation:
 
 def parse_comparison(rule: str) -> tuple[str, str, str]:
     """``"A >= B"`` as ``("A", ">=", "B")``; three empty strings when it is not a comparison."""
-    m = _COMPARISON.match(rule.strip())
+    text = rule.strip()
+    if len(text) > MAX_RULE_CHARS:  # the pattern below is quadratic on a long run of spaces
+        return "", "", ""
+    m = _COMPARISON.match(text)
     return (m.group(1).strip(), m.group(2), m.group(3).strip()) if m else ("", "", "")
 
 
