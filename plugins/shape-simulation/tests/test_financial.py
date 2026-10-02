@@ -227,3 +227,91 @@ def test_empty_transactions(financial_tables):
     r = sim({"transaction": empty, "account": financial_tables["account"]}).run()
     assert r.reversals.num_rows == 0 and r.settlements.num_rows == 6
     assert "FinancialStreamResult(transactions=0" in repr(r)
+
+
+# ---- the default window: the whole span of the transactions -------------------------------
+
+
+def months_of(table, col):
+    us = times(table, col)
+    return {(np.datetime64(int(v), "us").astype("datetime64[M]")) for v in us}
+
+
+@pytest.fixture
+def multi_month_tables():
+    """Transactions across 120 days (five months of 30 days) and their accounts."""
+    rng = np.random.default_rng(3)
+    n = 4000
+    start = np.datetime64("2024-01-01T00:00:00", "us").astype(np.int64)
+    when = np.sort(start + (rng.random(n) * 120 * 24 * HOUR).astype(np.int64))
+    accounts = pa.table({"account_id": pa.array([f"acc_{i}" for i in range(50)])})
+    txn = pa.table(
+        {
+            "transaction_id": pa.array([f"t{i}" for i in range(n)]),
+            "account_id": pa.array([f"acc_{i % 50}" for i in range(n)]),
+            "amount": pa.array(np.round(rng.uniform(1, 200, n), 2)),
+            "transaction_time": pa.array(when, pa.timestamp("us")),
+        }
+    )
+    return {"transaction": txn, "account": accounts}
+
+
+def test_default_window_settles_every_month(multi_month_tables):
+    r = sim(multi_month_tables, settlement_success_rate=1.0).run()
+    txn = multi_month_tables["transaction"]
+    seen = months_of(r.settlements, "settled_at")
+    assert months_of(txn, "transaction_time") <= seen
+    s = r.settlements.to_pydict()
+    assert set(s["status"]) == {"settled"}
+    # every transaction falls in a batch: nothing is left unsettled at the end of the span
+    assert sum(s["transaction_count"]) == txn.num_rows
+    assert times(r.settlements, "settled_at").max() >= times(txn).max()
+    span_hours = float(times(txn).max() - times(txn).min()) / HOUR
+    assert r.stats["duration_hours"] == pytest.approx(span_hours + 4.0)
+
+
+def test_default_window_covers_fraud_and_clearing_for_the_whole_period(multi_month_tables):
+    r = sim(multi_month_tables, fraud_burst_probability=0.01).run()
+    assert len(months_of(r.fraud_events, "transaction_time")) >= 4
+    assert sum(r.settlements.column("transaction_count").to_pylist()) == 4000
+
+
+def test_settlement_lag_distribution_is_unchanged(multi_month_tables):
+    """A transaction settles at the end of its batch: the lag is in (0, batch hours], spread
+    evenly, whatever the window, and the status mix follows the success rate."""
+    txn = multi_month_tables["transaction"]
+    t = times(txn)
+    batch = 4.0
+    for cfg in ({}, {"duration_hours": 120 * 24.0 + batch}):
+        r = sim(multi_month_tables, settlement_success_rate=0.9, seed=11, **cfg).run()
+        ends = np.sort(times(r.settlements, "settled_at"))
+        idx = np.searchsorted(ends, t, side="right")  # the first batch end after each transaction
+        lag = (ends[idx] - t) / HOUR
+        assert lag.min() > 0 and lag.max() <= batch + 1e-9
+        assert abs(lag.mean() - batch / 2) < 0.1
+        share = r.settlements.column("status").to_pylist().count("settled") / r.settlements.num_rows
+        assert 0.85 < share < 0.95
+
+
+def test_explicit_window_equals_the_default_when_it_is_the_same_length(multi_month_tables):
+    default = sim(multi_month_tables, seed=9).run()
+    same = sim(multi_month_tables, seed=9, duration_hours=default.stats["duration_hours"]).run()
+    assert all(default.table_map()[k].equals(same.table_map()[k]) for k in default.TABLES)
+
+
+def test_duration_hours_still_overrides_the_default_window(multi_month_tables):
+    r = sim(multi_month_tables, duration_hours=48.0, settlement_batch_hours=6.0).run()
+    assert r.settlements.num_rows == 8 and r.stats["duration_hours"] == 48.0
+    only_first_two_days = months_of(r.settlements, "settled_at")
+    assert len(only_first_two_days) == 1
+    t = times(multi_month_tables["transaction"])
+    assert times(r.settlements, "settled_at").max() <= t.min() + 48 * HOUR
+
+
+def test_default_window_without_a_time_column_is_a_day(financial_tables):
+    bare = {
+        "transaction": financial_tables["transaction"].drop_columns(["transaction_time"]),
+        "account": financial_tables["account"],
+    }
+    r = sim(bare).run()
+    assert r.stats["duration_hours"] == 24.0 and r.settlements.num_rows == 6

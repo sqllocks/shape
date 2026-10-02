@@ -43,7 +43,9 @@ def inputs(quick: bool) -> dict[str, pa.Table]:
 
 def configs(quick: bool) -> dict[str, dict[str, Any]]:
     return {
-        "default": {},
+        # The window is pinned to the baseline's own default of 24 h: Shape's default is the whole
+        # span of the transactions (SIM-9, probed below), and every other check stays comparable.
+        "default": {"duration_hours": 24.0},
         "variant": {
             "duration_hours": 48.0,
             "reversal_probability": 0.10,
@@ -271,7 +273,7 @@ def probes(ctx: h.Context) -> list[Report]:
         len(delays) > 0
         and float(delays.min()) >= float(h.numbers(renamed.column("transaction_date"), 0).min()),
     )
-    return [rep, _columns_probe()]
+    return [rep, _columns_probe(), _window_probe()]
 
 
 def _columns_probe() -> Report:
@@ -290,4 +292,55 @@ def _columns_probe() -> Report:
         tuple(run_shape(cfg, s, data).tables["transactions"].column_names) for s in range(1, 13)
     }
     rep.add("shape: one column set for every seed", len(ours) == 1)
+    return rep
+
+
+def _window_probe() -> Report:
+    """SIM-9: a table of months. The baseline's default window settles only the first 24 hours;
+    Shape's covers the whole span of the transactions and every month has settlements."""
+    n = 3_000
+    rng = np.random.default_rng(21)
+    start = np.datetime64("2024-01-01T00:00:00", "us").astype(np.int64)
+    when = np.sort(start + (rng.random(n) * 90 * 24 * HOUR_US).astype(np.int64))
+    data = fixtures.financial(True)
+    transaction = pa.table(
+        {
+            "transaction_id": pa.array([f"txn_{i:07d}" for i in range(n)]),
+            "account_id": pa.array(
+                [f"acc_{i % 120:05d}" for i in range(n)],
+            ),
+            "amount": pa.array(np.round(rng.lognormal(3.5, 1.1, n), 2)),
+            "transaction_time": pa.array(when, pa.timestamp("us")),
+        }
+    )
+    tables = {"transaction": transaction, "account": data["account"]}
+    cfg = {"settlement_success_rate": 1.0}
+    rep = Report("SIM-9 financial default window")
+    first, last = int(when.min()), int(when.max())
+
+    def settled(run: Run) -> list[int]:
+        return [int(v) for v in h.numbers(run.tables["settlements"].column("settled_at"), 0) * 1e6]
+
+    def months(stamps: list[int]) -> set[Any]:
+        return {np.datetime64(v, "us").astype("datetime64[M]") for v in stamps}
+
+    theirs = h.baseline_once(SIM, cfg, tables, 5, "default-window")
+    ours = run_shape(cfg, 5, tables)
+    t_stamps, s_stamps = settled(theirs), settled(ours)
+    rep.add(
+        "baseline: settles only the first day of a three-month table",
+        max(t_stamps) <= first + 24 * HOUR_US
+        and sum(theirs.tables["settlements"].column("transaction_count").to_pylist()) < n // 10,
+        settlements=len(t_stamps),
+    )
+    rep.add(
+        "shape: settles the whole span",
+        max(s_stamps) >= last
+        and sum(ours.tables["settlements"].column("transaction_count").to_pylist()) == n,
+        settlements=len(s_stamps),
+    )
+    rep.add(
+        "shape: every month of the table has settlements",
+        months(list(when.tolist())) <= months(s_stamps),
+    )
     return rep
