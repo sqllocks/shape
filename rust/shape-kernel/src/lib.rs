@@ -39,6 +39,7 @@ pub mod fit;
 pub mod gen;
 pub mod hashing;
 pub mod numpy_loops;
+pub mod parquet_out;
 pub mod profile;
 pub mod sketch;
 
@@ -308,6 +309,7 @@ fn _kernel(m: &Bound<'_, PyModule>) -> PyResult<()> {
     profile::register(m)?;
     exact::register(m)?;
     gen::register(m)?;
+    parquet_out::register(m)?;
     m.add_function(wrap_pyfunction!(version, m)?)?;
     m.add_function(wrap_pyfunction!(numpy_loops_mode, m)?)?;
     m.add_function(wrap_pyfunction!(roundtrip_batch, m)?)?;

@@ -1,0 +1,477 @@
+{
+ "meta": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-10-02 08:43:37",
+  "impl": "shape",
+  "domain": "healthcare",
+  "runs": 5,
+  "warmup": 1,
+  "ref_seed": 42,
+  "impl_seed": 1042,
+  "loadavg_start": 1.177734375
+ },
+ "scales": {
+  "medium": {
+   "summary": {
+    "spindle": {
+     "total_s": 2.47562129500011,
+     "gen_s": 1.8280580939999709,
+     "write_s": 0.6043322419998276,
+     "cpu_s": 2.488089,
+     "user_s": 1.71246,
+     "sys_s": 0.729276,
+     "minor_faults": 43155,
+     "import_s": 1.1970847069999309,
+     "peak_rss_mb": 482.31640625,
+     "parquet_bytes": 25999982,
+     "rows": 1260800,
+     "rows_per_s_total": 509286.29614972835,
+     "rows_per_s_generate": 689693.61758151,
+     "runs_total_s": [
+      2.257,
+      2.476,
+      2.529,
+      2.654,
+      2.172
+     ],
+     "loadavg_before": [
+      1.1630859375,
+      1.14990234375,
+      1.45849609375,
+      1.16845703125,
+      1.2353515625
+     ],
+     "per_table_s_median": {
+      "facility": 0.08995710499993947,
+      "patient": 0.14761969100004535,
+      "provider": 0.004384657999935371,
+      "encounter": 0.19357384600016303,
+      "claim": 0.13159304700002394,
+      "diagnosis": 0.6925013929999295,
+      "medication": 0.042365979999885894,
+      "procedure": 0.2048180759998104,
+      "claim_line": 0.16406843899994783,
+      "_compute_phase+business_rules": 0.13289444899987757,
+      "_construct_domain+Spindle()": 0.007702429000119082
+     },
+     "row_counts": {
+      "facility": 50,
+      "patient": 25000,
+      "provider": 2000,
+      "encounter": 150000,
+      "claim": 142500,
+      "diagnosis": 270000,
+      "medication": 135000,
+      "procedure": 180000,
+      "claim_line": 356250
+     }
+    },
+    "shape": {
+     "total_s": 0.33176458599996295,
+     "gen_s": 0.33176458599996295,
+     "write_s": 0.0,
+     "cpu_s": 0.774629,
+     "user_s": 0.6108960000000001,
+     "sys_s": 0.175105,
+     "minor_faults": 48375,
+     "import_s": 0.36022001800006365,
+     "peak_rss_mb": 291.34765625,
+     "parquet_bytes": 25655502,
+     "rows": 1260800,
+     "rows_per_s_total": 3800285.06116726,
+     "rows_per_s_generate": 3800285.06116726,
+     "runs_total_s": [
+      0.332,
+      0.341,
+      0.313,
+      0.33,
+      0.337
+     ],
+     "loadavg_before": [
+      1.14990234375,
+      1.14990234375,
+      1.45849609375,
+      1.16845703125,
+      1.2353515625
+     ],
+     "per_table_s_median": {
+      "_construct_domain+Engine": 0.008728823999945234,
+      "_generate+write": 0.3232053320000432
+     },
+     "row_counts": {
+      "facility": 50,
+      "patient": 25000,
+      "provider": 2000,
+      "encounter": 150000,
+      "claim": 142500,
+      "diagnosis": 270000,
+      "medication": 135000,
+      "procedure": 180000,
+      "claim_line": 356250
+     },
+     "numpy": "2.4.6",
+     "pyarrow": "25.0.1"
+    }
+   },
+   "raw": {
+    "spindle": [
+     {
+      "import_s": 1.2243646110000554,
+      "gen_s": 1.8052115230000254,
+      "write_s": 0.4519223530001,
+      "total_s": 2.2571338760001254,
+      "rows": {
+       "facility": 50,
+       "patient": 25000,
+       "provider": 2000,
+       "encounter": 150000,
+       "claim": 142500,
+       "diagnosis": 270000,
+       "medication": 135000,
+       "procedure": 180000,
+       "claim_line": 356250
+      },
+      "per_table_s": {
+       "facility": 0.08995710499993947,
+       "patient": 0.14444799200009584,
+       "provider": 0.0047304129998337885,
+       "encounter": 0.18866545100013354,
+       "claim": 0.13159304700002394,
+       "diagnosis": 0.6925013929999295,
+       "medication": 0.04419003599991811,
+       "procedure": 0.2029579659999854,
+       "claim_line": 0.16510507100019822,
+       "_compute_phase+business_rules": 0.13289444899987757,
+       "_construct_domain+Spindle()": 0.00816860000009001
+      },
+      "user_s": 1.6606620000000003,
+      "sys_s": 0.6051960000000001,
+      "minor_faults": 41909,
+      "major_faults": 0,
+      "cpu_s": 2.265858,
+      "peak_rss_mb": 483.62890625,
+      "parquet_bytes": 25999982,
+      "loadavg_before": 1.1630859375
+     },
+     {
+      "import_s": 1.1970847069999309,
+      "gen_s": 1.8280580939999709,
+      "write_s": 0.6475632010001391,
+      "total_s": 2.47562129500011,
+      "rows": {
+       "facility": 50,
+       "patient": 25000,
+       "provider": 2000,
+       "encounter": 150000,
+       "claim": 142500,
+       "diagnosis": 270000,
+       "medication": 135000,
+       "procedure": 180000,
+       "claim_line": 356250
+      },
+      "per_table_s": {
+       "facility": 0.09420188599983703,
+       "patient": 0.16602024200005872,
+       "provider": 0.004379782000114574,
+       "encounter": 0.19499169799996707,
+       "claim": 0.12980073900007483,
+       "diagnosis": 0.6625095319998309,
+       "medication": 0.04644785799996498,
+       "procedure": 0.21219676500004425,
+       "claim_line": 0.16883131600002343,
+       "_compute_phase+business_rules": 0.14097584699993604,
+       "_construct_domain+Spindle()": 0.007702429000119082
+      },
+      "user_s": 1.758813,
+      "sys_s": 0.729276,
+      "minor_faults": 43155,
+      "major_faults": 0,
+      "cpu_s": 2.488089,
+      "peak_rss_mb": 481.375,
+      "parquet_bytes": 25999982,
+      "loadavg_before": 1.14990234375
+     },
+     {
+      "import_s": 1.184968777999984,
+      "gen_s": 1.879234082000039,
+      "write_s": 0.649450201000036,
+      "total_s": 2.528684283000075,
+      "rows": {
+       "facility": 50,
+       "patient": 25000,
+       "provider": 2000,
+       "encounter": 150000,
+       "claim": 142500,
+       "diagnosis": 270000,
+       "medication": 135000,
+       "procedure": 180000,
+       "claim_line": 356250
+      },
+      "per_table_s": {
+       "facility": 0.08521020600005613,
+       "patient": 0.1376482370001213,
+       "provider": 0.004384657999935371,
+       "encounter": 0.18846732799988786,
+       "claim": 0.13998954800013053,
+       "diagnosis": 0.7721559950000483,
+       "medication": 0.04231414599985328,
+       "procedure": 0.20725710000010622,
+       "claim_line": 0.16406843899994783,
+       "_compute_phase+business_rules": 0.1303400540000439,
+       "_construct_domain+Spindle()": 0.007398370999908366
+      },
+      "user_s": 1.71246,
+      "sys_s": 0.827044,
+      "minor_faults": 43666,
+      "major_faults": 0,
+      "cpu_s": 2.539504,
+      "peak_rss_mb": 482.171875,
+      "parquet_bytes": 25999982,
+      "loadavg_before": 1.45849609375
+     },
+     {
+      "import_s": 1.1595868169999903,
+      "gen_s": 2.04956587200013,
+      "write_s": 0.6043322419998276,
+      "total_s": 2.653898113999958,
+      "rows": {
+       "facility": 50,
+       "patient": 25000,
+       "provider": 2000,
+       "encounter": 150000,
+       "claim": 142500,
+       "diagnosis": 270000,
+       "medication": 135000,
+       "procedure": 180000,
+       "claim_line": 356250
+      },
+      "per_table_s": {
+       "facility": 0.10584167300021363,
+       "patient": 0.18811573699986184,
+       "provider": 0.011823960000128864,
+       "encounter": 0.21887885399996776,
+       "claim": 0.1956339250000383,
+       "diagnosis": 0.7787659279999843,
+       "medication": 0.042365979999885894,
+       "procedure": 0.20427809500006333,
+       "claim_line": 0.1629088209999736,
+       "_compute_phase+business_rules": 0.13323032900007092,
+       "_construct_domain+Spindle()": 0.0077225699999416975
+      },
+      "user_s": 1.6949420000000002,
+      "sys_s": 0.9697879999999999,
+      "minor_faults": 43195,
+      "major_faults": 0,
+      "cpu_s": 2.66473,
+      "peak_rss_mb": 483.25,
+      "parquet_bytes": 25999982,
+      "loadavg_before": 1.16845703125
+     },
+     {
+      "import_s": 1.2458101659999556,
+      "gen_s": 1.6743875890001618,
+      "write_s": 0.49757887600003414,
+      "total_s": 2.171966465000196,
+      "rows": {
+       "facility": 50,
+       "patient": 25000,
+       "provider": 2000,
+       "encounter": 150000,
+       "claim": 142500,
+       "diagnosis": 270000,
+       "medication": 135000,
+       "procedure": 180000,
+       "claim_line": 356250
+      },
+      "per_table_s": {
+       "facility": 0.08928362200003903,
+       "patient": 0.14761969100004535,
+       "provider": 0.004260202999830653,
+       "encounter": 0.19357384600016303,
+       "claim": 0.1309357860000091,
+       "diagnosis": 0.5602076079999279,
+       "medication": 0.04163015900007849,
+       "procedure": 0.2048180759998104,
+       "claim_line": 0.16279483700009223,
+       "_compute_phase+business_rules": 0.13194106600008126,
+       "_construct_domain+Spindle()": 0.007322695000084423
+      },
+      "user_s": 1.7292560000000001,
+      "sys_s": 0.452864,
+      "minor_faults": 41569,
+      "major_faults": 0,
+      "cpu_s": 2.18212,
+      "peak_rss_mb": 482.31640625,
+      "parquet_bytes": 25999982,
+      "loadavg_before": 1.2353515625
+     }
+    ],
+    "shape": [
+     {
+      "import_s": 0.3458099859999493,
+      "gen_s": 0.33176458599996295,
+      "write_s": 0.0,
+      "total_s": 0.33176458599996295,
+      "overlapped": true,
+      "rows": {
+       "facility": 50,
+       "patient": 25000,
+       "provider": 2000,
+       "encounter": 150000,
+       "claim": 142500,
+       "diagnosis": 270000,
+       "medication": 135000,
+       "procedure": 180000,
+       "claim_line": 356250
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.008559253999919747,
+       "_generate+write": 0.3232053320000432
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.636416,
+      "sys_s": 0.138213,
+      "minor_faults": 48375,
+      "major_faults": 0,
+      "cpu_s": 0.774629,
+      "peak_rss_mb": 290.90625,
+      "parquet_bytes": 25655502,
+      "loadavg_before": 1.14990234375
+     },
+     {
+      "import_s": 0.36725134299990714,
+      "gen_s": 0.3409978059999048,
+      "write_s": 0.0,
+      "total_s": 0.3409978059999048,
+      "overlapped": true,
+      "rows": {
+       "facility": 50,
+       "patient": 25000,
+       "provider": 2000,
+       "encounter": 150000,
+       "claim": 142500,
+       "diagnosis": 270000,
+       "medication": 135000,
+       "procedure": 180000,
+       "claim_line": 356250
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.00961255699985486,
+       "_generate+write": 0.33138524900004995
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.5926140000000001,
+      "sys_s": 0.217849,
+      "minor_faults": 48282,
+      "major_faults": 0,
+      "cpu_s": 0.810463,
+      "peak_rss_mb": 291.34765625,
+      "parquet_bytes": 25655502,
+      "loadavg_before": 1.14990234375
+     },
+     {
+      "import_s": 0.3572747820001041,
+      "gen_s": 0.3129837160001898,
+      "write_s": 0.0,
+      "total_s": 0.3129837160001898,
+      "overlapped": true,
+      "rows": {
+       "facility": 50,
+       "patient": 25000,
+       "provider": 2000,
+       "encounter": 150000,
+       "claim": 142500,
+       "diagnosis": 270000,
+       "medication": 135000,
+       "procedure": 180000,
+       "claim_line": 356250
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.008712014000138879,
+       "_generate+write": 0.30427170200005094
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.6162810000000001,
+      "sys_s": 0.13064599999999998,
+      "minor_faults": 48949,
+      "major_faults": 0,
+      "cpu_s": 0.7469270000000001,
+      "peak_rss_mb": 291.703125,
+      "parquet_bytes": 25655502,
+      "loadavg_before": 1.45849609375
+     },
+     {
+      "import_s": 0.36022001800006365,
+      "gen_s": 0.3298238350000702,
+      "write_s": 0.0,
+      "total_s": 0.3298238350000702,
+      "overlapped": true,
+      "rows": {
+       "facility": 50,
+       "patient": 25000,
+       "provider": 2000,
+       "encounter": 150000,
+       "claim": 142500,
+       "diagnosis": 270000,
+       "medication": 135000,
+       "procedure": 180000,
+       "claim_line": 356250
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.008728823999945234,
+       "_generate+write": 0.32109501100012494
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.587468,
+      "sys_s": 0.175105,
+      "minor_faults": 52573,
+      "major_faults": 0,
+      "cpu_s": 0.762573,
+      "peak_rss_mb": 308.21484375,
+      "parquet_bytes": 25655502,
+      "loadavg_before": 1.16845703125
+     },
+     {
+      "import_s": 0.3622701330000382,
+      "gen_s": 0.3368059319998338,
+      "write_s": 0.0,
+      "total_s": 0.3368059319998338,
+      "overlapped": true,
+      "rows": {
+       "facility": 50,
+       "patient": 25000,
+       "provider": 2000,
+       "encounter": 150000,
+       "claim": 142500,
+       "diagnosis": 270000,
+       "medication": 135000,
+       "procedure": 180000,
+       "claim_line": 356250
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.009327390999942509,
+       "_generate+write": 0.32747854099989127
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.6108960000000001,
+      "sys_s": 0.183128,
+      "minor_faults": 47504,
+      "major_faults": 0,
+      "cpu_s": 0.7940240000000002,
+      "peak_rss_mb": 288.2734375,
+      "parquet_bytes": 25655502,
+      "loadavg_before": 1.2353515625
+     }
+    ]
+   }
+  }
+ }
+}
