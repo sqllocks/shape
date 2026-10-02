@@ -348,6 +348,27 @@ def test_tt_orphans_every_snapshot_has_full_foreign_key_integrity():
     assert result.snapshots[-1].row_counts["parent"] < N_PARENT * 2
 
 
+def test_tt_orphans_repair_keeps_the_skew_of_the_relationship():
+    parent = pa.table({"parent_id": pa.array(range(1, 11), pa.int64())})
+    # Parent 1 has 90 children, parents 2-5 have 2 each, and 40 children point at a removed parent.
+    fk = [1] * 90 + [2, 2, 3, 3, 4, 4, 5, 5] + [99] * 40
+    child = pa.table(
+        {"child_id": pa.array(range(len(fk)), pa.int64()), "parent_id": pa.array(fk, pa.int64())}
+    )
+    current = {"parent": parent, "child": child}
+    keys_ = {"parent": ["parent_id"], "child": ["child_id"]}
+    fks = {"parent": {}, "child": {"parent_id": ("parent", "parent_id")}}
+    TimeTravelEngine._repair_orphans(
+        current, ["parent", "child"], keys_, fks, np.random.default_rng(1)
+    )
+    repaired = np.asarray(current["child"].column("parent_id").to_pylist())
+    assert set(repaired.tolist()) <= set(range(1, 11))
+    assert (repaired[:98] == np.asarray(fk[:98])).all()  # rows that were fine do not move
+    # Proportional to the children each parent has (90 of 98): about 37 of the 40; uniform over the
+    # 10 parents would give about 4.
+    assert (repaired[98:] == 1).sum() >= 30
+
+
 def test_tt_rounding_integer_updates_do_not_drift_down():
     data = tables()
     data["child"] = data["child"].set_column(

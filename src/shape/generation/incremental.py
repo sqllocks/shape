@@ -27,8 +27,9 @@ of 2026-10-01; the parity harness lists them as named allow-list entries, see
 ``time-travel``
     ``TT-ZERO``  a growth rate of 0 adds no rows (a non-zero rate still adds at least one).
     ``TT-ORPHANS``  churn removes parent rows, so each month every child row left pointing at a
-    removed parent is re-pointed at a surviving one (row counts are unchanged): snapshots keep
-    100% foreign-key integrity.
+    removed parent is re-pointed at a surviving one, chosen in proportion to the children it
+    already has (row counts are unchanged, and the skew of the relationship is kept): snapshots
+    keep 100% foreign-key integrity.
     ``TT-KEYS``  the primary key is the declared one (a guess only without a schema), and a table
     whose key has no integer column cannot get new keys: an error, not duplicated keys.
     ``TT-ROUNDING``  an integer column changed by an update is rounded, not truncated (truncation
@@ -149,7 +150,8 @@ def _perturb(
     table: pa.Table, columns: list[str], rng: np.random.Generator, fraction: float
 ) -> pa.Table:
     """Perturb ``fraction`` of the values of each of ``columns``: numbers by a factor in
-    [0.9, 1.1], dates by 1-30 days, everything else shuffled among the chosen rows."""
+    [0.9, 1.1], dates by 1-30 days, everything else shuffled among the chosen rows; booleans are
+    left as they are."""
     n_rows = table.num_rows
     if n_rows == 0:
         return table
@@ -160,7 +162,9 @@ def _perturb(
         idx = rng.choice(n_rows, size=min(n_perturb, n_rows), replace=False).astype(np.int64)
         array = _chunked(table, name)
         t = array.type
-        if _is_numeric(t) and not pa.types.is_boolean(t):
+        if pa.types.is_boolean(t):
+            continue  # a flag is never flipped at random (two "primary" rows, a re-opened order)
+        if _is_numeric(t):
             table = _replace(table, name, _perturb_numeric(array, idx, rng))
         elif _is_datetime(t):
             table = _replace(table, name, _perturb_datetime(array, idx, rng))
@@ -782,7 +786,12 @@ class TimeTravelEngine:
         fks: Mapping[str, dict[str, tuple[str, str]]],
         rng: np.random.Generator,
     ) -> None:
-        """Point every child row whose parent was removed at a surviving parent (TT-ORPHANS)."""
+        """Re-point every child row whose parent was removed (TT-ORPHANS).
+
+        The new parent is drawn from the child column's own surviving values, so a parent that has
+        many children is chosen in proportion and the skew of the relationship (a few popular
+        products, many quiet ones) is kept; a column with no surviving value draws uniformly from
+        the parent's keys."""
         for name in order:
             for col, (parent, parent_col) in fks[name].items():
                 if col in keys[name] or parent not in current:
@@ -793,11 +802,14 @@ class TimeTravelEngine:
                     continue
                 array = _chunked(table, col)
                 pool = pool.cast(array.type)
-                orphan = pc.and_(array.is_valid(), pc.invert(pc.is_in(array, value_set=pool)))
+                known = pc.is_in(array, value_set=pool)
+                orphan = pc.and_(array.is_valid(), pc.invert(known))
                 bad = np.flatnonzero(np.asarray(orphan.to_numpy(zero_copy_only=False)))
                 if len(bad) == 0:
                     continue
-                picks = pool.take(pa.array(rng.choice(len(pool), size=len(bad), replace=True)))
+                survivors = array.filter(known)
+                source = survivors if len(survivors) else pool
+                picks = source.take(pa.array(rng.choice(len(source), size=len(bad), replace=True)))
                 values = np.asarray(array.to_pylist(), dtype=object)
                 values[bad] = np.asarray(picks.to_pylist(), dtype=object)
                 current[name] = _replace(table, col, pa.array(values.tolist(), type=array.type))
