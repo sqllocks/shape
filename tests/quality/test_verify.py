@@ -132,7 +132,7 @@ def test_gate_schema_round_trip_and_validation(tmp_path):
         ({"format": "shape-gates", "version": 1, "tables": {"t": 1}}, "table 't' must be"),
         (
             {"format": "shape-gates", "version": 1, "relationships": [{"name": "x"}]},
-            "invalid relationship",
+            r'relationships\[0\]: missing required key "parent"',
         ),
     ]:
         with pytest.raises(GateSchemaError, match=msg):
@@ -273,3 +273,44 @@ def test_cli_verify_on_a_shape_artifact_checks_its_signature(tmp_path, capsys):
     # no key: this is the signature command, not the gates, and it needs a key
     assert main(["verify", str(art)]) == 2
     assert "needs --key" in capsys.readouterr().err
+
+
+# ISS-verify (issue #31): a directory that mixes formats loads every file, or refuses loudly.
+
+
+def write_mixed(d):
+    d.mkdir()
+    pq.write_table(pa.table({"id": [10, 11, 12], "customer_id": [1, 2, 2]}), d / "order.parquet")
+    (d / "customer.csv").write_text("id,name\n1,a\n2,\n")
+    (d / "event.jsonl").write_text('{"id": 1}\n{"id": 2}\n')
+    return d
+
+
+def test_a_mixed_format_directory_loads_every_file(tmp_path):
+    d = write_mixed(tmp_path / "mixed")
+    tables = load_tables(d)
+    assert sorted(tables) == ["customer", "event", "order"]
+    assert [t.num_rows for t in (tables["customer"], tables["event"], tables["order"])] == [2, 2, 3]
+
+
+def test_a_table_in_two_formats_is_refused(tmp_path):
+    d = write_mixed(tmp_path / "mixed")
+    (d / "order.csv").write_text("id,customer_id\n1,1\n")
+    with pytest.raises(ValueError, match=r"order.*order\.csv.*order\.parquet|order.*both"):
+        load_tables(d)
+
+
+def test_an_explicit_format_names_the_files_it_skips(tmp_path):
+    d = write_mixed(tmp_path / "mixed")
+    with pytest.warns(UserWarning, match=r"skipped customer\.csv.*csv.*--format csv"):
+        tables = load_tables(d, "parquet")
+    assert sorted(tables) == ["order"]
+
+
+def test_cli_verify_a_mixed_directory_runs_the_referential_gate(tmp_path, capsys):
+    d = write_mixed(tmp_path / "mixed")
+    schema = write_schema(tmp_path)
+    assert main(["verify", str(d), "--schema", str(schema)]) == 0
+    out = capsys.readouterr()
+    assert "customer: 2" in out.out and "order: 3" in out.out
+    assert "not found" not in out.err
