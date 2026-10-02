@@ -278,3 +278,13 @@ def test_jobs_status_of_a_spark_job_needs_the_token(capsys, schema_file, fabric,
     monkeypatch.delenv("SHAPE_FABRIC_TOKEN")
     code, _, err = run(capsys, "jobs", "status", json.loads(text)["job_id"])
     assert code == 2 and "SHAPE_FABRIC_TOKEN" in err
+
+
+def test_an_unknown_target_or_scale_exits_2_and_makes_no_job(capsys, tmp_path, jobs_dir):
+    code, _, err = run(capsys, "generate", tmp_path / "missing.json", "--scale-mode", "local_mp")
+    assert code == 2 and "missing.json" in err
+    code, _, err = run(
+        capsys, "generate", "retail", "--scale", "nope", "--scale-mode", "local_single"
+    )
+    assert code == 2
+    assert not jobs_dir.exists() or not list(jobs_dir.glob("*.json"))

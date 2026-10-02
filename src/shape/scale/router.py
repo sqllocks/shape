@@ -196,7 +196,9 @@ class ScaleRouter:
             elapsed_seconds=round(elapsed, 3),
             throughput_rows_per_sec=int(rows / max(elapsed, 0.001)),
             peak_rss_gb=peak_rss_gb(),
-            threads=1 if self.mode == "local_single" else (threads or worker_threads()),
+            threads=0
+            if used_processes
+            else (1 if self.mode == "local_single" else (threads or worker_threads())),
             processes=used_processes,
             parts_skipped=skipped,
         )

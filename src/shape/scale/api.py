@@ -69,6 +69,7 @@ def normalize(params: Mapping[str, Any]) -> dict[str, Any]:
 
         # Building the sinks checks their names and settings now, before any job is made.
         build_sinks(request["sinks"], request["sink_config"], chunk_rows=int(request["chunk_size"]))
+    _engine(request)  # an unknown domain, schema file or scale fails here, not inside a job
     return request
 
 

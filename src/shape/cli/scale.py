@@ -179,6 +179,10 @@ def run_scale(a: argparse.Namespace) -> int:
     normalize(request)  # raises ValueError for anything it rejects, before any work
     if a.dry_run:
         return _dry_run(a, request)
+    if request["scale_mode"] != "fabric_spark" and request["sinks"] == ["memory"]:
+        print(
+            "shape: no -o and no --sink: generating into memory (nothing is kept)", file=sys.stderr
+        )
     jobs = Jobs(_store(a))
     if request["scale_mode"] == "fabric_spark":
         result = scale_generate(
@@ -210,13 +214,16 @@ def run_scale(a: argparse.Namespace) -> int:
         print(f"  resume with: shape jobs resume {job_id}", file=sys.stderr)
         return 1
     out = {**final["result"], "job_id": job_id}
+    workers = (
+        f"{out['processes']} process(es)" if out.get("processes") else f"{out['threads']} thread(s)"
+    )
     if a.json:
         _dump(out)
     else:
         print(
             f"{out['scale_mode']}: {out['rows_generated']:,} rows in {len(out['tables'])} tables "
             f"to {', '.join(out['sinks_written'])} ({out['elapsed_seconds']:.2f}s, "
-            f"{out['throughput_rows_per_sec']:,} rows/s, {out['threads']} thread(s)); job {job_id}"
+            f"{out['throughput_rows_per_sec']:,} rows/s, {workers}); job {job_id}"
         )
     from shape.cli.lifecycle import exit_now
 
