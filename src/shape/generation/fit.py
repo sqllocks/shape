@@ -86,6 +86,7 @@ COLUMN_FIELDS = (
     "pattern_contains_rates",
     "precision",
     "scale",
+    "placeholders",
     *_MARGINAL_FIELDS,
 )
 """Every field of a column of a profile; the plan reports each one that has a value."""
@@ -534,6 +535,12 @@ def _plan_column(
         "the generated values are synthetic: how often they match a pattern is not the profile's",
     )
     mark(("precision", "scale"), _N, "generated numbers do not take the profile's decimal type")
+    mark(
+        ("placeholders",),
+        _N,
+        "placeholder values (`00000`, `-1`, `N/A`) are what the data got wrong: generated values "
+        "are drawn without them unless they are in the profile's own value counts",
+    )
     for f in sorted(present):  # a field no rule above covered is never reported as preserved
         add(f, _N, "not modelled")
     return items
