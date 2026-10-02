@@ -1,0 +1,4 @@
+table-scale cells studied: 130 in 14 domain-scale pairs
+tables below the T-21 floor per fresh run: baseline seeds 47-72 mean 8.54 (min 3 max 15); Shape seeds 1042-1071 mean 8.47 (min 3 max 17)
+Shape seed 1042: 17 tables below floor
+Mann-Whitney on per-seed counts p=0.934; baseline counts [4, 7, 5, 8, 10, 15, 6, 11, 11, 11, 12, 14, 11, 8, 11, 13, 5, 4, 5, 4, 6, 5, 14, 3, 8, 11]; Shape counts [17, 3, 10, 10, 13, 9, 8, 6, 10, 6, 10, 7, 11, 6, 4, 6, 4, 5, 9, 6, 12, 5, 6, 12, 13, 9, 6, 16, 7, 8]

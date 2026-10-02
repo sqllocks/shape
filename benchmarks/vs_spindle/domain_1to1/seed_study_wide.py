@@ -67,9 +67,7 @@ def main(argv: list[str] | None = None) -> int:
     runs = [("spindle", s) for s in base_seeds] + [(args.impl, s) for s in impl_seeds]
     with ThreadPoolExecutor(args.jobs) as ex:
         ok = list(
-            ex.map(
-                lambda r: verify.ensure_run(r[0], args.domain, args.scale, r[1], tables), runs
-            )
+            ex.map(lambda r: verify.ensure_run(r[0], args.domain, args.scale, r[1], tables), runs)
         )
     if not all(ok):
         bad = [r for r, o in zip(runs, ok, strict=True) if not o]

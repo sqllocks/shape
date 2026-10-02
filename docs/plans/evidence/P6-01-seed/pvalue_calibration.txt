@@ -1,0 +1,6 @@
+table-level Mann-Whitney: 9/130 tests with p<0.05 (expected under no difference about 6.5)
+table-level Mann-Whitney: 0/130 tests with p<0.01 (expected under no difference about 1.3)
+   of the p<0.05, Shape scores higher in 4
+column-level Mann-Whitney: 43/756 tests with p<0.05 (expected under no difference about 37.8)
+column-level Mann-Whitney: 3/756 tests with p<0.01 (expected under no difference about 7.6)
+   of the p<0.05, Shape scores higher in 27

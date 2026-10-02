@@ -1,0 +1,7 @@
+theory mean 1648.5 sd 14.4
+baseline 30 seeds: mean 1648.2 sd 10.8 ; Shape 30 seeds: mean 1643.3 sd 12.7
+MW p 0.073, KS p 0.135, Levene p 0.293
+baseline share of seeds with |distinct/ref-1|>0.024 (ref 1623): 0.133 ; min,max distinct 1619.0 1670.0
+Shape share of seeds with |distinct/ref-1|>0.024 (ref 1623): 0.1 ; min,max distinct 1616.0 1670.0
+Shape seed 1042 distinct 1670.0
+seed 1042 z vs theory 1.49  ref z -1.78

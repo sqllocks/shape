@@ -1,10 +1,12 @@
 """Two-sample tests on the output of ``seed_study_wide.py`` (stdlib + scipy, any venv).
 
-    "$SPINDLE_PY" benchmarks/vs_spindle/domain_1to1/seed_study_analyze.py wide_*.json --out analysis.json
+    "$SPINDLE_PY" benchmarks/vs_spindle/domain_1to1/seed_study_analyze.py \\
+        wide_*.json --out analysis.json
 
-For every table (and every column of it) the baseline's N scores and the implementation's N scores
-are compared with a two-sided Mann-Whitney U test and a two-sample KS test; the p-values are
-Bonferroni-corrected over every test run in the invocation (``--alpha``, default 0.05). It also
+For every table (and every column of it) the baseline's N scores and the implementation's N
+scores are compared with a two-sided Mann-Whitney U test and a two-sample KS test; the p-values are
+Bonferroni-corrected over every test of the same level (all tables, or all columns;
+``--alpha``, default 0.05). It also
 reports where the implementation's seed-1042 score falls in the implementation's own distribution
 (rank, empirical percentile) and in the baseline's, and the share of each tool's seeds below the
 verifier's floor (min over baseline seeds 43-46, minus 0.5). Nothing here is a verdict of the
@@ -97,7 +99,7 @@ def main(argv: list[str] | None = None) -> int:
     args.out.write_text(
         json.dumps({"alpha": args.alpha, "tests": m, "rows": rows}, indent=1) + "\n", "utf-8"
     )
-    print(f"tests {m}: Bonferroni within the table level and within the column level, alpha {args.alpha}")
+    print(f"tests {m}: Bonferroni within each level (table, column), alpha {args.alpha}")
     for r in rows:
         if r["column"] == "<table>":
             print(
