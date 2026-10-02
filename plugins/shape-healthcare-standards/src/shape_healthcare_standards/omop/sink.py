@@ -65,7 +65,7 @@ class OmopSink:
     """
 
     name = "omop"
-    schemes = ("file", "")
+    schemes = ("file",)
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         ts = common.build_tables(table, batches, options.get("tables"))

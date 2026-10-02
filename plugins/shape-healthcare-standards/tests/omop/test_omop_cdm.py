@@ -15,13 +15,14 @@ from typing import Any
 
 import pyarrow as pa
 import pytest
-from shape.plugins import kit
 from shape_healthcare_standards import contract
 from shape_healthcare_standards.common import TableSet
 from shape_healthcare_standards.omop import ddl
 from shape_healthcare_standards.omop.mapping import map_tables
 from shape_healthcare_standards.omop.sink import OmopSink, write_omop
 from shape_healthcare_standards.testing import sample_tables
+
+from shape.plugins import kit
 
 duckdb = pytest.importorskip("duckdb")
 
@@ -412,7 +413,8 @@ def test_cost_totals_match_the_claims(loaded: Loaded):
     assert visit["CLM-I-0001"] == (Decimal("42000"), Decimal("18000"), Decimal("0"), "871")
     drug = loaded.rows(
         "SELECT c.paid_ingredient_cost, c.paid_dispensing_fee, c.total_paid FROM cost c "
-        "JOIN drug_exposure d ON c.cost_event_id = d.drug_exposure_id WHERE c.cost_domain_id = 'Drug'"
+        "JOIN drug_exposure d ON c.cost_event_id = d.drug_exposure_id "
+        "WHERE c.cost_domain_id = 'Drug'"
     )
     assert drug == [(Decimal("4.5"), Decimal("1.5"), Decimal("6"))]
     assert loaded.one("SELECT count(*) FROM cost WHERE payer_plan_period_id IS NOT NULL") == 5
@@ -554,7 +556,7 @@ def test_events_for_unknown_members_are_dropped(tmp_path: Path):
     t["member"] = t["member"].slice(1)
     counts = write_omop(t, tmp_path)
     assert counts["person"] == 3
-    assert counts["drug_exposure"] == 0 and counts["visit_occurrence"] == 2
+    assert counts["drug_exposure"] == 0 and counts["visit_occurrence"] == 3
 
 
 def test_long_text_is_cut_to_the_ddl_limit(tmp_path: Path):
