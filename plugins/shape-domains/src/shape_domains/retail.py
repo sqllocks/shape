@@ -19,9 +19,12 @@ _PACKAGE = "shape_domains"
 _DATASETS = ("categories", "product_names", "promo_names", "us_zip_locations")
 
 
+_FILES = {"3nf": "schema.json", "star": "schema_star.json"}
+
+
 @cache
-def _schema() -> dict[str, Any]:
-    text = resources.files(_PACKAGE).joinpath("data/retail/schema.json").read_text("utf-8")
+def _schema(mode: str = "3nf") -> dict[str, Any]:
+    text = resources.files(_PACKAGE).joinpath(f"data/retail/{_FILES[mode]}").read_text("utf-8")
     document: dict[str, Any] = json.loads(text)
     return document
 
@@ -40,9 +43,12 @@ class RetailDomain:
     """``shape.domains`` entry ``retail``."""
 
     name = "retail"
+    modes = ("3nf", "star")
 
-    def definition(self) -> DomainDefinition:
-        schema = _schema()
+    def definition(self, mode: str = "3nf") -> DomainDefinition:
+        if mode not in _FILES:
+            raise ValueError(f"retail has no {mode!r} mode (3nf, star)")
+        schema = _schema(mode)
         return DomainDefinition(
             schema=schema,
             reference_data=_reference_data(),

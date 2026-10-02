@@ -6,6 +6,7 @@ import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.plugins.api.v1 import FitResult
 from shape.profile.fitting import detect_distribution
 
@@ -22,7 +23,7 @@ class AutoFitter:
 
     def fit(self, sample: pa.Array) -> FitResult | None:
         values = pc.cast(sample, pa.float64()).drop_null()
-        arr = np.asarray(values.to_numpy(zero_copy_only=False), dtype=np.float64)
+        arr = np.asarray(arrow_numpy(values), dtype=np.float64)
         arr = arr[np.isfinite(arr)]
         out = detect_distribution(arr)
         if out["distribution"] is None or out["fit_score"] is None:

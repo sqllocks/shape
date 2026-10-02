@@ -11,6 +11,8 @@ import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.builtins.distributions.families import FAMILIES, FamilyError
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.generation.strategy_kit import (
     StrategyError,
     require,
@@ -63,13 +65,13 @@ class Distribution:
                 raise StrategyError(
                     f"unknown distribution {dist!r} for {where(ctx)}; known: {known}"
                 )
-            values = np.asarray(plugin.sample(dict(params), ctx).to_numpy(zero_copy_only=False))
+            values = np.asarray(arrow_numpy(plugin.sample(dict(params), ctx)))
             values = values.astype(np.float64, copy=False)
         if params.get("min") is not None:
             values = np.maximum(values, float(params["min"]))
         if params.get("max") is not None:
             values = np.minimum(values, float(params["max"]))
-        return pa.array(round_to_scale(values, ctx))
+        return arrow_array(round_to_scale(values, ctx))
 
 
 _PERCENTILE_KEYS = ("p1", "p5", "p10", "p25", "p50", "p75", "p90", "p95", "p99")
@@ -114,7 +116,7 @@ class Empirical:
             out = np.maximum(out, float(spec["min"]))
         if spec.get("max") is not None:
             out = np.minimum(out, float(spec["max"]))
-        return pa.array(out)
+        return arrow_array(out)
 
     @staticmethod
     def _interpolate(

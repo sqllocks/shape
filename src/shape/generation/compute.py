@@ -10,15 +10,26 @@ generator names a ``rule``, a ``child_table`` and a ``child_column``:
 * ``lookup_parent``: ``child_table`` is the *parent*; copy its ``child_column`` through this
   table's foreign key to it.
 
-Stable interface: :func:`apply_compute_phase`.
+Stable interface: :func:`apply_compute_phase`. :class:`StreamedAggregate` is the engine's way of
+having a ``sum_children`` or ``count_children`` column ready when the child table's last chunk is
+made, instead of after a pass over all of its rows.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+
 import numpy as np
+import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import fill_null as arrow_fill_null
+from shape.generation.arrowkit import raw_numpy
+from shape.generation.arrowkit import scalar as arrow_scalar
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.generation.kernel_relational import group_sums
 from shape.generation.keypos import dense_start, first_positions
 from shape.generation.schema import GenSchema
@@ -38,9 +49,9 @@ def _round_if_float(arr: pa.Array) -> pa.Array:
     whole number in floating point; the result would print with that noise."""
     if not pa.types.is_floating(arr.type):
         return arr
-    mask = arr.is_null().to_numpy(zero_copy_only=False) if arr.null_count else None
-    values = np.round(np.asarray(arr.fill_null(0).to_numpy(zero_copy_only=False)), 2)
-    return pa.array(values, type=arr.type, mask=mask)
+    mask = arrow_numpy(arr.is_null()) if arr.null_count else None
+    values = np.round(np.asarray(arrow_numpy(arrow_fill_null(arr, 0))), 2)
+    return arrow_array(values, type=arr.type, mask=mask)
 
 
 def _bincount_aggregate(
@@ -66,17 +77,17 @@ def _bincount_aggregate(
     pos = first_positions(child[fk], parent[pk])
     valid = pos >= 0
     if values.null_count:
-        valid &= ~np.asarray(values.is_null().to_numpy(zero_copy_only=False), dtype=bool)
+        valid &= ~np.asarray(arrow_numpy(values.is_null()), dtype=bool)
     pos = pos[valid]
     counts = np.bincount(pos, minlength=n)
     if rule == "count_children":
-        return pa.array(counts.astype(np.int64))
-    flat = np.asarray(pc.fill_null(values, 0).to_numpy(zero_copy_only=False))[valid]
+        return arrow_array(counts.astype(np.int64))
+    flat = np.asarray(arrow_numpy(arrow_fill_null(values, 0)))[valid]
     integral = pa.types.is_integer(t)
     if integral and float(np.abs(flat.astype(np.float64)).sum()) >= 2.0**53:
         return None
     sums = np.bincount(pos, weights=flat.astype(np.float64), minlength=n)
-    return _round_if_float(pa.array(sums.astype(np.int64)) if integral else pa.array(sums))
+    return _round_if_float(arrow_array(sums.astype(np.int64)) if integral else arrow_array(sums))
 
 
 def _aggregate(
@@ -90,7 +101,7 @@ def _aggregate(
     keys, values = grouped[fk].combine_chunks(), grouped[f"{source}_{func}"].combine_chunks()
     pos = pc.index_in(parent[pk].combine_chunks(), value_set=keys)
     out = pc.take(values, pos)
-    return _round_if_float(pc.fill_null(out, pa.scalar(0, type=out.type)))
+    return _round_if_float(arrow_fill_null(out, arrow_scalar(0, type=out.type)))
 
 
 def _lookup_parent(table: pa.Table, parent: pa.Table, fk: str, pk: str, source: str) -> pa.Array:
@@ -98,10 +109,15 @@ def _lookup_parent(table: pa.Table, parent: pa.Table, fk: str, pk: str, source: 
     return _round_if_float(pc.take(parent[source].combine_chunks(), pos))
 
 
-def apply_compute_phase(tables: dict[str, pa.Table], schema: GenSchema) -> dict[str, pa.Table]:
+def apply_compute_phase(
+    tables: dict[str, pa.Table],
+    schema: GenSchema,
+    precomputed: Mapping[tuple[str, str], pa.Array] | None = None,
+) -> dict[str, pa.Table]:
     """``tables`` with every ``computed`` column filled (the inputs are not changed). A column
     whose child table was not generated, or that has no foreign key linking the two, is left as
-    it is."""
+    it is. ``precomputed`` holds the finished values of some ``(table, column)`` pairs (see
+    :class:`StreamedAggregate`); they replace the aggregation, not the checks before it."""
     out = dict(tables)
     for tname, tdef in schema.tables.items():
         if tname not in out:
@@ -144,7 +160,134 @@ def apply_compute_phase(tables: dict[str, pa.Table], schema: GenSchema) -> dict[
                 )
                 if fk is None or source not in out[other].column_names:
                     continue
-                values = _aggregate(out[tname], out[other], pk, fk, source, rule)
+                values = (precomputed or {}).get((tname, cname))
+                if values is None:
+                    values = _aggregate(out[tname], out[other], pk, fk, source, rule)
             table = out[tname]
             out[tname] = table.set_column(table.column_names.index(cname), cname, values)
     return out
+
+
+# ---- aggregates computed while the child table is generated --------------------------------
+
+
+@dataclass(slots=True)
+class StreamedAggregate:
+    """``sum_children`` / ``count_children`` of one computed column, accumulated chunk by chunk.
+
+    The child's chunks arrive in row order, and each is added into the per-parent totals in that
+    order, which is the order of the single pass :func:`_bincount_aggregate` makes over the whole
+    child (a child row with a null key, a key outside the sequence or a null value is skipped; sums
+    of floats are added one row at a time, so the result is bit for bit the same). Only the case
+    that function handles with the native kernel is streamed: the parent's key is a ``sequence``
+    with step 1, the child's key an int64 column, the summed column int64 or float64.
+    :meth:`result` gives ``None`` whenever anything differs, and the engine then runs the
+    ordinary pass."""
+
+    parent: str
+    pk: str
+    column: str
+    child: str
+    fk: str
+    source: str
+    rule: str
+    start: int
+    size: int
+    child_rows: int
+    ok: bool = True
+    rows: int = 0
+    totals: npt.NDArray[np.generic] | None = field(default=None, repr=False)
+
+    def feed(self, batch: pa.RecordBatch) -> None:
+        """Add the next chunk of the child table."""
+        if not self.ok:
+            return
+        keys = batch.column(batch.schema.get_field_index(self.fk))
+        values = batch.column(batch.schema.get_field_index(self.source))
+        if keys.type != pa.int64() or values.type not in (pa.float64(), pa.int64()):
+            self.ok = False
+            return
+        k, k_valid = raw_numpy(keys)
+        v, v_valid = raw_numpy(values)
+        if self.totals is None:
+            kind = v.dtype if self.rule == "sum_children" else np.dtype(np.int64)
+            self.totals = np.zeros(self.size, dtype=kind)
+        elif self.rule == "sum_children" and v.dtype != self.totals.dtype:
+            self.ok = False  # the column's type changed between chunks
+            return
+        row = k - self.start
+        hit = (k >= self.start) & (row < self.size)
+        for valid in (k_valid, v_valid):
+            if valid is not None:
+                hit &= valid
+        if not hit.all():
+            row, v = row[hit], v[hit]
+        if self.rule == "sum_children":
+            np.add.at(self.totals, row, v)
+        else:
+            np.add.at(self.totals, row, 1)
+        self.rows += batch.num_rows
+
+    def result(self, parent: pa.Table, child: pa.Table) -> pa.Array | None:
+        """The finished column, or ``None`` when it cannot stand in for the ordinary pass."""
+        if (
+            not self.ok
+            or self.totals is None
+            or self.rows != child.num_rows
+            or self.rows != self.child_rows
+            or parent.num_rows != self.size
+            or child[self.fk].type != pa.int64()
+            or dense_start(parent[self.pk]) != self.start
+        ):
+            return None
+        totals = arrow_array(self.totals)
+        return _round_if_float(totals) if self.rule == "sum_children" else totals
+
+
+def plan_streamed_aggregates(
+    schema: GenSchema, row_counts: Mapping[str, int]
+) -> list[StreamedAggregate]:
+    """The computed columns of ``schema`` that :class:`StreamedAggregate` can build, by the same
+    rules :func:`apply_compute_phase` uses to pick the child table and its foreign key."""
+    plans: list[StreamedAggregate] = []
+    for tname, tdef in schema.tables.items():
+        for cname, col in tdef.columns.items():
+            if col.strategy != "computed":
+                continue
+            cfg = col.generator
+            rule = str(cfg.get("rule", "sum_children"))
+            other, source = str(cfg.get("child_table", "")), str(cfg.get("child_column", ""))
+            if rule not in ("sum_children", "count_children") or other not in schema.tables:
+                continue
+            if not tdef.primary_key or other == tname:
+                continue
+            pk = tdef.columns.get(tdef.primary_key[0])
+            child = schema.tables[other]
+            fk = next((c.name for c in child.columns.values() if c.fk_ref_table == tname), None)
+            if pk is None or fk is None or source not in child.columns:
+                continue
+            if child.columns[source].strategy == "computed":
+                continue  # the child's own back-fill would come first
+            gen = pk.generator
+            if (
+                pk.strategy != "sequence"
+                or int(gen.get("step", 1)) != 1
+                or (pk.nullable and pk.null_rate > 0)
+                or len(tdef.primary_key) != 1
+            ):
+                continue
+            plans.append(
+                StreamedAggregate(
+                    parent=tname,
+                    pk=pk.name,
+                    column=cname,
+                    child=other,
+                    fk=fk,
+                    source=source,
+                    rule=rule,
+                    start=int(gen.get("start", 1)),
+                    size=int(row_counts.get(tname, 0)),
+                    child_rows=int(row_counts.get(other, 0)),
+                )
+            )
+    return plans

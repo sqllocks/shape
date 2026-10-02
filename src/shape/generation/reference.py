@@ -30,6 +30,7 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
+from shape.generation.arrowkit import array as arrow_array
 
 REFERENCE_PATH_ENV = "SHAPE_REFERENCE_PATH"
 
@@ -42,9 +43,9 @@ def _arrow_column(values: list[Any]) -> pa.Array:
     """``values`` as one Arrow array; a column that mixes types (a number and a string) becomes
     text rather than failing."""
     try:
-        return pa.array(values)
+        return arrow_array(values)
     except (pa.ArrowInvalid, pa.ArrowTypeError):
-        return pa.array([None if v is None else str(v) for v in values], type=pa.string())
+        return arrow_array([None if v is None else str(v) for v in values], type=pa.string())
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,7 +75,7 @@ class Dataset:
             return cls(name, fields, cols, True)
         if all(isinstance(r, str) for r in rows):
             return cls(
-                name, (cls.VALUE,), {cls.VALUE: pa.array(list(rows), type=pa.string())}, False
+                name, (cls.VALUE,), {cls.VALUE: arrow_array(list(rows), type=pa.string())}, False
             )
         raise ValueError(
             f"reference dataset {name!r} must be a list of strings or a list of objects"
@@ -82,8 +83,13 @@ class Dataset:
 
     @classmethod
     def from_table(cls, name: str, table: pa.Table) -> Dataset:
-        cols = {f: table[f].combine_chunks() for f in table.column_names}
+        cols = {f: _one_chunk(table[f]) for f in table.column_names}
         return cls(name, tuple(table.column_names), cols, True)
+
+
+def _one_chunk(column: pa.ChunkedArray) -> pa.Array:
+    """``column`` as one array; a column that already is one is not copied."""
+    return column.chunk(0) if column.num_chunks == 1 else column.combine_chunks()
 
 
 _lock = threading.Lock()

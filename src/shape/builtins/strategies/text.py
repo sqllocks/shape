@@ -12,6 +12,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape.generation import kernel_ops
+from shape.generation.arrowkit import array as arrow_array
 from shape.generation.strategy_kit import StrategyError, stream, where
 from shape.plugins.api.v1 import GenerationContext
 
@@ -63,7 +64,7 @@ class Pattern:
                 numbers = np.arange(
                     ctx.row_start + 1, ctx.row_start + ctx.n_rows + 1, dtype=np.int64
                 )
-                columns.append(pa.array(numbers))
+                columns.append(arrow_array(numbers))
             elif token == "random":
                 columns.append(
                     kernel_ops.random_strings(

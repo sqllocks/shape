@@ -24,16 +24,47 @@ def _is_profile(obj: Any) -> bool:
     return False
 
 
-def generate(shape: Any, n: Any = None, seed: int = 0, relationships: Any = None) -> Any:
+def generate(
+    shape: Any,
+    n: Any = None,
+    seed: int | None = None,
+    relationships: Any = None,
+    *,
+    scale: str | None = None,
+    mode: str | None = None,
+) -> Any:
+    """Generate data.
+
+    ``generate("retail", scale="medium", seed=42, mode="star")`` runs a domain (or a
+    ``GenSchema``, or a generation schema ``dict``) through the engine and returns the
+    ``GenerationResult``: ``result.tables`` maps each table name to a ``pyarrow.Table`` (so does
+    ``result["order"]``). ``scale`` is a preset name, ``seed`` defaults to the schema's and ``mode``
+    (``3nf`` or ``star``) picks a domain's schema.
+
+    The earlier form, ``generate(shape_model, n, seed, relationships)``, still generates rows from
+    a Shape model.
+    """
+    from shape.generation.schema import GenSchema
+
     if _is_profile(shape):
         raise NotImplementedError(
             "generating data from a shape.profile() result is not available yet in this "
             "early-access release; profiling, check and diff are. It is planned (profile to "
             "generate)."
         )
+    if isinstance(shape, str):
+        from shape.generation.domains import load_domain
+        from shape.generation.engine import Engine
+
+        return Engine(load_domain(shape, mode=mode).schema, scale=scale, seed=seed).generate()
+    if isinstance(shape, GenSchema) or (isinstance(shape, dict) and "tables" in shape):
+        from shape.generation.engine import Engine
+
+        schema = shape if isinstance(shape, GenSchema) else GenSchema.from_dict(shape)
+        return Engine(schema, scale=scale, seed=seed).generate()
     from shape.generation import generate_from_shape
 
-    return generate_from_shape(shape, n, seed, relationships)
+    return generate_from_shape(shape, n, 0 if seed is None else seed, relationships)
 
 
 def timeline(versions: Any) -> Any:

@@ -1,0 +1,4323 @@
+{
+ "domain": "retail",
+ "scale": "medium",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "customer": {
+   "rows": {
+    "spindle": 50000,
+    "impl": 50000
+   },
+   "columns_spindle": [
+    "customer_id",
+    "first_name",
+    "last_name",
+    "email",
+    "gender",
+    "loyalty_tier",
+    "signup_date",
+    "is_active"
+   ],
+   "columns_impl": [
+    "customer_id",
+    "first_name",
+    "last_name",
+    "email",
+    "gender",
+    "loyalty_tier",
+    "signup_date",
+    "is_active"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "customer_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "first_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "last_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "email": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "gender": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "loyalty_tier": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "signup_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "is_active": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "customer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.012329559975556372,
+     "stats": {
+      "mean": {
+       "spindle": 25000.5,
+       "impl": 25000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 50000.0,
+       "impl": 50000.0
+      },
+      "std": {
+       "spindle": 14433.756726853893,
+       "impl": 14433.756726853893,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 50000,
+      "impl": 50000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "first_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "distinct": {
+      "spindle": 4999,
+      "impl": 5000,
+      "ratio": 1.0002000400080016,
+      "baseline_max_ratio_dev": 0.0002000400080015563
+     },
+     "top10": [
+      {
+       "value": "Iaus",
+       "spindle": 0.00042,
+       "impl": 0.00016
+      },
+      {
+       "value": "Rodney",
+       "spindle": 0.00042,
+       "impl": 0.0003
+      },
+      {
+       "value": "Very",
+       "spindle": 0.00042,
+       "impl": 0.00016
+      },
+      {
+       "value": "Sheryl",
+       "spindle": 0.0004,
+       "impl": 0.00012
+      },
+      {
+       "value": "Trisa",
+       "spindle": 0.0004,
+       "impl": 0.00028
+      },
+      {
+       "value": "Tene",
+       "spindle": 0.0004,
+       "impl": 0.00012
+      },
+      {
+       "value": "Debra",
+       "spindle": 0.00038,
+       "impl": 0.00014
+      },
+      {
+       "value": "Roor",
+       "spindle": 0.00038,
+       "impl": 0.00022
+      },
+      {
+       "value": "Caia",
+       "spindle": 0.00038,
+       "impl": 0.00026
+      },
+      {
+       "value": "Weel",
+       "spindle": 0.00038,
+       "impl": 0.0001
+      },
+      {
+       "value": "Erok",
+       "spindle": 8e-05,
+       "impl": 0.00046
+      },
+      {
+       "value": "Dinna",
+       "spindle": 0.00028,
+       "impl": 0.00046
+      },
+      {
+       "value": "Inth",
+       "spindle": 0.00016,
+       "impl": 0.00044
+      },
+      {
+       "value": "Jenor",
+       "spindle": 0.00022,
+       "impl": 0.00044
+      },
+      {
+       "value": "Koesa",
+       "spindle": 0.00016,
+       "impl": 0.00044
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.00039999999999995595
+     },
+     "top10": [
+      {
+       "value": "Acevewick",
+       "spindle": 0.00048,
+       "impl": 0.00032
+      },
+      {
+       "value": "Massey",
+       "spindle": 0.00044,
+       "impl": 0.00016
+      },
+      {
+       "value": "Macias",
+       "spindle": 0.00042,
+       "impl": 8e-05
+      },
+      {
+       "value": "Bartlburg",
+       "spindle": 0.00042,
+       "impl": 0.00018
+      },
+      {
+       "value": "Welton",
+       "spindle": 0.00042,
+       "impl": 0.00018
+      },
+      {
+       "value": "Macison",
+       "spindle": 0.0004,
+       "impl": 0.00018
+      },
+      {
+       "value": "Schmicroft",
+       "spindle": 0.0004,
+       "impl": 0.00016
+      },
+      {
+       "value": "Princwood",
+       "spindle": 0.0004,
+       "impl": 0.00016
+      },
+      {
+       "value": "Hawkiway",
+       "spindle": 0.0004,
+       "impl": 0.00014
+      },
+      {
+       "value": "Bealey",
+       "spindle": 0.0004,
+       "impl": 0.00018
+      },
+      {
+       "value": "Newmagate",
+       "spindle": 0.00016,
+       "impl": 0.0005
+      },
+      {
+       "value": "Montgford",
+       "spindle": 0.00022,
+       "impl": 0.00046
+      },
+      {
+       "value": "Cruz",
+       "spindle": 6e-05,
+       "impl": 0.00044
+      },
+      {
+       "value": "StNally",
+       "spindle": 0.0002,
+       "impl": 0.00044
+      },
+      {
+       "value": "Flowers",
+       "spindle": 0.00016,
+       "impl": 0.00042
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.04966,
+      "impl": 0.05106,
+      "baseline_max_abs_diff": 0.002019999999999994,
+      "tol": 0.006869780520511555
+     },
+     "distinct": {
+      "spindle": 47517,
+      "impl": 47447,
+      "ratio": 0.9985268430246017,
+      "baseline_max_ratio_dev": 0.0021255550645031818
+     },
+     "top10": [
+      {
+       "value": "krisa.greeshire305@outlook.com",
+       "spindle": 2.1045099648546836e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "carlos.chrley144@mail.ru",
+       "spindle": 2.1045099648546836e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "iris.hufman958@earthlink.net",
+       "spindle": 2.1045099648546836e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "hoea.mccwick349@mail.com",
+       "spindle": 2.1045099648546836e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "brnor.riggs402@yandex.com",
+       "spindle": 2.1045099648546836e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "sia.beawood581@charter.net",
+       "spindle": 2.1045099648546836e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "debra.galfield88@inbox.com",
+       "spindle": 2.1045099648546836e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "orea.coloncroft763@outlook.co.uk",
+       "spindle": 2.1045099648546836e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "evea.mezaman16@rediffmail.com",
+       "spindle": 2.1045099648546836e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "arion.procway39@icloud.com",
+       "spindle": 2.1045099648546836e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "kiea.lucerman307@rocketmail.com",
+       "spindle": 0.0,
+       "impl": 2.107614812316901e-05
+      },
+      {
+       "value": "waia.floydwick110@live.com",
+       "spindle": 0.0,
+       "impl": 2.107614812316901e-05
+      },
+      {
+       "value": "diol.gilmore937@msn.com",
+       "spindle": 0.0,
+       "impl": 2.107614812316901e-05
+      },
+      {
+       "value": "soea.walsh963@yahoo.com",
+       "spindle": 0.0,
+       "impl": 2.107614812316901e-05
+      },
+      {
+       "value": "alnor.shoham723@mail.com",
+       "spindle": 0.0,
+       "impl": 2.107614812316901e-05
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "gender": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "F",
+       "spindle": 0.51044,
+       "impl": 0.51386
+      },
+      {
+       "value": "M",
+       "spindle": 0.48956,
+       "impl": 0.48614
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0034199999999999786,
+     "tvd_baseline": 0.0033400000000000096,
+     "tvd_tol": 0.01513879513212096,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "loyalty_tier": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Basic",
+       "spindle": 0.54998,
+       "impl": 0.54998
+      },
+      {
+       "value": "Silver",
+       "spindle": 0.2476,
+       "impl": 0.25082
+      },
+      {
+       "value": "Gold",
+       "spindle": 0.13124,
+       "impl": 0.12938
+      },
+      {
+       "value": "Platinum",
+       "spindle": 0.07118,
+       "impl": 0.06982
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0032200000000000006,
+     "tvd_baseline": 0.006080000000000009,
+     "tvd_tol": 0.021409489393833258,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "signup_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "ks": 0.006479999999999986,
+     "ks_baseline": 0.01076000000000002,
+     "ks_tol": 0.01814000000000003,
+     "stats": {
+      "mean": {
+       "spindle": "2024-01-02 12:08:52.741277184",
+       "impl": "2023-12-29 19:40:57.757528832"
+      },
+      "min": {
+       "spindle": "2022-01-01 00:02:06.731507456",
+       "impl": "2022-01-01 00:37:14.812439040"
+      },
+      "max": {
+       "spindle": "2025-12-30 23:06:27.415323648",
+       "impl": "2025-12-30 22:14:26.537539072"
+      },
+      "std": {
+       "spindle": 420.07138339765567,
+       "impl": 421.3722377761789,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 50000,
+      "impl": 50000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_active": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "spindle": 0.84996,
+       "impl": 0.85116
+      },
+      {
+       "value": "false",
+       "spindle": 0.15004,
+       "impl": 0.14884
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0011999999999999927,
+     "tvd_baseline": 0.0035599999999999937,
+     "tvd_tol": 0.01513879513212096,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "address": {
+   "rows": {
+    "spindle": 75000,
+    "impl": 75000
+   },
+   "columns_spindle": [
+    "address_id",
+    "customer_id",
+    "address_type",
+    "street",
+    "city",
+    "state",
+    "zip_code",
+    "lat",
+    "lng",
+    "is_primary"
+   ],
+   "columns_impl": [
+    "address_id",
+    "customer_id",
+    "address_type",
+    "street",
+    "city",
+    "state",
+    "zip_code",
+    "lat",
+    "lng",
+    "is_primary"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "address_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "customer_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "address_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "street": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "city": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "state": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "zip_code": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "lat": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "lng": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "is_primary": {
+     "spindle": "bool",
+     "impl": "bool"
+    }
+   },
+   "columns": {
+    "address_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428027561675014e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.010067043564385115,
+     "stats": {
+      "mean": {
+       "spindle": 37500.5,
+       "impl": 37500.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 75000.0,
+       "impl": 75000.0
+      },
+      "std": {
+       "spindle": 21650.635092686465,
+       "impl": 21650.635092686465,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 75000,
+      "impl": 75000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "customer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428027561675014e-05
+     },
+     "ks": 0.007053333333333356,
+     "ks_baseline": 0.004653333333333287,
+     "ks_tol": 0.010067043564385115,
+     "stats": {
+      "mean": {
+       "spindle": 24970.8482,
+       "impl": 25141.35948
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 2.0
+      },
+      "max": {
+       "spindle": 50000.0,
+       "impl": 50000.0
+      },
+      "std": {
+       "spindle": 14427.309671274017,
+       "impl": 14455.930946518829,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 38869,
+      "impl": 38741
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "address_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428027561675014e-05
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "billing",
+       "spindle": 0.5007466666666667,
+       "impl": 0.4984266666666667
+      },
+      {
+       "value": "shipping",
+       "spindle": 0.3980533333333333,
+       "impl": 0.40196
+      },
+      {
+       "value": "both",
+       "spindle": 0.1012,
+       "impl": 0.09961333333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0039066666666666625,
+     "tvd_baseline": 0.004293333333333364,
+     "tvd_tol": 0.01513879513212096,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "street": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428027561675014e-05
+     },
+     "distinct": {
+      "spindle": 74962,
+      "impl": 74973,
+      "ratio": 1.0001467410154479,
+      "baseline_max_ratio_dev": 0.00018676129238803796
+     },
+     "top10": [
+      {
+       "value": "7099 Old Lincoln Blvd",
+       "spindle": 2.6666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "844 Short Colonial Ave",
+       "spindle": 2.6666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "9426 Old Eagle Blvd",
+       "spindle": 2.6666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "2336 Short Colonial Ln",
+       "spindle": 2.6666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "2937 Long Pond Ct",
+       "spindle": 2.6666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "7191 Big Westview Ct",
+       "spindle": 2.6666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "8091 River Way",
+       "spindle": 2.6666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "5790 Linden Ave",
+       "spindle": 2.6666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "5087 Lower Westview Ave",
+       "spindle": 2.6666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "1516 Short Eighth Ln",
+       "spindle": 2.6666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "5744 Big Technology Blvd",
+       "spindle": 0.0,
+       "impl": 2.6666666666666667e-05
+      },
+      {
+       "value": "2193 Lower Ruby Dr",
+       "spindle": 0.0,
+       "impl": 2.6666666666666667e-05
+      },
+      {
+       "value": "3250 Old Second Dr",
+       "spindle": 0.0,
+       "impl": 2.6666666666666667e-05
+      },
+      {
+       "value": "705 Upper West St",
+       "spindle": 0.0,
+       "impl": 2.6666666666666667e-05
+      },
+      {
+       "value": "100 Short State Dr",
+       "spindle": 0.0,
+       "impl": 2.6666666666666667e-05
+      }
+     ],
+     "vocab_overlap": 0.00072,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "number(100..9998)+' '+STREET_NAMES+' '+_STREET_SUFFIXES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "city": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428027561675014e-05
+     },
+     "distinct": {
+      "spindle": 16283,
+      "impl": 16314,
+      "ratio": 1.0019038260762758,
+      "baseline_max_ratio_dev": 0.002579377264631866
+     },
+     "top10": [
+      {
+       "value": "Washington",
+       "spindle": 0.00712,
+       "impl": 0.00724
+      },
+      {
+       "value": "Houston",
+       "spindle": 0.005026666666666666,
+       "impl": 0.0046
+      },
+      {
+       "value": "New York",
+       "spindle": 0.003986666666666667,
+       "impl": 0.003586666666666667
+      },
+      {
+       "value": "El Paso",
+       "spindle": 0.00324,
+       "impl": 0.0032266666666666667
+      },
+      {
+       "value": "Miami",
+       "spindle": 0.002746666666666667,
+       "impl": 0.00224
+      },
+      {
+       "value": "Dallas",
+       "spindle": 0.002586666666666667,
+       "impl": 0.0029733333333333335
+      },
+      {
+       "value": "Springfield",
+       "spindle": 0.0025066666666666666,
+       "impl": 0.002746666666666667
+      },
+      {
+       "value": "Atlanta",
+       "spindle": 0.0024933333333333335,
+       "impl": 0.0024133333333333333
+      },
+      {
+       "value": "Sacramento",
+       "spindle": 0.0023866666666666667,
+       "impl": 0.0024533333333333334
+      },
+      {
+       "value": "Los Angeles",
+       "spindle": 0.00236,
+       "impl": 0.00216
+      },
+      {
+       "value": "Columbus",
+       "spindle": 0.0021733333333333335,
+       "impl": 0.0021866666666666666
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "state": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428027561675014e-05
+     },
+     "distinct": {
+      "spindle": 51,
+      "impl": 51,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "CA",
+       "spindle": 0.06425333333333333,
+       "impl": 0.06476
+      },
+      {
+       "value": "TX",
+       "spindle": 0.06357333333333333,
+       "impl": 0.06422666666666667
+      },
+      {
+       "value": "PA",
+       "spindle": 0.053893333333333335,
+       "impl": 0.05152
+      },
+      {
+       "value": "NY",
+       "spindle": 0.05309333333333333,
+       "impl": 0.05278666666666667
+      },
+      {
+       "value": "IL",
+       "spindle": 0.038893333333333335,
+       "impl": 0.038066666666666665
+      },
+      {
+       "value": "FL",
+       "spindle": 0.03636,
+       "impl": 0.03558666666666667
+      },
+      {
+       "value": "OH",
+       "spindle": 0.03408,
+       "impl": 0.03537333333333333
+      },
+      {
+       "value": "VA",
+       "spindle": 0.02984,
+       "impl": 0.02944
+      },
+      {
+       "value": "MO",
+       "spindle": 0.028853333333333335,
+       "impl": 0.028506666666666666
+      },
+      {
+       "value": "MI",
+       "spindle": 0.027693333333333334,
+       "impl": 0.0274
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.012600000000000007,
+     "tvd_baseline": 0.014333333333333337,
+     "tvd_tol": 0.06241885137432118,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "zip_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428027561675014e-05
+     },
+     "distinct": {
+      "spindle": 34311,
+      "impl": 34470,
+      "ratio": 1.0046340823642563,
+      "baseline_max_ratio_dev": 0.003584856168575623
+     },
+     "top10": [
+      {
+       "value": "17830",
+       "spindle": 0.00012,
+       "impl": 1.3333333333333333e-05
+      },
+      {
+       "value": "53177",
+       "spindle": 0.00012,
+       "impl": 1.3333333333333333e-05
+      },
+      {
+       "value": "54428",
+       "spindle": 0.00012,
+       "impl": 6.666666666666667e-05
+      },
+      {
+       "value": "01035",
+       "spindle": 0.00012,
+       "impl": 1.3333333333333333e-05
+      },
+      {
+       "value": "41114",
+       "spindle": 0.00012,
+       "impl": 1.3333333333333333e-05
+      },
+      {
+       "value": "28781",
+       "spindle": 0.00012,
+       "impl": 2.6666666666666667e-05
+      },
+      {
+       "value": "11569",
+       "spindle": 0.00012,
+       "impl": 1.3333333333333333e-05
+      },
+      {
+       "value": "74864",
+       "spindle": 0.00012,
+       "impl": 2.6666666666666667e-05
+      },
+      {
+       "value": "33063",
+       "spindle": 0.00012,
+       "impl": 2.6666666666666667e-05
+      },
+      {
+       "value": "18949",
+       "spindle": 0.00012,
+       "impl": 1.3333333333333333e-05
+      },
+      {
+       "value": "57442",
+       "spindle": 0.0,
+       "impl": 0.00012
+      },
+      {
+       "value": "04224",
+       "spindle": 2.6666666666666667e-05,
+       "impl": 0.00012
+      },
+      {
+       "value": "06473",
+       "spindle": 1.3333333333333333e-05,
+       "impl": 0.00012
+      },
+      {
+       "value": "43961",
+       "spindle": 2.6666666666666667e-05,
+       "impl": 0.00012
+      },
+      {
+       "value": "13110",
+       "spindle": 1.3333333333333333e-05,
+       "impl": 0.00012
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lat": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428027561675014e-05
+     },
+     "ks": 0.0030266666666666775,
+     "ks_baseline": 0.0041200000000000125,
+     "ks_tol": 0.010067043564385115,
+     "stats": {
+      "mean": {
+       "spindle": 38.58815674933333,
+       "impl": 38.58936444133332
+      },
+      "min": {
+       "spindle": 19.0668,
+       "impl": 19.1002
+      },
+      "max": {
+       "spindle": 71.2346,
+       "impl": 70.6369
+      },
+      "std": {
+       "spindle": 5.206037336978166,
+       "impl": 5.226915883202788,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 28499,
+      "impl": 28596
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lng": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428027561675014e-05
+     },
+     "ks": 0.003026666666666733,
+     "ks_baseline": 0.00414666666666666,
+     "ks_tol": 0.010067043564385115,
+     "stats": {
+      "mean": {
+       "spindle": -91.09682628,
+       "impl": -91.11507470666668
+      },
+      "min": {
+       "spindle": -176.634,
+       "impl": -174.2006
+      },
+      "max": {
+       "spindle": -67.0408,
+       "impl": -67.0074
+      },
+      "std": {
+       "spindle": 15.265113037814201,
+       "impl": 15.289453846571872,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 30161,
+      "impl": 30265
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_primary": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428027561675014e-05
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "True",
+       "spindle": 0.5182533333333333,
+       "impl": 0.5165466666666667
+      },
+      {
+       "value": "False",
+       "spindle": 0.48174666666666666,
+       "impl": 0.48345333333333335
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0017066666666666619,
+     "tvd_baseline": 0.0013733333333333375,
+     "tvd_tol": 0.012360774464742067,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "product_category": {
+   "rows": {
+    "spindle": 50,
+    "impl": 50
+   },
+   "columns_spindle": [
+    "category_id",
+    "category_name",
+    "parent_category_id",
+    "level"
+   ],
+   "columns_impl": [
+    "category_id",
+    "category_name",
+    "parent_category_id",
+    "level"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "category_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "category_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "parent_category_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "level": {
+     "spindle": "int64",
+     "impl": "int64"
+    }
+   },
+   "columns": {
+    "category_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.38989492070408105,
+     "stats": {
+      "mean": {
+       "spindle": 25.5,
+       "impl": 25.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 50.0,
+       "impl": 50.0
+      },
+      "std": {
+       "spindle": 14.430869689661812,
+       "impl": 14.430869689661812,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 50,
+      "impl": 50
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "category_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "spindle": 34,
+      "impl": 29,
+      "ratio": 0.8529411764705882,
+      "baseline_max_ratio_dev": 0.1470588235294118
+     },
+     "top10": [
+      {
+       "value": "Hair Care",
+       "spindle": 0.06,
+       "impl": 0.04
+      },
+      {
+       "value": "Cameras & Photography",
+       "spindle": 0.06,
+       "impl": 0.02
+      },
+      {
+       "value": "Smartphones & Tablets",
+       "spindle": 0.06,
+       "impl": 0.04
+      },
+      {
+       "value": "Children's Clothing",
+       "spindle": 0.06,
+       "impl": 0.02
+      },
+      {
+       "value": "Grocery & Gourmet",
+       "spindle": 0.06,
+       "impl": 0.0
+      },
+      {
+       "value": "Bedding & Bath",
+       "spindle": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "Parts & Accessories",
+       "spindle": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "Kitchen & Dining",
+       "spindle": 0.04,
+       "impl": 0.04
+      },
+      {
+       "value": "Shoes & Footwear",
+       "spindle": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "Toys & Games",
+       "spindle": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "Clothing",
+       "spindle": 0.02,
+       "impl": 0.1
+      },
+      {
+       "value": "Home & Garden",
+       "spindle": 0.02,
+       "impl": 0.06
+      },
+      {
+       "value": "Pantry Staples",
+       "spindle": 0.0,
+       "impl": 0.06
+      },
+      {
+       "value": "Home Decor",
+       "spindle": 0.02,
+       "impl": 0.04
+      },
+      {
+       "value": "Fiction",
+       "spindle": 0.0,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.44000000000000006,
+     "tvd_baseline": 0.56,
+     "tvd_tol": 1.973857392743862,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "parent_category_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.16,
+      "impl": 0.16,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3666060555964672
+     },
+     "ks": 0.19047619047619047,
+     "ks_baseline": 0.19047619047619047,
+     "ks_tol": 0.4254102350488705,
+     "stats": {
+      "mean": {
+       "spindle": 10.952380952380953,
+       "impl": 12.833333333333334
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 2.0
+      },
+      "max": {
+       "spindle": 29.0,
+       "impl": 27.0
+      },
+      "std": {
+       "spindle": 7.751965590838362,
+       "impl": 8.150129028095396,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 21,
+      "impl": 18
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "level": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.38989492070408105,
+     "stats": {
+      "mean": {
+       "spindle": 2.26,
+       "impl": 2.26
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 3.0,
+       "impl": 3.0
+      },
+      "std": {
+       "spindle": 0.7158212067269312,
+       "impl": 0.7158212067269312,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 3
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "product": {
+   "rows": {
+    "spindle": 5000,
+    "impl": 5000
+   },
+   "columns_spindle": [
+    "product_id",
+    "category_id",
+    "product_name",
+    "unit_price",
+    "product_status",
+    "cost"
+   ],
+   "columns_impl": [
+    "product_id",
+    "category_id",
+    "product_name",
+    "unit_price",
+    "product_status",
+    "cost"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "product_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "category_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "product_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "unit_price": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "product_status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "cost": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "product_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 2500.5,
+       "impl": 2500.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "spindle": 1443.3756441065507,
+       "impl": 1443.3756441065507,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "category_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.00880000000000003,
+     "ks_baseline": 0.020600000000000007,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 25.8662,
+       "impl": 25.7988
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 50.0,
+       "impl": 50.0
+      },
+      "std": {
+       "spindle": 14.458834585124764,
+       "impl": 14.390521830705097,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 50,
+      "impl": 50
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "product_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 114,
+      "impl": 114,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Outdoor Swing Set",
+       "spindle": 0.0118,
+       "impl": 0.0082
+      },
+      {
+       "value": "Waterproof Rain Jacket",
+       "spindle": 0.0116,
+       "impl": 0.01
+      },
+      {
+       "value": "Chef's Knife 8-inch",
+       "spindle": 0.0114,
+       "impl": 0.0106
+      },
+      {
+       "value": "Premium Wireless Earbuds",
+       "spindle": 0.011,
+       "impl": 0.007
+      },
+      {
+       "value": "Electric Kettle",
+       "spindle": 0.011,
+       "impl": 0.008
+      },
+      {
+       "value": "Phone Screen Protector",
+       "spindle": 0.011,
+       "impl": 0.007
+      },
+      {
+       "value": "Cat Litter Clumping",
+       "spindle": 0.011,
+       "impl": 0.009
+      },
+      {
+       "value": "Moisturizing Face Cream",
+       "spindle": 0.011,
+       "impl": 0.007
+      },
+      {
+       "value": "Dog Food Premium 30lb",
+       "spindle": 0.0106,
+       "impl": 0.012
+      },
+      {
+       "value": "Bamboo Cutting Board",
+       "spindle": 0.0106,
+       "impl": 0.009
+      },
+      {
+       "value": "Coffee Maker 12-Cup",
+       "spindle": 0.0098,
+       "impl": 0.012
+      },
+      {
+       "value": "Noise-Cancelling Headphones",
+       "spindle": 0.0092,
+       "impl": 0.0116
+      },
+      {
+       "value": "Denim Jacket",
+       "spindle": 0.01,
+       "impl": 0.0116
+      },
+      {
+       "value": "Sunscreen SPF 50",
+       "spindle": 0.008,
+       "impl": 0.0114
+      },
+      {
+       "value": "Yoga Pants",
+       "spindle": 0.009,
+       "impl": 0.0112
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.07660000000000002,
+     "tvd_baseline": 0.09259999999999999,
+     "tvd_tol": 0.36143377995122117,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "unit_price": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.021399999999999975,
+     "ks_baseline": 0.031200000000000006,
+     "ks_tol": 0.04880000000000001,
+     "stats": {
+      "mean": {
+       "spindle": 32.743396,
+       "impl": 32.779557999999994
+      },
+      "min": {
+       "spindle": 0.99,
+       "impl": 0.99
+      },
+      "max": {
+       "spindle": 999.99,
+       "impl": 545.07
+      },
+      "std": {
+       "spindle": 43.87266875524196,
+       "impl": 40.38125271737661,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 3379,
+      "impl": 3399
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "product_status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "active",
+       "spindle": 0.7508,
+       "impl": 0.7524
+      },
+      {
+       "value": "discontinued",
+       "spindle": 0.1526,
+       "impl": 0.151
+      },
+      {
+       "value": "introduced",
+       "spindle": 0.0966,
+       "impl": 0.0966
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0015999999999999764,
+     "tvd_baseline": 0.011399999999999987,
+     "tvd_tol": 0.058632301428350395,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "cost": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.018199999999999994,
+     "ks_baseline": 0.028600000000000014,
+     "ks_tol": 0.04490000000000002,
+     "stats": {
+      "mean": {
+       "spindle": 16.232056,
+       "impl": 16.534954
+      },
+      "min": {
+       "spindle": 0.38,
+       "impl": 0.33
+      },
+      "max": {
+       "spindle": 447.68,
+       "impl": 346.87
+      },
+      "std": {
+       "spindle": 21.768581276069966,
+       "impl": 21.73083585502141,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 2595,
+      "impl": 2626
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "store": {
+   "rows": {
+    "spindle": 150,
+    "impl": 150
+   },
+   "columns_spindle": [
+    "store_id",
+    "store_name",
+    "store_type",
+    "city",
+    "state"
+   ],
+   "columns_impl": [
+    "store_id",
+    "store_name",
+    "store_type",
+    "city",
+    "state"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "store_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "store_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "store_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "city": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "state": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "store_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.22510593742416898,
+     "stats": {
+      "mean": {
+       "spindle": 75.5,
+       "impl": 75.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 150.0,
+       "impl": 150.0
+      },
+      "std": {
+       "spindle": 43.300307928081374,
+       "impl": 43.300307928081374,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 150,
+      "impl": 150
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "store_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "spindle": 150,
+      "impl": 150,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Store #0001",
+       "spindle": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0002",
+       "spindle": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0003",
+       "spindle": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0004",
+       "spindle": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0005",
+       "spindle": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0006",
+       "spindle": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0007",
+       "spindle": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0008",
+       "spindle": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0009",
+       "spindle": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0010",
+       "spindle": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "Store #{seq:4}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "store_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "spindle": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "physical",
+       "spindle": 0.8333333333333334,
+       "impl": 0.9
+      },
+      {
+       "value": "online",
+       "spindle": 0.1,
+       "impl": 0.08
+      },
+      {
+       "value": "warehouse",
+       "spindle": 0.06666666666666667,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.06666666666666665,
+     "tvd_baseline": 0.06666666666666665,
+     "tvd_tol": 0.3385137501286538,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "city": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "spindle": 78,
+      "impl": 76,
+      "ratio": 0.9743589743589743,
+      "baseline_max_ratio_dev": 0.03846153846153855
+     },
+     "top10": [
+      {
+       "value": "Cincinnati",
+       "spindle": 0.04,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Miami",
+       "spindle": 0.02666666666666667,
+       "impl": 0.02666666666666667
+      },
+      {
+       "value": "Jacksonville",
+       "spindle": 0.02666666666666667,
+       "impl": 0.02
+      },
+      {
+       "value": "Seattle",
+       "spindle": 0.02666666666666667,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "Nashville",
+       "spindle": 0.02666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Minneapolis",
+       "spindle": 0.02666666666666667,
+       "impl": 0.02666666666666667
+      },
+      {
+       "value": "Pittsburgh",
+       "spindle": 0.02666666666666667,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "Omaha",
+       "spindle": 0.02,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "Lexington",
+       "spindle": 0.02,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "San Diego",
+       "spindle": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Irvine",
+       "spindle": 0.006666666666666667,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "Tucson",
+       "spindle": 0.006666666666666667,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "Denver",
+       "spindle": 0.013333333333333334,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "Fremont",
+       "spindle": 0.006666666666666667,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "Santa Ana",
+       "spindle": 0.013333333333333334,
+       "impl": 0.02666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.4133333333333334,
+     "tvd_baseline": 0.4733333333333333,
+     "tvd_tol": 1.7260882175254777,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "state": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "spindle": 46,
+      "impl": 49,
+      "ratio": 1.065217391304348,
+      "baseline_max_ratio_dev": 0.0652173913043479
+     },
+     "top10": [
+      {
+       "value": "AR",
+       "spindle": 0.04666666666666667,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "TX",
+       "spindle": 0.04,
+       "impl": 0.02666666666666667
+      },
+      {
+       "value": "NY",
+       "spindle": 0.03333333333333333,
+       "impl": 0.02
+      },
+      {
+       "value": "HI",
+       "spindle": 0.03333333333333333,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "MD",
+       "spindle": 0.03333333333333333,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "NH",
+       "spindle": 0.03333333333333333,
+       "impl": 0.02666666666666667
+      },
+      {
+       "value": "MT",
+       "spindle": 0.03333333333333333,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "DE",
+       "spindle": 0.03333333333333333,
+       "impl": 0.02
+      },
+      {
+       "value": "WA",
+       "spindle": 0.03333333333333333,
+       "impl": 0.02
+      },
+      {
+       "value": "CA",
+       "spindle": 0.02666666666666667,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "NJ",
+       "spindle": 0.013333333333333334,
+       "impl": 0.06
+      },
+      {
+       "value": "MS",
+       "spindle": 0.006666666666666667,
+       "impl": 0.05333333333333334
+      },
+      {
+       "value": "NC",
+       "spindle": 0.02,
+       "impl": 0.04
+      },
+      {
+       "value": "SC",
+       "spindle": 0.013333333333333334,
+       "impl": 0.04
+      },
+      {
+       "value": "MI",
+       "spindle": 0.02666666666666667,
+       "impl": 0.02666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.3266666666666667,
+     "tvd_baseline": 0.34666666666666673,
+     "tvd_tol": 1.3255453865237978,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "promotion": {
+   "rows": {
+    "spindle": 200,
+    "impl": 200
+   },
+   "columns_spindle": [
+    "promotion_id",
+    "promo_name",
+    "promo_type",
+    "discount_pct",
+    "start_date",
+    "end_date"
+   ],
+   "columns_impl": [
+    "promotion_id",
+    "promo_name",
+    "promo_type",
+    "discount_pct",
+    "start_date",
+    "end_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "promotion_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "promo_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "promo_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "discount_pct": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "start_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "end_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "promotion_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.19494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 100.5,
+       "impl": 100.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 200.0,
+       "impl": 200.0
+      },
+      "std": {
+       "spindle": 57.73430522661548,
+       "impl": 57.73430522661548,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "promo_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 49,
+      "impl": 49,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.04081632653061229
+     },
+     "top10": [
+      {
+       "value": "End of Season Clearance",
+       "spindle": 0.055,
+       "impl": 0.015
+      },
+      {
+       "value": "Gift Card Bonus Event",
+       "spindle": 0.045,
+       "impl": 0.035
+      },
+      {
+       "value": "Easter Weekend Sale",
+       "spindle": 0.035,
+       "impl": 0.015
+      },
+      {
+       "value": "Last Chance Savings",
+       "spindle": 0.035,
+       "impl": 0.025
+      },
+      {
+       "value": "Loyalty Rewards Bonus",
+       "spindle": 0.035,
+       "impl": 0.02
+      },
+      {
+       "value": "Cyber Monday Deals",
+       "spindle": 0.035,
+       "impl": 0.025
+      },
+      {
+       "value": "App-Only Discount",
+       "spindle": 0.03,
+       "impl": 0.03
+      },
+      {
+       "value": "Welcome Offer",
+       "spindle": 0.03,
+       "impl": 0.015
+      },
+      {
+       "value": "Warehouse Sale",
+       "spindle": 0.03,
+       "impl": 0.005
+      },
+      {
+       "value": "First Purchase Discount",
+       "spindle": 0.025,
+       "impl": 0.025
+      },
+      {
+       "value": "4th of July Blowout",
+       "spindle": 0.015,
+       "impl": 0.045
+      },
+      {
+       "value": "Monthly Deals",
+       "spindle": 0.025,
+       "impl": 0.04
+      },
+      {
+       "value": "Buy More Save More",
+       "spindle": 0.02,
+       "impl": 0.035
+      },
+      {
+       "value": "Member Appreciation Week",
+       "spindle": 0.015,
+       "impl": 0.03
+      },
+      {
+       "value": "Black Friday Doorbusters",
+       "spindle": 0.02,
+       "impl": 0.03
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.275,
+     "tvd_baseline": 0.28,
+     "tvd_tol": 1.1847981254502882,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "promo_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "percent_off",
+       "spindle": 0.42,
+       "impl": 0.43
+      },
+      {
+       "value": "fixed_amount",
+       "spindle": 0.2,
+       "impl": 0.175
+      },
+      {
+       "value": "bogo",
+       "spindle": 0.15,
+       "impl": 0.19
+      },
+      {
+       "value": "bundle",
+       "spindle": 0.125,
+       "impl": 0.06
+      },
+      {
+       "value": "free_shipping",
+       "spindle": 0.105,
+       "impl": 0.145
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.09000000000000002,
+     "tvd_baseline": 0.10999999999999999,
+     "tvd_tol": 0.37846987830302403,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "discount_pct": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.09000000000000002,
+     "ks_baseline": 0.08499999999999996,
+     "ks_tol": 0.19494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 22.9,
+       "impl": 20.9
+      },
+      "min": {
+       "spindle": 5.0,
+       "impl": 5.0
+      },
+      "max": {
+       "spindle": 50.0,
+       "impl": 50.0
+      },
+      "std": {
+       "spindle": 14.511719401917885,
+       "impl": 13.890284374338778,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 6,
+      "impl": 6
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "start_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.10999999999999993,
+     "ks_baseline": 0.13,
+     "ks_tol": 0.197,
+     "stats": {
+      "mean": {
+       "spindle": "2023-10-30 08:16:09.160264960",
+       "impl": "2023-12-27 01:28:47.751011072"
+      },
+      "min": {
+       "spindle": "2022-01-08 09:31:57.626860544",
+       "impl": "2022-01-05 16:51:19.225854976"
+      },
+      "max": {
+       "spindle": "2025-12-15 05:24:21.001927936",
+       "impl": "2025-12-27 14:15:21.002074112"
+      },
+      "std": {
+       "spindle": 420.87272611257714,
+       "impl": 417.23292293148205,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "end_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.10500000000000004,
+     "ks_baseline": 0.13,
+     "ks_tol": 0.197,
+     "stats": {
+      "mean": {
+       "spindle": "2023-11-15 15:42:33.160264960",
+       "impl": "2024-01-12 23:04:47.751011072"
+      },
+      "min": {
+       "spindle": "2022-01-19 20:09:35.196698368",
+       "impl": "2022-01-12 16:51:19.225854976"
+      },
+      "max": {
+       "spindle": "2025-12-25 05:24:21.001927936",
+       "impl": "2026-01-17 13:10:41.976709888"
+      },
+      "std": {
+       "spindle": 420.2386994172371,
+       "impl": 417.64134162144137,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "order": {
+   "rows": {
+    "spindle": 500000,
+    "impl": 500000
+   },
+   "columns_spindle": [
+    "order_id",
+    "customer_id",
+    "store_id",
+    "shipping_address_id",
+    "promotion_id",
+    "order_date",
+    "status",
+    "order_total"
+   ],
+   "columns_impl": [
+    "order_id",
+    "customer_id",
+    "store_id",
+    "shipping_address_id",
+    "promotion_id",
+    "order_date",
+    "status",
+    "order_total"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "order_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "customer_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "store_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "shipping_address_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "promotion_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "order_date": {
+     "spindle": "timestamp[us]",
+     "impl": "timestamp[us]"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "order_total": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "order_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0038989492070408104,
+     "stats": {
+      "mean": {
+       "spindle": 250000.5,
+       "impl": 250000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 500000.0,
+       "impl": 500000.0
+      },
+      "std": {
+       "spindle": 144337.56729711776,
+       "impl": 144337.56729711776,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 500000,
+      "impl": 500000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "customer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0018259999999999943,
+     "ks_baseline": 0.003935999999999995,
+     "ks_tol": 0.007903999999999993,
+     "stats": {
+      "mean": {
+       "spindle": 18029.798536,
+       "impl": 18066.036708
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 50000.0,
+       "impl": 50000.0
+      },
+      "std": {
+       "spindle": 15825.660903838432,
+       "impl": 15839.614943979179,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 49963,
+      "impl": 49965
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "store_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0010779999999999679,
+     "ks_baseline": 0.0015080000000000093,
+     "ks_tol": 0.004262000000000014,
+     "stats": {
+      "mean": {
+       "spindle": 14.683178,
+       "impl": 14.668998
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 150.0,
+       "impl": 150.0
+      },
+      "std": {
+       "spindle": 26.683755092196378,
+       "impl": 26.674122285016164,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 150,
+      "impl": 150
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "shipping_address_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.223858,
+      "impl": 0.226914,
+      "baseline_max_abs_diff": 0.0023340000000000027,
+      "tol": 0.004168280170957802
+     },
+     "ks": 0.004058343154859201,
+     "ks_baseline": 0.006485088463751704,
+     "ks_tol": 0.011727632695627556,
+     "stats": {
+      "mean": {
+       "spindle": 37544.81519618833,
+       "impl": 37475.07004395371
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 75000.0,
+       "impl": 75000.0
+      },
+      "std": {
+       "spindle": 21626.3665701668,
+       "impl": 21701.02261241016,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 70299,
+      "impl": 70321
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "promotion_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.700242,
+      "impl": 0.700198,
+      "baseline_max_abs_diff": 0.00042599999999992644,
+      "tol": 0.004581518759494497
+     },
+     "ks": 0.0038759209316038268,
+     "ks_baseline": 0.003989911526596668,
+     "ks_tol": 0.007984867289895002,
+     "stats": {
+      "mean": {
+       "spindle": 100.33462326276529,
+       "impl": 100.68316422171966
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 200.0,
+       "impl": 200.0
+      },
+      "std": {
+       "spindle": 57.75222132794364,
+       "impl": 57.84780241621056,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "order_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.004170000000000007,
+     "ks_baseline": 0.006151999999999991,
+     "ks_tol": 0.011227999999999986,
+     "stats": {
+      "mean": {
+       "spindle": "2024-09-07 02:06:55.471775232",
+       "impl": "2024-09-04 21:09:57.111030272"
+      },
+      "min": {
+       "spindle": "2022-01-05 00:10:19",
+       "impl": "2022-01-04 10:17:37.677849088"
+      },
+      "max": {
+       "spindle": "2025-12-31 23:58:09",
+       "impl": "2025-12-31 23:56:06"
+      },
+      "std": {
+       "spindle": 343.207928235723,
+       "impl": 344.6202967541312,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 295828,
+      "impl": 297624
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "completed",
+       "spindle": 0.76894,
+       "impl": 0.77015
+      },
+      {
+       "value": "returned",
+       "spindle": 0.090478,
+       "impl": 0.089638
+      },
+      {
+       "value": "shipped",
+       "spindle": 0.080332,
+       "impl": 0.079782
+      },
+      {
+       "value": "cancelled",
+       "spindle": 0.040412,
+       "impl": 0.040392
+      },
+      {
+       "value": "processing",
+       "spindle": 0.019838,
+       "impl": 0.020038
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.0014100000000000223,
+     "tvd_baseline": 0.002582000000000027,
+     "tvd_tol": 0.00756939756606048,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "order_total": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.052810000000000024,
+     "ks_baseline": 0.40596400000000005,
+     "ks_tol": 0.6109460000000001,
+     "stats": {
+      "mean": {
+       "spindle": 111.13765372,
+       "impl": 108.15775208
+      },
+      "min": {
+       "spindle": 0.0,
+       "impl": 0.0
+      },
+      "max": {
+       "spindle": 6024.85,
+       "impl": 2555.04
+      },
+      "std": {
+       "spindle": 104.3209627151426,
+       "impl": 113.23398097159021,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 42950,
+      "impl": 45028
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "order_line": {
+   "rows": {
+    "spindle": 1250000,
+    "impl": 1250000
+   },
+   "columns_spindle": [
+    "order_line_id",
+    "order_id",
+    "product_id",
+    "quantity",
+    "promotion_id",
+    "unit_price",
+    "discount_percent",
+    "line_total"
+   ],
+   "columns_impl": [
+    "order_line_id",
+    "order_id",
+    "product_id",
+    "quantity",
+    "promotion_id",
+    "unit_price",
+    "discount_percent",
+    "line_total"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "order_line_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "order_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "product_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "quantity": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "promotion_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "unit_price": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "discount_percent": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "line_total": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "order_line_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656851986750228e-06
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0024659119951112745,
+     "stats": {
+      "mean": {
+       "spindle": 625000.5,
+       "impl": 625000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 1250000.0,
+       "impl": 1250000.0
+      },
+      "std": {
+       "spindle": 360843.91824340064,
+       "impl": 360843.91824340064,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 1250000,
+      "impl": 1250000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "order_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656851986750228e-06
+     },
+     "ks": 0.0006047999999999609,
+     "ks_baseline": 0.000988800000000012,
+     "ks_tol": 0.003483200000000018,
+     "stats": {
+      "mean": {
+       "spindle": 249990.4357872,
+       "impl": 249968.6883432
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 500000.0,
+       "impl": 500000.0
+      },
+      "std": {
+       "spindle": 144334.44496495457,
+       "impl": 144355.84217540376,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 458640,
+      "impl": 459018
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "product_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656851986750228e-06
+     },
+     "ks": 0.00101680000000004,
+     "ks_baseline": 0.0009031999999999929,
+     "ks_tol": 0.0033547999999999894,
+     "stats": {
+      "mean": {
+       "spindle": 54.302736,
+       "impl": 54.03354
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 5000.0,
+       "impl": 4998.0
+      },
+      "std": {
+       "spindle": 297.8294347020024,
+       "impl": 296.10465610231194,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 4675,
+      "impl": 4674
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "quantity": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656851986750228e-06
+     },
+     "ks": 0.000244800000000045,
+     "ks_baseline": 0.0007264000000000159,
+     "ks_tol": 0.003089600000000024,
+     "stats": {
+      "mean": {
+       "spindle": 1.6664704,
+       "impl": 1.6660984
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 15.0,
+       "impl": 15.0
+      },
+      "std": {
+       "spindle": 1.0533350871986749,
+       "impl": 1.0530428868367327,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 15,
+      "impl": 15
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "promotion_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.6998616,
+      "impl": 0.6999904,
+      "baseline_max_abs_diff": 0.0013279999999999959,
+      "tol": 0.002898657212196295
+     },
+     "ks": 0.005240596719808699,
+     "ks_baseline": 0.004058657590195858,
+     "ks_tol": 0.008087986385293787,
+     "stats": {
+      "mean": {
+       "spindle": 100.2607863572272,
+       "impl": 100.81280865678966
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 200.0,
+       "impl": 200.0
+      },
+      "std": {
+       "spindle": 57.747492896688456,
+       "impl": 57.83304306765473,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "unit_price": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656851986750228e-06
+     },
+     "ks": 0.3111056,
+     "ks_baseline": 0.5282872000000001,
+     "ks_tol": 0.7944308000000001,
+     "stats": {
+      "mean": {
+       "spindle": 28.629976208,
+       "impl": 27.700947488
+      },
+      "min": {
+       "spindle": 0.99,
+       "impl": 0.99
+      },
+      "max": {
+       "spindle": 999.99,
+       "impl": 545.07
+      },
+      "std": {
+       "spindle": 20.087880703849123,
+       "impl": 26.253415598649,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 3232,
+      "impl": 3247
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "discount_percent": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656851986750228e-06
+     },
+     "ks": 0.026922400000000013,
+     "ks_baseline": 0.026292800000000005,
+     "ks_tol": 0.04143920000000001,
+     "stats": {
+      "mean": {
+       "spindle": 6.872652,
+       "impl": 6.275516
+      },
+      "min": {
+       "spindle": 0.0,
+       "impl": 0.0
+      },
+      "max": {
+       "spindle": 50.0,
+       "impl": 50.0
+      },
+      "std": {
+       "spindle": 13.173784364672741,
+       "impl": 12.244721268111578,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 7,
+      "impl": 7
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "line_total": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656851986750228e-06
+     },
+     "ks": 0.1419432,
+     "ks_baseline": 0.44340160000000006,
+     "ks_tol": 0.6671024000000001,
+     "stats": {
+      "mean": {
+       "spindle": 44.455061488,
+       "impl": 43.263100832000006
+      },
+      "min": {
+       "spindle": 0.68,
+       "impl": 0.5
+      },
+      "max": {
+       "spindle": 5999.94,
+       "impl": 2487.6
+      },
+      "std": {
+       "spindle": 47.621111594203455,
+       "impl": 56.370552853208395,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 11315,
+      "impl": 11654
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "return": {
+   "rows": {
+    "spindle": 85000,
+    "impl": 85000
+   },
+   "columns_spindle": [
+    "return_id",
+    "order_id",
+    "reason",
+    "refund_amount",
+    "return_date"
+   ],
+   "columns_impl": [
+    "return_id",
+    "order_id",
+    "reason",
+    "refund_amount",
+    "return_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "return_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "order_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "reason": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "refund_amount": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "return_date": {
+     "spindle": "timestamp[us]",
+     "impl": "timestamp[us]"
+    }
+   },
+   "columns": {
+    "return_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.318854373207761e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.009456340829145577,
+     "stats": {
+      "mean": {
+       "spindle": 42500.5,
+       "impl": 42500.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 85000.0,
+       "impl": 85000.0
+      },
+      "std": {
+       "spindle": 24537.386438861005,
+       "impl": 24537.386438861005,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 85000,
+      "impl": 85000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "order_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.318854373207761e-05
+     },
+     "ks": 0.0023529411764705577,
+     "ks_baseline": 0.005882352941176561,
+     "ks_tol": 0.010823529411764841,
+     "stats": {
+      "mean": {
+       "spindle": 249824.95649411765,
+       "impl": 250185.03472941177
+      },
+      "min": {
+       "spindle": 16.0,
+       "impl": 4.0
+      },
+      "max": {
+       "spindle": 499997.0,
+       "impl": 499995.0
+      },
+      "std": {
+       "spindle": 144150.28514127032,
+       "impl": 144137.38617885375,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 78186,
+      "impl": 78183
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "reason": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.318854373207761e-05
+     },
+     "distinct": {
+      "spindle": 7,
+      "impl": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "wrong_size",
+       "spindle": 0.24788235294117647,
+       "impl": 0.24912941176470588
+      },
+      {
+       "value": "changed_mind",
+       "spindle": 0.22272941176470587,
+       "impl": 0.22087058823529412
+      },
+      {
+       "value": "not_as_described",
+       "spindle": 0.19730588235294116,
+       "impl": 0.20076470588235293
+      },
+      {
+       "value": "defective",
+       "spindle": 0.15135294117647058,
+       "impl": 0.14982352941176472
+      },
+      {
+       "value": "damaged_shipping",
+       "spindle": 0.10062352941176471,
+       "impl": 0.10029411764705883
+      },
+      {
+       "value": "arrived_late",
+       "spindle": 0.05056470588235294,
+       "impl": 0.04972941176470588
+      },
+      {
+       "value": "other",
+       "spindle": 0.029541176470588234,
+       "impl": 0.029388235294117646
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "tvd": 0.004705882352941155,
+     "tvd_baseline": 0.008035294117647052,
+     "tvd_tol": 0.02172205321764243,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "refund_amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.318854373207761e-05
+     },
+     "ks": 0.02783529411764707,
+     "ks_baseline": 0.11668235294117646,
+     "ks_tol": 0.1770235294117647,
+     "stats": {
+      "mean": {
+       "spindle": 32.361589529411766,
+       "impl": 31.152199764705877
+      },
+      "min": {
+       "spindle": 0.0,
+       "impl": 0.0
+      },
+      "max": {
+       "spindle": 429.37,
+       "impl": 571.75
+      },
+      "std": {
+       "spindle": 32.381986599295075,
+       "impl": 32.4243457505201,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 12056,
+      "impl": 11980
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "return_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.318854373207761e-05
+     },
+     "ks": 0.009258823529411764,
+     "ks_baseline": 0.010764705882352954,
+     "ks_tol": 0.018147058823529433,
+     "stats": {
+      "mean": {
+       "spindle": "2024-09-15 03:44:32.912196096",
+       "impl": "2024-09-08 19:51:43.373093120"
+      },
+      "min": {
+       "spindle": "2022-01-16 01:36:23",
+       "impl": "2022-01-11 10:27:36"
+      },
+      "max": {
+       "spindle": "2026-03-25 13:50:34",
+       "impl": "2026-03-16 11:18:56"
+      },
+      "std": {
+       "spindle": 342.5769680027384,
+       "impl": 345.3602944515915,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 64938,
+      "impl": 65008
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "spindle": [
+   "address",
+   "customer",
+   "order",
+   "order_line",
+   "product",
+   "product_category",
+   "promotion",
+   "return",
+   "store"
+  ],
+  "impl": [
+   "address",
+   "customer",
+   "order",
+   "order_line",
+   "product",
+   "product_category",
+   "promotion",
+   "return",
+   "store"
+  ]
+ },
+ "fk_integrity": {
+  "spindle": {
+   "address.customer_id->customer.customer_id": {
+    "integrity": 1.0,
+    "n": 75000
+   },
+   "product.category_id->product_category.category_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "order.customer_id->customer.customer_id": {
+    "integrity": 1.0,
+    "n": 500000
+   },
+   "order.store_id->store.store_id": {
+    "integrity": 1.0,
+    "n": 500000
+   },
+   "order.shipping_address_id->address.address_id": {
+    "integrity": 1.0,
+    "n": 388071
+   },
+   "order.promotion_id->promotion.promotion_id": {
+    "integrity": 1.0,
+    "n": 149879
+   },
+   "order_line.order_id->order.order_id": {
+    "integrity": 1.0,
+    "n": 1250000
+   },
+   "order_line.product_id->product.product_id": {
+    "integrity": 1.0,
+    "n": 1250000
+   },
+   "return.order_id->order.order_id": {
+    "integrity": 1.0,
+    "n": 85000
+   },
+   "product_category.parent_category_id->product_category.category_id": {
+    "integrity": 1.0,
+    "n": 42
+   },
+   "order_line.promotion_id->promotion.promotion_id": {
+    "integrity": 1.0,
+    "n": 375173
+   }
+  },
+  "impl": {
+   "address.customer_id->customer.customer_id": {
+    "integrity": 1.0,
+    "n": 75000
+   },
+   "product.category_id->product_category.category_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "order.customer_id->customer.customer_id": {
+    "integrity": 1.0,
+    "n": 500000
+   },
+   "order.store_id->store.store_id": {
+    "integrity": 1.0,
+    "n": 500000
+   },
+   "order.shipping_address_id->address.address_id": {
+    "integrity": 1.0,
+    "n": 386543
+   },
+   "order.promotion_id->promotion.promotion_id": {
+    "integrity": 1.0,
+    "n": 149901
+   },
+   "order_line.order_id->order.order_id": {
+    "integrity": 1.0,
+    "n": 1250000
+   },
+   "order_line.product_id->product.product_id": {
+    "integrity": 1.0,
+    "n": 1250000
+   },
+   "return.order_id->order.order_id": {
+    "integrity": 1.0,
+    "n": 85000
+   },
+   "product_category.parent_category_id->product_category.category_id": {
+    "integrity": 1.0,
+    "n": 42
+   },
+   "order_line.promotion_id->promotion.promotion_id": {
+    "integrity": 1.0,
+    "n": 375012
+   }
+  }
+ },
+ "fanout": {
+  "customer->address.customer_id": {
+   "spindle": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 5.0,
+    "max": 8,
+    "mean": 1.5,
+    "zero_frac": 0.22262
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 5.0,
+    "max": 10,
+    "mean": 1.5,
+    "zero_frac": 0.22518
+   },
+   "ks_counts": 0.002559999999999979,
+   "ks_baseline_max": 0.0020599999999999785,
+   "ks_tol": 0.012329559975556372,
+   "equivalent": true
+  },
+  "product_category->product.category_id": {
+   "spindle": {
+    "p50": 99.5,
+    "p90": 114.2,
+    "p99": 125.53,
+    "max": 127,
+    "mean": 100.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 100.0,
+    "p90": 115.0,
+    "p99": 125.02,
+    "max": 126,
+    "mean": 100.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.09999999999999998,
+   "ks_baseline_max": 0.12,
+   "ks_tol": 0.38989492070408105,
+   "equivalent": true
+  },
+  "customer->order.customer_id": {
+   "spindle": {
+    "p50": 8.0,
+    "p90": 15.0,
+    "p99": 50.0,
+    "max": 50,
+    "mean": 10.0,
+    "zero_frac": 0.00074
+   },
+   "impl": {
+    "p50": 8.0,
+    "p90": 15.0,
+    "p99": 50.0,
+    "max": 50,
+    "mean": 10.0,
+    "zero_frac": 0.0007
+   },
+   "ks_counts": 0.0032600000000000406,
+   "ks_baseline_max": 0.005700000000000038,
+   "ks_tol": 0.012329559975556372,
+   "equivalent": true
+  },
+  "store->order.store_id": {
+   "spindle": {
+    "p50": 563.5,
+    "p90": 4351.999999999997,
+    "p99": 50832.62999999977,
+    "max": 156506,
+    "mean": 3333.3333333333335,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 560.0,
+    "p90": 4337.699999999998,
+    "p99": 50932.589999999764,
+    "max": 156604,
+    "mean": 3333.3333333333335,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.04666666666666666,
+   "ks_baseline_max": 0.04000000000000001,
+   "ks_tol": 0.22510593742416898,
+   "equivalent": true
+  },
+  "address->order.shipping_address_id": {
+   "spindle": {
+    "p50": 4.0,
+    "p90": 10.0,
+    "p99": 33.0,
+    "max": 50,
+    "mean": 5.17428,
+    "zero_frac": 0.06268
+   },
+   "impl": {
+    "p50": 3.0,
+    "p90": 10.0,
+    "p99": 37.0,
+    "max": 50,
+    "mean": 5.153906666666667,
+    "zero_frac": 0.06238666666666667
+   },
+   "ks_counts": 0.004333333333333411,
+   "ks_baseline_max": 0.003586666666666627,
+   "ks_tol": 0.010067043564385115,
+   "equivalent": true
+  },
+  "promotion->order.promotion_id": {
+   "spindle": {
+    "p50": 747.5,
+    "p90": 790.2,
+    "p99": 818.03,
+    "max": 832,
+    "mean": 749.395,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 749.0,
+    "p90": 786.1,
+    "p99": 823.03,
+    "max": 829,
+    "mean": 749.505,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.06000000000000005,
+   "ks_baseline_max": 0.08000000000000002,
+   "ks_tol": 0.19494746035204052,
+   "equivalent": true
+  },
+  "order->order_line.order_id": {
+   "spindle": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 13,
+    "mean": 2.5,
+    "zero_frac": 0.08272
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 12,
+    "mean": 2.5,
+    "zero_frac": 0.081964
+   },
+   "ks_counts": 0.0008160000000000389,
+   "ks_baseline_max": 0.0007580000000000087,
+   "ks_tol": 0.0038989492070408104,
+   "equivalent": true
+  },
+  "product->order_line.product_id": {
+   "spindle": {
+    "p50": 4.0,
+    "p90": 44.0,
+    "p99": 1331.0100000000002,
+    "max": 483642,
+    "mean": 250.0,
+    "zero_frac": 0.065
+   },
+   "impl": {
+    "p50": 4.0,
+    "p90": 43.0,
+    "p99": 1370.1900000000041,
+    "max": 484578,
+    "mean": 250.0,
+    "zero_frac": 0.0652
+   },
+   "ks_counts": 0.01100000000000001,
+   "ks_baseline_max": 0.011599999999999944,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  },
+  "order->return.order_id": {
+   "spindle": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 4,
+    "mean": 0.17,
+    "zero_frac": 0.843628
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 4,
+    "mean": 0.17,
+    "zero_frac": 0.843634
+   },
+   "ks_counts": 0.00011600000000000499,
+   "ks_baseline_max": 0.00022999999999995246,
+   "ks_tol": 0.0038989492070408104,
+   "equivalent": true
+  },
+  "promotion->order_line.promotion_id": {
+   "spindle": {
+    "p50": 1877.0,
+    "p90": 1998.0,
+    "p99": 2053.3199999999997,
+    "max": 2114,
+    "mean": 1875.865,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 1882.0,
+    "p90": 1983.1,
+    "p99": 2070.0299999999997,
+    "max": 2112,
+    "mean": 1875.06,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.07,
+   "ks_baseline_max": 0.06999999999999995,
+   "ks_tol": 0.19494746035204052,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {
+  "address.city+state+zip_code+lat+lng in us_zip_locations": {
+   "impl": 1.0,
+   "spindle": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  }
+ },
+ "strategy_semantics": {
+  "promotion.end_date - start_date in [3,30] days": {
+   "impl": 1.0,
+   "spindle": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "order.order_total == sum(order_line.line_total)": {
+   "impl": 1.0,
+   "spindle": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "order_line.promotion_id == lookup order.promotion_id via order_id": {
+   "impl": 1.0,
+   "spindle": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "order_line.unit_price == lookup product.unit_price via product_id": {
+   "impl": 1.0,
+   "spindle": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "return.return_date - order.order_date in [1,90] days": {
+   "impl": 0.9993176470588235,
+   "spindle": [
+    0.9993647058823529,
+    0.9994117647058823,
+    0.9993529411764706,
+    0.9992823529411765,
+    0.9993529411764706
+   ],
+   "floor": 0.9942823529411765
+  }
+ },
+ "business_rules": {
+  "spindle_BusinessRulesEngine_violations": {},
+  "spindle_on_spindle": {}
+ },
+ "spindle_fidelity_comparator": {
+  "overall_impl": 92.1041610114951,
+  "overall_baseline_spindle_vs_spindle": [
+   91.5575335656577,
+   91.89226996631845,
+   89.07755109400844,
+   92.43466221781279
+  ],
+  "tables": {
+   "address": {
+    "impl": 88.42709386319987,
+    "baseline": [
+     88.21709880310024,
+     88.06501509851394,
+     87.86623720827927,
+     90.75216138835584
+    ],
+    "floor": 87.36623720827927,
+    "ok": true
+   },
+   "customer": {
+    "impl": 85.659643895842,
+    "baseline": [
+     85.12674345257362,
+     85.6264624586216,
+     85.50874907359503,
+     85.68393622445119
+    ],
+    "floor": 84.62674345257362,
+    "ok": true
+   },
+   "order": {
+    "impl": 99.43611383699393,
+    "baseline": [
+     97.0956521735588,
+     98.83982772030404,
+     91.22607018995417,
+     99.16949204097497
+    ],
+    "floor": 90.72607018995417,
+    "ok": true
+   },
+   "order_line": {
+    "impl": 97.59487096158324,
+    "baseline": [
+     93.78110915937475,
+     95.60342227147682,
+     86.63351792119238,
+     97.60403569174412
+    ],
+    "floor": 86.13351792119238,
+    "ok": true
+   },
+   "product": {
+    "impl": 94.78309344341051,
+    "baseline": [
+     94.53456179956054,
+     94.83827850897616,
+     94.57617572216132,
+     94.68957252594488
+    ],
+    "floor": 94.03456179956054,
+    "ok": true
+   },
+   "product_category": {
+    "impl": 86.49836493305747,
+    "baseline": [
+     87.56220318832499,
+     87.73440233562891,
+     84.74559762497057,
+     87.53686589429493
+    ],
+    "floor": 84.24559762497057,
+    "ok": true
+   },
+   "promotion": {
+    "impl": 91.61842816334114,
+    "baseline": [
+     93.38416432592675,
+     91.81618927591192,
+     91.02613006552633,
+     92.01188905648381
+    ],
+    "floor": 90.52613006552633,
+    "ok": true
+   },
+   "return": {
+    "impl": 99.50564132018803,
+    "baseline": [
+     98.67435037221965,
+     98.48447177898552,
+     94.60023237777881,
+     99.08166122311071
+    ],
+    "floor": 94.10023237777881,
+    "ok": true
+   },
+   "store": {
+    "impl": 85.41419868583964,
+    "baseline": [
+     85.64191881628008,
+     86.0223602484472,
+     85.51524966261809,
+     85.38234591495461
+    ],
+    "floor": 84.88234591495461,
+    "ok": true
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 60,
+  "columns_equivalent": 60,
+  "flagged": [],
+  "passed": true,
+  "seconds": 159.57426118850708
+ }
+}

@@ -4,8 +4,9 @@
     "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/domain_1to1/export_retail.py          # write
     "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/domain_1to1/export_retail.py --check  # equal
 
-* ``schema.json``: the baseline's retail schema (``fixtures/schemas/retail_3nf.json``, from
-  ``dump_schema.py``) as a Shape generation schema.
+* ``schema.json`` and ``schema_star.json``: the baseline's retail schemas
+  (``fixtures/schemas/retail_{3nf,star}.json``, from ``dump_schema.py``) as Shape generation
+  schemas.
 * ``reference/<name>.arrow``: the four reference datasets the schema reads
   (``categories``, ``product_names``, ``promo_names``, ``us_zip_locations``), copied from the
   baseline checkout, which is only read. Row order and values are the baseline's.
@@ -30,16 +31,19 @@ from paths import SHAPE_ROOT, SPINDLE_ROOT  # noqa: E402
 from schema_import import import_dump  # noqa: E402
 
 DATA = SHAPE_ROOT / "plugins" / "shape-domains" / "src" / "shape_domains" / "data" / "retail"
-SCHEMA_FIXTURE = HERE.parent / "fixtures" / "schemas" / "retail_3nf.json"
+SCHEMA_FIXTURES = {
+    "schema.json": HERE.parent / "fixtures" / "schemas" / "retail_3nf.json",
+    "schema_star.json": HERE.parent / "fixtures" / "schemas" / "retail_star.json",
+}
 SOURCE = SPINDLE_ROOT / "sqllocks_spindle" / "domains" / "retail" / "reference_data"
 DATASETS = ("categories", "product_names", "promo_names", "us_zip_locations")
 
 
-def schema_document() -> dict[str, Any]:
+def schema_document(fixture: Path = SCHEMA_FIXTURES["schema.json"]) -> dict[str, Any]:
     """The schema as Shape reads it. One addition to the baseline's: its uniform ``temporal``
     columns are nanosecond timestamps (pandas ``datetime64[ns]``), so they carry ``unit: ns``
     to give the same Arrow type (T-21 (a)); ``derived`` dates follow their source's unit."""
-    doc: dict[str, Any] = import_dump(json.loads(SCHEMA_FIXTURE.read_text("utf-8"))).to_dict()
+    doc: dict[str, Any] = import_dump(json.loads(fixture.read_text("utf-8"))).to_dict()
     for table in doc["tables"].values():
         for column in table["columns"].values():
             gen = column["generator"]
@@ -66,14 +70,15 @@ def main(argv: list[str] | None = None) -> int:
     check = ap.parse_args(argv).check
     problems: list[str] = []
 
-    schema_file = DATA / "schema.json"
-    text = render_schema(schema_document())
-    if check:
-        if not schema_file.exists() or schema_file.read_text("utf-8") != text:
-            problems.append(str(schema_file))
-    else:
-        DATA.mkdir(parents=True, exist_ok=True)
-        schema_file.write_text(text, "utf-8")
+    for filename, fixture in SCHEMA_FIXTURES.items():
+        schema_file = DATA / filename
+        text = render_schema(schema_document(fixture))
+        if check:
+            if not schema_file.exists() or schema_file.read_text("utf-8") != text:
+                problems.append(str(schema_file))
+        else:
+            DATA.mkdir(parents=True, exist_ok=True)
+            schema_file.write_text(text, "utf-8")
 
     for name in DATASETS:
         table = dataset_table(name)

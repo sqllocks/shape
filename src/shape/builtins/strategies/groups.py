@@ -17,6 +17,9 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import fill_null as arrow_fill_null
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.generation.kernel_relational import first_flags, group_order, scd2_offsets
 from shape.generation.strategy_kit import StrategyError, require, stream, where
 from shape.plugins.api.v1 import GenerationContext
@@ -33,9 +36,7 @@ def group_codes(column: pa.Array, *, nulls_are_a_group: bool) -> Ints:
     """Dense group ids of the values of ``column`` in order of first appearance. A null is its own
     group, or -1 (no group) when ``nulls_are_a_group`` is false."""
     encoded = pc.dictionary_encode(column, null_encoding="encode" if nulls_are_a_group else "mask")
-    return np.asarray(
-        pc.fill_null(encoded.indices, -1).to_numpy(zero_copy_only=False), dtype=np.int64
-    )
+    return np.asarray(arrow_numpy(arrow_fill_null(encoded.indices, -1)), dtype=np.int64)
 
 
 class FirstPerParent:
@@ -60,7 +61,7 @@ class FirstPerParent:
 
         flags = engine.cached(("first-per-parent", ctx.table, parent_column), build)
         first = flags[ctx.row_start : ctx.row_start + ctx.n_rows]
-        return pa.array(first if bool(spec.get("default", True)) else ~first, type=pa.bool_())
+        return arrow_array(first if bool(spec.get("default", True)) else ~first, type=pa.bool_())
 
 
 def _date_range(ctx: GenerationContext) -> tuple[dt.date, int]:
@@ -74,8 +75,8 @@ def _date_range(ctx: GenerationContext) -> tuple[dt.date, int]:
 def _micros(column: pa.Array) -> Ints:
     """Microseconds since the epoch of a date or timestamp column (nulls sort first)."""
     stamped = pc.cast(column, pa.timestamp("us"))
-    values = pc.fill_null(pc.cast(stamped, pa.int64()), np.iinfo(np.int64).min)
-    return np.asarray(values.to_numpy(zero_copy_only=False), dtype=np.int64)
+    values = arrow_fill_null(pc.cast(stamped, pa.int64()), np.iinfo(np.int64).min)
+    return np.asarray(arrow_numpy(values), dtype=np.int64)
 
 
 class Scd2:
@@ -125,7 +126,7 @@ class Scd2:
                 lambda: scd2_offsets(codes, total_days, min_gap, stream(ctx, "scd2")),
             )[window]
             micros = (start.toordinal() - dt.date(1970, 1, 1).toordinal() + offsets) * _US_PER_DAY
-            return pa.array(micros, mask=offsets < 0, type=pa.int64()).cast(pa.timestamp("us"))
+            return arrow_array(micros, mask=offsets < 0, type=pa.int64()).cast(pa.timestamp("us"))
 
         eff_column = str(spec.get("effective_date_column", "effective_date"))
         keys: Ints | None = None
@@ -146,12 +147,12 @@ class Scd2:
         )
         missing = rank[window] < 0
         if role == "version":
-            return pa.array(rank[window] + 1, mask=missing, type=pa.int64())
+            return arrow_array(rank[window] + 1, mask=missing, type=pa.int64())
         if role == "is_current":
-            return pa.array(rank[window] == size[window] - 1, mask=missing, type=pa.bool_())
+            return arrow_array(rank[window] == size[window] - 1, mask=missing, type=pa.bool_())
         after = following[window]
         end = order_keys[np.maximum(after, 0)] - min_gap * _US_PER_DAY
-        return pa.array(end, mask=after < 0, type=pa.int64()).cast(pa.timestamp("us"))
+        return arrow_array(end, mask=after < 0, type=pa.int64()).cast(pa.timestamp("us"))
 
 
 __all__ = ["SHAPE_API", "FirstPerParent", "Scd2", "group_codes"]

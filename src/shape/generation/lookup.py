@@ -23,6 +23,9 @@ import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import fill_null as arrow_fill_null
+from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.generation.engine import Engine, EngineContext
 from shape.generation.keypos import dense_positions, dense_row_array, dense_start
 from shape.generation.strategy_kit import StrategyError, where
@@ -35,7 +38,7 @@ def _is_number(t: pa.DataType) -> bool:
 
 def _numpy_float(arr: pa.Array) -> npt.NDArray[np.float64]:
     return np.asarray(
-        pc.fill_null(arr.cast(pa.float64()), float("nan")).to_numpy(zero_copy_only=False),
+        arrow_numpy(arrow_fill_null(arr.cast(pa.float64()), float("nan"))),
         dtype=np.float64,
     )
 
@@ -63,7 +66,7 @@ class KeyIndex:
                     self._float_sorted, self._float_order = flat[order], order
                 return self._float_sorted, self._float_order
             if self._sorted is None or self._order is None:
-                raw = np.asarray(self.keys.to_numpy(zero_copy_only=False))
+                raw = np.asarray(arrow_numpy(self.keys))
                 order = np.argsort(raw, kind="stable").astype(np.int64)
                 self._sorted, self._order = raw[order], order
             return self._sorted, self._order
@@ -81,19 +84,17 @@ class KeyIndex:
             probe = (
                 _numpy_float(values)
                 if as_float
-                else np.asarray(
-                    pc.fill_null(values, 0).to_numpy(zero_copy_only=False), dtype=np.int64
-                )
+                else np.asarray(arrow_numpy(arrow_fill_null(values, 0)), dtype=np.int64)
             )
             where_ = np.searchsorted(sorted_keys, probe, side="left")
             clipped = np.minimum(where_, max(len(sorted_keys) - 1, 0))
             hit = (where_ < len(sorted_keys)) & (sorted_keys[clipped] == probe)
-            hit &= np.asarray(pc.is_valid(values).to_numpy(zero_copy_only=False), dtype=bool)
+            hit &= np.asarray(arrow_numpy(pc.is_valid(values)), dtype=bool)
             return np.where(hit, order[clipped] if len(order) else 0, -1).astype(np.int64)
         probe_arr = values if values.type == self.keys.type else values.cast(pa.string())
         keys = self.keys if values.type == self.keys.type else self.keys.cast(pa.string())
         found = pc.index_in(probe_arr, value_set=keys)
-        return np.asarray(pc.fill_null(found, -1).to_numpy(zero_copy_only=False), dtype=np.int64)
+        return np.asarray(arrow_numpy(arrow_fill_null(found, -1)), dtype=np.int64)
 
 
 def _index_array(index: KeyIndex, values: pa.Array) -> pa.Array:
@@ -102,7 +103,7 @@ def _index_array(index: KeyIndex, values: pa.Array) -> pa.Array:
         return dense_row_array(values, index.dense, len(index.keys))
     pos = index.positions(values)
     miss = pos < 0
-    return pa.array(np.where(miss, 0, pos), mask=miss, type=pa.int64())
+    return arrow_array(np.where(miss, 0, pos), mask=miss, type=pa.int64())
 
 
 _indexes: weakref.WeakKeyDictionary[Engine, dict[tuple[str, str], KeyIndex]] = (

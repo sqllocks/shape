@@ -51,14 +51,10 @@ def _run(fn, a):
     """Run a profile/check/diff command: 0 ok, 1 failed check or drift, 2 input error."""
     import zipfile
 
-    from shape.artifact.io import ArtifactSignatureError
     from shape.errors import ShapeError
 
     try:
         return fn(a)
-    except ArtifactSignatureError as exc:
-        print(f"shape: signature check failed: {exc}", file=sys.stderr)
-        return 1
     except (
         OSError,
         ValueError,
@@ -68,6 +64,12 @@ def _run(fn, a):
         ShapeError,
         zipfile.BadZipFile,
     ) as exc:
+        # The artifact modules are not imported by the commands that never touch an artifact; an
+        # ArtifactSignatureError can only come from one that is.
+        artifact_io = sys.modules.get("shape.artifact.io")
+        if artifact_io is not None and isinstance(exc, artifact_io.ArtifactSignatureError):
+            print(f"shape: signature check failed: {exc}", file=sys.stderr)
+            return 1
         print(f"shape: error: {exc}", file=sys.stderr)
         return 2
 
@@ -422,6 +424,10 @@ def _stream_profile_arguments(parser):
 def _build_parser(plugin_commands=()):
     p = argparse.ArgumentParser(prog="shape", description="Shape as Code")
     p.add_argument("--version", "-V", action="store_true", help="print the version and exit")
+    g = p.add_argument_group("run logging and metrics (before the command)")
+    g.add_argument("--log-json", action="store_true", help="log JSON lines to stderr")
+    g.add_argument("--log-level", default="INFO", metavar="LEVEL", help="log level (default INFO)")
+    g.add_argument("--metrics", metavar="FILE", help="write the run's metrics to FILE as JSON")
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("doctor")
     sub.add_parser("conformance")
@@ -492,8 +498,13 @@ def _build_parser(plugin_commands=()):
     sg.add_argument("shape", metavar="ARTIFACT.shape")
     sg.add_argument("--key", required=True, metavar="PRIVATE.key")
     sg.add_argument("-o", "--output", metavar="OUT.shape", help="default: sign in place")
-    va = sub.add_parser("validate", help="validate a Shape-as-Code contract document")
-    va.add_argument("contract")
+    va = sub.add_parser(
+        "validate",
+        help="validate a generation schema or a contract (chosen by what the file holds)",
+        description="Validate FILE: a Shape generation schema goes through the schema "
+        "validator, a contract through the contract validation; any other document exits 2.",
+    )
+    va.add_argument("contract", metavar="FILE")
     vf = sub.add_parser(
         "verify",
         help="run the validation gates over data, or check a .shape artifact's signature",
@@ -513,9 +524,9 @@ def _build_parser(plugin_commands=()):
     qu = sub.add_parser("quality")
     qu.add_argument("csv")
     qu.add_argument("--reference")
-    ge = sub.add_parser("generate")
-    ge.add_argument("--rows", type=int, default=10)
-    ge.add_argument("--seed", type=int, default=0)
+    from shape.cli.generation import add_arguments as add_generation_arguments
+
+    add_generation_arguments(sub)
     fi = sub.add_parser(
         "fidelity",
         aliases=["compare"],
@@ -606,8 +617,90 @@ def _version():
     return __version__
 
 
+_GLOBAL_VALUE_OPTIONS = ("--log-level", "--metrics")
+
+
+def _split_global(argv):
+    """Take the global options (``--log-json``, ``--log-level L``, ``--metrics FILE``) off the
+    front of ``argv``; they may also come from SHAPE_LOG_JSON, SHAPE_LOG_LEVEL, SHAPE_METRICS."""
+    opts = {
+        "log_json": os.environ.get("SHAPE_LOG_JSON", "") not in ("", "0"),
+        "log_level": os.environ.get("SHAPE_LOG_LEVEL", "INFO"),
+        "metrics": os.environ.get("SHAPE_METRICS") or None,
+    }
+    rest = list(argv)
+    while rest and rest[0].startswith("--"):
+        name, eq, value = rest[0].partition("=")
+        if name == "--log-json":
+            opts["log_json"] = True
+            rest.pop(0)
+        elif name in _GLOBAL_VALUE_OPTIONS:
+            if not eq:
+                if len(rest) < 2:
+                    print(f"shape: error: {name} needs a value", file=sys.stderr)
+                    raise SystemExit(2)
+                value = rest.pop(1)
+            opts[name[2:].replace("-", "_")] = value
+            rest.pop(0)
+        else:
+            break
+    return opts, rest
+
+
 def main(argv=None):
-    argv = list(sys.argv[1:] if argv is None else argv)
+    """Run a command: 0 ok, 1 a check failed, 2 bad input. With the global options (or the
+    environment variables) on, the run logs JSON lines to stderr and writes its metrics.
+
+    Called as the program (no ``argv``), a ``generate`` that wrote its files ends the process as
+    soon as everything is flushed (``lifecycle.exit_now``) instead of tearing the interpreter down:
+    freeing the hundreds of megabytes of tables and unloading the modules takes about 40 ms of a
+    half-second run, and nothing is left to do (every file is closed, no ``atexit`` handler of
+    Shape's is pending)."""
+    from shape.cli import lifecycle
+
+    lifecycle.quick_exit_allowed = argv is None
+    return _main(argv)
+
+
+def _main(argv):
+    opts, argv = _split_global(sys.argv[1:] if argv is None else argv)
+    if not (opts["log_json"] or opts["metrics"]):
+        return _dispatch(argv)
+    from shape.cli import lifecycle
+
+    lifecycle.quick_exit_allowed = False  # the log line and metrics file come after the command
+    import logging
+    import time
+
+    from shape import runlog
+
+    if opts["log_json"]:
+        runlog.configure_logging(level=opts["log_level"])
+    command = next((x for x in argv if not x.startswith("-")), "")
+    run = runlog.begin(f"{time.strftime('%Y%m%dT%H%M%S')}_{command or 'shape'}")
+    run.set(command=command)
+    log = logging.getLogger(runlog.LOGGER)
+    log.info("command started", extra={"command": command})
+    code = 1
+    try:
+        code = _dispatch(argv)
+        return code
+    except SystemExit as exc:
+        code = exc.code if isinstance(exc.code, int) else 1
+        raise
+    finally:
+        run.set(exit_code=code)
+        summary = run.finish()
+        log.info(
+            "command finished",
+            extra={"command": command, "exit_code": code, "metrics": summary},
+        )
+        if opts["metrics"]:
+            with open(opts["metrics"], "w", encoding="utf-8") as fh:
+                fh.write(run.to_json() + "\n")
+
+
+def _dispatch(argv):
     if argv[:1] in (["--version"], ["-V"]):
         print(f"shape {_version()}")
         return 0
@@ -615,9 +708,10 @@ def main(argv=None):
         from shape.privacy.cli import main as privacy_main
 
         return privacy_main(argv[1:])
+    parser = _build_parser()
     builtin = {
         n
-        for act in _build_parser()._actions
+        for act in parser._actions
         if isinstance(act, argparse._SubParsersAction)
         for n in act.choices
     }
@@ -633,7 +727,7 @@ def main(argv=None):
         from shape.plugins.host import default_host
 
         return run_command(default_host(), argv[0], argv[1:])
-    a = _build_parser(plugin_cmds.values()).parse_args(argv)
+    a = (_build_parser(plugin_cmds.values()) if plugin_cmds else parser).parse_args(argv)
     if a.version:
         print(f"shape {_version()}")
         return 0
@@ -643,6 +737,10 @@ def main(argv=None):
         rc = _run(_verify_inputs, a)
         if rc:
             return rc
+    if a.cmd in ("generate", "describe", "list", "presets"):
+        from shape.cli.generation import run as run_generation
+
+        return _run(run_generation, a)
     if a.cmd == "from-ddl":
         return _run(_cmd_from_ddl, a)
     if a.cmd == "profile":
@@ -702,11 +800,9 @@ def main(argv=None):
     if a.cmd in ("show", "inspect"):
         return _run(_cmd_inspect, a)
     if a.cmd == "validate":
-        from shape.spec import load_contract
+        from shape.cli.validate import cmd_validate
 
-        c = load_contract(a.contract)
-        _dump({"valid": True, "name": c.name, "version": c.version, "fidelity": c.fidelity})
-        return 0
+        return _run(cmd_validate, a)
     if a.cmd == "quality":
         from shape.capture import capture_rows
         from shape.quality import infer_rules, validate_rows
@@ -716,16 +812,6 @@ def main(argv=None):
         result = validate_rows(rows, infer_rules(ref))
         _dump({"passed": result.passed, "violations": [asdict(v) for v in result.violations]})
         return 0 if result.passed else 2
-    if a.cmd == "generate":
-        from shape.generation import Choice, GenerationPlan, SequenceStrategy
-
-        plan = GenerationPlan(
-            (("id", SequenceStrategy()), ("segment", Choice(("A", "B", "C"), (0.7, 0.2, 0.1)))),
-            a.seed,
-        )
-        for row in plan.rows(a.rows):
-            print(json.dumps(row, sort_keys=True))
-        return 0
     if a.cmd == "drift":
         from shape.cli.tiers import run_drift
 

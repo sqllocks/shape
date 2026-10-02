@@ -1,0 +1,32 @@
+# final tree, Rust kernel
+## medium
+address.parquet 75000 e7d6c55e88e69a4c
+customer.parquet 50000 a27886a14c595658
+order.parquet 500000 dbb9688851411616
+order_line.parquet 1250000 36893aa2d07d5e46
+product.parquet 5000 c258e789e7b0b10b
+product_category.parquet 50 3c0b2215e40653b1
+promotion.parquet 200 a2449c0e5b8b2aa7
+return.parquet 85000 258c072b00653a92
+store.parquet 150 6574e174f6cdf59d
+## large
+address.parquet 750000 c5db97986fe5ac05
+customer.parquet 500000 4fefb3b33ccc40a6
+order.parquet 5000000 8573a64596c8ad14
+order_line.parquet 12500000 35ca51979bc1887d
+product.parquet 25000 9fef31666a36d9ad
+product_category.parquet 50 3c0b2215e40653b1
+promotion.parquet 200 a2449c0e5b8b2aa7
+return.parquet 850000 34348b9e2fa2dea9
+store.parquet 150 6574e174f6cdf59d
+# final tree, SHAPE_KERNEL=python
+## medium
+address.parquet 75000 e7d6c55e88e69a4c
+customer.parquet 50000 a27886a14c595658
+order.parquet 500000 dbb9688851411616
+order_line.parquet 1250000 36893aa2d07d5e46
+product.parquet 5000 c258e789e7b0b10b
+product_category.parquet 50 3c0b2215e40653b1
+promotion.parquet 200 a2449c0e5b8b2aa7
+return.parquet 85000 258c072b00653a92
+store.parquet 150 6574e174f6cdf59d

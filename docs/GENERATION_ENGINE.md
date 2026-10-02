@@ -235,7 +235,7 @@ print(format_summary(result))                                   # the `summary` 
 |---|---|---|
 | `csv`, `tsv` | `<table>.csv`, `<table>.tsv` | header row, nulls are empty fields |
 | `jsonl` | `<table>.jsonl` | dates and times ISO 8601; decimals are exact strings |
-| `parquet` | `<table>.parquet` | snappy, dictionary encoding on (T-17); options `row_group_rows` (1,048,576) and `dictionary_page_bytes` (131,072: a column whose dictionary outgrows it stops using one) |
+| `parquet` | `<table>.parquet` | snappy, dictionary encoding on (T-17); options `row_group_rows` (262,144: a table streamed while it is generated is encoded as its chunks arrive; a larger group would wait for a million rows) and `dictionary_page_bytes` (131,072: a column whose dictionary outgrows it stops using one) |
 | `sql` | `<table>.sql` | see below |
 | `excel` | `<table>.xlsx` | extra `[excel]`; refuses a table over 1,048,575 rows |
 | `delta` | `<dir>/<table>/` | extra `[delta]`; `mode` (`overwrite`, `append`), `partition_by` |
@@ -265,6 +265,17 @@ the last rule repair that can change it and the copula, and `on_table(name, tabl
 (and receives every table when there is no `on_batch`). Both callbacks run on the calling thread:
 hand the data to a writer. `write_engine` does exactly that.
 
+`write_engine` leaves one core to the writer threads (a Parquet file is encoded by one thread, and with
+every core generating, the encoder of the largest table is what a run waits for): `SHAPE_THREADS`
+unset means every core less one while writing, and exactly `SHAPE_THREADS` when set. Two passes run
+while the tables are still being made, and give what the plain order of the passes gives (tests compare
+them): a `sum_children` or `count_children` column over a `sequence` key is accumulated as the child
+table's chunks are made (`StreamedAggregate`, the same row-order additions as the single pass), and the
+leading business rules are repaired on a helper thread once the tables they name exist, when no
+`computed` column and no earlier rule is in their way (`EarlyRules`). The generation path builds Arrow
+arrays and reads them back through `shape.generation.arrowkit`, which never imports pandas (pyarrow's
+own `array`, `to_numpy` and `scalar` do, about 0.16 s of start-up).
+
 `generate()` runs with Arrow's system memory pool (`shape.generation.runtime.generation_memory`; set
 `SHAPE_MEMORY_POOL=default` to keep Arrow's default). The default pool maps fresh memory for each large
 array and returns it soon after, which on a virtual machine makes the page faults of short-lived arrays
@@ -286,3 +297,60 @@ capped at 1,000 rows (the server's limit for one `VALUES` list) whatever `batch_
 `tsql-fabric-warehouse` uses `VARCHAR` and `DATETIME2(6)`, writes the primary key as a comment (the
 warehouse does not enforce it) and emits no `DISTRIBUTION` clause; `NaN` and infinities become
 `NULL`; MySQL string literals escape backslashes.
+
+## The command line
+
+```
+shape list                                   # installed domains and their modes
+shape presets retail                         # rows per table for every scale preset
+shape describe retail --mode star --scale medium
+shape generate retail --scale medium --seed 42 --format parquet -o out/
+shape generate retail --dry-run              # the plan: order, rows, memory; generates nothing
+shape from-ddl tables.sql -o shop.gen.json && shape generate shop.gen.json -f csv -o out/
+shape validate shop.gen.json                 # a schema file, or a contract; exit 0, 1 or 2
+```
+
+Start-up and exit are kept short, because they are part of what a run costs (retail `medium` takes
+about 0.65 s end to end, of which the imports are about 0.2 s): `generate` imports pandas never (see
+`shape.generation.arrowkit`), loads a sink on a writer thread, and, run as the program with no
+`--log-json` or `--metrics`, switches the garbage collector off (the imports make the objects it would
+walk, and generation makes no reference cycles) and ends the process as soon as the last file is
+closed and the output flushed, instead of freeing the tables and unloading the modules.
+
+A target is an installed domain or the path of a generation schema file. `--mode star` picks a
+domain's star schema (a domain that has none exits 2; a schema file has the one mode it was
+written in). `--scale` must be one of the schema's presets (`shape presets`), `--seed` defaults to
+the schema's. `--format summary` (the default) prints the result and writes nothing; every other
+format needs `-o DIR` and is written by the writers above. `--json` prints the result, the plan or
+the description as JSON. Exit codes: 0 done, 1 a dry run found problems (or `validate` found the
+file invalid), 2 bad input.
+
+`shape generate --from X.shape` is reserved for generating from a profile and exits 2 for now.
+
+In Python, `shape.api.generate("retail", scale="medium", seed=42, mode="star")` returns the
+`GenerationResult`: `result.tables` maps names to Arrow tables (as does `result["order"]`).
+
+### Logging and metrics
+
+Every command can log JSON lines and write its metrics, with the options before the command or
+environment variables:
+
+```
+shape --log-json --metrics run.json generate retail --scale small
+```
+
+| Option | Variable | Meaning |
+|---|---|---|
+| `--log-json` | `SHAPE_LOG_JSON=1` | one JSON object per log line on stderr: `timestamp`, `level`, `logger`, `message`, extra fields |
+| `--log-level LEVEL` | `SHAPE_LOG_LEVEL` | default `INFO` |
+| `--metrics FILE` | `SHAPE_METRICS` | write the run's metrics as JSON: `run_id`, `command`, `exit_code`, `total_elapsed_seconds`, and for `generate` the domain, mode, scale, seed, format, rows and tables |
+
+`shape.runlog` has the same pieces for library code: `configure_logging`, `RunMetrics` (with
+`start_table`, `end_table`, `record_event`, `finish`). Nothing is sent anywhere.
+
+### `shape validate`
+
+`shape validate FILE` reads the file and decides by its content: `schema_version`, `model` and
+`tables` make it a generation schema (checked against the JSON Schema, then by `GenSchema.validate`;
+errors exit 1, warnings are printed), `name` and `fields` make it a contract, and anything else,
+including a document in another tool's format, exits 2.
