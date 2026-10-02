@@ -279,7 +279,19 @@ def _truncate(values: pa.Array, ctx: GenerationContext) -> pa.Array:
     limit = getattr(getattr(ctx, "column_def", None), "max_length", None)
     if not limit or not pa.types.is_string(values.type):
         return values
+    if _longest_bytes(values) <= int(limit):
+        return values  # nothing is longer than the limit: slicing every value would change none
     return pc.utf8_slice_codeunits(values, 0, int(limit))
+
+
+def _longest_bytes(values: pa.Array) -> int:
+    """The most bytes any value of a ``string`` array has (from its offsets, one pass over four
+    bytes per value). A value of at most ``n`` bytes has at most ``n`` characters."""
+    if len(values) == 0:
+        return 0
+    offsets = np.frombuffer(values.buffers()[1], dtype=np.int32)
+    window = offsets[values.offset : values.offset + len(values) + 1]
+    return int(np.diff(window).max())
 
 
 def _provider(spec: Mapping[str, Any]) -> str:

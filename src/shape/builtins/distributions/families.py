@@ -27,6 +27,7 @@ import numpy as np
 import numpy.typing as npt
 
 from shape.generation import kernel_ops
+from shape.generation.kernel_relational import cdf_search
 from shape.generation.rng import RowStream
 
 from .special import digamma, trigamma
@@ -234,7 +235,7 @@ class Zipf(Family):
     def draw(self, stream: RowStream, row_start: int, n: int, params: Mapping[str, Any]) -> Floats:
         top = int(_p(params, "max"))
         cdf = _zipf_cdf(_p(params, "a"), top)
-        k = np.searchsorted(cdf, _u(stream, row_start, n), side="right") + 1
+        k = cdf_search(cdf, _u(stream, row_start, n)) + 1
         return np.minimum(k, top).astype(np.float64)
 
     def fit(self, x: Floats) -> dict[str, Any]:
@@ -316,7 +317,7 @@ class Poisson(Family):
         if lam == 0.0:
             return np.zeros(n, dtype=np.float64)
         lo, cdf = _poisson_cdf(lam)
-        idx = np.searchsorted(cdf, _u(stream, row_start, n), side="right")
+        idx = cdf_search(cdf, _u(stream, row_start, n))
         return (lo + np.minimum(idx, len(cdf) - 1)).astype(np.float64)
 
     def fit(self, x: Floats) -> dict[str, Any]:
@@ -559,7 +560,7 @@ class NegativeBinomial(Family):
 
     def draw(self, stream: RowStream, row_start: int, n: int, params: Mapping[str, Any]) -> Floats:
         lo, cdf = _negbin_cdf(_p(params, "r"), _p(params, "p"))
-        idx = np.searchsorted(cdf, _u(stream, row_start, n), side="right")
+        idx = cdf_search(cdf, _u(stream, row_start, n))
         return (lo + np.minimum(idx, len(cdf) - 1)).astype(np.float64)
 
     def fit(self, x: Floats) -> dict[str, Any]:

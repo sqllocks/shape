@@ -19,6 +19,7 @@ from shape.generation import kernel_ops
 from shape.generation.arrowkit import array as arrow_array
 from shape.generation.arrowkit import scalar as arrow_scalar
 from shape.generation.engine import ArrayKeys, Engine, KeyPool, RangeKeys
+from shape.generation.kernel_relational import cdf_search
 from shape.generation.rng import RowStream
 from shape.generation.strategy_kit import StrategyError, where
 from shape.plugins.api.v1 import GenerationContext
@@ -100,17 +101,26 @@ def _zipf_head(alpha: float, head: int) -> Floats:
     return cum
 
 
+@lru_cache(maxsize=4)
+def _zipf_unit(alpha: float, head: int) -> Floats:
+    """:func:`_zipf_head` divided by its last entry: the cumulative table of the truncated law."""
+    cum = _zipf_head(alpha, head)
+    unit: Floats = cum / cum[-1]
+    unit.flags.writeable = False
+    return unit
+
+
 @lru_cache(maxsize=8)
 def _zipf_table(alpha: float, pool: int) -> kernel_ops.ZipfTable:
-    cum = _zipf_head(alpha, pool)
-    return kernel_ops.zipf_table(cum / cum[-1])
+    return kernel_ops.zipf_table(_zipf_unit(alpha, pool))
 
 
 def zipf_draw(
     stream: RowStream, row_start: int, n_rows: int, pool: int, alpha: float
 ) -> Ints | None:
-    """:func:`zipf_index` of the uniforms of ``stream`` (word 0 of each row) in one native pass, or
-    ``None`` for a pool beyond ``ZIPF_HEAD`` (drawn the long way). The same rows, bit for bit."""
+    """:func:`zipf_index` of the uniforms of ``stream`` (word 0 of each row) in one native pass
+    (the uniforms are never made as an array), or ``None`` for a pool beyond ``ZIPF_HEAD`` (drawn
+    the long way). The same rows, bit for bit."""
     if pool > ZIPF_HEAD:
         return None
     return kernel_ops.zipf_draw(_zipf_table(alpha, pool), stream, row_start, n_rows)
@@ -123,8 +133,7 @@ def zipf_index(u: Floats, pool: int, alpha: float) -> Ints:
     head = min(pool, ZIPF_HEAD)
     cum = _zipf_head(alpha, head)
     if pool <= ZIPF_HEAD:
-        k = np.searchsorted(cum / cum[-1], u, side="right")
-        return np.minimum(k, pool - 1).astype(np.int64)
+        return np.minimum(cdf_search(_zipf_unit(alpha, head), u), pool - 1)
     low, high = ZIPF_HEAD + 0.5, pool + 0.5
     if alpha == 1.0:
         tail = float(np.log(high / low))
@@ -132,7 +141,7 @@ def zipf_index(u: Floats, pool: int, alpha: float) -> Ints:
         tail = float((low ** (1 - alpha) - high ** (1 - alpha)) / (alpha - 1))
     target = u * (cum[-1] + tail)
     in_head = target < cum[-1]
-    out = np.minimum(np.searchsorted(cum, target, side="right"), head - 1)
+    out = np.minimum(cdf_search(cum, target), head - 1)
     rest = np.maximum(target - cum[-1], 0.0)
     if alpha == 1.0:
         x = low * np.exp(rest)

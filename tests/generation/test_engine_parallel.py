@@ -428,3 +428,14 @@ def test_a_failed_build_is_not_remembered_and_can_be_retried():
     with pytest.raises(RuntimeError):
         engine.cached("k", boom)
     assert engine.cached("k", lambda: 3) == 3
+
+
+def test_the_result_lists_tables_in_level_order_whatever_order_they_are_made_in(
+    monkeypatch,
+) -> None:
+    from shape.generation.engine import dependency_levels
+
+    monkeypatch.delenv(THREADS_ENV, raising=False)
+    rows = {"customer": 40, "order": 120, "order_line": 300}
+    result = Engine(schema(rows), strategies=STRATEGIES).generate()
+    assert list(result.tables) == [n for level in dependency_levels(result.schema) for n in level]

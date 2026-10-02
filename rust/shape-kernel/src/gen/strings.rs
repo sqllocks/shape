@@ -40,10 +40,20 @@ pub fn build_utf8(
     n: usize,
     f: &(impl Fn(usize, &mut Vec<u8>) -> bool + Sync),
 ) -> Result<StringArray, String> {
+    build_utf8_sized(n, 16, f)
+}
+
+/// :func:`build_utf8` for rows of about `row_bytes` bytes each: the buffers are sized for that, so
+/// a run of rows does not grow (and copy) its output several times.
+pub fn build_utf8_sized(
+    n: usize,
+    row_bytes: usize,
+    f: &(impl Fn(usize, &mut Vec<u8>) -> bool + Sync),
+) -> Result<StringArray, String> {
     let too_big = || String::from("string output exceeds 2 GiB: use smaller chunks");
     if n < PAR_MIN_ROWS || !crate::can_par() {
         // One pass straight into the final buffers.
-        let mut values: Vec<u8> = Vec::with_capacity(n * 16);
+        let mut values: Vec<u8> = Vec::with_capacity(n * row_bytes);
         let mut offsets: Vec<i32> = Vec::with_capacity(n + 1);
         let mut validity = Validity(None);
         offsets.push(0);
@@ -61,7 +71,7 @@ pub fn build_utf8(
         .into_par_iter()
         .map(|t| {
             let (lo, hi) = (t * TASK_ROWS, ((t + 1) * TASK_ROWS).min(n));
-            let mut bytes: Vec<u8> = Vec::with_capacity((hi - lo) * 16);
+            let mut bytes: Vec<u8> = Vec::with_capacity((hi - lo) * row_bytes);
             let mut ends: Vec<usize> = Vec::with_capacity(hi - lo);
             let mut valid = Validity(None);
             for i in lo..hi {
@@ -142,6 +152,17 @@ impl<'a> Col<'a> {
 
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+
+    /// About how many bytes a row of this column adds to a string built from it: the mean length of
+    /// a string column, or `width` (at least 6) for an integer one.
+    pub fn row_bytes(&self, width: usize) -> usize {
+        let n = self.len().max(1);
+        match self {
+            Col::S32(a) => a.value_data().len() / n + 1,
+            Col::S64(a) => a.value_data().len() / n + 1,
+            Col::Int(_) => width.max(6),
+        }
     }
 
     pub fn null_count(&self) -> usize {
@@ -243,7 +264,12 @@ pub fn template(
     // Most inputs have no nulls: then no row needs the per-column check.
     let may_be_null = slots.iter().any(|(c, _)| cols[*c].null_count() > 0);
     let literals: Vec<&[u8]> = literals.iter().map(String::as_bytes).collect();
-    build_utf8(n_rows, &|i, buf| {
+    let row_bytes = literals.iter().map(|l| l.len()).sum::<usize>()
+        + slots
+            .iter()
+            .map(|(c, w)| cols[*c].row_bytes(*w))
+            .sum::<usize>();
+    build_utf8_sized(n_rows, row_bytes, &|i, buf| {
         if may_be_null && slots.iter().any(|(c, _)| cols[*c].is_null(i)) {
             return false;
         }
@@ -260,7 +286,11 @@ pub fn template(
 /// null makes the row null. When every column is null and `skip_nulls` is set the row is "".
 pub fn join(cols: &[Col<'_>], sep: &str, skip_nulls: bool) -> Result<StringArray, String> {
     let n = check_lengths(cols)?;
-    build_utf8(n, &|i, buf| {
+    let row_bytes = cols
+        .iter()
+        .map(|c| c.row_bytes(0) + sep.len())
+        .sum::<usize>();
+    build_utf8_sized(n, row_bytes, &|i, buf| {
         let mut first = true;
         for c in cols {
             if c.is_null(i) {
@@ -365,6 +395,11 @@ pub fn pool_take(pool: &Col<'_>, indices: &arrow_array::Int64Array) -> Result<St
             }
         }
     }
+    if let Col::S32(entries) = pool {
+        if entries.null_count() == 0 && indices.null_count() == 0 {
+            return gather_utf8(entries, indices.values());
+        }
+    }
     build_utf8(indices.len(), &|i, buf| {
         if indices.is_null(i) {
             return false;
@@ -376,6 +411,33 @@ pub fn pool_take(pool: &Col<'_>, indices: &arrow_array::Int64Array) -> Result<St
         pool.write(p, 0, buf);
         true
     })
+}
+
+/// `entries[indices[i]]` for every row, when neither has a null and every index is in range: the
+/// output is sized first (one pass over the lengths) and then filled, with no per-row growth.
+fn gather_utf8(entries: &GenericStringArray<i32>, indices: &[i64]) -> Result<StringArray, String> {
+    let offsets = entries.value_offsets();
+    let data = entries.value_data();
+    let span = |p: usize| (offsets[p] as usize, offsets[p + 1] as usize);
+    let total: usize = indices
+        .iter()
+        .map(|&i| {
+            let (lo, hi) = span(i as usize);
+            hi - lo
+        })
+        .sum();
+    if i32::try_from(total).is_err() {
+        return Err("string output exceeds 2 GiB: use smaller chunks".into());
+    }
+    let mut values: Vec<u8> = Vec::with_capacity(total);
+    let mut ends: Vec<i32> = Vec::with_capacity(indices.len() + 1);
+    ends.push(0);
+    for &i in indices {
+        let (lo, hi) = span(i as usize);
+        values.extend_from_slice(&data[lo..hi]);
+        ends.push(values.len() as i32); // at most `total`, which fits
+    }
+    finish_utf8(ends, values, None)
 }
 
 const HEX: &[u8; 16] = b"0123456789abcdef";

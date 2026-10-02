@@ -39,6 +39,7 @@ from .gen import zipf_guide as zipf_guide
 from .hashing import hash_array as hash_array
 from .profile import ProfileState as ProfileState
 from .relational import cap_per_parent as cap_per_parent
+from .relational import cdf_search as cdf_search
 from .relational import dense_rows as dense_rows
 from .relational import first_flags as first_flags
 from .relational import group_order as group_order

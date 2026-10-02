@@ -53,6 +53,7 @@ Conversions (shared by both implementations):
 | `first_flags(codes)` | | `bool`: true on the first row of each non-negative group code (`0 <= code < len`); a negative code is never first |
 | `group_order(codes, keys)` | | `(rank, size, next)`, all int64: the 0-based place of each row in its group sorted by `keys` (ties keep row order), the group's size, and the row that follows it (-1 for the last); a negative code gives `(-1, 0, -1)` |
 | `dense_rows(keys, start, size)` | | `int64` row of the sequence key `start, start + 1, ...` (`size` rows) that holds each key; null for a null key or one outside the sequence |
+| `cdf_search(cdf, u)` | | `int64`: for each float64 `u`, how many entries of the ascending float64 table `cdf` are `<= u` (NumPy's `searchsorted(cdf, u, side="right")`, a NaN gives `len(cdf)`): the draw of a Zipf foreign key or a Poisson count from its cumulative table |
 | `group_sums(keys, values, start, size)` | | `(sums, counts)`: per row of that sequence, the sum (the type of `values`, int64 or float64) and the count of the non-null `values` of the child rows whose key it is; added in row order (a float sum is the sequential one), a null or unknown key is skipped, an integer sum wraps |
 | `scd2_offsets(codes, total_days, min_gap, k0, k1)` | per group | int64 day offsets of SCD type 2 effective dates (see below); -1 for a negative code |
 | `cap_per_parent(indices, pool, max_per_parent, k0, k1)` | up to 64 per moved row | int64 parent indices with at most `max_per_parent` rows each (see below) |

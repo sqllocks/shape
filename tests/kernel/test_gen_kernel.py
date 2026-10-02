@@ -203,6 +203,28 @@ def test_pool_take(nat, pa_type):
             m.pool_take(pa.array([1, 2], pa.int64()), pa.array([0], pa.int64()))
 
 
+@pytest.mark.parametrize("n", [0, 1, 7, 5_000, 32_767, 32_768, 70_000])
+@pytest.mark.parametrize(
+    "pool_kind", ["plain", "empty strings and unicode", "pool with a null", "slice"]
+)
+def test_pool_take_gathers_the_entries(nat, n, pool_kind):
+    """Pools without nulls take the sized gather path; the others the general one. Every result is
+    the pool's entry at each index, the same as the twin's."""
+    rng = np.random.default_rng(n + 3)
+    entries = [f"e{k}" * (1 + k % 5) for k in range(40)]
+    if pool_kind == "empty strings and unicode":
+        entries[3], entries[9], entries[12] = "", "日本語", "é" * 7
+    if pool_kind == "pool with a null":
+        entries[5] = None
+    pool = pa.array(entries, type=pa.string())
+    if pool_kind == "slice":
+        pool = pa.array(["skipped", *entries, "tail"], type=pa.string()).slice(1, len(entries))
+    idx = pa.array(rng.integers(0, len(entries), n), type=pa.int64())
+    got = nat.pool_take(pool, idx)
+    _same(got, ref.pool_take(pool, idx))
+    assert pa.array(got).to_pylist() == [entries[i] for i in idx.to_pylist()]
+
+
 def test_template_strings(nat):
     names = pa.array(["ann", None, "bob", "é"], type=pa.string())
     big = pa.array(["x", "y", "z", "w"], type=pa.large_string())

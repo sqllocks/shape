@@ -335,6 +335,19 @@ leading business rules are repaired on a helper thread once the tables they name
 arrays and reads them back through `shape.generation.arrowkit`, which never imports pandas (pyarrow's
 own `array`, `to_numpy` and `scalar` do, about 0.16 s of start-up).
 
+Two rules about business-rule repair keep a table from waiting for the post-passes when it need not
+(none changes a value; tests compare each with the plain order):
+
+* A business rule whose comparison `fix_rule` never changes (`>=` or `<=` or `==` between two columns
+  of one table, `<` or `==` across tables) is only validated, so it does not hold its table back
+  for the post-passes (`can_repair`).
+* A table whose every rule is *row-local* is repaired chunk by chunk as the chunk is made, and is
+  final at generation (`plan_streamed_rules`): a rule reads the row it repairs and the row its `via`
+  key names in a table of an earlier level, and draws from a row-addressed stream. A table
+  qualifies when no `computed` or correlated column changes it later, the compute phase reads none
+  of the columns it rewrites, and no rule of another table reads a column it rewrites before it, or
+  rewrites a column it reads after it (those rules see the repaired values, as in the plain order).
+
 `import shape` sets Arrow's allocator for the whole process, in one place (`shape._process.configure`),
 so the command line and the Python API behave alike. Arrow's default pool (mimalloc) reserves a large
 arena with `MADV_HUGEPAGE` at its first allocation, which on a virtual machine with transparent huge
