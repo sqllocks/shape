@@ -20,6 +20,7 @@ from shape.generation import kernel_ops
 from shape.generation.arrowkit import array as arrow_array
 from shape.generation.arrowkit import fill_null as arrow_fill_null
 from shape.generation.arrowkit import to_numpy as arrow_numpy
+from shape.generation.engine import RangeKeys
 from shape.generation.fanout import FanOut
 from shape.generation.kernel_relational import cap_per_parent
 from shape.generation.strategy_kit import StrategyError, require, stream, where
@@ -27,6 +28,7 @@ from shape.plugins.api.v1 import GenerationContext
 
 from ._relational import (
     BLOCK_ROWS,
+    ZIPF_HEAD,
     Ints,
     engine_of,
     parent_pool,
@@ -36,6 +38,7 @@ from ._relational import (
     whole_column,
     zipf_draw,
     zipf_index,
+    zipf_table,
 )
 
 SHAPE_API = "1.0"
@@ -126,8 +129,38 @@ class ForeignKey:
         if distribution == "pareto" and params.get("max_per_parent") is not None:
             index = self._capped(distribution, params, len(pool), ctx)
             return pool.take(index[ctx.row_start : ctx.row_start + ctx.n_rows])
+        if isinstance(pool, RangeKeys):
+            keys = self._range_keys(distribution, params, pool, ctx)
+            if keys is not None:
+                return keys
         index = _indices(distribution, params, len(pool), ctx.row_start, ctx.n_rows, ctx)
         return pool.take(index)
+
+    @staticmethod
+    def _range_keys(
+        distribution: str, params: Mapping[str, Any], pool: RangeKeys, ctx: GenerationContext
+    ) -> pa.Array | None:
+        """The keys of a uniform or Zipf draw over a sequence key, made in one native call (the
+        index draw and ``start + index * step`` together), or ``None`` for any other case."""
+        if not (-(2**63) <= pool.start < 2**63 and -(2**63) <= pool.step < 2**63):
+            return None
+        if distribution == "zipf":
+            alpha = positive(params, "alpha", 1.5, ctx)
+            if pool.count > ZIPF_HEAD:
+                return None
+            return kernel_ops.zipf_keys(
+                zipf_table(alpha, pool.count),
+                stream(ctx, "fk"),
+                ctx.row_start,
+                ctx.n_rows,
+                pool.start,
+                pool.step,
+            )
+        if distribution in ("pareto",):
+            return None
+        return kernel_ops.uniform_keys(
+            stream(ctx, "fk"), ctx.row_start, ctx.n_rows, pool.count, pool.start, pool.step
+        )
 
     def prepare(self, spec: Mapping[str, Any], ctx: GenerationContext) -> Callable[[], None] | None:
         """The whole-table cap of a ``pareto`` key with ``max_per_parent`` (see :meth:`_capped`),

@@ -417,3 +417,48 @@ def test_kernel_ops_lognormal_declines_scales_it_cannot_round_like_numpy():
     assert kernel_ops.lognormal(stream, 0, 10, 1.0, 1.0, None, None, 23) is None
     out = kernel_ops.lognormal(stream, 0, 10, 1.0, 1.0, None, None, 2)
     assert out is not None and out.dtype == np.float64 and len(out) == 10
+
+
+# ------------------------------------------------------------------ range_values and keyed draws
+
+
+@pytest.mark.parametrize(
+    ("start", "step", "row_start", "n"),
+    [
+        (1, 1, 0, 0),
+        (1, 1, 0, 10),
+        (100, 7, 5, 1000),
+        (-5, -3, 10**9, 300),
+        (2**62, 3, 7, 40),  # wraps like int64 arithmetic
+        (0, 0, 5, 5),
+        (-(2**63), 1, 0, 3),
+    ],
+)
+def test_range_values_equal_numpy_int64_arithmetic(nat, start, step, row_start, n):
+    idx = np.arange(row_start, row_start + n, dtype=np.int64)
+    with np.errstate(over="ignore"):
+        want = np.int64(start) + idx * np.int64(step)
+    got = nat.range_values(start, step, row_start, n)
+    assert pa.array(got).type == pa.int64()
+    assert np.array_equal(np.asarray(pa.array(got).to_numpy()), want)
+    _same(got, ref.range_values(start, step, row_start, n))
+
+
+def test_keyed_uniform_and_zipf_draws_are_the_affine_map_of_the_plain_draws(nat):
+    k0, k1 = KEYS[3]
+    cum = np.cumsum(np.arange(1, 501, dtype=np.float64) ** -1.2)
+    cum = pa.array(cum / cum[-1], type=pa.float64())
+    guide = nat.zipf_guide(cum)
+    for start, step in [(1, 1), (1000, 5), (-7, -2), (0, 3), (2**62, 3)]:
+        plain = np.asarray(pa.array(nat.uniform_index(k0, k1, 9, 4000, 500)).to_numpy())
+        keyed = nat.uniform_index(k0, k1, 9, 4000, 500, 1, 0, start, step)
+        with np.errstate(over="ignore"):
+            want = np.int64(start) + plain * np.int64(step)
+        assert np.array_equal(np.asarray(pa.array(keyed).to_numpy()), want)
+        _same(keyed, ref.uniform_index(k0, k1, 9, 4000, 500, 1, 0, start, step))
+        zplain = np.asarray(pa.array(nat.zipf_draw(cum, guide, k0, k1, 9, 4000)).to_numpy())
+        zkeyed = nat.zipf_draw(cum, guide, k0, k1, 9, 4000, start, step)
+        with np.errstate(over="ignore"):
+            zwant = np.int64(start) + zplain * np.int64(step)
+        assert np.array_equal(np.asarray(pa.array(zkeyed).to_numpy()), zwant)
+        _same(zkeyed, ref.zipf_draw(cum, guide, k0, k1, 9, 4000, start, step))

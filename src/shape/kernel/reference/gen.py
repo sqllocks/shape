@@ -205,6 +205,14 @@ def _index(words: npt.NDArray[np.uint64], size: int) -> npt.NDArray[np.int64]:
     return np.minimum((u * float(size)).astype(np.int64), size - 1)
 
 
+def _keys(indices: npt.NDArray[np.int64], start: int, step: int) -> npt.NDArray[np.int64]:
+    """``start + indices * step`` in wrapping int64 arithmetic (a no-op for ``0, 1``)."""
+    if start == 0 and step == 1:
+        return indices
+    with np.errstate(over="ignore"):
+        return np.int64(start) + indices * np.int64(step)
+
+
 def uniform_index(
     k0: int,
     k1: int,
@@ -213,12 +221,19 @@ def uniform_index(
     size: int,
     per_row: int = 1,
     slot: int = 0,
+    start: int = 0,
+    step: int = 1,
 ) -> pa.Array:
     _slot(per_row, slot, 1)
     if size < 1:
         raise ValueError("size must be positive")
     w = _words(k0, k1, row_start, n_rows, per_row).reshape(n_rows, per_row)
-    return arrow_array(_index(w[:, slot], size), type=pa.int64())
+    return arrow_array(_keys(_index(w[:, slot], size), start, step), type=pa.int64())
+
+
+def range_values(start: int, step: int, row_start: int, n_rows: int) -> pa.Array:
+    rows = np.arange(row_start, row_start + n_rows, dtype=np.int64)
+    return arrow_array(_keys(rows, start, step), type=pa.int64())
 
 
 def pool_pick(pool: Any, k0: int, k1: int, row_start: int, n_rows: int) -> pa.Array:
@@ -291,7 +306,16 @@ def zipf_guide(cum: Any) -> pa.Array:
     return arrow_array(np.zeros(1024, dtype=np.int64), type=pa.int64())
 
 
-def zipf_draw(cum: Any, guide: Any, k0: int, k1: int, row_start: int, n_rows: int) -> pa.Array:
+def zipf_draw(
+    cum: Any,
+    guide: Any,
+    k0: int,
+    k1: int,
+    row_start: int,
+    n_rows: int,
+    start: int = 0,
+    step: int = 1,
+) -> pa.Array:
     values = _cum(cum)
     table = np.asarray(arrow_numpy(arrow_array(guide)), dtype=np.int64)
     if (
@@ -302,7 +326,8 @@ def zipf_draw(cum: Any, guide: Any, k0: int, k1: int, row_start: int, n_rows: in
         raise ValueError("cum must be non-empty and guide a power-of-two table of its own")
     u = _unit(_words(k0, k1, row_start, n_rows, 1))
     found = np.searchsorted(values, u, side="right")
-    return arrow_array(np.minimum(found, len(values) - 1).astype(np.int64), type=pa.int64())
+    drawn = np.minimum(found, len(values) - 1).astype(np.int64)
+    return arrow_array(_keys(drawn, start, step), type=pa.int64())
 
 
 # ---------------------------------------------------------------- strings

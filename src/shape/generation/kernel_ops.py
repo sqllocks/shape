@@ -7,10 +7,10 @@ depend on how the rows are chunked.
 
 Stable interface: ``AliasTable``, ``alias_table``, ``alias_draw``, ``alias_pick_pool``,
 ``alias_pick_values``, ``pool_pick``, ``ZipfTable``, ``zipf_table``, ``zipf_draw``,
-``uniform_index``, ``lognormal``, ``compose_strings`` (``PoolPiece``, ``IntPiece``,
-``ColumnPiece``), ``pool_take``, ``uuid4``, ``random_strings``, ``template_strings``,
-``join_strings``, ``string_case``, ``day_weights``, ``hour_weights_peaks`` and
-``temporal_sample``.
+``uniform_index``, ``uniform_keys``, ``zipf_keys``, ``range_values``, ``lognormal``,
+``compose_strings`` (``PoolPiece``, ``IntPiece``, ``ColumnPiece``), ``pool_take``, ``uuid4``,
+``random_strings``, ``template_strings``, ``join_strings``, ``string_case``, ``day_weights``,
+``hour_weights_peaks`` and ``temporal_sample``.
 """
 
 from __future__ import annotations
@@ -119,6 +119,34 @@ def zipf_draw(
     clipped to the last row, for the uniform ``u`` of word 0 of each row."""
     out = get_kernel().zipf_draw(table.cum, table.guide, stream.k0, stream.k1, row_start, n_rows)
     return to_numpy(out).astype(np.int64, copy=False)
+
+
+def zipf_keys(
+    table: ZipfTable, stream: RowStream, row_start: int, n_rows: int, start: int, step: int
+) -> pa.Array:
+    """:func:`zipf_draw` as the keys ``start + row * step`` of a sequence primary key, as an
+    ``int64`` Arrow array, in one call."""
+    return _arrow(
+        get_kernel().zipf_draw(
+            table.cum, table.guide, stream.k0, stream.k1, row_start, n_rows, start, step
+        )
+    )
+
+
+def uniform_keys(
+    stream: RowStream, row_start: int, n_rows: int, size: int, start: int, step: int
+) -> pa.Array:
+    """:func:`uniform_index` as the keys ``start + row * step`` of a sequence primary key, as an
+    ``int64`` Arrow array, in one call."""
+    return _arrow(
+        get_kernel().uniform_index(stream.k0, stream.k1, row_start, n_rows, size, 1, 0, start, step)
+    )
+
+
+def range_values(start: int, step: int, row_start: int, n_rows: int) -> pa.Array:
+    """``start + (row_start + i) * step`` for ``i`` in ``0 .. n_rows - 1`` (a sequence column), as
+    an ``int64`` Arrow array. ``start`` and ``step`` must be int64 values."""
+    return _arrow(get_kernel().range_values(start, step, row_start, n_rows))
 
 
 def uniform_index(

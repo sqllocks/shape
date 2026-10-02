@@ -23,6 +23,8 @@ from .address import AddressPack, AddressReference, GeneratedAddress
 
 SHAPE_API = "1.0"
 
+_INT64_MIN, _INT64_MAX = -(2**63), 2**63 - 1
+
 
 class Constant:
     """``spec['value']`` repeated ``n_rows`` times."""
@@ -40,6 +42,8 @@ class Sequence:
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         start, step = int(spec.get("start", 1)), int(spec.get("step", 1))
+        if _INT64_MIN <= start <= _INT64_MAX and _INT64_MIN <= step <= _INT64_MAX:
+            return kernel_ops.range_values(start, step, ctx.row_start, ctx.n_rows)
         index = np.arange(ctx.row_start, ctx.row_start + ctx.n_rows, dtype=np.int64)
         return arrow_array(start + index * step)
 

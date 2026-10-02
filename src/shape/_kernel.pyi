@@ -31,10 +31,28 @@ def alias_sample(
     slot: int = 0,
 ) -> Any: ...
 def zipf_guide(cum: Any) -> Any: ...
-def zipf_draw(cum: Any, guide: Any, k0: int, k1: int, row_start: int, n_rows: int) -> Any: ...
-def uniform_index(
-    k0: int, k1: int, row_start: int, n_rows: int, size: int, per_row: int = 1, slot: int = 0
+def zipf_draw(
+    cum: Any,
+    guide: Any,
+    k0: int,
+    k1: int,
+    row_start: int,
+    n_rows: int,
+    start: int = 0,
+    step: int = 1,
 ) -> Any: ...
+def uniform_index(
+    k0: int,
+    k1: int,
+    row_start: int,
+    n_rows: int,
+    size: int,
+    per_row: int = 1,
+    slot: int = 0,
+    start: int = 0,
+    step: int = 1,
+) -> Any: ...
+def range_values(start: int, step: int, row_start: int, n_rows: int) -> Any: ...
 def lognormal_values(
     k0: int,
     k1: int,

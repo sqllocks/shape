@@ -224,8 +224,12 @@ fn zipf_guide(py: Python<'_>, cum: PyArray) -> PyResult<PyArray> {
 }
 
 /// One parent row per row from the Zipf draw of word 0 of each row of the stream `(k0, k1)`: the
-/// index of the first entry of `cum` that is greater than the uniform, clipped to the last.
+/// index of the first entry of `cum` that is greater than the uniform, clipped to the last. With
+/// `start` and `step` the result is `start + index * step`, the key a sequence primary key gives
+/// that row.
 #[pyfunction]
+#[pyo3(signature = (cum, guide, k0, k1, row_start, n_rows, start = 0, step = 1))]
+#[allow(clippy::too_many_arguments)]
 fn zipf_draw(
     py: Python<'_>,
     cum: PyArray,
@@ -234,6 +238,8 @@ fn zipf_draw(
     k1: u64,
     row_start: u64,
     n_rows: usize,
+    start: i64,
+    step: i64,
 ) -> PyResult<PyArray> {
     let (cum, _) = cum.into_inner();
     let values = f64_slice(&cum, "cum")?;
@@ -248,7 +254,11 @@ fn zipf_draw(
             "cum must be non-empty and guide a power-of-two table of its own".into(),
         ));
     }
-    let v = py.detach(|| zipf::draw(values, g, [k0, k1], row_start, n_rows));
+    let v = py.detach(|| {
+        let mut v = zipf::draw(values, g, [k0, k1], row_start, n_rows);
+        to_keys(&mut v, start, step);
+        v
+    });
     Ok(out(Arc::new(Int64Array::from(v))))
 }
 
@@ -370,10 +380,21 @@ fn lognormal_values(
     Ok(Some(out(Arc::new(Float64Array::from(v)))))
 }
 
+/// `start + index * step` for every index (wrapping, as int64 arithmetic in NumPy does): the key
+/// of a sequence primary key from the row it sits in. A no-op for `start = 0, step = 1`.
+fn to_keys(indices: &mut [i64], start: i64, step: i64) {
+    if start != 0 || step != 1 {
+        for v in indices.iter_mut() {
+            *v = start.wrapping_add(v.wrapping_mul(step));
+        }
+    }
+}
+
 /// One index in `0..size` per row: `min(floor(u * size), size - 1)` for the uniform `u` of word
-/// `slot` of each row's `per_row` words (the draw of a uniform key or pool pick).
+/// `slot` of each row's `per_row` words (the draw of a uniform key or pool pick). With `start` and
+/// `step` the result is `start + index * step`, the key a sequence primary key gives that row.
 #[pyfunction]
-#[pyo3(signature = (k0, k1, row_start, n_rows, size, per_row = 1, slot = 0))]
+#[pyo3(signature = (k0, k1, row_start, n_rows, size, per_row = 1, slot = 0, start = 0, step = 1))]
 #[allow(clippy::too_many_arguments)]
 fn uniform_index(
     py: Python<'_>,
@@ -384,13 +405,30 @@ fn uniform_index(
     size: i64,
     per_row: usize,
     slot: usize,
+    start: i64,
+    step: i64,
 ) -> PyResult<PyArray> {
     check_slot(per_row, slot, 1)?;
     if size < 1 {
         return Err(err("size must be positive".into()));
     }
-    let v = py.detach(|| rng::uniform_index([k0, k1], row_start, n_rows, size, per_row, slot));
+    let v = py.detach(|| {
+        let mut v = rng::uniform_index([k0, k1], row_start, n_rows, size, per_row, slot);
+        to_keys(&mut v, start, step);
+        v
+    });
     Ok(out(Arc::new(Int64Array::from(v))))
+}
+
+/// `start + (row_start + i) * step` for `i` in `0..n_rows` (wrapping): a sequence column.
+#[pyfunction]
+fn range_values(py: Python<'_>, start: i64, step: i64, row_start: i64, n_rows: usize) -> PyArray {
+    let v = py.detach(|| {
+        (0..n_rows as i64)
+            .map(|i| start.wrapping_add(row_start.wrapping_add(i).wrapping_mul(step)))
+            .collect::<Vec<i64>>()
+    });
+    out(Arc::new(Int64Array::from(v)))
 }
 
 /// `pool[i]` for an index `i` drawn per row as in `uniform_index` over the pool's length (the
@@ -781,6 +819,7 @@ pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(zipf_guide, m)?)?;
     m.add_function(wrap_pyfunction!(zipf_draw, m)?)?;
     m.add_function(wrap_pyfunction!(lognormal_values, m)?)?;
+    m.add_function(wrap_pyfunction!(range_values, m)?)?;
     m.add_function(wrap_pyfunction!(uniform_index, m)?)?;
     m.add_function(wrap_pyfunction!(pool_pick, m)?)?;
     m.add_function(wrap_pyfunction!(alias_pool, m)?)?;

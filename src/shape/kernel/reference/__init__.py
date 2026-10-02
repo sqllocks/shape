@@ -35,6 +35,7 @@ from .gen import philox_words as philox_words
 from .gen import pool_pick as pool_pick
 from .gen import pool_take as pool_take
 from .gen import random_strings as random_strings
+from .gen import range_values as range_values
 from .gen import string_case as string_case
 from .gen import template_strings as template_strings
 from .gen import temporal_sample as temporal_sample

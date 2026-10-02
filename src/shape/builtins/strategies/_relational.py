@@ -115,6 +115,12 @@ def _zipf_table(alpha: float, pool: int) -> kernel_ops.ZipfTable:
     return kernel_ops.zipf_table(_zipf_unit(alpha, pool))
 
 
+def zipf_table(alpha: float, pool: int) -> kernel_ops.ZipfTable:
+    """The cumulative table of the Zipf law (exponent ``alpha``) over ``pool`` parents, with its
+    guide, kept for reuse (``pool`` must not exceed ``ZIPF_HEAD``)."""
+    return _zipf_table(alpha, pool)
+
+
 def zipf_draw(
     stream: RowStream, row_start: int, n_rows: int, pool: int, alpha: float
 ) -> Ints | None:

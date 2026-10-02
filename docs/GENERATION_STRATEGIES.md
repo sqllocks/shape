@@ -55,6 +55,8 @@ schema, `row_counts`, `key_pool(table)`) and `column_def` (the column: `type`, `
 | `shape.generation.kernel_ops` | `alias_table`, `alias_draw` | weighted categorical draws (two words per row) |
 | `shape.generation.kernel_ops` | `alias_pick_pool`, `alias_pick_values` | the same draw taken from a string pool or a float64 array, in one call |
 | `shape.generation.kernel_ops` | `uniform_index`, `pool_pick` | a uniform index in `[0, size)` per row, or the pool entry it picks (one word per row) |
+| `shape.generation.kernel_ops` | `uniform_keys`, `zipf_keys`, `range_values` | the same draws as the keys of a sequence primary key (`start + index * step`), and a sequence column, as int64 Arrow arrays in one call |
+| `shape.generation.kernel_ops` | `lognormal` | `exp(mu + sigma * z)` clipped and rounded in one pass, NumPy's values bit for bit (`None` when the kernel cannot) |
 | `shape.generation.kernel_ops` | `compose_strings` (`PoolPiece`, `IntPiece`, `ColumnPiece`) | pool picks, drawn integers and columns assembled into one string per row in a single call |
 | | `ZipfTable`, `zipf_table`, `zipf_draw` | Zipf-distributed parent rows (one word per row); `zipf_table(cum)` keeps the table and its guide, which is worth reusing |
 | | `pool_take`, `template_strings`, `join_strings`, `string_case` | string assembly |
