@@ -398,7 +398,8 @@ def _keys(p: _Prepared) -> tuple[pa.Array, np.ndarray[Any, Any]]:
     if p.key_counts is not None:
         return p.key_counts
     counts = pc.value_counts(p.non_null.combine_chunks() if p.non_null.num_chunks else pa.array([]))
-    return keys_from_counts(counts.field("values"), counts.field("counts").to_numpy())
+    p.key_counts = keys_from_counts(counts.field("values"), counts.field("counts").to_numpy())
+    return p.key_counts
 
 
 def keys_from_counts(
