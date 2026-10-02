@@ -23,6 +23,16 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   storm switch; readings per sensor and the domains' own column names are understood. Harness:
   `benchmarks/vs_spindle/simulation_1to1/verify_patterns.py` (parity verifier, negative controls,
   allow-list probes).
+- Landing layout (`docs/LANDING.md`): `--path-template`, `--batch-date` and `--table-format` on
+  `shape generate`, `shape continue` and `shape chaos` write one file per table per business date
+  (`{table}/ingest_date={date}/{table}_{yyyymmdd}.{ext}`) with a format per table; the file sinks
+  take `path_template` and `batch_date`. Output without the options is unchanged.
+- Daily batches (`docs/INCREMENTAL.md`): `shape continue --daily-rows TABLE=N --start-date D
+  --batch-date D [--end-date D]` and `shape.generation.batches.BatchGenerator` write one day's new
+  rows with stable keys and foreign keys into earlier days, regenerable alone byte for byte.
+- `shape chaos` and `shape.chaos.groundtruth` (`docs/CHAOS.md`): named corruptions (`duplicates`,
+  `orphan_keys`, `date_shift`, `negative_amounts`, `case_whitespace`, `pii_fill`, `type_change`,
+  `null_creep`) with a rate and a seed, and a JSON Lines ground-truth log of every change.
 - `shape stream` (`docs/EMIT.md`): one table's rows as events in event-time order, on the `shape emit`
   runtime (same options, sinks, formats and delivery guarantees; `--table` required, `-t -s -m`,
   `--rate` 10, `--max-events` is the earliest N events). The flat-event encoder is vectorised

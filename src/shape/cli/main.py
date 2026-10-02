@@ -615,6 +615,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.incremental import add_arguments as add_incremental_arguments
 
     add_incremental_arguments(sub)
+    from shape.cli.chaos import add_arguments as add_chaos_arguments
+
+    add_chaos_arguments(sub)
     from shape.cli.pack import add_arguments as add_pack_arguments
 
     add_pack_arguments(sub)
@@ -871,6 +874,10 @@ def _dispatch(argv):
         from shape.cli.incremental import run as run_incremental
 
         return _run(run_incremental, a)
+    if a.cmd == "chaos":
+        from shape.cli.chaos import run as run_chaos
+
+        return _run(run_chaos, a)
     if a.cmd == "pack":
         from shape.cli.pack import run as run_pack
 

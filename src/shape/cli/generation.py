@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from shape.generation.schema import GenSchema
 
+DEFAULT_TEMPLATE = "{table}/ingest_date={date}/{table}_{yyyymmdd}.{ext}"
 FORMATS = ("summary", "csv", "tsv", "jsonl", "parquet", "excel", "sql", "delta")
 SQL_DIALECTS = ("tsql", "tsql-fabric-warehouse", "postgres", "mysql")
 MODES = ("3nf", "star")
@@ -93,6 +94,9 @@ def add_arguments(sub: Any) -> None:
     dl = ge.add_argument_group("delta output (--format delta)")
     dl.add_argument("--delta-mode", choices=("overwrite", "append"), default="overwrite")
     dl.add_argument("--partition-by", metavar="COLUMN", action="append", help="repeatable")
+    from shape.cli.landing import add_landing_arguments
+
+    add_landing_arguments(ge, default_template=DEFAULT_TEMPLATE)
 
     de = sub.add_parser(
         "describe",
@@ -285,6 +289,12 @@ def _generate(a: argparse.Namespace, engine: Any) -> int:
 
     run = current()
     started = time.perf_counter()
+    from shape.cli.landing import landing_requested
+
+    if landing_requested(a) and a.format == "summary":
+        raise ValueError(
+            "the landing options write files: give --format (csv, parquet, jsonl, ...)"
+        )
     if a.format == "summary":
         result = engine.generate()
         seconds = time.perf_counter() - started
@@ -297,6 +307,8 @@ def _generate(a: argparse.Namespace, engine: Any) -> int:
         return 0
     if not a.output:
         raise ValueError(f"--format {a.format} writes files: give -o DIR")
+    if landing_requested(a):
+        return _generate_landing(a, engine, started)
     paths = write_engine(engine, a.format, a.output, **_sink_options(a))
     seconds = time.perf_counter() - started
     counts = {name: int(rows) for name, rows in engine.row_counts.items() if name in engine.order}
@@ -321,6 +333,44 @@ def _generate(a: argparse.Namespace, engine: Any) -> int:
     from shape.cli.lifecycle import exit_now
 
     exit_now(0)  # as the program, nothing is left to do: skip freeing the tables
+    return 0
+
+
+def _generate_landing(a: argparse.Namespace, engine: Any, started: float) -> int:
+    """``generate`` with a landing layout: the tables are generated whole, then each is written at
+    the path template for the batch date, in its own format."""
+    from shape.cli.landing import landing_options
+    from shape.generation.landing import write_landing
+    from shape.runlog import current
+
+    if a.format in ("delta", "summary"):
+        raise ValueError(f"--format {a.format} cannot be combined with a landing layout")
+    options = landing_options(a, DEFAULT_TEMPLATE)
+    result = engine.generate()
+    landed = write_landing(result.tables, a.output, default_format=a.format, **options)
+    seconds = time.perf_counter() - started
+    counts = {f.table: f.rows for f in landed}
+    current().set(rows=sum(counts.values()), tables=len(counts), files=len(landed))
+    if a.json:
+        _dump(
+            {
+                "format": a.format,
+                "output": str(a.output),
+                "batch_date": a.batch_date,
+                "files": [
+                    {"table": f.table, "format": f.format, "path": str(f.path), "rows": f.rows}
+                    for f in landed
+                ],
+                "counts": counts,
+                "seconds": round(seconds, 3),
+                "seed": engine.seed,
+            }
+        )
+    else:
+        print(
+            f"Landed {len(landed)} files under {a.output}: {sum(counts.values()):,} rows in "
+            f"{len(counts)} tables ({seconds:.2f}s)"
+        )
     return 0
 
 

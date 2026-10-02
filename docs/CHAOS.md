@@ -47,6 +47,83 @@ kinds: Sequence[str] | None = None, protect: Sequence[str] = ()) -> AnomalyResul
 This function is the only API a stream emitter needs. Nothing else in `shape.chaos` is required
 for `--anomaly-fraction`.
 
+## Targeted corruptions and the ground-truth log (`shape chaos`)
+
+The categories below are randomised: a scheduler decides what fires and each mutator picks its
+own rows. To corrupt a table in a known way and score a quality check against the answer, use named
+corruptions, each with a rate, and the **ground-truth log** they write.
+
+```
+shape chaos retail --scale small --seed 7 -o corrupted/ \
+    --corrupt duplicates=0.02@order \
+    --corrupt orphan_keys=0.01@order.customer_id \
+    --corrupt date_shift=0.03@order.order_date:days=14 \
+    --corrupt negative_amounts=0.02@order.order_total \
+    --corrupt case_whitespace=0.05@order.status \
+    --corrupt pii_fill=0.05@customer.email \
+    --corrupt type_change=1@order.shipping_address_id \
+    --corrupt null_creep=0.02@order.promotion_id:step=0.01
+```
+
+writes the corrupted tables to `corrupted/` and the log to `corrupted/_chaos_ground_truth.jsonl`.
+The tables are generated, or read from `--input DIR` (the files `shape generate` writes); the same
+landing options as `shape generate` (`--path-template`, `--batch-date`, `--table-format`, see
+[LANDING.md](LANDING.md)) write them in a dated layout, and then the log is
+`_chaos_ground_truth_YYYYMMDD.jsonl`. `--start-date D0 --batch-date D` sets the batch number to the
+days between them (or give `--batch N`), which is what a daily job does.
+
+A corruption is `KIND[=RATE][@TABLE[.COLUMN]][:OPT=V,...]`. `RATE` is the share of the table's rows
+changed, exactly `round(rows x rate)` (fewer when fewer rows can change). Without `@TABLE` it
+applies to every table it fits; without a column, to the columns it picks itself.
+
+| Kind | What it models | Column when not named | Options |
+|---|---|---|---|
+| `duplicates` | rows delivered twice (at-least-once delivery): copies are appended at the end | the table | |
+| `orphan_keys` | foreign keys that match no parent row | the table's foreign keys | |
+| `date_shift` | late-arriving or wrongly dated rows | every date and timestamp column | `days` (up to, default 7), `direction` (`both`, `late`, `early`) |
+| `negative_amounts` | sign flips of positive amounts | number columns that are not keys | |
+| `case_whitespace` | inconsistent categories: upper, lower, leading or trailing blanks | text columns with at most 50 distinct values | |
+| `pii_fill` | a free-text column filled with SSN-format values (area 9xx, never issued) | needs a column | `pii` (`ssn`, `email`, `phone`) |
+| `type_change` | a number or date column delivered as text | needs a column | |
+| `null_creep` | a null rate that ramps up from batch to batch | needs a column | `step` (added to the rate per batch) |
+
+Every corruption also takes `from` and `to`, the first and last batch in which it is active
+(`type_change=1@order.amount:from=5,to=7` is a few days of numbers as strings). A corruption that
+cannot apply to what it is aimed at (a column that is not there, text where a date is needed) is an
+error, not a silent no-op.
+
+**The log** is JSON Lines. The first line is the run (`record: "run"`: the seed, the batch, the
+corruptions, rows in and out per table). Every other line is one change (`record: "change"`):
+
+| Field | Meaning |
+|---|---|
+| `table`, `kind`, `seed`, `batch` | what, where and with which seed |
+| `scope` | `row` (one cell) or `column` (`type_change`: the whole column) |
+| `row` | the position of the row in the **output** table, 0-based. Rows are never reordered or removed; duplicates are appended |
+| `key` | the row's key (the schema's primary key, else the first column), so a check that reorders can still join |
+| `column`, `before`, `after` | the cell before and after (dates as ISO text); for `type_change` the type names |
+| `source_row` | duplicates: the row copied |
+| `days`, `pii`, `rate` | the shift of a date, the PII kind, the null rate of that batch |
+
+The log is complete: a cell that is not in it is untouched. To score a data-quality check, compare
+the rows it flags with the `row` (or `key`) of the changes of one `kind`: precision is the share of
+flagged rows that are in the log, recall the share of the log that is flagged.
+
+**Determinism.** The same seed gives the same tables and the same log bytes. Each corruption has its
+own random stream, keyed by the seed, the batch, its kind, table and column, so adding a corruption
+of another kind does not change the others. Python:
+
+```python
+from shape.chaos.groundtruth import Corruption, corrupt_tables, write_ground_truth
+
+outcome = corrupt_tables(tables, [Corruption.parse("duplicates=0.02@order")], seed=7, batch=0)
+outcome.tables, outcome.records           # the corrupted tables and the change records
+write_ground_truth("ground_truth.jsonl", outcome)
+```
+
+These corruptions are separate from the six categories: the categories keep their own scheduler
+and random order, and the targeted form has an exact rate and a log.
+
 ## The six categories
 
 Each mutator is a class in `shape.chaos.categories` with
