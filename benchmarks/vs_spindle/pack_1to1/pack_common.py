@@ -102,6 +102,12 @@ ALLOWED: dict[str, dict[str, str]] = {
         "shape": "ISO 8601",
         "observed": "no",
     },
+    "PK-10": {
+        "what": "GSL chaos.config",
+        "baseline": "a nested `config:` mapping is stored as one setting called 'config', so its "
+        "settings (warmup_days, escalation, breaking_change_day) are never read",
+        "shape": "the nested settings are the chaos configuration",
+    },
     "ID-1": {
         "what": "manifest engine_version, sbom values, timestamps, run_id",
         "baseline": "the baseline's version, packages and clock",

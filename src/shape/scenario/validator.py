@@ -239,6 +239,9 @@ def chaos_config(section: dict[str, Any]) -> Any:
     ``breaking_change_day`` and ``categories``; other keys are not chaos settings."""
     from shape.chaos import ChaosConfig
 
+    nested = section.get("config")
+    if isinstance(nested, dict):  # `config:` inside the section holds settings too
+        section = {**{k: v for k, v in section.items() if k != "config"}, **nested}
     config = ChaosConfig(enabled=bool(section.get("enabled", False)))
     for key in ("intensity", "escalation"):
         if key in section:

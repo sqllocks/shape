@@ -149,6 +149,21 @@ def back(value: Any) -> Any:
     return value
 
 
+def unwrap_chaos_config(loaded: dict[str, Any]) -> bool:
+    """PK-10: the baseline stores a nested ``chaos.config.config`` mapping as one setting; Shape
+    merges it into ``chaos.config``. Rewrite the baseline's structure the way Shape reads it.
+    True when it applied."""
+    chaos = loaded.get("chaos")
+    if not isinstance(chaos, dict) or not isinstance(chaos.get("config"), dict):
+        return False
+    inner = chaos["config"].get("config")
+    if not isinstance(inner, dict):
+        return False
+    rest = {k: v for k, v in chaos["config"].items() if k != "config"}
+    chaos["config"] = {**rest, **inner}
+    return True
+
+
 def compare_loaded(
     base: dict[str, Any], shape: dict[str, Any], problems: list[str], tag: str
 ) -> None:
@@ -583,6 +598,8 @@ def check_input(
             kind,
         ]
     )
+    if unwrap_chaos_config(base["loaded"]):
+        observed.add("PK-10")
     compare_loaded(base["loaded"], shape_load["loaded"], problems, name)
     if kind == "spec":
         compare_loaded(

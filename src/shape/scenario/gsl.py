@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from shape.scenario.loader import PackError, Reader, read_yaml
+from shape.scenario.loader import PackError, Reader, describe_type, read_yaml
 
 SCHEMA_TYPES = ("domain", "schema_file")
 DEFAULT_DRIFT_POLICY = "quarantine_on_breaking_change"
@@ -176,8 +176,14 @@ class GSLParser:
     def _chaos(r: Reader | None) -> ChaosSpec | None:
         if r is None:
             return None
-        # Everything but the two named keys is chaos configuration.
+        # Everything but the two named keys is chaos configuration; a nested `config:` mapping
+        # (as the tutorial writes it) is part of it, not a setting called "config".
         config = {k: r.get(k) for k in list(r.raw) if k not in ("enabled", "intensity")}
+        nested = config.pop("config", None)
+        if isinstance(nested, dict):
+            config = {**config, **nested}
+        elif nested is not None:
+            raise PackError(f"{r.path}.config must be a mapping, got {describe_type(nested)}")
         spec = ChaosSpec(r.flag("enabled", False), r.text("intensity", "moderate"), config)
         r.close()
         return spec

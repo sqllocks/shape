@@ -215,7 +215,7 @@ class Reader:
 
     def __init__(self, raw: Any, path: str, unknown: list[str]) -> None:
         if not isinstance(raw, dict):
-            raise PackError(f"{path or 'document'} must be a mapping, got {_kind(raw)}")
+            raise PackError(f"{path or 'document'} must be a mapping, got {describe_type(raw)}")
         self.raw: dict[str, Any] = raw
         self.path = path
         self._unknown = unknown
@@ -233,9 +233,9 @@ class Reader:
         if value is None:
             return default
         if isinstance(value, bool) and bool not in kinds:
-            raise PackError(f"{self._where(key)} must be {what}, got {_kind(value)}")
+            raise PackError(f"{self._where(key)} must be {what}, got {describe_type(value)}")
         if not isinstance(value, kinds):
-            raise PackError(f"{self._where(key)} must be {what}, got {_kind(value)}")
+            raise PackError(f"{self._where(key)} must be {what}, got {describe_type(value)}")
         return value
 
     def text(self, key: str, default: str = "") -> str:
@@ -259,7 +259,9 @@ class Reader:
         if value is None:
             return list(default or [])
         if not isinstance(value, list) or not all(isinstance(v, (str, int)) for v in value):
-            raise PackError(f"{self._where(key)} must be a list of names, got {_kind(value)}")
+            raise PackError(
+                f"{self._where(key)} must be a list of names, got {describe_type(value)}"
+            )
         return [str(v) for v in value]
 
     def mapping(self, key: str) -> dict[str, Any] | None:
@@ -267,7 +269,7 @@ class Reader:
         if value is None:
             return None
         if not isinstance(value, dict):
-            raise PackError(f"{self._where(key)} must be a mapping, got {_kind(value)}")
+            raise PackError(f"{self._where(key)} must be a mapping, got {describe_type(value)}")
         return value
 
     def section(self, key: str) -> Reader | None:
@@ -279,7 +281,7 @@ class Reader:
         if value is None:
             return []
         if not isinstance(value, list):
-            raise PackError(f"{self._where(key)} must be a list, got {_kind(value)}")
+            raise PackError(f"{self._where(key)} must be a list, got {describe_type(value)}")
         return [Reader(v, f"{self._where(key)}[{i}]", self._unknown) for i, v in enumerate(value)]
 
     def close(self) -> None:
@@ -288,7 +290,7 @@ class Reader:
                 self._unknown.append(self._where(str(key)))
 
 
-def _kind(value: Any) -> str:
+def describe_type(value: Any) -> str:
     if value is None:
         return "nothing"
     return {
