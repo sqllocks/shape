@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import os
 import re
+import tempfile
 import time
 from pathlib import Path
 from typing import Any
@@ -47,7 +49,16 @@ class LocalRegistry:
         h = hashlib.sha256(raw).hexdigest()
         p = self._path("objects", h)
         if not p.exists():
-            p.write_bytes(raw)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            fd, tmp = tempfile.mkstemp(dir=p.parent, prefix=".tmp-")
+            try:
+                with os.fdopen(fd, "wb") as fh:
+                    fh.write(raw)
+                os.replace(tmp, p)
+            except BaseException:
+                with contextlib.suppress(OSError):
+                    os.unlink(tmp)
+                raise
         e = {"name": name, "content_id": h, "created_at": time.time(), "metadata": metadata or {}}
         with log.open("a") as f:
             f.write(json.dumps(e, sort_keys=True) + "\n")
@@ -58,9 +69,15 @@ class LocalRegistry:
         _check("ref", ref)
         p = self._path("refs", name)
         p.mkdir(parents=True, exist_ok=True)
-        tmp = p / (ref + ".tmp")
-        tmp.write_text(h)
-        os.replace(tmp, p / ref)
+        fd, tmp = tempfile.mkstemp(dir=p, prefix=".tmp-")
+        try:
+            with os.fdopen(fd, "w") as fh:
+                fh.write(h)
+            os.replace(tmp, p / ref)
+        except BaseException:
+            with contextlib.suppress(OSError):
+                os.unlink(tmp)
+            raise
 
     def resolve(self, name: str, ref: str = "latest") -> str:
         """Resolve a ref, tag or content hash that is recorded for ``name`` (SEC4)."""
@@ -77,7 +94,11 @@ class LocalRegistry:
         raise RegistryError(f"{name}@{ref} is not recorded in the registry")
 
     def checkout(self, name: str, ref: str = "latest") -> bytes:
-        return self._path("objects", self.resolve(name, ref)).read_bytes()
+        h = self.resolve(name, ref)
+        raw = self._path("objects", h).read_bytes()
+        if hashlib.sha256(raw).hexdigest() != h:
+            raise RegistryError(f"object {h} is corrupt: its content does not match its id")
+        return raw
 
     def tag(self, name: str, tag: str, ref: str = "latest") -> str:
         h = self.resolve(name, ref)

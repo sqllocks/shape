@@ -122,8 +122,8 @@ def verify_manifest_signature(
             raise ValueError("unsupported signature algorithm")
         sig = base64.b64decode(str(doc["signature"]), validate=True)
         kid = doc.get("key_id")
-    except (ValueError, KeyError, binascii.Error) as e:
-        raise ArtifactSignatureError(f"malformed signature: {e}") from e
+    except (ValueError, KeyError, binascii.Error, RecursionError) as e:
+        raise ArtifactSignatureError(f"malformed signature: {type(e).__name__}") from e
     if kid != key_id(public_key):
         raise ArtifactSignatureError("artifact is signed by a different key than the trusted key")
     _require_crypto()

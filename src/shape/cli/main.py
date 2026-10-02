@@ -28,10 +28,11 @@ def _artifact_kind(path):
     """The ``kind`` in a ``.shape`` manifest, or None when ``path`` is not a Shape artifact."""
     import zipfile
 
+    from shape.artifact.io import read_manifest_bytes
+
     try:
-        with zipfile.ZipFile(path) as z:
-            return json.loads(z.read("manifest.json")).get("kind")
-    except (OSError, ValueError, KeyError, zipfile.BadZipFile):
+        return json.loads(read_manifest_bytes(path)).get("kind")
+    except (OSError, ValueError, KeyError, AttributeError, zipfile.BadZipFile, RecursionError):
         return None
 
 
@@ -62,6 +63,7 @@ def _run(fn, a):
         NotImplementedError,
         KeyError,
         ShapeError,
+        RecursionError,
         zipfile.BadZipFile,
     ) as exc:
         # The artifact modules are not imported by the commands that never touch an artifact; an
@@ -83,6 +85,21 @@ def _sign_output(a, path):
     return None
 
 
+def _looks_like_artifact(path):
+    """True for a path the readers will treat as a Shape artifact. The readers sniff content, not
+    the file name, so ``--verify`` must too: deciding by extension let a forged ``x.bin`` or
+    ``x.SHAPE`` through unverified (P7-04)."""
+    import zipfile
+
+    if path.lower().endswith(".shape"):
+        return True
+    try:
+        with zipfile.ZipFile(path) as z:
+            return "manifest.json" in z.namelist()
+    except (OSError, zipfile.BadZipFile):
+        return False
+
+
 def _verify_inputs(a):
     """``--verify PUBKEY``: every .shape input must carry a valid signature by that key."""
     from shape.artifact.signing import load_public_key, verify_artifact
@@ -90,7 +107,7 @@ def _verify_inputs(a):
     key = load_public_key(a.verify)
     for name in ("shape", "before", "after", "target", "observed"):
         path = getattr(a, name, None)
-        if isinstance(path, str) and path.endswith(".shape"):
+        if isinstance(path, str) and _looks_like_artifact(path):
             verify_artifact(path, key)
 
 
@@ -148,10 +165,9 @@ def _profile_name(a):
     if a.name:
         return a.name
     if _artifact_kind(a.output) == "profile":
-        import zipfile
+        from shape.artifact.io import read_manifest_bytes
 
-        with zipfile.ZipFile(a.output) as z:
-            return str(json.loads(z.read("manifest.json")).get("name") or "") or None
+        return str(json.loads(read_manifest_bytes(a.output)).get("name") or "") or None
     return None
 
 

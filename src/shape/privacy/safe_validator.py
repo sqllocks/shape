@@ -38,7 +38,10 @@ SAFE_SCHEMA_MARKERS = frozenset({"schema_version", "redaction_manifest"})
 # Unanchored on purpose: personal data embedded anywhere inside a value must be found.
 _PII_REGEXES: dict[str, re.Pattern[str]] = {
     "ssn": re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
-    "email": re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"),
+    # The lookbehind starts a match only at the start of a local-part run. Without it the search
+    # restarts at every character of a long run with no "@" and takes quadratic time (a 70 KB
+    # string cost over 5 s: a denial of service on an untrusted artifact, P7-04).
+    "email": re.compile(r"(?<![a-zA-Z0-9._%+\-])[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"),
     "ip": re.compile(
         r"\b(?:25[0-5]|2[0-4]\d|[01]?\d?\d)(?:\.(?:25[0-5]|2[0-4]\d|[01]?\d?\d)){3}\b"
     ),

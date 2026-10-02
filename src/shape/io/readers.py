@@ -26,6 +26,8 @@ import pyarrow.csv as pacsv  # type: ignore[import-untyped]
 import pyarrow.json as pajson  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
+from shape.security.jsondepth import check_json_file
+
 DEFAULT_BATCH_ROWS = 65_536
 _COMPRESSION = {".gz", ".bz2", ".zst", ".lz4", ".xz"}
 _SUFFIX_KIND = {
@@ -225,6 +227,10 @@ def _read_csv_table(
 
 def _read_jsonl_table(path: Path, schema: pa.Schema | None) -> pa.Table:
     parse = pajson.ParseOptions(explicit_schema=schema) if schema is not None else None
+    try:
+        check_json_file(path)
+    except ValueError as exc:
+        raise ReaderError(f"cannot parse {path} as JSON lines: {exc}") from exc
     try:
         return pajson.read_json(path, parse_options=parse) if parse else pajson.read_json(path)
     except pa.ArrowInvalid as exc:
