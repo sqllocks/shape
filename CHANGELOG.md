@@ -5,6 +5,11 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `shape mask PATH -o DIR` (and the `mask` built-in of `shape.transforms`): replaces personal data
+  in CSV or Parquet files with synthetic values of the same format (`docs/MASK.md`). Columns are
+  found from their names and from the value patterns of Shape's profile engine; null positions,
+  types and every other column are kept, the same value gets the same replacement everywhere so
+  keys and the columns that refer to them still match, and no original value is written back.
 - Fidelity tiers 1 to 3 (`docs/FIDELITY_TIERS.md`): `shape fidelity REFERENCE SYNTHETIC --tier 1|2|3`
   (tier 1: Gaussian-mixture fits, conditional profiles, adversarial AUC, temporal profiles and
   periodicity; tier 2: format preservation, string similarity, cardinality and anomaly-rate checks;

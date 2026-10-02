@@ -320,7 +320,7 @@ def negative_controls(original: dict, shape_out: dict, expected: set[str]) -> di
     )
 
     broken = copy()  # a format that is not the original's
-    broken[phone] = [None if v is None else "REDACTED" for v in broken[phone]]
+    broken[phone] = [None if v is None else "@@ 12345 @@" for v in broken[phone]]
     results["a broken format is caught"] = bool(checks.check_format(original, broken, expected))
 
     unmasked = copy()  # a column that should have been masked, left as it was

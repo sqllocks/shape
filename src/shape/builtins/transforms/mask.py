@@ -324,11 +324,14 @@ def _column_infos(
 
 
 class Mask:
-    """The ``mask`` transform: ``apply(tables, seed=42, exclude=(), pii={}, profile=None)``."""
+    """The ``mask`` transform: ``apply(tables, seed=42, exclude=(), pii={}, profile=None)``.
+
+    ``mask`` takes the same options and returns the :class:`MaskResult` (which columns were masked,
+    and as what), where ``apply`` returns only the tables."""
 
     name = "mask"
 
-    def apply(self, tables: Mapping[str, pa.Table], **options: Any) -> dict[str, pa.Table]:
+    def mask(self, tables: Mapping[str, pa.Table], **options: Any) -> MaskResult:
         known = {"seed", "exclude", "pii", "profile"}
         unknown = sorted(set(options) - known)
         if unknown:
@@ -338,4 +341,7 @@ class Mask:
             pii_columns=dict(options.get("pii") or {}),
             exclude_columns=tuple(options.get("exclude") or ()),
         )
-        return mask_tables(tables, config, options.get("profile")).tables
+        return mask_tables(tables, config, options.get("profile"))
+
+    def apply(self, tables: Mapping[str, pa.Table], **options: Any) -> dict[str, pa.Table]:
+        return self.mask(tables, **options).tables

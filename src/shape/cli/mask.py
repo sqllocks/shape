@@ -100,7 +100,7 @@ def run(a: argparse.Namespace) -> int:
     import pyarrow.csv as pacsv
     import pyarrow.parquet as pq
 
-    from shape.builtins.transforms import MaskConfig, MaskError, mask_tables
+    from shape.plugins.host import default_host
     from shape.profile.reference import profile
 
     files, fmt = _files(Path(a.input), a.input_format)
@@ -108,14 +108,12 @@ def run(a: argparse.Namespace) -> int:
     for p in files.values():
         if (out_dir / p.name).resolve() == p.resolve():
             raise ValueError("the output directory would overwrite the input files")
-    config = MaskConfig(seed=a.seed, pii_columns=_pii(a.pii), exclude_columns=tuple(a.exclude))
+    pii = _pii(a.pii)
 
     tables = {name: _read(p, fmt) for name, p in files.items()}
     typed = profile({name: str(p) for name, p in files.items()}).to_dict()
-    try:
-        result = mask_tables(tables, config, typed)
-    except MaskError as exc:
-        raise ValueError(str(exc)) from exc
+    transform = default_host().get("shape.transforms", "mask")
+    result = transform.mask(tables, seed=a.seed, exclude=a.exclude, pii=pii, profile=typed)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     written = []
