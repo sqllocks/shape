@@ -14,6 +14,10 @@ import numpy as np
 import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import fill_null as arrow_fill_null
+from shape.generation.arrowkit import to_numpy as arrow_numpy
+
 from .gen import _below, _words
 
 _MASK = (1 << 64) - 1
@@ -21,12 +25,12 @@ _CAP_ATTEMPTS = 64
 
 
 def _ints(a: Any, what: str) -> npt.NDArray[np.int64]:
-    arr = a if isinstance(a, pa.Array) else pa.array(a)
+    arr = a if isinstance(a, pa.Array) else arrow_array(a)
     if not pa.types.is_int64(arr.type):
         raise ValueError(f"{what} must be an int64 array")
     if arr.null_count:
         raise ValueError(f"{what} must not contain nulls")
-    return np.asarray(arr.to_numpy(zero_copy_only=False), dtype=np.int64)
+    return np.asarray(arrow_numpy(arr), dtype=np.int64)
 
 
 def _check_codes(codes: npt.NDArray[np.int64]) -> None:
@@ -52,7 +56,7 @@ def first_flags(codes: Any) -> pa.Array:
         if v >= 0:
             seen.add(v)
         flags.append(first)
-    return pa.array(flags, type=pa.bool_())
+    return arrow_array(flags, type=pa.bool_())
 
 
 def group_order(codes: Any, keys: Any) -> tuple[pa.Array, pa.Array, pa.Array]:
@@ -68,7 +72,7 @@ def group_order(codes: Any, keys: Any) -> tuple[pa.Array, pa.Array, pa.Array]:
         rank[ordered] = np.arange(ordered.size)
         size[ordered] = ordered.size
         nxt[ordered[:-1]] = ordered[1:]
-    return pa.array(rank), pa.array(size), pa.array(nxt)
+    return arrow_array(rank), arrow_array(size), arrow_array(nxt)
 
 
 def _mix64(z: int) -> int:
@@ -102,7 +106,7 @@ def scd2_offsets(codes: Any, total_days: int, min_gap: int, k0: int, k1: int) ->
         usable = max(total_days - min_gap * (m - 1), m)
         offsets = np.sort(_below(words, usable))
         result[rows] = np.minimum(offsets + min_gap * np.arange(m, dtype=np.int64), total_days)
-    return pa.array(result)
+    return arrow_array(result)
 
 
 def cap_per_parent(indices: Any, pool: int, max_per_parent: int, k0: int, k1: int) -> pa.Array:
@@ -141,11 +145,11 @@ def cap_per_parent(indices: Any, pool: int, max_per_parent: int, k0: int, k1: in
         if counts[chosen] == cap:
             full += 1
         out[row] = chosen
-    return pa.array(out)
+    return arrow_array(out)
 
 
 def _nullable_ints(a: Any, what: str) -> pa.Array:
-    arr = a if isinstance(a, pa.Array) else pa.array(a)
+    arr = a if isinstance(a, pa.Array) else arrow_array(a)
     if not pa.types.is_int64(arr.type):
         raise ValueError(f"{what} must be an int64 array")
     return arr
@@ -153,34 +157,34 @@ def _nullable_ints(a: Any, what: str) -> pa.Array:
 
 def dense_rows(keys: Any, start: int, size: int) -> pa.Array:
     arr = _nullable_ints(keys, "keys")
-    values = np.asarray(arr.fill_null(0).to_numpy(zero_copy_only=False), dtype=np.int64)
+    values = np.asarray(arrow_numpy(arrow_fill_null(arr, 0)), dtype=np.int64)
     valid = (values >= start) & (values - start < size)
     if arr.null_count:
-        valid &= np.asarray(arr.is_valid().to_numpy(zero_copy_only=False), dtype=bool)
+        valid &= np.asarray(arrow_numpy(arr.is_valid()), dtype=bool)
     rows = np.where(valid, values - start, 0)
-    return pa.array(rows, mask=~valid, type=pa.int64())
+    return arrow_array(rows, mask=~valid, type=pa.int64())
 
 
 def group_sums(keys: Any, values: Any, start: int, size: int) -> tuple[pa.Array, pa.Array]:
     if size < 0:
         raise ValueError("size must not be negative")
     k = _nullable_ints(keys, "keys")
-    v = values if isinstance(values, pa.Array) else pa.array(values)
+    v = values if isinstance(values, pa.Array) else arrow_array(values)
     if not (pa.types.is_int64(v.type) or pa.types.is_float64(v.type)):
         raise ValueError("values must be an int64 or float64 array")
     if len(v) != len(k):
         raise ValueError("keys and values must have the same length")
-    key_values = np.asarray(k.fill_null(0).to_numpy(zero_copy_only=False), dtype=np.int64)
+    key_values = np.asarray(arrow_numpy(arrow_fill_null(k, 0)), dtype=np.int64)
     keep = (key_values >= start) & (key_values - start < size)
     if k.null_count:
-        keep &= np.asarray(k.is_valid().to_numpy(zero_copy_only=False), dtype=bool)
+        keep &= np.asarray(arrow_numpy(k.is_valid()), dtype=bool)
     if v.null_count:
-        keep &= np.asarray(v.is_valid().to_numpy(zero_copy_only=False), dtype=bool)
+        keep &= np.asarray(arrow_numpy(v.is_valid()), dtype=bool)
     rows = key_values[keep] - start
-    amounts = np.asarray(v.fill_null(0).to_numpy(zero_copy_only=False))[keep]
+    amounts = np.asarray(arrow_numpy(arrow_fill_null(v, 0)))[keep]
     sums = np.zeros(size, dtype=amounts.dtype)
     counts = np.zeros(size, dtype=np.int64)
     with np.errstate(over="ignore"):
         np.add.at(sums, rows, amounts)  # unbuffered: adds in row order, like the native loop
     np.add.at(counts, rows, 1)
-    return pa.array(sums), pa.array(counts)
+    return arrow_array(sums), arrow_array(counts)

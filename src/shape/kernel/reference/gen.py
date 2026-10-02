@@ -21,6 +21,9 @@ import numpy as np
 import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import to_numpy as arrow_numpy
+
 _TWO_NEG_53 = 2.0**-53
 _MAX_BELOW = 2**32 - 1
 _US_PER_HOUR = 3_600_000_000
@@ -67,7 +70,7 @@ def _slot(per_row: int, slot: int, width: int) -> None:
 
 
 def philox_words(k0: int, k1: int, row_start: int, n_rows: int, per_row: int = 1) -> pa.Array:
-    return pa.array(_words(k0, k1, row_start, n_rows, per_row), type=pa.uint64())
+    return arrow_array(_words(k0, k1, row_start, n_rows, per_row), type=pa.uint64())
 
 
 def philox_uniform(
@@ -75,7 +78,7 @@ def philox_uniform(
 ) -> pa.Array:
     _slot(per_row, slot, 1)
     w = _words(k0, k1, row_start, n_rows, per_row).reshape(n_rows, per_row)
-    return pa.array(_unit(w[:, slot]))
+    return arrow_array(_unit(w[:, slot]))
 
 
 def philox_normal(
@@ -87,16 +90,16 @@ def philox_normal(
     u2 = _unit(w[:, slot + 1])
     with np.errstate(all="ignore"):
         z = np.sqrt(-2.0 * np.log(u1)) * np.cos(2.0 * math.pi * u2)
-    return pa.array(z)
+    return arrow_array(z)
 
 
 def _f64(a: Any, what: str) -> npt.NDArray[np.float64]:
-    arr = pa.array(a) if not isinstance(a, pa.Array) else a
+    arr = arrow_array(a) if not isinstance(a, pa.Array) else a
     if not pa.types.is_float64(arr.type):
         raise ValueError(f"{what} must be a float64 array")
     if arr.null_count:
         raise ValueError(f"{what} must not contain nulls")
-    return np.asarray(arr.to_numpy(zero_copy_only=False), dtype=np.float64)
+    return np.asarray(arrow_numpy(arr), dtype=np.float64)
 
 
 def _build_alias(weights: Sequence[float]) -> tuple[list[float], list[int]]:
@@ -135,7 +138,7 @@ def _build_alias(weights: Sequence[float]) -> tuple[list[float], list[int]]:
 
 def alias_build(weights: Any) -> tuple[pa.Array, pa.Array]:
     prob, alias = _build_alias([float(w) for w in _f64(weights, "weights")])
-    return pa.array(prob, type=pa.float64()), pa.array(alias, type=pa.int64())
+    return arrow_array(prob, type=pa.float64()), arrow_array(alias, type=pa.int64())
 
 
 def _pick(
@@ -160,20 +163,20 @@ def alias_sample(
 ) -> pa.Array:
     _slot(per_row, slot, 2)
     p = _f64(prob, "prob")
-    a = np.asarray(pa.array(alias).to_numpy(zero_copy_only=False), dtype=np.int64)
+    a = np.asarray(arrow_numpy(arrow_array(alias)), dtype=np.int64)
     if len(p) == 0 or len(p) != len(a):
         raise ValueError("prob and alias must be non-empty and equally long")
     if ((a < 0) | (a >= len(p))).any():
         raise ValueError("alias entries must lie in 0..len(prob)")
     w = _words(k0, k1, row_start, n_rows, per_row).reshape(n_rows, per_row)
-    return pa.array(_pick(p, a, w[:, slot], w[:, slot + 1]), type=pa.int64())
+    return arrow_array(_pick(p, a, w[:, slot], w[:, slot + 1]), type=pa.int64())
 
 
 # ---------------------------------------------------------------- strings
 
 
 def _values(col: Any) -> list[Any]:
-    arr = col if isinstance(col, pa.Array) else pa.array(col)
+    arr = col if isinstance(col, pa.Array) else arrow_array(col)
     t = arr.type
     if not (pa.types.is_string(t) or pa.types.is_large_string(t) or pa.types.is_int64(t)):
         raise ValueError(f"expected string, large_string or int64, got {t}")
@@ -190,7 +193,7 @@ def pool_take(pool: Any, indices: Any) -> pa.Array:
     values = _values(pool)
     if pa.types.is_integer(pool.type):
         raise ValueError("pool_take needs a string pool")
-    idx = pa.array(indices)
+    idx = arrow_array(indices)
     if not pa.types.is_int64(idx.type):
         raise ValueError("indices must be an int64 array")
     size = len(values)
@@ -202,7 +205,7 @@ def pool_take(pool: Any, indices: Any) -> pa.Array:
         if v < 0 or v >= size:
             raise ValueError(f"pool index {v} out of range 0..{size}")
         out.append(values[v])
-    return pa.array(out, type=pa.string())
+    return arrow_array(out, type=pa.string())
 
 
 def template_strings(
@@ -228,7 +231,7 @@ def template_strings(
             parts.append(_fmt(cols[c][i], w))
             parts.append(literals[k + 1])
         out.append("".join(parts))
-    return pa.array(out, type=pa.string())
+    return arrow_array(out, type=pa.string())
 
 
 def join_strings(columns: Sequence[Any], sep: str, skip_nulls: bool = False) -> pa.Array:
@@ -243,7 +246,7 @@ def join_strings(columns: Sequence[Any], sep: str, skip_nulls: bool = False) -> 
             out.append(None)
         else:
             out.append(sep.join(_fmt(v, 0) for v in row if v is not None))
-    return pa.array(out, type=pa.string())
+    return arrow_array(out, type=pa.string())
 
 
 def _title(s: str) -> str:
@@ -263,7 +266,7 @@ def string_case(array: Any, mode: str) -> pa.Array:
     out = [
         None if v is None else (str(v) if not isinstance(v, str) else fn(v)) for v in _values(array)
     ]
-    return pa.array(out, type=pa.string())
+    return arrow_array(out, type=pa.string())
 
 
 def uuid4_strings(k0: int, k1: int, row_start: int, n_rows: int) -> pa.Array:
@@ -275,7 +278,7 @@ def uuid4_strings(k0: int, k1: int, row_start: int, n_rows: int) -> pa.Array:
     for row in raw:
         h = row.tobytes().hex()
         out.append(f"{h[:8]}-{h[8:12]}-{h[12:16]}-{h[16:20]}-{h[20:32]}")
-    return pa.array(out, type=pa.string())
+    return arrow_array(out, type=pa.string())
 
 
 def random_strings(
@@ -284,11 +287,11 @@ def random_strings(
     if not alphabet:
         raise ValueError("random_chars needs a non-empty alphabet")
     if length == 0:
-        return pa.array([""] * n_rows, type=pa.string())
+        return arrow_array([""] * n_rows, type=pa.string())
     chars = np.array(list(alphabet), dtype=object)
     w = _words(k0, k1, row_start, n_rows, length).reshape(n_rows, length)
     idx = _below(w, len(chars))
-    return pa.array(["".join(row) for row in chars[idx]], type=pa.string())
+    return arrow_array(["".join(row) for row in chars[idx]], type=pa.string())
 
 
 # ---------------------------------------------------------------- temporal
@@ -313,7 +316,7 @@ def day_weights(
         count = np.zeros((12, 7), dtype=np.float64)
         np.add.at(count, (months, dows), 1.0)
         base = base / count[months, dows]
-    return pa.array(base, type=pa.float64())
+    return arrow_array(base, type=pa.float64())
 
 
 def _erf(x: float) -> float:
@@ -348,7 +351,7 @@ def hour_weights_peaks(peaks: Sequence[float], std: float) -> pa.Array:
             for j in range(-k, k + 1):
                 lo = h + 24.0 * j - p
                 w[h] += _cdf((lo + 1.0) / std) - _cdf(lo / std)
-    return pa.array(w, type=pa.float64())
+    return arrow_array(w, type=pa.float64())
 
 
 def temporal_sample(
@@ -375,4 +378,4 @@ def temporal_sample(
     else:
         within = _below(w[:, 4], _US_PER_HOUR)
     micros = (start_day + day) * _US_PER_DAY + hour * _US_PER_HOUR + within
-    return pa.array(micros.astype("datetime64[us]"), type=pa.timestamp("us"))
+    return arrow_array(micros.astype("datetime64[us]"), type=pa.timestamp("us"))

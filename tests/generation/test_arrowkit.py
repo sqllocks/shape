@@ -73,6 +73,13 @@ def test_array_type_and_other_inputs() -> None:
     assert arrowkit.array([]).equals(pa.array([]))
     assert arrowkit.array((0.5, 0.25), type=pa.float64()).equals(pa.array([0.5, 0.25]))
     assert arrowkit.array([1, 2, 3]).equals(pa.array([1, 2, 3]))
+    for items in ([0.5, 1.5], [True, False], [2**63 - 1, 1], [1, 2.5], [1, None], [np.float64(1.0)]):
+        assert same(arrowkit.array(items), pa.array(items)), items
+    assert same(arrowkit.array([1, 2], type=pa.float64()), pa.array([1, 2], type=pa.float64()))
+    assert same(
+        arrowkit.array([1.0, float("nan")], from_pandas=True),
+        pa.array([1.0, float("nan")], from_pandas=True),
+    )
 
 
 def _arrays() -> list[pa.Array]:

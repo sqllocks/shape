@@ -1,0 +1,14 @@
+
+==================================== ERRORS ====================================
+______________________ ERROR collecting tests/demo/fabric ______________________
+tests/demo/fabric/conftest.py:13: in <module>
+    import fabric_helpers  # noqa: E402
+    ^^^^^^^^^^^^^^^^^^^^^
+tests/demo/fabric/fabric_helpers.py:18: in <module>
+    import nbformat
+E   ModuleNotFoundError: No module named 'nbformat'
+=========================== short test summary info ============================
+ERROR tests/demo/fabric - ModuleNotFoundError: No module named 'nbformat'
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+3661 deselected, 1 error in 2.87s
+heavy exit 2

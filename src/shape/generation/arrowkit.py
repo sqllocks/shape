@@ -9,6 +9,7 @@ other input to ``pyarrow.array`` unchanged, so the result is the same either way
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
@@ -76,6 +77,23 @@ def _from_strings(items: list[Any], type: pa.DataType | None) -> pa.Array | None
     return out
 
 
+def _from_sequence(
+    items: Sequence[Any], type: pa.DataType | None, from_pandas: bool
+) -> pa.Array | None:
+    """A non-empty list or tuple of only ``str``, only ``float``, only ``int`` (within int64) or
+    only ``bool``; anything else (``None``, a mix, other types) is left to pyarrow."""
+    kinds = {x.__class__ for x in items}
+    if kinds == {str}:
+        return _from_strings(list(items), type)
+    if kinds == {float}:
+        return _from_numpy(np.asarray(items, dtype=np.float64), type, None, from_pandas)
+    if kinds == {bool}:
+        return _from_numpy(np.asarray(items, dtype=np.bool_), type, None, from_pandas)
+    if kinds == {int} and all(-(2**63) <= x < 2**63 for x in items):
+        return _from_numpy(np.asarray(items, dtype=np.int64), type, None, from_pandas)
+    return None
+
+
 def array(
     obj: Any,
     type: pa.DataType | None = None,
@@ -90,10 +108,8 @@ def array(
             return obj
     elif isinstance(obj, np.ndarray):
         fast = _from_numpy(obj, type, None if mask is None else np.asarray(mask), from_pandas)
-    elif isinstance(obj, list) and mask is None and obj:
-        fast = _from_strings(obj, type)
-    elif isinstance(obj, tuple) and mask is None and obj and all(isinstance(x, float) for x in obj):
-        fast = _from_numpy(np.asarray(obj, dtype=np.float64), type, None, from_pandas)
+    elif isinstance(obj, list | tuple) and mask is None and obj:
+        fast = _from_sequence(obj, type, from_pandas)
     if fast is not None:
         return fast
     return pa.array(obj, type=type, mask=mask, from_pandas=from_pandas)
