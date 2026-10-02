@@ -51,14 +51,10 @@ def _run(fn, a):
     """Run a profile/check/diff command: 0 ok, 1 failed check or drift, 2 input error."""
     import zipfile
 
-    from shape.artifact.io import ArtifactSignatureError
     from shape.errors import ShapeError
 
     try:
         return fn(a)
-    except ArtifactSignatureError as exc:
-        print(f"shape: signature check failed: {exc}", file=sys.stderr)
-        return 1
     except (
         OSError,
         ValueError,
@@ -68,6 +64,12 @@ def _run(fn, a):
         ShapeError,
         zipfile.BadZipFile,
     ) as exc:
+        # The artifact modules are not imported by the commands that never touch an artifact; an
+        # ArtifactSignatureError can only come from one that is.
+        artifact_io = sys.modules.get("shape.artifact.io")
+        if artifact_io is not None and isinstance(exc, artifact_io.ArtifactSignatureError):
+            print(f"shape: signature check failed: {exc}", file=sys.stderr)
+            return 1
         print(f"shape: error: {exc}", file=sys.stderr)
         return 2
 
@@ -669,10 +671,26 @@ def _split_global(argv):
 
 def main(argv=None):
     """Run a command: 0 ok, 1 a check failed, 2 bad input. With the global options (or the
-    environment variables) on, the run logs JSON lines to stderr and writes its metrics."""
+    environment variables) on, the run logs JSON lines to stderr and writes its metrics.
+
+    Called as the program (no ``argv``), a ``generate`` that wrote its files ends the process as
+    soon as everything is flushed (``lifecycle.exit_now``) instead of tearing the interpreter down:
+    freeing the hundreds of megabytes of tables and unloading the modules takes about 40 ms of a
+    half-second run, and nothing is left to do (every file is closed, no ``atexit`` handler of
+    Shape's is pending)."""
+    from shape.cli import lifecycle
+
+    lifecycle.quick_exit_allowed = argv is None
+    return _main(argv)
+
+
+def _main(argv):
     opts, argv = _split_global(sys.argv[1:] if argv is None else argv)
     if not (opts["log_json"] or opts["metrics"]):
         return _dispatch(argv)
+    from shape.cli import lifecycle
+
+    lifecycle.quick_exit_allowed = False  # the log line and metrics file come after the command
     import logging
     import time
 
@@ -712,9 +730,10 @@ def _dispatch(argv):
         from shape.privacy.cli import main as privacy_main
 
         return privacy_main(argv[1:])
+    parser = _build_parser()
     builtin = {
         n
-        for act in _build_parser()._actions
+        for act in parser._actions
         if isinstance(act, argparse._SubParsersAction)
         for n in act.choices
     }
@@ -730,7 +749,7 @@ def _dispatch(argv):
         from shape.plugins.host import default_host
 
         return run_command(default_host(), argv[0], argv[1:])
-    a = _build_parser(plugin_cmds.values()).parse_args(argv)
+    a = (_build_parser(plugin_cmds.values()) if plugin_cmds else parser).parse_args(argv)
     if a.version:
         print(f"shape {_version()}")
         return 0

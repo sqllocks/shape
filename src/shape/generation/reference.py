@@ -83,8 +83,13 @@ class Dataset:
 
     @classmethod
     def from_table(cls, name: str, table: pa.Table) -> Dataset:
-        cols = {f: table[f].combine_chunks() for f in table.column_names}
+        cols = {f: _one_chunk(table[f]) for f in table.column_names}
         return cls(name, tuple(table.column_names), cols, True)
+
+
+def _one_chunk(column: pa.ChunkedArray) -> pa.Array:
+    """``column`` as one array; a column that already is one is not copied."""
+    return column.chunk(0) if column.num_chunks == 1 else column.combine_chunks()
 
 
 _lock = threading.Lock()

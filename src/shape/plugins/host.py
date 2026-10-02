@@ -136,12 +136,18 @@ class PluginHost:
                     PluginRecord("", "<discovery>", "", "<metadata>", _ERROR, None, _describe(exc))
                 )
                 return
+            names: dict[int, str] = {}  # reading a distribution's name parses its METADATA
             for ep in eps:
                 if ep.group not in v1.GROUPS:
                     continue
                 key = (ep.group, ep.name)
                 dist = getattr(ep, "dist", None)
-                source = (dist.name if dist is not None else None) or "<unknown>"
+                if dist is None:
+                    source = "<unknown>"
+                else:
+                    source = names.get(id(dist)) or names.setdefault(
+                        id(dist), dist.name or "<unknown>"
+                    )
                 if key in self._records:
                     # First (sorted) registration wins; the duplicate is reported, not loaded.
                     self._unkeyed.append(

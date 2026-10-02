@@ -270,6 +270,66 @@ def test_generate_parquet_never_imports_pandas(tmp_path):
     assert done.returncode == 0, done.stdout + done.stderr
 
 
+def _as_program(*args, **kw):
+    """Run ``main()`` the way the installed ``shape`` script does (no argv passed)."""
+    code = (
+        "import sys; from shape.cli.main import main; "
+        "sys.argv = ['shape', *sys.argv[1:]]; sys.exit(main())"
+    )
+    return subprocess.run(
+        [sys.executable, "-c", code, *map(str, args)], capture_output=True, text=True, **kw
+    )
+
+
+def test_generate_as_a_program_flushes_and_ends_early(tmp_path):
+    """A finished ``generate`` leaves without tearing the interpreter down: the output, the
+    metrics file and the JSON log are complete, and the files are whole."""
+    out, metrics = tmp_path / "out", tmp_path / "metrics.json"
+    done = _as_program(
+        "--log-json", "--metrics", metrics, "generate", "retail", "--scale", "small", "-f",
+        "parquet", "-o", out, "--json",
+    )  # fmt: skip
+    assert done.returncode == 0, done.stderr
+    assert json.loads(done.stdout)["format"] == "parquet"
+    assert "command finished" in done.stderr
+    assert json.loads(metrics.read_text())["exit_code"] == 0
+    import pyarrow.parquet as pq
+
+    assert len(list(out.glob("*.parquet"))) == 9
+    for f in out.glob("*.parquet"):
+        assert pq.read_metadata(f).num_rows > 0  # the footer is there: the file was closed
+
+
+def test_only_a_plain_generate_skips_the_interpreter_teardown(tmp_path):
+    """The early end is for the one command that has megabytes to free and nothing left to do: an
+    ``atexit`` handler still runs after every other command, and when the run logs or writes
+    metrics."""
+    marker = tmp_path / "atexit.txt"
+    code = (
+        "import atexit, sys; from shape.cli.main import main; "
+        f"atexit.register(lambda: open({str(marker)!r}, 'w').close()); "
+        "sys.argv = ['shape', *sys.argv[1:]]; sys.exit(main())"
+    )
+
+    def ran_atexit(*args):
+        marker.unlink(missing_ok=True)
+        done = subprocess.run([sys.executable, "-c", code, *map(str, args)], capture_output=True)
+        assert done.returncode == 0, done.stderr
+        return marker.exists()
+
+    out = tmp_path / "out"
+    generate = ("generate", "retail", "--scale", "small", "-f", "csv", "-o", out)
+    assert not ran_atexit(*generate)
+    assert ran_atexit("version")
+    assert ran_atexit("--metrics", tmp_path / "m.json", *generate)
+
+
+def test_a_failed_program_run_still_reports(tmp_path):
+    done = _as_program("generate", "retail", "--scale", "nope", "-f", "parquet", "-o", tmp_path)
+    assert done.returncode == 2
+    assert "unknown scale" in done.stderr
+
+
 def test_output_dir_is_created(capsys, tmp_path):
     out = Path(tmp_path) / "deep" / "er"
     assert run(capsys, "generate", "retail", "--scale", "small", "-f", "csv", "-o", out)[0] == 0

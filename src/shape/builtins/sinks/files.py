@@ -75,7 +75,10 @@ class TsvSink(CsvSink):
         return super()._open(target, schema, {**options, "delimiter": "\t"})
 
 
-ROW_GROUP_ROWS = 1 << 20
+# A group is encoded when it is complete, so a table written while it is generated waits for this
+# many rows before the encoder starts; 256k rows is a few chunks, and the file is 0.7% larger than
+# one with groups of a million rows (measured on the retail medium tables).
+ROW_GROUP_ROWS = 1 << 18
 # Dictionary encoding stays on (T-17); a column whose dictionary outgrows this many bytes stops
 # using it, so a column of mostly distinct values (a key, an amount) is not hashed for a megabyte
 # of dictionary first. 128 KiB holds a dictionary of 16k distinct 8-byte values.

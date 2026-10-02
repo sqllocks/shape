@@ -279,7 +279,7 @@ print(format_summary(result))                                   # the `summary` 
 |---|---|---|
 | `csv`, `tsv` | `<table>.csv`, `<table>.tsv` | header row, nulls are empty fields |
 | `jsonl` | `<table>.jsonl` | dates and times ISO 8601; decimals are exact strings |
-| `parquet` | `<table>.parquet` | snappy, dictionary encoding on (T-17); options `row_group_rows` (1,048,576) and `dictionary_page_bytes` (131,072: a column whose dictionary outgrows it stops using one) |
+| `parquet` | `<table>.parquet` | snappy, dictionary encoding on (T-17); options `row_group_rows` (262,144: a table streamed while it is generated is encoded as its chunks arrive; a larger group would wait for a million rows) and `dictionary_page_bytes` (131,072: a column whose dictionary outgrows it stops using one) |
 | `sql` | `<table>.sql` | see below |
 | `excel` | `<table>.xlsx` | extra `[excel]`; refuses a table over 1,048,575 rows |
 | `delta` | `<dir>/<table>/` | extra `[delta]`; `mode` (`overwrite`, `append`), `partition_by` |
@@ -308,6 +308,17 @@ row order as they are made and `on_batch(name, None)` when it is whole. Any othe
 the last rule repair that can change it and the copula, and `on_table(name, table)` receives it then
 (and receives every table when there is no `on_batch`). Both callbacks run on the calling thread:
 hand the data to a writer. `write_engine` does exactly that.
+
+`write_engine` leaves one core to the writer threads (a Parquet file is encoded by one thread, and with
+every core generating, the encoder of the largest table is what a run waits for): `SHAPE_THREADS`
+unset means every core less one while writing, and exactly `SHAPE_THREADS` when set. Two passes run
+while the tables are still being made, and give what the plain order of the passes gives (tests compare
+them): a `sum_children` or `count_children` column over a `sequence` key is accumulated as the child
+table's chunks are made (`StreamedAggregate`, the same row-order additions as the single pass), and the
+leading business rules are repaired on a helper thread once the tables they name exist, when no
+`computed` column and no earlier rule is in their way (`EarlyRules`). The generation path builds Arrow
+arrays and reads them back through `shape.generation.arrowkit`, which never imports pandas (pyarrow's
+own `array`, `to_numpy` and `scalar` do, about 0.16 s of start-up).
 
 `generate()` runs with Arrow's system memory pool (`shape.generation.runtime.generation_memory`; set
 `SHAPE_MEMORY_POOL=default` to keep Arrow's default). The default pool maps fresh memory for each large
@@ -342,6 +353,13 @@ shape generate retail --dry-run              # the plan: order, rows, memory; ge
 shape from-ddl tables.sql -o shop.gen.json && shape generate shop.gen.json -f csv -o out/
 shape validate shop.gen.json                 # a schema file, or a contract; exit 0, 1 or 2
 ```
+
+Start-up and exit are kept short, because they are part of what a run costs (retail `medium` takes
+about 0.65 s end to end, of which the imports are about 0.2 s): `generate` imports pandas never (see
+`shape.generation.arrowkit`), loads a sink on a writer thread, and, run as the program with no
+`--log-json` or `--metrics`, switches the garbage collector off (the imports make the objects it would
+walk, and generation makes no reference cycles) and ends the process as soon as the last file is
+closed and the output flushed, instead of freeing the tables and unloading the modules.
 
 A target is an installed domain or the path of a generation schema file. `--mode star` picks a
 domain's star schema (a domain that has none exits 2; a schema file has the one mode it was

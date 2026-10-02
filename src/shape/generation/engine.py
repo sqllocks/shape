@@ -54,8 +54,13 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 from shape.errors import ShapeSchemaError
 from shape.generation.arrowkit import array as arrow_array
 from shape.generation.arrowkit import scalar as arrow_scalar
-from shape.generation.compute import apply_compute_phase
+from shape.generation.compute import (
+    StreamedAggregate,
+    apply_compute_phase,
+    plan_streamed_aggregates,
+)
 from shape.generation.correlation import THRESHOLD, apply_copula
+from shape.generation.early_rules import EarlyRules
 from shape.generation.rng import RowStream
 from shape.generation.rules import (
     RuleViolation,
@@ -112,8 +117,9 @@ _ARROW_TYPES: dict[str, pa.DataType] = {
 }
 
 
-def worker_threads() -> int:
-    """Threads for generation: ``SHAPE_THREADS`` if set (``0`` or unset: every core)."""
+def worker_threads(reserved: int = 0) -> int:
+    """Threads for generation: ``SHAPE_THREADS`` if set, else every core less ``reserved`` (at
+    least one). ``0`` for ``SHAPE_THREADS`` means every core, as unset."""
     raw = os.environ.get(THREADS_ENV, "").strip()
     if raw:
         try:
@@ -124,7 +130,7 @@ def worker_threads() -> int:
             raise ValueError(f"{THREADS_ENV} must be a non-negative integer, got {raw!r}")
         if n > 0:
             return n
-    return os.cpu_count() or 1
+    return max(1, (os.cpu_count() or 1) - reserved)
 
 
 class CircularDependencyError(ShapeSchemaError):
@@ -500,6 +506,11 @@ class Engine:
         self._pools: dict[str, KeyPool] = {}
         self._building: set[str] = set()
         self._memo: dict[Hashable, Any] = {}
+        # Both are on unless a test turns them off to compare with the plain order of the passes:
+        self._early_rules = True  # repair rules on a helper thread when the order allows it
+        self._stream_aggregates = True  # sum children as the child table's chunks are made
+        # Cores that threads other than generation's (the writers of ``write_engine``) will use.
+        self.reserved_cores = 0
         self.row_counts = calculate_row_counts(self.schema, self._overrides)
         self._order: list[str] | None = None
 
@@ -702,6 +713,11 @@ class Engine:
         for i, start in enumerate(range(0, total, size)):
             yield self.generate_chunk(table, start, min(size, total - start), chunk=i)
 
+    def _built(self, table: str) -> pa.Table | None:
+        """``table`` if it has been generated whole (before the post-passes), else ``None``."""
+        with self._lock:
+            return self._tables.get(table)
+
     def generate_table(self, table: str, chunk_rows: int | None = None) -> pa.Table:
         """All of ``table`` before the post-passes (memoised for the default chunk size)."""
         if chunk_rows is None:
@@ -721,15 +737,17 @@ class Engine:
         names: list[str],
         on_batch: Callable[[str, pa.RecordBatch | None], None] | None = None,
         streamed: Collection[str] = (),
+        observers: Mapping[str, list[StreamedAggregate]] | None = None,
     ) -> set[str]:
         """Generate every table of ``names`` that is not built yet, their chunks spread over
         :func:`worker_threads` threads. A chunk depends only on its row range and on the tables of
         earlier levels, so the tables are the same as when built one chunk after another.
 
         ``on_batch`` receives each chunk of the tables in ``streamed``, in row order as soon as it
-        is ready, then ``None`` when the table is whole. Returns the tables it delivered."""
+        is ready, then ``None`` when the table is whole. ``observers`` (child table to aggregates)
+        are fed every chunk of their table, in row order. Returns the tables it delivered."""
         todo = [n for n in names if n not in self._tables]
-        workers = worker_threads()
+        workers = worker_threads(self.reserved_cores)
         jobs = []
         for name in todo:
             total = self.row_counts.get(name, DEFAULT_ROWS)
@@ -750,6 +768,8 @@ class Engine:
             for i, (job, batch) in enumerate(zip(jobs, produced, strict=False)):
                 name = job[0]
                 by_table.setdefault(name, []).append(batch)
+                for aggregate in (observers or {}).get(name, ()):
+                    aggregate.feed(batch)
                 if on_batch is not None and name in streamed:
                     on_batch(name, batch)
                     if last[name] == i:
@@ -833,9 +853,25 @@ class Engine:
         flat = [n for level in levels for n in level]
         touched = self._post_pass_tables()
         final_early = [n for n in flat if n not in touched]
+        early = (
+            EarlyRules(self.schema, self.seed, self._built)
+            if self._early_rules and self.schema.business_rules
+            else None
+        )
+        aggregates = (
+            plan_streamed_aggregates(self.schema, self.row_counts)
+            if self._stream_aggregates
+            else []
+        )
+        observers: dict[str, list[StreamedAggregate]] = {}
+        for aggregate in aggregates:
+            observers.setdefault(aggregate.child, []).append(aggregate)
         for level in levels:
             delivered = self._generate_level(
-                level, on_batch, [n for n in level if n in final_early] if on_batch else ()
+                level,
+                on_batch,
+                [n for n in level if n in final_early] if on_batch else (),
+                observers,
             )
             for name in level:
                 if name in touched or name in delivered:
@@ -847,8 +883,21 @@ class Engine:
                     on_batch(name, None)
                 elif on_table is not None:
                     on_table(name, table)
+            if early is not None:
+                early.advance()
         tables = {name: self.generate_table(name) for name in flat}
-        tables = apply_compute_phase(tables, self.schema)
+        rules_done = 0
+        if early is not None:
+            rules_done, repaired = early.finish()
+            tables.update(repaired)
+        precomputed = {
+            (a.parent, a.column): done
+            for a in aggregates
+            if a.parent in tables
+            and a.child in tables
+            and (done := a.result(tables[a.parent], tables[a.child])) is not None
+        }
+        tables = apply_compute_phase(tables, self.schema, precomputed)
         rules = self.schema.business_rules
         copula = {t for t, pairs in self.schema.correlated_columns.items() if t in tables and pairs}
         emitted: set[str] = set()
@@ -865,7 +914,8 @@ class Engine:
 
         release(-1)
         for i, rule in enumerate(rules):
-            tables = fix_rule(rule, tables, self.seed)
+            if i >= rules_done:
+                tables = fix_rule(rule, tables, self.seed)
             release(i)
         remaining = validate_rules(tables, self.schema) if rules else []
         for tname in self.schema.correlated_columns:
