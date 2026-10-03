@@ -279,6 +279,23 @@ one defined decides the record.
 stream, so the pair agrees for any chunking, the anchor may be defined before or after the field,
 and the anchor's null rate does not touch the fields.
 
+### `hierarchy` and `hierarchy_field`
+`hierarchy` (`{"dataset": "us_zip", "field": "state", "levels": ["state", "city", "zip"]}`) is the
+anchor of a group of columns that follow one path down a hierarchy of a dataset of records: a state,
+a city of that state, a ZIP of that city, and one record under that ZIP. `hierarchy_field`
+(`{"dataset": "us_zip", "field": "lat"}`) gives another field of the same record, so a ZIP is always
+inside its city and the coordinates are the record's own. Optional keys of the anchor: `weighting`
+(`records`: every record equally likely, the default; `uniform`: every child of a node equally
+likely) and `top_weights` (a mapping from top-level value to weight, for example a profile's state
+shares). Draws are row addressed like `record_sample`'s. See `docs/JOINT.md`.
+
+### `conditional_table`
+`conditional_table` (`{"source_column": "dept", "table": {"cardio": {"A": 0.9, "B": 0.1}},
+"values": {"A": 1, "B": 1}}`) draws a category given the value of another column of the same row
+(defined earlier). `table` maps each source value to the weights of this column's values; a source
+value without an entry, or a null, draws from `values`, the column's own distribution. `shape
+generate --from` writes it from a profile's conditional probability tables.
+
 ### `temporal`
 `{"pattern": "seasonal", "start": "2022-01-01", "end": "2025-12-31", "profiles": {...}}`.
 
