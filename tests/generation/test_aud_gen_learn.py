@@ -29,3 +29,24 @@ def test_dates_written_as_text_in_another_format_generate(tmp_path):
     values = [v for v in out.to_pylist() if v is not None]
     assert values
     assert all(dt.datetime(1949, 1, 1) <= v <= dt.datetime(1981, 1, 1) for v in values)
+
+
+def test_boolean_and_integer_enums_keep_their_type(tmp_path):
+    # 182: learn wrote weighted_enum without output_type: flag came out 'True'/'False' strings
+    # and lvl as 0.0, 1.0 although the schema declares boolean and integer.
+    path = tmp_path / "b.csv"
+    pacsv.write_csv(
+        pa.table(
+            {
+                "id": list(range(300)),
+                "flag": [i % 3 == 0 for i in range(300)],
+                "lvl": [i % 3 for i in range(300)],
+            }
+        ),
+        path,
+    )
+    schema = learn(shape.profile(str(path)))
+    out = Engine(schema, row_counts={"b": 200}).generate().tables["b"]
+    assert out.schema.field("flag").type == pa.bool_()
+    assert out.schema.field("lvl").type == pa.int64()
+    assert set(out["lvl"].to_pylist()) <= {0, 1, 2}
