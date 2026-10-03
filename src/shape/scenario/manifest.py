@@ -187,7 +187,10 @@ class ManifestBuilder:
 
     @staticmethod
     def from_file(path: str | Path) -> RunManifest:
-        raw = json.loads(Path(path).read_text(encoding="utf-8"))
+        try:
+            raw = json.loads(Path(path).read_text(encoding="utf-8"))
+        except (ValueError, UnicodeDecodeError) as exc:
+            raise ValueError(f"{path} is not a run manifest: it is not JSON ({exc})") from exc
         if not isinstance(raw, dict):
             raise ValueError(f"{path} is not a run manifest")
         if "format" in raw and raw["format"] != MANIFEST_FORMAT:
@@ -196,6 +199,10 @@ class ManifestBuilder:
                 f"{MANIFEST_FORMAT!r})"
             )
         version = raw.get("version", MANIFEST_VERSION)
+        if isinstance(version, bool) or (isinstance(version, int) and version < 1):
+            raise ValueError(
+                f"{path} is not a run manifest: version {version!r} is not an integer from 1"
+            )
         if not isinstance(version, int) or version > MANIFEST_VERSION:
             raise ManifestVersionError(
                 f"{path} is run manifest version {version!r}, written by a newer Shape; this Shape "
