@@ -99,7 +99,6 @@ class FullEvidenceEngine:
 
         def relationships() -> dict[str, Any]:
             out: dict[str, Any] = {}
-            list(numeric_columns)
             if "value" in numeric_columns and time_name in numeric_columns:
                 out["covariance"] = covariance_batch(
                     numeric_columns[time_name], numeric_columns["value"]
