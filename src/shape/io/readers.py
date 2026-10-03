@@ -284,6 +284,8 @@ def _open_csv_stream(
     ro, po, co = _csv_options(path, opts, columns, schema)
     try:
         return pacsv.open_csv(path, read_options=ro, parse_options=po, convert_options=co)
+    except pa.ArrowKeyError as exc:
+        raise _csv_columns_error(path, opts, columns, schema) from exc
     except pa.ArrowInvalid as exc:
         raise ReaderError(f"cannot parse {path} as CSV: {exc}") from exc
 
@@ -294,8 +296,19 @@ def _read_csv_table(
     ro, po, co = _csv_options(path, opts, columns, schema)
     try:
         return pacsv.read_csv(path, read_options=ro, parse_options=po, convert_options=co)
+    except pa.ArrowKeyError as exc:
+        raise _csv_columns_error(path, opts, columns, schema) from exc
     except pa.ArrowInvalid as exc:
         raise ReaderError(f"cannot parse {path} as CSV: {exc}") from exc
+
+
+def _csv_columns_error(
+    path: Path, opts: CsvOptions, columns: list[str] | None, schema: pa.Schema | None
+) -> ReaderError:
+    """The ``ReaderError`` for ``columns`` that the CSV file does not have."""
+    names = _open_csv_stream(path, opts, None, schema).schema.names
+    missing = [c for c in columns or [] if c not in names]
+    return ReaderError(f"{path}: columns not found: {missing}")
 
 
 def _read_jsonl_table(path: Path, schema: pa.Schema | None) -> pa.Table:
@@ -330,6 +343,26 @@ def _ipc_schema(path: Path) -> pa.Schema:
     except pa.ArrowInvalid:
         with pa.OSFile(str(path)) as f:
             return pa.ipc.open_stream(f).schema
+
+
+_KIND_LABEL = {"parquet": "Parquet", "ipc": "Arrow IPC", "csv": "CSV", "jsonl": "JSON lines"}
+
+
+def _readable(path: Path, kind: str, call: Callable[..., Any], *args: Any) -> Any:
+    """``call(*args)``, with an Arrow failure (a damaged or truncated file) as a ``ReaderError``."""
+    try:
+        return call(*args)
+    except pa.ArrowException as exc:
+        raise ReaderError(f"cannot read {path} as {_KIND_LABEL[kind]}: {exc}") from exc
+
+
+def _select_fields(schema: pa.Schema, columns: list[str] | None, origin: Path) -> pa.Schema:
+    if not columns:
+        return schema
+    missing = [c for c in columns if c not in schema.names]
+    if missing:
+        raise ReaderError(f"{origin}: columns not found: {missing}")
+    return pa.schema([schema.field(c) for c in columns])
 
 
 def _slice(batch: pa.RecordBatch, size: int) -> Iterator[pa.RecordBatch]:
@@ -440,16 +473,18 @@ def _files_source(
         if kind == "csv":
             return _read_csv_table(p, csv, columns, schema)
         table = _read_jsonl_table(p, schema)
+        if columns:
+            _select_fields(table.schema, columns, p)
         return table.select(columns) if columns else table
 
     if kind == "parquet":
-        out_schema = pq.read_schema(paths[0])
-        if columns:
-            out_schema = pa.schema([out_schema.field(c) for c in columns])
+        out_schema = _select_fields(
+            _readable(paths[0], kind, lambda: pq.read_schema(paths[0])), columns, paths[0]
+        )
     elif kind == "ipc":
-        out_schema = _ipc_schema(paths[0])
-        if columns:
-            out_schema = pa.schema([out_schema.field(c) for c in columns])
+        out_schema = _select_fields(
+            _readable(paths[0], kind, lambda: _ipc_schema(paths[0])), columns, paths[0]
+        )
     elif kind == "csv" and _csv_streams(paths[0], csv):
         out_schema = _open_csv_stream(paths[0], csv, columns, schema).schema
     else:
@@ -459,9 +494,9 @@ def _files_source(
 
     def _peek_schema(p: Path) -> pa.Schema:
         if kind == "parquet":
-            return pq.read_schema(p)
+            return _readable(p, kind, lambda: pq.read_schema(p))
         if kind == "ipc":
-            return _ipc_schema(p)
+            return _readable(p, kind, lambda: _ipc_schema(p))
         if kind == "csv":
             reader = _open_csv_stream(p, csv, columns, schema)  # its first block
             try:
@@ -478,7 +513,7 @@ def _files_source(
     def open_batches() -> Iterator[pa.RecordBatch]:
         for i, p in enumerate(paths):
             if kind == "parquet":
-                pf = pq.ParquetFile(p)
+                pf = _readable(p, kind, pq.ParquetFile, p)
                 stream: Iterator[pa.RecordBatch] = pf.iter_batches(batch_size=size, columns=columns)
             elif kind == "ipc":
                 stream = (
@@ -492,13 +527,17 @@ def _files_source(
             else:
                 table = first_table[0] if i == 0 and first_table else whole(p)
                 stream = _table_batches(table, size)
-            for batch in stream:
+            batches = iter(stream)
+            while True:
+                batch = _readable(p, kind, next, batches, None)
+                if batch is None:
+                    break
                 yield _conform(batch, out_schema, str(p)) if i or refined else batch
 
     stem = paths[0].name.split(".")[0] if len(paths) == 1 else paths[0].parent.name or "table"
     rows = None
     if kind == "parquet":
-        rows = sum(pq.ParquetFile(p).metadata.num_rows for p in paths)
+        rows = sum(_readable(p, kind, pq.ParquetFile, p).metadata.num_rows for p in paths)
     elif first_table and len(paths) == 1:
         rows = first_table[0].num_rows
     return Source(name or stem, kind, out_schema, open_batches, rows)
