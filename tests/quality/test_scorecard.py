@@ -553,3 +553,54 @@ def test_a_passing_gate_adds_no_binary_check():
     schema = _pk_schema()
     card = build_scorecard(VerifyRunner(schema).run(t), t, schema=schema)
     assert [c.table for c in card.dimensions["uniqueness"].checks] == ["t"]
+
+
+def test_reconciliation_and_timeseries_gates_are_scored():
+    """#590: both gates were skipped, so a failure never lowered a score."""
+    import datetime as dt
+
+    from shape.quality import VerifyConfig
+
+    ts = pa.array([dt.datetime(2024, 1, 1, h) for h in (0, 1, 5)], pa.timestamp("us"))
+    t = {"t": pa.table({"ts": ts, "id": [1, 2, 3]}), "u": pa.table({"id": [1, 2]})}
+    cfg = VerifyConfig.from_dict(
+        {
+            "format": "shape-verify-config",
+            "version": 1,
+            "timeseries": [{"table": "t", "time": "ts", "every": "1h", "gaps": {}}],
+            "reconcile": [{"source": {"table": "t"}, "target": {"table": "u"}}],
+        }
+    )
+    result = VerifyRunner(config=cfg).run(t)
+    names = {g.gate_name: g.passed for g in result.gate_results}
+    assert names["timeseries_quality"] is False and names["reconciliation"] is False
+    card = build_scorecard(result, t, config=cfg)
+    assert card.dimensions["timeliness"].score == 0.0
+    assert card.dimensions["consistency"].score == 0.0
+    assert card.dimensions["timeliness"].checks[0].gate == "timeseries_quality"
+    assert card.dimensions["consistency"].checks[0].gate == "reconciliation"
+
+
+def test_passing_reconciliation_scores_100_and_can_be_suppressed(tmp_path):
+    from shape.quality import VerifyConfig
+    from shape.quality.scorecard import Suppression
+
+    t = {"t": pa.table({"id": [1, 2]}), "u": pa.table({"id": [1, 2]})}
+    cfg = VerifyConfig.from_dict(
+        {
+            "format": "shape-verify-config",
+            "version": 1,
+            "reconcile": [{"source": {"table": "t"}, "target": {"table": "u"}}],
+        }
+    )
+    assert build_scorecard(VerifyRunner(config=cfg).run(t), t, config=cfg).overall == 100.0
+    t["u"] = pa.table({"id": [1]})
+    result = VerifyRunner(config=cfg).run(t)
+    hide = Suppression("suppress", "reconciliation", "known lag")
+    card = build_scorecard(result, t, config=cfg, suppressions=[hide])
+    assert card.overall is None and card.known_issues[0]["check"] == "reconciliation"
+    p = tmp_path / "s.json"
+    from shape.quality.scorecard import load_suppressions, save_suppressions
+
+    save_suppressions(p, [hide])
+    assert load_suppressions(p)[0].check == "reconciliation"
