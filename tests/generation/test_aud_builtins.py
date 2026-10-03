@@ -155,3 +155,19 @@ def test_empirical_cubic_never_leaves_the_outermost_anchors() -> None:
     generator = {"strategy": "empirical", "quantiles": quantiles, "interpolation": "cubic"}
     values = _table({"x": {"type": "float", "generator": generator}}, rows=20_000)["x"].to_numpy()
     assert values.min() >= 0 and values.max() <= 101
+
+
+# ---- #133: digits is uniform at every width --------------------------------------------------
+
+
+def test_wide_digits_are_uniform_in_every_position() -> None:
+    import numpy as np
+
+    for width in (16, 18):
+        generator = {"strategy": "native", "provider": "digits", "width": width}
+        text = _table({"d": {"type": "string", "generator": generator}}, rows=20_000)["d"]
+        values = text.to_pylist()
+        assert {len(v) for v in values} == {width}
+        last = np.bincount([int(v[-1]) for v in values], minlength=10)
+        assert last.min() > 1700, last  # 2000 expected per digit
+        assert len({v[-3:] for v in values}) > 990
