@@ -119,6 +119,26 @@ class SchemaWalker:
             pointer, via = target, True
         raise self.fail("$ref chain is circular", pointer)
 
+    def ref_target(self, schema: Any, pointer: str) -> tuple[str, bool]:
+        """The pointer of the named schema ``schema`` refers to, with whether it is one: a
+        ``$ref``, or a ``oneOf``/``anyOf`` whose only non-null branch is a ``$ref``."""
+        resolved, target, via = self.deref(schema, pointer)
+        if via:
+            return target, True
+        if isinstance(resolved, dict):
+            for key in ("oneOf", "anyOf"):
+                branches = resolved.get(key)
+                if not isinstance(branches, list):
+                    continue
+                live = []
+                for i, b in enumerate(branches):
+                    bres, _, _ = self.deref(b, f"{pointer}/{key}/{i}")
+                    if not (isinstance(bres, dict) and bres.get("type") == "null"):
+                        live.append((b, f"{pointer}/{key}/{i}"))
+                if len(live) == 1:
+                    return self.ref_target(*live[0])
+        return pointer, False
+
     # ---- the effective schema ----
 
     def effective(self, schema: Any, pointer: str, what: str) -> tuple[dict[str, Any] | None, bool]:
@@ -337,7 +357,7 @@ class SchemaWalker:
         self._unused(eff, ptr)
         nullable = nullable or not required
         kind = self.kind(eff)
-        _, target, via_ref = self.deref(pschema, ptr)
+        target, via_ref = self.ref_target(pschema, ptr)
         if kind == "object":
             if not eff.get("properties"):
                 self.report.skipped(
@@ -394,7 +414,7 @@ class SchemaWalker:
             return
         self._unused(ieff, f"{ptr}/items")
         ikind = self.kind(ieff)
-        _, itarget, ivia = self.deref(items, f"{ptr}/items")
+        itarget, ivia = self.ref_target(items, f"{ptr}/items")
         if ikind == "object" and ieff.get("properties"):
             if ivia:
                 child = self.named_table(itarget, itarget.rsplit("/", 1)[-1], ieff)

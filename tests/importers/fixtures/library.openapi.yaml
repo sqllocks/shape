@@ -1,0 +1,18 @@
+openapi: 3.0.0
+info:
+  title: yaml library
+  version: "1"
+components:
+  schemas:
+    Shelf:
+      type: object
+      required: [shelf_id]
+      properties:
+        shelf_id: {type: integer}
+        label: {type: string, maxLength: 10}
+    Copy:
+      type: object
+      required: [copy_id]
+      properties:
+        copy_id: {type: integer}
+        shelf: {$ref: "#/components/schemas/Shelf"}
