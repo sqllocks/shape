@@ -123,3 +123,42 @@ def test_520_flags_and_lists_that_are_right_still_work():
     p = params_from({"scenario": "retail", "dry_run": False, "domains": ("a", "b")})
     assert p.dry_run is False and p.domains == ["a", "b"]
     assert params_from({"scenario": "retail", "output_formats": "terminal, charts"}).output_formats
+
+
+# ---- #521: a run does not overwrite a file in the output folder --------------------------------
+
+
+def inference(schema_file, out_dir, formats):
+    return demo_run(
+        {
+            "scenario": "retail",
+            "domain": str(schema_file),
+            "rows": 1000,
+            "seed": 5,
+            "output_formats": formats,
+            "output_dir": str(out_dir),
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("formats", "name"),
+    [(["charts"], "retail_charts.html"), (["semantic_model"], "retail_model.bim")],
+)
+def test_521_an_existing_file_is_not_overwritten(tmp_path, schema_file, formats, name):
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+    (out_dir / name).write_text("mine", encoding="utf-8")
+    result = inference(schema_file, out_dir, formats)
+    assert result["success"] is False and "already exists" in result["error"]
+    assert (out_dir / name).read_text(encoding="utf-8") == "mine"
+
+
+def test_521_cleanup_of_an_older_session_keeps_the_newer_page(tmp_path, schema_file):
+    out_dir = tmp_path / "out"
+    first = inference(schema_file, out_dir, ["charts"])
+    second = inference(schema_file, out_dir, ["charts"])
+    assert first["success"] and not second["success"]
+    page = out_dir / "retail_charts.html"
+    assert page.is_file()
+    assert demo_cleanup(first["session_id"])["ok"] and not page.exists()
