@@ -181,3 +181,12 @@ def test_threads_generate_a_parent_once(monkeypatch):
     monkeypatch.setenv("SHAPE_THREADS", "4")
     engine_module.Engine(_lookup_schema()).generate()
     assert rows == {"src": 40_000, "dst": 40_000}
+
+
+def test_an_integer_output_near_the_int64_bounds_is_held_inside_them():
+    # 181: floats that round to 2**63 were cast with safe=False to -9223372036854775808.
+    values = pa.array([9.223372036854776e18, -9.3e18, 1e19, 12.6, None, float("nan")])
+    got = cast_output(values, "int64", "t.a").to_pylist()
+    assert got[0] > 9.2e18 and got[2] > 9.2e18
+    assert got[1] < -9.2e18
+    assert got[3:] == [13, None, None]  # NaN has no integer: null
