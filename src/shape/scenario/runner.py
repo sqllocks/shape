@@ -215,9 +215,11 @@ class PackRunner:
         root = pack.fabric_targets.get("lakehouse_files_root")
         if root:
             landing = output_root / str(root)
+        # Checked before anything is created (a link on the way already resolves), and again
+        # after, in case a link appeared in between.
+        _inside(landing, output_root)
         landing.mkdir(parents=True, exist_ok=True)
-        if not landing.resolve().is_relative_to(output_root.resolve()):
-            raise OSError(f"landing path {landing} leaves the output directory")
+        _inside(landing, output_root)
         return landing
 
     def _file_drop(
@@ -268,6 +270,11 @@ class PackRunner:
                 pack.hybrid.stream.topics, generated, output_root, "stream_", table_files, files
             )
         return events
+
+
+def _inside(path: Path, root: Path) -> None:
+    if not path.resolve().is_relative_to(root.resolve()):
+        raise OSError(f"landing path {path} leaves the output directory")
 
 
 # ---- spec overrides -----------------------------------------------------------------------
