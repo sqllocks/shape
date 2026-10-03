@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -160,10 +161,16 @@ def cmd_profile(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
         else:
             folder = ctx.jobs_dir / "bridge" / "profiles"
             folder.mkdir(parents=True, exist_ok=True, mode=0o700)
-            scratch = folder / f".new-{os.getpid()}.shape"
-            content_id = shape.save(prof, str(scratch))
-            target = folder / f"{str(content_id).replace(':', '-')}.shape"
-            os.replace(scratch, target)
+            # One scratch file per call: jobs are threads of one process.
+            fd, name = tempfile.mkstemp(dir=folder, prefix=".new-", suffix=".shape")
+            os.close(fd)
+            scratch = Path(name)
+            try:
+                content_id = shape.save(prof, str(scratch))
+                target = folder / f"{str(content_id).replace(':', '-')}.shape"
+                os.replace(scratch, target)
+            finally:
+                scratch.unlink(missing_ok=True)
     ctx.warn(
         "profile_file_holds_values",
         f"{target} is the full profile: it holds real values (value counts and extremes); "

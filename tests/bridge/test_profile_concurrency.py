@@ -5,8 +5,9 @@ from __future__ import annotations
 
 import threading
 
-import shape
 from bridge_helpers import write_csv
+
+import shape
 
 
 def test_concurrent_profile_jobs_write_their_own_artifact(api, bridge, tmp_path, monkeypatch):
