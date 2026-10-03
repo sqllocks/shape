@@ -880,8 +880,11 @@ def _profile_column(
                 stype = "boolean"
             else:
                 ok = _try(lambda a: pc.cast(a, pa.float64()), uniq)
+                u = pc.cast(uniq, pa.float64()).to_numpy() if ok else None
+                if u is not None and np.isnan(u).any():
+                    ok = False  # a NaN word: pandas' to_numeric gives NaN, so the column is text (#224)
                 if ok:
-                    u = pc.cast(uniq, pa.float64()).to_numpy()
+                    assert u is not None
                     if c.strict:
                         _require_finite(u)
                     stype = "integer" if all_whole(u) else "float"
