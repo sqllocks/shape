@@ -120,7 +120,9 @@ def _csv_profiles(tmp_path: Path) -> list[Profile]:
     (tmp_path / "p3.csv").write_text("id,amt\n")
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        return [shape.profile(str(tmp_path / f"{n}.csv"), sketches=True) for n in ("p1", "p2", "p3")]
+        return [
+            shape.profile(str(tmp_path / f"{n}.csv"), sketches=True) for n in ("p1", "p2", "p3")
+        ]
 
 
 def test_594_an_all_null_partition_merges_with_sketches(tmp_path: Path, kernel: str) -> None:

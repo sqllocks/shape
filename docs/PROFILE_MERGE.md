@@ -39,6 +39,9 @@ week.content_id         # the content id of the merged profile itself
 | `is_unique` | not mergeable from sketches | unknown (`null`) |
 | distribution fits, enum and pattern detection, string lengths, pattern rates, hour/day/year histograms, correlations, keys and relationships | depend on the whole data | unknown (`null`, empty) in a merged profile |
 
+`min_value` and `max_value` merge for every column type a profile reports them for: numbers,
+decimals, text, dates and times, times of day, durations and binary values.
+
 Unknown means `None`: a merged profile never carries a number it could not compute. The names of
 the unknown fields are listed in `merge.unavailable` of the merged profile.
 

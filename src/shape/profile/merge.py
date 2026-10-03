@@ -21,8 +21,11 @@ input had sketch state, carries the merged state, so merges can be chained.
 
 from __future__ import annotations
 
+import ast
 import datetime as _dt
+import decimal
 import math
+import re
 from collections.abc import Sequence
 from typing import Any
 
@@ -486,7 +489,12 @@ def _moments(where: str, cols: list[dict[str, Any]], finite: list[int]) -> tuple
     return mean, (math.sqrt(m2 / (n - 1)) if n > 1 else None)
 
 
+_TIMEDELTA = re.compile(r"(-?\d+) days \+?(\d+):(\d\d):(\d\d)(?:\.(\d{1,6}))?")
+
+
 def _key(where: str, tagged: Any) -> tuple[str, Any]:
+    """A comparable key for a tagged min/max value. Values that cannot be read back (a text
+    cut to its first characters) compare as their text, within their own kind."""
     tag, value = tagged
     if tag in ("int", "float", "bool"):
         return "number", value
@@ -497,6 +505,37 @@ def _key(where: str, tagged: Any) -> tuple[str, Any]:
             return "time", _dt.datetime.fromisoformat(value)
         except (ValueError, TypeError):
             return "time-text", value
+    if tag == "Decimal":
+        try:
+            return "number", decimal.Decimal(value)
+        except (decimal.InvalidOperation, TypeError):
+            return "decimal-text", value
+    if tag == "time":
+        try:
+            return "clock", _dt.time.fromisoformat(value)
+        except (ValueError, TypeError):
+            return "clock-text", value
+    if tag == "Timedelta":
+        m = _TIMEDELTA.fullmatch(value) if isinstance(value, str) else None
+        if m is None:
+            return "duration-text", value
+        days, hours, minutes, seconds, frac = m.groups()
+        micros = int((frac or "0").ljust(6, "0"))
+        return "duration", _dt.timedelta(
+            days=int(days),
+            hours=int(hours),
+            minutes=int(minutes),
+            seconds=int(seconds),
+            microseconds=micros,
+        )
+    if tag == "bytes":
+        try:
+            parsed = ast.literal_eval(value)
+        except (ValueError, SyntaxError, TypeError, MemoryError, RecursionError):
+            parsed = None
+        if isinstance(parsed, bytes):
+            return "bytes", parsed
+        return "bytes-text", value
     raise MergeError(f"{where}: the {tag} extremes cannot be combined")
 
 
@@ -517,6 +556,8 @@ def _extreme(where: str, cols: list[dict[str, Any]], field: str, pick: Any) -> A
             wins = pick(key[1], best_key[1]) == key[1] and key[1] != best_key[1]
         except TypeError as exc:  # a timestamp with a zone against one without
             raise MergeError(f"{where}: {field} mixes time zones: {exc}") from exc
+        except decimal.InvalidOperation as exc:  # a decimal NaN
+            raise MergeError(f"{where}: {field} cannot be compared: {exc!r}") from exc
         if wins:
             best, best_key = tagged, key
     return best
