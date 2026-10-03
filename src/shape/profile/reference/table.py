@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import itertools
 import os
 import threading
 from collections.abc import Callable
@@ -265,11 +266,15 @@ def _detect_fks(
 # public API
 # ---------------------------------------------------------------------------
 
-_FORK_STATE: dict[str, Any] = {}
+# The columns of each running fork pool, by a key per call: the workers read them from the copy
+# of this dict they inherit at fork, and concurrent profile() calls never see each other's (#216).
+_FORK_STATE: dict[int, tuple[list[_Col], int, bool]] = {}
+_FORK_KEYS = itertools.count()
 
 
-def _fork_task(i: int) -> tuple[int, ColumnProfile, Any]:
-    cols, row_count, keep = _FORK_STATE["args"]
+def _fork_task(task: tuple[int, int]) -> tuple[int, ColumnProfile, Any]:
+    key, i = task
+    cols, row_count, keep = _FORK_STATE[key]
     w = _profile_column(cols[i], row_count, keep_uniques=keep)
     return i, w.prof, (w.uniques if keep else None)
 
@@ -327,18 +332,21 @@ def _profile_cols(
     if mode == "process":
         import multiprocessing as mp
 
-        _FORK_STATE["args"] = (cols, row_count, keep_uniques)
+        key = next(_FORK_KEYS)
+        _FORK_STATE[key] = (cols, row_count, keep_uniques)
         try:
             ctx = mp.get_context("fork")
             out: list[Any] = [None] * len(cols)
             with ctx.Pool(min(n, len(cols))) as pool:
                 if on_ready:
                     on_ready()
-                for i, prof, uniq in pool.imap_unordered(_fork_task, order, chunksize=1):
+                for i, prof, uniq in pool.imap_unordered(
+                    _fork_task, [(key, i) for i in order], chunksize=1
+                ):
                     out[i] = _Work(col=cols[i], prof=prof, uniques=uniq)
             return out
         finally:
-            _FORK_STATE.clear()
+            del _FORK_STATE[key]
     if on_ready:
         on_ready()
     if row_count > 1000 and any(c.kind == "str" for c in cols):
