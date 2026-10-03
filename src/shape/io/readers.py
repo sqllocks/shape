@@ -32,6 +32,7 @@ import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.security.jsondepth import check_json_file
 
+from .excel import is_workbook_spec, read_sheet, read_workbook, split_spec, workbook_sheet_names
 from .identifiers import identifier_columns, resolve_type
 
 DEFAULT_BATCH_ROWS = 65_536
@@ -46,6 +47,8 @@ _SUFFIX_KIND = {
     ".arrow": "ipc",
     ".ipc": "ipc",
     ".feather": "ipc",
+    ".xlsx": "xlsx",
+    ".xlsm": "xlsx",
 }
 # pandas' default NA tokens (pandas._libs.parsers.STR_NA_VALUES)
 _PANDAS_NA = (
@@ -122,6 +125,10 @@ def _strip_compression(path: Path) -> str:
 
 def _kind_of(path: Path) -> str:
     suffix = _strip_compression(path)
+    if suffix in (".xls", ".xlsb"):
+        from .excel import check_workbook_file
+
+        check_workbook_file(path)  # raises the clear legacy-format error
     kind = _SUFFIX_KIND.get(suffix)
     if kind is None:
         raise ReaderError(
@@ -456,6 +463,10 @@ def _files_source(
     if len(kinds) != 1:
         raise ReaderError(f"files of mixed types cannot be read as one table: {sorted(kinds)}")
     kind = kinds.pop()
+    if kind == "xlsx":
+        if len(paths) != 1:
+            raise ReaderError("several workbooks cannot be read as one table; open each one")
+        return _workbook_source(str(paths[0]), name, size, columns)
     first_table: list[pa.Table] = []  # csv/jsonl: the first file is read once and reused
 
     def whole(p: Path, pinned: pa.Schema | None = None) -> pa.Table:
@@ -509,6 +520,31 @@ def _files_source(
     elif first_table and len(paths) == 1:
         rows = first_table[0].num_rows
     return Source(name or stem, kind, out_schema, open_batches, rows)
+
+
+def _workbook_source(spec: str, name: str | None, size: int, columns: list[str] | None) -> Source:
+    """One sheet of a workbook: ``book.xlsx#Sheet``, or ``book.xlsx`` when it has one visible
+    sheet. A workbook with several sheets is a dataset: read it with :func:`open_workbook`."""
+    path, sheet = split_spec(spec)
+    if sheet is None:
+        visible = workbook_sheet_names(path)
+        if len(visible) != 1:
+            raise ReaderError(
+                f"{Path(path).name} has {len(visible)} visible sheets {visible}: name one as "
+                f"'{Path(path).name}#SHEET', or read all of them with open_workbook()"
+            )
+        sheet = visible[0]
+    table = _project(read_sheet(path, sheet).table, columns)
+    return _single_batch_source(name or sheet, "xlsx", table, size)
+
+
+def open_workbook(
+    path: str | Path, *, include_hidden: bool = False, batch_size: int = DEFAULT_BATCH_ROWS
+) -> dict[str, Source]:
+    """Every visible sheet of a workbook (and the hidden ones with ``include_hidden``) as a
+    table, by sheet name."""
+    wb = read_workbook(split_spec(path)[0], include_hidden=include_hidden)
+    return {n: _single_batch_source(n, "xlsx", s.table, batch_size) for n, s in wb.sheets.items()}
 
 
 def _column_from_values(values: list[Any]) -> Any:
@@ -588,6 +624,8 @@ def open_source(
     if batch_size < 1:
         raise ValueError("batch_size must be positive")
     csv = csv or CsvOptions()
+    if is_workbook_spec(source):
+        return _workbook_source(str(source), name, batch_size, columns)
     if isinstance(source, (str, Path)) or (
         isinstance(source, (list, tuple))
         and source

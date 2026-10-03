@@ -232,6 +232,28 @@ def _digit_identifier_width(col: ColumnProfile) -> int | None:
     return int(low)
 
 
+def _zero_padded_width(col: ColumnProfile) -> int:
+    """The width of a text column whose values are all the same number of digits and some start
+    with a zero (so that read as numbers they would lose their zeros), else 0."""
+    if col.dtype != "string" or col.is_foreign_key or not col.string_length:
+        return 0
+    low, high = col.string_length.get("min"), col.string_length.get("max")
+    if low is None or low != high or not 2 <= low <= 18:
+        return 0
+    lo, hi = _text_of(col.min_value), _text_of(col.max_value)
+    if (
+        lo is None
+        or hi is None
+        or not (lo.isascii() and lo.isdigit() and hi.isascii() and hi.isdigit())
+    ):
+        return 0
+    return int(low) if lo.startswith("0") else 0
+
+
+def _text_of(value: Any) -> str | None:
+    return value if isinstance(value, str) else None
+
+
 def guess_provider(column_name: str) -> str:
     """A faker provider guessed from a column name."""
     lower = column_name.lower().strip()
@@ -385,6 +407,15 @@ class SchemaBuilder:
         self, col: ColumnProfile, parent_pk: Mapping[str, str], fit_threshold: float = 0.80
     ) -> dict[str, Any]:
         """The generator of one column: the first rule that applies."""
+        digits = _digit_identifier_width(col)
+        if digits is not None and col.is_enum and _is_covered_enum(col):
+            # a ZIP code and the like: the profile lists every value, so keep the value set
+            return _text_enum(col.value_counts_ext or col.enum_values or {})
+        width = _zero_padded_width(col)
+        if width:  # an identifier kept as text (ZIP, NDC, member id): never a number or a pattern
+            if col.is_primary_key or col.is_unique:
+                return {"strategy": "faker", "provider": "digit_ids", "width": width}
+            return {"strategy": "faker", "provider": "digits", "width": width}
         if col.is_primary_key:
             if col.pattern == "uuid" or col.dtype == "string":
                 return {"strategy": "uuid"}
@@ -397,12 +428,8 @@ class SchemaBuilder:
             return {"strategy": "foreign_key", "ref": f"{col.fk_ref_table}.{key}"}
         if col.pattern == "uuid":
             return {"strategy": "uuid"}
-        width = _digit_identifier_width(col)
-        if width is not None:  # a ZIP, NPI or member number: text of digits, zeros and all
-            values = col.value_counts_ext or col.enum_values
-            if col.is_enum and values and _is_covered_enum(col):
-                return _text_enum(values)
-            return {"strategy": "pattern", "format": f"{{digits:{width}}}"}
+        if digits is not None:  # a ZIP, NPI or member number: text of digits, zeros and all
+            return {"strategy": "pattern", "format": f"{{digits:{digits}}}"}
         if col.pattern == "email":
             return {"strategy": "faker", "provider": "email"}
         if col.pattern == "phone":

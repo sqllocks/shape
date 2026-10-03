@@ -260,7 +260,7 @@ def test_multi_file_schema_follows_the_first_file(tmp_path):
 
 def test_errors(tmp_path):
     with pytest.raises(ReaderError, match="unsupported file type"):
-        read_table(_write(tmp_path / "x.xlsx", "junk"))
+        read_table(_write(tmp_path / "x.docx", "junk"))
     a = _write(tmp_path / "a.csv", "k\n1\n")
     b = _write(tmp_path / "b.jsonl", '{"k": 1}\n')
     with pytest.raises(ReaderError, match="mixed types"):

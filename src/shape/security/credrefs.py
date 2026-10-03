@@ -2,16 +2,24 @@
 
 A reference names where a secret lives instead of holding it, so a command line, a config file
 or a log never carries the secret itself. ``env://`` and ``file://`` are built in. ``kv://`` is a
-secret store (a key vault) and needs a resolver the host registers with
-:func:`register_resolver`: core ships no cloud SDK, so without one ``kv://`` fails with a clear
-message. The same references serve signing keys and, later, cloud credentials.
+secret store (a key vault): core ships no cloud SDK, so it needs a resolver, which the Fabric
+plugin provides (Azure Key Vault) or a host registers with :func:`register_resolver`; without one
+``kv://`` fails with a clear message. The same references serve signing keys and cloud sign-in.
+
+``file://`` refuses a secret file that other users can read (see :func:`resolve_reference`): on
+POSIX a file with any group or world permission bit set is an error, not a warning, because a
+warning is read after the secret has already been exposed. ``kv://`` is looked up in the
+Fabric plugin's ``shape_fabric.keyvault`` (Azure Key Vault) when that package is installed; an
+explicit :func:`register_resolver` always wins.
 
 Errors name the reference and the missing piece, never a value.
 """
 
 from __future__ import annotations
 
+import importlib
 import os
+import stat
 import sys
 from collections.abc import Callable, Mapping
 from pathlib import Path
@@ -20,6 +28,10 @@ from typing import IO
 Resolver = Callable[[str], str]
 
 _RESOLVERS: dict[str, Resolver] = {}
+# Schemes a plugin provides, as (module, function): ``kv://`` is Azure Key Vault from the Fabric
+# plugin. The module is imported only when such a reference is resolved, and only if installed.
+_PROVIDERS: dict[str, tuple[str, str]] = {"kv": ("shape_fabric.keyvault", "resolve")}
+_LOADED: dict[str, Resolver | None] = {}
 
 
 class CredentialReferenceError(ValueError):
@@ -37,9 +49,27 @@ def _resolve_env(name: str) -> str:
     return value
 
 
-def _resolve_file(path: str) -> str:
+def _check_private(path: str) -> None:
+    """Refuse a secret file that group or others can access (POSIX; there are no mode bits to
+    read elsewhere, where the operating system's ACLs apply)."""
+    if os.name != "posix":
+        return
+    try:
+        mode = os.stat(path).st_mode
+    except OSError:
+        return  # the read that follows reports it
+    if mode & (stat.S_IRWXG | stat.S_IRWXO):
+        raise CredentialReferenceError(
+            f"credential file {path} is accessible to other users (mode {stat.S_IMODE(mode):04o}): "
+            f"run chmod 600 {path} and try again"
+        )
+
+
+def _resolve_file(path: str, *, private: bool = True) -> str:
     if not path:
         raise CredentialReferenceError("file:// needs a path, as file://PATH")
+    if private:
+        _check_private(path)
     try:
         text = Path(path).read_text(encoding="utf-8")
     except OSError as e:
@@ -57,12 +87,29 @@ def _resolve_file(path: str) -> str:
 
 def _no_kv(_: str) -> str:
     raise CredentialReferenceError(
-        "kv:// needs a secret-store resolver and none is registered: register one with "
+        "kv:// needs a secret-store resolver and none is installed: install the Fabric plugin "
+        "(pip install 'sqllocks-shape[fabric]'), or register one with "
         "shape.security.credrefs.register_resolver('kv', fn) (core ships no cloud SDK)"
     )
 
 
 _BUILTIN: dict[str, Resolver] = {"env": _resolve_env, "file": _resolve_file, "kv": _no_kv}
+
+
+def _discover(scheme: str) -> Resolver | None:
+    """The resolver of a package that provides ``scheme`` (``_PROVIDERS``), when it is installed;
+    imported on first use and remembered."""
+    spec = _PROVIDERS.get(scheme)
+    if spec is None:
+        return None
+    if scheme not in _LOADED:
+        found: Resolver | None = None
+        try:
+            found = getattr(importlib.import_module(spec[0]), spec[1])
+        except Exception:  # noqa: BLE001 - reported as "no resolver" by the caller
+            found = None
+        _LOADED[scheme] = found if callable(found) else None
+    return _LOADED[scheme]
 
 
 def register_resolver(scheme: str, resolver: Resolver) -> None:
@@ -81,13 +128,17 @@ def unregister_resolver(scheme: str) -> None:
 
 
 def _resolver_for(scheme: str) -> Resolver | None:
-    return _RESOLVERS.get(scheme) or _BUILTIN.get(scheme)
+    return _RESOLVERS.get(scheme) or _discover(scheme) or _BUILTIN.get(scheme)
+
+
+def _known(scheme: str) -> bool:
+    return scheme in _RESOLVERS or scheme in _BUILTIN
 
 
 def scheme_of(text: str) -> str | None:
     """The scheme of ``text`` when it is a credential reference, else ``None``."""
     head, sep, _ = text.partition("://")
-    if sep and _resolver_for(head) is not None:
+    if sep and _known(head):
         return head
     return None
 
@@ -96,10 +147,14 @@ def is_reference(text: str) -> bool:
     return scheme_of(text) is not None
 
 
-def resolve_reference(ref: str, *, environ: Mapping[str, str] | None = None) -> str:
+def resolve_reference(
+    ref: str, *, environ: Mapping[str, str] | None = None, private: bool = True
+) -> str:
     """The secret behind ``ref``.
 
-    ``environ`` replaces ``os.environ`` for ``env://`` (for tests and embedding)."""
+    ``environ`` replaces ``os.environ`` for ``env://`` (for tests and embedding). ``private``
+    (the default) makes ``file://`` refuse a file other users can read; pass ``private=False``
+    for a file that is not secret (a public key)."""
     scheme = scheme_of(ref)
     if scheme is None:
         raise CredentialReferenceError(
@@ -114,6 +169,8 @@ def resolve_reference(ref: str, *, environ: Mapping[str, str] | None = None) -> 
     resolver = _resolver_for(scheme)
     if resolver is None:
         raise CredentialReferenceError(f"no resolver for {scheme}://")
+    if scheme == "file" and "file" not in _RESOLVERS:
+        resolver = lambda path: _resolve_file(path, private=private)  # noqa: E731
     failure: str | None = None
     value: str = ""
     try:

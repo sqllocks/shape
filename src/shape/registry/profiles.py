@@ -441,7 +441,7 @@ class ProfileRegistry:
                 _part("name", name)
                 index[f"{system}/{table}/{name}"] = self._entry(system, table, name, path)
             except (OSError, ValueError, KeyError, ShapeError) as e:
-                skipped.append(f"{rel}: {e}")
+                skipped.append(f"{rel.as_posix()}: {e}")
         self._write_index(index)
         return len(index), skipped
 

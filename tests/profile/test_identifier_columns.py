@@ -307,7 +307,13 @@ def test_learn_builds_text_generators(tmp_path):
     assert main(["learn", str(_ids(tmp_path)), "-o", str(out)]) == 0
     cols = next(iter(json.loads(out.read_text())["tables"].values()))["columns"]
     assert cols["member_id"]["type"] == "string"
-    assert cols["member_id"]["generator"] == {"strategy": "pattern", "format": "{digits:10}"}
+    # zero-padded and unique: the digit-ids provider (a key stays unique); no zeros: a pattern
+    assert cols["member_id"]["generator"] == {
+        "strategy": "faker",
+        "provider": "digit_ids",
+        "width": 10,
+    }
+    assert cols["npi"]["generator"] == {"strategy": "pattern", "format": "{digits:10}"}
     assert cols["zip"]["generator"]["output_type"] == "string"
     assert set(cols["zip"]["generator"]["values"]) == set(ZIPS)
     assert cols["amount"]["type"] == "integer"

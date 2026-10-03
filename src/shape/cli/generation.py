@@ -52,7 +52,8 @@ def add_arguments(sub: Any) -> None:
         help="generate data for a domain or a generation schema",
         description="Generate every table of a domain (or of a generation schema file) and write "
         "it in the chosen format. `--dry-run` plans the run and generates nothing. With no "
-        "target, `--rows N` prints N demo rows as JSON lines.",
+        "target, `--rows N` prints N demo rows as JSON lines (not from any schema). "
+        "`--rows TABLE=N` (repeatable) sets the row count of one table of a schema.",
     )
     ge.add_argument("target", nargs="?", metavar="DOMAIN|SCHEMA.json", help=_TARGET_HELP)
     ge.add_argument(
@@ -69,7 +70,9 @@ def add_arguments(sub: Any) -> None:
         help="summary (default: print the plan result, write nothing), or csv, tsv, jsonl, "
         "parquet, ipc, excel, sql, delta, or any installed sink (see `shape plugins list`)",
     )
-    ge.add_argument("-o", "--output", metavar="DIR", help="the output directory (needed to write)")
+    ge.add_argument(
+        "-o", "--output", "--out", metavar="DIR", help="the output directory (needed to write)"
+    )
     ge.add_argument("--dry-run", action="store_true", help="plan the run; generate nothing")
     ge.add_argument("--json", action="store_true", help="print the result or the plan as JSON")
     ge.add_argument(
@@ -83,9 +86,10 @@ def add_arguments(sub: Any) -> None:
     )
     ge.add_argument(
         "--rows",
-        type=int,
-        metavar="N",
-        help="with no target: print N demo rows as JSON lines",
+        action="append",
+        metavar="N|TABLE=N",
+        help="TABLE=N (repeatable): rows of one table of the schema; N: with no target, print "
+        "N demo rows as JSON lines; with --from, the rows of a one-table profile",
     )
     from shape.cli.scale import add_arguments as add_scale_arguments
 
@@ -107,6 +111,17 @@ def add_arguments(sub: Any) -> None:
             default=None,
             help=f"write {what} statements (default: yes)",
         )
+    xl = ge.add_argument_group("excel output (--format excel: one workbook, a sheet per table)")
+    xl.add_argument(
+        "--chaos-log",
+        metavar="FILE",
+        help="a chaos ground-truth log (`shape chaos`): the _README sheet lists what it planted",
+    )
+    xl.add_argument(
+        "--drift-plan",
+        metavar="FILE",
+        help="a drift plan or its answer key: the _README sheet lists the planted drift",
+    )
     dl = ge.add_argument_group("delta output (--format delta)")
     dl.add_argument("--delta-mode", choices=("overwrite", "append"), default="overwrite")
     dl.add_argument("--partition-by", metavar="COLUMN", action="append", help="repeatable")
@@ -192,6 +207,10 @@ def _sink_options(a: argparse.Namespace) -> dict[str, Any]:
         ):
             if value is not None:
                 options[key] = value
+    elif fmt == "excel":
+        for key, value in (("chaos_log", a.chaos_log), ("drift_plan", a.drift_plan)):
+            if value is not None:
+                options[key] = value
     elif fmt == "delta":
         options["mode"] = a.delta_mode
         if a.partition_by:
@@ -199,30 +218,58 @@ def _sink_options(a: argparse.Namespace) -> dict[str, Any]:
     return options
 
 
-def _demo_rows(a: argparse.Namespace) -> int:
+def _rows_arg(a: argparse.Namespace) -> tuple[int | None, dict[str, int]]:
+    """``--rows`` as ``(N, {table: N})``: at most one bare count, any number of ``TABLE=N``."""
+    bare: int | None = None
+    per_table: dict[str, int] = {}
+    for item in a.rows or ():
+        name, eq, text = item.partition("=")
+        try:
+            count = int(text if eq else name)
+        except ValueError:
+            raise ValueError(f"--rows takes N or TABLE=N, not {item!r}") from None
+        if count < 0:
+            raise ValueError(f"--rows counts cannot be negative: {item!r}")
+        if eq:
+            per_table[name] = count
+        elif bare is not None:
+            raise ValueError("--rows N can be given once")
+        else:
+            bare = count
+    return bare, per_table
+
+
+def _demo_rows(a: argparse.Namespace, n: int) -> int:
     from shape.generation import Choice, GenerationPlan, SequenceStrategy
 
     plan = GenerationPlan(
         (("id", SequenceStrategy()), ("segment", Choice(("A", "B", "C"), (0.7, 0.2, 0.1)))),
         a.seed or 0,
     )
-    for row in plan.rows(a.rows):
+    print("shape: demo rows, not generated from any schema", file=sys.stderr)
+    for row in plan.rows(n):
         print(json.dumps(row, sort_keys=True))
     return 0
 
 
 def cmd_generate(a: argparse.Namespace) -> int:
     """``shape generate``: 0 generated (or the plan is sound), 1 a dry run found problems."""
+    bare, per_table = _rows_arg(a)
     if a.scale_mode and a.from_profile:
         raise ValueError("--scale-mode does not combine with --from")
     if a.from_profile:
-        return _generate_from_profile(a)
+        if per_table:
+            raise ValueError("--rows TABLE=N is for a schema; with --from give --rows N")
+        return _generate_from_profile(a, bare)
     if a.target is None:
-        if a.rows is None:
+        if bare is None or per_table:
             raise ValueError("name a domain or a schema file (see `shape list`), or give --rows N")
-        return _demo_rows(a)
-    if a.rows is not None:
-        raise ValueError("--rows prints demo rows and takes no target")
+        return _demo_rows(a, bare)
+    if bare is not None:
+        raise ValueError(
+            "--rows N prints demo rows and takes no target; give --rows TABLE=N to set the rows "
+            "of one table"
+        )
     if a.scale_mode:
         from shape.cli.scale import run_scale
 
@@ -242,7 +289,13 @@ def cmd_generate(a: argparse.Namespace) -> int:
     kwargs: dict[str, Any] = {}
     if a.chunk_rows:
         kwargs["chunk_rows"] = a.chunk_rows
-    engine = Engine(schema, scale=a.scale, seed=a.seed, **kwargs)
+    unknown = sorted(set(per_table) - set(schema.tables))
+    if unknown:
+        raise ValueError(
+            f"--rows names no such table: {', '.join(unknown)}; "
+            f"the tables are: {', '.join(schema.tables)}"
+        )
+    engine = Engine(schema, scale=a.scale, seed=a.seed, row_counts=per_table, **kwargs)
     run.set(
         domain=schema.model.domain or schema.model.name,
         mode=schema.model.schema_mode,
@@ -261,7 +314,7 @@ def cmd_generate(a: argparse.Namespace) -> int:
     return _generate(a, engine)
 
 
-def _generate_from_profile(a: argparse.Namespace) -> int:
+def _generate_from_profile(a: argparse.Namespace, rows: int | None) -> int:
     """``shape generate --from X.shape``: fit a schema to the profile and generate it."""
     if a.target is not None:
         raise ValueError("--from takes a profile: give no domain or schema file")
@@ -273,7 +326,7 @@ def _generate_from_profile(a: argparse.Namespace) -> int:
     from shape.runlog import current
 
     run = current()
-    fitted = fit_schema(shape.load(a.from_profile), rows=a.rows)
+    fitted = fit_schema(shape.load(a.from_profile), rows=rows)
     schema = fitted.schema
     _check_scale(schema, a.scale)
     counts = fitted.plan.counts()

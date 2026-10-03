@@ -123,7 +123,13 @@ class TestTables:
         ]
         assert (cols["a"].precision, cols["a"].scale, cols["a"].max_length) == (18, 2, None)
         assert cols["b"].max_length == 40
-        assert cols["g"].generator == {"strategy": "faker", "provider": "text", "max_nb_chars": 50}
+        assert cols["g"].generator == {
+            "strategy": "faker",
+            "provider": "text",
+            "args": {
+                "max_nb_chars": 50
+            },  # ISS-gen: `args` reach the provider; a top-level key did not
+        }
 
     def test_binary_columns_are_left_out(self) -> None:
         schema = parse("CREATE TABLE t (id INT PRIMARY KEY, blob VARBINARY(100), raw BYTEA);")
@@ -226,8 +232,8 @@ class TestGenerators:
             .columns
         )
         assert cols["a"].generator == {"strategy": "pattern", "format": "{seq:6}"}
-        assert cols["b"].generator["max_nb_chars"] == 200
-        assert cols["c"].generator["max_nb_chars"] == 60
+        assert cols["b"].generator["args"]["max_nb_chars"] == 200
+        assert cols["c"].generator["args"]["max_nb_chars"] == 60
 
     def test_generators_are_not_shared_between_columns(self) -> None:
         cols = parse("CREATE TABLE t (a BIT, b BIT);").tables["t"].columns
@@ -394,14 +400,17 @@ class TestSmartInference:
             "source_column": "price",
             "rule": "multiply",
             "params": {"factor_min": 0.30, "factor_max": 0.70},
+            "output_type": "decimal",  # ISS-gen: the declared DECIMAL(p,s) is kept
         }
         assert schema.tables["products"].columns["margin"].generator == {
             "strategy": "formula",
             "expression": "price - cost",
+            "output_type": "decimal",
         }
         assert schema.tables["order_lines"].columns["line_total"].generator == {
             "strategy": "formula",
             "expression": "quantity * unit_price",
+            "output_type": "decimal",
         }
         assert (
             schema.tables["orders"].columns["tax_amount"].generator["source_column"] == "subtotal"
@@ -412,7 +421,8 @@ class TestSmartInference:
         gen = schema.tables["orders"].columns["customer_id"].generator
         assert gen["distribution"] == "pareto"
         assert gen["params"] == {"alpha": 1.16, "max_per_parent": 50}
-        assert gen["null_rate"] == 0.15
+        assert "null_rate" not in gen  # a column property now (ISS-gen)
+        assert schema.tables["orders"].columns["customer_id"].null_rate == 0.15
 
     def test_row_counts_and_ratios(self) -> None:
         schema, _ = smart(RETAIL)

@@ -91,9 +91,10 @@ class _Col:
     tz: str | None = None  # dt64 only: the Parquet column's time zone (arr holds UTC instants)
     # file sources only: fail where the reference profiler fails on the same file (P1-08)
     strict: bool = False
-    # The reader was told this column is text (an identifier, or named in ``string_columns``):
-    # its digits are not re-typed as numbers, dates or booleans by the profiler's own detectors.
-    keep_text: bool = False
+    # The column is text kept as text (an identifier the CSV reader fixed as text, a column named in
+    # ``string_columns``, an Excel cell stored as text): its digits are not re-typed as numbers,
+    # dates or booleans by the profiler's own detectors, so ZIP codes keep their leading zeros.
+    text: bool = False
 
 
 def _is_string_view(typ: pa.DataType) -> bool:
@@ -157,7 +158,7 @@ def _csv_cols(t: pa.Table) -> list[_Col]:
             and t.schema.field(i).metadata
             and TEXT_MARK in t.schema.field(i).metadata
         ):
-            c.keep_text = True
+            c.text = True
     return out
 
 

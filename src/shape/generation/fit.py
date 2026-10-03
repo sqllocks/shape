@@ -110,6 +110,8 @@ _NATIVE = (
     "zip_plus4",
     "pystr",
     "word",
+    "digits",
+    "digit_ids",
 )
 
 

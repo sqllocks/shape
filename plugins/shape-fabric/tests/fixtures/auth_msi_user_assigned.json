@@ -1,0 +1,35 @@
+{
+  "channel": "identity",
+  "format": 1,
+  "result": {
+    "value": {
+      "token_issued": true
+    }
+  },
+  "scenario": "auth_msi_user_assigned",
+  "source": "in-repo fake service",
+  "steps": [
+    {
+      "request": {
+        "created_with": {
+          "client_id": "66666666-7777-8888-9999-000000000000"
+        },
+        "credential": "ManagedIdentityCredential"
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "request": {
+        "credential": "ManagedIdentityCredential",
+        "get_token": [
+          "https://database.windows.net/.default"
+        ]
+      },
+      "response": {
+        "ok": true
+      }
+    }
+  ]
+}
