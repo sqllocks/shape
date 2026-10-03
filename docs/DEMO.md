@@ -44,7 +44,9 @@ preset.
   and, unless it is a key, a date, a float or a unique pattern, its cardinality is close. The
   score is the share of columns that pass. `--output` takes `terminal` (the report, the
   default), `charts` (one self-contained HTML page), `semantic_model` (a Power BI `.bim` of
-  the learned schema) or `all`; files go to `--output-dir` (the working folder).
+  the learned schema) or `all`; files go to `--output-dir` (the working folder). A file that is
+  already there (`<scenario>_charts.html`, `<scenario>_model.bim`) is never overwritten: the run
+  fails and says so, so remove it (or clean up the session that wrote it) or choose another folder.
 * **seeding**: generates the scenario and writes it to the targets of a connection profile
   (below). With no profile the rows are generated and counted and nothing is written.
   `--scale-mode local` runs here; `spark` submits the run to a Fabric Spark notebook that writes

@@ -13,6 +13,7 @@ import importlib
 from pathlib import Path
 from typing import Any, TextIO
 
+from shape.demo.errors import DemoError
 from shape.demo.fidelity import FidelityReport
 from shape.demo.manifest import DemoManifest
 
@@ -87,6 +88,17 @@ def render_html(real: Any, synthetic: Any, score: float, scenario: str) -> str:
     )
 
 
+def _new_file(path: Path) -> Path:
+    """``path`` when nothing is there: a demo never overwrites a file (and a cleanup of this
+    session then removes only what it wrote)."""
+    if path.exists():
+        raise DemoError(
+            f"{path} already exists: a demo does not overwrite a file; remove it (or run "
+            "`shape demo cleanup` on the session that wrote it) or choose another --output-dir"
+        )
+    return path
+
+
 def render_charts(
     real: Any,
     synthetic: Any,
@@ -97,7 +109,7 @@ def render_charts(
     out: TextIO | None = None,
 ) -> Path:
     """Write the comparison page into ``out_dir`` and record it in the manifest."""
-    path = out_dir / f"{scenario}_charts.html"
+    path = _new_file(out_dir / f"{scenario}_charts.html")
     path.write_text(render_html(real, synthetic, score, scenario), encoding="utf-8")
     manifest.add_artifact("file", path.name, detail=str(path))
     print(f"     Comparison page written to {path}", file=out)
@@ -127,7 +139,7 @@ def write_semantic_model(
             raise ImportError(message) from exc
         print(f"     Skipping the semantic model: {message}", file=out)
         return None
-    path = out_dir / f"{scenario}_model.bim"
+    path = _new_file(out_dir / f"{scenario}_model.bim")
     exporter().export_bim(
         schema,
         source_type="lakehouse",
