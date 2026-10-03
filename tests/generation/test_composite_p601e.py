@@ -44,6 +44,7 @@ sys.path.insert(0, str(BENCH / "domain_1to1"))
 
 import allowlist  # noqa: E402
 import composites  # noqa: E402
+import export_domains  # noqa: E402
 import rowcounts  # noqa: E402
 import schema_import  # noqa: E402
 
@@ -87,6 +88,18 @@ def _normalised(doc: dict) -> dict:
     for table in out["tables"].values():
         for column in table["columns"].values():
             column["generator"].pop("unit", None)
+    return out
+
+
+def _without_unread_keys(doc: dict) -> dict:
+    """The document without the generator keys no generator reads, which the domains leave out
+    (``export_domains.UNREAD_KEYS``)."""
+    out = json.loads(json.dumps(doc))
+    for table in out["tables"].values():
+        for column in table["columns"].values():
+            generator = column["generator"]
+            for key in export_domains.UNREAD_KEYS.get(generator.get("strategy"), frozenset()):
+                generator.pop(key, None)
     return out
 
 
@@ -144,7 +157,10 @@ def _differences(mine: dict, base: dict) -> set[str]:
 @pytest.mark.parametrize("key", sorted(FIXTURES))
 def test_the_merged_schema_is_the_baselines_apart_from_the_named_differences(key):
     mine = _normalised(resolve(FIXTURES[key]["spec"]).schema.to_dict())
-    base = _normalised(schema_import.import_dump(FIXTURES[key]["schema"]).to_dict())
+    assert _without_unread_keys(mine) == mine  # the domains leave those keys out
+    base = _without_unread_keys(
+        _normalised(schema_import.import_dump(FIXTURES[key]["schema"]).to_dict())
+    )
     assert _differences(mine, base) == _expected_differences(key)
 
 
