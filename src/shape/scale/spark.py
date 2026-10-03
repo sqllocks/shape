@@ -25,6 +25,7 @@ import uuid
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import urlsplit
 
 from shape.scale.http import FABRIC_API, ONELAKE_DFS, Http, Transport
 from shape.scale.jobs import JobRecord
@@ -43,6 +44,19 @@ _REQUIREMENT = re.compile(
 
 class NotebookNotFoundError(RuntimeError):
     """The worker notebook could not be found or created."""
+
+
+def _fabric_url(url: str, what: str) -> str:
+    """``url`` when it is an ``https://`` URL on the Fabric API host, else an error: a header or
+    a paging field of an answer must not send the bearer token to another host."""
+    parts = urlsplit(url)
+    api = urlsplit(FABRIC_API)
+    if parts.scheme != "https" or parts.hostname != api.hostname or parts.port not in (None, 443):
+        raise NotebookNotFoundError(
+            f"the {what} is not a {api.hostname} URL ({parts.hostname or 'no host'}); "
+            "the token is not sent there"
+        )
+    return url
 
 
 @dataclass
@@ -181,10 +195,18 @@ class FabricSparkRouter:
     def _list_notebooks(self) -> list[dict[str, Any]]:
         url = f"{FABRIC_API}/workspaces/{self._workspace}/notebooks"
         found: list[dict[str, Any]] = []
+        seen: set[str] = set()
         while url:
+            seen.add(url)
             doc = self._http.request("GET", url).json()
             found.extend(doc.get("value", []))
             url = doc.get("continuationUri") or ""
+            if url:
+                _fabric_url(url, "continuation URI of the notebook list")
+                if url in seen:
+                    raise NotebookNotFoundError(
+                        "the notebook list repeats its continuation URI; paging does not end"
+                    )
         return found
 
     def find_notebook(self) -> str | None:
@@ -255,6 +277,7 @@ class FabricSparkRouter:
             raise NotebookNotFoundError(
                 "the Items API accepted the notebook but gave no operation URL"
             )
+        _fabric_url(location, "operation URL (Location header)")
         for _ in range(60):
             self._sleep(2.0)
             operation = self._http.request("GET", location).json()
@@ -268,6 +291,8 @@ class FabricSparkRouter:
                 raise NotebookNotFoundError(
                     f"notebook creation failed: {operation.get('error', 'unknown')}"
                 )
+            if state in ("Cancelled", "Canceled"):
+                raise NotebookNotFoundError("notebook creation was cancelled")
         raise NotebookNotFoundError("notebook creation timed out after about 2 minutes")
 
     # -- submitting -----------------------------------------------------------------------
