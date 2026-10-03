@@ -503,6 +503,15 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ### Fixed
 
+- Privacy second hunt (HUNT2-privacy): a safe-profile `k` below 2 is refused instead of silently
+  turning suppression off (#596); `release_for` applies the policy to the `joint` block and to
+  `placeholders` (#650); `validate --safe` flags a newer, malformed or foreign format version
+  (#657); `ProfileRegistry.save(safe=True)` keeps the `unsafe` stamp (#669); registry refs and
+  tags are validated, tag writes are atomic and bad metadata writes nothing (#671); wrongly typed
+  documents are a `ValueError` (#679); masking a date at the edge of the calendar is a
+  `MaskingError` (#600) and emails that differ by case are one address in `mask_tables` (#601);
+  signing a symbolic link in place signs its target (#706).
+
 - `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references` no longer depends on test order (#77): it resolves the references in a fresh interpreter and reports which cloud SDK modules got imported, so `azure*` modules left in `sys.modules` by `tests/demo/fabric` cannot fail it.
 - Issue #76. The three tests that failed were not numpy-dependent: they called pyarrow in ways older
   releases reject (float16 from Python floats, `if_else` on half-float, hive partition inference on a
