@@ -36,6 +36,7 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.strategies` | `uniform` | uniform on `[low, high)` |
 | `shape.strategies` | `normal` | normal with `mean` and `stddev` |
 | `shape.strategies` | `address` | coherent addresses from reference rows |
+| `shape.strategies` | `locale` | basic locale packs: places, postcodes, reserved-range phone numbers and first names for a country (`docs/LOCALES.md`) |
 | `shape.strategies` | `uuid` | version-4 UUID strings |
 | `shape.strategies` | `weighted_enum` | a value from a `{value: weight}` mapping (alias sampling) |
 | `shape.strategies` | `distribution` | values from a distribution family, clipped by `min`/`max` and rounded to the column's scale |

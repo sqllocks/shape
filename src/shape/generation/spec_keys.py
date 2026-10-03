@@ -52,6 +52,7 @@ STRATEGY_KEYS: dict[str, frozenset[str]] = {
     "faker": frozenset(
         {"provider", "args", "domains", "range", "width"}
     ),  # width: digits providers
+    "locale": frozenset({"locale", "provider", "group", "format"}),
     "formula": frozenset({"expression"}),
     "derived": frozenset({"source", "rule", "operation", "via", "params", "days"}),
     "computed": frozenset({"rule", "child_table", "child_column"}),
