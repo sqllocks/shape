@@ -46,8 +46,12 @@ STRATEGY_KEYS: dict[str, frozenset[str]] = {
     "distribution": frozenset({"distribution", "params", "min", "max"}),  # + the family's own
     "empirical": frozenset({"quantiles", "interpolation", "min", "max"}),
     "pattern": frozenset({"format"}),
-    "native": frozenset({"provider", "args", "domains", "range"}),
-    "faker": frozenset({"provider", "args", "domains", "range"}),
+    "native": frozenset(
+        {"provider", "args", "domains", "range", "width"}
+    ),  # width: digits providers
+    "faker": frozenset(
+        {"provider", "args", "domains", "range", "width"}
+    ),  # width: digits providers
     "formula": frozenset({"expression"}),
     "derived": frozenset({"source", "rule", "operation", "via", "params", "days"}),
     "computed": frozenset({"rule", "child_table", "child_column"}),
