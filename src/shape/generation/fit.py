@@ -206,11 +206,6 @@ def _looks_like_key(name: str) -> bool:
 # ---- the fit ---------------------------------------------------------------------------------
 
 
-def _is_covered(col: ColumnProfile) -> bool:
-    values = col.value_counts_ext or col.enum_values
-    return values is not None and 0 < len(values) and len(values) >= col.cardinality
-
-
 def _decimals(value: Any) -> int | None:
     """The decimal places a number is written with (at most 6), or ``None``."""
     if isinstance(value, bool) or not isinstance(value, (int, float)):
