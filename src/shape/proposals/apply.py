@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+from pathlib import Path
 from typing import Any
 
 from .model import DecisionError, DecisionFile
@@ -13,7 +14,8 @@ def _fk_name(child: str, column: str) -> str:
 
 
 def apply_decisions(profile: Any, decisions: DecisionFile) -> Any:
-    """A copy of ``profile`` with the relationship decisions applied.
+    """A copy of ``profile`` (a ``Profile``, its dict, or a ``.shape`` path) with the
+    relationship decisions applied.
 
     An *accepted* relationship is added to the profile's relationships and marked on its child
     column, so generation from the profile keeps it. A *rejected* one is removed from both, so a
@@ -27,6 +29,10 @@ def apply_decisions(profile: Any, decisions: DecisionFile) -> Any:
 
     from ._data import dataset_of
 
+    if isinstance(profile, (str, Path)):
+        import shape
+
+        profile = shape.load(str(profile))
     ds = dataset_of(profile)
     data = profile.to_dict() if hasattr(profile, "to_dict") else copy.deepcopy(profile)
     data = copy.deepcopy(data)
