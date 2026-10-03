@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 
 SECRET = "BRIDGE_SECRET_X"
 CONNECTION = f"Server=db;UID=sa;PWD={SECRET}"
@@ -46,3 +47,17 @@ def test_a_warning_is_redacted(api, monkeypatch):
     monkeypatch.setattr(domains, "load_domain", real)
     assert response["ok"] and response["warnings"]
     assert SECRET not in str(response)
+
+
+def test_a_password_inside_a_uri_never_reaches_a_job_file(api, jobs_dir):
+    """#279: masking was by key name only, so a URI's password (and the error quoting it) was
+    written to the job file."""
+    source = f"postgresql://sa:{SECRET}@127.0.0.1:1/db?table=t"
+    job = api.ok("profile", options={"async": True}, source=source)
+    for _ in range(200):
+        if api.ok("job_status", job_id=job["job_id"])["status"] != "running":
+            break
+        time.sleep(0.02)
+    text = (jobs_dir / "bridge" / f"{job['job_id']}.json").read_text()
+    assert "postgresql://sa:***@127.0.0.1:1/db" in text
+    assert SECRET not in text
