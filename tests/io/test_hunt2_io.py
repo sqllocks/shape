@@ -929,4 +929,37 @@ def test_an_intact_workbook_still_reads_after_the_damaged_ones(tmp_path: Path) -
     assert read_table(tmp_path / "ok.xlsx").to_pydict() == {"a": [1]}
 
 
+# ---- #743: an empty path is not the current directory -----------------------------------------
+
+
+@pytest.mark.parametrize("text", ["", "   "])
+def test_an_empty_or_blank_path_is_a_missing_source(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, text: str
+) -> None:
+    from shape.io import expand_paths, open_source, read_table
+
+    pq.write_table(pa.table({"a": [1]}), tmp_path / "p.parquet")
+    monkeypatch.chdir(tmp_path)
+    for call in (
+        lambda: expand_paths(text),
+        lambda: expand_paths(["p.parquet", text]),
+        lambda: read_table(text),
+        lambda: open_source(text),
+    ):
+        with pytest.raises(FileNotFoundError, match="source not found"):
+            call()
+
+
+def test_dot_still_names_the_current_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from shape.io import expand_paths, read_table
+
+    pq.write_table(pa.table({"a": [1]}), tmp_path / "p.parquet")
+    monkeypatch.chdir(tmp_path)
+    assert [p.name for p in expand_paths(".")] == ["p.parquet"]
+    assert [p.name for p in expand_paths(Path("."))] == ["p.parquet"]
+    assert read_table(".").num_rows == 1
+
+
 _ = dt
