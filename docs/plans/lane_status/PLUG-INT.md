@@ -98,3 +98,88 @@ Python 3.11, `~/.venvs/shape`: `pip install -e ".[dev,advanced,streaming]"`, all
 
 Not run here: emulator and live tests (the 4 deselected are core; 75 in plugins), the Windows and macOS legs,
 `dbt deps` from the hub, a CI run of the edited workflows (both files parse as YAML).
+
+
+# Round 2: merge of `origin/int/INT-15`
+
+`git merge origin/int/INT-15` (merge, no rebase, no force-push), merge commit on `lane/PLUG-INT`. Session note: this
+container started on a checkout at `ce8fe11`, behind `origin/lane/PLUG-INT`; fast-forwarded to round 1 (`3039907`)
+before merging.
+
+## Conflicts and resolutions (both sides kept)
+
+| File | Resolution |
+|---|---|
+| `.github/workflows/ci.yml` | **Taken whole from `origin/int/INT-15`** (`git checkout --theirs`), as instructed. Round 1's CI change is the diff below, for the lead to apply. `.github/workflows/nightly.yml` merged without a conflict (INT-15's jobs plus `dbt-build` and `healthcare-standards-validator`); it is in the merge commit as git produced it. |
+| `docs/INSTALL.md` | INT-15's "Offline and air-gapped installs" section kept whole; round 1's `sqllocks-shape-dbt` paragraph kept; round 1's one-line offline sentence dropped because INT-15's section replaces it. |
+| `pyproject.toml` | Extras: INT-15's `postgres`, `mysql`, `databases` and its two new `dev` entries (`duckdb`, `fsspec`) plus round 1's `dbt`, `healthcare`, `all`. New in this round: `fabric`, and `all` now also pins `sqllocks-shape-databases`. |
+| `scripts/check_plugin_skeletons.py` | `EXPECTED` is the union: eleven names (`databases` added to round 1's ten). |
+| `tests/plugins/test_plugin_kit_install.py` | Expected set is the union (eleven); built-wheel count 11; the behavior outside-install tests kept. |
+
+The `shape-databases` plugin is therefore the eleventh first-party distribution: `tests/plugins/test_extras.py`
+now expects eleven, and `docs/plugins/authoring.md` names it and says "eleven `pyproject.toml` files".
+
+## Round 1 gaps
+
+1. **`fabric` extra: built.** T-08 lists `[fabric]` and the extras are this lane's scope (round 1 decision (2)).
+   `fabric=["sqllocks-shape-fabric==0.9.0"]`; `all` already held it. New test
+   `test_every_plugin_has_its_own_extra` requires each plugin to appear in an extra named after it (the three
+   healthcare distributions in `healthcare`). `python scripts/offline_lock.py generate` then `check`: 25 sets
+   OK, so the new extras (`fabric`, `dbt`, `healthcare`, `all`) are handled by INT-15's lock tooling with no change
+   to it.
+2. **Windows: audited, and two real portability defects fixed; the Windows leg itself still cannot run here.**
+   Grep of the four plugins' `src` and `tests` for POSIX-only calls (`fork`, `getuid`, `chmod`, `symlink`,
+   `fcntl`, fixed `/tmp`, `shell=True`, hard-coded `bin/`): none. Found and fixed: (a) `Path.write_text` without
+   `newline` writes CRLF on Windows, so the dbt files, the behavior `run.json` and module JSON, and the
+   healthcare-codes asset metadata were not byte-identical across platforms; they now pass `newline="\n"` (the
+   FHIR, X12 and NCPDP writers already did); (b) `plugins/shape-dbt/tests/test_dbt_build.py::dbt_exe` fell back to
+   `Scripts/dbt`, which does not exist on Windows (`dbt.exe`). The diff below keeps `stream-plugins` on
+   `[ubuntu-latest, windows-latest]`, so the new plugins' fast tests will run on Windows in CI; that run is the
+   verification and **has not happened**. The dbt-build tests are nightly on Linux only.
+3. **dbt hub: out of scope to verify here; owner is the nightly `dbt-build` job (P6-07b / O-07 for the Fabric
+   dbt activity).** `dbt deps` from `hub.getdbt.com` fails in this sandbox again (`tarfile.ReadError: not a gzip
+   file`: the proxy does not pass the package tarballs), and the build tests ran with `SHAPE_DBT_PACKAGES_FILE`
+   pointing at local clones. A fix would be a workflow or network-policy change, not code in this lane. First
+   nightly run is the check; if it fails there, the failing step names the package.
+
+## Workflow change for the lead (exact diff against `origin/int/INT-15`'s `ci.yml`)
+
+Apply with `git apply` (checked with `patch --dry-run` against that file). It extends `stream-plugins`
+(Linux and Windows) with the four plugins' fast tests, and makes the Fabric demo job install `shape-dbt` (the demo's
+dbt gate imports it). INT-15's `database-plugins` job is unchanged.
+
+```diff
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -125,6 +125,8 @@
+       - run: python -m pytest -q tests/plugins/test_kit.py tests/plugins/test_plugin_kit_install.py
+   stream-plugins:
+     # P3-04, P5-02, P6-07a, P6-08: the Kafka, Event Hubs, SQL Server and Fabric plugins' contract tests.
++    # PLUG-INT: also the dbt, behavior, healthcare-codes and healthcare-standards plugins' fast tests.
++    # Their slow suites (the dbt build against DuckDB, the official HL7 validator) run in nightly.yml.
+     runs-on: ${{ matrix.os }}
+     strategy:
+       matrix:
+@@ -134,9 +136,9 @@
+       - uses: actions/setup-python@v5
+         with: {python-version: '3.11'}
+       - run: python -m pip install -U pip
+-      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-kafka -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e plugins/shape-fabric
+-      # The plugins' contract tests (no external service); emulator and live runs are nightly.
+-      - run: python -m pytest -q -m "not emulator and not live" plugins/shape-kafka/tests plugins/shape-eventhubs/tests plugins/shape-sqlserver/tests plugins/shape-fabric/tests
++      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-kafka -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e plugins/shape-fabric -e plugins/shape-dbt -e plugins/shape-behavior -e plugins/shape-healthcare-codes -e 'plugins/shape-healthcare-standards[test]'
++      # The plugins' contract tests (no external service); emulator, live and dbt-build runs are nightly.
++      - run: python -m pytest -q -m "not emulator and not live and not dbt" plugins/shape-kafka/tests plugins/shape-eventhubs/tests plugins/shape-sqlserver/tests plugins/shape-fabric/tests plugins/shape-dbt/tests plugins/shape-behavior/tests plugins/shape-healthcare-codes/tests plugins/shape-healthcare-standards/tests
+   database-plugins:
+     # ISS2-sinks: the PostgreSQL and MySQL sinks, contract tests against an in-memory server
+     # (no driver is installed: the sinks load psycopg / PyMySQL only when they connect).
+@@ -181,7 +183,7 @@
+         with: {distribution: temurin, java-version: '17'}
+       - run: sudo apt-get update -q && sudo apt-get install -y -q unixodbc
+       - run: python -m pip install -U pip
+-      - run: pip install -e '.[dev]' -r tests/demo/fabric/requirements.txt
++      - run: pip install -e '.[dev]' -e plugins/shape-dbt -r tests/demo/fabric/requirements.txt
+       - run: python -m pytest -q tests/demo/fabric tests/demo/content
+   pure-wheel:
+     # PF-03: the T-29 pure wheel is py3-none-any and under 28.6 MB, and the UDF helpers and
+```
