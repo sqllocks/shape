@@ -144,7 +144,15 @@ def _column(name: str, chunked: pa.ChunkedArray) -> Column:
         unit = t.unit
         ints = pc.cast(arr, pa.int64())
         valid = ~np.asarray(pc.is_null(ints).to_numpy(zero_copy_only=False), dtype=bool)
-        v = ints.fill_null(0).to_numpy(zero_copy_only=False).astype(np.int64) * _NS_PER_UNIT[unit]
+        raw = ints.fill_null(0).to_numpy(zero_copy_only=False).astype(np.int64)
+        scale = _NS_PER_UNIT[unit]
+        limit = np.iinfo(np.int64).max // scale
+        if raw.size and (raw.max() > limit or raw.min() < -limit):
+            raise ValueError(
+                f"column {name!r} holds a timestamp outside the nanosecond range "
+                "(1677-09-21 to 2262-04-11), which the fidelity tiers cannot compare"
+            )
+        v = raw * scale
         return Column(name, "datetime", v, valid)
     objs = np.empty(len(arr), dtype=object)
     items = arr.to_pylist()
