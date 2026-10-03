@@ -897,5 +897,23 @@ FAMILIES: dict[str, Family] = {
 
 
 def fit_family(name: str, sample: Sequence[float] | Floats) -> dict[str, Any]:
-    """The fitted parameters of the named family for ``sample``."""
-    return family_by_name(name).fit(np.asarray(sample, dtype=np.float64))
+    """The fitted parameters of the named family for ``sample``. A sample the family cannot be
+    fitted to (empty, not finite, too small, or without the spread the family needs) raises
+    :class:`FamilyError` (#144)."""
+    family = family_by_name(name)
+    x = np.asarray(sample, dtype=np.float64)
+    if x.size == 0:
+        raise FamilyError(f"cannot fit {name} to an empty sample")
+    if not np.isfinite(x).all():
+        raise FamilyError(f"cannot fit {name}: the sample has NaN or infinite values")
+    try:
+        with np.errstate(all="ignore"):
+            params = family.fit(x)
+    except FamilyError:
+        raise
+    except (ArithmeticError, IndexError, ValueError) as exc:
+        raise FamilyError(f"cannot fit {name} to this sample: {exc}") from exc
+    numbers = [v for v in params.values() if isinstance(v, int | float)]
+    if not all(math.isfinite(v) for v in numbers):
+        raise FamilyError(f"cannot fit {name} to this sample (it has too little spread)")
+    return params
