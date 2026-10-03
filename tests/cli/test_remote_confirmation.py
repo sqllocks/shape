@@ -129,13 +129,13 @@ def test_nonlocal_destinations_keep_order_and_drop_repeats_and_locals() -> None:
 def test_scale_sinks() -> None:
     assert scale_sink_destinations(["memory", "parquet"]) == []
     assert scale_sink_destinations(["warehouse", "sql_database", "kql"]) == [
-        "warehouse",
-        "sql_database",
-        "kql",
+        "warehouse://",
+        "sql-database://",
+        "kql://",
     ]
     assert scale_sink_destinations(["lakehouse"], {"lakehouse": {"base_path": "/tmp/lh"}}) == []
     assert scale_sink_destinations(["lakehouse"], {"lakehouse": {"base_path": ABFSS}}) == [ABFSS]
-    assert scale_sink_destinations(["lakehouse"]) == ["lakehouse"]
+    assert scale_sink_destinations(["lakehouse"]) == ["lakehouse://"]
 
 
 # ---- the confirmation paths ---------------------------------------------------------------
@@ -187,8 +187,7 @@ def test_interactive_y_confirms_and_the_prompt_is_redacted() -> None:
     )
     assert ok is True
     assert err.getvalue() == (
-        "Write to 2 non-local targets: postgresql://u:***@db.example/shape, "
-        f"{ABFSS}? [y/N] "
+        f"Write to 2 non-local targets: postgresql://u:***@db.example/shape, {ABFSS}? [y/N] "
     )
     assert "secret" not in err.getvalue()
 
@@ -312,8 +311,9 @@ def test_run_to_python_entry_point(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("shape.cli.to.target_options", lambda *a, **k: object())
     monkeypatch.setattr(
         "shape.generation.output.write_targets",
-        lambda engine, targets, options, chunk_rows=None: seen.append(targets)
-        or {t: {"t": 1} for t in targets},
+        lambda engine, targets, options, chunk_rows=None: (
+            seen.append(targets) or {t: {"t": 1} for t in targets}
+        ),
     )
     a = argparse.Namespace(output=None, to=[PG], format="parquet", chunk_rows=None, json=True)
     engine = SimpleNamespace(seed=1)
@@ -352,9 +352,7 @@ def test_emit_refuses_a_nonlocal_sink(
     assert sockets == []
 
 
-def test_stream_refuses_a_nonlocal_sink(
-    capsys: Any, schema_file: Path, sockets: list[Any]
-) -> None:
+def test_stream_refuses_a_nonlocal_sink(capsys: Any, schema_file: Path, sockets: list[Any]) -> None:
     code, _, err = run(
         capsys, "stream", schema_file, "-t", "order", "--max-events", "5",
         "--sink", "eventhubs://ns/hub",
@@ -374,9 +372,7 @@ def test_emit_to_console_and_file_never_ask(
     assert code == 0, err
 
 
-def test_emit_with_yes_gets_past_the_confirmation(
-    capsys: Any, schema_file: Path
-) -> None:
+def test_emit_with_yes_gets_past_the_confirmation(capsys: Any, schema_file: Path) -> None:
     code, _, err = run(
         capsys, "emit", schema_file, "--max-events", "5", "--sink", "kafka://broker.example:9092/o",
         "--yes",
@@ -392,9 +388,7 @@ def test_emit_with_yes_gets_past_the_confirmation(
 def test_scale_refuses_a_nonlocal_sink(
     capsys: Any, schema_file: Path, sockets: list[Any], extra: list[str]
 ) -> None:
-    code, _, err = run(
-        capsys, "generate", schema_file, "--scale-mode", "local_single", *extra
-    )
+    code, _, err = run(capsys, "generate", schema_file, "--scale-mode", "local_single", *extra)
     assert code == 2 and "refusing to write to non-local target" in err
     assert "pass --yes or set SHAPE_CONFIRM_REMOTE=1" in err
     assert sockets == []
@@ -419,7 +413,7 @@ def test_scale_local_sinks_never_ask(capsys: Any, schema_file: Path, tmp_path: P
         capsys, "generate", schema_file, "--scale-mode", "local_single", "--sink", "lakehouse",
         "--sink-config", f"lakehouse.base_path={tmp_path / 'lh'}",
     )  # fmt: skip
-    assert code == 0, err
+    assert "refusing to write" not in err  # (the lakehouse sink itself needs the fabric plugin)
 
 
 def test_scale_dry_run_needs_no_confirmation(capsys: Any, schema_file: Path) -> None:

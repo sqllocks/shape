@@ -164,9 +164,7 @@ def test_output_may_not_be_the_input_folder_or_inside_it(
     generate(capsys, schema_file, src, "csv")
     before = {p.name: p.read_bytes() for p in src.iterdir()}
     target = {"same": src, "inside": src / "nested", "same_with_dots": src / "x" / ".."}[where]
-    code, _, err = run(
-        capsys, "chaos", "--input", src, "-o", target, "--corrupt", "duplicates=0.5"
-    )
+    code, _, err = run(capsys, "chaos", "--input", src, "-o", target, "--corrupt", "duplicates=0.5")
     assert code == 2
     assert f"shape: error: chaos output {target} is the input folder; give a different -o" in err
     assert {p.name: p.read_bytes() for p in src.iterdir()} == before  # nothing was written
@@ -178,9 +176,7 @@ def test_a_sibling_output_folder_is_fine(tmp_path: Path) -> None:
     check_output_folder(tmp_path / "gen", tmp_path)  # the parent does not overwrite the input
 
 
-def test_chaos_without_input_is_unaffected(
-    capsys: Any, tmp_path: Path, schema_file: Path
-) -> None:
+def test_chaos_without_input_is_unaffected(capsys: Any, tmp_path: Path, schema_file: Path) -> None:
     out = tmp_path / "chaos"
     code, _, err = run(
         capsys, "chaos", schema_file, "-o", out, "--corrupt", "duplicates=0.05", "--seed", 1

@@ -93,7 +93,7 @@ def nonlocal_destinations(targets: Iterable[str]) -> list[str]:
 def scale_sink_destinations(
     sinks: Iterable[str], config: Mapping[str, Mapping[str, Any]] | None = None
 ) -> list[str]:
-    """The ``shape generate --scale-mode`` sinks that write off this machine, as the text to show:
+    """The ``shape generate --scale-mode`` sinks that write off this machine, as the URI to show (``warehouse://``):
     ``memory`` and ``parquet`` are local; ``lakehouse`` is local when its ``base_path`` is a local
     folder or a loopback URI; ``warehouse``, ``sql_database`` and ``kql`` are not."""
     config = config or {}
@@ -105,9 +105,9 @@ def scale_sink_destinations(
             base = str((config.get("lakehouse") or {}).get("base_path") or "")
             if base and is_local_destination(base):
                 continue
-            out.append(base or "lakehouse")
+            out.append(base or "lakehouse://")
         else:
-            out.append(f"{name}")
+            out.append(f"{name.replace('_', '-')}://")  # a scheme has no underscore
     return out
 
 
