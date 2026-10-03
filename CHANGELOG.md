@@ -330,3 +330,26 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Repository cleaned up for public release: removed internal milestone and
   qualification records.
 - README and changelog rewritten to describe the current state.
+
+### Fixed
+
+- Readers (`shape.io`): an existing file whose name has `[`, `*` or `?` is read instead of
+  treated as a glob (#489); a row iterable keeps a key first seen after the first batch, and a
+  column with only nulls so far takes the type of its first values (#492); several files read as
+  one table work when a column is empty in the first file (#493); a `RecordBatchReader` source
+  read twice raises instead of yielding nothing (#498); a damaged Parquet/IPC file or an unknown
+  `columns` name is a `ReaderError` for every file kind (#499); a workbook sheet whose name
+  contains `#` can be selected (`book.xlsx#Q#1`, #497).
+- Connectors: `DBAPISource` refuses result columns with the same name and says when a statement
+  has no result set (#494); Kafka and Event Hubs decoding keep every key and each value's type
+  (#495).
+- Capture: `capture_columns(mode=...)` applies the mode to every column and refuses an invalid
+  one (#496); an int beyond the float range is counted as an infinity, and rows that are not
+  mappings are a clear `TypeError` (#500).
+- Output paths: `MultiStoreWriter` labels stay unique (#501); landing `render_path` refuses an
+  extension or drive-letter table that leaves the directory, and `{hhmmss}` is UTC (#502); a
+  store file needs a name below the root, and a long valid file name gets a valid temporary name
+  (#503).
+- `shape.query`: `column("table.column")` works on a one-table model, and a path after a missing
+  name says what is missing (#504). `docs/LANDING.md` lists the rolling tokens and the
+  `--to abfss://` cloud landing (#505).
