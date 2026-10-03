@@ -38,6 +38,7 @@ INDEX = "_index.json"
 SUFFIX = ".shape"
 SAFE_SUFFIX = ".safe.json"
 _NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+_ENTRY_KEYS = ("system", "table", "name")  # what entries() filters and sorts on (#420)
 
 
 class ProfileRegistryError(ShapeError, ValueError):
@@ -131,7 +132,10 @@ class ProfileRegistry:
             data = json.loads(p.read_text(encoding="utf-8"))
         except ValueError as e:
             raise ProfileRegistryError(f"{p} is not valid JSON ({e}); run `reindex`") from e
-        if not isinstance(data, dict):
+        if not isinstance(data, dict) or not all(
+            isinstance(e, dict) and all(isinstance(e.get(k), str) for k in _ENTRY_KEYS)
+            for e in data.values()
+        ):
             raise ProfileRegistryError(f"{p} is not an index; run `reindex`")
         return data
 
