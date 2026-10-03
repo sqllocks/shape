@@ -23,6 +23,11 @@
       "type": "string",
       "minLength": 1
     },
+    "changes": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The planned-change file (docs/PLANNED_CHANGES.md), relative to the folder holding shape.yml. Default: shape-changes.yml next to shape.yml when that file exists."
+    },
     "sources": {
       "type": "object",
       "description": "Source name to source. Names are also the default registry name of the source's baselines.",

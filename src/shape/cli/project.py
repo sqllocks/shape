@@ -225,3 +225,74 @@ def run(a: argparse.Namespace) -> int:
     if a.cmd == "init":
         return _init(a)
     return _validate(a)
+
+
+# ---- planned changes (W1-12) -------------------------------------------------------------------
+
+
+def add_changes_flags(parser: argparse.ArgumentParser) -> None:
+    g = parser.add_argument_group("planned changes (shape-changes.yml)")
+    g.add_argument(
+        "--changes",
+        metavar="FILE",
+        help="the planned-change file (default: the `changes` key of shape.yml, else "
+        "shape-changes.yml next to it); see docs/PLANNED_CHANGES.md",
+    )
+    g.add_argument("--no-changes", action="store_true", help="ignore planned changes")
+    g.add_argument(
+        "--on",
+        metavar="YYYY-MM-DD",
+        help="the date planned changes are active on (default: today, UTC)",
+    )
+
+
+@dataclass(slots=True)
+class Planned:
+    """The planned changes a command runs under: the file, the day and the source."""
+
+    plan: Any  # shape.project.changes.PlannedChanges
+    on: date
+    source: str | None
+
+    def applier(self) -> Any:
+        return self.plan.applier(self.on, self.source)
+
+    def block(self) -> str:
+        return str(self.plan.path)
+
+
+def planned_for(a: argparse.Namespace, ctx: Context | None) -> Planned | None:
+    """The planned changes for a command, or None (``--no-changes``, or no file). A named file
+    that is missing, or any file that is not valid, is an input error."""
+    from shape.project.changes import load_changes, parse_day, today
+
+    raw_on = getattr(a, "on", None)
+    on = parse_day(raw_on, "--on") if raw_on is not None else today()
+    if getattr(a, "no_changes", False):
+        if getattr(a, "changes", None):
+            raise ValueError("--no-changes cannot be combined with --changes")
+        return None
+    named = getattr(a, "changes", None)
+    path = Path(named) if named else (ctx.project.changes_file() if ctx else None)
+    if path is None:
+        return None
+    plan = load_changes(path)
+    return Planned(plan, on, ctx.source.name if ctx and ctx.source else None)
+
+
+def expiry_notices(report: dict[str, Any]) -> None:
+    """One warning line on stderr for each expired entry that would have matched."""
+    for e in report.get("expired", ()):
+        print(f"shape: warning: planned change {e['id']} expired on {e['until']}", file=sys.stderr)
+
+
+def planned_summary(changes: list[dict[str, Any]]) -> None:
+    """The planned changes of a result as text on stderr, each marked ``(planned: ID)``."""
+    for c in changes:
+        mark = c.get("planned")
+        if mark:
+            what = c.get("column") or "table"
+            print(
+                f"shape: {what}: {c.get('kind') or c.get('rule')} (planned: {mark['id']})",
+                file=sys.stderr,
+            )

@@ -5,6 +5,13 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Planned-change registry (`docs/PLANNED_CHANGES.md`, #90). `shape-changes.yml` (format
+  `shape-planned-changes`, version 1, JSON Schema included) lists changes you expect, with a
+  window and a reason. `shape diff`, `shape check` and `shape verify` read it (`shape.yml` key
+  `changes`, `--changes FILE`, `--no-changes`, `--on DATE`): a planned change inside its window is
+  reported as planned and does not fail, a suppressed one is not reported, an expired entry stops
+  matching and prints a warning. `shape.diff(..., planned=...)` and the `--json` result add
+  `planned`, `planned_not_observed` and `expired`. New `shape changes validate|list|add|ack`.
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
