@@ -353,6 +353,15 @@
         "id": "sha256:2e3cda12f512852578cce846ff7c3e1e872cf313589816184e44e50f6821024a"
       }
     ],
+    "locale": [
+      {
+        "generators": {
+          "locale": 1,
+          "sequence": 1
+        },
+        "id": "sha256:c94a95eb29df0c75f31b1cfbcf8bcb584701f44cf9f37bd05482af73bb3b9687"
+      }
+    ],
     "lookup": [
       {
         "generators": {

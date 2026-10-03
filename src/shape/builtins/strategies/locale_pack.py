@@ -254,6 +254,7 @@ class Locale:
     ``spec['format']`` (``national`` or ``international``) is read by the French phone numbers."""
 
     name = "locale"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         raw = spec.get("locale")
