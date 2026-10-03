@@ -229,3 +229,14 @@ def test_readme_points_to_the_shipped_safe_profile():
     section = readme.split("## What a `.shape` file contains", 1)[1].split("\n## ", 1)[0]
     assert "is planned" not in section
     assert "shape profile safe" in section
+
+
+def test_the_contributing_guide_names_the_checks_ci_runs():
+    """#349: the guide sends contributors to `make check` (what the CI test job runs), and every
+    directory and script it names exists."""
+    guide = (ROOT / "docs/CONTRIBUTING.md").read_text("utf-8")
+    assert "make check" in guide
+    assert 'pytest -m "not emulator and not live"' in guide
+    for path in re.findall(r"`((?:[\w.-]+/)+[\w.-]*)`", guide):
+        assert (ROOT / path).exists(), path
+    assert "docs/CONTRIBUTING.md" in (ROOT / "CONTRIBUTING.md").read_text("utf-8")
