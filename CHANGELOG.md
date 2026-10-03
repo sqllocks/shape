@@ -282,3 +282,13 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Repository cleaned up for public release: removed internal milestone and
   qualification records.
 - README and changelog rewritten to describe the current state.
+
+### Fixed
+
+- Issue #76. The three tests that failed were not numpy-dependent: they called pyarrow in ways older
+  releases reject (float16 from Python floats, `if_else` on half-float, hive partition inference on a
+  single file). They now build and read their data in a way every supported pyarrow accepts, with
+  unchanged assertions. A minimum-versions run showed the declared floors were unusable: pyarrow 14
+  cannot be imported with numpy 2, Shape's own code needs `pyarrow.concat_batches` (pyarrow 19), Delta reads need pyarrow 19.0.1 (19.0.0 raises "Repetition level histogram size mismatch"), and
+  Rust-vs-numpy bitwise equality holds from numpy 2.3. The core floors are now `numpy>=2.3` and
+  `pyarrow>=19.0.1`; `ci/constraints-min.txt` pins them for the minimum-versions check.

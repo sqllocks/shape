@@ -1,0 +1,4 @@
+# Minimum-versions check (BF-76): pins the core runtime floors declared in pyproject.toml
+# [project].dependencies. tzdata has no version floor (Windows only), so it is not pinned.
+numpy==2.3.0
+pyarrow==19.0.1
