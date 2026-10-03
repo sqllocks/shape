@@ -66,6 +66,12 @@ kind, gate names) are checked by `shape project validate`, which reports every p
 with its key path, for example `sources.orders.baseline.window: window is required for
 rolling_window`. Two equal keys in one mapping are an error, not a silent "last one wins".
 
+**Compatibility.** Within `version: 1`, keys are only ever added: a file that was valid stays
+valid. The `thresholds` objects accept every threshold of the drift engine (`docs/DRIFT.md`);
+`dependency_confidence`, `placeholder_share`, `implausible_rate`, `association_shift`,
+`reference_match_rate`, `row_count_ratio_max` and `row_count_ratio_min` were added to the schema
+when the drift engine gained those comparisons.
+
 ## Baselines
 
 A baseline is resolved against the registry (`shape registry`, `docs/REGISTRY.md`): a plain
