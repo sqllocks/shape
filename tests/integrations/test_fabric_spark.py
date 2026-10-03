@@ -54,14 +54,20 @@ def spark(tmp_path_factory: pytest.TempPathFactory) -> Any:
     from pyspark.sql import SparkSession
 
     os.environ["PYSPARK_PYTHON"] = sys.executable  # executors import the same shape
-    session = (
+    builder = (
         SparkSession.builder.master("local[2]")
         .appName("shape-pf02")
         .config("spark.sql.warehouse.dir", str(tmp_path_factory.mktemp("warehouse")))
         .config("spark.ui.enabled", "false")
         .config("spark.sql.shuffle.partitions", "4")
-        .getOrCreate()
     )
+    if importlib.util.find_spec("delta") is not None:
+        # The process has one JVM and its packages are fixed when it starts: start it with
+        # Delta's, as the Delta modules (tests/demo/fabric) do, whichever runs first (#335).
+        import delta
+
+        builder = delta.configure_spark_with_delta_pip(builder)
+    session = builder.getOrCreate()
     yield session
     session.stop()
 
