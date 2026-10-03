@@ -372,6 +372,9 @@ def _cmd_profile(a):
 
     if not a.output:
         raise ValueError("profile needs -o OUT.shape")
+    from shape.cli import errors
+
+    errors.refuse_same_file(a.output, a.src)
     ctx = project_cli.context(a, a.src if isinstance(a.src, str) else None)
     named = project_cli.use_source_path(a, "src", ctx)
     if named is not None:  # `shape profile orders`: the source of shape.yml, not a path
@@ -454,7 +457,9 @@ def _capture_document(a):
 
 def _cmd_capture(a):
     from shape.artifact import write_shape
+    from shape.cli import errors
 
+    errors.refuse_same_file(a.output, a.src)
     name, obj = _capture_document(a)
     if a.output and str(a.output).endswith(".shape"):
         cid = write_shape(a.output, obj, name=name)
@@ -897,7 +902,10 @@ def _cmd_from_ddl(a):
 
     from shape.generation.ddl import from_ddl
 
+    from shape.cli import errors
+
     src = Path(a.input_file)
+    errors.refuse_same_file(a.output, src)
     schema, notes = from_ddl(_read_script(src), domain=a.domain, smart=a.smart, scale=a.scale)
     if not schema.tables:
         raise ValueError(f"no CREATE TABLE statements found in {src}")

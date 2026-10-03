@@ -78,6 +78,22 @@ def fail(exc: BaseException) -> int:
     return EXIT_INPUT_ERROR
 
 
+def refuse_same_file(output: object, *inputs: object) -> None:
+    """A command that writes ``output`` must not be pointed at one of its own inputs: the input
+    would be replaced. Raises ``ValueError`` (an input error) when they are the same file."""
+    from pathlib import Path
+
+    if not output:
+        return
+    target = Path(str(output)).resolve()
+    for source in inputs:
+        if source and "://" not in str(source) and Path(str(source)).resolve() == target:
+            raise ValueError(
+                f"the output file is the input file: {output} (give a different -o, or the "
+                "input would be replaced)"
+            )
+
+
 def guarded(fn: Callable[[], int], *, debug: bool = False) -> int:
     """Run ``fn`` and turn an expected error into a message and exit code 2."""
     try:

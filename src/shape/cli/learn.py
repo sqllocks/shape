@@ -62,6 +62,9 @@ def run(a: argparse.Namespace) -> int:
 
     path = Path(a.input)
     source = _sources(path, a.input_format)
+    from shape.cli import errors
+
+    errors.refuse_same_file(a.output, *(source.values() if isinstance(source, dict) else [path]))
     schema = learn(profile(source), a.domain)
     if a.output:
         out = Path(a.output)

@@ -38,6 +38,9 @@ def run(a: argparse.Namespace) -> int:
     from shape import dictionary
     from shape.cli import project as project_cli
 
+    from shape.cli import errors
+
+    errors.refuse_same_file(a.output, a.profile)
     profile = shape.load(a.profile)
     ctx = project_cli.context(a, profile.name)
     source = ctx.source if ctx is not None else None
