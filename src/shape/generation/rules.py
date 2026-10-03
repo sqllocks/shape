@@ -285,7 +285,12 @@ def _fix_cross_table(rule: BusinessRule, tables: Tables, seed: int) -> Tables:
     elif op == "<=":
         mask = lv > right_vals
         u = RowStream(seed, ltable, lcol, f"fix:{rule.name}").uniform(0, lt.num_rows)
-        new = np.round(right_vals * (0.3 + u * 0.7), 2)
+        if temporal:  # 1 to 29 days before the bound, as a cross_column ``<`` repair
+            new = right_vals - (1 + np.floor(u * 29)).astype("timedelta64[D]").astype(
+                "timedelta64[us]"
+            )
+        else:
+            new = np.round(right_vals * (0.3 + u * 0.7), 2)
     else:
         return tables
     if not mask.any():
