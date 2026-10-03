@@ -71,10 +71,16 @@ def load_geonames_postal(path, country=None):
     )
 
 
+_GAZETTEER_KINDS = ("zcta", "county", "place", "state")
+
+
 def load_census_gazetteer(path, kind, version):
+    if kind not in _GAZETTEER_KINDS:
+        raise ValueError(f"kind must be one of {', '.join(_GAZETTEER_KINDS)}; got {kind!r}")
     p = Path(path)
     out = []
-    sample = p.read_text(encoding="utf-8-sig", errors="replace")[:4096]
+    with p.open("r", encoding="utf-8-sig", errors="replace") as head:
+        sample = head.read(4096)  # enough to tell the delimiter; never the whole file
     delim = "|" if sample.count("|") > sample.count("\t") else "\t"
     with p.open("r", encoding="utf-8-sig", errors="replace", newline="") as f:
         for raw in csv.DictReader(f, delimiter=delim):
