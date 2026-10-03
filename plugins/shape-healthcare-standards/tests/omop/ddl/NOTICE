@@ -1,0 +1,18 @@
+OMOP CDM v5.4 DDL files vendored for tests
+==========================================
+
+The three .sql files in this directory are copied unmodified from the OHDSI CommonDataModel
+repository (https://github.com/OHDSI/CommonDataModel), directory inst/ddl/5.4/duckdb/, at
+commit 4a910305b2cb74a4fc2b2c34baf44eb0542ff03f of the main branch (2026-08-25); the files
+were last changed in commit 40ff52f7cb1e634dd45c3d7157307a47b1b78652 (2026-07-31).
+
+The v5.4.1 tag (4432382693f4e824f2fd5e482692c33772b7568a) has no duckdb directory, so the
+main-branch files are used. Source URLs:
+
+  https://raw.githubusercontent.com/OHDSI/CommonDataModel/main/inst/ddl/5.4/duckdb/OMOPCDM_duckdb_5.4_ddl.sql
+  https://raw.githubusercontent.com/OHDSI/CommonDataModel/main/inst/ddl/5.4/duckdb/OMOPCDM_duckdb_5.4_primary_keys.sql
+  https://raw.githubusercontent.com/OHDSI/CommonDataModel/main/inst/ddl/5.4/duckdb/OMOPCDM_duckdb_5.4_constraints.sql
+
+OHDSI CommonDataModel is licensed under the Apache License, Version 2.0 (the LICENSE file in
+this directory is the upstream license text). Copyright the Observational Health Data
+Sciences and Informatics contributors. No changes were made to the vendored files.
