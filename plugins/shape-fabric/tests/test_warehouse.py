@@ -128,6 +128,24 @@ def test_write_modes_match_the_sql_writer(batches):
     assert len(server.rows("dbo", "t")) == 3
 
 
+@pytest.mark.parametrize("mode", ["truncate", "replace"])
+def test_a_failed_truncate_or_replace_keeps_the_old_rows(mode, batches):
+    # #429: the TRUNCATE or DROP commits with the COPY INTO, or rolls back with it
+    w, server, fs = make()
+    w.write_table("t", batches)
+    before = server.rows("dbo", "t")
+
+    def fail(sql, params):
+        if sql.startswith("COPY INTO"):
+            raise RuntimeError("Bulk load failed")
+
+    server.fail = fail
+    with pytest.raises(WriteError, match="Bulk load failed"):
+        w.write_table("t", batches[:1], write_mode=mode)
+    assert server.rows("dbo", "t") == before and len(before) == 7
+    assert fs.files == {}
+
+
 def test_primary_key_is_declared_not_enforced(batches):
     w, server, _ = make()
     w.write_table("t", batches, primary_key=["id"])

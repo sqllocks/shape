@@ -2,9 +2,11 @@
   "channel": "odbc",
   "format": 1,
   "result": {
-    "value": 3
+    "error": "ShapeError",
+    "message": "table 't': a batch has columns ['x'], but the table has ['id', 'name', 'segment', 'balance', 'score', 'active', 'born', 'seen', 'seen_tz']",
+    "rows_after": 3
   },
-  "scenario": "sql_replace_with_key",
+  "scenario": "sql_truncate_that_fails_keeps_the_old_rows",
   "source": "in-repo fake service",
   "steps": [
     {
@@ -159,17 +161,7 @@
       "request": {
         "op": "execute",
         "params": [],
-        "sql": "DROP TABLE [dbo].[t]"
-      },
-      "response": {
-        "value": null
-      }
-    },
-    {
-      "request": {
-        "op": "execute",
-        "params": [],
-        "sql": "CREATE TABLE [dbo].[t] (\n    [id] BIGINT NOT NULL,\n    [name] NVARCHAR(MAX) NULL,\n    [segment] NVARCHAR(MAX) NULL,\n    [balance] DECIMAL(12,2) NULL,\n    [score] FLOAT NULL,\n    [active] BIT NULL,\n    [born] DATE NULL,\n    [seen] DATETIME2(6) NULL,\n    [seen_tz] DATETIME2(6) NULL,\n    CONSTRAINT [PK_t] PRIMARY KEY ([id])\n)"
+        "sql": "TRUNCATE TABLE [dbo].[t]"
       },
       "response": {
         "value": null
@@ -190,60 +182,41 @@
         "op": "executemany",
         "rows": [
           [
-            0,
+            3,
             "O'Brien; DROP TABLE x;--",
             "a",
             {
-              "$decimal": "0.00"
+              "$decimal": "0.75"
+            },
+            1.0,
+            false,
+            {
+              "$date": "2000-01-04"
+            },
+            {
+              "$datetime": "2026-01-04T12:00:00.123456"
+            },
+            {
+              "$datetime": "2026-01-04T12:00:00.123456"
+            }
+          ],
+          [
+            4,
+            "name 4",
+            "b",
+            {
+              "$decimal": "1.00"
             },
             null,
             true,
             {
-              "$date": "2000-01-01"
+              "$date": "2000-01-05"
             },
             {
-              "$datetime": "2026-01-01T12:00:00.123456"
+              "$datetime": "2026-01-05T12:00:00.123456"
             },
             {
-              "$datetime": "2026-01-01T12:00:00.123456"
-            }
-          ],
-          [
-            1,
-            "name 1",
-            "b",
-            {
-              "$decimal": "0.25"
-            },
-            0.3333333333333333,
-            false,
-            {
-              "$date": "2000-01-02"
-            },
-            {
-              "$datetime": "2026-01-02T12:00:00.123456"
-            },
-            {
-              "$datetime": "2026-01-02T12:00:00.123456"
-            }
-          ],
-          [
-            2,
-            "name 2",
-            "a",
-            {
-              "$decimal": "0.50"
-            },
-            0.6666666666666666,
-            true,
-            {
-              "$date": "2000-01-03"
-            },
-            {
-              "$datetime": "2026-01-03T12:00:00.123456"
-            },
-            {
-              "$datetime": "2026-01-03T12:00:00.123456"
+              "$datetime": "2026-01-05T12:00:00.123456"
             }
           ]
         ],
@@ -255,10 +228,30 @@
     },
     {
       "request": {
-        "op": "commit"
+        "op": "rollback"
       },
       "response": {
         "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [],
+        "sql": "SELECT COUNT(*) FROM [dbo].[t]"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "fetchone"
+      },
+      "response": {
+        "value": [
+          3
+        ]
       }
     }
   ]

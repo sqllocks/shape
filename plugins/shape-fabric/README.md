@@ -65,7 +65,8 @@ lists the tables completed before it. Nothing is reported written unless the des
 | `EventstreamWriter(uri)` | Eventstream | the emitter's transport, flat events with the `_shape_table`/`_shape_seq` key |
 
 `write_mode` (SQL, Warehouse, Eventhouse): `create` (default: an existing table is an error), `append`,
-`truncate`, `replace` (drops the old table). Names are quoted and checked, values are parameters; the
+`truncate`, `replace` (drops the old table). In a SQL database and a Warehouse the `TRUNCATE` or
+`DROP TABLE` commits together with the new rows, so a failed write keeps the old rows. Names are quoted and checked, values are parameters; the
 one literal that cannot be a parameter (the `COPY INTO` location) is validated against a strict
 character set. `shape_fabric.sinks` has `Sink`-protocol adapters; `shape_fabric.onelake` builds
 OneLake paths.
@@ -96,7 +97,7 @@ sink.write(
 |---|---|
 | `mssql://[user[:password]@]host[:port]/database` | the server and database (`sqlserver://` is the same) |
 | `?schema=`, `schema_name=` | SQL schema (default `dbo`; created when missing) |
-| `?write_mode=`, `write_mode=` | `create` (default; an existing table is an error), `append`, `truncate`, `replace` |
+| `?write_mode=`, `write_mode=` | `create` (default; an existing table is an error), `append`, `truncate`, `replace`; the `TRUNCATE` or `DROP TABLE` commits together with the new rows, so a failed write keeps the old rows |
 | `?batch_size=`, `batch_size=` | rows per round trip (default 5,000) |
 | `?commit_rows=`, `commit_rows=` | commit every N rows while the batches are consumed, so readers see rows as they arrive; the default is one transaction per call (a failure rolls everything back). With `commit_rows` a failure rolls back only the open chunk and keeps what was committed |
 | `credential=` | Microsoft Entra sign-in; without it the login is `user` and `password` |

@@ -120,6 +120,58 @@ def test_a_failed_append_rolls_back_only_its_own_rows(batches):
     assert ("dbo", "t") in server.tables  # and the existing table was not dropped
 
 
+def _three_then_failure():
+    yield pa.RecordBatch.from_arrays([pa.array([1, 2, 3])], names=["id"])
+    raise RuntimeError("source died")
+
+
+@pytest.mark.parametrize("mode", ["truncate", "replace"])
+def test_a_failed_truncate_or_replace_keeps_the_old_rows(mode):
+    # #429: the TRUNCATE or DROP is part of the write's one transaction, so a failure rolls
+    # it back with the new rows
+    server = FakeSqlServer()
+    w = writer(server)
+    w.write_table("t", [pa.RecordBatch.from_arrays([pa.array([7, 8, 9])], names=["id"])])
+    before = server.rows("dbo", "t")
+    with pytest.raises(WriteError, match="source died"):
+        w.write_table("t", _three_then_failure(), write_mode=mode)
+    assert server.rows("dbo", "t") == before
+    assert len(before) == 3
+
+
+@pytest.mark.parametrize("mode", ["truncate", "replace"])
+def test_a_truncate_or_replace_commits_once_with_its_rows(mode, batches):
+    server = FakeSqlServer()
+    w = writer(server)
+    w.write_table("t", batches)
+    commits = []
+    real = server.snapshot
+    server.snapshot = lambda: (commits.append(list(server.statements)), real())[1]
+    w.write_table("t", batches[:1], write_mode=mode)
+    assert len(commits) == 1  # nothing is committed before the rows are in
+    assert len(server.rows("dbo", "t")) == 4
+
+
+def test_a_failed_replace_of_a_missing_table_leaves_no_table():
+    server = FakeSqlServer()
+    with pytest.raises(WriteError, match="source died"):
+        writer(server).write_table("t", _three_then_failure(), write_mode="replace")
+    assert ("dbo", "t") not in server.tables
+
+
+def test_with_commit_rows_a_failed_replace_keeps_the_old_rows_until_the_first_commit():
+    server = FakeSqlServer()
+    w = writer(server)
+    w.write_table("t", [pa.RecordBatch.from_arrays([pa.array([7, 8, 9])], names=["id"])])
+    with pytest.raises(WriteError, match="source died"):
+        w.write_table("t", _three_then_failure(), write_mode="replace", commit_rows=10)
+    assert server.rows("dbo", "t") == [(7,), (8,), (9,)]
+    # once a chunk is committed, the replace is committed with it and the chunk stays
+    with pytest.raises(WriteError, match="source died"):
+        w.write_table("t", _three_then_failure(), write_mode="replace", commit_rows=2, batch_size=2)
+    assert server.rows("dbo", "t") == [(1,), (2,)]
+
+
 def test_write_tables_stops_at_the_first_failure_and_reports_progress(batches):
     server = FakeSqlServer()
     w = writer(server)

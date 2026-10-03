@@ -9,15 +9,17 @@ already there:
 ``create``    create the table; an existing table is an error (the default)
 ``append``    add rows; the table is created when it is missing
 ``truncate``  empty the table, then add rows; created when missing
-``replace``   drop the table and create it again (destroys the old rows)
+``replace``   drop the table and create it again; the old rows are gone once the new ones commit
 
 Rows are sent as parameterised ``INSERT`` statements, ``batch_size`` rows per round trip (default
-5,000). A table is written in one transaction by default: a failure rolls back its rows, and a
-table this call created is dropped again. With ``commit_rows=N`` the writer instead commits after
+5,000). A table is written in one transaction by default, together with a ``truncate``'s
+``TRUNCATE`` and a ``replace``'s ``DROP TABLE`` and ``CREATE TABLE``: a failure rolls back its
+rows, an existing table keeps its old rows (``truncate`` and ``replace`` included), and a table
+this call created is dropped again. With ``commit_rows=N`` the writer instead commits after
 every ``N`` rows (rounded up to a whole ``batch_size`` round trip) while it consumes the batches,
 so a reader sees the rows as they arrive (streaming use); a failure then rolls back only the open
-chunk, and the rows already committed, and the table, stay. (``replace`` has already dropped
-the old table by then; ``create`` and the other modes lose nothing.) A failure stops the run
+chunk, and the rows already committed, and the table, stay. (A ``truncate`` or ``replace``
+commits with the first chunk; a failure before it keeps the old rows.) A failure stops the run
 with :class:`WriteError`, whose ``result`` lists the tables that were completed.
 
 Names are quoted and checked; values are never part of a statement. ``connection_string`` may be
@@ -139,7 +141,11 @@ def prepare_table(
     primary_key: Sequence[str] = (),
 ) -> bool:
     """Make the target ready for ``mode`` (see the module docstring); ``schema`` is normalized.
-    Returns whether this call created the table."""
+
+    A ``truncate`` or ``replace`` of an existing table is left uncommitted: it commits with the
+    rows, and a rollback brings the old rows back (#429). A table that did not exist is created
+    and committed on its own. Returns whether this call committed a new table, which
+    :func:`undo` drops again after a failure."""
     db.ensure_schema(schema_name)
     exists = db.table_exists(schema_name, table)
     if mode == "create" and exists:
@@ -147,15 +153,12 @@ def prepare_table(
             f"table {schema_name}.{table} already exists; set write_mode to append, truncate "
             "or replace to write into it"
         )
-    if mode == "replace" and exists:
-        db.execute(_tsql.drop_table_sql(schema_name, table))
-        db.commit()
-        exists = False
     if exists and mode == "truncate":
         db.execute(_tsql.truncate_sql(schema_name, table))
-        db.commit()
-    if exists:
+    if exists and mode != "replace":
         return False
+    if exists:
+        db.execute(_tsql.drop_table_sql(schema_name, table))
     db.execute(
         _tsql.create_table_sql(
             schema_name,
@@ -166,6 +169,8 @@ def prepare_table(
             primary_key=primary_key,
         )
     )
+    if exists:
+        return False  # the drop and the new table commit with the rows, or roll back together
     db.commit()
     return True
 

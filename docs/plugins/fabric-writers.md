@@ -7,7 +7,7 @@ are described in the plugin's README (`plugins/shape-fabric/README.md`).
 Safety rules the writers follow: the default `write_mode` is `create`, which never touches an existing
 table; identifiers are validated and quoted; values are driver parameters; the `COPY INTO` location is
 checked against a strict character set; errors never show passwords or tokens; a failed write rolls
-back its table, and staged files and partial files are removed.
+back its table (a `truncate` or `replace` keeps the old rows), and staged files and partial files are removed.
 
 The `onelake://<workspace>/<lakehouse>/Tables/<table>` form reads a Delta table and
 `.../Files/<path>` reads files, through the core `abfss://` source (see [cloud-sources.md](cloud-sources.md)).
@@ -34,7 +34,7 @@ sink.write(
 |---|---|
 | `mssql://[user[:password]@]host[:port]/database` | the server and database (`sqlserver://` is the same) |
 | `?schema=`, `schema_name=` | SQL schema (default `dbo`; created when missing) |
-| `?write_mode=`, `write_mode=` | `create` (default; an existing table is an error), `append`, `truncate`, `replace` |
+| `?write_mode=`, `write_mode=` | `create` (default; an existing table is an error), `append`, `truncate`, `replace`; the `TRUNCATE` or `DROP TABLE` commits together with the new rows, so a failed write keeps the old rows |
 | `?batch_size=`, `batch_size=` | rows per round trip (default 5,000) |
 | `?commit_rows=`, `commit_rows=` | commit every N rows while the batches are consumed, so readers see rows as they arrive; the default is one transaction per call (a failure rolls everything back). With `commit_rows` a failure rolls back only the open chunk and keeps what was committed |
 | `credential=` | Microsoft Entra sign-in; without it the login is `user` and `password` |

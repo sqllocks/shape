@@ -43,7 +43,8 @@ shape publish retail -t eventhouse --connection-string https://<query-uri-host> 
   reference or a connection string without a password; `--credential REF` names a reference that
   holds it. The Warehouse stages Parquet at `--staging-path` (or `--base-path`) and loads with `COPY
   INTO`. `--write-mode create|append|truncate|replace` (default `create`: an existing table is an
-  error, nothing is dropped), `--batch-size`, `--schema-name`.
+  error, nothing is dropped; `truncate` and `replace` commit together with the new rows, so a failed
+  write keeps the old rows), `--batch-size`, `--schema-name`.
 * **eventhouse**: `--connection-string` is the query URI (or a reference to it), `--database` the KQL
   database; one KQL table per table, `--write-mode` as above.
 

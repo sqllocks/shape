@@ -207,7 +207,9 @@ class SqlServerSink:
     * ``connection_string`` (ODBC or ADO.NET form) or an open ``connection`` replace the URI's
       host and database.
     * ``commit_rows``: commit every N rows while the batches are consumed, so a reader sees them
-      as they arrive (streaming); the default is one transaction for the whole call.
+      as they arrive (streaming); the default is one transaction for the whole call, which
+      includes a ``truncate``'s ``TRUNCATE`` and a ``replace``'s ``DROP TABLE``: a failed write
+      keeps the old rows.
     * ``batch_size`` (rows per round trip), ``schema_name`` (default ``dbo``), ``columns``,
       ``primary_key`` and ``schema`` (an Arrow schema, to create an empty table) as the writer.
 

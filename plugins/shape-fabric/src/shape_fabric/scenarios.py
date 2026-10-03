@@ -29,6 +29,7 @@ from unittest import mock
 
 import pyarrow as pa  # type: ignore[import-untyped,unused-ignore]
 
+from . import _tsql
 from ._auth import SCOPE_SQL, token_for
 from .auth import AuthSettings, build_credential
 from .eventhouse import EventhouseEmitter
@@ -376,6 +377,21 @@ def sql_append_that_fails_is_rolled_back(svc: OdbcService) -> Any:
     return _outcome(lambda: w.write_table("t", [*sample_batches(), bad], write_mode="append"))
 
 
+def _sql_mode_that_fails(mode: str) -> Callable[[OdbcService], Any]:
+    """A ``truncate`` or ``replace`` whose input fails after the first batch went in: the
+    TRUNCATE or DROP rolls back with the rows, and the three old rows are still there."""
+
+    def run(svc: OdbcService) -> Any:
+        w = _sql_writer(svc.connect)
+        w.write_table("t", [sample_batch(0, 3)])
+        bad = pa.RecordBatch.from_arrays([pa.array([1])], names=["x"])
+        outcome = _outcome(lambda: w.write_table("t", [sample_batch(3, 2), bad], write_mode=mode))
+        cursor = w.db.execute(_tsql.count_sql("dbo", "t"))
+        return {**outcome, "rows_after": cursor.fetchone()[0]}
+
+    return run
+
+
 def sql_wide_string_after_a_short_first_row(svc: OdbcService) -> Any:
     batch = pa.RecordBatch.from_arrays([pa.array(["a", "a longer string", "mid"])], names=["s"])
     return _outcome(lambda: _sql_writer(svc.connect).write_table("t", [batch]))
@@ -571,6 +587,18 @@ SCENARIOS: dict[str, Scenario] = {
             "odbc",
             sql_append_that_fails_is_rolled_back,
             _sql_server_append_fails,
+        ),
+        Scenario(
+            "sql_truncate_that_fails_keeps_the_old_rows",
+            "odbc",
+            _sql_mode_that_fails("truncate"),
+            _sql_server,
+        ),
+        Scenario(
+            "sql_replace_that_fails_keeps_the_old_rows",
+            "odbc",
+            _sql_mode_that_fails("replace"),
+            _sql_server,
         ),
         Scenario(
             "sql_wide_string_after_a_short_first_row",
