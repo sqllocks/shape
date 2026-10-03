@@ -49,6 +49,10 @@ GATE_FILE = "gate.json"
 PROFILE_FILE = "profile.shape"
 SUMMARY_FILE = "summary.json"
 _STDERR_TAIL = 800
+# The gate checks the profile it writes against a contract (ranges, allowed values), which needs
+# the real extremes and values, and it publishes that profile as the baseline of the next diff:
+# it asks for a full capture (W1-11 made the default safe). Real values land in `outputUrl`.
+GATE_CAPTURE = "full"
 _ABFS = re.compile(r"^abfss?://", re.IGNORECASE)
 
 
@@ -173,7 +177,7 @@ def evaluate(settings: dict[str, Any], work: Path, shape_cmd: list[str]) -> dict
         env["AZURE_CLIENT_ID"] = client_id  # DefaultAzureCredential picks a user-assigned identity
     gate = _new_gate()
     profile, summary = work / PROFILE_FILE, work / SUMMARY_FILE
-    proc = _shape(shape_cmd, ["profile", source, "-o", str(profile), "--json", str(summary)], env)
+    proc = _shape(shape_cmd, ["profile", source, "-o", str(profile), "--json", str(summary), "--capture", GATE_CAPTURE], env)
     if proc.returncode != 0:
         raise GateError(f"shape profile exited {proc.returncode}: {_tail(proc)}")
     gate["rowCount"] = json.loads(summary.read_text(encoding="utf-8")).get("row_count")

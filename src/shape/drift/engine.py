@@ -26,7 +26,7 @@ from __future__ import annotations
 import fnmatch
 import json
 import math
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -242,6 +242,13 @@ class View:
     origin: str = "profile"  # "profile" (the reference profiler) or "engine" (profile engine)
     placeholders: list[dict[str, Any]] = field(default_factory=list)  # sentinel values (#47)
     top_values: dict[str, float] | None = None  # share of the non-null values, most frequent first
+    # surfaces a safe capture removed (W1-11): what this side cannot be compared on
+    suppressed: frozenset[str] = frozenset()
+
+    @property
+    def folded(self) -> bool:
+        """The categories were folded into ``__OTHER__`` by a safe capture."""
+        return self.categories is not None and OTHER_BUCKET in self.categories
 
     @property
     def unique_rate(self) -> float | None:
@@ -349,6 +356,12 @@ def _complete(proportions: Mapping[str, float] | None) -> dict[str, float] | Non
 
 
 _PATTERN_DATE = {"date"}
+OTHER_BUCKET = "__OTHER__"  # shape.privacy.cells.OTHER_BUCKET (a test keeps them equal)
+
+
+def _suppressed(col: Mapping[str, Any]) -> frozenset[str]:
+    redacted = col.get("redacted")
+    return frozenset(str(k) for k in redacted) if isinstance(redacted, Mapping) else frozenset()
 
 
 def view_of_profile_column(col: Mapping[str, Any], rows: int) -> View:
@@ -381,6 +394,7 @@ def view_of_profile_column(col: Mapping[str, Any], rows: int) -> View:
         distribution=col.get("distribution"),
         placeholders=list(col.get("placeholders") or ()),
         top_values=col.get("value_counts_ext"),
+        suppressed=_suppressed(col),
     )
     if dtype == "datetime":
         view.hour = col.get("hour_histogram")
@@ -575,13 +589,16 @@ def _largest_moves(
     )
 
 
-def _cdf(view: View) -> tuple[np.ndarray, np.ndarray] | None:
+_EXTREMES = frozenset({"min_value", "max_value"})
+
+
+def _cdf(view: View, endpoints: bool = True) -> tuple[np.ndarray, np.ndarray] | None:
     import numpy as np
 
     pairs = list(view.quantiles)
-    if view.min is not None:
+    if endpoints and view.min is not None:
         pairs.append((0.0, view.min))
-    if view.max is not None:
+    if endpoints and view.max is not None:
         pairs.append((1.0, view.max))
     if len(pairs) < 3:
         return None
@@ -598,7 +615,10 @@ def _ks(base: View, cur: View) -> float | None:
     """The KS distance between two columns, from their quantiles (piecewise-linear CDFs)."""
     import numpy as np
 
-    a, b = _cdf(base), _cdf(cur)
+    # a side whose extremes a safe capture removed is compared on its quantiles alone, and so is
+    # the other side, so neither has an end point the other lacks
+    ends = not ((base.suppressed | cur.suppressed) & _EXTREMES)
+    a, b = _cdf(base, ends), _cdf(cur, ends)
     if a is None or b is None:
         return None
     xs = np.union1d(a[0], b[0])
@@ -644,7 +664,53 @@ def _family_evidence(base: View, cur: View, enough: bool) -> bool:
     return ks > _ks_critical(base, cur)
 
 
-def _diff_column(name: str, base: View, cur: View, th: Mapping[str, Any]) -> list[dict[str, Any]]:
+def _sides(base: View, cur: View, lacks: Callable[[View], bool]) -> list[str]:
+    """The sides (``baseline``, ``current``) that ``lacks`` says cannot be compared."""
+    return [side for side, view in (("baseline", base), ("current", cur)) if lacks(view)]
+
+
+def _not_evaluable(
+    skipped: list[dict[str, Any]] | None, column: str, kind: str, sides: list[str], what: str
+) -> None:
+    """Record a comparison that cannot be made because a safe capture removed what it reads: it
+    is listed in the result and never counted as a change."""
+    if skipped is None:
+        return
+    where = " and ".join(sides)
+    skipped.append(
+        {
+            "column": column,
+            "kind": kind,
+            "captured_safe": list(sides),
+            "reason": f"{what} was captured safe (statistics and formats only) on the {where} "
+            "side; re-profile with --capture full",
+        }
+    )
+
+
+def _category_gap(base: View, cur: View) -> list[str]:
+    """The sides on which the categories cannot be compared: one side is folded into
+    ``__OTHER__`` and the other is not, or a safe capture removed them on one side."""
+    if base.categories is not None and cur.categories is not None:
+        if base.folded == cur.folded:
+            return []
+        return ["baseline" if base.folded else "current"]
+    if base.categories is None and cur.categories is None:
+        return []
+    return _sides(
+        base,
+        cur,
+        lambda v: v.categories is None and bool({"enum_values", "value_counts_ext"} & v.suppressed),
+    )
+
+
+def _diff_column(
+    name: str,
+    base: View,
+    cur: View,
+    th: Mapping[str, Any],
+    skipped: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     # The two profilers type whole-valued floats differently, and Shape models know one numeric
     # family: int against float is a type change only between two reference profiles.
@@ -663,25 +729,28 @@ def _diff_column(name: str, base: View, cur: View, th: Mapping[str, Any]) -> lis
     keyed = base.key_like or cur.key_like
     flag = base.flag and cur.flag
     if base.dtype in _NUMERIC and cur.dtype in _NUMERIC and not keyed and not flag:
-        out.extend(_diff_numeric(name, base, cur, th, enough))
+        out.extend(_diff_numeric(name, base, cur, th, enough, skipped))
     fitted = "engine" not in (base.origin, cur.origin)  # the engine's documents carry no fit
-    if (
-        fitted
-        and not keyed
-        and not flag
-        and base.distribution != cur.distribution
-        and _family_evidence(base, cur, enough)
-    ):
-        out.append(
-            _change(
-                name,
-                "distribution_change",
-                base.distribution,
-                cur.distribution,
-                _DISTRIBUTION_LABEL_SCORE,
+    if fitted and not keyed and not flag and base.distribution != cur.distribution:
+        no_fit = _sides(base, cur, lambda v: "distribution_params" in v.suppressed)
+        if no_fit:  # the fit names the minimum, so a safe capture keeps none of it
+            _not_evaluable(skipped, name, "distribution_change", no_fit, "its distribution fit")
+        elif _family_evidence(base, cur, enough):
+            out.append(
+                _change(
+                    name,
+                    "distribution_change",
+                    base.distribution,
+                    cur.distribution,
+                    _DISTRIBUTION_LABEL_SCORE,
+                )
             )
-        )
-    if flag:
+    gap = _category_gap(base, cur)
+    if gap:
+        boolean = "boolean" in (base.dtype, cur.dtype)
+        kind = "true_rate_change" if boolean else "category_shift"
+        _not_evaluable(skipped, name, kind, gap, "its category counts")
+    elif flag:
         b_rate, c_rate = base.true_rate, cur.true_rate
         if b_rate is not None and c_rate is not None and enough:
             se = math.sqrt(
@@ -744,7 +813,12 @@ def _diff_cardinality(
 
 
 def _diff_numeric(
-    name: str, base: View, cur: View, th: Mapping[str, Any], enough: bool
+    name: str,
+    base: View,
+    cur: View,
+    th: Mapping[str, Any],
+    enough: bool,
+    skipped: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     b_std = base.std
@@ -771,7 +845,11 @@ def _diff_numeric(
         if ks is not None:
             if ks > max(th["ks_distance"], _ks_critical(base, cur)):
                 out.append(_change(name, "distribution_shift", _summary(base), _summary(cur), ks))
-    out.extend(_diff_range(name, base, cur, th))
+    no_extremes = _sides(base, cur, lambda v: bool(_EXTREMES & v.suppressed))
+    if no_extremes:
+        _not_evaluable(skipped, name, "range_change", no_extremes, "its minimum and maximum")
+    else:
+        out.extend(_diff_range(name, base, cur, th))
     b_out, c_out = base.outlier_rate, cur.outlier_rate
     if b_out is not None and c_out is not None:
         p = 0.5 * (b_out + c_out)
@@ -893,9 +971,11 @@ def diff_records(
     baseline: Any,
     current: Any,
     policy: Policy,
+    skipped: list[dict[str, Any]] | None = None,
 ) -> list[tuple[str | None, str | None, dict[str, Any]]]:
     """``(table, column, record)`` for every change that passes ``policy`` (the table is ``None``
-    when neither side is a dataset)."""
+    when neither side is a dataset). A comparison that a safe capture makes impossible is not a
+    change: it is appended to ``skipped`` when a list is given (W1-11)."""
     b_tables, b_dataset = tables_of(baseline)
     c_tables, c_dataset = tables_of(current)
     dataset = b_dataset or c_dataset
@@ -931,8 +1011,14 @@ def diff_records(
         for cname, bv in bt.columns.items():
             if cname in ct.columns:
                 th = policy.for_column(tname if dataset else None, cname)
-                for ch in _diff_column(_qualify(tname, cname, dataset), bv, ct.columns[cname], th):
+                gaps: list[dict[str, Any]] = []
+                found = _diff_column(
+                    _qualify(tname, cname, dataset), bv, ct.columns[cname], th, gaps
+                )
+                for ch in found:
                     changes.append((tname, cname, ch))
+                if skipped is not None and not policy.skips(tname if dataset else None, cname):
+                    skipped.extend(gaps)
     out: list[tuple[str | None, str | None, dict[str, Any]]] = []
     for owner, col, record in changes:
         scope = owner if dataset else None
@@ -946,10 +1032,13 @@ def diff_records(
     from .joint import diff_joint
 
     for tname, bt, ct in pairs:
-        out.extend(diff_joint(tname if dataset else None, bt, ct, policy))
+        out.extend(diff_joint(tname if dataset else None, bt, ct, policy, skipped))
     return out
 
 
-def diff_tables(baseline: Any, current: Any, policy: Policy) -> list[dict[str, Any]]:
-    """Compare two profiled things and return the change records that pass ``policy``."""
-    return [ch for _, _, ch in diff_records(baseline, current, policy)]
+def diff_tables(
+    baseline: Any, current: Any, policy: Policy, skipped: list[dict[str, Any]] | None = None
+) -> list[dict[str, Any]]:
+    """Compare two profiled things and return the change records that pass ``policy``; what a
+    safe capture makes impossible to compare goes to ``skipped`` (see :func:`diff_records`)."""
+    return [ch for _, _, ch in diff_records(baseline, current, policy, skipped)]

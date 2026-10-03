@@ -338,6 +338,9 @@ def _cmd_profile(a):
     if not a.output:
         raise ValueError("profile needs -o OUT.shape")
     from shape.cli import auth
+    from shape.cli import capture as capture_args
+
+    capture_config = capture_args.config_from_args(a)  # a bad setting fails before any work
 
     settings = auth.settings_from_args(a)
     if settings and "://" not in a.src:
@@ -363,13 +366,19 @@ def _cmd_profile(a):
     else:
         prof = shape.profile(_profile_source(a), **options)
     _warn_empty(a, prof)
-    content_id = shape.save(prof, a.output)
+    from shape.privacy.redact import redact_profile
+    from shape.profile.reference.profile import save_captured
+
+    captured = redact_profile(prof, capture_config)  # what is written or printed below
+    content_id = save_captured(captured, a.output)
     key_id = _sign_output(a, a.output)
+    if captured.capture["mode"] == "full":
+        capture_args.warn_full(a.output)
     if a.html:
         with open(a.html, "w", encoding="utf-8") as fh:
-            fh.write(prof.to_html())
+            fh.write(captured.to_html())
     if a.json:
-        _write_json(a.json, prof.summary())
+        _write_json(a.json, captured.summary())
     out = {"written": a.output, "shape_content_id": content_id}
     if prof.provenance is not None:
         out["provenance"] = prof.provenance
@@ -485,7 +494,11 @@ def _cmd_check(a):
     if a.json:
         _write_json(a.json, out)
     _dump(out)
-    return 0 if result.passed else 1
+    for gap in result.not_evaluable:
+        print(f"shape: error: not evaluable: {gap['reason']}", file=sys.stderr)
+    if result.violations:
+        return 1
+    return 2 if result.not_evaluable else 0
 
 
 def _cmd_fidelity(a):
@@ -926,6 +939,9 @@ def _build_parser(plugin_commands=()):
     pr.add_argument("-o", "--output", metavar="OUT")
     pr.add_argument("--sign", metavar="KEY", help="sign the written .shape; KEY: " + _KEY_HELP)
     _add_passphrase_args(pr)
+    from shape.cli.capture import add_capture_args
+
+    add_capture_args(pr)
     pr.add_argument(
         "--dataset",
         action="store_true",

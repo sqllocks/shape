@@ -181,7 +181,7 @@ def test_dataset_profile_maps_every_table_and_keeps_relationships(profile):
 
 def test_profile_path_and_dict_inputs_agree(profile, tmp_path):
     path = tmp_path / "p.shape"
-    shape.save(profile, str(path))
+    shape.save(profile, str(path), capture="full")  # the default is already a safe capture
     assert to_safe_profile(path).to_json() == to_safe_profile(profile.to_dict()).to_json()
 
 

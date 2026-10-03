@@ -155,7 +155,7 @@ def test_tuples_survive_save_and_load(tmp_path):
     from shape.profile.reference import Profile
 
     q = Profile(data)
-    shape.save(q, tmp_path / "t.shape")
+    shape.save(q, tmp_path / "t.shape", capture="full")
     back = shape.load(tmp_path / "t.shape")
     assert same(back.to_dict(), q.to_dict())
 

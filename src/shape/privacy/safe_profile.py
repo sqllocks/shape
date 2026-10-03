@@ -255,6 +255,35 @@ def _winsorized_bounds(
     return {"lo": float(lo), "hi": float(hi)}
 
 
+def pii_gate_reason(
+    pattern: str | None,
+    cardinality: int,
+    row_count: int | None,
+    cfg: SafeConfig,
+    rates: Mapping[str, float] | None = None,
+) -> str | None:
+    """Why the column must be reduced to its pattern and length distribution only, or ``None``.
+
+    Three independent triggers, all independent of the column name: the detected value
+    pattern is a personal-data class (``"pii_pattern"``), the share of values matching a
+    personal-data pattern (``rates``: the whole-value and contained-in-text rates of the profile)
+    reaches ``pii_pattern_floor`` (``"pii_pattern_rate"``), or the distinct count is within
+    ``pii_cardinality_ratio`` of the row count, free text such as names or notes
+    (``"high_cardinality"``).
+    """
+    if not cfg.gate_on:
+        return None
+    if pattern is not None and pattern in PII_PATTERNS:
+        return "pii_pattern"
+    if rates and any(
+        rate >= cfg.pii_pattern_floor for fam, rate in rates.items() if fam in PII_RATE_FAMILIES
+    ):
+        return "pii_pattern_rate"
+    if row_count and row_count > 0 and cardinality / row_count >= cfg.pii_cardinality_ratio:
+        return "high_cardinality"
+    return None
+
+
 def pii_gate_fires(
     pattern: str | None,
     cardinality: int,
@@ -262,25 +291,9 @@ def pii_gate_fires(
     cfg: SafeConfig,
     rates: Mapping[str, float] | None = None,
 ) -> bool:
-    """True when the column must be reduced to its pattern and length distribution only.
-
-    Three independent triggers, all independent of the column name: the detected value
-    pattern is a personal-data class, the share of values matching a personal-data pattern
-    (``rates``: the whole-value and contained-in-text rates of the profile) reaches
-    ``pii_pattern_floor``, or the distinct count is within ``pii_cardinality_ratio`` of the row
-    count (free text such as names or notes).
-    """
-    if not cfg.gate_on:
-        return False
-    if pattern is not None and pattern in PII_PATTERNS:
-        return True
-    if rates and any(
-        rate >= cfg.pii_pattern_floor for fam, rate in rates.items() if fam in PII_RATE_FAMILIES
-    ):
-        return True
-    return bool(
-        row_count and row_count > 0 and cardinality / row_count >= cfg.pii_cardinality_ratio
-    )
+    """True when the column must be reduced to its pattern and length distribution only (see
+    :func:`pii_gate_reason` for the three triggers)."""
+    return pii_gate_reason(pattern, cardinality, row_count, cfg, rates) is not None
 
 
 def _column_rates(col: Mapping[str, Any]) -> dict[str, float]:

@@ -186,8 +186,42 @@ def generate(out: Path) -> list[dict[str, Any]]:
     csv = _csv(work)
     profile = shape.profile(str(csv))
     (out / "profile").mkdir()
+    # version 1 (no capture field) has no writer any more: built from the documented layout
+    v1_body = codec.dumps(profile.to_dict(), sort_keys=False)
+    write_artifact(
+        str(out / "profile" / "orders-v1.shape"),
+        {
+            "format": "shape",
+            "format_version": 1,
+            "kind": "profile",
+            "name": profile.name,
+            "shape_content_id": sha256(v1_body),
+        },
+        {"profile.json": v1_body},
+    )
+    add(
+        "profile-artifact-v1",
+        "profile-artifact",
+        1,
+        "profile/orders-v1.shape",
+        "documented version 1 layout (nothing writes it any more)",
+    )
     shape.save(profile, str(out / "profile" / "orders.shape"))
-    add("profile-artifact-v1", "profile-artifact", 1, "profile/orders.shape", "shape.save")
+    add(
+        "profile-artifact-v2",
+        "profile-artifact",
+        2,
+        "profile/orders.shape",
+        "shape.save (the default capture, safe)",
+    )
+    shape.save(profile, str(out / "profile" / "orders.full.shape"), capture="full")
+    add(
+        "profile-artifact-v2-full",
+        "profile-artifact",
+        2,
+        "profile/orders.full.shape",
+        "shape.save(capture='full')",
+    )
     (out / "profile" / "orders.export.json").write_text(
         json.dumps(export_document(profile), indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )

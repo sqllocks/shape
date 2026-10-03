@@ -14,11 +14,13 @@ Hardening over a plain directory of JSON files: every identity part is a plain n
 leave the root), files and the index are written atomically, ``save`` never replaces a profile
 silently, and ``reindex`` / ``import_dir`` report what they skipped instead of dropping it.
 
-Two forms of an entry exist. The full profile (``name.shape``) keeps real values from the data
-(value counts and extremes), so this store is a private, local catalog. ``save(safe=True)`` stores
-the share-safe form instead (``name.safe.json``, as ``shape profile safe`` writes it, checked by
-``shape profile validate --safe``); a registry that is shared or put under git holds that form.
-An identity has one form at a time.
+Two forms of an entry exist. The profile (``name.shape``) is the safe capture by default
+(statistics and formats only for a sensitive column, categories of at least ``k`` rows; see
+:mod:`shape.privacy.redact`); ``save(capture=CaptureConfig(mode="full"))`` keeps real values from
+the data (value counts and extremes), and such a store is a private, local catalog.
+``save(safe=True)`` stores the share-safe profile JSON instead (``name.safe.json``, as
+``shape profile safe`` writes it, checked by ``shape profile validate --safe``). An identity has
+one form at a time.
 """
 
 from __future__ import annotations
@@ -149,7 +151,13 @@ class ProfileRegistry:
 
     @staticmethod
     def _write(
-        path: Path, table: dict[str, Any], name: str, description: str, tags: list[str]
+        path: Path,
+        table: dict[str, Any],
+        name: str,
+        description: str,
+        tags: list[str],
+        capture: dict[str, Any] | None = None,
+        redaction: dict[str, Any] | None = None,
     ) -> None:
         import hashlib
         import importlib
@@ -167,6 +175,8 @@ class ProfileRegistry:
                 "name": name,
                 "shape_content_id": hashlib.sha256(body).hexdigest(),
                 "registry": {"description": description, "tags": sorted(set(tags))},
+                **({"capture": capture} if capture is not None else {}),
+                **({"redaction_manifest": redaction} if redaction else {}),
             },
         )
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -259,7 +269,7 @@ class ProfileRegistry:
         prof = shape.load(path)  # verifies the content id
         meta = self._manifest(path).get("registry") or {}
         data = prof.to_dict()
-        return {
+        entry = {
             "system": system,
             "table": table,
             "name": name,
@@ -268,6 +278,9 @@ class ProfileRegistry:
             "source_rows": int(data.get("row_count", 0)),
             "path": str(path.relative_to(self.root)),
         }
+        if prof.capture_declared:  # a profile saved before capture modes says nothing: it is full
+            entry["capture"] = prof.capture["mode"]
+        return entry
 
     # -- CRUD -----------------------------------------------------------------
 
@@ -285,14 +298,23 @@ class ProfileRegistry:
         overwrite: bool = False,
         safe: bool = False,
         safe_config: Any = None,
+        capture: Any = None,
     ) -> list[str]:
         """Store ``profile`` (a ``Profile``) as one entry per table; returns the identities.
 
-        With ``safe`` the share-safe form is stored (``safe_config`` is a
+        By default each entry is the safe capture of its table (``capture`` is a
+        ``shape.privacy.redact.CaptureConfig``; ``CaptureConfig(mode="full")`` keeps real values).
+        With ``safe`` the share-safe profile JSON is stored instead (``safe_config`` is a
         ``shape.privacy.safe_profile.SafeConfig``) and no value of the data is kept.
         Nothing is written when any entry exists and ``overwrite`` is false."""
         _part("system", system)
         _part("name", name)
+        captured = None
+        if not safe:
+            from shape.privacy.redact import CaptureConfig, redact_profile
+
+            captured = redact_profile(profile, capture or CaptureConfig())
+            profile = captured
         tables = profile.tables
         for t in tables:
             _part("table", t)
@@ -312,7 +334,15 @@ class ProfileRegistry:
             if safe:
                 self._write_safe(path, docs[t], description, tag_list)
             else:
-                self._write(path, data, name, description, tag_list)
+                assert captured is not None
+                cap = captured.capture
+                full_manifest = captured.redaction_manifest
+                one = (
+                    {**full_manifest, "tables": {t: full_manifest["tables"][t]}}
+                    if full_manifest
+                    else {}
+                )
+                self._write(path, data, name, description, tag_list, cap, one)
             with contextlib.suppress(OSError):  # an identity has one form at a time
                 self._path(identity, not safe).unlink()
             index[identity] = self._entry(system, t, name, path)

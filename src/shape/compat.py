@@ -131,7 +131,7 @@ KINDS: dict[str, Kind] = {
             "profile-artifact",
             "Shape profile artifact",
             "shape",
-            1,
+            2,
             legacy_version_keys=("format_version",),
         ),
         _kind(

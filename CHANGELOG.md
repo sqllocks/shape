@@ -5,6 +5,23 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- **Behaviour change: profiles are written safe by default (W1-11).** `shape profile -o OUT.shape`,
+  its `--json` summary and `--html` report, `shape.save(profile, path)` and `shape profile
+  registry save` now write the **safe capture**: a sensitive column (declared `CONFIDENTIAL` or
+  higher with `--classify COLUMN=LEVEL`, or pattern-only by the safe profile's own rules) keeps
+  statistics and formats only, and a category is kept only if every released category has at
+  least `k` rows (`--k N`, default 5; `--column-k COLUMN=N`), the rest folding into `__OTHER__`.
+  Before, these held real values (up to 500 per column, raw minimum and maximum). **To keep real
+  values, ask for them: `--capture full` / `shape.save(profile, path, capture="full")`**; the file
+  says so (`capture`), a warning goes to standard error, and `shape profile validate --safe`
+  reports it (`full-capture`, exit 1); the default passes (exit 0). The in-memory profile that
+  `shape.profile()` returns is unchanged. The profile artifact is version 2 (`capture`,
+  `redaction_manifest`); version 1 files still load and read as full (`shape migrate` stamps
+  them). `shape diff` lists comparisons a safe capture cannot make under `not_evaluable` (never
+  drift); `shape check` reports a rule that needs left-out values as `not evaluable: COLUMN was
+  captured safe ...` and exits 2; `shape generate --from` and `shape plan` mark such columns
+  `approximate`. `shape registry` commits a safe capture without `--allow-raw`. The bridge's
+  `profile` still writes a full capture. See `docs/PRIVACY_MODEL.md`.
 - State and compatibility policy (`docs/specs/STATE_AND_COMPATIBILITY.md`): every persisted file
   declares `format`, an integer `version`, `shape_version` and `min_shape_version` (the old key
   names `format_version`, `schema_version` and `pack_version` are still read, and still written

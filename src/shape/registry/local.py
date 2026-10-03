@@ -28,27 +28,43 @@ class RawProfileError(RegistryError):
     """A raw profile (real values) was offered to a registry without ``allow_raw``."""
 
 
-def is_raw_profile(data: bytes) -> bool:
-    """True for a raw profile: a ``.shape`` profile artifact or ``shape profile export`` JSON.
-
-    Both hold up to 500 real values per column. The safe form (``shape profile safe``) is not
-    raw, and neither is anything else."""
+def profile_capture(data: bytes) -> str | None:
+    """How the profile in ``data`` was captured (``"safe"`` or ``"full"``), or ``None`` when it is
+    not a profile: a ``.shape`` profile artifact or ``shape profile export`` JSON. A profile that
+    does not say (written before capture modes existed) was captured full."""
+    doc: object = None
     if data[:4] == b"PK\x03\x04":
         import io
         import zipfile
 
         try:
             with zipfile.ZipFile(io.BytesIO(data)) as z:
-                return bool(json.loads(z.read("manifest.json")).get("kind") == "profile")
+                doc = json.loads(z.read("manifest.json"))
         except (OSError, ValueError, KeyError, zipfile.BadZipFile):
-            return False
-    if data.lstrip()[:1] == b"{":
+            return None
+        if not isinstance(doc, dict) or doc.get("kind") != "profile":
+            return None
+    elif data.lstrip()[:1] == b"{":
         try:
             doc = json.loads(data)
         except ValueError:
-            return False
-        return isinstance(doc, dict) and doc.get("format") == "shape-profile"
-    return False
+            return None
+        if not isinstance(doc, dict) or doc.get("format") != "shape-profile":
+            return None
+    else:
+        return None
+    capture = doc.get("capture")
+    mode = capture.get("mode") if isinstance(capture, dict) else None
+    return "safe" if mode == "safe" else "full"
+
+
+def is_raw_profile(data: bytes) -> bool:
+    """True for a raw profile: a full capture, as a ``.shape`` profile artifact or ``shape profile
+    export`` JSON, which holds up to 500 real values per column.
+
+    A safe capture (the default of ``shape profile``) is not raw, nor is the safe form
+    (``shape profile safe``), nor anything else."""
+    return profile_capture(data) == "full"
 
 
 def _check(kind: str, value: object) -> str:

@@ -183,7 +183,7 @@ def test_the_joint_entry_is_deterministic_and_survives_save_and_load(
     a = shape.profile(city_zip["bad"])
     b = shape.profile(city_zip["bad"])
     assert _table(a)["joint"] == _table(b)["joint"]
-    shape.save(a, str(tmp_path / "p.shape"))
+    shape.save(a, str(tmp_path / "p.shape"), capture="full")
     again = shape.load(str(tmp_path / "p.shape"))
     assert _table(again)["joint"] == _table(a)["joint"]
 

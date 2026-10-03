@@ -127,6 +127,8 @@ def _card(name: str, col: dict[str, Any]) -> str:
     body = [f"<h3>{_e(name)}</h3>", "<p>" + " · ".join(facts) + "</p>"]
     if col.get("quantiles"):
         lo, hi = _plain(col["min_value"]), _plain(col["max_value"])
+        if (lo is None or hi is None) and col.get("bounds"):  # a safe capture: the p1..p99 bounds
+            lo, hi = col["bounds"]["lo"], col["bounds"]["hi"]
         if isinstance(lo, (int, float)) and isinstance(hi, (int, float)):
             body.append(_quantile_strip(col["quantiles"], float(lo), float(hi)))
     enum = col.get("enum_values") or col.get("value_counts_ext")
@@ -215,6 +217,14 @@ def render_html(profile: Profile) -> str:
     tables = profile.tables
     total = sum(t["row_count"] for t in tables.values())
     parts.append(f'<p class="meta">{len(tables)} table(s) · {total:,} rows profiled</p>')
+    if profile.capture_declared:
+        mode = profile.capture["mode"]
+        parts.append(
+            f'<p class="meta">captured safe (k={profile.capture["k"]}): a sensitive column shows '
+            "statistics and formats only, and a category needs k rows to be listed</p>"
+            if mode == "safe"
+            else '<p class="meta">captured full: this report holds real values; do not share it</p>'
+        )
     for tname, table in tables.items():
         parts.append(_table_section(table, tname))
     if profile.is_dataset:

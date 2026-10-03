@@ -17,7 +17,7 @@ command is `shape`, and artifacts use the `.shape` extension.
 import shape
 
 p = shape.profile("customers.csv")      # also: Parquet, JSONL, Delta tables, pandas, pyarrow
-shape.save(p, "customers.shape")
+shape.save(p, "customers.shape")   # the safe capture; capture="full" keeps real values
 print(p.summary())                      # small JSON-safe summary per column
 
 result = shape.check(p, {"columns": {"customer_id": {"unique": True, "nullable": False}}})
@@ -29,7 +29,8 @@ print(drift.drifted, drift.changes)
 
 ```bash
 shape profile customers.csv -o customers.shape --name customers --html report.html --json summary.json
-shape check customers.shape contract.json          # exit code 1 if the contract fails
+shape check customers.shape contract.json          # exit 1 if the contract fails, 2 if a rule needs
+                                                     # a value the safe capture left out
 shape diff customers.shape customers_next.shape --fail-on-drift
 ```
 
@@ -101,15 +102,17 @@ git diff                              # one changed line per changed property
 - **The name is stable.** `--name NAME` sets the profile name. Without it, `-o` over an existing
   profile keeps that profile's name; otherwise the name is the input's file name. Re-profiling
   `orders_w2.csv` over `orders.shape` therefore does not show a rename.
-- **What to commit.** A `.shape` file, its `--json` summary and its HTML report hold real values
-  (up to 500 per column, and each column's minimum and maximum). They are pipeline-internal:
-  commit them only to a repository that is as private as the data. The git-committable artifact
-  is the share-safe JSON, `shape profile safe orders.shape -o orders.safe.json`: sorted keys,
-  one value per line, stable numbers, rare values suppressed. Check it with
-  `shape profile validate --safe orders.safe.json` (exit 0 means no leak found).
-  A registry follows the same rule: `shape registry` refuses a raw profile (commit it with
-  `--safe`, or commit the safe JSON; `docs/REGISTRY.md`), and `shape profile registry` is a
-  private catalog of full profiles unless you save with `--safe` (`docs/PROFILE_REGISTRY.md`).
+- **What to commit.** The default `.shape` is the safe capture, and it is the artifact to commit:
+  a sensitive column keeps statistics and formats only (no values, no raw minimum or maximum),
+  and a category is listed only when every released category has at least `k` rows (default 5;
+  `--k N`). Check it with `shape profile validate --safe orders.shape` (exit 0 means no leak
+  found). The `--json` summary and the HTML report are redacted the same way. Keeping real values
+  is an explicit choice, `--capture full`, which is recorded in the file, prints a warning, and
+  fails `validate --safe`: commit such a file only to a repository as private as the data. The
+  share-safe JSON, `shape profile safe orders.shape -o orders.safe.json`, is still there for the
+  stricter form. A registry follows the same rule: `shape registry` takes a safe capture and
+  refuses a full one (commit it with `--safe`; `docs/REGISTRY.md`), and `shape profile registry`
+  stores safe captures unless you save with `--capture full` (`docs/PROFILE_REGISTRY.md`).
 - Signed files (`--sign KEY`) are reproducible too: the signature covers the manifest bytes,
   not the container.
 
@@ -124,11 +127,14 @@ commands (such as `fidelity`) are experimental and will change.
 
 ## What a `.shape` file contains
 
-A profile keeps real values from your data: up to the 500
-most frequent values per column with their counts, and each column's minimum and maximum.
-Treat a `.shape` file, its HTML report and its JSON summary as you would the source data,
-and don't share one from a sensitive table. A privacy-safe profile, with rare values
-suppressed, is planned.
+By default a profile is a **safe capture** (`docs/PRIVACY_MODEL.md`): counts, types, formats,
+length distributions, quantiles and bounds for every column, and category values only for columns
+that are not sensitive, with every released category at least `k` rows (default 5). A column is
+sensitive when you declare it `CONFIDENTIAL` or higher (`--classify COLUMN=LEVEL`) or when it looks
+like personal data (an email, SSN or card pattern, or nearly one distinct value per row). With
+`--capture full` a profile keeps the 500 most frequent values per column with their counts and each
+column's minimum and maximum; treat that file, its HTML report and its JSON summary as you would
+the source data. A safe capture is data minimisation, not anonymisation.
 
 ## Design principles
 

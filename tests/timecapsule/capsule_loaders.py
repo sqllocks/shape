@@ -106,7 +106,11 @@ def _profile_artifact(path: Path, corpus: Path, kind: str) -> Any:
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         prof = shape.load(str(path))
-    return {"name": prof.name, "profile": prof.to_dict()}
+    out = {"name": prof.name, "profile": prof.to_dict()}
+    if prof.capture_declared:  # version 2 says how the profile was captured; version 1 does not
+        out["capture"] = prof.capture
+        out["redaction_manifest"] = prof.redaction_manifest
+    return out
 
 
 def _profile_export(path: Path, corpus: Path, kind: str) -> Any:

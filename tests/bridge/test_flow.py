@@ -29,7 +29,8 @@ def test_profile_writes_the_artifact_the_cli_writes(api, capsys, csv_pair, tmp_p
     out = tmp_path / "a.shape"
     result = api.ok("profile", source=str(a), output=str(out))
     assert result["path"] == str(out) and out.is_file()
-    assert main(["profile", str(a), "-o", str(tmp_path / "cli.shape")]) == 0
+    # the bridge writes the full profile (BRIDGE_CAPTURE), so the command line is asked for it too
+    assert main(["profile", str(a), "-o", str(tmp_path / "cli.shape"), "--capture", "full"]) == 0
     cli = json.loads(capsys.readouterr().out)
     assert result["content_id"] == cli["shape_content_id"]
     assert shape.load(str(out)).to_dict() == shape.load(str(tmp_path / "cli.shape")).to_dict()

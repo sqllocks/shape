@@ -530,6 +530,8 @@ def _plan_column(
             f"synthetic values from {provider}: the real values, their lengths and how often "
             "they repeat are not reproduced",
         )
+    if col.redacted or col.folded:
+        _mark_captured_safe(table, col, items)
     mark(("nan_count", "inf_count"), _N, "generated numbers are always finite")
     mark(
         ("pattern_rates", "pattern_contains_rates"),
@@ -546,6 +548,37 @@ def _plan_column(
     for f in sorted(present):  # a field no rule above covered is never reported as preserved
         add(f, _N, "not modelled")
     return items
+
+
+_SAFE_SENSITIVE = (
+    "captured safe (statistics and formats only): generated from the column's pattern and length "
+    "distribution, not from its real values"
+)
+_SAFE_FOLDED = (
+    "captured safe: the categories with too few rows were folded together in the profile and are "
+    "not generated"
+)
+
+
+def _mark_captured_safe(table: str, col: ColumnProfile, items: list[PlanItem]) -> None:
+    """What a safe capture took out of a column is approximated: the plan says so for each field
+    it removed (W1-11), and for the categories it folded."""
+    named = {i.evidence for i in items}
+    for f in sorted(col.redacted or ()):
+        evidence = f"{table}.{col.name}.{f}"
+        if evidence in named:  # a rule above had a say about a field that is still there
+            items[:] = [
+                PlanItem(evidence, _A, _SAFE_SENSITIVE) if i.evidence == evidence else i
+                for i in items
+            ]
+        else:
+            items.append(PlanItem(evidence, _A, _SAFE_SENSITIVE))
+    if col.folded:
+        for f in ("enum_values", "value_counts_ext", "value_counts_ext_order"):
+            evidence = f"{table}.{col.name}.{f}"
+            items[:] = [
+                PlanItem(evidence, _A, _SAFE_FOLDED) if i.evidence == evidence else i for i in items
+            ]
 
 
 def _has(col: ColumnProfile, field: str) -> bool:

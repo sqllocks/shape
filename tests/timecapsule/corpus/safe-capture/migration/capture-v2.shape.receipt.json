@@ -1,0 +1,33 @@
+{
+  "created": "2026-10-03T12:27:31.747451Z",
+  "format": "shape-migration-receipt",
+  "kind": "artifact",
+  "min_shape_version": "0.9.0",
+  "result": {
+    "content_id": "51307dcc6c70321be64a90cebf66211bc56653af7821b03473b2a0e99bf172af",
+    "file_name": "capture-v2.shape",
+    "file_sha256": "c95668047e11a561bf0200b07d73c4a1fd5aa60fc52c4a8577ecd2dbeccb020e",
+    "version": 2
+  },
+  "shape_version": "0.9.0",
+  "signature": {
+    "algorithm": "Ed25519",
+    "key_id": "6a3803d5f059902a",
+    "signature": "Gudk5Br2aBfR1AzKB9r2jo6Zcz6xv9XdAKoGdW/S7BcOe4vb3nLfLc7bRts+O+JIF06jS9wbCeOoDz01IHA1AQ=="
+  },
+  "source": {
+    "content_id": "f745d9f69e89bc38811c27fc1f8fb526df21be96fc725b69e44b20f3eddc7148",
+    "file_name": "capture-v1-signed.shape",
+    "file_sha256": "a7a73653c132080b62181766d97f330e9a3f90260fde7e915896dba7f62e9b46",
+    "signature": {
+      "algorithm": "Ed25519",
+      "key_id": "34750f98bd59fcfc",
+      "verified": true
+    },
+    "version": 1
+  },
+  "steps": [
+    "capture-v1-to-model-v2"
+  ],
+  "version": 1
+}
