@@ -151,3 +151,109 @@ def test_a_number_and_a_text_branch_make_a_text_column() -> None:
     kind, pairs = _conditional(7, "seven")
     assert kind == pa.string()
     assert pairs == {("x", "7"), ("y", "seven")}
+
+
+# ---- #654: SpecDocument.save keeps a normal file mode; deep nesting is a SpecError ------------
+
+
+@pytest.mark.skipif(__import__("os").name != "posix", reason="POSIX file modes")
+def test_save_gives_a_new_spec_the_umask_mode_and_keeps_an_existing_mode(tmp_path: Path) -> None:
+    import os
+    import stat
+
+    old = os.umask(0o022)
+    try:
+        doc = SpecDocument.from_dict(SPEC)
+        new = tmp_path / "new.json"
+        doc.save(new)
+        assert stat.S_IMODE(new.stat().st_mode) == 0o644
+        shared = tmp_path / "shared.json"
+        shared.write_text("{}", encoding="utf-8")
+        shared.chmod(0o664)
+        doc.save(shared)
+        assert stat.S_IMODE(shared.stat().st_mode) == 0o664
+        assert json.loads(shared.read_text(encoding="utf-8")) == SPEC
+        assert [p.name for p in tmp_path.iterdir() if p.name.startswith(".")] == []
+    finally:
+        os.umask(old)
+
+
+@pytest.mark.parametrize("depth", [600, 5000, 200_000])
+def test_deep_nesting_is_a_spec_error(depth: int) -> None:
+    from shape.generation.spec_edit import SpecError, validate_text
+
+    text = '{"model":{"name":"m"},"tables":{},"x-deep":' + "[" * depth + "]" * depth + "}"
+    problems = validate_text(text)
+    assert len(problems) == 1 and "nested" in problems[0].message
+    with pytest.raises(SpecError, match="nested"):
+        SpecDocument.loads(text)
+
+
+def test_moderate_nesting_still_loads() -> None:
+    text = '{"schema_version":1,"model":{"name":"m"},"tables":{},"x-deep":' + "[" * 200 + "]" * 200 + "}"
+    doc = SpecDocument.loads(text)
+    assert doc.dumps() == text
+
+
+# ---- #655: the locale strategy names the real package -------------------------------------------
+
+
+def test_the_locale_install_hint_names_the_real_package() -> None:
+    root = Path(__file__).resolve().parents[2]
+    for path in (
+        root / "src/shape/builtins/strategies/locale_pack.py",
+        root / "docs/LOCALES.md",
+        root / "docs/GENERATION_STRATEGIES.md",
+    ):
+        text = path.read_text(encoding="utf-8")
+        assert "sqllocations" not in text, path
+    assert "pip install sqllocks-shape-domains" in (
+        root / "src/shape/builtins/strategies/locale_pack.py"
+    ).read_text(encoding="utf-8")
+
+
+# ---- #656: validate() reports a NaN null_rate and a negative max_length -------------------------
+
+
+def _column_issues(**props: object) -> list[str]:
+    doc = {
+        "schema_version": 1,
+        "model": {"name": "m"},
+        "tables": {
+            "t": {
+                "name": "t",
+                "primary_key": [],
+                "columns": {
+                    "c": {
+                        "name": "c",
+                        "type": "string",
+                        "generator": {"strategy": "native", "provider": "first_name"},
+                        **props,
+                    }
+                },
+            }
+        },
+    }
+    schema = GenSchema.from_dict(doc)
+    return [i.message for i in schema.validate() if i.level == "error"]
+
+
+def test_a_nan_null_rate_is_an_error() -> None:
+    issues = _column_issues(nullable=True, null_rate=float("nan"))
+    assert any("null_rate" in m for m in issues), issues
+    with pytest.raises(GenSchemaError, match="null_rate"):  # the loader refuses inf already
+        _column_issues(nullable=True, null_rate=float("inf"))
+
+
+@pytest.mark.parametrize("value", [-1, -40])
+def test_a_negative_max_length_is_an_error(value: int) -> None:
+    issues = _column_issues(max_length=value)
+    assert any("max_length" in m for m in issues), issues
+
+
+@pytest.mark.parametrize(
+    "props",
+    [{"max_length": 0}, {"max_length": 3}, {"null_rate": 0.0}, {"null_rate": 1.0, "nullable": True}],
+)
+def test_valid_column_properties_have_no_error(props: dict[str, object]) -> None:
+    assert _column_issues(**props) == []
