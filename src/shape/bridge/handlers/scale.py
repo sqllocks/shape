@@ -8,6 +8,7 @@ is submitted to Fabric and recorded as a job whose state is read from Fabric whe
 from __future__ import annotations
 
 import os
+import time
 from typing import Any
 
 from shape.bridge.context import Context
@@ -192,11 +193,24 @@ def cmd_stream(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
         rows += stats.rows_generated
         ctx.progress({"chunks_written": chunks, "rows_written": rows})
         if interval > 0 and not ctx.cancel.is_set():
-            ctx.cancel.wait(timeout=interval)
+            _wait(ctx, interval)
     done = {"chunks_written": chunks, "rows_written": rows}
     if ctx.cancel.is_set():
         raise JobCancelled(done)
     return {**done, "stopped": False}
+
+
+_MAX_WAIT = 3600.0  # one wait at a time: Event.wait overflows on a huge timeout
+
+
+def _wait(ctx: Context, seconds: float) -> None:
+    """Wait ``seconds`` or until the job is cancelled, however long ``seconds`` is."""
+    deadline = time.monotonic() + seconds
+    while not ctx.cancel.is_set():
+        left = deadline - time.monotonic()
+        if left <= 0:
+            return
+        ctx.cancel.wait(timeout=min(left, _MAX_WAIT))
 
 
 def _stream_started(record: dict[str, Any]) -> dict[str, Any]:
