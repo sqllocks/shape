@@ -178,6 +178,21 @@ def _check_confidence(value: Any, where: str) -> float:
     return float(value)
 
 
+def _check_identity(
+    pid: Any, kind: Any, subject: Any, claim: Any, evidence: Any, where: str
+) -> None:
+    """The rules a proposal's id, kind, subject, claim and evidence follow, on read and on
+    update alike, so nothing is stored that the file could not be read back with."""
+    if kind not in KINDS:
+        raise DecisionError(f"{where}: kind must be one of {', '.join(KINDS)}, got {kind!r}")
+    if not isinstance(subject, str) or not subject:
+        raise DecisionError(f"{where}: subject must be a non-empty string")
+    if pid != f"{kind}:{subject}":
+        raise DecisionError(f"{where}: id {pid!r} must be {kind}:{subject}")
+    if not isinstance(claim, Mapping) or not isinstance(evidence, Mapping):
+        raise DecisionError(f"{where}: claim and evidence must be objects")
+
+
 class DecisionFile:
     """Proposals and decisions, read from and written to a text file."""
 
@@ -237,14 +252,7 @@ class DecisionFile:
             if key not in raw:
                 raise DecisionError(f"{where}: missing key {key!r}")
         pid, kind, subject = raw["id"], raw["kind"], raw["subject"]
-        if kind not in KINDS:
-            raise DecisionError(f"{where}: kind must be one of {', '.join(KINDS)}, got {kind!r}")
-        if not isinstance(subject, str) or not subject:
-            raise DecisionError(f"{where}: subject must be a non-empty string")
-        if pid != f"{kind}:{subject}":
-            raise DecisionError(f"{where}: id {pid!r} must be {kind}:{subject}")
-        if not isinstance(raw["claim"], dict) or not isinstance(raw["evidence"], dict):
-            raise DecisionError(f"{where}: claim and evidence must be objects")
+        _check_identity(pid, kind, subject, raw["claim"], raw["evidence"], where)
         when = raw["proposed_at"]
         if not isinstance(when, str) or not _TIME.match(when):
             raise DecisionError(f"{where}: proposed_at must be UTC like 2026-10-03T12:00:00Z")
@@ -358,6 +366,8 @@ class DecisionFile:
             raise DecisionError(f"no proposal {proposal_id!r} in the decision file")
         if not isinstance(actor, str) or not actor.strip():
             raise DecisionError("a decision needs an actor (who decided)")
+        if not isinstance(note, str):
+            raise DecisionError(f"a decision's note must be text, got {type(note).__name__}")
         d = Decision(proposal_id, status, actor.strip(), stamp(now), note)
         self._decisions[proposal_id] = d
         return d
@@ -389,12 +399,18 @@ class DecisionFile:
         if bad:
             raise DecisionError(f"unknown kind {sorted(bad)[0]!r}")
         at = stamp(now)
+        incoming = list(proposals)
+        for raw in incoming:  # every check before any change: a bad proposal changes nothing
+            _check_identity(raw.id, raw.kind, raw.subject, raw.claim, raw.evidence, str(raw.id))
+            _canon(raw.claim)
+            _canon(raw.evidence)
+            _check_confidence(raw.confidence, str(raw.id))
         added: list[str] = []
         updated: list[str] = []
         skipped: list[str] = []
         auto: list[str] = []
         seen: set[str] = set()
-        for raw in proposals:
+        for raw in incoming:
             p = Proposal(
                 raw.id,
                 raw.kind,
