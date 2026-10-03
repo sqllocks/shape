@@ -753,11 +753,22 @@ def write_ground_truth(path: str | Path, outcome: ChaosOutcome) -> Path:
 
 def read_ground_truth(path: str | Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     """The ``run`` record and the ``change`` records of a :func:`write_ground_truth` log."""
-    lines = [
-        json.loads(x) for x in Path(path).read_text(encoding="utf-8").splitlines() if x.strip()
-    ]
-    if not lines or lines[0].get("record") != "run":
+    lines: list[dict[str, Any]] = []
+    for number, text in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), 1):
+        if not text.strip():
+            continue
+        try:
+            lines.append(json.loads(text))
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"{path} line {number} is not JSON: {exc.msg}") from None
+    if not lines or not isinstance(lines[0], dict) or lines[0].get("record") != "run":
         raise ValueError(f"{path} is not a chaos ground-truth log (no run record first)")
+    version = lines[0].get("log_version")
+    if version != LOG_VERSION:
+        raise ValueError(
+            f"{path} is a ground-truth log of log_version {version}; this release reads "
+            f"version {LOG_VERSION}"
+        )
     return lines[0], lines[1:]
 
 

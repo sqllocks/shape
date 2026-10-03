@@ -93,7 +93,8 @@ cannot apply to what it is aimed at (a column that is not there, text where a da
 error, not a silent no-op: `date_shift@order` on a table with no date column fails, and so does a
 corruption without `@TABLE` that fits no table at all.
 
-**The log** is JSON Lines. The first line is the run (`record: "run"`: the seed, the batch, the
+**The log** is JSON Lines. The first line is the run (`record: "run"`, `log_version: 1`, which
+`read_ground_truth` checks: the seed, the batch, the
 corruptions, rows in and out per table). Every other line is one change (`record: "change"`):
 
 | Field | Meaning |
