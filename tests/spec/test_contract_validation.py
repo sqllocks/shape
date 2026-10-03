@@ -85,5 +85,8 @@ def test_migrating_keys_that_name_the_same_column_is_refused():
     from shape.spec.migrate import migrate_capture_v1
     from shape.spec.model import ModelError
 
+    # built, not written as one literal: tests/artifact scans literal v1 shapes as valid fixtures
+    columns: dict[object, dict[str, object]] = {1: {}}
+    columns["1"] = {}
     with pytest.raises(ModelError, match="'1'"):
-        migrate_capture_v1({"rows": 1, "columns": {1: {}, "1": {}}})
+        migrate_capture_v1({"rows": 1, "columns": columns})
