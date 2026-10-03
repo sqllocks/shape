@@ -56,6 +56,23 @@ def _sources(path: Path, fmt: str | None) -> dict[str, Path] | Path:
     return path
 
 
+def _non_finite(obj: Any, path: list[str] | None = None) -> tuple[list[str], float] | None:
+    """The path and value of the first infinite or NaN number in ``obj``, or None."""
+    import math
+
+    path = path or []
+    if isinstance(obj, float) and not math.isfinite(obj):
+        return path, obj
+    items = (
+        obj.items() if isinstance(obj, dict) else enumerate(obj) if isinstance(obj, list) else ()
+    )
+    for key, value in items:
+        found = _non_finite(value, [*path, str(key)])
+        if found is not None:
+            return found
+    return None
+
+
 def run(a: argparse.Namespace) -> int:
     from shape.generation.learn import learn
     from shape.profile.reference import profile
@@ -71,7 +88,17 @@ def run(a: argparse.Namespace) -> int:
             if path.is_dir()
             else path.with_suffix(".schema.json")
         )
-    out.write_text(json.dumps(schema.to_dict(), indent=2) + "\n", encoding="utf-8")
+    document = schema.to_dict()
+    bad = _non_finite(document)
+    if bad is not None:
+        path, value = bad
+        where = f"column {path[1]}.{path[3]}" if path[:1] == ["tables"] and len(path) > 3 else ""
+        raise ValueError(
+            f"the inferred schema holds {value} at {'.'.join(path)}"
+            + (f" ({where}: its values overflow a float)" if where else "")
+            + f", which JSON cannot hold; {out} was not written"
+        )
+    out.write_text(json.dumps(document, indent=2, allow_nan=False) + "\n", encoding="utf-8")
 
     tables: dict[str, dict[str, Any]] = {
         name: {
