@@ -4,7 +4,8 @@ Prints, as JSON lines, what the host does to a process that only sleeps (no shap
 1 ms ticker thread sees while a realtime emit run is under way, how long ``time.sleep(0.05)``
 really takes in a loop (the duration test's sink), and the busiest processes at the time. A stall
 that shows up in the shape-free probe is the host's, not the runtime's. Not a test: it asserts
-nothing and is run by ``.github/workflows/pacing-diagnostic.yml``.
+nothing. Run it by hand on a suspect runner (``python scripts/pacing_diagnostic.py``); the CI
+workflow that ran it was removed (CI-FIX).
 """
 
 from __future__ import annotations
