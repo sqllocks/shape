@@ -14,7 +14,7 @@ from shape.cli.main import main
 from shape.contracts.v1 import ContractError
 from shape.generation import reference as gen_ref
 from shape.privacy.safe_profile import SafeConfig, to_safe_profile
-from shape.reference import write_pack
+from shape.refpacks import write_pack
 from shape.validation.valid_as import KINDS, ValidatorUnavailableError, measure, validator
 
 GOOD_IBAN = "GB82 WEST 1234 5698 7654 32"

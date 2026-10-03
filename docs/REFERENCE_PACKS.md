@@ -58,7 +58,7 @@ other key is allowed in version 1. A reader checks, in this order: the manifest,
 dataset it reads the checksum (`reference pack NAME: FILE does not match its checksum`, exit 2),
 then that the file's fields and row count are the manifest's. A dataset file name is never a path.
 
-`shape.reference.write_pack(directory, name=..., tables={dataset: pyarrow.Table}, ...)` writes a
+`shape.refpacks.write_pack(directory, name=..., tables={dataset: pyarrow.Table}, ...)` writes a
 pack, with the checksums, and gives the same bytes for the same table.
 
 ### Where packs are found
@@ -69,7 +69,7 @@ pack, with the checksums, and gives the same bytes for the same table.
 2. `<name>.json` in a search directory (`add_search_path`, then `SHAPE_REFERENCE_PATH`);
 3. a dataset of a pack in a search directory (the directory itself, if it holds `pack.json`, or
    each of its subdirectories that does);
-4. a dataset of a shipped pack: the packs in `shape/reference/data/` and, with
+4. a dataset of a shipped pack: the packs in `shape/refpacks/data/` and, with
    `sqllocks-shape-domains` installed, its `reference_packs/`.
 
 So your own pack with the dataset name `us_zip_city` in a search directory replaces the shipped one.

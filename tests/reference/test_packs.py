@@ -13,7 +13,7 @@ import pytest
 
 from shape.cli.main import main
 from shape.generation import reference as gen_ref
-from shape.reference import (
+from shape.refpacks import (
     PACK_FORMAT,
     PACK_VERSION,
     ReferencePackError,

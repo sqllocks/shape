@@ -36,9 +36,9 @@ import pyarrow as pa
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from shape.reference import read_manifest, write_pack  # noqa: E402
+from shape.refpacks import read_manifest, write_pack  # noqa: E402
 
-CORE_DATA = ROOT / "src" / "shape" / "reference" / "data"
+CORE_DATA = ROOT / "src" / "shape" / "refpacks" / "data"
 DOMAINS_PACKS = ROOT / "plugins" / "shape-domains" / "src" / "shape_domains" / "reference_packs"
 
 #: SHA-256 of the file each shipped pack is built from.

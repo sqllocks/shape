@@ -178,7 +178,7 @@ def load_dataset(name: str) -> Dataset:
         searched.append(str(candidate))
         if candidate.is_file():
             return _from_file(name, candidate)
-    from shape.reference.packs import find_dataset
+    from shape.refpacks.packs import find_dataset
 
     in_pack = find_dataset(name, search_directories())
     if in_pack is not None:

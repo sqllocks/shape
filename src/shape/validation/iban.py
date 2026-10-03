@@ -15,14 +15,14 @@ from typing import Any
 
 __all__ = ["IBAN_LENGTHS", "iban_problem", "is_valid_iban"]
 
-_PACK = Path(__file__).resolve().parent.parent / "reference" / "data" / "iban-lengths"
+_PACK = Path(__file__).resolve().parent.parent / "refpacks" / "data" / "iban-lengths"
 _lengths: dict[str, int] | None = None
 
 
 def _table() -> dict[str, int]:
     global _lengths
     if _lengths is None:
-        from shape.reference.packs import Pack, read_manifest
+        from shape.refpacks.packs import Pack, read_manifest
 
         table = Pack(_PACK, read_manifest(_PACK), "shipped").table("iban_lengths")
         _lengths = dict(

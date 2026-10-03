@@ -11,7 +11,7 @@ import pytest
 import shape
 from shape.cli.main import main
 from shape.generation import reference as gen_ref
-from shape.reference import find_pack
+from shape.refpacks import find_pack
 
 pytest.importorskip("shape_domains")
 

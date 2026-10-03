@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 import shape
-from shape.reference import read_manifest
+from shape.refpacks import read_manifest
 
 ROOT = Path(shape.__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "build_reference_packs.py"
@@ -96,7 +96,7 @@ def cldr_zip(tmp_path):
 
 
 def _rows(out: Path, dataset: str):
-    from shape.reference.packs import Pack
+    from shape.refpacks.packs import Pack
 
     manifest = read_manifest(out)
     return Pack(out, manifest, "search path").table(dataset).to_pylist()

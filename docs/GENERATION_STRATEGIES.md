@@ -326,7 +326,9 @@ generate --from` writes it from a profile's conditional probability tables.
 `load_dataset(name)` finds a dataset in this order: datasets registered in the process
 (`register_dataset(name, rows_or_table)`; a domain plugin registers the `reference_data` tables of
 its `DomainDefinition`), then `<name>.json` in each search directory (`add_search_path(dir)`, then
-the directories of the `SHAPE_REFERENCE_PATH` environment variable, named `REFERENCE_PATH_ENV`). A JSON dataset is a list of
+the directories of the `SHAPE_REFERENCE_PATH` environment variable, named `REFERENCE_PATH_ENV`;
+`search_directories()` lists them), then the datasets of reference packs, in the search directories
+and then the shipped ones (`docs/REFERENCE_PACKS.md`). A JSON dataset is a list of
 strings or a list of objects whose keys are the fields (the first object names them). `Dataset`
 holds Arrow columns; `unregister_dataset` and `clear_search_paths` undo the above;
 `DatasetNotFoundError` lists where it looked. Loaded files are cached by path and modification time.

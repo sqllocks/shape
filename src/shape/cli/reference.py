@@ -40,7 +40,7 @@ def _dump(doc: Any) -> None:
 
 
 def _list(a: argparse.Namespace) -> int:
-    from shape.reference import discover_packs
+    from shape.refpacks import discover_packs
 
     found = discover_packs()
     for problem in found.problems:
@@ -91,7 +91,7 @@ def _list(a: argparse.Namespace) -> int:
 
 
 def _show(a: argparse.Namespace) -> int:
-    from shape.reference import find_pack
+    from shape.refpacks import find_pack
 
     pack = find_pack(a.name)
     datasets = []

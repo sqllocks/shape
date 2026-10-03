@@ -26,7 +26,7 @@ readme above, checked 2026-10-02). Attribution: "This work includes data from Ge
 
 ## Unicode CLDR
 
-The reference packs `iso-3166-1` and `iso-639-1` (`src/shape/reference/data/`) are built from the
+The reference packs `iso-3166-1` and `iso-639-1` (`src/shape/refpacks/data/`) are built from the
 Unicode Common Locale Data Repository, release 48.2 (`core.zip`,
 https://unicode.org/Public/cldr/48.2/core.zip, retrieved 2026-10-03): the region and language
 validity lists, the territory code mappings and the English display names. Attribution:
@@ -65,7 +65,7 @@ text, as shipped in `core.zip`:
 
 ## schwifty (IBAN lengths)
 
-The reference pack `iban-lengths` (`src/shape/reference/data/iban-lengths/`) holds the length of an
+The reference pack `iban-lengths` (`src/shape/refpacks/data/iban-lengths/`) holds the length of an
 IBAN in each country, read from `schwifty/iban_registry/generated.json` of schwifty 2026.7.3
 (https://pypi.org/project/schwifty/2026.7.3/, retrieved 2026-10-03), which derives it from the
 SWIFT IBAN Registry. schwifty is under the MIT licence. Attribution: "Copyright (c) 2021 Martin

@@ -11,7 +11,7 @@ import pytest
 
 import shape
 from shape.generation import reference as gen_ref
-from shape.reference import discover_packs, find_pack, read_manifest
+from shape.refpacks import discover_packs, find_pack, read_manifest
 
 ROOT = Path(shape.__file__).resolve().parents[2]
 CORE = ["iso-3166-1", "iso-639-1", "iban-lengths"]
