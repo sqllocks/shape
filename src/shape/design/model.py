@@ -288,6 +288,9 @@ def _names_exist(
 ) -> None:
     if nonempty and not names:
         raise DesignError(f"{where}: empty {what}")
+    repeated = next((n for i, n in enumerate(names) if n in names[:i]), None)
+    if repeated is not None:
+        raise DesignError(f"{where}: {what} repeats attribute {repeated!r}")
     for n in names:
         if n not in have:
             raise DesignError(f"{where}: unknown attribute {n!r}")

@@ -32,6 +32,9 @@ this Shape supports is refused with an error that says so.
 | `facts[].measures[]` | `name`, `attribute`, `additivity` (`additive`, `semi_additive`, `non_additive`), `not_additive_over` |
 | `facts[].dimensions[]` | `entity`, `via` (the source attribute that holds the key), optional `role` |
 
+A name may appear once in a key, a dependency side, a hierarchy or a fact's attribute lists, and a
+decimal's `scale` may not exceed its `precision`; either is refused with the path of the problem.
+
 Declared keys count as dependencies (`key -> every other attribute`). An entity with no key gets
 the first candidate key found from its dependencies.
 
