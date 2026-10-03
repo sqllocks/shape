@@ -138,3 +138,48 @@ def test_not_null_with_any_whitespace(gap):
     schema, _ = from_ddl(f"CREATE TABLE t (id INT PRIMARY KEY, a INT NOT{gap}NULL)", smart=False)
     a = schema.tables["t"].columns["a"]
     assert (a.type, a.nullable) == ("integer", False)
+
+
+@pytest.mark.parametrize(
+    ("body", "columns"),
+    [
+        (
+            "id INT PRIMARY KEY, sep VARCHAR(5) DEFAULT ')', name VARCHAR(50) NOT NULL",
+            ["id", "sep", "name"],
+        ),
+        (
+            "id INT PRIMARY KEY, sep VARCHAR(5) DEFAULT 'a, b c', name VARCHAR(50)",
+            ["id", "sep", "name"],
+        ),
+        ("id INT PRIMARY KEY, [a--b] INT, c INT", ["id", "a--b", "c"]),
+        ('id INT PRIMARY KEY, "x/*y" INT, z INT, "w*/" INT', ["id", "x/*y", "z", "w*/"]),
+        (
+            "id INT PRIMARY KEY, [O'Neil] INT, -- a comment with (paren\n c INT",
+            ["id", "O'Neil", "c"],
+        ),
+    ],
+)
+def test_literals_and_quoted_names_do_not_split_or_end_a_table(body, columns):
+    # 197: a ')' or ',' in a DEFAULT literal, and comment markers or an apostrophe in a quoted
+    # name, lost columns or the whole table, or added a phantom column.
+    schema, _ = from_ddl(f"CREATE TABLE t ({body})", smart=False)
+    assert list(schema.tables["t"].columns) == columns
+
+
+@pytest.mark.parametrize(
+    ("default", "nullable", "key", "type_"),
+    [
+        ("'NOT NULL'", True, ["id"], "string"),
+        ("'PRIMARY KEY'", True, ["id"], "string"),
+        ("'identity'", True, ["id"], "string"),
+    ],
+)
+def test_keywords_inside_a_default_literal_are_text(default, nullable, key, type_):
+    # 197: DEFAULT 'NOT NULL' made the column not nullable, 'PRIMARY KEY' the key, 'identity'
+    # an integer sequence.
+    schema, _ = from_ddl(
+        f"CREATE TABLE t (id INT PRIMARY KEY, note VARCHAR(30) DEFAULT {default})", smart=False
+    )
+    note = schema.tables["t"].columns["note"]
+    assert (note.nullable, schema.tables["t"].primary_key, note.type) == (nullable, key, type_)
+    assert note.generator["strategy"] != "sequence"
