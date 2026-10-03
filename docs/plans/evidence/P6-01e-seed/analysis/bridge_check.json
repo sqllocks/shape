@@ -1,0 +1,722 @@
+[
+ {
+  "table": "education_department",
+  "column": "shared_organization_hr_department_id",
+  "scale": "medium",
+  "parent_rows": 30,
+  "rows": 25,
+  "expected_distinct": 17.145954460497844,
+  "spindle": {
+   "mean_distinct": 17.266666666666666,
+   "sd_distinct": 1.4367908045682758,
+   "z_vs_expected": 0.46016997098436035,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 16.933333333333334,
+   "sd_distinct": 1.3113124074319809,
+   "z_vs_expected": -0.8880979611734328,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "education_student",
+  "column": "shared_person_hr_employee_id",
+  "scale": "medium",
+  "parent_rows": 5000,
+  "rows": 20000,
+  "expected_distinct": 4908.458434391737,
+  "spindle": {
+   "mean_distinct": 4907.6,
+   "sd_distinct": 9.622531031297113,
+   "z_vs_expected": -0.4886280740098349,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 4907.9,
+   "sd_distinct": 9.448043037654905,
+   "z_vs_expected": -0.3237359440701973,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "education_department",
+  "column": "shared_organization_hr_department_id",
+  "scale": "small",
+  "parent_rows": 30,
+  "rows": 25,
+  "expected_distinct": 17.145954460497844,
+  "spindle": {
+   "mean_distinct": 17.266666666666666,
+   "sd_distinct": 1.4367908045682758,
+   "z_vs_expected": 0.46016997098436035,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 16.933333333333334,
+   "sd_distinct": 1.3113124074319809,
+   "z_vs_expected": -0.8880979611734328,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "education_student",
+  "column": "shared_person_hr_employee_id",
+  "scale": "small",
+  "parent_rows": 500,
+  "rows": 2000,
+  "expected_distinct": 490.8787873881247,
+  "spindle": {
+   "mean_distinct": 490.3,
+   "sd_distinct": 2.8180452995551413,
+   "z_vs_expected": -1.1249461054633498,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 490.6333333333333,
+   "sd_distinct": 2.9998084230018165,
+   "z_vs_expected": -0.4481643614621556,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "capital_markets_company",
+  "column": "shared_organization_education_department_id",
+  "scale": "medium",
+  "parent_rows": 25,
+  "rows": 500,
+  "expected_distinct": 24.99999996583696,
+  "spindle": {
+   "mean_distinct": 25.0,
+   "sd_distinct": 0.0,
+   "z_vs_expected": null,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 25.0,
+   "sd_distinct": 0.0,
+   "z_vs_expected": null,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "marketing_industry",
+  "column": "shared_organization_education_department_id",
+  "scale": "medium",
+  "parent_rows": 25,
+  "rows": 25,
+  "expected_distinct": 15.99008207854955,
+  "spindle": {
+   "mean_distinct": 15.833333333333334,
+   "sd_distinct": 1.2887666740841357,
+   "z_vs_expected": -0.666178179045206,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 15.833333333333334,
+   "sd_distinct": 1.3152509484776143,
+   "z_vs_expected": -0.652763822105032,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "marketing_contact",
+  "column": "shared_person_education_student_id",
+  "scale": "medium",
+  "parent_rows": 20000,
+  "rows": 50000,
+  "expected_distinct": 18358.4026339836,
+  "spindle": {
+   "mean_distinct": 18351.4,
+   "sd_distinct": 37.20270661269614,
+   "z_vs_expected": -1.0309735349898612,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 18365.966666666667,
+   "sd_distinct": 31.291161397576722,
+   "z_vs_expected": 1.32401328080588,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "capital_markets_company",
+  "column": "shared_organization_education_department_id",
+  "scale": "small",
+  "parent_rows": 25,
+  "rows": 100,
+  "expected_distinct": 24.57824201602876,
+  "spindle": {
+   "mean_distinct": 24.7,
+   "sd_distinct": 0.4660915996993991,
+   "z_vs_expected": 1.4308259239259182,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 24.5,
+   "sd_distinct": 0.572351471472339,
+   "z_vs_expected": -0.748751759358476,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "marketing_industry",
+  "column": "shared_organization_education_department_id",
+  "scale": "small",
+  "parent_rows": 25,
+  "rows": 25,
+  "expected_distinct": 15.99008207854955,
+  "spindle": {
+   "mean_distinct": 16.8,
+   "sd_distinct": 1.627352408689945,
+   "z_vs_expected": 2.7259634295390587,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 15.833333333333334,
+   "sd_distinct": 1.3152509484776143,
+   "z_vs_expected": -0.652763822105032,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "marketing_contact",
+  "column": "shared_person_education_student_id",
+  "scale": "small",
+  "parent_rows": 2000,
+  "rows": 5000,
+  "expected_distinct": 1835.932611136196,
+  "spindle": {
+   "mean_distinct": 1836.5333333333333,
+   "sd_distinct": 10.817397651654625,
+   "z_vs_expected": 0.3041665923372824,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 1834.3333333333333,
+   "sd_distinct": 10.08355894114475,
+   "z_vs_expected": -0.8687017485176072,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "marketing_industry",
+  "column": "shared_organization_financial_branch_id",
+  "scale": "medium",
+  "parent_rows": 200,
+  "rows": 25,
+  "expected_distinct": 23.55595141023976,
+  "spindle": {
+   "mean_distinct": 23.433333333333334,
+   "sd_distinct": 1.0726484571581119,
+   "z_vs_expected": -0.6261202002517187,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 23.5,
+   "sd_distinct": 1.45625878715715,
+   "z_vs_expected": -0.21044233197293225,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "marketing_contact",
+  "column": "shared_person_retail_customer_id",
+  "scale": "medium",
+  "parent_rows": 50000,
+  "rows": 50000,
+  "expected_distinct": 31606.21188269971,
+  "spindle": {
+   "mean_distinct": 31633.866666666665,
+   "sd_distinct": 81.03287256898653,
+   "z_vs_expected": 1.869259785741635,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 31605.833333333332,
+   "sd_distinct": 77.1791839603245,
+   "z_vs_expected": -0.026864760218400497,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "financial_branch",
+  "column": "shared_location_retail_store_id",
+  "scale": "medium",
+  "parent_rows": 150,
+  "rows": 200,
+  "expected_distinct": 110.63655223761135,
+  "spindle": {
+   "mean_distinct": 110.8,
+   "sd_distinct": 3.907552369097743,
+   "z_vs_expected": 0.22910512253652832,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 110.7,
+   "sd_distinct": 4.465577153106284,
+   "z_vs_expected": 0.07782145396215347,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "financial_customer",
+  "column": "shared_person_retail_customer_id",
+  "scale": "medium",
+  "parent_rows": 50000,
+  "rows": 50000,
+  "expected_distinct": 31606.21188269971,
+  "spindle": {
+   "mean_distinct": 31601.366666666665,
+   "sd_distinct": 80.53077515538043,
+   "z_vs_expected": -0.32954285019163804,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 31616.566666666666,
+   "sd_distinct": 63.211567761372415,
+   "z_vs_expected": 0.8972327309148177,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "marketing_industry",
+  "column": "shared_organization_financial_branch_id",
+  "scale": "small",
+  "parent_rows": 200,
+  "rows": 25,
+  "expected_distinct": 23.55595141023976,
+  "spindle": {
+   "mean_distinct": 23.666666666666668,
+   "sd_distinct": 0.8441822541139559,
+   "z_vs_expected": 0.7183430249743195,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 23.5,
+   "sd_distinct": 1.45625878715715,
+   "z_vs_expected": -0.21044233197293225,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "marketing_contact",
+  "column": "shared_person_retail_customer_id",
+  "scale": "small",
+  "parent_rows": 1000,
+  "rows": 5000,
+  "expected_distinct": 993.2788880401345,
+  "spindle": {
+   "mean_distinct": 993.1333333333333,
+   "sd_distinct": 2.713101461469859,
+   "z_vs_expected": -0.2938467189606733,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 992.7333333333333,
+   "sd_distinct": 2.377093753440044,
+   "z_vs_expected": -1.257050206100015,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "financial_branch",
+  "column": "shared_location_retail_store_id",
+  "scale": "small",
+  "parent_rows": 150,
+  "rows": 200,
+  "expected_distinct": 110.63655223761135,
+  "spindle": {
+   "mean_distinct": 111.36666666666666,
+   "sd_distinct": 4.781309395994981,
+   "z_vs_expected": 0.8363820644791753,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 110.7,
+   "sd_distinct": 4.465577153106284,
+   "z_vs_expected": 0.07782145396215347,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "financial_customer",
+  "column": "shared_person_retail_customer_id",
+  "scale": "small",
+  "parent_rows": 1000,
+  "rows": 1000,
+  "expected_distinct": 632.3045752290362,
+  "spindle": {
+   "mean_distinct": 630.7333333333333,
+   "sd_distinct": 9.744789353302094,
+   "z_vs_expected": -0.8831433891200802,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 633.3333333333334,
+   "sd_distinct": 10.216056778031044,
+   "z_vs_expected": 0.5515572516702427,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "hr_department",
+  "column": "shared_location_retail_store_id",
+  "scale": "medium",
+  "parent_rows": 150,
+  "rows": 30,
+  "expected_distinct": 27.27259829387407,
+  "spindle": {
+   "mean_distinct": 27.133333333333333,
+   "sd_distinct": 1.4558640835892127,
+   "z_vs_expected": -0.5239401206338887,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 27.5,
+   "sd_distinct": 1.1670771035014103,
+   "z_vs_expected": 1.067222068590457,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "hr_employee",
+  "column": "shared_person_retail_customer_id",
+  "scale": "medium",
+  "parent_rows": 50000,
+  "rows": 5000,
+  "expected_distinct": 4758.174340658061,
+  "spindle": {
+   "mean_distinct": 4755.966666666666,
+   "sd_distinct": 11.651500815962201,
+   "z_vs_expected": -1.0378000772636287,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 4758.533333333334,
+   "sd_distinct": 18.150203443969197,
+   "z_vs_expected": 0.10833398470332012,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "financial_branch",
+  "column": "shared_organization_hr_department_id",
+  "scale": "medium",
+  "parent_rows": 30,
+  "rows": 200,
+  "expected_distinct": 29.96592233018986,
+  "spindle": {
+   "mean_distinct": 29.9,
+   "sd_distinct": 0.3051285766293646,
+   "z_vs_expected": -1.183342041809114,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 29.966666666666665,
+   "sd_distinct": 0.18257418583505533,
+   "z_vs_expected": 0.022330094304194862,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "hr_department",
+  "column": "shared_location_retail_store_id",
+  "scale": "small",
+  "parent_rows": 150,
+  "rows": 30,
+  "expected_distinct": 27.27259829387407,
+  "spindle": {
+   "mean_distinct": 26.766666666666666,
+   "sd_distinct": 1.222866427231762,
+   "z_vs_expected": -2.2660705912426695,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 27.5,
+   "sd_distinct": 1.1670771035014103,
+   "z_vs_expected": 1.067222068590457,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "hr_employee",
+  "column": "shared_person_retail_customer_id",
+  "scale": "small",
+  "parent_rows": 1000,
+  "rows": 500,
+  "expected_distinct": 393.6210551388153,
+  "spindle": {
+   "mean_distinct": 392.0,
+   "sd_distinct": 7.665417189537382,
+   "z_vs_expected": -1.1583041660154993,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 394.3666666666667,
+   "sd_distinct": 7.189471868442523,
+   "z_vs_expected": 0.5680365128524674,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "financial_branch",
+  "column": "shared_organization_hr_department_id",
+  "scale": "small",
+  "parent_rows": 30,
+  "rows": 200,
+  "expected_distinct": 29.96592233018986,
+  "spindle": {
+   "mean_distinct": 29.966666666666665,
+   "sd_distinct": 0.18257418583505533,
+   "z_vs_expected": 0.022330094304194862,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 29.966666666666665,
+   "sd_distinct": 0.18257418583505533,
+   "z_vs_expected": 0.022330094304194862,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "iot_location",
+  "column": "shared_location_manufacturing_production_line_id",
+  "scale": "medium",
+  "parent_rows": 20,
+  "rows": 100,
+  "expected_distinct": 19.881589415593318,
+  "spindle": {
+   "mean_distinct": 19.9,
+   "sd_distinct": 0.30512857662936466,
+   "z_vs_expected": 0.3304801040854529,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 19.9,
+   "sd_distinct": 0.30512857662936466,
+   "z_vs_expected": 0.3304801040854529,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "supply_chain_warehouse",
+  "column": "shared_location_manufacturing_production_line_id",
+  "scale": "medium",
+  "parent_rows": 20,
+  "rows": 50,
+  "expected_distinct": 18.461100494465736,
+  "spindle": {
+   "mean_distinct": 18.6,
+   "sd_distinct": 1.191926866536875,
+   "z_vs_expected": 0.6382807078464087,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 18.533333333333335,
+   "sd_distinct": 1.0080138659874618,
+   "z_vs_expected": 0.3924901886311156,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "supply_chain_supplier",
+  "column": "shared_organization_manufacturing_production_line_id",
+  "scale": "medium",
+  "parent_rows": 20,
+  "rows": 200,
+  "expected_distinct": 19.999298946675022,
+  "spindle": {
+   "mean_distinct": 20.0,
+   "sd_distinct": 0.0,
+   "z_vs_expected": null,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 20.0,
+   "sd_distinct": 0.0,
+   "z_vs_expected": null,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "iot_location",
+  "column": "shared_location_manufacturing_production_line_id",
+  "scale": "small",
+  "parent_rows": 20,
+  "rows": 100,
+  "expected_distinct": 19.881589415593318,
+  "spindle": {
+   "mean_distinct": 19.9,
+   "sd_distinct": 0.30512857662936466,
+   "z_vs_expected": 0.3304801040854529,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 19.9,
+   "sd_distinct": 0.30512857662936466,
+   "z_vs_expected": 0.3304801040854529,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "supply_chain_warehouse",
+  "column": "shared_location_manufacturing_production_line_id",
+  "scale": "small",
+  "parent_rows": 20,
+  "rows": 50,
+  "expected_distinct": 18.461100494465736,
+  "spindle": {
+   "mean_distinct": 18.366666666666667,
+   "sd_distinct": 0.8502873077655142,
+   "z_vs_expected": -0.6083065947795184,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 18.533333333333335,
+   "sd_distinct": 1.0080138659874618,
+   "z_vs_expected": 0.3924901886311156,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "supply_chain_supplier",
+  "column": "shared_organization_manufacturing_production_line_id",
+  "scale": "small",
+  "parent_rows": 20,
+  "rows": 200,
+  "expected_distinct": 19.999298946675022,
+  "spindle": {
+   "mean_distinct": 20.0,
+   "sd_distinct": 0.0,
+   "z_vs_expected": null,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 20.0,
+   "sd_distinct": 0.0,
+   "z_vs_expected": null,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "real_estate_neighborhood",
+  "column": "shared_location_manufacturing_production_line_id",
+  "scale": "medium",
+  "parent_rows": 20,
+  "rows": 50,
+  "expected_distinct": 18.461100494465736,
+  "spindle": {
+   "mean_distinct": 18.866666666666667,
+   "sd_distinct": 0.9371024061116424,
+   "z_vs_expected": 2.3704745567477503,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 18.066666666666666,
+   "sd_distinct": 1.2298957997167563,
+   "z_vs_expected": -1.756574052683264,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "real_estate_neighborhood",
+  "column": "shared_location_manufacturing_production_line_id",
+  "scale": "small",
+  "parent_rows": 20,
+  "rows": 50,
+  "expected_distinct": 18.461100494465736,
+  "spindle": {
+   "mean_distinct": 18.3,
+   "sd_distinct": 1.0553639672872464,
+   "z_vs_expected": -0.8360942535391951,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 18.066666666666666,
+   "sd_distinct": 1.2298957997167563,
+   "z_vs_expected": -1.756574052683264,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "telecom_subscriber",
+  "column": "shared_person_financial_customer_id",
+  "scale": "medium",
+  "parent_rows": 50000,
+  "rows": 20000,
+  "expected_distinct": 16484.131763760062,
+  "spindle": {
+   "mean_distinct": 16476.7,
+   "sd_distinct": 40.44677217418399,
+   "z_vs_expected": -1.0063954265386974,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 16485.5,
+   "sd_distinct": 55.025229323183794,
+   "z_vs_expected": 0.13619458961421743,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "marketing_contact",
+  "column": "shared_person_financial_customer_id",
+  "scale": "medium",
+  "parent_rows": 50000,
+  "rows": 50000,
+  "expected_distinct": 31606.21188269971,
+  "spindle": {
+   "mean_distinct": 31593.566666666666,
+   "sd_distinct": 75.19523248521642,
+   "z_vs_expected": -0.9210783499055185,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 31589.8,
+   "sd_distinct": 60.372635957143636,
+   "z_vs_expected": -1.4889458151440615,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "telecom_subscriber",
+  "column": "shared_person_financial_customer_id",
+  "scale": "small",
+  "parent_rows": 1000,
+  "rows": 2000,
+  "expected_distinct": 864.8000746025006,
+  "spindle": {
+   "mean_distinct": 864.4,
+   "sd_distinct": 9.072884953492483,
+   "z_vs_expected": -0.24152172720996523,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 863.4333333333333,
+   "sd_distinct": 8.024459734024994,
+   "z_vs_expected": -0.9328914945164413,
+   "mean_null_rate": 0.0
+  }
+ },
+ {
+  "table": "marketing_contact",
+  "column": "shared_person_financial_customer_id",
+  "scale": "small",
+  "parent_rows": 1000,
+  "rows": 5000,
+  "expected_distinct": 993.2788880401345,
+  "spindle": {
+   "mean_distinct": 993.9,
+   "sd_distinct": 2.682638947778461,
+   "z_vs_expected": 1.2681431895123623,
+   "mean_null_rate": 0.0
+  },
+  "impl_runs": {
+   "mean_distinct": 993.1,
+   "sd_distinct": 2.3831303667293535,
+   "z_vs_expected": -0.4111441665862042,
+   "mean_null_rate": 0.0
+  }
+ }
+]

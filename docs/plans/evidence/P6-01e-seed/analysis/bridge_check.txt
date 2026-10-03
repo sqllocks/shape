@@ -1,0 +1,5 @@
+baseline  33 columns with a z: mean -0.04, sd 1.09, |z|>2 in 3 (about 1.5 expected)
+shape     33 columns with a z: mean -0.19, sd 0.78, |z|>2 in 0 (about 1.5 expected)
+  marketing_industry.shared_organization_education_department_id (small) pool 25 rows 25 expected 15.99: baseline 16.80 (z 2.7), shape 15.83 (z -0.7)
+  hr_department.shared_location_retail_store_id (small) pool 150 rows 30 expected 27.27: baseline 26.77 (z -2.3), shape 27.50 (z 1.1)
+  real_estate_neighborhood.shared_location_manufacturing_production_line_id (medium) pool 20 rows 50 expected 18.46: baseline 18.87 (z 2.4), shape 18.07 (z -1.8)
