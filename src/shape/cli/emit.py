@@ -552,7 +552,7 @@ def run(a: argparse.Namespace) -> int:
         # A resumed run adds to the key of the run before it (read_answer_key drops repeats);
         # only a run that starts the stream over starts the file over. The file is opened here,
         # after the checkpoint was read: opening it for writing any earlier truncates it.
-        answer_key = AnswerKey(a.answer_key, append=offset > 0)
+        answer_key = AnswerKey(a.answer_key, append=offset > 0, staged=True)
         plan.answer_key = answer_key
         if injector is not None:
             injector.answer_key = answer_key

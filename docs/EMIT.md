@@ -116,7 +116,9 @@ to be scored against what was really injected.
   `anomaly`, `duplicate`, `poison`), `table`, `seq`, `key` (`table/seq`) and details (`moved_up_to`
   for a late event, `mutators` for an anomaly, `delivered_after_events` for a duplicate).
   `shape.streaming.emit.read_answer_key(path)` returns each `(kind, table, seq)` once (a resumed run
-  writes the events after its checkpoint again). The choice of events depends on the seed and the
+  adds to the file and writes the events after its checkpoint again). The key names only events
+  that were delivered: a run stopped by `--max-events`, `--duration` or an interrupt does not list
+  the faults of the events it had generated but not sent. The choice of events depends on the seed and the
   event's key only, so the answer key is the same on every run.
 
 `--synthetic-header` (on by default; `--no-synthetic-header` turns it off) marks every message of

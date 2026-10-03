@@ -340,6 +340,9 @@ class EmitRunner:
         while True:
             try:
                 self.sink.send(batch)
+                key = getattr(self.plan, "answer_key", None)
+                if key is not None and getattr(key, "staged", False):
+                    key.commit(batch)  # the faults the plan chose for these events are now real
                 return
             except (OSError, ConnectionError, TimeoutError) as exc:
                 attempt += 1

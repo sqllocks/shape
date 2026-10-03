@@ -162,7 +162,7 @@ class AnomalyInjector:
         self.stats.rows_selected += k
         if self.answer_key is not None:
             seqs = (row_start + np.flatnonzero(chosen)).tolist()
-            self.answer_key.record("anomaly", table, seqs, mutators=[m.name for m in self.mutators])
+            self.answer_key.stage("anomaly", table, seqs, mutators=[m.name for m in self.mutators])
         columns: list[Any] = [
             pc.replace_with_mask(batch.column(i), mask, sub.column(i))
             for i in range(batch.num_columns)

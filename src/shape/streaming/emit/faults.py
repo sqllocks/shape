@@ -41,24 +41,31 @@ _MASK = (1 << 64) - 1
 
 class AnswerKey:
     """Appends injection records to a JSON-lines file (thread-safe; ``None`` path keeps them in
-    memory only, for tests and hosts)."""
+    memory only, for tests and hosts).
 
-    def __init__(self, path: str | None = None, *, append: bool = False) -> None:
+    The plan decides which events are late or anomalous when it generates a block, which is ahead
+    of delivery (and past ``--max-events``). With ``staged=True`` those records (:meth:`stage`)
+    wait, and :meth:`commit` writes the ones whose event a delivered batch holds, so the key never
+    names an event the run did not send."""
+
+    def __init__(
+        self, path: str | None = None, *, append: bool = False, staged: bool = False
+    ) -> None:
         self.path = path
+        self.staged = staged
         self.records: list[dict[str, Any]] = []
         self._lock = threading.Lock()
+        self._waiting: dict[str, dict[int, list[dict[str, Any]]]] = {}  # table -> seq -> records
         self._file = open(path, "a" if append else "w", encoding="utf-8") if path else None  # noqa: SIM115
 
-    def record(
-        self,
+    @staticmethod
+    def _rows(
         kind: str,
         table: str,
         seqs: Sequence[int],
-        per_event: Mapping[str, Sequence[Any]] | None = None,
-        **detail: Any,
-    ) -> None:
-        """Log ``kind`` for events ``seqs`` of ``table``; ``per_event`` gives one value per event,
-        ``detail`` the same value for all of them."""
+        per_event: Mapping[str, Sequence[Any]] | None,
+        detail: Mapping[str, Any],
+    ) -> list[dict[str, Any]]:
         lines = []
         for i, seq in enumerate(seqs):
             row: dict[str, Any] = {
@@ -71,6 +78,9 @@ class AnswerKey:
             for name, values in (per_event or {}).items():
                 row[name] = values[i]
             lines.append(row)
+        return lines
+
+    def _write(self, lines: list[dict[str, Any]]) -> None:
         if not lines:
             return
         with self._lock:
@@ -78,6 +88,54 @@ class AnswerKey:
             if self._file is not None:
                 self._file.write("".join(json.dumps(r, default=str) + "\n" for r in lines))
                 self._file.flush()
+
+    def record(
+        self,
+        kind: str,
+        table: str,
+        seqs: Sequence[int],
+        per_event: Mapping[str, Sequence[Any]] | None = None,
+        **detail: Any,
+    ) -> None:
+        """Log ``kind`` for events ``seqs`` of ``table`` now; ``per_event`` gives one value per
+        event, ``detail`` the same value for all of them."""
+        self._write(self._rows(kind, table, seqs, per_event, detail))
+
+    def stage(
+        self,
+        kind: str,
+        table: str,
+        seqs: Sequence[int],
+        per_event: Mapping[str, Sequence[Any]] | None = None,
+        **detail: Any,
+    ) -> None:
+        """As :meth:`record` for a fault the plan decided before delivery: written at once unless
+        the key is ``staged``, then when :meth:`commit` sees the event in a delivered batch."""
+        lines = self._rows(kind, table, seqs, per_event, detail)
+        if not self.staged:
+            self._write(lines)
+            return
+        with self._lock:
+            waiting = self._waiting.setdefault(table, {})
+            for row in lines:
+                waiting.setdefault(row["seq"], []).append(row)
+
+    def commit(self, batch: pa.RecordBatch) -> None:
+        """Write the staged records of the events ``batch`` holds (a batch that was delivered)."""
+        if not self._waiting:
+            return
+        names = batch.schema.names
+        if FIELD_TABLE not in names or FIELD_SEQ not in names:
+            return
+        tables = batch.column(FIELD_TABLE).to_pylist()
+        seqs = batch.column(FIELD_SEQ).to_pylist()
+        out: list[dict[str, Any]] = []
+        with self._lock:
+            for table, seq in zip(tables, seqs, strict=True):
+                waiting = self._waiting.get(table)
+                if waiting:
+                    out.extend(waiting.pop(seq, ()))
+        self._write(out)
 
     def close(self) -> None:
         with self._lock:

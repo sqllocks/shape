@@ -259,7 +259,7 @@ class EventPlan:
         order, late, shifts = moved
         if self.answer_key is not None:
             seqs = events.column(FIELD_SEQ).take(pa.array(late)).to_pylist()
-            self.answer_key.record("late", table, seqs, {"moved_up_to": shifts.tolist()})
+            self.answer_key.stage("late", table, seqs, {"moved_up_to": shifts.tolist()})
         return events.take(pa.array(order))
 
     def locate(self, offset: int) -> tuple[str, int] | None:

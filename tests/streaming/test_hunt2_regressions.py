@@ -6,8 +6,19 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from shape.cli.generation import load_target
 from shape.cli.main import main
-from shape.streaming.emit import read_answer_key
+from shape.generation.engine import Engine
+from shape.streaming.emit import (
+    AnomalyInjector,
+    AnswerKey,
+    EmitConfig,
+    EmitRunner,
+    EventPlan,
+    read_answer_key,
+    resolve_mutators,
+)
+from shape.streaming.emit.sinks import MemorySink
 
 FAULTS = [
     "--out-of-order",
@@ -83,19 +94,7 @@ def test_695_the_answer_key_names_only_events_the_run_delivered(tmp_path):
     assert [r for r in records if (r["table"], r["seq"]) not in sent] == []
 
 
-def test_695_a_complete_run_lists_every_fault(tmp_path):
-    from shape.generation.engine import Engine
-    from shape.cli.generation import load_target
-    from shape.streaming.emit import (
-        AnomalyInjector,
-        AnswerKey,
-        EmitConfig,
-        EmitRunner,
-        EventPlan,
-        resolve_mutators,
-    )
-    from shape.streaming.emit.sinks import MemorySink
-
+def test_695_a_complete_run_lists_every_fault():
     def run(staged: bool) -> set[tuple[str, str, int]]:
         engine = Engine(load_target("retail", None), scale="tiny", seed=5)
         key = AnswerKey(staged=staged)
