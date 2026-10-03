@@ -120,7 +120,7 @@ class BatchGenerator:
             engine.schema.validate_or_raise()
             for name, (first, stop) in ranges.items():
                 chunk = engine.generate_chunk(name, first, stop - first)
-                tables[name] = pa.Table.from_batches([chunk])
+                tables[name] = engine.finalize(name, pa.Table.from_batches([chunk]))
         day = self.start_date + dt.timedelta(days=index)
         for name, column in self.date_columns.items():
             tables[name] = _stamp(tables[name], column, day)
