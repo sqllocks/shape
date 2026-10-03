@@ -18,7 +18,7 @@ from pathlib import Path
 
 __all__ = ["claim_run_folder", "parse_run_folder", "run_stamp", "unique_run_name"]
 
-_RUN = re.compile(r"(\d{8}T\d{6})(\d{6})?Z(?:_(\d+))?")
+_RUN = re.compile(r"([0-9]{8}T[0-9]{6})([0-9]{6})?Z(?:_([0-9]+))?")
 
 
 def run_stamp(now: datetime | None = None) -> str:
@@ -36,7 +36,10 @@ def parse_run_folder(name: str) -> datetime | None:
     if match is None:
         return None
     second, micro, _ = match.groups()
-    moment = datetime.strptime(second, "%Y%m%dT%H%M%S").replace(tzinfo=UTC)
+    try:
+        moment = datetime.strptime(second, "%Y%m%dT%H%M%S").replace(tzinfo=UTC)
+    except ValueError:  # 20261399T999999Z has the shape of a run folder but is not a time
+        return None
     return moment.replace(microsecond=int(micro)) if micro else moment
 
 
