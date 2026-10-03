@@ -419,3 +419,15 @@ def test_calendar_inputs_are_checked() -> None:
     for profiles in ({"month": {"January": 100}}, {"day_of_week": {"Monday": 2}}):
         with pytest.raises(StrategyError, match=r"Jan|Mon"):
             _times({"pattern": "seasonal", "profiles": profiles}, rows=10)
+
+
+# ---- dead code: the chunk-keyed generator helper is gone ---------------------------------------
+
+
+def test_chunk_keyed_rng_helper_is_removed() -> None:
+    import importlib
+
+    import pytest
+
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("shape.builtins._rng")
