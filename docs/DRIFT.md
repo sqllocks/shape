@@ -82,6 +82,10 @@ section 12.3 and keep their values.
 - The extremes of a heavy-tailed column vary a lot between two samples of one distribution, so such
   a column can show a `range_change` now and then. It is low severity: raise `range_margin_std`, or
   ignore the column.
+- **Floating-point rounding.** A column holding one constant float value has a mean and a standard
+  deviation that differ in their last digits between two row counts. Means and spreads that differ
+  by less than 1e-9 of the column's magnitude are equal, so such a column shows no `mean_shift` or
+  `spread_change`; a real move of the constant, or a spread that appears, still does.
 - **Row counts.** `row_count_change` compares the exact row counts of a table, so there is no
   sampling noise to allow for; the defaults (more than double, fewer than half) let a 1.5 times
   larger extract of the same data pass. A stream window is not compared by size (its size is its

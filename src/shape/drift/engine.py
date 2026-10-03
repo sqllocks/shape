@@ -545,6 +545,9 @@ def _change(
     }
 
 
+_ROUNDING = 1e-9  # relative: means and spreads closer than this are equal (#616)
+
+
 def _ratio_score(ratio: float) -> float:
     """``1 - min(r, 1/r)``: 0 for no change, 1 for a drop to zero (the limit as r -> 0)."""
     return 1.0 if ratio <= 0 else 1.0 - min(ratio, 1.0 / ratio)
@@ -748,24 +751,29 @@ def _diff_numeric(
     name: str, base: View, cur: View, th: Mapping[str, Any], enough: bool
 ) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
+    # floating-point rounding: a constant column's mean and std differ in their last digits
+    # between two sizes; a difference below this share of the column's magnitude is not a change
+    rounding = _ROUNDING * max(abs(base.mean or 0.0), abs(cur.mean or 0.0))
     b_std = base.std
     if base.mean is not None and cur.mean is not None:
         # in baseline standard deviations; a model without a spread (a v1 capture) is read in
         # multiples of the mean instead, so a 1% move is not a shift
-        scale = b_std if b_std is not None else abs(base.mean)
+        scale = max(b_std, rounding) if b_std is not None else abs(base.mean)
         shift = abs(cur.mean - base.mean)
-        if shift > th["mean_shift_std"] * scale:
+        if shift > rounding and shift > th["mean_shift_std"] * scale:
             z = shift / scale if scale else math.inf
             score = 1.0 if math.isinf(z) else z / (1.0 + z)
             out.append(_change(name, "mean_shift", base.mean, cur.mean, score))
     if not enough:
         return out
     if b_std is not None and cur.std is not None:
-        if b_std > 0:
-            ratio = cur.std / b_std
+        b_spread = b_std if b_std > rounding else 0.0
+        c_spread = cur.std if cur.std > rounding else 0.0
+        if b_spread > 0:
+            ratio = c_spread / b_spread
             if ratio > th["std_ratio_max"] or ratio < th["std_ratio_min"]:
                 out.append(_change(name, "spread_change", b_std, cur.std, _ratio_score(ratio)))
-        elif cur.std > 0:
+        elif c_spread > 0:
             out.append(_change(name, "spread_change", b_std, cur.std, 1.0))
     if base.categories is None or cur.categories is None:
         ks = _ks(base, cur)
