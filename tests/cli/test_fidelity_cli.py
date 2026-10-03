@@ -135,3 +135,40 @@ def test_a_profile_without_columns_no_longer_passes(tmp_path):
     rows = tmp_path / "rows.csv"
     pacsv.write_csv(_data(), rows)
     assert main(["fidelity", str(prof), str(rows)]) == 3
+
+
+# --- W1-16 deliverable 5: a .shape reference is explained in one line, never a traceback ---
+
+
+def _shape_files(tmp_path):
+    from shape.artifact import write_model
+
+    csv = tmp_path / "d.csv"
+    csv.write_text("id,x\n1,a\n2,b\n")
+    prof = tmp_path / "p.shape"
+    assert main(["profile", str(csv), "-o", str(prof)]) == 0
+    model = tmp_path / "m.shape"
+    write_model(str(model), {"tables": {}})
+    return csv, prof, model
+
+
+@pytest.mark.parametrize("which", ["prof", "model"])
+@pytest.mark.parametrize("position", ["reference", "synthetic"])
+@pytest.mark.parametrize("cmd", ["fidelity", "compare"])
+def test_shape_artifact_in_fidelity_is_one_line(tmp_path, capsys, which, position, cmd):
+    csv, prof, model = _shape_files(tmp_path)
+    art = prof if which == "prof" else model
+    args = [cmd, str(art), str(csv)] if position == "reference" else [cmd, str(csv), str(art)]
+    capsys.readouterr()
+    assert main(args) == 2
+    err = capsys.readouterr().err.strip()
+    assert err.startswith("shape: error:") and "\n" not in err
+    assert "accepts CSV, Parquet or JSONL" in err and ".shape" in err
+    assert "Traceback" not in err
+
+
+def test_shape_artifact_with_tier_is_also_explained(tmp_path, capsys):
+    csv, prof, _ = _shape_files(tmp_path)
+    capsys.readouterr()
+    assert main(["fidelity", str(csv), str(prof), "--tier", "1"]) == 2
+    assert "accepts CSV, Parquet or JSONL" in capsys.readouterr().err
