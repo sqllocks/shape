@@ -484,8 +484,10 @@ def _cmd_inspect(a):
 
 def _cmd_check(a):
     import shape
+    from shape.cli import ci
     from shape.cli import project as project_cli
 
+    t0 = ci.started()
     profile = shape.load(a.shape)
     ctx = project_cli.context(a, profile.name)
     source = ctx.source if ctx else None
@@ -503,6 +505,12 @@ def _cmd_check(a):
     if a.json:
         _write_json(a.json, out)
     _dump(out)
+    if ci.requested(a) or ci.project_ci(a)[0]:
+        table = next(iter(profile.tables), profile.name)
+        checks = ci.checks_from_contract(
+            _load_json(contract), result.violations, table, dataset=profile.is_dataset
+        )
+        ci.write_reports(a, "check", checks, contract, t0)
     return 0 if result.passed else 1
 
 
@@ -510,13 +518,18 @@ def _cmd_fidelity(a):
     """``shape fidelity REFERENCE SYNTHETIC``: 0 when every pass mark is met, 1 when not."""
     from pathlib import Path
 
+    from shape.cli import ci
+
     if a.tier:
+        if ci.requested(a):
+            raise ValueError("--junit and --sarif are not available with --tier")
         from shape.cli.tiers import run_fidelity
 
         return run_fidelity(a)
     from shape.generation.report import Thresholds, compare_tables, render_report
     from shape.quality import load_tables
 
+    t0 = ci.started()
     real = load_tables(a.reference, a.input_format)
     synth = load_tables(a.csv, a.input_format)
     if not real:
@@ -532,6 +545,7 @@ def _cmd_fidelity(a):
             raise ValueError(f"cannot tell the report format of {out}: use .json, .md or .html")
         Path(out).write_bytes(render_report(report, fmt))
     sys.stdout.write(render_report(report, a.format).decode())
+    ci.write_reports(a, "fidelity", ci.checks_from_fidelity(report), a.csv, t0)
     return 0 if report["passed"] else 1
 
 
@@ -610,8 +624,10 @@ def _diff_options(a):
 
 def _cmd_diff(a):
     import shape
+    from shape.cli import ci
     from shape.cli import project as project_cli
 
+    t0 = ci.started()
     current_path = a.after if a.after is not None else a.before
     current = shape.load(current_path)
     ctx = project_cli.context(a, current.name)
@@ -637,6 +653,8 @@ def _cmd_diff(a):
     if a.json:
         _write_json(a.json, out)
     _dump(out)
+    columns = {name: list(t["columns"]) for name, t in current.tables.items()}
+    ci.write_reports(a, "diff", ci.checks_from_diff(out["changes"], columns), current_path, t0)
     return 1 if (a.fail_on_drift and out["drifted"]) else 0
 
 
@@ -675,6 +693,13 @@ def _cmd_verify(a):
     """``shape verify``: a ``.shape`` artifact is checked for its signature, anything else is
     data for the validation gates."""
     if str(a.shape).endswith(".shape"):
+        from shape.cli import ci
+
+        if ci.requested(a):
+            raise ValueError(
+                "--junit and --sarif report the validation gates of data; a .shape file is "
+                "only checked for its signature"
+            )
         return _cmd_verify_signature(a)
     return _cmd_verify_gates(a)
 
@@ -682,6 +707,7 @@ def _cmd_verify(a):
 def _cmd_verify_gates(a):
     """Load tables, run the gates, print the gate table; 0 pass, 1 a gate failed (or a warning
     under --strict), 2 input error."""
+    from shape.cli import ci
     from shape.cli import project as project_cli
     from shape.quality import (
         VerifyReport,
@@ -692,6 +718,7 @@ def _cmd_verify_gates(a):
     )
     from shape.quality.verify import data_files
 
+    t0 = ci.started()
     ctx = project_cli.context(a)
     named = project_cli.use_source_path(a, "shape", ctx)
     if named is not None:  # `shape verify orders`: the source of shape.yml, not a path
@@ -778,6 +805,8 @@ def _cmd_verify_gates(a):
             fh.write(text)
         print(f"Report written to {a.output}")
     has_warnings = any(g.warnings for g in result.gate_results if enforced(g))
+    checks = ci.checks_from_gates(result.gate_results, modes, strict=a.strict)
+    ci.write_reports(a, "verify", checks, a.shape, t0)
     return 1 if (not enforced_passed or (a.strict and has_warnings)) else 0
 
 
@@ -950,7 +979,7 @@ def _stream_profile_arguments(parser):
 
 
 def _build_parser(plugin_commands=()):
-    from shape.cli import gitcmds
+    from shape.cli import ci, gitcmds
     from shape.cli.project import add_arguments as add_project_arguments
     from shape.cli.project import add_project_flags
 
@@ -1126,6 +1155,7 @@ def _build_parser(plugin_commands=()):
     )
     add_project_flags(d)
     d.add_argument("--json", metavar="RESULT.json")
+    ci.add_flags(d)
     d.add_argument("--fail-on-drift", action="store_true")
     d.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     _diff_policy_arguments(d)
@@ -1220,6 +1250,7 @@ def _build_parser(plugin_commands=()):
     vf.add_argument("--statistical", action="store_true", help="add KS and chi-squared tests")
     vf.add_argument("-o", "--output", metavar="REPORT", help="write a .json or .md report")
     vf.add_argument("--strict", action="store_true", help="exit 1 on warnings too")
+    ci.add_flags(vf)
     add_project_flags(vf, source=False)
     qu = sub.add_parser("quality")
     qu.add_argument("csv")
@@ -1301,6 +1332,8 @@ def _build_parser(plugin_commands=()):
         default="json",
         help="what to print: a shape.reports format such as json, md or html (default json)",
     )
+    ci.add_flags(fi)
+    add_project_flags(fi, source=False)
     k = sub.add_parser("key")
     k.add_argument("csv")
     k.add_argument("fields", nargs="+")
@@ -1324,6 +1357,7 @@ def _build_parser(plugin_commands=()):
         help="default: the `contract` of the source in shape.yml",
     )
     ck.add_argument("--json", metavar="RESULT.json")
+    ci.add_flags(ck)
     add_project_flags(ck)
     ck.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     co = sub.add_parser(
@@ -1510,6 +1544,7 @@ def _cmd_evidence(a):
     """``shape query|check|plan`` on an evidence document (JSON or ``.shape``). ``plan`` also
     takes a generation schema and then prints the plan of its run, as ``generate --dry-run``."""
     from shape.artifact import read_shape
+    from shape.cli import ci
 
     _, s = read_shape(a.shape) if str(a.shape).endswith(".shape") else ({}, _load_json(a.shape))
     if a.cmd == "query":
@@ -1533,8 +1568,10 @@ def _cmd_evidence(a):
     if a.contract is None:
         raise ValueError("shape check needs CONTRACT.json")
     contract = _load_json(a.contract)
+    t0 = ci.started()
     r = evaluate_contract(s, contract)
     _dump(r.to_dict())
+    ci.write_reports(a, "check", ci.checks_from_report(r.to_dict()), a.contract, t0)
     return 0 if r.passed else 4
 
 
@@ -1715,7 +1752,13 @@ def _dispatch(argv):
     if a.cmd in ("fidelity", "compare") and (a.tier or not str(a.reference).endswith(".json")):
         return _run(_cmd_fidelity, a)
     if a.cmd in ("fidelity", "compare"):
+        from shape.cli import ci
         from shape.generation import certify
+
+        if ci.requested(a):
+            raise ValueError(
+                "--junit and --sarif need data as REFERENCE, not a REFERENCE.json profile"
+            )
 
         ref = _load_json(a.reference)
         cert = certify(ref, list(_rows(a.csv)), tolerance=a.tolerance)

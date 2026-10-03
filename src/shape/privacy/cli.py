@@ -55,6 +55,11 @@ def _parser() -> argparse.ArgumentParser:
     va.add_argument("artifact", metavar="ARTIFACT")
     va.add_argument("--safe", action="store_true", help="run the safe-profile leak scanner")
     va.add_argument("--json", action="store_true", help="machine-readable output")
+    from shape.cli import ci
+    from shape.cli.project import add_project_flags
+
+    ci.add_flags(va)
+    add_project_flags(va, source=False)
     return p
 
 
@@ -83,7 +88,13 @@ def _validate(a: argparse.Namespace) -> int:
     if not a.safe:
         print("shape: error: specify --safe to run the safe-profile leak scanner", file=sys.stderr)
         return 2
+    from shape.cli import ci
+
+    t0 = ci.started()
     result = _scan(a.artifact)
+    ci.write_reports(
+        a, "profile validate", ci.checks_from_leaks(a.artifact, result.findings), a.artifact, t0
+    )
     if a.json:
         print(json.dumps(result.to_dict(), indent=2))
     elif result.is_clean:

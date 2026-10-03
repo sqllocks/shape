@@ -27,6 +27,7 @@ VERSION = 1
 FILE_NAMES = ("shape.yml", "shape.yaml")
 MAX_BYTES = 1 << 20
 
+_PLACEHOLDER = re.compile(r"\{command\}")
 _NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 #: ``shape profile NAME`` words that are subcommands, so a source cannot carry them.
 RESERVED_SOURCE_NAMES = frozenset({"safe", "validate", "export", "import", "list", "registry"})
@@ -133,6 +134,12 @@ class Project:
     name: str | None
     sources: Mapping[str, Source]
     gates: Mapping[str, str]
+
+    @property
+    def ci(self) -> Mapping[str, str]:
+        """The ``ci:`` defaults (``junit``, ``sarif``, ``json`` report paths); empty when absent."""
+        found = self.document.get("ci")
+        return dict(found) if isinstance(found, dict) else {}
 
     @property
     def root(self) -> Path:
@@ -291,6 +298,10 @@ def _semantic_problems(doc: dict[str, Any]) -> list[str]:
                 out.append(f"{where}.columns: a column name must not be empty")
             if "owner" in _dict(col):
                 _text_problems(f"{where}.columns.{cname}.owner", col["owner"], out)
+    for key, value in _dict(doc.get("ci")).items():
+        _text_problems(f"ci.{key}", value, out)
+        if isinstance(value, str) and set(_PLACEHOLDER.sub("", value)) & {"{", "}"}:
+            out.append(f"ci.{key}: only {{command}} may appear in braces")
     if isinstance(doc.get("gates"), dict) and doc["gates"]:
         from shape.quality.gates import GateRunner
 
