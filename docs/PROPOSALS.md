@@ -222,7 +222,9 @@ the accepted, non-stale rule proposals with sorted keys, so the same decisions g
 With nothing accepted it exits 2.
 
 `--merge` adds the rules to a copy of an existing contract and keeps everything else in it (`drift`,
-other tables, `required_columns`). A rule that agrees with the one already there is no conflict. An
+other tables, `required_columns`). The existing contract is first read as `shape check` reads it: a
+newer `version`, another `format`, an unknown key or rule is refused (exit 2, nothing written) with
+`shape check`'s message. A rule that agrees with the one already there is no conflict. An
 accepted rule that differs from a rule already there is refused, exit 2, naming both:
 
 ```

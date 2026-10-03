@@ -13,8 +13,7 @@ import pytest
 
 import shape
 from shape.cli.main import main
-from shape.contracts.v1 import ContractError
-from shape.proposals import DecisionFile, dump_contract, propose_rules
+from shape.proposals import DecisionError, DecisionFile, dump_contract, propose_rules
 
 from .conftest import LATER, NOW
 
@@ -52,7 +51,7 @@ _GOOD = _profile(pa.table({"v": [1, 2, 3, 4, 5] * 8}))
     ],
 )
 def test_645_a_newer_or_malformed_contract_is_not_merged(existing: dict, match: str) -> None:
-    with pytest.raises(ContractError, match=match):
+    with pytest.raises(DecisionError, match=match):
         _decided(_GOOD).to_contract(existing)
 
 

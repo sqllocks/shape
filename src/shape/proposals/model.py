@@ -384,6 +384,8 @@ class DecisionFile:
             raise DecisionError("no accepted, non-stale rule proposal in the decision file")
         if merge is not None and not isinstance(merge, Mapping):
             raise DecisionError("the contract to merge into must be a JSON object")
+        if merge is not None:
+            _check_existing(merge, merge_source)
         out: dict[str, Any] = copy.deepcopy(dict(merge)) if merge is not None else {}
         for e in entries:
             _place(out, e.proposal, merge_source)
@@ -616,3 +618,22 @@ def _place(out: dict[str, Any], p: Proposal, source: str) -> None:
                     break
             else:
                 listed.append(rule)
+
+
+def _check_existing(contract: Mapping[str, Any], source: str) -> None:
+    """The contract to merge into is read as ``shape check`` reads it: a newer version, another
+    format or an unknown key is a :class:`DecisionError` with ``shape check``'s message, never
+    merged and written back (#645)."""
+    from shape.contracts.v1 import ContractError, _validate_contract
+
+    doc = dict(contract)
+    try:
+        _validate_contract(doc)
+        tables = doc.get("tables")
+        if isinstance(tables, Mapping):
+            for name, sub in tables.items():
+                if not isinstance(sub, dict):
+                    raise ContractError(f"table {name!r} of 'tables' must be a contract object")
+                _validate_contract(sub, top=False)
+    except ContractError as exc:
+        raise DecisionError(f"{source}: {exc}") from exc
