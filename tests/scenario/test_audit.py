@@ -254,3 +254,19 @@ def test_519_a_manifest_that_is_not_json_names_the_file(tmp_path):
     path.write_text("{bad", encoding="utf-8")
     with pytest.raises(ValueError, match="broken_manifest.json"):
         ManifestBuilder.from_file(path)
+
+
+# ---- #525: a landing root through a link out of the output creates nothing outside -------------
+
+
+def test_525_a_landing_root_through_a_link_creates_nothing_outside(tmp_path, retail):
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    out = tmp_path / "out"
+    out.mkdir()
+    (out / "Files").symlink_to(elsewhere, target_is_directory=True)
+    targets = {"lakehouse_files_root": "Files/landing/retail"}
+    pack = PackLoader().parse({**FILE_DROP, "fabric_targets": targets})
+    result = PackRunner().run(pack, retail, "small", 1, out)
+    assert not result.is_success and any("leaves the output" in e for e in result.errors)
+    assert list(elsewhere.iterdir()) == []
