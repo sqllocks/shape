@@ -262,6 +262,10 @@ def cmd_continue(a: argparse.Namespace) -> int:
         raise ValueError("give --input DIR (change mode) or --daily-rows TABLE=N (daily batches)")
     if a.start_date or a.end_date or a.date_column or a.scale:
         raise ValueError("--start-date, --end-date, --date-column and --scale are for --daily-rows")
+    if Path(a.output).resolve() == Path(a.input).resolve():
+        raise ValueError(
+            "the output directory would overwrite the input files: give a different -o folder"
+        )
     schema = load_target(a.target, a.mode)
     tables = read_tables(a.input)
     transitions: dict[str, dict[str, dict[str, float]]] = {}
