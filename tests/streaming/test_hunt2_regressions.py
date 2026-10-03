@@ -453,3 +453,56 @@ def test_735_a_fractional_number_does_not_fit_an_integer_column():
     assert _read_typed([2**70, 7], pa.int64()) == ([7], 1)
     assert _read_typed([3, None, 4.0], pa.int32()) == ([3, None, 4], 0)
     assert _read_typed([1, 2.25], pa.float64()) == ([1.0, 2.25], 0)  # a float column takes both
+
+
+class _Down:
+    def read(self, uri, start=None, **options):
+        raise ConnectionError("broker down")
+        yield
+
+
+def _consumer(source, **kw):
+    import pyarrow as pa
+
+    from shape.streaming.consumer import StreamConsumer
+    from shape.streaming.runtime import GlobalProfiler
+
+    return StreamConsumer(
+        source, "kafka://x/t", GlobalProfiler(pa.schema([("x", pa.int64())])), **kw
+    )
+
+
+def test_700_consecutive_failed_reconnects_wait_longer_each_time():
+    pauses: list[float] = []
+    c = _consumer(_Down(), max_attempts=6, backoff=1.0, max_backoff=3.0, sleep=pauses.append)
+    with pytest.raises(ConnectionError):
+        list(c.run())
+    assert pauses == [1.0, 2.0, 3.0, 3.0] and c.reconnects == 6  # the first retry is immediate
+
+
+def test_700_a_reconnect_after_progress_does_not_wait():
+    import pyarrow as pa
+
+    class Blip:
+        calls = 0
+
+        def read(self, uri, start=None, **options):
+            Blip.calls += 1
+            if Blip.calls == 1:
+                from shape.plugins.api.v1 import StreamOffset
+
+                yield StreamOffset({"0": 1}), pa.record_batch([pa.array([1])], names=["x"])
+                raise ConnectionError("blip")
+
+    pauses: list[float] = []
+    c = _consumer(Blip(), backoff=1.0, sleep=pauses.append)
+    list(c.run())
+    assert c.reconnects == 1 and pauses == []
+
+
+def test_700_the_library_default_is_unchanged_and_the_command_backs_off():
+    from shape.streaming import cli
+
+    c = _consumer(_Down(), max_attempts=3)
+    assert c.backoff == 0.0
+    assert cli.RECONNECT_BACKOFF > 0
