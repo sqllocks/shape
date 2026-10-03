@@ -221,6 +221,7 @@ class ManifestBuilder:
         compat.check_format("run-manifest", raw)
         compat.check_readable("run-manifest", raw, path, error=ManifestVersionError)
         unknown = compat.check_unknown("run-manifest", raw, _KNOWN)
+        _check_types(raw, path)
         return RunManifest(
             extra={k: raw[k] for k in unknown},
             run_id=raw.get("run_id", ""),
@@ -241,6 +242,37 @@ class ManifestBuilder:
             reproducibility=raw.get("reproducibility", {}),
             dataset_id=raw.get("dataset_id", ""),
         )
+
+
+_TEXT_FIELDS = (
+    "run_id", "spec_hash", "pack_id", "domain", "scale", "engine_version", "workspace_id",
+    "lakehouse_id", "dataset_id",
+)  # fmt: skip
+_MAPPING_FIELDS = (
+    "outputs", "tables", "validation", "chaos", "timestamps", "sbom", "reproducibility",
+)  # fmt: skip
+
+
+def _check_types(raw: dict[str, Any], path: str | Path) -> None:
+    """A field a manifest holds has the type the writer gave it; a missing one takes its default."""
+
+    def refuse(key: str, what: str, value: Any) -> ValueError:
+        return ValueError(
+            f"{path} is not a run manifest: {key} must be {what}, got {type(value).__name__}"
+        )
+
+    for key in _TEXT_FIELDS:
+        if key in raw and not isinstance(raw[key], str):
+            raise refuse(key, "text", raw[key])
+    for key in _MAPPING_FIELDS:
+        if key in raw and not isinstance(raw[key], dict):
+            raise refuse(key, "a mapping", raw[key])
+    seed = raw.get("seed", 0)
+    if isinstance(seed, bool) or not isinstance(seed, int):
+        raise refuse("seed", "an integer", seed)
+    for name, entry in raw.get("tables", {}).items():
+        if not isinstance(entry, dict):
+            raise refuse(f"tables.{name}", "a mapping", entry)
 
 
 def collect_sbom() -> dict[str, str]:

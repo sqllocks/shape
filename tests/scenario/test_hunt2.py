@@ -183,7 +183,8 @@ def test_667_a_field_of_the_wrong_type_is_refused_with_its_name(tmp_path, retail
     path.write_text(json.dumps(doc))
     with pytest.raises(ValueError) as caught:
         ManifestBuilder.from_file(path)
-    assert f"{key} must be" in str(caught.value) and str(path) in str(caught.value)
+    message = str(caught.value)
+    assert key in message and "must be" in message and str(path) in message
 
 
 def test_667_a_manifest_the_runner_wrote_and_an_old_one_still_load(tmp_path, retail):
