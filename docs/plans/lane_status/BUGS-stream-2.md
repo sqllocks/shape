@@ -24,7 +24,7 @@ the behaviour. No other assertion was changed.
 | `make check` (every step) | exit 0 |
 | `python scripts/check_user_facing.py` | clean |
 | `SHAPE_KERNEL=rust pytest -m "not emulator and not live"` | 7065 passed, 4 failed, 19 errors (see below) |
-| `SHAPE_KERNEL=python pytest -m "not emulator and not live"` | running; result to be recorded here |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live"` | 7084 passed, 4 failed, 0 errors (the same 4 as below; Java option unset) |
 
 No equivalence verifier for kernel, generation or profile applies: the change is in the event
 encoder only, so no timing was taken.
@@ -49,3 +49,12 @@ None: `.github/workflows` was not touched.
   `tests/kernel/test_hashing.py::test_rust_equals_reference_on_a_million_values[float16]` and
   `::test_one_and_one_point_zero_hash_equal` fail identically on the base commit `5c91ea5`
   (installed pyarrow is 19.0.1). Not touched here; no test was skipped or changed.
+
+## Python-kernel run
+
+The same four tests fail as in the Rust-kernel run (the three that also fail on the base commit,
+plus `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references`).
+The last one passes when run alone on the base commit and on this branch; in the full run it sees
+`azure.functions` already imported (installed from `tests/demo/fabric/requirements.txt`). I did not
+confirm whether it fails in a full run on the base commit, so it is open, not shown to be
+pre-existing. No test was skipped, deselected or changed.
