@@ -93,3 +93,32 @@ def test_pick_follows_weights():
     out = p.pick(np.random.default_rng(0), ["a", "b"], 5000, [9, 1])
     assert 0.85 < (out == "a").mean() < 0.95
     assert set(p.pick(np.random.default_rng(0), [1, 2, 3], 100)) <= {1, 2, 3}
+
+
+def test_iso_text_times_with_z_or_an_offset_are_read_as_utc():
+    # Issue #422: text times with a zone designator crashed the pattern simulators.
+    import datetime as dt
+
+    col = pa.array(
+        ["2024-01-01T00:00:00Z", "2024-01-01T02:00:00+02:00", None, "2024-01-01T01:00:00"]
+    )
+    us, valid, tz = p.timestamp_us(col)
+    assert valid.tolist() == [True, True, False, True]
+    epoch = dt.datetime(2024, 1, 1, tzinfo=dt.UTC).timestamp() * 1_000_000
+    assert us[[0, 1, 3]].tolist() == [epoch, epoch, epoch + 3_600_000_000]
+    assert tz is None
+
+
+def test_financial_reads_zoned_text_times():
+    from shape_simulation.financial_patterns import FinancialStreamConfig, FinancialStreamSimulator
+
+    tx = pa.table(
+        {
+            "transaction_id": [1, 2],
+            "account_id": [1, 1],
+            "amount": [1.0, 2.0],
+            "transaction_time": ["2024-01-01T00:00:00Z", "2024-01-01T05:00:00+01:00"],
+        }
+    )
+    r = FinancialStreamSimulator(tx, pa.table({"account_id": [1]}), FinancialStreamConfig()).run()
+    assert r.stats["duration_hours"] == 4.0 + 4.0  # the span plus one settlement batch
