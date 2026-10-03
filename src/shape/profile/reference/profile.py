@@ -491,6 +491,9 @@ def save(
     k: int = 5,
     column_k: Mapping[str, int] | None = None,
     classifications: Mapping[str, str] | None = None,
+    vault: str | Path | None = None,
+    vault_policy: Any = None,
+    kek: Any = None,
 ) -> str:
     """Write ``p`` to a ``.shape`` artifact and return its content id (sha256).
 
@@ -500,6 +503,12 @@ def save(
     classification, and ``CONFIDENTIAL`` or higher makes it sensitive). ``"full"`` keeps real
     values, and the artifact says so; do not share it. ``p`` itself is not changed. A profile that
     was captured safe cannot be saved as full.
+
+    ``vault`` (a path) also writes the value vault of what the safe capture withheld, chosen by
+    ``vault_policy`` (a policy file, document or ``shape.vault.policy.VaultPolicy``) and encrypted
+    under ``kek`` (32 bytes, or a credential reference such as ``file://KEK.key``); the vault is
+    written first, and the artifact's manifest names it by ``vault_id`` and SHA-256 (see
+    ``docs/VAULT.md``). It needs ``capture="safe"`` and a profile that holds real values.
     """
     from shape.privacy.redact import CaptureConfig, redact_profile
 
@@ -511,12 +520,40 @@ def save(
             mode=capture, k=k, column_k=column_k or {}, classifications=classifications or {}
         ),
     )
-    return save_captured(out, path)
+    if vault is None:
+        if vault_policy is not None or kek is not None:
+            raise ValueError("vault_policy and kek apply to a vault: pass vault=PATH")
+        return save_captured(out, path)
+    if capture != "safe":
+        raise ValueError(
+            "a vault needs capture safe: with capture full the values are already in the clear"
+        )
+    if vault_policy is None:
+        raise ValueError("a vault needs vault_policy")
+    if kek is None:
+        raise ValueError("a vault needs kek (32 bytes or a credential reference)")
+    if p.capture_declared and p.capture["mode"] == "safe":
+        raise ValueError(
+            "this profile was captured safe: its values are gone, so there is nothing for a "
+            "vault; profile the data again"
+        )
+    from shape.vault.build import write_profile_vault
+
+    body = _encode(out._data)
+    written = write_profile_vault(
+        p, out, hashlib.sha256(body).hexdigest(), vault, vault_policy, kek, classifications
+    )
+    try:
+        return save_captured(out, path, vault=written["reference"])
+    except BaseException:
+        Path(vault).unlink(missing_ok=True)
+        raise
 
 
-def save_captured(out: Profile, path: str | Path) -> str:
+def save_captured(out: Profile, path: str | Path, *, vault: dict[str, str] | None = None) -> str:
     """Write a profile that already carries how it was captured (see
-    :func:`shape.privacy.redact.redact_profile`) and return its content id."""
+    :func:`shape.privacy.redact.redact_profile`) and return its content id. ``vault`` is the
+    ``{"vault_id", "sha256"}`` reference to record in the manifest."""
     if not out.capture_declared:
         raise ValueError("this profile does not say how it was captured: use save()")
     body = _encode(out._data)
@@ -532,6 +569,8 @@ def save_captured(out: Profile, path: str | Path) -> str:
     )
     if out.redaction_manifest:
         manifest["redaction_manifest"] = out.redaction_manifest
+    if vault is not None:
+        manifest["vault"] = dict(vault)
     if out.provenance is not None:
         manifest["provenance"] = out.provenance
     write_artifact(str(path), manifest, {PROFILE_COMPONENT: body})
