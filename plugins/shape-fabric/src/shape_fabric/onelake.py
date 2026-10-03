@@ -26,7 +26,7 @@ import posixpath
 import re
 from dataclasses import dataclass
 from pathlib import PureWindowsPath
-from urllib.parse import unquote, urlsplit
+from urllib.parse import quote, unquote, urlsplit
 
 from shape.errors import ShapeError
 
@@ -34,6 +34,10 @@ ONELAKE_HOST = "onelake.dfs.fabric.microsoft.com"
 SECTIONS = ("Files", "Tables")
 _GUID = re.compile(r"^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$")
 _BAD_SEGMENT = re.compile(r"[\x00-\x1f\\?#]")
+# Characters a URL path holds as they are (RFC 3986 sub-delims, ':', '@', and the glob
+# brackets): '*', '[' and ']' stay readable for the core source's globbing. '%', spaces, '#',
+# '?' and non-ASCII are encoded.
+_PATH_SAFE = "!$&'()*+,;=:@[]~"
 _ITEM_TYPES = (".Lakehouse", ".Warehouse", ".SQLDatabase", ".KQLDatabase", ".Eventhouse")
 
 
@@ -82,13 +86,18 @@ class OneLakePath:
             self.workspace, self.item, "/".join([*self.path.split("/"), *segs]).strip("/")
         )
 
+    def _tail(self) -> str:
+        """The item and path, each segment percent-encoded once (readers decode them once)."""
+        segs = [self.item, *(s for s in self.path.split("/") if s)]
+        return "/".join(quote(s, safe=_PATH_SAFE) for s in segs)
+
     def abfss(self) -> str:
-        tail = f"/{self.path}" if self.path else ""
-        return f"abfss://{self.workspace}@{ONELAKE_HOST}/{self.item}{tail}"
+        # The workspace is the URI's user part: it is checked (no '@', '/' or ':'), not encoded,
+        # because the abfss:// readers take that part as it is written.
+        return f"abfss://{self.workspace}@{ONELAKE_HOST}/{self._tail()}"
 
     def https(self) -> str:
-        tail = f"/{self.path}" if self.path else ""
-        return f"https://{ONELAKE_HOST}/{self.workspace}/{self.item}{tail}"
+        return f"https://{ONELAKE_HOST}/{quote(self.workspace, safe='')}/{self._tail()}"
 
     @property
     def section(self) -> str | None:
@@ -104,6 +113,7 @@ def parse(uri: str) -> OneLakePath:
     parts = urlsplit(uri)
     if parts.scheme in ("abfss", "abfs"):
         workspace, _, host = parts.netloc.partition("@")
+        workspace = _workspace(workspace) if workspace else workspace
         if not workspace or host != ONELAKE_HOST:
             raise ShapeError(
                 f"not a OneLake URI: {uri!r} (abfss://<workspace>@{ONELAKE_HOST}/<item>/...)"
@@ -116,8 +126,17 @@ def parse(uri: str) -> OneLakePath:
         segs = path_segments(parts.path, uri)
         if not parts.netloc or not segs:
             raise ShapeError(f"not a OneLake URI: {uri!r} (onelake://<workspace>/<lakehouse>/...)")
-        return OneLakePath(parts.netloc, item_name(segs[0]), "/".join(segs[1:]))
+        return OneLakePath(_workspace(parts.netloc), item_name(segs[0]), "/".join(segs[1:]))
     raise ShapeError(f"not a OneLake URI: {uri!r}")
+
+
+def _workspace(raw: str) -> str:
+    """A URI's workspace part, decoded and checked: it becomes the user part of an abfss:// URI,
+    where '@', '/' and ':' would change which host or path is meant."""
+    name = segment(unquote(raw), "workspace")
+    if any(ch in name for ch in "@:"):
+        raise ShapeError(f"a workspace name cannot contain '@' or ':': {name!r}")
+    return name
 
 
 def to_abfss(uri: str) -> str:
