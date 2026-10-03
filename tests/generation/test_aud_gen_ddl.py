@@ -260,3 +260,24 @@ def test_one_foreign_key_declared_several_ways_is_one_relationship():
         smart=False,
     )
     assert [r.name for r in schema.relationships] == ["fk_o_c_id"]
+
+
+def test_same_named_tables_in_two_schemas_are_an_error():
+    # 200: crm.customer silently replaced sales.customer (one table with columns id, b).
+    from shape.generation.ddl import DdlError
+
+    with pytest.raises(DdlError, match=r"sales\.customer.*crm\.customer"):
+        from_ddl(
+            "CREATE TABLE sales.customer (id INT PRIMARY KEY, a INT);"
+            "CREATE TABLE crm.customer (id INT PRIMARY KEY, b INT)",
+            smart=False,
+        )
+
+
+def test_a_quoted_table_name_with_a_dot_is_an_error_not_a_rename():
+    # 200: [dbo].[my.table] became the table "table". A generation schema names a column
+    # "table.column", so a dot cannot be part of a table name: it is an error that says so.
+    from shape.generation.ddl import DdlError
+
+    with pytest.raises(DdlError, match=r"'my\.table'"):
+        from_ddl("CREATE TABLE [dbo].[my.table] (id INT PRIMARY KEY)", smart=False)
