@@ -90,3 +90,65 @@ def test_a_reused_time_travel_engine_gives_the_same_output():
     for a, b, c in zip(first.snapshots, second.snapshots, again.snapshots, strict=True):
         assert a.tables["t"].equals(b.tables["t"])
         assert a.tables["t"].equals(c.tables["t"])
+
+
+def test_time_travel_renumbers_the_integer_column_of_a_composite_key():
+    # 208: only key[:1] was tried: a key (code, n) with a text code was refused.
+    from shape.generation.incremental import TimeTravelConfig, TimeTravelEngine
+    from shape.generation.schema import GenSchema
+
+    t = pa.table({"code": ["a"] * 50, "n": pa.array(range(1, 51)), "v": [1.0] * 50})
+    doc = {
+        "schema_version": 1,
+        "model": {"name": "m"},
+        "tables": {
+            "t": {
+                "name": "t",
+                "primary_key": ["code", "n"],
+                "columns": {
+                    c: {"name": c, "type": ty, "generator": {"strategy": "uuid"}}
+                    for c, ty in (("code", "string"), ("n", "integer"), ("v", "float"))
+                },
+            }
+        },
+    }
+    result = TimeTravelEngine().generate_from(
+        {"t": t}, TimeTravelConfig(months=1, seed=1), schema=GenSchema.from_dict(doc)
+    )
+    last = result.snapshots[-1].tables["t"]
+    assert max(last["n"].to_pylist()) > 50
+
+
+def test_continue_on_an_all_null_key_starts_new_keys_at_one():
+    # 208: TypeError: int() argument must be ... not 'NoneType'.
+    t = pa.table({"t_id": pa.array([None, None], pa.int64()), "v": [1.0, 2.0]})
+    d = ContinueEngine().continue_from(
+        {"t": t}, config=ContinueConfig(seed=1, insert_count=2, delete_fraction=0)
+    )
+    assert d.inserts["t"]["t_id"].to_pylist() == [1, 2]
+
+
+def test_every_delta_table_has_the_delta_columns_even_when_empty():
+    # 208: with insert_count=0 the inserts table lacked _shape_delta_type/_timestamp.
+    t = pa.table({"t_id": pa.array([1, 2, 3]), "v": [1.0, 2.0, 3.0]})
+    d = ContinueEngine().continue_from(
+        {"t": t}, config=ContinueConfig(seed=1, insert_count=0, delete_fraction=0)
+    )
+    names = d.updates["t"].column_names
+    assert d.inserts["t"].column_names == names == d.deletes["t"].column_names
+
+
+def test_transitions_on_a_table_name_with_a_dot():
+    # 208: "dbo.orders.status" was split at the first dot and refused.
+    t = pa.table({"t_id": pa.array([1, 2]), "status": ["a", "a"]})
+    d = ContinueEngine().continue_from(
+        {"dbo.orders": t},
+        config=ContinueConfig(
+            seed=1,
+            insert_count=0,
+            delete_fraction=0,
+            update_fraction=1.0,
+            state_transitions={"dbo.orders.status": {"a": {"b": 1.0}}},
+        ),
+    )
+    assert set(d.updates["dbo.orders"]["status"].to_pylist()) == {"b"}
