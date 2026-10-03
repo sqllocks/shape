@@ -133,8 +133,8 @@ def _third_normal_form(design: DesignInput) -> SchemaDesign:
                         f"entity {ent.name!r} attribute {a!r} references {target.name!r}, whose "
                         f"key has {len(target_pk)} columns; a reference needs a one-column key"
                     )
-                if base_table[target.name] == name:
-                    continue
+                if base_table[target.name] == name and (a,) == target_pk:
+                    continue  # the key itself, not a reference to another row
                 fks.append(ForeignKey((a,), base_table[target.name], target_pk))
             cols = tuple(
                 _column(ent.attribute(a), nullable=False if a in primary[name] else None)
