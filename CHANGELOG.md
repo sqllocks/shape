@@ -347,8 +347,9 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Kernel: `Kll.update(NaN)` is skipped instead of panicking (#531); restored sketch state and
   snapshots are validated (#532); native and reference agree on text patterns (#534), temporal
   values outside years 1-9999 (#536), `hash_value` of NumPy, pandas and Arrow scalars and nulls
-  (#538), negative-scale decimals (#540) and nulls in dense inputs (#550); every native function has
-  a twin and a stub (#553).
+  (#538), negative-scale decimals (#540), nulls in dense inputs (#550) and edge inputs (dictionary
+  nulls, zoned timestamps, saturating counts, self-merge; #552); every native function has a twin and
+  a stub (#553).
 - Generation kernel: keys, slots and word addresses no longer overflow (#549); oversized calls are
   `ValueError`s ("use smaller chunks") instead of interpreter aborts (#548); very wide or non-finite
   hour peaks, days outside the timestamp range and extreme SCD2 gaps are handled (#551).
