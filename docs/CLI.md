@@ -133,6 +133,12 @@ the policy.
   (exit 1 outside the tolerance, 2 no frequency data for a requested column). See
   [SCALE.md](SCALE.md#skew-rehearsal).
 
+- `shape scorecard DATA` scores data quality by dimension ([SCORECARD.md](SCORECARD.md)); with
+  `--slice-by COLUMN` it scores every slice and exits 1 when `--max-slice-gap` is exceeded.
+  `shape skew TRAIN SERVING` compares serving data with training data (data or profiles) and
+  exits 0 when nothing is flagged, 1 when a feature is flagged, 2 for unusable input
+  ([FAIRNESS_AND_SKEW.md](FAIRNESS_AND_SKEW.md)).
+
 - `shape bridge` serves Shape's commands as a versioned JSON protocol on standard input and output
   (one request and one response per line; `--once` for a single request; `--jobs-dir DIR` for the
   job files). `shape bridge schema --out DIR` writes its JSON Schemas and `--check DIR` verifies a

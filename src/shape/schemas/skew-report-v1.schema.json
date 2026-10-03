@@ -1,0 +1,365 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Shape training-serving skew report, version 1",
+  "description": "Written by `shape skew -o` and `shape.quality.skew(...).to_dict()` (docs/FAIRNESS_AND_SKEW.md). With a profile on either side the PSI and the value measures are null and say why in `notes`.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "shape_version",
+    "thresholds",
+    "flagged",
+    "missing_tables",
+    "tables"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "shape-skew-report"
+    },
+    "version": {
+      "const": 1
+    },
+    "shape_version": {
+      "type": "string"
+    },
+    "thresholds": {
+      "type": "object",
+      "required": [
+        "psi",
+        "null_rate",
+        "unseen_category_share",
+        "out_of_range_share",
+        "label_rate_diff",
+        "min_slice_rows"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "psi": {
+          "type": "number"
+        },
+        "null_rate": {
+          "type": "number"
+        },
+        "unseen_category_share": {
+          "type": "number"
+        },
+        "out_of_range_share": {
+          "type": "number"
+        },
+        "label_rate_diff": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "min_slice_rows": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "flagged": {
+      "type": "boolean"
+    },
+    "missing_tables": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tables": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/table"
+      }
+    }
+  },
+  "$defs": {
+    "feature": {
+      "type": "object",
+      "required": [
+        "feature",
+        "schema",
+        "train_null_rate",
+        "serving_null_rate",
+        "null_rate_difference",
+        "psi",
+        "unseen_category_share",
+        "out_of_range_share",
+        "notes",
+        "flags",
+        "flagged"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "feature": {
+          "type": "string"
+        },
+        "schema": {
+          "type": "object",
+          "required": [
+            "status",
+            "train_type",
+            "serving_type"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "enum": [
+                "ok",
+                "missing_in_serving",
+                "type_changed"
+              ]
+            },
+            "train_type": {
+              "type": "string"
+            },
+            "serving_type": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "train_null_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "serving_null_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "null_rate_difference": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "psi": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "unseen_category_share": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "out_of_range_share": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "flagged": {
+          "type": "boolean"
+        }
+      }
+    },
+    "label": {
+      "type": "object",
+      "required": [
+        "column",
+        "train_rate",
+        "serving_rate",
+        "difference",
+        "flagged"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "column": {
+          "type": "string"
+        },
+        "train_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "serving_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "difference": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "flagged": {
+          "type": "boolean"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "slice": {
+      "type": "object",
+      "required": [
+        "slice",
+        "train_rows",
+        "serving_rows",
+        "features",
+        "flagged"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "slice": {
+          "type": "string"
+        },
+        "train_rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "serving_rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/feature"
+          }
+        },
+        "flagged": {
+          "type": "boolean"
+        }
+      }
+    },
+    "slices": {
+      "type": "object",
+      "required": [
+        "by",
+        "slices",
+        "small_slices"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "by": {
+          "type": "string"
+        },
+        "slices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/slice"
+          }
+        },
+        "small_slices": {
+          "type": "object",
+          "required": [
+            "slices",
+            "train_rows",
+            "serving_rows",
+            "reported"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "slices": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "train_rows": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "serving_rows": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "reported": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "table": {
+      "type": "object",
+      "required": [
+        "mode",
+        "train_rows",
+        "serving_rows",
+        "features",
+        "extra_in_serving",
+        "label",
+        "slices",
+        "flagged"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "data",
+            "profile"
+          ]
+        },
+        "train_rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "serving_rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/feature"
+          }
+        },
+        "extra_in_serving": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "label": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/label"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "slices": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/slices"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "flagged": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

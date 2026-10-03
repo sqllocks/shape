@@ -358,4 +358,5 @@ gates above.
 
 `shape scorecard` runs these gates and scores accuracy, completeness, conformity, consistency,
 timeliness and uniqueness from them, with failing-row samples and an optional flag column. See
-[SCORECARD.md](SCORECARD.md).
+[SCORECARD.md](SCORECARD.md). `--slice-by` scores them per slice; `shape skew` compares serving
+data with training data ([FAIRNESS_AND_SKEW.md](FAIRNESS_AND_SKEW.md)).

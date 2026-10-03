@@ -1,0 +1,151 @@
+{
+  "format": "shape-scorecard",
+  "version": 1,
+  "shape_version": "SV",
+  "run_at": "RUN_AT",
+  "data_path": "DATA",
+  "overall": 89.06,
+  "dimensions": {
+    "accuracy": {
+      "score": null,
+      "checks": []
+    },
+    "completeness": {
+      "score": 93.75,
+      "checks": [
+        {
+          "gate": "null_constraint",
+          "table": "customer",
+          "column": "id",
+          "check": "null",
+          "score": 100.0,
+          "rows": 4,
+          "failing": 0,
+          "owner": null
+        },
+        {
+          "gate": "null_constraint",
+          "table": "customer",
+          "column": "name",
+          "check": "null",
+          "score": 75.0,
+          "rows": 4,
+          "failing": 1,
+          "owner": null
+        },
+        {
+          "gate": "null_constraint",
+          "table": "order",
+          "column": "id",
+          "check": "null",
+          "score": 100.0,
+          "rows": 4,
+          "failing": 0,
+          "owner": null
+        },
+        {
+          "gate": "null_constraint",
+          "table": "order",
+          "column": "customer_id",
+          "check": "null",
+          "score": 100.0,
+          "rows": 4,
+          "failing": 0,
+          "owner": null
+        }
+      ]
+    },
+    "conformity": {
+      "score": 100.0,
+      "checks": [
+        {
+          "gate": "schema_conformance",
+          "table": null,
+          "column": null,
+          "check": "gate",
+          "score": 100.0,
+          "rows": null,
+          "failing": null,
+          "owner": null
+        }
+      ]
+    },
+    "consistency": {
+      "score": 75.0,
+      "checks": [
+        {
+          "gate": "referential_integrity",
+          "table": "order",
+          "column": "customer_id",
+          "check": "orphan",
+          "score": 75.0,
+          "rows": 4,
+          "failing": 1,
+          "owner": null
+        }
+      ]
+    },
+    "timeliness": {
+      "score": null,
+      "checks": []
+    },
+    "uniqueness": {
+      "score": 87.5,
+      "checks": [
+        {
+          "gate": "unique_constraint",
+          "table": "customer",
+          "column": "id",
+          "check": "duplicate",
+          "score": 75.0,
+          "rows": 4,
+          "failing": 1,
+          "owner": null
+        },
+        {
+          "gate": "unique_constraint",
+          "table": "order",
+          "column": "id",
+          "check": "duplicate",
+          "score": 100.0,
+          "rows": 4,
+          "failing": 0,
+          "owner": null
+        }
+      ]
+    }
+  },
+  "known_issues": [],
+  "samples": [
+    {
+      "gate": "null_constraint",
+      "check": "null",
+      "table": "customer",
+      "row": 1,
+      "values": {
+        "name": null
+      },
+      "redacted": false
+    },
+    {
+      "gate": "unique_constraint",
+      "check": "duplicate",
+      "table": "customer",
+      "row": 2,
+      "values": {
+        "id": 2
+      },
+      "redacted": false
+    },
+    {
+      "gate": "referential_integrity",
+      "check": "orphan",
+      "table": "order",
+      "row": 1,
+      "values": {
+        "customer_id": 9
+      },
+      "redacted": false
+    }
+  ]
+}

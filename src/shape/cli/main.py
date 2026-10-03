@@ -1414,6 +1414,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.scorecard import add_arguments as add_scorecard_arguments
 
     add_scorecard_arguments(sub)
+    from shape.cli.training_skew import add_arguments as add_training_skew_arguments
+
+    add_training_skew_arguments(sub)
     from shape.cli.incremental import add_arguments as add_incremental_arguments
 
     add_incremental_arguments(sub)
@@ -1876,6 +1879,10 @@ def _dispatch(argv):
         from shape.cli.reportcard import run as run_report_card
 
         return _run(run_report_card, a)
+    if a.cmd == "skew":
+        from shape.cli.training_skew import run as run_training_skew
+
+        return _run(run_training_skew, a)
     if a.cmd == "jobs":
         from shape.cli.jobs import run as run_jobs
 

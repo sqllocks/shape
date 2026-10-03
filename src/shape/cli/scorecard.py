@@ -17,8 +17,10 @@ def add_arguments(sub: Any) -> None:
         description="Run the validation gates over data and score six dimensions (accuracy, "
         "completeness, conformity, consistency, timeliness, uniqueness) from them, with the "
         "owner of each failing column, the trend over earlier scorecards, and failing-row "
-        "samples that never show the values of classified columns unless asked. Exit 0 when the "
-        "scorecard was produced, 2 on an input error.",
+        "samples that never show the values of classified columns unless asked. With --slice-by "
+        "every dimension is also scored per slice. Exit 0 when the scorecard was produced (and, "
+        "with --max-slice-gap, no slice gap is above it), 1 when a slice gap is above "
+        "--max-slice-gap, 2 on an input error.",
     )
     sc.add_argument("data", metavar="DATA", help="a data file, or a directory of data files")
     sc.add_argument("--format", choices=("auto", "csv", "parquet", "jsonl"), default="auto")
@@ -69,6 +71,38 @@ def add_arguments(sub: Any) -> None:
         metavar="NAME",
         help="name of the flag column (default _shape_dq_failed)",
     )
+    sc.add_argument(
+        "--slice-by",
+        metavar="COLUMN[,COLUMN]",
+        help="also score every dimension per slice: each value (or value combination) of these "
+        "columns in the tables that hold them; null is the slice (null)",
+    )
+    sc.add_argument(
+        "--min-slice-rows",
+        type=int,
+        default=30,
+        metavar="N",
+        help="slices with fewer rows are pooled as (small slices) and never shown alone "
+        "(default 30)",
+    )
+    sc.add_argument(
+        "--max-slice-gap",
+        type=float,
+        metavar="G",
+        help="exit 1 when any dimension's gap (highest minus lowest slice score) exceeds G",
+    )
+    sc.add_argument(
+        "--reference",
+        metavar="REF",
+        help="with --slice-by: data or a profile of the population the data should describe; "
+        "reports each slice's reference share and the ratio",
+    )
+    sc.add_argument(
+        "--label",
+        metavar="COLUMN",
+        help="with --slice-by: a boolean or two-valued column; reports each slice's positive "
+        "rate and the disparity ratio (flagged below 0.8, the four-fifths screening heuristic)",
+    )
     sc.add_argument("--json", action="store_true", help="print the scorecard as JSON")
     sc.add_argument("-o", "--output", metavar="FILE", help="write the scorecard to FILE")
 
@@ -81,6 +115,13 @@ def _classified(pairs: list[str]) -> dict[str, set[str]]:
             raise ValueError(f"--classified needs TABLE.COLUMN, got {pair!r}")
         out.setdefault(table, set()).add(column)
     return out
+
+
+def _slice_columns(text: str) -> list[str]:
+    columns = [c.strip() for c in text.split(",")]
+    if not all(columns):
+        raise ValueError(f"--slice-by needs COLUMN[,COLUMN], got {text!r}")
+    return columns
 
 
 def _write_flagged(a: argparse.Namespace, card: Any, tables: dict[str, Any]) -> None:
@@ -128,6 +169,7 @@ def run(a: argparse.Namespace) -> int:
         record_scorecard,
         scorecard_trend,
     )
+    from shape.quality.sources import load_data_or_profile
     from shape.quality.verify import data_files
     from shape.registry.local import LocalRegistry
 
@@ -135,6 +177,9 @@ def run(a: argparse.Namespace) -> int:
         raise ValueError("--record needs --history DIR and --name NAME")
     if a.name and not a.history:
         raise ValueError("--name needs --history DIR")
+    slice_by = _slice_columns(a.slice_by) if a.slice_by is not None else None
+    if slice_by is None and (a.reference or a.label or a.max_slice_gap is not None):
+        raise ValueError("--reference, --label and --max-slice-gap need --slice-by")
     classified = _classified(a.classified)
     tables = load_tables(a.data, a.format)
     if not tables:
@@ -158,6 +203,11 @@ def run(a: argparse.Namespace) -> int:
         classified=classified,
         show_classified=a.show_classified,
         history=history,
+        slice_by=slice_by,
+        min_slice_rows=a.min_slice_rows,
+        label=a.label,
+        reference=load_data_or_profile(a.reference, a.format) if a.reference else None,
+        max_slice_gap=a.max_slice_gap,
     )
     if a.flag_output:
         _write_flagged(a, card, tables)
@@ -168,4 +218,4 @@ def run(a: argparse.Namespace) -> int:
         Path(a.output).write_text(text, encoding="utf-8")
     else:
         print(text, end="" if text.endswith("\n") else "\n")
-    return 0
+    return 1 if card.slices and card.slices.get("exceeded") else 0
