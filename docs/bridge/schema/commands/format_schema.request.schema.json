@@ -7,43 +7,18 @@
       "type": "string"
     },
     "args": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "description": "a format name; without it the result lists the names available (`design-input`, `generation-schema`, `decisions`, `project`, ...)",
+          "type": "string",
+          "x-since": "1.1"
+        }
+      },
       "type": "object"
     },
     "command": {
-      "enum": [
-        "check",
-        "demo_cleanup",
-        "demo_list",
-        "demo_run",
-        "demo_status",
-        "describe",
-        "design",
-        "design_from_data",
-        "diff",
-        "dry_run",
-        "format_schema",
-        "generate",
-        "job_cancel",
-        "job_list",
-        "job_status",
-        "list",
-        "preview",
-        "profile",
-        "profile_info",
-        "project_show",
-        "project_validate",
-        "proposals_decide",
-        "proposals_list",
-        "proposals_propose",
-        "scale_cancel",
-        "scale_generate",
-        "scale_status",
-        "stream",
-        "stream_status",
-        "stream_stop",
-        "validate",
-        "verify"
-      ]
+      "const": "format_schema"
     },
     "id": {
       "maxLength": 128,
@@ -82,7 +57,8 @@
   "required": [
     "command"
   ],
-  "title": "bridge request",
+  "title": "format_schema request",
   "type": "object",
-  "x-api-version": "1.1"
+  "x-api-version": "1.1",
+  "x-since": "1.1"
 }

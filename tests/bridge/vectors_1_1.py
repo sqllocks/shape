@@ -195,6 +195,15 @@ FILES["design_from_data"] = {
     ]
 }
 
+FILES["format_schema"] = {
+    "cases": [
+        case("names", "format_schema"),
+        case("design-input", "format_schema", {"name": "design-input"}),
+        case("unknown-format", "format_schema", {"name": "nope"}),
+        case("name-must-be-text", "format_schema", {"name": 3}, valid_request=False),
+    ]
+}
+
 #: Setup and cases added to the vector files of 1.0 commands.
 EXTENDS: dict[str, dict[str, Any]] = {
     "profile": {

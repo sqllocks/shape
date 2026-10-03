@@ -45,6 +45,7 @@ ADDED_1_1 = {
     "project_show",
     "design",
     "design_from_data",
+    "format_schema",
 }
 
 

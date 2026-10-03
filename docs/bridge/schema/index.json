@@ -183,6 +183,19 @@
       "since": "1.0",
       "summary": "Plan a run (row counts, order, problems) without generating a row."
     },
+    "format_schema": {
+      "args": {
+        "name": "1.1"
+      },
+      "cancellable": false,
+      "effects": [],
+      "job": "never",
+      "pending": null,
+      "request": "commands/format_schema.request.schema.json",
+      "result": "commands/format_schema.result.schema.json",
+      "since": "1.1",
+      "summary": "List the formats Shape reads, or give the JSON Schema of one."
+    },
     "generate": {
       "args": {
         "domain": "1.0",
