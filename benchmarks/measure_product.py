@@ -7,7 +7,8 @@ datasets in ``$BENCH_DATA_DIR/profile``. Create them with the ``datasets.py`` sc
 ``profile_1to1`` folder of the benchmark harness. Each measurement runs in a fresh process,
 and the profile output of the RUNS runs is hashed and compared. The timing is the median of
 RUNS runs, and wall-clock excludes ``import shape``. Peak memory is the process's peak
-resident set size.
+resident set size. Nothing is written unless the profile is the same on every run and has the
+expected rows. Everything runs under the exclusive benchmark lock, after the load gate (plan 1.4).
 Writes benchmarks/baselines/2026-09-30-product/product_bench.json. Nothing is extrapolated.
 """
 
@@ -24,6 +25,9 @@ from datetime import datetime
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "benchmarks" / "vs_spindle"))
+from common import bench_lock, wait_for_quiet  # noqa: E402
+
 DATA = Path(os.environ.get("BENCH_DATA_DIR", Path.home() / "bench-data")) / "profile"
 OUT = REPO / "benchmarks" / "baselines" / "2026-09-30-product" / "product_bench.json"
 RUNS = 3
@@ -73,10 +77,24 @@ def main() -> None:
         },
         "profile": {},
     }
+    with bench_lock():
+        _measure(result)
+    print(result["startup"])
+    OUT.write_text(json.dumps(result, indent=1) + "\n")
+
+
+def _measure(result: dict) -> None:
     for name, rows, cols in DATASETS:
-        runs = [_child(DATA / name) for _ in range(RUNS)]
-        assert all(r["rows"] == rows for r in runs), name
+        runs = []
+        for _ in range(RUNS):
+            wait_for_quiet()
+            runs.append(_child(DATA / name))
+        wrong = sorted({r["rows"] for r in runs if r["rows"] != rows})
+        if wrong:
+            raise SystemExit(f"{name}: profiled {wrong[0]} rows, expected {rows}; nothing written")
         identical = len({r["sha256"] for r in runs}) == 1
+        if not identical:
+            raise SystemExit(f"{name}: the profile differs between runs; nothing written")
         med = statistics.median(r["s"] for r in runs)
         result["profile"][name] = {
             "rows": rows,
@@ -89,6 +107,7 @@ def main() -> None:
         }
         print(name, round(med, 2), "s", round(rows / med), "rows/s")
     shape_bin = Path(sys.executable).parent / "shape"
+    wait_for_quiet()
     result["startup"] = {
         "runs": STARTUP_RUNS,
         "import_shape_median_s": statistics.median(
@@ -101,8 +120,6 @@ def main() -> None:
             _timed([sys.executable, "-c", "pass"]) for _ in range(STARTUP_RUNS)
         ),
     }
-    print(result["startup"])
-    OUT.write_text(json.dumps(result, indent=1) + "\n")
 
 
 if __name__ == "__main__":

@@ -56,6 +56,7 @@ def measure(monkeypatch, tmp_path):
     monkeypatch.setattr(mod, "OUT", tmp_path / "product_bench.json")
     monkeypatch.setattr(mod, "DATASETS", [("d1.parquet", 200_000, 6)])
     monkeypatch.setattr(mod, "_timed", lambda cmd: 0.1)
+    monkeypatch.setattr(mod, "wait_for_quiet", lambda *a, **k: 0.0, raising=False)
     monkeypatch.setenv("BENCH_LOCK_HELD", "1")
     return mod
 
