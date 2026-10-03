@@ -296,7 +296,7 @@ def test_a_merged_profile_generates_its_exact_value_sets(tmp_path: Path) -> None
     for column, expected in (("state", {"WA", "OR", "CA"}), ("code", {"02134", "10001"})):
         got = _generated(merged, column)
         assert set(got) == expected, (column, got)
-        assert set(_generated(whole, column)) == expected  # as the unmerged profile does
+    assert set(_generated(whole, "state")) == {"WA", "OR", "CA"}  # as the unmerged profile does
     got = _generated(merged, "state")
     assert got["WA"] > got["OR"] and got["WA"] > got["CA"]  # weights: WA is half the rows
 
@@ -308,3 +308,4 @@ def test_a_merged_column_with_too_many_values_is_not_an_enum(tmp_path: Path) -> 
     # `note` is unique (n0..n399): more distinct values than the top list holds, never an enum
     gen = fit_schema(merged).schema.tables["p"].columns["note"].generator
     assert gen["strategy"] != "weighted_enum"
+

@@ -561,6 +561,69 @@ def _has(col: ColumnProfile, field: str) -> bool:
     return value is not None
 
 
+def _merged_value_set(column: dict[str, Any], sketch: Any, rows: int) -> None:
+    """Fill a merged text column's value set from the merge's top values when they list every
+    value exactly (every error 0, the counts adding up to the non-null values), under the
+    profile's own enum rule (#682). A merged profile leaves ``enum_values`` unknown, which would
+    otherwise make the column a name-guessed provider."""
+    if column.get("enum_values") is not None or column.get("dtype") != "string":
+        return
+    if not isinstance(sketch, Mapping) or sketch.get("kind") != "text":
+        return
+    top, count = sketch.get("top"), sketch.get("count")
+    if not isinstance(top, list) or not top or not isinstance(count, int) or count <= 0:
+        return
+    entries: list[tuple[str, int]] = []
+    for item in top:
+        if not (isinstance(item, list) and len(item) == 3 and isinstance(item[0], str)):
+            return
+        value, n, error = item
+        if not isinstance(n, int) or error != 0:
+            return
+        entries.append((value, n))
+    if sum(n for _, n in entries) != count:
+        return  # some value is missing from the list
+    cardinality = len(entries)
+    nulls = column.get("null_count") or 0
+    is_enum = (
+        (cardinality < 200 or (cardinality / rows < 0.30 and cardinality < 50_000))
+        and 2 * cardinality <= count
+        and not (cardinality == rows and nulls == 0)
+    )  # the profile's enum rule (P1-18), with the merge's exact counts
+    if not is_enum:
+        return
+    entries.sort(key=lambda e: (-e[1], e[0]))
+    props = {value: round(n / count, 6) for value, n in entries}
+    column.update(
+        is_enum=True,
+        enum_values=props,
+        value_counts_ext=dict(props),
+        value_counts_ext_order=list(props),
+    )
+
+
+def _with_merged_value_sets(profile: Any) -> Any:
+    """``profile`` as a document whose merged tables have the value sets their merge lists
+    exactly (see :func:`_merged_value_set`); any other profile as it is."""
+    if isinstance(profile, DatasetProfile) or not hasattr(profile, "to_dict"):
+        if not isinstance(profile, Mapping):
+            return profile
+        doc: Any = copy.deepcopy(dict(profile))
+    else:
+        doc = profile.to_dict()
+    tables = doc.get("tables") if isinstance(doc.get("tables"), Mapping) else {"": doc}
+    for table in tables.values():
+        merge = table.get("merge") if isinstance(table, Mapping) else None
+        if not isinstance(merge, Mapping) or not isinstance(table.get("columns"), Mapping):
+            continue
+        sketches = merge.get("sketch_columns") or {}
+        rows = table.get("row_count") or 0
+        for name, column in table["columns"].items():
+            if isinstance(column, dict) and isinstance(rows, int) and rows > 0:
+                _merged_value_set(column, sketches.get(name), rows)
+    return doc
+
+
 def fit_schema(
     profile: Any,
     *,
@@ -579,7 +642,7 @@ def fit_schema(
         from shape.proposals import apply_decisions
 
         profile = apply_decisions(profile, decisions)
-    dataset: DatasetProfile = as_dataset(profile)
+    dataset: DatasetProfile = as_dataset(_with_merged_value_sets(profile))
     base = SchemaBuilder().build(dataset, domain_name=domain, correlation_threshold=2.0)
     doc = copy.deepcopy(base.to_dict())
     items: list[PlanItem] = []

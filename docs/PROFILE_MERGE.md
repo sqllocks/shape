@@ -73,6 +73,14 @@ error terms add, so the bound holds for the union.
 The tests in `tests/profile/test_merge.py` enforce each of these on merged partitions, including
 empty and single-row ones, and compare associativity across groupings.
 
+## Generating from a merged profile
+
+`shape generate --from` and `shape plan` (`fit_schema`) read a merged profile like any other. A
+text column whose merged top values list every value exactly (every error 0, the counts adding up
+to the column's non-null values) is drawn from those values and weights when the profile's enum
+rule would call it an enum, as the profile of the union would; any other column whose value set is
+unknown is generated as for a profile without one.
+
 ## Sketch state in the file
 
 `shape profile --sketches` (or `shape.profile(..., sketches=True)`) reads the data one more time,
