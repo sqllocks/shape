@@ -329,3 +329,17 @@ def test_distinct_counter_estimates_and_merges():
         other.update(i)
     h.merge(other)
     assert abs(h.estimate() - 75_000) / 75_000 < 0.03
+
+
+@pytest.mark.parametrize("kernel", ["rust", "python"])
+def test_kll_update_skips_nan_in_both_kernels(native, kernel):
+    # Regression #531: the native KLL panicked sorting a NaN; the twin returned NaN quantiles.
+    mod = native if kernel == "rust" else reference
+    sk = mod.Kll(200)
+    sk.update(float("nan"))
+    sk.update(1.0)
+    assert sk.n == 1 and sk.quantile(0.5) == 1.0
+    many = mod.Kll(200)
+    for x in [float("nan")] + [float(i) for i in range(1000)] + [float("nan")]:
+        many.update(x)
+    assert many.n == 1000 and 400 <= many.quantile(0.5) <= 600
