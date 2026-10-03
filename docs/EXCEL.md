@@ -22,7 +22,8 @@ shape.io.open_source("book.xlsx#Members")       # Arrow batches; open_workbook("
 
 The first non-empty row of a sheet is its header. Sheets are read in read-only streaming mode. Cached formula results
 are read, not the formulas. `.xls` (legacy), `.xlsb` and password-protected files are refused with an error that says
-what to do; an archive that inflates absurdly is refused as well.
+what to do; an archive that inflates absurdly is refused as well: a member, or all members together, larger than
+256 MiB uncompressed and more than 1,000 times its compressed size.
 
 ### Tables and named ranges
 
