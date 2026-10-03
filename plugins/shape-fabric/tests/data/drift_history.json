@@ -1,0 +1,137 @@
+{
+  "schema": {
+    "schema_version": 1,
+    "model": {
+      "name": "feed",
+      "seed": 7,
+      "schema_mode": "3nf"
+    },
+    "tables": {
+      "orders": {
+        "name": "orders",
+        "primary_key": [
+          "order_id"
+        ],
+        "columns": {
+          "order_id": {
+            "name": "order_id",
+            "type": "integer",
+            "generator": {
+              "strategy": "sequence"
+            }
+          },
+          "status": {
+            "name": "status",
+            "type": "string",
+            "generator": {
+              "strategy": "weighted_enum",
+              "values": {
+                "completed": 80,
+                "shipped": 15,
+                "cancelled": 5
+              }
+            }
+          },
+          "total": {
+            "name": "total",
+            "type": "float",
+            "generator": {
+              "strategy": "distribution",
+              "distribution": "log_normal",
+              "mean": 4.0,
+              "sigma": 0.5
+            }
+          },
+          "note": {
+            "name": "note",
+            "type": "string",
+            "nullable": true,
+            "null_rate": 0.02,
+            "generator": {
+              "strategy": "weighted_enum",
+              "values": {
+                "a": 1,
+                "b": 1
+              }
+            }
+          },
+          "vip": {
+            "name": "vip",
+            "type": "integer",
+            "generator": {
+              "strategy": "distribution",
+              "distribution": "bernoulli",
+              "probability": 0.5
+            }
+          }
+        }
+      }
+    },
+    "generation": {
+      "scale": "small",
+      "scales": {
+        "small": {
+          "orders": 3000
+        }
+      }
+    }
+  },
+  "events": [
+    {
+      "kind": "null_rate",
+      "table": "orders",
+      "column": "note",
+      "start": "2026-03-04",
+      "ramp_days": 4,
+      "to": 0.4
+    },
+    {
+      "kind": "new_category",
+      "table": "orders",
+      "column": "status",
+      "start": "2026-03-06",
+      "value": "lost",
+      "share": 0.08
+    },
+    {
+      "kind": "distribution",
+      "table": "orders",
+      "column": "total",
+      "start": "2026-03-08",
+      "scale": 1.4
+    },
+    {
+      "kind": "add_column",
+      "table": "orders",
+      "column": "channel",
+      "start": "2026-03-10",
+      "definition": {
+        "type": "string",
+        "generator": {
+          "strategy": "weighted_enum",
+          "values": {
+            "web": 3,
+            "store": 1
+          }
+        }
+      }
+    },
+    {
+      "kind": "type_change",
+      "table": "orders",
+      "column": "vip",
+      "start": "2026-03-11",
+      "end": "2026-03-13",
+      "to": {
+        "type": "string",
+        "generator": {
+          "strategy": "weighted_enum",
+          "values": {
+            "yes": 1,
+            "no": 1
+          }
+        }
+      }
+    }
+  ]
+}

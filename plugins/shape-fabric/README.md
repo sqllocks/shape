@@ -3,8 +3,8 @@
 Shape plugin: Microsoft Fabric. It holds the two event emitters of `shape emit` (`shape.emitters`),
 the `sqlserver` and `warehouse` sinks (`shape.sinks`), the writers behind the scale router's Fabric
 sinks, `--auth` and credential references ([fabric-auth](../../docs/plugins/fabric-auth.md)), and
-the commands `shape fabric publish|notebook|deploy-notebook|setup|export-model` with their
-top-level aliases ([fabric-commands](../../docs/plugins/fabric-commands.md)).
+the commands `shape fabric publish|notebook|deploy-notebook|setup|export-model|known-answer|
+check-answers|publish-report` with their top-level aliases ([fabric-commands](../../docs/plugins/fabric-commands.md)).
 
 ```
 pip install sqllocks-shape-fabric          # brings sqllocks-shape-eventhubs

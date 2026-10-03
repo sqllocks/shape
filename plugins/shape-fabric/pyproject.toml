@@ -36,6 +36,9 @@ notebook = "shape_fabric.commands:NotebookCommand"
 deploy-notebook = "shape_fabric.commands:DeployNotebookCommand"
 setup-fabric = "shape_fabric.commands:SetupFabricCommand"
 export-model = "shape_fabric.commands:ExportModelCommand"
+known-answer = "shape_fabric.commands:KnownAnswerCommand"
+check-answers = "shape_fabric.commands:CheckAnswersCommand"
+publish-report = "shape_fabric.commands:PublishReportCommand"
 
 [project.entry-points."shape.sinks"]
 sqlserver = "shape_fabric:SqlServerSink"

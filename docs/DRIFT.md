@@ -240,3 +240,6 @@ The answer key (`ground_truth.json`, version 1) lists every event (`id`, `kind`,
 which events had taken effect and how far (0 to 1). `expected_changes(a, b)` turns it into the
 changes to expect between two days, so a test can plant drift, profile two days and check the diff:
 small steps of a ramp stay under the thresholds, so compare days far enough apart.
+
+A history of profiles becomes drift tables and a Power BI semantic model with
+`shape publish-report` ([DRIFT_REPORT.md](DRIFT_REPORT.md)).

@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "shop",
+    "domain": "shop",
+    "seed": 11,
+    "schema_mode": "3nf"
+  },
+  "tables": {
+    "category": {
+      "name": "category",
+      "primary_key": [
+        "category_id"
+      ],
+      "columns": {
+        "category_id": {
+          "name": "category_id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "label": {
+          "name": "label",
+          "type": "string",
+          "generator": {
+            "strategy": "weighted_enum",
+            "values": {
+              "books": 3,
+              "toys": 2,
+              "food": 1
+            }
+          }
+        },
+        "region": {
+          "name": "region",
+          "type": "string",
+          "generator": {
+            "strategy": "weighted_enum",
+            "values": {
+              "north": 1,
+              "south": 1
+            }
+          },
+          "nullable": true,
+          "null_rate": 0.2
+        }
+      }
+    },
+    "item": {
+      "name": "item",
+      "primary_key": [
+        "item_id"
+      ],
+      "columns": {
+        "item_id": {
+          "name": "item_id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "integer",
+          "generator": {
+            "strategy": "foreign_key",
+            "ref": "category.category_id"
+          }
+        },
+        "price": {
+          "name": "price",
+          "type": "decimal",
+          "generator": {
+            "strategy": "distribution",
+            "distribution": "uniform",
+            "min": 1.0,
+            "max": 10.0
+          },
+          "precision": 10,
+          "scale": 2
+        },
+        "discount": {
+          "name": "discount",
+          "type": "decimal",
+          "generator": {
+            "strategy": "distribution",
+            "distribution": "uniform",
+            "min": 0.0,
+            "max": 0.5
+          },
+          "precision": 6,
+          "scale": 2,
+          "nullable": true,
+          "null_rate": 0.25
+        },
+        "weight": {
+          "name": "weight",
+          "type": "float",
+          "generator": {
+            "strategy": "distribution",
+            "distribution": "uniform",
+            "min": 0.0,
+            "max": 5.0
+          }
+        },
+        "qty": {
+          "name": "qty",
+          "type": "integer",
+          "generator": {
+            "strategy": "weighted_enum",
+            "values": {
+              "1": 5,
+              "2": 3,
+              "3": 2
+            }
+          }
+        }
+      }
+    }
+  },
+  "relationships": [
+    {
+      "name": "item_category",
+      "parent": "category",
+      "child": "item",
+      "parent_columns": [
+        "category_id"
+      ],
+      "child_columns": [
+        "category_id"
+      ],
+      "type": "one_to_many"
+    }
+  ],
+  "generation": {
+    "scale": "small",
+    "scales": {
+      "small": {
+        "category": 6,
+        "item": 300
+      }
+    }
+  }
+}

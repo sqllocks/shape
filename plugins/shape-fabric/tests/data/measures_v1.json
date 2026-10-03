@@ -1,0 +1,20 @@
+{
+  "format": "shape-dax-measures",
+  "version": 1,
+  "measures": [
+    {"name": "Items", "table": "item", "aggregation": "count"},
+    {"name": "Revenue", "table": "item", "aggregation": "sum", "column": "price"},
+    {"name": "Cheapest", "table": "item", "aggregation": "min", "column": "price"},
+    {"name": "Priciest", "table": "item", "aggregation": "max", "column": "price"},
+    {"name": "Mean Price", "table": "item", "aggregation": "avg", "column": "price"},
+    {
+      "name": "Revenue per Item",
+      "table": "item",
+      "aggregation": "ratio",
+      "numerator": "Revenue",
+      "denominator": "Items"
+    },
+    {"name": "Categories", "table": "category", "aggregation": "count"}
+  ],
+  "slice_by": ["category.label", "category.region"]
+}

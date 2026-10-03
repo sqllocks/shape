@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -99,6 +100,7 @@ class SemanticModelExporter:
         output_path: str | Path = "model.bim",
         include_measures: bool = True,
         schema_name: str = "dbo",
+        measures: Mapping[str, Sequence[Mapping[str, Any]]] | None = None,
     ) -> Path:
         """Write the model to ``output_path`` (parent folders are created); return the path."""
         tom = self.to_dict(
@@ -107,6 +109,7 @@ class SemanticModelExporter:
             source_name=source_name,
             include_measures=include_measures,
             schema_name=schema_name,
+            measures=measures,
         )
         path = Path(output_path)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -121,8 +124,11 @@ class SemanticModelExporter:
         source_name: str = "",
         include_measures: bool = True,
         schema_name: str = "dbo",
+        measures: Mapping[str, Sequence[Mapping[str, Any]]] | None = None,
     ) -> dict[str, Any]:
-        """The TOM model as a dict."""
+        """The TOM model as a dict. ``measures`` (table name to a list of ``{"name", "expression",
+        "formatString"}``) replaces the default measures of the tables it names; a table it does
+        not name has none."""
         if source_type not in SOURCE_TYPES:
             raise ValueError(
                 f"unknown source type {source_type!r}; choose one of {', '.join(SOURCE_TYPES)}"
@@ -136,7 +142,14 @@ class SemanticModelExporter:
             "model": {
                 "culture": schema.model.locale.replace("_", "-"),
                 "tables": [
-                    self._table(tdef, source_type, source_name, schema_name, include_measures)
+                    self._table(
+                        tdef,
+                        source_type,
+                        source_name,
+                        schema_name,
+                        include_measures,
+                        None if measures is None else measures.get(tdef.name, ()),
+                    )
                     for tdef in schema.tables.values()
                 ],
                 "relationships": [self._relationship(r) for r in schema.relationships],
@@ -158,6 +171,7 @@ class SemanticModelExporter:
         source_name: str,
         schema_name: str,
         include_measures: bool,
+        measures: Sequence[Mapping[str, Any]] | None = None,
     ) -> dict[str, Any]:
         table: dict[str, Any] = {
             "name": tdef.name,
@@ -176,10 +190,13 @@ class SemanticModelExporter:
         }
         if tdef.description:
             table["description"] = tdef.description
-        if include_measures:
-            measures = self._measures(tdef)
+        if measures is not None:
             if measures:
-                table["measures"] = measures
+                table["measures"] = [dict(m) for m in measures]
+        elif include_measures:
+            defaults = self._measures(tdef)
+            if defaults:
+                table["measures"] = defaults
         return table
 
     @staticmethod
@@ -219,35 +236,62 @@ class SemanticModelExporter:
 
     @staticmethod
     def _measures(tdef: Table) -> list[dict[str, Any]]:
-        measures: list[dict[str, Any]] = [
-            {
-                "name": f"{title_case(tdef.name)} Count",
-                "expression": f"COUNTROWS({dax_table(tdef.name)})",
-                "formatString": "#,0",
-            }
+        return [
+            {"name": m["name"], "expression": m["expression"], "formatString": m["formatString"]}
+            for m in default_measure_specs(tdef)
         ]
-        for cname, cdef in tdef.columns.items():
-            if cname in tdef.primary_key or cdef.is_foreign_key:
-                continue
-            title = title_case(cname)
-            ref = dax_column(tdef.name, cname)
-            if cdef.type in ("decimal", "float"):
-                measures.append(
-                    {
-                        "name": f"Total {title}",
-                        "expression": f"SUM({ref})",
-                        "formatString": "#,0.00",
-                    }
-                )
-                measures.append(
-                    {
-                        "name": f"Avg {title}",
-                        "expression": f"AVERAGE({ref})",
-                        "formatString": "#,0.00",
-                    }
-                )
-            elif cdef.type == "integer":
-                measures.append(
-                    {"name": f"Total {title}", "expression": f"SUM({ref})", "formatString": "#,0"}
-                )
-        return measures
+
+
+def default_measure_specs(tdef: Table) -> list[dict[str, Any]]:
+    """The measures the exporter writes for one table, as data: ``name``, ``expression`` (DAX),
+    ``formatString``, ``table``, ``kind`` (``count`` or ``sum`` or ``avg``) and ``column`` (``None``
+    for a row count). :meth:`SemanticModelExporter._measures` is built from this list, so the two
+    cannot differ."""
+    specs: list[dict[str, Any]] = [
+        {
+            "name": f"{title_case(tdef.name)} Count",
+            "expression": f"COUNTROWS({dax_table(tdef.name)})",
+            "formatString": "#,0",
+            "table": tdef.name,
+            "kind": "count",
+            "column": None,
+        }
+    ]
+    for cname, cdef in tdef.columns.items():
+        if cname in tdef.primary_key or cdef.is_foreign_key:
+            continue
+        title = title_case(cname)
+        ref = dax_column(tdef.name, cname)
+        if cdef.type in ("decimal", "float"):
+            specs.append(
+                {
+                    "name": f"Total {title}",
+                    "expression": f"SUM({ref})",
+                    "formatString": "#,0.00",
+                    "table": tdef.name,
+                    "kind": "sum",
+                    "column": cname,
+                }
+            )
+            specs.append(
+                {
+                    "name": f"Avg {title}",
+                    "expression": f"AVERAGE({ref})",
+                    "formatString": "#,0.00",
+                    "table": tdef.name,
+                    "kind": "avg",
+                    "column": cname,
+                }
+            )
+        elif cdef.type == "integer":
+            specs.append(
+                {
+                    "name": f"Total {title}",
+                    "expression": f"SUM({ref})",
+                    "formatString": "#,0",
+                    "table": tdef.name,
+                    "kind": "sum",
+                    "column": cname,
+                }
+            )
+    return specs
