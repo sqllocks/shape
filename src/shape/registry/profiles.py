@@ -233,7 +233,7 @@ class ProfileRegistry:
                 tables={t: table},
                 relationships=[],
                 redaction_manifest={**manifest, "tables": kept},
-                unsafe=False,
+                unsafe=safe.unsafe,
             )
             docs[t] = one.to_dict()
         return docs
