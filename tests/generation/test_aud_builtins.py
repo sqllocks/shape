@@ -220,3 +220,18 @@ def test_monthly_payday_defaults_to_the_28th() -> None:
         date(2024, 3, 1),
         date(2024, 3, 15),
     ]
+
+
+# ---- #137: formula errors are StrategyErrors that name the column -----------------------------
+
+
+def test_formula_misuse_is_a_strategy_error_naming_the_column() -> None:
+    import pytest
+
+    from shape.generation.strategy_kit import StrategyError
+
+    base = {"x": {"type": "float", "generator": {"strategy": "uniform", "low": 0, "high": 1}}}
+    for expression, message in (("abs + x", "abs is a function"), ("-" * 1500 + "x", "deep")):
+        formula = {"type": "float", "generator": {"strategy": "formula", "expression": expression}}
+        with pytest.raises(StrategyError, match=f"t\\.y.*{message}|{message}.*t\\.y"):
+            _table({**base, "y": formula}, rows=3)
