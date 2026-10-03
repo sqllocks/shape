@@ -29,6 +29,7 @@ from typing import Any
 
 from shape.generation.schema import GenSchema
 from shape.profile.reference.model import ColumnProfile, DatasetProfile, TableProfile
+from shape.profile.univariate import FIELDS as UNIVARIATE_FIELDS
 
 DIFFERENCES: dict[str, str] = {
     "truncated_enum": (
@@ -165,6 +166,7 @@ def _column(doc: Mapping[str, Any]) -> ColumnProfile:
         precision=doc.get("precision"),
         scale=doc.get("scale"),
         placeholders=doc.get("placeholders"),
+        univariate={k: doc[k] for k in UNIVARIATE_FIELDS if doc.get(k) is not None} or None,
     )
 
 

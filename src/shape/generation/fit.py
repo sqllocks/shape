@@ -37,6 +37,7 @@ from shape.generation.future import normal_cdf
 from shape.generation.learn import SchemaBuilder, as_dataset
 from shape.generation.schema import GenSchema
 from shape.profile.reference.model import ColumnProfile, DatasetProfile, TableProfile
+from shape.profile.univariate import FIELDS as UNIVARIATE_FIELDS
 
 Floats = npt.NDArray[np.float64]
 
@@ -87,6 +88,7 @@ COLUMN_FIELDS = (
     "precision",
     "scale",
     "placeholders",
+    *UNIVARIATE_FIELDS,
     *_MARGINAL_FIELDS,
 )
 """Every field of a column of a profile; the plan reports each one that has a value."""
@@ -543,6 +545,12 @@ def _plan_column(
         "placeholder values (`00000`, `-1`, `N/A`) are what the data got wrong: generated values "
         "are drawn without them unless they are in the profile's own value counts",
     )
+    mark(
+        UNIVARIATE_FIELDS,
+        _N,
+        "model selection, zero inflation, heaping, Benford and the tail index describe the "
+        "column; generation does not use them",
+    )
     for f in sorted(present):  # a field no rule above covered is never reported as preserved
         add(f, _N, "not modelled")
     return items
@@ -551,6 +559,8 @@ def _plan_column(
 def _has(col: ColumnProfile, field: str) -> bool:
     if field == "value_counts_ext_order":
         return bool(col.value_counts_ext)
+    if field in UNIVARIATE_FIELDS:
+        return field in (col.univariate or {})
     value = getattr(col, field, None)
     if field in ("nan_count", "inf_count"):
         return bool(value)  # zero is the usual case, and not worth a plan item
