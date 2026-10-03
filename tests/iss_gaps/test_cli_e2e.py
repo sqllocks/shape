@@ -34,7 +34,11 @@ def sha(path: Path) -> str:
 
 
 def tree(root: Path) -> dict[str, str]:
-    return {p.relative_to(root).as_posix(): sha(p) for p in sorted(root.rglob("*")) if p.is_file()}
+    return {
+        p.relative_to(root).as_posix(): sha(p)
+        for p in sorted(root.rglob("*"))
+        if p.is_file() and p.name != "_shape_provenance.json"  # the record of origin, not data
+    }
 
 
 # ---- #15: the landing layout on generate ------------------------------------------------------
@@ -65,7 +69,8 @@ def test_generate_with_a_custom_template(capsys, schema_file, tmp_path) -> None:
 def test_generate_without_the_options_is_unchanged(capsys, schema_file, tmp_path) -> None:
     code, *_ = run(capsys, "generate", schema_file, "--format", "parquet", "-o", tmp_path)
     assert code == 0
-    assert sorted(p.name for p in tmp_path.iterdir()) == ["customer.parquet", "order.parquet"]
+    names = sorted(p.name for p in tmp_path.iterdir() if p.name != "_shape_provenance.json")
+    assert names == ["customer.parquet", "order.parquet"]
 
 
 def test_a_dated_template_without_a_date_is_an_error(capsys, schema_file, tmp_path) -> None:

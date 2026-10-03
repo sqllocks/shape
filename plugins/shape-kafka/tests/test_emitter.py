@@ -107,6 +107,7 @@ def test_shape_emit_through_the_plugin(monkeypatch, capsys, tmp_path):
     """``shape emit --sink kafka://...`` end to end over the fake cluster, with a checkpoint."""
     from shape.cli.main import main
 
+    monkeypatch.setenv("SHAPE_CONFIRM_REMOTE", "1")  # about the emitter, not the confirmation
     h = EmitterHarness()
     host = PluginHost(entry_points=lambda: [])
     register_builtins(host)

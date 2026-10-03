@@ -80,6 +80,19 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   or a self-contained HTML page (`-o`, by extension); `--require` turns a skipped section into exit 1;
   exit 2 for unusable input. The verify configuration gains an optional `privacy` section. Python:
   `shape.quality.report_card(...)`. The card holds no value of the data.
+- Chaos safety and confirmation for non-local targets (W1-17). **Behaviour change for scripts that
+  write to remote targets:** `shape generate --to`, `shape emit`/`stream` (`--sink URI`, `--to`) and
+  `shape generate --scale-mode --sink` to a non-local target (a database, OneLake, Event Hubs,
+  Kafka; not a path, `file://`, `console` or `localhost`/`127.0.0.1`/`::1`) now exit 2 unless you
+  pass `--yes` or set `SHAPE_CONFIRM_REMOTE=1` (or answer `y` at a terminal prompt); `--dry-run`
+  needs none (`docs/SINKS.md`). `shape.cli.to.run_to` and the emit target setup take
+  `confirm_remote`. `shape generate -o`, `continue`, `time-travel`, `pack run` and `chaos` write
+  `_shape_provenance.json` (`format: shape-provenance`, `version: 1`) beside the tables, which are
+  unchanged; folder readers skip it and `_SUCCESS`. `shape chaos --input DIR` now refuses table
+  files that are not listed there with a matching sha256 (or Parquet with the `shape_synthetic`
+  marker) unless `--allow-real-input`, logs `input_provenance` (`verified`/`unverified`) in the
+  ground-truth `run` record, and refuses an `-o` that is the input folder or inside it
+  (`docs/CHAOS.md`, `docs/THREAT_MODEL.md`).
 
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and

@@ -417,12 +417,15 @@ def _targets(a: argparse.Namespace) -> list[str]:
     return named or ["console"]
 
 
-def _sink(a: argparse.Namespace, envelope: str, resuming: bool) -> Any:
-    from shape.cli.to import target_options
+def _sink(
+    a: argparse.Namespace, envelope: str, resuming: bool, *, confirm_remote: bool = False
+) -> Any:
+    from shape.cli.to import confirm_targets, target_options
     from shape.io.targets import scheme_of, sink_names_by_scheme
     from shape.streaming.emit import FanOutSink, open_sink
 
     targets = _targets(a)
+    confirm_targets(a, targets, confirm_remote=confirm_remote)  # before any sign-in
     options = target_options(a, a.format, targets)  # --auth for the table sinks
     sinks = []
     for target in targets:
@@ -505,6 +508,9 @@ def run(a: argparse.Namespace) -> int:
     if speed is not None and a.realtime:
         raise ShapeError("--speed paces by event time and --realtime by rate: choose one")
     targets = _targets(a)
+    from shape.cli.to import confirm_targets
+
+    confirmed = confirm_targets(a, targets)  # before anything is generated or signed in to
     schema = load_target(a.target, a.mode)
     engine = Engine(schema, scale=a.scale, seed=a.seed)
     injector = None
@@ -557,7 +563,7 @@ def run(a: argparse.Namespace) -> int:
         plan.answer_key = answer_key
         if injector is not None:
             injector.answer_key = answer_key
-    sink = _sink(a, a.envelope, resuming=offset > 0)
+    sink = _sink(a, a.envelope, resuming=offset > 0, confirm_remote=confirmed)
     if a.duplicate_fraction > 0 or a.poison_fraction > 0 or answer_key is not None:
         from shape.streaming.emit.faults import FaultSink
 

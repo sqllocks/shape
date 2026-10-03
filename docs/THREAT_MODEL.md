@@ -101,6 +101,20 @@ validator and k-anonymity (`docs/PRIVACY_MODEL.md`, `tests/privacy`). A full-fid
 and `--json` hold real values by design; the docs name `shape profile safe` output as the
 committable artifact.
 
+### Mistakes: chaos on real data, writes to the wrong target
+
+Two checks prevent a user from doing harm by accident; neither is a security boundary.
+
+- **Chaos input** (`docs/CHAOS.md`). `shape chaos --input` refuses table files that
+  `_shape_provenance.json` does not list with a matching SHA-256 (or Parquet without the
+  `shape_synthetic` key). It stops corrupting a folder of production extracts by mistake. It does
+  not stop a user who passes `--allow-real-input`, copies a sidecar, writes the marker themselves
+  or edits the sidecar; the check is provenance, not content, and the sidecar is not signed.
+- **Non-local targets** (`docs/SINKS.md`). A `--to`, `emit --sink` or `scale --sink` target that
+  is not on this machine needs `--yes` or `SHAPE_CONFIRM_REMOTE=1`. It stops a mistyped or
+  stale URI from writing to a real system. It does not stop a script that sets the variable, and
+  it does not limit what a plugin command (`shape fabric publish`) writes.
+
 ### Network surfaces
 
 Emitters (Kafka, Event Hubs, Fabric Eventstream and Eventhouse), `shape stream` sources, SQL Server

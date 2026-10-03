@@ -407,6 +407,7 @@ def _generate(a: argparse.Namespace, engine: Any) -> int:
     paths = write_engine(engine, a.format, a.output, **_sink_options(a))
     seconds = time.perf_counter() - started
     counts = {name: int(rows) for name, rows in engine.row_counts.items() if name in engine.order}
+    _record_provenance(engine, a.output, paths, counts)
     total = sum(counts.values())
     run.set(rows=total, tables=len(counts), files=len(paths))
     if a.json:
@@ -431,6 +432,24 @@ def _generate(a: argparse.Namespace, engine: Any) -> int:
     return 0
 
 
+def _record_provenance(
+    engine: Any, folder: Any, paths: Any, counts: dict[str, int], landed: Any = None
+) -> None:
+    """``_shape_provenance.json`` in the output folder (``docs/CHAOS.md``): what Shape wrote."""
+    from shape.io.provenance import write_provenance
+
+    rows = {p: f.rows for p, f in ((f.path, f) for f in landed)} if landed else {}
+    pairs = [(p, rows.get(p, counts.get(Path(p).stem))) for p in paths]
+    schema = engine.schema
+    write_provenance(
+        folder,
+        pairs,
+        seed=engine.seed,
+        domain=schema.model.domain or schema.model.name,
+        scale=schema.generation.scale,
+    )
+
+
 def _generate_landing(a: argparse.Namespace, engine: Any, started: float) -> int:
     """``generate`` with a landing layout: the tables are generated whole, then each is written at
     the path template for the batch date, in its own format."""
@@ -445,6 +464,7 @@ def _generate_landing(a: argparse.Namespace, engine: Any, started: float) -> int
     landed = write_landing(result.tables, a.output, default_format=a.format, **options)
     seconds = time.perf_counter() - started
     counts = {f.table: f.rows for f in landed}
+    _record_provenance(engine, a.output, [f.path for f in landed], counts, landed)
     current().set(rows=sum(counts.values()), tables=len(counts), files=len(landed))
     if a.json:
         _dump(

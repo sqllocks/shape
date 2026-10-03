@@ -31,6 +31,12 @@ CS = "Driver={ODBC Driver 18 for SQL Server};Server=db.example.test;Database=d"
 ROWS = {"customer": 30, "order": 200}
 
 
+@pytest.fixture(autouse=True)
+def _confirm_remote(monkeypatch):
+    # About the sign-in, not the confirmation (tests/cli/test_remote_confirmation.py).
+    monkeypatch.setenv("SHAPE_CONFIRM_REMOTE", "1")
+
+
 def _col(name, strategy, type_="integer", **gen):
     return {
         "name": name,
@@ -292,6 +298,7 @@ def test_a_driver_that_echoes_the_connection_string_in_its_error_leaks_nothing(w
             raise cls.Error(f"[28000] Login failed. Connection: {cs}")
 
     monkeypatch.undo()  # use the real _tsql.connect over a fake driver
+    monkeypatch.setenv("SHAPE_CONFIRM_REMOTE", "1")  # undo() took the autouse one away
     monkeypatch.setenv("SHAPE_JOBS_DIR", str(world.tmp / "jobs"))
     monkeypatch.setitem(sys.modules, "pyodbc", Pyodbc)
     monkeypatch.setenv("SHAPE_TEST_CS", CS)

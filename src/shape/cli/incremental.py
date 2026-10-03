@@ -139,8 +139,12 @@ def read_tables(directory: str | Path) -> dict[str, pa.Table]:
     if not path.is_dir():
         raise ValueError(f"input directory not found: {directory}")
     tables: dict[str, pa.Table] = {}
+    from shape.io.provenance import is_ignored
+
     for pattern, fmt in _READ_PATTERNS:
         for file in sorted(path.glob(pattern)):
+            if is_ignored(file):  # _shape_provenance.json and _SUCCESS are not tables
+                continue
             if fmt == "csv":
                 import pyarrow.csv as pacsv  # type: ignore[import-untyped]
 
@@ -159,6 +163,28 @@ def read_tables(directory: str | Path) -> dict[str, pa.Table]:
     if not tables:
         raise ValueError(f"no CSV, Parquet or JSON Lines files found in {directory}")
     return tables
+
+
+def _record_provenance(
+    folder: Any,
+    paths: Any,
+    rows: dict[str, int],
+    *,
+    seed: int | None,
+    schema: Any,
+    scale: str | None,
+) -> None:
+    """``_shape_provenance.json`` next to the files written (``docs/CHAOS.md``)."""
+    from shape.io.provenance import record_tables
+
+    record_tables(
+        folder,
+        paths,
+        rows,
+        seed=seed,
+        domain=schema.model.domain or schema.model.name,
+        scale=scale,
+    )
 
 
 def write_tables(tables: dict[str, pa.Table], fmt: str, directory: Path) -> list[Path]:
@@ -242,6 +268,14 @@ def _daily(a: argparse.Namespace) -> int:
             }
         )
     seed = a.seed if a.seed is not None else schema.model.seed
+    _record_provenance(
+        a.output,
+        [Path(f["path"]) for d in days for f in d["files"]],
+        {f["table"]: f["rows"] for d in days for f in d["files"]},
+        seed=seed,
+        schema=schema,
+        scale=a.scale,
+    )
     if a.json:
         _dump({"output": str(a.output), "seed": seed, "start_date": a.start_date, "days": days})
         return 0
@@ -289,6 +323,14 @@ def cmd_continue(a: argparse.Namespace) -> int:
         ]
     else:
         files = write_tables(changed, a.format, Path(a.output))
+    _record_provenance(
+        a.output,
+        files,
+        {n: t.num_rows for n, t in changed.items()},
+        seed=seed,
+        schema=schema,
+        scale=None,
+    )
     if a.json:
         _dump(
             {
@@ -330,7 +372,17 @@ def cmd_time_travel(a: argparse.Namespace) -> int:
     out = Path(a.output)
     files: list[Path] = []
     for snap in result.snapshots:
-        files += write_tables(snap.tables, a.format, out / f"month_{snap.month_index}")
+        month = out / f"month_{snap.month_index}"
+        written = write_tables(snap.tables, a.format, month)
+        _record_provenance(
+            month,
+            written,
+            {n: t.num_rows for n, t in snap.tables.items()},
+            seed=a.seed,
+            schema=schema,
+            scale=a.scale,
+        )
+        files += written
     if a.json:
         _dump(
             {
