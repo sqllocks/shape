@@ -2,7 +2,8 @@
 
 Each check is a :class:`Check` with a status (``pass``, ``warn``, ``fail``), a message that says
 what was found and a ``next`` step. The checks take their network and credential as arguments, so
-tests drive them with fakes; :class:`SocketNet` is the real one (sockets, ``ssl`` and ``urllib``).
+tests drive them with fakes; :class:`SocketNet` is the real one (sockets, ``ssl``, and HTTPS through
+:func:`shape.scale.http.urllib_transport`).
 Core holds no cloud SDK (T-18): a credential comes from ``shape.cli.auth.make_credential`` (the
 ``shape-fabric`` plugin), and Delta limits are read through ``deltalake`` when it is installed.
 A token is used for one request and is never stored or printed.
@@ -82,15 +83,10 @@ class SocketNet:
                 return tls.version() or "TLS"
 
     def http_get(self, url: str, headers: dict[str, str], timeout: float) -> int:
-        import urllib.error
-        import urllib.request
+        # HTTP goes through the explicit fetch module (scripts/check_shipped_data.py)
+        from shape.scale.http import urllib_transport
 
-        request = urllib.request.Request(url, headers=headers, method="GET")  # noqa: S310
-        try:
-            with urllib.request.urlopen(request, timeout=timeout) as resp:  # noqa: S310
-                return int(resp.status)
-        except urllib.error.HTTPError as exc:
-            return int(exc.code)
+        return urllib_transport("GET", url, headers, None, timeout).status
 
 
 def default_net() -> Net:
