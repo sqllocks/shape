@@ -175,3 +175,23 @@ def test_a_missing_timestamp_is_a_very_small_number_the_classifier_can_see():
     same = pa.table({"x": rng.normal(size=n), "t": real["t"]})
     fair = Tier1Profiler().profile_pair(real, same).adversarial
     assert fair is not None and fair.auc_roc < 0.6
+
+
+def test_the_gap_distribution_does_not_hand_scipy_a_named_norm_with_args() -> None:
+    """SciPy 1.18 turned ``kstest(x, "norm", args=(loc, scale))`` into a bare ``ndtr(x, loc,
+    scale)`` call, which raises. The normal fit is passed as a frozen distribution's cdf."""
+    from scipy import stats as real_stats
+
+    from shape.fidelity.tier1 import _gap_distribution
+
+    class Stats:
+        norm = staticmethod(real_stats.norm)
+
+        @staticmethod
+        def kstest(x, cdf, args=()):  # type: ignore[no-untyped-def]
+            if cdf == "norm":
+                raise TypeError("ndtr() takes from 1 to 2 positional arguments but 3 were given")
+            return real_stats.kstest(x, cdf, args=args)
+
+    gaps = np.random.default_rng(3).normal(10.0, 2.0, size=300)
+    assert _gap_distribution(Stats, gaps) == "normal"
