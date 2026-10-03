@@ -56,6 +56,9 @@ STATUS_MAP: dict[str, str] = {
     "Completed": "succeeded",
     "Failed": "failed",
     "Cancelled": "cancelled",
+    # A run that was not started because an identical one was running: nothing of its own to wait
+    # for, so it is final, and ``cancelled`` (the closest) lets it be resumed.
+    "Deduped": "cancelled",
 }
 
 
