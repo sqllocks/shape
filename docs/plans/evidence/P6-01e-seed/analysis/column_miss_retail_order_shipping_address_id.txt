@@ -1,0 +1,5 @@
+retail_order.shipping_address_id null rate: reference 0.2236; baseline 0.2233+-0.0018 [0.2196, 0.2289]; Shape 0.2235+-0.0024 [0.2181, 0.2281], 1042 = 0.2279; MW p 0.673, KS p 0.808
+retail_order.shipping_address_id distinct count: reference 70363.0000; baseline 70326.7333+-71.0090 [70161.0000, 70477.0000]; Shape 70318.2000+-76.6701 [70062.0000, 70425.0000], 1042 = 70209.0000; MW p 0.647, KS p 0.808
+binomial sd of one run's null rate: 0.00059
+outside the verifier's null rate tolerance (0.0042): fresh baseline seeds 1/26, Shape seeds 4/30 (Fisher p 0.36); seed 1042: 0.0043
+outside the verifier's distinct ratio tolerance (0.0200): fresh baseline seeds 0/26, Shape seeds 0/30 (Fisher p 1.00); seed 1042: 0.0022

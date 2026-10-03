@@ -1,0 +1,5 @@
+healthcare_patient.email null rate: reference 0.1300; baseline 0.1475+-0.0160 [0.1140, 0.2040]; Shape 0.1485+-0.0174 [0.1020, 0.1780], 1042 = 0.1580; MW p 0.399, KS p 0.594
+healthcare_patient.email distinct count: reference 435.0000; baseline 426.2667+-8.0040 [398.0000, 443.0000]; Shape 425.7333+-8.7096 [411.0000, 449.0000], 1042 = 421.0000; MW p 0.399, KS p 0.594
+binomial sd of one run's null rate: 0.01504
+outside the verifier's null rate tolerance (0.1063): fresh baseline seeds 0/26, Shape seeds 0/30 (Fisher p 1.00); seed 1042: 0.0280
+outside the verifier's distinct ratio tolerance (0.0310): fresh baseline seeds 5/26, Shape seeds 12/30 (Fisher p 0.14); seed 1042: 0.0322

@@ -52,6 +52,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--table", required=True)
     ap.add_argument("--column", required=True)
     ap.add_argument("--parent-table", required=True)
+    ap.add_argument("--parent-column", help="the parent table's key column (default: --column)")
     ap.add_argument("--n", type=int, default=30)
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
@@ -72,7 +73,11 @@ def main(argv: list[str] | None = None) -> int:
                 return 2
             d = generate.out_dir(impl, a.domain, a.scale, seed)
             col = pd.read_parquet(d / f"{a.table}.parquet", columns=[a.column])[a.column]
-            parents = len(pd.read_parquet(d / f"{a.parent_table}.parquet", columns=[a.column]))
+            parents = len(
+                pd.read_parquet(
+                    d / f"{a.parent_table}.parquet", columns=[a.parent_column or a.column]
+                )
+            )
             c, s = run_stats(col, parents)
             counts[label].append(c)
             stats_by[label].append(s)
