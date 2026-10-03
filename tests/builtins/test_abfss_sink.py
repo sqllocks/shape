@@ -772,7 +772,13 @@ CLI_RUNS = [
 
 @pytest.mark.parametrize(("command", "uri", "message"), CLI_RUNS)
 def test_cli_exits_2_before_any_file_appears(
-    cli_lake: Any, capsys: Any, tmp_path: Any, command: str, uri: str, message: str
+    cli_lake: Any,
+    capsys: Any,
+    tmp_path: Any,
+    monkeypatch: Any,
+    command: str,
+    uri: str,
+    message: str,
 ) -> None:
     import json
     import sys as _sys
@@ -783,6 +789,8 @@ def test_cli_exits_2_before_any_file_appears(
     _sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scale"))
     from scale_schemas import plain_doc
 
+    # About the OneLake check, not the remote confirmation (tests/cli/test_remote_confirmation.py).
+    monkeypatch.setenv("SHAPE_CONFIRM_REMOTE", "1")
     schema = tmp_path / "schema.json"
     schema.write_text(json.dumps(plain_doc({"customer": 40})))
     before = everything(cli_lake)
