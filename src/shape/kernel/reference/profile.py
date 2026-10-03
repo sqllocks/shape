@@ -7,7 +7,6 @@ Rust module for what each statistic means.
 
 from __future__ import annotations
 
-import datetime as _dt
 import math
 import re
 import struct
@@ -43,7 +42,6 @@ PATTERNS = {
     "language": r"^[a-z]{2}(-[A-Z]{2})?$",
 }
 _COMPILED = {k: re.compile(v) for k, v in PATTERNS.items()}
-_EPOCH = _dt.datetime(1970, 1, 1)
 
 
 def _is_string_view(t: Any) -> bool:
@@ -309,9 +307,9 @@ class _Column:
             days, rem = divmod(v, 86_400_000_000)
             self.hour[rem // 3_600_000_000] += 1
             self.dow[(days + 3) % 7] += 1
-            d = (_EPOCH + _dt.timedelta(days=days)).date()
-            self.month[d.month - 1] += 1
-            self.year[d.year] = self.year.get(d.year, 0) + 1
+            year, month = _civil(days)
+            self.month[month - 1] += 1
+            self.year[year] = self.year.get(year, 0) + 1
 
     # ------------------------------------------------------------- merge
     def merge(self, o: _Column, offset: int) -> None:
@@ -646,6 +644,19 @@ def _read_kll(r: _Reader) -> Any:
     except ValueError as exc:
         raise ValueError(f"snapshot: {exc}") from None
     return _sketches().KLL(k, levels or [[]], n, compactions)
+
+
+def _civil(days: int) -> tuple[int, int]:
+    """(year, month) of a day number since 1970-01-01 in the proleptic Gregorian calendar, for
+    any year (``datetime`` stops at 1 and 9999; the native kernel does not)."""
+    z = days + 719_468
+    era = z // 146_097
+    doe = z - era * 146_097
+    yoe = (doe - doe // 1460 + doe // 36_524 - doe // 146_096) // 365
+    doy = doe - (365 * yoe + yoe // 4 - yoe // 100)
+    mp = (5 * doy + 2) // 153
+    month = mp + 3 if mp < 10 else mp - 9
+    return yoe + era * 400 + (month <= 2), month
 
 
 class ProfileState:
