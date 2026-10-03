@@ -243,6 +243,9 @@ instruction.
 
 | Date | ID | Change | Reason |
 |---|---|---|---|
+| 2026-10-03 | INT-15 | **Integration INT-15 merged into build/main-plan:** ISS2-sinks round 2, W1-02, W1-03, W2-03, W5-02, W6-02, W1-08, P6-11 (`shape bridge`) and P6-12 (`shape demo`). Lead fixes in INT-15: the `delta_scan` SQL `# nosec B608` with its escaping (see the row below), the publish test key set, and the fabric commands parity harness: W1-03 adds four declared keys to the run manifest (`format`, `version`, `reproducibility`, `dataset_id`); the harness now accepts exactly those four as Shape-only keys, requires every other key to match the baseline as before, checks the format declaration, and gained four negative controls (a Shape key removed, the declaration changed, a non-integer version, an unknown key added); with them its negative control passes. Verified by the lead before merging (54 steps, all exit 0): ruff, format, mypy, full suite in both kernels, heavy suites, demo, profile verifiers in both kernels, DDL, plugins (install, tests, kit, uninstall), db parity, domains, retail export and verify, tiers, simulation files and patterns with negative control, incremental, pack, stream profile and stream parity, fabric plugins, fabric commands parity with negative control, chaos parity. **Decisions:** every ported domain ships, listed by maturity (no top-ten cut; register R8-03); the lead tags `demo-2026-10-06` at the freeze once the owner sets the version (owner action). | Lead verification logs |
+| 2026-10-03 | §13 lanes launched; W4-02 rejected; W1-07 done; early-start dependencies | **Owner: speed is all that matters.** Every remaining §13 package without an open chain dependency now has a lane, specified by issues #79 to #106 (W1-10, W1-11, W1-12, W1-14, W1-15, W1-17, W1-18, W2-06, W2-08, W2-09, W2-10, W3-01, W3-02, W3-03, W3-05, W3-07, W3-11, W3-12, W3-13, W4-01, W5-04 to W5-10, W6-04). Lanes start from int/INT-15 and merge the finished, not yet integrated lanes they depend on (W1-01, W1-04, W1-05, W1-06, W2-01, W3-06, PLUG-INT); a lane merges into build/main-plan only after its dependencies have. **W4-02 rejected:** the open side already imports Synthea modules (`shape behave import-gmf`); a runner needs a Java runtime (poor fit for air-gapped use) and served calibration, which is not open work. **W1-07 done:** `docs/BRANDING.md` already carries it on build/main-plan (9e87cd8, c6b5d17). **W2-06 is open:** the sempy source plugin profiles semantic models; report and visual usage lookup is out of its scope. **W1-11:** safe capture becomes the default as §13 says (superseding SAC-01), redacting only what is written or printed, so the verifiers and T-22 parity are unchanged. **W1-17** is built now and merged after the 2026-10-07 demo. Held until their dependencies land: W1-13 (W1-12), W2-07 (ISS2-bugs), W3-08 (W3-07), W5-03 (W1-11), W6-01 (W1-14), W6-03 (W5-05); W2-05 waits on O-07. | Lead; issue specs written from the plan and the code |
+| 2026-10-03 | #46 vs ISS2-joint tests; #76; #78; INT-15 | **ZIP-as-text wins over the integer reading in five ISS2-joint tests:** with #46 (identifier columns stay text, owner request) the `city_zip` fixture's `zip` column is text, so its placeholder is `'00000'` and `02134` and `2134` are different values; ISS2-bugs round 5 updates exactly those five expectations (recomputed, each citing #46) and nothing else. **#76 is a pyarrow-floor question, not numpy:** the three failures occur with pyarrow < 25 (pulled in by `tests/demo/fabric/requirements.txt`) and are raised by the tests' own pyarrow calls; the core floor `pyarrow>=14.0.1` stays unless Shape's own code fails at it; BF-76 makes the tests build their data in a version-independent way with every assertion unchanged, and adds a minimum-versions check (a floor rises only on evidence that Shape fails below it). **#78 filed** (nightly sqlserver-e2e: pyodbc `Row` compared with a tuple; fabric-emit-e2e) with lane BF-78; W1-09 round 2 fixes the Fabric demo tests on Windows from nightly run 37110403910 (kafka-e2e passed there). **INT-15 lead fixes:** `delta_scan` SQL marked `# nosec B608` with the escaping it relies on (bandit gate; W2-03's tests pin the SQL text, so parameter binding was not used); the P6-07c publish test's exact manifest key set now includes W1-03's `format`, `version`, `reproducibility`, `dataset_id`, as W1-03's own runner test already does. | Lane reports ISS2-bugs round 4, BF-76 round 1; nightly run 37110403910 |
 | 2026-10-03 | INT-14, W1-05, issues #76 #77 | **Integration INT-14 merged into build/main-plan:** ISS2-joint round 2 (held decisions (1) and (6) built, G1 re-measured), P6-07c (`shape fabric publish\|notebook\|deploy-notebook\|setup\|export-model` with top-level aliases) and W2-04 (Excel named ranges, tables, merged cells, autofilter; Delta reader 1 / writer 2). Verified by the lead before merging: ruff, format, mypy, full suite in both kernels (5637 passed each), heavy suites, demo, profile verifier, plugins, domains, retail, tiers, fabric, simulation, incremental, pack, stream and chaos parity, and fabric commands parity with its negative control (all exit 0). The fabric commands parity harness needs the baseline installed in its venv (it reads the baseline's own package metadata for the SBOM comparison); the lead's local check installs a copy of the pinned checkout into a separate venv, the pinned checkout itself is untouched. **W1-05 deprecation window accepted:** nothing in plugin API v1 is removed in 1.x; a deprecated member keeps working until the next major version. **Issues #76 and #77 filed:** three tests fail with numpy 2.5.3 (allowed by `numpy>=2.0,<3`; fix lane BF-76, high), and an order-dependent credential-reference test (BF-77, low); the matching failures that lanes W3-04, W3-06 and W3-09 reported are these issues, not lane defects. build/main-plan CI is red on 3d65c49 for reasons outside INT-14 (bench-quick reference_port profile verifier, macOS kill-9 restart test, an intermittent abort at interpreter exit); CI-FIX round 5 owns them. | Lead integration; lane reports; local reproduction of #76 (numpy 2.4.6 passes) |
 | 2026-10-03 | CI, realtime tests | **Realtime timing tests (marker `realtime`, including the 10-minute soak) run on Linux only, now also excluded on Windows** (the 2026-10-02 owner decision excluded macOS). No bound or assertion changed; every other test still runs on Windows; G5's 1-hour soak is a Linux nightly. Evidence (lane CI-FIX round 4, run 37100249946): on the hosted Windows runner the whole process stopped for about 4 s (a probe thread that only sleeps woke 1.66 s and 0.97 s late; no garbage collection over 0.1 s), intermittently (3.11 two of two runs, 3.14 one of two); the rate outside the stall and the overall rate were exact. | Lead decision under the owner delegation, same reasoning as the macOS decision. |
 | 2026-10-03 | W2-04, Delta output | **Shape's Delta writer stores time-zone-less timestamps as UTC timestamps** (the wall-clock value is kept and reads back as UTC), so Shape's Delta tables stay at reader version 1 / writer version 2 with no table features: `deltalake` 1.6.6 otherwise adds the `timestampNtz` feature (reader 3 / writer 7), which not every Fabric engine reads. Documented as a behaviour change of Delta output; a regression test asserts the protocol. | Lead decision on the lane's finding; Fabric compatibility (readers 1 / writers 2 for Python notebooks, pipelines and Eventstreams). |
@@ -2053,8 +2056,8 @@ Work packages are listed in execution order. The next work package is the first 
 | 71a | P6-08b | done (rounds 1-2: FIX-1..FIX-9; real-server parity 11/11) | 515d26e |
 | 72 | P6-09 | done (CI bench-quick verify_1to1 green on c7bd366, run 36850390984) | 3859a3c |
 | 73 | P6-10 | done | 1faff65 |
-| 74 | P6-11 | todo | |
-| 75 | P6-12 | todo | |
+| 74 | P6-11 | done | Integrated in INT-15 (2026-10-03, §2.3); issue #56. |
+| 75 | P6-12 | done | Integrated in INT-15 (2026-10-03, §2.3). |
 | 76 | P6-13 | done (lead scale_1to1: local_single and local_mp pass T-21 at retail medium, negative controls flagged; baseline local_mp row-count defect fixed) | 693c897 |
 | 77 | P6-14 | done | 62160c9 |
 | 78 | P7-01 | done | b04bf32 |
@@ -2067,18 +2070,18 @@ Work packages are listed in execution order. The next work package is the first 
 | 85 | P8-04 | todo | |
 | 86 | P8-05 | todo | |
 | 87 | W1-01 | todo | |
-| 88 | W1-02 | todo | |
-| 89 | W1-03 | todo | |
+| 88 | W1-02 | done | Integrated in INT-15 (2026-10-03, §2.3); issue #57. |
+| 89 | W1-03 | done | Integrated in INT-15 (2026-10-03, §2.3); issue #58. |
 | 90 | W1-04 | todo | |
 | 91 | W1-05 | todo | |
 | 92 | W1-06 | todo | |
 | 93 | W1-07 | done | 9e87cd8, c6b5d17 |
 | 94 | W2-01 | todo | |
 | 95 | W2-02 | todo | |
-| 96 | W2-03 | todo | |
+| 96 | W2-03 | done | Integrated in INT-15 (2026-10-03, §2.3); issue #53. |
 | 97 | W5-01 | todo | |
-| 98 | W5-02 | todo | |
-| 99 | W1-08 | todo | |
+| 98 | W5-02 | done | Integrated in INT-15 (2026-10-03, §2.3); issue #63. |
+| 99 | W1-08 | done | Integrated in INT-15 (2026-10-03, §2.3); issue #66. |
 | 100 | W1-09 | todo | |
 | 101 | W1-10 | todo | |
 | 102 | W1-11 | todo | |
@@ -2121,7 +2124,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 139 | W5-09 | todo | |
 | 140 | W5-10 | todo | |
 | 141 | W6-01 | todo | |
-| 142 | W6-02 | todo | |
+| 142 | W6-02 | done | Integrated in INT-15 (2026-10-03, §2.3); issue #75. |
 | 143 | W6-03 | todo | |
 | 144 | W6-04 | todo | |
 
