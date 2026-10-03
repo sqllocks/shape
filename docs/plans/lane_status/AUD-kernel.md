@@ -179,3 +179,9 @@ pytest tests/scale                                           159 passed (scale c
 profile_1to1/verify.py --impl shape d1.csv d1.parquet d2.csv d2.parquet mt   exit 0
   same, SHAPE_KERNEL=python (d1.csv d1.parquet d2.parquet mt)                exit 0
 stream_prof/verify.py                                        stream == batch PASS; identical across processes PASS; exit 0
+pytest -m "not emulator and not live" (SHAPE_KERNEL=rust)   7155 passed, 17 skipped, 1 failed (#558, outside the area)
+pytest -m "not emulator and not live and not heavy" (SHAPE_KERNEL=python)
+                                                             7113 passed, 17 skipped, 1 failed (#558)
+  (heavy is excluded under the twin, as in CI: test_bounded_mode_memory_does_not_grow_with_rows
+   profiles 48M rows in pure Python and does not finish in the time limit; CI runs heavy tests
+   only with the native kernel)
