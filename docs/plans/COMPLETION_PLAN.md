@@ -243,6 +243,7 @@ instruction.
 
 | Date | ID | Change | Reason |
 |---|---|---|---|
+| 2026-10-03 | INT-12, P6-04, issues | **Integration INT-12 merged into build/main-plan:** P6-04 (lanes P6-04a, P6-04b: simulation) and the issue lanes ISS-gaps (#13, #15, #16), ISS-sign (#38), ISS-stream (#33, #34, #36), ISS-verify (#7, #31, #32), ISS-cli (#6, #8, #27, #28, #29; #30 waits on a spec) and ISS-diff (#3, #4, #5, #14, #20, #34, #35). Hand-merged conflicts: `cli/main.py` (ISS-cli error handling kept with the warnings restore, `--version/--as-of`, `--fail-on-empty`), `registry/local.py` (raw-profile refusal plus atomic writes). Lead verification of the integrated tree, every step exit 0: static checks, debug and release `cargo test`, strategy baselines, full suite in both kernel modes (5212 each), heavy, demo, profile verify both kernels, ddl, plugins (install, tests, kit, uninstall), SQL Server plugin parity, domain tests and export, retail T-21 small, tiers, simulation file and pattern parity with negative controls, incremental, pack, stream and stream-profile parity, heavy streaming, simulation plugin kit, chaos parity (20,083 runs per tool, identical cell for cell). Each lane's status file names what it left undone; no gate, tolerance or D-xx/T-xx decision changed. | Lead. |
 | 2026-10-02 | P6-11, T-08, D-08, PR #48 | **The MCP server moves to a separate, private commercial component; it is not cancelled.** The `plugins/shape-mcp` skeleton (never published) is removed from this repository (sqllocks/shape#48), P6-11 keeps `shape bridge` (the JSON protocol the commercial MCP server builds on) and drops the `shape-mcp` deliverable and its MCP client e2e test, T-08 drops the `[mcp]` extra, and the first-party plugin list (T-09, §5, `scripts/check_plugin_skeletons.py`) has six distributions. No public MCP server is re-added. The skeleton stays in git history and was MIT licensed while public. | Owner. |
 | 2026-10-02 | T-07, issue #21 | **Owner: add `tzdata` as a Windows-only core dependency** so named time zones work out of the box on Windows (Linux and macOS use the OS database; unchanged). T-07 amended. | Owner, 2026-10-02: "Add tzdata on Windows". |
 | 2026-10-02 | T-22, issue #24 | **Owner: decimal columns keep `dtype: float`** with `precision` and `scale` beside it (no new `decimal` dtype; T-22 vocabulary unchanged). | Owner, 2026-10-02. |
@@ -2036,7 +2037,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 62 | P6-01e | wip (lane/P6-01e, started early from lane/P6-01-int) | |
 | 63 | P6-02 | done | 0f8c36e |
 | 64 | P6-03 | done | 50d7be4 |
-| 65 | P6-04 | wip (lanes P6-04a and P6-04b, started before G5's 1-hour soak) | |
+| 65 | P6-04 | done | Lanes P6-04a and P6-04b, integrated in INT-12 (2026-10-03, §2.3). |
 | 66 | P6-05 | done | 3a85d86 |
 | 67 | P6-06 | done | e5d338f |
 | 68 | P6-07a | done (contract tests on recorded interactions; 5 baseline defects fixed: destructive default mode, unescaped SQL/KQL identifiers, COPY INTO location, bulk-load cleanup and row counts; emulator/live tests nightly) | 98f6ac6 |
