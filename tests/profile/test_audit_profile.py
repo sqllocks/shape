@@ -346,3 +346,16 @@ def test_zoned_date_text_is_refused_naming_the_column_and_the_fix(tmp_path, text
     path.write_text(f"n,when\n1,{text}\n2,{text}\n")
     with pytest.raises(NotImplementedError, match=r"column 'when'.*to_datetime"):
         shape.profile(str(path))
+
+
+# ---- #270: the date tokenizer is linear in the text's length ------------------------------
+
+
+def test_a_long_text_value_is_tokenized_in_linear_time():
+    import time
+
+    from shape.profile.reference import dtparse
+
+    start = time.perf_counter()
+    assert dtparse.parse_mixed("1." * 200_000) is None  # 400 KB: 25 s when quadratic
+    assert time.perf_counter() - start < 5.0
