@@ -353,3 +353,37 @@ def test_a_negative_scale_override_is_an_error():
         from_ddl("CREATE TABLE customer (id INT PRIMARY KEY)", scale="small:customer=-5")
     schema, _ = from_ddl("CREATE TABLE customer (id INT PRIMARY KEY)", scale="small:custmer=5")
     assert any("custmer" in i.message for i in schema.validate())
+
+
+def test_a_type_column_with_the_parser_template_is_upgraded_like_a_method_column():
+    # 218: _is_placeholder_enum checked {type_a, type_b}, but the parser writes type_a/b/c,
+    # so no *_type column was ever upgraded (payment_method was, payment_type was not).
+    schema, _ = from_ddl(
+        "CREATE TABLE payment (id INT PRIMARY KEY, payment_type VARCHAR(20), "
+        "payment_method VARCHAR(20))"
+    )
+    cols = schema.tables["payment"].columns
+    assert set(cols["payment_type"].generator["values"]) != {"type_a", "type_b", "type_c"}
+
+
+@pytest.mark.parametrize(
+    "columns",
+    [
+        "subtotal DECIMAL(10,2), tax_amount DECIMAL(10,2)",
+        "tax_amount DECIMAL(10,2), subtotal DECIMAL(10,2)",
+    ],
+)
+def test_tax_follows_the_subtotal_whatever_the_column_order(columns):
+    # 218: (tax_amount, subtotal) did not fire CR-02: _find_col("subtotal", "amount") returned
+    # tax_amount itself.
+    _, notes = from_ddl(f"CREATE TABLE invoice (id INT PRIMARY KEY, {columns})")
+    assert ("invoice", "tax_amount", "CR-02") in {(n.table, n.column, n.rule_id) for n in notes}
+
+
+def test_net_is_gross_minus_tax_only_for_amounts():
+    # 218: net_weight = gross_weight - tax_amount.
+    schema, notes = from_ddl(
+        "CREATE TABLE parcel (id INT PRIMARY KEY, net_weight DECIMAL(10,2), "
+        "gross_weight DECIMAL(10,2), tax_amount DECIMAL(10,2))"
+    )
+    assert "CR-05" not in {n.rule_id for n in notes}
