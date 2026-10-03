@@ -70,8 +70,10 @@ def render_path(
 
     ``part`` fills ``{part}`` and ``now`` fills ``{hhmmss}``; a template using either needs it."""
     check_template(template)
-    if "/" in table or "\\" in table or table in ("", ".", ".."):
+    if "/" in table or "\\" in table or table in ("", ".", "..") or re.match(r"^[A-Za-z]:", table):
         raise ValueError(f"table name {table!r} cannot be used in a path")
+    if "/" in ext or "\\" in ext or ext in (".", ".."):
+        raise ValueError(f"file extension {ext!r} cannot be used in a path")
     values = {"table": table, "ext": ext}
     tokens = _TOKEN.findall(template)
     if "part" in tokens:
@@ -81,6 +83,8 @@ def render_path(
     if "hhmmss" in tokens:
         if now is None:
             raise ValueError(f"path template {template!r} has {{hhmmss}}: it is for rolling files")
+        if now.tzinfo is not None:  # the documented time is UTC
+            now = now.astimezone(dt.UTC)
         values["hhmmss"] = now.strftime("%H%M%S")
     if uses_date(template):
         if batch_date is None:

@@ -31,7 +31,7 @@ def test_501_labels_stay_unique_when_a_writer_is_named_like_a_generated_label():
 def test_502_render_path_refuses_an_extension_or_table_that_leaves_the_directory():
     from shape.io.landing import render_path
 
-    for ext in ("..", "/../../x", "a/b", "a\\b", ""):
+    for ext in ("..", ".", "/../../x", "a/b", "a\\b"):
         with pytest.raises(ValueError, match="extension"):
             render_path("{table}/{ext}", "t", ext, None)
     with pytest.raises(ValueError, match="cannot be used in a path"):
