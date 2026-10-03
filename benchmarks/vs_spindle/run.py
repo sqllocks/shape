@@ -27,6 +27,7 @@ import contextlib
 import datetime as dt
 import json
 import os
+import statistics
 import subprocess
 import sys
 from pathlib import Path
@@ -34,7 +35,7 @@ from typing import Any
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from common import bench_lock, machine_meta  # noqa: E402
+from common import bench_lock, machine_meta, wait_for_quiet  # noqa: E402
 from paths import BENCH_OUT_DIR, SHAPE_PY, SHAPE_ROOT, SPINDLE_PY, SPINDLE_ROOT  # noqa: E402
 
 SCHEMA_VERSION = 1
@@ -463,40 +464,32 @@ def other_domain_baselines(runs: int, out: dict) -> None:
             "runs_s": [],
             "verifier": None,
         }
-        rc, text = sh(
-            [
-                str(SPINDLE_PY),
-                str(DOMAIN / "generate.py"),
-                "--impl",
-                "spindle",
-                "--domain",
-                dom,
-                "--scale",
-                "medium",
-                "--seed",
-                "42",
-            ]
-        )
-        if rc == 0:
-            times = []
-            for _ in range(runs):
-                rc, text = sh(
-                    [
-                        str(SPINDLE_PY),
-                        str(DOMAIN / "generate.py"),
-                        "--impl",
-                        "spindle",
-                        "--domain",
-                        dom,
-                        "--scale",
-                        "medium",
-                        "--seed",
-                        "42",
-                    ]
-                )
-                line = next(x for x in reversed(text.splitlines()) if x.startswith("GEN_JSON "))
-                times.append(json.loads(line[9:])["total_s"])
-            rec.update(runs_s=times, median_s=sorted(times)[len(times) // 2])
+        cmd = [
+            str(SPINDLE_PY),
+            str(DOMAIN / "generate.py"),
+            "--impl",
+            "spindle",
+            "--domain",
+            dom,
+            "--scale",
+            "medium",
+            "--seed",
+            "42",
+        ]
+        rc, text = sh(cmd)
+        times = []
+        for _ in range(runs if rc == 0 else 0):
+            wait_for_quiet()
+            rc, text = sh(cmd)
+            line = next((x for x in reversed(text.splitlines()) if x.startswith("GEN_JSON ")), None)
+            if rc != 0 or line is None:
+                times = []
+                break
+            times.append(json.loads(line[9:])["total_s"])
+        if times:
+            rec.update(runs_s=times, median_s=statistics.median(times))
+        else:
+            print(f"{wid}: a baseline run failed (exit {rc}); no numbers", file=sys.stderr)
         out["spindle"]["workloads"][wid] = rec
         out[IMPL]["workloads"][wid] = {
             "kind": "generate",
