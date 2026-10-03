@@ -158,3 +158,48 @@ split. `--partition-idle-timeout` is not a window duration: a plain number of se
 * `pytest tests/streaming` (includes the heavy-marked tests): 367 passed. `pytest plugins/shape-kafka plugins/shape-eventhubs -m "not emulator and not live"`: 86 passed.
 * `benchmarks/vs_spindle/stream_1to1/verify.py --scale small` (baseline built with `benchmarks/vs_spindle/setup_spindle.sh`; `scripts/setup_spindle.sh` does not exist): **VERDICT PASS**, exit 0.
 * Deviations from the task text: the full run excluded `heavy` (as `make check` does, and as round 1 did); heavy was run for `tests/streaming` only. `pytest tests/demo/fabric`, the emulator tests (Docker), the cargo checks (no Rust file changed), `profile_1to1` and `stream_prof` verifiers were not re-run in round 2.
+
+## Round 3 — merge of `origin/build/main-plan` (ce8fe11, INT-13)
+
+One merge commit (`216aa56`, plus the status commit); no rebase, no force-push. No gate, tolerance, D-xx or T-xx decision, §11 or §2.3
+was touched; `$SPINDLE_ROOT` was only read (the baseline was built into a fresh container with
+`benchmarks/vs_spindle/setup_spindle.sh`). Main-plan brought ISS-profile (#2, #21-#24, #37, CSV options), ISS-gen (#9-#12, #17-#19),
+EXCEL (#50, #51), FIN-CAP (`load_table`), P6-07b (`--auth`, credential references, redaction in `errors.fail`) and CI-FIX round 3.
+
+### What conflicted and how it was resolved (both sides kept)
+
+| File | Resolution |
+|---|---|
+| `CHANGELOG.md` | Both lists of entries kept. |
+| `src/shape/cli/main.py` | `profile`: P6-07b's `--auth` check and `source_options(credential=...)` wrapper kept; one `options` dict holds the CSV and identifier options (`string_columns`, `types`, `infer_types`) and the workbook options (`--sheet`, `--include-hidden`); `--delimiter`, `--encoding`, `--quotechar`, `--header` are declared once; `--string-columns`, `--types`, `--infer-types`, `--version`, `--as-of`, `--fail-on-empty`, `--sheet`, `--include-hidden` all present. |
+| `src/shape/generation/engine.py` | `release(len(rules), copula_applied=True)` (the round-1 fix, so correlated tables are written) followed by main-plan's `self.finalize(...)` of every table. |
+| `src/shape/generation/learn.py` | Both helper sets kept (`_text_enum`, `_digit_identifier_width` from #46; `_zero_padded_width` from EXCEL). Order in `column_generator`: a column whose profile lists every value keeps that value set as text (#46); else a zero-padded text column gets EXCEL's `digit_ids` (unique) / `digits` provider; else a fixed-width digit column gets the `{digits:N}` pattern (#46). |
+| `src/shape/generation/output.py` | Both kept: the sink-based `_paths(fmt, sink, ...)`, `_check_destination` (#42, #40) and EXCEL's `_write_workbook`. The workbook writer now also calls `_check_destination`, so `-f excel` to an `abfss://` URI gives the #42 error instead of creating a folder called `abfss:`. |
+| `src/shape/io/readers.py` | Both imports (`identifiers` for #46, `excel` for #50). |
+| `src/shape/profile/reference/readers.py` | One flag, not two: my `_Col.keep_text` and EXCEL's `_Col.text` meant the same thing; it is `_Col.text` now (reader-fixed identifier text, `string_columns`, Excel text cells). |
+| `src/shape/profile/reference/column.py` | The bool-spelling detector skips `c.text` columns (the same line, one flag). |
+| `src/shape/profile/reference/profile.py` | `profile()` takes `version`, `as_of`, the CSV options, `string_columns`/`types`/`infer_types` and `sheet`/`include_hidden`; the workbook branch runs first, then `_profile(source, name, version, as_of, fmt)` (main-plan's argument order). |
+| `src/shape/profile/reference/sources.py` | Imports of both sides (`is_workbook_spec`, `read_csv_detect`); `load_table`, `source_options` and the Delta paths from main-plan kept. |
+
+**Semantic conflicts found by `mypy` and the tests, not by git (all in this lane's code):**
+
+* `profile/reference/sources.py::_to_cols` (EXCEL) assigned `c.text = kind == "xlsx" and ...` to every column, which **reset** the flag the CSV reader had set, so
+  every #46 identifier column came out `integer` again (22 of the 37 tests in `tests/profile/test_identifier_columns.py`, both kernels, plus
+  `test_dtype_of_every_column_matches_the_spindle_profiler`). It is now `c.text = c.text or (kind == "xlsx" and ...)`.
+* `learn.py`: two variables named `width` of different types (`mypy`); mine is `digits`.
+* `learn.py`: a ZIP column (leading zeros, every value listed) went to EXCEL's `digits` provider before the covered-value-set rule, so generated ZIPs were no
+  longer drawn from the profile (`test_generate_from_a_profile_keeps_the_zeros_and_the_width`, `test_the_csv_file_itself_quotes_the_text`). The order above fixes it.
+* **One assertion of this lane's own test changed**, `test_learn_builds_text_generators`: a `member_id` column of unique, zero-padded ten-digit values now
+  gets EXCEL's `{"strategy": "faker", "provider": "digit_ids", "width": 10}` (keeps the key unique) instead of `{"strategy": "pattern", "format": "{digits:10}"}`.
+  The property the test is about (text, width 10, zeros kept) is unchanged and still asserted by the generate tests; the pattern is asserted on `npi`
+  (ten digits, no zeros). No other lane's test changed. Reported for the lead to confirm that the two generators should coexist this way.
+
+### Commands and results (final tree; venv with `.[dev,advanced]`, the domains, kafka and eventhubs plugins editable)
+
+* `ruff check` and `ruff format --check` on `src tests plugins benchmarks/vs_spindle`: clean (899 files). `mypy`: no issues (356 files). `python scripts/check_user_facing.py`: clean.
+* `pytest -m "not emulator and not live" --ignore=tests/demo/fabric` under `SHAPE_KERNEL=rust` (heavy included): **5,628 passed**, 4 deselected.
+* Same under `SHAPE_KERNEL=python`: **the heavy tests were not run**: the heavy bounded-memory profile test ran for over 30 CPU-minutes without finishing (as round 1 recorded) and was stopped. `-m "not emulator and not live and not heavy"`: **5,586 passed**, 46 deselected.
+* `pytest tests/streaming` (heavy-marked tests included): 367 passed. `pytest plugins/shape-kafka plugins/shape-eventhubs -m "not emulator and not live"`: 86 passed, 31 deselected.
+* `benchmarks/vs_spindle/stream_1to1/verify.py --scale small`: **VERDICT PASS**, exit 0.
+* `benchmarks/vs_spindle/profile_1to1/verify.py --impl shape` (after `datasets.py` generated the data): exit 0 under `SHAPE_KERNEL=rust` and under `SHAPE_KERNEL=python`; the identifier allow-list applied to 12 of 12 columns.
+* Not run: `tests/demo/fabric` (excluded as in earlier rounds), the emulator tests (Docker), cargo checks (no Rust file changed by this lane or this merge), `stream_prof/verify.py`, `pytest -m heavy` under the Python kernel (above).
