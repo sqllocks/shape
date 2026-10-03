@@ -173,9 +173,28 @@ def _is_windows_style(path: str) -> bool:
 
 
 def _dt(value: str) -> str:
-    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+    """A calendar date written ``YYYY-MM-DD`` in ASCII digits."""
+    import datetime
+
+    if not isinstance(value, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value):
         raise ShapeError(f"a landing-zone date is YYYY-MM-DD, got {value!r}")
+    try:
+        datetime.date.fromisoformat(value)
+    except ValueError:
+        raise ShapeError(f"a landing-zone date must be a real date, got {value!r}") from None
     return value
+
+
+def _hour(value: str | int) -> int:
+    """An hour 0 to 23, given as an int or as ASCII digits."""
+    if isinstance(value, bool) or not (
+        isinstance(value, int) or (isinstance(value, str) and re.fullmatch(r"[0-9]{1,2}", value))
+    ):
+        raise ShapeError(f"a landing-zone hour is a whole number 0 to 23, got {value!r}")
+    h = int(value)
+    if not 0 <= h <= 23:
+        raise ShapeError(f"an hour is 0 to 23, got {value!r}")
+    return h
 
 
 def landing_zone(
@@ -184,10 +203,7 @@ def landing_zone(
     """The partition folder ``landing/<domain>/<entity>/dt=<dt>[/hour=<HH>]``."""
     path = join(base, "landing", domain, entity, f"dt={_dt(dt)}")
     if hour is not None:
-        h = int(hour)
-        if not 0 <= h <= 23:
-            raise ShapeError(f"an hour is 0 to 23, got {hour!r}")
-        path = join(path, f"hour={h:02d}")
+        path = join(path, f"hour={_hour(hour):02d}")
     return path
 
 
