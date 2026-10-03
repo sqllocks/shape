@@ -172,10 +172,31 @@ def _pack(a: np.ndarray) -> str:
     return base64.b64encode(zlib.compress(np.ascontiguousarray(a).tobytes(), 6)).decode("ascii")
 
 
-def _unpack(text: str, dtype: Any) -> np.ndarray:
-    return np.frombuffer(
-        zlib.decompress(base64.b64decode(text)), dtype=np.dtype(dtype).newbyteorder("<")
-    ).astype(dtype)
+def _inflate(text: str, max_bytes: int) -> bytes:
+    """Decompress a checkpoint field into at most ``max_bytes``; anything else is corrupt.
+
+    A checkpoint is state on disk that another process may have written, so the output size is
+    bounded by what the state declares instead of by what the stream claims.
+    """
+    try:
+        inflater = zlib.decompressobj()
+        raw = inflater.decompress(base64.b64decode(text, validate=True), max_bytes)
+    except (ValueError, zlib.error) as exc:
+        raise ValueError(f"corrupt checkpoint: a state field does not decode ({exc})") from None
+    if inflater.unconsumed_tail or not inflater.eof:
+        raise ValueError(
+            f"corrupt checkpoint: a state field is larger than the {max_bytes} bytes it declares "
+            "or is cut short"
+        )
+    return raw
+
+
+def _unpack(text: str, dtype: Any, max_items: int) -> np.ndarray:
+    dt = np.dtype(dtype).newbyteorder("<")
+    raw = _inflate(text, max_items * dt.itemsize)
+    if len(raw) % dt.itemsize:
+        raise ValueError("corrupt checkpoint: a state field is not a whole number of items")
+    return np.frombuffer(raw, dtype=dt).astype(dtype)
 
 
 class KeyedSketches:
@@ -552,14 +573,14 @@ class KeyedSketches:
         if n > obj.max_keys:
             raise ValueError("snapshot holds more keys than its cap")
         for name, arr in obj._arrays().items():
-            data = _unpack(snap["arrays"][name], arr.dtype)
+            data = _unpack(snap["arrays"][name], arr.dtype, n)
             if len(data) != n:
                 raise ValueError(f"snapshot array {name!r} has {len(data)} entries, not {n}")
             arr[:n] = data
         if obj._registers is not None:
-            obj._registers[:n] = _unpack(snap["arrays"]["registers"], np.uint8).reshape(
-                n, 1 << obj.hll_p
-            )
+            obj._registers[:n] = _unpack(
+                snap["arrays"]["registers"], np.uint8, n << obj.hll_p
+            ).reshape(n, 1 << obj.hll_p)
         obj._alive[:n] = True
         obj._used = n
         obj._index = dict(zip(obj._key[:n].tolist(), range(n), strict=True))

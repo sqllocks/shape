@@ -216,9 +216,9 @@ class Deduplicator:
         obj.duplicates = int(snap["counters"]["duplicates"])
         for r in snap["runs"]:
             run = _Run(
-                _unpack(r["keys"], np.int64),
-                _unpack(r["seq"], np.int64),
-                _unpack(r["time"], np.float64),
+                _unpack(r["keys"], np.int64, obj.max_keys),
+                _unpack(r["seq"], np.int64, obj.max_keys),
+                _unpack(r["time"], np.float64, obj.max_keys),
             )
             if not (len(run.keys) == len(run.seq) == len(run.time)):
                 raise ValueError("snapshot run arrays differ in length")

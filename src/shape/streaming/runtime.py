@@ -38,8 +38,10 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape.kernel.dispatch import get_kernel
 from shape.profile.engine import table_entry
+from shape.streaming.keyed import _inflate
 
 SNAPSHOT_FORMAT = "shape-stream-window-v1"
+MAX_STATE_BYTES = 1 << 30  # a window-state field that inflates past this is a corrupt checkpoint
 EVENT_TIME = "_shape_event_time"
 _US = timedelta(microseconds=1)
 _DAY_US = 86_400_000_000
@@ -166,7 +168,7 @@ def _encode_state(state: Any) -> str:
 
 
 def _decode_state(schema: pa.Schema, text: str) -> Any:
-    raw = zlib.decompress(base64.b64decode(text))
+    raw = _inflate(text, MAX_STATE_BYTES)
     return get_kernel().ProfileState.from_snapshot(schema, raw)
 
 
