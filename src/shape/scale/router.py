@@ -226,6 +226,9 @@ class ScaleRouter:
             if not used_processes:
                 with thread_limit(threads):
                     self._run_threads()
+        except BaseException:
+            self._registry.abort()
+            raise
         finally:
             self._registry.close()
         elapsed = time.perf_counter() - started

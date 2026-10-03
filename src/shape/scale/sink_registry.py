@@ -88,6 +88,19 @@ class SinkRegistry:
 
         self._each("finish_table", finish, self._sinks)
 
+    def abort(self) -> None:
+        """Tell every opened sink that has an ``abort`` hook that the run stopped early; call
+        ``close`` after it. A hook that fails is logged, never raised: the run's own error is
+        the one to report."""
+        for sink in self._opened:
+            hook = getattr(sink, "abort", None)
+            if hook is None:
+                continue
+            try:
+                hook()
+            except Exception as exc:
+                logger.error("sink %s: abort failed: %s", sink_name(sink), redact_text(str(exc)))
+
     def close(self) -> None:
         """Close every sink that was opened; raise one ``SinkError`` for all that failed."""
         errors: list[tuple[str, Exception]] = []

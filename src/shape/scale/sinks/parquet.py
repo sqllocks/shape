@@ -66,6 +66,7 @@ class ParquetSink(BaseSink):
         self._empty: dict[str, pa.RecordBatch] = {}
         self._lock = threading.Lock()
         self._sink: Any = None
+        self._aborted = False
         self.parts_written = 0
         self.parts_skipped = 0
 
@@ -82,6 +83,7 @@ class ParquetSink(BaseSink):
         self._pending, self._pending_rows, self._parts, self._rows = {}, {}, {}, {}
         self._empty = {}
         self._futures = []
+        self._aborted = False
         self.parts_written = self.parts_skipped = 0
         n = self._threads if self._threads is not None else min(4, worker_threads())
         self._pool = ThreadPoolExecutor(max_workers=max(1, n), thread_name_prefix="shape-part")
@@ -128,14 +130,23 @@ class ParquetSink(BaseSink):
         tmp.write_text(json.dumps({"rows": rows, "parts": parts}), encoding="utf-8")
         os.replace(tmp, target / COMPLETE)
 
+    def abort(self) -> None:
+        """The run stopped early: rows not yet in a full part are dropped and no table gets its
+        marker, so a table that was cut short does not look finished. Part files already written
+        stay (a resume skips them)."""
+        self._aborted = True
+
     def close(self) -> None:
         try:
-            for table in list(self._parts):
-                if self._pending_rows.get(table) or (
-                    self._parts[table] == 0 and table in self._empty
-                ):
-                    self.finish_table(table)
-            self._drain()
+            if self._aborted:
+                self._drain_quietly()
+            else:
+                for table in list(self._parts):
+                    if self._pending_rows.get(table) or (
+                        self._parts[table] == 0 and table in self._empty
+                    ):
+                        self.finish_table(table)
+                self._drain()
         finally:
             pool, self._pool = self._pool, None
             if pool is not None:
@@ -179,3 +190,9 @@ class ParquetSink(BaseSink):
         futures, self._futures = self._futures, []
         for future in futures:
             future.result()
+
+    def _drain_quietly(self) -> None:
+        """Wait for the parts in flight; a part that failed is left for a resume to write."""
+        futures, self._futures = self._futures, []
+        for future in futures:
+            future.exception()

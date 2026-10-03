@@ -33,6 +33,10 @@ class Sink(Protocol):
         """Called once after the last batch: flush, commit, release."""
         ...
 
+    # Optional: ``finish_table(table)`` and ``abort()``. The router calls ``abort()`` before
+    # ``close()`` when the run stops early (a cancel or an error), so a sink does not present a
+    # table that was cut short as a finished one.
+
 
 class BaseSink:
     """The four hooks, each doing nothing; a sink overrides what it needs."""
@@ -46,6 +50,9 @@ class BaseSink:
         return None
 
     def finish_table(self, table: str) -> None:
+        return None
+
+    def abort(self) -> None:
         return None
 
     def close(self) -> None:
