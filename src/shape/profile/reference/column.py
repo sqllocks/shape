@@ -349,8 +349,8 @@ def _no_subsecond(ts: pa.Array) -> bool:
 
 
 def _to_timestamp(v: _dt.datetime) -> Timestamp:
-    return Timestamp(
-        v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond, tzinfo=v.tzinfo
+    return Timestamp(  # fold keeps the second 01:30 of a DST fall-back on its own offset (#225)
+        v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond, v.tzinfo, fold=v.fold
     )
 
 
@@ -744,13 +744,16 @@ def _profile_column(
     if kind in _OBJECT_KINDS:
         return _profile_object_column(c, row_count, top_n)
     arr = c.arr
-    tzmap: dict[Any, Any] | None = None
+    wall: Any = None
+    zoned: Any = None
     if kind == "dt64" and c.tz:
-        # pandas' .dt.hour etc. use the wall clock of the column's zone; keys and min/max
-        # keep the zone (and its UTC offset) in their text
+        # pandas counts a zoned column's instants (two instants in the repeated hour of a DST
+        # change are two values, #225) and takes .dt.hour etc. from the wall clock of its zone;
+        # keys and min/max keep the zone (and its UTC offset) in their text
         aware = _combine(arr)
-        arr = _local_timestamp(aware, c.tz)
-        tzmap = dict(zip(_combine(arr).to_pylist(), _aware_datetimes(aware, c.tz), strict=True))
+        zoned = aware.type
+        wall = _local_timestamp(aware, c.tz)
+        arr = pc.cast(aware, pa.timestamp(zoned.unit))  # the UTC instants, without the zone
 
     # ---- non-null values ---------------------------------------------------
     nan_count = inf_count = 0
@@ -850,15 +853,19 @@ def _profile_column(
             stype = "float"
         numeric = nn_np
     elif kind == "dt64":
+        if wall is not None:
+            non_null_wall = _combine(pc.drop_null(wall) if null_count else wall)
+        else:
+            non_null_wall = non_null
         if n_nn:
-            ints = pc.cast(non_null, pa.int64()).to_numpy()
+            ints = pc.cast(non_null_wall, pa.int64()).to_numpy()
             per_day = {"s": 86400, "ms": 86400_000, "us": 86400_000_000, "ns": 86400_000_000_000}[
                 non_null.type.unit
             ]
             stype = "date" if not np.any(ints % per_day) else "datetime"
         else:
             stype = "datetime"
-        dt_values = non_null
+        dt_values = non_null_wall
     elif kind == "objdate":
         stype = "string" if n_nn == 0 else "datetime"
         dt_values = pc.cast(non_null, pa.timestamp("s")) if n_nn else None
@@ -935,8 +942,8 @@ def _profile_column(
             top_keys = uniq.take(pa.array(top))
             top_counts = counts[top]
         keys = _keys_py(top_keys, kind)
-        if tzmap is not None:
-            keys = [str(tzmap[v]) for v in top_keys.to_pylist()]
+        if zoned is not None:
+            keys = [str(v) for v in _aware_datetimes(pc.cast(top_keys, zoned), c.tz)]
         if kind == "float" and "0.0" in keys:
             zeros = np.flatnonzero(raw_nn == 0)
             if len(zeros) and np.signbit(raw_nn[zeros[0]]):
@@ -956,10 +963,10 @@ def _profile_column(
             mm = pc.min_max(non_null)
             lo, hi = mm["min"].as_py(), mm["max"].as_py()
             if kind == "dt64":
-                lo, hi = (
-                    _to_timestamp(tzmap[lo] if tzmap else lo),
-                    _to_timestamp(tzmap[hi] if tzmap else hi),
-                )
+                if zoned is not None:
+                    instants = pc.cast(pa.array([lo, hi], non_null.type), zoned)
+                    lo, hi = _aware_datetimes(instants, c.tz)
+                lo, hi = _to_timestamp(lo), _to_timestamp(hi)
             elif kind in ("uint64", "objint"):
                 lo, hi = int(lo), int(hi)
             min_value, max_value = lo, hi
