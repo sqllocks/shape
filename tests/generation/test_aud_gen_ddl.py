@@ -235,3 +235,28 @@ def test_a_mysql_key_line_is_an_index_not_a_column():
         smart=False,
     )
     assert list(schema.tables["t"].columns) == ["id", "a", "key"]
+
+
+def test_a_foreign_key_to_a_table_not_in_the_file_is_a_plain_column():
+    # 203: the relationship was dropped but the column kept foreign_key -> ghost.id, so the
+    # schema failed validation: FK references non-existent table 'ghost'.
+    schema, _ = from_ddl(
+        "CREATE TABLE t (id INT PRIMARY KEY, x INT REFERENCES ghost(id), "
+        "y INT, FOREIGN KEY (y) REFERENCES ghost)",
+        smart=False,
+    )
+    for name in ("x", "y"):
+        assert schema.tables["t"].columns[name].generator["strategy"] != "foreign_key"
+    assert not [i for i in schema.validate() if i.level == "error"]
+
+
+def test_one_foreign_key_declared_several_ways_is_one_relationship():
+    # 203: inline REFERENCES + table-level FOREIGN KEY + ALTER gave three fk_o_c_id.
+    schema, _ = from_ddl(
+        "CREATE TABLE c (id INT PRIMARY KEY);"
+        "CREATE TABLE o (id INT PRIMARY KEY, c_id INT REFERENCES c(id), "
+        "FOREIGN KEY (c_id) REFERENCES c(id));"
+        "ALTER TABLE o ADD CONSTRAINT f FOREIGN KEY (c_id) REFERENCES c(id)",
+        smart=False,
+    )
+    assert [r.name for r in schema.relationships] == ["fk_o_c_id"]
