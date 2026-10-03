@@ -17,14 +17,14 @@ class EncryptedPayload:
     algorithm: str = "AES-256-GCM"
 
 
-def encrypt_aes_gcm(plaintext, key, aad=b""):
+def encrypt_aes_gcm(plaintext: bytes, key: bytes, aad: bytes = b"") -> EncryptedPayload:
     if len(key) != 32:
         raise ValueError("AES-256-GCM key must be 32 bytes")
     n = os.urandom(12)
     return EncryptedPayload(n, AESGCM(key).encrypt(n, plaintext, aad))
 
 
-def decrypt_aes_gcm(payload, key, aad=b""):
+def decrypt_aes_gcm(payload: EncryptedPayload, key: bytes, aad: bytes = b"") -> bytes:
     if len(key) != 32:
         raise ValueError("AES-256-GCM key must be 32 bytes")
     try:

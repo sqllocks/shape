@@ -177,6 +177,8 @@ KINDS: dict[str, Kind] = {
         _kind("migration-receipt", "migration receipt", "shape-migration-receipt"),
         _kind("gate-schema", "gate schema", "shape-gates"),
         _kind("verify-config", "verify configuration", "shape-verify-config"),
+        _kind("vault", "value vault", "shape-vault"),
+        _kind("vault-policy", "vault policy", "shape-vault-policy"),
         _kind(
             "profile-export",
             "profile export",
