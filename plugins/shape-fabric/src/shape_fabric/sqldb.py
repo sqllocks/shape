@@ -334,9 +334,7 @@ class SqlDatabaseWriter:
             _tsql.check_columns(first.schema, raw, table)
             batch = _tsql.normalize_batch(raw)
             for start in range(0, batch.num_rows, batch_size):
-                piece = batch.slice(start, batch_size)
-                if piece.num_rows == 0:
-                    continue
+                piece = batch.slice(start, batch_size)  # never empty: start < num_rows
                 fast = _tsql.widest_first(piece)
                 if hasattr(cursor, "fast_executemany"):
                     cursor.fast_executemany = fast
