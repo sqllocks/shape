@@ -189,10 +189,13 @@ def verify_11(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
         if pc is not None:
             entry["mode"] = pc.project.gate_mode(g.gate_name)
         gates.append(entry)
+    # `passed` is the 1.0 result: every gate passed (and, with `strict`, none warned). Under a
+    # project, `enforced_passed` is the CLI's: every gate the project enforces passed; the exit
+    # code of `shape verify` is 0 when it holds and, with `strict`, no enforced gate warned.
+    has_warnings = any(g["warnings"] for g in gates)
     enforced_passed = all(g.passed for g in result.gate_results if enforced(g))
-    has_warnings = any(g.warnings for g in result.gate_results if enforced(g))
     out: dict[str, Any] = {
-        "passed": enforced_passed and not (args.get("strict") and has_warnings),
+        "passed": bool(result.passed) and not (args.get("strict") and has_warnings),
         "gates": ctx.spill("the gates", gates),
         "row_counts": {n: int(c) for n, c in sorted(result.row_counts.items())},
         "statistical": bool(args.get("statistical")),

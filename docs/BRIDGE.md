@@ -384,9 +384,11 @@ Errors: `input.not_found`, `input.invalid_schema` (with the problems), `input.un
   given: the bridge does not look up a baseline.
 - `profile`'s `source` and `verify`'s `path` may name a source of the project instead of a path (a
   path that exists wins, as on the command line): the source's path, `dataset` and name apply.
-- `verify` reports each gate's `mode` and `enforced_passed` (every enforced gate passed), and
-  `passed` follows the exit code of `shape verify`: a failing gate that the project only observes
-  does not fail the run. The result has the `project` block.
+- `verify` reports each gate's `mode` (`observe` or `enforce`; a gate the project does not list is
+  enforced), `enforced_passed` (every enforced gate passed) and the `project` block, as `shape
+  verify -o report.json` does. `passed` stays the 1.0 result (every gate passed): a failing gate that
+  the project only observes leaves `passed` false and `enforced_passed` true, and the exit code of
+  `shape verify` is 0.
 
 **`verify`'s `source` is the real data**, not a source name (below), as in `shape verify --source
 DATA`; a project source for `verify` is selected as the command line selects it, by the single source

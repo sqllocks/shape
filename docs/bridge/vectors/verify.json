@@ -86,7 +86,7 @@
               "warnings": []
             }
           ],
-          "passed": true,
+          "passed": false,
           "project": {
             "file": "${DIR}/shape.yml",
             "format": "shape-project",

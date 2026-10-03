@@ -459,7 +459,8 @@ def test_verify_reports_each_gates_mode_and_the_enforced_result_like_the_cli(hom
     gates = {g["name"]: g for g in result["gates"]}
     assert gates["range_constraint"]["passed"] is False
     assert gates["range_constraint"]["mode"] == "observe"  # shape.yml observes it
-    assert result["enforced_passed"] is True and result["passed"] is True
+    # `passed` is the 1.0 result (every gate), `enforced_passed` the one the exit code follows
+    assert result["enforced_passed"] is True and result["passed"] is False
     assert result["project"]["file"] == project
     code, out = cli(capsys, "verify", data, "--config", str(config), "--project", project)
     assert code == 0 and "observe" in out and "PASS" in out
