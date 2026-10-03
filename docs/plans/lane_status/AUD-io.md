@@ -84,3 +84,37 @@ message), then the fix (`AUD-io: fix #N ...`). Fix commits are in the table abov
 - Multi-file reads where the first file infers `int64` and a later one has `1.5` still fail with a
   clear `ReaderError`: the module documents that the schema is the first file's.
 - No `.github/workflows/*` change is needed.
+
+## Commands and results (this session, at `d4d25ad` + this status commit)
+
+| Command | Result |
+|---|---|
+| `ruff check src tests plugins benchmarks/vs_spindle` | All checks passed |
+| `ruff format --check src tests plugins benchmarks/vs_spindle` | 1094 files already formatted |
+| `mypy` | Success: no issues found in 437 source files |
+| `python scripts/check_user_facing.py` (D-13) | clean |
+| `lint-imports` | 1 kept, 0 broken |
+| `vulture src/shape scripts/vulture_whitelist.py --min-confidence 80` | no findings |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live" --ignore=tests/demo/fabric/test_udf.py` | 7067 passed, 2 skipped, 3 failed, 7 errors (environment, below) |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live" --ignore=tests/demo/fabric/test_udf.py` | 7067 passed, 2 skipped, 3 failed, 7 errors (the same) |
+| `pytest tests/io tests/connectors tests/query tests/capture` | all pass (new AUD-io tests included) |
+
+The 3 failures and 7 errors are this container's environment, not this lane's code; none of
+them touches the audited area:
+
+- `tests/demo/fabric/test_generate_udf.py` (7 errors) and `tests/demo/fabric/test_udf.py`
+  (ignored): `ImportError: libodbc.so.2` (no unixODBC here). They run in the `fabric-demo` job.
+- `tests/demo_cmd/test_notebook_and_outputs.py` (2): "the semantic model needs the shape-fabric
+  plugin"; this venv mirrors the main CI job (`-e plugins/shape-domains` only). Both fail the same
+  way on `origin/build/main-plan` (checked in a worktree).
+- `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references`:
+  passes alone; in the full run `azure.functions` is already in `sys.modules`, imported by the
+  `tests/demo/fabric` tests because the fabric-demo packages
+  (`tests/demo/fabric/requirements.txt`) are installed in this venv, which the main CI job does
+  not do. It passes on `origin/build/main-plan` in the same isolation.
+
+Not run: the equivalence verifiers. `$SPINDLE_ROOT` is not present in this container, and no fix
+changes bytes they compare (the readers change only for inputs that used to fail or lose data;
+capture is not compared by any verifier).
+
+`origin/build/main-plan` was merged (already contained: no new commits since `5c91ea5`).
