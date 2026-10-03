@@ -297,6 +297,7 @@ source_modules = [
     "shape.io",
     "shape.kernel",
     "shape.location",
+    "shape.masking",
     "shape.migrate",
     "shape.model",
     "shape.runlog",
