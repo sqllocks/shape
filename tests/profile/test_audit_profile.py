@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import math
 
 import numpy as np
 import pyarrow as pa
@@ -541,3 +542,333 @@ def test_nanoseconds_survive_the_fork_pool(monkeypatch):
     c = shape.profile(pa.table(cols)).to_dict()["columns"]["t"]
     assert c["min_value"] == ["timestamp", "1970-01-01 00:00:00.000000001"]
     assert c["max_value"] == ["timestamp", "1970-01-01 00:00:00.000000005"]
+
+
+# ---- #319: a workbook source refuses the options it cannot use, and measures reference pairs --
+
+
+def _workbook(tmp_path) -> str:
+    openpyxl = pytest.importorskip("openpyxl")
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Data"
+    ws.append(["a", "b"])
+    for i in range(12):
+        ws.append([f"x{i % 3}", i])
+    path = tmp_path / "b.xlsx"
+    wb.save(path)
+    return str(path)
+
+
+@pytest.mark.parametrize(
+    "option",
+    [
+        {"version": 1},
+        {"as_of": "garbage"},
+        {"delimiter": ";"},
+        {"encoding": "latin-1"},
+        {"quotechar": "'"},
+        {"header": False},
+    ],
+)
+def test_a_workbook_refuses_the_options_it_cannot_use(tmp_path, option):
+    (name,) = option
+    with pytest.raises(ValueError, match=rf"\b{name}\b.*workbook"):
+        shape.profile(_workbook(tmp_path) + "#Data", **option)
+
+
+def test_a_workbook_sheet_measures_reference_pairs(tmp_path):
+    ref = pa.table({"a": ["x0", "x1"], "b": [0, 1]})
+    spec = [{"columns": ["a", "b"], "reference": ref}]
+    (pair,) = shape.profile(_workbook(tmp_path) + "#Data", reference_pairs=spec).to_dict()["joint"][
+        "reference_pairs"
+    ]
+    assert pair["rows"] == 12 and pair["mismatched"] == 10
+    with pytest.raises(FileNotFoundError, match="nonexistent"):
+        shape.profile(
+            _workbook(tmp_path) + "#Data",
+            reference_pairs=[{"columns": ["a", "b"], "reference": "/nonexistent.csv"}],
+        )
+    whole = shape.profile(_workbook(tmp_path), reference_pairs={"Data": spec}).to_dict()
+    assert whole["tables"]["Data"]["joint"]["reference_pairs"][0]["mismatched"] == 10
+
+
+# ---- #320: CSV files the baseline reads ---------------------------------------------------
+
+
+def test_a_trailing_delimiter_makes_the_first_field_the_index_as_in_the_baseline(kernel, tmp_path):
+    path = tmp_path / "t.csv"
+    path.write_text("a,b\n1,2,\n3,4,\n")
+    d = shape.profile(str(path)).to_dict()
+    assert d["row_count"] == 2 and list(d["columns"]) == ["a", "b"]
+    assert d["columns"]["a"]["dtype"] == "integer"
+    assert d["columns"]["a"]["min_value"] == ["int", 2] and d["columns"]["a"]["max_value"] == [
+        "int",
+        4,
+    ]
+    assert d["columns"]["b"]["null_count"] == 2
+
+
+def test_a_row_with_an_extra_field_later_in_the_file_is_still_refused(tmp_path):
+    path = tmp_path / "t.csv"
+    path.write_text("a,b\n1,2\n3,4,5\n")
+    with pytest.raises(pa.ArrowInvalid, match="Expected 2 columns, got 3"):
+        shape.profile(str(path))
+
+
+@pytest.mark.parametrize("text", ["a,b", "a,b\n", "a,b\r\n"])
+def test_a_header_only_csv_has_text_columns_and_no_rows(kernel, tmp_path, text):
+    path = tmp_path / "t.csv"
+    path.write_bytes(text.encode())
+    d = shape.profile(str(path)).to_dict()
+    assert d["row_count"] == 0 and list(d["columns"]) == ["a", "b"]
+    assert {c["dtype"] for c in d["columns"].values()} == {"string"}
+
+
+@pytest.mark.parametrize("digits", [39, 41, 76])
+def test_integers_wider_than_38_digits_are_float_as_in_the_baseline(kernel, tmp_path, digits):
+    big = int("9" * digits)
+    path = tmp_path / "t.csv"
+    path.write_text(f"a\n{big}\n1\n")
+    c = shape.profile(str(path)).to_dict()["columns"]["a"]
+    assert c["dtype"] == "float"
+    assert c["min_value"] == ["int", 1] and c["max_value"] == ["int", big]
+
+
+def test_integers_wider_than_76_digits_are_refused_naming_the_column(tmp_path):
+    path = tmp_path / "t.csv"
+    path.write_text("wide\n" + "9" * 77 + "\n1\n")
+    with pytest.raises(NotImplementedError, match="wide.*76 digits"):
+        shape.profile(str(path))
+
+
+# ---- #321: a folder of files with nothing in common is refused; the CLI compares sets ------
+
+
+def test_a_folder_of_files_with_no_column_in_common_is_refused(tmp_path):
+    (tmp_path / "x.csv").write_text("a,b\n1,2\n")
+    (tmp_path / "y.csv").write_text("c,d\n3,4\n")
+    with pytest.raises(ValueError, match=r"x\.csv.*y\.csv.*no column in common"):
+        shape.profile(str(tmp_path))
+
+
+def test_a_folder_of_files_with_the_same_columns_in_another_order_is_one_table(tmp_path, capsys):
+    from shape.cli.main import main
+
+    (tmp_path / "x.csv").write_text("a,b\n1,2\n")
+    (tmp_path / "y.csv").write_text("b,a\n3,4\n")
+    d = shape.profile(str(tmp_path)).to_dict()
+    assert d["row_count"] == 2 and d["columns"]["a"]["null_count"] == 0
+    assert main(["profile", str(tmp_path), "-o", str(tmp_path.parent / "o.shape")]) == 0
+
+
+def test_a_folder_of_jsonl_files_with_other_keys_is_refused_by_the_cli(tmp_path, capsys):
+    from shape.cli.main import main
+
+    folder = tmp_path / "j"
+    folder.mkdir()
+    (folder / "x.jsonl").write_text('{"a": 1}\n')
+    (folder / "y.jsonl").write_text('{"zz": "q"}\n')
+    assert main(["profile", str(folder), "-o", str(tmp_path / "o.shape")]) == 2
+    assert "do not share their columns" in capsys.readouterr().err
+    with pytest.raises(ValueError, match="no column in common"):
+        shape.profile(str(folder))
+
+
+# ---- #322: the engine document is strict JSON when a float column overflows ---------------
+
+
+@pytest.mark.parametrize("batch_size", [1 << 17, 7, 1])
+def test_the_engine_document_is_strict_json_when_moments_overflow(kernel, batch_size):
+    import json
+
+    from shape.profile.engine import profile as engine_profile
+
+    d = engine_profile(pa.table({"f": [1e308, -1e308, 0.0] * 100}), name="t", batch_size=batch_size)
+    json.dumps(d, allow_nan=False)
+    (col,) = d["tables"]["t"]["columns"]
+    for key in ("mean", "m2", "variance_population", "variance_sample"):
+        assert col[key] is None or math.isfinite(col[key])
+    assert col["m2"] is None and col["variance_sample"] is None
+
+
+# ---- #324: clear errors for unreadable inputs ----------------------------------------------
+
+
+def test_a_csv_that_is_not_utf8_says_to_pass_its_encoding(tmp_path):
+    path = tmp_path / "l.csv"
+    path.write_bytes("name\ncafé\n".encode("latin-1"))
+    with pytest.raises(ValueError, match=r"l\.csv.*not UTF-8.*encoding="):
+        shape.profile(str(path))
+    assert shape.profile(str(path), encoding="latin-1").to_dict()["row_count"] == 1
+
+
+def test_an_empty_csv_file_is_named(tmp_path):
+    path = tmp_path / "empty.csv"
+    path.write_bytes(b"")
+    with pytest.raises(ValueError, match=r"empty\.csv.*empty"):
+        shape.profile(str(path))
+
+
+def test_an_unknown_time_zone_is_named_as_unknown(kernel):
+    pytest.importorskip("zoneinfo").ZoneInfo("America/New_York")  # a database is present
+    t = pa.table({"t": pa.array([0, 1], pa.timestamp("us", tz="Mars/Base"))})
+    with pytest.raises(ValueError, match=r"unknown time zone 'Mars/Base'") as e:
+        shape.profile(t)
+    assert "tzdata" not in str(e.value)
+
+
+@pytest.mark.parametrize("raw", ["abc", "1.5", "-1", "0x2"])
+def test_profile_threads_must_be_a_positive_integer(monkeypatch, tmp_path, raw):
+    path = tmp_path / "t.csv"
+    path.write_text("a\n1\n")
+    monkeypatch.setenv("PROFILE_THREADS", raw)
+    with pytest.raises(
+        ValueError, match=rf"PROFILE_THREADS must be a positive integer, got '{raw}'"
+    ):
+        shape.profile(str(path))
+
+
+def test_profile_threads_one_does_not_change_the_process_thread_pools(monkeypatch, tmp_path):
+    path = tmp_path / "t.csv"
+    path.write_text("a\n1\n")
+    before = (pa.cpu_count(), pa.io_thread_count())
+    monkeypatch.setenv("PROFILE_THREADS", "1")
+    shape.profile(str(path))
+    assert (pa.cpu_count(), pa.io_thread_count()) == before
+
+
+def test_engine_threads_must_not_be_negative():
+    from shape.profile.engine import EngineOptions
+
+    with pytest.raises(ValueError, match="threads must be a non-negative integer"):
+        EngineOptions(threads=-1)
+
+
+def test_file_urls_and_home_paths_are_read(tmp_path, monkeypatch):
+    path = tmp_path / "x.csv"
+    path.write_text("a\n1\n2\n")
+    assert shape.profile(path.as_uri()).to_dict()["row_count"] == 2
+    monkeypatch.setenv("HOME", str(tmp_path))
+    assert shape.profile("~/x.csv").to_dict()["row_count"] == 2
+
+
+def test_an_empty_list_says_it_has_no_rows():
+    with pytest.raises(ValueError, match="empty list"):
+        shape.profile([])
+
+
+def test_a_long_quotechar_is_a_value_error(tmp_path):
+    path = tmp_path / "t.csv"
+    path.write_text("a\n1\n")
+    with pytest.raises(ValueError, match="quote character must be one character"):
+        shape.profile(str(path), quotechar="ab")
+
+
+def test_bytes_that_are_not_utf8_name_their_column(kernel):
+    t = pa.table({"blob": pa.array([b"\xff\xfe", b"ok"], pa.binary())})
+    with pytest.raises(ValueError, match="blob"):
+        shape.profile(t)
+
+
+# ---- #325: small correctness gaps ----------------------------------------------------------
+
+
+def test_cramers_v_ignores_categories_whose_rows_were_dropped(kernel):
+    from shape.profile.joint.measures import contingency, cramers_v
+
+    a = ["x", "y", "z"] * 10 + [f"q{i}" for i in range(1, 6)] * 2
+    b = ["p", "p", "r"] * 10 + [None] * 10
+    cats = list(dict.fromkeys(a))  # x, y, z first: the 30 complete rows use codes 0 to 2
+    ca = np.array([cats.index(v) for v in a])
+    bcats = ["p", "r"]
+    cb = np.array([-1 if v is None else bcats.index(v) for v in b])
+    full = cramers_v(contingency(ca, cb, len(cats), 2))
+    complete = cramers_v(contingency(ca[:30], cb[:30], 3, 2))
+    assert full == pytest.approx(complete)
+
+
+def test_a_dictionary_with_a_null_or_repeated_value_counts_right(kernel):
+    nulls = _col(pa.DictionaryArray.from_arrays(pa.array([0, 1, 0]), pa.array(["x", None])))
+    assert nulls["null_count"] == 1 and nulls["cardinality"] == 1
+    assert nulls["value_counts_ext"] == {"x": 1.0}
+    twice = _col(pa.DictionaryArray.from_arrays(pa.array([0, 1, 0, 1]), pa.array(["x", "x"])))
+    assert twice["cardinality"] == 1 and twice["value_counts_ext"] == {"x": 1.0}
+
+
+def test_a_long_duration_is_correlated(kernel):
+    t = pa.table({"d": pa.array([10**10, 1, 2], pa.duration("s")), "x": [1.0, 2.0, 3.5]})
+    m = shape.profile(t).to_dict()["correlation_matrix"]
+    assert m["d"]["x"] == round(-0.802955, 4)  # the baseline's (pandas) value, rounded as stored
+
+
+def test_profile_tables_are_copies(kernel):
+    p = shape.profile(pa.table({"a": [1, 2, 3]}), name="t")
+    p.tables[p.name]["row_count"] = 999
+    assert p.to_dict()["row_count"] == 3
+    ds = shape.profile({"t": pa.table({"a": [1, 2, 3]})})
+    ds.tables["t"]["row_count"] = 999
+    assert ds.to_dict()["tables"]["t"]["row_count"] == 3
+
+
+def test_the_delimiter_warning_points_at_the_callers_line(tmp_path):
+    path = tmp_path / "semi.csv"
+    path.write_text("a;b\n1;2\n")
+    with pytest.warns(UserWarning, match="delimiter") as rec:
+        shape.profile(str(path), delimiter=",")
+    assert rec[0].filename == __file__
+    with pytest.warns(UserWarning, match="delimiter") as rec:
+        shape.profile({"t": str(path)}, delimiter=",")
+    assert rec[0].filename == __file__
+
+
+def test_a_malformed_reference_pairs_spec_is_refused_before_profiling(monkeypatch):
+    import importlib
+
+    profile_mod = importlib.import_module("shape.profile.reference.profile")
+
+    def boom(*a, **k):
+        raise AssertionError("profiled before the spec was checked")
+
+    monkeypatch.setattr(profile_mod, "_profile_cols_table", boom)
+    t = pa.table({"a": [1, 2], "b": [3, 4]})
+    for bad, msg in (
+        ("zip", "list of"),
+        ([{"columns": ["a"]}], "reference"),
+        ([{"reference": "x"}], "columns"),
+        ([{"columns": ["a", "nope"], "reference": "x"}], "nope"),
+        ([{"columns": "a", "reference": "x"}], "list"),
+    ):
+        with pytest.raises(ValueError, match=msg):
+            shape.profile(t, reference_pairs=bad)
+
+
+# ---- #326: infer.py's date and datetime read the zone; the joint loop stops building views --
+
+
+@pytest.mark.parametrize(
+    ("hour_utc", "want"), [(5, "date"), (0, "datetime")]
+)  # New York midnight is 05:00 UTC in January
+def test_infer_reads_the_wall_clock_of_a_zoned_column(hour_utc, want):
+    from shape.profile.infer import infer_column_type
+
+    vals = [dt.datetime(2024, 1, d, hour_utc) for d in range(1, 6)]
+    arr = pa.array(vals, pa.timestamp("us")).cast(pa.timestamp("us", tz="America/New_York"))
+    assert infer_column_type(arr) == want
+    assert _col(arr)["dtype"] == want
+
+
+def test_the_joint_analysis_builds_no_view_for_a_column_it_cannot_use(monkeypatch):
+    from shape.profile.joint import analyze
+
+    built: list[str] = []
+    real = analyze._build_view
+
+    def counting(name, *a, **k):
+        built.append(name)
+        return real(name, *a, **k)
+
+    monkeypatch.setattr(analyze, "_build_view", counting)
+    cols = {f"t{i}": [f"v{(i + r) % 4}" for r in range(200)] for i in range(300)}
+    shape.profile(pa.table(cols))
+    assert len(built) == analyze.budget_for(200).max_columns
