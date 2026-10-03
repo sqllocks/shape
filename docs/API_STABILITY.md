@@ -69,3 +69,5 @@ A break needs a new major version. After an additive change, refresh the baselin
 
 The window of plugin API v1 applies (`docs/plugins/stability.md`): nothing is removed in 1.x. A
 deprecated member keeps working and raises a `DeprecationWarning` until the next major version.
+
+The Python API that `import shape` exports is documented, with its signatures, in `docs/API.md`.

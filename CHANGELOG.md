@@ -706,6 +706,12 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ### Fixed
 
+- Public Python API documentation (#264): every function `import shape` exports has a docstring
+  that matches what it does (`shape.generate` documents each input form, what it returns and the
+  arguments it ignores; `timeline`, `view`, `query`, `certify` and `plan` say what they read),
+  `view`, `timeline`, `certify` and `plan` declare their return class, `shape.types` passes
+  `mypy --strict`, and the new `docs/API.md` lists every exported name with the code's own
+  signature, checked by `tests/api/`.
 - `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references` no longer depends on test order (#77): it resolves the references in a fresh interpreter and reports which cloud SDK modules got imported, so `azure*` modules left in `sys.modules` by `tests/demo/fabric` cannot fail it.
 - Issue #76. The three tests that failed were not numpy-dependent: they called pyarrow in ways older
   releases reject (float16 from Python floats, `if_else` on half-float, hive partition inference on a
