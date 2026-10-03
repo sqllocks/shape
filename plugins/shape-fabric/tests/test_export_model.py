@@ -250,3 +250,57 @@ def test_a_table_without_measures_has_no_measures_key():
     schema = GenSchema.from_dict(_schema_doc("t"))
     plain = SemanticModelExporter().to_dict(schema, include_measures=False)
     assert "measures" not in plain["model"]["tables"][0]
+
+
+# --- measure names are unique across the model (#425) ---------------------------------------
+
+
+def _measure_names(model):
+    return [m["name"] for t in model["model"]["tables"] for m in t.get("measures", [])]
+
+
+def test_retail_measure_names_are_unique_across_the_model(run, tmp_path):
+    run("export-model", "retail", "-o", "m.bim")
+    model = bim(tmp_path / "m.bim")
+    names = _measure_names(model)
+    assert len({n.casefold() for n in names}) == len(names)
+    # product.unit_price and order_line.unit_price: each name carries its table
+    for t in ("product", "order_line"):
+        own = {m["name"] for m in table(model, t)["measures"]}
+        assert {f"Total Unit Price ({t})", f"Avg Unit Price ({t})"} <= own
+    assert "Total Unit Price" not in names and "Avg Unit Price" not in names
+
+
+def _two_tables(a_columns, b_columns):
+    def table_doc(name, columns):
+        cols = {"id": {"name": "id", "type": "integer", "generator": {"strategy": "sequence"}}}
+        for c in columns:
+            cols[c] = {"name": c, "type": "decimal", "generator": {"strategy": "sequence"}}
+        return {"name": name, "primary_key": ["id"], "columns": cols}
+
+    return {
+        "schema_version": 1,
+        "model": {"name": "t", "domain": "t", "seed": 1},
+        "tables": {"a": table_doc("a", a_columns), "b": table_doc("b", b_columns)},
+        "relationships": [],
+        "generation": {"scale": "small", "scales": {"small": {"a": 3, "b": 3}}},
+    }
+
+
+def test_only_measure_names_that_would_collide_are_qualified():
+    schema = GenSchema.from_dict(_two_tables(["price", "weight"], ["price", "cost"]))
+    model = SemanticModelExporter().to_dict(schema)
+    assert [m["name"] for m in table(model, "a")["measures"]] == [
+        "A Count", "Total Price (a)", "Avg Price (a)", "Total Weight", "Avg Weight",
+    ]  # fmt: skip
+    assert [m["name"] for m in table(model, "b")["measures"]] == [
+        "B Count", "Total Price (b)", "Avg Price (b)", "Total Cost", "Avg Cost",
+    ]  # fmt: skip
+    # the expressions are untouched: only the name changes
+    assert table(model, "a")["measures"][1]["expression"] == "SUM('a'[price])"
+
+
+def test_a_model_without_collisions_keeps_every_name_as_it_is():
+    schema = GenSchema.from_dict(_two_tables(["price"], ["cost"]))
+    names = _measure_names(SemanticModelExporter().to_dict(schema))
+    assert names == ["A Count", "Total Price", "Avg Price", "B Count", "Total Cost", "Avg Cost"]

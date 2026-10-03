@@ -42,7 +42,7 @@ from typing import Any
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
-from differences import ALLOWED, brand, unversion  # noqa: E402
+from differences import ALLOWED, brand, qualify_colliding_measures, unversion  # noqa: E402
 from paths import SHAPE_VENV, SPINDLE_ROOT, SPINDLE_VENV  # noqa: E402
 
 SPINDLE_PY = SPINDLE_VENV / "bin" / "python"
@@ -114,12 +114,15 @@ def diff(a: Any, b: Any, path: str = "") -> Problems:
 
 
 def compare_bim(base: Any, mine: Any) -> Problems:
-    """Equal except the model name and the generated_by annotation, which must be Shape's."""
+    """Equal except the model name and the generated_by annotation, which must be Shape's, and
+    a measure name the baseline repeats, which must carry its table (``colliding-measure-names``).
+    """
     base, mine = copy.deepcopy(base), copy.deepcopy(mine)
     problems: Problems = []
     if not re.fullmatch(r"Spindle[A-Z]\w*", base["name"]):
         problems.append(f"baseline model name {base['name']!r} is not the expected form")
     base["name"] = brand(base["name"])
+    qualify_colliding_measures(base["model"])
     base["model"]["annotations"] = [
         {**a, "value": brand(a["value"])} for a in base["model"]["annotations"]
     ]
@@ -676,6 +679,53 @@ def probe_quoting(tmp: Path) -> Problems:
     return problems
 
 
+def measure_names(model: Any) -> list[str]:
+    return [m["name"] for t in model["model"]["tables"] for m in t.get("measures", [])]
+
+
+def repeated(names: list[str]) -> set[str]:
+    folded = [n.casefold() for n in names]
+    return {n for n in names if folded.count(n.casefold()) > 1}
+
+
+def probe_measure_collisions(tmp: Path) -> Problems:
+    """The baseline repeats measure names (retail, and two tables with a ``price`` column);
+    Shape's names are unique, each repeated one is ``NAME (TABLE)``, and nothing else differs
+    (``compare_bim`` maps only the repeated names)."""
+    problems: Problems = []
+    cwd = tmp / "collide"
+    cwd.mkdir()
+    baseline(["export-model", "retail", "-o", "base.bim"], cwd)
+    shape(["export-model", "retail", "-o", "mine.bim"], cwd)
+    base = json.loads((cwd / "base.bim").read_text(encoding="utf-8"))
+    mine = json.loads((cwd / "mine.bim").read_text(encoding="utf-8"))
+    want = {"Total Unit Price", "Avg Unit Price"}
+    if repeated(measure_names(base)) != want:
+        problems.append(f"the baseline's repeated retail names are {repeated(measure_names(base))}")
+    if repeated(measure_names(mine)):
+        problems.append(f"shape repeats retail names {repeated(measure_names(mine))}")
+    for name in want:
+        for table in ("product", "order_line"):
+            if f"{name} ({table})" not in measure_names(mine):
+                problems.append(f"shape has no measure {name} ({table})")
+    problems += [f"[retail] {p}" for p in compare_bim(base, mine)]
+    # the library: the owner table gets a price column too
+    doc = synthetic_doc()
+    doc["tables"]["owner"]["columns"]["price"] = {
+        "name": "price",
+        "type": "decimal",
+        "generator": {"strategy": "sequence"},
+    }
+    base = baseline_bim(doc, "lakehouse", "Src", True, "gen", tmp)
+    mine = shape_bim(doc, "lakehouse", "Src", True, "gen")
+    if repeated(measure_names(base)) != {"Total Price", "Avg Price"}:
+        problems.append(f"the baseline's repeated names are {repeated(measure_names(base))}")
+    if repeated(measure_names(mine)):
+        problems.append(f"shape repeats names {repeated(measure_names(mine))}")
+    problems += [f"[library] {p}" for p in compare_bim(base, mine)]
+    return problems
+
+
 def probe_notebook_part(tmp: Path) -> Problems:
     b = baseline_json("baseline_rest.py", ["deploy", "retail", "--workspace", "Demo"])
     s = shape_conversation("deploy-notebook", ["retail", "--workspace", "Demo"])
@@ -823,6 +873,45 @@ def negative_control(tmp: Path) -> Problems:
     flagged("a key flag removed", lambda d: [c.pop("isKey", None) for c in first(d)["columns"]])
     flagged("the model name changed", lambda d: d.update(name="Other"))
 
+    # colliding-measure-names: only a name the baseline repeats may change, and only to NAME (TABLE)
+    def measure(d: dict[str, Any], table: str, name: str) -> dict[str, Any]:
+        t = next(t for t in d["model"]["tables"] if t["name"] == table)
+        return next(m for m in t["measures"] if m["name"] == name)
+
+    if "Total Unit Price (product)" not in measure_names(mine):
+        raise RunError("the colliding-measure-names control needs the qualified retail names")
+    flagged(
+        "a measure that collides with none renamed",
+        lambda d: measure(d, "customer", "Customer Count").update(name="Customers"),
+    )
+    flagged(
+        "a measure that collides with none qualified with its table",
+        lambda d: measure(d, "customer", "Customer Count").update(name="Customer Count (customer)"),
+    )
+
+    def rename_a_lone_total(d: dict[str, Any]) -> None:
+        lone = next(
+            m
+            for t in d["model"]["tables"]
+            for m in t.get("measures", [])
+            if m["name"].startswith("Total ") and "(" not in m["name"]
+        )
+        lone["name"] += " (renamed)"
+
+    flagged("a non-colliding Total measure renamed", rename_a_lone_total)
+    flagged(
+        "a colliding measure left unqualified",
+        lambda d: measure(d, "product", "Total Unit Price (product)").update(
+            name="Total Unit Price"
+        ),
+    )
+    flagged(
+        "a colliding measure qualified with another table",
+        lambda d: measure(d, "product", "Total Unit Price (product)").update(
+            name="Total Unit Price (order_line)"
+        ),
+    )
+
     # the manifest comparison
     pdir = tmp / "nc-pub"
     pdir.mkdir()
@@ -927,6 +1016,7 @@ CHECKS: tuple[tuple[str, Callable[[Path], Problems]], ...] = (
     ("publish: landing zone, manifest and report for each format; dry run", check_publish),
     ("wrong command lines fail in both (Shape: exit 2)", check_exit_codes),
     ("probe: M and DAX quoting", probe_quoting),
+    ("probe: repeated measure names are qualified", probe_measure_collisions),
     ("probe: the notebook part path", probe_notebook_part),
     ("probe: a 202 is not 'created'", probe_accepted),
     ("probe: workspace listing pages", probe_pagination),

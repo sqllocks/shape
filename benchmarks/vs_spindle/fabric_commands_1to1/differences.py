@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -40,6 +41,20 @@ def brand(text: str) -> str:
     return text
 
 
+def qualify_colliding_measures(model: dict[str, Any]) -> None:
+    """The ``colliding-measure-names`` entry, applied in place to the baseline's TOM model.
+
+    A measure whose name another measure of the model shares (names compared case-blind, as
+    Tabular compares them) becomes ``NAME (TABLE)``; every other name is left exactly as it is.
+    """
+    names = [m["name"].casefold() for t in model["tables"] for m in t.get("measures", [])]
+    shared = {n for n in names if names.count(n) > 1}
+    for table in model["tables"]:
+        for measure in table.get("measures", []):
+            if measure["name"].casefold() in shared:
+                measure["name"] = f"{measure['name']} ({table['name']})"
+
+
 def unversion(text: str) -> str:
     """``text`` with any ``Shape vX.Y.Z`` made ``Shape vVERSION``."""
     text = re.sub(r"Shape v\d+\.\d+\.\d+\S*", "Shape vVERSION", text)
@@ -53,6 +68,17 @@ ALLOWED: tuple[Difference, ...] = (
         "the model is named for Shape (ShapeRetail, annotation generated_by 'Shape vX'); the "
         "content is otherwise equal, table by table, column by column, measure by measure",
         "export-model rows and the library rows of verify.py",
+    ),
+    Difference(
+        "colliding-measure-names",
+        "export-model",
+        "the baseline names a measure 'Total <Column>' or 'Avg <Column>' without its table, so two "
+        "tables with a column of the same name give two measures one name, and a Tabular model "
+        "with a repeated measure name cannot be deployed (retail: product.unit_price and "
+        "order_line.unit_price). Shape qualifies a name with its table, 'NAME (TABLE)', only when "
+        "another measure of the model would share it; every other measure name is equal "
+        "(owner approval 2026-10-03, issue #425)",
+        "probe_measure_collisions and qualify_colliding_measures in compare_bim",
     ),
     Difference(
         "m-and-dax-quoting",

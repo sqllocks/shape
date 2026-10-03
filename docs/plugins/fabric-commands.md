@@ -81,7 +81,9 @@ Writes a Tabular Object Model document (compatibility level 1604): typed columns
 one Power Query partition per table for the source (`--source-type lakehouse|warehouse|sql_database`,
 `--source-name`, `--schema-name` for the SQL sources) and DAX measures (`--include-measures`, the
 default, or `--no-measures`): a row count per table, a total and an average per decimal or float
-column, a total per other integer column. `-s/--scale` is accepted for the command line's sake and
+column, a total per other integer column. Measure names are unique across the model, as Tabular
+requires: a name that two measures would share is qualified with its table (`Total Unit Price
+(product)` and `Total Unit Price (order_line)` in retail); every other name is kept. `-s/--scale` is accepted for the command line's sake and
 does not change the model. `-m/--mode 3nf|star` picks the domain's schema. Names that reach M or
 DAX are quoted. Open the file in Tabular Editor or deploy it through the XMLA endpoint.
 

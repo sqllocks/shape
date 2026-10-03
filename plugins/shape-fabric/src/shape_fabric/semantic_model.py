@@ -6,6 +6,10 @@ Warehouse or SQL Database source, and DAX measures (a row count for every table,
 average for each decimal or float column, a total for each other integer column). Standard
 library only.
 
+A measure name is unique across the model, as Tabular requires: a name that two measures would
+share (``Total Unit Price`` for ``product.unit_price`` and ``order_line.unit_price``) is qualified
+with its table, ``Total Unit Price (product)``; every other name is left as it is.
+
     exporter = SemanticModelExporter()
     exporter.export_bim(schema, source_type="lakehouse", output_path="retail.bim")
 
@@ -88,6 +92,22 @@ def _sql(server: str, database: str, schema: str, table: str) -> str:
     )
 
 
+def _qualify_shared_measure_names(tables: list[dict[str, Any]]) -> None:
+    """Give each measure whose name another measure of the model shares the name ``NAME (TABLE)``.
+
+    Names are compared case-blind, as Tabular compares them; a name no other measure has is kept.
+    """
+    counts: dict[str, int] = {}
+    for table in tables:
+        for measure in table.get("measures", []):
+            key = measure["name"].casefold()
+            counts[key] = counts.get(key, 0) + 1
+    for table in tables:
+        for measure in table.get("measures", []):
+            if counts[measure["name"].casefold()] > 1:
+                measure["name"] = f"{measure['name']} ({table['name']})"
+
+
 class SemanticModelExporter:
     """Export a :class:`~shape.generation.schema.GenSchema` as a Power BI ``.bim`` model."""
 
@@ -130,15 +150,17 @@ class SemanticModelExporter:
         from shape import __version__
 
         domain = schema.model.domain
+        tables = [
+            self._table(tdef, source_type, source_name, schema_name, include_measures)
+            for tdef in schema.tables.values()
+        ]
+        _qualify_shared_measure_names(tables)
         return {
             "name": f"Shape{domain.replace('_', ' ').title().replace(' ', '')}",
             "compatibilityLevel": COMPATIBILITY_LEVEL,
             "model": {
                 "culture": schema.model.locale.replace("_", "-"),
-                "tables": [
-                    self._table(tdef, source_type, source_name, schema_name, include_measures)
-                    for tdef in schema.tables.values()
-                ],
+                "tables": tables,
                 "relationships": [self._relationship(r) for r in schema.relationships],
                 "roles": [],
                 "annotations": [

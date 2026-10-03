@@ -5,6 +5,10 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `shape export-model`: measure names are unique across the model, so the model deploys. A name
+  that two measures would share (retail: `Total Unit Price` and `Avg Unit Price`, from
+  `product.unit_price` and `order_line.unit_price`) is qualified with its table, for example
+  `Total Unit Price (product)`; every other name is unchanged (#425).
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
