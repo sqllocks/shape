@@ -37,9 +37,29 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   (the profile is still written); `--fail-on-empty` exits 2 instead and writes nothing. A Delta
   table with deletion vectors or column mapping is read with DuckDB (extra `delta-fallback`) and
   says so on stderr; see the README.
-- `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles.
-- `shape inspect ARTIFACT.shape` prints what an artifact holds, a profile or a model. `shape show`
-  is an alias of `shape inspect`.
+- `shape profile` can profile a sample: `--sample N|P%` (N rows or P% of them; nothing is sampled
+  without it), `--sample-method random|systematic|head` (default `random`) and `--sample-seed S`
+  (default 42). The profile records the sample and its adequacy, and `shape profile` prints
+  `shape: note: profiled a random sample of N of M rows (seed S)` to stderr (one line per table
+  with `--dataset`); an invalid value (0 rows, a percentage outside 0 to 100, an unknown method)
+  exits 2. `--decisions DECISIONS.json` reads the accepted `type` decisions of a decision file as
+  `--types` (a `--types` file wins for a column both name). See
+  [PROFILING_NOTES.md](PROFILING_NOTES.md#sampling).
+- `shape types PROFILE.shape [--contract CONTRACT.json] [--min-confidence C] [--json]` lists the
+  columns whose declared, inferred or contract types disagree: a declared `string` that holds
+  integers or ISO dates, a `float` that holds whole numbers, an `integer` the identifier rule
+  calls a suspect, an inferred type that fewer than `C` (default 0.99) of the values fit, and a
+  contract `dtype` that differs from the profile's. Each line names the table, the column, both
+  types, the confidence and the option that would change it (`--types`, `--string-columns`). Exit
+  0 with no findings, 1 with findings, 2 for bad input; `--json` prints the findings as a list
+  (the same as `shape.types_report(profile, contract, min_confidence)`). See
+  [PROFILING_NOTES.md](PROFILING_NOTES.md#type-inference).
+- `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles. `shape diff`
+  adds `notes` to its result when the two profiles were sampled differently, and compares
+  `row_count_change` on the sources' row counts (`population_rows`) when both profiles state them.
+- `shape inspect ARTIFACT.shape` prints what an artifact holds, a profile or a model (for a
+  profile, its sampling record per table: how many rows it saw, or `not recorded` for a profile
+  written by an older Shape). `shape show` is an alias of `shape inspect`.
 - `shape capture SRC` reads everything `shape profile` reads (CSV, Parquet, JSONL, a folder or
   glob, a Delta table with `--version N` or `--as-of TIMESTAMP`, an `abfss://` source) and writes a
   **model** (JSON, or a model `.shape` with `-o OUT.shape`), which `shape query`,

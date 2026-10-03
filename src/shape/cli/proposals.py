@@ -17,7 +17,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
-_KINDS = ("relationship", "pii", "semantic")  # shape.proposals.KINDS; a test keeps them equal
+_KINDS = (
+    "relationship",
+    "pii",
+    "semantic",
+    "type",
+)  # shape.proposals.KINDS; a test keeps them equal
+_DEFAULT_KINDS = ("relationship", "pii", "semantic")  # shape.proposals.DEFAULT_KINDS
 _VERBS = {"accept": "accepted", "reject": "rejected", "defer": "deferred"}
 
 
@@ -52,8 +58,9 @@ def add_arguments(sub: Any) -> None:
     )
     pr.add_argument(
         "--kinds",
-        default=",".join(KINDS),
-        help=f"comma-separated kinds to propose (default {','.join(KINDS)})",
+        default=",".join(_DEFAULT_KINDS),
+        help=f"comma-separated kinds to propose, from {','.join(KINDS)} "
+        f"(default {','.join(_DEFAULT_KINDS)}; `type` is asked for)",
     )
     pr.add_argument("--min-confidence", type=float, default=0.5, metavar="C")
     pr.add_argument(

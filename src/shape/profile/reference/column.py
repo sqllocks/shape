@@ -22,7 +22,13 @@ from shape.kernel.reference.exact import lerp as _lerp
 from shape.kernel.reference.exact import linear_index as _linear_index
 from shape.profile.fitting import detect_distribution as _kernel_detect_distribution
 
-from . import dtparse
+from ..sampling import (
+    FIT_SAMPLE_ROWS,
+    PATTERN_SAMPLE_ROWS,
+    PATTERN_SAMPLE_SEED,
+    RATES_SAMPLE_ROWS,
+)
+from . import dtparse, typeinfer
 from .model import ColumnProfile, Timedelta, Timestamp
 from .readers import _Col
 
@@ -97,7 +103,9 @@ def _pattern_sample(n: int) -> np.ndarray:
 def _pattern_sample_cached(n: int) -> np.ndarray:
     """The 1000 row positions sampled for pattern detection (the same for every column of n rows:
     drawing them permutes all n positions, which costs more than the detection itself)."""
-    idx: np.ndarray = np.random.RandomState(42).choice(n, size=1000, replace=False)
+    idx: np.ndarray = np.random.RandomState(PATTERN_SAMPLE_SEED).choice(
+        n, size=PATTERN_SAMPLE_ROWS, replace=False
+    )
     idx.setflags(write=False)
     return idx
 
@@ -108,7 +116,7 @@ def detect_pattern(non_null: pa.Array, cardinality: int) -> str | None:
     if n == 0:
         return None
     sample = non_null
-    if n > 1000:
+    if n > PATTERN_SAMPLE_ROWS:
         sample = non_null.take(pa.array(_pattern_sample(n)))
     total = len(sample)
     thr = 0.9
@@ -142,6 +150,8 @@ def detect_pattern(non_null: pa.Array, cardinality: int) -> str | None:
     return None
 
 
+_RATE_MAX_DISTINCT = RATES_SAMPLE_ROWS
+
 # Rates of personal-data patterns (#2). ``pattern`` is one label gated at 90% of a 1,000-row
 # sample, so a column where 4% of the values are SSNs reports nothing. These rates are measured
 # on every distinct value (weighted by its count), up to ``_RATE_MAX_DISTINCT`` of them; beyond
@@ -160,7 +170,6 @@ _CONTAINS_RE = {
 }
 _CONTAINS_NEEDS = {"ssn": "-", "email": "@"}
 _CARD_RUN = re.compile(r"\d(?:[ -]?\d){12,18}")
-_RATE_MAX_DISTINCT = 50_000
 
 
 def _luhn(digits: str) -> bool:
@@ -614,7 +623,10 @@ def _profile_object_column(c: _Col, row_count: int, top_n: int = 500) -> _Work:
                 (_timedelta(lo), _timedelta(hi)) if kind == "objdur" else (lo, hi)
             )
     pattern = string_length = None
+    samples: list[str] = []
     if stype == "string" and n_nn:
+        if n_nn > PATTERN_SAMPLE_ROWS:
+            samples.append("pattern_detection")
         pattern = detect_pattern(pa.array(text, pa.string()), cardinality)
         lens = np.array([len(t) for t in text], dtype=np.float64)
         string_length = {
@@ -651,6 +663,14 @@ def _profile_object_column(c: _Col, row_count: int, top_n: int = 500) -> _Work:
         fit_score=base.fit_score if base else None,
         precision=c.arr.type.precision if kind == "objdec" else None,
         scale=c.arr.type.scale if kind == "objdec" else None,
+    )
+    prof.samples = samples
+    prof.type_inference = typeinfer.build(
+        c,
+        prof,
+        row_count,
+        pa.array(ukeys, pa.string()) if kind == "cat" else None,
+        np.array([n for _, n in entries], dtype=np.int64) if kind == "cat" else None,
     )
     return _Work(col=c, prof=prof, uniques=pa.array(ukeys, pa.string()))
 
@@ -883,6 +903,7 @@ def _profile_column(
             min_value, max_value = lo, hi
 
     # ---- numeric stats / distribution / quantiles ---------------------------
+    samples: list[str] = []  # analyses of this column that drew a sample (see sampling.INTERNAL)
     mean_val = std_val = None
     dist_name = dist_params = None
     quantiles = None
@@ -898,6 +919,8 @@ def _profile_column(
         mean_val, std_val = st["mean"], st["std"]
         if cnt < 2:
             std_val = None  # a spread needs two values; NaN would not be valid JSON (#22)
+        if cnt > FIT_SAMPLE_ROWS:
+            samples.append("distribution_fit")
         fitted = _kernel_detect_distribution(numeric)
         dist_name, dist_params = fitted["distribution"], fitted["distribution_params"]
         fit_score_val = fitted["fit_score"]
@@ -914,8 +937,12 @@ def _profile_column(
     rates: dict[str, float] = {}
     contains: dict[str, float] = {}
     if stype == "string" and n_nn:
+        if n_nn > PATTERN_SAMPLE_ROWS:
+            samples.append("pattern_detection")
         pattern = detect_pattern(non_null, cardinality)
         if kind == "str":
+            if len(uniq) > _RATE_MAX_DISTINCT:
+                samples.append("pattern_rates")
             rates, contains = pattern_rates(uniq, counts, n_nn, pattern)
         lens = pc.utf8_length(non_null).to_numpy()
         string_length = {
@@ -988,6 +1015,11 @@ def _profile_column(
         inf_count=inf_count,
         pattern_rates=rates or None,
         pattern_contains_rates=contains or None,
+    )
+    prof.samples = samples
+    text_values = kind == "str" and n_nn > 0
+    prof.type_inference = typeinfer.build(
+        c, prof, row_count, uniq if text_values else None, counts if text_values else None
     )
     return _Work(col=c, prof=prof, uniques=uniq if (keep_uniques or num_top is None) else None)
 

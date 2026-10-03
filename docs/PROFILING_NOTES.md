@@ -1,7 +1,7 @@
 # Profiling notes: inputs, odd values and size
 
-What `shape profile` (and `shape.profile`) does with CSV files, non-finite numbers, decimals, time zones and large
-inputs. Each statement here has a test in `tests/profile/test_profile_issues.py`.
+What `shape profile` (and `shape.profile`) does with CSV files, non-finite numbers, decimals, time zones, large
+inputs, sampling and column types. Each statement here has a test in `tests/profile/test_profile_issues.py`.
 
 ## CSV files
 
@@ -110,3 +110,135 @@ with the table; it is on for a single table and off for a dataset (several table
 the call does not. `--reference-pair COLS=REFERENCE` checks
 that columns hold real combinations against a reference file.
 
+
+## Sampling
+
+A profile says how much of the data it saw. Nothing is sampled unless you ask, and every table's profile records what was
+done, whether you asked or not.
+
+```bash
+shape profile orders.csv -o orders.shape --sample 100000                       # 100,000 rows
+shape profile orders.csv -o orders.shape --sample 10% --sample-method systematic --sample-seed 7
+shape profile data/ --dataset -o shop.shape --sample 20%                       # each table
+```
+
+```python
+shape.profile("orders.csv", sample=100_000)                       # an int is a number of rows
+shape.profile("orders.csv", sample=0.1, sample_method="head")     # a float above 0 and up to 1 is a fraction
+shape.profile(frame, sample="10%", sample_seed=7)
+```
+
+| Method | The rows |
+|---|---|
+| `random` (default) | a uniform sample without replacement: numpy's legacy `RandomState(seed).choice`, then sorted, so the rows keep their order |
+| `systematic` | `k` rows evenly spread with a step of `N / k` (every step-th row; the step need not be whole) from a seeded random start |
+| `head` | the first `k` rows (the seed has no effect) |
+
+The seed is 42 unless you give one, and it is recorded. The rows depend on nothing else: the same rows are chosen on every
+run, in both kernel modes (`SHAPE_KERNEL=rust` and `python`), and for a file, a folder, a glob, a Delta table (with
+`version` or `as_of`), an Arrow table and a data frame; the position is counted in the order the source reads back (a folder
+is its files in name order). An invalid value (0 rows, a fraction outside (0, 1], an unknown method, a seed outside
+0 to 4294967295) is an input error (exit 2). Asking for as many rows as the table has, or more, reads it whole.
+The table is read whole before it is sampled: sampling cuts the work of the statistics, not the read.
+
+With `--dataset` (or a dict of tables) each table is sampled on its own. Foreign keys are detected on the sampled child
+rows against the parent's whole key column, because independent samples of a parent and a child share few keys and
+would hide a relationship that is there. A reference-pair check (`--reference-pair`) always reads the whole table.
+
+### The sampling record
+
+Every table profile has `sampling`:
+
+| Key | Meaning |
+|---|---|
+| `method` | `random`, `systematic`, `head`, or `none` when the whole table was read |
+| `seed` | the seed of a sampled profile, else `null` |
+| `requested` | what was asked for: `{"rows": N}` or `{"fraction": F}`, else `null` |
+| `population_rows` | the rows the source had (exact: the source is read whole before it is sampled) |
+| `sampled_rows` | the rows profiled; `row_count` is the same number |
+| `internal` | the samples the statistics take of their own, below |
+| `adequacy`, `adequacy_reason` | `adequate`, `limited` or `insufficient`, and why |
+
+`shape profile` prints `shape: note: profiled a random sample of 100000 of 2500000 rows (seed 42)` to stderr when
+`--sample` is given (one line per table of a dataset, ending `, table NAME`), and never otherwise. `shape show` prints the
+record per table (`not recorded` for a profile written by an older Shape), the `--json` summary and the HTML report carry
+it, and `shape diff` adds a note to its result (`notes` in `--json`, present only when there is one) when the two profiles
+were sampled by different methods, or one was sampled and the other not. `row_count_change` compares the sources'
+`population_rows` when both profiles state it, not the sizes of their samples.
+
+### Adequacy
+
+Each column has `adequacy`:
+
+* `non_null`: the values seen;
+* `null_rate_se`: the standard error of the null rate, `sqrt(p (1 - p) / n)` with `n` the rows profiled, times the finite
+  population correction `sqrt((N - n) / (N - 1))` when the source's `N` rows are known; 0 when every row was read;
+* `min_detectable_share`: `1 - 0.05^(1/n)` over the column's `non_null` values: the smallest share a value needs to be
+  seen at least once with 95% probability.
+
+The table's `sampling.adequacy` follows from the rows profiled `n` (a table read whole counts too: exact about its rows,
+it says little about values it has not got):
+
+| Level | When |
+|---|---|
+| `insufficient` | fewer than 30 rows (the drift engine's `min_rows`) |
+| `limited` | `min_detectable_share(n)` is above 0.01: from 30 to 298 rows, a value must be more than 1% of the rows to be seen |
+| `adequate` | otherwise (299 rows or more) |
+
+### Internal samples
+
+Some statistics sample inside themselves, whatever you asked for. The record lists the ones the profile's statistics used:
+
+| `analysis` | When | Rows, method, seed |
+|---|---|---|
+| `pattern_detection` | a string column of more than 1,000 values | 1,000, `random`, 42 |
+| `pattern_rates` | a string column of more than 50,000 distinct values | 50,000 distinct values, `systematic`, no seed |
+| `distribution_fit` | a numeric column of more than 2,000 values | 2,000, `random`, 42 |
+| `joint` | a table of more than 20,000 rows | 5,000 rows, `systematic` with a seeded offset in each stride (seed 7) |
+| `kendall_tau` | a numeric association of more than 500 rows | 500, `systematic`, no seed |
+| `reference_pairs` | a reference-pair check on more than a million rows | 1,000,000, `systematic`, no seed |
+
+Each entry has `analysis`, `rows`, `method`, `seed` and, for the column analyses, the `columns` it applied to. The
+statistics of a sampled table sample inside the rows that were kept. A test fails when a code path draws a sample that is not
+registered here (`shape.profile.sampling.INTERNAL`).
+
+## Type inference
+
+Every column has `type_inference`: where its type came from and how well the values fit it.
+
+| Key | Meaning |
+|---|---|
+| `type` | the profile's `dtype` |
+| `source` | `declared` (a typed source: Parquet, Delta, Excel, an Arrow table, a data frame), `inferred` (CSV, JSON, text, Python values), `option` (`--types`, `--string-columns`, `--infer-types off`) or `identifier_rule` (a column the identifier rule kept as text) |
+| `confidence` | the share of non-null values that parse as `type`; 1.0 for `option`; `null` for no values |
+| `parse_shares` | the share of non-null values that parse as each of `integer`, `float`, `boolean`, `date`, `datetime` |
+| `identifier` | the identifier rule's reason (why it kept the column as text, or why an integer column is only a suspect), else `null` |
+| `declared`, `inferred` | for a `declared` column: its declared type, and the narrowest type every value parses as |
+| `candidate` | for an inferred text column that is mostly one narrower type: that type (the `confidence` is then its share) |
+
+The shares are exact: counted over the distinct values weighted by their counts for text, over the values for numbers and
+timestamps. Integers parse as floats; `integer` also counts a float that is a whole number; `boolean` is the six words
+`true false yes no 0 1` in any case; `date` is an ISO `YYYY-MM-DD` that is a real date; `datetime` is ISO 8601 with an
+optional time and zone. The profiler types text as numbers, booleans or datetimes only when every value parses (its own
+rules for dates are wider than ISO), so such a column has confidence 1.0.
+
+A column that is 97% integers with 3% stray text is not an integer to the reader: its type is `string`, its `confidence` is
+0.97, its `candidate` is `integer` and `parse_shares.integer` is 0.97. `shape types` reports it.
+
+### `shape types`
+
+`shape types PROFILE.shape [--contract CONTRACT.json] [--min-confidence C] [--json]` lists the columns whose types need a
+second look, with the table, the column, both types, the confidence and the option that would change it (`--types`,
+`--string-columns`); exit 0 with no findings, 1 with findings, 2 for bad input. `shape.types_report(profile, contract=None,
+min_confidence=0.99)` returns the same as a list of dicts. The findings:
+
+* `declared_differs`: a `string` that holds integers, floats, booleans, dates or datetimes, or a `float` that holds whole
+  numbers;
+* `identifier_suspect`: an integer column the identifier rule calls a suspect (every value has five or more digits, or its
+  name says it holds identifiers), or would have kept as text;
+* `low_confidence`: a type inferred from text with a `confidence` below `C` (default 0.99, strict: a column at exactly `C`
+  is not reported);
+* `contract_differs`: a column whose contract `dtype` differs from the profile's.
+
+A profile written before type inference was recorded has no `type_inference`: `shape types` says so on stderr and compares
+only the contract. The findings become `type` proposals with `shape proposals propose --kinds type` (`docs/PROPOSALS.md`).

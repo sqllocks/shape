@@ -5,9 +5,9 @@ from __future__ import annotations
 import os
 import re
 import warnings
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -81,6 +81,10 @@ PANDAS_NA = [
 
 
 TEXT_MARK = b"shape.keep_text"  # field metadata: the CSV reader fixed this column as text
+# field metadata of a CSV column: where its type came from (``option``, ``identifier_rule``) and the
+# identifier rule's reason (the rule that kept it as text, or why an integer column is a suspect)
+SOURCE_MARK = b"shape.type_source"
+IDENTIFIER_MARK = b"shape.identifier"
 
 
 @dataclass
@@ -95,6 +99,12 @@ class _Col:
     # ``string_columns``, an Excel cell stored as text): its digits are not re-typed as numbers,
     # dates or booleans by the profiler's own detectors, so ZIP codes keep their leading zeros.
     text: bool = False
+    # Where the column's type came from (W2-07): ``declared`` (a typed source: Parquet, Delta,
+    # Arrow, a data frame), ``inferred`` (CSV, JSON, text), ``option`` (``--types``,
+    # ``--string-columns``, ``--infer-types off``) or ``identifier_rule``.
+    type_source: str = "declared"
+    declared: str | None = None  # a declared column's type as the profile names types
+    identifier: str | None = None  # the identifier rule's reason (see ``shape.io.identifiers``)
 
 
 def _is_string_view(typ: pa.DataType) -> bool:
@@ -153,17 +163,57 @@ def _csv_cols(t: pa.Table) -> list[_Col]:
         else:
             out.append(_Col(name, "str", pc.cast(col, pa.string()) if typ != pa.string() else col))
     for i, c in enumerate(out):
-        if (
-            c.kind == "str"
-            and t.schema.field(i).metadata
-            and TEXT_MARK in t.schema.field(i).metadata
-        ):
+        meta = t.schema.field(i).metadata or {}
+        c.type_source = "inferred"
+        if c.kind == "str" and TEXT_MARK in meta:
             c.text = True
+        if SOURCE_MARK in meta:
+            c.type_source = meta[SOURCE_MARK].decode()
+        if IDENTIFIER_MARK in meta:
+            c.identifier = meta[IDENTIFIER_MARK].decode()
     return out
+
+
+def declared_name(typ: pa.DataType) -> str:
+    """An Arrow type as the profile names types: ``string``, ``integer``, ``float``, ``boolean``,
+    ``date``, ``datetime`` (``decimal``, ``time``, ``binary``, ``duration``, ``null`` and
+    ``other`` for the rest)."""
+    if pa.types.is_dictionary(typ):
+        return declared_name(typ.value_type)
+    if pa.types.is_integer(typ):
+        return "integer"
+    if pa.types.is_floating(typ):
+        return "float"
+    if pa.types.is_boolean(typ):
+        return "boolean"
+    if pa.types.is_timestamp(typ):
+        return "datetime"
+    if pa.types.is_date(typ):
+        return "date"
+    if pa.types.is_decimal(typ):
+        return "decimal"
+    if pa.types.is_time(typ):
+        return "time"
+    if pa.types.is_duration(typ):
+        return "duration"
+    if pa.types.is_null(typ):
+        return "null"
+    if pa.types.is_large_string(typ) or pa.types.is_string(typ) or _is_string_view(typ):
+        return "string"
+    if pa.types.is_binary(typ) or pa.types.is_large_binary(typ):
+        return "binary"
+    return "other"
 
 
 def _arrow_cols(t: pa.Table) -> list[_Col]:
     """pa.Table -> pandas semantics of Table.to_pandas() / pd.read_parquet()."""
+    cols = _arrow_cols_untyped(t)
+    for c, typ in zip(cols, t.schema.types, strict=True):
+        c.declared = declared_name(typ)
+    return cols
+
+
+def _arrow_cols_untyped(t: pa.Table) -> list[_Col]:
     out = []
     for name, col in zip(t.column_names, t.columns, strict=True):
         typ = col.type
@@ -240,6 +290,17 @@ class CsvFormat:
     types: tuple[tuple[str, str], ...] = ()
     # "auto": integer columns that hold identifiers stay text; "off": every column is text.
     infer_types: str = "auto"
+    # ``(table, column, type)``: types for the columns of one table (accepted ``type`` decisions,
+    # ``shape profile --decisions``); ``types`` wins when both name a column.
+    table_types: tuple[tuple[str, str, str], ...] = ()
+
+    def for_table(self, table: str) -> CsvFormat:
+        """This format with the types decided for ``table`` added to ``types``."""
+        named = {c for c, _ in self.types}
+        extra = tuple((c, t) for tb, c, t in self.table_types if tb == table and c not in named)
+        if not extra:
+            return self
+        return replace(self, types=self.types + extra)
 
 
 def _csv_options(path: str | Path, fmt: CsvFormat | None) -> tuple[CsvFormat, Any]:
@@ -264,7 +325,7 @@ def read_csv_detect(
     threads: int | None = None,
     fmt: CsvFormat | None = None,
     *,
-    force_text: Iterable[str] = (),
+    force_text: Iterable[str] | Mapping[str, str] = (),
     warn: bool = False,
 ) -> tuple[pa.Table, dict[str, str]]:
     """The CSV as an Arrow table, and ``{column: reason}`` for the integer columns that hold
@@ -337,10 +398,28 @@ def read_csv_detect(
     table = _mixed_chunk_columns(_refine_integers(path, table, ro, po, co))
     declared = {n for n, t in f.types if pa.types.is_string(resolve_type(t))}
     marked = ({*f.string_columns, *force_text, *declared} | set(found)) & set(table.column_names)
+    # where each column's type came from (``shape.profile`` reports it as ``type_inference``):
+    # an option the caller gave beats the identifier rule, which beats plain inference
+    options = (
+        set(table.column_names) if f.infer_types == "off" else {*f.string_columns, *dict(f.types)}
+    )
+    forced = dict(force_text) if isinstance(force_text, Mapping) else dict.fromkeys(force_text, "")
+    reasons = {s.column: s.reason for s in suspects} | forced | found
+    meta: dict[str, dict[bytes, bytes]] = {n: {} for n in table.column_names}
     for name in marked:
-        i = table.schema.get_field_index(name)
-        field = pa.field(name, table.schema.field(i).type, metadata={TEXT_MARK: b"1"})
-        table = table.set_column(i, field, table.column(i))
+        meta[name][TEXT_MARK] = b"1"
+    for name in table.column_names:
+        if name in options:
+            meta[name][SOURCE_MARK] = b"option"
+        elif name in found or name in forced:
+            meta[name][SOURCE_MARK] = b"identifier_rule"
+        if reasons.get(name):
+            meta[name][IDENTIFIER_MARK] = reasons[name].encode()
+    for name, md in meta.items():
+        if md:
+            i = table.schema.get_field_index(name)
+            field = pa.field(name, table.schema.field(i).type, metadata=md)
+            table = table.set_column(i, field, table.column(i))
     return table, found
 
 

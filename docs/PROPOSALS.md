@@ -22,7 +22,8 @@ decision file (created if missing).
 * `--data DIR` or `--data NAME=PATH` (repeatable): the profiled data. It adds value evidence
   (containment for relationships, matching values for PII). Without it Shape proposes from the
   profile alone and is less confident.
-* `--kinds relationship,pii,semantic`, `--min-confidence C` (default 0.5).
+* `--kinds relationship,pii,semantic,type`, `--min-confidence C` (default 0.5). The default runs
+  `relationship,pii,semantic`; `type` is asked for (`--kinds type`).
 * `--auto-accept THRESHOLD`: accept undecided proposals at or above the confidence, recorded as
   actor `auto-accept`. **Off unless given**, and it never overrides a decision.
 
@@ -52,7 +53,7 @@ decisions.write("decisions.json")
 fit_schema(profile, decisions=decisions)                 # generation keeps accepted relationships
 ```
 
-`propose_relationships`, `propose_pii` and `propose_semantics` run one kind;
+`propose_relationships`, `propose_pii`, `propose_semantics` and `propose_types` run one kind;
 `DecisionFile.list(status=, kind=, min_confidence=)`, `.accepted(kind)` and `.entries()` read it.
 
 ## What is proposed
@@ -77,9 +78,20 @@ with the data, the share of sampled string values that match a detector (email, 
 **Semantics** (`semantic:customers.city`): what a column means, from its name and the pattern the
 profile found (email, uuid).
 
+**Types** (`type:orders.zip`): columns whose type needs a second look, from the findings of
+`shape types` (`shape.types_report`) and every identifier suspect. One proposal per column; the
+claim is `{"type": ..., "table": ..., "column": ...}`: the narrower type the values of a declared
+`string` or `float` column all parse as, the candidate type of a column that is mostly one type
+(`low_confidence`), or `string` for an integer column that may hold identifiers (a ZIP, an NPI).
+The evidence holds the `finding`, `declared`, `inferred`, the `confidence` and the `parse_shares`
+and, for a suspect, the identifier rule's reason and the digits' `width`. Confidence is 0.9 times
+the share of values that parse as the proposed type, 0.8 when the identifier rule itself would keep
+the column as text, 0.6 for a suspect by name and 0.55 by width. A profile written before type
+inference was recorded has no evidence and proposes nothing.
+
 ## The decision file
 
-Text JSON, safe to commit. `format` is `shape-decisions` and `version` an integer (1). Keys are
+Text JSON, safe to commit. `format` is `shape-decisions` and `version` an integer (1); a file without `type` proposals (every file written before they existed) reads and writes unchanged. Keys are
 sorted, proposals and decisions are in id order, times are UTC ISO 8601 (`2026-10-03T12:00:00Z`)
 and confidences have four decimals, so unchanged findings change no line and one decision changes
 only its own lines. A newer `version` than Shape knows is refused with a message that says so.
@@ -105,6 +117,15 @@ The JSON Schema is `src/shape/schemas/decisions-v1.schema.json`.
   column's foreign-key flags), so `fit_schema(..., decisions=)` and `shape generate --from
   ... --decisions` generate it as a foreign key. Accepted PII and semantic decisions are read with
   `DecisionFile.accepted("pii")`; they do not change the profile.
+* **Accepted type**: the column takes the proposed type. `apply_decisions` (so `shape generate
+  --from ... --decisions` and `shape plan --decisions`) gives an integer column proposed as
+  `string` its digits as text (a fixed width and leading zeros are kept), relabels `datetime` as
+  `date` and `integer` as `float`, and turns a text column into numbers from the frequencies of its
+  values when the profile lists every distinct value; when it cannot (it lacks the column, or the
+  values), it fails with a message that says to re-profile. `shape profile --decisions
+  DECISIONS.json` reads the accepted `type` decisions as `--types` for the table they name
+  (`TABLE` is the profile's table name), and an explicit `--types` file wins for a column both
+  name; `shape.profile(..., decisions=)` is the same from Python.
 * **Deferred**: stays in the file, shown as `deferred`, applied as nothing.
 * **Pending** proposals that a later run no longer finds are withdrawn; decided ones stay.
 * A re-profile keeps a proposal's first `proposed_at` and updates its evidence and confidence.

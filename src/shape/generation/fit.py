@@ -87,6 +87,8 @@ COLUMN_FIELDS = (
     "precision",
     "scale",
     "placeholders",
+    "adequacy",
+    "type_inference",
     *_MARGINAL_FIELDS,
 )
 """Every field of a column of a profile; the plan reports each one that has a value."""
@@ -546,6 +548,18 @@ def _plan_column(
         _N,
         "placeholder values (`00000`, `-1`, `N/A`) are what the data got wrong: generated values "
         "are drawn without them unless they are in the profile's own value counts",
+    )
+    mark(
+        ("adequacy",),
+        _N,
+        "how much of the data the profile saw (values seen, the error of the null rate): a "
+        "property of the profile, not of the data, so nothing is generated from it",
+    )
+    mark(
+        ("type_inference",),
+        _N,
+        "how the column's type was found and how well the values fit it: the generated column "
+        "takes the profile's type, and nothing is inferred",
     )
     for f in sorted(present):  # a field no rule above covered is never reported as preserved
         add(f, _N, "not modelled")

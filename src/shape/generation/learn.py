@@ -147,6 +147,8 @@ def _column(doc: Mapping[str, Any]) -> ColumnProfile:
         distribution=doc.get("distribution"),
         distribution_params=doc.get("distribution_params"),
         pattern=doc.get("pattern"),
+        adequacy=doc.get("adequacy"),
+        type_inference=doc.get("type_inference"),
         is_primary_key=bool(doc.get("is_primary_key")),
         is_foreign_key=bool(doc.get("is_foreign_key")),
         fk_ref_table=doc.get("fk_ref_table"),

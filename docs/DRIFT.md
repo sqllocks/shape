@@ -86,7 +86,14 @@ section 12.3 and keep their values.
   sampling noise to allow for; the defaults (more than double, fewer than half) let a 1.5 times
   larger extract of the same data pass. A stream window is not compared by size (its size is its
   width), and `ShapeMonitor` drops the kind (its buffer is a window of the stream). Set
-  `row_count_ratio_max` to a large number to turn the kind off.
+  `row_count_ratio_max` to a large number to turn the kind off. Two profiles of samples (`shape
+  profile --sample`) are compared on the rows their sources had (`population_rows` in the
+  profile's `sampling` record) when both state it, not on the sizes of their samples.
+- **Profiles read differently.** When two profiles were sampled by different methods, or one was
+  sampled and the other not, `shape diff` adds a note to its result (`notes` in `--json`, present
+  only then; `--fail-on-drift` ignores it). Some differences between a sample and the whole table
+  are sampling error, not change. A profile written before the sampling record existed draws no
+  note.
 - **The fitted family's name** (`distribution_change`, low) flips between samples of one
   distribution (a normal column fit as log-normal). The name is reported only when the data also
   moved: the KS distance between the samples, read from the quantiles, must exceed the critical

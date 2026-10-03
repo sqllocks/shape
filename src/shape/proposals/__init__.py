@@ -15,8 +15,10 @@ from typing import Any
 
 from ._data import DataSource
 from .apply import apply_decisions as apply_decisions
+from .apply import decided_types as decided_types
 from .columns import propose_pii as propose_pii
 from .columns import propose_semantics as propose_semantics
+from .model import DEFAULT_KINDS as DEFAULT_KINDS
 from .model import FORMAT as FORMAT
 from .model import KINDS as KINDS
 from .model import STATUSES as STATUSES
@@ -28,8 +30,10 @@ from .model import Entry as Entry
 from .model import Proposal as Proposal
 from .model import UpdateResult as UpdateResult
 from .relationships import propose_relationships as propose_relationships
+from .types import propose_types as propose_types
 
 __all__ = [
+    "DEFAULT_KINDS",
     "FORMAT",
     "KINDS",
     "STATUSES",
@@ -41,10 +45,12 @@ __all__ = [
     "Proposal",
     "UpdateResult",
     "apply_decisions",
+    "decided_types",
     "propose",
     "propose_pii",
     "propose_relationships",
     "propose_semantics",
+    "propose_types",
 ]
 
 
@@ -52,11 +58,11 @@ def propose(
     profile: Any,
     data: DataSource | None = None,
     *,
-    kinds: Iterable[str] = KINDS,
+    kinds: Iterable[str] = DEFAULT_KINDS,
     min_confidence: float = 0.5,
 ) -> list[Proposal]:
-    """The proposals of ``kinds`` for ``profile`` (and ``data``, which adds value evidence),
-    the most confident first."""
+    """The proposals of ``kinds`` (default: relationships, PII and semantics; ``"type"`` is asked
+    for) for ``profile`` (and ``data``, which adds value evidence), the most confident first."""
     chosen = list(kinds)
     for k in chosen:
         if k not in KINDS:
@@ -65,6 +71,7 @@ def propose(
         "relationship": propose_relationships,
         "pii": propose_pii,
         "semantic": propose_semantics,
+        "type": propose_types,
     }
     out: list[Proposal] = []
     for k in KINDS:

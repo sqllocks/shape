@@ -5,6 +5,25 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Sampling controls, recorded in the profile (W2-07). `shape profile --sample N|P% [--sample-method
+  random|systematic|head] [--sample-seed S]` and `shape.profile(src, sample=, sample_method=,
+  sample_seed=)` profile a seeded sample (default seed 42; the same rows in both kernel modes and for
+  every source); nothing is sampled without `--sample`. Every table profile has `sampling` (method,
+  seed, what was requested, `population_rows`, `sampled_rows`, the `internal` samples the statistics
+  take of their own, and `adequacy` with its reason) and every column `adequacy` (values seen, the
+  standard error of the null rate with the finite population correction, the smallest share seen with
+  95% probability). A sampled `shape profile` prints a note to stderr; `shape show`, the summary and the
+  HTML report show the record; `shape diff` notes profiles sampled differently (`notes`) and compares
+  `row_count_change` on `population_rows`. A dataset sample keeps foreign key detection.
+- Type inference confidence (W2-07). Every column has `type_inference`: the type, its source
+  (`declared`, `inferred`, `option`, `identifier_rule`), the `confidence` (the share of values that
+  parse as it) and the parse share of `integer`, `float`, `boolean`, `date` and `datetime`; a declared
+  column also says what its values hold. `shape types PROFILE.shape [--contract] [--min-confidence]
+  [--json]` (and `shape.types_report`) lists declared types that differ from the values, integer
+  identifier suspects, low-confidence inferred types and contract types that differ, with the option
+  that would change each. `shape proposals propose --kinds type` turns the findings into `type`
+  proposals; accepted ones apply to `generate --from`, `plan` and `shape profile --decisions`
+  (read as `--types`). Profiles and decision files written before this load and diff unchanged.
 - CSV identifier columns keep their text (#46): an integer column of digits with leading zeros, or of
   one fixed width of five or more digits under an identifier name (`zip`, `npi`, `ndc`, `member_id`),
   is read as text by `shape.profile`, `shape.io` and the commands built on them, so `00000` is not 0.

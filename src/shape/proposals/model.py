@@ -30,7 +30,9 @@ from shape.errors import ShapeError
 FORMAT = "shape-decisions"
 VERSION = 1
 
-KINDS = ("relationship", "pii", "semantic")
+KINDS = ("relationship", "pii", "semantic", "type")
+# what ``propose`` runs when no kinds are named; ``type`` is asked for (``--kinds type``)
+DEFAULT_KINDS = ("relationship", "pii", "semantic")
 STATUSES = ("accepted", "rejected", "deferred")
 PENDING = "pending"
 AUTO_ACCEPT_ACTOR = "auto-accept"
@@ -374,7 +376,8 @@ class DecisionFile:
 
         New proposals are added; a known one has its claim, confidence and evidence updated when
         they changed (its first ``proposed_at`` and its decision stay); a rejected one is skipped;
-        an undecided proposal of ``kinds`` (default all) that the run no longer finds is withdrawn.
+        an undecided proposal of ``kinds`` (default: the kinds ``propose`` runs by default) that the
+        run no longer finds is withdrawn.
         With ``auto_accept`` a threshold from 0 to 1, undecided proposals at or above it are
         accepted by the actor ``auto-accept``; without it nothing is accepted automatically.
         """
@@ -384,7 +387,7 @@ class DecisionFile:
             or not 0.0 <= auto_accept <= 1.0
         ):
             raise DecisionError("the auto-accept threshold must be a number from 0 to 1")
-        run_kinds = set(KINDS if kinds is None else kinds)
+        run_kinds = set(DEFAULT_KINDS if kinds is None else kinds)
         bad = run_kinds - set(KINDS)
         if bad:
             raise DecisionError(f"unknown kind {sorted(bad)[0]!r}")

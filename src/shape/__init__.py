@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from .api import query as query
     from .api import save as save
     from .api import timeline as timeline
+    from .api import types_report as types_report
     from .api import view as view
     from .model import Evidence as Evidence
     from .model import Provenance as Provenance
@@ -44,6 +45,7 @@ _API = (
     "query",
     "save",
     "timeline",
+    "types_report",
     "view",
 )
 _LAZY: dict[str, tuple[str, str | None]] = {
@@ -82,6 +84,7 @@ __all__ = [
     "certify",
     "plan",
     "check",
+    "types_report",
 ]
 
 

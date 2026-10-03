@@ -321,6 +321,45 @@ def _workbook_options(a):
     return opts
 
 
+def _sample_options(a):
+    """``--sample``, ``--sample-method`` and ``--sample-seed`` as the keyword arguments of
+    ``shape.profile``; an invalid value is an input error (exit 2)."""
+    if a.sample is None:
+        if a.sample_method is not None or a.sample_seed is not None:
+            raise ValueError("--sample-method and --sample-seed need --sample")
+        return {}
+    from shape.profile.sampling import parse_sample
+
+    rows, fraction = parse_sample(a.sample)
+    return {
+        "sample": rows if rows is not None else fraction,
+        "sample_method": a.sample_method or "random",
+        "sample_seed": a.sample_seed,
+    }
+
+
+def _note_sampling(a, prof):
+    """Never silent: say, on stderr, that the profile is of a sample (one line per table)."""
+    if a.sample is None:
+        return
+    for name, table in prof.tables.items():
+        rec = table.get("sampling") or {}
+        if rec.get("requested") is None:
+            continue
+        method = rec["method"] if rec["method"] != "none" else a.sample_method or "random"
+        seed = (
+            rec["seed"]
+            if rec.get("seed") is not None
+            else (42 if a.sample_seed is None else a.sample_seed)
+        )
+        where = f", table {name}" if prof.is_dataset else ""
+        print(
+            f"shape: note: profiled a {method} sample of {rec['sampled_rows']} of "
+            f"{rec['population_rows']} rows (seed {seed}){where}",
+            file=sys.stderr,
+        )
+
+
 def _profile_name(a):
     """``--name``, else the name of the profile ``-o`` is about to overwrite (so a versioned
     ``.shape`` keeps its name when the input file changes), else None: the input's own name."""
@@ -370,6 +409,8 @@ def _cmd_profile(a):
         infer_types=fmt.infer_types,
         reference_pairs=_reference_pairs(a),
         joint=a.joint,
+        decisions=a.decisions,
+        **_sample_options(a),
         **_workbook_options(a),
     )
     if settings:
@@ -380,6 +421,7 @@ def _cmd_profile(a):
     else:
         prof = shape.profile(_profile_source(a), **options)
     _warn_empty(a, prof)
+    _note_sampling(a, prof)
     content_id = shape.save(prof, a.output)
     key_id = _sign_output(a, a.output)
     if a.html:
@@ -479,7 +521,12 @@ def _cmd_inspect(a):
         import shape
 
         prof = shape.load(a.shape)
-        doc = {"kind": "profile", "name": prof.name, "profile": prof.to_dict()}
+        doc = {
+            "kind": "profile",
+            "name": prof.name,
+            "sampling": {n: r or "not recorded" for n, r in prof.sampling().items()},
+            "profile": prof.to_dict(),
+        }
         if prof.provenance is not None:
             doc["provenance"] = prof.provenance
         _dump(doc)
@@ -1005,6 +1052,12 @@ def _build_parser(plugin_commands=()):
         "off: read every column as text",
     )
     pr.add_argument(
+        "--decisions",
+        metavar="DECISIONS.json",
+        help="a decision file (`shape proposals`): its accepted `type` decisions are read as "
+        "--types (a --types file wins for a column both name)",
+    )
+    pr.add_argument(
         "--version",
         dest="delta_version",
         type=int,
@@ -1049,6 +1102,24 @@ def _build_parser(plugin_commands=()):
         action="store_true",
         help="SRC is an .xlsx workbook: read its hidden sheets too (they are always reported)",
     )
+    pr.add_argument(
+        "--sample",
+        metavar="N|P%",
+        help="profile a sample of each table: N rows, or P%% of them (nothing is sampled "
+        "without it; the profile records the sample and its adequacy)",
+    )
+    pr.add_argument(
+        "--sample-method",
+        choices=("random", "systematic", "head"),
+        help="random (default: uniform, without replacement), systematic (evenly spread rows "
+        "from a seeded start) or head (the first rows)",
+    )
+    pr.add_argument(
+        "--sample-seed",
+        type=int,
+        metavar="S",
+        help="seed of a random or systematic sample (default 42)",
+    )
     pr.add_argument("--html", metavar="REPORT.html")
     pr.add_argument("--json", metavar="SUMMARY.json")
     from shape.cli.auth import add_arguments as add_auth_arguments
@@ -1080,6 +1151,9 @@ def _build_parser(plugin_commands=()):
         action="store_true",
         help="pretty-printed JSON with sorted keys, one value per line (git-diffable)",
     )
+    from shape.cli import types_cmd
+
+    types_cmd.add_parser(sub)
     gitcmds.add_parsers(sub)
     from shape.cli import design as design_cmd
 
@@ -1578,6 +1652,10 @@ def _dispatch(argv):
         return _run(run_gitcmds, a)
     if a.cmd == "profile":
         return _run(_cmd_profile, a)
+    if a.cmd == "types":
+        from shape.cli.types_cmd import run as run_types
+
+        return _run(run_types, a)
     if a.cmd == "stream-profile":
         return _run(_cmd_stream_profile, a)
     if a.cmd == "check" and _is_profile_or_missing(a.shape):

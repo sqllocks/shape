@@ -6,6 +6,7 @@ import os
 import threading
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,7 @@ import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.profile.joint import analyze_table, detect_placeholders
 
+from .. import sampling as _sampling
 from ._blas import single_thread_blas
 from .column import _combine, _pattern_sample, _profile_column, _Work
 from .model import ColumnProfile, DatasetProfile, TableProfile
@@ -221,13 +223,32 @@ def _fk_values(w: _Work) -> pa.Array:
     return u
 
 
+def _population_keys(col: _Col, like: pa.Array) -> pa.Array | None:
+    """The distinct values of a parent key column before it was sampled, as ``like`` (the child's
+    values), or ``None`` when they cannot be compared (the sampled values are used then)."""
+    if col.kind not in ("int", "uint64", "float", "str"):
+        return None
+    try:
+        keys = pc.unique(pc.drop_null(_combine(col.arr)))
+        if col.kind != "str":
+            keys = pc.cast(keys, pa.float64())
+        return pc.cast(keys, like.type) if keys.type != like.type else keys
+    except (pa.ArrowInvalid, pa.ArrowNotImplementedError, pa.ArrowTypeError):
+        return None
+
+
 def _detect_fks(
     tname: str,
     works: list[_Work],
     all_works: dict[str, list[_Work]],
     pks: dict[str, list[str]],
     threshold: float = 0.9,
+    population: dict[str, list[_Col]] | None = None,
 ) -> dict[str, str]:
+    """Foreign keys among the tables: a ``..._id`` column whose values (at least ``threshold`` of
+    them) are keys of the table it names. When the parent table was sampled, the child's sampled
+    values are compared with the parent's whole key column (``population``): two independent
+    samples share few keys, and sampling must not hide a relationship."""
     if not all_works:
         return {}
     out = {}
@@ -252,6 +273,11 @@ def _detect_fks(
         if len(child_vals) == 0:
             continue
         parent_vals = _fk_values(pw)
+        if population is not None and parent in population:
+            full = next((c for c in population[parent] if c.name == ppk[0]), None)
+            whole = None if full is None else _population_keys(full, child_vals)
+            if whole is not None:
+                parent_vals = whole
         if child_vals.type != parent_vals.type:
             overlap = 0.0
         else:
@@ -394,13 +420,34 @@ def _profile_tables(
     return {t: [w for w in ws if w is not None] for t, ws in res.items()}
 
 
-def _sample_rows(
-    cols: list[_Col], row_count: int, sample_rows: int | None
-) -> tuple[list[_Col], int]:
-    if sample_rows is None or row_count <= sample_rows:
-        return cols, row_count
-    idx = pa.array(np.random.RandomState(42).choice(row_count, size=sample_rows, replace=False))
-    return [_Col(c.name, c.kind, c.arr.take(idx), c.tz, c.strict) for c in cols], sample_rows
+@dataclass(frozen=True)
+class _Sampled:
+    """A table after the caller's sample: the columns to profile and what was left out."""
+
+    cols: list[_Col]
+    rows: int  # rows profiled
+    population: int  # rows the source had
+    taken: bool  # rows were left out
+    spec: _sampling.SampleSpec | None
+
+
+def _apply_sample(cols: list[_Col], row_count: int, spec: _sampling.SampleSpec | None) -> _Sampled:
+    """The rows ``spec`` picks from a table read whole (every row when it asks for none or for
+    at least as many as there are)."""
+    idx = None if spec is None else _sampling.select(spec, row_count)
+    if idx is None:
+        return _Sampled(cols, row_count, row_count, False, spec)
+    take = pa.array(idx)
+    picked = [replace(c, arr=c.arr.take(take)) for c in cols]
+    return _Sampled(picked, len(idx), row_count, True, spec)
+
+
+def _spec_of(sample: _sampling.SampleSpec | None, sample_rows: int | None) -> Any:
+    """The sample asked for: ``sample``, or ``sample_rows`` (the reference helpers' argument: a
+    seeded random sample of that many rows)."""
+    if sample is not None:
+        return sample
+    return None if sample_rows is None else _sampling.SampleSpec(rows=sample_rows)
 
 
 def _finish_table(
@@ -411,10 +458,13 @@ def _finish_table(
     row_count: int,
     corr: dict[str, dict[str, float]],
     joint: dict[str, Any] | None = None,
+    sampled: _Sampled | None = None,
 ) -> TableProfile:
     columns = {}
+    population = sampled.population if sampled is not None else row_count
     for w in works:
         p = w.prof
+        p.adequacy = _sampling.column_adequacy(row_count, p.null_count, p.null_rate, population)
         found = detect_placeholders(
             p.value_counts_ext,
             null_rate=p.null_rate,
@@ -435,6 +485,13 @@ def _finish_table(
         correlation_matrix=corr if corr else None,
         correlation_truncated=isinstance(corr, _TruncatedCorr),
         joint=joint,
+        sampling=_sampling.record(
+            sampled.spec if sampled is not None else None,
+            population,
+            row_count,
+            sampled.taken if sampled is not None else False,
+            _sampling.internal_samples(list(columns.values()), row_count, joint),
+        ),
     )
 
 
@@ -445,8 +502,10 @@ def _profile_cols_table(
     threads: int | None,
     sample_rows: int | None = None,
     joint: bool | None = None,
+    sample: _sampling.SampleSpec | None = None,
 ) -> TableProfile:
-    cols, row_count = _sample_rows(cols, row_count, sample_rows)
+    picked = _apply_sample(cols, row_count, _spec_of(sample, sample_rows))
+    cols, row_count = picked.cols, picked.rows
     cstart, cresult = _spawn_correlation(cols, row_count, threads)
     jstart, jresult = _spawn_joint(cols, row_count, threads, resolve_joint(joint))
 
@@ -456,7 +515,7 @@ def _profile_cols_table(
 
     works = _profile_cols(cols, row_count, threads, on_ready=start)
     pk = _detect_primary_key(works, row_count)
-    return _finish_table(name, works, pk, {}, row_count, cresult(), jresult())
+    return _finish_table(name, works, pk, {}, row_count, cresult(), jresult(), picked)
 
 
 def profile_csv(
@@ -517,8 +576,14 @@ def profile_dataset_columns(
     cols_by_t: dict[str, tuple[list[_Col], int]],
     threads: int | None = None,
     joint: bool | None = None,
+    sample: _sampling.SampleSpec | None = None,
 ) -> DatasetProfile:
-    """Multi-table profile (with FK detection) from already-read columns."""
+    """Multi-table profile (with FK detection) from already-read columns. ``sample`` samples each
+    table on its own; foreign keys are then detected on the sampled child rows against the
+    parents' whole key columns."""
+    picked = {n: _apply_sample(c, rc, sample) for n, (c, rc) in cols_by_t.items()}
+    population = {n: cols_by_t[n][0] for n, p in picked.items() if p.taken}
+    cols_by_t = {n: (p.cols, p.rows) for n, p in picked.items()}
     corr = {n: _spawn_correlation(c, rc, threads) for n, (c, rc) in cols_by_t.items()}
     on = resolve_joint(joint, dataset=True)
     jobs = {n: _spawn_joint(c, rc, threads, on) for n, (c, rc) in cols_by_t.items()}
@@ -532,8 +597,10 @@ def profile_dataset_columns(
     pks = {n: _detect_primary_key(w, cols_by_t[n][1]) for n, w in works.items()}
     profiles = {}
     for n, w in works.items():
-        fks = _detect_fks(n, w, works, pks)
-        profiles[n] = _finish_table(n, w, pks[n], fks, cols_by_t[n][1], corr[n][1](), jobs[n][1]())
+        fks = _detect_fks(n, w, works, pks, population=population)
+        profiles[n] = _finish_table(
+            n, w, pks[n], fks, cols_by_t[n][1], corr[n][1](), jobs[n][1](), picked[n]
+        )
     rels = []
     for n, tp in profiles.items():
         for col, parent in tp.detected_fks.items():

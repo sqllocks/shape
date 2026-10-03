@@ -48,6 +48,7 @@ def profile_workbook(
     sheet: str | None = None,
     include_hidden: bool = False,
     joint: bool | None = None,
+    sample: Any = None,
 ) -> tuple[dict[str, Any], str]:
     """-> (the profile dict, the profile's name) for a workbook source."""
     path, picked = split_spec(spec)
@@ -58,9 +59,9 @@ def profile_workbook(
     stem = Path(path).stem
     if picked is not None:
         ((table_name, (cols, rows)),) = cols_by_t.items()
-        table = _profile_cols_table(table_name, cols, rows, None, None, joint)
+        table = _profile_cols_table(table_name, cols, rows, None, None, joint, sample)
         findings = by_table[table_name] + wb.findings
         return _table_dict(table, findings), name or table_name
     return _dataset_dict(
-        profile_dataset_columns(cols_by_t, None, joint), by_table, wb.findings
+        profile_dataset_columns(cols_by_t, None, joint, sample), by_table, wb.findings
     ), name or stem

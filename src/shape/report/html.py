@@ -183,6 +183,24 @@ _HEADERS = (
 )
 
 
+def _sampling_block(record: dict[str, Any] | None) -> str:
+    """How much of the data the table's profile saw (a profile written before the record existed
+    says so)."""
+    from shape.profile.sampling import describe
+
+    lines = [f"<strong>Sampling</strong>: {_e(describe(record))}"]
+    if record:
+        if record.get("adequacy_reason"):
+            lines.append(_e(record["adequacy_reason"]))
+        internal = [
+            f"{i['analysis']} on {i['rows'] if i.get('rows') is not None else 'a spread of'} rows"
+            for i in record.get("internal") or []
+        ]
+        if internal:
+            lines.append("Statistics that sample inside: " + _e("; ".join(internal)))
+    return '<p class="meta">' + "<br>".join(lines) + "</p>"
+
+
 def _table_section(table: dict[str, Any], heading: str) -> str:
     cols = table["columns"]
     pk = ", ".join(table["primary_key"]) or "none detected"
@@ -190,6 +208,7 @@ def _table_section(table: dict[str, Any], heading: str) -> str:
         f"<h2>{_e(heading)}</h2>",
         f'<p class="meta">{table["row_count"]:,} rows · {len(cols)} columns · '
         f"primary key: {_e(pk)}</p>",
+        _sampling_block(table.get("sampling")),
         '<div class="tablewrap"><table><thead><tr>',
         "".join(f"<th>{h}</th>" for h in _HEADERS),
         "</tr></thead><tbody>",

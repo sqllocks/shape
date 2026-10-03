@@ -40,6 +40,9 @@ SAFE_SUFFIX = ".safe.json"
 _NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 
 
+_RECORD_FIELDS = frozenset({"adequacy", "type_inference"})  # W2-07
+
+
 class ProfileRegistryError(ShapeError, ValueError):
     """A bad identity, a missing or existing profile, or an unreadable store."""
 
@@ -418,6 +421,8 @@ class ProfileRegistry:
                 k: {"from": ca[col].get(k), "to": cb[col].get(k)}
                 for k in sorted(set(ca[col]) | set(cb[col]))
                 if ca[col].get(k) != cb[col].get(k)
+                # a profile written before these records existed has none: not a change
+                and not (k in _RECORD_FIELDS and (k not in ca[col] or k not in cb[col]))
             }
             if fields:
                 changed[col] = fields

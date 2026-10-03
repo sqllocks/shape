@@ -9,6 +9,7 @@ import math
 import warnings
 from collections.abc import Iterable, Mapping
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,7 @@ from shape.artifact.io import ArtifactError, read_artifact, write_artifact
 from shape.io.excel import is_workbook_spec
 from shape.security.hardening import validate_structure
 
+from .. import sampling as _sampling
 from .column import MAX_VALUE_CHARS
 from .model import ColumnProfile, DatasetProfile, TableProfile
 from .readers import CsvFormat
@@ -141,6 +143,10 @@ def _column_dict(cp: ColumnProfile) -> dict[str, Any]:
     d["value_counts_ext"] = _clean(cp.value_counts_ext)
     # key order is the frequency order of the top values; keep it explicitly
     d["value_counts_ext_order"] = list(cp.value_counts_ext) if cp.value_counts_ext else None
+    if cp.adequacy is not None:  # absent in a profile written before W2-07
+        d["adequacy"] = cp.adequacy
+    if cp.type_inference is not None:
+        d["type_inference"] = cp.type_inference
     return d
 
 
@@ -158,6 +164,8 @@ def table_to_dict(tp: TableProfile) -> dict[str, Any]:
         out["correlation_truncated"] = True
     if tp.joint:
         out["joint"] = tp.joint
+    if tp.sampling is not None:  # absent in a profile written before W2-07
+        out["sampling"] = tp.sampling
     return out
 
 
@@ -203,6 +211,8 @@ def _table_summary(table: dict[str, Any]) -> dict[str, Any]:
     }
     if table.get("findings"):
         out["findings"] = copy.deepcopy(table["findings"])
+    if table.get("sampling") is not None:
+        out["sampling"] = copy.deepcopy(table["sampling"])
     return out
 
 
@@ -268,12 +278,23 @@ class Profile:
 
         return render_html(self)
 
+    def sampling(self) -> dict[str, dict[str, Any] | None]:
+        """The sampling record of every table (``None`` for a profile written before the record
+        existed): how many rows were profiled, by which method, and whether that is adequate."""
+        return {n: t.get("sampling") for n, t in self.tables.items()}
+
+    def describe_sampling(self) -> str:
+        """One line per table saying how much of the data this profile saw."""
+        return "\n".join(f"{n}: {_sampling.describe(r)}" for n, r in self.sampling().items())
+
     def __repr__(self) -> str:
+        sampled = [n for n, r in self.sampling().items() if r and r.get("method") != "none"]
+        suffix = f", sampled={sampled}" if sampled else ""
         if self.is_dataset:
-            return f"Profile(dataset, tables={list(self._data['tables'])})"
+            return f"Profile(dataset, tables={list(self._data['tables'])}{suffix})"
         return (
             f"Profile({self._data['name']!r}, rows={self._data['row_count']}, "
-            f"columns={len(self._data['columns'])})"
+            f"columns={len(self._data['columns'])}{suffix})"
         )
 
     def __eq__(self, other: object) -> bool:
@@ -299,6 +320,10 @@ def profile(
     joint: bool | None = None,
     sheet: str | None = None,
     include_hidden: bool = False,
+    sample: int | float | str | None = None,
+    sample_method: str = "random",
+    sample_seed: int | None = None,
+    decisions: Any = None,
 ) -> Profile:
     """Profile a path, glob, directory, Delta table, Arrow table or DataFrame.
 
@@ -334,6 +359,16 @@ def profile(
     one table, off by default for a dataset (a dict of tables, a workbook), ``joint=True`` turns
     it on and ``joint=False`` off; without it ``SHAPE_PROFILE_JOINT`` decides (``0`` off, ``1`` on).
 
+    ``decisions`` (a ``DecisionFile`` or its path) gives the CSV columns the types of its accepted
+    ``type`` decisions, as ``types`` does; ``types`` wins for a column both name.
+
+    ``sample`` profiles a sample of each table instead of all of it: an ``int`` is a number of rows,
+    a ``float`` above 0 and up to 1 a fraction of them (``"10%"`` also works). ``sample_method`` is
+    ``random`` (uniform, without replacement), ``systematic`` (evenly spread rows from a seeded
+    start) or ``head`` (the first rows); ``sample_seed`` defaults to 42. The same rows are chosen
+    on every run and in both kernel modes. Nothing is sampled without ``sample``, and every table's
+    profile records what was done in ``sampling`` (``docs/PROFILING_NOTES.md``).
+
     An ``.xlsx`` workbook is a dataset with one table per visible sheet (``"book.xlsx#Sheet"``
     or ``sheet=`` profiles that sheet alone, hidden or not; ``include_hidden=True`` reads the
     hidden sheets too), and the profile carries ``findings`` about its cells.
@@ -347,15 +382,20 @@ def profile(
         tuple((types or {}).items()),
         infer_types,
     )
+    spec = _sampling.make_spec(sample, sample_method, sample_seed)
+    if decisions is not None:
+        from shape.proposals import decided_types
+
+        fmt = replace(fmt, table_types=decided_types(decisions))
     with np.errstate(all="ignore"):  # inf / NaN inputs are data, not numpy warnings
         if is_workbook_spec(source):
             from .workbook import profile_workbook
 
-            data, title = profile_workbook(source, name, sheet, include_hidden, joint)
+            data, title = profile_workbook(source, name, sheet, include_hidden, joint, spec)
             return Profile(data, name=title)
         if sheet is not None or include_hidden:
             raise SourceError("sheet and include_hidden apply to .xlsx workbooks only")
-        return _profile(source, name, version, as_of, fmt, reference_pairs, joint)
+        return _profile(source, name, version, as_of, fmt, reference_pairs, joint, spec)
 
 
 def _load_tables(
@@ -408,6 +448,13 @@ def _attach_reference_pairs(
     if joint is None:
         joint = doc["joint"] = {"version": 1}
     joint["reference_pairs"] = measured
+    record = doc.get("sampling")
+    if record is not None and any(m.get("sampled") for m in measured):
+        # the check ran on an evenly spread part of a larger table (on the whole table, not on a
+        # sample of the caller's): the profile says so
+        from shape.profile.joint import reference as _pairs
+
+        record["internal"].append(_sampling.internal_entry("reference_pairs", _pairs.MAX_ROWS))
 
 
 def _profile(
@@ -418,6 +465,7 @@ def _profile(
     csv: CsvFormat | None = None,
     reference_pairs: Any = None,
     joint: bool | None = None,
+    sample: _sampling.SampleSpec | None = None,
 ) -> Profile:
     check_delta_options(version, as_of)
     asked = version is not None or as_of is not None
@@ -427,7 +475,7 @@ def _profile(
         if not source:
             raise SourceError("an empty dict of tables cannot be profiled")
         cols_by_t = _load_tables({str(k): v for k, v in source.items()}, csv)
-        doc = dataset_to_dict(profile_dataset_columns(cols_by_t, None, joint))
+        doc = dataset_to_dict(profile_dataset_columns(cols_by_t, None, joint, sample))
         if reference_pairs:
             if not isinstance(reference_pairs, dict):
                 raise ValueError("for several tables, reference_pairs maps a table name to a list")
@@ -452,7 +500,7 @@ def _profile(
     else:
         table, provenance = read_delta(delta, version=version, as_of=as_of)
         table_name, cols, rows = load_columns(table, name or delta.name)
-    table_profile = _profile_cols_table(table_name, cols, rows, None, None, joint)
+    table_profile = _profile_cols_table(table_name, cols, rows, None, None, joint, sample)
     doc = table_to_dict(table_profile)
     _attach_reference_pairs(doc, cols, rows, reference_pairs)
     return Profile(doc, name=name, provenance=provenance)

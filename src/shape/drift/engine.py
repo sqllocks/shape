@@ -475,6 +475,14 @@ class TableView:
     rows: int
     columns: dict[str, View]
     joint: Mapping[str, Any] | None = None  # the profile's joint analysis (#47)
+    sampling: Mapping[str, Any] | None = None  # how many rows were profiled, and how (W2-07)
+
+    @property
+    def population(self) -> int | None:
+        """The rows the source had, when the profile says (a sampled profile's ``row_count`` is
+        the sample's size)."""
+        n = (self.sampling or {}).get("population_rows")
+        return int(n) if isinstance(n, int) and not isinstance(n, bool) else None
 
     @property
     def window(self) -> bool:
@@ -491,6 +499,7 @@ def _profile_tables(obj: Any) -> dict[str, TableView]:
             rows,
             {c: view_of_profile_column(col, rows) for c, col in table["columns"].items()},
             table.get("joint"),
+            table.get("sampling"),
         )
     return out
 
@@ -873,8 +882,12 @@ def _diff_temporal(
 def _diff_rows(base: TableView, cur: TableView, th: Mapping[str, Any]) -> list[dict[str, Any]]:
     """The table's row count moved past the ratio thresholds. Row counts are exact, so there is
     no sampling noise to allow for. A stream window is not compared (its size is its width), and
-    an empty baseline against a filled table scores 1."""
+    an empty baseline against a filled table scores 1. Two sampled profiles are compared on the
+    rows their sources had (``population_rows``), not on the sizes of their samples, when both
+    state it."""
     b_rows, c_rows = base.rows, cur.rows
+    if base.population is not None and cur.population is not None:
+        b_rows, c_rows = base.population, cur.population
     if b_rows == c_rows or base.window or cur.window:
         return []
     if b_rows <= 0:
@@ -953,3 +966,48 @@ def diff_records(
 def diff_tables(baseline: Any, current: Any, policy: Policy) -> list[dict[str, Any]]:
     """Compare two profiled things and return the change records that pass ``policy``."""
     return [ch for _, _, ch in diff_records(baseline, current, policy)]
+
+
+def sampling_notes(baseline: Any, current: Any) -> list[str]:
+    """Notes for a comparison of profiles that were not read the same way: one sampled and the
+    other not, or sampled by different methods. A profile written before the record existed says
+    nothing, so it draws no note. A difference between samples of one method is sampling error,
+    which the thresholds already allow for."""
+    try:
+        b_tables, b_dataset = tables_of(baseline)
+        c_tables, c_dataset = tables_of(current)
+    except TypeError:
+        return []
+    if b_dataset or c_dataset:
+        pairs = [(t, b_tables[t], c_tables[t]) for t in b_tables if t in c_tables]
+    else:
+        ((bn, bt),) = b_tables.items()
+        ((cn, ct),) = c_tables.items()
+        pairs = [(bn if bn == cn else f"{bn} / {cn}", bt, ct)]
+    notes: list[str] = []
+    for name, bt, ct in pairs:
+        b, c = bt.sampling, ct.sampling
+        if not b or not c:
+            continue
+        bm, cm = b.get("method", "none"), c.get("method", "none")
+        if bm == cm:
+            continue
+
+        def what(rec: Mapping[str, Any]) -> str:
+            if rec.get("method", "none") == "none":
+                return f"in full ({rec.get('sampled_rows')} rows)"
+            return (
+                f"as a {rec['method']} sample ({rec.get('sampled_rows')} of "
+                f"{rec.get('population_rows')} rows)"
+            )
+
+        how = (
+            "one was sampled and the other was not"
+            if "none" in (bm, cm)
+            else ("they were sampled by different methods")
+        )
+        notes.append(
+            f"table {name}: {how}: the baseline was profiled {what(b)}, the current profile "
+            f"{what(c)}; some differences are sampling error, not change"
+        )
+    return notes

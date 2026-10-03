@@ -7,6 +7,8 @@ from typing import Any, cast
 
 import numpy as np
 
+from ..sampling import FIT_SAMPLE_ROWS, FIT_SAMPLE_SEED
+
 # scipy re-implementations (numpy only)
 # ---------------------------------------------------------------------------
 
@@ -786,8 +788,10 @@ def _param_dict(name: str, params: Any) -> dict[str, float]:
 
 def detect_distribution(values: np.ndarray) -> tuple[str | None, dict[str, float] | None]:
     """DataProfiler._detect_distribution."""
-    if len(values) > 2000:
-        values = np.random.default_rng(42).choice(values, size=2000, replace=False)
+    if len(values) > FIT_SAMPLE_ROWS:
+        values = np.random.default_rng(FIT_SAMPLE_SEED).choice(
+            values, size=FIT_SAMPLE_ROWS, replace=False
+        )
     if len(values) < 20:
         return None, None
     xs = np.sort(values)

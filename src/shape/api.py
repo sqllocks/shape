@@ -9,6 +9,7 @@ from shape.contracts.v1 import diff as diff
 from shape.profile.reference import load as load
 from shape.profile.reference import profile as profile
 from shape.profile.reference import save as save
+from shape.profile.types_report import types_report as types_report
 
 
 def _is_profile(obj: Any) -> bool:

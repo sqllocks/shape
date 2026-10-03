@@ -13,6 +13,8 @@ from dataclasses import dataclass
 import numpy as np
 import numpy.typing as npt
 
+from shape.profile.sampling import KENDALL_SAMPLE_ROWS
+
 DENSE_CELLS = 1 << 18  # a contingency table of more cells than this is counted by sorting
 
 
@@ -121,7 +123,7 @@ def spearman(x: np.ndarray, y: np.ndarray) -> float | None:
     return pearson(ranks(x[m]), ranks(y[m]))
 
 
-def kendall_tau(x: np.ndarray, y: np.ndarray, max_rows: int = 500) -> float | None:
+def kendall_tau(x: np.ndarray, y: np.ndarray, max_rows: int = KENDALL_SAMPLE_ROWS) -> float | None:
     """Kendall's tau-b on at most ``max_rows`` evenly spaced rows (the pair count is quadratic)."""
     m = ~(np.isnan(x) | np.isnan(y))
     a, b = x[m], y[m]

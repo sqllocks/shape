@@ -48,6 +48,13 @@ class ColumnProfile:
     pattern_rates: dict[str, float] | None = None  # share of values that are wholly a pattern
     pattern_contains_rates: dict[str, float] | None = None  # share that contain an SSN/email/card
     placeholders: list[dict[str, Any]] | None = None  # sentinel values and their evidence (#47)
+    adequacy: dict[str, Any] | None = (
+        None  # values seen, null-rate error, rarest share seen (W2-07)
+    )
+    type_inference: dict[str, Any] | None = None  # source and confidence of the type (W2-07)
+    # the analyses whose statistics of this column drew a sample (``sampling.INTERNAL``); read by
+    # the table's sampling record, never stored in the profile
+    samples: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -60,6 +67,7 @@ class TableProfile:
     correlation_matrix: dict[str, dict[str, float]] | None = None
     correlation_truncated: bool = False  # only each column's strongest pairs are kept (#37)
     joint: dict[str, Any] | None = None  # dependencies, keys, associations (#47)
+    sampling: dict[str, Any] | None = None  # how many rows were profiled, and how (W2-07)
 
 
 @dataclass

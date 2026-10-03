@@ -30,6 +30,7 @@ from .readers import (
 )
 
 _SUFFIXES = (".csv", ".parquet", ".jsonl", ".ndjson")
+_INFERRED_KINDS = frozenset({"csv", "jsonl", "json", "ndjson"})  # Parquet, Delta and Excel declare
 
 _SOURCE_OPTIONS: ContextVar[dict[str, Any] | None] = ContextVar(
     "shape_source_options", default=None
@@ -202,7 +203,7 @@ def _read_csv_files(
     """The files of one table. A column that holds identifiers in any file is text in all of them
     (the files of a table share their types)."""
     first = [read_csv_detect(p, threads, csv, warn=i == 0) for i, p in enumerate(paths)]
-    union = {name for _, found in first for name in found}
+    union = {name: reason for _, found in first for name, reason in found.items()}
     return [
         table
         if all(name in found for name in union)
@@ -292,10 +293,22 @@ def _load_workbook_sheet(text: str, name: str | None) -> tuple[str, list[_Col], 
     return src.name, _to_cols("xlsx", table), table.num_rows
 
 
+def _table_name(text: str, name: str | None) -> str:
+    """The name of the table ``_path_table`` will read (``name``, else the source's own)."""
+    if name:
+        return name
+    if any(ch in text for ch in "*?["):
+        return Path(text.split("*")[0].split("?")[0].split("[")[0]).name or "table"
+    path = Path(text)
+    return path.name if path.is_dir() else _default_name(path)
+
+
 def _path_table(
     text: str, name: str | None, threads: int | None, csv: CsvFormat | None = None
 ) -> tuple[str, str, pa.Table]:
     """-> (table name, kind, Arrow table) of a path, glob, directory, Delta table or URL."""
+    if csv is not None and csv.table_types:
+        csv = csv.for_table(_table_name(text, name))
     if _is_url(text):
         table_name, table = _remote_table(text, name)
         return table_name, "remote", table
@@ -434,4 +447,7 @@ def _to_cols(kind: str, table: pa.Table) -> list[_Col]:
     for c in cols:
         c.strict = True
         c.text = c.text or (kind == "xlsx" and c.kind == "str")
+        if kind in _INFERRED_KINDS and kind != "csv":  # the CSV reader marks its own columns
+            c.type_source = "inferred"
+            c.declared = None
     return cols

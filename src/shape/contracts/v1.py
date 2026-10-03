@@ -13,7 +13,12 @@ from pathlib import Path
 from typing import Any
 
 from shape.drift.engine import DEFAULT_THRESHOLDS as DRIFT_DEFAULTS
-from shape.drift.engine import diff_tables, resolve_policy, view_of_profile_column
+from shape.drift.engine import (
+    diff_tables,
+    resolve_policy,
+    sampling_notes,
+    view_of_profile_column,
+)
 from shape.profile.reference.profile import Profile
 
 from .joint import check_joint_rules, check_no_placeholder
@@ -398,9 +403,15 @@ class DiffResult:
 
     drifted: bool
     changes: list[dict[str, Any]] = field(default_factory=list)
+    # things to know when reading the changes (profiles read differently: one sampled, the other
+    # not, or by different methods); empty, and then absent from ``to_dict``, otherwise
+    notes: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
-        return {"drifted": self.drifted, "changes": [dict(c) for c in self.changes]}
+        out: dict[str, Any] = {"drifted": self.drifted, "changes": [dict(c) for c in self.changes]}
+        if self.notes:
+            out["notes"] = list(self.notes)
+        return out
 
 
 def diff(
@@ -430,4 +441,6 @@ def diff(
         policy=policy,
     )
     changes = diff_tables(baseline, current, resolved)
-    return DiffResult(drifted=bool(changes), changes=changes)
+    return DiffResult(
+        drifted=bool(changes), changes=changes, notes=sampling_notes(baseline, current)
+    )
