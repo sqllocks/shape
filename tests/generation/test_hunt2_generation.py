@@ -494,3 +494,24 @@ def test_shape_generate_refuses_an_unknown_scale() -> None:
 
     with pytest.raises(ValueError, match="unknown scale"):
         shape.generate("retail", scale="mediun")
+
+
+# ---- #343: changing a returned domain definition does not change later loads ------------------
+
+
+def test_a_changed_domain_definition_does_not_leak_into_later_loads() -> None:
+    from shape.generation.domains import load_domain
+    from shape.plugins.host import default_host
+
+    domain = default_host().get("shape.domains", "retail")
+    first = domain.definition()
+    first.schema["tables"]["customer"]["columns"].pop("email")
+    first.schema["generation"]["scales"]["small"]["customer"] = 1
+    first.scale_presets["small"]["customer"] = 2
+    again = domain.definition()
+    assert "email" in again.schema["tables"]["customer"]["columns"]
+    assert again.schema["generation"]["scales"]["small"]["customer"] != 1
+    assert again.scale_presets["small"]["customer"] not in (1, 2)
+    assert "email" in load_domain("retail").schema.tables["customer"].columns
+    star = domain.definition("star")
+    assert star.schema is not domain.definition("star").schema
