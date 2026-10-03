@@ -126,7 +126,10 @@ def test_the_message_explains_each_family():
     sink = default_host().get("shape.sinks", "parquet")
     with pytest.raises(
         UnsupportedSchemeError,
-        match="ADLS Gen2 sinks are (not available|provided by the abfss sink)",
+        match=(
+            r"OneLake and ADLS Gen2 sinks are provided by the abfss and fabric-mirror sink: "
+            r"shape generate --to abfss://\.\.\."
+        ),
     ):
         require_scheme(sink, "abfss://c@a.dfs.core.windows.net/x")
     with pytest.raises(UnsupportedSchemeError, match="database sinks.*INSERT scripts"):
