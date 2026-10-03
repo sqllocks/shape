@@ -305,9 +305,7 @@ def test_delta_append_still_refuses_a_different_schema(tmp_path: Path) -> None:
     sink = DeltaSink()
     sink.write(str(tmp_path), "t", pa.table({"a": [1]}).to_batches())
     with pytest.raises(Exception, match="(?i)schema"):
-        sink.write(
-            str(tmp_path), "t", pa.table({"a": [2], "b": ["x"]}).to_batches(), mode="append"
-        )
+        sink.write(str(tmp_path), "t", pa.table({"a": [2], "b": ["x"]}).to_batches(), mode="append")
     assert _delta_rows(tmp_path / "t") == {"a": [1]}
 
 
@@ -360,6 +358,76 @@ def test_delta_cloud_location_says_a_connection_string_cannot_open_a_delta_table
     monkeypatch.setenv("AZURE_STORAGE_CONNECTION_STRING", "UseDevelopmentStorage=true")
     with pytest.raises(ValueError, match="connection string"):
         _location(_DELTA_URI, "t", {})
+
+
+# ---- #629: the single-table Excel sink stores text as text ----------------------------------
+
+
+def _sheet_cells(path: Path) -> tuple[str, list[list[tuple[object, str]]]]:
+    openpyxl = pytest.importorskip("openpyxl")
+    wb = openpyxl.load_workbook(path)
+    ws = wb.worksheets[0]
+    return ws.title, [[(c.value, c.data_type) for c in row] for row in ws.iter_rows()]
+
+
+def test_excel_sink_stores_formula_like_text_as_text(tmp_path: Path) -> None:
+    from shape.builtins.sinks.excel import ExcelSink
+
+    t = pa.table({"a": ["=1+1", "#N/A", "@SUM(1)", "+1", "ok"], "=h": [1, 2, 3, 4, 5]})
+    ExcelSink().write(str(tmp_path / "x.xlsx"), "x", t.to_batches())
+    _, rows = _sheet_cells(tmp_path / "x.xlsx")
+    assert rows[0] == [("a", "s"), ("=h", "s")]
+    assert [r[0] for r in rows[1:]] == [
+        ("=1+1", "s"),
+        ("#N/A", "s"),
+        ("@SUM(1)", "s"),
+        ("+1", "s"),
+        ("ok", "s"),
+    ]
+    assert [r[1] for r in rows[1:]] == [(1, "n"), (2, "n"), (3, "n"), (4, "n"), (5, "n")]
+
+
+def test_excel_sink_removes_characters_a_worksheet_cannot_hold(tmp_path: Path) -> None:
+    from shape.builtins.sinks.excel import ExcelSink
+
+    t = pa.table({"a": ["a\x01b", "tab\there", "é\u2028x"]})
+    assert ExcelSink().write(str(tmp_path / "x.xlsx"), "x", t.to_batches()) == 3
+    _, rows = _sheet_cells(tmp_path / "x.xlsx")
+    assert [r[0][0] for r in rows[1:]] == ["ab", "tab\there", "é\u2028x"]
+
+
+@pytest.mark.parametrize(
+    ("table", "sheet"),
+    [
+        ("a/b", "a_b"),
+        ("a:b*c?", "a_b_c_"),
+        ("[x]", "_x_"),
+        ("'quoted'", "quoted"),
+        ("x" * 40, "x" * 31),
+        ("", "Sheet"),
+    ],
+)
+def test_excel_sink_makes_the_table_name_a_valid_sheet_name(
+    tmp_path: Path, table: str, sheet: str
+) -> None:
+    from shape.builtins.sinks.excel import ExcelSink
+
+    target = tmp_path / "x.xlsx"
+    ExcelSink().write(str(target), table, pa.table({"a": [1]}).to_batches())
+    assert _sheet_cells(target)[0] == sheet
+
+
+def test_excel_sink_keeps_a_plain_table_name_and_empty_tables(tmp_path: Path) -> None:
+    from shape.builtins.sinks.excel import ExcelSink
+
+    target = tmp_path / "x.xlsx"
+    assert (
+        ExcelSink().write(str(target), "orders", iter([]), schema=pa.schema([("a", pa.int64())]))
+        == 0
+    )
+    title, rows = _sheet_cells(target)
+    assert title == "orders"
+    assert rows == [[("a", "s")]]
 
 
 _ = dt
