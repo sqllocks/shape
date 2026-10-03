@@ -128,7 +128,8 @@ name) and whose sampled rows show no null and no repeated value (with no sampled
 rules it out). Of those, the identity column wins, then a column named `id` or like the table:
 `<table>_id`, `<table>_key`, and the same with the table's singular (`orders` gives `order_id`).
 (`<table>` is the table's name without a leading `dim` or `fact`, so `dimcustomer` gives
-`customer`; `dim` or `fact` elsewhere in a name is part of the name.) **Otherwise the table has
+`customer`; `dim` or `fact` elsewhere in a name is part of the name, and the whole name counts
+too, so `factory` keeps `factory_id`.) **Otherwise the table has
 no primary key** (`primary_key` is empty): an arbitrary column ending in `id` would only look
 authoritative.
 

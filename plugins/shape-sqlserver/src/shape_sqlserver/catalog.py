@@ -116,8 +116,10 @@ def guess_primary_key(
     then a column named ``id`` or like the table: ``<table>_id``, ``<table>_key``, the same with
     the table's singular (``orders`` gives ``order_id``). Otherwise the table is reported with no
     primary key: guessing any other column would only look authoritative."""
-    stem = table_stem(table).replace("_", "")
-    stems = {stem, stem.removesuffix("s")} - {""}
+    # The name itself counts as well as its stem: ``factory`` is a table of factories, not a
+    # ``fact`` table of ``ory`` (and ``dimension`` is not a ``dim``ension of ``ension``).
+    names = {table_stem(table).replace("_", ""), table.lower().replace("_", "")}
+    stems = {n for name in names for n in (name, name.removesuffix("s"))} - {""}
     wanted = {"id"} | {s + suffix for s in stems for suffix in ("id", "key")}
     blocked = set(foreign_key_columns)
     eligible = [

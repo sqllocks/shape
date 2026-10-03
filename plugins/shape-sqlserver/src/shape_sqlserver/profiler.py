@@ -264,7 +264,9 @@ def _infer_keys_from_names(
             if (t.name, col) in skip or col in own_key:
                 continue
             candidate = key_stem(col)
-            if candidate is None or _norm(candidate) == _norm(table_stem(t.name)):
+            # the table's own key: named after its stem (``dimcustomer.customer_id``) or after
+            # the whole name (``factory.factory_id``, whose stem would be ``ory``)
+            if candidate is None or _norm(candidate) in (_norm(table_stem(t.name)), _norm(t.name)):
                 continue
             parent = by_norm.get(_norm(candidate)) or by_norm.get("dim" + _norm(candidate))
             if parent is not None:
