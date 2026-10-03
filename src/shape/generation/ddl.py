@@ -256,6 +256,15 @@ _UNTYPED_STRATEGIES = frozenset(
 
 
 _QUOTES = {"'": "'", '"': '"', "`": "`", "[": "]"}
+_ENUM = re.compile(r"ENUM\s*\((.*)\)", re.IGNORECASE)
+_INTEGER_MODIFIERS = (" unsigned", " signed", " zerofill")
+_TYPE_ALIASES = {"double": "double precision"}
+# A MySQL index line (``KEY idx (a)``, ``UNIQUE KEY uq (a)``, ``FULLTEXT KEY ft (b)``), told from
+# a column named ``key`` (``key VARCHAR(10)``) by what its parentheses hold: names, not a length.
+_INDEX_LINE = re.compile(
+    r"^(?:UNIQUE\s+|FULLTEXT\s+|SPATIAL\s+)?(?:KEY|INDEX)\b\s*" + _NAME + r"*\s*\(\s*[^\d\s)]",
+    re.IGNORECASE,
+)
 
 
 def _quoted_end(sql: str, i: int, absent: dict[str, int] | None = None) -> int:
@@ -320,6 +329,7 @@ class _ParsedColumn:
     is_primary_key: bool = False
     default: str | None = None
     references: tuple[str, str] | None = None  # (parent table, parent column or "" for its key)
+    values: list[str] | None = None  # the values of a MySQL ENUM('a', 'b')
 
 
 @dataclass
@@ -423,6 +433,8 @@ class DdlParser:
             if not part:
                 continue
             first = part.split()[0].upper() if part.split() else ""
+            if _INDEX_LINE.match(part):
+                continue
             if first in ("CONSTRAINT", "UNIQUE", "CHECK", "INDEX", "PRIMARY", "FOREIGN"):
                 pk = _TABLE_PK.search(part)
                 if pk:
@@ -474,6 +486,12 @@ class DdlParser:
         if not rest:
             return None
         rest = " ".join(rest.split())  # NOT  NULL, NOT<newline>NULL: one space between words
+        enum = _ENUM.match(rest)
+        values = (
+            [v[1:-1].replace("''", "'") for v in _STRING_LITERAL.findall(enum.group(1))]
+            if enum
+            else None
+        )
         # Keywords are read with string literals blanked: DEFAULT 'NOT NULL' is text.
         rest = _STRING_LITERAL.sub("''", rest)
 
@@ -502,6 +520,8 @@ class DdlParser:
         type_part = type_part.strip().rstrip(",")
 
         base, max_length, precision, scale = self._parse_type(type_part)
+        if values:
+            base, max_length, precision, scale = "enum", None, None, None
         references = self._column_references(rest)
         default = None
         m = re.search(r"DEFAULT\s+(\S+)", rest, re.IGNORECASE)
@@ -521,6 +541,7 @@ class DdlParser:
             is_primary_key="PRIMARY KEY" in upper,
             default=default,
             references=references,
+            values=values or None,
         )
 
     @staticmethod
@@ -539,11 +560,20 @@ class DdlParser:
     def _parse_type(type_str: str) -> tuple[str, int | None, int | None, int | None]:
         """``(base_type, max_length, precision, scale)`` of ``NVARCHAR(50)``, ``DECIMAL(18,2)``
         (also quoted, as SQL Server scripts write them: ``[decimal](18, 2)``)."""
-        type_str = _unquote(type_str)
+        type_str = " ".join(_unquote(type_str).lower().split())
+        zone = None  # PostgreSQL: TIMESTAMP(3) WITH TIME ZONE
+        for suffix, zoned in ((" with time zone", True), (" without time zone", False)):
+            if type_str.endswith(suffix):
+                type_str, zone = type_str[: -len(suffix)], zoned
+        while type_str.endswith(_INTEGER_MODIFIERS):  # MySQL: INT UNSIGNED ZEROFILL
+            type_str = type_str.rsplit(" ", 1)[0]
         match = _TYPE_SPEC.match(type_str)
         if not match:
-            return type_str.lower(), None, None, None
-        base = match.group(1).strip().lower()
+            return type_str, None, None, None
+        base = match.group(1).strip()
+        base = _TYPE_ALIASES.get(base, base)
+        if zone and base == "timestamp":
+            base = "timestamptz"
         p1 = (
             int(match.group(2)) if match.group(2) and match.group(2).isdigit() else None
         )  # MAX: none
@@ -745,6 +775,8 @@ class DdlParser:
         if col.name in table.primary_key and len(table.primary_key) == 1:
             return {"strategy": "sequence", "start": 1}
 
+        if col.values:  # ENUM('a', 'b'): its values, equally likely
+            return {"strategy": "weighted_enum", "values": dict.fromkeys(col.values, 1.0)}
         base = col.base_type.lower()
         if base in _BINARY:
             return None

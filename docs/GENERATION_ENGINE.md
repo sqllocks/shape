@@ -203,7 +203,9 @@ table by its singular or plural name (`order_id` to `order` or `orders`, `catego
 `categories`) are foreign keys too, when the DDL does not declare them: the key points at that
 table's primary key, whatever it is called, and is left out (the column stays a plain number) when
 the table has no single-column primary key. A name written without separators (`orderdate`) is one
-word and matches no rule. Binary columns (`VARBINARY`, `BINARY`, `VARBINARY(MAX)`, `IMAGE`, `BYTEA`,
+word and matches no rule. Types are read as the dialects write them: quoted (`[decimal](18, 2)`), with MySQL's `UNSIGNED`
+and `ZEROFILL`, PostgreSQL's `WITH TIME ZONE`, `DOUBLE`; a MySQL `ENUM('a', 'b')` draws its values,
+and a MySQL `KEY idx (a)` line is an index, not a column. Binary columns (`VARBINARY`, `BINARY`, `VARBINARY(MAX)`, `IMAGE`, `BYTEA`,
 and the `BLOB` types) are left out. `MAX` is a length like any other. A generated string never
 exceeds its column: a code in `CHAR(2)` is two random characters (`A7`), and a value set keeps
 only the values that fit (a `status` in `VARCHAR(7)` is active or pending; in `CHAR(2)` a code set
