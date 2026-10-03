@@ -90,3 +90,30 @@ def test_empty_data_is_an_error() -> None:
 def test_unnameable_column_set_is_rejected() -> None:
     with pytest.raises(DesignError, match="duplicate|empty"):
         design_from_rows({}, name="t")
+
+
+def test_other_value_types_are_inferred() -> None:
+    import datetime as dt
+    from decimal import Decimal
+
+    rows = [
+        {
+            "d": dt.date(2024, 1, i + 1),
+            "t": dt.datetime(2024, 1, 1, i),
+            "m": Decimal(f"{i}.25"),
+            "f": i + 0.5,
+            "b": bool(i % 2),
+            "mixed": i if i % 2 else "x",
+        }
+        for i in range(6)
+    ]
+    by = {a.name: a for a in design_from_rows(rows, name="t").entity("t").attributes}
+    assert [by[k].type for k in ("d", "t", "m", "f", "b", "mixed")] == [
+        "date",
+        "timestamp",
+        "decimal",
+        "float",
+        "boolean",
+        "string",
+    ]
+    assert by["m"].scale == 2
