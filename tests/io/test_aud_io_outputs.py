@@ -69,3 +69,13 @@ def test_503_a_long_but_valid_file_name_is_written(tmp_path):
     store.put_bytes(f"d/{name}", b"1")
     assert (tmp_path / "d" / name).read_bytes() == b"1"
     assert store.names("d") == [name]
+
+
+def test_505_landing_doc_lists_every_token_and_the_cloud_target():
+    from pathlib import Path
+
+    from shape.io.landing import TOKENS
+
+    text = (Path(__file__).resolve().parents[2] / "docs" / "LANDING.md").read_text("utf-8")
+    assert [t for t in TOKENS if "{" + t + "}" not in text] == []
+    assert "--to abfss://" in text
