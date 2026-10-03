@@ -234,3 +234,28 @@ Run 37094298568 (cd78ad3): every job green except the two Windows test jobs, inc
 Checks before the next push: ruff, ruff format --check, mypy (also `--platform win32` on the two files
 with Windows-only code) clean; `tests/validation tests/security tests/scenario tests/scale
 tests/quality/test_verify_config.py` pass.
+
+Run 37097912266 (26cbb4d): every job green except the two Windows test jobs, and on both of those the
+whole main suite passed (3.11: 5188 passed, 2 skipped; 3.14: 5188 passed, 2 skipped), so items 1 and 2
+and the three round-4 follow-ups above are confirmed on Windows. What failed is the *heavy* step, which
+had never run on Windows before (the earlier runs stopped at the first step):
+`tests/streaming/emit/test_soak.py::test_realtime_rate_holds_at_10000_events_per_second` (10 minutes at
+10,000 events/s, a Linux-and-Windows test by the owner decision):
+
+| job | first bad 10 s window | overall rate | `max_lag` |
+|---|---|---|---|
+| Windows 3.11 | at 100 s: 6,260 events/s | 10,000.0 (within 5%) | 5,030 ms |
+| Windows 3.14 | at 140 s: 6,500 events/s | 10,000.0 (within 5%) | 5,618 ms |
+
+One stall of about 5 s in the run (the next window shows 13,500 to 13,740 events/s: the schedule caught
+up, nothing was dropped). Ubuntu and macOS legs of the same step pass (Linux max lag 50 ms in the P5-01
+measurement). Nothing in the runtime waits for 5 s (`q.put`/`q.get` time out at 0.05 s, the delivery
+retries total at most 0.7 s, `max_queue_depth` and `retries` were not printed), so the cause is either a
+whole-process stall (host) or something in the process holding the GIL; the log does not say which.
+No fix was made on a guess. The soak test now carries evidence for its own failure, with no change to
+any assertion or bound: a sleeping probe thread (gaps over 0.25 s, with the second into the run), a
+`gc` callback (collections over 0.1 s, with generation), `faulthandler` stack dumps when the probe has
+not run for 3 s (they name the code holding the GIL), the list of seconds off the rate, the retries
+and the queue depth, all printed in the assertion message. The next Windows run decides: a gap in the
+probe with `none` for dumps and no long collection is the host (then this item goes to the owner, as
+for macOS); a dump naming shape or numpy code, or a long collection, is a runtime cause to fix.
