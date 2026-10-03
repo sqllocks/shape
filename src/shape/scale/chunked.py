@@ -45,6 +45,20 @@ def reference_counts(schema: GenSchema) -> dict[str, int]:
     return {name: n for name, n in probe.row_counts.items() if name in schema.tables}
 
 
+def check_overrides(schema: GenSchema, overrides: Mapping[str, int] | None) -> dict[str, int]:
+    """``overrides`` as ints, each naming a table of ``schema`` with a count of at least 0."""
+    out: dict[str, int] = {}
+    for name, count in (overrides or {}).items():
+        if name not in schema.tables:
+            raise ValueError(
+                f"row override {name!r} is not in the schema; tables: {', '.join(schema.tables)}"
+            )
+        if int(count) < 0:
+            raise ValueError(f"row override for {name!r} is negative ({count})")
+        out[name] = int(count)
+    return out
+
+
 def derive_counts(
     schema: GenSchema,
     target_table: str,
@@ -61,14 +75,14 @@ def derive_counts(
         )
     if target_count < 1:
         raise ValueError("target_count must be at least 1")
+    overrides = check_overrides(schema, overrides)
     ref = reference_counts(schema)
     ref_target = ref.get(target_table) or target_count
     ref[target_table] = ref_target
     factor = target_count / ref_target
     counts = {name: max(1, int(ref.get(name, 100) * factor)) for name in schema.tables}
     counts[target_table] = target_count
-    if overrides:
-        counts.update({k: int(v) for k, v in overrides.items()})
+    counts.update(overrides)
     return counts
 
 
@@ -137,7 +151,7 @@ class ChunkedGenerator:
     ) -> ChunkedResult:
         if chunk_rows < 1:
             raise ValueError("chunk_rows must be at least 1")
-        counts = scale_overrides
+        counts = check_overrides(self._schema, scale_overrides) if scale_overrides else None
         if target_table is not None:
             if target_count is None:
                 raise ValueError("target_count is required when target_table is given")
