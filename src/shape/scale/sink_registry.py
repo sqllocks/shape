@@ -65,10 +65,17 @@ class SinkRegistry:
                 max_workers=min(self._max_workers, len(self._sinks)),
                 thread_name_prefix="shape-sink",
             )
+        opened: list[Sink] = []
+
+        def open_one(sink: Sink) -> None:
+            sink.open(schema)
+            opened.append(sink)
+
         try:
-            self._each("open", lambda s: s.open(schema), self._sinks)
+            self._each("open", open_one, self._sinks)
         finally:
-            self._opened = list(self._sinks)
+            # a sink whose open failed is not closed; the ones that opened are, by ``close``
+            self._opened = [s for s in self._sinks if s in opened]
 
     def write_batch(self, table: str, batch: pa.RecordBatch) -> None:
         self._each("write_batch", lambda s: s.write_batch(table, batch), self._sinks)

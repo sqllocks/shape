@@ -219,8 +219,8 @@ class ScaleRouter:
         threads = _threads_for(self.mode, self.max_workers)
         used_processes = 0
         skipped = 0
-        self._registry.open(self.engine.schema)
         try:
+            self._registry.open(self.engine.schema)
             if self.processes:
                 used_processes, skipped = self._run_processes()
             if not used_processes:
