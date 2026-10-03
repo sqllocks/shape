@@ -5,6 +5,24 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+### Fixed
+
+- Scenario packs and `shape demo` (audit AUD-scenario): a pack run's id and manifest path are built
+  from plain names, so a domain or scale holding a path no longer writes outside `--output` (#281),
+  and the landing folder is checked before it is created (#525); the `chaos` section of a pack or
+  spec is validated (a wrong type is an error naming `chaos.<key>`, `enabled` must be true or
+  false, an unknown key is warned about, and a spec run checks the spec's chaos) (#510); an unknown
+  file format is warned about (it is written as CSV) (#513); a same-second run keeps its whole id
+  in the `_x2` suffix (#514); a topic listed twice is an error (#515); a stream rate must be finite
+  and positive, in hybrid packs too (#516); a list of names refuses `true`/`false` (#526); the run
+  manifest reader refuses a bool or sub-1 version and names the file of invalid JSON (#519). An
+  interrupted demo run saves its session so `shape demo cleanup` can remove what it wrote (#511);
+  the comparison page and semantic model never overwrite a file (#521); streaming refuses more
+  than one domain (#523); a new session never takes a saved session's id (#524); session and
+  profile names refuse a line break (#517); a session record that is not a JSON object is a
+  `DemoError` (#518); `demo_run` settings refuse a flag that is not a bool and a list that is not
+  names (#520); `demo/build_benchmark_sheet.py` checks without `assert` and uses UTF-8 (#527).
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
