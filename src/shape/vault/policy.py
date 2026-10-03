@@ -85,13 +85,10 @@ def parse_policy(doc: Any) -> VaultPolicy:
     :class:`VaultInputError` that names the entry."""
     if not isinstance(doc, dict):
         raise VaultInputError("the vault policy must be a JSON object")
-    try:
-        compat.check_format("vault-policy", doc, error=VaultInputError)
-        if compat.FORMAT_KEY not in doc:
-            raise VaultInputError("the vault policy declares no format (shape-vault-policy)")
-        compat.check_readable("vault-policy", doc, error=VaultInputError)
-    except compat.FormatError as e:
-        raise VaultInputError(str(e)) from None
+    compat.check_format("vault-policy", doc, error=VaultInputError)
+    if compat.FORMAT_KEY not in doc:
+        raise VaultInputError("the vault policy declares no format (shape-vault-policy)")
+    compat.check_readable("vault-policy", doc, error=VaultInputError)
     compat.check_unknown("vault-policy", doc, _KNOWN, error=VaultInputError)
     default = _policy_value(doc.get("default", "none"), "default")
     by_class: dict[str, str] = {}

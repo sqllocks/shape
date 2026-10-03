@@ -447,7 +447,79 @@ def generate_run_manifest(out: Path) -> list[dict[str, Any]]:
     return entries
 
 
+VAULT_KEK = b"\x03" * 32  # a published test key: never use it for anything but this corpus
+
+
+def generate_vault(out: Path) -> list[dict[str, Any]]:
+    """The generation written by W5-03: a value vault with the profile that refers to it (the
+    additive ``vault`` field of the profile artifact manifest) and a vault policy file."""
+    import shape
+    from shape import __version__
+    from shape.artifact.io import canonical_json, read_artifact
+    from shape.vault.format import encode_value, seal_vault
+    from shape.vault.ops import attach_vault, write_file
+    from shape.vault.policy import VaultPolicy
+
+    if out.exists():
+        raise SystemExit(f"{out} exists: a generation is written once")
+    (out / "vault").mkdir(parents=True)
+    (out / "policy").mkdir()
+    work = Path(tempfile.mkdtemp(prefix="timecapsule-vault-"))
+    csv = _csv(work)
+    shape_path = out / "vault" / "orders.shape"
+    shape.save(shape.profile(str(csv)), shape_path)
+    manifest, _ = read_artifact(shape_path, notice=False)
+    raw = seal_vault(
+        {
+            "orders.status": ("categories", {"categories": [["paid", 40], ["new", 20]]}),
+            "orders.amount": ("extremes", {"min": encode_value(0.0), "max": encode_value(88.5)}),
+        },
+        manifest["shape_content_id"],
+        VAULT_KEK,
+    )
+    write_file(out / "vault" / "orders.shapevault", raw)
+    attach_vault(shape_path, raw)
+    policy = VaultPolicy(
+        "none",
+        {"CONFIDENTIAL": "categories"},
+        {"orders.status": "all", "orders.amount": "extremes"},
+    )
+    (out / "policy" / "vault-policy.json").write_text(
+        json.dumps(policy.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    entries = [
+        {
+            "id": "vault-v1",
+            "kind": "vault",
+            "format_version": 1,
+            "path": "vault",
+            "sha256": _tree_digest(out / "vault"),
+            "produced_by": "shape.vault.format.seal_vault + shape.vault.ops.attach_vault",
+            "authored": False,
+            "writer_shape_version": __version__,
+            "note": "a vault, and the profile artifact whose manifest carries its reference",
+        },
+        {
+            "id": "vault-policy-v1",
+            "kind": "vault-policy",
+            "format_version": 1,
+            "path": "policy/vault-policy.json",
+            "sha256": _tree_digest(out / "policy" / "vault-policy.json"),
+            "produced_by": "shape.vault.policy.VaultPolicy.to_dict",
+            "authored": False,
+            "writer_shape_version": __version__,
+            "note": "",
+        },
+    ]
+    (out / "index.json").write_bytes(canonical_json({"files": entries}) + b"\n")
+    return entries
+
+
 if __name__ == "__main__":
+    if len(sys.argv) == 3 and sys.argv[1] == "--vault":
+        for e in generate_vault(Path(sys.argv[2])):
+            print(f"{e['id']:24} {e['path']}")
+        raise SystemExit(0)
     if len(sys.argv) == 3 and sys.argv[1] == "--run-manifest":
         for e in generate_run_manifest(Path(sys.argv[2])):
             print(f"{e['id']:24} {e['path']}")

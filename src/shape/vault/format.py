@@ -47,7 +47,6 @@ from .errors import (
     VaultAuthenticationError,
     VaultFormatError,
     VaultInputError,
-    VaultVersionError,
 )
 from .kek import KEK_BYTES, kek_id
 
@@ -238,21 +237,10 @@ def parse_vault(raw: bytes | str) -> ParsedVault:
         raise VaultFormatError("malformed vault: not JSON") from None
     if not isinstance(doc, dict):
         raise VaultFormatError("malformed vault: not a JSON object")
-    try:
-        compat.check_format("vault", doc, error=VaultFormatError)
-        if compat.FORMAT_KEY not in doc:
-            raise VaultFormatError("malformed vault: no format declared")
-        version = compat.check_readable("vault", doc, error=VaultFormatError)
-    except compat.UnsupportedVersionError as e:
-        raise VaultVersionError(
-            str(e),
-            kind=e.kind,
-            found=e.found,
-            supported=e.supported,
-            min_shape_version=e.min_shape_version,
-        ) from None
-    except compat.FormatError as e:
-        raise VaultFormatError(f"malformed vault: {e}") from None
+    compat.check_format("vault", doc, error=VaultFormatError)
+    if compat.FORMAT_KEY not in doc:
+        raise VaultFormatError("malformed vault: no format declared")
+    version = compat.check_readable("vault", doc, error=VaultFormatError)
     vault_id = doc.get("vault_id")
     pid = doc.get("profile_content_id")
     key_id = doc.get("kek_id")

@@ -45,6 +45,8 @@ never had a second version before they were declared).
 | `gate-schema` | gate schema JSON | `shape-gates` | 1 | none: it already used `version` | |
 | `verify-config` | verify configuration JSON | `shape-verify-config` | 1 | none: it already used `version` | authored by users |
 | `profile-export` | `shape profile export` JSON | `shape-profile` | 1 | `format_version` | |
+| `vault` | `*.shapevault`, the encrypted value vault | `shape-vault` | 1 | none | new; the profile artifact's manifest gains the additive `vault` field (`vault_id`, `sha256`), see `docs/VAULT.md` |
+| `vault-policy` | vault policy JSON | `shape-vault-policy` | 1 | none | authored by users |
 
 Three kinds do not follow the table to the letter, for reasons that are part of the policy:
 
@@ -256,6 +258,8 @@ by `shape.compat.render_support_table()` and a test keeps it equal to the code.
 | `migration-receipt` | `shape-migration-receipt` | 1 | 0.9.0 | supported |
 | `gate-schema` | `shape-gates` | 1 | 0.9.0 | supported |
 | `verify-config` | `shape-verify-config` | 1 | 0.9.0 | supported |
+| `vault` | `shape-vault` | 1 | 0.9.0 | supported |
+| `vault-policy` | `shape-vault-policy` | 1 | 0.9.0 | supported |
 | `profile-export` | `shape-profile` | 1 | 0.9.0 | supported |
 <!-- support-table:end -->
 

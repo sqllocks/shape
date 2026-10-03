@@ -36,6 +36,7 @@ from shape.artifact.io import (
     write_container,
 )
 from shape.compat import BOOKKEEPING_KEYS, KINDS, FormatError, UnsupportedVersionError
+from shape.vault.errors import VaultFormatError, VaultInputError
 
 NEWER_MINIMUM = "9.9.0"
 
@@ -388,6 +389,39 @@ def _verify_read(doc: dict[str, Any]) -> str:
     return canon({"rules": dict(cfg.rules), "files": list(cfg.file_paths)})
 
 
+def _vault_make(tmp: Path, profile: Any) -> Path:
+    from shape.vault.format import seal_vault
+
+    out = tmp / "v.shapevault"
+    out.write_bytes(
+        seal_vault({"t.c": ("categories", {"categories": [["a", 1]]})}, "ab" * 32, bytes(32))
+    )
+    return out
+
+
+def _vault_read(path: Path) -> str:
+    from shape.vault.format import inspect_vault
+
+    info = inspect_vault(path.read_bytes())
+    return canon(strip({k: v for k, v in info.items() if k != "vault_id"}))
+
+
+_VAULT_POLICY = {
+    "format": "shape-vault-policy",
+    "version": 1,
+    "default": "none",
+    "by_classification": {"CONFIDENTIAL": "categories"},
+    "columns": {"t.c": "all"},
+}
+
+
+def _vault_policy_read(doc: dict[str, Any]) -> str:
+    from shape.vault.policy import parse_policy
+
+    p = parse_policy(doc)
+    return canon({"d": p.default, "c": dict(p.by_classification), "o": dict(p.columns)})
+
+
 def _const(doc: dict[str, Any]) -> Callable[[Path, Any], dict[str, Any]]:
     return lambda tmp, profile: copy.deepcopy(doc)
 
@@ -419,6 +453,13 @@ CASES: dict[str, Case] = {
         ),
         _json("gate-schema", _gate_make, _gate_read, legacy_keep=("format", "version")),
         _json("profile-export", _export_make, _export_read, legacy_keep=("format",)),
+        _json(
+            "vault",
+            _vault_make,
+            _vault_read,
+            legacy_keep=("format", "version"),
+            error=VaultFormatError,
+        ),
         _json("registry-layout", _registry_make, _registry_read),
         _json("profile-registry-layout", _profile_registry_make, _profile_registry_read),
         Case(
@@ -445,6 +486,16 @@ CASES: dict[str, Case] = {
             _gsl_read,
             legacy_keep=("version",),
             authored=True,
+        ),
+        Case(
+            "vault-policy",
+            _const(_VAULT_POLICY),
+            _dict_declaration,
+            _dict_edit,
+            _vault_policy_read,
+            legacy_keep=("format", "version"),
+            authored=True,
+            error=VaultInputError,
         ),
         Case(
             "verify-config",

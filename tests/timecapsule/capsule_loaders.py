@@ -226,7 +226,47 @@ def _verify_config(path: Path, corpus: Path, kind: str) -> Any:
     }
 
 
+def _vault(path: Path, corpus: Path, kind: str) -> Any:
+    """The header, the decrypted payloads (with the published test key) and the check against the
+    profile whose manifest carries the vault reference."""
+    from capsule_generate import VAULT_KEK
+
+    from shape.artifact.io import read_artifact
+    from shape.vault.format import inspect_vault, open_vault
+    from shape.vault.ops import vault_reference, verify_vault
+
+    raw = (path / "orders.shapevault").read_bytes()
+    manifest, _ = read_artifact(path / "orders.shape", notice=False)
+    opened = open_vault(raw, VAULT_KEK)
+    report = verify_vault(path / "orders.shapevault", path / "orders.shape", kek=VAULT_KEK)
+    return {
+        "header": {
+            k: v
+            for k, v in inspect_vault(raw).items()
+            if k not in ("shape_version", "min_shape_version")
+        },
+        "payloads": {
+            n: {"policy": c.policy, "payload": c.payload} for n, c in opened.columns.items()
+        },
+        "reference": vault_reference(manifest),
+        "verified": report["ok"],
+    }
+
+
+def _vault_policy(path: Path, corpus: Path, kind: str) -> Any:
+    from shape.vault.policy import load_policy
+
+    p = load_policy(path)
+    return {
+        "default": p.default,
+        "by_classification": dict(p.by_classification),
+        "columns": dict(p.columns),
+    }
+
+
 LOADERS = {
+    "vault": _vault,
+    "vault-policy": _vault_policy,
     "artifact": _artifact,
     "signature": _signature,
     "migration-receipt": _receipt,
