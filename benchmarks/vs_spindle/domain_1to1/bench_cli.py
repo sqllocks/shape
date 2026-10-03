@@ -10,11 +10,12 @@ Each timed run is a fresh process of
     $SHAPE_VENV/bin/shape     generate DOMAIN --scale S --seed 1042 --format parquet -o DIR
 
 (wall clock around the whole process: interpreter start, imports, generation, writing). The output
-goes to the layout directories ``generate.py`` and ``verify.py`` use, so ``verify.py --impl shape``
-checks exactly what the CLI wrote (equivalence first: run it, require exit 0, then trust the
-timings). Default threading for both; ``--shape-threads 1`` also times single-threaded Shape. The
-whole run holds the exclusive benchmark lock and each run waits for a 1-minute load average
-<= 1.5. The output directory is removed before every run, so no cache survives between runs.
+goes to the ``<impl>-cli`` layout directories (``spindle-cli``, ``shape-cli``), next to the API
+runs, so ``verify.py --impl shape --cli`` checks exactly what the CLI wrote (equivalence first:
+run it, require exit 0, then trust the timings). Default threading for both; ``--shape-threads 1``
+also times single-threaded Shape. The whole run holds the exclusive benchmark lock and each run
+waits for a 1-minute load average <= 1.5. The output directory is removed before every run, so
+no cache survives between runs.
 Tools are interleaved run by run; the median is reported next to every raw run.
 """
 
