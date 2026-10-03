@@ -176,6 +176,13 @@ def run(a: argparse.Namespace) -> int:
     tables = load_tables(a.data, a.format)
     if not tables:
         raise ValueError(f"no {a.format} data files found in {a.data}")
+    for table, columns in classified.items():
+        for column in sorted(columns):
+            if table not in tables or column not in tables[table].column_names:
+                raise ValueError(
+                    f"--classified {table}.{column} names no column of the data "
+                    f"(tables: {', '.join(tables)})"
+                )
     schema = load_gate_schema(a.schema) if a.schema else None
     config = load_verify_config(a.config) if a.config else None
     suppressions = load_suppressions(a.suppressions) if a.suppressions else []

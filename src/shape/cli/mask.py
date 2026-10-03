@@ -137,6 +137,13 @@ def run(a: argparse.Namespace) -> int:
     key = _key(a, out_dir)
 
     tables = {name: _read(p, fmt) for name, p in files.items()}
+    known = list(dict.fromkeys(c for t in tables.values() for c in t.column_names))
+    for flag, names in (("--exclude", a.exclude), ("--pii", list(pii))):
+        for name in names:
+            if name not in known:
+                raise ValueError(
+                    f"{flag} {name!r} is not a column of the data (columns: {', '.join(known)})"
+                )
     typed = profile({name: str(p) for name, p in files.items()}).to_dict()
     transform = default_host().get("shape.transforms", "mask")
     result = transform.mask(tables, seed=a.seed, exclude=a.exclude, pii=pii, profile=typed, key=key)
