@@ -330,3 +330,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Repository cleaned up for public release: removed internal milestone and
   qualification records.
 - README and changelog rewritten to describe the current state.
+
+### Fixed
+
+- `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references` no longer depends on test order (#77): it resolves the references in a fresh interpreter and reports which cloud SDK modules got imported, so `azure*` modules left in `sys.modules` by `tests/demo/fabric` cannot fail it.
