@@ -1309,7 +1309,11 @@ def main(argv=None):
     from shape.cli import lifecycle
 
     lifecycle.quick_exit_allowed = argv is None
-    return _main(argv)
+    lifecycle.exit_on_return = False
+    code = _main(argv)
+    if lifecycle.exit_on_return:
+        lifecycle.exit_now(code)
+    return code
 
 
 def _main(argv):

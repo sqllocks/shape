@@ -503,3 +503,13 @@ def test_cloud_delta_passes_the_derived_options_to_delta_rs(monkeypatch, no_ambi
 def test_not_a_delta_table_is_a_clear_error(tmp_path):
     with pytest.raises(ValueError, match="not a Delta table"):
         DeltaSource().schema(str(tmp_path))
+
+
+def test_a_file_uri_with_a_drive_letter_is_the_drive_path():
+    from pathlib import Path
+
+    from shape.builtins.sources.files import local_path
+
+    assert local_path("file:///C:/Users/me/tbl") == Path("C:/Users/me/tbl")
+    assert local_path("file:///C:/Users/my%20dir/tbl") == Path("C:/Users/my dir/tbl")
+    assert local_path("file:///tmp/tbl") == Path("/tmp/tbl")

@@ -1464,7 +1464,13 @@ def _profile_column(c: _Col, row_count: int, top_n: int = 500, iqr_factor: float
     # ---- enum + value_counts_ext ------------------------------------------
     enum_values = None
     value_counts_ext = None
-    if n_nn:
+    # a text column whose values are (nearly) all different lists no values: its top values would
+    # be an arbitrary few of them (owner decision 2026-10-01, ISS-profile #37; same rule as
+    # shape.profile.reference and the allow-list in verify.py)
+    arbitrary_top = (
+        kind == "str" and stype == "string" and cardinality > top_n and cardinality >= 0.95 * n_nn
+    )
+    if n_nn and not arbitrary_top:
         need = cardinality if is_enum else min(top_n, cardinality)
         if vc_mode == "hash":
             top = np.argsort(-counts, kind="stable")[:need]

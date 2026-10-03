@@ -17,6 +17,8 @@ import json
 import logging
 import os
 import re
+import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -75,6 +77,52 @@ def default_jobs_dir() -> Path:
     return Path(os.environ.get(JOBS_DIR_ENV) or Path.home() / ".shape" / "jobs")
 
 
+def windows_current_user() -> str:
+    """``DOMAIN\\user`` of the account running this process (the name icacls accepts)."""
+    import getpass
+
+    user = os.environ.get("USERNAME") or getpass.getuser()
+    domain = os.environ.get("USERDOMAIN")
+    return f"{domain}\\{user}" if domain else user
+
+
+def restrict_to_current_user(path: Path) -> None:
+    """Make ``path`` (a directory or a file) readable and writable by the current user only.
+
+    POSIX needs nothing here: directories are created with mode 0700 and files with 0600.
+    Windows ignores POSIX modes, so the ACL is rewritten with ``icacls``, which ships with Windows:
+    inheritance from the parent is removed and the current user is the only entry. A directory
+    also gets object and container inheritance, but the store sets the ACL of each file itself, so
+    the result does not depend on what the parent (a profile, a temp folder, or the ACL Python 3.13
+    gives ``mkdir(mode=0o700)``) hands down. Raises ``OSError`` when the ACL cannot be set: a store
+    that cannot be made private is not used.
+    """
+    if sys.platform != "win32":
+        return
+    rights = "(OI)(CI)F" if path.is_dir() else "F"
+    try:
+        done = subprocess.run(
+            [
+                "icacls",
+                str(path),
+                "/inheritance:r",
+                "/grant:r",
+                f"{windows_current_user()}:{rights}",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise OSError(f"cannot restrict {path} to the current user: {exc}") from exc
+    if done.returncode != 0:
+        raise OSError(
+            f"cannot restrict {path} to the current user: icacls exited "
+            f"{done.returncode}: {(done.stderr or done.stdout).strip()}"
+        )
+
+
 @dataclass
 class JobRecord:
     """One job. ``request`` is what was asked (never a secret); ``fabric`` holds the ids of a
@@ -113,6 +161,7 @@ class JobStore:
         self._root = Path(root) if root is not None else None
         self._lock = threading.RLock()
         self._jobs: dict[str, JobRecord] = {}
+        self._secured = False
 
     @classmethod
     def default(cls) -> JobStore:
@@ -133,12 +182,16 @@ class JobStore:
         if self._root is None:
             return
         self._root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        if not self._secured:
+            restrict_to_current_user(self._root)
+            self._secured = True
         target = self._path(record.job_id)
         fd, tmp = tempfile.mkstemp(dir=self._root, prefix=".job-", suffix=".tmp")
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as handle:
                 json.dump(record.to_dict(), handle, indent=2, sort_keys=True, default=str)
             os.chmod(tmp, 0o600)
+            restrict_to_current_user(Path(tmp))
             os.replace(tmp, target)
         except BaseException:
             Path(tmp).unlink(missing_ok=True)

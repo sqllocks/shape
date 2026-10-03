@@ -286,9 +286,13 @@ def cmd_generate(a: argparse.Namespace) -> int:
         from shape.cli.scale import run_scale
 
         return run_scale(a)
-    from shape.cli.lifecycle import quick_exit_allowed
+    from shape.cli import lifecycle
 
-    if quick_exit_allowed:
+    if lifecycle.quick_exit_allowed:
+        # Loading the schema starts Arrow's thread pool, and tearing the interpreter down with it
+        # alive aborts now and then ("terminate called without an active exception"). A failure
+        # ends the process as a finished run does: flushed, then straight out.
+        lifecycle.exit_on_return = True
         # A process that ends when the files are written: the collector would only walk the
         # objects the imports make (about 10 ms), and generation makes no reference cycles.
         gc.disable()

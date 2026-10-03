@@ -9,6 +9,9 @@ import sys
 
 # Set by ``main``: it was called with no ``argv``, and nothing runs after the command returns.
 quick_exit_allowed = False
+# Set by a command that has started native thread pools: whatever it returns, the process ends
+# at once (``main`` calls ``exit_now``) rather than tearing the interpreter down around them.
+exit_on_return = False
 
 
 def exit_now(code: int) -> None:

@@ -14,6 +14,7 @@ from typing import Any
 
 MAX_BYTES = 4 * 1024 * 1024
 MAX_NODES = 2_000_000
+MAX_FLOW_DEPTH = 100
 
 
 def _expanded_size(node: Any, memo: dict[int, int], active: set[int]) -> int:
@@ -39,6 +40,37 @@ def _expanded_size(node: Any, memo: dict[int, int], active: set[int]) -> int:
     return size
 
 
+def _check_flow_depth(text: str) -> None:
+    """Refuse flow collections (``[`` and ``{``) nested deeper than ``MAX_FLOW_DEPTH``.
+
+    PyYAML's scanner revisits every open flow collection for each token it reads, so ``[`` x
+    10 000 costs seconds (quadratic) before the composer's recursion limit refuses it; a linear
+    pass over the text bounds that cost. Quoted scalars and comments are skipped; an unbalanced
+    bracket inside a block scalar is counted, which only matters past ``MAX_FLOW_DEPTH``."""
+    depth = 0
+    quote = ""
+    i, n = 0, len(text)
+    while i < n:
+        c = text[i]
+        if quote:
+            if quote == '"' and c == "\\":
+                i += 1
+            elif c == quote:
+                quote = ""
+        elif c in "\"'" and (i == 0 or text[i - 1] in " \t\n,[{:-?"):
+            quote = c  # a quote opens a scalar only at its start (``don't`` is a plain scalar)
+        elif c == "#" and (i == 0 or text[i - 1] in " \t\n"):
+            end = text.find("\n", i)
+            i = n if end < 0 else end
+        elif c in "[{":
+            depth += 1
+            if depth > MAX_FLOW_DEPTH:
+                raise ValueError("YAML document is nested too deeply")
+        elif c in "]}" and depth:
+            depth -= 1
+        i += 1
+
+
 def safe_load_yaml(text: str) -> Any:
     """The parsed document; ``ValueError`` for anything that is not a bounded, safe document.
     (``yaml.YAMLError`` is not a ``ValueError``: it passes through for the caller to wrap.)"""
@@ -46,6 +78,7 @@ def safe_load_yaml(text: str) -> Any:
 
     if len(text) > MAX_BYTES:
         raise ValueError(f"YAML document larger than {MAX_BYTES} bytes")
+    _check_flow_depth(text)
     try:
         root = yaml.compose(text, Loader=yaml.SafeLoader)
         if root is not None:
