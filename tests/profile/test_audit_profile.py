@@ -335,3 +335,14 @@ def test_integers_wider_than_64_bits_are_float_as_in_the_baseline(kernel, tmp_pa
     assert c["dtype"] == "float"
     if min(values) > 0:  # (the baseline's CSV reader keeps the negative case's values as text)
         assert c["min_value"] == ["int", min(values)] and c["max_value"] == ["int", max(values)]
+
+
+# ---- #269: zoned date text is refused with the column and the way out ---------------------
+
+
+@pytest.mark.parametrize("text", ["2024-01-01T00:00:00Z", "2024-01-01 10:00+02:00"])
+def test_zoned_date_text_is_refused_naming_the_column_and_the_fix(tmp_path, text):
+    path = tmp_path / "z.csv"
+    path.write_text(f"n,when\n1,{text}\n2,{text}\n")
+    with pytest.raises(NotImplementedError, match=r"column 'when'.*to_datetime"):
+        shape.profile(str(path))
