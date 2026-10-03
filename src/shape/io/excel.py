@@ -92,12 +92,26 @@ def is_workbook_path(path: str | Path) -> bool:
 
 def split_spec(spec: str | Path) -> tuple[str, str | None]:
     """``"book.xlsx#Sheet"`` -> ``("book.xlsx", "Sheet")``; ``"book.xlsx"`` -> ``("book.xlsx",
-    None)``. A ``#`` after anything but a workbook suffix is not a sheet selector."""
+    None)``. A ``#`` after anything but a workbook suffix is not a sheet selector, and the sheet
+    part can itself contain ``#`` (``"book.xlsx#Q#1"`` is sheet ``Q#1``). A file that exists
+    under the whole name is that file; otherwise the workbook part is the first that exists, or
+    the shortest."""
     text = str(spec)
-    head, sep, tail = text.rpartition("#")
-    if sep and tail and is_workbook_path(head):
-        return head, tail
-    return text, None
+    splits = [
+        (text[:i], text[i + 1 :])
+        for i, ch in enumerate(text)
+        if ch == "#" and i + 1 < len(text) and is_workbook_path(text[:i])
+    ]
+    if not splits or _is_file(text):
+        return text, None
+    return next((s for s in splits if _is_file(s[0])), splits[0])
+
+
+def _is_file(text: str) -> bool:
+    try:
+        return Path(text).is_file()
+    except (OSError, ValueError):  # a name too long for the filesystem, a NUL byte
+        return False
 
 
 def is_workbook_spec(spec: Any) -> bool:
