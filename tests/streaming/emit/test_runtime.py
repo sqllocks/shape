@@ -289,6 +289,24 @@ def test_transient_failures_are_retried(retail_engine) -> None:
     assert _seqs(sink) == list(range(5000))
 
 
+@pytest.mark.parametrize("error", [FileNotFoundError, PermissionError])
+def test_a_missing_target_or_refused_write_is_not_retried(retail_engine, error) -> None:
+    sink = Flaky([2], error)
+    cfg = EmitConfig(batch_events=500, retries=3, retry_backoff=0.001, max_events=5000)
+    with pytest.raises(error, match="^down$"):
+        EmitRunner(_plan(retail_engine), sink, cfg).run()
+    assert sink.calls == 2  # the failing batch was sent once
+    assert _seqs(sink) == list(range(500))
+
+
+def test_other_os_errors_are_still_retried(retail_engine) -> None:
+    sink = Flaky([2, 3], OSError)
+    cfg = EmitConfig(batch_events=500, retry_backoff=0.001, max_events=5000)
+    report = EmitRunner(_plan(retail_engine), sink, cfg).run()
+    assert report.retries == 2 and report.complete
+    assert _seqs(sink) == list(range(5000))
+
+
 def test_a_persistent_failure_checkpoints_the_last_delivery(retail_engine, tmp_path: Path) -> None:
     sink = Flaky(list(range(4, 100)), OSError)
     ck = tmp_path / "c"

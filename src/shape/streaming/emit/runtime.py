@@ -341,6 +341,8 @@ class EmitRunner:
             try:
                 self.sink.send(batch)
                 return
+            except (FileNotFoundError, PermissionError):
+                raise  # a missing target or a refused write does not heal: no retry, no wrapping
             except (OSError, ConnectionError, TimeoutError) as exc:
                 attempt += 1
                 if attempt > cfg.retries:

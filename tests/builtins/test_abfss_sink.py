@@ -761,14 +761,12 @@ CLI_CASES = [
 ]
 
 
-# The missing-item refusal is a FileNotFoundError, which the emit runtime retries and wraps
-# ("delivery failed after N retries: ..."); `stream` and `emit` for that case are blocked on a
-# change outside this package (docs/plans/lane_status/W7-02.md).
+# The missing-item refusal is a FileNotFoundError, which the emit runtime raises as it is (no
+# retry), so `stream` and `emit` give the same one line as `generate` (INT-18).
 CLI_RUNS = [
     (command, uri, message)
     for command in ("generate", "stream", "emit")
     for uri, message in CLI_CASES
-    if command == "generate" or "does not exist" not in message
 ]
 
 
