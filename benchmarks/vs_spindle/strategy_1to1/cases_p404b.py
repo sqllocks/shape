@@ -19,6 +19,7 @@ from __future__ import annotations
 from typing import Any
 
 from cases import _col  # type: ignore[import-not-found]
+from identifier_differences import REALISTIC_OPTIONS  # type: ignore[import-not-found]
 
 ROWS = 60_000
 PARENT_ROWS = 3_000
@@ -150,9 +151,22 @@ def _providers() -> dict[str, dict[str, Any]]:
         for provider, extra in specs.items():
             regex = r"[a-z0-9]{12}" if provider in ("pystr", "word") else None
             out[f"{strategy}/{provider}"] = _case(
-                strategy, _text(strategy, provider), regex=regex, **extra
+                strategy,
+                _text(strategy, provider),
+                regex=regex,
+                shape_generators=_opt_in(strategy, provider),
+                **extra,
             )
     return out
+
+
+def _opt_in(strategy: str, provider: str) -> dict[str, dict[str, Any]]:
+    """Shape's generator for ``provider`` with the explicit opt-in that gives the baseline's
+    realistic values (see ``identifier_differences.py``); the defaults differ on purpose."""
+    options = REALISTIC_OPTIONS.get(provider)
+    if options is None:
+        return {}
+    return {TARGET: {"strategy": strategy, "provider": provider, **options}}
 
 
 def _email_with_names() -> dict[str, dict[str, Any]]:
@@ -169,6 +183,7 @@ def _email_with_names() -> dict[str, dict[str, Any]]:
             strategy,
             _text(strategy, "email"),
             helpers=helpers,
+            shape_generators=_opt_in(strategy, "email"),
             parts={
                 "regex": _FIRST + r"\.(?P<last>[^ .@\d]+)(?P<n>\d+)@(?P<domain>[^ @]+)",
                 "groups": {

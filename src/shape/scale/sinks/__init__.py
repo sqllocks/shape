@@ -34,8 +34,15 @@ def build_sink(
     *,
     chunk_rows: int = 500_000,
     resume: bool = False,
+    auth: Mapping[str, Any] | None = None,
+    resolve: bool = True,
 ) -> Sink:
-    """One sink by name with its settings (a mapping; see each sink's class)."""
+    """One sink by name with its settings (a mapping; see each sink's class).
+
+    ``auth`` is the sign-in (``--auth`` and friends, see ``shape.cli.auth``): for the Fabric sinks
+    it becomes the writer's credential, or a SQL login. ``resolve=False`` only checks names and
+    settings: no credential reference is resolved and no credential is built (validation
+    before a job exists must not read a vault or start a sign-in)."""
     settings = dict(cfg or {})
     if name == "memory":
         from shape.scale.sinks.memory import MemorySink
@@ -55,7 +62,11 @@ def build_sink(
 
     if name == "lakehouse":
         _check(name, settings, ("base_path", "format"))
-        return fabric.LakehouseSink(settings.pop("base_path", ""), **settings)
+        return fabric.LakehouseSink(
+            settings.pop("base_path", ""),
+            **settings,
+            writer_options=fabric.auth_options(auth) if resolve else None,
+        )
     if name == "warehouse":
         _check(
             name,
@@ -68,8 +79,11 @@ def build_sink(
                 "chunk_size",
             ),
         )
+        conn, opts = fabric.connection_and_auth(
+            settings.pop("connection_string", ""), auth, resolve
+        )
         return fabric.WarehouseSink(
-            settings.pop("connection_string", ""), settings.pop("staging_path", ""), **settings
+            conn, settings.pop("staging_path", ""), **settings, writer_options=opts
         )
     if name == "sql_database":
         _check(
@@ -77,11 +91,17 @@ def build_sink(
             settings,
             ("connection_string", "schema_name", "write_mode", "batch_size"),
         )
-        return fabric.SqlDatabaseSink(settings.pop("connection_string", ""), **settings)
+        conn, opts = fabric.connection_and_auth(
+            settings.pop("connection_string", ""), auth, resolve
+        )
+        return fabric.SqlDatabaseSink(conn, **settings, writer_options=opts)
     if name == "kql":
         _check(name, settings, ("cluster_uri", "database", "table_prefix", "write_mode"))
         return fabric.KqlSink(
-            settings.pop("cluster_uri", ""), settings.pop("database", ""), **settings
+            settings.pop("cluster_uri", ""),
+            settings.pop("database", ""),
+            **settings,
+            writer_options=fabric.auth_options(auth) if resolve else None,
         )
     raise ValueError(f"unknown sink {name!r}; the sinks are: {', '.join(SINK_NAMES)}")
 
@@ -92,13 +112,20 @@ def build_sinks(
     *,
     chunk_rows: int = 500_000,
     resume: bool = False,
+    auth: Mapping[str, Any] | None = None,
+    resolve: bool = True,
 ) -> list[Sink]:
     """Sinks for ``names``, each with ``config[name]``."""
     config = config or {}
     unused = sorted(set(config) - set(names))
     if unused:
         raise ValueError(f"settings for sinks not in use: {', '.join(unused)}")
-    return [build_sink(n, config.get(n), chunk_rows=chunk_rows, resume=resume) for n in names]
+    return [
+        build_sink(
+            n, config.get(n), chunk_rows=chunk_rows, resume=resume, auth=auth, resolve=resolve
+        )
+        for n in names
+    ]
 
 
 def redact(config: Mapping[str, Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
