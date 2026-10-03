@@ -5,6 +5,13 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+### Fixed
+
+- Streaming checkpoints: compressed state fields are inflated within a bound taken from the state's
+  declared size, and an oversized or damaged field is refused as a corrupt checkpoint (#298).
+- `shape stream --json`: a run whose events fit in one batch no longer reports `elapsed` and `rate`
+  as 0.0 (#473).
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
