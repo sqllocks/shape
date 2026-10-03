@@ -98,6 +98,17 @@ def _valid_mask(array: pa.Array) -> npt.NDArray[np.bool_]:
     return mask
 
 
+def _to_integer(scaled: npt.NDArray[np.float64], dtype: np.dtype[Any]) -> npt.NDArray[Any]:
+    """``scaled`` as ``dtype``, held to the type's range (a cast would wrap)."""
+    info = np.iinfo(dtype)
+    out = np.clip(scaled, info.min, info.max)
+    with np.errstate(invalid="ignore"):
+        ints = out.astype(dtype)
+    ints[out >= float(info.max)] = info.max  # float(max) of a 64-bit type is 2**63 or 2**64
+    ints[out <= float(info.min)] = info.min
+    return ints
+
+
 def _perturb_numeric(
     array: pa.Array, idx: _IntArray, rng: np.random.Generator, *, truncate: bool = False
 ) -> pa.Array:
@@ -108,12 +119,14 @@ def _perturb_numeric(
     if pa.types.is_decimal(array.type):
         values = np.asarray(pc.cast(array, pa.float64()).fill_null(0.0).to_numpy(False))
         values = values.copy()
-        values[idx] = values[idx] * factors
-        return pc.cast(pa.array(values, mask=~valid), array.type, safe=False)
+        scale = array.type.scale
+        top = (10 ** (array.type.precision - scale) - 10.0**-scale) if scale >= 0 else np.inf
+        values[idx] = np.clip(np.round(values[idx] * factors, max(scale, 0)), -top, top)
+        return pc.cast(pa.array(values, mask=~valid), array.type)
     if _is_integer(array.type):
         values = np.asarray(array.fill_null(0).to_numpy(zero_copy_only=False)).copy()
         scaled = values[idx].astype(np.float64) * factors
-        values[idx] = (scaled if truncate else np.round(scaled)).astype(values.dtype)
+        values[idx] = _to_integer(scaled if truncate else np.round(scaled), values.dtype)
         return pa.array(values, type=array.type, mask=~valid)
     values = np.asarray(array.fill_null(0.0).to_numpy(zero_copy_only=False)).copy()
     values[idx] = values[idx] * factors
