@@ -515,3 +515,6 @@ def test_a_changed_domain_definition_does_not_leak_into_later_loads() -> None:
     assert "email" in load_domain("retail").schema.tables["customer"].columns
     star = domain.definition("star")
     assert star.schema is not domain.definition("star").schema
+    domain.star_map().clear()
+    domain.cdm_entities().clear()
+    assert domain.star_map() and domain.cdm_entities()

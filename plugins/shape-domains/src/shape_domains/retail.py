@@ -5,6 +5,7 @@ locations from here."""
 
 from __future__ import annotations
 
+import copy
 import json
 from functools import cache
 from importlib import resources
@@ -32,10 +33,10 @@ class RetailDomain(PackagedDomain):
 
     def star_map(self) -> dict[str, Any]:
         """How ``shape transform star`` reshapes this domain's tables into dimensions and facts."""
-        star: dict[str, Any] = _transforms()["star"]
+        star: dict[str, Any] = copy.deepcopy(_transforms()["star"])  # the cache stays as read
         return star
 
     def cdm_entities(self) -> dict[str, str]:
         """Table name to CDM entity name, for ``shape transform cdm``."""
-        entities: dict[str, str] = _transforms()["cdm_entities"]
+        entities: dict[str, str] = dict(_transforms()["cdm_entities"])
         return entities

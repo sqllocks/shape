@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import json
 from functools import cache
 from importlib import resources
@@ -48,7 +49,8 @@ class PackagedDomain:
     def definition(self, mode: str = "3nf") -> DomainDefinition:
         if mode not in _FILES:
             raise ValueError(f"{self.name} has no {mode!r} mode (3nf, star)")
-        schema = schema_document(self.name, mode)
+        # a copy: the cached document is shared by every later call in the process (#343)
+        schema = copy.deepcopy(schema_document(self.name, mode))
         reference = {d: reference_table(self.name, d) for d in self.datasets}
         for dataset, (domain, source) in self.borrowed.items():
             reference[dataset] = reference_table(domain, source)
