@@ -10,6 +10,19 @@ readme="README.md"
 requires-python=">=3.11"
 license = "MIT"
 license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md", "THIRD_PARTY_NOTICES_RUST.md"]
+# T-06: Python 3.11-3.14 (tests/release/test_packaging.py keeps these in step).
+classifiers=[
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Operating System :: OS Independent",
+  "Topic :: Database",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+  "Typing :: Typed",
+]
 dependencies=["numpy>=2.0,<3","pyarrow>=14.0.1","tzdata; sys_platform == 'win32'"]
 
 [project.optional-dependencies]

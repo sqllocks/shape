@@ -11,7 +11,23 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+    "Topic :: Database",
+]
 dependencies = ["sqllocks-shape==0.9.0", "confluent-kafka>=2.5,<4"]
+
+[project.urls]
+Homepage = "https://github.com/sqllocks/shape"
+Repository = "https://github.com/sqllocks/shape"
+Issues = "https://github.com/sqllocks/shape/issues"
+Documentation = "https://github.com/sqllocks/shape/tree/main/plugins/shape-kafka"
 
 [project.entry-points."shape.stream_sources"]
 kafka = "shape_kafka:KafkaStreamSource"
