@@ -258,7 +258,9 @@ class Reader:
         value = self.get(key)
         if value is None:
             return list(default or [])
-        if not isinstance(value, list) or not all(isinstance(v, (str, int)) for v in value):
+        if not isinstance(value, list) or not all(
+            isinstance(v, (str, int)) and not isinstance(v, bool) for v in value
+        ):
             raise PackError(
                 f"{self._where(key)} must be a list of names, got {describe_type(value)}"
             )
