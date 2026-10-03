@@ -100,3 +100,36 @@ def test_a_cross_table_le_repair_satisfies_its_rule_for_a_negative_bound():
     lim = {1: -10.0, 2: 0.0}
     for pid, v in zip(fixed["pid"].to_pylist(), fixed["v"].to_pylist(), strict=True):
         assert v <= lim[pid]
+
+
+def test_a_between_constraint_is_checked():
+    # 327: smart inference writes "rating BETWEEN 1 AND 5", which the rules engine skipped.
+    import pyarrow as pa  # type: ignore[import-untyped]
+
+    from shape.generation.rules import validate_rules
+    from shape.generation.schema import BusinessRule
+
+    schema = _customers_and_orders("order.placed <= customer.churned")
+    schema.business_rules = [
+        BusinessRule(name="r", type="constraint", rule="rating BETWEEN 1 AND 5", table="t")
+    ]
+    tables = {"t": pa.table({"rating": [0.5, 1.0, 3.0, 5.0, 6.0, None]})}
+    (violation,) = validate_rules(tables, schema)
+    assert (violation.rule_name, violation.violation_count) == ("r", 2)
+    assert not [i for i in schema.validate() if "never checked" in i.message]
+
+
+def test_inferred_date_order_rules_name_their_tables():
+    # 327: BR-04 wrote the cross_table rule "order_date >= order_date" without table prefixes,
+    # so it was never checked or repaired.
+    from shape.generation.ddl import from_ddl
+
+    schema, _ = from_ddl(
+        "CREATE TABLE orders (id INT PRIMARY KEY, order_date DATE NOT NULL, total DECIMAL(10,2));"
+        "CREATE TABLE order_items (id INT PRIMARY KEY, order_id INT REFERENCES orders(id), "
+        "order_date DATE NOT NULL, quantity INT, unit_price DECIMAL(10,2))"
+    )
+    rules = {r.name: r.rule for r in schema.business_rules if r.type == "cross_table"}
+    assert rules == {"order_items_after_orders": "order_items.order_date >= orders.order_date"}
+    res = Engine(schema).generate()
+    assert not [v for v in res.remaining_violations if v.rule_name == "order_items_after_orders"]
