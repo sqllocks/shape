@@ -6,6 +6,7 @@ import datetime as dt
 
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.csv as pacsv  # type: ignore[import-untyped]
+import pytest
 
 import shape
 from shape.generation.engine import Engine
@@ -119,3 +120,30 @@ def test_an_undefined_correlation_is_not_turned_into_a_copula():
         doc["correlation_matrix"] = {"x": {"y": value}, "y": {"x": value}}
         fit = fit_schema(doc)
         assert fit.schema.correlated_columns.get("t", []) == []
+
+
+@pytest.mark.parametrize(
+    ("name", "not_provider"),
+    [
+        ("ethnicity", "city"),
+        ("membership", "ipv4"),
+        ("relationship", "ipv4"),
+        ("real_estate", "state"),
+        ("candidate", "date"),
+    ],
+)
+def test_a_provider_hint_matches_whole_words(name, not_provider):
+    # 214: suffixes matched inside words: ethnicity -> city, membership -> ipv4.
+    from shape.generation.learn import guess_provider
+
+    assert guess_provider(name) != not_provider
+
+
+@pytest.mark.parametrize(
+    ("name", "provider"),
+    [("home_city", "city"), ("ship_ip", "ipv4"), ("CustomerEmail", "email"), ("due_date", "date")],
+)
+def test_a_provider_hint_still_matches_a_word_of_the_name(name, provider):
+    from shape.generation.learn import guess_provider
+
+    assert guess_provider(name) == provider
