@@ -330,3 +330,10 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Repository cleaned up for public release: removed internal milestone and
   qualification records.
 - README and changelog rewritten to describe the current state.
+
+### Fixed
+
+- Files are the same bytes on Windows as on Linux (#237): the local registry (`logs/*.jsonl`, refs
+  and tags) is written and read as UTF-8 with `\n` line ends, the profile registry index records
+  `/`-separated paths, and the Fabric notebook, `.bim` model and recorded tapes, the simulator
+  `stats.json` and file-drop manifests, and `shape profile-db --json` no longer get `\r\n` line ends.
