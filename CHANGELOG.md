@@ -5,6 +5,16 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `shape report-card REAL SYNTHETIC` (`docs/REPORT_CARD.md`, #102): one local report card for a
+  synthetic dataset. Three sections, each `pass`, `fail` or `not_run` with its reason: fidelity (the
+  `shape fidelity` scores and tiers 1 and 2), utility (the `shape verify --source` utility gate) and
+  privacy (the memorization gate and a new membership-inference test: with `--holdout`, the AUC of
+  telling real rows from held-out real rows by the distance to the closest synthetic row, failing
+  above `privacy.max_membership_auc`, default 0.6). Output as `shape-report-card` v1 JSON, Markdown
+  or a self-contained HTML page (`-o`, by extension); `--require` turns a skipped section into exit 1;
+  exit 2 for unusable input. The verify configuration gains an optional `privacy` section. Python:
+  `shape.quality.report_card(...)`. The card holds no value of the data.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

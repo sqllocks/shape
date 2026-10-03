@@ -10,9 +10,9 @@ if TYPE_CHECKING:
 
 _CSS = """
 :root{--fg:#1f2933;--muted:#616e7c;--line:#d9e2ec;--bg:#fff;--soft:#f5f7fa;--accent:#2f6fed;
---warn:#b44d12}
+--warn:#b44d12;--ok:#1a7f37;--bad:#c62828}
 @media (prefers-color-scheme:dark){:root{--fg:#e4e7eb;--muted:#9aa5b1;--line:#3e4c59;
---bg:#161b22;--soft:#1f2630;--accent:#6ea0ff;--warn:#f0a35e}}
+--bg:#161b22;--soft:#1f2630;--accent:#6ea0ff;--warn:#f0a35e;--ok:#56d364;--bad:#ff7b72}}
 body{font:14px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--fg);
 background:var(--bg);margin:0;padding:24px 16px}
 main{max-width:1100px;margin:0 auto}
@@ -35,6 +35,11 @@ margin-top:12px}
 svg{display:block;width:100%;height:auto;margin-top:6px}
 .bar{fill:var(--accent)}.axis{stroke:var(--line)}.lbl{fill:var(--muted);font-size:9px}
 .warn{color:var(--warn)}
+.status{display:inline-block;padding:0 8px;border-radius:9px;font-size:12px;font-weight:600;
+border:1px solid var(--line);background:var(--soft)}
+.status.pass{color:var(--ok);border-color:var(--ok)}
+.status.fail{color:var(--bad);border-color:var(--bad)}
+.status.not_run{color:var(--muted)}
 """
 
 
@@ -48,6 +53,28 @@ def _fmt(value: Any) -> str:
     if isinstance(value, float):
         return f"{value:.6g}"
     return _e(value)
+
+
+def escape(value: Any) -> str:
+    """``value`` as HTML-safe text (``None`` is empty)."""
+    return _e(value)
+
+
+def format_value(value: Any) -> str:
+    """A cell value as HTML-safe text: ``–`` for ``None``, six significant digits for a float."""
+    return _fmt(value)
+
+
+def document(title: str, body: str) -> str:
+    """``body`` (HTML) in the self-contained page every Shape report uses: the shared inline
+    styles, no script, no external asset."""
+    return (
+        "<!doctype html>"
+        '<html lang="en"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        f"<title>{_e(title)}</title><style>{_CSS}</style></head><body><main>{body}</main>"
+        "</body></html>"
+    )
 
 
 def _plain(tagged: Any) -> Any:

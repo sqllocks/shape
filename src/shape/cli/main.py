@@ -1143,6 +1143,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.proposals import add_arguments as add_proposals_arguments
 
     add_proposals_arguments(sub)
+    from shape.cli.reportcard import add_arguments as add_report_card_arguments
+
+    add_report_card_arguments(sub)
     from shape.cli.bridge import add_arguments as add_bridge_arguments
 
     add_bridge_arguments(sub)
@@ -1499,6 +1502,10 @@ def _dispatch(argv):
         from shape.cli.proposals import run as run_proposals
 
         return _run(run_proposals, a)
+    if a.cmd == "report-card":
+        from shape.cli.reportcard import run as run_report_card
+
+        return _run(run_report_card, a)
     if a.cmd == "jobs":
         from shape.cli.jobs import run as run_jobs
 

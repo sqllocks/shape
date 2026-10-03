@@ -65,6 +65,11 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   of one file per table. Given a captured evidence document (`REFERENCE.json`) it certifies the
   CSV against it instead. A profile is not a fidelity reference; profile the synthetic data and
   run `shape diff`.
+- `shape report-card REAL SYNTHETIC` runs the fidelity scores and tiers, the utility gate, the
+  memorization gate and (with `--holdout`) a membership-inference test, and writes one card as
+  JSON, Markdown or HTML (`-o`, by extension). Exit 0 when every section that ran passed, 1 when
+  one failed or a `--require`d one did not run, 2 for unusable input. See
+  [REPORT_CARD.md](REPORT_CARD.md).
 - `shape proposals propose|list|decide` keeps the answers to what a profile cannot settle alone
   (foreign keys, personal data, meaning) in a decision file; `shape generate --from` and
   `shape plan` take it with `--decisions`. See [PROPOSALS.md](PROPOSALS.md).
