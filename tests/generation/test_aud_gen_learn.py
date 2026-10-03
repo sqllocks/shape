@@ -84,3 +84,38 @@ def test_zoned_timestamps_are_generated_inside_the_observed_wall_clock_range():
     # by day: the seasonal pattern ignores the time of day of its bounds (#129, built-ins)
     days = (min(values).date(), max(values).date())
     assert low.date() <= days[0] and days[1] <= high.date(), (days, low, high)
+
+
+def test_a_decimal_column_is_generated_at_its_scale():
+    # 213: decimal128 min/max reach the fit as text, so no scale was set: 135.32477875759335.
+    from decimal import Decimal
+
+    from shape.generation.fit import fit_schema
+
+    t = pa.table(
+        {
+            "id": list(range(200)),
+            "d": pa.array([Decimal("0.25") + Decimal(i) for i in range(200)], pa.decimal128(10, 2)),
+        }
+    )
+    fit = fit_schema(shape.profile(t, name="t"))
+    assert fit.schema.tables["t"].columns["d"].scale == 2
+    values = Engine(fit.schema, row_counts={"t": 100}).generate().tables["t"]["d"].to_pylist()
+    assert all(round(v, 2) == v for v in values if v is not None)
+
+
+def test_an_undefined_correlation_is_not_turned_into_a_copula():
+    # 213: a NaN correlation passed |r| >= threshold (abs(nan) < t is False) and calibrated to
+    # -0.999; None raised TypeError: bad operand type for abs().
+    import math
+
+    from shape.generation.fit import fit_schema
+
+    t = pa.table(
+        {"x": [float(i % 17) for i in range(300)], "y": [float(i % 13) for i in range(300)]}
+    )
+    doc = shape.profile(t, name="t").to_dict()
+    for value in (math.nan, None):
+        doc["correlation_matrix"] = {"x": {"y": value}, "y": {"x": value}}
+        fit = fit_schema(doc)
+        assert fit.schema.correlated_columns.get("t", []) == []
