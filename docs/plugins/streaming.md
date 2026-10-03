@@ -141,6 +141,13 @@ JSON-serialisable and reading from the offset after batch *k* must give exactly 
 as `{partition: next offset}` so the consumer can deduplicate replays. A source for tests can
 follow `shape_kafka.testing.FakeBroker`.
 
+To read a source outside the consumer with reconnects, wrap its `read` in
+`shape.connectors.qualification.reconnecting_batches(connect, max_attempts=5)`: after a failure it
+reconnects from the offset after the last batch it yielded and gives up after `max_attempts`
+failures in a row. It waits before each reconnect: `backoff` seconds (keyword-only, default 0.5),
+doubled for each further failure in a row and capped at 30 s; a delivered batch resets it.
+`backoff=0` reconnects at once, and `sleep=` replaces the wait function in tests.
+
 ## Tests
 
 * Every PR: contract tests with an in-memory broker and hub, and the kit

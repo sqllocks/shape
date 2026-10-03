@@ -191,7 +191,7 @@ def test_the_attempt_bound_counts_consecutive_failures():
 
     out = []
     with pytest.raises(ConnectionError, match="for good"):
-        for item in reconnecting_batches(flaky, 3):
+        for item in reconnecting_batches(flaky, 3, backoff=0):  # 50 drops: no pauses
             out.append(item[0])
     assert out == list(range(50))  # 50 failures survived, then 3 in a row stopped it
 

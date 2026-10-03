@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import inspect
 import itertools
+import time
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from typing import Any
@@ -35,6 +36,13 @@ class PartitionCheckpointStore:
 
 
 class ExactlyOnceProjector:
+    """Hand each record to a handler once: records at or below the partition's committed offset
+    are stale, and a record whose ``message_id`` was already handled is a duplicate.
+
+    ``ids`` keeps every ``message_id`` handled, so memory grows with the number of distinct ids.
+    It is not bounded on purpose: forgetting an id would let its duplicate through again.
+    """
+
     def __init__(self, store: PartitionCheckpointStore | None = None) -> None:
         self.store = store or PartitionCheckpointStore()
         self.ids: set[str] = set()
@@ -78,11 +86,16 @@ def _takes_start(connect: Callable[..., Any]) -> bool:
     )
 
 
+_MAX_BACKOFF = 30.0  # seconds: the longest pause between two reconnects
+
+
 def reconnecting_batches(
     connect: Callable[..., Iterable[Any]],
     max_attempts: int = 5,
     *,
     retry_on: tuple[type[BaseException], ...] = (Exception,),
+    backoff: float = 0.5,
+    sleep: Callable[[float], object] = time.sleep,
 ) -> Iterator[Any]:
     """Yield what ``connect`` yields, reconnecting after a failure without replaying anything.
 
@@ -94,7 +107,13 @@ def reconnecting_batches(
     beginning: the items already yielded are skipped by position.
 
     ``max_attempts`` counts consecutive failures; a connection that delivers an item resets it.
+    Before each reconnect it waits ``backoff`` seconds, doubled for each further consecutive
+    failure and capped at 30 s (0.5, 1, 2, ... 30 by default), so a transient outage is not spent
+    in milliseconds (#562). ``backoff=0`` reconnects at once. ``sleep`` is the wait function
+    (``time.sleep``; tests pass their own). No wait follows the last failure.
     """
+    if backoff < 0:
+        raise ValueError("backoff must be zero or positive")
     resumable = _takes_start(connect)
     last: Any = None
     yielded = 0
@@ -120,3 +139,5 @@ def reconnecting_batches(
             failures += 1
             if failures >= max_attempts:
                 raise
+            if backoff:
+                sleep(min(backoff * 2.0 ** min(failures - 1, 64), _MAX_BACKOFF))

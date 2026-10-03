@@ -91,8 +91,9 @@ def test_562_backoff_zero_keeps_immediate_retries_and_progress_resets_the_pause(
     slept.clear()
     with pytest.raises(ConnectionError, match="for good"):
         list(reconnecting_batches(flaky, 3, sleep=slept.append))
-    # each drop after progress waits the first pause again; then 3 failures in a row
-    assert slept == [0.5, 0.5, 0.5, 0.5, 1.0]
+    # each drop after progress waits the first pause again; the last drop and the first
+    # refusal are 2 failures in a row (0.5, 1.0), and the third stops it without a wait
+    assert slept == [0.5, 0.5, 0.5, 1.0]
 
     with pytest.raises(ValueError, match="backoff"):
         list(reconnecting_batches(_down, 3, backoff=-1, sleep=slept.append))

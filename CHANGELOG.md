@@ -350,6 +350,11 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Connectors: `DBAPISource` refuses result columns with the same name and says when a statement
   has no result set (#494); Kafka and Event Hubs decoding keep every key and each value's type
   (#495).
+- Connectors: `reconnecting_batches` waits before each reconnect (keyword-only `backoff`, 0.5 s
+  doubling per failure in a row, capped at 30 s; `backoff=0` reconnects at once; `sleep=` for
+  tests), instead of spending `max_attempts` in milliseconds (#562). `ExactlyOnceProjector`
+  documents that its id set grows with the number of distinct message ids (kept unbounded so a
+  duplicate is never re-admitted).
 - Capture: `capture_columns(mode=...)` applies the mode to every column and refuses an invalid
   one (#496); an int beyond the float range is counted as an infinity, and rows that are not
   mappings are a clear `TypeError` (#500).
