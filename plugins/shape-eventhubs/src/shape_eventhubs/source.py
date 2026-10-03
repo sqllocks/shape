@@ -240,6 +240,8 @@ class EventHubsStreamSource:
         # the profile built from them) are the same on every run; following a hub reads all
         # partitions together, in arrival order.
         groups = [[p] for p in ids if positions[p] < ends[p]] if stop_at_end else [ids]
+        # ``stats`` adds up every read of this source (a reconnect reads again): count this one.
+        before = self.stats.messages
         for group in groups:
             receiver = self._client_factory(target, connect)
             for offset, batch in self._receive(
@@ -249,14 +251,14 @@ class EventHubsStreamSource:
                 ends,
                 stop_at_end=stop_at_end,
                 idle_timeout=idle_timeout,
-                budget=None if max_messages is None else max_messages - self.stats.messages,
+                budget=None if max_messages is None else max_messages - (self.stats.messages - before),
                 batch_size=batch_size,
                 schema=schema,
                 decode=decode,
             ):
                 schema = batch.schema
                 yield offset, batch
-            if max_messages is not None and self.stats.messages >= max_messages:
+            if max_messages is not None and self.stats.messages - before >= max_messages:
                 return
 
     def _receive(
