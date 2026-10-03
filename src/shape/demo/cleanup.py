@@ -98,11 +98,11 @@ class CleanupEngine:
                     }
                 )
                 continue
-            if dry_run:
+            if dry_run and target != "file":  # a remote target cannot be read without removing
                 result.removed.setdefault(target, []).append(name)
                 continue
             try:
-                outcome = self._remove(manifest, artifact, folders)
+                outcome = self._remove(manifest, artifact, folders, dry_run=dry_run)
             except Exception as exc:
                 from shape.security.redact import redact_text
 
@@ -120,12 +120,18 @@ class CleanupEngine:
         return result
 
     def _remove(
-        self, manifest: DemoManifest, artifact: ArtifactRecord, folders: set[Path]
+        self,
+        manifest: DemoManifest,
+        artifact: ArtifactRecord,
+        folders: set[Path],
+        *,
+        dry_run: bool = False,
     ) -> str | None:
-        """Remove one artifact; ``None`` when removed, else the reason it was left alone."""
+        """Remove one artifact; ``None`` when removed, else the reason it was left alone. With
+        ``dry_run`` a local file is judged by the same rules and left where it is."""
         target = artifact.target
         if target == "file":
-            return self._remove_file(manifest, artifact, folders)
+            return self._remove_file(manifest, artifact, folders, dry_run=dry_run)
         if target in ("warehouse", "sql_db"):
             match = _QUALIFIED.match(artifact.detail or f"dbo.{artifact.name}")
             if match is None:
@@ -146,7 +152,12 @@ class CleanupEngine:
         return f"unknown target type {target!r}"
 
     def _remove_file(
-        self, manifest: DemoManifest, artifact: ArtifactRecord, folders: set[Path]
+        self,
+        manifest: DemoManifest,
+        artifact: ArtifactRecord,
+        folders: set[Path],
+        *,
+        dry_run: bool = False,
     ) -> str | None:
         raw = artifact.detail or artifact.name
         path = Path(raw).resolve()
@@ -155,6 +166,8 @@ class CleanupEngine:
             folders.add(folder)
             if not path.exists():
                 return "already gone"
+            if dry_run:
+                return None
             if path.is_dir():
                 shutil.rmtree(path)
             elif path.exists():
@@ -162,7 +175,8 @@ class CleanupEngine:
             return None
         out = manifest.params.get("output_dir")
         if out and path.is_file() and Path(out).resolve() in path.parents:
-            path.unlink()
+            if not dry_run:
+                path.unlink()
             return None
         if not path.exists():
             return "already gone"
