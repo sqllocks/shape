@@ -7,38 +7,49 @@
       "type": "string"
     },
     "args": {
+      "additionalProperties": false,
+      "properties": {
+        "actor": {
+          "description": "who decides (default: $SHAPE_ACTOR, else the login name)",
+          "type": "string",
+          "x-since": "1.1"
+        },
+        "decisions": {
+          "description": "the decision file (format shape-decisions)",
+          "type": "string",
+          "x-path": "write",
+          "x-since": "1.1"
+        },
+        "note": {
+          "description": "why",
+          "type": "string",
+          "x-since": "1.1"
+        },
+        "proposal": {
+          "description": "the proposal id, such as `pii:customers.email`",
+          "type": "string",
+          "x-since": "1.1"
+        },
+        "verb": {
+          "description": "the decision",
+          "enum": [
+            "accept",
+            "reject",
+            "defer"
+          ],
+          "type": "string",
+          "x-since": "1.1"
+        }
+      },
+      "required": [
+        "decisions",
+        "proposal",
+        "verb"
+      ],
       "type": "object"
     },
     "command": {
-      "enum": [
-        "check",
-        "demo_cleanup",
-        "demo_list",
-        "demo_run",
-        "demo_status",
-        "describe",
-        "diff",
-        "dry_run",
-        "generate",
-        "job_cancel",
-        "job_list",
-        "job_status",
-        "list",
-        "preview",
-        "profile",
-        "profile_info",
-        "proposals_decide",
-        "proposals_list",
-        "proposals_propose",
-        "scale_cancel",
-        "scale_generate",
-        "scale_status",
-        "stream",
-        "stream_status",
-        "stream_stop",
-        "validate",
-        "verify"
-      ]
+      "const": "proposals_decide"
     },
     "id": {
       "maxLength": 128,
@@ -75,9 +86,11 @@
     }
   },
   "required": [
-    "command"
+    "command",
+    "args"
   ],
-  "title": "bridge request",
+  "title": "proposals_decide request",
   "type": "object",
-  "x-api-version": "1.1"
+  "x-api-version": "1.1",
+  "x-since": "1.1"
 }

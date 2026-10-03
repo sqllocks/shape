@@ -71,7 +71,9 @@ def annotate(commands: dict[str, Command]) -> dict[str, Command]:
     out: dict[str, Command] = {}
     for name, command in commands.items():
         if name not in EFFECTS:
-            out[name] = command  # a 1.1 command carries its own
+            # a 1.1 command carries its own annotations; all its arguments are new with it
+            args = {k: replace(a, since=command.since) for k, a in command.args.items()}
+            out[name] = replace(command, args=args)
             continue
         args = dict(command.args)
         for arg_name, mode in PATHS.get(name, {}).items():

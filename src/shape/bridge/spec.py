@@ -43,7 +43,10 @@ class Arg:
     default: Any = None
     enum: tuple[str, ...] | None = None
     minimum: int | float | None = None
+    maximum: int | float | None = None
     items: str | None = None
+    #: The values an element of an array may take (``enum`` is for a scalar).
+    items_enum: tuple[str, ...] | None = None
     secret: bool = False
     #: The version that added the argument; a request for an older one does not know it.
     since: str = "1.0"
@@ -74,8 +77,12 @@ class Arg:
             out["enum"] = list(self.enum)
         if self.minimum is not None:
             out["minimum"] = self.minimum
+        if self.maximum is not None:
+            out["maximum"] = self.maximum
         if self.items is not None:
             out["items"] = {"type": self.items}
+            if self.items_enum is not None:
+                out["items"]["enum"] = list(self.items_enum)
         if self.default is not None:
             out["default"] = self.default
         return out
@@ -194,6 +201,18 @@ def check_args(command: Command, args: dict[str, Any], minor: int = API_MINOR) -
                 "usage.invalid_argument",
                 f"argument {name!r} must be at least {arg.minimum}, got {value!r}",
             )
+        if arg.maximum is not None and value > arg.maximum:
+            raise BridgeError(
+                "usage.invalid_argument",
+                f"argument {name!r} must be at most {arg.maximum}, got {value!r}",
+            )
+        if arg.items_enum is not None:
+            bad = [v for v in value if v not in arg.items_enum]
+            if bad:
+                raise BridgeError(
+                    "usage.invalid_argument",
+                    f"argument {name!r} may only hold {', '.join(arg.items_enum)}, got {bad[0]!r}",
+                )
         if arg.type == "string" and name in ("domain", "schema_path", "session_id") and not value:
             raise BridgeError("usage.invalid_argument", f"argument {name!r} must not be empty")
     return given

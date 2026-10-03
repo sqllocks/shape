@@ -18,6 +18,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "scale"))
 
+import vectors_1_1 as v11  # noqa: E402
 import vectors_lib as lib  # noqa: E402
 from fakes import LH, WS, FakeFabric  # noqa: E402
 from scale_schemas import plain_doc  # noqa: E402
@@ -349,9 +350,19 @@ FILES: dict[str, dict[str, Any]] = {
 }
 
 
+def merge_1_1() -> None:
+    """Add the vectors of the 1.1 commands, and the 1.1 cases of the 1.0 commands."""
+    for command, doc in v11.FILES.items():
+        FILES[command] = doc
+    for command, extra in v11.EXTENDS.items():
+        FILES[command]["setup"] = [*FILES[command].get("setup", []), *extra.get("setup", [])]
+        FILES[command]["cases"] = [*FILES[command]["cases"], *extra["cases"]]
+
+
 def write_fixtures() -> None:
     folder = lib.VECTOR_DIR / "fixtures"
     folder.mkdir(parents=True, exist_ok=True)
+    v11.write_fixtures(folder)
     (folder / "schema.json").write_text(
         json.dumps(plain_doc(ROWS), indent=2, sort_keys=True) + "\n"
     )
@@ -391,6 +402,7 @@ def main() -> None:
     import os
     from unittest import mock
 
+    merge_1_1()
     write_fixtures()
     for command, doc in FILES.items():
         with tempfile.TemporaryDirectory() as tmp:

@@ -7,38 +7,50 @@
       "type": "string"
     },
     "args": {
+      "additionalProperties": false,
+      "properties": {
+        "decisions": {
+          "description": "the decision file (format shape-decisions)",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.1"
+        },
+        "kind": {
+          "description": "only proposals of this kind",
+          "enum": [
+            "relationship",
+            "pii",
+            "semantic"
+          ],
+          "type": "string",
+          "x-since": "1.1"
+        },
+        "min_confidence": {
+          "description": "only proposals at or above this",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number",
+          "x-since": "1.1"
+        },
+        "status": {
+          "description": "only proposals in this state",
+          "enum": [
+            "pending",
+            "accepted",
+            "rejected",
+            "deferred"
+          ],
+          "type": "string",
+          "x-since": "1.1"
+        }
+      },
+      "required": [
+        "decisions"
+      ],
       "type": "object"
     },
     "command": {
-      "enum": [
-        "check",
-        "demo_cleanup",
-        "demo_list",
-        "demo_run",
-        "demo_status",
-        "describe",
-        "diff",
-        "dry_run",
-        "generate",
-        "job_cancel",
-        "job_list",
-        "job_status",
-        "list",
-        "preview",
-        "profile",
-        "profile_info",
-        "proposals_decide",
-        "proposals_list",
-        "proposals_propose",
-        "scale_cancel",
-        "scale_generate",
-        "scale_status",
-        "stream",
-        "stream_status",
-        "stream_stop",
-        "validate",
-        "verify"
-      ]
+      "const": "proposals_list"
     },
     "id": {
       "maxLength": 128,
@@ -75,9 +87,11 @@
     }
   },
   "required": [
-    "command"
+    "command",
+    "args"
   ],
-  "title": "bridge request",
+  "title": "proposals_list request",
   "type": "object",
-  "x-api-version": "1.1"
+  "x-api-version": "1.1",
+  "x-since": "1.1"
 }

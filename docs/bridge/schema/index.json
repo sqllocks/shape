@@ -283,6 +283,65 @@
       "since": "1.0",
       "summary": "The distribution weights and derived-count ratios a domain generates with."
     },
+    "proposals_decide": {
+      "args": {
+        "actor": "1.1",
+        "decisions": "1.1",
+        "note": "1.1",
+        "proposal": "1.1",
+        "verb": "1.1"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files",
+        "writes_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/proposals_decide.request.schema.json",
+      "result": "commands/proposals_decide.result.schema.json",
+      "since": "1.1",
+      "summary": "Record that a proposal is accepted, rejected or deferred."
+    },
+    "proposals_list": {
+      "args": {
+        "decisions": "1.1",
+        "kind": "1.1",
+        "min_confidence": "1.1",
+        "status": "1.1"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/proposals_list.request.schema.json",
+      "result": "commands/proposals_list.result.schema.json",
+      "since": "1.1",
+      "summary": "List the proposals of a decision file and the decisions on them."
+    },
+    "proposals_propose": {
+      "args": {
+        "auto_accept": "1.1",
+        "data": "1.1",
+        "decisions": "1.1",
+        "kinds": "1.1",
+        "min_confidence": "1.1",
+        "profile": "1.1"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files",
+        "writes_files"
+      ],
+      "job": "optional",
+      "pending": null,
+      "request": "commands/proposals_propose.request.schema.json",
+      "result": "commands/proposals_propose.result.schema.json",
+      "since": "1.1",
+      "summary": "Find proposals for a profile and merge them into a decision file."
+    },
     "scale_cancel": {
       "args": {
         "job_id": "1.0",

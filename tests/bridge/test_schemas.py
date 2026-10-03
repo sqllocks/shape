@@ -36,10 +36,12 @@ PLAN_COMMANDS = {
 }
 ADDED = {"profile", "diff", "check", "verify"}
 JOBS = {"job_status", "job_cancel", "job_list"}
+#: The commands bridge 1.1 adds (their vectors, schemas and tests are in the 1.1 test files).
+ADDED_1_1 = {"proposals_propose", "proposals_list", "proposals_decide"}
 
 
 def test_the_command_set_is_the_plans_plus_the_core_workflow_and_the_job_commands():
-    assert set(COMMANDS) == PLAN_COMMANDS | ADDED | JOBS
+    assert set(COMMANDS) == PLAN_COMMANDS | ADDED | JOBS | ADDED_1_1
     assert set(PARITY_COMMANDS) == PLAN_COMMANDS and len(PARITY_COMMANDS) == 17
 
 
@@ -60,9 +62,8 @@ def test_every_command_has_a_published_request_and_result_schema(name):
     required = [k for k, a in COMMANDS[name].args.items() if a.required]
     assert request["properties"]["args"].get("required", []) == required
     assert ("args" in request["required"]) == bool(required)
-    assert not validate({"command": name, "args": {k: "x" for k in required}}, request) or name in (
-        "demo_run",
-    )
+    sample = {k: (COMMANDS[name].args[k].enum or ("x",))[0] for k in required}
+    assert not validate({"command": name, "args": sample}, request) or name in ("demo_run",)
 
 
 def test_the_index_lists_every_command_and_error_code():
