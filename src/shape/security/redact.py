@@ -14,18 +14,27 @@ import re
 MASK = "***"
 
 _KEYS = (
-    r"pwd|password|passwd|accountkey|sharedaccesskey|sharedaccesssignature|sas_token|sig|"
-    r"client_secret|clientsecret|secret|access_token|accesstoken|access token|token"
+    r"pwd|password|passwd|accountkey|account[_-]key|sharedaccesskey|sharedaccesssignature|"
+    r"sas_token|sig|api[_-]?key|client_secret|clientsecret|secret|access_token|accesstoken|"
+    r"access token|token"
 )
+# A key is recognised after any non-alphanumeric character (``sasl_password``, ``sasl.password``,
+# ``x-api-key``) and may be quoted (``"password": "x"``, ``{'password': 'x'}``), #291.
 _PAIR = re.compile(
-    rf"(?i)\b({_KEYS})(\s*[=:]\s*)(\{{(?:[^}}]|\}}\}})*\}}|\"[^\"]*\"|'[^']*'|[^;&\s\"',]+)"
+    rf"(?i)(?<![A-Za-z0-9])({_KEYS})([\"']?\s*[=:]\s*)"
+    r"(\{(?:[^}]|\}\})*\}|\"[^\"]*\"|'[^']*'|[^;&\s\"',]+)"
 )
 _BEARER = re.compile(r"(?i)\b(bearer\s+)[A-Za-z0-9._~+/=-]{8,}")
-_JWT = re.compile(r"eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]*")
+_BASIC = re.compile(r"(?i)\b(authorization\s*[:=]\s*basic\s+)[A-Za-z0-9+/=]+")
+# Starts only where a token can start, so a long run of ``eyJ`` is scanned once (linear time).
+_JWT = re.compile(r"(?<![A-Za-z0-9_-])eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]*")
 _PEM = re.compile(
     r"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(?:-----END [A-Z ]*PRIVATE KEY-----|$)"
 )
-_URL_USER = re.compile(r"(\b[a-z][a-z0-9+.-]*://[^/\s:@]+:)[^/\s@]+(@)")
+# Anchored on ``://`` (no scheme scan, which was quadratic on ``a.a.a...``); the password runs to
+# the last ``@`` of the authority, so a password that contains ``@`` is masked whole. The
+# authority ends at the next ``/``, so each scan stops at the next ``://`` (linear time).
+_URL_USER = re.compile(r"(://[^/\s?#@:]+:)[^/\s?#]+(@)")
 
 
 def redact_text(text: str) -> str:
@@ -33,6 +42,7 @@ def redact_text(text: str) -> str:
     text = _PEM.sub(MASK, text)
     text = _JWT.sub(MASK, text)
     text = _BEARER.sub(rf"\1{MASK}", text)
+    text = _BASIC.sub(rf"\1{MASK}", text)
     text = _URL_USER.sub(rf"\1{MASK}\2", text)
     return _PAIR.sub(lambda m: f"{m.group(1)}{m.group(2)}{MASK}", text)
 
