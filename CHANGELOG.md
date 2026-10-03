@@ -330,3 +330,26 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Repository cleaned up for public release: removed internal milestone and
   qualification records.
 - README and changelog rewritten to describe the current state.
+
+### Fixed (command line)
+
+- `shape diff` of two captures honours `--fail-on-drift` (exit 1) and `--json`, and refuses the
+  profile-only threshold and column flags instead of ignoring them (#107); `shape check` of an
+  evidence document writes `--json` (#108).
+- "Not verified" notices are one `shape: note:` line in every command, never a Python warning;
+  `registry diff` and `conformance` no longer name temporary files (#109).
+- `shape fidelity` checks `--format` before comparing, and an error message is no longer turned
+  into "missing key ... in the input" (#110); a `--tier` report is written to every `-o`, as
+  `.json` (#111).
+- Commands that take a generation schema file read YAML as `shape validate` does (#112); a schema,
+  contract, DDL or transitions file that is not JSON or not text is named in the error (#116).
+- `shape learn` never writes `Infinity` or `NaN` into a schema (#113); `shape quality` exits 1 for
+  a failed check (#114).
+- Help for every command, with the verdict exit codes of `check` and `compatibility` (#115).
+- `emit`/`stream` range-check `--poison-fraction`, `--retries` and `--checkpoint-every`, and the
+  `--live-report` format before streaming (#118, #119); `--chunk-rows 0` is refused (#124);
+  `generate --scale-mode` prints its into-memory note once (#117).
+- A closed standard output (`shape ... | head`) ends quietly with exit 141 (#120); `demo
+  notebook|report` take `-o` (#121); an unknown `--log-level` and an unwritable `--metrics` path
+  are refused before the command runs (#123); `learn`, `mask` and `profile registry save` say
+  `file not found: PATH` (#125).
