@@ -7,7 +7,7 @@ Usage::
 
     from shape_simulation.financial_patterns import FinancialStreamConfig, FinancialStreamSimulator
 
-    cfg = FinancialStreamConfig(duration_hours=24)
+    cfg = FinancialStreamConfig(seed=7)  # the window is the span of the transactions
     result = FinancialStreamSimulator(transactions, accounts, cfg).run()
     # or: FinancialStreamSimulator(tables=generated.tables, config=cfg)
 
@@ -15,6 +15,12 @@ Usage::
 time column (``transaction_time``, or the domain's ``transaction_date``); ``accounts`` needs
 ``account_id``. The same configuration (seed included) gives the same tables; where the
 transactions carry no time the window starts at ``start_time``.
+
+The window defaults to the whole span of the transactions: from the first to the last
+transaction time, plus one settlement batch so that the last transactions settle too. A table
+that covers months therefore has settlements, fraud-burst chances and clearing for every month,
+not just its first day. ``duration_hours`` overrides the window; without a time column the
+default is 24 hours.
 """
 
 from __future__ import annotations
@@ -70,7 +76,9 @@ class FinancialStreamConfig:
     """Configuration for :class:`FinancialStreamSimulator`.
 
     Args:
-        duration_hours: Total simulation window in hours.
+        duration_hours: Total simulation window in hours. ``None`` (the default) is the full
+            span of the transactions plus one settlement batch (24 hours when they carry no
+            time).
         start_time: Where the window starts when the transactions have no time column
             (ISO-8601; a missing zone means UTC).
         reversal_enabled: Whether to generate transaction reversals.
@@ -86,7 +94,7 @@ class FinancialStreamConfig:
         seed: Random seed for reproducibility.
     """
 
-    duration_hours: float = 24.0
+    duration_hours: float | None = None
     start_time: str = "2024-01-01T00:00:00"
     reversal_enabled: bool = True
     reversal_probability: float = 0.03
@@ -176,6 +184,20 @@ class FinancialStreamSimulator:
             if self._time_valid.any()
             else parse_start(self._config.start_time)
         )
+        self._window_hours = self._window()
+
+    def _window(self) -> float:
+        """The simulated window in hours: ``duration_hours``, else the span of the transactions
+        plus the settlement lag (a transaction settles when its batch ends, so one batch), else
+        24 hours for transactions without a time."""
+        cfg = self._config
+        if cfg.duration_hours is not None:
+            return float(cfg.duration_hours)
+        if not self._time_valid.any():
+            return 24.0
+        times = self._time_us[self._time_valid]
+        span_hours = float(times.max() - times.min()) / _HOUR_US
+        return span_hours + float(cfg.settlement_batch_hours)
 
     # ---- public -----------------------------------------------------------------------------
 
@@ -199,7 +221,7 @@ class FinancialStreamSimulator:
             "fraud_event_count": fraud.num_rows,
             "settlement_batch_count": settlements.num_rows,
             "combined_transaction_count": combined.num_rows,
-            "duration_hours": cfg.duration_hours,
+            "duration_hours": self._window_hours,
             "seed": cfg.seed,
         }
         return FinancialStreamResult(combined, reversals, fraud, settlements, stats=stats)
@@ -286,7 +308,7 @@ class FinancialStreamSimulator:
         accounts = self._accounts.column("account_id")
         if self._accounts.num_rows == 0:
             return self._empty_fraud()
-        n_hours = int(np.ceil(cfg.duration_hours))
+        n_hours = int(np.ceil(self._window_hours))
         hours = np.flatnonzero(rng.random(n_hours) < cfg.fraud_burst_probability)
         if len(hours) == 0 or cfg.fraud_burst_count <= 0:
             return self._empty_fraud()
@@ -330,7 +352,7 @@ class FinancialStreamSimulator:
         """Periodic settlement batches: how many transactions each window settled, their total,
         and whether the batch settled, settled partially or failed."""
         cfg, rng = self._config, self._rng
-        n_batches = max(1, int(np.ceil(cfg.duration_hours / cfg.settlement_batch_hours)))
+        n_batches = max(1, int(np.ceil(self._window_hours / cfg.settlement_batch_hours)))
         batch_us = int(round(cfg.settlement_batch_hours * _HOUR_US))
         n = self._transactions.num_rows
         amount = np.nan_to_num(self._amount, nan=0.0)

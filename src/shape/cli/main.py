@@ -351,6 +351,59 @@ def _cmd_profile(a):
     return 0
 
 
+def _capture_document(a):
+    """``(name, document)`` of ``shape capture``: the captured table, or, with ``--dataset``, a
+    model with one table per file. The table comes from the profile's source layer, so every
+    input ``shape profile`` reads is read here."""
+    from shape.capture import capture_arrow
+    from shape.profile.reference.sources import load_table
+
+    if a.dataset:
+        from shape.spec.migrate import CAPTURE_ENGINE, MODEL_VERSION, migrate_capture_v1
+
+        if a.delta_version is not None or a.as_of is not None:
+            raise ValueError("--version and --as-of read one Delta table, not a dataset")
+        tables = {}
+        for name, path in _profile_source(a).items():
+            tables[name] = migrate_capture_v1(
+                capture_arrow(load_table(str(path), name)[1]).to_dict(), name
+            )["tables"][name]
+        name = os.path.basename(os.path.normpath(a.src))
+        model = {
+            "schema_version": MODEL_VERSION,
+            "engine": CAPTURE_ENGINE,
+            "mode": "bounded",
+            "name": name,
+            "tables": tables,
+        }
+        return name, model
+    name, table, _ = load_table(_profile_source(a), version=a.delta_version, as_of=a.as_of)
+    return name, capture_arrow(table).to_dict()
+
+
+def _cmd_capture(a):
+    from shape.artifact import write_shape
+
+    name, obj = _capture_document(a)
+    if a.output and str(a.output).endswith(".shape"):
+        cid = write_shape(a.output, obj, name=name)
+        out = {"written": a.output, "shape_content_id": cid}
+        kid = _sign_output(a, a.output)
+        if kid:
+            out["signed_by"] = kid
+        _dump(out)
+        return 0
+    if getattr(a, "sign", None):
+        raise ValueError("capture --sign needs -o OUT.shape")
+    raw = json.dumps(obj, sort_keys=True, indent=2, default=str)
+    if a.output:
+        with open(a.output, "w", encoding="utf-8") as fh:
+            fh.write(raw + "\n")
+    else:
+        print(raw)
+    return 0
+
+
 def _cmd_plan_profile(a):
     """``shape plan PROFILE.shape``: the fitted schema's plan."""
     import shape
@@ -786,18 +839,40 @@ def _build_parser(plugin_commands=()):
     pld.add_argument("--json", action="store_true", help="print the report as JSON")
     c = sub.add_parser(
         "capture",
-        help="write a Shape model of a CSV (for `query`, `compatibility`, `plan`); "
+        help="write a Shape model of a table (for `query`, `compatibility`, `plan`); "
         "use `shape profile` for profiles",
-        description="Capture a CSV file as a Shape model: JSON, or a model .shape with -o "
-        "OUT.shape. It reads CSV only and writes a model, which `shape query`, `shape "
-        "compatibility` and `shape plan` read. `shape profile` is the command for profiling "
-        "data: it reads CSV, Parquet, JSONL, folders and Delta tables, and its profile feeds "
-        "`check`, `diff` and `generate --from`.",
+        description="Capture a table as a Shape model: JSON, or a model .shape with -o "
+        "OUT.shape. SRC is anything `shape profile` reads: a CSV, Parquet or JSONL file, a glob, "
+        "a folder, a Delta table (`--version`/`--as-of` pick a version) or an abfss:// source. "
+        "The model has the same content whatever the file format. It is what `shape query`, "
+        "`shape compatibility` and `shape plan` read, so `shape capture feed.parquet -o "
+        "BASE.shape` today and again tomorrow, then `shape compatibility BASE.shape NEW.shape`, "
+        "reports a renamed, dropped or retyped column. `shape profile` is the command for "
+        "profiling data: its profile feeds `check`, `diff` and `generate --from`.",
     )
-    c.add_argument("csv")
+    c.add_argument("src", metavar="SRC")
     c.add_argument("-o", "--output")
     c.add_argument("--sign", metavar="KEY", help="sign the written .shape; KEY: " + _KEY_HELP)
     _add_passphrase_args(c)
+    c.add_argument(
+        "--dataset",
+        action="store_true",
+        help="SRC is a folder of table files: capture one table per file, named by the file name "
+        "without its extension (without it a folder is one table)",
+    )
+    c.add_argument(
+        "--version",
+        dest="delta_version",
+        type=int,
+        metavar="N",
+        help="a Delta table: capture version N instead of the latest",
+    )
+    c.add_argument(
+        "--as-of",
+        metavar="TIMESTAMP",
+        help="a Delta table: capture the newest version committed at or before this ISO-8601 "
+        "time (no zone means UTC), instead of the latest",
+    )
     pr = sub.add_parser(
         "profile",
         help="profile a file, glob, directory, Excel workbook or Delta table",
@@ -1372,26 +1447,7 @@ def _dispatch(argv):
         _dump([asdict(x) for x in r])
         return 0 if all(x.passed for x in r) else 1
     if a.cmd == "capture":
-        from shape.artifact import write_shape
-        from shape.capture import capture_rows
-
-        obj = capture_rows(_rows(a.csv)).to_dict()
-        if a.output and str(a.output).endswith(".shape"):
-            cid = write_shape(a.output, obj, name=__import__("pathlib").Path(a.csv).stem)
-            out = {"written": a.output, "shape_content_id": cid}
-            kid = _sign_output(a, a.output)
-            if kid:
-                out["signed_by"] = kid
-            _dump(out)
-            return 0
-        if getattr(a, "sign", None):
-            raise ValueError("capture --sign needs -o OUT.shape")
-        raw = json.dumps(obj, sort_keys=True, indent=2, default=str)
-        if a.output:
-            open(a.output, "w", encoding="utf-8").write(raw + "\n")
-        else:
-            print(raw)
-        return 0
+        return _run(_cmd_capture, a)
     if a.cmd == "diff":
         from shape.drift import compare
 

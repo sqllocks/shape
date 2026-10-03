@@ -5,6 +5,16 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
+  the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
+  clearing cover every month of a multi-month table. `duration_hours` still overrides it
+  (`docs/plugins/simulation.md`). Recorded as a named, probed difference (`SIM-9`) in the
+  parity harness.
+- `shape capture` reads every input `shape profile` reads (Parquet, Delta with `--version` and
+  `--as-of`, JSONL, globs, folders, `abfss://`) through the same source layer, and `--dataset`
+  captures a folder of one file per table. The model has the same content for the same data in any
+  format. `shape compatibility` compares models with several tables per table. `docs/CLI.md` and
+  `docs/QUICKSTART.md` show the schema-change check on a Parquet feed.
 - `shape generate --scale-mode local_single|local_mp|fabric_spark` and `shape jobs list|status|cancel|resume`
   (`docs/SCALE.md`): the scale router with sinks (memory, Parquet part files, Lakehouse, Warehouse,
   SQL Database, KQL), a durable job store (submit, status, cancel, resume), the `fabric_spark` router
