@@ -58,13 +58,19 @@ class MultiStoreResult:
 
 
 def _labels(writers: Sequence[Any]) -> list[str]:
-    seen: dict[str, int] = {}
-    labels = []
+    bases = []
     for writer in writers:
         base = getattr(writer, "name", None)
-        base = base if isinstance(base, str) and base else type(writer).__name__
-        seen[base] = seen.get(base, 0) + 1
-        labels.append(base if seen[base] == 1 else f"{base}#{seen[base]}")
+        bases.append(base if isinstance(base, str) and base else type(writer).__name__)
+    taken: set[str] = set()
+    labels = []
+    for base in bases:
+        label, n = base, 1
+        while label in taken:  # also past a name that looks like a generated label
+            n += 1
+            label = f"{base}#{n}"
+        taken.add(label)
+        labels.append(label)
     return labels
 
 
