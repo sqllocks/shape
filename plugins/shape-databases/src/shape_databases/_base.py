@@ -80,7 +80,11 @@ def parse_uri(
             raise ShapeError(
                 f"unknown URI parameter {key!r}; allowed: {', '.join(sorted(allowed))}"
             )
-        params[key] = allowed[key](value)
+        try:
+            params[key] = allowed[key](value)
+        except ShapeError as exc:
+            failure = ShapeError(f"URI parameter {key!r} is {value!r}: {exc}")
+            raise failure from None
     database = unquote(parts.path[1:]) if len(parts.path) > 1 else None
     return Target(
         host=parts.hostname or None,
