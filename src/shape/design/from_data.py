@@ -62,6 +62,8 @@ def _type(values: list[Any]) -> str:
         return "string"
     if kinds == {"integer", "float"}:
         return "float"
+    if kinds == {"integer", "decimal"}:
+        return "decimal"
     return kinds.pop() if len(kinds) == 1 else "string"
 
 
@@ -94,6 +96,12 @@ def _entity(
 ) -> dict[str, Any]:
     if not rows:
         raise DesignError(f"table {table!r} has no rows")
+    for i, r in enumerate(rows):
+        if not isinstance(r, Mapping):
+            raise DesignError(
+                f"table {table!r} row {i} is a {type(r).__name__}, not a mapping of column name "
+                "to value"
+            )
     columns: list[str] = []
     for r in rows:
         for c in r:
@@ -113,7 +121,12 @@ def _entity(
         if kind == "string":
             attr["max_length"] = max([1, *(len(str(v)) for v in values[c] if v is not None)])
         elif kind == "decimal":
-            finite = [v.as_tuple() for v in values[c] if isinstance(v, Decimal) and v.is_finite()]
+            # integers count as decimals with no fraction digits
+            finite = [
+                Decimal(v).as_tuple()
+                for v in values[c]
+                if isinstance(v, (int, Decimal)) and Decimal(v).is_finite()
+            ]
             scale = max([0, *(-int(t.exponent) for t in finite)])
             whole = max([0, *(len(t.digits) + int(t.exponent) for t in finite)])
             # 38 (the T-SQL maximum) unless the values need more digits than that
