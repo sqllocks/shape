@@ -111,8 +111,10 @@ class Frame:
 
     @classmethod
     def from_arrow(cls, table: pa.Table) -> Frame:
+        # by position: a name may repeat (the last column of a name is the one looked up)
         return cls(
-            [_column(name, table.column(name)) for name in table.column_names], table.num_rows
+            [_column(f.name, table.column(i)) for i, f in enumerate(table.schema)],
+            table.num_rows,
         )
 
 
