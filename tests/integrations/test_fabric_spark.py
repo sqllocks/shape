@@ -254,35 +254,62 @@ def test_empty_table_profiles_to_zero_rows(spark: Any) -> None:
     assert entry["rows"] == 0 and [c["name"] for c in entry["columns"]] == ["a", "b"]
 
 
+_PYTHON_KERNEL_RUN = """
+import json, sys
+from pyspark.sql import SparkSession
+from shape.integrations.fabric.spark import profile_distributed
+
+path, warehouse = sys.argv[1], sys.argv[2]
+session = (
+    SparkSession.builder.master("local[2]")
+    .appName("shape-pf02-python-kernel")
+    .config("spark.sql.warehouse.dir", warehouse)
+    .config("spark.ui.enabled", "false")
+    .config("spark.executorEnv.SHAPE_KERNEL", "python")
+    .config("spark.sql.shuffle.partitions", "4")
+    .getOrCreate()
+)
+try:
+    probe = session.sparkContext.parallelize([0], 1).map(
+        lambda _: __import__("os").environ.get("SHAPE_KERNEL")
+    )
+    kernels = probe.collect()
+    # the same partitioning as the module fixture: repartition(5) of the same file
+    doc = profile_distributed(session.read.parquet(path).repartition(5), name="d3")
+finally:
+    session.stop()
+print(json.dumps({"kernels": kernels, "doc": doc}))
+"""
+
+
 def test_executors_on_the_python_kernel_give_the_same_profile(
     tmp_path: Path, d3_arrow: pa.Table, distributed: dict[str, Any]
 ) -> None:
     """Snapshots are one format for both kernels: executors on the pure-Python twin (what a
-    Fabric Environment without the platform wheel runs) merge into the same document."""
+    Fabric Environment without the platform wheel runs) merge into the same document.
+
+    The run is a separate process: with the module's session running, ``getOrCreate`` would
+    return that session and ignore ``spark.executorEnv.SHAPE_KERNEL``, and stopping it would
+    stop the session the other tests use (#328)."""
+    import json
+    import subprocess
+
     import pyarrow.parquet as pq
-    from pyspark.sql import SparkSession
 
     path = tmp_path / "d3.parquet"
     pq.write_table(d3_arrow, path, row_group_size=20_000)
-    session = (
-        SparkSession.builder.master("local[2]")
-        .appName("shape-pf02-python-kernel")
-        .config("spark.sql.warehouse.dir", str(tmp_path / "wh"))
-        .config("spark.ui.enabled", "false")
-        .config("spark.executorEnv.SHAPE_KERNEL", "python")
-        .config("spark.sql.shuffle.partitions", "4")
-        .getOrCreate()
+    run = subprocess.run(
+        [sys.executable, "-c", _PYTHON_KERNEL_RUN, str(path), str(tmp_path / "wh")],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "PYSPARK_PYTHON": sys.executable},
+        timeout=600,
     )
-    try:
-        # the executors really run the Python twin (#328)
-        probe = session.sparkContext.parallelize([0], 1).map(
-            lambda _: __import__("os").environ.get("SHAPE_KERNEL")
-        )
-        assert probe.collect() == ["python"]
-        # the same partitioning as the module fixture: repartition(5) of the same file
-        doc = profile_distributed(session.read.parquet(str(path)).repartition(5), name="d3")
-    finally:
-        session.stop()
+    assert run.returncode == 0, run.stderr[-4000:]
+    out = json.loads(run.stdout.strip().splitlines()[-1])
+    # the executors really run the Python twin (#328)
+    assert out["kernels"] == ["python"]
+    doc = out["doc"]
     d, s = _cols(doc), _cols(distributed)
     assert doc["tables"]["d3"]["rows"] == D3_ROWS
     for name in d:
