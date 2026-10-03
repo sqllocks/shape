@@ -98,6 +98,11 @@ def _next_page(doc: dict[str, Any], seen: set[str], what: str) -> str:
     return token
 
 
+def _seg(value: str) -> str:
+    """An id as one URL path segment: ``/``, ``?`` and ``#`` cannot reach another path."""
+    return quote(str(value), safe="")
+
+
 def is_guid(value: str) -> bool:
     return bool(_GUID.match(value))
 
@@ -157,7 +162,7 @@ class FabricApi:
 
     def find_item(self, workspace_id: str, item_type: str, name: str) -> dict[str, Any] | None:
         """The item of ``item_type`` called ``name``, or ``None``."""
-        url = f"{FABRIC_API}/workspaces/{workspace_id}/items?type={quote(item_type)}"
+        url = f"{FABRIC_API}/workspaces/{_seg(workspace_id)}/items?type={quote(item_type)}"
         token = ""
         seen: set[str] = set()
         while True:
@@ -182,7 +187,7 @@ class FabricApi:
         try:
             response = self._http.request(
                 "POST",
-                f"{FABRIC_API}/workspaces/{workspace_id}/items",
+                f"{FABRIC_API}/workspaces/{_seg(workspace_id)}/items",
                 body=body,
                 timeout=60.0,
             )
@@ -237,7 +242,9 @@ class FabricApi:
 
     def delete_item(self, workspace_id: str, item_id: str) -> None:
         """Delete an item (the live tests remove what they made)."""
-        self._http.request("DELETE", f"{FABRIC_API}/workspaces/{workspace_id}/items/{item_id}")
+        self._http.request(
+            "DELETE", f"{FABRIC_API}/workspaces/{_seg(workspace_id)}/items/{_seg(item_id)}"
+        )
 
     def ensure_item(self, workspace_id: str, body: dict[str, Any]) -> tuple[dict[str, Any], bool]:
         """The item of ``body``'s name and type, created if missing: ``(item, created)``."""
