@@ -47,6 +47,11 @@ class _TableStream:
     def _run(self) -> None:
         try:
             self._write(self._drain())
+            if not self._ended:
+                raise RuntimeError(
+                    f"the writer for table {self.table!r} returned before reading all of its "
+                    "batches; the rows after that point were not written"
+                )
         except BaseException as exc:
             self.error = exc
             # Keep the producer from blocking: read what is left, up to the end marker (a writer
