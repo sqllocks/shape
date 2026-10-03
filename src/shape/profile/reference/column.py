@@ -405,7 +405,7 @@ def _first_is_iso(arr: Any) -> bool:
     return bool(_ISO_DATE.match(first) or _ISO_DT.match(first) or _ISO_DT_FRAC.match(first))
 
 
-def _coerce_datetime_strings(arr: Any, keep_nulls: bool = False) -> Any:
+def _coerce_datetime_strings(arr: Any, keep_nulls: bool = False, uniq: Any = None) -> Any:
     """pd.to_datetime(series, errors="coerce"): the format is guessed from the first element
     and applied strictly (non-matching elements become NaT, dropped unless keep_nulls); with no
     guessable format every element is parsed on its own. ISO-8601 text, the common case, takes
@@ -430,8 +430,90 @@ def _coerce_datetime_strings(arr: Any, keep_nulls: bool = False) -> Any:
         return out if keep_nulls else pc.drop_null(out)
     else:
         return _coerce_with_dtparse(arr, keep_nulls)
-    out = pc.strptime(arr, format=fmt, unit="s", error_is_null=True)
-    return out if keep_nulls else pc.drop_null(out)
+    parsed = pc.strptime(arr, format=fmt, unit="s", error_is_null=True)
+    has_time = fmt != "%Y-%m-%d"
+    # the distinct values (when given and much fewer than the rows) say whether any rolled over
+    if uniq is None or 4 * len(uniq) >= len(arr) or _rolls_over(uniq, fmt, has_time):
+        parsed = _reject_rolled_over(arr, parsed, has_time)
+    return parsed if keep_nulls else pc.drop_null(parsed)
+
+
+_ISO_FIELDS = re.compile(r"^\d+-(?P<mo>\d+)-(?P<d>\d+)(?:[ T](?P<h>\d+):(?P<mi>\d+):(?P<s>\d+))?$")
+
+
+def _rolled_over_chunk(text: Any, parsed: Any, has_time: bool) -> tuple[Any, Any]:
+    """``(bad, unchecked)`` row positions of one chunk. A value can only roll over when its text
+    says day 29 to 31 or second 60 or 61, so those two digits are read straight from the string
+    buffers of fixed-width ISO text, and only rows that name such a day or second are compared
+    with what ``parsed`` holds. Rows of another width are returned to be checked otherwise."""
+    none = np.zeros(0, np.int64)
+    if not (pa.types.is_string(text.type) or pa.types.is_large_string(text.type)):
+        return none, np.flatnonzero(parsed.is_valid().to_numpy(zero_copy_only=False))
+    n = len(text)
+    bufs = text.buffers()
+    off_type = np.int64 if pa.types.is_large_string(text.type) else np.int32
+    offsets = np.frombuffer(bufs[1], off_type)[text.offset : text.offset + n + 1]
+    if bufs[2] is None:
+        return none, none
+    data = np.frombuffer(bufs[2], np.uint8)
+    valid = parsed.is_valid().to_numpy(zero_copy_only=False)
+    fixed = np.diff(offsets) == (19 if has_time else 10)
+    start = np.where(fixed, offsets[:-1], 0)
+
+    def two(pos: int) -> Any:
+        return (data[start + pos].astype(np.int16) - 48) * 10 + data[start + pos + 1] - 48
+
+    suspect = two(8) >= 29
+    if has_time:
+        suspect |= two(17) >= 60
+    rows = np.flatnonzero(suspect & fixed & valid)
+    bad = np.zeros(len(rows), dtype=bool)
+    if len(rows):
+        sub, idx = pc.take(parsed, pa.array(rows)), start[rows]
+        for pos, field in [(8, pc.day)] + ([(17, pc.second)] if has_time else []):
+            want = (data[idx + pos].astype(np.int64) - 48) * 10 + data[idx + pos + 1] - 48
+            bad |= want != field(sub).to_numpy(zero_copy_only=False)
+    return rows[bad], np.flatnonzero(valid & ~fixed)
+
+
+def _rolls_over(uniq: Any, fmt: str, has_time: bool) -> bool:
+    """True when Arrow's ``strptime`` rolls any of these distinct values over (#221)."""
+    parsed = pc.strptime(uniq, format=fmt, unit="s", error_is_null=True)
+    return _reject_rolled_over(uniq, parsed, has_time) is not parsed
+
+
+def _reject_rolled_over(text: Any, parsed: Any, has_time: bool) -> Any:
+    """``parsed`` with the values Arrow's ``strptime`` rolled over made null: it turns 2023-02-29
+    into 2023-03-01 and second 60 into the next minute, where pandas gives NaT (#221)."""
+    t_chunks = text.chunks if isinstance(text, pa.ChunkedArray) else [text]
+    p_chunks = parsed.chunks if isinstance(parsed, pa.ChunkedArray) else [parsed]
+    if [len(c) for c in t_chunks] != [len(c) for c in p_chunks]:
+        t_chunks, p_chunks = [pa.concat_arrays(t_chunks)], [pa.concat_arrays(p_chunks)]
+    bad_parts, unchecked_parts, base = [], [], 0
+    for t, p in zip(t_chunks, p_chunks, strict=True):
+        bad, unchecked = _rolled_over_chunk(t, p, has_time)
+        bad_parts.append(bad + base)
+        unchecked_parts.append(unchecked + base)
+        base += len(t)
+    bad_rows = np.concatenate(bad_parts)
+    unchecked = np.concatenate(unchecked_parts)
+    if len(unchecked):  # text of another width: Arrow's strict ISO cast, else field by field
+        rows = pa.array(unchecked)
+        text_u = pc.take(text, rows)
+        if not _try(lambda a: pc.cast(a, pa.timestamp("s")), text_u):
+            parsed_u = pc.take(parsed, rows)
+            parts = pc.extract_regex(text_u, _ISO_FIELDS.pattern)
+            fields = (pc.month, pc.day, pc.hour, pc.minute, pc.second)[: 5 if has_time else 2]
+            same = np.ones(len(unchecked), dtype=bool)
+            for i, field in enumerate(fields):
+                eq = pc.equal(pc.cast(pc.struct_field(parts, [i]), pa.int64()), field(parsed_u))
+                same &= pc.fill_null(eq, True).to_numpy(zero_copy_only=False)
+            bad_rows = np.concatenate([bad_rows, unchecked[~same]])
+    if len(bad_rows) == 0:
+        return parsed
+    keep = np.ones(len(parsed), dtype=bool)
+    keep[bad_rows] = False
+    return pc.if_else(pa.array(keep), parsed, pa.scalar(None, parsed.type))
 
 
 def _coerce_with_dtparse(arr: Any, keep_nulls: bool) -> Any:
@@ -813,7 +895,7 @@ def _profile_column(
                     # parse, so a column of ordinary text costs one failed parse, not one per
                     # distinct value.
                     dt_try = (
-                        _coerce_datetime_strings(non_null, keep_nulls=True)
+                        _coerce_datetime_strings(non_null, keep_nulls=True, uniq=uniq)
                         if _first_is_iso(non_null)
                         else None
                     )
@@ -823,11 +905,11 @@ def _profile_column(
                     elif _all_parse_datetime(uniq):
                         stype = "datetime"
                         if dt_try is None:
-                            dt_try = _coerce_datetime_strings(non_null, keep_nulls=True)
+                            dt_try = _coerce_datetime_strings(non_null, keep_nulls=True, uniq=uniq)
                         dt_values = (
                             pc.drop_null(dt_try)
                             if dt_try is not None
-                            else _coerce_datetime_strings(non_null)
+                            else _coerce_datetime_strings(non_null, uniq=uniq)
                         )
 
     # ---- enum + value_counts_ext ------------------------------------------

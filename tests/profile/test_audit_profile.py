@@ -143,13 +143,13 @@ def test_concurrent_profiles_on_the_fork_pool_keep_their_own_columns(monkeypatch
     for _ in range(5):
         out: dict[str, object] = {}
 
-        def run(key: str) -> None:
+        def run(key: str, out: dict[str, object]) -> None:
             try:
                 out[key] = sorted(shape.profile(frames[key]).to_dict()["columns"])
             except Exception as exc:  # noqa: BLE001 - a crash is a failure of this test
                 out[key] = repr(exc)
 
-        threads = [threading.Thread(target=run, args=(k,)) for k in frames]
+        threads = [threading.Thread(target=run, args=(k, out)) for k in frames]
         for t in threads:
             t.start()
         for t in threads:
@@ -176,3 +176,13 @@ def test_impossible_iso_dates_are_text_as_in_the_baseline(kernel, tmp_path, valu
     path = tmp_path / "d.csv"
     path.write_text("d\n" + "\n".join(values) + "\n")
     assert shape.profile(str(path)).to_dict()["columns"]["d"]["dtype"] == dtype
+
+
+@pytest.mark.parametrize("bad", ["2023-02-29", "2023-02-29 10:00:00"])
+def test_an_impossible_date_among_many_repeats_is_found_from_the_distinct_values(tmp_path, bad):
+    good = "2023-03-01" if len(bad) == 10 else "2023-03-01 10:00:00"
+    path = tmp_path / "d.csv"
+    path.write_text("d\n" + "\n".join([good] * 40 + [bad] + [good] * 40) + "\n")
+    assert shape.profile(str(path)).to_dict()["columns"]["d"]["dtype"] == "string"
+    path.write_text("d\n" + "\n".join([good] * 81) + "\n")
+    assert shape.profile(str(path)).to_dict()["columns"]["d"]["dtype"] == "datetime"
