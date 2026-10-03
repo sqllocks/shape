@@ -278,7 +278,7 @@ def test_findings_survive_the_artifact_and_the_summary(workbook, tmp_path):
     path = workbook({"A": [["x"], ["00000"]], "H": [["y"], [1]]}, hidden_sheets=["H"])
     prof = shape.profile(str(path))
     out = tmp_path / "p.shape"
-    shape.save(prof, out)
+    shape.save(prof, out, capture="full")  # equality and the sentinel value need a full capture
     again = shape.load(out)
     assert again == prof and _findings(again, "sentinel_values")
     summary = prof.summary()
@@ -319,7 +319,7 @@ def _shape(*args, cwd):
 def test_cli_profile_json_lists_findings(workbook, tmp_path):
     path = workbook({"A": [["zip", "n"], ["00000", "5"]], "H": [["y"], [1]]}, hidden_sheets=["H"])
     out, js = tmp_path / "b.shape", tmp_path / "b.json"
-    done = _shape("profile", path, "-o", out, "--json", js, cwd=tmp_path)
+    done = _shape("profile", path, "-o", out, "--json", js, "--capture", "full", cwd=tmp_path)
     assert done.returncode == 0, done.stderr
     summary = json.loads(js.read_text())
     kinds = {f["kind"] for f in summary["tables"]["A"]["findings"]}
@@ -359,7 +359,8 @@ def test_leading_zero_identifiers_survive_profile_and_generate_from(workbook, tm
         rows.append([f"{i:07d}", f"{(i * 37) % 900 + 1:05d}", ("gold", "silver", "bronze")[i % 3]])
     path = workbook({"Members": rows})
     profile = tmp_path / "members.shape"
-    done = _shape("profile", path, "-o", profile, cwd=tmp_path)
+    # the zero padding is read off the real minimum and maximum, which only a full capture has
+    done = _shape("profile", path, "-o", profile, "--capture", "full", cwd=tmp_path)
     assert done.returncode == 0, done.stderr
     out = tmp_path / "out"
     done = _shape(

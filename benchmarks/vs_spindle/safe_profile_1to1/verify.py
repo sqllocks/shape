@@ -34,7 +34,9 @@ CACHE = BENCH_OUT_DIR / "safe_cache"
 REL = 1e-9
 # Keys the product adds to the baseline's format (P7-02: cells withheld by the minimum cohort).
 # Parity covers every baseline key; these are compared separately, by test.
-ADDED_KEYS = {"cells_suppressed"}
+# ``pattern_rates`` and ``pattern_contains_rates`` are the rates the safe profile reads (INT-15):
+# bookkeeping like ``cells_suppressed``, covered by tests/privacy and tests/profile.
+ADDED_KEYS = {"cells_suppressed", "pattern_rates", "pattern_contains_rates"}
 # The declaration every persisted Shape file carries (W1-01): top level only, like
 # ``schema_version``, because the two formats number their own history.
 DECLARATION_KEYS = ("format", "version", "shape_version", "min_shape_version")

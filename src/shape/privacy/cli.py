@@ -74,7 +74,11 @@ def _scan(path: str) -> ValidationResult:
     if zipfile.is_zipfile(path):
         import shape
 
-        data: Any = shape.load(path).to_dict()
+        prof = shape.load(path)
+        data: Any = prof.to_dict()
+        data["capture"] = prof.capture  # a profile that does not say reads as full
+        if prof.redaction_manifest:  # the marker of a safe capture; a full one has none
+            data["redaction_manifest"] = prof.redaction_manifest
         return validator.validate_data(data, path=path)
     return validator.validate_file(path)
 

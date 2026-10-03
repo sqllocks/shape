@@ -191,6 +191,31 @@ def _signature_info(path: Path, signature: dict[str, Any]) -> dict[str, Any] | N
     }
 
 
+def _profile_v1_to_v2(manifest: dict[str, Any]) -> dict[str, Any]:
+    """Version 2 records how the profile was captured. A version 1 profile holds what the data
+    held, so it is a full capture; the body is not touched."""
+    return {**manifest, "capture": {"mode": "full", "k": None}}
+
+
+# profile artifact: source version -> (step name, step); each advances exactly one version
+_PROFILE_STEPS: dict[int, tuple[str, Callable[[dict[str, Any]], dict[str, Any]]]] = {
+    1: ("profile-capture-full", _profile_v1_to_v2),
+}
+
+
+def _migrate_profile_manifest(
+    manifest: dict[str, Any], version: int, target: int
+) -> tuple[tuple[str, ...], dict[str, Any]]:
+    names: list[str] = []
+    for v in range(version, target):
+        if v not in _PROFILE_STEPS:
+            raise MigrationError(f"a profile artifact has no migration from {v}")
+        name, step = _PROFILE_STEPS[v]
+        manifest = step(manifest)
+        names.append(name)
+    return tuple(names), manifest
+
+
 def _prepare_artifact(src: Path, to: int | None, verify_key: bytes | None) -> _Prepared:
     import warnings
 
@@ -219,12 +244,17 @@ def _prepare_artifact(src: Path, to: int | None, verify_key: bytes | None) -> _P
     steps: tuple[str, ...]
     migrated_manifest: dict[str, Any] = dict(manifest)
     if version < target:
-        if kind != "artifact":
+        if kind == "profile-artifact":
+            steps, migrated_manifest = _migrate_profile_manifest(dict(manifest), version, target)
+        elif kind != "artifact":
             raise MigrationError(f"a {compat.KINDS[kind].label} has no migration from {version}")
-        path = MIGRATIONS.path(version, target)
-        steps = tuple(m.name for m in path)
-        migrated_manifest, obj, _ = MIGRATIONS.migrate(dict(manifest), codec.loads(body), target)
-        new_body = codec.dumps(obj, sort_keys=True)
+        else:
+            path = MIGRATIONS.path(version, target)
+            steps = tuple(m.name for m in path)
+            migrated_manifest, obj, _ = MIGRATIONS.migrate(
+                dict(manifest), codec.loads(body), target
+            )
+            new_body = codec.dumps(obj, sort_keys=True)
     elif _declaration_complete(manifest):
         steps = ()
     else:

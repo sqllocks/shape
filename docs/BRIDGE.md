@@ -230,8 +230,9 @@ What stays is the column's shape (type, null rate, cardinality, pattern), which 
 `verify` messages come from the gate schema and counts, never from data values.
 
 Two things the default does not do: it does not change the `.shape` file `profile` writes, which is
-the full profile and holds real values (the warning `profile_file_holds_values` says so; share a
-safe profile, `shape profile safe`, not that file), and it does not touch `generate`, `preview` or
+still the full profile (`capture="full"`) and holds real values (the warning
+`profile_file_holds_values` says so; the safe default of `shape profile` does not apply to the
+bridge until its protocol says so), and it does not touch `generate`, `preview` or
 `stream`, which return generated data.
 
 ## What each command runs

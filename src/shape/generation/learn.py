@@ -30,6 +30,8 @@ from typing import Any
 from shape.generation.schema import GenSchema
 from shape.profile.reference.model import ColumnProfile, DatasetProfile, TableProfile
 
+OTHER_BUCKET = "__OTHER__"  # shape.privacy.cells.OTHER_BUCKET (a test keeps them equal)
+
 DIFFERENCES: dict[str, str] = {
     "truncated_enum": (
         "a numeric column whose profile lists fewer values than it has distinct ones is generated "
@@ -126,10 +128,19 @@ def _untag(value: Any) -> Any:
 
 
 def _column(doc: Mapping[str, Any]) -> ColumnProfile:
-    value_counts = doc.get("value_counts_ext")
+    value_counts: dict[str, float] | None = doc.get("value_counts_ext")
     order = doc.get("value_counts_ext_order")
     if value_counts and order:
         value_counts = {k: value_counts[k] for k in order if k in value_counts}
+    enum_values: dict[str, float] | None = doc.get("enum_values")
+    redacted = doc.get("redacted")
+    folded = False
+    if isinstance(enum_values, Mapping) and OTHER_BUCKET in enum_values:
+        # a safe capture folded the rare categories into one bucket: it is not a value to generate
+        folded = True
+        enum_values = {k: v for k, v in enum_values.items() if k != OTHER_BUCKET}
+    if isinstance(value_counts, Mapping) and OTHER_BUCKET in value_counts:
+        value_counts = {k: v for k, v in value_counts.items() if k != OTHER_BUCKET}
     return ColumnProfile(
         name=doc["name"],
         dtype=doc["dtype"],
@@ -139,7 +150,7 @@ def _column(doc: Mapping[str, Any]) -> ColumnProfile:
         cardinality_ratio=doc.get("cardinality_ratio"),
         is_unique=doc.get("is_unique"),
         is_enum=bool(doc.get("is_enum")),
-        enum_values=doc.get("enum_values"),
+        enum_values=enum_values,
         min_value=_untag(doc.get("min_value")),
         max_value=_untag(doc.get("max_value")),
         mean=doc.get("mean"),
@@ -165,6 +176,10 @@ def _column(doc: Mapping[str, Any]) -> ColumnProfile:
         precision=doc.get("precision"),
         scale=doc.get("scale"),
         placeholders=doc.get("placeholders"),
+        redacted={str(k): str(v) for k, v in redacted.items()}
+        if isinstance(redacted, Mapping)
+        else None,
+        folded=folded,
     )
 
 

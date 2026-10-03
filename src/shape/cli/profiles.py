@@ -90,13 +90,16 @@ def _parser() -> argparse.ArgumentParser:
     sv.add_argument(
         "--safe",
         action="store_true",
-        help="store the share-safe form (as `shape profile safe`) instead of the full profile, "
-        "which holds real values from the data",
+        help="store the share-safe profile JSON (as `shape profile safe`) instead of a .shape "
+        "profile",
     )
-    sv.add_argument("--k", type=int, metavar="N", help="with --safe: minimum cohort (default 5)")
+    sv.add_argument("--k", type=int, metavar="N", help="minimum cohort (default 5)")
     sv.add_argument(
         "--sensitive", action="store_true", help="with --safe: raise the minimum cohort to 11"
     )
+    from shape.cli.capture import add_capture_args
+
+    add_capture_args(sv, k=False)
     _root(sv)
     dl = rs.add_parser("delete", help="delete a profile")
     dl.add_argument("identity", metavar="SYSTEM/TABLE/NAME")
@@ -147,9 +150,12 @@ def _is_shape(path: str) -> bool:
 def export_document(prof: Any) -> dict[str, Any]:
     from shape.artifact import codec
 
-    return compat.stamp(
-        "profile-export", {"name": prof.name, "profile": codec.encode(prof.to_dict())}
-    )
+    doc: dict[str, Any] = {"name": prof.name, "profile": codec.encode(prof.to_dict())}
+    if prof.capture_declared:
+        doc["capture"] = prof.capture
+        if prof.redaction_manifest:
+            doc["redaction_manifest"] = prof.redaction_manifest
+    return compat.stamp("profile-export", doc)
 
 
 def read_export(path: str) -> Any:
@@ -171,7 +177,16 @@ def read_export(path: str) -> Any:
     problems = check_profile_data(body)
     if problems:
         raise ValueError(f"{path} is not a valid profile: {problems[0]}")
-    return _profile_class()(body, name=str(doc.get("name") or "") or None)
+    from shape.profile.reference.profile import check_capture
+
+    capture = check_capture(doc["capture"]) if "capture" in doc else None
+    redaction = doc.get("redaction_manifest")
+    return _profile_class()(
+        body,
+        name=str(doc.get("name") or "") or None,
+        capture=capture,
+        redaction_manifest=redaction if isinstance(redaction, dict) else None,
+    )
 
 
 def _profile_class() -> Any:
@@ -320,7 +335,7 @@ def _reg_list(a: argparse.Namespace) -> int:
         print("-" * 93)
         for e in rows:
             ident = f"{e['system']}/{e['table']}/{e['name']}"
-            form = e.get("form", "full")
+            form = e.get("form") or ("safe capture" if e.get("capture") == "safe" else "full")
             print(f"{ident:<45} {', '.join(e['tags']):<30} {e['source_rows']:>10,}  {form}")
     return 0
 
@@ -337,13 +352,23 @@ def _reg_save(a: argparse.Namespace) -> int:
         else shape.profile(a.source)
     )
     tags = [t.strip() for t in a.tags.split(",") if t.strip()]
-    if (a.k is not None or a.sensitive) and not a.safe:
-        raise ValueError("--k and --sensitive apply to --safe only")
     config = None
+    capture = None
     if a.safe:
+        if a.capture == "full" or a.column_k or a.classify:
+            raise ValueError(
+                "--safe stores the share-safe profile JSON: --capture full, --column-k and "
+                "--classify apply to the .shape form"
+            )
         from shape.privacy.safe_profile import SafeConfig
 
         config = SafeConfig(k=a.k, sensitive=a.sensitive)
+    else:
+        if a.sensitive:
+            raise ValueError("--sensitive applies to --safe only")
+        from shape.cli import capture as capture_args
+
+        capture = capture_args.config_from_args(a)
     saved = reg.save(
         prof,
         system=a.system,
@@ -353,17 +378,20 @@ def _reg_save(a: argparse.Namespace) -> int:
         overwrite=a.overwrite,
         safe=a.safe,
         safe_config=config,
+        capture=capture,
     )
     for i in saved:
         print(f"  Saved: {i}")
-    print(f"Saved {len(saved)} profile(s) to the registry" + (" (safe form)." if a.safe else "."))
-    if not a.safe:
-        print(
-            "shape: note: the full profile holds real values from the data (value counts and "
-            "extremes): keep this registry private, or save with --safe to store the share-safe "
-            "form",
-            file=sys.stderr,
-        )
+    form = (
+        " (safe profile JSON)."
+        if capture is None
+        else " (full capture)."
+        if capture.mode == "full"
+        else "."
+    )
+    print(f"Saved {len(saved)} profile(s) to the registry{form}")
+    if capture is not None and capture.mode == "full":
+        capture_args.warn_full(reg.root)
     return 0
 
 

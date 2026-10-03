@@ -29,7 +29,7 @@ never had a second version before they were declared).
 | Kind | File | `format` | Version | Old key name(s) still read | Notes |
 |---|---|---|---|---|---|
 | `artifact` | `.shape` archive, `manifest.json` | `shape` | 2 | `format_version` | the manifest declares; version 1 holds a v1 capture and is migrated on read |
-| `profile-artifact` | `.shape` archive with `kind: profile` | `shape` | 1 | `format_version` | |
+| `profile-artifact` | `.shape` archive with `kind: profile` | `shape` | 2 | `format_version` | version 2 records `capture` (`safe` or `full`, and `k`) and, for a safe capture, the `redaction_manifest`; a version 1 file has no `capture` and reads as `full` |
 | `model` | `shape.json` in an artifact; a standalone model JSON | `shape-model` | 2 | `schema_version` | see below |
 | `safe-profile` | `*.safe.json` | `shape-safe-profile` | 1 | `schema_version` | |
 | `generation-schema` | generation schema JSON | `shape-generation-schema` | 1 | `schema_version` | see below |
@@ -243,6 +243,7 @@ by `shape.compat.render_support_table()` and a test keeps it equal to the code.
 | `artifact` | `shape` | 1 | 0.9.0 | supported |
 | `artifact` | `shape` | 2 | 0.9.0 | supported |
 | `profile-artifact` | `shape` | 1 | 0.9.0 | supported |
+| `profile-artifact` | `shape` | 2 | 0.9.0 | supported |
 | `model` | `shape-model` | 1 | 0.9.0 | supported |
 | `model` | `shape-model` | 2 | 0.9.0 | supported |
 | `safe-profile` | `shape-safe-profile` | 1 | 0.9.0 | supported |

@@ -36,7 +36,7 @@ def work(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.delenv("SHAPE_DEBUG", raising=False)
     rows = "\n".join(f"{i},user{i}@example.com,{20 + i % 40}" for i in range(500))
     (tmp_path / "customers.csv").write_text("id,email,age\n" + rows + "\n")
-    assert main(["profile", "customers.csv", "-o", "cust.shape"]) == 0
+    assert main(["profile", "customers.csv", "-o", "cust.shape", "--capture", "full"]) == 0
     return tmp_path
 
 

@@ -16,7 +16,8 @@ The rules deny by shape, not by name, so a renamed field does not slip through:
 
 It fails closed on ambiguity: a table without a usable ``row_count``, or an artifact without
 the safe-profile markers (``schema_version`` or ``redaction_manifest``), is flagged and still
-walked, so the report names the concrete leaks. An artifact stamped ``unsafe`` is rejected.
+walked, so the report names the concrete leaks. An artifact stamped ``unsafe`` is rejected, and so
+is a profile whose ``capture`` says ``full`` (``--capture full``, W1-11), which keeps real values.
 """
 
 from __future__ import annotations
@@ -164,6 +165,14 @@ class SafeProfileValidator:
                 "unsafe-stamp",
                 "$.unsafe",
                 "artifact is stamped unsafe (the full-fidelity opt-out); it is rejected",
+            )
+        capture = data.get("capture") if isinstance(data, dict) else None
+        if isinstance(capture, dict) and capture.get("mode") == "full":
+            result.add(
+                "full-capture",
+                "$.capture.mode",
+                "profile was captured full (--capture full): it keeps real values from the data "
+                "and is not for sharing; re-profile with the default (--capture safe)",
             )
         self._check_row_counts(data, result)
         self._walk(data, "$", None, result)

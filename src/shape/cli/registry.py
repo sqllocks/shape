@@ -167,18 +167,29 @@ def _safe_document(data: bytes) -> dict[str, Any] | None:
     return None
 
 
+def _refuse_leaks(found: list[str], label: str) -> int:
+    print(
+        f"shape: error: not committed: the leak scan found {len(found)} problem(s) in {label}",
+        file=sys.stderr,
+    )
+    for line in found[:5]:
+        print(f"  {line}", file=sys.stderr)
+    return 1
+
+
 def _commit(r: Any, a: argparse.Namespace) -> int:
-    from shape.registry.local import RawProfileError, is_raw_profile
+    from shape.registry.local import RawProfileError, is_raw_profile, profile_capture
 
     meta = _metadata(a)
     if (a.k is not None or a.sensitive) and not a.safe:
         raise ValueError("--k and --sensitive apply to --safe only")
     data = Path(a.artifact).read_bytes()
+    capture = profile_capture(data)  # None: not a profile
     raw = is_raw_profile(data)
     if a.safe:
-        if not raw:
+        if capture is None:
             raise ValueError(
-                f"{a.artifact} is not a raw profile: --safe needs a profile written by "
+                f"{a.artifact} is not a profile: --safe needs a profile written by "
                 "`shape profile` (or exported by `shape profile export`)"
             )
         data = _safe_form(a, a.artifact)
@@ -198,18 +209,22 @@ def _commit(r: Any, a: argparse.Namespace) -> int:
             file=sys.stderr,
         )
         meta["profile_form"] = "raw"
+    elif capture == "safe" and data[:2] == b"PK":  # the default capture: scan it like the rest
+        from shape.privacy.cli import _scan
+
+        result = _scan(a.artifact)
+        if not result.is_clean:
+            return _refuse_leaks(
+                [f"[{f.rule}] {f.path}: {f.detail}" for f in result.findings], a.artifact
+            )
+        meta["profile_form"] = "safe"
+    elif capture == "safe":
+        meta["profile_form"] = "safe"
     doc = _safe_document(data)
     if doc is not None:
         found = _leaks(doc, a.artifact)
         if found:
-            print(
-                f"shape: error: not committed: the leak scan found {len(found)} problem(s) in "
-                f"{a.artifact}",
-                file=sys.stderr,
-            )
-            for line in found[:5]:
-                print(f"  {line}", file=sys.stderr)
-            return 1
+            return _refuse_leaks(found, a.artifact)
         meta["profile_form"] = "safe"
     _dump({"content_id": r.commit(a.name, data, meta, allow_raw=a.allow_raw)})
     return 0
@@ -273,7 +288,7 @@ def _changed(a: Any, b: Any, prefix: str = "") -> dict[str, dict[str, Any]]:
 
 
 def _drift(first: bytes, second: bytes) -> dict[str, Any]:
-    """``shape diff`` of two raw profile artifacts."""
+    """``shape diff`` of two profile artifacts."""
     import tempfile
 
     import shape
@@ -293,9 +308,10 @@ def _diff(r: Any, a: argparse.Namespace) -> int:
     out: dict[str, Any] = {"name": a.name, "from": id1, "to": id2, "same": id1 == id2}
     if id1 != id2:
         first, second = r.checkout(a.name, id1), r.checkout(a.name, id2)
-        from shape.registry.local import is_raw_profile
+        from shape.registry.local import profile_capture
 
-        if is_raw_profile(first) and is_raw_profile(second) and first[:2] == b"PK":
+        both_profiles = profile_capture(first) is not None and profile_capture(second) is not None
+        if both_profiles and first[:2] == b"PK":
             out["drift"] = _drift(first, second)
         else:
             try:

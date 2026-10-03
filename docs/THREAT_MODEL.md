@@ -12,7 +12,7 @@ residual risk. The review that produced this version, with every finding, is in
 
 ## Assets
 
-- Source data and the real values inside a full-fidelity profile (`.shape`, `--json`).
+- Source data and the real values inside a full-capture profile (`.shape`, `--json` written with `--capture full`).
 - Safe profiles (`shape profile safe`): the artifact that is meant to be shared and committed.
 - Synthetic output: files, tables, event streams.
 - Credentials: connection strings, SAS tokens, SASL and SQL passwords, Entra tokens, Ed25519
@@ -98,8 +98,9 @@ Each row: the threat, the control, the test that enforces it.
 
 Raw-value leakage, re-identification and small cells are handled by the safe profile, the leak
 validator and k-anonymity (`docs/PRIVACY_MODEL.md`, `tests/privacy`). A full-fidelity `.shape`
-and `--json` hold real values by design; the docs name `shape profile safe` output as the
-committable artifact.
+and `--json` (`--capture full`) hold real values by design; the default capture of `shape profile`
+is the committable artifact (`docs/PRIVACY_MODEL.md`), and `shape profile validate --safe` flags a
+full one.
 
 ### Network surfaces
 

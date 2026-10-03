@@ -52,11 +52,25 @@ the policy.
 ## What each command expects
 
 - `shape profile SRC -o OUT.shape` reads CSV, Parquet, JSONL, a folder or glob of them, or a Delta
-  table, and writes a **profile**. A table with 0 rows prints `shape: warning: ... has 0 rows`
+  table, and writes a **profile**. The profile is the **safe capture** by default (`--capture
+  safe`): a sensitive column keeps statistics and formats only, and a category is kept only if
+  every released category has at least `k` rows (`--k N`, default 5; `--column-k COLUMN=N`;
+  `--classify COLUMN=LEVEL`, where `CONFIDENTIAL` or higher makes a column sensitive). The `--json`
+  summary and the `--html` report are redacted the same way. `--capture full` keeps real values,
+  says so in the artifact and prints `shape: warning: --capture full keeps real values in OUT; do
+  not commit or share it` once; `--k`, `--column-k` and `--classify` are errors with it (exit 2).
+  `shape profile validate --safe OUT.shape` exits 0 for the default and 1 for a full capture.
+  `shape profile registry save` takes the same options. See `docs/PRIVACY_MODEL.md`. A table with 0 rows prints `shape: warning: ... has 0 rows`
   (the profile is still written); `--fail-on-empty` exits 2 instead and writes nothing. A Delta
   table with deletion vectors or column mapping is read with DuckDB (extra `delta-fallback`) and
   says so on stderr; see the README.
-- `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles.
+- `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles, safe captures
+  included. `shape diff` lists a comparison a safe capture makes impossible under
+  `not_evaluable` and does not count it as drift. `shape check` exits 0 when every rule passes, 1
+  when a rule is violated, and 2 when a rule needs a value a safe capture left out (`shape: error:
+  not evaluable: COLUMN was captured safe (statistics and formats only); re-profile with --capture
+  full`) and nothing is violated. `shape generate --from` and `shape plan` generate such a column
+  from its pattern and length distribution and mark it `approximate`.
 - `shape inspect ARTIFACT.shape` prints what an artifact holds, a profile or a model. `shape show`
   is an alias of `shape inspect`.
 - `shape capture SRC` reads everything `shape profile` reads (CSV, Parquet, JSONL, a folder or

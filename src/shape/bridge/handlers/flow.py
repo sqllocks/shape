@@ -103,6 +103,12 @@ def _load_profile(path: str, ctx: Context) -> Any:
 # ---- profile ------------------------------------------------------------------------------
 
 
+# The bridge protocol (docs/BRIDGE.md, docs/bridge/vectors) says its profile file is the full
+# profile and warns so; the safe default of `shape.save` (W1-11) is not applied to a protocol
+# response without a protocol decision (recorded in docs/plans/lane_status/W1-11.md).
+BRIDGE_CAPTURE = "full"
+
+
 def cmd_profile(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
     import shape
     from shape.cli.main import _profile_source
@@ -127,12 +133,12 @@ def cmd_profile(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
         if output:
             target = Path(output)
             target.parent.mkdir(parents=True, exist_ok=True)
-            content_id = shape.save(prof, str(target))
+            content_id = shape.save(prof, str(target), capture=BRIDGE_CAPTURE)
         else:
             folder = ctx.jobs_dir / "bridge" / "profiles"
             folder.mkdir(parents=True, exist_ok=True, mode=0o700)
             scratch = folder / f".new-{os.getpid()}.shape"
-            content_id = shape.save(prof, str(scratch))
+            content_id = shape.save(prof, str(scratch), capture=BRIDGE_CAPTURE)
             target = folder / f"{str(content_id).replace(':', '-')}.shape"
             os.replace(scratch, target)
     ctx.warn(
