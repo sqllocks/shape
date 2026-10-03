@@ -330,3 +330,14 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Repository cleaned up for public release: removed internal milestone and
   qualification records.
 - README and changelog rewritten to describe the current state.
+
+### Fixed
+
+- Offline install locks (`scripts/offline_lock.py`) now carry the drivers of first-party plugin
+  extras: `postgres`, `mysql` and `databases` lock `psycopg` / `pymysql` (#259).
+- The shipped-data check flags `from urllib import request`, `from http import client` and
+  `urllib3` as network clients (#261).
+- The secret check detects Azure Storage and Event Hubs keys, GitHub tokens, AWS access key IDs,
+  `client_secret` literals and private-key blocks of any kind (#262).
+- `scripts/fuzz_artifacts.py` rejects `--iterations` below 1 instead of passing having fuzzed
+  nothing (#263).
