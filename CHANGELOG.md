@@ -5,6 +5,22 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Profile depth III and rule strength (`docs/PROFILING_NOTES.md`, `docs/CONTRACTS.md`, #226). Each
+  numeric column with at least 200 finite values gains `mixture` (Gaussian mixtures with 1 to 4
+  components fitted by EM from a deterministic quantile start, chosen by BIC: `k`, `components`,
+  `bic_by_k`, `multimodal`), and, for a table with a date or timestamp column (`shape profile
+  --time-column COL`, `shape.profile(..., time_column=)`), `seasonality` (mean per day or hour,
+  candidate periods 24, 7, 12 and 52 with at least three full periods, autocorrelation and the
+  strength of a moving-average decomposition; `seasonal` at strength 0.6). Identical under both
+  kernels; both are left out of the share-safe profile. `shape diff` reports `mixture_change` and
+  `seasonality_change` (thresholds `mixture_weight` and `seasonality_strength`). Contract v1 gains
+  the optional key `strength` (`hard`, `soft`, `learned`) on a column's rules, `row_count` and each
+  `fd`, `implies` and `reference_pair` entry: a broken `soft` rule is a warning, `learned` is a
+  warning unless `shape check --enforce-learned`, `--strict` fails on every broken rule, and
+  `CheckResult` and `--json` carry `strength` on violations and a `warnings` list. A contract with
+  no `strength` gives the result it always did; profiles and contracts written before this change
+  load, display, diff and check as before.
+
 - Univariate depth (`docs/PROFILING_NOTES.md`, #103). Each numeric column of a profile gains, where
   it applies: `distribution_candidates` and `distribution_by_bic` (maximum-likelihood fits of the
   normal, lognormal, exponential, uniform, gamma and Weibull with log-likelihood, AIC, BIC and KS;

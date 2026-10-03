@@ -15,8 +15,8 @@ from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
-import pyarrow as pa
-import pyarrow.compute as pc
+import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 CHUNK = 1 << 18
 """Rows per step of the aggregation pass."""

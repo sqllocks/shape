@@ -289,10 +289,10 @@ def _column_strength(rules: dict[str, Any], rule: str) -> str:
     if value is None:
         return "hard"
     if isinstance(value, str):
-        return value
+        return str(value)
     names = ("min_true_rate", "max_true_rate") if rule == "true_rate" else (rule,)
     present = [value.get(n, "hard") for n in names if n in rules or rule != "true_rate"]
-    return max(present or ["hard"], key=_RANK.__getitem__)
+    return str(max(present or ["hard"], key=_RANK.__getitem__))
 
 
 def _check_column(
