@@ -259,3 +259,143 @@ def test_quality_failure_exits_1(
     monkeypatch.setattr(quality, "infer_rules", lambda ref: (Rule("amount", "max", 10),))
     assert main(["quality", "q.csv"]) == 1
     assert json.loads(capsys.readouterr().out)["passed"] is False
+
+
+# -- low-severity findings ---------------------------------------------------------------------
+
+
+@pytest.fixture
+def schema(capsys: pytest.CaptureFixture[str]) -> str:
+    Path("t.sql").write_text(
+        "CREATE TABLE t (id INT PRIMARY KEY, name VARCHAR(20));\n", encoding="utf-8"
+    )
+    assert main(["from-ddl", "t.sql", "-o", "t.json"]) == 0
+    capsys.readouterr()
+    return "t.json"
+
+
+def test_every_command_has_help_and_names_its_verdict_codes() -> None:
+    import argparse
+
+    from shape.cli.main import _build_parser
+
+    parser = _build_parser()
+    sub = next(a for a in parser._actions if isinstance(a, argparse._SubParsersAction))
+    helps = {a.dest: a.help for a in sub._choices_actions}
+    for name in ("conformance", "version", "quality", "key", "fd", "privacy-k", "query"):
+        assert helps.get(name), f"`shape {name}` has no help"
+    assert helps.get("certify-shapes")
+    check = sub.choices["check"].format_help()
+    assert "exit" in check and "4" in check
+    compat = sub.choices["compatibility"].format_help()
+    assert "exit" in compat and "5" in compat
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        ["describe", "bad.json"],
+        ["generate", "bad.json"],
+        ["validate", "bad.json"],
+        ["validate", "bin.json"],
+        ["from-ddl", "bin.json"],
+    ],
+)
+def test_unreadable_documents_are_named(
+    args: list[str], capsys: pytest.CaptureFixture[str]
+) -> None:
+    Path("bad.json").write_text("{bad", encoding="utf-8")
+    Path("bin.json").write_bytes(bytes(range(128, 256)))
+    assert main(args) == 2
+    assert args[-1] in capsys.readouterr().err
+
+
+def test_scale_mode_memory_note_once(schema: str, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["generate", schema, "--scale-mode", "local_single", "--jobs-dir", "jobs"]) == 0
+    assert capsys.readouterr().err.count("generating into memory") == 1
+
+
+@pytest.mark.parametrize(
+    "flag",
+    [["--poison-fraction", "-1"], ["--retries", "-1"], ["--checkpoint-every", "0"]],
+)
+def test_emit_refuses_out_of_range_options(
+    schema: str, flag: list[str], capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["emit", schema, "--sink", "file", "-o", "ev.jsonl", *flag]) == 2
+    assert flag[0] in capsys.readouterr().err
+
+
+def test_emit_refuses_a_live_report_format_before_streaming(
+    schema: str, capsys: pytest.CaptureFixture[str]
+) -> None:
+    args = ["emit", schema, "--sink", "file", "-o", "ev.jsonl", "--live-target", schema]
+    assert main([*args, "--live-report", "r.txt"]) == 2
+    assert "r.txt" in capsys.readouterr().err
+    assert not Path("ev.jsonl").exists() or Path("ev.jsonl").stat().st_size == 0
+
+
+def test_a_closed_pipe_is_not_an_error() -> None:
+    import subprocess
+    import sys
+
+    p = subprocess.Popen(
+        [sys.executable, "-m", "shape", "plugins", "list"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    assert p.stdout is not None and p.stderr is not None
+    p.stdout.close()  # the reader went away, as `| head` does
+    err = p.stderr.read().decode()
+    code = p.wait()
+    assert "error" not in err.lower(), err
+    assert code != 2
+
+
+def test_demo_notebook_takes_o(capsys: pytest.CaptureFixture[str]) -> None:
+    from shape.cli.main import _build_parser
+
+    a = _build_parser().parse_args(["demo", "notebook", "retail", "-o", "nb.ipynb"])
+    assert a.output == "nb.ipynb"
+    a = _build_parser().parse_args(["demo", "report", "S1", "-o", "r.md"])
+    assert a.output == "r.md"
+
+
+def test_profile_registry_delete_of_a_missing_profile(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["profile", "registry", "delete", "crm/x/y", "--root", "preg"]) == 2
+    assert capsys.readouterr().err.startswith("shape: error: profile not found: crm/x/y")
+
+
+def test_unknown_log_level_is_refused(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["--log-json", "--log-level", "bogus", "version"]) == 2
+    captured = capsys.readouterr()
+    assert "--log-level" in captured.err and captured.out == ""
+
+
+def test_unwritable_metrics_path_is_refused_before_the_command(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    Path("t.sql").write_text("CREATE TABLE t (id INT PRIMARY KEY);\n", encoding="utf-8")
+    assert main(["--metrics", "nodir/m.json", "from-ddl", "t.sql", "-o", "t.json"]) == 2
+    assert "--metrics" in capsys.readouterr().err
+    assert not Path("t.json").exists()
+
+
+def test_chunk_rows_zero_is_refused(schema: str, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["generate", schema, "--chunk-rows", "0"]) == 2
+    assert "chunk" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        ["learn", "nope.csv"],
+        ["mask", "nope.csv", "-o", "out"],
+        ["profile", "registry", "save", "nope.csv", "--system", "s", "--name", "n", "--root", "r"],
+    ],
+)
+def test_missing_paths_use_the_one_wording(
+    args: list[str], capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(args) == 2
+    assert capsys.readouterr().err.strip() == "shape: error: file not found: nope.csv"
