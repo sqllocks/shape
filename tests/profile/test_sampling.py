@@ -623,6 +623,28 @@ def test_the_pattern_rates_sample_is_recorded(monkeypatch: pytest.MonkeyPatch) -
     assert got["pattern_rates"]["seed"] is None
 
 
+def _csv_of_text(tmp_path: Path, n: int, stray: int) -> str:
+    path = tmp_path / "q.csv"
+    values = [str(i) for i in range(n - stray)] + [f"x{i}" for i in range(stray)]
+    path.write_text("q,k\n" + "".join(f"{v},{i}\n" for i, v in enumerate(values)))
+    return str(path)
+
+
+def test_the_type_shares_sample_is_recorded_and_close_to_the_exact_share(tmp_path: Path) -> None:
+    prof = shape.profile(_csv_of_text(tmp_path, 60_000, 1800))  # 3% stray text
+    got = _internal(prof)["type_inference"]
+    assert got["rows"] == 50_000 and got["method"] == "systematic" and got["columns"] == ["q"]
+    ti = prof.tables["q"]["columns"]["q"]["type_inference"]
+    assert ti["confidence"] == pytest.approx(0.97, abs=0.002)
+    assert ti["candidate"] == "integer"
+
+
+def test_the_type_shares_are_exact_up_to_the_limit(tmp_path: Path) -> None:
+    prof = shape.profile(_csv_of_text(tmp_path, 50_000, 1500))
+    assert "type_inference" not in _internal(prof)
+    assert prof.tables["q"]["columns"]["q"]["type_inference"]["confidence"] == 0.97
+
+
 def test_the_kendall_sample_is_recorded() -> None:
     rng = np.random.RandomState(8)
     x = rng.normal(0, 1, 800)
@@ -682,6 +704,7 @@ def test_a_sampled_profile_records_the_internal_samples_of_the_sampled_rows() ->
 _SAMPLERS = {
     "profile/reference/column.py::_pattern_sample_cached": "pattern_detection",
     "profile/reference/column.py::pattern_rates": "pattern_rates",
+    "profile/reference/typeinfer.py::_text_shares": "type_inference",
     "profile/reference/numerics.py::detect_distribution": "distribution_fit",
     "kernel/reference/fit.py::sample_for_fitting": "distribution_fit",
     "profile/joint/analyze.py::_sample_index": "joint",
@@ -755,6 +778,7 @@ def test_the_registry_matches_the_constants_the_code_paths_use() -> None:
     assert S.FIT_SAMPLE_ROWS == kernel_fit.SAMPLE_SIZE == S.INTERNAL["distribution_fit"]["rows"]
     assert S.KENDALL_SAMPLE_ROWS == measures.kendall_tau.__defaults__[0]  # type: ignore[index]
     assert S.RATES_SAMPLE_ROWS == column._RATE_MAX_DISTINCT
+    assert S.TYPE_SHARES_ROWS == S.INTERNAL["type_inference"]["rows"]
     assert S.REFERENCE_PAIRS_ROWS == reference.MAX_ROWS
     assert S.PATTERN_SAMPLE_ROWS == S.INTERNAL["pattern_detection"]["rows"]
     assert S.INTERNAL["joint"]["seed"] == S.JOINT_JITTER_SEED

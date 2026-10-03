@@ -1,7 +1,9 @@
 # Profiling notes: inputs, odd values and size
 
 What `shape profile` (and `shape.profile`) does with CSV files, non-finite numbers, decimals, time zones, large
-inputs, sampling and column types. Each statement here has a test in `tests/profile/test_profile_issues.py`.
+inputs, sampling and column types. Each statement here has a test in `tests/profile/test_profile_issues.py`; the
+sections on sampling and type inference are tested in `tests/profile/test_sampling.py`,
+`tests/profile/test_type_inference.py`, `tests/cli/test_profile_sampling_cli.py` and `tests/cli/test_types_command.py`.
 
 ## CSV files
 
@@ -193,6 +195,7 @@ Some statistics sample inside themselves, whatever you asked for. The record lis
 |---|---|---|
 | `pattern_detection` | a string column of more than 1,000 values | 1,000, `random`, 42 |
 | `pattern_rates` | a string column of more than 50,000 distinct values | 50,000 distinct values, `systematic`, no seed |
+| `type_inference` | a string column of more than 50,000 distinct values | 50,000 distinct values, `systematic`, no seed |
 | `distribution_fit` | a numeric column of more than 2,000 values | 2,000, `random`, 42 |
 | `joint` | a table of more than 20,000 rows | 5,000 rows, `systematic` with a seeded offset in each stride (seed 7) |
 | `kendall_tau` | a numeric association of more than 500 rows | 500, `systematic`, no seed |
@@ -216,8 +219,12 @@ Every column has `type_inference`: where its type came from and how well the val
 | `declared`, `inferred` | for a `declared` column: its declared type, and the narrowest type every value parses as |
 | `candidate` | for an inferred text column that is mostly one narrower type: that type (the `confidence` is then its share) |
 
-The shares are exact: counted over the distinct values weighted by their counts for text, over the values for numbers and
-timestamps. Integers parse as floats; `integer` also counts a float that is a whole number; `boolean` is the six words
+The shares are counted over the distinct values weighted by their counts for text, and over the values for numbers and
+timestamps. They are exact, except for a text column of more than 50,000 distinct values, whose shares are measured on
+50,000 evenly spread distinct values (each weighted by its count) so that the cost does not grow with the number of
+distinct values; the record lists that column under `internal` as `type_inference`.
+
+Integers parse as floats; `integer` also counts a float that is a whole number; `boolean` is the six words
 `true false yes no 0 1` in any case; `date` is an ISO `YYYY-MM-DD` that is a real date; `datetime` is ISO 8601 with an
 optional time and zone. The profiler types text as numbers, booleans or datetimes only when every value parses (its own
 rules for dates are wider than ISO), so such a column has confidence 1.0.

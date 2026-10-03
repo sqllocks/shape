@@ -43,6 +43,7 @@ FIT_SAMPLE_ROWS = 2000
 FIT_SAMPLE_SEED = 42
 JOINT_JITTER_SEED = 7
 RATES_SAMPLE_ROWS = 50_000  # distinct values; the pattern rates of a column with more
+TYPE_SHARES_ROWS = 50_000  # distinct values; the parse shares of a text column with more
 KENDALL_SAMPLE_ROWS = 500  # rows of a pair of numeric columns, for Kendall's tau
 REFERENCE_PAIRS_ROWS = 1_000_000
 
@@ -52,6 +53,9 @@ INTERNAL: dict[str, dict[str, Any]] = {
     # a string column of more than 50,000 distinct values: the personal-data pattern rates are
     # measured on evenly spread distinct values (each weighted by its count)
     "pattern_rates": {"rows": RATES_SAMPLE_ROWS, "method": "systematic", "seed": None},
+    # a text column of more than 50,000 distinct values: the parse shares and the type confidence
+    # are measured on evenly spread distinct values (each weighted by its count)
+    "type_inference": {"rows": TYPE_SHARES_ROWS, "method": "systematic", "seed": None},
     # a numeric column of more than 2000 values: the distribution fit and its test
     "distribution_fit": {"rows": FIT_SAMPLE_ROWS, "method": "random", "seed": 42},
     # a table of more than 20,000 rows: evenly spread rows with a seeded offset in each stride
@@ -308,7 +312,7 @@ def internal_samples(
     (``samples``); the joint analysis says its own sample (``sampled``, ``rows_analyzed``), and
     its association entries say which pairs of numeric columns were too long for Kendall's tau."""
     out: list[dict[str, Any]] = []
-    for analysis in ("pattern_detection", "pattern_rates", "distribution_fit"):
+    for analysis in ("pattern_detection", "pattern_rates", "type_inference", "distribution_fit"):
         named = [c.name for c in columns if analysis in c.samples]
         if named:
             out.append(internal_entry(analysis, columns=named))

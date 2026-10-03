@@ -21,6 +21,8 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape.io.identifiers import DigitStats, judge, suspect
 
+from ..sampling import TYPE_SHARES_ROWS
+
 TYPES = ("integer", "float", "boolean", "date", "datetime")
 SOURCES = ("declared", "inferred", "option", "identifier_rule")
 MIN_CONFIDENCE = 0.99  # ``shape types`` reports an inferred type below this
@@ -31,7 +33,10 @@ _NUMBER = (
     r"^\s*[+-]?(?:(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?"
     r"|[iI][nN][fF](?:[iI][nN][iI][tT][yY])?|[nN][aA][nN])\s*$"
 )
-_NUMBERISH = r"^\s*[+-]?(?:[0-9.]|[iInN])"
+# the first characters a number or a date can have (after any white space): a superset test that
+# needs no regular expression
+_FIRST_CHARS = list(" \t\r\n0123456789.+-")
+_FIRST_WORD_CHARS = list("iInN")
 _ISO_DATE = r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
 _ISO_DATETIME = (
     r"^[0-9]{4}-[0-9]{2}-[0-9]{2}(?:[T ][0-9]{2}:[0-9]{2}(?::[0-9]{2}(?:\.[0-9]+)?)?"
@@ -48,32 +53,50 @@ def _none_shares() -> dict[str, float | None]:
     return dict.fromkeys(TYPES)
 
 
-def _text_shares(values: Any, counts: np.ndarray[Any, Any] | None) -> dict[str, float | None]:
-    """Parse shares of a text column from its distinct values and their counts (``None`` counts:
-    every value counts once)."""
+def _text_shares(
+    values: Any, counts: np.ndarray[Any, Any] | None
+) -> tuple[dict[str, float | None], bool]:
+    """``(parse shares, sampled)`` of a text column from its distinct values and their counts
+    (``None`` counts: every value counts once). Exact up to ``TYPE_SHARES_ROWS`` distinct values;
+    beyond that, evenly spread distinct values stand in for all of them, each weighted by its count
+    (the same rule as the pattern rates), and ``sampled`` is true."""
     values = pa.array(values) if not isinstance(values, (pa.Array, pa.ChunkedArray)) else values
     if isinstance(values, pa.ChunkedArray):
         values = values.combine_chunks()
     if not pa.types.is_string(values.type):
         values = pc.cast(values, pa.string())
-    n = len(values)
-    w = np.ones(n, dtype=np.float64) if counts is None else np.asarray(counts, dtype=np.float64)
+    w = np.ones(len(values), dtype=np.float64) if counts is None else np.asarray(counts, np.float64)
+    sampled = len(values) > TYPE_SHARES_ROWS
+    if sampled:
+        pick = np.linspace(0, len(values) - 1, TYPE_SHARES_ROWS).astype(np.int64)
+        values, w = values.take(pa.array(pick)), w[pick]
     total = float(w.sum())
     if not total:
-        return _none_shares()
+        return _none_shares(), sampled
 
-    def weight(mask: Any) -> float:
-        return float(
-            w[np.asarray(mask.fill_null(False).to_numpy(zero_copy_only=False), dtype=bool)].sum()
-        )
-
-    # booleans: the six words in any case (a short value only)
+    # booleans: the six words in any case, so a value of at most five characters
     shares: dict[str, float | None] = {}
-    short = pc.less_equal(pc.utf8_length(values), 5)
-    boolean = pc.and_(short, pc.is_in(pc.utf8_lower(values), value_set=pa.array(_BOOL_WORDS)))
-    shares["boolean"] = _share(weight(boolean), total)
+    lengths = pc.utf8_length(values)
+    shortest = pc.min(lengths).as_py()
+    boolean = 0.0
+    if shortest is not None and shortest <= 5:
+        short = np.flatnonzero(
+            np.asarray(pc.less_equal(lengths, 5).to_numpy(zero_copy_only=False), dtype=bool)
+        )
+        lowered = pc.utf8_lower(values.take(pa.array(short)))
+        hit = np.asarray(
+            pc.is_in(lowered, value_set=pa.array(_BOOL_WORDS)).to_numpy(zero_copy_only=False),
+            dtype=bool,
+        )
+        boolean = float(w[short][hit].sum())
+    shares["boolean"] = _share(boolean, total)
     # numbers and dates share a first character test; only those values are looked at further
-    cand = pc.match_substring_regex(values, _NUMBERISH).fill_null(False)
+    first = pc.utf8_slice_codeunits(values, 0, 1)
+    cand = pc.or_(
+        pc.is_in(first, value_set=pa.array(_FIRST_CHARS)),
+        # ``inf``, ``infinity`` and ``nan`` are short: a long value that starts with i or n is not
+        pc.and_(pc.is_in(first, value_set=pa.array(_FIRST_WORD_CHARS)), pc.less_equal(lengths, 11)),
+    )
     cand_idx = np.flatnonzero(np.asarray(cand.to_numpy(zero_copy_only=False), dtype=bool))
     numbers = dates = datetimes = ints = 0.0
     if len(cand_idx):
@@ -112,30 +135,45 @@ def _text_shares(values: Any, counts: np.ndarray[Any, Any] | None) -> dict[str, 
     shares["float"] = _share(numbers, total)
     shares["date"] = _share(dates, total)
     shares["datetime"] = _share(datetimes, total)
-    return {t: shares[t] for t in TYPES}
+    return {t: shares[t] for t in TYPES}, sampled
 
 
-_ZONE = r"(?:Z|[+-][0-9]{2}(?::?[0-9]{2})?)$"
+_ISO_PARTS = (
+    r"^(?P<y>[0-9]{4})-(?P<m>[0-9]{2})-(?P<d>[0-9]{2})"
+    r"(?:[T ](?P<h>[0-9]{2}):(?P<mi>[0-9]{2})(?::(?P<s>[0-9]{2}))?)?"
+)
+_DAYS = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
 
 
 def _valid_iso(values: Any) -> np.ndarray[Any, Any]:
-    """Which ISO-looking values are real dates or datetimes (month 13 is not). A zone suffix is
-    set aside: it does not change whether the date and time are real."""
-    has_time = pc.match_substring_regex(values, r"[T ][0-9]{2}:")
-    bare = pc.if_else(has_time, pc.replace_substring_regex(values, _ZONE, ""), values)
-    try:
-        pc.cast(bare, pa.timestamp("us"))
-        return np.ones(len(values), dtype=bool)
-    except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
-        pass
-    out = np.zeros(len(values), dtype=bool)
-    for i, v in enumerate(bare.to_pylist()):
-        try:
-            pc.cast(pa.array([v]), pa.timestamp("us"))
-            out[i] = True
-        except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
-            pass
-    return out
+    """Which ISO-looking values are real dates or datetimes (month 13 and February 30 are not).
+    The parts are read with one regular expression and checked with numpy, so it costs the same
+    for any number of invalid values; a zone suffix is not looked at (it does not change whether the
+    date and time are real)."""
+    parts = pc.extract_regex(values, _ISO_PARTS)
+
+    def field(name: str) -> np.ndarray[Any, Any]:
+        text = parts.field(name)  # a part the value does not have is the empty string
+        col = pc.cast(pc.if_else(pc.equal(text, ""), pa.scalar("0"), text), pa.int32())
+        return np.asarray(col.fill_null(0).to_numpy(zero_copy_only=False), dtype=np.int64)
+
+    year, month, day = field("y"), field("m"), field("d")
+    hour, minute, second = field("h"), field("mi"), field("s")
+    leap = (year % 4 == 0) & ((year % 100 != 0) | (year % 400 == 0))
+    in_month = np.where(
+        (month >= 1) & (month <= 12), _DAYS[np.clip(month - 1, 0, 11)] + ((month == 2) & leap), 0
+    )
+    return np.asarray(
+        (year >= 1)
+        & (month >= 1)
+        & (month <= 12)
+        & (day >= 1)
+        & (day <= in_month)
+        & (hour <= 23)
+        & (minute <= 59)
+        & (second <= 59),
+        dtype=bool,
+    )
 
 
 def _non_null(col: Any) -> Any:
@@ -176,8 +214,18 @@ def _numeric_shares(col: Any, prof: Any, n: int) -> dict[str, float | None]:
     return s
 
 
+def _numbers(col: Any) -> np.ndarray[Any, Any]:
+    """The non-null values of a numeric column as a numpy array (no copy for one chunk)."""
+    arr = col.arr
+    if arr.null_count:
+        arr = arr.drop_null()
+    if col.kind in ("int", "float"):
+        return np.asarray(arr.to_numpy())
+    return np.asarray(pc.cast(arr, pa.float64(), safe=False).to_numpy(zero_copy_only=False))
+
+
 def _whole_share(col: Any, n: int) -> float:
-    a = np.asarray(_non_null(col).to_numpy(zero_copy_only=False), dtype=np.float64)
+    a = _numbers(col)
     return _share(float((np.isfinite(a) & (a == np.floor(a))).sum()), n)
 
 
@@ -188,9 +236,8 @@ def _zero_one_share(col: Any, prof: Any, n: int) -> float:
             return 0.0
         if prof.dtype == "integer" and lo >= 0 and hi <= 1:
             return 1.0
-    arr = _non_null(col)
-    hits = pc.sum(pc.is_in(pc.cast(arr, pa.float64(), safe=False), value_set=pa.array([0.0, 1.0])))
-    return _share(float(hits.as_py() or 0), n)
+    a = _numbers(col)
+    return _share(float(((a == 0) | (a == 1)).sum()), n)
 
 
 def _midnight_share(col: Any, n: int) -> float:
@@ -260,7 +307,9 @@ def build(
     if n <= 0:
         shares: dict[str, float | None] = _none_shares()
     elif textual:
-        shares = _text_shares(uniques, counts)
+        shares, sampled = _text_shares(uniques, counts)
+        if sampled:
+            prof.samples.append("type_inference")
     elif col.kind in ("str", "cat", "objmix", "objtime", "objbin", "objdur", "nullobj"):
         shares = _none_shares()
     else:

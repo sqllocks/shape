@@ -328,3 +328,28 @@ def test_wide_numeric_columns_keep_their_shares_in_a_sample(tmp_path: Path) -> N
     prof = shape.profile(orders_table(600), sample=100)
     assert col(prof, "amount")["parse_shares"]["float"] == 1.0
     assert col(prof, "gift")["parse_shares"]["boolean"] == 1.0
+
+
+@pytest.mark.parametrize(
+    ("text", "real"),
+    [
+        ("2026-01-05", True), ("2026-13-05", False), ("2026-00-10", False), ("2026-01-00", False),
+        ("2024-02-29", True), ("2023-02-29", False), ("2000-02-29", True), ("1900-02-29", False),
+        ("2026-04-31", False), ("2026-04-30", True), ("0000-01-01", False),
+        ("2026-01-05T10:00:00", True), ("2026-01-05 10:59", True), ("2026-01-05T24:00:00", False),
+        ("2026-01-05T10:60:00", False), ("2026-01-05T10:00:60", False),
+        ("2026-01-05T10:00:00.123Z", True), ("2026-01-05T10:00:00+02:00", True),
+    ],
+)  # fmt: skip
+def test_the_iso_calendar_check(text: str, real: bool) -> None:
+    from shape.profile.reference.typeinfer import _valid_iso
+
+    assert bool(_valid_iso(pa.array([text]))[0]) is real
+
+
+def test_many_invalid_dates_cost_no_more_than_a_vectorised_pass() -> None:
+    from shape.profile.reference.typeinfer import _valid_iso
+
+    good = [f"2026-{1 + i % 12:02d}-{1 + i % 28:02d}" for i in range(200_000)]
+    ok = _valid_iso(pa.array([*good, "2026-02-30", "2026-13-01"]))
+    assert ok[:-2].all() and not ok[-2:].any()
