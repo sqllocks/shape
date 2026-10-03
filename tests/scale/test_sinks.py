@@ -294,3 +294,36 @@ def test_connection_profile_keeps_its_token_out_of_repr():
 
     profile = FabricConnectionProfile(token="tok-9", endpoint="https://x")
     assert "tok-9" not in repr(profile) and profile.token == "tok-9"
+
+
+# ---- numeric settings given as text (the command line keeps non-integers as strings) ---------
+
+
+def test_memory_limit_from_the_command_line_is_a_number_not_a_repeated_string():
+    # Regression #482: "0.5" * 1024**3 built a 3 GiB string before int() failed.
+    from shape.cli.scale import parse_sink_config
+
+    cfg = parse_sink_config(["memory.max_memory_gb=0.5"])["memory"]
+    sink = build_sink("memory", cfg, resolve=False)
+    assert isinstance(sink, MemorySink) and sink._max_bytes == 1024**3 // 2
+
+
+@pytest.mark.parametrize(
+    ("name", "cfg", "setting"),
+    [
+        ("memory", {"max_memory_gb": "lots"}, "max_memory_gb"),
+        ("memory", {"max_memory_gb": 0}, "max_memory_gb"),
+        ("parquet", {"output_dir": "x", "chunk_rows": "1e3"}, "chunk_rows"),
+        ("parquet", {"output_dir": "x", "writer_threads": "two"}, "writer_threads"),
+    ],
+)
+def test_bad_numeric_sink_settings_name_the_setting(name, cfg, setting):
+    with pytest.raises(ValueError, match=f"sink {name!r}: {setting}"):
+        build_sink(name, cfg, resolve=False)
+
+
+def test_numeric_sink_settings_accept_numbers_written_as_text():
+    sink = build_sink(
+        "parquet", {"output_dir": "x", "chunk_rows": "250", "writer_threads": "2"}, resolve=False
+    )
+    assert isinstance(sink, ParquetSink) and sink._chunk_rows == 250 and sink._threads == 2
