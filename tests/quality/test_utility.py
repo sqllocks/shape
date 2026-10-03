@@ -151,6 +151,18 @@ def test_timestamp_features_are_used_as_numbers():
     assert "when" in run(gen, real).details["features"]
 
 
+@pytest.mark.parametrize("unit", ["ms", "us", "ns"])
+def test_sub_second_timestamp_features_do_not_crash_the_gate(unit):
+    # #457: a timestamp with sub-second values was cast to seconds with a safe cast, which raised
+    base = dt.datetime(2020, 1, 1, 0, 0, 0, 123456)
+    t = [base + dt.timedelta(seconds=i, microseconds=i) for i in range(1200)]
+    real = REAL.append_column("when", pa.array(t, pa.timestamp(unit)))
+    gen = make(1200, 2).append_column("when", pa.array(t, pa.timestamp(unit, tz="UTC")))
+    result = run(gen, real)
+    assert result.passed, result.errors
+    assert "when" in result.details["features"]
+
+
 def test_identifier_like_text_columns_are_not_features():
     real = REAL.append_column("uid", pa.array([f"id{i}" for i in range(REAL.num_rows)]))
     gen = make(1200, 2).append_column("uid", pa.array([f"g{i}" for i in range(1200)]))
