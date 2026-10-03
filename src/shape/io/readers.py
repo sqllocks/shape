@@ -32,7 +32,13 @@ import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.security.jsondepth import check_json_file
 
-from .excel import is_workbook_spec, read_sheet, read_workbook, split_spec, workbook_sheet_names
+from .excel import (
+    is_workbook_spec,
+    read_selection,
+    read_workbook,
+    split_spec,
+    workbook_sheet_names,
+)
 from .identifiers import identifier_columns, resolve_type
 
 DEFAULT_BATCH_ROWS = 65_536
@@ -534,7 +540,7 @@ def _workbook_source(spec: str, name: str | None, size: int, columns: list[str] 
                 f"'{Path(path).name}#SHEET', or read all of them with open_workbook()"
             )
         sheet = visible[0]
-    table = _project(read_sheet(path, sheet).table, columns)
+    table = _project(read_selection(path, sheet).table, columns)
     return _single_batch_source(name or sheet, "xlsx", table, size)
 
 

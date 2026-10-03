@@ -3,8 +3,11 @@
 The keys are ``run_id``, ``spec_hash``, ``pack_id``, ``domain``, ``scale``, ``seed``,
 ``engine_version``, ``outputs``, ``tables`` (``rows``, ``columns``, ``file_paths`` each),
 ``validation``, ``chaos``, ``timestamps`` (``started``, ``finished``, ``elapsed_seconds``),
-``workspace_id``, ``lakehouse_id`` and ``sbom``. The run id is
-``YYYYMMDD_HHMMSS_{domain}_{scale}_s{seed}``.
+``workspace_id``, ``lakehouse_id``, ``sbom``, and, from manifest version 1, ``format``
+(``shape-run-manifest``), ``version``, ``reproducibility`` (the tuple of
+``shape.repro``) and ``dataset_id`` (the content address of the output tables). The run
+id is ``YYYYMMDD_HHMMSS_{domain}_{scale}_s{seed}``. A manifest written before ``format`` and
+``version`` existed loads with an empty ``reproducibility`` and ``dataset_id``.
 """
 
 from __future__ import annotations
@@ -12,13 +15,22 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from shape.repro import dataset_id, reproducibility_tuple
+
+MANIFEST_FORMAT = "shape-run-manifest"
+MANIFEST_VERSION = 1
 SBOM_PACKAGES = ("sqllocks-shape", "pandas", "numpy", "faker", "pyarrow", "scipy")
 NOT_INSTALLED = "not installed"
+
+
+class ManifestVersionError(ValueError):
+    """A manifest is not one this Shape can read."""
 
 
 @dataclass
@@ -40,6 +52,8 @@ class RunManifest:
     workspace_id: str = ""
     lakehouse_id: str = ""
     sbom: dict[str, str] = field(default_factory=dict)
+    reproducibility: dict[str, Any] = field(default_factory=dict)
+    dataset_id: str = ""
 
     def summary(self) -> str:
         lines = [
@@ -50,6 +64,8 @@ class RunManifest:
             f"  Scale:   {self.scale}",
             f"  Seed:    {self.seed}",
         ]
+        if self.dataset_id:
+            lines.append(f"  Dataset: {self.dataset_id}")
         if self.tables:
             total_rows = sum(int(t.get("rows", 0)) for t in self.tables.values())
             lines.append(f"  Tables:  {len(self.tables)} ({total_rows:,} total rows)")
@@ -77,6 +93,10 @@ class RunManifest:
             "workspace_id": self.workspace_id,
             "lakehouse_id": self.lakehouse_id,
             "sbom": self.sbom,
+            "format": MANIFEST_FORMAT,
+            "version": MANIFEST_VERSION,
+            "reproducibility": self.reproducibility,
+            "dataset_id": self.dataset_id,
         }
 
 
@@ -113,12 +133,17 @@ class ManifestBuilder:
             seed=seed,
             engine_version=__version__,
             sbom=collect_sbom(),
+            reproducibility=reproducibility_tuple(seed, scale),
         )
 
     def record_output(
         self, table_name: str, rows: int, columns: int, paths: list[str] | None = None
     ) -> None:
         self._m.tables[table_name] = {"rows": rows, "columns": columns, "file_paths": paths or []}
+
+    def record_dataset(self, tables: Mapping[str, Any]) -> None:
+        """Record the dataset id of the run's output tables."""
+        self._m.dataset_id = dataset_id(tables)
 
     def record_validation(self, gate: str, result: bool) -> None:
         self._m.validation[gate] = result
@@ -160,6 +185,19 @@ class ManifestBuilder:
     @staticmethod
     def from_file(path: str | Path) -> RunManifest:
         raw = json.loads(Path(path).read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            raise ValueError(f"{path} is not a run manifest")
+        if "format" in raw and raw["format"] != MANIFEST_FORMAT:
+            raise ValueError(
+                f"{path} is not a run manifest (format {raw['format']!r}, expected "
+                f"{MANIFEST_FORMAT!r})"
+            )
+        version = raw.get("version", MANIFEST_VERSION)
+        if not isinstance(version, int) or version > MANIFEST_VERSION:
+            raise ManifestVersionError(
+                f"{path} is run manifest version {version!r}, written by a newer Shape; this Shape "
+                f"reads versions up to {MANIFEST_VERSION}. Upgrade Shape to read it"
+            )
         return RunManifest(
             run_id=raw.get("run_id", ""),
             spec_hash=raw.get("spec_hash", ""),
@@ -176,6 +214,8 @@ class ManifestBuilder:
             workspace_id=raw.get("workspace_id", ""),
             lakehouse_id=raw.get("lakehouse_id", ""),
             sbom=raw.get("sbom", {}),
+            reproducibility=raw.get("reproducibility", {}),
+            dataset_id=raw.get("dataset_id", ""),
         )
 
 

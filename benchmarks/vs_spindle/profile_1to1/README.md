@@ -117,8 +117,9 @@ regression test in `tests/profile/test_profile_issues.py`. Everything else is co
   other column of the same files is compared as it is. A full run fails if the rule did not apply to
   every listed column. Probes: `tests/profile/test_identifier_columns.py`.
 
-New fields (`nan_count`, `inf_count`, `pattern_rates`, `pattern_contains_rates`, `precision`, `scale`)
-are additive and not compared.
+New fields (`nan_count`, `inf_count`, `pattern_rates`, `pattern_contains_rates`, `precision`, `scale`,
+and from #47 the column `placeholders` and the table `joint` entry) are additive and not compared:
+`COLUMN_RULES` and `TABLE_RULES` are explicit field lists, so no allow-list entry was needed.
 
 ### Verification result (`verify.py --refresh`, all 30 variants)
 

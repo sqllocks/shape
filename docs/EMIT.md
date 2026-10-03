@@ -77,6 +77,14 @@ whole once, so its rows equal `shape generate`'s; the others are read chunk by c
   only persists offsets that were delivered and flushed; the final checkpoint is synchronous.
 * `--burst START:DURATION:MULT` (repeatable, needs `--realtime`): from START seconds for DURATION
   seconds the rate is MULT times `--rate`. Bursts may not overlap.
+* `--speed 60x` (a virtual clock, instead of `--realtime`): pace by the events' **event time**, 60
+  times faster than the clock, so a day of events replays in 24 minutes. An event stamped `t`
+  seconds after the first is due `t / 60` seconds after the start; an event that is earlier than
+  one already sent (`--out-of-order`) goes at once. It needs events with a date or timestamp
+  column, so it is meant for `shape stream`, which delivers one table in time order. The report
+  gives `virtual_span`, the seconds of event time replayed.
+* `--max-rate N`: a hard cap, never more than N events per second from the start of the run,
+  whatever `--rate`, `--burst`, `--speed` or the sink would otherwise do.
 * `--max-events N`: stop when N events have been delivered *in all* (a position in the stream, so a
   resumed run stops at the same place). `--duration S`: stop after S seconds of this run.
 
@@ -92,6 +100,29 @@ whole once, so its rows equal `shape generate`'s; the others are read chunk by c
 
 Both are row-addressed draws from the seed, so the stream is the same on every run and after a
 restart.
+
+## Duplicates, poison messages and the answer key
+
+Delivery systems repeat and corrupt messages; a pipeline has to survive both, and a detector has
+to be scored against what was really injected.
+
+* `--duplicate-fraction F` (`--duplicate-window N`, default 1000): each event, with probability F,
+  is delivered a second time 1 to N events later. A consumer that keeps the first event of each
+  `(_shape_table, _shape_seq)` key still sees the original stream.
+* `--poison-fraction F`: each event, with probability F, is delivered cut off, so it is not valid
+  JSON (its key is intact). It needs a sink that sends the JSON text: a file, standard output,
+  Kafka or Event Hubs; a table sink stores typed values and refuses it.
+* `--answer-key FILE`: every injected fault as JSON lines, one record per event: `kind` (`late`,
+  `anomaly`, `duplicate`, `poison`), `table`, `seq`, `key` (`table/seq`) and details (`moved_up_to`
+  for a late event, `mutators` for an anomaly, `delivered_after_events` for a duplicate).
+  `shape.streaming.emit.read_answer_key(path)` returns each `(kind, table, seq)` once (a resumed run
+  writes the events after its checkpoint again). The choice of events depends on the seed and the
+  event's key only, so the answer key is the same on every run.
+
+`--synthetic-header` (on by default; `--no-synthetic-header` turns it off) marks every message of
+a transport that has headers as synthetic: Kafka header `shape-synthetic: true`, Event Hubs and
+Eventstream property `shape_synthetic`; the Parquet files of a table sink carry the file metadata
+`shape_synthetic`. The event body is not changed (D-12).
 
 ## Delivery, backpressure and checkpoints
 
@@ -114,6 +145,26 @@ or an error. After a crash (even `kill -9`), run the same command again:
   `--fresh` starts over, and a finished run is not repeated.
 
 A run with no checkpoint (the console sink, or no `--checkpoint`) starts from the beginning.
+
+## Several destinations, and tables as destinations
+
+`--to URI` is repeatable, and `--sink` counts as one: `shape emit retail --to kafka://... --to
+abfss://...` sends every batch to every destination. A destination that fails is retried alone, so
+the others are not sent the batch again. The URI of a **sink** (`abfss://`, `delta+abfss://`,
+`mssql://`, `postgresql://`, `mysql://`; see `docs/SINKS.md`) lands the stream in files, Delta
+tables or database tables **that a reader can query while the stream runs**:
+
+* files roll to a new numbered file every `--roll-rows N` rows or `--roll-seconds S` seconds, and at
+  every checkpoint; each file is written under a temporary name and renamed when complete, so a
+  reader never sees a partial file; `--format` (`parquet` default, `csv`, `tsv`, `jsonl`),
+  `--path-template` and `--batch-date` set the layout (`{table}/ingest_date={date}/...`);
+* Delta commits at every checkpoint (and every `--commit-rows`);
+* databases commit every batch (or every `--commit-rows`).
+
+A table gets the event's columns less `_shape_table`, so `_shape_seq` and `_shape_event_time` are
+columns, and delivery stays at-least-once: a resumed run appends (it never replaces files), and a
+consumer removes repeats on `_shape_seq`. Set `--checkpoint-every` to how often readers should see
+new rows. Secrets are never command-line values: see `docs/SINKS.md`.
 
 ## Emitters
 

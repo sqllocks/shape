@@ -85,6 +85,11 @@ def add_arguments(sub: Any) -> None:
         help="generate from a profile (a .shape file): fits strategies to it",
     )
     ge.add_argument(
+        "--decisions",
+        metavar="DECISIONS.json",
+        help="with --from: apply a decision file (`shape proposals`)",
+    )
+    ge.add_argument(
         "--rows",
         action="append",
         metavar="N|TABLE=N",
@@ -128,6 +133,9 @@ def add_arguments(sub: Any) -> None:
     from shape.cli.landing import add_landing_arguments
 
     add_landing_arguments(ge, default_template=DEFAULT_TEMPLATE)
+    from shape.cli.to import add_to_arguments
+
+    add_to_arguments(ge)
 
     de = sub.add_parser(
         "describe",
@@ -257,6 +265,10 @@ def cmd_generate(a: argparse.Namespace) -> int:
     bare, per_table = _rows_arg(a)
     if a.scale_mode and a.from_profile:
         raise ValueError("--scale-mode does not combine with --from")
+    if a.decisions and not a.from_profile:
+        raise ValueError("--decisions goes with --from PROFILE.shape")
+    if a.to and a.scale_mode:
+        raise ValueError("--to does not combine with --scale-mode (use --sink there)")
     if a.from_profile:
         if per_table:
             raise ValueError("--rows TABLE=N is for a schema; with --from give --rows N")
@@ -326,7 +338,11 @@ def _generate_from_profile(a: argparse.Namespace, rows: int | None) -> int:
     from shape.runlog import current
 
     run = current()
-    fitted = fit_schema(shape.load(a.from_profile), rows=rows)
+    from shape.cli.proposals import load_decisions
+
+    fitted = fit_schema(
+        shape.load(a.from_profile), rows=rows, decisions=load_decisions(a.decisions)
+    )
     schema = fitted.schema
     _check_scale(schema, a.scale)
     counts = fitted.plan.counts()
@@ -364,6 +380,10 @@ def _generate(a: argparse.Namespace, engine: Any) -> int:
 
     run = current()
     started = time.perf_counter()
+    if a.to:
+        from shape.cli.to import run_to
+
+        return run_to(a, engine, started)
     from shape.cli.landing import landing_requested
 
     if landing_requested(a) and a.format == "summary":

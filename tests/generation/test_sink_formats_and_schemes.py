@@ -115,7 +115,7 @@ def test_a_sink_refuses_a_cloud_or_database_uri(fmt: str, tmp_path: Path, monkey
     with pytest.raises(UnsupportedSchemeError) as caught:
         sink.write(uri, "t", iter(BATCHES))
     message = str(caught.value)
-    assert f"the {fmt} sink writes only to local files; got {uri}" in message
+    assert f"the {fmt} sink writes only to local files" in message and f"got {uri}" in message
     assert "Sinks by scheme: file:" in message
     assert "plugin" in message
     assert list(tmp_path.iterdir()) == [], "nothing may be created for a refused URI"
@@ -124,7 +124,10 @@ def test_a_sink_refuses_a_cloud_or_database_uri(fmt: str, tmp_path: Path, monkey
 
 def test_the_message_explains_each_family():
     sink = default_host().get("shape.sinks", "parquet")
-    with pytest.raises(UnsupportedSchemeError, match="ADLS Gen2 sinks are not available"):
+    with pytest.raises(
+        UnsupportedSchemeError,
+        match="ADLS Gen2 sinks are (not available|provided by the abfss sink)",
+    ):
         require_scheme(sink, "abfss://c@a.dfs.core.windows.net/x")
     with pytest.raises(UnsupportedSchemeError, match="database sinks.*INSERT scripts"):
         require_scheme(sink, "mssql://sa@localhost/db")

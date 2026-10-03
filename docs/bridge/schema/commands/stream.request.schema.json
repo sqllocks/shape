@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "api_version": {
+      "pattern": "^(0|[1-9][0-9]{0,3})\\.(0|[1-9][0-9]{0,3})$",
+      "type": "string"
+    },
+    "args": {
+      "additionalProperties": false,
+      "properties": {
+        "chunk_size": {
+          "description": "most rows per table per chunk (default 100000)",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "domain": {
+          "description": "an installed domain (see `list`) or a generation schema file",
+          "type": "string"
+        },
+        "interval_seconds": {
+          "description": "seconds between chunks (default 30)",
+          "minimum": 0,
+          "type": "number"
+        },
+        "max_chunks": {
+          "description": "stop after this many chunks (default: run until stopped)",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "mode": {
+          "description": "the schema mode of a domain",
+          "enum": [
+            "3nf",
+            "star"
+          ],
+          "type": "string"
+        },
+        "profile": {
+          "description": "a distribution profile of the domain (default: `default`)",
+          "type": "string"
+        },
+        "scale": {
+          "description": "a scale preset (see `describe`)",
+          "type": "string"
+        },
+        "seed": {
+          "description": "the seed (default: the schema's)",
+          "type": "integer"
+        },
+        "sink_config": {
+          "description": "settings per sink name, e.g. {\"parquet\": {\"output_dir\": ...}}; for fabric_spark workspace_id, lakehouse_id, notebook_name and token",
+          "type": "object"
+        },
+        "sinks": {
+          "description": "sinks to write to (default: memory)",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "domain"
+      ],
+      "type": "object"
+    },
+    "command": {
+      "const": "stream"
+    },
+    "id": {
+      "maxLength": 128,
+      "type": [
+        "string",
+        "integer",
+        "null"
+      ]
+    },
+    "options": {
+      "additionalProperties": false,
+      "properties": {
+        "async": {
+          "default": false,
+          "description": "for a command that can run as a job: return a job id at once and run in the background",
+          "type": "boolean"
+        },
+        "include_raw_values": {
+          "default": false,
+          "description": "return raw values (minimum, maximum, category values, offending values) even for classified columns; off by default",
+          "type": "boolean"
+        },
+        "max_inline_bytes": {
+          "default": 262144,
+          "description": "a result part larger than this is written to a file and returned as a reference",
+          "minimum": 1024,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "command",
+    "args"
+  ],
+  "title": "stream request",
+  "type": "object",
+  "x-api-version": "1.0"
+}

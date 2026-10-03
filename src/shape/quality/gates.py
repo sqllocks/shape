@@ -32,12 +32,15 @@ _DISTRIBUTION_MIN_SAMPLE = 20
 @dataclass
 class ValidationContext:
     """What every gate receives. ``config`` keys: ``ranges``, ``date_range``, ``no_future``,
-    ``ordering``, ``baseline``, ``distribution_alpha`` (see each gate)."""
+    ``ordering``, ``baseline``, ``distribution_alpha``, ``classifications``, ``memorization``,
+    ``utility`` (see each gate). ``source_tables`` are the real tables the generated ones are
+    compared with by the memorization and utility gates."""
 
     tables: dict[str, pa.Table] = field(default_factory=dict)
     schema: GateSchema | None = None
     file_paths: list[Path] = field(default_factory=list)
     config: dict[str, Any] = field(default_factory=dict)
+    source_tables: dict[str, pa.Table] = field(default_factory=dict)
 
 
 @dataclass

@@ -21,6 +21,79 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `--allowed-lateness` that would have kept them.
 - `generate --from PROFILE` (and any schema with correlated columns) wrote no files while reporting
   success; the table is now handed to the writer after the correlation pass.
+- Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
+  values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
+  records approximate functional dependencies, two-column keys, association measures for every
+  type pair (Pearson, Spearman, Kendall, Cramer's V, Theil's U, correlation ratio, mutual
+  information), conditional probability tables and the share of implausible rows, on a bounded
+  sample; `reference_pairs` / `--reference-pair` check that columns hold real combinations.
+  `shape diff` reports `dependency_broken`, `placeholder_surge`, `implausible_rate_change`,
+  `association_shift` and `reference_match_change`, naming the columns and the value. New optional
+  contract rules `fd`, `implies`, `reference_pair`, `max_implausible_rate` and `no_placeholder`.
+  Generation: hierarchical sampling (`hierarchy` and `hierarchy_field` strategies,
+  `HierarchicalSampler`), categorical joint tables from a profile (`conditional_table`), a Chow-Liu
+  joint model with per-row plausibility scores and a report of impossible combinations
+  (`fit_joint`), and a joint fidelity check (`joint_fidelity`). The joint analysis is on by default
+  for a single table and off for a dataset (several tables): `--joint` / `joint=True` turn it on,
+  `--no-joint` / `joint=False` off, `SHAPE_PROFILE_JOINT` when the call does not choose.
+
+- `shape demo init|list|run|preflight|cleanup|status|notebook|report` (`docs/DEMO.md`): four scenarios in three
+  modes (inference, seeding, streaming); seeding writes to a folder, a Lakehouse, a Warehouse, a SQL database
+  or an Eventhouse and records a session that `cleanup` removes exactly; the operations are plain functions
+  (`shape.demo`) the JSON bridge calls too. A scenario runs its own domains, a failed run is rolled back,
+  `preflight` checks each target, a profile never stores a secret and reports are escaped. Harness:
+  `benchmarks/vs_spindle/demo_1to1/` (the fidelity report and the metadata exactly, the generated data by
+  T-21, an allow-list with probes, negative controls).
+- `shape fabric publish|notebook|deploy-notebook|setup|export-model` and the top-level `shape publish`,
+  `shape notebook`, `shape deploy-notebook`, `shape setup-fabric`, `shape export-model`
+  (`docs/plugins/fabric-commands.md`): publish a domain to a Lakehouse (landing zone and run manifest),
+  Warehouse, SQL Database or Eventhouse; make and deploy a Fabric notebook; make a Fabric Environment;
+  export a Power BI semantic model (`.bim`). Names that reach M and DAX are quoted, an accepted (202)
+  creation is followed to its end, the workspace listing is read across pages, and the notebook part is
+  named for its format. Harness: `benchmarks/vs_spindle/fabric_commands_1to1/` (the `.bim`, the
+  notebook, the requests and the landing zone against the baseline, an allow-list with probes,
+  negative controls).
+- Sinks for OneLake, ADLS Gen2 and databases (`docs/SINKS.md`): `shape generate --to URI` and
+  `shape emit/stream --to URI` (repeatable) write to `abfss://` (Parquet, CSV, TSV, JSONL, IPC in
+  dated Hive-style folders, rolling files, atomic publish), `delta+abfss://` (a Delta commit per
+  micro-batch), `mssql://` (SQL Server, Azure SQL, Fabric Warehouse), `postgresql://` (`COPY`) and
+  `mysql://` (`sqllocks-shape-databases`). Local Parquet/CSV/JSONL and Delta sinks take
+  `roll_rows`/`roll_seconds`/`commit_rows` so readers see rows while a stream runs. `shape emit`
+  gains `--speed 60x` (virtual clock), `--max-rate`, `--duplicate-fraction`, `--poison-fraction`,
+  `--answer-key` and the synthetic marker (`--synthetic-header`).
+- `shape verify --source DATA`: the memorization gate (exact-match rate and nearest-neighbour
+  distance between generated and source rows; fails on a reproduced row in a column classified
+  `CONFIDENTIAL` or above, reporting row indices, never values) and the utility gate (train on
+  generated data, test on held-out real data, fail below a minimum retention; needs the `[advanced]`
+  extra). The verify configuration gains `classifications`, `memorization` and `utility`
+  (`docs/VERIFY.md`).
+- Run manifest: `format`, `version`, the reproducibility tuple (`reproducibility`) and a
+  content-addressed `dataset_id`; `shape pack replay MANIFEST TARGET` regenerates a run and checks
+  the id (`docs/REPRODUCIBILITY.md`).
+- Air-gap hardening: every test that needs no network runs under a `zero_network` guard that
+  fails any connection leaving the machine, and again in CI with networking disabled; pinned,
+  hashed lock files for core and each extra (`scripts/offline_lock.py`) are built in CI and
+  checked against the declared dependencies; `scripts/check_shipped_data.py` checks that all
+  reference data is in the wheel and that nothing downloads at run time (`docs/INSTALL.md`).
+- `shape diff`: new `row_count_change` kind (a table with more than twice or fewer than half the
+  baseline's rows; thresholds `row_count_ratio_max` and `row_count_ratio_min`). `distribution_change`
+  now respects sample size: a changed fitted-family name is reported only when the samples also
+  differ by more than sampling noise, so two samples of one distribution no longer trigger it. A
+  planted-drift sweep (`tests/diff/test_drift_sweep.py`; fast in CI, full nightly) guards both
+  (`docs/DRIFT.md`).
+- `shape bridge` (`docs/BRIDGE.md`): a versioned JSON request/response protocol on standard input
+  and output (`api_version` `1.0`, request id, `result` and `warnings`, or an `error` with a stable
+  code in the groups usage, input, policy, privacy, io, auth and internal). It serves the 17
+  commands of the original JSON bridge (the four `demo_*` commands are specified and answer
+  `policy.capability_unavailable` until `shape demo` exists) plus `profile`, `diff`, `check`,
+  `verify` and `job_status`, `job_cancel`, `job_list`. Long-running commands return a job id
+  (`options.async`); job state is a versioned file per job under `--jobs-dir`, so jobs survive a
+  restart (a job whose process died reads as `interrupted`); large results come back as a file
+  reference with a content id; results never include the raw values of a classified column unless
+  `options.include_raw_values` is set. JSON Schemas for every request and result are published in
+  `docs/bridge/schema/` (`shape bridge schema --out|--check`) with test vectors in
+  `docs/bridge/vectors/`; a compatibility test per command keeps them from changing silently.
+  Harness: `benchmarks/vs_spindle/bridge_1to1/`.
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it

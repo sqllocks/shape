@@ -91,18 +91,28 @@ def sinks_by_scheme(host: Any | None = None) -> dict[str, list[str]]:
         sink = host.try_get("shape.sinks", name)
         for scheme in getattr(sink, "schemes", ()) if sink is not None else ():
             out.setdefault(str(scheme).lower(), []).append(name)
-    return {scheme: sorted(names) for scheme, names in sorted(out.items())}
+    # ``file`` first (what most sinks write to), then the others by name.
+    ordered = sorted(out.items(), key=lambda item: (item[0] != "file", item[0]))
+    return {scheme: sorted(names) for scheme, names in ordered}
 
 
 def _describe(schemes: Sequence[str]) -> str:
     schemes = [s.lower() for s in schemes]
     if schemes == ["file"]:
         return "local files"
-    return "URIs of scheme " + ", ".join(f"{s}://" for s in schemes)
+    others = [s for s in schemes if s != "file"]
+    listing = ", ".join(f"{s}://" for s in others)
+    if "file" in schemes:
+        return f"local files and URIs of scheme {listing}"
+    return f"URIs of scheme {listing}"
 
 
-def _unavailable(scheme: str) -> str:
+def _unavailable(scheme: str, handlers: Sequence[str] = ()) -> str:
     kind = _KNOWN.get(scheme)
+    if handlers:
+        which = " and ".join(handlers)
+        what = f"{kind} database sinks" if scheme in _DATABASES else f"{kind or scheme} sinks"
+        return f"{what} are provided by the {which} sink: shape generate --to {scheme}://..."
     if kind is None:
         return f"no installed sink writes {scheme}:// URIs"
     if scheme in _DATABASES:
@@ -129,8 +139,9 @@ def require_scheme(sink: Any, uri: str, *, host: Any | None = None) -> None:
         sql_note = " (the sql sink writes INSERT scripts to a file that you can run against it)"
     raise UnsupportedSchemeError(
         f"the {name} sink writes only to {_describe(schemes)}; got {redact(uri)} "
-        f"({_unavailable(scheme)}{sql_note}). Sinks by scheme: {listing}. A plugin adds a scheme "
-        "by registering a shape.sinks sink that declares it (see `shape plugins list`)."
+        f"({_unavailable(scheme, table.get(scheme, ()))}{sql_note}). Sinks by scheme: {listing}. "
+        "A plugin adds a scheme by registering a shape.sinks sink that declares it "
+        "(see `shape plugins list`)."
     )
 
 

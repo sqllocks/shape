@@ -40,6 +40,20 @@ The Delta version and its commit time are recorded in the `.shape` manifest
 (`Profile.provenance`, printed by `shape profile` and `shape inspect`), outside the profile body,
 so they do not change the content id or a diff. The data of a version must still be in the table
 (not vacuumed).
+
+Tables that use **deletion vectors** (Fabric Spark writes them by default) or **column mapping**
+cannot be read by the `deltalake` package (it fails on deletion vectors, and for column mapping it
+fails or returns null columns, depending on its release). Shape detects them from the table's
+protocol and configuration and reads them with DuckDB `delta_scan` instead, after a one-line
+`shape: note: ...` on stderr; `Profile.provenance` then also carries `reader: "duckdb"`,
+`reader_features` and `fallback_reason`. The fallback is an optional extra:
+`pip install 'sqllocks-shape[delta-fallback]'` (DuckDB downloads its `delta` extension on first
+use; run `INSTALL delta` once on a machine with network access if yours has none). Without it,
+profiling such a table stops with an error that names the feature and the extra. A table
+`deltalake` can read is still read by `deltalake`, and both readers give the same profile (same
+content id) for it. `--version` and `--as-of` work with the fallback (an `--as-of` time is turned
+into a version from the table's history, as for any table). `delta+abfss://` tables (OneLake,
+ADLS Gen2) use the same fallback with the credentials the Delta source already resolves.
 `shape diff` compares types, null rates, distinct values, category mix, true rates, spread,
 quantiles, ranges, patterns and string lengths, with a documented default for each; thresholds can
 be set per column and columns ignored (`--ignore`, `--policy`). See `docs/DRIFT.md`, which also

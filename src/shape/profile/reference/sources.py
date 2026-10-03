@@ -18,6 +18,7 @@ import pyarrow.parquet as pq  # type: ignore[import-untyped]
 from shape.io.excel import is_workbook_spec
 from shape.security.jsondepth import check_json_file
 
+from . import delta_fallback
 from .readers import (
     CsvFormat,
     _arrow_cols,
@@ -107,7 +108,10 @@ def read_delta(
     """A Delta table's rows at ``version``, or as of a time (the newest version committed at or
     before it), or at its latest version; and the provenance of what was read: the Delta
     ``version``, that version's commit ``timestamp`` (UTC, ISO-8601, or ``None`` when the log
-    does not carry it) and the ``as_of`` asked for (UTC), if any."""
+    does not carry it) and the ``as_of`` asked for (UTC), if any. A table delta-rs refuses for an
+    unsupported reader feature (deletion vectors, column mapping) is read with DuckDB when the
+    ``delta-fallback`` extra is installed, and the provenance then also carries ``reader``,
+    ``reader_features`` and ``fallback_reason``."""
     when = check_delta_options(version, as_of)
     try:
         from deltalake import DeltaTable
@@ -154,7 +158,16 @@ def read_delta(
         else datetime.fromtimestamp(stamp / 1000, UTC).isoformat(),
         "as_of": None if when is None else when.isoformat(),
     }
-    return table.to_pyarrow_table(), provenance
+    if delta_fallback.never_read_by_delta_rs(table):
+        rows, extra = delta_fallback.fallback_read(path.name, str(path), table, None)
+        return rows, {**provenance, **extra}
+    try:
+        return table.to_pyarrow_table(), provenance
+    except Exception as exc:
+        if not delta_fallback.is_unsupported_feature_error(exc):
+            raise
+        rows, extra = delta_fallback.fallback_read(path.name, str(path), table, exc)
+        return rows, {**provenance, **extra}
 
 
 def _read_delta(path: Path) -> pa.Table:

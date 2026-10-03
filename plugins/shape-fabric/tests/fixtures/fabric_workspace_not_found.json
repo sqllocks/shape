@@ -1,0 +1,27 @@
+{
+  "channel": "http",
+  "format": 1,
+  "result": {
+    "error": "FabricApiError",
+    "message": "workspace 'Nowhere' not found (or not visible to this sign-in)"
+  },
+  "scenario": "fabric_workspace_not_found",
+  "source": "in-repo fake service",
+  "steps": [
+    {
+      "request": {
+        "body": "",
+        "headers": {
+          "authorization": "Bearer <redacted>"
+        },
+        "method": "GET",
+        "url": "https://api.fabric.microsoft.com/v1/workspaces"
+      },
+      "response": {
+        "body": "{\"value\": [{\"id\": \"11111111-1111-4111-8111-111111111111\", \"displayName\": \"Demo\"}]}",
+        "headers": {},
+        "status": 200
+      }
+    }
+  ]
+}

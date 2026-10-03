@@ -38,6 +38,7 @@ from shape.streaming.emit.formats import ENVELOPES, encode_events
 
 DEFAULT_CONFIG: dict[str, Any] = {"acks": "all", "enable.idempotence": True, "linger.ms": 5}
 HEADER_TABLE = "shape-table"
+HEADER_SYNTHETIC = "shape-synthetic"
 _POLL = 0.05  # seconds one wait for a full queue to drain
 
 
@@ -69,6 +70,8 @@ class KafkaEmitter:
     """
 
     name = "kafka"
+    accepts_poison = True  # one JSON text per message: a cut-off body is a poison message
+    supports_synthetic = True  # the `synthetic` option marks every message with a header
     schemes = ("kafka",)
 
     def __init__(self, producer_factory: Callable[[dict[str, Any]], Any] | None = None) -> None:
@@ -92,6 +95,7 @@ class KafkaEmitter:
         resuming: bool = False,
         config: Mapping[str, Any] | None = None,
         flush_timeout: float = 60.0,
+        synthetic: bool = False,
         **options: Any,
     ) -> int:
         """Send every batch; return the number of events, after the broker acknowledged them."""
@@ -108,6 +112,7 @@ class KafkaEmitter:
                 failures.append(err)
 
         sent = 0
+        marker = [(HEADER_SYNTHETIC, b"true")] if synthetic else []
         for batch in batches:
             for event in encode_events(batch, envelope):
                 while True:
@@ -116,7 +121,7 @@ class KafkaEmitter:
                             topic,
                             value=event.body,
                             key=event.key.encode("utf-8"),
-                            headers=[(HEADER_TABLE, event.table.encode("utf-8"))],
+                            headers=[(HEADER_TABLE, event.table.encode("utf-8")), *marker],
                             on_delivery=delivered,
                         )
                         break
