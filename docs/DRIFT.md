@@ -139,8 +139,9 @@ shape.diff(
   named `table.column`; a bare name matches that column in every table.
 - Per-column thresholds apply least specific first: `*`, a glob, the column name, `table.column`.
   `min_severity` can be set per column as well.
-- An unknown threshold, a value that is not a number of 0 or more (`min_severity` is `low`,
-  `medium` or `high`) or an unknown policy key raises `ValueError`.
+- An unknown threshold, a value that is not a number of 0 or more (NaN included; `min_severity`
+  is `low`, `medium` or `high`), an unknown policy key, or a policy whose `thresholds` or
+  `columns` is not an object raises `ValueError`. An infinite threshold turns its comparison off.
 - A policy file is `{"thresholds": {...}, "columns": {...}, "ignore": [...], "only": [...]}`. A
   contract may carry the same object as `"drift"`, so a team keeps one policy file:
   `shape diff a.shape b.shape --policy contract.json`. `shape check` ignores the `drift` key.

@@ -116,7 +116,12 @@ def _check_thresholds(th: Mapping[str, Any], where: str = "") -> None:
         if key == "min_severity":
             if value not in SEVERITY_RANK:
                 raise ValueError("min_severity must be 'low', 'medium' or 'high'")
-        elif isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+        elif (
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or math.isnan(value)
+            or value < 0
+        ):
             raise ValueError(f"threshold {key!r}{where} must be a number of 0 or more")
 
 
@@ -178,6 +183,9 @@ def resolve_policy(
         loaded = _load_policy(policy)
         base = dict(loaded)
     th = dict(DEFAULT_THRESHOLDS)
+    for key in ("thresholds", "columns"):
+        if not isinstance(base.get(key, {}), Mapping):
+            raise ValueError(f"drift policy {key!r} must be an object")
     merged_th = {**base.get("thresholds", {}), **(thresholds or {})}
     _check_thresholds(merged_th)
     th.update(merged_th)
