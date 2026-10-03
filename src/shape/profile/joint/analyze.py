@@ -174,12 +174,12 @@ def _sample_index(row_count: int, budget: Budget) -> np.ndarray | None:
     if row_count <= budget.sample_rows:
         return None
     # evenly spread rows with a fixed random offset inside each stride: deterministic, ordered,
-    # and linear in the sample (a permutation of the whole table would cost more than the analysis)
-    stride = row_count / budget.sample_rows
-    jitter = np.random.RandomState(7).random_sample(budget.sample_rows)
-    return np.minimum(
-        ((np.arange(budget.sample_rows) + jitter) * stride).astype(np.int64), row_count - 1
-    )
+    # and linear in the sample (a permutation of the whole table would cost more than the analysis).
+    # Slot i picks one row of its own bucket [lo_i, lo_{i+1}), so no row is picked twice (#150).
+    k = budget.sample_rows
+    edges = (np.arange(k + 1, dtype=np.int64) * row_count) // k
+    jitter = np.random.RandomState(7).random_sample(k)
+    return edges[:-1] + (jitter * (edges[1:] - edges[:-1])).astype(np.int64)
 
 
 def _round(x: float | None, digits: int = 4) -> float | None:
