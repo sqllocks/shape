@@ -135,11 +135,12 @@ def test_every_check_an_entry_names_is_a_real_drift_kind_rule_or_gate(modes):
 def test_the_check_registry_is_built_from_shapes_own_lists():
     from shape.contracts.v1 import _COLUMN_RULES
     from shape.drift.engine import KIND_SEVERITY
+    from shape.scenario.results import VERIFY_GATES
     from shape.scenario.validator import KNOWN_GATES
 
     known = known_checks()
     assert known["drift"] == frozenset(KIND_SEVERITY) and "null_rate_change" in known["drift"]
-    assert known["gate"] == frozenset(KNOWN_GATES)
+    assert known["gate"] == frozenset(KNOWN_GATES) | frozenset(VERIFY_GATES)
     assert frozenset(_COLUMN_RULES) <= known["rule"] and "row_count.max" in known["rule"]
 
 
