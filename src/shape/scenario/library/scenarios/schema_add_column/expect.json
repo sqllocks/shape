@@ -1,0 +1,22 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "schema_add_column",
+  "gates_fail": [],
+  "drift": [
+    {
+      "between": [
+        0,
+        10
+      ],
+      "changes": [
+        {
+          "column": "order.channel",
+          "kinds": [
+            "column_added"
+          ]
+        }
+      ]
+    }
+  ]
+}

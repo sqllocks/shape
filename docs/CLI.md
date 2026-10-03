@@ -175,6 +175,21 @@ the policy.
 - `shape generate -o`, `continue`, `time-travel`, `pack run` and `chaos` write
   `_shape_provenance.json` beside the tables (`format: shape-provenance`, `version: 1`).
 
+## `shape suite`, `shape seed` and the starter library
+
+- `shape pack list --library` lists the starter scenarios and suites; `shape pack run library:NAME`
+  runs one and compares it with its answer key. `shape suite run NAME|FILE [--scale small]
+  [--seed N] [-o DIR] [--json]` runs a suite (`smoke`, `schema-evolution` or a `shape-suite` file):
+  exit 0 when every scenario met its key, 1 when one did not (the scenario, the expectation and
+  the observation are printed), 2 for a malformed suite or an unknown scenario. See
+  `docs/SCENARIO_LIBRARY.md`.
+- `shape seed SPEC|DOMAIN --target URI [--scale S] [--seed N] [--mode create|truncate|append]
+  [--dry-run] [--json]` writes the generated tables into a database (`mssql`, `postgres`, `mysql`)
+  or, with `sql://DIR`, into one ordered INSERT script per table, parents first. Exit 0 when
+  seeded or planned, 1 when `--mode create` found an existing table (nothing written), 2 for bad
+  input or a failed write. See `docs/TESTING_WITH_SHAPE.md`, which also describes the pytest
+  plugin.
+
 ## `shape doctor`
 
 ```

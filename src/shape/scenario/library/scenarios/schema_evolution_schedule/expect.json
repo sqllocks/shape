@@ -1,0 +1,118 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "schema_evolution_schedule",
+  "gates_fail": [],
+  "drift": [
+    {
+      "between": [
+        0,
+        7
+      ],
+      "changes": [
+        {
+          "column": "order.channel",
+          "kinds": [
+            "column_added"
+          ]
+        }
+      ]
+    },
+    {
+      "between": [
+        0,
+        12
+      ],
+      "changes": [
+        {
+          "column": "order.channel",
+          "kinds": [
+            "column_added"
+          ]
+        },
+        {
+          "column": "order.status",
+          "kinds": [
+            "column_removed"
+          ]
+        },
+        {
+          "column": "order.order_status",
+          "kinds": [
+            "column_added"
+          ]
+        }
+      ]
+    },
+    {
+      "between": [
+        0,
+        17
+      ],
+      "changes": [
+        {
+          "column": "order.channel",
+          "kinds": [
+            "column_added"
+          ]
+        },
+        {
+          "column": "order.status",
+          "kinds": [
+            "column_removed"
+          ]
+        },
+        {
+          "column": "order.order_status",
+          "kinds": [
+            "column_added"
+          ]
+        },
+        {
+          "column": "store.state",
+          "kinds": [
+            "column_removed"
+          ]
+        }
+      ]
+    },
+    {
+      "between": [
+        0,
+        29
+      ],
+      "changes": [
+        {
+          "column": "order.channel",
+          "kinds": [
+            "column_added"
+          ]
+        },
+        {
+          "column": "order.status",
+          "kinds": [
+            "column_removed"
+          ]
+        },
+        {
+          "column": "order.order_status",
+          "kinds": [
+            "column_added"
+          ]
+        },
+        {
+          "column": "store.state",
+          "kinds": [
+            "column_removed"
+          ]
+        },
+        {
+          "column": "customer.is_active",
+          "kinds": [
+            "dtype_change"
+          ]
+        }
+      ]
+    }
+  ]
+}
