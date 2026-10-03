@@ -835,8 +835,8 @@ def _temporal_generator(
     semantics: dict[str, ColumnSemantic],
     date_range: dict[str, str],
 ) -> dict[str, Any] | None:
-    if semantic == ColumnSemantic.TEMPORAL_TRANSACTION:
-        return copy.deepcopy(_SEASONAL_TRANSACTION)
+    if semantic == ColumnSemantic.TEMPORAL_TRANSACTION:  # inside the model's dates
+        return {**copy.deepcopy(_SEASONAL_TRANSACTION), "range_ref": "model.date_range"}
     if semantic == ColumnSemantic.TEMPORAL_END:
         start = next((c for c, s in semantics.items() if s == ColumnSemantic.TEMPORAL_START), None)
         if start is None:

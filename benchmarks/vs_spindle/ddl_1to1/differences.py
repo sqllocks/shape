@@ -105,6 +105,12 @@ FIXES: dict[str, str] = {
         "`time` or `bool`. The baseline writes no such key, so a DATE came out as timestamps "
         "with a time of day, BIT as 1.0/0.0 and BOOLEAN as the strings 'true'/'false'."
     ),
+    "F15": (
+        "A transaction date that smart inference gives the seasonal pattern (TP-TEMPORAL_"
+        "TRANSACTION) is drawn inside the model's date range (AUD-gen, issue #195): its "
+        "generator has range_ref `model.date_range`. The baseline has none, so the temporal "
+        "strategy's default range (from 2022-01-01) was used whatever the model's dates."
+    ),
 }
 
 
@@ -482,6 +488,27 @@ ALLOWED: list[Field | Note] = [
             ("smart_retail", "orders", "shipping_address_id"),
         )
         for where in ("generator.null_rate", "null_rate")
+    ),
+    # F15 entries: a transaction date is inside the model's date range
+    *(
+        Field("F15", case, f"tables.{table}.columns.{column}.generator.range_ref", SMART)
+        for case, table, column in (
+            ("adventureworks_sample", "product_reviews", "review_date"),
+            ("adventureworks_sample", "sales_orders", "order_date"),
+            ("adventureworks_sample", "sales_orders", "ship_date"),
+            ("ddl_parser__mysql_ddl", "order", "order_date"),
+            ("ddl_parser__postgres_ddl", "order", "order_date"),
+            ("ddl_parser__sql_server_ddl", "order", "order_date"),
+            ("e2e_ddl_pipeline__postgres_ddl", "order", "order_date"),
+            ("e2e_ddl_pipeline__sql_server_ddl", "order", "order_date"),
+            ("fix_cases", "invoice", "invoice_date"),
+            ("quoted_and_exotic", "Sales Order", "OrderDate"),
+            ("smart_inference__ddl_plural", "orders", "order_date"),
+            ("smart_retail", "fact_sales", "sale_date"),
+            ("smart_retail", "order_items", "order_date"),
+            ("smart_retail", "orders", "order_date"),
+            ("smart_retail", "orders", "ship_date"),
+        )
     ),
     # F14 entries: DATE, TIME, BIT and BOOLEAN keep their type (output_type)
     *(
