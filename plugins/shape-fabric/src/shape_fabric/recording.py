@@ -90,6 +90,29 @@ def find_secrets(text: str) -> list[str]:
 # --- values ------------------------------------------------------------------------------
 
 
+def readable_body(body: str) -> str:
+    """``body`` with the inline base64 parts of a Fabric item definition decoded.
+
+    A long base64 run looks like a storage key, so the scrubber would blank a notebook's payload
+    and the tape could no longer tell one notebook from another. The decoded text is what the
+    payload says (and the scrubber still reads it)."""
+    try:
+        doc = json.loads(body)
+        parts = doc["definition"]["parts"]
+    except (ValueError, KeyError, TypeError):
+        return body
+    if not isinstance(parts, list):
+        return body
+    for part in parts:
+        if isinstance(part, dict) and part.get("payloadType") == "InlineBase64":
+            try:
+                part["payloadType"] = "InlineText"
+                part["payload"] = base64.b64decode(part["payload"]).decode("utf-8")
+            except (ValueError, KeyError):
+                return body
+    return json.dumps(doc)
+
+
 def jsonable(value: Any) -> Any:
     """``value`` as plain JSON data, strings scrubbed; types JSON lacks become ``{"$type": ...}``
     objects so that equal values compare equal after a round trip."""
@@ -214,7 +237,7 @@ class TapeTransport:
             "method": method,
             "url": url,
             "headers": kept,
-            "body": body.decode("utf-8", "replace"),
+            "body": readable_body(body.decode("utf-8", "replace")),
         }
 
         def produce() -> dict[str, Any]:

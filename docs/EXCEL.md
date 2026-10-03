@@ -10,6 +10,7 @@ Each statement below has a test in `tests/excel/`.
 shape profile book.xlsx -o book.shape                  # one table per visible sheet (a dataset)
 shape profile 'book.xlsx#Members' -o members.shape     # that sheet alone (hidden or not)
 shape profile book.xlsx --sheet Members -o members.shape
+shape profile 'book.xlsx#Members' -o t.shape           # an Excel table or a named range called Members
 shape profile book.xlsx --include-hidden -o all.shape  # read the hidden sheets too
 ```
 
@@ -22,6 +23,21 @@ shape.io.open_source("book.xlsx#Members")       # Arrow batches; open_workbook("
 The first non-empty row of a sheet is its header. Sheets are read in read-only streaming mode. Cached formula results
 are read, not the formulas. `.xls` (legacy), `.xlsb` and password-protected files are refused with an error that says
 what to do; an archive that inflates absurdly is refused as well.
+
+### Tables and named ranges
+
+`book.xlsx#Name` also takes the name of an Excel table (Insert > Table) or of a named range (a defined name that points
+at one block of cells, such as `Data!$B$3:$D$6`). The first row of the block is its header, the table is named after
+the table or range, and findings carry cell positions on the sheet. A sheet of that name wins over a table, and a table
+over a named range; a name is matched exactly first, then ignoring case. A table's totals row is left out. These are
+refused with a clear error: a table with no header row, a named range of several areas, of one cell, or of a sheet that
+does not exist. The same works through `shape.io.open_source`, `shape.profile` and `read_workbook(path, "Name")`.
+
+### Merged cells
+
+A merged range reads as the value of its top-left cell; the other cells of the range are blank. The `merged_cells`
+finding lists the ranges (`ranges`), their top-left cells (`cells`), how many `count` and how many cells they leave
+`blank_cells`. For a table or named range only the merges inside it are reported.
 
 ### Cell types are kept
 
@@ -48,6 +64,7 @@ there is something to report. A profile of any other source has no `findings` ke
 | `duplicate_header` | a repeated header, renamed `name_2`, `name_3`, ... (the new name is `column`, the old one `original`) |
 | `blank_header` | a column with no header, named `column_N` |
 | `sentinel_values` | a placeholder: `99999` and other all-nines numbers, `00000`, `9999-12-31` and other epoch dates, `N/A`, `NULL`, `TBD`, ... (`value`) |
+| `merged_cells` | merged ranges (`ranges`, `cells`, `count`, `blank_cells`): the value is the top-left cell's, the rest are blank |
 | `mixed_types` | a column that mixes text with numbers or dates (`types`) |
 
 `shape profile --json` includes the findings in the summary. The share-safe form (`shape profile safe`) leaves them out,
@@ -74,7 +91,8 @@ The `excel` format writes **one workbook** for the whole dataset (`<domain>.xlsx
   rows and columns per table, the table-to-sheet mapping, the text-format identifier columns, and what was planted: the
   chaos in the ground-truth log (`--chaos-log`, from `shape chaos`: the changes per table, kind and column, with an
   example) and the drift plan or its answer key (`--drift-plan`: every event). With neither, it says `none`.
-- **Formatting**: a styled header row, frozen; column widths fitted to the first 1,000 rows and capped at 50; dates and
+- **Formatting**: a styled header row, frozen, with an autofilter over the table (`write_workbook(..., autofilter=False)`,
+  or `autofilter=False` in `write_result`/`write_engine` options, turns it off); column widths fitted to the first 1,000 rows and capped at 50; dates and
   timestamps have a date format; **identifier columns have the text number format `@`** so leading zeros survive editing
   in Excel: text columns whose values are all digits (ZIP, NPI, member id), text columns named like an identifier (`id`,
   `key`, `code`, `zip`, `ndc`, `npi`, `mrn`, `ssn`, `member`, `account`, `number`) and the text key columns of the
