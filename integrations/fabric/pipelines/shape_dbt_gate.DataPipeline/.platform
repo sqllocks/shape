@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "shape_dbt_gate"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "988f5035-5d95-574f-aab1-f244089cca6e"
+  }
+}
