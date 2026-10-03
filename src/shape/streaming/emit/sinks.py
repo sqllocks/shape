@@ -23,6 +23,11 @@ import pyarrow as pa  # type: ignore[import-untyped]
 from shape.streaming.emit.formats import encode_batch
 
 
+class ReaderGone(Exception):
+    """The destination's reader went away for good (a closed pipe): the run stops quietly. A
+    retry cannot help, so the runtime does not retry it."""
+
+
 class EventSink(Protocol):
     def send(self, batch: pa.RecordBatch) -> None: ...
 
@@ -115,6 +120,15 @@ class FileSink:
             self._f.close()
 
 
+def _silence_stdout() -> None:
+    """Point standard output at the null device, so the interpreter's own flush at exit does not
+    fail again on the closed pipe (the recipe of the Python documentation)."""
+    try:
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+    except (OSError, ValueError, AttributeError):
+        pass
+
+
 class StdoutSink:
     """JSON lines on standard output."""
 
@@ -123,15 +137,31 @@ class StdoutSink:
     def __init__(self, *, envelope: str = "flat", source: str = "shape") -> None:
         self.envelope = envelope
         self.source = source
+        self._gone = False
 
     def send(self, batch: pa.RecordBatch) -> None:
-        sys.stdout.buffer.write(encode_batch(batch, self.envelope, self.source))
+        try:
+            sys.stdout.buffer.write(encode_batch(batch, self.envelope, self.source))
+        except BrokenPipeError as exc:  # the reader (`| head -1`) has gone; retrying cannot help
+            self._gone = True
+            _silence_stdout()
+            raise ReaderGone("the reader of standard output closed the pipe") from exc
 
     def flush(self) -> None:
-        sys.stdout.buffer.flush()
+        if self._gone:
+            return
+        try:
+            sys.stdout.buffer.flush()
+        except BrokenPipeError as exc:
+            self._gone = True
+            _silence_stdout()
+            raise ReaderGone("the reader of standard output closed the pipe") from exc
 
     def close(self) -> None:
-        self.flush()
+        try:
+            self.flush()
+        except ReaderGone:
+            pass  # already reported by the send that found the pipe closed
 
 
 class MemorySink:

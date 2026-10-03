@@ -602,9 +602,10 @@ def run(a: argparse.Namespace) -> int:
         print(json.dumps(doc, default=str), file=out)
     else:
         note = " (already complete)" if report.already_complete else ""
+        stopped = "the reader closed" if report.stopped_by == "reader-closed" else report.stopped_by
         print(
             f"shape {a.cmd}: {report.events:,} events delivered, offset {report.end_offset:,}"
-            f" of {report.total_events:,}, {report.stopped_by}{note}"
+            f" of {report.total_events:,}, {stopped}{note}"
             + (f", {report.rate:,.0f} events/s" if report.events else ""),
             file=out,
         )

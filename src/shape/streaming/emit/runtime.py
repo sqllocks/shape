@@ -58,7 +58,7 @@ from shape.streaming.checkpoint import CheckpointError, FileCheckpointStore
 from shape.streaming.emit.anomaly import AnomalyInjector
 from shape.streaming.emit.formats import FIELD_TIME
 from shape.streaming.emit.rate import Burst, RateCap, RateSchedule, VirtualClock
-from shape.streaming.emit.sinks import EventSink
+from shape.streaming.emit.sinks import EventSink, ReaderGone
 from shape.streaming.emit.source import EventBlock
 
 CHECKPOINT_FORMAT = "shape-emit-v1"
@@ -202,7 +202,7 @@ class EmitReport:
     end_offset: int = 0
     total_events: int = 0
     complete: bool = False
-    stopped_by: str = ""  # complete | max-events | duration | stop-request | error
+    stopped_by: str = ""  # complete | max-events | duration | stop-request | reader-closed | error
     elapsed: float = 0.0
     rate: float = 0.0  # delivered events per second between first and last delivery
     max_queue_depth: int = 0  # the most batches waiting between the generator and the sink
@@ -338,7 +338,9 @@ class EmitRunner:
         if remaining > 0:
             self._stop.wait(remaining)
 
-    def _send(self, batch: pa.RecordBatch, report: EmitReport) -> None:
+    def _send(self, batch: pa.RecordBatch, report: EmitReport) -> bool:
+        """Deliver batch (retrying a transient failure); False when the reader of the
+        destination has gone away, which ends the run without an error."""
         cfg = self.config
         attempt = 0
         while True:
@@ -347,7 +349,9 @@ class EmitRunner:
                 key = getattr(self.plan, "answer_key", None)
                 if key is not None and getattr(key, "staged", False):
                     key.commit(batch)  # the faults the plan chose for these events are now real
-                return
+                return True
+            except ReaderGone:
+                return False
             except (OSError, ConnectionError, TimeoutError) as exc:
                 attempt += 1
                 if attempt > cfg.retries:
@@ -443,7 +447,9 @@ class EmitRunner:
                         stopped_by = "stop-request"
                         break
                     report.max_lag = max(report.max_lag, time.perf_counter() - due)
-                self._send(batch, report)
+                if not self._send(batch, report):
+                    stopped_by = "reader-closed"
+                    break
                 now = time.perf_counter()
                 if first is None:
                     first = now
