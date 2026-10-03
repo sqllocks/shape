@@ -2,7 +2,7 @@
   "api_version": "1.0",
   "cases": [
     {
-      "name": "pending",
+      "name": "dry-run",
       "request": {
         "api_version": "1.0",
         "args": {
@@ -11,18 +11,45 @@
           "scenario": "retail"
         },
         "command": "demo_run",
-        "id": "pending"
+        "id": "dry-run"
+      },
+      "response": {
+        "api_version": "1.0",
+        "command": "demo_run",
+        "id": "dry-run",
+        "ok": true,
+        "result": {
+          "artifact_count": 0,
+          "error": null,
+          "fidelity_score": null,
+          "mode": "inference",
+          "scenario": "retail",
+          "session_id": "<any>",
+          "success": true
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-scenario",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "scenario": "ghost"
+        },
+        "command": "demo_run",
+        "id": "unknown-scenario"
       },
       "response": {
         "api_version": "1.0",
         "command": "demo_run",
         "error": {
-          "code": "policy.capability_unavailable",
-          "group": "policy",
-          "hint": "use generate, scale_generate or stream for now",
-          "message": "demo_run needs `shape demo`, which this build does not include yet"
+          "code": "input.invalid_value",
+          "group": "input",
+          "hint": null,
+          "message": "scenario 'ghost' not found. Available: adventureworks, enterprise, healthcare, retail"
         },
-        "id": "pending",
+        "id": "unknown-scenario",
         "ok": false,
         "warnings": []
       }

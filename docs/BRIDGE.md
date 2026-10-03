@@ -139,10 +139,18 @@ Per-command argument, result and example detail is in the published schemas
 (`commands/NAME.request.schema.json`, `commands/NAME.result.schema.json`) and the vectors
 (`vectors/NAME.json`); every argument carries a description.
 
-**The demo commands.** `demo_list`, `demo_run`, `demo_status` and `demo_cleanup` are specified,
-their schemas are published and their requests are checked now, but the demo scenarios are run by
-`shape demo`, which this build does not include yet. A valid request answers
-`policy.capability_unavailable` until it does.
+**The demo commands.** `demo_list`, `demo_run`, `demo_status` and `demo_cleanup` call the same
+functions as `shape demo`: the result of each is what the matching `shape demo` operation returns.
+`demo_run` takes the settings `shape demo run` takes (`scenario`, `mode`, `rows`, `domain`,
+`input_file`, `connection`, `output_formats`, `dry_run`, `seed`, `scale_mode`) and returns
+`success`, `session_id`, `scenario`, `mode`, `fidelity_score` (`null` when no column was compared),
+`error` and `artifact_count`; a failed run is a result with `success: false`, and a setting that
+cannot be used is `input.invalid_value`. `demo_status` returns the session's `manifest` (and, for a
+Spark run, its live state under `fabric`, which needs `token` or `$SHAPE_FABRIC_TOKEN`; the token
+is never stored). `demo_cleanup` returns `removed` as a list of `{target, names}` entries, with
+`failed` and `skipped` (what was left, and why). An unknown session is `input.invalid_value`. The
+sessions are kept in `$SHAPE_HOME` (default `~/.shape`). A run's progress is printed to standard
+error; standard output carries only the reply.
 
 `generate`, `preview` and `scale_generate` return synthetic data. `profile`, `diff`, `check` and
 `verify` read real data: see *Safe by default*.

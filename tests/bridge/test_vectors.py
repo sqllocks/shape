@@ -38,10 +38,7 @@ def test_every_command_has_a_success_and_a_failure_vector(command):
         and doc["command"] == command
     )
     outcomes = {c["response"]["ok"] for c in doc["cases"]}
-    if COMMANDS[command].pending:
-        assert outcomes == {False}  # pending: only the refusals exist
-    else:
-        assert outcomes == {True, False}
+    assert outcomes == {True, False}
 
 
 @pytest.mark.parametrize("command", sorted(COMMANDS))
@@ -74,6 +71,7 @@ def test_a_live_bridge_gives_the_responses_of_the_vectors(command, tmp_path, mon
     jobs = lib.prepare(directory, doc)
     monkeypatch.setenv("SHAPE_FABRIC_STORAGE_TOKEN", "stor")
     monkeypatch.delenv("SHAPE_FABRIC_TOKEN", raising=False)
+    monkeypatch.setenv("SHAPE_HOME", str(directory / "shape-home"))
     bridge = Bridge(jobs)
     for setup in doc.get("setup", []):
         assert bridge.handle(lib.substitute(setup, str(directory)))["ok"]

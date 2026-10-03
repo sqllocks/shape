@@ -2,26 +2,120 @@
   "api_version": "1.0",
   "cases": [
     {
-      "name": "pending",
+      "name": "scenarios",
       "request": {
         "api_version": "1.0",
         "args": {},
         "command": "demo_list",
-        "id": "pending"
+        "id": "scenarios"
+      },
+      "response": {
+        "api_version": "1.0",
+        "command": "demo_list",
+        "id": "scenarios",
+        "ok": true,
+        "result": {
+          "count": 4,
+          "scenarios": [
+            {
+              "default_rows": 100000,
+              "description": "Retail domain \u2014 customers, products, orders, order lines.",
+              "domains": [
+                "retail"
+              ],
+              "name": "retail",
+              "supported_modes": [
+                "inference",
+                "streaming",
+                "seeding"
+              ],
+              "tags": [
+                "retail",
+                "beginner"
+              ]
+            },
+            {
+              "default_rows": 50000,
+              "description": "AdventureWorks-compatible schema \u2014 DimCustomer, DimProduct, FactSalesOrder, FactSalesOrderLine. Conference 'Retire AdventureWorks' demo.",
+              "domains": [
+                "retail"
+              ],
+              "name": "adventureworks",
+              "supported_modes": [
+                "inference",
+                "seeding"
+              ],
+              "tags": [
+                "adventureworks",
+                "conference",
+                "inference"
+              ]
+            },
+            {
+              "default_rows": 50000,
+              "description": "Healthcare domain \u2014 patients, encounters, medications, claims. PHI-safe.",
+              "domains": [
+                "healthcare"
+              ],
+              "name": "healthcare",
+              "supported_modes": [
+                "inference",
+                "streaming",
+                "seeding"
+              ],
+              "tags": [
+                "healthcare",
+                "compliance",
+                "phi"
+              ]
+            },
+            {
+              "default_rows": 200000,
+              "description": "Enterprise composite \u2014 retail + hr + financial across all 4 Fabric targets. The '60-second workspace' demo.",
+              "domains": [
+                "retail",
+                "hr",
+                "financial"
+              ],
+              "name": "enterprise",
+              "supported_modes": [
+                "seeding"
+              ],
+              "tags": [
+                "enterprise",
+                "composite",
+                "all-targets"
+              ]
+            }
+          ]
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-argument",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "x": 1
+        },
+        "command": "demo_list",
+        "id": "unknown-argument"
       },
       "response": {
         "api_version": "1.0",
         "command": "demo_list",
         "error": {
-          "code": "policy.capability_unavailable",
-          "group": "policy",
-          "hint": "use generate, scale_generate or stream for now",
-          "message": "demo_list needs `shape demo`, which this build does not include yet"
+          "code": "usage.unknown_argument",
+          "group": "usage",
+          "hint": "it takes: no arguments",
+          "message": "demo_list does not take argument(s): x"
         },
-        "id": "pending",
+        "id": "unknown-argument",
         "ok": false,
         "warnings": []
-      }
+      },
+      "valid_request": false
     }
   ],
   "command": "demo_list",

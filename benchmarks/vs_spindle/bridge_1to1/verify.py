@@ -19,7 +19,10 @@ Both bridges are driven as a client drives them: a JSON line in, a JSON line out
 * **Baseline defects fixed** (``ALLOW``, the standing decision of 2026-10-01): each entry names the
   defect and the reason, and the harness *shows* it in the baseline at the pinned commit and shows
   Shape correct, so an entry cannot outlive its defect.
-* ``demo_*`` wait for ``shape demo`` (P6-12): reported as pending, with the baseline's answer kept.
+* ``demo_*`` run ``shape demo``: the catalog, the result of a run (same fields, same score and
+  artifact count) and the manifest keys are compared with the baseline's, in an isolated home
+  for each bridge; an unknown session is compared as the baseline reports it (an error in a
+  success) against Shape's ``input.invalid_value``.
 * ``fabric_spark`` needs a live Fabric workspace: its refusals are compared, its submit/status/
   cancel is tested against recorded interactions (``tests/bridge/test_scale.py``), not here.
 
@@ -53,7 +56,6 @@ DOMAIN = "retail"
 REF_SEED, SPREAD_SEEDS, IMPL_SEED = 42, (43, 44, 45, 46), 1042
 DOMAIN_VERIFY = HERE.parent / "domain_1to1" / "verify.py"
 ROOT = BENCH_OUT_DIR / "bridge_1to1"
-PENDING = ("demo_list", "demo_run", "demo_status", "demo_cleanup")
 PLAN_COMMANDS = (
     "list", "describe", "generate", "dry_run", "validate", "preview", "profile_info", "demo_list",
     "demo_run", "demo_status", "demo_cleanup", "scale_generate", "stream", "stream_status",
@@ -679,28 +681,69 @@ def allow_list(base: Baseline, shape: Shape, rep: Report, work: Path, scale: str
     )
 
 
-def pending(base: Baseline, shape: Shape, rep: Report) -> None:
-    answers = {
-        "demo_list": {},
-        "demo_run": {"scenario": "retail", "rows": 100, "dry_run": True},
-        "demo_status": {"session_id": "none"},
-        "demo_cleanup": {"session_id": "none", "dry_run": True},
-    }
-    kept = {}
-    for command, args in answers.items():
-        b_ok, b = base.call(command, **args)
-        s_ok, s = shape.call(command, **args)
-        kept[command] = {
-            "baseline_ok": b_ok,
-            "baseline": (b if b_ok else str(b)[:200]),
-            "shape": s if not s_ok else "answered",
-        }
+def demo(base: Baseline, shape: Shape, rep: Report) -> None:
+    ok_b, lb = base.call("demo_list")
+    ok_s, ls = shape.call("demo_list")
+    assert ok_b and ok_s, (lb, ls)
+    keep = ("name", "supported_modes", "domains", "default_rows", "tags")
+    pick = [[{k: x[k] for k in keep} for x in r["scenarios"]] for r in (lb, ls)]
+    rep.check(
+        "demo_list",
+        "the scenarios: names, modes, domains, default rows and tags, and the count",
+        pick[0] == pick[1] and lb["count"] == ls["count"] == len(pick[0]) > 0,
+    )
+    args = {"scenario": "retail", "rows": 100, "seed": 42}
+    ok_b, rb = base.call("demo_run", **args)
+    ok_s, rs = shape.call("demo_run", **args)
+    assert ok_b and ok_s, (rb, rs)
+    gone = {"session_id"}
+    rep.check(
+        "demo_run",
+        "the result: the same fields, scenario, mode, score and artifact count",
+        {k: v for k, v in rb.items() if k not in gone}
+        == {k: v for k, v in rs.items() if k not in gone}
+        and rs["success"] is True
+        and rs["fidelity_score"] is not None,
+    )
+    ok_b, sb = base.call("demo_status", session_id=rb["session_id"])
+    ok_s, ss = shape.call("demo_status", session_id=rs["session_id"])
+    assert ok_b and ok_s, (sb, ss)
+    names = lambda r: [(a["target"], a["name"], a["row_count"]) for a in r["manifest"]["artifacts"]]  # noqa: E731
+    rep.check(
+        "demo_status",
+        "the manifest: the same keys, scenario, mode, success and artifacts",
+        sorted(sb) == sorted(ss)
+        and sorted(sb["manifest"]) == sorted(ss["manifest"])
+        and all(sb["manifest"][k] == ss["manifest"][k] for k in ("scenario", "mode", "success"))
+        and names(sb) == names(ss),
+    )
+    for command in ("demo_status", "demo_cleanup"):
+        ok_b, b = base.call(command, session_id="none")
+        ok_s, s = shape.call(command, session_id="none")
         rep.check(
             command,
-            "PENDING P6-12 (`shape demo`): Shape answers policy.capability_unavailable",
-            (not s_ok) and s["code"] == "policy.capability_unavailable",
+            "an unknown session is reported (baseline: an error in a success; Shape: "
+            "input.invalid_value naming it)",
+            ok_b
+            and b.get("error") == "session_not_found"
+            and (not ok_s)
+            and s["code"] == "input.invalid_value"
+            and "none" in s["message"],
         )
-    rep.notes["pending_p6_12"] = {k: {"baseline_ok": v["baseline_ok"]} for k, v in kept.items()}
+    ok_b, cb = base.call("demo_cleanup", session_id=rb["session_id"], dry_run=True)
+    ok_s, cs = shape.call("demo_cleanup", session_id=rs["session_id"], dry_run=True)
+    assert ok_b and ok_s, (cb, cs)
+    rep.check(
+        "demo_cleanup",
+        "a dry run removes nothing and names every artifact (baseline: lists the in-memory ones "
+        "as removed; Shape: as skipped, nothing was written)",
+        sorted(cb["synthetic"]) == sorted(a["name"] for a in cs["skipped"])
+        and cs["removed"] == []
+        and cs["dry_run"] is True
+        and cs["session_id"] == rs["session_id"],
+    )
+    ok_s, done = shape.call("demo_cleanup", session_id=rs["session_id"])
+    rep.check("demo_cleanup", "a cleanup answers ok", ok_s and done["ok"] is True)
 
 
 # ─── negative controls ───────────────────────────────────────────────────────────────────────
@@ -767,8 +810,12 @@ def main(argv: list[str] | None = None) -> int:
     work = Path(tempfile.mkdtemp(dir=ROOT))
     rep = Report()
     try:
-        base = Baseline()
-        shape = Shape(work / "jobs")
+        homes = {}
+        for name in ("baseline", "shape"):
+            (work / name).mkdir(parents=True, exist_ok=True)
+            homes[name] = str(work / name)
+        base = Baseline({"HOME": homes["baseline"]})
+        shape = Shape(work / "jobs", {"HOME": homes["shape"], "SHAPE_HOME": homes["shape"]})
     except Exception as exc:
         print(f"cannot start a bridge: {exc}", file=sys.stderr)
         return 2
@@ -780,8 +827,8 @@ def main(argv: list[str] | None = None) -> int:
         stream_checks(base, shape, rep, work)
         print("baseline defects fixed (allow-list)")
         allow_list(base, shape, rep, work, args.scale)
-        print("pending")
-        pending(base, shape, rep)
+        print("demo")
+        demo(base, shape, rep)
         if not args.skip_data:
             print(f"generated data (scale {args.scale})")
             data_checks(base, shape, rep, args.scale, work, got)

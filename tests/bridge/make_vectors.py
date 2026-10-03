@@ -46,6 +46,21 @@ def job(job_id: str, command: str, status: str, **extra: Any) -> dict[str, Any]:
     }
 
 
+SESSIONS = {
+    "s-1": {
+        "session_id": "s-1",
+        "scenario": "retail",
+        "mode": "inference",
+        "started_at": "2026-01-01T00:00:00",
+        "finished_at": "2026-01-01T00:00:01",
+        "success": True,
+        "artifacts": [
+            {"target": "synthetic", "name": "customer", "row_count": 40, "detail": ""},
+            {"target": "synthetic", "name": "order", "row_count": 1200, "detail": ""},
+        ],
+    }
+}
+
 JOBS = {
     "job-000000000001": job(
         "job-000000000001", "scale_generate", "succeeded", result={"rows_generated": 10}
@@ -171,24 +186,34 @@ FILES: dict[str, dict[str, Any]] = {
             case("unknown-profile", "profile_info", {"domain": "retail", "profile": "ghost"}),
         ]
     },
-    "demo_list": {"cases": [case("pending", "demo_list")]},
+    "demo_list": {
+        "cases": [
+            case("scenarios", "demo_list"),
+            case("unknown-argument", "demo_list", {"x": 1}, valid_request=False),
+        ]
+    },
     "demo_run": {
         "cases": [
-            case("pending", "demo_run", {"scenario": "retail", "rows": 100, "dry_run": True}),
+            case("dry-run", "demo_run", {"scenario": "retail", "rows": 100, "dry_run": True}),
+            case("unknown-scenario", "demo_run", {"scenario": "ghost"}),
             case("bad-rows", "demo_run", {"rows": "100"}, valid_request=False),
         ]
     },
     "demo_status": {
+        "sessions": SESSIONS,
         "cases": [
-            case("pending", "demo_status", {"session_id": "s-1"}),
+            case("session", "demo_status", {"session_id": "s-1"}),
+            case("unknown-session", "demo_status", {"session_id": "ghost"}),
             case("needs-a-session", "demo_status", {}, valid_request=False),
-        ]
+        ],
     },
     "demo_cleanup": {
+        "sessions": SESSIONS,
         "cases": [
-            case("pending", "demo_cleanup", {"session_id": "s-1", "dry_run": True}),
+            case("dry-run", "demo_cleanup", {"session_id": "s-1", "dry_run": True}),
+            case("unknown-session", "demo_cleanup", {"session_id": "ghost"}),
             case("needs-a-session", "demo_cleanup", {}, valid_request=False),
-        ]
+        ],
     },
     "scale_generate": {
         "cases": [
@@ -401,6 +426,7 @@ def main() -> None:
                     os.environ, {"SHAPE_FABRIC_STORAGE_TOKEN": "stor"}, clear=False
                 ):
                     os.environ.pop("SHAPE_FABRIC_TOKEN", None)
+                    os.environ["SHAPE_HOME"] = str(Path(directory) / "shape-home")
                     if one.get("needs") == "fabric":
                         with mock.patch("shape.scale.http.urllib_transport", FakeFabric()):
                             response = run_case(bridge, doc, one, directory)
@@ -419,6 +445,7 @@ def main() -> None:
                 "command": command,
                 **({"jobs": doc["jobs"]} if doc.get("jobs") else {}),
                 **({"setup": doc["setup"]} if doc.get("setup") else {}),
+                **({"sessions": doc["sessions"]} if doc.get("sessions") else {}),
                 "cases": cases,
             }
             (lib.VECTOR_DIR / f"{command}.json").write_text(

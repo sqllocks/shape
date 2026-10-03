@@ -52,8 +52,8 @@ class Baseline(Session):
     """The baseline's persistent bridge (``mcp_bridge_server``): the commands run in one process,
     so a stream or a job can be asked about after it starts."""
 
-    def __init__(self) -> None:
-        super().__init__([str(SPINDLE_PY), "-m", "sqllocks_spindle.mcp_bridge_server"])
+    def __init__(self, env: dict[str, str] | None = None) -> None:
+        super().__init__([str(SPINDLE_PY), "-m", "sqllocks_spindle.mcp_bridge_server"], env)
         assert self.proc.stdout is not None
         ready = json.loads(self.proc.stdout.readline())
         if ready.get("data", {}).get("ready") is not True:
@@ -68,8 +68,9 @@ class Baseline(Session):
 
 
 class Shape(Session):
-    def __init__(self, jobs_dir: Path) -> None:
-        super().__init__([str(SHAPE_PY), "-m", "shape", "bridge", "--jobs-dir", str(jobs_dir)])
+    def __init__(self, jobs_dir: Path, env: dict[str, str] | None = None) -> None:
+        argv = [str(SHAPE_PY), "-m", "shape", "bridge", "--jobs-dir", str(jobs_dir)]
+        super().__init__(argv, env)
         self.last: dict[str, Any] = {}
 
     def call(

@@ -12,7 +12,7 @@
     "demo_cleanup": {
       "cancellable": false,
       "job": "never",
-      "pending": "P6-12",
+      "pending": null,
       "request": "commands/demo_cleanup.request.schema.json",
       "result": "commands/demo_cleanup.result.schema.json",
       "summary": "Remove what a demo session created."
@@ -20,7 +20,7 @@
     "demo_list": {
       "cancellable": false,
       "job": "never",
-      "pending": "P6-12",
+      "pending": null,
       "request": "commands/demo_list.request.schema.json",
       "result": "commands/demo_list.result.schema.json",
       "summary": "List the demo scenarios."
@@ -28,7 +28,7 @@
     "demo_run": {
       "cancellable": false,
       "job": "never",
-      "pending": "P6-12",
+      "pending": null,
       "request": "commands/demo_run.request.schema.json",
       "result": "commands/demo_run.result.schema.json",
       "summary": "Run a demo scenario."
@@ -36,7 +36,7 @@
     "demo_status": {
       "cancellable": false,
       "job": "never",
-      "pending": "P6-12",
+      "pending": null,
       "request": "commands/demo_status.request.schema.json",
       "result": "commands/demo_status.result.schema.json",
       "summary": "The manifest of a demo session (and a Fabric run's live state)."

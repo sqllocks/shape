@@ -4,8 +4,9 @@ A vector file holds ``cases``: a ``request`` and the ``response`` that must come
 contain ``${DIR}`` (a scratch directory that holds a copy of ``fixtures/``); ``"<any>"`` in a
 response matches any value. A response matches when every key of the expected one is present with a
 matching value (the bridge may add fields in a minor version, never remove one). ``setup`` requests
-run first; ``jobs`` are job records placed in the jobs directory; ``needs: "fabric"`` runs the case
-against the recorded Fabric interactions."""
+run first; ``jobs`` are job records placed in the jobs directory; ``sessions`` are demo session
+records placed in ``${DIR}/shape-home/sessions`` (the run sets ``SHAPE_HOME=${DIR}/shape-home``);
+``needs: "fabric"`` runs the case against the recorded Fabric interactions."""
 
 from __future__ import annotations
 
@@ -30,6 +31,9 @@ VOLATILE = (
     "chunks",
     "parts_skipped",
     "summary",
+    "session_id",
+    "started_at",
+    "finished_at",
 )
 
 
@@ -91,6 +95,10 @@ def prepare(directory: Path, doc: dict[str, Any]) -> Path:
     folder.mkdir(parents=True, exist_ok=True)
     for job_id, record in (doc.get("jobs") or {}).items():
         (folder / f"{job_id}.json").write_text(json.dumps(record))
+    sessions = directory / "shape-home" / "sessions"
+    sessions.mkdir(parents=True, exist_ok=True)
+    for session_id, record in (doc.get("sessions") or {}).items():
+        (sessions / f"demo-{session_id}.json").write_text(json.dumps(record))
     return jobs
 
 

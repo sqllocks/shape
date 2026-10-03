@@ -83,9 +83,8 @@ def test_the_index_lists_every_command_and_error_code():
         index["commands"]["stream"]["job"] == "always"
         and index["commands"]["generate"]["job"] == "optional"
     )
-    assert (
-        index["commands"]["list"]["job"] == "never"
-        and index["commands"]["demo_run"]["pending"] == "P6-12"
+    assert index["commands"]["list"]["job"] == "never" and all(
+        entry["pending"] is None for entry in index["commands"].values()
     )
     assert (
         index["commands"]["scale_generate"]["cancellable"]

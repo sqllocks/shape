@@ -2,7 +2,7 @@
   "api_version": "1.0",
   "cases": [
     {
-      "name": "pending",
+      "name": "dry-run",
       "request": {
         "api_version": "1.0",
         "args": {
@@ -10,18 +10,55 @@
           "session_id": "s-1"
         },
         "command": "demo_cleanup",
-        "id": "pending"
+        "id": "dry-run"
+      },
+      "response": {
+        "api_version": "1.0",
+        "command": "demo_cleanup",
+        "id": "dry-run",
+        "ok": true,
+        "result": {
+          "dry_run": true,
+          "failed": [],
+          "ok": true,
+          "removed": [],
+          "session_id": "<any>",
+          "skipped": [
+            {
+              "name": "customer",
+              "reason": "held in memory only; nothing written",
+              "target": "synthetic"
+            },
+            {
+              "name": "order",
+              "reason": "held in memory only; nothing written",
+              "target": "synthetic"
+            }
+          ]
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-session",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "session_id": "ghost"
+        },
+        "command": "demo_cleanup",
+        "id": "unknown-session"
       },
       "response": {
         "api_version": "1.0",
         "command": "demo_cleanup",
         "error": {
-          "code": "policy.capability_unavailable",
-          "group": "policy",
-          "hint": "use generate, scale_generate or stream for now",
-          "message": "demo_cleanup needs `shape demo`, which this build does not include yet"
+          "code": "input.invalid_value",
+          "group": "input",
+          "hint": null,
+          "message": "no session 'ghost' found in ${DIR}/shape-home/sessions"
         },
-        "id": "pending",
+        "id": "unknown-session",
         "ok": false,
         "warnings": []
       }
@@ -52,5 +89,29 @@
   ],
   "command": "demo_cleanup",
   "format": "shape-bridge-vectors",
+  "sessions": {
+    "s-1": {
+      "artifacts": [
+        {
+          "detail": "",
+          "name": "customer",
+          "row_count": 40,
+          "target": "synthetic"
+        },
+        {
+          "detail": "",
+          "name": "order",
+          "row_count": 1200,
+          "target": "synthetic"
+        }
+      ],
+      "finished_at": "2026-01-01T00:00:01",
+      "mode": "inference",
+      "scenario": "retail",
+      "session_id": "s-1",
+      "started_at": "2026-01-01T00:00:00",
+      "success": true
+    }
+  },
   "version": 1
 }

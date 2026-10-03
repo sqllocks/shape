@@ -1,13 +1,13 @@
 """``demo_list``, ``demo_run``, ``demo_status`` and ``demo_cleanup`` (P6-11).
 
-The demo scenarios are run by ``shape demo`` (work package P6-12), which this build does not
-include yet. The four commands are specified and tested now: a request is checked against its
-schema like any other, and until ``shape demo`` exists the command answers
-``policy.capability_unavailable``. Wiring each handler to ``shape demo`` is the whole of what is
-left (see ``docs/plans/lane_status/P6-11.md``)."""
+Each command calls the matching function of ``shape.demo.api``, as ``shape demo`` does. The
+progress a run prints goes to standard error: standard output carries only the reply. A session
+the demo cannot find, and a scenario, mode or setting it cannot use, are ``input.invalid_value``;
+so is a Spark session asked after without a Fabric token."""
 
 from __future__ import annotations
 
+import sys
 from typing import Any
 
 from shape.bridge.context import Context
@@ -22,26 +22,44 @@ from shape.bridge.handlers.common import (
     nullable,
     obj,
 )
-from shape.bridge.protocol import BridgeError
-from shape.bridge.spec import Arg, Command, Handler
+from shape.bridge.spec import Arg, Command
 
-PENDING = "P6-12"
 _SESSION = Arg("string", "the demo session id", True)
 
 
-def _unavailable(command: str) -> BridgeError:
-    return BridgeError(
-        "policy.capability_unavailable",
-        f"{command} needs `shape demo`, which this build does not include yet",
-        "use generate, scale_generate or stream for now",
+def _runtime() -> Any:
+    from shape.demo.runtime import DemoRuntime
+
+    return DemoRuntime(out=sys.stderr)
+
+
+def cmd_demo_list(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
+    from shape.demo.api import demo_list
+
+    return demo_list()
+
+
+def cmd_demo_run(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
+    from shape.demo.api import demo_run
+
+    return demo_run(args, runtime=_runtime())
+
+
+def cmd_demo_status(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
+    from shape.demo.api import demo_status
+
+    return demo_status(args["session_id"], token=args.get("token"), runtime=_runtime())
+
+
+def cmd_demo_cleanup(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
+    from shape.demo.api import demo_cleanup
+
+    result = demo_cleanup(
+        args["session_id"], dry_run=bool(args.get("dry_run", False)), runtime=_runtime()
     )
-
-
-def _handler(command: str) -> Handler:
-    def run(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
-        raise _unavailable(command)
-
-    return run
+    # the published result holds ``removed`` as a list: one entry per target
+    result["removed"] = [{"target": t, "names": n} for t, n in result["removed"].items()]
+    return result
 
 
 COMMANDS = [
@@ -66,8 +84,7 @@ COMMANDS = [
                 "count": INT,
             }
         ),
-        _handler("demo_list"),
-        pending=PENDING,
+        cmd_demo_list,
     ),
     Command(
         "demo_run",
@@ -96,8 +113,7 @@ COMMANDS = [
             },
             {"fabric_run_id": STR, "status": STR, "scale_mode": STR},
         ),
-        _handler("demo_run"),
-        pending=PENDING,
+        cmd_demo_run,
     ),
     Command(
         "demo_status",
@@ -107,15 +123,13 @@ COMMANDS = [
             "token": Arg("string", "a Fabric token; never stored", secret=True),
         },
         obj({"session_id": STR, "manifest": mapping(ANY)}, {"fabric": mapping(ANY)}),
-        _handler("demo_status"),
-        pending=PENDING,
+        cmd_demo_status,
     ),
     Command(
         "demo_cleanup",
         "Remove what a demo session created.",
         {"session_id": _SESSION, "dry_run": Arg("boolean", "list what would be removed only")},
         obj({"session_id": STR}, {"removed": arr(ANY), "dry_run": BOOL}),
-        _handler("demo_cleanup"),
-        pending=PENDING,
+        cmd_demo_cleanup,
     ),
 ]
