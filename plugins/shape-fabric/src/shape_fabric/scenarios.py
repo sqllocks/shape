@@ -15,11 +15,17 @@ is committed. A tape is only ever produced by running a scenario; none is writte
 
 from __future__ import annotations
 
+import contextlib
+import io
+import json
 import sys
-from collections.abc import Callable
+import tempfile
+import uuid
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from unittest import mock
 
 import pyarrow as pa  # type: ignore[import-untyped,unused-ignore]
 
@@ -231,6 +237,114 @@ def _fabric_set_up_before() -> FakeFabricItems:
     )
 
 
+# --- the publish command, end to end ---------------------------------------------------------
+
+PUBLISH_ROWS = {"customer": 3, "order": 6}
+
+
+def _tiny_schema(folder: Path) -> str:
+    """A two-table generation schema (3 customers, 6 orders) in ``folder``."""
+
+    def col(name: str, strategy: str, **gen: Any) -> dict[str, Any]:
+        return {"name": name, "type": "integer", "generator": {"strategy": strategy, **gen}}
+
+    doc = {
+        "schema_version": 1,
+        "model": {"name": "tiny", "domain": "tiny", "seed": 5},
+        "tables": {
+            "customer": {
+                "name": "customer",
+                "primary_key": ["customer_id"],
+                "columns": {"customer_id": col("customer_id", "sequence")},
+            },
+            "order": {
+                "name": "order",
+                "primary_key": ["order_id"],
+                "columns": {
+                    "order_id": col("order_id", "sequence"),
+                    "customer_id": col("customer_id", "foreign_key", ref="customer.customer_id"),
+                },
+            },
+        },
+        "relationships": [
+            {
+                "name": "o_c",
+                "parent": "customer",
+                "child": "order",
+                "parent_columns": ["customer_id"],
+                "child_columns": ["customer_id"],
+            }
+        ],
+        "generation": {"scale": "small", "scales": {"small": PUBLISH_ROWS}},
+    }
+    path = folder / "tiny.json"
+    path.write_text(json.dumps(doc), encoding="utf-8")
+    return str(path)
+
+
+def _publish(argv_after_schema: list[str]) -> dict[str, Any]:
+    """``shape publish`` on the tiny schema, in this process, with a fake sign-in."""
+    from shape.cli.main import main
+
+    out = io.StringIO()
+    with tempfile.TemporaryDirectory() as folder, FakeIdentity().installed():
+        schema = _tiny_schema(Path(folder))
+        with contextlib.redirect_stdout(out):
+            code = main(["publish", schema, *argv_after_schema])
+    rows = [ln.strip() for ln in out.getvalue().splitlines() if ln.startswith("  ")]
+    return {"exit": code, "tables": rows}
+
+
+@contextlib.contextmanager
+def _odbc_patched(svc: OdbcService) -> Iterator[None]:
+    def connect(connection_string: str, credential: Any = None, **kw: Any) -> Any:
+        return svc.connect(connection_string, credential)
+
+    with (
+        mock.patch("shape_fabric._tsql.connect", connect),
+        mock.patch("shape.builtins.sources.azure._filesystem", lambda loc, options: svc.files),
+        mock.patch.object(uuid, "uuid4", return_value=uuid.UUID(int=1)),
+        mock.patch("shape_fabric.auth._notebookutils", lambda: None),
+    ):
+        yield
+
+
+def publish_eventhouse(transport: Any) -> Any:
+    with (
+        mock.patch("shape_fabric.kusto.urllib_transport", transport),
+        mock.patch("shape_fabric.auth._notebookutils", lambda: None),
+    ):
+        return _publish(
+            [
+                "-t",
+                "eventhouse",
+                "--connection-string",
+                "https://kql.example.test",
+                "--database",
+                "db1",
+            ]
+        )
+
+
+def publish_sql_database(svc: OdbcService) -> Any:
+    with _odbc_patched(svc):
+        return _publish(["-t", "sql-database", "--connection-string", SQL_CS.split(";UID")[0]])
+
+
+def publish_warehouse(svc: OdbcService) -> Any:
+    with _odbc_patched(svc):
+        return _publish(
+            [
+                "-t",
+                "warehouse",
+                "--connection-string",
+                WH_CS.split(";UID")[0],
+                "--staging-path",
+                STAGING,
+            ]
+        )
+
+
 # --- ODBC: SQL database ------------------------------------------------------------------
 
 
@@ -439,6 +553,9 @@ SCENARIOS: dict[str, Scenario] = {
             fabric_setup_environment_and_lakehouse,
             _fabric_set_up_before,
         ),
+        Scenario("publish_eventhouse", "http", publish_eventhouse, _kusto),
+        Scenario("publish_sql_database", "odbc", publish_sql_database, _sql_server),
+        Scenario("publish_warehouse", "odbc", publish_warehouse, _sql_server),
         Scenario("keyvault_secret", "http", keyvault_secret, _keyvault),
         Scenario("keyvault_secret_version", "http", keyvault_secret_version, _keyvault),
         Scenario("keyvault_secret_not_found", "http", keyvault_secret_not_found, _keyvault),
