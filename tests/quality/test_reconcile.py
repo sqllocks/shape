@@ -361,3 +361,34 @@ def test_the_cli_reconciles_two_files(tmp_path, capsys):
     spec["aggregates"][0]["tolerance"] = {"abs": 1}
     cfg.write_text(json.dumps(doc(reconcile=[spec])))
     assert main(["verify", str(d), "--config", str(cfg)]) == 0
+
+
+# -- HUNT2-quality ----------------------------------------------------------------------------
+
+NAN = float("nan")
+
+
+def test_a_table_reconciles_with_itself_when_a_value_is_nan():
+    """#572: NaN never equalled NaN, so identical tables differed."""
+    t = pa.table({"id": [1, 2, 3], "v": [1.0, 2.0, NAN]})
+    for agg in ("sum", "mean", "min", "max"):
+        assert reconcile(t, t, aggregates=[{"column": "v", "agg": agg}]).passed, agg
+    per_key = reconcile(t, t, key=["id"], aggregates=[{"column": "v", "agg": "max"}])
+    assert per_key.passed, per_key.findings
+
+
+def test_a_nan_key_matches_the_nan_key_on_the_other_side():
+    a = pa.table({"k": [NAN, 1.0], "v": [1, 2]})
+    b = pa.table({"k": [NAN, 1.0], "v": [1, 2]})
+    assert reconcile(a, b, key=["k"], aggregates=[{"column": "v", "agg": "sum"}]).passed
+    assert reconcile(a, b, partition_by=["k"]).passed
+
+
+def test_nan_against_a_number_still_differs():
+    a = pa.table({"v": [NAN]})
+    b = pa.table({"v": [1.0]})
+    r = reconcile(a, b, aggregates=[{"column": "v", "agg": "sum"}])
+    assert not r.passed
+    a2 = pa.table({"k": [NAN]})
+    b2 = pa.table({"k": [1.0]})
+    assert not reconcile(a2, b2, key=["k"]).passed
