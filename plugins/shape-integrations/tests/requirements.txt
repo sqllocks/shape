@@ -1,0 +1,2 @@
+# Test-only requirements of the integrations job (the adapters' own libraries are extras).
+jsonschema>=4.18,<5

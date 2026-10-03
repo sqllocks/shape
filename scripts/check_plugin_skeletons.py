@@ -34,6 +34,7 @@ EXPECTED = (
     "databases",
     "domains",
     "simulation",
+    "integrations",
 )
 
 
