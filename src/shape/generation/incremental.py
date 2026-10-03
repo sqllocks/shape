@@ -380,6 +380,14 @@ def _tag(table: pa.Table, kind: str, config: ContinueConfig, when: dt.datetime) 
     )
 
 
+def _utc_naive(when: dt.datetime) -> dt.datetime:
+    """``when`` as a UTC wall clock without a zone (the delta timestamp column has none); a
+    naive ``when`` is taken to be UTC already."""
+    if when.tzinfo is not None:
+        when = when.astimezone(dt.UTC)
+    return when.replace(tzinfo=None)
+
+
 class ContinueEngine:
     """Generate incremental changes (inserts, updates, deletes) from existing tables."""
 
@@ -399,7 +407,7 @@ class ContinueEngine:
         tables, found_schema = _normalise_tables(existing)
         schema = schema if schema is not None else found_schema
         rng = np.random.default_rng(config.seed)
-        when = (config.as_of or dt.datetime.now(dt.UTC)).replace(tzinfo=None)
+        when = _utc_naive(config.as_of or dt.datetime.now(dt.UTC))
         order = _table_order(tables, schema)
         keys = primary_keys(tables, schema)
         fks = foreign_keys(tables, schema, keys)
@@ -731,8 +739,10 @@ class TimeTravelEngine:
         schema: GenSchema | None = None,
         domain_name: str = "unknown",
     ) -> TimeTravelResult:
-        """Evolve ``initial`` (month 0) for ``config.months`` months."""
+        """Evolve ``initial`` (month 0) for ``config.months`` months. Each call starts afresh:
+        the same input and config give the same snapshots."""
         config = config or TimeTravelConfig()
+        self._high_water = {}  # keys issued by an earlier run do not move this one's
         rng = np.random.default_rng(config.seed)
         current = dict(initial)
         order = list(current)
