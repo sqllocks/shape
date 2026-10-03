@@ -239,5 +239,7 @@ class TablesResult:
         for name, table in self.table_map().items():
             sink.write(str(out) + "/", name, table.to_batches(), schema=table.schema)
             written[name] = out / f"{name}.{fmt}"
-        (out / "stats.json").write_text(json.dumps(self.stats, indent=2, default=str) + "\n")
+        (out / "stats.json").write_text(
+            json.dumps(self.stats, indent=2, default=str) + "\n", encoding="utf-8", newline="\n"
+        )
         return written
