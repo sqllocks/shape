@@ -11,10 +11,10 @@ import threading
 import time
 
 import pytest
+from bridge_helpers import Caller
 
 from shape.bridge.core import Bridge
 from shape.bridge.jobs import JOB_FORMAT, JOB_VERSION, now_iso
-from tests.bridge.conftest import Caller
 
 
 def wait_final(api, job_id, timeout=30):

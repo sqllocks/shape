@@ -94,7 +94,7 @@ def test_profile_refusals(api, tmp_path):
     api.fail("profile", "usage.missing_argument")
     blocker = tmp_path / "blocker"
     blocker.write_text("x")
-    from conftest import write_csv
+    from bridge_helpers import write_csv
 
     api.fail(
         "profile",
@@ -164,7 +164,7 @@ def test_every_result_of_the_workflow_withholds_classified_values(api, csv_pair,
 
 
 def test_diff_withholds_values_of_a_classified_column_only(api, tmp_path):
-    from conftest import write_csv
+    from bridge_helpers import write_csv
 
     a, b = write_csv(tmp_path / "x.csv"), write_csv(tmp_path / "y.csv", shift=1)
     # a classified column (an email pattern) with few distinct values, which change
@@ -191,7 +191,7 @@ def test_diff_withholds_values_of_a_classified_column_only(api, tmp_path):
 
 
 def test_check_withholds_the_observed_values_of_a_classified_column(api, tmp_path):
-    from conftest import write_csv
+    from bridge_helpers import write_csv
 
     path = write_csv(tmp_path / "c.csv")
     lines = path.read_text().splitlines()
@@ -254,7 +254,7 @@ def test_diff_refusals(api, csv_pair, tmp_path):
 
 
 def test_a_large_change_list_is_returned_as_a_file(api, tmp_path):
-    from conftest import write_wide
+    from bridge_helpers import write_wide
 
     pa = api.ok(
         "profile", source=str(write_wide(tmp_path / "a.csv", 0)), output=str(tmp_path / "a.shape")

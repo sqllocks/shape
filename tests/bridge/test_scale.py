@@ -210,8 +210,9 @@ def test_fabric_spark_is_submitted_and_recorded_as_a_job(api, fabric, schema_fil
 def test_a_fabric_job_is_polled_for_its_state_and_survives_a_restart(
     api, fabric, schema_file, jobs_dir
 ):
+    from bridge_helpers import Caller
+
     from shape.bridge.core import Bridge
-    from tests.bridge.conftest import Caller
 
     job_id = submit(api, schema_file)["job_id"]
     fabric.job_status = "InProgress"
