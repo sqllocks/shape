@@ -146,6 +146,13 @@ def add_arguments(sub: Any) -> None:
     from shape.cli.scale import add_arguments as add_scale_arguments
 
     add_scale_arguments(ge)
+    ge.add_argument(
+        "--fingerprint",
+        action="store_true",
+        help="with --format parquet or delta: write the shape.fingerprint footer/property "
+        "(table_id, run dataset_id, reproducibility tuple); the tables are generated whole "
+        "first (`shape fingerprint verify` checks it, docs/FINGERPRINT.md)",
+    )
 
     co = sub.add_parser(
         "composite",
@@ -297,6 +304,12 @@ def _demo_rows(a: argparse.Namespace, n: int) -> int:
 def cmd_generate(a: argparse.Namespace) -> int:
     """``shape generate``: 0 generated (or the plan is sound), 1 a dry run found problems."""
     bare, per_table = _rows_arg(a)
+    if a.fingerprint:
+        if a.format not in ("parquet", "delta"):
+            raise ValueError("--fingerprint is for --format parquet or delta")
+        for flag, given in (("--scale-mode", a.scale_mode), ("--to", a.to)):
+            if given:
+                raise ValueError(f"--fingerprint does not combine with {flag}")
     if a.scale_mode and a.from_profile:
         raise ValueError("--scale-mode does not combine with --from")
     if a.decisions and not a.from_profile:
@@ -453,9 +466,18 @@ def _generate(a: argparse.Namespace, engine: Any) -> int:
         return 0
     if not a.output:
         raise ValueError(f"--format {a.format} writes files: give -o DIR")
+    # `--fingerprint` is a `generate` option; `composite` shares this path without it.
+    fingerprint = bool(getattr(a, "fingerprint", False))
     if landing_requested(a):
+        if fingerprint:
+            raise ValueError("--fingerprint does not combine with the landing options")
         return _generate_landing(a, engine, started)
-    paths = write_engine(engine, a.format, a.output, **_sink_options(a))
+    if fingerprint:
+        from shape.cli.fingerprint import generate_fingerprinted
+
+        paths = generate_fingerprinted(engine, a)
+    else:
+        paths = write_engine(engine, a.format, a.output, **_sink_options(a))
     seconds = time.perf_counter() - started
     counts = {name: int(rows) for name, rows in engine.row_counts.items() if name in engine.order}
     total = sum(counts.values())

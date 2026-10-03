@@ -1388,6 +1388,13 @@ def _build_parser(plugin_commands=()):
     from shape.cli.bridge import add_arguments as add_bridge_arguments
 
     add_bridge_arguments(sub)
+    from shape.cli.fingerprint import add_arguments as add_fingerprint_arguments
+    from shape.cli.share_bundle import add_arguments as add_share_bundle_arguments
+    from shape.cli.skew import add_arguments as add_skew_arguments
+
+    add_fingerprint_arguments(sub)
+    add_share_bundle_arguments(sub)
+    add_skew_arguments(sub)
     from shape.cli.demo import add_arguments as add_demo_arguments
 
     add_demo_arguments(sub)
@@ -1775,6 +1782,18 @@ def _dispatch(argv):
         from shape.cli.mask import run as run_mask
 
         return _run(run_mask, a)
+    if a.cmd == "fingerprint":
+        from shape.cli.fingerprint import run as run_fingerprint
+
+        return _run(run_fingerprint, a)
+    if a.cmd == "share-bundle":
+        from shape.cli.share_bundle import run as run_share_bundle
+
+        return _run(run_share_bundle, a)
+    if a.cmd == "skew-rehearsal":
+        from shape.cli.skew import run as run_skew
+
+        return _run(run_skew, a)
     if a.cmd == "proposals":
         from shape.cli.proposals import run as run_proposals
 

@@ -172,8 +172,38 @@ class _ParquetRowGroups:
 
 
 class ParquetSink(_FileSink):
+    """Parquet files. Option ``fingerprint`` (``True``, or the run's context: ``dataset_id``,
+    ``reproducibility``, ``profile_content_id``) holds the table in memory, computes its
+    ``table_id`` and writes the signed-format fingerprint (``shape.fingerprint``, see
+    ``docs/FINGERPRINT.md``) into the footer; it does not combine with rolling files."""
+
     name = "parquet"
     extension = "parquet"
+
+    def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+        stamp = options.get("fingerprint")
+        if not stamp:
+            return super().write(uri, table, batches, **options)
+        from shape.builtins.sinks._roll import wants_rolling
+        from shape.fingerprint import KEY, dump, for_sink
+
+        if wants_rolling(options):
+            raise ValueError("fingerprint does not combine with rolling files (roll_rows/seconds)")
+        schema = options.get("schema")
+        listed = list(batches)
+        if listed:
+            schema = listed[0].schema
+        if schema is None:
+            raise ValueError(
+                "a fingerprinted Parquet file needs a schema when there are no batches"
+            )
+        whole = pa.Table.from_batches(listed, schema=schema)
+        doc = for_sink(table, whole, stamp)
+        whole = whole.replace_schema_metadata(
+            {**(schema.metadata or {}), KEY.encode(): dump(doc).encode("utf-8")}
+        )
+        rest = {k: v for k, v in options.items() if k not in ("fingerprint", "schema")}
+        return super().write(uri, table, iter(whole.to_batches()), schema=whole.schema, **rest)
 
     def _open(self, target: Any, schema: pa.Schema, options: dict[str, Any]) -> Any:
         # T-17: snappy, dictionary encoding on.

@@ -1,0 +1,27 @@
+{
+  "columns": [
+    {
+      "column": "order.customer_id",
+      "difference": 0.002675,
+      "generated_top_share": 0.802675,
+      "parents": 2000,
+      "profile_top_share": 0.8,
+      "references": "customer.customer_id",
+      "rows": 40000,
+      "shape": "power",
+      "top_fraction": 0.2,
+      "within_tolerance": true
+    }
+  ],
+  "files": [
+    "customer.parquet",
+    "order.parquet"
+  ],
+  "format": "shape-skew-report",
+  "scale": "large",
+  "seed": 7,
+  "skipped": [],
+  "tolerance": 0.02,
+  "version": 1,
+  "within_tolerance": true
+}
