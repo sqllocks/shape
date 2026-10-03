@@ -171,7 +171,7 @@ def test_the_baseline_names_are_confined_to_the_harness():
     assert names.PARAMETERS["FinancialStreamSimulator"]["transactions_df"] == "transactions"
 
 
-def test_exit_codes(monkeypatch, capsys):
+def test_exit_codes(monkeypatch, capsys, tmp_path):
     """0 when everything passes, 1 on a failed check, an undetected control or a failed probe,
     2 when the baseline is missing."""
     ok = h.Report("a")
@@ -189,6 +189,7 @@ def test_exit_codes(monkeypatch, capsys):
         "failed probe": ([ok], [], [_probe(False)]),
     }
     current: dict[str, object] = {}
+    monkeypatch.setattr(verify, "BENCH_OUT_DIR", tmp_path)  # not the real $BENCH_OUT_DIR (#332)
     monkeypatch.setattr(verify.importlib, "import_module", lambda name: ModuleType(name))
     monkeypatch.setattr(h, "run_case", lambda module, ctx: current["result"])
     monkeypatch.setattr(verify.harness, "run_case", lambda module, ctx: current["result"])
@@ -213,9 +214,10 @@ def _probe(passed: bool) -> object:
     return rep
 
 
-def test_the_exit_code_test_leaves_the_benchmark_output_alone(monkeypatch, capsys):
+def test_the_exit_code_test_leaves_the_benchmark_output_alone(monkeypatch, capsys, tmp_path):
     """The harness writes results.json under $BENCH_OUT_DIR; a test must not (#332)."""
     target = verify.BENCH_OUT_DIR / "simulation_1to1" / "results.json"
     before = target.stat().st_mtime_ns if target.exists() else None
-    test_exit_codes(monkeypatch, capsys)
+    test_exit_codes(monkeypatch, capsys, tmp_path)
+    assert (tmp_path / "simulation_1to1" / "results.json").is_file()
     assert (target.stat().st_mtime_ns if target.exists() else None) == before
