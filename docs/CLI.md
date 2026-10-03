@@ -62,6 +62,8 @@ the policy.
   when an input lacks the sketch state the statistics need (and `--exact-only` is not given), or
   the profiles do not share their columns. See `docs/PROFILE_MERGE.md`.
 - `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles.
+- `shape explain DIFF.json` explains a `shape diff --json` or `shape drift` result in plain
+  English, deterministically (`docs/EXPLAIN.md`).
 - `shape inspect ARTIFACT.shape` prints what an artifact holds, a profile or a model. `shape show`
   is an alias of `shape inspect`.
 - `shape capture SRC` reads everything `shape profile` reads (CSV, Parquet, JSONL, a folder or

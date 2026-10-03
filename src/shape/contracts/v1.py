@@ -65,6 +65,17 @@ class CheckResult:
     def to_dict(self) -> dict[str, Any]:
         return {"passed": self.passed, "violations": [dict(v) for v in self.violations]}
 
+    def _repr_html_(self) -> str:
+        """Notebook display: expected and observed values only for aggregate rules."""
+        from shape.report.display import check_html
+
+        return check_html(self)
+
+    def _repr_markdown_(self) -> str:
+        from shape.report.display import check_markdown
+
+        return check_markdown(self)
+
 
 def _violation(column: str | None, rule: str, expected: Any, observed: Any) -> dict[str, Any]:
     return {"column": column, "rule": rule, "expected": expected, "observed": observed}
@@ -410,6 +421,17 @@ class DiffResult:
 
     def to_dict(self) -> dict[str, Any]:
         return {"drifted": self.drifted, "changes": [dict(c) for c in self.changes]}
+
+    def _repr_html_(self) -> str:
+        """Notebook display: the narrative's rows, with no extremes or category values."""
+        from shape.report.display import diff_html
+
+        return diff_html(self)
+
+    def _repr_markdown_(self) -> str:
+        from shape.report.display import diff_markdown
+
+        return diff_markdown(self)
 
 
 def diff(
