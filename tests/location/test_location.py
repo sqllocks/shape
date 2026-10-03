@@ -75,3 +75,13 @@ def test_location_specs_parse_zip_plus_four_and_refuse_blanks():
             location_from_spec(bad)
     with pytest.raises(ValueError):
         location_from_spec({"zip": None})
+
+
+def test_scope_from_specs_says_what_is_wrong_with_the_weights():
+    """#382: the error used to be just 'weights'."""
+    from shape.location import scope_from_specs
+
+    with pytest.raises(ValueError, match="2 weights for 1 location"):
+        scope_from_specs(["OH"], weights=[1, 2])
+    scope = scope_from_specs(["OH", "PA"], weights=[3, 1], exclude=["43215"])
+    assert scope.normalized_weights == (0.75, 0.25) and scope.exclude[0].postal_code == "43215"
