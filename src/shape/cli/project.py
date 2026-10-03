@@ -196,6 +196,12 @@ def _init(a: argparse.Namespace) -> int:
     return 0
 
 
+def _os_problem(exc: OSError) -> str:
+    if isinstance(exc, FileNotFoundError):
+        return "file not found"
+    return f"cannot be read: {exc.strerror or exc}"
+
+
 def _validate(a: argparse.Namespace) -> int:
     from shape.project import find_project
 
@@ -204,11 +210,14 @@ def _validate(a: argparse.Namespace) -> int:
         raise ProjectError(f"no shape.yml found from {Path.cwd()} upwards")
     try:
         project = _load(path)
-    except ProjectError as exc:
+    except (ProjectError, OSError) as exc:
+        if not isinstance(exc, ProjectError) and not a.json:
+            raise  # one line from the common error policy
+        problems = list(exc.problems) if isinstance(exc, ProjectError) else [_os_problem(exc)]
         if a.json:
-            _dump({"valid": False, "file": str(path), "problems": list(exc.problems)})
+            _dump({"valid": False, "file": str(path), "problems": problems})
         else:
-            for problem in exc.problems:
+            for problem in problems:
                 print(f"shape: error: {path}: {problem}", file=sys.stderr)
         return 2
     _dump(
