@@ -25,8 +25,9 @@ import hashlib
 import json
 import math
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, fields
+from fnmatch import fnmatchcase
 from pathlib import Path
 from typing import Any
 
@@ -60,6 +61,10 @@ PII_PATTERNS = frozenset(
     {"email", "ssn", "credit_card", "phone", "ip_address", "iban", "postal_code"}
 )
 PII_CARDINALITY_RATIO = 0.95
+# Families whose rate is checked on every column (#2): a column with at least ``pii_pattern_floor``
+# of its values matching one of these, wholly or inside text, is pattern-only, however few they are.
+PII_RATE_FAMILIES = frozenset({"ssn", "email", "credit_card", "ip_address", "iban"})
+PII_PATTERN_FLOOR = 0.001
 
 WIDEN_BOUNDS = {"bounds_lo_quantile": "p0_5", "bounds_hi_quantile": "p99_5"}
 
@@ -81,6 +86,7 @@ class SafeConfig:
     columns: Mapping[str, ColumnConfig] = field(default_factory=dict)
     pii_gate: bool = True
     pii_cardinality_ratio: float = PII_CARDINALITY_RATIO
+    pii_pattern_floor: float = PII_PATTERN_FLOOR
     bounds_lo_quantile: str = "p1"
     bounds_hi_quantile: str = "p99"
     unsafe_full_fidelity: bool = False
@@ -248,21 +254,40 @@ def _winsorized_bounds(
 
 
 def pii_gate_fires(
-    pattern: str | None, cardinality: int, row_count: int | None, cfg: SafeConfig
+    pattern: str | None,
+    cardinality: int,
+    row_count: int | None,
+    cfg: SafeConfig,
+    rates: Mapping[str, float] | None = None,
 ) -> bool:
     """True when the column must be reduced to its pattern and length distribution only.
 
-    Two independent triggers, both independent of the column name: the detected value
-    pattern is a personal-data class, or the distinct count is within
-    ``pii_cardinality_ratio`` of the row count (free text such as names or notes).
+    Three independent triggers, all independent of the column name: the detected value
+    pattern is a personal-data class, the share of values matching a personal-data pattern
+    (``rates``: the whole-value and contained-in-text rates of the profile) reaches
+    ``pii_pattern_floor``, or the distinct count is within ``pii_cardinality_ratio`` of the row
+    count (free text such as names or notes).
     """
     if not cfg.gate_on:
         return False
     if pattern is not None and pattern in PII_PATTERNS:
         return True
+    if rates and any(
+        rate >= cfg.pii_pattern_floor for fam, rate in rates.items() if fam in PII_RATE_FAMILIES
+    ):
+        return True
     return bool(
         row_count and row_count > 0 and cardinality / row_count >= cfg.pii_cardinality_ratio
     )
+
+
+def _column_rates(col: Mapping[str, Any]) -> dict[str, float]:
+    """The larger of a family's whole-value rate and its contained-in-text rate."""
+    out: dict[str, float] = {}
+    for key in ("pattern_rates", "pattern_contains_rates"):
+        for fam, rate in (col.get(key) or {}).items():
+            out[fam] = max(out.get(fam, 0.0), float(rate))
+    return out
 
 
 def _length_dist(string_length: Mapping[str, float] | None) -> dict[str, float] | None:
@@ -290,6 +315,8 @@ class SafeColumnProfile:
     suppressed_category_count: int | None = None
     categorical_histogram: dict[str, Any] | None = None
     pattern: str | None = None
+    pattern_rates: dict[str, float] | None = None
+    pattern_contains_rates: dict[str, float] | None = None
     length_dist: dict[str, float] | None = None
     string_length: dict[str, float] | None = None
     hour_histogram: list[float] | None = None
@@ -322,7 +349,7 @@ class SafeColumnProfile:
         pattern = col.get("pattern")
         string_length = _opt_dict(col.get("string_length"))
         length_dist = None
-        if pii_gate_fires(pattern, cardinality, row_count, cfg):
+        if pii_gate_fires(pattern, cardinality, row_count, cfg, _column_rates(col)):
             length_dist = _length_dist(string_length)
             weights = None
             suppressed = None
@@ -381,6 +408,8 @@ class SafeColumnProfile:
             suppressed_category_count=suppressed,
             categorical_histogram=histogram,
             pattern=pattern,
+            pattern_rates=_opt_dict(col.get("pattern_rates")),
+            pattern_contains_rates=_opt_dict(col.get("pattern_contains_rates")),
             length_dist=length_dist,
             string_length=string_length,
             hour_histogram=hour,
@@ -396,7 +425,9 @@ class SafeColumnProfile:
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> SafeColumnProfile:
         names = {f.name for f in fields(cls)}
-        return cls(**{k: v for k, v in data.items() if k in names})
+        known = {k: v for k, v in data.items() if k in names}
+        known.setdefault("null_rate", None)  # absent in the compact form
+        return cls(**known)
 
 
 @dataclass
@@ -407,6 +438,7 @@ class SafeTableProfile:
     primary_key: list[str] = field(default_factory=list)
     detected_fks: dict[str, str] = field(default_factory=dict)
     correlation_matrix: dict[str, dict[str, float]] | None = None
+    correlation_truncated: bool = False
 
     @classmethod
     def from_table(cls, table: Mapping[str, Any], cfg: SafeConfig) -> SafeTableProfile:
@@ -421,10 +453,11 @@ class SafeTableProfile:
             primary_key=list(table.get("primary_key") or []),
             detected_fks=dict(table.get("detected_fks") or {}),
             correlation_matrix=table.get("correlation_matrix"),
+            correlation_truncated=bool(table.get("correlation_truncated")),
         )
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        out: dict[str, Any] = {
             "name": self.name,
             "row_count": self.row_count,
             "columns": {n: c.to_dict() for n, c in self.columns.items()},
@@ -432,6 +465,9 @@ class SafeTableProfile:
             "detected_fks": dict(self.detected_fks),
             "correlation_matrix": self.correlation_matrix,
         }
+        if self.correlation_truncated:
+            out["correlation_truncated"] = True
+        return out
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> SafeTableProfile:
@@ -442,6 +478,7 @@ class SafeTableProfile:
             primary_key=list(data.get("primary_key", [])),
             detected_fks=dict(data.get("detected_fks", {})),
             correlation_matrix=data.get("correlation_matrix"),
+            correlation_truncated=bool(data.get("correlation_truncated")),
         )
 
 
@@ -474,12 +511,49 @@ class SafeProfile:
             unsafe=bool(data.get("unsafe", False)),
         )
 
-    def to_json(self) -> str:
-        return json.dumps(self.to_dict(), indent=2, sort_keys=True, allow_nan=False) + "\n"
+    def to_json(self, *, compact: bool = False) -> str:
+        """The JSON text. ``compact`` writes one line without ``null`` fields (a column or table
+        field that is absent reads back as ``None``): the form to keep per run, #37."""
+        if not compact:
+            return json.dumps(self.to_dict(), indent=2, sort_keys=True, allow_nan=False) + "\n"
+        return (
+            json.dumps(
+                _without_nulls(self.to_dict()),
+                separators=(",", ":"),
+                sort_keys=True,
+                allow_nan=False,
+            )
+            + "\n"
+        )
 
-    def save(self, path: str | Path) -> Path:
+    def save(self, path: str | Path, *, compact: bool = False) -> Path:
         out = Path(path)
-        out.write_text(self.to_json(), encoding="utf-8")
+        out.write_text(self.to_json(compact=compact), encoding="utf-8")
+        return out
+
+    def select_columns(
+        self, include: Sequence[str] | None = None, exclude: Sequence[str] | None = None
+    ) -> SafeProfile:
+        """A copy with only the columns that match ``include`` (names or ``*`` patterns; all when
+        empty) and do not match ``exclude``; correlation entries of dropped columns go too."""
+
+        def wanted(col: str) -> bool:
+            if include and not any(fnmatchcase(col, pat) for pat in include):
+                return False
+            return not (exclude and any(fnmatchcase(col, pat) for pat in exclude))
+
+        out = SafeProfile.from_dict(self.to_dict())
+        for table in out.tables.values():
+            table.columns = {n: c for n, c in table.columns.items() if wanted(n)}
+            table.primary_key = [c for c in table.primary_key if c in table.columns]
+            table.detected_fks = {c: r for c, r in table.detected_fks.items() if c in table.columns}
+            if table.correlation_matrix:
+                kept = {
+                    a: {b: v for b, v in row.items() if b in table.columns}
+                    for a, row in table.correlation_matrix.items()
+                    if a in table.columns
+                }
+                table.correlation_matrix = {a: row for a, row in kept.items() if row} or None
         return out
 
     @classmethod
@@ -491,6 +565,14 @@ class SafeProfile:
         if not isinstance(version, int) or version > SCHEMA_VERSION:
             raise ValueError(f"unsupported safe profile schema_version {version!r}")
         return cls.from_dict(data)
+
+
+def _without_nulls(node: Any) -> Any:
+    if isinstance(node, dict):
+        return {k: _without_nulls(v) for k, v in node.items() if v is not None}
+    if isinstance(node, list):
+        return [_without_nulls(v) for v in node]
+    return node
 
 
 def _tables_of(profile: Mapping[str, Any]) -> tuple[dict[str, Any], list[Any]]:
@@ -523,7 +605,11 @@ def build_redaction_manifest(
                 "cells_suppressed": safe_col.cells_suppressed,
                 "bounds_winsorized": safe_col.bounds is not None,
                 "pattern_only": pii_gate_fires(
-                    col.get("pattern"), int(col.get("cardinality") or 0), row_count, cfg
+                    col.get("pattern"),
+                    int(col.get("cardinality") or 0),
+                    row_count,
+                    cfg,
+                    _column_rates(col),
                 ),
                 "k": cfg.column_k(cname),
                 "sensitive": cfg.column_sensitive(cname),

@@ -114,7 +114,11 @@ def test_object_dtype_path(kernel):
 def test_top_values_are_kept_for_every_column(kernel):
     """``value_counts_ext`` (first 500) does not depend on the enum decision."""
     unique = _col([f"k{i}" for i in range(700)])
-    assert len(unique["value_counts_ext"]) == 500 and unique["enum_values"] is None
+    # (ISS-profile #37: the top 500 of a text column whose values are all different would be an
+    # arbitrary few, so a near-unique text column lists none; a numeric one still does)
+    assert unique["value_counts_ext"] is None and unique["enum_values"] is None
+    unique_num = _col(list(range(700)))
+    assert len(unique_num["value_counts_ext"]) == 500 and unique_num["enum_values"] is None
     cat = _col([f"k{i % 120}" for i in range(2000)])
     assert cat["is_enum"] is True
     assert len(cat["enum_values"]) == 120 and set(cat["value_counts_ext"]) == set(

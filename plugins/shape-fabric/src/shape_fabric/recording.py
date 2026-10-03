@@ -223,6 +223,7 @@ class TapeTransport:
                 status, resp_headers, data = self._inner(method, url, headers, body, timeout)
             except Exception as exc:
                 return {"raises": type(exc).__name__, "message": str(exc)}
+            data = _hide_vault_value(url, data)
             return {
                 "status": status,
                 "headers": dict(resp_headers),
@@ -235,6 +236,21 @@ class TapeTransport:
                 response["raises"], RuntimeError
             )(response.get("message", ""))
         return int(response["status"]), dict(response["headers"]), response["body"].encode("utf-8")
+
+
+def _hide_vault_value(url: str, data: bytes) -> bytes:
+    """A Key Vault answer holds the secret itself: the tape keeps the shape of the answer, never
+    the value (the caller gets ``<redacted>`` in the recording as well, so both runs agree)."""
+    if ".vault.azure.net/secrets/" not in url:
+        return data
+    try:
+        doc = json.loads(data)
+    except ValueError:
+        return data
+    if isinstance(doc, dict) and "value" in doc:
+        doc["value"] = REDACTED
+        return json.dumps(doc).encode()
+    return data
 
 
 # --- ODBC --------------------------------------------------------------------------------
