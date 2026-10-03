@@ -37,6 +37,10 @@ deploy-notebook = "shape_fabric.commands:DeployNotebookCommand"
 setup-fabric = "shape_fabric.commands:SetupFabricCommand"
 export-model = "shape_fabric.commands:ExportModelCommand"
 
+[project.entry-points."shape.sinks"]
+sqlserver = "shape_fabric:SqlServerSink"
+warehouse = "shape_fabric:WarehouseSink"
+
 [project.entry-points."shape.sources"]
 onelake = "shape_fabric:LakehouseSource"
 

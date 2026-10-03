@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sqllocks-shape-databases"
+# Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
+version = "0.9.0"
+description = "Shape plugin: live PostgreSQL (COPY) and MySQL sinks"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+# The client libraries are extras so that a host that writes to one database does not install
+# the other's driver, and so core never carries them (T-07). Without its driver a sink fails
+# with the pip command that installs it.
+dependencies = ["sqllocks-shape==0.9.0"]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.1,<4"]
+mysql = ["pymysql>=1.1,<2"]
+
+[project.entry-points."shape.sinks"]
+postgres = "shape_databases:PostgresSink"
+mysql = "shape_databases:MySqlSink"
+
+[tool.setuptools.packages.find]
+where = ["src"]

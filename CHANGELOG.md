@@ -30,6 +30,14 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   named for its format. Harness: `benchmarks/vs_spindle/fabric_commands_1to1/` (the `.bim`, the
   notebook, the requests and the landing zone against the baseline, an allow-list with probes,
   negative controls).
+- Sinks for OneLake, ADLS Gen2 and databases (`docs/SINKS.md`): `shape generate --to URI` and
+  `shape emit/stream --to URI` (repeatable) write to `abfss://` (Parquet, CSV, TSV, JSONL, IPC in
+  dated Hive-style folders, rolling files, atomic publish), `delta+abfss://` (a Delta commit per
+  micro-batch), `mssql://` (SQL Server, Azure SQL, Fabric Warehouse), `postgresql://` (`COPY`) and
+  `mysql://` (`sqllocks-shape-databases`). Local Parquet/CSV/JSONL and Delta sinks take
+  `roll_rows`/`roll_seconds`/`commit_rows` so readers see rows while a stream runs. `shape emit`
+  gains `--speed 60x` (virtual clock), `--max-rate`, `--duplicate-fraction`, `--poison-fraction`,
+  `--answer-key` and the synthetic marker (`--synthetic-header`).
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it

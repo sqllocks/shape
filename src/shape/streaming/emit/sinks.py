@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -62,6 +63,8 @@ class FileSink:
     """JSON lines in a file. ``append`` continues a file a previous run started (its torn last
     line, if any, is cut first); otherwise the file starts empty."""
 
+    accepts_poison = True
+
     def __init__(
         self,
         path: str | os.PathLike[str],
@@ -100,6 +103,8 @@ class FileSink:
 
 class StdoutSink:
     """JSON lines on standard output."""
+
+    accepts_poison = True
 
     def __init__(self, *, envelope: str = "flat", source: str = "shape") -> None:
         self.envelope = envelope
@@ -144,10 +149,16 @@ class EmitterSink:
     """A ``shape.emitters`` plugin as a sink: ``send`` is one ``emit`` of one batch, so an
     emitter's own acknowledgement is the delivery acknowledgement."""
 
-    def __init__(self, emitter: Any, uri: str, **options: Any) -> None:
+    def __init__(self, emitter: Any, uri: str, *, synthetic: bool = False, **options: Any) -> None:
         self.emitter = emitter
         self.uri = uri
         self.options = options
+        if synthetic and getattr(emitter, "supports_synthetic", False):
+            self.options["synthetic"] = True
+
+    @property
+    def accepts_poison(self) -> bool:
+        return bool(getattr(self.emitter, "accepts_poison", False))
 
     def send(self, batch: pa.RecordBatch) -> None:
         self.emitter.emit(self.uri, [batch], **self.options)
@@ -169,6 +180,8 @@ def open_sink(
     output: str | os.PathLike[str] | None = None,
     envelope: str = "flat",
     resuming: bool = False,
+    synthetic: bool = True,
+    table_options: Mapping[str, Any] | None = None,
     choices: str = "console, file, or the URI of an emitter plugin (kafka://, eventhubs://, ...)",
     **options: Any,
 ) -> EventSink:
@@ -191,5 +204,21 @@ def open_sink(
     for name in host.names("shape.emitters"):
         emitter = host.try_get("shape.emitters", name)
         if emitter is not None and scheme and scheme in getattr(emitter, "schemes", ()):
-            return EmitterSink(emitter, sink, envelope=envelope, resuming=resuming, **options)
+            return EmitterSink(
+                emitter,
+                sink,
+                envelope=envelope,
+                resuming=resuming,
+                synthetic=synthetic,
+                **options,
+            )
+    if scheme:
+        from shape.io.targets import sink_names_by_scheme
+
+        if scheme in sink_names_by_scheme():
+            from shape.streaming.emit.tables import TableEventSink
+
+            return TableEventSink(
+                sink, synthetic=synthetic, resuming=resuming, **dict(table_options or {})
+            )
     raise ShapeError(f"unknown sink {sink!r}: {choices}")

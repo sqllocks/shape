@@ -94,3 +94,62 @@ class RateSchedule:
             return 0.0
         i = bisect.bisect_right(self._t0, t) - 1
         return self._cum[i] + (t - self._t0[i]) * self._rate[i]
+
+
+def parse_speed(text: str | float) -> float:
+    """``60x``, ``60`` or ``0.5x`` as a speed factor: event time passes that many times faster
+    than the wall clock."""
+    raw = str(text).strip().lower().removesuffix("x")
+    try:
+        speed = float(raw)
+    except ValueError:
+        raise ValueError(f"speed {text!r}: expected a number such as 60x") from None
+    if not math.isfinite(speed) or speed <= 0:
+        raise ValueError(f"speed {text!r}: must be a positive number")
+    return speed
+
+
+class VirtualClock:
+    """Pace a stream by its *event time* instead of a rate: ``speed`` is how many times faster
+    than the wall clock the event time passes (``60`` replays an hour in a minute).
+
+    ``due(event_time)`` is the wall-clock second (after the start of the run) at which an event
+    stamped ``event_time`` is due: ``(event_time - first_event_time) / speed``. The first event
+    seen is the origin, so a run resumed from a checkpoint starts at once and keeps the spacing
+    of the events. The result never goes backwards: an event that is earlier than one already
+    sent (out-of-order delivery) is due at once, and the clock waits for the next later one.
+    """
+
+    def __init__(self, speed: float) -> None:
+        if not math.isfinite(speed) or speed <= 0:
+            raise ValueError("speed must be a positive number")
+        self.speed = float(speed)
+        self._origin: float | None = None
+        self._latest = 0.0
+        self.span = 0.0  # event-time seconds replayed so far
+
+    def due(self, event_time: float | None) -> float:
+        """The due time of an event at ``event_time`` seconds (any epoch); ``None`` (no time) is
+        due when the previous event was."""
+        if event_time is None:
+            return self._latest
+        if self._origin is None:
+            self._origin = event_time
+        offset = (event_time - self._origin) / self.speed
+        if offset > self._latest:
+            self._latest = offset
+            self.span = max(self.span, event_time - self._origin)
+        return self._latest
+
+
+class RateCap:
+    """A hard ceiling on delivery: at most ``cap`` events per second over the run, however fast
+    the schedule or the sink would go. ``due(n)`` is when ``n`` events may have been sent."""
+
+    def __init__(self, cap: float) -> None:
+        if not math.isfinite(cap) or cap <= 0:
+            raise ValueError("the rate cap must be a positive number of events per second")
+        self.cap = float(cap)
+
+    def due(self, n: float) -> float:
+        return max(0.0, n) / self.cap

@@ -14,13 +14,22 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from shape.generation.output import EXTENSIONS, FORMATS
+from shape.generation.output import FORMATS
 from shape.io.landing import DEFAULT_TEMPLATE, parse_date, render_path
 from shape.plugins.host import default_host
 
 if TYPE_CHECKING:
     import pyarrow as pa  # type: ignore[import-untyped]
 
+# The file extension of each format that writes one file per table.
+EXTENSIONS = {
+    "csv": "csv",
+    "tsv": "tsv",
+    "jsonl": "jsonl",
+    "parquet": "parquet",
+    "excel": "xlsx",
+    "sql": "sql",
+}
 # Formats that write one file per table (a Delta table is a directory and has no file name).
 LANDING_FORMATS = tuple(f for f in FORMATS if f in EXTENSIONS)
 

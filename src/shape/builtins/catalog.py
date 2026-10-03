@@ -23,6 +23,7 @@ BUILTINS: tuple[tuple[str, str, str], ...] = (
     ("shape.sinks", "sql", "shape.builtins.sinks:SqlSink"),
     ("shape.sinks", "excel", "shape.builtins.sinks:ExcelSink"),
     ("shape.sinks", "delta", "shape.builtins.sinks:DeltaSink"),
+    ("shape.sinks", "abfss", "shape.builtins.sinks:AbfssSink"),
     ("shape.emitters", "console", "shape.builtins.emitters:ConsoleEmitter"),
     ("shape.emitters", "file", "shape.builtins.emitters:FileEmitter"),
     ("shape.emitters", "jsonl", "shape.builtins.emitters:JsonlEmitter"),
