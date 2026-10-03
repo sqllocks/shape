@@ -45,7 +45,7 @@ message says what).
 | `--event-time FIELD` | The payload field holding the event time (default `_shape_event_time`); `--event-time-unit s|ms|us` for numbers. An event without one uses the broker's timestamp. |
 | `--start earliest\|latest` | Where to begin when there is no checkpoint (brokers only; a file is read from its start). |
 | `--order file\|event-time` | Files only: replay in file order (default), or sorted by event time. |
-| `--follow` | Keep reading as events arrive. Without it the run stops at the end the stream had when it began. `--max-events N` and `--idle-timeout SECONDS` stop a followed read; Ctrl-C finishes the profile from what was read and keeps the checkpoint resumable. |
+| `--follow` | Keep reading as events arrive. Without it the run stops at the end the stream had when it began. `--max-events N` and `--idle-timeout SECONDS` stop a followed read; Ctrl-C finishes the profile from what was read and keeps the checkpoint resumable. The windows that Ctrl-C closed early are written with `"partial": true`; a restart removes them and writes them complete. |
 | `--checkpoint FILE`, `--checkpoint-every N` | Commit the offsets and profile state every N batches and at the end, and resume from the file when it exists. |
 | `--batch-size N` | Events per micro-batch (default 65,536). The first batch fixes the schema. |
 | `--option KEY=VALUE`, `--options-file FILE.json` | Source options (JSON values allowed). Put secrets in the file, not on the command line. |

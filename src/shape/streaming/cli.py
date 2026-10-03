@@ -15,6 +15,8 @@ Output:
   one closed window per line, as they close. A window is identified by ``(kind, start, end)``;
   a restarted run reads the file and does not write a window it already holds, so the file has
   each window once even though the consumer hands windows out at least once.
+  Ctrl-C writes the windows still open with ``"partial": true``; a restart drops those lines
+  and writes the windows complete.
 
 The schema comes from the first batch the source delivers (or from the checkpoint when there is
 one); rows that cannot take it are counted as ``rejected``, never coerced.
@@ -136,26 +138,43 @@ def _atomic_write(path: Path, text: str) -> None:
 
 
 class _WindowFile:
-    """The JSON-lines file of closed windows, each written once."""
+    """The JSON-lines file of closed windows, each written once.
+
+    A window that Ctrl-C closed early (the profiler finished what it had read) is written with
+    ``"partial": true``. It does not count as written: a restart removes the partial lines first,
+    so the resumed run writes those windows complete, as an uninterrupted run would."""
 
     def __init__(self, path: Path) -> None:
         self.path = path
         self.seen: set[tuple[Any, ...]] = set()
         self.written = 0
         if path.exists():
+            kept: list[str] = []
+            dropped = False
             with path.open(encoding="utf-8") as fh:
                 for line in fh:
-                    if line.strip():
-                        doc = json.loads(line)
-                        self.seen.add((doc["kind"], doc["start_us"], doc["end_us"]))
+                    if not line.strip():
+                        continue
+                    doc = json.loads(line)
+                    if doc.get("partial"):
+                        dropped = True
+                        continue
+                    kept.append(line if line.endswith("\n") else line + "\n")
+                    self.seen.add((doc["kind"], doc["start_us"], doc["end_us"]))
+            if dropped:
+                _atomic_write(path, "".join(kept))
         self._fh = path.open("a", encoding="utf-8")
 
-    def add(self, window: WindowProfile) -> None:
+    def add(self, window: WindowProfile, *, partial: bool = False) -> None:
         key = (window.kind, window.start, window.end)
         if key in self.seen:
             return
-        self.seen.add(key)
-        self._fh.write(json.dumps(window.to_dict(), sort_keys=True, allow_nan=False) + "\n")
+        doc = window.to_dict()
+        if partial:
+            doc["partial"] = True
+        else:
+            self.seen.add(key)
+        self._fh.write(json.dumps(doc, sort_keys=True, allow_nan=False) + "\n")
         self._fh.flush()
         self.written += 1
 
@@ -309,7 +328,7 @@ def run(args: Any) -> int:
         for window in consumer.profiler.finish():
             last = window
             if sink is not None:
-                sink.add(window)
+                sink.add(window, partial=True)
     finally:
         if sink is not None:
             sink.close()
