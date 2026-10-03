@@ -20,7 +20,7 @@ from typing import Any
 from shape.security import credrefs
 from shape.security.redact import holds_secret
 
-AUTH_MODES = ("cli", "msi", "spn", "sql", "device-code", "fabric")
+AUTH_MODES = ("cli", "msi", "spn", "sql", "device-code", "fabric", "kerberos")
 _REFERENCE_HELP = "a credential reference: env://NAME, file://PATH or kv://VAULT/SECRET"
 
 # (option, settings key, takes a secret)
@@ -30,6 +30,8 @@ _OPTIONS = (
     ("--client-secret", "client_secret", True),
     ("--sql-user", "sql_user", False),
     ("--sql-password", "sql_password", True),
+    ("--keytab", "keytab", True),
+    ("--principal", "principal", False),
 )
 
 
@@ -41,7 +43,8 @@ def add_arguments(parser: Any, *, connection_string: bool = True) -> None:
         choices=AUTH_MODES,
         help="how to sign in to Fabric / Azure: cli (az login, the default), msi (managed "
         "identity), spn (service principal), sql (SQL login), device-code (browser sign-in) or "
-        "fabric (the Fabric notebook identity)",
+        "fabric (the Fabric notebook identity) or kerberos (a keytab, for a SQL Server that takes "
+        "Windows authentication only)",
     )
     g.add_argument("--tenant-id", metavar="GUID", help="Entra tenant (spn, device-code)")
     g.add_argument("--client-id", metavar="GUID", help="Entra application (spn, device-code, msi)")
@@ -52,6 +55,14 @@ def add_arguments(parser: Any, *, connection_string: bool = True) -> None:
     g.add_argument(
         "--sql-password", metavar="REF", help=f"sql: the login's password, {_REFERENCE_HELP}"
     )
+    g.add_argument(
+        "--keytab",
+        metavar="REF",
+        help="kerberos: the keytab, file://PATH (mode 600) or kv://VAULT/NAME (the keytab "
+        "base64-encoded); Shape runs kinit into a private cache that is removed when the command "
+        "ends",
+    )
+    g.add_argument("--principal", metavar="NAME@REALM", help="kerberos: the service principal")
     if connection_string:
         g.add_argument(
             "--connection-string",
@@ -98,10 +109,14 @@ def settings_from_args(a: argparse.Namespace) -> dict[str, str] | None:
             out["mode"] = "sql"
         elif "client_secret" in out:
             out["mode"] = "spn"
+        elif "keytab" in out or "principal" in out:
+            out["mode"] = "kerberos"
     if out and out.get("mode") != "sql" and ("sql_user" in out or "sql_password" in out):
         raise ValueError("--sql-user and --sql-password belong to --auth sql")
     if out and out.get("mode") != "spn" and "client_secret" in out:
         raise ValueError("--client-secret belongs to --auth spn")
+    if out and out.get("mode") != "kerberos" and ("keytab" in out or "principal" in out):
+        raise ValueError("--keytab and --principal belong to --auth kerberos")
     return out or None
 
 
@@ -134,3 +149,13 @@ def _plugin() -> Any:
         raise ValueError(
             "--auth needs the shape-fabric plugin: pip install 'sqllocks-shape[fabric]'"
         ) from exc
+
+
+def release() -> None:
+    """Remove what a sign-in left on disk (a Kerberos credential cache). Called when a command
+    ends, also after an error; a no-op unless the plugin's Kerberos sign-in was used."""
+    import sys
+
+    module = sys.modules.get("shape_fabric.kerberos")
+    if module is not None:
+        module.release_all()

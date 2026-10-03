@@ -396,3 +396,36 @@ def test_the_environment_token_still_wins_and_signs_nothing(
     )  # fmt: skip
     assert code == 0, err
     assert stub_plugin["tokens"] == []
+
+
+# --- W2-10: --auth kerberos --------------------------------------------------------------
+
+
+def test_kerberos_settings_keep_the_keytab_as_a_reference():
+    a = parse(
+        "--auth", "kerberos", "--keytab", "file:///etc/shape/svc.keytab",
+        "--principal", "svc@CORP.EXAMPLE",
+    )  # fmt: skip
+    assert auth.settings_from_args(a) == {
+        "mode": "kerberos",
+        "keytab": "file:///etc/shape/svc.keytab",
+        "principal": "svc@CORP.EXAMPLE",
+    }
+    assert "kerberos" in auth.AUTH_MODES
+
+
+def test_the_kerberos_mode_is_inferred_from_a_keytab_or_a_principal():
+    assert auth.settings_from_args(parse("--keytab", "kv://v/k"))["mode"] == "kerberos"
+    assert auth.settings_from_args(parse("--principal", "a@B"))["mode"] == "kerberos"
+
+
+def test_a_keytab_path_that_is_not_a_reference_is_refused():
+    with pytest.raises(ValueError, match="credential reference"):
+        auth.settings_from_args(parse("--auth", "kerberos", "--keytab", "/etc/shape/svc.keytab"))
+
+
+def test_keytab_and_principal_belong_to_kerberos():
+    with pytest.raises(ValueError, match="belong to --auth kerberos"):
+        auth.settings_from_args(parse("--auth", "cli", "--keytab", "file:///k"))
+    with pytest.raises(ValueError, match="belong to --auth kerberos"):
+        auth.settings_from_args(parse("--auth", "sql", "--principal", "a@B"))

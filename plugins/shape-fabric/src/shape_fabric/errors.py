@@ -53,3 +53,11 @@ class WriteError(ShapeError):
 
 class AuthError(ShapeError):
     """No usable credential, or the destination refused the one given."""
+
+
+class ConstraintError(WriteError):
+    """Rows were loaded with constraints disabled (``constraints=disable``) and some constraint
+    does not hold: the run ends with exit code 1 (a data verdict, not bad input), and the message
+    names each table and constraint and says it was left disabled."""
+
+    exit_code = 1

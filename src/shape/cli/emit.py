@@ -418,15 +418,27 @@ def _targets(a: argparse.Namespace) -> list[str]:
 
 
 def _sink(
-    a: argparse.Namespace, envelope: str, resuming: bool, *, confirm_remote: bool = False
+    a: argparse.Namespace,
+    envelope: str,
+    resuming: bool,
+    schema: Any = None,
+    *,
+    confirm_remote: bool = False,
 ) -> Any:
     from shape.cli.to import confirm_targets, target_options
-    from shape.io.targets import scheme_of, sink_names_by_scheme
+    from shape.generation.output import preflight
+    from shape.io.targets import scheme_of, sink_for_target, sink_names_by_scheme
     from shape.streaming.emit import FanOutSink, open_sink
 
     targets = _targets(a)
     confirm_targets(a, targets, confirm_remote=confirm_remote)  # before any sign-in
     options = target_options(a, a.format, targets)  # --auth for the table sinks
+    options.schema_hint = schema  # a SQL Server target reads identity columns and keys from it
+    if schema is not None:
+        table_targets = [t for t in targets if (scheme_of(t) or "") in sink_names_by_scheme()]
+        preflight(
+            [(t, *sink_for_target(t)) for t in table_targets], options, None, list(schema.tables)
+        )
     sinks = []
     for target in targets:
         scheme = scheme_of(target) or ""
@@ -563,7 +575,7 @@ def run(a: argparse.Namespace) -> int:
         plan.answer_key = answer_key
         if injector is not None:
             injector.answer_key = answer_key
-    sink = _sink(a, a.envelope, resuming=offset > 0, confirm_remote=confirmed)
+    sink = _sink(a, a.envelope, resuming=offset > 0, schema=schema, confirm_remote=confirmed)
     if a.duplicate_fraction > 0 or a.poison_fraction > 0 or answer_key is not None:
         from shape.streaming.emit.faults import FaultSink
 

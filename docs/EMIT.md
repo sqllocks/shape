@@ -151,8 +151,8 @@ A run with no checkpoint (the console sink, or no `--checkpoint`) starts from th
 `--to URI` is repeatable, and `--sink` counts as one: `shape emit retail --to kafka://... --to
 abfss://...` sends every batch to every destination. A destination that fails is retried alone, so
 the others are not sent the batch again. The URI of a **sink** (`abfss://`, `delta+abfss://`,
-`mssql://`, `postgresql://`, `mysql://`, `snowflake://`, `databricks://`, `synapse://`; see
-`docs/SINKS.md`) lands the stream in files, Delta
+`mssql://`, `postgresql://`, `mysql://`, `snowflake://`, `databricks://`, `synapse://`,
+`duckdb://`; see `docs/SINKS.md`) lands the stream in files, Delta
 tables or database tables **that a reader can query while the stream runs**:
 
 * files roll to a new numbered file every `--roll-rows N` rows or `--roll-seconds S` seconds, and at
@@ -160,7 +160,11 @@ tables or database tables **that a reader can query while the stream runs**:
   reader never sees a partial file; `--format` (`parquet` default, `csv`, `tsv`, `jsonl`),
   `--path-template` and `--batch-date` set the layout (`{table}/ingest_date={date}/...`);
 * Delta commits at every checkpoint (and every `--commit-rows`);
-* databases commit every batch (or every `--commit-rows`).
+* databases commit every batch (or every `--commit-rows`);
+* `--write-mode upsert` (`mssql://`, `duckdb://`) merges each batch on the schema's primary key,
+  so a row with the same key is written once and a rerun after a failure leaves no duplicates;
+  `--sql-constraints disable` and `--auth kerberos` apply to `mssql://`, and an identity column of
+  the schema keeps its generated values (`docs/SINKS.md`).
 
 A table gets the event's columns less `_shape_table`, so `_shape_seq` and `_shape_event_time` are
 columns, and delivery stays at-least-once: a resumed run appends (it never replaces files), and a

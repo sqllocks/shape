@@ -145,6 +145,11 @@ def build_request(a: argparse.Namespace) -> dict[str, Any]:
     from shape.cli import auth
 
     settings = auth.settings_from_args(a)
+    if settings and settings.get("mode") == "kerberos":
+        raise ValueError(
+            "--auth kerberos signs in to an mssql:// target (generate --to, emit/stream "
+            "--to), not a --scale-mode job"
+        )
     if settings:
         request["auth"] = settings
     conn = auth.connection_string_from_args(a)

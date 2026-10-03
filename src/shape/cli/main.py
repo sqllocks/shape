@@ -1638,7 +1638,12 @@ def main(argv=None):
 
     lifecycle.quick_exit_allowed = argv is None
     lifecycle.exit_on_return = False
-    code = _main(argv)
+    try:
+        code = _main(argv)
+    finally:
+        from shape.cli import auth
+
+        auth.release()  # a Kerberos credential cache never outlives the command
     if lifecycle.exit_on_return:
         lifecycle.exit_now(code)
     return code

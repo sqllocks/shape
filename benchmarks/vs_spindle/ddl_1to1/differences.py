@@ -2,10 +2,10 @@
 
 P4-01b made Shape's ``from-ddl`` equal the baseline's in every field. The owner then decided
 (2026-10-01) to fix five behaviours that would harm users' trust (F1 to F5), and the lead three
-more (F6 to F8, round 2); ISS-gen added F9 to F11. Each fix changes a known, small set of
-fields, listed here by input, mode and field. ``verify.py`` accepts a difference **only**
-when it is listed: every other field must still equal the baseline, and an entry that no longer
-matches a difference fails the run (so the list cannot go stale).
+more (F6 to F8, round 2); ISS-gen added F9 to F11; W2-10 added F12. Each fix changes a known,
+small set of fields, listed here by input, mode and field. ``verify.py`` accepts a difference
+**only** when it is listed: every other field must still equal the baseline, and an entry that no
+longer matches a difference fails the run (so the list cannot go stale).
 
 Schema paths are dotted keys of ``GenSchema.to_dict()``; a list of relationships or rules is
 keyed by name. A path allows itself and everything below it. An annotation key is
@@ -86,6 +86,12 @@ FIXES: dict[str, str] = {
         "(`null_rate`), where the engine reads it, not in the generator (ISS-gen, lead decision "
         "2026-10-02). The baseline puts it in the generator, where it is ignored, so the declared "
         "rate never took effect: a foreign key that was documented as nullable had no nulls."
+    ),
+    "F12": (
+        'An IDENTITY, SERIAL or AUTO_INCREMENT column is written with `"identity": true` '
+        "(W2-10, issue 98): the SQL Server writer and the `sql` script sink then create it as an "
+        "identity column and keep the generated keys that child foreign keys reference. The "
+        "baseline turns it into a plain sequence column and the schema carries no such key."
     ),
 }
 
@@ -514,5 +520,54 @@ ALLOWED: list[Field | Note] = [
             ("adventureworks_sample", "sales_orders", "territory", PLAIN),
         )
         for key in ("args", "max_nb_chars")
+    ),
+    # F12 entries: the identity flag of an IDENTITY, SERIAL or AUTO_INCREMENT column
+    *(
+        Field("F12", case, f"tables.{table}.columns.{column}.identity", BOTH)
+        for case, table, column in (
+            ("adventureworks_sample", "addresses", "address_id"),
+            ("adventureworks_sample", "customers", "customer_id"),
+            ("adventureworks_sample", "inventory_log", "log_id"),
+            ("adventureworks_sample", "order_details", "detail_id"),
+            ("adventureworks_sample", "persons", "person_id"),
+            ("adventureworks_sample", "product_categories", "category_id"),
+            ("adventureworks_sample", "product_reviews", "review_id"),
+            ("adventureworks_sample", "products", "product_id"),
+            ("adventureworks_sample", "sales_orders", "order_id"),
+            ("ddl_parser__mysql_ddl", "customer", "customer_id"),
+            ("ddl_parser__mysql_ddl", "order", "order_id"),
+            ("ddl_parser__postgres_ddl", "customer", "customer_id"),
+            ("ddl_parser__postgres_ddl", "order", "order_id"),
+            ("ddl_parser__sql_server_ddl", "customer", "customer_id"),
+            ("ddl_parser__sql_server_ddl", "order", "order_id"),
+            ("e2e_ddl_pipeline__postgres_ddl", "customer", "customer_id"),
+            ("e2e_ddl_pipeline__postgres_ddl", "order", "order_id"),
+            ("e2e_ddl_pipeline__sql_server_ddl", "customer", "customer_id"),
+            ("e2e_ddl_pipeline__sql_server_ddl", "order", "order_id"),
+            ("e2e_ddl_pipeline__sql_server_ddl", "order_line", "line_id"),
+            ("e2e_ddl_pipeline__sql_server_ddl", "product", "product_id"),
+            ("smart_inference__ddl_plural", "categories", "category_id"),
+            ("smart_inference__ddl_plural", "customers", "customer_id"),
+            ("smart_inference__ddl_plural", "order_lines", "line_id"),
+            ("smart_inference__ddl_plural", "orders", "order_id"),
+            ("smart_inference__ddl_plural", "products", "product_id"),
+            ("fix_cases", "customer", "id"),
+            ("fix_cases", "my_order", "id"),
+            ("fix_cases", "pg_order", "id"),
+            ("fix_cases_round2", "PurchaseOrder", "Id"),
+            ("fix_cases_round2", "Receipt", "Id"),
+            ("fix_cases_round2", "Vendor", "Id"),
+            ("quoted_and_exotic", "Customer", "CustomerID"),
+            ("quoted_and_exotic", "Sales Order", "SalesOrderID"),
+            ("smart_retail", "addresses", "address_id"),
+            ("smart_retail", "audit_log", "log_id"),
+            ("smart_retail", "customers", "customer_id"),
+            ("smart_retail", "order_items", "item_id"),
+            ("smart_retail", "order_returns", "return_id"),
+            ("smart_retail", "orders", "order_id"),
+            ("smart_retail", "products", "product_id"),
+            ("smart_retail", "shipment_lines", "line_id"),
+            ("smart_retail", "tags", "tag_id"),
+        )
     ),
 ]

@@ -8,7 +8,7 @@ environment that is not activated, a CI step, a notebook). Both start the same p
 | Code | Meaning |
 |---|---|
 | 0 | ok |
-| 1 | a check failed, drift was found, a signature or leak scan failed |
+| 1 | a check failed, drift was found, a signature or leak scan failed, or constraints did not hold after `--sql-constraints disable` loaded the rows (the error names each one) |
 | 2 | bad input: a missing or unreadable file, the wrong kind of file, a bad argument |
 | 3 and above | a command's own verdict (a certificate below its threshold, a failed contract, an incompatible change); each command's `--help` says which |
 

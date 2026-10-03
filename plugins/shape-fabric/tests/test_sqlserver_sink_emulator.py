@@ -49,6 +49,15 @@ def schema():
     yield name
     conn = _tsql.connect(CS)
     cursor = conn.cursor()
+    # foreign keys first: a table another table references cannot be dropped before it
+    for table, constraint in cursor.execute(
+        "SELECT OBJECT_NAME(parent_object_id), name FROM sys.foreign_keys "
+        "WHERE SCHEMA_NAME(schema_id) = ?",
+        name,
+    ).fetchall():
+        cursor.execute(
+            f"ALTER TABLE {_tsql.qualified(name, table)} DROP CONSTRAINT {_tsql.ident(constraint)}"
+        )
     for (table,) in cursor.execute(
         "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ?", name
     ).fetchall():
@@ -114,3 +123,178 @@ def test_commit_rows_makes_rows_readable_from_another_connection_mid_write(schem
         uri_for(schema, commit_rows=100, batch_size=100), "ev", stream(), **LOGIN
     )
     assert rows == 400 and seen == [100, 200, 300] and count(schema, "ev") == 400
+
+
+# --- W2-10: identity columns, constraint toggling, idempotent reruns ---------------------
+
+ID_SCHEMA = pa.schema([("customer_id", pa.int64()), ("name", pa.string())])
+ID_COLUMNS = {
+    "customer_id": {"nullable": False, "identity": {"start": 1000, "step": 5}},
+    "name": {"nullable": True, "max_length": 40},
+}
+
+
+def customers(first=0, n=10):
+    ids = [1000 + 5 * i for i in range(first, first + n)]
+    return pa.RecordBatch.from_pydict(
+        {"customer_id": ids, "name": [f"c{i}" for i in ids]}, schema=ID_SCHEMA
+    )
+
+
+def query(sql, *params):
+    conn = _tsql.connect(CS)
+    try:
+        cursor = conn.cursor()
+        cursor.execute(sql, *params)
+        return cursor.fetchall()
+    finally:
+        conn.close()
+
+
+def run_sql(sql):
+    conn = _tsql.connect(CS)
+    try:
+        conn.cursor().execute(sql)
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def test_identity_keep_inserts_the_generated_keys_with_identity_insert(schema):
+    sink = SqlServerSink()
+    rows = sink.write(
+        uri_for(schema), "customer", iter([customers(0, 6), customers(6, 4)]),
+        columns=ID_COLUMNS, primary_key=["customer_id"], **LOGIN,
+    )  # fmt: skip
+    assert rows == 10
+    table = f"{_tsql.ident(schema)}.[customer]"
+    assert (
+        query("SELECT COLUMNPROPERTY(OBJECT_ID(?), 'customer_id', 'IsIdentity')", table)[0][0] == 1
+    )
+    assert query("SELECT IDENT_SEED(?), IDENT_INCR(?)", table, table)[0] == (1000, 5)
+    keys = [r[0] for r in query(f"SELECT customer_id FROM {table} ORDER BY customer_id")]
+    assert keys == [1000 + 5 * i for i in range(10)]  # the generated keys, not 1000, 1005 by luck
+    # an append of keys that exist is a key violation, so IDENTITY_INSERT really was on
+    with pytest.raises(WriteError, match=r"(?i)duplicate key|PRIMARY KEY"):
+        sink.write(
+            uri_for(schema, write_mode="append"), "customer", iter([customers(0, 2)]),
+            columns=ID_COLUMNS, **LOGIN,
+        )  # fmt: skip
+
+
+def test_identity_server_lets_the_server_number_the_rows(schema):
+    SqlServerSink().write(
+        uri_for(schema, identity="server"), "customer", iter([customers(3, 5)]),
+        columns=ID_COLUMNS, primary_key=["customer_id"], **LOGIN,
+    )  # fmt: skip
+    table = f"{_tsql.ident(schema)}.[customer]"
+    keys = [r[0] for r in query(f"SELECT customer_id FROM {table} ORDER BY customer_id")]
+    assert keys == [1000 + 5 * i for i in range(5)]  # numbered from the seed, not the batch's keys
+
+
+def _family(schema):
+    if not query("SELECT 1 FROM sys.schemas WHERE name = ?", schema):
+        run_sql(f"CREATE SCHEMA {_tsql.ident(schema)}")
+    run_sql(
+        f"CREATE TABLE {_tsql.ident(schema)}.[parent] ([id] BIGINT NOT NULL PRIMARY KEY, "
+        "[name] NVARCHAR(40) NULL)"
+    )
+    run_sql(
+        f"CREATE TABLE {_tsql.ident(schema)}.[child] ([child_id] BIGINT NOT NULL PRIMARY KEY, "
+        f"[parent_id] BIGINT NOT NULL, CONSTRAINT [FK_child_parent] FOREIGN KEY ([parent_id]) "
+        f"REFERENCES {_tsql.ident(schema)}.[parent]([id]))"
+    )
+    SqlServerSink().write(
+        uri_for(schema, write_mode="append"), "parent",
+        iter([pa.RecordBatch.from_pydict({"id": [1, 2, 3], "name": ["a", "b", "c"]})]), **LOGIN,
+    )  # fmt: skip
+
+
+def children(ids, parents):
+    return pa.RecordBatch.from_pydict({"child_id": ids, "parent_id": parents})
+
+
+def test_constraints_disable_loads_a_violating_row_then_exits_1_naming_the_constraint(schema):
+    from shape_fabric.errors import ConstraintError
+
+    _family(schema)
+    with pytest.raises(WriteError, match="FOREIGN KEY"):  # keep: the server refuses the row
+        SqlServerSink().write(
+            uri_for(schema, write_mode="append"),
+            "child",
+            iter([children([1, 2], [1, 99])]),
+            **LOGIN,
+        )
+    assert count(schema, "child") == 0
+    with pytest.raises(ConstraintError) as err:
+        SqlServerSink().write(
+            uri_for(schema, write_mode="append", constraints="disable"), "child",
+            iter([children([1, 2], [1, 99])]), **LOGIN,
+        )  # fmt: skip
+    assert err.value.exit_code == 1
+    assert "FK_child_parent" in str(err.value) and "left disabled" in str(err.value)
+    assert count(schema, "child") == 2  # the rows are there
+    disabled = query(
+        "SELECT is_disabled FROM sys.foreign_keys WHERE name = 'FK_child_parent' "
+        "AND parent_object_id = OBJECT_ID(?)",
+        f"{_tsql.ident(schema)}.[child]",
+    )
+    assert disabled == [(1,)]
+
+
+def test_constraints_disable_with_good_data_leaves_the_constraints_enabled_and_trusted(schema):
+    _family(schema)
+    SqlServerSink().write(
+        uri_for(schema, write_mode="append", constraints="disable"), "child",
+        iter([children([1, 2], [1, 3])]), **LOGIN,
+    )  # fmt: skip
+    state = query(
+        "SELECT is_disabled, is_not_trusted FROM sys.foreign_keys WHERE name = 'FK_child_parent' "
+        "AND parent_object_id = OBJECT_ID(?)",
+        f"{_tsql.ident(schema)}.[child]",
+    )
+    assert state == [(0, 0)]
+
+
+def test_truncate_of_a_table_a_foreign_key_references_uses_delete(schema):
+    _family(schema)
+    SqlServerSink().write(
+        uri_for(schema, write_mode="truncate"), "parent",
+        iter([pa.RecordBatch.from_pydict({"id": [7, 8], "name": ["x", "y"]})]), **LOGIN,
+    )  # fmt: skip
+    assert count(schema, "parent") == 2
+
+
+def test_upsert_rerun_after_a_run_killed_mid_table_completes_it_without_duplicates(schema):
+    columns = {"customer_id": {"nullable": False}, "name": {"nullable": True, "max_length": 40}}
+    options = {"columns": columns, "primary_key": ["customer_id"], **LOGIN}
+
+    def stream(die_after=None):
+        for i in range(8):
+            if die_after is not None and i == die_after:
+                raise RuntimeError("killed")  # the process dies between two round trips
+            yield pa.RecordBatch.from_pydict(
+                {"customer_id": list(range(i * 50, i * 50 + 50)), "name": [f"n{i}"] * 50},
+                schema=ID_SCHEMA,
+            )
+
+    uri = uri_for(schema, write_mode="upsert", commit_rows=50, batch_size=50)
+    with pytest.raises(WriteError):
+        SqlServerSink().write(uri, "customer", stream(die_after=5), **options)
+    partial = count(schema, "customer")
+    assert 0 < partial < 400  # the committed chunks stay
+    assert SqlServerSink().write(uri, "customer", stream(), **options) == 400
+    table = f"{_tsql.ident(schema)}.[customer]"
+    assert query(f"SELECT COUNT(*), COUNT(DISTINCT customer_id) FROM {table}") == [(400, 400)]
+    assert SqlServerSink().write(uri, "customer", stream(), **options) == 400  # a plain rerun
+    assert query(f"SELECT COUNT(*), COUNT(DISTINCT customer_id) FROM {table}") == [(400, 400)]
+
+
+def test_upsert_with_identity_keep_keeps_the_generated_identity_values(schema):
+    options = {"columns": ID_COLUMNS, "primary_key": ["customer_id"], **LOGIN}
+    uri = uri_for(schema, write_mode="upsert")
+    for _ in range(2):
+        SqlServerSink().write(uri, "customer", iter([customers(0, 10)]), **options)
+    table = f"{_tsql.ident(schema)}.[customer]"
+    keys = [r[0] for r in query(f"SELECT customer_id FROM {table} ORDER BY customer_id")]
+    assert keys == [1000 + 5 * i for i in range(10)]

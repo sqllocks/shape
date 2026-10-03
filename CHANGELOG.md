@@ -246,6 +246,25 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   unseen categories and out-of-range values per feature, ranked by PSI, per slice with `--slice-by`,
   on data or profiles (`shape-skew-report` version 1).
 
+- SQL Server write path II and a DuckDB writer (`docs/SINKS.md`, `docs/plugins/fabric-writers.md`,
+  `docs/plugins/fabric-auth.md`, W2-10 / #98). `--auth kerberos --keytab REF --principal NAME@REALM`
+  signs in to a SQL Server that takes Windows authentication only: `kinit -k -t` runs into a private
+  credential cache (a keytab is `file://PATH`, mode 600, or `kv://VAULT/NAME` holding it
+  base64-encoded), the connection uses `Trusted_Connection=yes`, `KRB5CCNAME` is set only while a
+  connection opens, and the cache is removed when the command ends, also after an error. A
+  generation-schema column may carry `"identity": true` (an optional key of the version-1 document;
+  `integer` type and `sequence` strategy only); `shape from-ddl` writes it for `IDENTITY`, `SERIAL`
+  and `AUTO_INCREMENT`; the SQL Server writer creates `BIGINT IDENTITY(start, step)` and by default
+  keeps the generated keys with `SET IDENTITY_INSERT` (`identity=server` lets the server number
+  the rows and is refused when a foreign key references the column); the `sql` script sink emits the
+  same for the `tsql` dialect. `--sql-constraints disable` loads into existing tables with
+  `NOCHECK CONSTRAINT ALL`, then validates (exit 1 naming each constraint left disabled);
+  `truncate` of a referenced table uses `DELETE`. `--write-mode upsert` merges each batch into the
+  table on its primary key, so a rerun leaves the same rows and finishes a killed load. A new
+  `duckdb` sink (`duckdb:///PATH.duckdb[?schema=main]`, extra `sqllocks-shape[duckdb]`) writes Arrow
+  batches into a DuckDB file with `create`, `append`, `truncate`, `replace` and `upsert`. A run no
+  longer waits forever when a sink fails after its last batch.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

@@ -70,12 +70,15 @@ def describe(exc: BaseException) -> str:
 
 
 def fail(exc: BaseException) -> int:
-    """Print ``exc`` (secrets redacted) as an expected error; returns the exit code."""
+    """Print ``exc`` (secrets redacted) as an expected error; returns the exit code: 2, or the
+    ``exit_code`` the error declares (a verdict on the data, such as constraints that do not hold
+    after a load, is 1)."""
     from shape.security.redact import redact_text
 
     # A message can quote a connection string or a URI with a key in it: never print the secret.
     print(f"shape: error: {redact_text(describe(exc))}", file=sys.stderr)
-    return EXIT_INPUT_ERROR
+    code = getattr(exc, "exit_code", EXIT_INPUT_ERROR)
+    return code if isinstance(code, int) and not isinstance(code, bool) else EXIT_INPUT_ERROR
 
 
 def guarded(fn: Callable[[], int], *, debug: bool = False) -> int:

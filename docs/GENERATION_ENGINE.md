@@ -11,7 +11,7 @@ domain plugin, a profile fit, a DDL file or a hand-written JSON file. It holds
 | Part | Contents |
 |---|---|
 | `model` | `name`, `domain`, `schema_mode` (`3nf` or `star`), `locale`, `seed`, `date_range` |
-| `tables` | per table: `primary_key`, and ordered `columns`, each with a `type`, `nullable`, `null_rate` and a `generator` (a `strategy` name plus that strategy's keys) |
+| `tables` | per table: `primary_key`, and ordered `columns`, each with a `type`, `nullable`, `null_rate`, a `generator` (a `strategy` name plus that strategy's keys) and an optional `identity` (below) |
 | `relationships` | parent/child links with column lists and a type |
 | `business_rules` | `cross_column`, `cross_table` and `constraint` rules, `A OP B` |
 | `generation` | the current `scale`, the `scales` presets (rows per table), and `derived_counts` |
@@ -154,6 +154,16 @@ equality for structure), so the plan cannot claim more than the data shows. `pla
 portable evidence documents (`shape capture`) and checks each item against what the generator can
 build from it.
 
+## Identity columns
+
+A column may carry `"identity": true` (an optional boolean key of the version-1 document, absent
+from a document written before it and omitted when false). The column must be of type `integer`
+and use the `sequence` strategy; anything else is a validation error naming the column
+(`tables.T.columns.C`). The SQL Server writer creates it as `BIGINT IDENTITY(start, step)` from the
+sequence's `start` and `step` and, by default, keeps the generated values with `SET IDENTITY_INSERT`
+(`docs/SINKS.md`); the `sql` script sink does the same for the `tsql` dialect. A schema without
+`identity` produces byte-identical DDL and scripts.
+
 ## Reading SQL DDL
 
 `shape from-ddl FILE` turns `CREATE TABLE` statements (SQL Server, PostgreSQL, MySQL and ANSI SQL,
@@ -175,6 +185,9 @@ shape from-ddl tables.sql --explain            # print every inference decision
 | `-s`, `--scale` | `preset:table=N,...`: select that scale preset and set those tables' row counts |
 | `--smart` / `--no-smart` | smart inference (the default), or keep the first generators |
 | `--explain` | print the inference report: rule, table and column, what changed, confidence |
+
+`IDENTITY`, `SERIAL` / `BIGSERIAL` / `SMALLSERIAL` and `AUTO_INCREMENT` columns become `sequence`
+columns with `"identity": true`.
 
 In Python: `shape.generation.ddl.from_ddl(sql, domain=, smart=, scale=)` returns
 `(GenSchema, annotations)`; `DdlParser` is the parser alone.

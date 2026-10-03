@@ -66,12 +66,12 @@ def notebook(monkeypatch):
 
 
 def test_the_modes_are_the_baselines_six():
-    assert auth.AUTH_MODES == ("cli", "msi", "spn", "sql", "device-code", "fabric")
+    assert auth.AUTH_MODES == ("cli", "msi", "spn", "sql", "device-code", "fabric", "kerberos")
 
 
 def test_unknown_mode_is_an_error():
-    with pytest.raises(AuthError, match="unknown --auth mode 'kerberos'"):
-        auth.AuthSettings(mode="kerberos")
+    with pytest.raises(AuthError, match="unknown --auth mode 'ntlm'"):
+        auth.AuthSettings(mode="ntlm")  # was 'kerberos' until W2-10 made it a mode
 
 
 def test_cli_uses_the_azure_cli_session(identity, no_notebook):

@@ -1,9 +1,10 @@
 # sqllocks-shape-databases
 
-Shape plugin: write generated tables straight into a running database
-(`shape.sinks`). Four sinks live here. `postgres` and `mysql` match the dialects of the built-in
+Shape plugin: write generated tables straight into a running database, or a local DuckDB file
+(`shape.sinks`). Five sinks live here. `postgres` and `mysql` match the dialects of the built-in
 `sql` script sink (same quoting, same Arrow-to-database type map); `snowflake` and `databricks`
-have their own type maps (see [Snowflake](#snowflake) and [Databricks](#databricks)):
+have their own type maps (see [Snowflake](#snowflake) and [Databricks](#databricks)); `duckdb`
+writes Arrow batches into a DuckDB file:
 
 | sink | URI | how rows are sent |
 |---|---|---|
@@ -11,11 +12,13 @@ have their own type maps (see [Snowflake](#snowflake) and [Databricks](#databric
 | `mysql` | `mysql://user@host:3306/db?ssl_ca=/path/ca.pem` | batched multi-row `INSERT` through bound parameters (PyMySQL) |
 | `snowflake` | `snowflake://user@account/database/schema?warehouse=WH&role=ROLE` | Parquet files `PUT` to the table stage, then one `COPY INTO` |
 | `databricks` | `databricks://host/http_path?catalog=CAT&schema=SCH` | batched multi-row `INSERT` with bound parameters into Delta tables |
+| `duckdb` | `duckdb:///PATH.duckdb[?schema=main]` | Arrow batches scanned by DuckDB directly, `INSERT ... SELECT` (DuckDB) |
 
 ```
 pip install 'sqllocks-shape[postgres]'                      # psycopg 3
 pip install 'sqllocks-shape[mysql]'                         # PyMySQL
 pip install 'sqllocks-shape[databases]'                     # both
+pip install 'sqllocks-shape[duckdb]'                        # DuckDB
 pip install 'sqllocks-shape-databases[snowflake]'           # snowflake-connector-python
 pip install 'sqllocks-shape-databases[databricks]'          # databricks-sql-connector
 ```
@@ -211,6 +214,56 @@ already emptied it.
 On the command line, `--sink-config databricks.token=env://NAME` resolves the reference first. A
 token and a client secret together, or one half of the OAuth pair, are errors.
 
+## DuckDB (`duckdb://`)
+
+```python
+from shape_databases import DuckDbSink
+
+DuckDbSink().write(
+    "duckdb:///out/retail.duckdb?schema=raw",
+    "customer",
+    batches,
+    write_mode="upsert",
+    primary_key=["customer_id"],
+    commit_rows=50_000,
+)
+```
+
+`duckdb:///PATH.duckdb` is relative to the working directory, `duckdb:////abs/path.duckdb`
+absolute (Windows: `duckdb:///C:/data/x.duckdb`); a host, a password, no path and `:memory:` are
+refused. `?schema=` (or `schema_name=`) is the DuckDB schema, created when missing in a step of its
+own. Each Arrow batch is scanned by DuckDB as an Arrow table: no value is converted in Python.
+
+| Arrow type | DuckDB column |
+|---|---|
+| bool | `BOOLEAN` |
+| int8 / 16 / 32 / 64 | `TINYINT` / `SMALLINT` / `INTEGER` / `BIGINT` |
+| uint8 / 16 / 32 / 64 | `UTINYINT` / `USMALLINT` / `UINTEGER` / `UBIGINT` |
+| float32 / float64 (float16 as float32) | `FLOAT` / `DOUBLE` |
+| decimal128(p, s), p at most 38 | `DECIMAL(p,s)` |
+| string, large_string, dictionary | `VARCHAR`; `UUID` when the `columns` entry says `"type": "uuid"` |
+| binary, large_binary, fixed binary | `BLOB` |
+| date32 / date64 | `DATE` |
+| time32 / time64 | `TIME` (nanoseconds cut to microseconds) |
+| timestamp, no zone: s / ms / us / ns | `TIMESTAMP_S` / `TIMESTAMP_MS` / `TIMESTAMP` / `TIMESTAMP_NS` |
+| timestamp with a zone | `TIMESTAMPTZ` |
+
+Nested values and durations are refused with the column named. `primary_key` becomes a `PRIMARY KEY`;
+a key column, or one whose `columns` entry says `"nullable": false`, is `NOT NULL`.
+
+| option | meaning |
+|---|---|
+| `write_mode` (or `?write_mode=`; the option wins) | `create` (default: an existing table is an error), `append` (create if missing), `truncate` (`DELETE`, then add; create if missing), `replace` (drop and create), `upsert` (`INSERT OR REPLACE` on the primary key; none: `upsert needs a primary key on <table>`) |
+| `commit_rows` | commit every N rows (rounded up to a batch) so another connection sees them |
+| `schema_name`, `columns`, `primary_key`, `schema` | as above, as for the other sinks |
+
+One table is one transaction: a failure rolls back the rows, the table this call created and a
+`replace`'s drop; with `commit_rows` only the open chunk is lost (`WriteError.rows_committed` counts
+what stays). Tables of a run are written at the same time, each on its own connection. A file that
+another process holds locked is a `ShapeError` (exit 2) with DuckDB's message. Reading the tables
+back gives the same `shape.repro.dataset_id` as the generated tables. DuckDB is imported when a write
+starts, never at import time, and is never a core dependency.
+
 ## Credentials
 
 A password is never accepted in the URI (it would reach logs and shell history): a URI
@@ -242,7 +295,7 @@ real accounts are marked `live` and skip, with the missing setting named, unless
 (`pytest -m live plugins/shape-databases/tests/test_live.py`). `pytest -m emulator plugins/shape-databases/tests` runs the end-to-end
 tests against real PostgreSQL 16 and MySQL 8.4 (`docker compose -f ci/emulators/docker-compose.yml
 up -d --wait postgres mysql`, with `SHAPE_POSTGRES_PASSWORD` / `SHAPE_MYSQL_PASSWORD` set to
-`shape_emulator`), nightly in CI.
+`shape_emulator`), nightly in CI. The DuckDB sink needs no server: its tests write real DuckDB files.
 
 Its version always equals core's (`sqllocks-shape`), and it is released together with core.
 How plugins are written: `docs/plugins/authoring.md` in the repository.

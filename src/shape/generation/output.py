@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import queue
 import threading
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
@@ -56,19 +56,49 @@ def format_summary(result: GenerationResult) -> str:
 def sql_options(schema: GenSchema, table: str) -> dict[str, Any]:
     """The per-table options the ``sql`` sink takes from the generation schema."""
     tdef = schema.tables[table]
-    return {
-        "primary_key": list(tdef.primary_key),
-        "columns": {
-            c.name: {
-                "type": c.type,
-                "nullable": c.nullable or c.null_rate > 0,
-                "max_length": c.max_length,
-                "precision": c.precision,
-                "scale": c.scale,
+    columns: dict[str, dict[str, Any]] = {}
+    for c in tdef.columns.values():
+        meta: dict[str, Any] = {
+            "type": c.type,
+            "nullable": c.nullable or c.null_rate > 0,
+            "max_length": c.max_length,
+            "precision": c.precision,
+            "scale": c.scale,
+        }
+        if (
+            c.identity
+        ):  # only identity columns carry the key: a plain schema's options are as before
+            meta["identity"] = {
+                "start": int(c.generator.get("start", 1)),
+                "step": int(c.generator.get("step", 1)),
             }
-            for c in tdef.columns.values()
-        },
-    }
+        columns[c.name] = meta
+    return {"primary_key": list(tdef.primary_key), "columns": columns}
+
+
+def identity_references(schema: GenSchema, table: str) -> list[dict[str, str]]:
+    """The foreign keys that point at an identity column of ``table``: ``{"child", "column",
+    "parent_column"}`` each, in a stable order. ``identity=server`` would break them (the server
+    numbers the parent's rows, so the keys the children carry would not exist)."""
+    identity = {c.name for c in schema.tables[table].columns.values() if c.identity}
+    found: dict[tuple[str, str, str], None] = {}
+    if identity:
+        for other in schema.tables.values():
+            for c in other.columns.values():
+                parent, _, column = str(c.generator.get("ref", "")).partition(".")
+                if c.is_foreign_key and parent == table and column in identity:
+                    found[(other.name, c.name, column)] = None
+        for rel in schema.relationships:
+            if rel.parent == table:
+                for parent_column, child_column in zip(
+                    rel.parent_columns, rel.child_columns, strict=False
+                ):
+                    if parent_column in identity:
+                        found[(rel.child, child_column, parent_column)] = None
+    return [
+        {"child": child, "column": column, "parent_column": parent_column}
+        for child, column, parent_column in sorted(found)
+    ]
 
 
 def available_formats() -> tuple[str, ...]:
@@ -414,6 +444,7 @@ _DB_MODES = {
     "truncate": "truncate",
     "replace": "replace",
     "overwrite": "replace",
+    "upsert": "upsert",
 }
 
 
@@ -434,6 +465,7 @@ class TargetOptions:
         write_mode: str | None = None,
         manifest: bool = False,
         partition_by: list[str] | None = None,
+        constraints: str | None = None,
         extra: Mapping[str, Mapping[str, Any]] | None = None,
     ) -> None:
         self.fmt = fmt
@@ -447,6 +479,11 @@ class TargetOptions:
         self.write_mode = write_mode
         self.manifest = manifest
         self.partition_by = partition_by
+        self.constraints = constraints
+        #: the generation schema when ``for_sink`` is not given it (``shape emit``): a SQL Server
+        #: target takes only what ``upsert`` and identity columns need from it, so the tables an
+        #: emit creates keep the DDL they always had
+        self.schema_hint: GenSchema | None = None
         self.extra = {k: dict(v) for k, v in (extra or {}).items()}
 
     def for_sink(self, name: str, schema: GenSchema | None, table: str) -> dict[str, Any]:
@@ -486,8 +523,39 @@ class TargetOptions:
                 db = sql_options(schema, table)
                 out["primary_key"] = db["primary_key"]
                 out["columns"] = db["columns"]
+            if name == "sqlserver":
+                self._sqlserver(out, schema, table)
+            elif (
+                schema is None
+                and self.write_mode == "upsert"
+                and self.schema_hint is not None
+                and table in self.schema_hint.tables
+            ):  # an emit has no schema here: an upsert still needs the key to match rows on
+                out["primary_key"] = list(self.schema_hint.tables[table].primary_key)
+        if self.constraints == "disable":
+            if name != "sqlserver":
+                raise ValueError("--sql-constraints disable applies to mssql:// targets only")
+            out["constraints"] = "disable"
         out.update(self.extra.get(name, {}))
         return out
+
+    def _sqlserver(self, out: dict[str, Any], schema: GenSchema | None, table: str) -> None:
+        """What the SQL Server sink takes from the generation schema beyond ``columns`` and
+        ``primary_key``: the foreign keys that reference an identity column, and (for an emit,
+        which has no ``schema``) the identity columns and the key an upsert matches on."""
+        source = schema or self.schema_hint
+        if source is None or table not in source.tables:
+            return
+        if schema is None:
+            db = sql_options(source, table)
+            identity = {c: m for c, m in db["columns"].items() if "identity" in m}
+            if identity:
+                out["columns"] = identity
+            if self.write_mode == "upsert":
+                out["primary_key"] = db["primary_key"]
+        refs = identity_references(source, table)
+        if refs:
+            out["identity_references"] = refs
 
 
 def _file_mode(mode: str) -> str:
@@ -500,15 +568,40 @@ def _file_mode(mode: str) -> str:
 
 
 def _feed(
-    sink: Any, uri: str, table: str, pending: queue.Queue[Any], options: dict[str, Any]
+    sink: Any,
+    uri: str,
+    table: str,
+    pending: queue.Queue[Any],
+    options: dict[str, Any],
+    finished: threading.Event | None = None,
 ) -> int:
+    """``sink.write`` over the batches in ``pending``; ``finished`` is set once the end marker was
+    taken, so a sink that fails after its last batch (a check that runs at the end) does not leave
+    the caller waiting for a marker that is already gone."""
+
     def batches() -> Iterator[pa.RecordBatch]:
         while (item := pending.get()) is not None:
             if isinstance(item, BaseException):
                 raise item
             yield item
+        if finished is not None:
+            finished.set()
 
     return int(sink.write(uri, table, batches(), **options))
+
+
+def preflight(
+    sinks: Iterable[tuple[str, str, Any]],
+    options: TargetOptions,
+    schema: GenSchema | None,
+    tables: Any,
+) -> None:
+    """Let every sink that has a ``preflight(uri, {table: options})`` refuse an impossible
+    combination of options for the whole run, before anything is generated or written."""
+    for uri, name, sink in sinks:
+        check = getattr(sink, "preflight", None)
+        if check is not None:
+            check(uri, {table: options.for_sink(name, schema, table) for table in tables})
 
 
 def write_targets(
@@ -529,6 +622,7 @@ def write_targets(
     post = needs_post_pass(engine.schema)
     result = engine.generate() if post else None
     names = list(result.generation_order if result is not None else engine.order)
+    preflight(sinks, options, engine.schema, names)
     written: dict[str, dict[str, int]] = {redact(u): {} for u in uris}
     lock = threading.Lock()
 
@@ -549,12 +643,13 @@ def write_targets(
             opts = options.for_sink(sink_name, engine.schema, name)
             if schema is not None:
                 opts["schema"] = schema
+            finished = threading.Event()
             try:
-                counts[i] = _feed(sink, uri, name, queues[i], opts)
+                counts[i] = _feed(sink, uri, name, queues[i], opts, finished)
             except BaseException as exc:
                 errors.append(exc)
-                while queues[i].get() is not None:  # keep the producer from blocking on us
-                    pass
+                while not finished.is_set() and queues[i].get() is not None:
+                    pass  # keep the producer from blocking on us
 
         threads = [threading.Thread(target=run, args=(i,), daemon=True) for i in range(len(sinks))]
         for t in threads:

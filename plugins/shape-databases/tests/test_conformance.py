@@ -78,6 +78,7 @@ def test_the_installed_distribution_conforms():
     lines = kit.check_installed("sqllocks-shape-databases")
     assert [ln.split(":")[0] + ":" + ln.split(":")[1] for ln in lines] == [
         "shape.sinks:databricks",
+        "shape.sinks:duckdb",
         "shape.sinks:mysql",
         "shape.sinks:postgres",
         "shape.sinks:snowflake",
@@ -97,6 +98,8 @@ def test_lockstep_and_extras_with_core():
     assert extras["postgres"] == [f"{name}[postgres]=={version}"]
     assert extras["mysql"] == [f"{name}[mysql]=={version}"]
     assert extras["databases"] == [f"{name}[postgres,mysql]=={version}"]
+    assert extras["duckdb"] == [f"{name}[duckdb]=={version}"]
+    assert any(d.startswith("duckdb") for d in plugin["optional-dependencies"]["duckdb"])
     assert any(d.startswith("psycopg") for d in plugin["optional-dependencies"]["postgres"])
     assert any(d.lower().startswith("pymysql") for d in plugin["optional-dependencies"]["mysql"])
     # T-08: the two cloud drivers are extras of the plugin, and core has no extra for them
@@ -114,6 +117,8 @@ def test_lockstep_and_extras_with_core():
             for d in deps
             if "sqllocks-shape-databases" not in d
         )
+    # T-07: DuckDB is never a core dependency (extras such as dev and delta-fallback may name it)
+    assert not any(d.lower().startswith("duckdb") for d in core["dependencies"])
 
 
 def test_importing_the_plugin_does_not_import_a_driver():
@@ -123,7 +128,7 @@ def test_importing_the_plugin_does_not_import_a_driver():
     code = (
         "import sys, shape_databases; "
         "bad = [m for m in ('psycopg', 'pymysql', 'psycopg2', 'snowflake', 'databricks', "
-        "'cryptography') if m in sys.modules]; "
+        "'cryptography', 'duckdb') if m in sys.modules]; "
         "sys.exit(1 if bad else 0)"
     )
     assert subprocess.run([sys.executable, "-c", code], check=False).returncode == 0

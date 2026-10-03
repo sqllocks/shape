@@ -16,11 +16,46 @@ and `shape jobs` take the same sign-in options. The sign-in itself is the `sqllo
 | `sql` | a SQL login | `--sql-user`, `--sql-password REF`, and a connection string |
 | `device-code` | you, in a browser (the address and code go to stderr) | `azure-identity`; `--tenant-id` optional |
 | `fabric` | the Fabric notebook identity only (no fallback) | running in a Fabric notebook |
+| `kerberos` | a Windows (domain) account, with a keytab on Linux and macOS | `--keytab REF`, `--principal NAME@REALM`; `kinit` (MIT Kerberos) on `PATH`; `mssql://` targets only |
 
 `azure-identity` comes with `pip install 'sqllocks-shape-fabric[entra]'`. A SQL destination is given as
 `--connection-string` (the server and database; Entra modes send a token, `sql` adds the login in memory)
 or `--sink-config sql_database.connection_string=...`. For `fabric_spark`, `--auth` gives the Fabric API
 and OneLake tokens; `SHAPE_FABRIC_TOKEN` / `SHAPE_FABRIC_STORAGE_TOKEN` still win when set.
+
+## `--auth kerberos`: a SQL Server that takes Windows authentication only
+
+```bash
+shape generate retail --to mssql://sql01.corp.example/shop \
+  --auth kerberos --keytab file:///etc/shape/svc.keytab --principal svc_shape@CORP.EXAMPLE
+```
+
+For `shape generate --to mssql://` and `shape emit` / `shape stream --to mssql://` (not
+`warehouse://`, not `--scale-mode` jobs). On Linux and macOS Shape runs
+`kinit -k -t KEYTAB -c CACHE PRINCIPAL` into a **private credential cache** and connects with
+`Trusted_Connection=yes` (ODBC Driver 18); `--connection-string` may still give the server and
+database (without a login). `--keytab` is a credential reference:
+
+* `file://PATH`: the keytab file, which must be mode 600 (a keytab other users can read is refused
+  before `kinit` runs);
+* `kv://VAULT/NAME`: an Azure Key Vault secret that holds the keytab **base64-encoded**; Shape decodes
+  it into a mode-600 temporary file that is removed as soon as `kinit` returns.
+
+The cache is a file in a new mode-700 directory. `KRB5CCNAME` is set only while a connection is
+being opened and put back afterwards; the cache is removed when the command ends, also after an
+error. On Windows there is no keytab: the signed-in account is used (`Trusted_Connection=yes`), and
+`--keytab` is an error.
+
+| error (all exit 2) | when |
+|---|---|
+| `--auth kerberos needs the MIT Kerberos client (kinit) on PATH` | `kinit` is not installed |
+| `kinit failed for PRINCIPAL with keytab REF: MESSAGE` | `kinit` failed; the message is `kinit`'s, with the keytab reference and the principal and never the keytab bytes |
+| `on Windows, --auth kerberos uses the signed-in account; leave out --keytab` | `--keytab` on Windows |
+| `--auth kerberos needs --keytab and --principal` | one of them is missing (Linux, macOS) |
+| `--keytab and --principal belong to --auth kerberos` | used with another mode |
+
+A live Kerberos realm is not part of the automated tests (a fake `kinit` covers the flow); a run
+against a real domain is an owner action.
 
 ## Credential references
 

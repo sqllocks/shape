@@ -16,7 +16,17 @@ COMMON = frozenset({"strategy", "output_type"})
 
 # What a column, not its generator, carries: `scale` rounds a number, `null_rate` makes nulls.
 COLUMN_PROPERTIES = frozenset(
-    {"name", "type", "scale", "precision", "max_length", "nullable", "null_rate", "primary_key"}
+    {
+        "name",
+        "type",
+        "scale",
+        "precision",
+        "max_length",
+        "nullable",
+        "null_rate",
+        "primary_key",
+        "identity",
+    }
 )
 
 _TEMPORAL = frozenset(
