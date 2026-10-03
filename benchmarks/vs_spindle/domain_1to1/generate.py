@@ -35,6 +35,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
+from common import peak_rss_mb  # noqa: E402
 from paths import BENCH_OUT_DIR, SPINDLE_ROOT  # noqa: E402
 
 IMPLS = ("spindle", "reference_port", "shape")
@@ -58,7 +59,7 @@ def is_complete(path: Path, tables: list[str] | None = None) -> bool:
 
 
 def _peak_rss_mb() -> float:
-    return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
+    return peak_rss_mb()
 
 
 def _ru() -> dict[str, float]:

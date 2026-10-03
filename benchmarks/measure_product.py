@@ -46,7 +46,8 @@ import shape
 t = time.perf_counter()
 p = shape.profile(sys.argv[1], name="bench")
 dt = time.perf_counter() - t
-rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024  # KiB on Linux, bytes on macOS
+rss = rss / 1024 if sys.platform == "darwin" else rss
 import hashlib
 digest = hashlib.sha256(json.dumps(p.to_dict(), sort_keys=True, default=str).encode()).hexdigest()
 print(json.dumps({"s": dt, "peak_rss_mb": rss, "rows": p.summary()["row_count"], "sha256": digest}))

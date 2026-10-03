@@ -20,6 +20,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
+from common import peak_rss_mb  # noqa: E402
 from paths import SPINDLE_ROOT  # noqa: E402
 
 sys.path.insert(0, str(HERE))
@@ -72,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
         "events": result.events_sent,
         "emit_s": result.elapsed_seconds,
         "cpu_s": (ru1.ru_utime + ru1.ru_stime) - (ru0.ru_utime + ru0.ru_stime),
-        "peak_rss_mb": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0,
+        "peak_rss_mb": peak_rss_mb(),
         "bytes": os.path.getsize(a.output),
     }
     print("STREAM_JSON " + json.dumps(rec))

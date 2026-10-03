@@ -38,7 +38,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-from common import bench_lock, machine_meta, wait_for_quiet  # noqa: E402
+from common import bench_lock, machine_meta, maxrss_kib, wait_for_quiet  # noqa: E402
 from paths import BENCH_OUT_DIR, PROFILE_DATA_DIR, SHAPE_PY, SPINDLE_PY, SPINDLE_ROOT  # noqa: E402
 
 DATA = PROFILE_DATA_DIR
@@ -62,12 +62,7 @@ DATASETS = [
 
 
 def _rss_kb():
-    import resource
-
-    return (
-        resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
-        resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss,
-    )
+    return maxrss_kib(), maxrss_kib(children=True)
 
 
 def worker(tool: str, ds: str):

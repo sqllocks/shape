@@ -6,6 +6,7 @@ from __future__ import annotations
 import contextlib
 import os
 import platform
+import sys
 import time
 from collections.abc import Iterator
 
@@ -43,6 +44,21 @@ def wait_for_quiet(limit: float = LOAD_MAX, max_wait_s: float = 900) -> float:
             return load
         time.sleep(15)
         waited += 15
+
+
+def maxrss_kib(children: bool = False) -> float:
+    """Peak resident set size of this process (or of its largest waited-for child) in KiB.
+    ``ru_maxrss`` is KiB on Linux but bytes on macOS."""
+    import resource
+
+    who = resource.RUSAGE_CHILDREN if children else resource.RUSAGE_SELF
+    value = float(resource.getrusage(who).ru_maxrss)
+    return value / 1024.0 if sys.platform == "darwin" else value
+
+
+def peak_rss_mb() -> float:
+    """Peak resident set size of this process in MB, on every platform."""
+    return maxrss_kib() / 1024.0
 
 
 def machine_meta() -> dict[str, object]:

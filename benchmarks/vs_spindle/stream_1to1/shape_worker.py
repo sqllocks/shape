@@ -24,6 +24,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
+from common import peak_rss_mb  # noqa: E402
 from stream_common import DOMAIN, TABLE  # noqa: E402
 
 
@@ -91,7 +92,7 @@ def main(argv: list[str] | None = None) -> int:
         "events": run["events"],
         "emit_s": run["elapsed"],
         "cpu_s": (ru1.ru_utime + ru1.ru_stime) - (ru0.ru_utime + ru0.ru_stime),
-        "peak_rss_mb": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0,
+        "peak_rss_mb": peak_rss_mb(),
         "bytes": os.path.getsize(a.output),
     }
     print("STREAM_JSON " + json.dumps(rec))
