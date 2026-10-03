@@ -5,6 +5,13 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Planned-change registry (`docs/PLANNED_CHANGES.md`, #90). `shape-changes.yml` (format
+  `shape-planned-changes`, version 1, JSON Schema included) lists changes you expect, with a
+  window and a reason. `shape diff`, `shape check` and `shape verify` read it (`shape.yml` key
+  `changes`, `--changes FILE`, `--no-changes`, `--on DATE`): a planned change inside its window is
+  reported as planned and does not fail, a suppressed one is not reported, an expired entry stops
+  matching and prints a warning. `shape.diff(..., planned=...)` and the `--json` result add
+  `planned`, `planned_not_observed` and `expired`. New `shape changes validate|list|add|ack`.
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
@@ -78,6 +85,16 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `docs/bridge/schema/` (`shape bridge schema --out|--check`) with test vectors in
   `docs/bridge/vectors/`; a compatibility test per command keeps them from changing silently.
   Harness: `benchmarks/vs_spindle/bridge_1to1/`.
+
+- `shape.yml` project file and `shape init` (`docs/PROJECT.md`): named sources, a baseline per
+  source (previous run, same weekday, rolling window, month end or a pinned artifact, resolved
+  against the registry), drift thresholds and ignore lists per column, gates with `observe` or
+  `enforce` modes, and column owners and annotations. Versioned (`format`, integer `version`,
+  JSON Schema `shape-project-v1.schema.json`, a frozen version 1 file in the tests).
+  `shape profile`, `diff`, `check` and `verify` read it when present and every flag overrides it;
+  `shape init` scaffolds `shape.yml`, folders, `.gitattributes` and an example CI workflow;
+  `shape project validate` reports every problem with its key path. PyYAML stays an optional
+  extra (`yaml`).
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it

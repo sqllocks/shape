@@ -41,6 +41,7 @@ class ValidationContext:
     file_paths: list[Path] = field(default_factory=list)
     config: dict[str, Any] = field(default_factory=dict)
     source_tables: dict[str, pa.Table] = field(default_factory=dict)
+    planned: Any = None  # a ``shape.project.changes.Applier`` (planned changes, W1-12), or None
 
 
 @dataclass
@@ -581,31 +582,57 @@ class SchemaDriftGate(ValidationGate):
         warnings: list[str] = []
         additive: list[str] = []
         breaking: list[str] = []
+        applier = context.planned
 
-        def add(change: str, *, is_breaking: bool) -> None:
+        def add(
+            change: str, kind: str, table: str, column: str | None, *, is_breaking: bool
+        ) -> None:
+            """A planned change is a warning marked with the entry (``expect``), is left out
+            (``suppress``) or fails only at severity ``high`` (``severity``)."""
+            hit = applier.match(table, column, kind) if applier is not None else None
+            if hit is not None:
+                if hit.action == "suppress":
+                    return
+                is_breaking = hit.action == "severity" and hit.severity == "high"
+                change = f"{change} (planned: {hit.id})"
             (errors if is_breaking else warnings).append(change)
             (breaking if is_breaking else additive).append(change)
 
         for tname in baseline:
             if tname not in context.tables:
-                add(f"Table '{tname}' removed", is_breaking=True)
+                add(f"Table '{tname}' removed", "table_removed", tname, None, is_breaking=True)
         for tname, table in context.tables.items():
             if tname not in baseline:
-                add(f"New table '{tname}' added", is_breaking=False)
+                add(f"New table '{tname}' added", "table_added", tname, None, is_breaking=False)
                 continue
             base_cols: dict[str, str] = baseline[tname].get("columns", {})
             actual = {f.name: dtype_name(f.type) for f in table.schema}
             for cname in base_cols:
                 if cname not in actual:
-                    add(f"Table '{tname}': column '{cname}' removed", is_breaking=True)
+                    add(
+                        f"Table '{tname}': column '{cname}' removed",
+                        "column_removed",
+                        tname,
+                        cname,
+                        is_breaking=True,
+                    )
             for cname in actual:
                 if cname not in base_cols:
-                    add(f"Table '{tname}': new column '{cname}'", is_breaking=False)
+                    add(
+                        f"Table '{tname}': new column '{cname}'",
+                        "column_added",
+                        tname,
+                        cname,
+                        is_breaking=False,
+                    )
             for cname, was in base_cols.items():
                 if cname in actual and actual[cname] != was:
                     add(
                         f"Table '{tname}': column '{cname}' type changed "
                         f"from '{was}' to '{actual[cname]}'",
+                        "dtype_change",
+                        tname,
+                        cname,
                         is_breaking=True,
                     )
         return GateResult(

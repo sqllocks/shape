@@ -1,0 +1,36 @@
+# Time capsule of format version 1 of the planned-change file (W1-12). Do not edit: a newer
+# Shape must keep reading it.
+format: shape-planned-changes
+version: 1
+changes:
+  - id: orders-new-column-2026-11
+    source: orders
+    column: loyalty_tier
+    kinds: [column_added]
+    from: 2026-11-01
+    until: 2026-11-30
+    action: expect
+    reason: Release 2026-11-02 adds the loyalty tier column
+    owner: orders-team@example.com
+    ticket: SHAPE-123
+  - id: amount-type-migration
+    column: orders.amount
+    kinds: [dtype_change, mean_shift]
+    until: 2026-12-15
+    action: severity
+    severity: medium
+    reason: Migration changes amount from float to decimal
+  - id: legacy-notes-noise
+    column: note*
+    kinds: [null_rate_change]
+    until: 2027-01-31
+    action: suppress
+    reason: The notes field is being retired
+    acknowledged_by: sam
+    acknowledged_at: 2026-10-03
+  - id: vendor-switch
+    column: "*"
+    kinds: [row_count_change]
+    from: 2026-11-10
+    until: 2026-11-12
+    reason: A source switches vendor
