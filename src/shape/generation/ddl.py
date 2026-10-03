@@ -448,6 +448,7 @@ class DdlParser:
             rest = parts[1]
         if not rest:
             return None
+        rest = " ".join(rest.split())  # NOT  NULL, NOT<newline>NULL: one space between words
 
         upper = rest.upper()
         is_identity = bool(_IDENTITY.search(upper))
