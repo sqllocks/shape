@@ -66,6 +66,25 @@ def _retry_after(value: str | None) -> float:
     return min(max(POLL_SECONDS, seconds), 60.0)
 
 
+def _document(response: Any, what: str) -> dict[str, Any]:
+    """The JSON object a Fabric call answered, or :class:`FabricApiError`: a gateway page or a
+    changed API is the service's failure, not the user's input."""
+    try:
+        doc = response.json()
+    except (ValueError, UnicodeDecodeError):
+        doc = None
+    if not isinstance(doc, dict):
+        raise FabricApiError(f"Fabric returned an unexpected answer for {what} (not a JSON object)")
+    return doc
+
+
+def _rows(doc: dict[str, Any], what: str) -> list[dict[str, Any]]:
+    rows = doc.get("value", [])
+    if not isinstance(rows, list) or not all(isinstance(r, dict) for r in rows):
+        raise FabricApiError(f"Fabric returned an unexpected answer for {what} (no list of items)")
+    return rows
+
+
 def is_guid(value: str) -> bool:
     return bool(_GUID.match(value))
 
@@ -99,8 +118,9 @@ class FabricApi:
             page = self._http.request(
                 "GET", url + (f"?continuationToken={quote(token)}" if token else "")
             )
-            doc = page.json()
-            matches += [w for w in doc.get("value", []) if w.get("displayName") == workspace]
+            doc = _document(page, "the workspace listing")
+            rows = _rows(doc, "the workspace listing")
+            matches += [w for w in rows if w.get("displayName") == workspace]
             token = doc.get("continuationToken") or ""
             if not token:
                 break
@@ -112,7 +132,12 @@ class FabricApi:
             raise FabricApiError(
                 f"{len(matches)} workspaces are named {workspace!r}: pass the workspace GUID"
             )
-        return str(matches[0]["id"])
+        found = matches[0].get("id")
+        if not isinstance(found, str) or not found:
+            raise FabricApiError(
+                "Fabric returned an unexpected answer for the workspace listing (no id)"
+            )
+        return found
 
     # ---- items -----------------------------------------------------------------------------
 
@@ -121,10 +146,13 @@ class FabricApi:
         url = f"{FABRIC_API}/workspaces/{workspace_id}/items?type={quote(item_type)}"
         token = ""
         while True:
-            doc = self._http.request(
-                "GET", url + (f"&continuationToken={quote(token)}" if token else "")
-            ).json()
-            for item in doc.get("value", []):
+            doc = _document(
+                self._http.request(
+                    "GET", url + (f"&continuationToken={quote(token)}" if token else "")
+                ),
+                "the item listing",
+            )
+            for item in _rows(doc, "the item listing"):
                 if item.get("displayName") == name:
                     return dict(item)
             token = doc.get("continuationToken") or ""
@@ -150,7 +178,7 @@ class FabricApi:
                 ) from None
             raise
         if response.status in (200, 201):
-            item = response.json()
+            item = _document(response, f"creating the {kind} {name!r}")
             if item.get("id"):
                 return dict(item)
         else:
@@ -176,7 +204,7 @@ class FabricApi:
         for _ in range(POLL_LIMIT):
             self._sleep(wait)
             answer = self._http.request("GET", location)
-            state = answer.json()
+            state = _document(answer, f"the operation creating the {kind} {name!r}")
             status = state.get("status", "")
             if status == "Succeeded":
                 return
