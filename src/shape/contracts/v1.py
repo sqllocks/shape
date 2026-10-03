@@ -102,9 +102,14 @@ def _validate_contract(contract: dict[str, Any]) -> None:
             raise ContractError(f"unknown rules for column {name!r}: {sorted(bad)}")
         if "allowed_values" in rules and not isinstance(rules["allowed_values"], list):
             raise ContractError(f"allowed_values for column {name!r} must be a list")
+        for key in ("nullable", "unique"):
+            if key in rules and not isinstance(rules[key], bool):
+                raise ContractError(f"{key} for column {name!r} must be true or false")
         for key in ("max_null_rate", "min_true_rate", "max_true_rate"):
             if key in rules and not (_is_number(rules[key]) and 0 <= rules[key] <= 1):
                 raise ContractError(f"{key} for column {name!r} must be a number from 0 to 1")
+    if "allow_extra_columns" in contract and not isinstance(contract["allow_extra_columns"], bool):
+        raise ContractError("'allow_extra_columns' must be true or false")
     required = contract.get("required_columns", [])
     if not isinstance(required, list) or not all(isinstance(c, str) for c in required):
         raise ContractError("'required_columns' must be a list of column names")
