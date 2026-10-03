@@ -70,7 +70,25 @@ Details:
 
 ## Phase 2: issues
 
-(filled in below as issues are filed)
+| Finding | Issue |
+|---|---|
+| 1 | #129 |
+| 2 | #130 |
+| 3 | #131 |
+| 4 | #132 |
+| 5 | #133 |
+| 6 | #134 |
+| 7 | #135 |
+| 8 | #136 |
+| 9 | #137 |
+| 10 | #138 |
+| 11 | #140 |
+| 12 | #144 |
+| 13 | #146 |
+| 14 | #147 |
+| 15 | none (dead code: an improvement, not a defect) |
+| 16 | #148 |
+| 17, 18, 19 | #149 |
 
 ## Phase 3: fixes
 
