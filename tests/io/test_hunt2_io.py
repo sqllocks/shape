@@ -494,4 +494,134 @@ def test_jsonl_keeps_the_other_values_as_they_were(tmp_path: Path) -> None:
     ]
 
 
+# ---- #719, #720: the Excel reader and unused cells --------------------------------------------
+
+
+def _write_book(path: Path, build) -> Path:  # type: ignore[no-untyped-def]
+    openpyxl = pytest.importorskip("openpyxl")
+    wb = openpyxl.Workbook()
+    build(wb.active, openpyxl)
+    wb.save(path)
+    return path
+
+
+def _styled(ws, openpyxl, *cells: str) -> None:  # type: ignore[no-untyped-def]
+    for ref in cells:
+        ws[ref].fill = openpyxl.styles.PatternFill("solid", start_color="FFFF00")
+
+
+def test_excel_reader_drops_formatted_but_empty_trailing_rows(tmp_path: Path) -> None:
+    from shape.io import read_table
+
+    def build(ws, openpyxl):  # type: ignore[no-untyped-def]
+        ws.append(["h1", "h2"])
+        ws.append([1, "a"])
+        ws.append([None, None])  # a blank row between data rows is kept
+        ws.append([2, "b"])
+        _styled(ws, openpyxl, *(f"A{r}" for r in range(10, 16)))
+
+    table = read_table(_write_book(tmp_path / "t.xlsx", build))
+    assert table.to_pydict() == {"h1": [1, None, 2], "h2": ["a", None, "b"]}
+
+
+def test_excel_reader_header_only_sheet_with_formatted_rows_has_no_rows(tmp_path: Path) -> None:
+    from shape.io import read_table
+
+    def build(ws, openpyxl):  # type: ignore[no-untyped-def]
+        ws.append(["h1", "h2"])
+        _styled(ws, openpyxl, "A5", "B6")
+
+    table = read_table(_write_book(tmp_path / "t.xlsx", build))
+    assert table.num_rows == 0
+    assert table.column_names == ["h1", "h2"]
+
+
+def test_excel_reader_keeps_trailing_rows_with_a_value_or_an_error(tmp_path: Path) -> None:
+    from shape.io import read_table
+
+    def build(ws, openpyxl):  # type: ignore[no-untyped-def]
+        ws.append(["h1", "h2"])
+        ws.append([1, "a"])
+        ws.append([None, "#N/A"])  # an error cell is data
+        ws["B3"].data_type = "e"
+        ws.append([None, " "])  # whitespace is a value
+        _styled(ws, openpyxl, "A9")
+
+    table = read_table(_write_book(tmp_path / "t.xlsx", build))
+    assert table.num_rows == 3
+    assert table.column("h2").to_pylist() == ["a", None, " "]
+
+
+def test_excel_reader_keeps_the_blank_rows_of_an_explicit_named_range(tmp_path: Path) -> None:
+    from shape.io import read_table
+
+    def build(ws, openpyxl):  # type: ignore[no-untyped-def]
+        from openpyxl.workbook.defined_name import DefinedName
+
+        ws.title = "Data"
+        ws.append(["h1", "h2"])
+        ws.append([1, "a"])
+        _styled(ws, openpyxl, "A4", "A5")  # the rows exist, with a format and no value
+        wb = ws.parent
+        wb.defined_names["block"] = DefinedName("block", attr_text="Data!$A$1:$B$5")
+
+    table = read_table(str(_write_book(tmp_path / "t.xlsx", build)) + "#block")
+    assert table.num_rows == 4
+
+
+class _TooSlow(Exception):
+    pass
+
+
+def _within(seconds: int):  # type: ignore[no-untyped-def]
+    import contextlib
+    import signal
+
+    @contextlib.contextmanager
+    def guard():  # type: ignore[no-untyped-def]
+        if not hasattr(signal, "SIGALRM"):
+            yield
+            return
+
+        def fire(*_: object) -> None:
+            raise _TooSlow(f"still running after {seconds} s")
+
+        old = signal.signal(signal.SIGALRM, fire)
+        signal.alarm(seconds)
+        try:
+            yield
+        finally:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, old)
+
+    return guard()
+
+
+def test_excel_reader_refuses_a_sheet_with_a_huge_declared_range(tmp_path: Path) -> None:
+    from shape.io import read_table
+    from shape.io.excel import WorkbookError
+
+    def build(ws, openpyxl):  # type: ignore[no-untyped-def]
+        ws.append(["h"])
+        ws.append([1])
+        ws["XFD1048576"] = "far"
+
+    path = _write_book(tmp_path / "far.xlsx", build)
+    with _within(30), pytest.raises(WorkbookError, match=r"A1:XFD1048576"):
+        read_table(path)
+
+
+def test_excel_reader_still_reads_a_wide_and_a_tall_sheet(tmp_path: Path) -> None:
+    from shape.io import read_table
+
+    def build(ws, openpyxl):  # type: ignore[no-untyped-def]
+        ws.append([f"c{i}" for i in range(200)])
+        for r in range(2000):
+            ws.append([r] * 200)
+
+    with _within(60):
+        table = read_table(_write_book(tmp_path / "big.xlsx", build))
+    assert (table.num_rows, table.num_columns) == (2000, 200)
+
+
 _ = dt
