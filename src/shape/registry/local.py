@@ -29,23 +29,46 @@ def is_raw_profile(data: bytes) -> bool:
     """True for a raw profile: a ``.shape`` profile artifact or ``shape profile export`` JSON.
 
     Both hold up to 500 real values per column. The safe form (``shape profile safe``) is not
-    raw, and neither is anything else."""
-    if data[:4] == b"PK\x03\x04":
-        import io
-        import zipfile
+    raw, and neither is anything else. JSON is recognised in every encoding ``json.loads`` reads
+    (UTF-8 with or without a byte-order mark, UTF-16, UTF-32), and the manifest of a zip is read
+    within the artifact reader's size limit (#283). Bytes that are neither give ``False``, never
+    an exception (#396)."""
+    import io
+    import zipfile
+
+    if zipfile.is_zipfile(io.BytesIO(data)):
+        from shape.artifact.io import read_manifest_bytes
 
         try:
-            with zipfile.ZipFile(io.BytesIO(data)) as z:
-                return bool(json.loads(z.read("manifest.json")).get("kind") == "profile")
-        except (OSError, ValueError, KeyError, zipfile.BadZipFile):
-            return False
-    if data.lstrip()[:1] == b"{":
-        try:
-            doc = json.loads(data)
-        except ValueError:
-            return False
-        return isinstance(doc, dict) and doc.get("format") == "shape-profile"
-    return False
+            manifest = json.loads(read_manifest_bytes(io.BytesIO(data)))
+        except (
+            OSError,
+            ValueError,
+            KeyError,
+            EOFError,
+            RuntimeError,
+            NotImplementedError,
+            zipfile.BadZipFile,
+        ):
+            manifest = None  # RecursionError is a RuntimeError
+        if isinstance(manifest, dict) and manifest.get("kind") == "profile":
+            return True
+    if not _starts_like_an_object(data):
+        return False
+    try:
+        doc = json.loads(data)
+    except (ValueError, RecursionError):
+        return False
+    return isinstance(doc, dict) and doc.get("format") == "shape-profile"
+
+
+def _starts_like_an_object(data: bytes) -> bool:
+    """Whether the first non-blank character of ``data``, in the encoding ``json.loads`` would
+    detect, is ``{`` (so a large file of another kind is never parsed whole)."""
+    from json import detect_encoding
+
+    head = data[:256].decode(detect_encoding(data[:4]), errors="ignore")
+    return head.lstrip("\ufeff \t\r\n")[:1] == "{"
 
 
 def _check(kind: str, value: object) -> str:
