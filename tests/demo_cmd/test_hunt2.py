@@ -115,3 +115,57 @@ def test_663_the_page_says_a_column_is_withheld(tmp_path):
 
     real = as_dataset(profile(people_csv(tmp_path / "people.csv")))
     assert "values withheld" in render_html(real, real, 1.0, "people")
+
+
+# ---- #701: a dry run shows what the real cleanup would do ------------------------------------
+
+
+def write_session(home: Path, session: str, artifacts: list[dict]) -> None:
+    (home / "sessions").mkdir(parents=True, exist_ok=True)
+    record = {
+        "session_id": session, "scenario": "retail", "mode": "seeding", "started_at": "t",
+        "finished_at": "t", "success": True, "error": None, "artifacts": artifacts,
+        "params": {}, "metrics": {}, "scale_mode": None, "fabric_run_id": None,
+        "workspace_id": None, "notebook_item_id": None,
+    }  # fmt: skip
+    (home / "sessions" / f"demo-{session}.json").write_text(json.dumps(record))
+
+
+def test_701_a_dry_run_leaves_alone_what_the_real_cleanup_leaves_alone(run, home, tmp_path):
+    precious = tmp_path / "precious.txt"
+    precious.write_text("keep")
+    gone = tmp_path / "gone.txt"
+    write_session(
+        home,
+        "abc12345",
+        [
+            {"target": "file", "name": "precious.txt", "row_count": 0, "detail": str(precious)},
+            {"target": "file", "name": "gone.txt", "row_count": 0, "detail": str(gone)},
+        ],
+    )
+    code, dry, _ = run("demo", "cleanup", "abc12345", "--dry-run")
+    assert code == 0
+    assert "Would remove: file/precious.txt" not in dry
+    assert "Left alone: file/precious.txt (not inside a folder this session created)" in dry
+    code, real, _ = run("demo", "cleanup", "abc12345")
+    assert code == 0 and precious.read_text() == "keep"
+    assert "Left alone: file/precious.txt (not inside a folder this session created)" in real
+    assert "Left alone: file/gone.txt (already gone)" in dry and "already gone" in real
+
+
+def test_701_a_dry_run_still_lists_the_session_folder_it_would_remove(
+    run, home, tmp_path, schema_file
+):
+    from test_run_local import session_of
+
+    assert run("demo", "init", "--name", "loc", "--local-path", tmp_path / "land")[0] == 0
+    code, out, _ = run(
+        "demo", "run", "retail", "--mode", "seeding", "--connection", "loc",
+        "--domain", schema_file, "--rows", "1000", "--seed", "3",
+    )  # fmt: skip
+    session = session_of(out)
+    code, dry, _ = run("demo", "cleanup", session, "--dry-run")
+    assert code == 0 and "[dry-run] Would remove: file/customer" in dry
+    assert (tmp_path / "land" / session / "customer").is_dir()  # nothing was removed
+    code, real, _ = run("demo", "cleanup", session)
+    assert "Removed: file/customer" in real and not (tmp_path / "land" / session).exists()
