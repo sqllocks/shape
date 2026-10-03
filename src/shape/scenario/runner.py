@@ -31,6 +31,7 @@ from shape.scenario.validator import (
     match_table,
     schema_of,
 )
+from shape.security.names import contained, is_safe_name
 
 if TYPE_CHECKING:
     import pyarrow as pa  # type: ignore[import-untyped]
@@ -127,6 +128,10 @@ class PackRunner:
         presets = schema.generation.scales
         if presets and scale not in presets:
             return failed([f"unknown scale {scale!r}; the presets are: {', '.join(presets)}"])
+        # both name the run's manifest file, so neither may be a path
+        for value, what in ((name, "domain name"), (scale, "scale name")):
+            if not is_safe_name(value):
+                return failed([f"unsafe {what} {value!r}: it must be a plain name, not a path"])
         output_root = Path(base_path)
         output_root.mkdir(parents=True, exist_ok=True)
 
@@ -181,12 +186,12 @@ class PackRunner:
                     errors.append(f"Validation gate '{gate}' failed: {message}")
 
         manifest = builder.finish()
-        manifest_path = output_root / f"{manifest.run_id}_manifest.json"
+        manifest_path = contained(output_root, f"{manifest.run_id}_manifest", ".json")
         counter = 1
         while manifest_path.exists():  # two runs in one second must not overwrite each other
             counter += 1
             manifest.run_id = f"{manifest.run_id.rsplit('_x', 1)[0]}_x{counter}"
-            manifest_path = output_root / f"{manifest.run_id}_manifest.json"
+            manifest_path = contained(output_root, f"{manifest.run_id}_manifest", ".json")
         ManifestBuilder.to_file(manifest, manifest_path)
         files.append(str(manifest_path))
         return RunResult(
@@ -211,9 +216,9 @@ class PackRunner:
         root = pack.fabric_targets.get("lakehouse_files_root")
         if root:
             landing = output_root / str(root)
-        landing.mkdir(parents=True, exist_ok=True)
         if not landing.resolve().is_relative_to(output_root.resolve()):
             raise OSError(f"landing path {landing} leaves the output directory")
+        landing.mkdir(parents=True, exist_ok=True)
         return landing
 
     def _file_drop(
