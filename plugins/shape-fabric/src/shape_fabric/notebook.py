@@ -11,11 +11,14 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 import uuid
 from pathlib import Path
 from typing import Any
 
 OUTPUT_TARGETS = ("lakehouse", "display", "csv")
+_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*\Z")
+_VERSION = re.compile(r"[A-Za-z0-9][A-Za-z0-9.+!_-]*\Z")
 PLATFORM_SCHEMA = (
     "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/"
     "platformProperties/2.0.0/schema.json"
@@ -45,7 +48,14 @@ def generate_notebook(
         raise ValueError(
             f"unknown notebook target {output_target!r}; choose one of {', '.join(OUTPUT_TARGETS)}"
         )
+    # These values are written into the notebook's code: only plain values are taken.
+    if not isinstance(domain, str) or not _NAME.match(domain):
+        raise ValueError(f"not a domain name: {domain!r} (letters, digits, '_', '-' and '.' only)")
+    if isinstance(seed, bool) or not isinstance(seed, int):
+        raise ValueError(f"the seed must be an integer, not {seed!r}")
     ver = version or _version()
+    if not _VERSION.match(ver):
+        raise ValueError(f"not a package version: {ver!r}")
     cells: list[dict[str, Any]] = [
         _markdown(
             f"# Shape data generation: {domain.title()}\n\n"
