@@ -61,6 +61,16 @@ def test_marker_strings_without_key_material_pass(tmp_path):
     assert r.returncode == 0, r.stdout
 
 
+def test_nosec_marks_a_deliberate_fake_on_its_line_only(tmp_path):
+    fake = 'client_secret="fake-client-secret-for-tests",  # nosec B106\n'
+    assert _run(tmp_path, {"src/a.py": fake}).returncode == 0
+    leak = "client_secret" + '="fake-client-secret-for-tests",\n# nosec on another line\n'
+    assert _run(tmp_path, {"src/a.py": leak}).returncode == 1
+    # the original two patterns take no exemption
+    old = "api_key" + ' = "abcdefghijklmnop"  # nosec\n'
+    assert _run(tmp_path, {"src/a.py": old}).returncode == 1
+
+
 def test_security_test_fixtures_and_key_files(tmp_path):
     fixture = "k = 'AKIA" + "ABCDEFGHIJ234567" + "'\n"
     assert _run(tmp_path, {"tests/security/test_x.py": fixture}).returncode == 0
