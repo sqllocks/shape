@@ -5,6 +5,21 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+### Fixed
+
+- Chaos, fidelity tiers and the HTML report (audit lane AUD-chaos): `orphan_keys` never writes a
+  key a parent row has, also without a declared reference (#397), and handles narrow integers,
+  infinite floats and non-key types (#399); `negative_amounts` refuses unsigned columns (#401); a
+  corruption that fits nothing it is aimed at is an error (#403); input errors name the seed, batch
+  or option (#408); `read_ground_truth` checks `log_version`
+  and names a malformed line (#410); out-of-range anomalies and value chaos no longer overflow on
+  huge or infinite floats (#406); `ChaosConfig.validate` lists bad weights, seeds and override
+  categories (#414); anomaly report details always carry the same keys (#418); CHAOS.md says
+  `future_date` applies to `date32` (#421); PSI drift fails closed on infinite values (#404); the
+  tiers read tables with repeated column names (#423) and refuse timestamps outside the nanosecond
+  range (#555); `bootstrap_table` names a negative `n_rows` (#427); report bar charts stay valid
+  SVG for NaN or negative shares (#430).
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

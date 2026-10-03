@@ -45,4 +45,44 @@ are deterministic per seed.
 
 ## Phase 2 and 3: issues and fixes
 
-(filled in below as they land)
+Every finding but 19 (a docstring) was filed; each fix has a regression test committed first,
+failing, with its output in the commit message.
+
+| Finding | Issue | Test commit | Fix commit | State |
+|---|---|---|---|---|
+| 1 | #397 | a6c24bb | 222c081 | fixed |
+| 2, 3 | #399 | ecac599 | f4e8500 | fixed |
+| 4 | #401 | 9d60b1e | d688386 | fixed |
+| 5 | #403 | 92f8a89 | 3da55ca | fixed |
+| 6 | #404 | fadbb42 | 336b9af | fixed |
+| 7, 8 | #406 | 5812bcd | c11efa6 | fixed (chaos parity `--quick` exit 0 after it) |
+| 9, 10 | #408 | 4ee2219 | 90d61cf | fixed |
+| 11 | #408 | 4ee2219 | reverted in the follow-up commit | **open, for the lead** (below) |
+| 12 | #410 | 7485362 | 1afac7f | fixed |
+| 13 | #414 | 7845c93 | 3d4906c | fixed |
+| 14 | #418 | db4ec57 | 30a6198 | fixed |
+| 15 | #421 | 9d6932e | 9003df8 | fixed (docs; eligibility unchanged) |
+| 16 | #423 | 531ca63 | 222edd2 | fixed |
+| 17 | #427 | 1a2ae8c | 07daebc | fixed |
+| 18 | #430 | b4ee776 | 6f8fb08 | fixed |
+| 19 | (none) | | 3d4906c | docstring: `ChaosOverride.params` is not read |
+| 20 | #555 | 58f5340 | 7855de7 | fixed |
+
+### Left open, for the lead
+
+* **Finding 11 (`duplicates` with a column).** `tests/diff/test_drift_sweep.py:222` (outside this
+  lane) builds `Corruption("duplicates", 0.6, "orders", "order_id")` and relies on the column being
+  accepted. Refusing it broke that test's collection, so the refusal was reverted and the existing
+  test left unchanged; the column is still silently ignored. Decide whether `duplicates` should
+  refuse a column (and that test drop it) or document that it is ignored.
+* **Outside this lane, not changed:** `src/shape/cli/chaos.py` passes `--seed` and the derived
+  batch straight through; with #408 a negative `--seed` now gets the message "the seed is an
+  integer 0 or more" from `corrupt_tables` instead of numpy's.
+
+### Behaviour changes to note
+
+* `corrupt_tables` now raises where it silently did nothing (#403) or wrote wrong values (#401,
+  #399 for non-key types). Ground-truth logs are not compared by any equivalence verifier; the
+  six categories' output on finite inputs is unchanged (#406 only caps a baseline that overflowed).
+* No gate, tolerance, D-xx or T-xx decision changed; no existing test's expectation changed; no
+  workflow edited.
