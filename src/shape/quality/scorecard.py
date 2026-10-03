@@ -7,8 +7,8 @@ gate on one table and column set. Where a gate has a row-level form
 (:mod:`shape.quality.rowlevel`) the check scores ``100 * (1 - failing rows / rows)``; any other
 gate is one check scoring 100 when it passes and 0 when it fails. The gates of the ``reconcile``
 and ``timeseries`` rules (:data:`CONFIG_GATE_DIMENSION`) are scored the same way; the memorization
-and utility gates compare generated data with its source and are not data quality checks. A dimension scores the mean
-of its checks, and is not scored (``None``) when no check of it ran.
+and utility gates compare generated data with its source and are not data quality checks. A
+dimension scores the mean of its checks, and is not scored (``None``) when no check of it ran.
 
 Known issues are recorded in a versioned file (``format: shape-scorecard-suppressions``): a
 *snooze* hides a failing check from the score until a date, a *suppress* hides it with a reason

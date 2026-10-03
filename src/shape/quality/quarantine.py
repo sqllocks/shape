@@ -14,6 +14,7 @@ outside the quarantine root.
 from __future__ import annotations
 
 import json
+import math
 import re
 import shutil
 from dataclasses import asdict, dataclass
@@ -44,6 +45,28 @@ class QuarantineEntry:
 def _check_name(kind: str, value: str) -> str:
     if not _NAME.fullmatch(value) or value in (".", ".."):
         raise ValueError(f"invalid {kind} {value!r}: use letters, digits, '.', '_' and '-' only")
+    return value
+
+
+def _free_name(directory: Path, filename: str) -> str:
+    """``filename``, or ``stem-2.ext``, ``stem-3.ext``... when an item of that name (or its
+    metadata) is already in ``directory``: a quarantine never replaces what an earlier call kept."""
+    path = Path(filename)
+    name, n = filename, 1
+    while (directory / name).exists() or (directory / f"{name}{META_SUFFIX}").exists():
+        n += 1
+        name = f"{path.stem}-{n}{path.suffix}"
+    return name
+
+
+def _strict(value: Any) -> Any:
+    """``value`` with non-finite floats (not valid JSON) as ``None``."""
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    if isinstance(value, dict):
+        return {k: _strict(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_strict(v) for v in value]
     return value
 
 
@@ -80,7 +103,8 @@ class QuarantineManager:
         source = Path(source_path)
         dest_dir = self._run_dir(quarantine_root, run_id)
         dest_dir.mkdir(parents=True, exist_ok=True)
-        dest = dest_dir / source.name
+        name = _free_name(dest_dir, source.name)
+        dest = dest_dir / name
         shutil.copy2(source, dest)
         entry = QuarantineEntry(
             original_path=str(source.resolve()),
@@ -89,7 +113,7 @@ class QuarantineManager:
             timestamp=datetime.now(UTC).isoformat(),
             run_id=run_id,
         )
-        self._write_meta(dest_dir / f"{source.name}{META_SUFFIX}", entry)
+        self._write_meta(dest_dir / f"{name}{META_SUFFIX}", entry)
         return dest
 
     def quarantine_table(
@@ -109,7 +133,7 @@ class QuarantineManager:
         _check_name("table name", table_name)
         dest_dir = self._run_dir(quarantine_root, run_id)
         dest_dir.mkdir(parents=True, exist_ok=True)
-        filename = f"{table_name}{_EXTENSIONS[fmt]}"
+        filename = _free_name(dest_dir, f"{table_name}{_EXTENSIONS[fmt]}")
         dest = dest_dir / filename
         if fmt == "csv":
             import pyarrow.csv as pacsv  # type: ignore[import-untyped]
@@ -118,7 +142,9 @@ class QuarantineManager:
         elif fmt == "jsonl":
             with open(dest, "w", encoding="utf-8") as fh:
                 for row in table.to_pylist():
-                    fh.write(json.dumps(row, default=_json_default) + "\n")
+                    fh.write(
+                        json.dumps(_strict(row), default=_json_default, allow_nan=False) + "\n"
+                    )
         else:
             import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
@@ -146,6 +172,8 @@ class QuarantineManager:
                 with open(meta_path, encoding="utf-8") as fh:
                     meta = json.load(fh)
             except (ValueError, OSError):
+                continue
+            if not isinstance(meta, dict):
                 continue
             artifact = meta_path.parent / meta_path.name[: -len(META_SUFFIX)]
             meta["quarantine_path"] = str(artifact)
