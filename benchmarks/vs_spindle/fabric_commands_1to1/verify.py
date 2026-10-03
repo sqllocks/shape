@@ -489,10 +489,21 @@ def landing(root: Path) -> dict[str, Path]:
     return {str(p.relative_to(root)): p for p in sorted(root.rglob("*")) if p.is_file()}
 
 
+SHAPE_ONLY_MANIFEST_KEYS = frozenset({"format", "version", "reproducibility", "dataset_id"})
+
+
 def compare_manifest(base: dict[str, Any], mine: dict[str, Any], *, seed: int) -> Problems:
     problems: Problems = []
-    if sorted(base) != sorted(mine):
+    # Shape's run manifest declares its format and version and carries the
+    # reproducibility tuple and dataset id (W1-03, plan 2.3). Exactly these keys
+    # are Shape's own; every other key must match the baseline's key set.
+    extra = sorted(set(mine) - set(base))
+    if extra != sorted(SHAPE_ONLY_MANIFEST_KEYS) or sorted(base) != sorted(
+        set(mine) - SHAPE_ONLY_MANIFEST_KEYS
+    ):
         problems.append(f"manifest keys: {sorted(base)} != {sorted(mine)}")
+    elif mine["format"] != "shape-run-manifest" or type(mine["version"]) is not int:
+        problems.append(f"manifest declaration: {mine['format']!r} version {mine['version']!r}")
     for key in (
         "spec_hash",
         "pack_id",
@@ -829,6 +840,10 @@ def negative_control(tmp: Path) -> Problems:
         ("the seed changed", lambda m: m.update(seed=1)),
         ("a key removed", lambda m: m.pop("chaos")),
         ("the run id malformed", lambda m: m.update(run_id="latest")),
+        ("Shape's dataset id removed", lambda m: m.pop("dataset_id")),
+        ("Shape's format declaration changed", lambda m: m.update(format="other")),
+        ("Shape's version not an integer", lambda m: m.update(version="1")),
+        ("an unknown key added", lambda m: m.update(extra=1)),
     ):
         bad = copy.deepcopy(sm)
         tamper(bad)
