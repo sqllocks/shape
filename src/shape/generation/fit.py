@@ -611,12 +611,20 @@ def _with_merged_value_sets(profile: Any) -> Any:
         doc: Any = copy.deepcopy(dict(profile))
     else:
         doc = profile.to_dict()
-    tables = doc.get("tables") if isinstance(doc.get("tables"), Mapping) else {"": doc}
-    for table in tables.values():
-        merge = table.get("merge") if isinstance(table, Mapping) else None
-        if not isinstance(merge, Mapping) or not isinstance(table.get("columns"), Mapping):
+    dataset = isinstance(doc.get("tables"), Mapping)
+    tables = doc["tables"] if dataset else {"": doc}
+    # one table keeps its merge block (sketch_columns by column); a dataset keeps one at the top
+    # (sketch_columns by table, then column)
+    top = doc.get("merge") if dataset else None
+    for tname, table in tables.items():
+        if not isinstance(table, Mapping) or not isinstance(table.get("columns"), Mapping):
+            continue
+        merge = table.get("merge", top)
+        if not isinstance(merge, Mapping):
             continue
         sketches = merge.get("sketch_columns") or {}
+        if dataset and "merge" not in table:
+            sketches = sketches.get(tname) or {}
         rows = table.get("row_count") or 0
         for name, column in table["columns"].items():
             if isinstance(column, dict) and isinstance(rows, int) and rows > 0:
