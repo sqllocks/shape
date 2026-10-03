@@ -35,7 +35,6 @@ Floats = npt.NDArray[np.float64]
 
 MAX_TABLE = 1 << 24  # largest cumulative table a discrete family builds
 GAMMA_ATTEMPTS = 12  # rejection attempts per row (acceptance is at least 0.95 each)
-TRUNCATION_ATTEMPTS = 64
 
 
 class FamilyError(ValueError):
@@ -802,12 +801,19 @@ class Mixture(Family):
 
 
 class Truncated(Family):
-    """Any family restricted to ``[low, high]`` (either bound optional), by rejection: each row
-    takes the first of up to 64 candidates, each from its own derived stream, that lies inside,
-    so the result is the exact truncated distribution and a row still depends on its own words.
-    ``base`` names the base family and ``base_params`` holds its parameters."""
+    """Any family restricted to ``[low, high]`` (either bound optional), by rejection: the
+    candidates of a row come from derived streams ``t0``, ``t1``, ... and the row takes the first
+    one that lies inside, so the result is the exact truncated distribution and a row depends on
+    its own words only, whatever the chunking (#130). ``base`` names the base family and
+    ``base_params`` holds its parameters. The interval must hold at least ``MIN_SHARE`` of the
+    base distribution (estimated once from a fixed probe of the base), else rejection would be
+    too slow and the error says so."""
 
     name = "truncated"
+    MIN_SHARE = 0.05  # least share of the base distribution inside the interval
+    PROBE_ROWS = 4096  # base draws that estimate that share (the same for every chunk)
+    MAX_ATTEMPTS = 4096  # candidates per row: a row misses them all with p < 1e-91
+    ROW_BY_ROW = 256  # rows still pending below which the rest is drawn row by row
 
     def from_spec(self, spec: Mapping[str, Any]) -> dict[str, Any]:
         if "base" not in spec:
@@ -828,19 +834,32 @@ class Truncated(Family):
         high = np.inf if params.get("high") is None else float(_p(params, "high"))
         if not low < high:
             raise FamilyError("truncated needs low < high")
+        probe = family.sample(stream.derive("probe"), 0, self.PROBE_ROWS, base)
+        share = float(((probe >= low) & (probe <= high)).mean())
+        if share < self.MIN_SHARE:
+            raise FamilyError(
+                f"the truncation interval holds almost none of the distribution (about "
+                f"{share:.1%}; at least {self.MIN_SHARE:.0%} is needed): widen the interval or "
+                "choose a base distribution closer to it"
+            )
         if n == 0:
             return np.empty(0, dtype=np.float64)
         out = np.empty(n, dtype=np.float64)
         todo = np.ones(n, dtype=bool)
-        for attempt in range(TRUNCATION_ATTEMPTS):
+        attempt = 0
+        while attempt < self.MAX_ATTEMPTS and todo.sum() > self.ROW_BY_ROW:
             cand = family.sample(stream.derive(f"t{attempt}"), row_start, n, base)
             ok = todo & (cand >= low) & (cand <= high)
             out[ok] = cand[ok]
             todo &= ~ok
-            if not todo.any():
-                return out
-            if attempt == 15 and todo.sum() > 0.9 * n:
-                raise FamilyError("the truncation interval holds almost none of the distribution")
+            attempt += 1
+        for row in np.flatnonzero(todo):  # the few rows left: the same candidates, one row each
+            for k in range(attempt, self.MAX_ATTEMPTS):
+                value = family.sample(stream.derive(f"t{k}"), row_start + int(row), 1, base)[0]
+                if low <= value <= high:
+                    out[row] = value
+                    todo[row] = False
+                    break
         if todo.any():
             raise FamilyError("the truncation interval holds too little of the distribution")
         return out

@@ -123,6 +123,12 @@ defaults) and `words_per_row`, implement `draw(stream, row_start, n, params)` re
 override `from_spec` when the spec spells parameters differently, and add the instance to `FAMILIES`.
 A family draws a fixed number of words per row (no rejection loops) so it stays row addressed.
 
+`truncated` (`{"distribution": "truncated", "base": "normal", "base_params": {...}, "low": ..,
+"high": ..}`) restricts any family to `[low, high]` by rejection: a row takes the first of its
+candidates (each from its own derived stream) that lies inside, so it is the exact truncated
+distribution and the same for any chunking. The interval must hold at least 5% of the base
+distribution (estimated from a fixed probe of 4,096 base draws), otherwise it is an error.
+
 ### `empirical`
 `{"quantiles": {"p1": .., "p5": .., "p10": .., "p25": .., "p50": .., "p75": .., "p90": .., "p95": ..,
 "p99": ..}}` (optionally `p0_5` and `p99_5` as tail anchors): a uniform draw mapped through the
