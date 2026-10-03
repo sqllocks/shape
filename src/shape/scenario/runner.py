@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING, Any
 from shape.scenario.loader import ScenarioPack
 from shape.scenario.manifest import ManifestBuilder, RunManifest
 from shape.scenario.validator import (
+    FILE_FORMATS,
     KNOWN_GATES,
     PackValidator,
     chaos_config,
@@ -39,8 +40,6 @@ if TYPE_CHECKING:
 
     from shape.generation.engine import GenerationResult
     from shape.scenario.gsl import GenerationSpec
-
-_FILE_FORMATS = {"parquet": "parquet", "csv": "csv", "jsonl": "jsonl", "json": "jsonl"}
 
 
 @dataclass
@@ -231,7 +230,7 @@ class PackRunner:
         if pack.file_drop is None:
             return []
         formats = pack.file_drop.formats
-        fmt = _FILE_FORMATS.get(formats[0] if formats else "parquet", "csv")
+        fmt = FILE_FORMATS.get(formats[0] if formats else "parquet", "csv")
         landing = self._landing(pack, output_root)
         return _write_tables(generated, pack.file_drop.entities, fmt, landing, table_files)
 
@@ -262,7 +261,7 @@ class PackRunner:
         if batch is not None:
             micro_root = output_root / "micro_batch"
             micro_root.mkdir(parents=True, exist_ok=True)
-            fmt = _FILE_FORMATS.get(batch.formats[0] if batch.formats else "jsonl", "csv")
+            fmt = FILE_FORMATS.get(batch.formats[0] if batch.formats else "jsonl", "csv")
             files.extend(_write_tables(generated, batch.entities, fmt, micro_root, table_files))
         if pack.hybrid.stream is not None and pack.hybrid.stream.topics:
             events = _write_topics(

@@ -22,6 +22,8 @@ KNOWN_GATES = (
     "uniqueness",
 )
 VALID_CADENCES = ("daily", "hourly", "every_15m", "every_5m", "weekly")
+# The formats a run writes, by the name a pack gives (the first of ``formats`` is written).
+FILE_FORMATS = {"parquet": "parquet", "csv": "csv", "jsonl": "jsonl", "json": "jsonl"}
 
 
 @dataclass
@@ -154,6 +156,7 @@ class PackValidator:
             result.warnings.append("file_drop section has no entities listed")
         if not pack.file_drop.formats:
             result.errors.append("file_drop section has no formats defined")
+        _format(pack.file_drop.formats, "file_drop.formats", result)
 
     @staticmethod
     def _streaming(pack: ScenarioPack, result: PackValidationResult) -> None:
@@ -172,6 +175,8 @@ class PackValidator:
             return
         if pack.hybrid.micro_batch is None and pack.hybrid.stream is None:
             result.errors.append("Hybrid pack must define at least micro_batch or stream")
+        if pack.hybrid.micro_batch is not None:
+            _format(pack.hybrid.micro_batch.formats, "hybrid.micro_batch.formats", result)
 
     @staticmethod
     def _targets(pack: ScenarioPack, result: PackValidationResult) -> None:
@@ -220,6 +225,15 @@ class PackValidator:
             result.warnings.append(
                 "failure_injection is enabled but a pack run does not apply it; use `chaos`"
             )
+
+
+def _format(formats: list[str], where: str, result: PackValidationResult) -> None:
+    """Warn when the format a run writes (the first) is not one it knows: it is written as CSV."""
+    if formats and formats[0] not in FILE_FORMATS:
+        result.warnings.append(
+            f"{where}: '{formats[0]}' is not a format a run writes "
+            f"({', '.join(FILE_FORMATS)}); the run writes csv"
+        )
 
 
 def match_table(name: str, tables: list[str]) -> str | None:
