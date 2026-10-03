@@ -28,10 +28,11 @@ A change is reported only when it passes its threshold, so a stable column produ
 | `table_added`, `table_removed` | any | high | 1 |
 | `column_added`, `column_removed` | any | high | 1 |
 | `dtype_change` | any | high | 1 |
+| `row_count_change` | the table's row count over baseline's > `row_count_ratio_max` = 2.0 or < `row_count_ratio_min` = 0.5 (not for a stream window) | medium | 1 - min(r, 1/r); 1 from an empty table |
 | `null_rate_change` | null rate moved by more than `null_rate` = 0.05 (absolute) | medium | the change |
 | `cardinality_change` | distinct values over baseline's > `cardinality_ratio_max` = 1.5 or < `cardinality_ratio_min` = 0.67 | medium | 1 - min(r, 1/r) |
 | `mean_shift` | mean moved by more than `mean_shift_std` = 0.5 baseline standard deviations | medium | z / (1 + z) |
-| `distribution_change` | the fitted family's name differs | low | 0.2 |
+| `distribution_change` | the fitted family's name differs, and the two samples differ by more than two samples of their sizes do by chance (KS critical value, alpha = 0.001) | low | 0.2 |
 | `new_categorical_values` | a category the baseline did not have | low | share of rows with it |
 | `category_shift` | total variation distance of the category proportions > `category_tvd` = 0.10 | medium | the distance |
 | `true_rate_change` | share of true values (booleans, 0/1 columns) moved by more than `true_rate` = 0.10 | medium | the change |
@@ -42,6 +43,11 @@ A change is reported only when it passes its threshold, so a stable column produ
 | `length_change` | mean string length moved by more than `length_ratio` = 25% | low | the relative change |
 | `outlier_rate_change` | outlier rate moved by more than `outlier_rate` = 0.02 | low | the change |
 | `uniqueness_change` | distinct values per row moved by more than `uniqueness_rate` = 0.05 (unique-like columns) | medium | the change |
+| `dependency_broken` | an approximate functional dependency of the baseline (`zip -> city`) lost more than `dependency_confidence` = 0.02 of its confidence (never below the sampling noise); a baseline determinant that was unique counts as confidence 1 (`docs/JOINT.md`) | high | the drop |
+| `placeholder_surge` | the share of rows holding a placeholder value (`00000`, `-1`, `N/A`, ...) rose by more than `placeholder_share` = 0.01 | medium | the rise |
+| `implausible_rate_change` | the share of implausible rows rose by more than `implausible_rate` = 0.02 | medium | the rise |
+| `association_shift` | an association measure (Cramer's V, Theil's U, correlation ratio, Pearson, Spearman) moved by more than `association_shift` = 0.2 | low | the change |
+| `reference_match_change` | the share of rows whose columns are a real combination of a reference fell by more than `reference_match_rate` = 0.02 | high | the drop |
 | `hour_of_day_change`, `day_of_week_change` | total variation distance of the mix > `temporal_tvd` = 0.20 (day of week: both columns span 14 days or more) | low | the distance |
 
 The first five thresholds (`null_rate`, `cardinality_ratio_max`, `cardinality_ratio_min`,
@@ -76,9 +82,42 @@ section 12.3 and keep their values.
 - The extremes of a heavy-tailed column vary a lot between two samples of one distribution, so such
   a column can show a `range_change` now and then. It is low severity: raise `range_margin_std`, or
   ignore the column.
-- The fitted family's name (`distribution_change`, low) can flip between samples of one
-  distribution (a normal column fit as log-normal); the size of a real distribution change is
-  `distribution_shift`.
+- **Row counts.** `row_count_change` compares the exact row counts of a table, so there is no
+  sampling noise to allow for; the defaults (more than double, fewer than half) let a 1.5 times
+  larger extract of the same data pass. A stream window is not compared by size (its size is its
+  width), and `ShapeMonitor` drops the kind (its buffer is a window of the stream). Set
+  `row_count_ratio_max` to a large number to turn the kind off.
+- **The fitted family's name** (`distribution_change`, low) flips between samples of one
+  distribution (a normal column fit as log-normal). The name is reported only when the data also
+  moved: the KS distance between the samples, read from the quantiles, must exceed the critical
+  value for their sizes (alpha = 0.001, no 0.10 floor, so the bigger the samples, the smaller the
+  move that counts). Without quantiles to compare, only samples of `min_rows` or more name a
+  family. The size of a real distribution change is `distribution_shift`.
+
+## The sweep: planted drift as a regression test
+
+`tests/diff/test_drift_sweep.py` generates pairs of datasets with Shape's own generators, records
+every planted change in an answer key (column, kind, size), runs `shape diff` at the default
+thresholds and asserts two things:
+
+- **Zero false negatives.** Every planted change is reported as one of the kinds that find it.
+  The planted changes are the `DriftPlan` events (null rate, category weights, a new category, a
+  scale of a log-normal, normal and uniform column, a boolean rate, a column added, dropped and
+  retyped), the generation engine's row counts (2.5 times and 0.4 times the baseline) and the
+  chaos generator's corruptions (case and whitespace, null creep, type change, negative amounts,
+  duplicates, PII fill).
+- **A bounded false-positive rate.** On pairs of one distribution (a fresh sample of the same
+  size, and a fresh sample 1.5 times as large) at most **5%** of the pairs report any change, and
+  at most **0.5%** of the (pair, column) comparisons do. `distribution_change` and
+  `row_count_change` never fire on them.
+
+`SHAPE_DRIFT_SWEEP=fast` (default; CI runs it in both kernel modes) uses 2,000 rows, 5 trials of
+each planted case and 50 same-distribution pairs. `SHAPE_DRIFT_SWEEP=full` (the nightly job) uses
+20,000 rows, 40 trials and 400 pairs. `python tests/diff/test_drift_sweep.py` prints the report.
+Measured on the full size: 0 of 760 planted changes missed; 2 of 400 same-distribution pairs
+reported a change (both a `range_change` of the heavy-tailed log-normal column, which the notes
+above describe), against 203 of 400 (a `distribution_change` of a normal or uniform column) before
+`distribution_change` respected sample size.
 
 ## Tuning
 

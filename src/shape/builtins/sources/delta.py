@@ -13,11 +13,14 @@ object), so a connection string cannot be used for them; an account key or SAS t
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 from urllib.parse import urlparse
 
 import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.dataset as pa_dataset  # type: ignore[import-untyped]
+
+from shape.profile.reference import delta_fallback
 
 from . import _azure_auth as auth
 from .azure import DEFAULT_BATCH_ROWS
@@ -97,4 +100,23 @@ class DeltaSource:
         return iter(dataset.to_batches(columns=columns, batch_size=batch_rows))
 
     def _dataset(self, uri: str, options: Mapping[str, Any]) -> Any:
-        return self._table(uri, options).to_pyarrow_dataset()
+        table = self._table(uri, options)
+        error: BaseException | None = None
+        if not delta_fallback.never_read_by_delta_rs(table):
+            try:
+                return table.to_pyarrow_dataset()
+            except Exception as refusal:
+                if not delta_fallback.is_unsupported_feature_error(refusal):
+                    raise
+                error = refusal
+        # delta-rs refused the table's reader features: read it with DuckDB (extra
+        # ``delta-fallback``), with the same authentication.
+        target = uri[len(PREFIX) :] if _is_cloud(uri) else str(local_path(uri))
+        rows, _ = delta_fallback.fallback_read(
+            PurePosixPath(urlparse(target).path).name or target,
+            target,
+            table,
+            error,
+            storage_options=_storage_options(target, options) or None,
+        )
+        return pa_dataset.dataset(rows)

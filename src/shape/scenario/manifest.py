@@ -3,10 +3,13 @@
 The keys are ``run_id``, ``spec_hash``, ``pack_id``, ``domain``, ``scale``, ``seed``,
 ``engine_version``, ``outputs``, ``tables`` (``rows``, ``columns``, ``file_paths`` each),
 ``validation``, ``chaos``, ``timestamps`` (``started`` and ``finished`` in UTC ISO 8601 with
-``Z``, ``elapsed_seconds``), ``workspace_id``, ``lakehouse_id`` and ``sbom``, then the
-declaration every persisted file carries (``format``, ``version``, ``shape_version``,
-``min_shape_version``; ``docs/specs/STATE_AND_COMPATIBILITY.md``). The run id is
-``YYYYMMDD_HHMMSS_{domain}_{scale}_s{seed}``.
+``Z``, ``elapsed_seconds``), ``workspace_id``, ``lakehouse_id``, ``sbom``, ``reproducibility``
+(the tuple of ``shape.repro``) and ``dataset_id`` (the content address of the output tables),
+then the declaration every persisted file carries (``format`` = ``shape-run-manifest``,
+``version``, ``shape_version``, ``min_shape_version``;
+``docs/specs/STATE_AND_COMPATIBILITY.md``). The run id is
+``YYYYMMDD_HHMMSS_{domain}_{scale}_s{seed}``. A manifest written before ``format`` and
+``version`` existed loads with an empty ``reproducibility`` and ``dataset_id``.
 """
 
 from __future__ import annotations
@@ -14,13 +17,17 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from shape import compat
+from shape.repro import dataset_id, reproducibility_tuple
 
+MANIFEST_FORMAT = compat.KINDS["run-manifest"].format
+MANIFEST_VERSION = compat.KINDS["run-manifest"].current
 SBOM_PACKAGES = ("sqllocks-shape", "pandas", "numpy", "faker", "pyarrow", "scipy")
 NOT_INSTALLED = "not installed"
 
@@ -42,8 +49,15 @@ _KNOWN = frozenset(
         "workspace_id",
         "lakehouse_id",
         "sbom",
+        "reproducibility",
+        "dataset_id",
     }
 )
+
+
+class ManifestVersionError(ValueError):
+    """A manifest was written by a newer Shape than this one reads (compat raises it combined
+    with :class:`shape.compat.UnsupportedVersionError`)."""
 
 
 @dataclass
@@ -65,6 +79,8 @@ class RunManifest:
     workspace_id: str = ""
     lakehouse_id: str = ""
     sbom: dict[str, str] = field(default_factory=dict)
+    reproducibility: dict[str, Any] = field(default_factory=dict)
+    dataset_id: str = ""
     # Fields a newer release wrote that this one does not know: ignored, and written back as read.
     extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
 
@@ -77,6 +93,8 @@ class RunManifest:
             f"  Scale:   {self.scale}",
             f"  Seed:    {self.seed}",
         ]
+        if self.dataset_id:
+            lines.append(f"  Dataset: {self.dataset_id}")
         if self.tables:
             total_rows = sum(int(t.get("rows", 0)) for t in self.tables.values())
             lines.append(f"  Tables:  {len(self.tables)} ({total_rows:,} total rows)")
@@ -108,6 +126,8 @@ class RunManifest:
             "workspace_id": self.workspace_id,
             "lakehouse_id": self.lakehouse_id,
             "sbom": self.sbom,
+            "reproducibility": self.reproducibility,
+            "dataset_id": self.dataset_id,
         }
 
 
@@ -144,12 +164,17 @@ class ManifestBuilder:
             seed=seed,
             engine_version=__version__,
             sbom=collect_sbom(),
+            reproducibility=reproducibility_tuple(seed, scale),
         )
 
     def record_output(
         self, table_name: str, rows: int, columns: int, paths: list[str] | None = None
     ) -> None:
         self._m.tables[table_name] = {"rows": rows, "columns": columns, "file_paths": paths or []}
+
+    def record_dataset(self, tables: Mapping[str, Any]) -> None:
+        """Record the dataset id of the run's output tables."""
+        self._m.dataset_id = dataset_id(tables)
 
     def record_validation(self, gate: str, result: bool) -> None:
         self._m.validation[gate] = result
@@ -194,7 +219,7 @@ class ManifestBuilder:
         if not isinstance(raw, dict):
             raise ValueError(f"{path} is not a run manifest")
         compat.check_format("run-manifest", raw)
-        compat.check_readable("run-manifest", raw, path)
+        compat.check_readable("run-manifest", raw, path, error=ManifestVersionError)
         unknown = compat.check_unknown("run-manifest", raw, _KNOWN)
         return RunManifest(
             extra={k: raw[k] for k in unknown},
@@ -213,6 +238,8 @@ class ManifestBuilder:
             workspace_id=raw.get("workspace_id", ""),
             lakehouse_id=raw.get("lakehouse_id", ""),
             sbom=raw.get("sbom", {}),
+            reproducibility=raw.get("reproducibility", {}),
+            dataset_id=raw.get("dataset_id", ""),
         )
 
 

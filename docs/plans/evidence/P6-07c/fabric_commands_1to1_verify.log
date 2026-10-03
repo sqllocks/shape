@@ -1,0 +1,17 @@
+PASS  export-model: every option, the .bim and the report
+PASS  export-model: the library on synthetic schemas (every type, key, source)
+PASS  notebook: cells, metadata and report for each target
+PASS  deploy-notebook / setup-fabric: requests and report
+PASS  publish: landing zone, manifest and report for each format; dry run
+PASS  wrong command lines fail in both (Shape: exit 2)
+PASS  probe: M and DAX quoting
+PASS  probe: the notebook part path
+PASS  probe: a 202 is not 'created'
+PASS  probe: workspace listing pages
+PASS  probe: the manifest lists files
+PASS  probe: the baseline's two landing layouts
+PASS  probe: the baseline's remote delta
+PASS  negative control: tampering is flagged
+
+allowed differences: model-name-and-generator, m-and-dax-quoting, notebook-part-path, accepted-is-not-created, workspace-listing-pages, setup-existing-items, manifest-file-paths, one-landing-layout, delta-is-written-or-refused, database-write-modes, exit-codes, shape-wording, extra-options
+VERDICT: PASS

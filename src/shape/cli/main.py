@@ -261,6 +261,21 @@ def _csv_format(a):
     )
 
 
+def _reference_pairs(a):
+    """``--reference-pair COLS=REFERENCE`` as the profile's ``reference_pairs`` list."""
+    out = []
+    for text in getattr(a, "reference_pair", None) or ():
+        cols, sep, reference = text.rpartition("=")
+        if not sep or not cols or not reference:
+            raise ValueError(f"--reference-pair {text!r}: expected COLS=REFERENCE")
+        mapping = {}
+        for item in cols.split(","):
+            column, _, field = item.partition(":")
+            mapping[column.strip()] = (field or column).strip()
+        out.append({"columns": mapping, "reference": reference})
+    return out or None
+
+
 def _profile_source(a):
     """What ``shape profile`` reads. A folder is one table (its files are partitions) unless
     ``--dataset`` asks for one table per file, named by the file's stem. A folder whose files
@@ -336,6 +351,8 @@ def _cmd_profile(a):
         encoding=fmt.encoding,
         quotechar=fmt.quotechar,
         header=fmt.header,
+        reference_pairs=_reference_pairs(a),
+        joint=a.joint,
         **_workbook_options(a),
     )
     if settings:
@@ -418,9 +435,10 @@ def _cmd_capture(a):
 def _cmd_plan_profile(a):
     """``shape plan PROFILE.shape``: the fitted schema's plan."""
     import shape
+    from shape.cli.proposals import load_decisions
     from shape.generation.fit import fit_schema
 
-    plan = fit_schema(shape.load(a.shape), rows=a.rows).plan
+    plan = fit_schema(shape.load(a.shape), rows=a.rows, decisions=load_decisions(a.decisions)).plan
     out = plan.to_dict()
     if a.status:
         out["items"] = [x for x in out["items"] if x["status"] in a.status]
@@ -608,6 +626,14 @@ def _cmd_verify_gates(a):
         raise ValueError(f"no {a.format} data files found in {a.shape}")
     schema = load_gate_schema(a.schema) if a.schema else None
     config = load_verify_config(a.config) if a.config else None
+    if config is not None and config.needs_source and not a.source:
+        raise ValueError(
+            "the verify configuration asks for the memorization or utility gate, which compare "
+            "with the source data: give --source"
+        )
+    source = load_tables(a.source, a.format) if a.source else None
+    if a.source and not source:
+        raise ValueError(f"no {a.format} data files found in {a.source}")
     result = VerifyRunner(
         schema,
         a.statistical,
@@ -616,6 +642,8 @@ def _cmd_verify_gates(a):
         config,
         a.config,
         data_files(a.shape, a.format),
+        source=source,
+        source_path=a.source,
     ).run(tables)
     print(f"Shape {_version()} - Verify\n")
     print(f"Data path:   {a.shape}")
@@ -623,6 +651,8 @@ def _cmd_verify_gates(a):
         print(f"Schema:      {a.schema}")
     if a.config:
         print(f"Config:      {a.config}")
+    if a.source:
+        print(f"Source:      {a.source}")
     print(f"Statistical: {'yes' if a.statistical else 'no'}\n")
     if result.gate_results:
         print(f"{'Gate':<28} {'Status':<8} {'Errors':>6} {'Warnings':>8}")
@@ -940,6 +970,22 @@ def _build_parser(plugin_commands=()):
         help="the CSV's first row is a header (--no-header: columns are named f0, f1, ...)",
     )
     pr.add_argument(
+        "--reference-pair",
+        action="append",
+        metavar="COLS=REFERENCE",
+        help="check that columns hold real combinations: COLS is a comma list (COLUMN or "
+        "COLUMN:FIELD), REFERENCE a CSV, Parquet or JSONL file, e.g. city,zip=zips.csv "
+        "(repeatable; stored in the profile for the reference_pair contract rule)",
+    )
+    pr.add_argument(
+        "--joint",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="the joint analysis (dependencies, keys, associations): on by default for one table, "
+        "off for a dataset; --joint turns it on, --no-joint off (SHAPE_PROFILE_JOINT=0|1 when "
+        "neither is given)",
+    )
+    pr.add_argument(
         "--sheet",
         metavar="SHEET",
         help="SRC is an .xlsx workbook: profile this sheet alone (also SRC#SHEET); without it "
@@ -982,6 +1028,9 @@ def _build_parser(plugin_commands=()):
         help="pretty-printed JSON with sorted keys, one value per line (git-diffable)",
     )
     gitcmds.add_parsers(sub)
+    from shape.cli import design as design_cmd
+
+    design_cmd.add_parsers(sub)
     fd = sub.add_parser(
         "from-ddl",
         help="read SQL CREATE TABLE DDL into a generation schema",
@@ -1051,6 +1100,13 @@ def _build_parser(plugin_commands=()):
         help="verify configuration (format shape-verify-config): ranges, date_range, no_future, "
         "ordering, baseline, file_paths; runs the range, temporal, drift and file gates",
     )
+    vf.add_argument(
+        "--source",
+        metavar="DATA",
+        help="the real data the generated data was made from (same layout as DATA, same "
+        "--format): runs the memorization gate, and the utility gate when the configuration "
+        "has a utility section",
+    )
     vf.add_argument("--statistical", action="store_true", help="add KS and chi-squared tests")
     vf.add_argument("-o", "--output", metavar="REPORT", help="write a .json or .md report")
     vf.add_argument("--strict", action="store_true", help="exit 1 on warnings too")
@@ -1090,6 +1146,15 @@ def _build_parser(plugin_commands=()):
     from shape.cli.jobs import add_arguments as add_jobs_arguments
 
     add_jobs_arguments(sub)
+    from shape.cli.proposals import add_arguments as add_proposals_arguments
+
+    add_proposals_arguments(sub)
+    from shape.cli.bridge import add_arguments as add_bridge_arguments
+
+    add_bridge_arguments(sub)
+    from shape.cli.demo import add_arguments as add_demo_arguments
+
+    add_demo_arguments(sub)
     fi = sub.add_parser(
         "fidelity",
         aliases=["compare"],
@@ -1170,6 +1235,11 @@ def _build_parser(plugin_commands=()):
         help="list only items with this status (repeatable)",
     )
     gp.add_argument("--rows", type=int, metavar="N", help="plan for N rows (a one-table profile)")
+    gp.add_argument(
+        "--decisions",
+        metavar="DECISIONS.json",
+        help="apply a decision file (`shape proposals`): accepted relationships are kept",
+    )
     gp.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     fc = sub.add_parser("certify-shapes")
     fc.add_argument("target")
@@ -1435,14 +1505,30 @@ def _dispatch(argv):
         from shape.cli.mask import run as run_mask
 
         return _run(run_mask, a)
+    if a.cmd == "proposals":
+        from shape.cli.proposals import run as run_proposals
+
+        return _run(run_proposals, a)
     if a.cmd == "jobs":
         from shape.cli.jobs import run as run_jobs
 
         return _run(run_jobs, a)
+    if a.cmd == "bridge":
+        from shape.cli.bridge import run as run_bridge
+
+        return _run(run_bridge, a)
+    if a.cmd == "demo":
+        from shape.cli.demo import run as run_demo
+
+        return _run(run_demo, a)
     if a.cmd == "transform":
         from shape.cli.transform import run as run_transform
 
         return _run(run_transform, a)
+    if a.cmd == "design":
+        from shape.cli.design import run as run_design
+
+        return _run(run_design, a)
     if a.cmd in ("cat", "git-setup"):
         from shape.cli.gitcmds import run as run_gitcmds
 

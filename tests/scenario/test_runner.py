@@ -14,6 +14,7 @@ from tests.scenario.conftest import HYBRID, PACK, STREAM, write
 MANIFEST_KEYS = {
     "run_id", "spec_hash", "pack_id", "domain", "scale", "seed", "engine_version", "outputs",
     "tables", "validation", "chaos", "timestamps", "workspace_id", "lakehouse_id", "sbom",
+    "format", "version", "reproducibility", "dataset_id",
 }  # fmt: skip
 # the declaration every persisted file carries (docs/specs/STATE_AND_COMPATIBILITY.md)
 DECLARATION_KEYS = {"format", "version", "shape_version", "min_shape_version"}

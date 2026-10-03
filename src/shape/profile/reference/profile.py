@@ -133,6 +133,8 @@ def _column_dict(cp: ColumnProfile) -> dict[str, Any]:
     for f in ("nan_count", "inf_count"):  # absent when zero, like the other optional fields
         if not d[f]:
             del d[f]
+    if cp.placeholders:  # absent when none, like the other optional fields
+        d["placeholders"] = cp.placeholders
     d["min_value"] = _tag_scalar(cp.min_value)
     d["max_value"] = _tag_scalar(cp.max_value)
     d["enum_values"] = _clean(cp.enum_values)
@@ -154,6 +156,8 @@ def table_to_dict(tp: TableProfile) -> dict[str, Any]:
     }
     if tp.correlation_truncated:
         out["correlation_truncated"] = True
+    if tp.joint:
+        out["joint"] = tp.joint
     return out
 
 
@@ -288,6 +292,8 @@ def profile(
     encoding: str | None = None,
     quotechar: str | None = None,
     header: bool = True,
+    reference_pairs: Any = None,
+    joint: bool | None = None,
     sheet: str | None = None,
     include_hidden: bool = False,
 ) -> Profile:
@@ -304,6 +310,16 @@ def profile(
     ``encoding`` (default UTF-8), ``quotechar`` (default ``"``) and ``header=False`` for a file
     without a header row (columns are then ``f0``, ``f1``, ...).
 
+    ``reference_pairs`` checks that groups of columns hold real combinations: a list of
+    ``{"columns": ["city", "zip"], "reference": <dataset name, file or table>}`` (for several
+    tables, a dict of table name to such a list). The share of rows whose tuple is in the
+    reference is stored in the table's ``joint`` entry, where the ``reference_pair`` contract
+    rule and ``shape.diff`` read it.
+
+    ``joint`` chooses the joint analysis (dependencies, keys, associations): on by default for
+    one table, off by default for a dataset (a dict of tables, a workbook), ``joint=True`` turns
+    it on and ``joint=False`` off; without it ``SHAPE_PROFILE_JOINT`` decides (``0`` off, ``1`` on).
+
     An ``.xlsx`` workbook is a dataset with one table per visible sheet (``"book.xlsx#Sheet"``
     or ``sheet=`` profiles that sheet alone, hidden or not; ``include_hidden=True`` reads the
     hidden sheets too), and the profile carries ``findings`` about its cells.
@@ -313,11 +329,11 @@ def profile(
         if is_workbook_spec(source):
             from .workbook import profile_workbook
 
-            data, title = profile_workbook(source, name, sheet, include_hidden)
+            data, title = profile_workbook(source, name, sheet, include_hidden, joint)
             return Profile(data, name=title)
         if sheet is not None or include_hidden:
             raise SourceError("sheet and include_hidden apply to .xlsx workbooks only")
-        return _profile(source, name, version, as_of, fmt)
+        return _profile(source, name, version, as_of, fmt, reference_pairs, joint)
 
 
 def _load_tables(
@@ -355,8 +371,31 @@ def _warn_delimiter(name: str, src: Any, cols: list[Any], csv: CsvFormat | None)
         )
 
 
+def _attach_reference_pairs(
+    doc: dict[str, Any], cols: list[Any], rows: int, specs: Any, table: str | None = None
+) -> None:
+    """Add the reference-pair measurements to a table document's ``joint`` entry."""
+    if not specs:
+        return
+    if not isinstance(specs, (list, tuple)):
+        raise ValueError("reference_pairs is a list of {columns, reference} objects")
+    from shape.profile.joint.reference import measure_reference_pairs
+
+    measured = measure_reference_pairs(cols, rows, specs)
+    joint = doc.get("joint")
+    if joint is None:
+        joint = doc["joint"] = {"version": 1}
+    joint["reference_pairs"] = measured
+
+
 def _profile(
-    source: Any, name: str | None, version: int | None, as_of: Any, csv: CsvFormat | None = None
+    source: Any,
+    name: str | None,
+    version: int | None,
+    as_of: Any,
+    csv: CsvFormat | None = None,
+    reference_pairs: Any = None,
+    joint: bool | None = None,
 ) -> Profile:
     check_delta_options(version, as_of)
     asked = version is not None or as_of is not None
@@ -366,7 +405,19 @@ def _profile(
         if not source:
             raise SourceError("an empty dict of tables cannot be profiled")
         cols_by_t = _load_tables({str(k): v for k, v in source.items()}, csv)
-        return Profile(dataset_to_dict(profile_dataset_columns(cols_by_t)), name=name)
+        doc = dataset_to_dict(profile_dataset_columns(cols_by_t, None, joint))
+        if reference_pairs:
+            if not isinstance(reference_pairs, dict):
+                raise ValueError("for several tables, reference_pairs maps a table name to a list")
+            for tname, specs in reference_pairs.items():
+                if tname not in cols_by_t:
+                    raise ValueError(
+                        f"reference_pairs names the table {tname!r}, which is not here"
+                    )
+                _attach_reference_pairs(
+                    doc["tables"][tname], cols_by_t[tname][0], cols_by_t[tname][1], specs
+                )
+        return Profile(doc, name=name)
     delta = delta_dir(source)
     if delta is None:
         if asked:
@@ -379,8 +430,10 @@ def _profile(
     else:
         table, provenance = read_delta(delta, version=version, as_of=as_of)
         table_name, cols, rows = load_columns(table, name or delta.name)
-    table_profile = _profile_cols_table(table_name, cols, rows, None)
-    return Profile(table_to_dict(table_profile), name=name, provenance=provenance)
+    table_profile = _profile_cols_table(table_name, cols, rows, None, None, joint)
+    doc = table_to_dict(table_profile)
+    _attach_reference_pairs(doc, cols, rows, reference_pairs)
+    return Profile(doc, name=name, provenance=provenance)
 
 
 # --- .shape artifact ---------------------------------------------------------------

@@ -133,7 +133,13 @@ Every run writes `<run_id>_manifest.json` into the output directory
 | `chaos` | category to the number of changes |
 | `timestamps` | `started`, `finished`, `elapsed_seconds` |
 | `workspace_id`, `lakehouse_id` | Fabric identifiers, empty unless set |
+| `format`, `version` | `shape-run-manifest`, `1` (a manifest from a newer Shape is refused; one without them loads with an empty `reproducibility` and `dataset_id`) |
+| `reproducibility` | the reproducibility tuple: `schema_version`, `profile_version`, `seed`, `scale`, `shape_version`, `kernel`, `platform` (`docs/REPRODUCIBILITY.md`) |
+| `dataset_id` | the content address of the output tables (`sha256:...`), over every generated table after chaos |
 | `sbom` | version of `sqllocks-shape`, `pandas`, `numpy`, `faker`, `pyarrow` and `scipy` (`not installed` when absent) |
+
+`shape pack replay MANIFEST TARGET` regenerates a run from its manifest and checks the dataset id
+(`docs/REPRODUCIBILITY.md`).
 
 ## Safety
 

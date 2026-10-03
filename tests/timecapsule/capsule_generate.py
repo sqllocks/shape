@@ -406,7 +406,52 @@ def generate(out: Path) -> list[dict[str, Any]]:
     return entries
 
 
+def generate_run_manifest(out: Path) -> list[dict[str, Any]]:
+    """A small generation holding only the run manifest as written once it carries the
+    reproducibility tuple and the dataset id (W1-03); the full generations predate both."""
+    import pyarrow as pa
+
+    from shape import __version__
+    from shape.artifact.io import canonical_json
+    from shape.scenario.manifest import ManifestBuilder
+
+    if out.exists():
+        raise SystemExit(f"{out} exists: a generation is written once")
+    (out / "run").mkdir(parents=True)
+    builder = ManifestBuilder()
+
+    class _Pack:
+        id = "capsule_pack"
+
+    builder.start(PACK_SOURCE, _Pack(), "retail", "small", 42)
+    builder.record_output("orders", 60, 5, ["Files/orders.parquet"])
+    builder.record_dataset(
+        {"orders": pa.table({"id": list(range(60)), "amount": [i * 1.5 for i in range(60)]})}
+    )
+    builder.record_validation("schema_conformance", True)
+    ManifestBuilder.to_file(builder.finish(), out / "run" / "run-manifest.json")
+    entries = [
+        {
+            "id": "run-manifest-v1",
+            "kind": "run-manifest",
+            "format_version": 1,
+            "path": "run/run-manifest.json",
+            "sha256": _tree_digest(out / "run" / "run-manifest.json"),
+            "produced_by": "shape.scenario.manifest.ManifestBuilder.to_file",
+            "authored": False,
+            "writer_shape_version": __version__,
+            "note": "with reproducibility and dataset_id",
+        }
+    ]
+    (out / "index.json").write_bytes(canonical_json({"files": entries}) + b"\n")
+    return entries
+
+
 if __name__ == "__main__":
+    if len(sys.argv) == 3 and sys.argv[1] == "--run-manifest":
+        for e in generate_run_manifest(Path(sys.argv[2])):
+            print(f"{e['id']:24} {e['path']}")
+        raise SystemExit(0)
     if len(sys.argv) != 2:
         raise SystemExit(__doc__)
     for e in generate(Path(sys.argv[1])):

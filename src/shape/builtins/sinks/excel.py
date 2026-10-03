@@ -14,6 +14,7 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.builtins.sources.files import local_path
+from shape.plugins.schemes import require_scheme
 
 MAX_SHEET_ROWS = 1_048_576
 SHEET_NAME_LIMIT = 31
@@ -30,8 +31,10 @@ def _cell(value: Any) -> Any:
 class ExcelSink:
     name = "excel"
     schemes = ("file",)
+    extension = "xlsx"
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+        require_scheme(self, uri)
         try:
             from openpyxl import Workbook
         except ImportError as exc:

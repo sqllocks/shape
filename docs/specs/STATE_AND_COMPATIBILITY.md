@@ -37,7 +37,7 @@ never had a second version before they were declared).
 | `scenario-pack` | pack YAML | `shape-scenario-pack` | 1 | `pack_version` | authored by users |
 | `registry-layout` | `layout.json` at the root of a registry | `shape-registry` | 1 | none: no marker before | opening a registry writes it |
 | `profile-registry-layout` | `_layout.json` at the root of a profile registry | `shape-profile-registry` | 1 | none: no marker before | |
-| `run-manifest` | run manifest JSON | `shape-run-manifest` | 1 | none | |
+| `run-manifest` | run manifest JSON | `shape-run-manifest` | 1 | none | carries `reproducibility` and `dataset_id`; a manifest written before they existed loads with both empty; a newer version raises `ManifestVersionError` (also an `UnsupportedVersionError`) |
 | `contract` | contract JSON read by `shape check` | `shape-contract` | 1 | none | authored by users |
 | `contract-model` | Shape-as-Code contract file | `shape-contract-model` | 1 | none: `version` was always the format version | |
 | `signature` | `manifest.sig` in a signed artifact | `shape-signature` | 1 | none | also names its `algorithm` |

@@ -1,0 +1,71 @@
+metadata
+  PASS  list            every Shape domain is a baseline domain, with its profiles
+  PASS  list            retail is listed
+  PASS  describe        retail 3nf: tables, columns, keys, relationships, rules, presets
+  PASS  describe        retail star: tables, columns, keys, relationships, rules, presets
+  PASS  dry_run         every preset (fabric_demo, large, medium, small, warehouse, xlarge, xxl, xxxl): planned rows and order
+  PASS  profile_info    ratios and every baseline distribution
+  PASS  profile_info    BR-7 the baseline's lifecycle weights are not the ones its schema generates with
+  PASS  profile_info    BR-7 Shape reports the weights it generates with (the baseline schema's)
+  PASS  profile_info    BR-6: the baseline names a column that does not exist
+  PASS  preview         tables, columns, row counts and value types
+  PASS  preview         categorical columns carry the same values
+  PASS  validate        a good schema: valid, table and relationship counts
+  PASS  validate        a schema with a relationship to a missing table is invalid in both
+  PASS  validate        a missing file is an error in both
+jobs and streams
+  PASS  stream          starts: stream_id and status started
+  PASS  stream_status   keys, chunks_written, running, error
+  PASS  stream          same rows on disk: chunk_size per table per chunk
+  PASS  stream_status   BR-3 baseline rows_written is chunks x chunk_size, not the rows written
+  PASS  stream_status   BR-3 Shape's rows_written is the rows written
+  PASS  stream_stop     a running stream is stopped in both
+  PASS  stream_status   after a stop: not running (the baseline forgets a stopped stream; Shape keeps it)
+  PASS  stream_status   an unknown id is reported (baseline: an error in a success; Shape: input.unknown_job)
+  PASS  stream_stop     an unknown id is reported (baseline: an error in a success; Shape: input.unknown_job)
+  PASS  scale_status    an unknown id is reported (baseline: an error in a success; Shape: input.unknown_job)
+  PASS  scale_cancel    an unknown id is reported (baseline: an error in a success; Shape: input.unknown_job)
+baseline defects fixed (allow-list)
+  PASS  scale_generate  BR-1 baseline local_mp writes the wrong row counts (medium)
+  PASS  scale_generate  BR-1 Shape local_mp writes the preset's rows (medium)
+  PASS  scale_status    BR-2 the baseline's job store is in memory and its record holds the token
+  PASS  scale_status    BR-2 Shape's job is read by a new bridge process
+  PASS  generate        BR-4 baseline: success with nothing written; Shape: usage.missing_argument
+  PASS  preview         BR-5 baseline: an empty success; Shape: input.invalid_value naming the table
+pending
+  PASS  demo_list       PENDING P6-12 (`shape demo`): Shape answers policy.capability_unavailable
+  PASS  demo_run        PENDING P6-12 (`shape demo`): Shape answers policy.capability_unavailable
+  PASS  demo_status     PENDING P6-12 (`shape demo`): Shape answers policy.capability_unavailable
+  PASS  demo_cleanup    PENDING P6-12 (`shape demo`): Shape answers policy.capability_unavailable
+generated data (scale medium)
+  PASS  generate        summary at medium: counts per table, totals, integrity
+  PASS  generate        csv: the same file names
+  PASS  generate        jsonl: the same file names
+  PASS  generate        parquet: the same file names
+  PASS  generate        tsv: the same file names
+  PASS  generate        T-21 on the bridges' own Parquet at medium (domain verifier, clauses a-h)
+  PASS  scale_generate  local_single: result fields and exact rows
+  PASS  scale_generate  local_single: T-21 on the Parquet part files at medium (clauses a-h)
+  PASS  scale_generate  local_single: the default memory sink
+  PASS  scale_generate  local_mp: result fields and exact rows
+  PASS  scale_generate  local_mp: T-21 on the Parquet part files at medium (clauses a-h)
+  PASS  scale_generate  local_mp: the default memory sink
+  PASS  scale_generate  both refuse {'domain': 'nope'}
+  PASS  scale_generate  both refuse {'domain': 'retail', 'scale_mode': 'warp'}
+  PASS  scale_generate  both refuse {'domain': 'retail', 'sinks': ['warp']}
+  PASS  scale_generate  fabric_spark without ids and a token is refused in both
+negative controls
+  PASS  control         describe: a column type changed is flagged
+  PASS  control         describe: a relationship dropped is flagged
+  PASS  control         describe: a preset changed is flagged
+  PASS  control         dry_run: a planned row count changed is flagged
+  PASS  control         profile_info: a ratio changed is flagged
+  PASS  control         profile_info: a weight changed is flagged
+  PASS  control         profile_info: a distribution dropped is flagged
+  PASS  control         preview: the columns reordered is flagged
+  PASS  control         preview: a value type changed is flagged
+  PASS  control         validate: a table count changed is flagged
+  PASS  control         generate: a row count changed is flagged
+
+62/62 checks hold; commands covered: 17/17; report /root/bench-out/bridge_1to1/report.json
+exit 0

@@ -1,0 +1,41 @@
+"""The command table: every bridge command, by name."""
+
+from __future__ import annotations
+
+from shape.bridge.spec import Command
+
+
+def _build() -> dict[str, Command]:
+    from shape.bridge.handlers import catalog, demo, flow, generate, scale
+
+    table: dict[str, Command] = {}
+    for module in (catalog, generate, flow, scale, demo):
+        for command in module.COMMANDS:
+            if command.name in table:
+                raise AssertionError(f"duplicate bridge command {command.name!r}")
+            table[command.name] = command
+    return table
+
+
+COMMANDS: dict[str, Command] = _build()
+
+#: The original 17 commands of the JSON bridge protocol.
+PARITY_COMMANDS = (
+    "list",
+    "describe",
+    "generate",
+    "dry_run",
+    "validate",
+    "preview",
+    "profile_info",
+    "demo_list",
+    "demo_run",
+    "demo_status",
+    "demo_cleanup",
+    "scale_generate",
+    "stream",
+    "stream_status",
+    "stream_stop",
+    "scale_status",
+    "scale_cancel",
+)

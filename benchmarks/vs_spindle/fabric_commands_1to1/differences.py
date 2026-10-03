@@ -1,0 +1,152 @@
+"""The intentional differences between Shape's Fabric commands and the baseline's (P6-07c).
+
+Every entry has a name, the reason, and where the harness shows it (a probe that runs in
+``verify.py``: an observation of the baseline, so an entry that stops being true fails the run).
+Nothing outside this list may differ: a difference that is not here is a failure.
+
+``BRAND`` is not a defect: Shape names itself where the baseline names itself (D-13), so the
+baseline's text is mapped to Shape's before it is compared.
+"""
+
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Difference:
+    name: str
+    command: str
+    reason: str
+    probe: str  # where verify.py shows it
+
+
+# (pattern, replacement) applied to the baseline's text before comparing it with Shape's.
+BRAND: tuple[tuple[str, str], ...] = (
+    (r"Spindle v\d+\.\d+\.\d+", "Shape vVERSION"),
+    (r"Spindle_", "Shape_"),
+    (r"spindle-", "shape-"),
+    (r"Spindle(?=[A-Z])", "Shape"),  # the model name prefix: SpindleRetail
+    (r"sqllocks-spindle", "sqllocks-shape"),
+    (r"'spindle notebook'", "'shape notebook'"),
+)
+
+
+def brand(text: str) -> str:
+    """The baseline's ``text`` with its own name mapped to Shape's."""
+    for pattern, replacement in BRAND:
+        text = re.sub(pattern, replacement, text)
+    return text
+
+
+def unversion(text: str) -> str:
+    """``text`` with any ``Shape vX.Y.Z`` made ``Shape vVERSION``."""
+    text = re.sub(r"Shape v\d+\.\d+\.\d+\S*", "Shape vVERSION", text)
+    return re.sub(r"(sqllocks-shape) \d+\.\d+\.\d+\S*", r"\1 VERSION", text)
+
+
+ALLOWED: tuple[Difference, ...] = (
+    Difference(
+        "model-name-and-generator",
+        "export-model",
+        "the model is named for Shape (ShapeRetail, annotation generated_by 'Shape vX'); the "
+        "content is otherwise equal, table by table, column by column, measure by measure",
+        "export-model rows and the library rows of verify.py",
+    ),
+    Difference(
+        "m-and-dax-quoting",
+        "export-model",
+        "a table or column name that holds a double quote, a single quote or a closing bracket "
+        "reaches the M text literal, the M identifier and the DAX reference unquoted in the "
+        "baseline, so the name ends the literal and the rest is read as expression; Shape quotes "
+        'each (\'\' and ]] in DAX, "" and #"..." in M). Names of the shipped domains are plain: '
+        "their output is equal",
+        "probe_quoting",
+    ),
+    Difference(
+        "notebook-part-path",
+        "deploy-notebook",
+        "the baseline declares format ipynb but names the part notebook-content.py, which the "
+        "Items API does not read as an ipynb part; Shape names it notebook-content.ipynb and adds "
+        "the .platform part that carries the display name",
+        "probe_notebook_part",
+    ),
+    Difference(
+        "accepted-is-not-created",
+        "deploy-notebook, setup-fabric",
+        "a 202 (the item is made later) has no body: the baseline reports the notebook created "
+        "with 'Item ID: unknown' without checking; Shape follows the operation to its end and "
+        "reports the real item, or the failure",
+        "probe_accepted",
+    ),
+    Difference(
+        "workspace-listing-pages",
+        "deploy-notebook, setup-fabric",
+        "the baseline reads the first page of the workspace listing only, so a workspace on a "
+        "later page is 'not found'; Shape follows the continuation token",
+        "probe_pagination",
+    ),
+    Difference(
+        "setup-existing-items",
+        "setup-fabric",
+        "a name already in use fails the baseline's command (it reads the 409 as an error); "
+        "Shape finds the existing item and says so (the command is safe to run again)",
+        "tests/test_fabric_commands.py::test_setup_reuses_what_is_already_there",
+    ),
+    Difference(
+        "manifest-file-paths",
+        "publish",
+        "the baseline's manifest lists no file for any table (file_paths is empty); Shape lists "
+        "the path of each table's file",
+        "probe_manifest_paths",
+    ),
+    Difference(
+        "one-landing-layout",
+        "publish",
+        "the baseline lays a remote lakehouse out one way (Files/landing/DOMAIN/TABLE/latest, "
+        "manifest in Files/_control/DOMAIN) and a local folder another (landing/DOMAIN/TABLE/"
+        "dt=latest, manifest in landing/DOMAIN/manifest/_control); Shape uses the baseline's "
+        "local layout for both",
+        "probe_baseline_layouts (reads the baseline's source)",
+    ),
+    Difference(
+        "delta-is-written-or-refused",
+        "publish",
+        "--format delta to a remote lakehouse writes an empty file in the baseline (the remote "
+        "branch serialises parquet, csv and jsonl only); Shape writes Delta tables to a local "
+        "folder and refuses OneLake rather than writing nothing",
+        "probe_baseline_delta (reads the baseline's source)",
+    ),
+    Difference(
+        "database-write-modes",
+        "publish",
+        "the baseline's SQL path drops and recreates an existing table; Shape's default fails on "
+        "an existing table and --write-mode names the destructive choices (P6-07a)",
+        "plugins/shape-fabric/tests/test_publish.py",
+    ),
+    Difference(
+        "exit-codes",
+        "all",
+        "the baseline exits 1 for every failure; Shape exits 2 for a wrong command line or "
+        "input and 1 for a service or destination failure (the convention of every Shape command)",
+        "the exit-code rows of verify.py (non-zero in both, 2 in Shape)",
+    ),
+    Difference(
+        "shape-wording",
+        "notebook, deploy-notebook, setup-fabric, publish",
+        "the generated notebook's text, the next-steps list of setup-fabric (it adds the domains "
+        "package Shape's library needs) and the per-table summary table of publish are Shape's "
+        "own; structure, counts and every request are compared",
+        "the notebook and setup rows of verify.py",
+    ),
+    Difference(
+        "extra-options",
+        "export-model, publish, deploy-notebook, setup-fabric",
+        "options the baseline lacks: export-model --mode; publish --write-mode, --batch-size, "
+        "--schema-name, --staging-path, --workspace-id env names (SHAPE_*), the six --auth modes "
+        "and their companions; deploy-notebook and setup-fabric the same --auth modes; "
+        "setup-fabric --lakehouse-name. None changes the baseline's behaviour when absent",
+        "tests/test_export_model.py, tests/test_publish.py, tests/test_fabric_commands.py",
+    ),
+)

@@ -47,6 +47,7 @@ from .source import ENV_CONNECTION_STRING
 
 PROP_KEY = "shape_key"
 PROP_TABLE = "shape_table"
+PROP_SYNTHETIC = "shape_synthetic"
 PROP_SEQ = "shape_seq"
 _BUSY_PAUSE = 0.5  # seconds; doubles with each repeat
 
@@ -120,6 +121,8 @@ class EventHubsEmitter:
     """
 
     name = "eventhubs"
+    accepts_poison = True  # one JSON text per message: a cut-off body is a poison message
+    supports_synthetic = True  # the `synthetic` option marks every message with a header
     schemes = ("eventhubs",)
     env_connection_string = ENV_CONNECTION_STRING
 
@@ -155,6 +158,7 @@ class EventHubsEmitter:
         resuming: bool = False,
         partition_key: str = "table",
         busy_retries: int = 6,
+        synthetic: bool = False,
         **options: Any,
     ) -> int:
         """Send every batch; return the number of events, after the service accepted them."""
@@ -172,13 +176,19 @@ class EventHubsEmitter:
         for batch in batches:
             events = encode_events(batch, envelope)
             for key, group in _groups(events, partition_key == "table"):
-                self._send_group(client, key, group, content_type, busy_retries)
+                self._send_group(client, key, group, content_type, busy_retries, synthetic)
             sent += len(events)
         return sent
 
     # ---------------------------------------------------------------- sending
     def _send_group(
-        self, client: Any, key: str | None, group: list[EncodedEvent], content_type: str, busy: int
+        self,
+        client: Any,
+        key: str | None,
+        group: list[EncodedEvent],
+        content_type: str,
+        busy: int,
+        synthetic: bool = False,
     ) -> None:
         from azure.eventhub import EventData
 
@@ -189,6 +199,8 @@ class EventHubsEmitter:
             data = EventData(ev.body)
             data.content_type = content_type
             data.properties = {PROP_KEY: ev.key, PROP_TABLE: ev.table, PROP_SEQ: ev.seq}
+            if synthetic:
+                data.properties[PROP_SYNTHETIC] = True
             return data
 
         current = new_batch()

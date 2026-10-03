@@ -10,6 +10,7 @@ import importlib
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from .azure import AbfssSink as AbfssSink
     from .delta import DeltaSink as DeltaSink
     from .excel import ExcelSink as ExcelSink
     from .files import CsvSink as CsvSink
@@ -22,6 +23,7 @@ if TYPE_CHECKING:
 SHAPE_API = "1.0"
 
 _EXPORTS = {
+    "AbfssSink": "azure",
     "CsvSink": "files",
     "DeltaSink": "delta",
     "ExcelSink": "excel",

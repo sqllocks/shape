@@ -145,6 +145,7 @@ class PackRunner:
             generated = _apply_chaos(generated, section, builder)
             chaos_applied = True
 
+        builder.record_dataset(generated.tables)
         errors: list[str] = []
         files: list[str] = []
         table_files: dict[str, list[str]] = {t: [] for t in generated.tables}

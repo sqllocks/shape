@@ -106,8 +106,9 @@ regression test in `tests/profile/test_profile_issues.py`. Everything else is co
   Wide tables keep each column's 25 strongest correlations past 256 numeric columns; no dataset is
   that wide, so `correlation_matrix` is compared in full.
 
-New fields (`nan_count`, `inf_count`, `pattern_rates`, `pattern_contains_rates`, `precision`, `scale`)
-are additive and not compared.
+New fields (`nan_count`, `inf_count`, `pattern_rates`, `pattern_contains_rates`, `precision`, `scale`,
+and from #47 the column `placeholders` and the table `joint` entry) are additive and not compared:
+`COLUMN_RULES` and `TABLE_RULES` are explicit field lists, so no allow-list entry was needed.
 
 ### Verification result (`verify.py --refresh`, all 30 variants)
 

@@ -126,6 +126,7 @@ class AnomalyInjector:
         self.mutators = list(mutators)
         self.seed = seed
         self.stats = AnomalyStats()
+        self.answer_key: Any = None  # an AnswerKey, set by the plan
 
     def apply(self, batch: pa.RecordBatch, table: str, row_start: int) -> pa.RecordBatch:
         """``batch`` (rows ``row_start ..`` of ``table``) with a fraction of its rows mutated."""
@@ -152,6 +153,9 @@ class AnomalyInjector:
                 self.stats.rows_affected.get(report.mutator, 0) + report.rows_affected
             )
         self.stats.rows_selected += k
+        if self.answer_key is not None:
+            seqs = (row_start + np.flatnonzero(chosen)).tolist()
+            self.answer_key.record("anomaly", table, seqs, mutators=[m.name for m in self.mutators])
         columns: list[Any] = [
             pc.replace_with_mask(batch.column(i), mask, sub.column(i))
             for i in range(batch.num_columns)
