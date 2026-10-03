@@ -569,10 +569,9 @@ class ContinueEngine:
     ) -> pa.Table:
         """Move rows between states, one Markov step per row; rows in an unlisted state stay."""
         array = _chunked(table, column)
-        current = np.asarray(
-            pc.cast(array, pa.string()).fill_null("").to_numpy(zero_copy_only=False), dtype=object
-        )
-        out = np.asarray(array.to_pylist(), dtype=object)
+        text = pc.cast(array, pa.string())  # states are named as text: "5", "true", "active"
+        current = np.asarray(text.fill_null("").to_numpy(zero_copy_only=False), dtype=object)
+        out = np.asarray(text.to_pylist(), dtype=object)
         for state, nxt in transitions.items():
             mask = current == state
             count = int(mask.sum())
@@ -582,7 +581,14 @@ class ContinueEngine:
             probs = np.array(list(nxt.values()), dtype=float)
             probs /= probs.sum()
             out[mask] = rng.choice(np.array(states, dtype=object), size=count, p=probs)
-        return _replace(table, column, pa.array(out.tolist()).cast(array.type))
+        try:
+            moved = pa.array(out.tolist(), type=pa.string()).cast(array.type)
+        except (pa.ArrowInvalid, pa.ArrowNotImplementedError) as exc:
+            raise IncrementalError(
+                f"a state transition of {column} names a state that is not a {array.type} value: "
+                f"{exc}"
+            ) from None
+        return _replace(table, column, moved)
 
 
 def _tag_schema(table: pa.Table, config: ContinueConfig) -> pa.Table:
