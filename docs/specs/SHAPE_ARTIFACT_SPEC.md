@@ -14,3 +14,6 @@ Normative rules:
 
 Writer conventions (not reader requirements; every reader still accepts any valid zip):
 9. Writers SHOULD be byte-reproducible: identical manifest and components give identical file bytes. The reference writer stores members uncompressed, in the order `manifest.json`, components sorted by name, then `manifest.sig`, each with the timestamp 1980-01-01 00:00:00, creator system Unix and mode 0644. The signature covers the manifest bytes only (rule 6), so it does not depend on any of these container fields, and Ed25519 signatures are deterministic.
+
+Versioning (see [state and compatibility](STATE_AND_COMPATIBILITY.md)):
+10. The manifest declares `format` (`shape`), `version`, `shape_version` and `min_shape_version`; `format_version` carries the same number as `version` in the 1.x series and is the only name older writers used. Readers MUST refuse a version newer than they read, naming the minimum release when the manifest gives it, and MUST ignore, and a rewriting tool MUST preserve, manifest fields they do not know.

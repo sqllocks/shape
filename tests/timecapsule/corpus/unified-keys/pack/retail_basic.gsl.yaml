@@ -1,0 +1,25 @@
+# retail_basic.gsl.yaml
+version: 1
+name: retail_daily_demo
+
+schema:
+  type: domain
+  domain: retail
+
+scenario:
+  pack: tutorial_custom_pack.yaml
+  scale: fabric_demo
+  seed: 42
+  date_range:
+    start: "2025-01-01"
+    end: "2025-01-31"
+
+outputs:
+  lakehouse:
+    mode: files_only
+    landing_zone:
+      root: Files/landing/retail
+    formats: [parquet]
+
+validation:
+  gates: [schema_conformance, referential_integrity]

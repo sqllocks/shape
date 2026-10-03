@@ -12,8 +12,11 @@ import time
 from pathlib import Path
 from typing import Any
 
+from shape import compat
 from shape.errors import ShapeError
+from shape.registry.layout import open_layout
 
+LAYOUT = "layout.json"
 _NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 
 
@@ -60,6 +63,7 @@ class LocalRegistry:
         for x in ("objects", "refs", "tags", "logs"):
             (self.root / x).mkdir(parents=True, exist_ok=True)
         self._real_root = self.root.resolve()
+        self.layout_version = open_layout(self.root, LAYOUT, "registry-layout", RegistryError)
 
     def _path(self, *parts: str) -> Path:
         """A path under the root; anything that resolves outside it raises RegistryError."""
@@ -102,7 +106,13 @@ class LocalRegistry:
                 with contextlib.suppress(OSError):
                     os.unlink(tmp)
                 raise
-        e = {"name": name, "content_id": h, "created_at": time.time(), "metadata": metadata or {}}
+        e = {
+            "name": name,
+            "content_id": h,
+            "created_at": time.time(),
+            "created": compat.utc_iso(),
+            "metadata": metadata or {},
+        }
         with log.open("a") as f:
             f.write(json.dumps(e, sort_keys=True) + "\n")
         self._write_ref(name, "latest", h)

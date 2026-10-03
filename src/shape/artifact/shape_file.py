@@ -18,6 +18,7 @@ from __future__ import annotations
 import hashlib
 from typing import Any, cast
 
+from shape import compat
 from shape.privacy.policy import LEVELS
 from shape.security import SecurityError, enforce_no_secrets, validate_structure
 from shape.spec.migrate import legacy_view, to_model
@@ -63,22 +64,23 @@ def write_model(
     model = to_model(shape, str(name))
     body = codec.dumps(model, sort_keys=True)
     content_id = hashlib.sha256(body).hexdigest()
-    manifest = {
-        "format": FORMAT,
-        "format_version": FORMAT_VERSION,
-        "name": str(name),
-        "shape_content_id": content_id,
-        "fidelity": str(fidelity),
-        "classification": classification,
-        "metadata": metadata,
-    }
+    manifest = compat.stamp(
+        "artifact",
+        {
+            "name": str(name),
+            "shape_content_id": content_id,
+            "fidelity": str(fidelity),
+            "classification": classification,
+            "metadata": metadata,
+        },
+    )
     write_artifact(path, manifest, {COMPONENT: body})
     return content_id
 
 
 def read_model(path: Any, *, verify_key: bytes | None = None) -> ArtifactRead:
     """``(manifest, model)`` of a .shape file; a version 1 file is migrated (its manifest then
-    says ``format_version`` 2, with ``migrated_from`` and ``source_content_id``). Any defect of
+    says ``version`` 2, with ``migrated_from`` and ``source_content_id``). Any defect of
     the file is an ``ArtifactError``. With ``verify_key`` (a trusted Ed25519 public key) the file
     must carry a valid signature, else ``ArtifactSignatureError``. The tuple also has ``.signature``
     (``status`` ``verified``, ``unsigned`` or ``signed_not_verified``); without ``verify_key`` an
@@ -88,11 +90,7 @@ def read_model(path: Any, *, verify_key: bytes | None = None) -> ArtifactRead:
     signature = read.signature
     if m.get("format") != FORMAT:
         raise ArtifactError("not a Shape artifact")
-    version = m.get("format_version")
-    if not isinstance(version, int) or isinstance(version, bool):
-        raise ArtifactError("invalid Shape format version")
-    if version < 1 or version > FORMAT_VERSION:
-        raise ArtifactError("unsupported Shape artifact version")
+    version = compat.check_readable("artifact", m, error=ArtifactError)
     try:
         _classification(m.get("classification", "PUBLIC"))
     except ValueError as e:
@@ -116,6 +114,14 @@ def read_model(path: Any, *, verify_key: bytes | None = None) -> ArtifactRead:
             obj = to_model(obj)
     except (SecurityError, ArtifactError):
         raise
+    except compat.UnsupportedVersionError as e:
+        raise compat.error_class(ArtifactError)(
+            f"invalid {COMPONENT}: {e}",
+            kind=e.kind,
+            found=e.found,
+            supported=e.supported,
+            min_shape_version=e.min_shape_version,
+        ) from e
     except (ValueError, TypeError, KeyError, RecursionError, ModelError) as e:
         raise ArtifactError(f"invalid {COMPONENT}: {e}") from e
     return ArtifactRead(m, obj, signature)
