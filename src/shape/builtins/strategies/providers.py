@@ -386,6 +386,25 @@ class Native:
         return _truncate(make(ctx, spec), ctx)
 
 
+_FAKER_API = frozenset(
+    ("seed", "seed_instance", "seed_locale", "add_provider", "get_providers", "provider")
+    + ("set_formatter", "get_formatter", "set_arguments", "get_arguments", "del_arguments")
+    + ("format", "parse", "random", "factories", "items", "locales", "weights")
+)
+
+
+def _is_provider(fake: Any, name: str) -> bool:
+    """Whether ``name`` is a provider method of ``fake``: a public method of one of its locale's
+    provider classes, never the Faker object's own API (``seed_instance``, ``add_provider``) or a
+    private name (#140)."""
+    if name.startswith("_") or name in _FAKER_API:
+        return False
+    factories = getattr(fake, "factories", None)
+    if factories is None:  # not the faker package's proxy: its public methods are the providers
+        return True
+    return any(name in dir(p) for factory in factories for p in getattr(factory, "providers", ()))
+
+
 @lru_cache(maxsize=16)
 def _faker_pool(locale: str, provider: str, args_json: str, key: int, size: int) -> pa.Array:
     """``size`` values of a Faker provider, drawn once with a Faker seeded from ``key``."""
@@ -398,7 +417,7 @@ def _faker_pool(locale: str, provider: str, args_json: str, key: int, size: int)
         ) from exc
     fake = faker_class(locale)
     fake.seed_instance(key & 0x7FFFFFFF)
-    method = getattr(fake, provider, None)
+    method = getattr(fake, provider, None) if _is_provider(fake, provider) else None
     if not callable(method):
         raise StrategyError(f"unknown faker provider {provider!r}")
     args = json.loads(args_json)
