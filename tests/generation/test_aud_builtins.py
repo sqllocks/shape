@@ -333,3 +333,25 @@ def test_faker_accepts_only_provider_methods() -> None:
             _table({"y": {"type": "string", "generator": generator}}, rows=3)
     generator = {"strategy": "faker", "provider": "color_name"}
     assert _table({"y": {"type": "string", "generator": generator}}, rows=3)["y"].null_count == 0
+
+
+# ---- #144: fitting a degenerate sample is a FamilyError ---------------------------------------
+
+
+def test_fit_family_refuses_degenerate_samples_with_a_family_error() -> None:
+    import pytest
+
+    from shape.builtins.distributions.families import FAMILIES, FamilyError, fit_family
+
+    fittable = [name for name in FAMILIES if name != "truncated"]
+    for name in fittable:
+        with pytest.raises(FamilyError):
+            fit_family(name, [])
+        with pytest.raises(FamilyError):
+            fit_family(name, [1.0, float("nan")])
+    for name in ("gamma", "beta", "pareto"):
+        with pytest.raises(FamilyError):
+            fit_family(name, [0.5] * 10)
+    with pytest.raises(FamilyError):
+        fit_family("triangular", [0.5])
+    assert fit_family("normal", [1.0, 2.0, 3.0])["mu"] == 2.0
