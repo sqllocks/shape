@@ -20,3 +20,14 @@ def test_drift_monitor_fails_closed_on_an_infinite_value() -> None:
     """#404: the KS path's PSI signal is NaN too; the column fails closed."""
     col = DriftMonitor().compare(_INF, _FINITE).columns["x"]
     assert (col.method, col.is_drifted) == ("error", True)
+
+
+def test_tiers_read_a_table_with_duplicate_column_names() -> None:
+    """#423: the frame reads columns by position, so a repeated name is no KeyError."""
+    from shape.fidelity._frame import Frame
+    from shape.fidelity.tier2 import run_tier2
+
+    t = pa.table([pa.array(["a"] * 20), pa.array(["b"] * 20)], names=["c", "c"])
+    frame = Frame.from_arrow(t)
+    assert frame.names == ["c", "c"]
+    assert run_tier2(t, t).cardinality["c"].passed
