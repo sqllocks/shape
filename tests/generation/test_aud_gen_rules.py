@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pytest
 from aud_gen_fixtures import build, col
 
 from shape.generation.engine import Engine
@@ -51,3 +52,51 @@ def test_a_temporal_cross_table_rule_with_le_is_repaired():
         order["customer_id"].to_pylist(), order["placed"].to_pylist(), strict=True
     ):
         assert placed <= churned[cid]
+
+
+def _pairs(left, right, type_=None):
+    import pyarrow as pa  # type: ignore[import-untyped]
+
+    return pa.table({"a": pa.array(left, type_), "b": pa.array(right, type_)})
+
+
+@pytest.mark.parametrize(
+    ("op", "left", "right", "type_"),
+    [
+        ("<", [5.0, 5.0, 5.0], [-10.0, 0.0, 0.004], "float64"),
+        (">", [-50.0, -5.0], [-10.0, 0.0], "float64"),
+        ("<", [3] * 10, [1] * 10, "int64"),
+        (">", [0] * 10, [1] * 10, "int64"),
+    ],
+)
+def test_a_cross_column_repair_satisfies_its_rule_for_any_bound(op, left, right, type_):
+    # 192: the repair scaled the bound by 0.3..0.95 (or 1.05..2), which only works for positive
+    # bounds: a < b with b = -10, 0, 0.004 still broke the rule after the repair.
+    import pyarrow as pa  # type: ignore[import-untyped]
+    import pyarrow.compute as pc  # type: ignore[import-untyped]
+
+    from shape.generation.rules import fix_rule
+    from shape.generation.schema import BusinessRule
+
+    rule = BusinessRule(name="r", type="cross_column", rule=f"a {op} b", table="t")
+    fixed = fix_rule(rule, {"t": _pairs(left, right, pa.type_for_alias(type_))}, 7)["t"]
+    test = pc.less if op == "<" else pc.greater
+    assert all(test(fixed["a"], fixed["b"]).to_pylist()), fixed.to_pydict()
+
+
+def test_a_cross_table_le_repair_satisfies_its_rule_for_a_negative_bound():
+    # 192: c.v <= p.lim with lim = -10 gave v = -5.46, still above the bound.
+    import pyarrow as pa  # type: ignore[import-untyped]
+
+    from shape.generation.rules import fix_rule
+    from shape.generation.schema import BusinessRule
+
+    rule = BusinessRule(name="r", type="cross_table", rule="c.v <= p.lim", via="pid")
+    tables = {
+        "p": pa.table({"pid": [1, 2], "lim": [-10.0, 0.0]}),
+        "c": pa.table({"pid": [1, 2, 1], "v": [5.0, 3.0, -20.0]}),
+    }
+    fixed = fix_rule(rule, tables, 7)["c"]
+    lim = {1: -10.0, 2: 0.0}
+    for pid, v in zip(fixed["pid"].to_pylist(), fixed["v"].to_pylist(), strict=True):
+        assert v <= lim[pid]
