@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable
 from dataclasses import dataclass
 
@@ -56,8 +57,8 @@ class WeightedLocation:
     weight: float = 1.0
 
     def __post_init__(self):
-        if self.weight <= 0:
-            raise ValueError("weight must be positive")
+        if not (0 < self.weight < math.inf):  # NaN fails every comparison
+            raise ValueError(f"weight must be a positive finite number, got {self.weight!r}")
 
 
 @dataclass(frozen=True, slots=True)
