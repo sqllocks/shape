@@ -68,6 +68,9 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--wheel", action="append", default=[], type=Path)
     a = ap.parse_args(argv)
+    for w in a.wheel:
+        if not w.is_file():
+            ap.error(f"no such archive: {w} (was the wheel or sdist built?)")
     found: list[str] = []
     for p in tree_files():
         found += hits(str(p.relative_to(ROOT)), p.read_bytes())

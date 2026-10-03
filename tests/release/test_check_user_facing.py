@@ -80,3 +80,15 @@ def test_tree_files_skips_plans_and_build_output(tmp_path, monkeypatch):
 
 def test_repository_is_clean():
     assert cuf.main([]) == 0
+
+
+def test_missing_archive_is_a_clear_usage_error(tmp_path, capsys):
+    # an unmatched `dist/*.whl` glob reaches the script as a literal path
+    missing = tmp_path / "dist" / "*.whl"
+    try:
+        cuf.main(["--wheel", str(missing)])
+    except SystemExit as exc:
+        assert exc.code == 2
+    else:
+        raise AssertionError("expected a usage error")
+    assert "no such archive" in capsys.readouterr().err
