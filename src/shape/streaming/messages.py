@@ -145,7 +145,7 @@ def _plain_numbers(values: list[Any], typ: pa.DataType) -> bool:
         return False
     if pa.types.is_null(seen) or pa.types.is_integer(seen):
         return True
-    return pa.types.is_floating(seen) and pa.types.is_floating(typ)
+    return bool(pa.types.is_floating(seen) and pa.types.is_floating(typ))
 
 
 def _typed(values: list[Any], typ: pa.DataType) -> tuple[pa.Array, list[int]]:
