@@ -90,7 +90,8 @@ applies to every table it fits; without a column, to the columns it picks itself
 Every corruption also takes `from` and `to`, the first and last batch in which it is active
 (`type_change=1@order.amount:from=5,to=7` is a few days of numbers as strings). A corruption that
 cannot apply to what it is aimed at (a column that is not there, text where a date is needed) is an
-error, not a silent no-op.
+error, not a silent no-op: `date_shift@order` on a table with no date column fails, and so does a
+corruption without `@TABLE` that fits no table at all.
 
 **The log** is JSON Lines. The first line is the run (`record: "run"`: the seed, the batch, the
 corruptions, rows in and out per table). Every other line is one change (`record: "change"`):

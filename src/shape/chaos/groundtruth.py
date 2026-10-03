@@ -405,7 +405,7 @@ def _columns(run: _Run, c: Corruption, table: str) -> list[str]:
         elif c.kind == "case_whitespace" and _is_text(f.type):
             if f.name != key and f.name not in fks:
                 col = _col(t, t.column_names.index(f.name))
-                if t.num_rows and len(pc.unique(col)) <= 50:
+                if len(pc.unique(col)) <= 50:  # an empty table fits too (no row changes)
                     out.append(f.name)
         elif c.kind == "orphan_keys" and f.name in run.foreign_keys(table):
             out.append(f.name)
@@ -700,13 +700,25 @@ def corrupt_tables(
         pos = zlib.crc32(f"{c.kind}:{occurrence}".encode())
         if not c.active(batch):
             continue
+        fitted = False
         for table in _targets(run, c):
             if c.kind == "duplicates":
                 _duplicates(run, c, pos, table)
                 continue
             columns = _columns(run, c, table)
+            if not columns and c.table is not None:
+                raise ValueError(
+                    f"{c.kind}: table {table!r} has no column it applies to; "
+                    f"name one: {c.kind}=RATE@{table}.COLUMN"
+                )
+            fitted = fitted or bool(columns)
             for column in columns:
                 _COLUMN_KINDS[c.kind](run, c, pos, table, column)
+        if c.kind != "duplicates" and not fitted:
+            raise ValueError(
+                f"{c.kind}: no table has a column it applies to; "
+                f"name one: {c.kind}=RATE@TABLE.COLUMN"
+            )
     return ChaosOutcome(
         run.tables, run.records, run.applied, seed, batch, list(corruptions), rows_in
     )

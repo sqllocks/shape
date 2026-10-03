@@ -110,3 +110,10 @@ def test_an_untargeted_corruption_still_skips_the_tables_it_does_not_fit() -> No
     }
     out = corrupt_tables(tables, [Corruption("negative_amounts", 0.5)], seed=1)
     assert {r["table"] for r in out.records} == {"b"}
+
+
+def test_a_corruption_aimed_at_an_empty_table_with_fitting_columns_changes_nothing() -> None:
+    """#403: an empty batch is not an error; its columns still fit."""
+    empty = pa.table({"id": pa.array([], pa.int64()), "status": pa.array([], pa.string())})
+    out = corrupt_tables({"t": empty}, [Corruption("case_whitespace", 0.5, "t")], seed=1)
+    assert out.records == []
