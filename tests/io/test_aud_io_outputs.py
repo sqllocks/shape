@@ -47,3 +47,25 @@ def test_502_hhmmss_is_utc_for_an_aware_time():
     assert render_path("{table}_{hhmmss}.{ext}", "t", "csv", None, now=now) == "t_070000.csv"
     naive = dt.datetime(2026, 1, 1, 12, 0, 0)
     assert render_path("{table}_{hhmmss}.{ext}", "t", "csv", None, now=naive) == "t_120000.csv"
+
+
+def test_503_a_store_file_needs_a_name_below_the_root(tmp_path):
+    import fsspec
+
+    from shape.io.store import FsspecStore, LocalStore
+
+    stores = [LocalStore(tmp_path / "r"), FsspecStore(fsspec.filesystem("memory"), "/aud503")]
+    for store in stores:
+        for rel in ("", ".", "./", "a/.."):
+            with pytest.raises(ValueError):
+                store.create(rel)
+
+
+def test_503_a_long_but_valid_file_name_is_written(tmp_path):
+    from shape.io.store import LocalStore
+
+    store = LocalStore(tmp_path)
+    name = "x" * 250 + ".csv"  # 254 bytes: a valid file name
+    store.put_bytes(f"d/{name}", b"1")
+    assert (tmp_path / "d" / name).read_bytes() == b"1"
+    assert store.names("d") == [name]
