@@ -5,6 +5,7 @@ finding there becomes a regression case in this file."""
 from __future__ import annotations
 
 import random
+import sys
 
 import pytest
 
@@ -14,10 +15,23 @@ pytestmark = pytest.mark.security
 
 SMOKE_SEED = 20261002
 SMOKE_ITERATIONS = 40
+# Line tracing (coverage, a debugger) makes pure-Python parsing several times slower: the deeply
+# nested YAML inputs take under 1 s untraced and about 3 s under ``--cov`` here, and past the
+# 5 s budget on slower runners. The property is "no input runs unbounded", so the budget is
+# scaled only while a tracer is attached; an untraced run keeps the 5 s limit.
+TRACED_TIME_LIMIT_FACTOR = 10
+
+
+def _tracing() -> bool:
+    if sys.gettrace() is not None:
+        return True
+    monitoring = getattr(sys, "monitoring", None)  # Python 3.12+: coverage uses sys.monitoring
+    return monitoring is not None and any(monitoring.get_tool(i) for i in range(6))
 
 
 def test_smoke_run_has_no_findings():
-    findings = fuzz.run_fuzz(SMOKE_SEED, SMOKE_ITERATIONS)
+    limit = fuzz.TIME_LIMIT_S * (TRACED_TIME_LIMIT_FACTOR if _tracing() else 1)
+    findings = fuzz.run_fuzz(SMOKE_SEED, SMOKE_ITERATIONS, time_limit=limit)
     assert not findings, "\n".join(str(f) for f in findings)
 
 
