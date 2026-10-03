@@ -103,6 +103,11 @@ def _extension(fmt: str, sink: Any) -> str:
     return value if isinstance(value, str) else fmt
 
 
+def file_extension(fmt: str) -> str:
+    """The file extension of installed format ``fmt``; empty for a sink that writes a directory."""
+    return _extension(fmt, _sink(fmt))
+
+
 class _LazySink:
     """The sink of ``fmt``, loaded by the first thread that writes to it. The format is checked
     now; importing the sink (Parquet alone is about 15 ms) happens on a writer thread, while the
