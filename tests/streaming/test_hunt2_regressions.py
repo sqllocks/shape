@@ -417,3 +417,39 @@ def test_696_a_gone_reader_is_not_retried():
     report = EmitRunner(EventPlan(engine), Gone(), EmitConfig(retries=3)).run()
     assert Gone.calls == 1 and report.retries == 0
     assert report.stopped_by == "reader-closed" and report.events == 0 and not report.complete
+
+
+def _read_typed(body_values, typ):
+    import pyarrow as pa
+
+    from shape.streaming.messages import (
+        EVENT_TIME_TYPE,
+        DecodeStats,
+        StreamMessage,
+        decode_messages,
+    )
+
+    schema = pa.schema([("x", typ), ("_shape_event_time", EVENT_TIME_TYPE)])
+    stats = DecodeStats()
+    msgs = [StreamMessage("0", i, json.dumps({"x": v})) for i, v in enumerate(body_values)]
+    batch = decode_messages(msgs, schema=schema, stats=stats)
+    return (None if batch is None else batch.to_pydict()["x"]), stats.rejected
+
+
+def test_698_a_boolean_does_not_fit_a_numeric_column():
+    import pyarrow as pa
+
+    assert _read_typed([True, 5], pa.int64()) == ([5], 1)
+    assert _read_typed([False, 2.5], pa.float64()) == ([2.5], 1)
+    assert _read_typed([True], pa.int64()) == (None, 1)
+    assert _read_typed([True, False], pa.bool_()) == ([True, False], 0)  # it fits a boolean column
+
+
+def test_735_a_fractional_number_does_not_fit_an_integer_column():
+    import pyarrow as pa
+
+    assert _read_typed([1.5, -1.9, 2.0], pa.int64()) == ([2], 2)
+    assert _read_typed([1e30, 7], pa.int64()) == ([7], 1)
+    assert _read_typed([2**70, 7], pa.int64()) == ([7], 1)
+    assert _read_typed([3, None, 4.0], pa.int32()) == ([3, None, 4], 0)
+    assert _read_typed([1, 2.25], pa.float64()) == ([1.0, 2.25], 0)  # a float column takes both
