@@ -248,7 +248,8 @@ def _token(args_token: str | None) -> str:
 
 
 def _poll(ctx: Context, record: dict[str, Any], token: str | None) -> dict[str, Any]:
-    """A remote job's current state, asked of Fabric and recorded."""
+    """A remote job's current state, asked of Fabric and recorded. A status the bridge has no
+    name for leaves the job as it was (active) and is reported as ``progress.fabric_status``."""
     external = record.get("external")
     if not external or record["status"] not in ACTIVE:
         return record
@@ -258,7 +259,11 @@ def _poll(ctx: Context, record: dict[str, Any], token: str | None) -> dict[str, 
 
     scale = ScaleJobs(ScaleStore(ctx.jobs_dir / "scale"))
     polled = scale.status(external["scale_job_id"], token or None)
-    changes: dict[str, Any] = {"status": polled["status"]}
+    changes: dict[str, Any] = {}
+    if polled["status"] in _STATUSES:
+        changes["status"] = polled["status"]
+    else:  # a name the bridge does not know: still active, so asked again and cancellable
+        changes["progress"] = {**(record.get("progress") or {}), "fabric_status": polled["status"]}
     if polled.get("error"):
         changes["error"] = {
             "code": "io.sink_failed",

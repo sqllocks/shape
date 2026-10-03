@@ -177,7 +177,9 @@ A command that can take a while returns **a job** instead of a result when the r
   job id.
 - A `fabric_spark` run is submitted to Fabric and recorded as a job; its state is read from Fabric
   when it is asked for (`job_status`, `scale_status`), so those calls need the Fabric token: the
-  argument `token`, else `$SHAPE_FABRIC_TOKEN`. A token is never written to a file.
+  argument `token`, else `$SHAPE_FABRIC_TOKEN`. A token is never written to a file. A Fabric status
+  the bridge has no name for leaves the job `submitted` (still asked, still cancellable) and is
+  reported as `progress.fabric_status`.
 
 **A job survives a restart of the bridge.** Job state lives in one JSON file per job under
 `DIR/bridge/` (`DIR` from `--jobs-dir`, `$SHAPE_JOBS_DIR`, or `~/.shape/jobs`):
