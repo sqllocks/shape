@@ -85,6 +85,19 @@ def _rows(doc: dict[str, Any], what: str) -> list[dict[str, Any]]:
     return rows
 
 
+def _next_page(doc: dict[str, Any], seen: set[str], what: str) -> str:
+    """The continuation token of a listing page (``""`` on the last page); a token the service
+    already gave would page forever, so it is a :class:`FabricApiError`."""
+    token = doc.get("continuationToken") or ""
+    if not isinstance(token, str):
+        raise FabricApiError(f"Fabric returned an unexpected answer for {what} (bad token)")
+    if token in seen:
+        raise FabricApiError(f"{what} repeated a continuation token; the paging would not end")
+    if token:
+        seen.add(token)
+    return token
+
+
 def is_guid(value: str) -> bool:
     return bool(_GUID.match(value))
 
@@ -114,6 +127,7 @@ class FabricApi:
         matches: list[dict[str, Any]] = []
         url = f"{FABRIC_API}/workspaces"
         token = ""
+        seen: set[str] = set()
         while True:
             page = self._http.request(
                 "GET", url + (f"?continuationToken={quote(token)}" if token else "")
@@ -121,7 +135,7 @@ class FabricApi:
             doc = _document(page, "the workspace listing")
             rows = _rows(doc, "the workspace listing")
             matches += [w for w in rows if w.get("displayName") == workspace]
-            token = doc.get("continuationToken") or ""
+            token = _next_page(doc, seen, "the workspace listing")
             if not token:
                 break
         if not matches:
@@ -145,6 +159,7 @@ class FabricApi:
         """The item of ``item_type`` called ``name``, or ``None``."""
         url = f"{FABRIC_API}/workspaces/{workspace_id}/items?type={quote(item_type)}"
         token = ""
+        seen: set[str] = set()
         while True:
             doc = _document(
                 self._http.request(
@@ -155,7 +170,7 @@ class FabricApi:
             for item in _rows(doc, "the item listing"):
                 if item.get("displayName") == name:
                     return dict(item)
-            token = doc.get("continuationToken") or ""
+            token = _next_page(doc, seen, "the item listing")
             if not token:
                 return None
 
