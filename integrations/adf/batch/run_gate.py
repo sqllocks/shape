@@ -65,11 +65,11 @@ def load_settings(path: str | Path) -> dict[str, Any]:
         raise GateError(f"cannot read {path}: {exc}") from exc
     if not isinstance(data, dict):
         raise GateError(f"{path} is not a JSON object")
-    ext = (
-        data.get("typeProperties", {}).get("extendedProperties")
-        if "typeProperties" in data
-        else data
-    )
+    if "typeProperties" in data:
+        props = data["typeProperties"]
+        ext = props.get("extendedProperties") if isinstance(props, dict) else None
+    else:
+        ext = data
     if not isinstance(ext, dict):
         raise GateError(f"{path} has no extendedProperties object")
     return ext
@@ -242,6 +242,8 @@ def run(settings: dict[str, Any], shape_cmd: list[str], workdir: str | Path | No
             _upload(work / SUMMARY_FILE, output, SUMMARY_FILE, client_id)
         except GateError as exc:
             gate = _new_gate(str(exc))
+        except Exception as exc:  # noqa: BLE001 - exit 1 means a violation: a crash is exit 2
+            gate = _new_gate(f"{type(exc).__name__}: {exc}")
         gate_file = work / GATE_FILE
         gate_file.write_text(json.dumps(gate), encoding="utf-8")
         _upload(gate_file, output, GATE_FILE, client_id)  # a failed gate still reports why
@@ -267,6 +269,9 @@ def main(argv: list[str] | None = None) -> int:
         return run(settings, a.shape.split())
     except GateError as exc:
         print(f"shape gate: {exc}", file=sys.stderr)
+        return 2
+    except Exception as exc:  # noqa: BLE001 - never exit 1 (a violation) for an error
+        print(f"shape gate: {type(exc).__name__}: {exc}", file=sys.stderr)
         return 2
 
 

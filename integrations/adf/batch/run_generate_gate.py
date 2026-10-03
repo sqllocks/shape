@@ -195,8 +195,9 @@ def run(settings: dict[str, Any], shape_cmd: list[str], workdir: str | Path | No
                 work / run_gate.PROFILE_FILE, output, run_gate.PROFILE_FILE, client_id
             )
             run_gate._upload(work / run_gate.SUMMARY_FILE, output, run_gate.SUMMARY_FILE, client_id)
-        except GateError as exc:
-            gate = run_gate._new_gate(str(exc))
+        except Exception as exc:  # noqa: BLE001 - exit 1 means a violation: a crash is exit 2
+            message = str(exc) if isinstance(exc, GateError) else f"{type(exc).__name__}: {exc}"
+            gate = run_gate._new_gate(message)
             gate["domain"] = str(settings.get("domain") or "")
             gate["tables"] = {}
         gate_file = work / run_gate.GATE_FILE
@@ -224,6 +225,9 @@ def main(argv: list[str] | None = None) -> int:
         return run(settings, a.shape.split())
     except GateError as exc:
         print(f"shape generate gate: {exc}", file=sys.stderr)
+        return 2
+    except Exception as exc:  # noqa: BLE001 - never exit 1 (a violation) for an error
+        print(f"shape generate gate: {type(exc).__name__}: {exc}", file=sys.stderr)
         return 2
 
 
