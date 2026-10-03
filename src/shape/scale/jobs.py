@@ -106,6 +106,25 @@ def new_job_id(kind: str) -> str:
     return f"{prefix}-{uuid.uuid4().hex[:8]}"
 
 
+def _read_record(path: Path, job_id: str) -> JobRecord:
+    """The record in ``path``; a ``ValueError`` naming the file when it is not a job record of
+    ``job_id`` (damaged, or written by something else)."""
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        raise ValueError(f"job file {path.name} is not valid JSON: {exc}") from None
+    if (
+        not isinstance(doc, dict)
+        or doc.get("job_id") != job_id
+        or not isinstance(doc.get("kind"), str)
+    ):
+        raise ValueError(f"job file {path.name} is not a job record of {job_id}")
+    try:
+        return JobRecord.from_dict(doc)
+    except TypeError as exc:
+        raise ValueError(f"job file {path.name} is not a job record: {exc}") from None
+
+
 class JobStore:
     """Thread-safe store of :class:`JobRecord`; durable when it has a directory."""
 
@@ -160,8 +179,7 @@ class JobStore:
                 path = self._path(job_id)
                 if path.is_file():
                     cached = self._jobs.get(job_id)
-                    doc = json.loads(path.read_text(encoding="utf-8"))
-                    disk = JobRecord.from_dict(doc)
+                    disk = _read_record(path, job_id)
                     if cached is None or disk.updated_at >= cached.updated_at:
                         self._jobs[job_id] = disk
             record = self._jobs.get(job_id)
@@ -184,7 +202,10 @@ class JobStore:
                 for path in sorted(self._root.glob("*.json")):
                     try:
                         self.get(path.stem)
-                    except (JobNotFoundError, ValueError, json.JSONDecodeError):
+                    except JobNotFoundError:
+                        continue
+                    except ValueError as exc:  # JSONDecodeError included
+                        logger.warning("skipping job file %s: %s", path.name, exc)
                         continue
             return sorted(self._jobs.values(), key=lambda r: (r.created_at, r.job_id))
 
