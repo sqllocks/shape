@@ -6,14 +6,17 @@ The keys are ``run_id``, ``spec_hash``, ``pack_id``, ``domain``, ``scale``, ``se
 ``workspace_id``, ``lakehouse_id``, ``sbom``, and, from manifest version 1, ``format``
 (``shape-run-manifest``), ``version``, ``reproducibility`` (the tuple of
 ``shape.repro``) and ``dataset_id`` (the content address of the output tables). The run
-id is ``YYYYMMDD_HHMMSS_{domain}_{scale}_s{seed}``. A manifest written before ``format`` and
-``version`` existed loads with an empty ``reproducibility`` and ``dataset_id``.
+id is ``YYYYMMDD_HHMMSS_{domain}_{scale}_s{seed}``, with every character of the domain and scale
+that is not a letter, digit, ``.``, ``_`` or ``-`` replaced by ``_`` (the id is a file name). A
+manifest written before ``format`` and ``version`` existed loads with an empty ``reproducibility``
+and ``dataset_id``.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import re
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -125,7 +128,7 @@ class ManifestBuilder:
         self._started_iso = now.isoformat()
         self._started = time.perf_counter()
         self._m = RunManifest(
-            run_id=f"{now.strftime('%Y%m%d_%H%M%S')}_{domain_name}_{scale}_s{seed}",
+            run_id=f"{now.strftime('%Y%m%d_%H%M%S')}_{plain(domain_name)}_{plain(scale)}_s{seed}",
             spec_hash=hash_file(Path(spec_path)) if spec_path is not None else "",
             pack_id=str(getattr(pack, "id", "")) if pack is not None else "",
             domain=domain_name,
@@ -217,6 +220,12 @@ class ManifestBuilder:
             reproducibility=raw.get("reproducibility", {}),
             dataset_id=raw.get("dataset_id", ""),
         )
+
+
+def plain(text: str) -> str:
+    """``text`` as part of a file name: anything but letters, digits, ``.``, ``_`` and ``-``
+    becomes ``_`` (a path separator in a domain or scale name never reaches the file system)."""
+    return re.sub(r"[^A-Za-z0-9._-]", "_", str(text))
 
 
 def collect_sbom() -> dict[str, str]:

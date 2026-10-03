@@ -31,6 +31,7 @@ from shape.scenario.validator import (
     match_table,
     schema_of,
 )
+from shape.security.names import contained
 
 if TYPE_CHECKING:
     import pyarrow as pa  # type: ignore[import-untyped]
@@ -181,12 +182,12 @@ class PackRunner:
                     errors.append(f"Validation gate '{gate}' failed: {message}")
 
         manifest = builder.finish()
-        manifest_path = output_root / f"{manifest.run_id}_manifest.json"
+        manifest_path = contained(output_root, manifest.run_id, "_manifest.json")
         counter = 1
         while manifest_path.exists():  # two runs in one second must not overwrite each other
             counter += 1
             manifest.run_id = f"{manifest.run_id.rsplit('_x', 1)[0]}_x{counter}"
-            manifest_path = output_root / f"{manifest.run_id}_manifest.json"
+            manifest_path = contained(output_root, manifest.run_id, "_manifest.json")
         ManifestBuilder.to_file(manifest, manifest_path)
         files.append(str(manifest_path))
         return RunResult(
