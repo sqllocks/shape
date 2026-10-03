@@ -8,11 +8,14 @@ Delta table in the Lakehouse (``Tables/<prefix><table>``):
   spec and making its row range (the engine's random access makes a chunk independent of the
   others), so the generation is spread over the cluster;
 * every other table, and every table of a schema with a post-pass, is generated on the driver
-  with ``Engine.generate`` and written from there.
+  and written from there: table by table when the schema has no post-pass, else with one
+  ``Engine.generate`` run.
 
-Row counts are exact, and the output does not depend on how Spark split the work. Shape must be
-installed on the executors (the notebook's first cell installs it; a Fabric Environment library
-works too). Spark is never imported here, so the module is importable and testable anywhere.
+The row count of every table is read back from the Delta table once it is written, so
+``check_result`` compares what was written with the spec. Row counts are exact, and the output
+does not depend on how Spark split the work. Shape must be installed on the executors (the
+notebook's first cell installs it; a Fabric Environment library works too). Spark is never
+imported here, so the module is importable and testable anywhere.
 """
 
 from __future__ import annotations
@@ -116,13 +119,11 @@ def run_job(
     chunk_rows = int(spec["chunk_rows"])
     root = f"abfss://{workspace_id}@onelake.dfs.fabric.microsoft.com/{lakehouse_id}/Tables"
 
-    def save(frame: Any, table: str) -> None:
-        (
-            frame.write.format("delta")
-            .mode("overwrite")
-            .option("overwriteSchema", "true")
-            .save(f"{root}/{table_prefix}{table}")
-        )
+    def save(frame: Any, table: str) -> int:
+        """Write ``table`` and return the rows the Delta table holds (read back, not assumed)."""
+        path = f"{root}/{table_prefix}{table}"
+        frame.write.format("delta").mode("overwrite").option("overwriteSchema", "true").save(path)
+        return int(spark.read.format("delta").load(path).count())
 
     spread = distributed_tables(engine, chunk_rows)
     rows: dict[str, int] = {}
@@ -137,19 +138,26 @@ def run_job(
             frame = ids.mapInArrow(
                 _chunk_batches(broadcast.value, table), arrow_to_ddl(sample.schema)
             )
-            save(frame, table)
-            rows[table] = total
-            log(f"  wrote {table}: {total:,} rows in {chunks} chunk(s), made on the executors")
+            rows[table] = save(frame, table)
+            written = rows[table]
+            log(f"  wrote {table}: {written:,} rows in {chunks} chunk(s), made on the executors")
     rest = [n for n in engine.order if n not in rows]
     if rest:
-        result = engine.generate()
         from shape.integrations.fabric.generation import delta_ready
 
+        if engine._post_pass_tables():
+            # A post-pass needs whole tables: one full run on the driver.
+            made = engine.generate().tables.__getitem__
+        else:
+            # Each table on its own (a table it points at is generated as its key pool needs),
+            # so the driver never makes the tables the executors made.
+            def made(table: str) -> Any:
+                return engine.finalize(table, engine.generate_table(table))
+
         for table in rest:
-            arrow = delta_ready(result.tables[table])
-            save(spark.createDataFrame(arrow.to_pandas()), table)
-            rows[table] = arrow.num_rows
-            log(f"  wrote {table}: {arrow.num_rows:,} rows, made on the driver")
+            arrow = delta_ready(made(table))
+            rows[table] = save(spark.createDataFrame(arrow.to_pandas()), table)
+            log(f"  wrote {table}: {rows[table]:,} rows, made on the driver")
     return {
         "status": "succeeded",
         "rows_generated": sum(rows.values()),

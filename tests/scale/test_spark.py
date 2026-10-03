@@ -371,27 +371,52 @@ def test_the_driver_does_not_regenerate_the_tables_the_executors_make(monkeypatc
     from collections import Counter
 
     made: Counter[str] = Counter()
+    on_executor = [False]
     original = Engine.generate_chunk
+    executor_fn = spark_worker._chunk_batches
 
     def spy(self, table, start, n_rows, chunk=0):
-        made[table] += n_rows
+        if not on_executor[0]:
+            made[table] += n_rows
         return original(self, table, start, n_rows, chunk=chunk)
 
+    def executor(spec_json, table):
+        run = executor_fn(spec_json, table)
+
+        def flagged(batches):
+            on_executor[0] = True
+            try:
+                yield from run(batches)
+            finally:
+                on_executor[0] = False
+
+        return flagged
+
     monkeypatch.setattr(Engine, "generate_chunk", spy)
-    _, _, result, _ = run_worker(plain_doc(ROWS), ROWS, 500)  # the fake runs no executor code
+    monkeypatch.setattr(spark_worker, "_chunk_batches", executor)
+    spec, spark, result, _ = run_worker(plain_doc(ROWS), ROWS, 500)
     assert result["distributed"] == ["order", "order_line"]
     assert +made == Counter(customer=40)  # zero-row schema samples drop out
+    spark_worker.check_result(spec, result)
+    root = f"abfss://{WS}@onelake.dfs.fabric.microsoft.com/{LH}/Tables"
+    direct = Engine(GenSchema.from_dict(plain_doc(ROWS)), seed=9).generate()
+    driver_made = collect(spark.saved[f"{root}/p_customer"][2])
+    assert driver_made.to_pylist() == direct.tables["customer"].to_pylist()
 
 
 def test_the_written_row_count_of_an_executor_table_is_measured(monkeypatch):
     # Regression #485: run_job reported the spec's count for executor-made tables.
+    lost = []
+
     def lose_a_chunk(spec_json, table):
         whole = original(spec_json, table)
 
         def run(batches):
-            for i, batch in enumerate(whole(batches)):
-                if i or table != "order":
-                    yield batch
+            for batch in whole(batches):
+                if table == "order" and not lost:
+                    lost.append(batch.num_rows)  # the first chunk made is never written
+                    continue
+                yield batch
 
         return run
 
