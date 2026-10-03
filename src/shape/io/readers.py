@@ -599,6 +599,20 @@ def _coerce_text(
     return pa.RecordBatch.from_arrays(arrays, schema=pa.schema(fields))
 
 
+def _once(items: Iterable[Any], what: str) -> Callable[[], Iterator[Any]]:
+    """An opener for a one-shot iterable that raises on a second read instead of yielding
+    nothing."""
+    state = {"used": False}
+
+    def open_once() -> Iterator[Any]:
+        if state["used"]:
+            raise ReaderError(f"{what} can be read only once")
+        state["used"] = True
+        return iter(items)
+
+    return open_once
+
+
 def _is_pandas(obj: Any) -> bool:
     mod = type(obj).__module__
     return mod.startswith("pandas") and hasattr(obj, "columns") and hasattr(obj, "dtypes")
@@ -632,9 +646,9 @@ def open_source(
             name or "table", "table", _project(pa.Table.from_batches([source]), columns), batch_size
         )
     if isinstance(source, pa.RecordBatchReader):
-        reader = source
-        sch = reader.schema
-        return Source(name or "stream", "stream", sch, lambda: iter(reader), None)
+        return Source(
+            name or "stream", "stream", source.schema, _once(source, "a record batch reader"), None
+        )
     if isinstance(source, Mapping):
         try:
             table = pa.table(dict(source))
