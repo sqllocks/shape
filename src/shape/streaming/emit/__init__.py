@@ -24,12 +24,18 @@ from shape.streaming.emit.formats import (
     event_key,
     read_events,
 )
+from shape.streaming.emit.progress import ProgressLine
 from shape.streaming.emit.rate import (
     Burst,
+    DailyCurve,
+    DaySchedule,
+    Ramp,
     RateCap,
     RateSchedule,
     VirtualClock,
+    load_curve,
     parse_burst,
+    parse_ramp,
     parse_speed,
 )
 from shape.streaming.emit.runtime import EmitConfig, EmitReport, EmitRunner, EventSequence
@@ -44,6 +50,12 @@ from shape.streaming.emit.sinks import (
 from shape.streaming.emit.source import EventBlock, EventPlan
 
 __all__ = [
+    "DailyCurve",
+    "DaySchedule",
+    "ProgressLine",
+    "Ramp",
+    "load_curve",
+    "parse_ramp",
     "DeadLetterSink",
     "RejectedEvents",
     "Rejection",

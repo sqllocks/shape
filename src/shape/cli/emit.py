@@ -25,6 +25,21 @@ SINKS_HELP = (
 )
 
 
+class _RateAction(argparse.Action):
+    """``--rate N``, remembering that it was given (``--day-seconds`` sets the pace and cannot be
+    combined with an explicit rate, whatever the default is)."""
+
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: Any,
+        option_string: str | None = None,
+    ) -> None:
+        namespace.rate = values
+        namespace.rate_given = True
+
+
 def add_arguments(sub: Any) -> None:
     em = sub.add_parser(
         "emit",
@@ -90,7 +105,12 @@ def add_options(em: Any, *, stream: bool = False) -> None:
         help="pace to --rate events per second (default: --no-realtime, as fast as possible)",
     )
     rate.add_argument(
-        "--rate", type=float, default=None, metavar="N", help=f"events/s ({rate_default:g})"
+        "--rate",
+        type=float,
+        default=rate_default,
+        action=_RateAction,
+        metavar="N",
+        help=f"events/s ({rate_default:g})",
     )
     rate.add_argument(
         "--burst",
@@ -841,7 +861,13 @@ def run(a: argparse.Namespace) -> int:
             raise ShapeError("--day-seconds needs --realtime")
         if not math.isfinite(a.day_seconds) or a.day_seconds <= 0:
             raise ShapeError("--day-seconds must be positive")
-        if a.rate is not None or a.burst or a.ramp or a.daily_curve or a.arrivals != "constant":
+        if (
+            getattr(a, "rate_given", False)
+            or a.burst
+            or a.ramp
+            or a.daily_curve
+            or a.arrivals != "constant"
+        ):
             raise ShapeError(
                 "--day-seconds sets the pace: it cannot be combined with --rate, --burst, "
                 "--ramp, --daily-curve or --arrivals"
@@ -914,7 +940,7 @@ def run(a: argparse.Namespace) -> int:
     )
     config = EmitConfig(
         realtime=a.realtime,
-        rate=a.rate if a.rate is not None else (10.0 if a.cmd == "stream" else 100.0),
+        rate=a.rate,
         bursts=tuple(parse_burst(b) for b in a.burst or ()),
         max_events=a.max_events,
         duration=a.duration,
