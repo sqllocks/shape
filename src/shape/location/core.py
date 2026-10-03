@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 
@@ -129,26 +130,35 @@ class LocationResolver:
         )
 
 
+_ZIP = re.compile(r"[0-9]{5}(?:-?[0-9]{4})?")  # ASCII digits: ZIP or ZIP+4, dash optional
+
+
 def location_from_spec(spec) -> Location:
     """Parse an app/agent-friendly location specification."""
     if isinstance(spec, Location):
         return spec
     if isinstance(spec, str):
         s = spec.strip()
-        if s.isdigit() and len(s) in (5, 9):
+        if _ZIP.fullmatch(s):
             return Location.zip(s[:5])
-        if len(s) == 2 and s.isalpha():
+        if len(s) == 2 and s.isascii() and s.isalpha():
             return Location.state_scope(s.upper())
         parts = [x.strip() for x in s.split(",")]
-        if len(parts) == 2:
+        if len(parts) == 2 and all(parts):
             return Location.city_scope(parts[0], parts[1])
-        raise ValueError("string location must be a ZIP, a state code ('WA') or 'City, ST'")
+        raise ValueError(
+            "string location must be a ZIP (43215, 43215-0001), a state code ('WA') or "
+            f"'City, ST'; got {spec!r}"
+        )
     if not isinstance(spec, dict):
         raise TypeError("location spec")
     if "zip" in spec or "postal_code" in spec:
-        return Location.zip(
-            str(spec.get("zip", spec.get("postal_code"))), spec.get("country", "US")
-        )
+        code = spec.get("zip")
+        if code is None:
+            code = spec.get("postal_code")
+        if code is None or not str(code).strip():
+            raise ValueError("location spec has an empty zip/postal_code")
+        return Location.zip(str(code).strip(), spec.get("country", "US"))
     if "city" in spec:
         return Location(
             country=spec.get("country", "US"), state=spec.get("state"), city=spec["city"]
