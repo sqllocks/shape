@@ -351,7 +351,7 @@ class OperationalLogSimulator:
             "outage": in_outage,
         }
         if cfg.error_burst_enabled and len(burst_hours) and cfg.error_burst_count > 0 and n_svc:
-            parts = self._append_bursts(parts, burst_hours, n_svc, names, tiers, start_us)
+            parts = self._append_bursts(parts, burst_hours, n_svc, names, tiers, start_us, span_s)
 
         order = np.argsort(parts["ts"], kind="stable")
         logs = self._logs_table(parts, order, zone)
@@ -445,8 +445,10 @@ class OperationalLogSimulator:
         names: np.ndarray,
         tiers: np.ndarray,
         start_us: int,
+        span_s: np.ndarray,
     ) -> dict[str, np.ndarray]:
-        """In each burst hour every service logs ``error_burst_count`` errors in five minutes."""
+        """In each burst hour every service logs ``error_burst_count`` errors in five minutes,
+        or in what is left of the window when its last, partial hour is shorter."""
         cfg, rng = self._config, self._rng
         per = cfg.error_burst_count
         hour = np.repeat(burst_hours, n_svc * per)
@@ -460,7 +462,8 @@ class OperationalLogSimulator:
         extra: dict[str, np.ndarray] = {
             "ts": start_us
             + hour * 3_600_000_000
-            + np.round(rng.uniform(0, 300, n) * 1e6).astype(np.int64),
+            # the same draws as uniform(0, 300) wherever the hour has five minutes left
+            + np.round(rng.uniform(0, np.minimum(300.0, span_s[hour]), n) * 1e6).astype(np.int64),
             "service": names[svc],
             "tier": tiers[svc],
             "level": np.full(n, "ERROR", dtype=object),
