@@ -117,6 +117,11 @@ FIXES: dict[str, str] = {
         "#218). The baseline checks for a two-value template the parser never writes, so no "
         "*_type column was ever upgraded."
     ),
+    "F17": (
+        "The child-after-parent date rule (BR-04) names both sides as table.column (AUD-gen, "
+        "issue #327), as the rules engine reads a cross_table rule. The baseline writes bare "
+        "column names (order_date >= order_date), so the rule was never checked or repaired."
+    ),
 }
 
 
@@ -495,6 +500,8 @@ ALLOWED: list[Field | Note] = [
         )
         for where in ("generator.null_rate", "null_rate")
     ),
+    # F17 entries: BR-04 names its tables
+    Field("F17", "smart_retail", "business_rules.order_items_after_orders.rule", SMART),
     # F16 entries: a *_type column with the parser's template is upgraded
     Field(
         "F16",

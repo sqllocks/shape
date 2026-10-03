@@ -1205,7 +1205,8 @@ def _business_rules(ctx: _Context) -> None:
             BusinessRule(
                 f"{rel.child}_after_{rel.parent}",
                 "cross_table",
-                f"{child_dates[0]} >= {parent_dates[0]}",
+                # table.column on both sides, as the rules engine reads a cross_table rule
+                f"{rel.child}.{child_dates[0]} >= {rel.parent}.{parent_dates[0]}",
                 rel.child,
                 via,
             ),

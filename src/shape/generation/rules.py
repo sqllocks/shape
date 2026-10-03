@@ -40,6 +40,10 @@ from shape.generation.schema import BusinessRule, GenSchema
 
 MAX_RULE_CHARS = 2000
 _COMPARISON = re.compile(r"^(.+?)\s*(>=|<=|>|<|==)\s*(.+)$")
+_NUMBER = r"([-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?)"
+_BETWEEN = re.compile(
+    r"^\s*(\w+)\s+BETWEEN\s+" + _NUMBER + r"\s+AND\s+" + _NUMBER + r"\s*$", re.IGNORECASE
+)
 
 Tables = dict[str, pa.Table]
 
@@ -120,10 +124,34 @@ def _count_violations(left: npt.NDArray[Any], op: str, right: npt.NDArray[Any]) 
 # ---- validate -----------------------------------------------------------------------------
 
 
+def parse_between(rule: str) -> tuple[str, float, float] | None:
+    """``"x BETWEEN 1 AND 5"`` as ``("x", 1.0, 5.0)``; ``None`` when it is not one."""
+    m = _BETWEEN.match(rule) if len(rule) <= MAX_RULE_CHARS else None
+    return (m.group(1), float(m.group(2)), float(m.group(3))) if m else None
+
+
+def _check_between(rule: BusinessRule, table: pa.Table) -> RuleViolation | None:
+    """Rows of ``x BETWEEN low AND high`` (both ends included) outside the range; a null is
+    not a violation."""
+    parsed = parse_between(rule.rule)
+    if parsed is None or parsed[0] not in table.column_names:
+        return None
+    column, low, high = parsed
+    col = table[column]
+    if not _evaluable(col) or _is_temporal(col):
+        return None
+    values = _numpy(col)
+    with np.errstate(invalid="ignore"):
+        count = int(((values < low) | (values > high)).sum())
+    return RuleViolation(rule.name, str(rule.table), count, table.num_rows) if count else None
+
+
 def _check_single_table(rule: BusinessRule, tables: Tables) -> RuleViolation | None:
     if not rule.table or rule.table not in tables:
         return None
     table = tables[rule.table]
+    if parse_between(rule.rule) is not None:
+        return _check_between(rule, table)
     left, op, right = parse_comparison(rule.rule)
     if not left or left not in table.column_names:
         return None

@@ -547,11 +547,19 @@ class GenSchema:
 
     def _comparison_problem(self, b: BusinessRule, *, cross_table: bool) -> str | None:
         """Why the rules engine cannot evaluate ``b`` (it then skips it), or ``None``."""
-        from shape.generation.rules import parse_comparison
+        from shape.generation.rules import parse_between, parse_comparison
 
+        between = parse_between(b.rule)
+        if between is not None and not cross_table:
+            column = between[0]
+            ok = column in self.tables[str(b.table)].columns
+            return None if ok else f"'{column}' is not a column of '{b.table}'"
         left, op, right = parse_comparison(b.rule)
         if not op:
-            return "it is not a comparison 'A OP B' with OP one of >=, <=, >, <, =="
+            return (
+                "it is not a comparison 'A OP B' with OP one of >=, <=, >, <, == (or "
+                "'x BETWEEN low AND high')"
+            )
         if not cross_table:
             table = self.tables[str(b.table)]
             for side in (left, right):

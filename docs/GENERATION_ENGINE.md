@@ -115,7 +115,8 @@ They need whole tables, so `generate()` runs them and `iter_chunks()` does not. 
 2. **Compute phase** (`compute.py`): fills `computed` columns from another table: `sum_children`,
    `count_children`, `avg_children`, `min_children`, `max_children` (rows without children get 0;
    decimals are rounded to 2 places), or `lookup_parent`.
-3. **Business rules** (`rules.py`): `validate_rules` lists the rules the data breaks;
+3. **Business rules** (`rules.py`): `validate_rules` lists the rules the data breaks (an
+   `A OP B` comparison, or a `constraint` `x BETWEEN low AND high`, both ends included);
    `fix_rules` repairs `cross_column` (`<`, `>`) and `cross_table` (`>=`, `>`, `<=`) rules and
    returns what still violates. Repairs draw from the `fix:<rule>` stream. `remaining_violations`
    is what the finished tables break.
