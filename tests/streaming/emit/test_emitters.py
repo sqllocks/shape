@@ -190,3 +190,24 @@ def test_encode_events_matches_the_json_lines(plan: Any) -> None:
         events = encode_events(batch, envelope)
         assert b"\n".join(e.body for e in events) + b"\n" == encode_batch(batch, envelope)
         assert [e.key for e in events] == [f"order_line/{i}" for i in range(30)]
+
+
+def test_a_plugin_emitter_on_file_does_not_take_over_the_file_emitter(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from shape.plugins.host import PluginHost
+    from shape.streaming.emit.sinks import open_sink
+
+    class NdjsonEmitter(FileEmitter):
+        name = "fhir"
+
+    host = PluginHost(entry_points=lambda: [])
+    host.register("shape.emitters", "fhir", NdjsonEmitter())  # sorts before "file"
+    host.register("shape.emitters", "file", FileEmitter())
+    monkeypatch.setattr("shape.plugins.host.default_host", lambda: host)
+    sink = open_sink(f"file://{tmp_path}/a.jsonl")
+    assert type(sink.emitter) is FileEmitter  # type: ignore[attr-defined]
+    # With no emitter named after the scheme, one that lists it is still found.
+    host = PluginHost(entry_points=lambda: [])
+    host.register("shape.emitters", "fhir", NdjsonEmitter())
+    assert type(open_sink(f"file://{tmp_path}/b.jsonl").emitter) is NdjsonEmitter  # type: ignore[attr-defined]

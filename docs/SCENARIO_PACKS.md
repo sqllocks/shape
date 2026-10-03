@@ -134,6 +134,7 @@ Every run writes `<run_id>_manifest.json` into the output directory
 | `timestamps` | `started`, `finished`, `elapsed_seconds` |
 | `workspace_id`, `lakehouse_id` | Fabric identifiers, empty unless set |
 | `format`, `version` | `shape-run-manifest`, `1` (a manifest from a newer Shape is refused; one without them loads with an empty `reproducibility` and `dataset_id`) |
+| `shape_version`, `min_shape_version` | the Shape release that wrote the manifest, and the first release that reads its `version` (`docs/specs/STATE_AND_COMPATIBILITY.md`) |
 | `reproducibility` | the reproducibility tuple: `schema_version`, `profile_version`, `seed`, `scale`, `shape_version`, `kernel`, `platform` (`docs/REPRODUCIBILITY.md`) |
 | `dataset_id` | the content address of the output tables (`sha256:...`), over every generated table after chaos |
 | `sbom` | version of `sqllocks-shape`, `pandas`, `numpy`, `faker`, `pyarrow` and `scipy` (`not installed` when absent) |

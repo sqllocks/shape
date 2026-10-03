@@ -489,14 +489,19 @@ def landing(root: Path) -> dict[str, Path]:
     return {str(p.relative_to(root)): p for p in sorted(root.rglob("*")) if p.is_file()}
 
 
-SHAPE_ONLY_MANIFEST_KEYS = frozenset({"format", "version", "reproducibility", "dataset_id"})
+SHAPE_ONLY_MANIFEST_KEYS = frozenset(
+    {"format", "version", "shape_version", "min_shape_version", "reproducibility", "dataset_id"}
+)
 
 
 def compare_manifest(base: dict[str, Any], mine: dict[str, Any], *, seed: int) -> Problems:
     problems: Problems = []
-    # Shape's run manifest declares its format and version and carries the
-    # reproducibility tuple and dataset id (W1-03, plan 2.3). Exactly these keys
-    # are Shape's own; every other key must match the baseline's key set.
+    # Shape's run manifest declares its format, version, writing release and the
+    # first release that reads it (W1-01) and carries the reproducibility tuple and
+    # dataset id (W1-03, plan 2.3). Exactly these keys are Shape's own; every other
+    # key must match the baseline's key set.
+    from shape import compat
+
     extra = sorted(set(mine) - set(base))
     if extra != sorted(SHAPE_ONLY_MANIFEST_KEYS) or sorted(base) != sorted(
         set(mine) - SHAPE_ONLY_MANIFEST_KEYS
@@ -504,6 +509,13 @@ def compare_manifest(base: dict[str, Any], mine: dict[str, Any], *, seed: int) -
         problems.append(f"manifest keys: {sorted(base)} != {sorted(mine)}")
     elif mine["format"] != "shape-run-manifest" or type(mine["version"]) is not int:
         problems.append(f"manifest declaration: {mine['format']!r} version {mine['version']!r}")
+    elif mine["shape_version"] != mine["engine_version"] or mine[
+        "min_shape_version"
+    ] != compat.KINDS["run-manifest"].first_release.get(mine["version"]):
+        problems.append(
+            f"manifest declaration: written by {mine['shape_version']!r}, read from "
+            f"{mine['min_shape_version']!r}"
+        )
     for key in (
         "spec_hash",
         "pack_id",
@@ -843,6 +855,9 @@ def negative_control(tmp: Path) -> Problems:
         ("Shape's dataset id removed", lambda m: m.pop("dataset_id")),
         ("Shape's format declaration changed", lambda m: m.update(format="other")),
         ("Shape's version not an integer", lambda m: m.update(version="1")),
+        ("Shape's writing release removed", lambda m: m.pop("shape_version")),
+        ("Shape's writing release changed", lambda m: m.update(shape_version="0.0.1")),
+        ("Shape's minimum reading release changed", lambda m: m.update(min_shape_version="9.9.9")),
         ("an unknown key added", lambda m: m.update(extra=1)),
     ):
         bad = copy.deepcopy(sm)

@@ -1,0 +1,93 @@
+# INT-16 — integration fixes (cross-lane test failures)
+
+Branch `int/INT-16`, based on `build/main-plan` (5c91ea50, INT-15 merged; it has not moved since, so there was
+no new merge to make). No edit to §11 or §2.3 of the plan, to `.github/workflows`, or to `$SPINDLE_ROOT` (cloned at
+the pinned commit 422e78d and only read). No gate, tolerance or D-xx/T-xx decision changed; no test skipped,
+deselected or xfailed.
+
+## Lanes merged (earlier INT-16 sessions)
+
+CI-FIX, BF-77, W1-01, W1-04, W1-05, W1-06, W2-01, W2-02, W3-04, W3-06, W3-09, W3-10, W4-03, W5-01, W1-16,
+PLUG-INT, BF-78, W1-09, P6-01e-seed, NIGHTLY-FIX, then `build/main-plan` (INT-15). One commit from those sessions,
+9385c53 ("workflow changes proposed by PLUG-INT"), applies PLUG-INT's `ci.yml` diff from
+`docs/plans/lane_status/PLUG-INT.md`. This session did not edit any workflow.
+
+## Cross-lane fixes
+
+| Commit | Fix |
+|---|---|
+| 207f452 | `shape verify --source DATA` is not read as a `shape.yml` source name (W1-04 x INT-15 merge resolution) |
+| fe728c6 | ruff format of the merged generate/composite options (P6-01e-seed merge resolution) |
+| e780bc4 | `demo_cmd` failed-domain tests use a scenario whose own domain cannot exist |
+| ace3414 | W1-06 spec contract covers `conditional_table`, `hierarchy`, `hierarchy_field` and `locale` |
+| 3ce515c | `shape.behaviors` is under plugin API v1's promise (W1-05 x PLUG-INT) |
+| b2bda02 | `shape-project-v1` schema accepts every drift-engine threshold (W1-04 x INT-15) |
+| 7b520d0 | sink-scheme message test expects the message naming both ADLS providers |
+| 0bc534e | `shape doctor`'s HTTPS probe goes through the explicit fetch module |
+| 8d40fa8 | ruff format of W1-09's demo tests |
+| 4d7f51f | healthcare-codes docs name no payer domain |
+| c153e9c | bridge vectors list the 14 installed domains (P6-01e-seed) |
+| 69df49a | composite dump test treats `export_domains.UNREAD_KEYS` as a named difference |
+| 4edaeb1 | **this session.** `emit --to file://` keeps the built-in `file` emitter. The healthcare-standards `fhir` emitter lists the `file` scheme and its name sorts before `file`, so with PLUG-INT's plugins installed every emit to `file://` went to the FHIR emitter (`tests/streaming/emit/test_faults.py::test_emit_to_two_files` exited 2: "table 'member' lacks required column(s)"). `open_sink` now tries the emitter named after the scheme first, the rule `find_source` already uses for stream sources. Regression test `test_a_plugin_emitter_on_file_does_not_take_over_the_file_emitter` fails before the fix and passes after it. |
+| 9770d13 | **this session.** W1-01 stamps the run manifest with `shape_version` and `min_shape_version`. INT-15's fabric commands parity harness and the shape-fabric publish test accepted exactly W1-03's four Shape-only keys, so the parity run failed on `publish` ("manifest keys ... != ...") and `plugins/shape-fabric/tests/test_publish.py::test_lakehouse_writes_the_landing_zone_and_the_manifest` failed. Both pass on `build/main-plan`. The fix follows INT-15's pattern: the harness accepts exactly those six keys, requires `shape_version == engine_version` and `min_shape_version` to equal `shape.compat`'s first release for the declared `version`, and gains three negative controls (writing release removed, writing release changed, minimum reading release changed). `docs/SCENARIO_PACKS.md` lists the two keys. |
+
+Choice recorded (spec silent): the harness change is the same kind of change INT-15's lead made for W1-03's keys
+(§2.3, INT-15 row). Exact-value checks and negative controls keep it strict. Every key the baseline also writes is
+still compared as before.
+
+## Environment (this session)
+
+Python 3.11.15, `~/.venvs/shape`: `pip install -e ".[dev,advanced,streaming]"`, all eleven `plugins/*` editable
+(`plugins/shape-healthcare-standards[test]`), `dbt-duckdb`, `-r tests/demo/fabric/requirements.txt`, unixODBC
+(apt). Rust kernel built by maturin. Baseline venv from `benchmarks/vs_spindle/setup_spindle.sh`. Resolved versions
+include numpy 2.4.6, pandas 3.0.6 and **pyarrow 19.0.1**. `fabric-user-data-functions` (from
+`tests/demo/fabric/requirements.txt`) requires `pyarrow>=19.0.1,<20.0.0`.
+
+## Commands and results (final tree unless noted)
+
+| Check | Result |
+|---|---|
+| `ruff check src tests plugins benchmarks/vs_spindle` | All checks passed |
+| `ruff format --check` (same paths) | 1344 files already formatted |
+| `mypy` | no issues in 476 source files |
+| `compileall`, `vulture`, `lint-imports` | clean; contracts 1 kept, 0 broken |
+| `check_requirements`, `check_secrets`, `check_user_facing`, `check_shipped_data`, `check_plugin_skeletons`, `check_conformance_coverage` | all OK (89 requirements; 33 data files; 11 distributions; 32/32 statements) |
+| `python scripts/check_user_facing.py` | clean |
+| make check: `pytest -m "not emulator and not live and not heavy" ... --cov=shape --cov-fail-under=86` | 8466 passed, **2 failed** (#76 below); coverage 92.72% |
+| make check: `pytest -m heavy tests/kernel tests/profile tests/streaming` (run after 4edaeb1; `src` unchanged since) | 41 passed, **1 failed** (#76: `float16` hashing) |
+| make check: `SHAPE_KERNEL=python pytest tests/kernel` (same) | 263 passed, **2 failed** (#76) |
+| `cargo fmt --check`, `cargo clippy -D warnings`, `cargo test` | clean, clean, 34 passed |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live"` (includes `tests/demo/fabric` and `tests/demo/content`) | 8779 passed, **3 failed** (#76), 16 deselected (2033 s) |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live"` | 8779 passed, **3 failed** (#76, same three as rust), 16 deselected (6399 s) |
+| `pytest -m "not emulator and not live"` in each `plugins/*` (`SHAPE_DBT_PACKAGES_FILE` local, see below) | behavior 86, databases 155, dbt 115, domains 6, eventhubs 42, fabric 463 + **1 failed**, healthcare-codes 100, healthcare-standards 138, kafka 46, simulation 155 + **1 failed**, sqlserver 150 passed |
+| `fabric_commands_1to1/verify.py` | VERDICT: PASS (exit 0); before 9770d13: FAIL on `publish` manifest keys |
+| `fabric_commands_1to1/verify.py --negative-control` | with pyarrow 19.0.1: exit 2, "restoring the landing zone did not restore equality". Same exit 2 on `build/main-plan` in this venv. With pyarrow 25.0.1 put first on `PYTHONPATH` (`pip install --no-deps --target`): **exit 0, PASS**, which includes the three new manifest controls |
+
+shape-dbt's `dbt` marker tests need `dbt deps`. This network policy blocks the hub's tarball host (codeload, 403),
+so the run used `SHAPE_DBT_PACKAGES_FILE`, which the test documents for this case: a `packages.yml` with `local:`
+clones of dbt-utils 1.4.1, dbt-expectations 0.10.10 and dbt-date 0.21.0, made from github.com in the session
+scratchpad, outside the repository. Without it the 7 `dbt` tests error at `dbt deps` ("not a gzip file").
+
+## Failures not fixed here (all pre-existing, all pyarrow < 25)
+
+Each one fails on `origin/build/main-plan` (5c91ea50) in the same venv: a worktree with `PYTHONPATH` set to its
+`src` and its `plugins/*/src`. Each one passes on INT-16 with pyarrow 25.0.1 first on `PYTHONPATH`.
+
+| Test | Error | Owner |
+|---|---|---|
+| `tests/kernel/test_hashing.py::test_one_and_one_point_zero_hash_equal` | `ArrowTypeError: Expected np.float16 instance` | issue #76, lane/BF-76 (not merged into `build/main-plan`) |
+| `tests/kernel/test_hashing.py::test_rust_equals_reference_on_a_million_values[float16]` (heavy) | same | #76, BF-76 |
+| `tests/iss_gaps/test_landing_and_batches.py::test_file_sinks_take_path_template_and_batch_date` | read-back gains a dictionary `ingest_date` hive partition column | #76, BF-76 |
+| `plugins/shape-fabric/tests/test_lakehouse.py::test_parquet_to_a_local_folder_round_trips` | dictionary indices `int32` vs `int8` on read-back | same pyarrow < 25 class; not in BF-76's three tests |
+| `plugins/shape-simulation/tests/test_scd2_file_drops.py::test_deltas_have_the_snapshot_columns_in_the_snapshot_order` | extra `dt` hive partition column on read-back | same class; not in BF-76's three |
+| `fabric_commands_1to1/verify.py --negative-control` (landing restore) | `pq.read_table` of `.../dt=latest/part-0001.parquet` adds a `dt` column, so the restored file differs | same class |
+
+pyarrow 19.0.1 checked directly: `pq.read_table('h/dt=latest/p.parquet').column_names == ['a', 'dt']`.
+For the lead: BF-76 covers the first three. The last three need the same treatment (read a single file without
+partition discovery, or compare with the dictionary index width normalized). Alternatively the Fabric test
+requirements should stop pinning pyarrow below 25 in the core suite's venv.
+
+## Not run here
+
+Emulator and live tests (the 16 deselected in core; the deselected ones in the plugins); the Windows and macOS
+legs; a CI run of the branch.
