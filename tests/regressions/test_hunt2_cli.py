@@ -263,3 +263,38 @@ def test_continue_into_another_folder_still_works(tmp_path: Path, capsys) -> Non
     assert main(["generate", "retail", "--scale", "small", "-o", str(data), "--format", "csv"]) == 0
     assert main(["continue", "retail", "--input", str(data), "-o", str(tmp_path / "next")]) == 0
     assert (tmp_path / "next" / "customer.csv").is_file()
+
+
+# -- #672 ------------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("command", ["profile", "capture", "learn", "dictionary", "from-ddl"])
+def test_output_that_is_the_input_is_refused(tmp_path: Path, capsys, command: str) -> None:
+    if command == "dictionary":
+        csv = tmp_path / "d.csv"
+        csv.write_text("id,amount\n1,5\n2,6\n", encoding="utf-8")
+        target = tmp_path / "p.shape"
+        assert main(["profile", str(csv), "-o", str(target), "--no-project"]) == 0
+        argv = ["dictionary", str(target), "-o", str(target)]
+    elif command == "from-ddl":
+        target = tmp_path / "in.sql"
+        target.write_text("CREATE TABLE a (id INT);\n", encoding="utf-8")
+        argv = ["from-ddl", str(target), "-o", str(target)]
+    else:
+        target = tmp_path / "d.csv"
+        target.write_text("id,amount\n1,5\n2,6\n", encoding="utf-8")
+        argv = [command, str(target), "-o", str(target)]
+        if command == "profile":
+            argv.append("--no-project")
+    before = target.read_bytes()
+    capsys.readouterr()
+    assert main(argv) == 2
+    assert "output file is the input file" in capsys.readouterr().err
+    assert target.read_bytes() == before
+
+
+def test_output_next_to_the_input_is_not_refused(tmp_path: Path) -> None:
+    csv = tmp_path / "d.csv"
+    csv.write_text("id,amount\n1,5\n2,6\n", encoding="utf-8")
+    assert main(["profile", str(csv), "-o", str(tmp_path / "d.shape"), "--no-project"]) == 0
+    assert main(["capture", str(csv), "-o", str(tmp_path / "d.capture.json")]) == 0
