@@ -79,7 +79,7 @@ applies to every table it fits; without a column, to the columns it picks itself
 | Kind | What it models | Column when not named | Options |
 |---|---|---|---|
 | `duplicates` | rows delivered twice (at-least-once delivery): copies are appended at the end | the table | |
-| `orphan_keys` | foreign keys that match no parent row (the declared parent, else every other table's column of the same name) | the table's foreign keys | |
+| `orphan_keys` | foreign keys that match no parent row (the declared parent, else every other table's column of the same name); integer, float or text keys, and an integer column too narrow for the orphan ids becomes `int64` | the table's foreign keys | |
 | `date_shift` | late-arriving or wrongly dated rows | every date and timestamp column | `days` (up to, default 7), `direction` (`both`, `late`, `early`) |
 | `negative_amounts` | sign flips of positive amounts | number columns that are not keys | |
 | `case_whitespace` | inconsistent categories: upper, lower, leading or trailing blanks | text columns with at most 50 distinct values | |

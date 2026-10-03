@@ -251,6 +251,17 @@ def _is_amount(t: pa.DataType) -> bool:
     return bool(pa.types.is_floating(t) or pa.types.is_decimal(t) or pa.types.is_integer(t))
 
 
+def _is_key_number(t: pa.DataType) -> bool:
+    return bool(pa.types.is_integer(t) or pa.types.is_floating(t))
+
+
+def _peak(col: pa.Array) -> int:
+    """The largest finite value of a number column, as an integer (0 when there is none)."""
+    if pa.types.is_floating(col.type):
+        col = pc.filter(col, pc.is_finite(col))
+    return int(pc.max(col).as_py() or 0)
+
+
 def _is_date(t: pa.DataType) -> bool:
     return bool(pa.types.is_timestamp(t) or pa.types.is_date(t))
 
@@ -424,15 +435,23 @@ def _orphan_keys(run: _Run, c: Corruption, pos: int, table: str, column: str) ->
     if len(rows) == 0:
         return
     before = _cells(col, rows)
-    if pa.types.is_integer(col.type) or pa.types.is_floating(col.type):
-        peak = int(pc.max(col).as_py() or 0)
-        base = max(ORPHAN_BASE, 2 * peak)
+    if _is_key_number(col.type):
+        base = max(ORPHAN_BASE, 2 * _peak(col))
         for ptable, pcol in run.parents(table, column):
             parent = _col(run.tables[ptable], run.tables[ptable].column_names.index(pcol))
-            if pa.types.is_integer(parent.type) or pa.types.is_floating(parent.type):
-                base = max(base, int(pc.max(parent).as_py() or 0) + 1)
+            if _is_key_number(parent.type):
+                base = max(base, _peak(parent) + 1)
         orphans: list[Any] = [base + int(v) for v in rng.integers(0, 999_999, size=len(rows))]
+        if (
+            pa.types.is_integer(col.type)
+            and max(orphans) > np.iinfo(col.type.to_pandas_dtype()).max
+        ):
+            col = pc.cast(col, pa.int64())  # the orphan ids do not fit the column's integer type
         new = _write_orphans(col, rows, orphans)
+    elif not _is_text(col.type):
+        raise ValueError(
+            f"orphan_keys: {table}.{column} is {col.type}; a key column is integer, float or text"
+        )
     else:
         orphans = [f"ORPHAN-{int(v):09d}" for v in rng.integers(0, 999_999_999, size=len(rows))]
         cells = col.to_pylist()
