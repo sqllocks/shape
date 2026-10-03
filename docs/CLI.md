@@ -75,6 +75,10 @@ the policy.
   `docs/RULES_TESTING.md`.
 - `shape inspect ARTIFACT.shape` prints what an artifact holds, a profile or a model. `shape show`
   is an alias of `shape inspect`.
+  A numeric column of a profile carries the univariate depth fields (best family by BIC and the
+  fitted candidates, zero share and zero inflation, heaping, Benford conformity, tail index), so
+  `shape show` prints them; `shape profile --json` and `--html` show them too
+  (`docs/PROFILING_NOTES.md`).
 - `shape capture SRC` reads everything `shape profile` reads (CSV, Parquet, JSONL, a folder or
   glob, a Delta table with `--version N` or `--as-of TIMESTAMP`, an `abfss://` source) and writes a
   **model** (JSON, or a model `.shape` with `-o OUT.shape`), which `shape query`,

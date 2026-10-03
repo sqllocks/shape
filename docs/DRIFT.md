@@ -48,6 +48,10 @@ A change is reported only when it passes its threshold, so a stable column produ
 | `implausible_rate_change` | the share of implausible rows rose by more than `implausible_rate` = 0.02 | medium | the rise |
 | `association_shift` | an association measure (Cramer's V, Theil's U, correlation ratio, Pearson, Spearman) moved by more than `association_shift` = 0.2 | low | the change |
 | `reference_match_change` | the share of rows whose columns are a real combination of a reference fell by more than `reference_match_rate` = 0.02 | high | the drop |
+| `zero_inflation_change` | a numeric column's share of zeros moved by more than `zero_share` = 0.05 (absolute, and never below four standard errors of the two shares), or its `zero_inflation` went from not inflated to inflated while the share moved by more than four standard errors (`docs/PROFILING_NOTES.md`) | medium | the larger of the move and the share above the expected one |
+| `heaping_change` | the current column is heaped (`heaping.heaped`) and the baseline was not, or both are and the ratio rose to `heaping_ratio` = 2.0 times the baseline's; in both cases the ratio rose by more than four standard errors | low | `1 - 1/ratio` when it appeared, else `1 - baseline ratio / current ratio` |
+| `benford_change` | Benford conformity (`close`, `acceptable`, `marginal`, `nonconformity`) got worse by `benford_class_steps` = 2 classes or more, and the MAD rose by more than three standard errors of the difference; both sides must be applicable | medium | steps / 3 |
+| `tail_change` | the Hill tail index alpha fell by more than `tail_alpha_drop` = 0.3 of the baseline's, to below `tail_alpha_max` = 3, and by more than three standard errors of the difference | low | `1 - current / baseline` |
 | `hour_of_day_change`, `day_of_week_change` | total variation distance of the mix > `temporal_tvd` = 0.20 (day of week: both columns span 14 days or more) | low | the distance |
 
 The first five thresholds (`null_rate`, `cardinality_ratio_max`, `cardinality_ratio_min`,
@@ -60,6 +64,19 @@ section 12.3 and keep their values.
   never go below the noise two samples of that size show by themselves (about twice the expected
   distance, or four standard errors; the KS distance uses the critical value at alpha = 0.001). Two
   samples of one distribution do not drift, however tight the setting.
+- **Univariate depth.** `zero_inflation_change`, `heaping_change`, `benford_change` and
+  `tail_change` read the column fields `zero_share`, `zero_inflation`, `heaping`, `benford` and
+  `tail_index` of a profile (`docs/PROFILING_NOTES.md`). A profile written before those fields
+  existed, a stream window, and a key or a 0/1 column have none, and report none of the four kinds.
+  Each is held to sampling noise, like the other rates: a flag can flip between two samples of one
+  distribution that sits on its edge (a log-normal with sigma 0.8 has a Benford MAD of 0.0123, in
+  the middle of the marginal band, and samples of 1,500 values land from `acceptable` to
+  `nonconformity`), so the move behind the flag must be real. `zero_share` and the heaping ratio
+  must move by more than four standard errors, the Benford MAD (standard error at most
+  `sqrt(sum p(1-p) / n) / 9`) and the tail index (`alpha / sqrt(k)` each) by more than three
+  standard errors of the difference. A Hill estimate on a few hundred values is noisy, so a 30%
+  fall on its own would flag two samples of one distribution. A fall in heaping, an improvement in Benford conformity and a lighter tail are not
+  changes.
 - **Small samples.** With fewer than `min_rows` = 30 non-null values a column gets no distribution
   comparison (category mix, spread, KS, range, outliers, true rate, hour of day).
 - **Keys.** A primary key, or a dense unique integer column (a counter), has no `mean_shift`,

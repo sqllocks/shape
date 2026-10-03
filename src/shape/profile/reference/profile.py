@@ -136,6 +136,8 @@ def _column_dict(cp: ColumnProfile) -> dict[str, Any]:
             del d[f]
     if cp.placeholders:  # absent when none, like the other optional fields
         d["placeholders"] = cp.placeholders
+    if cp.univariate:  # the univariate depth fields, each present only where it applies
+        d.update(cp.univariate)
     d["min_value"] = _tag_scalar(cp.min_value)
     d["max_value"] = _tag_scalar(cp.max_value)
     d["enum_values"] = _clean(cp.enum_values)
