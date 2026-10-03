@@ -5,6 +5,26 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+### Fixed
+
+- Plugins audit (AUD-dbplugins), with a regression test for each:
+  - `shape-databases`: a password containing whitespace no longer leaks into write errors (#338);
+    a bad URI parameter value names the parameter (#344).
+  - `shape-sqlserver`: alias-type columns are read and profiled as their base type (#340);
+    `profile-db --tables`/`--schema` that name nothing is an error, not an empty profile (#341);
+    tables named like `factory` or `dimension` keep their own key (#342).
+  - `shape-domains`: changing a returned retail definition no longer changes later loads (#343).
+  - `shape-simulation`: the file drop's backfills and restatements of a table without a time
+    column re-drop that partition's rows (#345); the financial simulator refuses an unbounded
+    window (#413) and settles every transaction when there is no time column (#417); text times
+    with `Z` or an offset are read (#422); clickstream refuses `bot_pages_per_session` below 1
+    (#426); SCD2 refuses repeated or null keys, tracking the key or a version column, and rates
+    outside [0, 1], and a rate of 0 changes nothing (#431); pattern settings that cannot work
+    are refused with their name, exit 2 (#433); `StreamEmitter.emit(config=...)` sizes the
+    replay window from that config (#435); operational-log error bursts stay inside the window
+    (#437); IoT baseline alerts follow one per device per eight hours (#439); the workflow
+    summary lists every entity when none moves (#441).
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

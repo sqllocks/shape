@@ -22,24 +22,34 @@ Each finding was reproduced in this session. Status values: **fixed** (with its 
 
 | # | Sev | Issue | Where | Finding | Status |
 |---|---|---|---|---|---|
-| 1 | high | #338 | `shape_databases/_auth.py` `scrub` | A password with a run of spaces or a tab leaks into `WriteError` messages (whitespace collapsed before the secret is replaced). | see below |
+| 1 | high | #338 | `shape_databases/_auth.py` `scrub` | A password with a run of spaces or a tab leaks into `WriteError` messages (whitespace collapsed before the secret is replaced). | fixed bdddb9a |
 | 2 | high | #339 | `shape_databases/_auth.py` `ENTRA_DB_SCOPE` | The default Entra scope is `https://ossrh-postgresql.azure.com/.default`; Azure Database for PostgreSQL/MySQL tokens are for `https://ossrdbms-aad.database.windows.net/.default`. | lead: pinned by `tests/test_credentials.py:94` |
-| 3 | high | #413 | `shape_simulation/financial_patterns.py` | One far-future transaction time (9999-12-31) or a huge `duration_hours` gives an unbounded window: 17M settlement batches, 6.7 GB. | see below |
-| 4 | medium | #340 | `shape_sqlserver/sql.py` `COLUMNS_QUERY` | A column of a user-defined alias type is typed by its alias: profiled as `string`, and `mssql://` reads fail (`ArrowTypeError`). | see below |
-| 5 | medium | #341 | `shape_sqlserver/catalog.py` `read_catalog` | `--tables` naming unknown tables, or a schema with no tables, writes an empty profile and exits 0. | see below |
-| 6 | medium | #342 | `shape_sqlserver/catalog.py` `table_stem` | A table named `factory` or `dimension` loses its leading `fact`/`dim`: no guessed key and a foreign key from its own key to itself. | see below |
-| 7 | medium | #343 | `shape_domains/retail.py` | `definition()`, `star_map()` and `cdm_entities()` return the cached dicts; a caller's change alters every later load in the process. | see below |
-| 8 | medium | #345 | `shape_simulation/file_drop.py` `_slot_rows` | Backfill and restatement of a table without a time column re-drop `table.slice` rows, not the round-robin rows the partition held. | see below |
-| 9 | medium | #417 | `financial_patterns.py` | Without a time column, settlements drop the `n % batches` remainder transactions. | see below |
-| 10 | medium | #422 | `_patterns.py` | ISO-8601 text times with `Z` or an offset crash financial, IoT and pulse. | see below |
-| 11 | medium | #426 | `clickstream_patterns.py` | `bot_pages_per_session=0` crashes with `IndexError` (exit 1). | see below |
-| 12 | medium | #431 | `scd2_file_drops.py` | Tracking the key, duplicate keys, rates of 0 (still one change) and rates outside [0, 1] break the documented chain invariant or settings. | see below |
-| 13 | low | #344 | `shape_databases/_base.py` `parse_uri` | A bad URI parameter value does not name the parameter. | see below |
-| 14 | low | #433 | pattern configs | Zero divisors give tracebacks (exit 1, docs say 2); type and range errors do not name the setting; `service_count=-1` gives 7 services. | see below |
-| 15 | low | #435 | `stream_emit.py` `emit` | `emit(config=...)` sizes the replay window from the constructor's config. | see below |
-| 16 | low | #437 | `operational_log_patterns.py` | Error bursts land after the end of a fractional window. | see below |
-| 17 | low | #439 | `iot_patterns.py` | Baseline alerts are at least one per device for any window under 16 h (docs: one per eight hours). | see below |
-| 18 | low | #441 | `state_machine.py` | `entity_summary` is empty when no entity moves. | see below |
+| 3 | high | #413 | `shape_simulation/financial_patterns.py` | One far-future transaction time (9999-12-31) or a huge `duration_hours` gives an unbounded window: 17M settlement batches, 6.7 GB. | fixed d00ad64 |
+| 4 | medium | #340 | `shape_sqlserver/sql.py` `COLUMNS_QUERY` | A column of a user-defined alias type is typed by its alias: profiled as `string`, and `mssql://` reads fail (`ArrowTypeError`). | fixed b8604b0 |
+| 5 | medium | #341 | `shape_sqlserver/catalog.py` `read_catalog` | `--tables` naming unknown tables, or a schema with no tables, writes an empty profile and exits 0. | fixed 32786ad |
+| 6 | medium | #342 | `shape_sqlserver/catalog.py` `table_stem` | A table named `factory` or `dimension` loses its leading `fact`/`dim`: no guessed key and a foreign key from its own key to itself. | fixed c218542 |
+| 7 | medium | #343 | `shape_domains/retail.py` | `definition()`, `star_map()` and `cdm_entities()` return the cached dicts; a caller's change alters every later load in the process. | fixed b7f9ea1 |
+| 8 | medium | #345 | `shape_simulation/file_drop.py` `_slot_rows` | Backfill and restatement of a table without a time column re-drop `table.slice` rows, not the round-robin rows the partition held. | fixed 17547ba |
+| 9 | medium | #417 | `financial_patterns.py` | Without a time column, settlements drop the `n % batches` remainder transactions. | fixed dd18793 |
+| 10 | medium | #422 | `_patterns.py` | ISO-8601 text times with `Z` or an offset crash financial, IoT and pulse. | fixed 7b59632 |
+| 11 | medium | #426 | `clickstream_patterns.py` | `bot_pages_per_session=0` crashes with `IndexError` (exit 1). | fixed 84d2b40 |
+| 12 | medium | #431 | `scd2_file_drops.py` | Tracking the key, duplicate keys, rates of 0 (still one change) and rates outside [0, 1] break the documented chain invariant or settings. | fixed bc71a2f |
+| 13 | low | #344 | `shape_databases/_base.py` `parse_uri` | A bad URI parameter value does not name the parameter. | fixed a1bd79f |
+| 14 | low | #433 | pattern configs | Zero divisors give tracebacks (exit 1, docs say 2); type and range errors do not name the setting; `service_count=-1` gives 7 services. | fixed aed21be |
+| 15 | low | #435 | `stream_emit.py` `emit` | `emit(config=...)` sizes the replay window from the constructor's config. | fixed e3e8233 |
+| 16 | low | #437 | `operational_log_patterns.py` | Error bursts land after the end of a fractional window. | fixed 26722f4 |
+| 17 | low | #439 | `iot_patterns.py` | Baseline alerts are at least one per device for any window under 16 h (docs: one per eight hours). | fixed a607fdb |
+| 18 | low | #441 | `state_machine.py` | `entity_summary` is empty when no entity moves. | fixed 2dc3b07 |
+| 19 | medium | #556 | `plugins/shape-domains` | Only `retail` is installed; `docs/plugins/simulation.md` uses `financial`, `iot` and `pulse` (`generate("financial", ...)`, `shape simulate iot` by default), which raise `DomainNotFoundError`. | lead: porting domains is outside this lane |
+
+Every fix has a failing regression test committed first (the commit before it, with the
+failing output in its message).
+
+Improvements (no behaviour change, one commit each): retail domain tests in the plugin itself
+(36e7d73; `retail.py` was 0% covered by the plugin's tests), simulation table-helper tests
+(01e57b3), SQL Server managed identity, Fabric token and `spread_query` tests (db15416; `auth.py`
+and `sql.py` now 100%), and one catalog walk per `mssql://` read instead of two plus a repeated
+primary-key query (879d449).
 
 Not filed (judgement calls or behaviour the docs state):
 - `profile-db -o` into a missing folder fails after profiling, exit 1 with a clear message
