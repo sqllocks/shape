@@ -10,6 +10,10 @@
 ``sql``         a SQL login (``sql_user``, ``sql_password``) for SQL Server and SQL databases
 ``device-code`` an interactive sign-in: the address and code are printed, you sign in in a browser
 ``fabric``      the Fabric notebook's identity only (no fallback)
+``kerberos``    a keytab (``keytab``, ``principal``) for a SQL Server that takes Windows
+                authentication only; ``kinit`` runs into a private credential cache and the
+                connection uses ``Trusted_Connection=yes`` (:mod:`shape_fabric.kerberos`); on
+                Windows the signed-in account is used and there is no keytab
 ==============  ====================================================================================
 
 Every secret setting (``client_secret``, ``sql_password``, and a ``connection_string`` that holds a
@@ -37,9 +41,9 @@ from shape.security import credrefs
 from ._auth import SCOPE_SQL, SCOPE_STORAGE
 from .errors import AuthError
 
-AUTH_MODES = ("cli", "msi", "spn", "sql", "device-code", "fabric")
+AUTH_MODES = ("cli", "msi", "spn", "sql", "device-code", "fabric", "kerberos")
 DEFAULT_MODE = "cli"
-SECRET_SETTINGS = ("client_secret", "sql_password")
+SECRET_SETTINGS = ("client_secret", "sql_password", "keytab")
 
 _SQL_AUDIENCE = "https://database.windows.net/"
 
@@ -55,12 +59,16 @@ class AuthSettings:
     client_secret: str | None = field(default=None, repr=False)
     sql_user: str | None = None
     sql_password: str | None = field(default=None, repr=False)
+    keytab: str | None = field(default=None, repr=False)
+    principal: str | None = None
 
     def __post_init__(self) -> None:
         if self.mode not in AUTH_MODES:
             raise AuthError(
                 f"unknown --auth mode {self.mode!r}; choose one of {', '.join(AUTH_MODES)}"
             )
+        if self.mode != "kerberos" and (self.keytab or self.principal):
+            raise AuthError("--keytab and --principal belong to --auth kerberos")
 
     @classmethod
     def from_mapping(cls, data: Mapping[str, Any] | None) -> AuthSettings:
@@ -80,6 +88,7 @@ class AuthSettings:
             "tenant_id": self.tenant_id,
             "client_id": self.client_id,
             "sql_user": self.sql_user,
+            "principal": self.principal,
         }
         secrets = {k: "***" for k in SECRET_SETTINGS if getattr(self, k)}
         return (
@@ -216,6 +225,8 @@ def build_credential(settings: AuthSettings) -> Any | None:
     mode = settings.mode
     if mode == "sql":
         return None
+    if mode == "kerberos":
+        raise AuthError("--auth kerberos is for mssql:// targets (SQL Server), not for this use")
     if mode == "fabric":
         utils = _notebookutils()
         if utils is None or not hasattr(utils, "credentials"):
@@ -318,7 +329,37 @@ def writer_options(
         return {
             "connection_string": connection_string_with_login(connection_string, user, password)
         }
+    if cfg.mode == "kerberos":
+        return _kerberos_options(cfg, connection_string)
     return {"credential": build_credential(cfg)}
+
+
+def _kerberos_options(cfg: AuthSettings, connection_string: str | None) -> dict[str, Any]:
+    """The sink options of ``--auth kerberos``: ``trusted_connection`` (Windows: the signed-in
+    account) or a :class:`~shape_fabric.kerberos.KerberosSession` (a ticket from the keytab)."""
+    from . import kerberos
+
+    options: dict[str, Any] = {}
+    if connection_string:
+        from ._tsql import _LOGIN_KEYS
+
+        connection_string = _odbc(connection_string)
+        if _LOGIN_KEYS.search(connection_string):
+            raise AuthError(
+                "the connection string already holds a login (UID, PWD or Authentication)"
+            )
+        options["connection_string"] = connection_string.rstrip().rstrip(";") + ";Trusted_Connection=yes;"
+    if sys.platform == "win32":
+        if cfg.keytab:
+            raise AuthError(kerberos.WINDOWS_KEYTAB)
+        if cfg.principal:
+            raise AuthError(kerberos.WINDOWS_KEYTAB.replace("--keytab", "--principal"))
+        return {**options, "trusted_connection": True}
+    for flag, value in (("--keytab", cfg.keytab), ("--principal", cfg.principal)):
+        if not value:
+            raise AuthError(f"--auth kerberos needs --keytab and --principal (missing {flag})")
+    assert cfg.keytab is not None and cfg.principal is not None
+    return {**options, "kerberos": kerberos.KerberosSession(cfg.keytab, cfg.principal)}
 
 
 __all__ = [

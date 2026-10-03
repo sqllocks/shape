@@ -62,7 +62,7 @@ def add_to_arguments(
     )
     g.add_argument(
         "--write-mode",
-        choices=("overwrite", "append", "fail", "create", "truncate", "replace"),
+        choices=("overwrite", "append", "fail", "create", "truncate", "replace", "upsert"),
         help="what to do with data already there (files: overwrite, append or fail; databases: "
         "create (the default; never touches an existing table), append, truncate or replace)",
     )
@@ -142,6 +142,10 @@ def sign_in_options(a: argparse.Namespace, name: str) -> dict[str, Any]:
         if "connection_string" not in options:
             raise ValueError("--auth sql needs --connection-string (the server and database)")
         options.update(auth.writer_options(settings, options["connection_string"]))
+    elif settings and settings.get("mode") == "kerberos":
+        if name != "sqlserver":
+            raise ValueError("--auth kerberos is for mssql:// targets (SQL Server)")
+        options.update(auth.writer_options(settings, options.get("connection_string")))
     elif settings:
         options["credential"] = auth.make_credential(settings)
     return options

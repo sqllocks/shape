@@ -46,6 +46,7 @@ from shape_sqlserver.sql import (
 
 from shape.errors import ShapeError
 
+from . import _tsql
 from .eventhouse_writer import EventhouseWriter
 from .eventstream_writer import EventstreamWriter
 from .lakehouse import LakehouseWriter
@@ -252,6 +253,8 @@ class SqlServerSink:
     ) -> int:
         credential = opts.pop("credential", None)
         connection = opts.pop("connection", None)
+        kerberos = opts.pop("kerberos", None)  # a KerberosSession (--auth kerberos on Linux/macOS)
+        trusted = bool(opts.pop("trusted_connection", False)) or kerberos is not None
         schema_name = opts.pop("schema_name", None)
         given = opts.pop("connection_string", None)
         conn_opts = {k: opts.pop(k) for k in _CONN_KEYS if k in opts}
@@ -269,15 +272,18 @@ class SqlServerSink:
                 if key in query:
                     write_opts.setdefault(key, query[key])
             if connection is None:
-                conn = self._connection_string(parts, conn_opts, credential)
+                conn = self._connection_string(parts, conn_opts, credential, trusted)
         for key in ("batch_size", "commit_rows"):
             if key in write_opts:
                 write_opts[key] = _whole(key, write_opts[key])
+        connect = self._connect
+        if kerberos is not None:  # KRB5CCNAME is set for the call that opens the connection only
+            connect = kerberos.wrap(connect or _tsql.connect)
         with SqlDatabaseWriter(
             conn,
             credential=credential,
             connection=connection,
-            connect=self._connect,
+            connect=connect,
             schema_name=str(schema_name or "dbo"),
         ) as writer:
             log.debug("writing table %r to %s", table, writer.destination)
@@ -297,7 +303,9 @@ class SqlServerSink:
         query.pop("table", None)
         return query, parts
 
-    def _connection_string(self, parts: Any, conn_opts: dict[str, Any], credential: Any) -> str:
+    def _connection_string(
+        self, parts: Any, conn_opts: dict[str, Any], credential: Any, trusted: bool = False
+    ) -> str:
         try:
             port = parts.port
         except ValueError:
@@ -317,7 +325,12 @@ class SqlServerSink:
         password = conn_opts.pop("password", None) or _uri_password(parts.geturl())
         if credential is not None and (user or password):
             raise ShapeError("use either credential= or a user and password, not both")
-        extra: dict[str, Any] = {}
+        if trusted and (user or password or credential is not None):
+            raise ShapeError(
+                "--auth kerberos signs in with the ticket: leave out the user, the password "
+                "and credential="
+            )
+        extra: dict[str, Any] = {"extra": {"Trusted_Connection": "yes"}} if trusted else {}
         if "driver" in conn_opts:
             extra["driver"] = str(conn_opts["driver"])
         for key in ("encrypt", "trust_server_certificate"):

@@ -65,6 +65,12 @@ def _check_private(path: str) -> None:
         )
 
 
+def check_private_file(path: str) -> None:
+    """Raise :class:`CredentialReferenceError` when ``path`` is accessible to group or others
+    (POSIX), for a secret that is a file to hand to another program, not text to read."""
+    _check_private(path)
+
+
 def _resolve_file(path: str, *, private: bool = True) -> str:
     if not path:
         raise CredentialReferenceError("file:// needs a path, as file://PATH")

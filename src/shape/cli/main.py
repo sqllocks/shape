@@ -1309,7 +1309,12 @@ def main(argv=None):
     from shape.cli import lifecycle
 
     lifecycle.quick_exit_allowed = argv is None
-    return _main(argv)
+    try:
+        return _main(argv)
+    finally:
+        from shape.cli import auth
+
+        auth.release()  # a Kerberos credential cache never outlives the command
 
 
 def _main(argv):

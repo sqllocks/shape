@@ -66,7 +66,7 @@ def notebook(monkeypatch):
 
 
 def test_the_modes_are_the_baselines_six():
-    assert auth.AUTH_MODES == ("cli", "msi", "spn", "sql", "device-code", "fabric")
+    assert auth.AUTH_MODES == ("cli", "msi", "spn", "sql", "device-code", "fabric", "kerberos")
 
 
 def test_unknown_mode_is_an_error():
