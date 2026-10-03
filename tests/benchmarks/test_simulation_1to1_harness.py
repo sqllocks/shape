@@ -211,3 +211,11 @@ def _probe(passed: bool) -> object:
     rep = h.Report("SIM-1 probe")
     rep.add("p", passed)
     return rep
+
+
+def test_the_exit_code_test_leaves_the_benchmark_output_alone(monkeypatch, capsys):
+    """The harness writes results.json under $BENCH_OUT_DIR; a test must not (#332)."""
+    target = verify.BENCH_OUT_DIR / "simulation_1to1" / "results.json"
+    before = target.stat().st_mtime_ns if target.exists() else None
+    test_exit_codes(monkeypatch, capsys)
+    assert (target.stat().st_mtime_ns if target.exists() else None) == before
