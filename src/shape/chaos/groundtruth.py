@@ -287,6 +287,20 @@ class _Run:
         key = self.key_column(table)
         return [c for c in self.tables[table].column_names if c.endswith("_id") and c != key]
 
+    def parents(self, table: str, column: str) -> list[tuple[str, str]]:
+        """The parent columns a foreign key may point to: the declared reference, else every
+        other table's column of the same name (``order.customer_id``: ``customer.customer_id``)."""
+        ref = self.references.get(f"{table}.{column}")
+        if ref:
+            ptable, _, pcol = ref.partition(".")
+            found = ptable in self.tables and pcol in self.tables[ptable].column_names
+            return [(ptable, pcol)] if found else []
+        return [
+            (name, column)
+            for name, t in self.tables.items()
+            if name != table and column in t.column_names
+        ]
+
     def record(
         self,
         table: str,
@@ -413,14 +427,10 @@ def _orphan_keys(run: _Run, c: Corruption, pos: int, table: str, column: str) ->
     if pa.types.is_integer(col.type) or pa.types.is_floating(col.type):
         peak = int(pc.max(col).as_py() or 0)
         base = max(ORPHAN_BASE, 2 * peak)
-        ref = run.references.get(f"{table}.{column}")
-        if ref:
-            ptable, _, pcol = ref.partition(".")
-            if ptable in run.tables and pcol in run.tables[ptable].column_names:
-                parent_peak = pc.max(
-                    _col(run.tables[ptable], run.tables[ptable].column_names.index(pcol))
-                )
-                base = max(base, int(parent_peak.as_py() or 0) + 1)
+        for ptable, pcol in run.parents(table, column):
+            parent = _col(run.tables[ptable], run.tables[ptable].column_names.index(pcol))
+            if pa.types.is_integer(parent.type) or pa.types.is_floating(parent.type):
+                base = max(base, int(pc.max(parent).as_py() or 0) + 1)
         orphans: list[Any] = [base + int(v) for v in rng.integers(0, 999_999, size=len(rows))]
         new = _write_orphans(col, rows, orphans)
     else:
@@ -649,7 +659,8 @@ def corrupt_tables(
             the log names a row by it.
         references: ``{"order.customer_id": "customer.customer_id"}``, the foreign keys of the
             tables (default: ``*_id`` columns other than the key); orphan keys are chosen to match
-            no parent row.
+            no parent row. Without a declared reference every other table's column of the same
+            name counts as a parent.
 
     Returns:
         A :class:`ChaosOutcome` with the corrupted tables and the log records.
