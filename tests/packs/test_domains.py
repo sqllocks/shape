@@ -39,3 +39,19 @@ def test_g8_latest_version_is_numeric_not_lexicographic():
         reg.register(DomainDefinition(name="d", version=v, fields=()))
     assert reg.get("d").version == "1.10.0"
     assert reg.get("d", "1.9.0").version == "1.9.0"
+
+
+def test_a_pre_release_is_older_than_its_release():
+    """#372: `1.0.0-rc1` used to sort after `1.0.0` (a longer tuple compares greater)."""
+    from shape.packs import DomainDefinition
+
+    reg = DomainRegistry()
+    for v in ("1.0.0-rc1", "1.0.0", "0.9.9"):
+        reg.register(DomainDefinition(name="d", version=v, fields=()))
+    assert reg.get("d").version == "1.0.0"
+    reg.register(DomainDefinition(name="d", version="1.0.0.1", fields=()))
+    assert reg.get("d").version == "1.0.0.1"
+    reg2 = DomainRegistry()
+    for v in ("2.0.0-beta", "2.0.0-alpha", "1.9.0"):
+        reg2.register(DomainDefinition(name="e", version=v, fields=()))
+    assert reg2.get("e").version == "2.0.0-beta"
