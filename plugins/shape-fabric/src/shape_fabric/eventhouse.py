@@ -25,8 +25,15 @@ Sign-in: ``token`` (a bearer token, or a function returning one), else the envir
 
 Options of :meth:`EventhouseEmitter.emit`: ``envelope`` (only ``"flat"``; a KQL table holds the
 flat event), ``token``, ``max_request_bytes`` (default 3,000,000; the service limit is 4 MB),
-``busy_retries`` (default 6), ``timeout`` (seconds per request, default 100), ``resuming``
-(ignored).
+``busy_retries`` (default 6), ``timeout`` (seconds per request, default 100), ``ready_timeout``
+(seconds to wait for a table the emitter has just created to accept streaming ingestion, default
+120), ``resuming`` (ignored).
+
+A table created a moment ago is not always ready: until the service has propagated it (and its
+streaming-ingestion policy), a request is answered "entity not found" (400) or with a streaming
+ingestion initialisation error (5xx). The first request to each table waits for that, with
+backoff, for up to ``ready_timeout``; nothing was ingested by such a request, and the key makes
+a repeat harmless either way.
 """
 
 from __future__ import annotations
@@ -130,6 +137,13 @@ def dedupe_query(table: str) -> str:
     return f"{_q(table)} | summarize take_any(*) by _shape_table, _shape_seq"
 
 
+def _not_ready(exc: Exception) -> bool:
+    """A new table the service has not finished setting up: it is not found yet, or streaming
+    ingestion on it is still initialising."""
+    text = str(exc)
+    return "EntityNotFound" in text or "StreamingIngestion" in text
+
+
 def _urllib_transport(
     method: str, url: str, headers: dict[str, str], body: bytes, timeout: float
 ) -> tuple[int, dict[str, str], bytes]:
@@ -156,6 +170,7 @@ class EventhouseEmitter:
         self._transport = transport or _urllib_transport
         self._busy_pause = busy_pause
         self._prepared: set[tuple[str, str, str, str]] = set()
+        self._warm: set[tuple[str, str, str]] = set()  # tables that have accepted a request
 
     # ------------------------------------------------------------------ auth
     def _token(self, target: EventhouseTarget, given: Any) -> str | None:
@@ -245,6 +260,7 @@ class EventhouseEmitter:
         max_request_bytes: int = 3_000_000,
         busy_retries: int = 6,
         timeout: float = 100.0,
+        ready_timeout: float = 120.0,
         **options: Any,
     ) -> int:
         """Send every batch; return the number of events, after the service accepted them."""
@@ -268,7 +284,14 @@ class EventhouseEmitter:
                     part = batch.slice(start, i - start)
                     table = target.table or str(tables[start])
                     self._ingest(
-                        target, table, part, headers, timeout, busy_retries, max_request_bytes
+                        target,
+                        table,
+                        part,
+                        headers,
+                        timeout,
+                        busy_retries,
+                        max_request_bytes,
+                        ready_timeout,
                     )
                     start = i
             sent += batch.num_rows
@@ -283,6 +306,7 @@ class EventhouseEmitter:
         timeout: float,
         busy: int,
         max_bytes: int,
+        ready_timeout: float,
     ) -> None:
         self._prepare(target, table, batch.schema, headers, timeout, busy)
         url = (
@@ -294,12 +318,43 @@ class EventhouseEmitter:
         size = 0
         for ev in encode_events(batch, "flat"):
             if chunk and size + len(ev.body) + 1 > max_bytes:
-                self._call("POST", url, ingest_headers, b"\n".join(chunk) + b"\n", timeout, busy)
+                self._stream(
+                    target, table, url, ingest_headers, chunk, timeout, busy, ready_timeout
+                )
                 chunk, size = [], 0
             chunk.append(ev.body)
             size += len(ev.body) + 1
         if chunk:
-            self._call("POST", url, ingest_headers, b"\n".join(chunk) + b"\n", timeout, busy)
+            self._stream(target, table, url, ingest_headers, chunk, timeout, busy, ready_timeout)
+
+    def _stream(
+        self,
+        target: EventhouseTarget,
+        table: str,
+        url: str,
+        headers: dict[str, str],
+        chunk: list[bytes],
+        timeout: float,
+        busy: int,
+        ready_timeout: float,
+    ) -> None:
+        body = b"\n".join(chunk) + b"\n"
+        key = (target.base, target.database, table)
+        if key in self._warm:
+            self._call("POST", url, headers, body, timeout, busy)
+            return
+        deadline = time.monotonic() + ready_timeout
+        pause = self._busy_pause
+        while True:
+            try:
+                self._call("POST", url, headers, body, timeout, busy)
+                break
+            except (ShapeError, ConnectionError) as exc:
+                if not _not_ready(exc) or time.monotonic() + pause > deadline:
+                    raise
+                time.sleep(pause)
+                pause = min(pause * 2, 10.0)
+        self._warm.add(key)
 
     def flush(self) -> None:
         return None  # every emit() returns after the service answered

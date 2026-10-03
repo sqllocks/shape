@@ -214,3 +214,49 @@ def test_a_refused_streaming_policy_is_not_an_error_but_a_refused_table_is():
 
     with pytest.raises(ShapeError, match="not authorised"):
         EventhouseEmitter(refuse_table).emit("eventhouse://h/db?tls=false", [a])
+
+
+def test_a_new_table_that_is_not_ready_yet_is_waited_for_once():
+    a, _ = _events()
+    answers = [
+        (400, b'{"error": {"code": "BadRequest_EntityNotFound"}}'),
+        (
+            520,
+            b'{"error": {"@type": "Kusto.DataNode.Exceptions.StreamingIngestionServiceException"}}',
+        ),
+    ]
+    ingests = []
+
+    def transport(method, url, headers, body, timeout):
+        if "/v1/rest/ingest/" in url:
+            ingests.append(url)
+            if answers:
+                status, text = answers.pop(0)
+                return status, {}, text
+        return 200, {}, b"{}"
+
+    emitter = EventhouseEmitter(transport, busy_pause=0.001)
+    assert emitter.emit("eventhouse://h/db?tls=false", [a]) == 3
+    assert len(ingests) == 3  # two refusals, then one request with the events
+
+    # once a table has accepted a request, the same answer is an error at once
+    answers.append((400, b'{"error": {"code": "BadRequest_EntityNotFound"}}'))
+    with pytest.raises(ShapeError, match="EntityNotFound"):
+        emitter.emit("eventhouse://h/db?tls=false", [a])
+
+
+def test_a_table_that_never_becomes_ready_fails_after_the_wait():
+    a, _ = _events()
+    calls = []
+
+    def transport(method, url, headers, body, timeout):
+        if "/v1/rest/ingest/" in url:
+            calls.append(url)
+            return 400, {}, b'{"error": {"code": "BadRequest_EntityNotFound"}}'
+        return 200, {}, b"{}"
+
+    with pytest.raises(ShapeError, match="EntityNotFound"):
+        EventhouseEmitter(transport, busy_pause=0.001).emit(
+            "eventhouse://h/db?tls=false", [a], ready_timeout=0.05
+        )
+    assert len(calls) > 1
