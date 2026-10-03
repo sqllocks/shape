@@ -19,7 +19,9 @@ bad suppression file). The command reports quality; it does not fail a build. Us
 
 Each gate scores exactly one dimension. A dimension with no check that ran has no score (`n/a`
 in Markdown, `null` in JSON). The mapping is `GATE_DIMENSION` in `shape.quality.scorecard`,
-and a test keeps this table equal to it.
+and a test keeps this table equal to it. The last two gates run only when the verify
+configuration has their rules (`CONFIG_GATE_DIMENSION`). The memorization and utility gates compare
+generated data with its source and are not scored.
 
 | Gate | Dimension | What it measures |
 |---|---|---|
@@ -32,6 +34,8 @@ and a test keeps this table equal to it.
 | `referential_integrity` | consistency | foreign-key values with no parent row |
 | `temporal_consistency` | timeliness | dates outside the range, in the future, or ending before they start |
 | `unique_constraint` | uniqueness | repeated primary-key values |
+| `reconciliation` | consistency | a source and a target that differ in counts or aggregates (`reconcile` rules of the verify configuration; one pass/fail check) |
+| `timeseries_quality` | timeliness | gaps, stuck values and daylight-saving errors (`timeseries` rules of the verify configuration; one pass/fail check) |
 
 ## How a score is computed
 

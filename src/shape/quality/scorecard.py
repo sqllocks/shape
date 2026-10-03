@@ -5,7 +5,9 @@ timeliness and uniqueness. :data:`GATE_DIMENSION` maps each gate of :mod:`shape.
 exactly one of them (documented in ``docs/SCORECARD.md`` and tested against it). A check is one
 gate on one table and column set. Where a gate has a row-level form
 (:mod:`shape.quality.rowlevel`) the check scores ``100 * (1 - failing rows / rows)``; any other
-gate is one check scoring 100 when it passes and 0 when it fails. A dimension scores the mean
+gate is one check scoring 100 when it passes and 0 when it fails. The gates of the ``reconcile``
+and ``timeseries`` rules (:data:`CONFIG_GATE_DIMENSION`) are scored the same way; the memorization
+and utility gates compare generated data with its source and are not data quality checks. A dimension scores the mean
 of its checks, and is not scored (``None``) when no check of it ran.
 
 Known issues are recorded in a versioned file (``format: shape-scorecard-suppressions``): a
@@ -57,6 +59,13 @@ GATE_DIMENSION: dict[str, str] = {
     "temporal_consistency": "timeliness",
     "unique_constraint": "uniqueness",
 }
+
+#: Gates that run only when the verify configuration has their rules (not registered built-ins).
+CONFIG_GATE_DIMENSION: dict[str, str] = {
+    "reconciliation": "consistency",
+    "timeseries_quality": "timeliness",
+}
+_SCORED_GATES = {**GATE_DIMENSION, **CONFIG_GATE_DIMENSION}
 
 
 class ScorecardError(ValueError):
@@ -116,8 +125,8 @@ def _entry(raw: Any, i: int) -> Suppression:
     if action not in ("snooze", "suppress"):
         raise SuppressionError(f'{where}: action must be "snooze" or "suppress", not {action!r}')
     check = raw.get("check")
-    if check not in GATE_DIMENSION:
-        raise SuppressionError(f"{where}: check {check!r} is not one of {sorted(GATE_DIMENSION)}")
+    if check not in _SCORED_GATES:
+        raise SuppressionError(f"{where}: check {check!r} is not one of {sorted(_SCORED_GATES)}")
     reason = raw.get("reason")
     if not isinstance(reason, str) or not reason.strip():
         raise SuppressionError(f"{where}: a reason is required")
@@ -426,7 +435,7 @@ def build_scorecard(
         )
 
     for g in result.gate_results:
-        dim = GATE_DIMENSION.get(g.gate_name)
+        dim = _SCORED_GATES.get(g.gate_name)
         if dim is None:
             continue
         outcomes = row_outcomes(g.gate_name, ctx)
