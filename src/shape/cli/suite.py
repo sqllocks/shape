@@ -18,8 +18,8 @@ def add_arguments(sub: Any) -> None:
     su = sub.add_parser(
         "suite",
         help="run a named suite of starter scenarios and check each against its answer key",
-        description="Run every scenario of a suite (the built-in suites are smoke and "
-        "schema-evolution, or give the path of a shape-suite file), compare each outcome with the "
+        description="Run every scenario of a suite (the built-in suites are smoke, "
+        "schema-evolution and failure-modes, or give the path of a shape-suite file), compare each outcome with the "
         "scenario's answer key and print the result. Exit 0 when every scenario met its "
         "expectation, 1 when one did not, 2 for a malformed suite or an unknown scenario. See "
         "docs/SCENARIO_LIBRARY.md.",

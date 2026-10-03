@@ -538,8 +538,9 @@ def test_scale_names_resolve_to_presets_or_tiny():
 # ---- suites ---------------------------------------------------------------------------------
 
 
-def test_the_built_in_suites_are_smoke_and_schema_evolution():
-    assert list_suites() == ["schema-evolution", "smoke"]
+def test_the_built_in_suites_are_smoke_schema_evolution_and_failure_modes():
+    # W6-03 adds the failure-modes suite beside the two of W5-05
+    assert list_suites() == ["failure-modes", "schema-evolution", "smoke"]
     smoke = load_suite("smoke")["scenarios"]
     assert smoke[0] == "clean_baseline" and set(smoke) <= set(IDS)
     evolution = load_suite("schema-evolution")["scenarios"]

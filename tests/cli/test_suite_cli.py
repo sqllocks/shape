@@ -119,7 +119,7 @@ def test_a_malformed_suite_an_unknown_scenario_or_suite_exit_two(capsys, tmp_pat
 def test_pack_list_library_names_every_scenario_and_suite(capsys):
     code, out, _ = run(capsys, "pack", "list", "--library")
     assert code == 0 and "nulls_injected" in out and "schema_evolution_schedule" in out
-    assert "suites: schema-evolution, smoke" in out
+    assert "suites: failure-modes, schema-evolution, smoke" in out
     code, out, _ = run(capsys, "pack", "list", "--library", "--json")
     doc = json.loads(out)
     assert (

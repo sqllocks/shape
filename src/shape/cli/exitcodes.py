@@ -128,6 +128,8 @@ _EXTRA: dict[str, dict[int, str]] = {
     "registry diff": {},
     "init": {},
     "project validate": {},
+    "failure-modes list": {},
+    "failure-modes show": {2: "the failure mode id is not in the catalog, or " + BAD},
 }
 
 #: ``quality`` is the one command whose "failed" verdict has always been 2.
