@@ -77,31 +77,39 @@ def windows_current_user() -> str:
     return f"{domain}\\{user}" if domain else user
 
 
-def restrict_to_current_user(directory: Path) -> None:
-    """Make ``directory`` readable and writable by the current user only.
+def restrict_to_current_user(path: Path) -> None:
+    """Make ``path`` (a directory or a file) readable and writable by the current user only.
 
-    POSIX needs nothing here: the directory is created with mode 0700 and each file with 0600.
-    Windows ignores POSIX modes, so the directory's ACL is rewritten with ``icacls``, which ships
-    with Windows: inheritance from the parent is removed and the current user is the only entry,
-    with object and container inheritance so every file created inside gets the same ACL. Raises
-    ``OSError`` when the ACL cannot be set: a store that cannot be made private is not used.
+    POSIX needs nothing here: directories are created with mode 0700 and files with 0600.
+    Windows ignores POSIX modes, so the ACL is rewritten with ``icacls``, which ships with Windows:
+    inheritance from the parent is removed and the current user is the only entry. A directory
+    also gets object and container inheritance, but the store sets the ACL of each file itself, so
+    the result does not depend on what the parent (a profile, a temp folder, or the ACL Python 3.13
+    gives ``mkdir(mode=0o700)``) hands down. Raises ``OSError`` when the ACL cannot be set: a store
+    that cannot be made private is not used.
     """
     if sys.platform != "win32":
         return
-    grant = f"{windows_current_user()}:(OI)(CI)F"
+    rights = "(OI)(CI)F" if path.is_dir() else "F"
     try:
         done = subprocess.run(
-            ["icacls", str(directory), "/inheritance:r", "/grant:r", grant],
+            [
+                "icacls",
+                str(path),
+                "/inheritance:r",
+                "/grant:r",
+                f"{windows_current_user()}:{rights}",
+            ],
             capture_output=True,
             text=True,
             check=False,
             timeout=30,
         )
     except (OSError, subprocess.SubprocessError) as exc:
-        raise OSError(f"cannot restrict {directory} to the current user: {exc}") from exc
+        raise OSError(f"cannot restrict {path} to the current user: {exc}") from exc
     if done.returncode != 0:
         raise OSError(
-            f"cannot restrict {directory} to the current user: icacls exited "
+            f"cannot restrict {path} to the current user: icacls exited "
             f"{done.returncode}: {(done.stderr or done.stdout).strip()}"
         )
 
@@ -174,6 +182,7 @@ class JobStore:
             with os.fdopen(fd, "w", encoding="utf-8") as handle:
                 json.dump(record.to_dict(), handle, indent=2, sort_keys=True, default=str)
             os.chmod(tmp, 0o600)
+            restrict_to_current_user(Path(tmp))
             os.replace(tmp, target)
         except BaseException:
             Path(tmp).unlink(missing_ok=True)

@@ -108,3 +108,21 @@ def test_malformed_signature_member_is_a_signature_error():
     pytest.importorskip("cryptography")
     with pytest.raises(ArtifactSignatureError):
         verify_manifest_signature(b"{}", b"[" * 5000, bytes(32))
+
+
+def test_deeply_nested_yaml_is_refused_in_linear_time(tmp_path):
+    """The fuzzer's ``[`` x 10 000 took seconds on a slow runner (PyYAML's scanner is quadratic in
+    the open flow collections) and tripped the time limit; it is now refused before parsing."""
+    import time
+
+    from shape.security.yamlsafe import MAX_FLOW_DEPTH, safe_load_yaml
+
+    for opener in ("[", "{a: ", "[{a: "):
+        start = time.monotonic()
+        with pytest.raises(ValueError, match="nested too deeply"):
+            safe_load_yaml(opener * 10_000)
+        assert time.monotonic() - start < 0.5, opener
+    assert safe_load_yaml("[" * MAX_FLOW_DEPTH + "]" * MAX_FLOW_DEPTH) is not None
+    # brackets in quoted scalars and comments are not nesting; an apostrophe is not a quote
+    assert safe_load_yaml('a: "' + "[" * 500 + "\"\nb: '" + "{" * 500 + "'\n# " + "[" * 500)
+    assert safe_load_yaml("a: don't\nb: [1, [2]]\n") == {"a": "don't", "b": [1, [2]]}

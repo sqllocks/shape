@@ -57,13 +57,16 @@ def test_store_files_are_private_and_hold_no_token(store, tmp_path):
     path = tmp_path / "jobs" / "spark-1.json"
     if sys.platform == "win32":
         # Windows ignores POSIX modes; the guarantee is the ACL: one entry, the current user.
-        acl = subprocess.run(
-            ["icacls", str(path)], capture_output=True, text=True, check=True
-        ).stdout
+        def acl_of(target):
+            return subprocess.run(
+                ["icacls", str(target)], capture_output=True, text=True, check=True
+            ).stdout
+
+        acl = acl_of(path)
         entries = re.findall(r"(\S+):\(", acl.replace(str(path), ""))
         assert len(entries) == 1 and entries[0].lower().endswith(
             windows_current_user().split("\\")[-1].lower()
-        ), acl
+        ), f"file: {acl}\ndirectory: {acl_of(path.parent)}"
     else:
         assert oct(path.stat().st_mode & 0o777) == "0o600"
         assert oct((tmp_path / "jobs").stat().st_mode & 0o777) == "0o700"

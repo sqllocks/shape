@@ -208,4 +208,29 @@ skipped, xfailed or weakened, and no bound or tolerance was changed.
 
 ### CI on lane/CI-FIX (round 4)
 
-(filled in below as runs complete)
+Run 37094298568 (cd78ad3): every job green except the two Windows test jobs, including **ubuntu 3.12**
+(the realtime GC test, item 3), both macOS test jobs, mypy on Windows (item 1) and the Windows
+`stream-plugins`. Windows 3.14 passed items 2a, 2b and 2d (3.14 had only the two failures below); Windows
+3.11 ran its tests for the first time (mypy now passes) and had three failures. Remaining after this run:
+
+* **`tests/scale/test_jobs.py::test_store_files_are_private_and_hold_no_token`** (3.11 and 3.14): the file
+  still carried inherited entries (3.11: SYSTEM, Administrators and the user; 3.14: those plus OWNER
+  RIGHTS, which is the ACL Python 3.13+ gives `mkdir(mode=0o700)`), so the directory-level `icacls` did
+  not leave the user alone as an inheritable entry. I could not see the directory ACL in that log, so the
+  store no longer depends on inheritance: each file's ACL is set with `icacls <tmp> /inheritance:r
+  /grant:r user:F` before the atomic replace (the ACL travels with the file), the directory keeps its
+  own restriction, and a failing assertion now prints both ACLs.
+* **`tests/quality/test_verify_config.py::test_the_report_names_the_config`** (3.11 and 3.14): the test read
+  the report with the locale encoding (cp1252); the product writes it as UTF-8 explicitly
+  (`cli/main.py`). The test reads UTF-8.
+* **`tests/validation/test_fuzz_smoke.py::test_smoke_run_has_no_findings`** (3.11 only):
+  `pack-yaml` iteration 12 (the input is `[` x 10 000) hit the 5 s limit. Root cause: PyYAML's scanner
+  revisits every open flow collection per token, so deep flow nesting is quadratic (0.9 s here on
+  3.11; under `--cov` on a slower Windows runner over 5 s) before the composer's recursion limit refuses
+  it. `shape.security.yamlsafe` now refuses flow nesting over `MAX_FLOW_DEPTH = 100` with a linear
+  pre-scan (quoted scalars and comments skipped; same "nested too deeply" error as before). The limit
+  of the harness is unchanged. Test: `test_deeply_nested_yaml_is_refused_in_linear_time`.
+
+Checks before the next push: ruff, ruff format --check, mypy (also `--platform win32` on the two files
+with Windows-only code) clean; `tests/validation tests/security tests/scenario tests/scale
+tests/quality/test_verify_config.py` pass.
