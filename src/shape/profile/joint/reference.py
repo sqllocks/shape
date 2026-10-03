@@ -14,7 +14,10 @@ leading zeros, so a ZIP read as the number ``2872`` matches ``"02872"``.
 
 from __future__ import annotations
 
+import math
+import os
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
@@ -27,8 +30,11 @@ def normalize(value: Any) -> str | None:
     """A value as comparable text (``None`` for a missing value)."""
     if value is None:
         return None
-    if isinstance(value, float) and value == int(value):
-        value = int(value)
+    if isinstance(value, float):
+        if math.isnan(value):  # a NaN is a missing value (#302)
+            return None
+        if math.isfinite(value) and value.is_integer():
+            value = int(value)
     text = str(value).strip().casefold()
     if text.isdigit():
         return text.lstrip("0") or "0"
@@ -38,17 +44,23 @@ def normalize(value: Any) -> str | None:
 def _reference_table(reference: Any) -> tuple[pa.Table, str]:
     if isinstance(reference, pa.Table):
         return reference, "table"
-    if isinstance(reference, str):
-        from pathlib import Path
-
-        if Path(reference).is_file():
+    if isinstance(reference, (str, os.PathLike)):
+        path = Path(reference)
+        if path.is_file():
             from shape.profile.reference.sources import load_columns
 
-            _, cols, _ = load_columns(reference)
-            return pa.table({c.name: c.arr for c in cols}), Path(reference).name
-        from shape.generation.reference import load_dataset
+            _, cols, _ = load_columns(str(path))
+            return pa.table({c.name: c.arr for c in cols}), path.name
+        if not isinstance(reference, str):
+            raise FileNotFoundError(f"reference file not found: {reference}")
+        from shape.generation.reference import DatasetNotFoundError, load_dataset
 
-        ds = load_dataset(reference)
+        try:
+            ds = load_dataset(reference)
+        except DatasetNotFoundError as exc:
+            if len(path.parts) > 1 or path.suffix:  # it reads as a path: say the file is missing
+                raise FileNotFoundError(f"reference file not found: {reference}") from exc
+            raise
         return pa.table(dict(ds.columns)), reference
     raise TypeError("reference is a dataset name, a file path or a pyarrow.Table")
 
