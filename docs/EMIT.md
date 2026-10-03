@@ -151,7 +151,8 @@ A run with no checkpoint (the console sink, or no `--checkpoint`) starts from th
 `--to URI` is repeatable, and `--sink` counts as one: `shape emit retail --to kafka://... --to
 abfss://...` sends every batch to every destination. A destination that fails is retried alone, so
 the others are not sent the batch again. The URI of a **sink** (`abfss://`, `delta+abfss://`,
-`mssql://`, `postgresql://`, `mysql://`; see `docs/SINKS.md`) lands the stream in files, Delta
+`mssql://`, `postgresql://`, `mysql://`, `snowflake://`, `databricks://`, `synapse://`; see
+`docs/SINKS.md`) lands the stream in files, Delta
 tables or database tables **that a reader can query while the stream runs**:
 
 * files roll to a new numbered file every `--roll-rows N` rows or `--roll-seconds S` seconds, and at
