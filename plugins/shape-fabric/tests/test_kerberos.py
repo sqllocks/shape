@@ -222,9 +222,7 @@ def test_a_failed_kinit_reports_its_message_the_reference_and_the_principal(
     assert not _cache_of(call).parent.exists()  # nothing is left behind by a failure
 
 
-def test_the_failure_message_never_carries_the_keytab_even_if_kinit_echoes_it(
-    kinit, monkeypatch
-):
+def test_the_failure_message_never_carries_the_keytab_even_if_kinit_echoes_it(kinit, monkeypatch):
     secret = base64.b64encode(KEYTAB_BYTES).decode()
     credrefs.register_resolver("kv", lambda rest: secret)
     monkeypatch.setenv("FAKE_KINIT_FAIL", f"kinit: bad keytab {secret}")
@@ -357,9 +355,7 @@ def _no_secret(world, out, err):
         assert secret not in seen
 
 
-def test_generate_to_mssql_signs_in_with_the_keytab_and_cleans_up(
-    world, kinit, keytab_file
-):
+def test_generate_to_mssql_signs_in_with_the_keytab_and_cleans_up(world, kinit, keytab_file):
     code, out, err = world.run("generate", world.schema, "--to", URI, *_flags(keytab_file))
     assert code == 0, err
     assert len(world.server.rows("dbo", "customer")) == 25
@@ -469,7 +465,9 @@ def test_kerberos_with_a_scale_mode_job_is_refused_not_half_supported(
 def test_the_sink_adds_trusted_connection_to_a_given_connection_string(
     world, kinit, keytab_file, monkeypatch
 ):
-    monkeypatch.setenv("SHAPE_TEST_CS", "Driver={ODBC Driver 18 for SQL Server};Server=sql01;Database=d")
+    monkeypatch.setenv(
+        "SHAPE_TEST_CS", "Driver={ODBC Driver 18 for SQL Server};Server=sql01;Database=d"
+    )
     code, _, err = world.run(
         "generate", world.schema, "--to", URI, "--connection-string", "env://SHAPE_TEST_CS",
         *_flags(keytab_file),

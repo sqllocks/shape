@@ -390,7 +390,7 @@ def test_fabric_mode_outside_a_notebook_fails_clearly(world, monkeypatch):
 
 def test_auth_is_validated_before_a_job_is_made(world):
     with pytest.raises(SystemExit) as stop:
-        world.run(*sink_args(world, "--auth", "kerberos"))
+        world.run(*sink_args(world, "--auth", "ntlm"))  # 'kerberos' became a mode in W2-10
     assert stop.value.code == 2
     assert not (world.tmp / "jobs").exists() or not list((world.tmp / "jobs").glob("*.json"))
 

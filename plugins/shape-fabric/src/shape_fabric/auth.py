@@ -348,7 +348,9 @@ def _kerberos_options(cfg: AuthSettings, connection_string: str | None) -> dict[
             raise AuthError(
                 "the connection string already holds a login (UID, PWD or Authentication)"
             )
-        options["connection_string"] = connection_string.rstrip().rstrip(";") + ";Trusted_Connection=yes;"
+        options["connection_string"] = (
+            connection_string.rstrip().rstrip(";") + ";Trusted_Connection=yes;"
+        )
     if sys.platform == "win32":
         if cfg.keytab:
             raise AuthError(kerberos.WINDOWS_KEYTAB)

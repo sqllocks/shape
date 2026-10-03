@@ -43,6 +43,7 @@ class _ThreadedWriter:
         self._cond = threading.Condition()
         self._put = self._taken = self._done = 0
         self._error: BaseException | None = None
+        self._ended = False  # the end marker was taken: nothing more will arrive
         self.rows = 0
 
         def run() -> None:
@@ -52,8 +53,8 @@ class _ThreadedWriter:
                 with self._cond:
                     self._error = exc
                     self._cond.notify_all()
-                while self._q.get() is not None:  # keep the producer from blocking on us
-                    pass
+                while not self._ended and self._q.get() is not None:
+                    pass  # keep the producer from blocking on us
 
         self._thread = threading.Thread(target=run, name=f"shape-table-{table}", daemon=True)
         self._thread.start()
@@ -65,6 +66,7 @@ class _ThreadedWriter:
                 self._cond.notify_all()
             item = self._q.get()
             if item is None:
+                self._ended = True
                 return
             with self._cond:
                 self._taken += 1

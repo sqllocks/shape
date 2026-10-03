@@ -64,7 +64,15 @@ def add_to_arguments(
         "--write-mode",
         choices=("overwrite", "append", "fail", "create", "truncate", "replace", "upsert"),
         help="what to do with data already there (files: overwrite, append or fail; databases: "
-        "create (the default; never touches an existing table), append, truncate or replace)",
+        "create (the default; never touches an existing table), append, truncate or replace; "
+        "mssql:// also upsert: merge on the primary key, so a rerun leaves the same rows)",
+    )
+    g.add_argument(
+        "--sql-constraints",
+        choices=("keep", "disable"),
+        help="mssql:// targets: keep (the default) or disable the foreign key and check "
+        "constraints of tables that already exist while loading, then validate them (exit 1 and "
+        "the constraints named when one does not hold)",
     )
     if with_sink_config:
         g.add_argument(
@@ -159,6 +167,8 @@ def target_options(a: argparse.Namespace, fmt: str, targets: list[str] | None = 
     from shape.io.targets import scheme_of, sink_for_target, sink_names_by_scheme
 
     extra = sink_config(getattr(a, "sink_config", None))
+    if "mssql" in extra:  # the URI scheme is an accepted name for the sqlserver sink's options
+        extra.setdefault("sqlserver", {}).update(extra.pop("mssql"))
     for target in targets or []:
         if (scheme_of(target) or "") in sink_names_by_scheme():  # an emitter signs in elsewhere
             name = sink_for_target(target)[0]
@@ -174,6 +184,7 @@ def target_options(a: argparse.Namespace, fmt: str, targets: list[str] | None = 
         write_mode=a.write_mode,
         manifest=a.manifest,
         partition_by=list(a.partition_by) if getattr(a, "partition_by", None) else None,
+        constraints=getattr(a, "sql_constraints", None),
         extra=extra,
     )
 

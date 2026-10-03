@@ -35,7 +35,7 @@ from __future__ import annotations
 
 import logging
 import re
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from typing import Any
 from urllib.parse import parse_qsl, unquote, urlsplit
 
@@ -50,7 +50,7 @@ from . import _tsql
 from .eventhouse_writer import EventhouseWriter
 from .eventstream_writer import EventstreamWriter
 from .lakehouse import LakehouseWriter
-from .sqldb import SqlDatabaseWriter
+from .sqldb import SqlDatabaseWriter, plan_write
 from .warehouse import WarehouseWriter
 
 log = logging.getLogger(__name__)
@@ -146,9 +146,28 @@ _CONN_KEYS = (
     "timeout",
 )
 _URI_KEYS = frozenset(
-    {*_CONN_KEYS, "schema", "table", "write_mode", "batch_size", "commit_rows"}
+    {
+        *_CONN_KEYS,
+        "schema",
+        "table",
+        "write_mode",
+        "batch_size",
+        "commit_rows",
+        "identity",
+        "constraints",
+    }
 ) - {"password"}
-_WRITE_KEYS = ("write_mode", "batch_size", "commit_rows", "columns", "primary_key", "schema")
+_WRITE_KEYS = (
+    "write_mode",
+    "batch_size",
+    "commit_rows",
+    "columns",
+    "primary_key",
+    "schema",
+    "identity",
+    "constraints",
+    "identity_references",
+)
 
 
 def _flag(name: str, value: Any) -> bool:
@@ -211,6 +230,16 @@ class SqlServerSink:
       as they arrive (streaming); the default is one transaction for the whole call.
     * ``batch_size`` (rows per round trip), ``schema_name`` (default ``dbo``), ``columns``,
       ``primary_key`` and ``schema`` (an Arrow schema, to create an empty table) as the writer.
+    * ``write_mode=upsert``: each batch is merged into the table on its primary key (``MERGE``), so
+      rerunning the same load leaves the same rows; a table without a primary key is refused.
+    * ``identity=keep`` (default) or ``server``: a ``columns`` entry with ``identity`` is created as
+      ``BIGINT IDENTITY(start, step)``; ``keep`` inserts the generated keys with
+      ``SET IDENTITY_INSERT ... ON``, ``server`` leaves the column out (refused when
+      ``identity_references`` lists a foreign key that points at it).
+    * ``constraints=keep`` (default) or ``disable``: ``disable`` runs ``NOCHECK CONSTRAINT ALL``
+      before loading a table that already exists and ``WITH CHECK CHECK CONSTRAINT ALL`` after; a
+      constraint that does not hold ends the call with exit code 1 (``ConstraintError``).
+    * ``preflight(uri, {table: options})`` checks all of these for a whole run before it writes.
 
     A secret (``password``, ``connection_string``, a password in the URI) is never part of an
     exception message or a log record; give them as options or in the environment of the caller,
@@ -268,7 +297,7 @@ class SqlServerSink:
             for key in _CONN_KEYS:
                 if key in query:
                     conn_opts.setdefault(key, query[key])
-            for key in ("write_mode", "batch_size", "commit_rows"):
+            for key in ("write_mode", "batch_size", "commit_rows", "identity", "constraints"):
                 if key in query:
                     write_opts.setdefault(key, query[key])
             if connection is None:
@@ -290,6 +319,22 @@ class SqlServerSink:
             rows = writer.write_table(table, batches, **write_opts)
             log.debug("wrote %d rows of table %r to %s", rows, table, writer.destination)
             return rows
+
+    def preflight(self, uri: str, tables: Mapping[str, Mapping[str, Any]]) -> None:
+        """Refuse an impossible combination of write options for any of ``tables`` (each value is
+        the options that table's ``write`` would get) before the first table is written."""
+        query, _ = self._parse(uri)
+        for table, given in tables.items():
+            options = {**query, **given}
+            plan_write(
+                table,
+                mode=str(options.get("write_mode", "create")),
+                identity=options.get("identity", "keep"),
+                constraints=options.get("constraints", "keep"),
+                columns=options.get("columns"),
+                primary_key=options.get("primary_key") or (),
+                identity_references=options.get("identity_references") or (),
+            )
 
     def _parse(self, uri: str) -> tuple[dict[str, str], Any]:
         parts = urlsplit(uri)

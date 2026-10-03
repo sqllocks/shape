@@ -10,6 +10,25 @@ already there:
 ``append``    add rows; the table is created when it is missing
 ``truncate``  empty the table, then add rows; created when missing
 ``replace``   drop the table and create it again (destroys the old rows)
+``upsert``    add the rows that are missing and update the others, matched on the primary key
+              (``MERGE``); the table is created when it is missing; a table without a primary key
+              is refused. Rerunning the same load leaves the same rows, and finishes a load that
+              was killed half way
+
+``truncate`` on a table that a foreign key references uses ``DELETE`` (SQL Server refuses
+``TRUNCATE`` there); the delete fails while rows of a child table still point at it.
+
+**Identity.** A column whose ``columns`` entry has ``"identity": {"start": N, "step": M}`` (or
+``True``) is created as ``BIGINT IDENTITY(N, M)``. ``identity="keep"`` (the default) inserts the
+generated values between ``SET IDENTITY_INSERT ... ON`` and ``OFF``, so the keys that child foreign
+keys reference are kept; ``identity="server"`` leaves the column out and lets the server number the
+rows, and is refused when ``identity_references`` (``{"child", "column", "parent_column"}``) says a
+foreign key points at the column. A Warehouse has no identity: the setting is ignored there.
+
+**Constraints.** ``constraints="disable"`` runs ``ALTER TABLE ... NOCHECK CONSTRAINT ALL`` on a
+table that already exists, loads, then ``ALTER TABLE ... WITH CHECK CHECK CONSTRAINT ALL``. When
+that fails the rows stay, and :class:`~shape_fabric.errors.ConstraintError` (exit code 1) names each
+constraint that does not hold; those are left disabled. A failed load puts checking back on.
 
 Rows are sent as parameterised ``INSERT`` statements, ``batch_size`` rows per round trip (default
 5,000). A table is written in one transaction by default: a failure rolls back its rows, and a
@@ -33,6 +52,7 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
@@ -40,9 +60,12 @@ import pyarrow as pa  # type: ignore[import-untyped]
 from shape.errors import ShapeError
 
 from . import _tsql
-from .errors import WriteError, WriteResult
+from .errors import ConstraintError, WriteError, WriteResult
 
 WRITE_MODES = ("create", "append", "truncate", "replace")
+SQL_WRITE_MODES = (*WRITE_MODES, "upsert")  # the SQL database writer; the others refuse upsert
+IDENTITY_MODES = ("keep", "server")
+CONSTRAINT_MODES = ("keep", "disable")
 DEFAULT_BATCH_SIZE = 5000
 DEFAULT_SCHEMA = "dbo"
 
@@ -51,6 +74,73 @@ def check_mode(mode: str) -> str:
     if mode not in WRITE_MODES:
         raise ShapeError(f"unknown write mode {mode!r}; choose one of {', '.join(WRITE_MODES)}")
     return mode
+
+
+def check_sql_mode(mode: str) -> str:
+    if mode not in SQL_WRITE_MODES:
+        raise ShapeError(f"unknown write mode {mode!r}; choose one of {', '.join(SQL_WRITE_MODES)}")
+    return mode
+
+
+def _choice(name: str, value: Any, choices: Sequence[str]) -> str:
+    if not isinstance(value, str) or value not in choices:
+        raise ShapeError(f"{name} must be {' or '.join(choices)}")
+    return value
+
+
+@dataclass(frozen=True)
+class WritePlan:
+    """The checked options of one table's write: nothing is connected before this exists."""
+
+    mode: str
+    identity: str
+    constraints: str
+    identity_columns: tuple[str, ...]
+    primary_key: tuple[str, ...]
+
+
+def plan_write(
+    table: str,
+    *,
+    mode: str = "create",
+    identity: Any = "keep",
+    constraints: Any = "keep",
+    columns: Mapping[str, Mapping[str, Any]] | None = None,
+    primary_key: Sequence[str] = (),
+    identity_references: Sequence[Mapping[str, str]] = (),
+    warehouse: bool = False,
+) -> WritePlan:
+    """Check the write options of ``table`` and refuse an impossible combination: an unknown value,
+    ``upsert`` without a primary key or on a Warehouse, ``identity=server`` where a foreign key
+    references the identity column or the identity column is what an upsert matches on."""
+    check_sql_mode(mode)
+    identity = _choice("identity", identity, IDENTITY_MODES)
+    constraints = _choice("constraints", constraints, CONSTRAINT_MODES)
+    identity_columns = (
+        ()
+        if warehouse
+        else tuple(name for name, meta in (columns or {}).items() if _tsql.identity_parts(meta))
+    )
+    if identity == "server":
+        for ref in identity_references:
+            if ref["parent_column"] in identity_columns:
+                raise ShapeError(
+                    f"identity=server would break the foreign key {ref['child']}.{ref['column']} "
+                    f"-> {table}.{ref['parent_column']}"
+                )
+    if mode == "upsert":
+        if warehouse:
+            raise ShapeError("upsert is not supported for a Warehouse")
+        if not primary_key:
+            raise ShapeError(f"upsert needs a primary key on {table}")
+        if identity == "server":
+            clash = next((k for k in primary_key if k in identity_columns), None)
+            if clash is not None:
+                raise ShapeError(
+                    f"identity=server cannot match rows on the identity key {table}.{clash}: "
+                    "use identity=keep for an upsert"
+                )
+    return WritePlan(mode, identity, constraints, identity_columns, tuple(primary_key))
 
 
 class SqlConnection:
@@ -152,7 +242,15 @@ def prepare_table(
         db.commit()
         exists = False
     if exists and mode == "truncate":
-        db.execute(_tsql.truncate_sql(schema_name, table))
+        if (
+            not db.warehouse
+            and db.execute(_tsql.REFERENCED_SQL, _tsql.qualified(schema_name, table)).fetchone()
+        ):
+            db.execute(
+                _tsql.delete_sql(schema_name, table)
+            )  # TRUNCATE is refused on a target of a key
+        else:
+            db.execute(_tsql.truncate_sql(schema_name, table))
         db.commit()
     if exists:
         return False
@@ -271,16 +369,28 @@ class SqlDatabaseWriter:
         columns: Mapping[str, Mapping[str, Any]] | None = None,
         primary_key: Sequence[str] = (),
         schema: pa.Schema | None = None,
+        identity: str = "keep",
+        constraints: str = "keep",
+        identity_references: Sequence[Mapping[str, str]] = (),
     ) -> int:
         """Write one table; return its row count. ``schema`` is needed only to create an
         empty table from no batches."""
-        mode = check_mode(write_mode)
         if isinstance(batch_size, bool) or not isinstance(batch_size, int) or batch_size < 1:
             raise ShapeError("batch_size must be a positive integer")
         if commit_rows is not None and (
             isinstance(commit_rows, bool) or not isinstance(commit_rows, int) or commit_rows < 1
         ):
             raise ShapeError("commit_rows must be a positive integer")
+        plan = plan_write(
+            table,
+            mode=write_mode,
+            identity=identity,
+            constraints=constraints,
+            columns=columns,
+            primary_key=primary_key,
+            identity_references=identity_references,
+            warehouse=self.db.warehouse,
+        )
         sname = schema_name or self.schema_name
         _tsql.qualified(sname, table)  # validates both names before anything runs
         first, rest = _peek(batches)
@@ -290,22 +400,156 @@ class SqlDatabaseWriter:
                 f"table {table!r} has no batches and no schema: pass schema= to create it empty"
             )
         use_schema = _tsql.normalize_schema(use_schema)
+        unknown = [k for k in plan.primary_key if k not in use_schema.names]
+        if unknown and plan.mode == "upsert":
+            raise ShapeError(f"primary key column {unknown[0]!r} is not a column of {table!r}")
+        if plan.identity == "server" and all(n in plan.identity_columns for n in use_schema.names):
+            raise ShapeError(
+                f"table {table!r} has only identity columns: identity=server has no column to "
+                "insert; use identity=keep"
+            )
         created = False
+        disabled = False
         db = self.db
         committed = [0]  # rows already committed by this call (commit_rows only)
         try:
             created = prepare_table(
-                db, sname, table, mode, use_schema, columns=columns, primary_key=primary_key
+                db,
+                sname,
+                table,
+                plan.mode,
+                use_schema,
+                columns=columns,
+                primary_key=primary_key,
             )
-            rows = self._insert(sname, table, first, rest, batch_size, commit_rows, committed)
+            if plan.constraints == "disable" and not created:
+                db.execute(_tsql.nocheck_sql(sname, table))
+                db.commit()
+                disabled = True
+            rows = self._load(
+                sname, table, first, rest, plan, columns, batch_size, commit_rows, committed
+            )
             db.commit()
-            return rows
-        except ShapeError:
-            undo(db, sname, table, created and not committed[0])
-            raise
         except Exception as exc:
             undo(db, sname, table, created and not committed[0])
+            if disabled:
+                self._enable_again(sname, table)
+            if isinstance(exc, ShapeError):
+                raise
             raise WriteError(f"writing {sname}.{table} failed: {_tsql.redact(str(exc))}") from exc
+        if disabled:
+            self._validate(sname, table)
+        return rows
+
+    def _enable_again(self, schema_name: str, table: str) -> None:
+        """After a failed load: put constraint checking back on (without validating old rows)."""
+        try:
+            self.db.execute(_tsql.enable_sql(schema_name, table))
+            self.db.commit()
+        except Exception:  # noqa: S110  # nosec B110 - the load's own error is the one to report
+            pass
+
+    def _validate(self, schema_name: str, table: str) -> None:
+        """After a load with constraints disabled: enable them and validate every row, or raise
+        :class:`ConstraintError` naming each constraint that does not hold (left disabled)."""
+        db = self.db
+        where = f"{schema_name}.{table}"
+        try:
+            db.execute(_tsql.check_all_sql(schema_name, table))
+            db.commit()
+            return
+        except Exception as exc:
+            db.rollback()
+            first_error = _tsql.redact(str(exc))
+        qualified = _tsql.qualified(schema_name, table)
+        failing: list[str] = []
+        try:
+            names = [
+                row[0]
+                for row in db.execute(_tsql.CONSTRAINT_NAMES_SQL, qualified, qualified).fetchall()
+            ]
+        except Exception:
+            db.rollback()
+            names = []
+        for name in names:
+            try:
+                db.execute(_tsql.check_one_sql(schema_name, table, name))
+                db.commit()
+            except Exception:
+                db.rollback()
+                failing.append(f"{where}.{name}")
+        listed = ", ".join(failing) if failing else f"{where} (see: {first_error})"
+        raise ConstraintError(
+            f"after loading {where}, these constraints do not hold and were left disabled: "
+            f"{listed}; fix the rows, then run: ALTER TABLE {qualified} WITH CHECK CHECK "
+            "CONSTRAINT ALL"
+        )
+
+    def _load(
+        self,
+        schema_name: str,
+        table: str,
+        first: pa.RecordBatch | None,
+        rest: Iterator[pa.RecordBatch],
+        plan: WritePlan,
+        columns: Mapping[str, Mapping[str, Any]] | None,
+        batch_size: int,
+        commit_rows: int | None,
+        committed: list[int],
+    ) -> int:
+        if first is None:
+            return 0
+        keep = plan.identity == "keep" and any(
+            n in plan.identity_columns for n in first.schema.names
+        )
+        left_out = set(plan.identity_columns) if plan.identity == "server" else set()
+        names = [n for n in first.schema.names if n not in left_out]
+        if keep:
+            self.db.execute(_tsql.identity_insert_sql(schema_name, table, True))
+        try:
+            if plan.mode == "upsert":
+                return self._upsert(
+                    schema_name, table, first, rest, plan, columns, names, batch_size, commit_rows,
+                    committed,
+                )  # fmt: skip
+            return self._insert(
+                schema_name, table, first, rest, batch_size, commit_rows, committed, names
+            )
+        finally:
+            if keep:
+                try:
+                    self.db.execute(_tsql.identity_insert_sql(schema_name, table, False))
+                except Exception:  # noqa: S110  # nosec B110 - a dead connection has nothing to undo
+                    pass
+
+    def _pieces(
+        self,
+        first: pa.RecordBatch,
+        rest: Iterator[pa.RecordBatch],
+        names: list[str],
+        table: str,
+        batch_size: int,
+    ) -> Iterator[pa.RecordBatch]:
+        """The rows as pieces of at most ``batch_size``, normalized, with only ``names``."""
+
+        def batches() -> Iterator[pa.RecordBatch]:
+            yield first
+            yield from rest
+
+        for raw in batches():
+            _tsql.check_columns(first.schema, raw, table)
+            batch = _tsql.normalize_batch(raw)
+            if len(names) != batch.num_columns:
+                batch = batch.select(names)
+            for start in range(0, batch.num_rows, batch_size):
+                piece = batch.slice(start, batch_size)
+                if piece.num_rows:
+                    yield piece
+
+    def _send(self, cursor: Any, sql: str, piece: pa.RecordBatch) -> None:
+        if hasattr(cursor, "fast_executemany"):
+            cursor.fast_executemany = _tsql.widest_first(piece)
+        cursor.executemany(sql, _tsql.rows_as_params(piece))
 
     def _insert(
         self,
@@ -316,36 +560,68 @@ class SqlDatabaseWriter:
         batch_size: int,
         commit_rows: int | None = None,
         committed: list[int] | None = None,
+        names: list[str] | None = None,
     ) -> int:
         if first is None:
             return 0
+        names = names if names is not None else list(first.schema.names)
         cursor = self.db.get().cursor()
-        sql = _tsql.insert_sql(schema_name, table, first.schema.names)
+        sql = _tsql.insert_sql(schema_name, table, names)
         rows = 0
         pending = 0
+        for piece in self._pieces(first, rest, names, table, batch_size):
+            self._send(cursor, sql, piece)
+            rows += piece.num_rows
+            pending += piece.num_rows
+            if commit_rows is not None and pending >= commit_rows:
+                self.db.commit()
+                pending = 0
+                if committed is not None:
+                    committed[0] = rows
+        return rows
 
-        def batches() -> Iterator[pa.RecordBatch]:
-            yield first
-            yield from rest
-
-        for raw in batches():
-            _tsql.check_columns(first.schema, raw, table)
-            batch = _tsql.normalize_batch(raw)
-            for start in range(0, batch.num_rows, batch_size):
-                piece = batch.slice(start, batch_size)
-                if piece.num_rows == 0:
-                    continue
-                fast = _tsql.widest_first(piece)
-                if hasattr(cursor, "fast_executemany"):
-                    cursor.fast_executemany = fast
-                cursor.executemany(sql, _tsql.rows_as_params(piece))
+    def _upsert(
+        self,
+        schema_name: str,
+        table: str,
+        first: pa.RecordBatch,
+        rest: Iterator[pa.RecordBatch],
+        plan: WritePlan,
+        columns: Mapping[str, Mapping[str, Any]] | None,
+        names: list[str],
+        batch_size: int,
+        commit_rows: int | None,
+        committed: list[int],
+    ) -> int:
+        """Each piece goes into the session temporary table and is merged into the target on the
+        primary key: non-key columns are updated (an identity column never is), the rest inserted."""
+        db = self.db
+        key = list(plan.primary_key)
+        updates = [n for n in names if n not in key and n not in plan.identity_columns]
+        stage_schema = pa.schema([first.schema.field(n) for n in names])
+        db.execute(_tsql.drop_stage_sql())
+        db.execute(_tsql.create_stage_sql(stage_schema, columns=columns, key=key))
+        stage_sql = _tsql.stage_insert_sql(names)
+        merge = _tsql.merge_sql(schema_name, table, names, key, updates)
+        cursor = db.get().cursor()
+        rows = 0
+        pending = 0
+        try:
+            for piece in self._pieces(first, rest, names, table, batch_size):
+                db.execute(_tsql.truncate_stage_sql())
+                self._send(cursor, stage_sql, piece)
+                db.execute(merge)
                 rows += piece.num_rows
                 pending += piece.num_rows
                 if commit_rows is not None and pending >= commit_rows:
-                    self.db.commit()
+                    db.commit()
                     pending = 0
-                    if committed is not None:
-                        committed[0] = rows
+                    committed[0] = rows
+        finally:
+            try:
+                db.execute(_tsql.drop_stage_sql())
+            except Exception:  # noqa: S110  # nosec B110 - the session ends with the connection
+                pass
         return rows
 
     def write_tables(

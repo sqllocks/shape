@@ -124,6 +124,26 @@ def column_type(
     )
 
 
+STAGE = "#shape_stage"  # the session temporary table an upsert loads each batch into
+
+
+def identity_parts(meta: Mapping[str, Any]) -> tuple[int, int] | None:
+    """``(seed, increment)`` when the column ``meta`` is an identity column, else ``None``. The
+    ``identity`` value is ``True`` (1, 1) or ``{"start": int, "step": int}``; both go into DDL text
+    so each must be an integer, and the increment cannot be zero."""
+    value = meta.get("identity")
+    if not value:
+        return None
+    spec: Mapping[str, Any] = value if isinstance(value, Mapping) else {}
+    seed, step = spec.get("start", 1), spec.get("step", 1)
+    for what, number in (("start", seed), ("step", step)):
+        if isinstance(number, bool) or not isinstance(number, int):
+            raise ShapeError(f"identity {what} must be an integer, got {number!r}")
+    if step == 0:
+        raise ShapeError("identity step cannot be 0")
+    return int(seed), int(step)
+
+
 def create_table_sql(
     schema_name: str,
     table: str,
@@ -145,6 +165,10 @@ def create_table_sql(
         meta = columns.get(field.name, {})
         sql_type = column_type(field, meta, warehouse=warehouse, key=field.name in key)
         nullable = bool(meta.get("nullable", True)) and field.name not in key
+        identity = None if warehouse else identity_parts(meta)  # a Warehouse has no identity
+        if identity is not None:
+            sql_type = f"BIGINT IDENTITY({identity[0]}, {identity[1]})"
+            nullable = False
         lines.append(f"    {ident(field.name)} {sql_type} {'NULL' if nullable else 'NOT NULL'}")
     if key:
         cols = ", ".join(ident(c) for c in key)
@@ -165,6 +189,96 @@ def drop_table_sql(schema_name: str, table: str, *, if_exists: bool = False) -> 
 
 def truncate_sql(schema_name: str, table: str) -> str:
     return f"TRUNCATE TABLE {qualified(schema_name, table)}"  # nosec B608 - quoted names only
+
+
+def delete_sql(schema_name: str, table: str) -> str:
+    return f"DELETE FROM {qualified(schema_name, table)}"  # nosec B608 - quoted names only
+
+
+def identity_insert_sql(schema_name: str, table: str, on: bool) -> str:
+    return f"SET IDENTITY_INSERT {qualified(schema_name, table)} {'ON' if on else 'OFF'}"
+
+
+def nocheck_sql(schema_name: str, table: str) -> str:
+    return f"ALTER TABLE {qualified(schema_name, table)} NOCHECK CONSTRAINT ALL"
+
+
+def check_all_sql(schema_name: str, table: str) -> str:
+    """Re-enable every constraint and validate the rows (they become trusted again)."""
+    return f"ALTER TABLE {qualified(schema_name, table)} WITH CHECK CHECK CONSTRAINT ALL"
+
+
+def check_one_sql(schema_name: str, table: str, constraint: str) -> str:
+    return (
+        f"ALTER TABLE {qualified(schema_name, table)} WITH CHECK CHECK CONSTRAINT "
+        f"{ident(constraint)}"
+    )
+
+
+def enable_sql(schema_name: str, table: str) -> str:
+    """Re-enable every constraint without validating the rows already there (never fails on data)."""
+    return f"ALTER TABLE {qualified(schema_name, table)} CHECK CONSTRAINT ALL"
+
+
+CONSTRAINT_NAMES_SQL = (
+    "SELECT name FROM sys.foreign_keys WHERE parent_object_id = OBJECT_ID(?) "
+    "UNION ALL SELECT name FROM sys.check_constraints WHERE parent_object_id = OBJECT_ID(?)"
+)
+REFERENCED_SQL = "SELECT 1 FROM sys.foreign_keys WHERE referenced_object_id = OBJECT_ID(?)"
+
+
+def drop_stage_sql() -> str:
+    return f"DROP TABLE IF EXISTS {ident(STAGE)}"
+
+
+def truncate_stage_sql() -> str:
+    return f"TRUNCATE TABLE {ident(STAGE)}"
+
+
+def create_stage_sql(
+    schema: pa.Schema, *, columns: Mapping[str, Mapping[str, Any]] | None, key: Sequence[str]
+) -> str:
+    """The session temporary table an upsert loads a batch into: the target's column types, every
+    column nullable, no keys and no identity."""
+    columns = columns or {}
+    lines = [
+        f"    {ident(f.name)} "
+        f"{column_type(f, columns.get(f.name, {}), warehouse=False, key=f.name in key)} NULL"
+        for f in schema
+    ]
+    return f"CREATE TABLE {ident(STAGE)} (\n" + ",\n".join(lines) + "\n)"  # nosec B608
+
+
+def stage_insert_sql(names: Sequence[str]) -> str:
+    cols = ", ".join(ident(n) for n in names)
+    marks = ", ".join("?" for _ in names)
+    return f"INSERT INTO {ident(STAGE)} ({cols}) VALUES ({marks})"  # nosec B608
+
+
+def merge_sql(
+    schema_name: str,
+    table: str,
+    names: Sequence[str],
+    key: Sequence[str],
+    updates: Sequence[str],
+) -> str:
+    """``MERGE`` of the staged rows into ``table`` on ``key``: matched rows get ``updates``, the
+    others are inserted with ``names``. ``HOLDLOCK`` makes the match-and-insert atomic."""
+    on = " AND ".join(f"t.{ident(k)} = s.{ident(k)}" for k in key)
+    matched = (
+        " WHEN MATCHED THEN UPDATE SET "
+        + ", ".join(f"t.{ident(c)} = s.{ident(c)}" for c in updates)
+        if updates
+        else ""
+    )
+    cols = ", ".join(ident(n) for n in names)
+    values = ", ".join(f"s.{ident(n)}" for n in names)
+    # every name went through ident(); the rows are in the staging table, not in the statement
+    return (  # nosec B608
+        f"MERGE {qualified(schema_name, table)} WITH (HOLDLOCK) AS t "
+        f"USING {ident(STAGE)} AS s ON {on}{matched} "
+        f"WHEN NOT MATCHED THEN INSERT ({cols}) VALUES ({values});"
+    )
 
 
 def count_sql(schema_name: str, table: str) -> str:

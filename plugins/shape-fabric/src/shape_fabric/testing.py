@@ -303,10 +303,42 @@ def _unbracket(name: str) -> str:
     return name.replace("]]", "]")
 
 
+class SqlConstraint:
+    """A foreign key or check constraint of a :class:`SqlTable` (``disabled`` after ``NOCHECK``)."""
+
+    def __init__(
+        self,
+        name: str,
+        kind: str,
+        columns: tuple[str, ...] = (),
+        parent: tuple[str, str] | None = None,
+        parent_columns: tuple[str, ...] = (),
+        predicate: Callable[[dict[str, Any]], bool] | None = None,
+    ) -> None:
+        self.name = name
+        self.kind = kind  # "fk" or "check"
+        self.columns = columns
+        self.parent = parent
+        self.parent_columns = parent_columns
+        self.predicate = predicate
+        self.disabled = False
+        self.trusted = True
+
+
 class SqlTable:
     def __init__(self, columns: list[tuple[str, str, bool]]) -> None:
         self.columns = columns  # (name, T-SQL type, nullable)
         self.rows: list[tuple[Any, ...]] = []
+        self.identity: tuple[str, int, int] | None = None  # (column, seed, increment)
+        self.identity_next = 0
+        self.primary_key: tuple[str, ...] = ()
+        self.constraints: list[SqlConstraint] = []
+
+    def names(self) -> list[str]:
+        return [c[0] for c in self.columns]
+
+
+_TEMP = "#temp"  # the schema key of a session temporary table (``[#name]``)
 
 
 class FakeSqlServer:
@@ -317,6 +349,13 @@ class FakeSqlServer:
     ``VARCHAR(n)`` truncation errors, and ``COPY INTO`` reading Parquet from ``files`` (a
     :class:`MemoryFS`; ``timestamp(ns)`` is refused as the Warehouse does). Anything the fake does
     not understand raises, so a writer cannot send a statement nobody has looked at.
+
+    It also models what the SQL Server write path relies on: ``IDENTITY(seed, step)`` columns
+    (an explicit value needs ``SET IDENTITY_INSERT ... ON``, one table at a time per server),
+    primary keys (a duplicate raises once ``enforce_keys`` is set), foreign keys and check constraints (``add_foreign_key``,
+    ``add_check``; ``ALTER TABLE ... NOCHECK CONSTRAINT ALL`` and ``WITH CHECK CHECK CONSTRAINT``
+    that re-validates and fails naming the constraint), ``TRUNCATE`` refused on a referenced table,
+    ``DELETE``, session temporary tables (``[#name]``) and the ``MERGE`` the upsert sends.
 
     ``fail`` is called with ``(sql, params)`` before each statement and may raise;
     ``copy_reports_rowcount=False`` makes ``COPY INTO`` report ``-1`` as some drivers do.
@@ -331,6 +370,8 @@ class FakeSqlServer:
         self.fail: Callable[[str, tuple[Any, ...]], None] | None = None
         self.copy_reports_rowcount = True
         self.copy_loads_fewer = 0
+        self.identity_insert: tuple[str, str] | None = None  # session state: not rolled back
+        self.enforce_keys = False  # True: a duplicate primary key raises (as a real server does)
         self._committed: tuple[dict[tuple[str, str], SqlTable], set[str]] | None = None
         self.snapshot()
 
@@ -351,6 +392,28 @@ class FakeSqlServer:
     def rows(self, schema: str, table: str) -> list[tuple[Any, ...]]:
         return list(self.tables[(schema, table)].rows)
 
+    # -- schema the tests set up ---------------------------------------------------------
+    def add_foreign_key(
+        self,
+        child: tuple[str, str],
+        columns: tuple[str, ...] | list[str],
+        parent: tuple[str, str],
+        parent_columns: tuple[str, ...] | list[str],
+        name: str,
+    ) -> None:
+        """A foreign key from ``child`` (schema, table) to ``parent``, enforced until disabled."""
+        self.tables[child].constraints.append(
+            SqlConstraint(name, "fk", tuple(columns), parent, tuple(parent_columns))
+        )
+        self.snapshot()
+
+    def add_check(
+        self, table: tuple[str, str], name: str, predicate: Callable[[dict[str, Any]], bool]
+    ) -> None:
+        """A check constraint: ``predicate(row as a dict)`` must be true for every row."""
+        self.tables[table].constraints.append(SqlConstraint(name, "check", predicate=predicate))
+        self.snapshot()
+
 
 class FakeSqlConnection:
     autocommit = False
@@ -370,6 +433,9 @@ class FakeSqlConnection:
 
     def close(self) -> None:
         self.closed = True
+        for key in [k for k in self.server.tables if k[0] == _TEMP]:  # the session ends
+            del self.server.tables[key]
+        self.server.snapshot()
 
 
 class FakeSqlCursor:
@@ -383,20 +449,31 @@ class FakeSqlCursor:
     def fetchone(self) -> tuple[Any, ...] | None:
         return self._result.pop(0) if self._result else None
 
+    def fetchall(self) -> list[tuple[Any, ...]]:
+        out, self._result = self._result, []
+        return out
+
     def executemany(self, sql: str, rows: Any) -> None:
         rows = [tuple(r) for r in rows]
         self.server.statements.append(sql)
-        pattern = rf"INSERT INTO {_NAME}\.{_NAME} \((.*)\) VALUES \(([?, ]*)\)$"  # nosec B608
-        match = re.match(pattern, sql)
-        if not match:
-            raise RuntimeError(f"the fake does not understand: {sql[:80]}")
-        table = self._table(match.group(1), match.group(2))
-        names = [_unbracket(n) for n in re.findall(_NAME, match.group(3))]
-        if names != [c[0] for c in table.columns]:
-            raise RuntimeError(f"INSERT columns {names} do not match the table")
+        if self.server.fail:
+            self.server.fail(sql, ())
+        qualified = rf"INSERT INTO {_NAME}\.{_NAME} \((.*)\) VALUES \(([?, ]*)\)$"  # nosec B608
+        temporary = rf"INSERT INTO {_NAME} \((.*)\) VALUES \(([?, ]*)\)$"  # nosec B608
+        match = re.match(qualified, sql)
+        if match:
+            key = (_unbracket(match.group(1)), _unbracket(match.group(2)))
+            names_text = match.group(3)
+        else:
+            match = re.match(temporary, sql)
+            if not match:
+                raise RuntimeError(f"the fake does not understand: {sql[:80]}")
+            key = (_TEMP, _unbracket(match.group(1)))
+            names_text = match.group(2)
+        table = self._table(*key)
+        names = [_unbracket(n) for n in re.findall(_NAME, names_text)]
         for row in rows:
-            self._check(table, row)
-            table.rows.append(row)
+            self._insert(key, table, names, row)
         self.rowcount = len(rows)
 
     def execute(self, sql: str, *params: Any) -> FakeSqlCursor:
@@ -417,16 +494,35 @@ class FakeSqlCursor:
         elif text.startswith("CREATE TABLE"):
             self._create(sql)
         elif text.startswith("DROP TABLE"):
-            schema, name = (_unbracket(g) for g in _QUALIFIED.search(text).groups())  # type: ignore[union-attr]
-            if (schema, name) not in server.tables and "IF EXISTS" not in text:
-                raise RuntimeError(f"Cannot drop the table {name}, it does not exist")
-            server.tables.pop((schema, name), None)
+            key = self._key(text)
+            if key not in server.tables and "IF EXISTS" not in text:
+                raise RuntimeError(f"Cannot drop the table {key[1]}, it does not exist")
+            server.tables.pop(key, None)
         elif text.startswith("TRUNCATE TABLE"):
-            schema, name = (_unbracket(g) for g in _QUALIFIED.search(text).groups())  # type: ignore[union-attr]
-            server.tables[(schema, name)].rows.clear()
+            key = self._key(text)
+            if self._referenced(key):
+                raise RuntimeError(
+                    f"Cannot truncate table '{key[1]}' because it is being referenced by a "
+                    "FOREIGN KEY constraint."
+                )
+            server.tables[key].rows.clear()
+            server.tables[key].identity_next = 0
+        elif text.startswith("DELETE FROM"):
+            self._delete(self._key(text))
         elif text.startswith("SELECT COUNT(*) FROM"):
-            schema, name = (_unbracket(g) for g in _QUALIFIED.search(text).groups())  # type: ignore[union-attr]
-            self._result = [(len(server.tables[(schema, name)].rows),)]
+            key = self._key(text)
+            self._result = [(len(server.tables[key].rows),)]
+        elif text.startswith("SET IDENTITY_INSERT"):
+            self._set_identity_insert(text)
+        elif text.startswith("ALTER TABLE"):
+            self._alter(text)
+        elif text.startswith("SELECT name FROM sys.foreign_keys"):
+            table = server.tables[self._key(params[0])]
+            self._result = [(c.name,) for c in table.constraints]
+        elif text.startswith("SELECT 1 FROM sys.foreign_keys WHERE referenced_object_id"):
+            self._result = [(1,)] if self._referenced(self._key(params[0])) else []
+        elif text.startswith("MERGE"):
+            self._merge(text)
         elif text.startswith("COPY INTO"):
             self._copy(text)
         else:
@@ -434,6 +530,15 @@ class FakeSqlCursor:
         return self
 
     # ------------------------------------------------------------------------------------
+    def _key(self, text: str) -> tuple[str, str]:
+        """The (schema, table) a statement names: ``[s].[t]`` or a temporary ``[#t]``."""
+        both = _QUALIFIED.search(text)
+        if both:
+            return _unbracket(both.group(1)), _unbracket(both.group(2))
+        single = re.search(rf"{_NAME}", text)
+        assert single is not None, text
+        return _TEMP, _unbracket(single.group(1))
+
     def _table(self, schema: str, name: str) -> SqlTable:
         key = (_unbracket(schema), _unbracket(name))
         if key not in self.server.tables:
@@ -441,24 +546,241 @@ class FakeSqlCursor:
         return self.server.tables[key]
 
     def _create(self, sql: str) -> None:
-        head = _QUALIFIED.search(sql)
-        assert head is not None
-        schema, name = (_unbracket(g) for g in head.groups())
+        text = " ".join(sql.split())
+        temporary = re.match(rf"CREATE TABLE {_NAME} \(", text)
+        if temporary:
+            schema, name = _TEMP, _unbracket(temporary.group(1))
+            head_end = temporary.end() - 1
+        else:
+            head = _QUALIFIED.search(sql)
+            assert head is not None
+            schema, name = (_unbracket(g) for g in head.groups())
+            if schema not in self.server.schemas:
+                raise RuntimeError(f"Invalid schema '{schema}'")
+            head_end = head.end()
         if (schema, name) in self.server.tables:
             raise RuntimeError(f"There is already an object named '{name}'")
-        if schema not in self.server.schemas:
-            raise RuntimeError(f"Invalid schema '{schema}'")
-        body = sql[sql.index("(", head.end()) + 1 : sql.rindex(")")]
+        source = sql if not temporary else sql[sql.index("(") :]
+        body = source[source.index("(", head_end if not temporary else 0) + 1 : source.rindex(")")]
         columns = []
+        identity: tuple[str, int, int] | None = None
+        primary_key: tuple[str, ...] = ()
         for line in body.split(",\n"):
             line = line.strip()
             if line.startswith("CONSTRAINT"):
+                pk = re.search(r"PRIMARY KEY (?:NONCLUSTERED )?\(([^)]*)\)", line)
+                if pk and "NOT ENFORCED" not in line:
+                    primary_key = tuple(_unbracket(n) for n in re.findall(_NAME, pk.group(1)))
                 continue
             col = re.match(rf"{_NAME} (.+?) (NOT NULL|NULL)$", line)
             if not col:
                 raise RuntimeError(f"the fake cannot read the column definition: {line[:60]}")
-            columns.append((_unbracket(col.group(1)), col.group(2), col.group(3) == "NULL"))
-        self.server.tables[(schema, name)] = SqlTable(columns)
+            sql_type = col.group(2)
+            ident = re.match(r"(.+?) IDENTITY\((\d+), (\d+)\)$", sql_type)
+            if ident:
+                sql_type = ident.group(1)
+                identity = (_unbracket(col.group(1)), int(ident.group(2)), int(ident.group(3)))
+            columns.append((_unbracket(col.group(1)), sql_type, col.group(3) == "NULL"))
+        table = SqlTable(columns)
+        table.identity = identity
+        table.primary_key = primary_key
+        self.server.tables[(schema, name)] = table
+
+    # -- rows ---------------------------------------------------------------------------
+    def _insert(
+        self, key: tuple[str, str], table: SqlTable, names: list[str], row: tuple[Any, ...]
+    ) -> None:
+        """One row: identity rules, value checks, primary key, constraints."""
+        all_names = table.names()
+        values = dict(zip(names, row, strict=True))
+        unknown = [n for n in names if n not in all_names]
+        if unknown:
+            raise RuntimeError(f"Invalid column name '{unknown[0]}'")
+        if table.identity:
+            column, seed, step = table.identity
+            if column in values:
+                if self.server.identity_insert != key:
+                    raise RuntimeError(
+                        f"Cannot insert explicit value for identity column in table '{key[1]}' "
+                        "when IDENTITY_INSERT is set to OFF."
+                    )
+                table.identity_next = max(table.identity_next, (values[column] - seed) // step + 1)
+            else:
+                values[column] = seed + table.identity_next * step
+                table.identity_next += 1
+        missing = [n for n in all_names if n not in values]
+        if missing:
+            nullable = {c[0]: c[2] for c in table.columns}
+            if any(not nullable[n] for n in missing):
+                raise RuntimeError(f"Cannot insert NULL into column '{missing[0]}'")
+            for n in missing:
+                values[n] = None
+        full = tuple(values[n] for n in all_names)
+        self._check(table, full)
+        self._store(key, table, full)
+
+    def _store(self, key: tuple[str, str], table: SqlTable, row: tuple[Any, ...]) -> None:
+        names = table.names()
+        if table.primary_key and self.server.enforce_keys:
+            pk = tuple(row[names.index(c)] for c in table.primary_key)
+            for other in table.rows:
+                if tuple(other[names.index(c)] for c in table.primary_key) == pk:
+                    raise RuntimeError(
+                        f"Violation of PRIMARY KEY constraint 'PK_{key[1]}'. Cannot insert "
+                        f"duplicate key in object '{key[0]}.{key[1]}'."
+                    )
+        self._enforce(table, row)
+        table.rows.append(row)
+
+    def _enforce(self, table: SqlTable, row: tuple[Any, ...]) -> None:
+        names = table.names()
+        for c in table.constraints:
+            if c.disabled:
+                continue
+            if self._violates(table, names, c, row):
+                kind = "FOREIGN KEY" if c.kind == "fk" else "CHECK"
+                raise RuntimeError(
+                    f'The INSERT statement conflicted with the {kind} constraint "{c.name}".'
+                )
+
+    def _violates(
+        self, table: SqlTable, names: list[str], c: SqlConstraint, row: tuple[Any, ...]
+    ) -> bool:
+        if c.kind == "check":
+            assert c.predicate is not None
+            return not c.predicate(dict(zip(names, row, strict=True)))
+        value = tuple(row[names.index(n)] for n in c.columns)
+        if any(v is None for v in value):
+            return False
+        assert c.parent is not None
+        parent = self.server.tables[c.parent]
+        pnames = parent.names()
+        return not any(
+            tuple(p[pnames.index(n)] for n in c.parent_columns) == value for p in parent.rows
+        )
+
+    def _referenced(self, key: tuple[str, str]) -> bool:
+        return any(
+            c.kind == "fk" and c.parent == key
+            for t in self.server.tables.values()
+            for c in t.constraints
+        )
+
+    def _delete(self, key: tuple[str, str]) -> None:
+        table = self.server.tables[key]
+        names = table.names()
+        for other in self.server.tables.values():
+            for c in other.constraints:
+                if c.kind != "fk" or c.parent != key or c.disabled:
+                    continue
+                onames = other.names()
+                held = {tuple(r[names.index(n)] for n in c.parent_columns) for r in table.rows}
+                if any(tuple(r[onames.index(n)] for n in c.columns) in held for r in other.rows):
+                    raise RuntimeError(
+                        f'The DELETE statement conflicted with the REFERENCE constraint "{c.name}".'
+                    )
+        table.rows.clear()
+
+    def _set_identity_insert(self, text: str) -> None:
+        match = re.match(rf"SET IDENTITY_INSERT {_NAME}\.{_NAME} (ON|OFF)$", text)
+        if not match:
+            raise RuntimeError(f"the fake does not understand: {text[:80]}")
+        key = (_unbracket(match.group(1)), _unbracket(match.group(2)))
+        table = self._table(*key)
+        if table.identity is None:
+            raise RuntimeError(
+                f"Table '{key[1]}' does not have the identity property. Cannot perform SET "
+                "operation."
+            )
+        if match.group(3) == "OFF":
+            if self.server.identity_insert == key:
+                self.server.identity_insert = None
+            return
+        current = self.server.identity_insert
+        if current is not None and current != key:
+            raise RuntimeError(f"IDENTITY_INSERT is already ON for table '{current[1]}'.")
+        self.server.identity_insert = key
+
+    def _alter(self, text: str) -> None:
+        match = re.match(
+            rf"ALTER TABLE {_NAME}\.{_NAME} (NOCHECK|WITH CHECK CHECK|CHECK) CONSTRAINT "
+            rf"(ALL|{_NAME})$",
+            text,
+        )
+        if not match:
+            raise RuntimeError(f"the fake does not understand: {text[:80]}")
+        key = (_unbracket(match.group(1)), _unbracket(match.group(2)))
+        table = self._table(*key)
+        action, target = match.group(3), match.group(4)
+        wanted = (
+            table.constraints
+            if target == "ALL"
+            else [c for c in table.constraints if c.name == _unbracket(target[1:-1])]
+        )
+        if target != "ALL" and not wanted:
+            raise RuntimeError(f"Constraint '{_unbracket(target[1:-1])}' does not exist.")
+        if action == "NOCHECK":
+            for c in wanted:
+                c.disabled = True
+            return
+        if action == "WITH CHECK CHECK":  # validates the rows already there; all or nothing
+            names = table.names()
+            for c in wanted:
+                if any(self._violates(table, names, c, row) for row in table.rows):
+                    kind = "FOREIGN KEY" if c.kind == "fk" else "CHECK"
+                    raise RuntimeError(
+                        f"The ALTER TABLE statement conflicted with the {kind} constraint "
+                        f'"{c.name}".'
+                    )
+        for c in wanted:
+            c.disabled = False
+            c.trusted = action == "WITH CHECK CHECK"
+
+    def _merge(self, text: str) -> None:
+        match = re.match(
+            rf"MERGE {_NAME}\.{_NAME} WITH \(HOLDLOCK\) AS t USING {_NAME} AS s ON (.+?) "
+            rf"(?:WHEN MATCHED THEN UPDATE SET (.+?) )?WHEN NOT MATCHED THEN INSERT \((.+?)\) "
+            rf"VALUES \((.+?)\);$",
+            text,
+        )
+        if not match:
+            raise RuntimeError(f"the fake does not understand: {text[:80]}")
+        key = (_unbracket(match.group(1)), _unbracket(match.group(2)))
+        target = self._table(*key)
+        stage = self._table(_TEMP, match.group(3))
+        pairs = re.findall(rf"t\.{_NAME} = s\.{_NAME}", match.group(4))
+        key_columns = [_unbracket(a) for a, _ in pairs]
+        updates = [
+            (_unbracket(a), _unbracket(b))
+            for a, b in re.findall(rf"t\.{_NAME} = s\.{_NAME}", match.group(5) or "")
+        ]
+        insert_names = [_unbracket(n) for n in re.findall(_NAME, match.group(6))]
+        snames, tnames = stage.names(), target.names()
+        touched: set[tuple[Any, ...]] = set()
+        for row in list(stage.rows):
+            source = dict(zip(snames, row, strict=True))
+            wanted = tuple(source[c] for c in key_columns)
+            found = [
+                i
+                for i, r in enumerate(target.rows)
+                if tuple(r[tnames.index(c)] for c in key_columns) == wanted
+            ]
+            if found:
+                if wanted in touched:
+                    raise RuntimeError(
+                        "The MERGE statement attempted to UPDATE or DELETE the same row more "
+                        "than once."
+                    )
+                touched.add(wanted)
+                if updates:
+                    new = list(target.rows[found[0]])
+                    for column, from_column in updates:
+                        new[tnames.index(column)] = source[from_column]
+                    self._check(target, tuple(new))
+                    self._enforce(target, tuple(new))
+                    target.rows[found[0]] = tuple(new)
+            else:
+                self._insert(key, target, insert_names, tuple(source[n] for n in insert_names))
 
     def _check(self, table: SqlTable, row: tuple[Any, ...]) -> None:
         for (name, sql_type, nullable), value in zip(table.columns, row, strict=True):
