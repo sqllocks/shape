@@ -1,0 +1,13 @@
+{
+  "format": "shape-suite",
+  "version": 1,
+  "name": "smoke",
+  "description": "Fast checks for every CI run: the clean baseline, three injected data defects and one added column.",
+  "scenarios": [
+    "clean_baseline",
+    "nulls_injected",
+    "duplicate_rows",
+    "orphaned_foreign_keys",
+    "schema_add_column"
+  ]
+}

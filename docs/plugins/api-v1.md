@@ -6,6 +6,8 @@
 the host rejects any other major version. Plugins are trusted, in-process code.
 Hooks take and return whole Arrow batches or arrays, never single values or rows.
 A plugin satisfies a Protocol structurally; it does not import or subclass it.
+What stays stable within 1.x, what counts as a breaking change and how deprecation works
+are in [stability.md](stability.md).
 
 | Entry-point group | Protocol |
 |---|---|

@@ -1,0 +1,11 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "late_arriving_data",
+  "gates_fail": [],
+  "defects": {
+    "late_arrivals": {
+      "min": 1
+    }
+  }
+}

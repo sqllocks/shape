@@ -1,0 +1,28 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "schema_rename_column",
+  "gates_fail": [],
+  "drift": [
+    {
+      "between": [
+        0,
+        10
+      ],
+      "changes": [
+        {
+          "column": "order.status",
+          "kinds": [
+            "column_removed"
+          ]
+        },
+        {
+          "column": "order.order_status",
+          "kinds": [
+            "column_added"
+          ]
+        }
+      ]
+    }
+  ]
+}
