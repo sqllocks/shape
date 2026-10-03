@@ -32,7 +32,9 @@ from .sql import (
     DEFAULT_SAMPLE_ROWS,
     DEFAULT_SCHEMA,
     NOT_HASHABLE_TYPES,
+    TABLES_QUERY,
     SqlServerError,
+    fetch_dicts,
     register_converters,
     spread_query,
     sql_type_to_dtype,
@@ -359,6 +361,30 @@ def _profile_tables(
     return DatasetProfile(tables=profiles, relationships=relationships), sampled, methods, evidence
 
 
+def _check_found(cursor: Any, catalog: Catalog, tables: list[str] | None) -> None:
+    """An empty profile is never a success: a schema with no tables, or a requested table the
+    schema does not have, is an error that lists what the schema does have."""
+    found = {t.name for t in catalog.tables}
+    missing = [t for t in tables or () if t not in found]
+    if found and not missing:
+        return
+    every = sorted(r["table_name"] for r in _schema_tables(cursor, catalog.schema))
+    if not every:
+        raise SqlServerError(
+            f"schema {catalog.schema!r} has no tables (or the login cannot see them); "
+            "give the schema with --schema"
+        )
+    names = ", ".join(repr(t) for t in missing)
+    raise SqlServerError(
+        f"schema {catalog.schema!r} has no table {names}; its tables are: {', '.join(every)}"
+    )
+
+
+def _schema_tables(cursor: Any, schema: str) -> list[dict[str, Any]]:
+    cursor.execute(TABLES_QUERY, (schema,))
+    return fetch_dicts(cursor)
+
+
 def profile_database(
     connection_string: str | None = None,
     *,
@@ -388,6 +414,7 @@ def profile_database(
     cursor = conn.cursor()
     try:
         catalog = read_catalog(cursor, schema, tables)
+        _check_found(cursor, catalog, tables)
         dataset, sampled, methods, evidence = _profile_tables(cursor, catalog, sample_rows)
     finally:
         cursor.close()

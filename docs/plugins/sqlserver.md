@@ -28,7 +28,7 @@ shape profile-db --server myserver.database.windows.net --database shop \
 | `--server`, `--database` | Build the connection string for you (encrypted, certificate validated). |
 | `--auth` | `cli` (default): the Azure CLI's signed-in account. `msi`: managed identity or the default Azure credential chain. `spn`: service principal (`--tenant-id`, `--client-id`, secret in `SHAPE_SQLSERVER_CLIENT_SECRET` or `--client-secret`). `fabric`: the token of the running Fabric notebook. `sql`: the login in the connection string. |
 | `--schema` | Schema to profile (default `dbo`). |
-| `--tables A,B` | Only these tables. |
+| `--tables A,B` | Only these tables. A name the schema does not have, or a schema with no tables, is an error (exit 2) that lists the schema's tables, never an empty profile. |
 | `--sample-rows N` | Rows sampled per table (default 1000). `0` profiles the catalog only. |
 | `-o OUT.shape`, `--json SUMMARY.json` | Where to write the profile and its summary. |
 
