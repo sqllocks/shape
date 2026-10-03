@@ -220,17 +220,18 @@ _UNQUOTE = re.compile(r'[\[\]"`]')
 _CREATE_TABLE_HEADER = re.compile(
     r"CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(" + _NAME + r"+?)\s*\(", re.IGNORECASE
 )
+# ``REFERENCES parent (col)``, or ``REFERENCES parent`` alone (its primary key: group 4 is None).
+_FK_TARGET = r"REFERENCES\s+(" + _NAME + r"+)(?:\s*\(\s*(" + _NAME + r"+)\s*\))?"
+# SQL Server scripts write ``ALTER TABLE t WITH CHECK ADD CONSTRAINT ...``; the constraint name is
+# optional everywhere.
 _ALTER_FK = re.compile(
     r"ALTER\s+TABLE\s+(" + _NAME + r"+?)\s+"
-    r"ADD\s+CONSTRAINT\s+" + _NAME + r"+\s+"
-    r"FOREIGN\s+KEY\s*\(\s*(" + _NAME + r"+)\s*\)\s*"
-    r"REFERENCES\s+(" + _NAME + r"+?)\s*\(\s*(" + _NAME + r"+)\s*\)",
+    r"(?:WITH\s+(?:NO)?CHECK\s+)?ADD\s+(?:CONSTRAINT\s+" + _NAME + r"+\s+)?"
+    r"FOREIGN\s+KEY\s*\(\s*(" + _NAME + r"+)\s*\)\s*" + _FK_TARGET,
     re.IGNORECASE,
 )
 _INLINE_FK = re.compile(
-    r"FOREIGN\s+KEY\s*\(\s*(" + _NAME + r"+)\s*\)\s*"
-    r"REFERENCES\s+(" + _NAME + r"+?)\s*\(\s*(" + _NAME + r"+)\s*\)",
-    re.IGNORECASE,
+    r"FOREIGN\s+KEY\s*\(\s*(" + _NAME + r"+)\s*\)\s*" + _FK_TARGET, re.IGNORECASE
 )
 _TABLE_PK = re.compile(
     r"(?:CONSTRAINT\s+" + _NAME + r"+\s+)?"
@@ -408,7 +409,7 @@ class DdlParser:
                         {
                             "child_column": _unquote(fk.group(1)),
                             "parent_table": _table_name(fk.group(2)),
-                            "parent_column": _unquote(fk.group(3)),
+                            "parent_column": _unquote(fk.group(3) or ""),
                         }
                     )
                 continue
@@ -552,7 +553,7 @@ class DdlParser:
                 child_table=_table_name(m.group(1)),
                 child_column=_unquote(m.group(2)),
                 parent_table=_table_name(m.group(3)),
-                parent_column=_unquote(m.group(4)),
+                parent_column=_unquote(m.group(4) or ""),
             )
             for m in _ALTER_FK.finditer(sql)
         ]
