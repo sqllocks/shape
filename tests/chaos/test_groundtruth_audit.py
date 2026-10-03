@@ -26,3 +26,36 @@ def test_orphan_keys_match_no_parent_row_without_declared_references() -> None:
     keys = set(parent.column("customer_id").to_pylist())
     assert len(out.records) == 500
     assert not [r["after"] for r in out.records if r["after"] in keys]
+
+
+def _orphans(col: pa.Array) -> pa.Table:
+    tables = {"t": pa.table({"id": pa.array(range(len(col)), pa.int64()), "x_id": col})}
+    out = corrupt_tables(tables, [Corruption("orphan_keys", 0.5, "t", "x_id")], seed=1)
+    return out.tables["t"]
+
+
+def test_orphan_keys_widen_an_integer_column_the_orphans_do_not_fit() -> None:
+    """#399: an int32 key near its limit gets int64 orphans instead of an OverflowError."""
+    out = _orphans(pa.array([2_000_000_000, 1, 2, 3], pa.int32()))
+    assert out.schema.field("x_id").type == pa.int64()
+    assert max(out.column("x_id").to_pylist()) > 2_000_000_000
+
+
+def test_orphan_keys_ignore_infinite_values_when_choosing_the_base() -> None:
+    """#399: an infinite float key does not crash the orphan base."""
+    out = _orphans(pa.array([1.0, 2.0, float("inf"), 4.0]))
+    assert out.num_rows == 4
+
+
+def test_orphan_keys_on_a_decimal_or_boolean_column_is_a_clear_error() -> None:
+    """#399: a column that cannot hold orphan ids is an error naming it and its type."""
+    import decimal
+
+    import pytest
+
+    for col in (
+        pa.array([decimal.Decimal("1.5")] * 4, pa.decimal128(5, 2)),
+        pa.array([True, False, True, False]),
+    ):
+        with pytest.raises(ValueError, match=r"orphan_keys: t\.x_id is .* integer, float or text"):
+            _orphans(col)
