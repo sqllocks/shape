@@ -346,6 +346,19 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   not to build things. `docs/specs/ONE_ZERO_CONTRACT.md` now states the exit codes the CLI uses
   (`docs/CLI.md`). No command, flag or exit code changed.
 
+- `shape known-answer`, `shape check-answers` and `shape publish-report`, also under `shape fabric`
+  (`docs/plugins/fabric-commands.md`, `docs/DRIFT_REPORT.md`). `known-answer DOMAIN|SCHEMA -o DIR`
+  writes a dataset (Parquet per table), the semantic model of its schema, `answers.json` (format
+  `shape-dax-answers`) with the exact expected value of every measure for the grand total and every
+  slice (`Decimal` arithmetic; averages and ratios as exact fractions rounded half-even), and
+  `queries.dax`; `--measures` (format `shape-dax-measures`) picks the measures and slices and
+  `--plant TABLE.COLUMN=VALUE` sets a decimal column's total exactly inside its generator's bounds.
+  `check-answers` compares a DAX client's CSV or JSON export with the answers (exit 0, 1, 2).
+  `publish-report PROFILE.shape... | --registry NAME` diffs a profile history with the options of
+  `shape diff` and writes `fact_drift_change`, `dim_run`, `dim_column`, `dim_kind` and `dim_date`,
+  `drift.bim` with measures, and `report.json` (format `shape-drift-report`). The exporter takes an
+  optional `measures` argument that replaces its default measures.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

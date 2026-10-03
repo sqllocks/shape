@@ -1,0 +1,79 @@
+{
+  "format": "shape-drift-report",
+  "version": 1,
+  "source": {
+    "kind": "files",
+    "registry": null,
+    "since": null
+  },
+  "inputs": [
+    {
+      "label": "orders-2026-03-01",
+      "path": "orders-2026-03-01.shape",
+      "content_id": null,
+      "sha256": "d7fd2cebab3be67ec01e6ce830f2fb76e42bb71d76de870c86185bd60efbd1b8",
+      "date": "2026-03-01"
+    },
+    {
+      "label": "orders-2026-03-06",
+      "path": "orders-2026-03-06.shape",
+      "content_id": null,
+      "sha256": "cb91dc0accd4c23b49050c1ad0b141f9be1bf51ae73f832b2fa0177035a9640d",
+      "date": "2026-03-06"
+    },
+    {
+      "label": "orders-2026-03-11",
+      "path": "orders-2026-03-11.shape",
+      "content_id": null,
+      "sha256": "46cacb1bef6331590bdb8a6a6e8648a7c504185b39eb6b19348551256bfd731a",
+      "date": "2026-03-11"
+    },
+    {
+      "label": "orders-2026-03-13",
+      "path": "orders-2026-03-13.shape",
+      "content_id": null,
+      "sha256": "948b1332c6b923bf0cda508240340e57c62f50cfdc9ee04a2c1cb0e9f6a903eb",
+      "date": "2026-03-13"
+    }
+  ],
+  "thresholds": {
+    "thresholds": {
+      "null_rate": 0.05,
+      "cardinality_ratio_max": 1.5,
+      "cardinality_ratio_min": 0.67,
+      "mean_shift_std": 0.5,
+      "min_severity": "low",
+      "category_tvd": 0.1,
+      "true_rate": 0.1,
+      "std_ratio_max": 1.5,
+      "std_ratio_min": 0.67,
+      "ks_distance": 0.1,
+      "range_margin_std": 2.0,
+      "length_ratio": 0.25,
+      "outlier_rate": 0.02,
+      "uniqueness_rate": 0.05,
+      "temporal_tvd": 0.2,
+      "min_rows": 30,
+      "dependency_confidence": 0.02,
+      "placeholder_share": 0.01,
+      "implausible_rate": 0.02,
+      "association_shift": 0.2,
+      "reference_match_rate": 0.02,
+      "row_count_ratio_max": 2.0,
+      "row_count_ratio_min": 0.5
+    },
+    "columns": {},
+    "ignore": [],
+    "only": []
+  },
+  "format_of_tables": "parquet",
+  "tables": {
+    "dim_column": 6,
+    "dim_date": 8,
+    "dim_kind": 27,
+    "dim_run": 3,
+    "fact_drift_change": 10
+  },
+  "runs": 3,
+  "changes": 10
+}

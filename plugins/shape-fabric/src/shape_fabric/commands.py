@@ -1,9 +1,10 @@
-"""The Fabric commands: ``shape fabric publish|notebook|deploy-notebook|setup|export-model``, and
-``shape profile-model`` (a semantic model as a profile).
+"""The Fabric commands: ``shape fabric publish|notebook|deploy-notebook|setup|export-model|
+known-answer|check-answers|publish-report``, and ``shape profile-model`` (a semantic model as a
+profile).
 
 Each command is also a top-level command (``shape publish``, ``shape notebook``,
-``shape deploy-notebook``, ``shape setup-fabric``, ``shape export-model``): the same code behind
-both names.
+``shape deploy-notebook``, ``shape setup-fabric``, ``shape export-model``, ``shape known-answer``,
+``shape check-answers``, ``shape publish-report``): the same code behind both names.
 
 Exit codes: 0 done; 1 the service or the destination failed (a sign-in, a write, an HTTP error);
 2 the input is wrong (an unknown domain, a missing option, a bad value). Every message is
@@ -220,6 +221,211 @@ def _run_export_model(a: argparse.Namespace) -> int:
     print(f"  Output:        {path}")
     print()
     print("Import this .bim file into Tabular Editor or deploy via XMLA endpoint.")
+    return EXIT_OK
+
+
+# ---------------------------------------------------------------------------------------------
+# known-answer and check-answers
+
+
+def _configure_known_answer(p: argparse.ArgumentParser) -> None:
+    p.add_argument(
+        "domain", metavar="DOMAIN|SCHEMA.json", help="a domain, or a generation schema file"
+    )
+    p.add_argument("-s", "--scale", default="small", help="scale preset (default: small)")
+    p.add_argument(
+        "--seed", type=int, default=None, help="the generation seed (default: the schema's)"
+    )
+    p.add_argument(
+        "--measures",
+        metavar="MEASURES.json",
+        help="a shape-dax-measures file: the measures and the slices (default: the exporter's "
+        "measures, sliced by the first text column of each dimension)",
+    )
+    p.add_argument(
+        "--plant",
+        action="append",
+        default=[],
+        metavar="TABLE.COLUMN=VALUE",
+        help="move the values of a decimal column, inside its generator's bounds, so that its "
+        "total is exactly VALUE (repeatable)",
+    )
+    p.add_argument(
+        "-o",
+        "--output",
+        required=True,
+        metavar="DIR",
+        help="the folder for data/, model.bim, answers.json and queries.dax",
+    )
+
+
+@_guarded
+def _run_known_answer(a: argparse.Namespace) -> int:
+    from shape.cli.generation import load_target
+    from shape.generation.engine import Engine
+
+    from . import known_answer as ka
+
+    is_file = Path(a.domain).is_file() or a.domain.lower().endswith(".json")
+    schema = load_target(a.domain, None if is_file else "3nf")
+    scales = schema.generation.scales
+    if scales and a.scale not in scales:
+        raise ValueError(
+            f"unknown scale {a.scale!r} for {a.domain}; the presets are: {', '.join(scales)}"
+        )
+    engine = Engine(schema, scale=a.scale, seed=a.seed)
+    result = engine.generate()
+    tables = {name: result[name] for name in engine.schema.tables}
+    try:
+        built = ka.build(
+            engine.schema,
+            a.output,
+            tables=tables,
+            scale=a.scale,
+            seed=engine.seed,
+            measures_file=a.measures,
+            plants=a.plant,
+        )
+    except ka.PlantError as exc:
+        return _fail(str(exc), EXIT_FAILED)
+    skipped = built.answers.get("skipped") or []
+    if skipped:
+        print(
+            f"shape: {len(skipped)} (measure, slice) pair(s) skipped; "
+            "see `skipped` in answers.json",
+            file=sys.stderr,
+        )
+    print(f"Shape v{_version()} — Known-answer dataset")
+    print()
+    print(f"  Domain:   {a.domain}")
+    print(f"  Scale:    {a.scale}  (seed {engine.seed})")
+    print(f"  Tables:   {len(built.tables)} ({sum(built.tables.values())} rows)")
+    print(f"  Measures: {built.measures}")
+    print(f"  Queries:  {built.queries}")
+    for plant in built.plants:
+        print(f"  Planted:  {plant['table']}.{plant['column']} = {plant['total']}")
+    print(f"  Output:   {built.directory}")
+    print()
+    print("Run queries.dax in a DAX client against the model, save the results, then:")
+    print(f"  shape check-answers {built.directory / 'answers.json'} RESULTS")
+    return EXIT_OK
+
+
+def _configure_check_answers(p: argparse.ArgumentParser) -> None:
+    p.add_argument("answers", metavar="ANSWERS.json", help="the answers.json of a known-answer run")
+    p.add_argument(
+        "results",
+        metavar="RESULTS",
+        help="a CSV or JSON export of the queries: a folder with one file per query (named by "
+        "the query id), or one file with a query column",
+    )
+    p.add_argument(
+        "--places",
+        type=int,
+        default=None,
+        metavar="N",
+        help="compare averages, ratios and float sums rounded to N places, not the answers' "
+        "(counts and sums stay exact)",
+    )
+
+
+@_guarded
+def _run_check_answers(a: argparse.Namespace) -> int:
+    from . import answer_check as ac
+    from . import known_answer as ka
+
+    answers = ka.load_answers(a.answers)
+    results = ac.read_results(a.results, [q["id"] for q in answers["queries"]])
+    report = ac.check(answers, results, a.places)
+    print(ac.render(report))
+    return EXIT_FAILED if report.mismatches else EXIT_OK
+
+
+# ---------------------------------------------------------------------------------------------
+# publish-report
+
+
+def _configure_publish_report(p: argparse.ArgumentParser) -> None:
+    from shape.cli.main import _diff_policy_arguments
+
+    p.add_argument(
+        "profiles",
+        nargs="*",
+        metavar="PROFILE.shape",
+        help="the profiles of the history, oldest first (a date in a file name, YYYY-MM-DD, is "
+        "the run's date)",
+    )
+    p.add_argument(
+        "--registry",
+        metavar="NAME",
+        help="the history is the commits of NAME in a `shape registry` (full profiles, "
+        "committed with --allow-raw), oldest first; needs --registry-root",
+    )
+    p.add_argument(
+        "--registry-root", metavar="DIR", help="the registry folder that --registry reads"
+    )
+    p.add_argument(
+        "--since",
+        metavar="DATE",
+        help="with --registry: only the runs dated YYYY-MM-DD or later (the commit before them "
+        "is the first run's baseline); a commit's date is its business date, else its commit date",
+    )
+    p.add_argument(
+        "-o",
+        "--output",
+        required=True,
+        metavar="DIR",
+        help="the folder for data/, drift.bim and report.json",
+    )
+    p.add_argument(
+        "--format",
+        choices=("parquet", "csv"),
+        default="parquet",
+        help="the format of the tables under data/ (default: parquet)",
+    )
+    _diff_policy_arguments(p)
+
+
+@_guarded
+def _run_publish_report(a: argparse.Namespace) -> int:
+    from shape.cli.main import _diff_options
+
+    from . import drift_report as dr
+    from .known_answer import KnownAnswerError
+
+    options = _diff_options(a)
+    if a.policy and not Path(a.policy).is_file():
+        raise KnownAnswerError(f"the policy file {a.policy} does not exist")
+    if a.registry:
+        if a.profiles:
+            raise KnownAnswerError("give profile files or --registry, not both")
+        if not a.registry_root:
+            raise KnownAnswerError("--registry needs --registry-root DIR (the registry folder)")
+        sources = dr.registry_sources(a.registry_root, a.registry, a.since)
+        kind = "registry"
+    else:
+        if a.since or a.registry_root:
+            raise KnownAnswerError("--since and --registry-root belong to --registry")
+        sources = dr.file_sources(a.profiles)
+        kind = "files"
+    done = dr.publish(
+        sources,
+        a.output,
+        fmt=a.format,
+        options=options,
+        source_kind=kind,
+        registry=a.registry,
+        since=a.since,
+    )
+    print(f"Shape v{_version()} — Drift report")
+    print()
+    print(f"  Profiles:  {len(sources)} ({done.runs} runs)")
+    print(f"  Changes:   {done.changes}")
+    for name, rows in done.rows.items():
+        print(f"  {name + ':':<19}{rows} rows")
+    print(f"  Output:    {done.directory}")
+    print()
+    print("Open drift.bim in Tabular Editor or Power BI Desktop; see docs/DRIFT_REPORT.md.")
     return EXIT_OK
 
 
@@ -831,21 +1037,53 @@ class PublishCommand(_Command):
     _run = staticmethod(_run_publish)
 
 
+class KnownAnswerCommand(_Command):
+    """``shape known-answer``: a dataset, a model and the exact results of its DAX measures."""
+
+    name = "known-answer"
+    help = "generate a dataset, a semantic model and the exact answers of its DAX measures"
+    _configure = staticmethod(_configure_known_answer)
+    _run = staticmethod(_run_known_answer)
+
+
+class CheckAnswersCommand(_Command):
+    """``shape check-answers``: results exported from a DAX client against the known answers."""
+
+    name = "check-answers"
+    help = "compare results exported from a DAX client with the known answers"
+    _configure = staticmethod(_configure_check_answers)
+    _run = staticmethod(_run_check_answers)
+
+
+class PublishReportCommand(_Command):
+    """``shape publish-report``: a profile history as drift tables and a semantic model."""
+
+    name = "publish-report"
+    help = "turn a profile history into drift tables and a Power BI semantic model"
+    _configure = staticmethod(_configure_publish_report)
+    _run = staticmethod(_run_publish_report)
+
+
 _SUBCOMMANDS: tuple[tuple[str, type[_Command]], ...] = (
     ("publish", PublishCommand),
     ("notebook", NotebookCommand),
     ("deploy-notebook", DeployNotebookCommand),
     ("setup", SetupFabricCommand),
     ("export-model", ExportModelCommand),
+    ("known-answer", KnownAnswerCommand),
+    ("check-answers", CheckAnswersCommand),
+    ("publish-report", PublishReportCommand),
 )
 
 
 class FabricCommand:
-    """``shape fabric``: publish, notebook, deploy-notebook, setup and export-model."""
+    """``shape fabric``: publish, notebook, deploy-notebook, setup, export-model, known-answer,
+    check-answers and publish-report."""
 
     name = "fabric"
     help = (
-        "Microsoft Fabric: publish data, make and deploy notebooks, set up, export a semantic model"
+        "Microsoft Fabric: publish data, make and deploy notebooks, set up, export a semantic "
+        "model, known-answer datasets for DAX measures"
     )
 
     def configure(self, parser: Any) -> None:
