@@ -176,3 +176,12 @@ def test_160_a_failed_file_write_leaves_the_file_as_it_was(tmp_path):
     sink._f = real
     sink.close()
     assert path.read_bytes() == encode_batch(batch)
+
+
+def test_161_deduplicate_ids_keeps_ids_of_different_types_apart():
+    from shape.streaming import deduplicate_ids
+
+    seen: set = set()
+    assert deduplicate_ids([1, "1", 1, 2.5, "2.5"], seen).tolist() == [True, True, False, True, True]
+    assert seen == {1, "1", 2.5, "2.5"}
+    assert deduplicate_ids([True, 1, 1.0], set()).tolist() == [True, False, False]  # equal in a set
