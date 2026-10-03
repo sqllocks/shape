@@ -61,6 +61,10 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   CSV against it instead. A profile is not a fidelity reference; profile the synthetic data and
   run `shape diff`.
 
+- `shape resolve run FILE` finds duplicate entities in a CSV, Parquet or JSONL file and writes
+  golden records; `shape resolve synth FILE -o OUT` plants seeded duplicates and writes the true
+  clusters. See [RESOLVE.md](RESOLVE.md). Bad options or an unreadable file exit 2.
+
 ## `shape doctor`
 
 ```

@@ -8,7 +8,8 @@ be scored against that log because it is the whole truth: a cell that is not in 
 The corruptions model what a source system does to a delivery:
 
 =================  =================================================================================
-``duplicates``     rows delivered twice (at-least-once delivery), appended at the end of the table
+``duplicates``     rows delivered twice (at-least-once delivery), appended at the end of the table;
+                   ``fuzz=P`` damages cells of the copies; ``duplicate_clusters`` gives the clusters
 ``orphan_keys``    foreign keys that match no parent row
 ``date_shift``     late-arriving or wrongly dated rows (a date or timestamp moved by up to N days)
 ``negative_amounts``  sign flips of positive amounts
@@ -63,6 +64,7 @@ CORRUPTIONS = (
 PII_KINDS = ("ssn", "email", "phone")
 _TEXT_HINTS = ("note", "comment", "text", "desc", "memo", "remark", "message")
 _OPTIONS = {
+    "duplicates": {"fuzz"},
     "date_shift": {"days", "direction"},
     "pii_fill": {"pii"},
     "null_creep": {"step"},
@@ -87,7 +89,9 @@ class Corruption:
         end_batch: Last batch (inclusive); ``None`` means no end.
         options: ``days`` and ``direction`` (``both``, ``late`` or ``early``) of a date shift,
             ``pii`` (``ssn``, ``email`` or ``phone``) of a PII fill, ``step`` (rate added per batch)
-            of null creep.
+            of null creep, ``fuzz`` (0 to 1, default none) of duplicates: the chance that a text,
+            number or date cell of a copy is damaged, which makes near-duplicates instead of exact
+            copies (keys are left alone).
     """
 
     kind: str
@@ -112,6 +116,8 @@ class Corruption:
         extra = set(self.options) - _OPTIONS.get(self.kind, set())
         if extra:
             raise ValueError(f"{self.kind} has no option {', '.join(sorted(extra))}")
+        if self.kind == "duplicates" and not 0.0 <= float(self.options.get("fuzz", 0.0)) <= 1.0:
+            raise ValueError("duplicates fuzz is 0 to 1")
         if self.kind == "date_shift":
             if int(self.options.get("days", 7)) < 1:
                 raise ValueError("date_shift days must be at least 1")
@@ -175,7 +181,7 @@ class Corruption:
                 kwargs["start_batch" if key == "from" else "end_batch"] = int(value)
             elif key in ("days",):
                 options[key] = int(value)
-            elif key == "step":
+            elif key in ("step", "fuzz"):
                 options[key] = float(value)
             else:
                 options[key] = value.strip()
@@ -395,10 +401,23 @@ def _duplicates(run: _Run, c: Corruption, pos: int, table: str) -> None:
     source = _pick(rng, np.arange(n, dtype=np.int64), n, c.rate_in(run.batch))
     if len(source) == 0:
         return
-    out = pa.concat_tables([t, t.take(pa.array(source))])
+    copies = t.take(pa.array(source))
+    fuzz = float(c.options.get("fuzz", 0.0))
+    if fuzz > 0.0:
+        from shape.resolve.perturb import fuzz_table
+
+        keep = {run.key_column(table), *run.foreign_keys(table)}
+        copies = fuzz_table(
+            copies, _rng(run.seed, run.batch, pos, table, "fuzz"), rate=fuzz, skip=keep
+        )
+    out = pa.concat_tables([t, copies])
     run.tables[table] = out
     dest = np.arange(n, n + len(source), dtype=np.int64)
-    run.record(table, c, dest, None, None, None, [{"source_row": int(s)} for s in source.tolist()])
+    extra: list[dict[str, Any]] = [{"source_row": int(s)} for s in source.tolist()]
+    if "fuzz" in c.options:
+        for e in extra:
+            e["fuzz"] = fuzz
+    run.record(table, c, dest, None, None, None, extra)
 
 
 def _orphan_keys(run: _Run, c: Corruption, pos: int, table: str, column: str) -> None:
@@ -675,6 +694,40 @@ def corrupt_tables(
     )
 
 
+def duplicate_clusters(records: Sequence[Mapping[str, Any]]) -> dict[str, list[list[int]]]:
+    """The true duplicate clusters of one run, per table, from its log records.
+
+    A cluster is an original row with every copy of it (a copy of a copy joins the same cluster),
+    as sorted row positions of the output table; clusters are ordered by their smallest row.
+    Works on ``outcome.records`` and on the records of a log read back with
+    :func:`read_ground_truth`. The records must come from one batch.
+    """
+    dups = [r for r in records if r.get("kind") == "duplicates"]
+    if len({r.get("batch") for r in dups}) > 1:
+        raise ValueError("duplicate_clusters needs the records of one batch")
+    parent: dict[str, dict[int, int]] = {}
+
+    def find(forest: dict[int, int], x: int) -> int:
+        forest.setdefault(x, x)
+        while forest[x] != x:
+            forest[x] = forest[forest[x]]
+            x = forest[x]
+        return x
+
+    for r in dups:
+        forest = parent.setdefault(str(r["table"]), {})
+        a, b = find(forest, int(r["source_row"])), find(forest, int(r["row"]))
+        if a != b:
+            forest[max(a, b)] = min(a, b)
+    out: dict[str, list[list[int]]] = {}
+    for table, forest in parent.items():
+        groups: dict[int, list[int]] = {}
+        for row in sorted(forest):
+            groups.setdefault(find(forest, row), []).append(row)
+        out[table] = [groups[k] for k in sorted(groups)]
+    return out
+
+
 def write_ground_truth(path: str | Path, outcome: ChaosOutcome) -> Path:
     """Write the log as JSON Lines: a ``run`` record, then one ``change`` record per change."""
     target = Path(path)
@@ -701,6 +754,7 @@ __all__ = [
     "ChaosOutcome",
     "Corruption",
     "corrupt_tables",
+    "duplicate_clusters",
     "parse_corruptions",
     "read_ground_truth",
     "write_ground_truth",
