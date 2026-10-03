@@ -156,7 +156,11 @@ impl KllCore {
         }
     }
 
+    /// Add one value; NaN is skipped (T-13), as `update_values` skips it.
     pub fn update(&mut self, x: f64) {
+        if x.is_nan() {
+            return;
+        }
         self.levels[0].push(x);
         self.n += 1;
         self.compress();

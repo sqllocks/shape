@@ -220,7 +220,11 @@ class KLL:
         return sum(kll_capacity(self.k, i, h) for i in range(h))
 
     def update(self, x: float) -> None:
-        self.levels[0].append(float(x))
+        """Add one value; NaN is skipped (T-13), as ``update_values`` skips it."""
+        x = float(x)
+        if x != x:
+            return
+        self.levels[0].append(x)
         self.n += 1
         self._compress()
 
