@@ -173,6 +173,9 @@ values times the lower and the upper bound); so does a total with more decimal p
 column has. A plant changes the final table only: a column computed from the planted one (an
 `order_total` that sums `line_total`) is not recomputed.
 
+The answers are computed in Python over every row, once per measure and slice, so the time grows
+with rows times measures times slices: use a small scale (the default) for a known-answer dataset.
+
 Exit codes: `0` written; `1` a plant cannot be met or a file could not be written; `2` the input
 is wrong (an unknown domain, scale, table or column, a malformed measures file or plant, a
 non-decimal plant column). The same inputs give byte-identical `answers.json`, `queries.dax` and
