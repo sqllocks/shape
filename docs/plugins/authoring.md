@@ -159,7 +159,8 @@ Each one starts as a **skeleton**: it builds and installs, declares `SHAPE_API` 
 nothing. The work package that implements a plugin adds its entry points to `pyproject.toml`,
 its code under `src/`, and kit-based tests. `shape-sqlserver` is the first one implemented; its
 guide is [sqlserver.md](sqlserver.md). `shape-kafka` and `shape-eventhubs` follow it; their guide
-is [streaming.md](streaming.md).
+is [streaming.md](streaming.md). `shape-integrations` (OpenLineage, MLflow, Presidio, SDMetrics,
+Anonymeter, Ibis and DuckDB, one extra each) is described in [integrations.md](integrations.md).
 
 Rules that `python scripts/check_plugin_skeletons.py` enforces (and CI runs):
 

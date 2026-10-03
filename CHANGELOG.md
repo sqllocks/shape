@@ -5,6 +5,18 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Integration plugins, `sqllocks-shape-integrations` (`docs/plugins/integrations.md`, W5-08): thin,
+  optional adapters, one extra each, none imported until used (a missing library exits 2 with the
+  pip command). `shape lineage emit MANIFEST --to URL|file://PATH` sends a run manifest to OpenLineage
+  as `START` and `COMPLETE` or `FAIL` events with schema facets and a `shape` run facet (reproducibility
+  tuple and dataset id); `shape mlflow log MANIFEST` logs params, gate metrics and artifacts to one
+  MLflow run and refuses a second log of the same run id; the `presidio` detector labels text columns
+  from a bounded, seeded sample without downloading a model; `shape evaluate sdmetrics|anonymeter`
+  writes informational `shape-evaluation` reports (version 1; not gates); the `duckdb` source reads a
+  table read-only through Arrow, and `shape_integrations.ibis.connect(DIR)` registers an output
+  directory as Ibis views. Known limit: Anonymeter 1.1.0 pins `numpy<1.27`, so its extra cannot resolve
+  next to Shape's `numpy>=2` (install note in the guide).
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
