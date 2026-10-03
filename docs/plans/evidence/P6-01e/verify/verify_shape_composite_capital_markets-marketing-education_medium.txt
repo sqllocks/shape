@@ -1,0 +1,328 @@
+Spindle composite_capital_markets-marketing-education (seed 42) vs shape (seed 1042) - scale=medium  (baseline = max distance of Spindle seeds [43, 44, 45, 46] to Spindle seed 42)
+table order identical: True
+
+table.column                       kind        type         null s/i       dist  baseline     tol  vocab  verdict
+-- capital_markets_exchange: rows 3 / 3  cols identical+ordered=True  types identical=True
+capital_markets_exchange.exchange_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  1.5917         EQUIVALENT
+capital_markets_exchange.exchange_name categorical ok    0.0000/0.0000 TVD  0.6667    0.6667  1.9544 1.0000  EQUIVALENT
+capital_markets_exchange.exchange_code categorical ok    0.0000/0.0000 TVD  0.6667    0.3333  1.9544 1.0000  EQUIVALENT
+capital_markets_exchange.mic       categorical ok    0.0000/0.0000 TVD  0.3333    0.3333  2.3937 1.0000  EQUIVALENT
+capital_markets_exchange.timezone  categorical ok    0.0000/0.0000 TVD  0.0000    0.0000  1.9544 1.0000  EQUIVALENT
+capital_markets_exchange.trading_hours_start categorical ok    0.0000/0.0000 TVD  0.0000    0.0000  1.9544 1.0000  EQUIVALENT
+capital_markets_exchange.trading_hours_end categorical ok    0.0000/0.0000 TVD  0.0000    0.0000  1.9544 1.0000  EQUIVALENT
+-- capital_markets_sector: rows 11 / 11  cols identical+ordered=True  types identical=True
+capital_markets_sector.sector_id   numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.8313         EQUIVALENT
+capital_markets_sector.sector_name categorical ok    0.0000/0.0000 TVD  0.2727    0.7273  1.7678 1.0000  EQUIVALENT
+capital_markets_sector.sector_code categorical ok    0.0000/0.0000 TVD  0.3636    0.6364  1.9095 1.0000  EQUIVALENT
+-- capital_markets_industry: rows 61 / 61  cols identical+ordered=True  types identical=True
+capital_markets_industry.industry_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3530         EQUIVALENT
+capital_markets_industry.sector_id numeric     ok    0.0000/0.0000  KS  0.1148    0.1311  0.3530         EQUIVALENT
+capital_markets_industry.industry_name categorical ok    0.0000/0.0000 TVD  0.0000    0.0000  0.4334 1.0000  EQUIVALENT
+-- capital_markets_company: rows 500 / 500  cols identical+ordered=True  types identical=True
+capital_markets_company.ticker     categorical ok    0.0000/0.0000 TVD  0.3080    0.2980  1.1726 1.0000  EQUIVALENT
+capital_markets_company.shared_organization_education_department_id numeric     ok    0.0000/0.0000  KS  0.0400    0.0400  0.1233         EQUIVALENT
+capital_markets_company.company_name categorical ok    0.0000/0.0000 TVD  0.3080    0.2980  1.1726 1.0000  EQUIVALENT
+capital_markets_company.cik        categorical ok    0.0000/0.0000 TVD  0.3080    0.2980  1.1726 1.0000  EQUIVALENT
+capital_markets_company.exchange_code categorical ok    0.0000/0.0000 TVD  0.0300    0.0580  0.1514 1.0000  EQUIVALENT
+capital_markets_company.sector_name categorical ok    0.0000/0.0000 TVD  0.0560    0.0980  0.3550 1.0000  EQUIVALENT
+capital_markets_company.industry_name categorical ok    0.0000/0.0000 TVD  0.1880    0.1760  0.7181 1.0000  EQUIVALENT
+capital_markets_company.market_cap_tier categorical ok    0.0000/0.0000 TVD  0.0700    0.0740  0.2141 1.0000  EQUIVALENT
+capital_markets_company.founding_year numeric     ok    0.0000/0.0000  KS  0.0760    0.1060  0.1610         EQUIVALENT
+capital_markets_company.hq_state   categorical ok    0.0000/0.0000 TVD  0.1300    0.1400  0.5352 1.0000  EQUIVALENT
+capital_markets_company.website    categorical ok    0.0000/0.0000 TVD  0.3080    0.2980  1.1726 1.0000  EQUIVALENT
+-- capital_markets_daily_price: rows 126,000 / 126,000  cols identical+ordered=True  types identical=True
+capital_markets_daily_price.price_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0078         EQUIVALENT
+capital_markets_daily_price.ticker categorical ok    0.0000/0.0000 TVD  0.3094    0.3031  0.4567 1.0000  EQUIVALENT
+capital_markets_daily_price.trade_date datetime    ok    0.0000/0.0000  KS  0.0023    0.0038  0.0078         EQUIVALENT
+capital_markets_daily_price.open   numeric     ok    0.0000/0.0000  KS  0.0019    0.0042  0.0083         EQUIVALENT
+capital_markets_daily_price.volume numeric     ok    0.0000/0.0000  KS  0.0030    0.0041  0.0081         EQUIVALENT
+capital_markets_daily_price.high   numeric     ok    0.0000/0.0000  KS  0.0022    0.0040  0.0081         EQUIVALENT
+capital_markets_daily_price.low    numeric     ok    0.0000/0.0000  KS  0.0022    0.0042  0.0084         EQUIVALENT
+capital_markets_daily_price.close  numeric     ok    0.0000/0.0000  KS  0.0020    0.0043  0.0084         EQUIVALENT
+capital_markets_daily_price.adj_close numeric     ok    0.0000/0.0000  KS  0.0019    0.0047  0.0090         EQUIVALENT
+-- capital_markets_dividend: rows 750 / 750  cols identical+ordered=True  types identical=True
+capital_markets_dividend.dividend_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1007         EQUIVALENT
+capital_markets_dividend.ticker    categorical ok    0.0000/0.0000 TVD  0.3773    0.4267  0.9454 1.0000  EQUIVALENT
+capital_markets_dividend.ex_date   datetime    ok    0.0000/0.0000  KS  0.0480    0.0573  0.1007         EQUIVALENT
+capital_markets_dividend.amount    numeric     ok    0.0000/0.0000  KS  0.0773    0.0613  0.1007         EQUIVALENT
+capital_markets_dividend.frequency categorical ok    0.0000/0.0000 TVD  0.0067    0.0427  0.1514 1.0000  EQUIVALENT
+capital_markets_dividend.pay_date  datetime    ok    0.0000/0.0000  KS  0.0493    0.0547  0.1007         EQUIVALENT
+-- capital_markets_split: rows 25 / 25  cols identical+ordered=True  types identical=True
+capital_markets_split.split_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.5514         EQUIVALENT
+capital_markets_split.ticker       categorical ok    0.0000/0.0000 TVD  0.6800    0.8800  2.2959 1.0000  EQUIVALENT
+capital_markets_split.split_date   datetime    ok    0.0000/0.0000  KS  0.2000    0.2400  0.5514         EQUIVALENT
+capital_markets_split.ratio_from   numeric     ok    0.0000/0.0000  KS  0.1600    0.1200  0.5514         EQUIVALENT
+capital_markets_split.ratio_to     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.5514         EQUIVALENT
+-- capital_markets_earnings: rows 2,000 / 2,000  cols identical+ordered=True  types identical=True
+capital_markets_earnings.earnings_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0616         EQUIVALENT
+capital_markets_earnings.ticker    categorical ok    0.0000/0.0000 TVD  0.3575    0.3275  0.5863 1.0000  EQUIVALENT
+capital_markets_earnings.report_date datetime    ok    0.0000/0.0000  KS  0.0175    0.0375  0.0616         EQUIVALENT
+capital_markets_earnings.fiscal_quarter categorical ok    0.0000/0.0000 TVD  0.0320    0.0250  0.1070 1.0000  EQUIVALENT
+capital_markets_earnings.eps_estimate numeric     ok    0.0000/0.0000  KS  0.0210    0.0310  0.0616         EQUIVALENT
+capital_markets_earnings.surprise_pct numeric     ok    0.0000/0.0000  KS  0.0225    0.0265  0.0616         EQUIVALENT
+capital_markets_earnings.eps_actual numeric     ok    0.0000/0.0000  KS  0.0240    0.0350  0.0616         EQUIVALENT
+-- capital_markets_insider_transaction: rows 1,000 / 1,000  cols identical+ordered=True  types identical=True
+capital_markets_insider_transaction.txn_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0872         EQUIVALENT
+capital_markets_insider_transaction.ticker categorical ok    0.0000/0.0000 TVD  0.3910    0.3480  0.8257 1.0000  EQUIVALENT
+capital_markets_insider_transaction.txn_date datetime    ok    0.0000/0.0000  KS  0.0350    0.0420  0.0872         EQUIVALENT
+capital_markets_insider_transaction.insider_name categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+capital_markets_insider_transaction.insider_title categorical ok    0.0000/0.0000 TVD  0.0560    0.0600  0.2141 1.0000  EQUIVALENT
+capital_markets_insider_transaction.txn_type categorical ok    0.0000/0.0000 TVD  0.0060    0.0320  0.1311 1.0000  EQUIVALENT
+capital_markets_insider_transaction.shares numeric     ok    0.0000/0.0000  KS  0.0410    0.0420  0.0872         EQUIVALENT
+capital_markets_insider_transaction.price_per_share numeric     ok    0.0000/0.0000  KS  0.0380    0.0610  0.0935         EQUIVALENT
+-- capital_markets_trade: rows 500,000 / 500,000  cols identical+ordered=True  types identical=True
+capital_markets_trade.trade_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0039         EQUIVALENT
+capital_markets_trade.ticker       categorical ok    0.0000/0.0000 TVD  0.9070    0.9182  1.3792 1.0000  EQUIVALENT
+capital_markets_trade.timestamp    datetime    ok    0.0000/0.0000  KS  0.0010    0.0018  0.0046         EQUIVALENT
+capital_markets_trade.price        numeric     ok    0.0000/0.0000  KS  0.0016    0.0027  0.0060         EQUIVALENT
+capital_markets_trade.volume       numeric     ok    0.0000/0.0000  KS  0.0020    0.0032  0.0069         EQUIVALENT
+capital_markets_trade.side         categorical ok    0.0000/0.0000 TVD  0.0005    0.0018  0.0048 1.0000  EQUIVALENT
+-- marketing_campaign_type: rows 15 / 15  cols identical+ordered=True  types identical=True
+marketing_campaign_type.type_id    numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.7118         EQUIVALENT
+marketing_campaign_type.type_name  categorical ok    0.0000/0.0000 TVD  0.4000    0.6667  2.0498 1.0000  EQUIVALENT
+marketing_campaign_type.channel    categorical ok    0.0000/0.0000 TVD  0.2000    0.4667  1.5139 1.0000  EQUIVALENT
+marketing_campaign_type.avg_conversion_rate numeric     ok    0.0000/0.0000  KS  0.4667    0.4667  0.7118         EQUIVALENT
+-- marketing_industry: rows 25 / 25  cols identical+ordered=True  types identical=True
+marketing_industry.industry_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.5514         EQUIVALENT
+marketing_industry.shared_organization_education_department_id numeric     ok    0.0000/0.0000  KS  0.1600    0.2400  0.5514         EQUIVALENT
+marketing_industry.industry_name   categorical ok    0.0000/0.0000 TVD  0.4800    0.5600  1.9149 1.0000  EQUIVALENT
+marketing_industry.sector          categorical ok    0.0000/0.0000 TVD  0.3600    0.4000  1.1726 1.0000  EQUIVALENT
+-- marketing_campaign: rows 2,000 / 2,000  cols identical+ordered=True  types identical=True
+marketing_campaign.campaign_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0616         EQUIVALENT
+marketing_campaign.campaign_type_id numeric     ok    0.0000/0.0000  KS  0.0315    0.0450  0.0695         EQUIVALENT
+marketing_campaign.campaign_name   categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+marketing_campaign.start_date      datetime    ok    0.0000/0.0000  KS  0.0190    0.0375  0.0616         EQUIVALENT
+marketing_campaign.budget          numeric     ok    0.0000/0.0000  KS  0.0275    0.0305  0.0616         EQUIVALENT
+marketing_campaign.status          categorical ok    0.0000/0.0000 TVD  0.0260    0.0245  0.1070 1.0000  EQUIVALENT
+marketing_campaign.end_date        datetime    ok    0.0000/0.0000  KS  0.0190    0.0375  0.0616         EQUIVALENT
+-- marketing_lead_source: rows 20 / 20  cols identical+ordered=True  types identical=True
+marketing_lead_source.source_id    numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.6165         EQUIVALENT
+marketing_lead_source.source_name  categorical ok    0.0000/0.0000 TVD  0.4500    0.5500  2.0027 1.0000  EQUIVALENT
+marketing_lead_source.source_type  categorical ok    0.0000/0.0000 TVD  0.2000    0.2500  1.0705 1.0000  EQUIVALENT
+marketing_lead_source.cost_per_lead numeric     ok    0.0000/0.0000  KS  0.2500    0.3500  0.6165         EQUIVALENT
+-- marketing_contact: rows 50,000 / 50,000  cols identical+ordered=True  types identical=True
+marketing_contact.contact_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0123         EQUIVALENT
+marketing_contact.industry_id      numeric     ok    0.0000/0.0000  KS  0.0067    0.0059  0.0123         EQUIVALENT
+marketing_contact.lead_source_id   numeric     ok    0.0000/0.0000  KS  0.0026    0.0109  0.0183         EQUIVALENT
+marketing_contact.shared_person_education_student_id numeric     ok    0.0000/0.0000  KS  0.0050    0.0063  0.0123         EQUIVALENT
+marketing_contact.first_name       categorical ok    0.0000/0.0000 |dR-1|  0.0002    0.0002  0.0200 1.0000  EQUIVALENT
+marketing_contact.last_name        categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+marketing_contact.email            categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+marketing_contact.phone            categorical ok    0.1492/0.1479 |dR-1|  0.0015    0.0038  0.0200 1.0000  EQUIVALENT
+marketing_contact.company          categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+marketing_contact.created_date     datetime    ok    0.0000/0.0000  KS  0.0072    0.0072  0.0128         EQUIVALENT
+-- marketing_lead: rows 20,000 / 20,000  cols identical+ordered=True  types identical=True
+marketing_lead.lead_id             numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0195         EQUIVALENT
+marketing_lead.contact_id          numeric     ok    0.0000/0.0000  KS  0.0095    0.0108  0.0195         EQUIVALENT
+marketing_lead.campaign_id         numeric     ok    0.0000/0.0000  KS  0.0113    0.0109  0.0195         EQUIVALENT
+marketing_lead.lead_score          numeric     ok    0.0000/0.0000  KS  0.0045    0.0080  0.0195         EQUIVALENT
+marketing_lead.status              categorical ok    0.0000/0.0000 TVD  0.0087    0.0104  0.0378 1.0000  EQUIVALENT
+marketing_lead.created_date        datetime    ok    0.0000/0.0000  KS  0.0072    0.0093  0.0195         EQUIVALENT
+-- marketing_opportunity: rows 10,000 / 10,000  cols identical+ordered=True  types identical=True
+marketing_opportunity.opp_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0276         EQUIVALENT
+marketing_opportunity.lead_id      numeric     ok    0.0000/0.0000  KS  0.0116    0.0197  0.0315         EQUIVALENT
+marketing_opportunity.opp_name     categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+marketing_opportunity.stage        categorical ok    0.0000/0.0000 TVD  0.0157    0.0174  0.0586 1.0000  EQUIVALENT
+marketing_opportunity.amount       numeric     ok    0.0000/0.0000  KS  0.0104    0.0181  0.0292         EQUIVALENT
+marketing_opportunity.close_date   datetime    ok    0.0000/0.0000  KS  0.0066    0.0106  0.0276         EQUIVALENT
+marketing_opportunity.probability  numeric     ok    0.0000/0.0000  KS  0.0216    0.0247  0.0391         EQUIVALENT
+-- marketing_email_send: rows 100,000 / 100,000  cols identical+ordered=True  types identical=True
+marketing_email_send.send_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0087         EQUIVALENT
+marketing_email_send.campaign_id   numeric     ok    0.0000/0.0000  KS  0.0036    0.0045  0.0087         EQUIVALENT
+marketing_email_send.contact_id    numeric     ok    0.0000/0.0000  KS  0.0036    0.0051  0.0097         EQUIVALENT
+marketing_email_send.sent_date     datetime    ok    0.0000/0.0000  KS  0.0065    0.0049  0.0093         EQUIVALENT
+marketing_email_send.opened        categorical ok    0.0000/0.0000 TVD  0.0040    0.0009  0.0107 1.0000  EQUIVALENT
+marketing_email_send.clicked       categorical ok    0.0000/0.0000 TVD  0.0005    0.0029  0.0107 1.0000  EQUIVALENT
+marketing_email_send.bounced       categorical ok    0.0000/0.0000 TVD  0.0003    0.0009  0.0107 1.0000  EQUIVALENT
+-- marketing_web_visit: rows 250,000 / 250,000  cols identical+ordered=True  types identical=True
+marketing_web_visit.visit_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0055         EQUIVALENT
+marketing_web_visit.contact_id     numeric     ok    0.0000/0.0000  KS  0.0014    0.0019  0.0055         EQUIVALENT
+marketing_web_visit.visit_date     datetime    ok    0.0000/0.0000  KS  0.0032    0.0030  0.0064         EQUIVALENT
+marketing_web_visit.page_url       categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+marketing_web_visit.referrer       categorical ok    0.0000/0.0000 TVD  0.0031    0.0031  0.0107 1.0000  EQUIVALENT
+marketing_web_visit.duration_seconds numeric     ok    0.0000/0.0000  KS  0.0039    0.0029  0.0063         EQUIVALENT
+marketing_web_visit.pages_viewed   numeric     ok    0.0000/0.0000  KS  0.0018    0.0029  0.0064         EQUIVALENT
+-- marketing_conversion: rows 6,000 / 6,000  cols identical+ordered=True  types identical=True
+marketing_conversion.conversion_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0356         EQUIVALENT
+marketing_conversion.lead_id       numeric     ok    0.0000/0.0000  KS  0.0205    0.0210  0.0356         EQUIVALENT
+marketing_conversion.campaign_id   numeric     ok    0.0000/0.0000  KS  0.0102    0.0170  0.0356         EQUIVALENT
+marketing_conversion.conversion_date datetime    ok    0.0000/0.0000  KS  0.0202    0.0277  0.0435         EQUIVALENT
+marketing_conversion.conversion_type categorical ok    0.0000/0.0000 TVD  0.0138    0.0120  0.0618 1.0000  EQUIVALENT
+marketing_conversion.revenue       numeric     ok    0.0000/0.0000  KS  0.0140    0.0210  0.0356         EQUIVALENT
+-- education_department: rows 25 / 25  cols identical+ordered=True  types identical=True
+education_department.department_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.5514         EQUIVALENT
+education_department.department_name categorical ok    0.0000/0.0000 TVD  0.5600    0.5200  1.8541 1.0000  EQUIVALENT
+education_department.college       categorical ok    0.0000/0.0000 TVD  0.2000    0.2800  1.0705 1.0000  EQUIVALENT
+education_department.budget        numeric     ok    0.0000/0.0000  KS  0.1200    0.3600  0.5514         EQUIVALENT
+-- education_instructor: rows 150 / 150  cols identical+ordered=True  types identical=True
+education_instructor.instructor_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2251         EQUIVALENT
+education_instructor.department_id numeric     ok    0.0000/0.0000  KS  0.0533    0.1200  0.2251         EQUIVALENT
+education_instructor.first_name    categorical ok    0.0000/0.0000 TVD  0.9533    0.9800  2.3615 1.0000  EQUIVALENT
+education_instructor.last_name     categorical ok    0.0000/0.0000 TVD  0.9600    0.9867  2.3696 1.0000  EQUIVALENT
+education_instructor.email         categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+education_instructor.rank          categorical ok    0.0000/0.0000 TVD  0.0867    0.1000  0.4370 1.0000  EQUIVALENT
+education_instructor.tenure_status categorical ok    0.0000/0.0000 TVD  0.0200    0.0867  0.3385 1.0000  EQUIVALENT
+education_instructor.hire_date     datetime    ok    0.0000/0.0000  KS  0.0667    0.1333  0.2251         EQUIVALENT
+-- education_course: rows 300 / 300  cols identical+ordered=True  types identical=True
+education_course.course_id         numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1592         EQUIVALENT
+education_course.department_id     numeric     ok    0.0000/0.0000  KS  0.0600    0.0767  0.1592         EQUIVALENT
+education_course.course_code       categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+education_course.course_name       categorical ok    0.0000/0.0000 TVD  0.3000    0.3067  1.3541 1.0000  EQUIVALENT
+education_course.credits           numeric     ok    0.0000/0.0000  KS  0.0233    0.0567  0.1592         EQUIVALENT
+education_course.level             numeric     ok    0.0000/0.0000  KS  0.0667    0.0500  0.1592         EQUIVALENT
+-- education_student: rows 20,000 / 20,000  cols identical+ordered=True  types identical=True
+education_student.student_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0195         EQUIVALENT
+education_student.major_department_id numeric     ok    0.0000/0.0000  KS  0.0062    0.0077  0.0195         EQUIVALENT
+education_student.first_name       categorical ok    0.0000/0.0000 |dR-1|  0.0006    0.0043  0.0200 1.0000  EQUIVALENT
+education_student.last_name        categorical ok    0.0000/0.0000 |dR-1|  0.0041    0.0049  0.0200 1.0000  EQUIVALENT
+education_student.email            categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+education_student.date_of_birth    datetime    ok    0.0000/0.0000  KS  0.0041    0.0106  0.0195         EQUIVALENT
+education_student.enrollment_date  datetime    ok    0.0000/0.0000  KS  0.0098    0.0094  0.0195         EQUIVALENT
+education_student.gpa              numeric     ok    0.0000/0.0000  KS  0.0089    0.0125  0.0207         EQUIVALENT
+education_student.classification   categorical ok    0.0000/0.0000 TVD  0.0152    0.0087  0.0378 1.0000  EQUIVALENT
+education_student.status           categorical ok    0.0000/0.0000 TVD  0.0054    0.0069  0.0339 1.0000  EQUIVALENT
+-- education_enrollment: rows 160,000 / 160,000  cols identical+ordered=True  types identical=True
+education_enrollment.enrollment_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0069         EQUIVALENT
+education_enrollment.student_id    numeric     ok    0.0000/0.0000  KS  0.0036    0.0051  0.0096         EQUIVALENT
+education_enrollment.course_id     numeric     ok    0.0000/0.0000  KS  0.0017    0.0050  0.0095         EQUIVALENT
+education_enrollment.instructor_id numeric     ok    0.0000/0.0000  KS  0.0017    0.0038  0.0077         EQUIVALENT
+education_enrollment.semester      categorical ok    0.0000/0.0000 TVD  0.0048    0.0044  0.0134 1.0000  EQUIVALENT
+education_enrollment.grade         categorical ok    0.1014/0.0988 TVD  0.0057    0.0066  0.0207 1.0000  EQUIVALENT
+education_enrollment.credits_attempted numeric     ok    0.0000/0.0000  KS  0.0024    0.0032  0.0069         EQUIVALENT
+-- education_financial_aid: rows 14,000 / 14,000  cols identical+ordered=True  types identical=True
+education_financial_aid.aid_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0233         EQUIVALENT
+education_financial_aid.student_id numeric     ok    0.0000/0.0000  KS  0.0111    0.0121  0.0233         EQUIVALENT
+education_financial_aid.aid_type   categorical ok    0.0000/0.0000 TVD  0.0162    0.0209  0.0784 1.0000  EQUIVALENT
+education_financial_aid.academic_year categorical ok    0.0000/0.0000 TVD  0.0108    0.0141  0.0452 1.0000  EQUIVALENT
+education_financial_aid.amount     numeric     ok    0.0000/0.0000  KS  0.0081    0.0099  0.0233         EQUIVALENT
+education_financial_aid.status     categorical ok    0.0000/0.0000 TVD  0.0016    0.0084  0.0405 1.0000  EQUIVALENT
+education_financial_aid.award_date datetime    ok    0.0000/0.0000  KS  0.0122    0.0116  0.0233         EQUIVALENT
+-- education_course_section: rows 600 / 600  cols identical+ordered=True  types identical=True
+education_course_section.section_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1126         EQUIVALENT
+education_course_section.course_id numeric     ok    0.0000/0.0000  KS  0.0417    0.0450  0.1126         EQUIVALENT
+education_course_section.instructor_id numeric     ok    0.0000/0.0000  KS  0.0267    0.0567  0.1126         EQUIVALENT
+education_course_section.semester  categorical ok    0.0000/0.0000 TVD  0.0300    0.0517  0.2185 1.0000  EQUIVALENT
+education_course_section.room_number categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+education_course_section.capacity  numeric     ok    0.0000/0.0000  KS  0.0383    0.0600  0.1126         EQUIVALENT
+education_course_section.enrolled_count numeric     ok    0.0000/0.0000  KS  0.0350    0.0400  0.1126         EQUIVALENT
+-- education_grade_appeal: rows 3,200 / 3,200  cols identical+ordered=True  types identical=True
+education_grade_appeal.appeal_id   numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0487         EQUIVALENT
+education_grade_appeal.enrollment_id numeric     ok    0.0000/0.0000  KS  0.0256    0.0259  0.0487         EQUIVALENT
+education_grade_appeal.filed_date  datetime    ok    0.0000/0.0000  KS  0.0113    0.0328  0.0512         EQUIVALENT
+education_grade_appeal.reason      categorical ok    0.0000/0.0000 TVD  0.0250    0.0216  0.0946 1.0000  EQUIVALENT
+education_grade_appeal.status      categorical ok    0.0000/0.0000 TVD  0.0278    0.0228  0.0846 1.0000  EQUIVALENT
+education_grade_appeal.resolution_date datetime    ok    0.2959/0.3162  KS  0.0281    0.0428  0.0662         EQUIVALENT
+-- education_academic_standing: rows 40,000 / 40,000  cols identical+ordered=True  types identical=True
+education_academic_standing.standing_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0138         EQUIVALENT
+education_academic_standing.student_id numeric     ok    0.0000/0.0000  KS  0.0048    0.0069  0.0138         EQUIVALENT
+education_academic_standing.semester categorical ok    0.0000/0.0000 TVD  0.0036    0.0072  0.0268 1.0000  EQUIVALENT
+education_academic_standing.standing categorical ok    0.0000/0.0000 TVD  0.0024    0.0026  0.0239 1.0000  EQUIVALENT
+education_academic_standing.cumulative_gpa numeric     ok    0.0000/0.0000  KS  0.0058    0.0093  0.0160         EQUIVALENT
+education_academic_standing.semester_gpa numeric     ok    0.0000/0.0000  KS  0.0033    0.0076  0.0138         EQUIVALENT
+
+FK integrity (spindle / impl):
+  capital_markets_industry.sector_id->capital_markets_sector.sector_id 1.0000 / 1.0000
+  capital_markets_daily_price.ticker->capital_markets_company.ticker 1.0000 / 1.0000
+  capital_markets_dividend.ticker->capital_markets_company.ticker 1.0000 / 1.0000
+  capital_markets_split.ticker->capital_markets_company.ticker 1.0000 / 1.0000
+  capital_markets_earnings.ticker->capital_markets_company.ticker 1.0000 / 1.0000
+  capital_markets_insider_transaction.ticker->capital_markets_company.ticker 1.0000 / 1.0000
+  capital_markets_trade.ticker->capital_markets_company.ticker 1.0000 / 1.0000
+  marketing_campaign.campaign_type_id->marketing_campaign_type.type_id 1.0000 / 1.0000
+  marketing_contact.industry_id->marketing_industry.industry_id 1.0000 / 1.0000
+  marketing_contact.lead_source_id->marketing_lead_source.source_id 1.0000 / 1.0000
+  marketing_lead.contact_id->marketing_contact.contact_id 1.0000 / 1.0000
+  marketing_lead.campaign_id->marketing_campaign.campaign_id 1.0000 / 1.0000
+  marketing_opportunity.lead_id->marketing_lead.lead_id   1.0000 / 1.0000
+  marketing_email_send.campaign_id->marketing_campaign.campaign_id 1.0000 / 1.0000
+  marketing_email_send.contact_id->marketing_contact.contact_id 1.0000 / 1.0000
+  marketing_web_visit.contact_id->marketing_contact.contact_id 1.0000 / 1.0000
+  marketing_conversion.lead_id->marketing_lead.lead_id    1.0000 / 1.0000
+  marketing_conversion.campaign_id->marketing_campaign.campaign_id 1.0000 / 1.0000
+  education_instructor.department_id->education_department.department_id 1.0000 / 1.0000
+  education_course.department_id->education_department.department_id 1.0000 / 1.0000
+  education_student.major_department_id->education_department.department_id 1.0000 / 1.0000
+  education_enrollment.student_id->education_student.student_id 1.0000 / 1.0000
+  education_enrollment.course_id->education_course.course_id 1.0000 / 1.0000
+  education_enrollment.instructor_id->education_instructor.instructor_id 1.0000 / 1.0000
+  education_financial_aid.student_id->education_student.student_id 1.0000 / 1.0000
+  education_course_section.course_id->education_course.course_id 1.0000 / 1.0000
+  education_course_section.instructor_id->education_instructor.instructor_id 1.0000 / 1.0000
+  education_grade_appeal.enrollment_id->education_enrollment.enrollment_id 1.0000 / 1.0000
+  education_academic_standing.student_id->education_student.student_id 1.0000 / 1.0000
+  marketing_contact.shared_person_education_student_id->education_student.student_id 1.0000 / 1.0000
+  marketing_industry.shared_organization_education_department_id->education_department.department_id 1.0000 / 1.0000
+  capital_markets_company.shared_organization_education_department_id->education_department.department_id 1.0000 / 1.0000
+FK fan-out (children per parent)  spindle p50/p90/p99/max/zero% | impl | KS (baseline max, tol)
+  capital_markets_sector->capital_markets_industry.sector_id 5/9/9/9/0.000 | 5/9/11/11/0.000 | 0.0909 (0.1818, 0.8313)
+  capital_markets_company->capital_markets_daily_price.ticker 1253/1964/2821/2821/0.000 | 1283/1796/2791/2791/0.000 | 0.1080 (0.1140, 0.1730)
+  capital_markets_company->capital_markets_dividend.ticker 7/12/25/25/0.010 | 7/15/22/22/0.014 | 0.1020 (0.1020, 0.1550)
+  capital_markets_company->capital_markets_split.ticker 0/1/2/2/0.732 | 0/1/2/2/0.758 | 0.0260 (0.0460, 0.1233)
+  capital_markets_company->capital_markets_earnings.ticker 18/34/40/40/0.000 | 21/31/43/43/0.000 | 0.1440 (0.1080, 0.1640)
+  capital_markets_company->capital_markets_insider_transaction.ticker 10/16/22/22/0.004 | 11/18/20/20/0.006 | 0.0740 (0.0940, 0.1430)
+  capital_markets_company->capital_markets_trade.ticker 502/8867/72552/198235/0.000 | 786/4695/199184/199184/0.000 | 0.1380 (0.1280, 0.1940)
+  marketing_campaign_type->marketing_campaign.campaign_type_id 131/151/153/153/0.000 | 136/144/149/150/0.000 | 0.2000 (0.2667, 0.7118)
+  marketing_industry->marketing_contact.industry_id 1999/2042/2092/2095/0.000 | 2012/2056/2072/2073/0.000 | 0.2000 (0.2000, 0.5514)
+  marketing_lead_source->marketing_contact.lead_source_id 2508/2563/2586/2588/0.000 | 2510/2540/2544/2544/0.000 | 0.1500 (0.2500, 0.6165)
+  marketing_contact->marketing_lead.contact_id 0/1/2/6/0.671 | 0/1/2/5/0.672 | 0.0005 (0.0031, 0.0123)
+  marketing_campaign->marketing_lead.campaign_id 1/6/102/5645/0.424 | 1/6/112/5625/0.419 | 0.0110 (0.0200, 0.0616)
+  marketing_lead->marketing_opportunity.lead_id 0/1/3/6/0.605 | 0/1/3/5/0.606 | 0.0011 (0.0043, 0.0195)
+  marketing_campaign->marketing_email_send.campaign_id 50/59/68/76/0.000 | 50/59/67/76/0.000 | 0.0130 (0.0245, 0.0616)
+  marketing_contact->marketing_email_send.contact_id 2/4/6/12/0.135 | 2/4/6/10/0.134 | 0.0013 (0.0032, 0.0123)
+  marketing_contact->marketing_web_visit.contact_id 5/8/11/16/0.008 | 5/8/11/16/0.007 | 0.0026 (0.0050, 0.0123)
+  marketing_lead->marketing_conversion.lead_id 0/1/2/4/0.738 | 0/1/2/4/0.740 | 0.0024 (0.0055, 0.0195)
+  marketing_campaign->marketing_conversion.campaign_id 3/5/7/10/0.050 | 3/5/7/10/0.052 | 0.0080 (0.0160, 0.0616)
+  education_department->education_instructor.department_id 4/11/38/42/0.120 | 3/11/42/46/0.120 | 0.1200 (0.2000, 0.5514)
+  education_department->education_course.department_id 12/16/18/18/0.000 | 12/17/19/19/0.000 | 0.1600 (0.2000, 0.5514)
+  education_department->education_student.major_department_id 279/1554/6426/7479/0.000 | 258/1564/6399/7458/0.000 | 0.0800 (0.1200, 0.5514)
+  education_student->education_enrollment.student_id 8/12/15/22/0.000 | 8/12/15/21/0.000 | 0.0045 (0.0055, 0.0195)
+  education_course->education_enrollment.course_id 72/535/7889/47940/0.000 | 72/559/8065/47946/0.000 | 0.0300 (0.0500, 0.1592)
+  education_instructor->education_enrollment.instructor_id 238/1467/15076/42515/0.000 | 242/1596/15044/42762/0.000 | 0.0400 (0.0467, 0.2251)
+  education_student->education_financial_aid.student_id 1/2/3/7/0.499 | 1/2/3/5/0.494 | 0.0044 (0.0054, 0.0195)
+  education_course->education_course_section.course_id 2/4/6/7/0.140 | 2/4/6/6/0.167 | 0.0267 (0.0233, 0.1592)
+  education_instructor->education_course_section.instructor_id 1/7/61/162/0.333 | 1/5/63/162/0.360 | 0.0733 (0.0800, 0.2251)
+  education_enrollment->education_grade_appeal.enrollment_id 0/0/1/3/0.980 | 0/0/1/2/0.980 | 0.0000 (0.0001, 0.0069)
+  education_student->education_academic_standing.student_id 2/4/6/10/0.136 | 2/4/6/10/0.138 | 0.0036 (0.0042, 0.0195)
+  education_student->marketing_contact.shared_person_education_student_id 2/5/7/11/0.082 | 2/5/7/11/0.081 | 0.0032 (0.0073, 0.0195)
+  education_department->marketing_industry.shared_organization_education_department_id 1/3/4/4/0.360 | 1/2/3/3/0.320 | 0.0400 (0.1200, 0.5514)
+  education_department->capital_markets_company.shared_organization_education_department_id 20/25/30/31/0.000 | 20/26/34/36/0.000 | 0.1200 (0.1600, 0.5514)
+record_coherence (impl / min over Spindle seeds, floor):
+  capital_markets_company.ticker+company_name+cik+exchange_code+sector_name+industry_name+market_cap_tier+founding_year+hq_state+website in sp500_constituents 1.0000 / 1.0000  floor 0.9950
+strategy_semantics (impl / min over Spindle seeds, floor):
+  capital_markets_dividend.pay_date - ex_date in [14,45] days  1.0000 / 1.0000  floor 0.9950
+Spindle BusinessRulesEngine violations on impl output: {}
+Spindle FidelityComparator (real=Spindle seed 42, synthetic=impl): overall impl=90.72  Spindle-vs-Spindle baselines=[90.64, 90.97, 90.94, 90.35]
+  capital_markets_company impl  85.35  floor  83.39  baselines [85.47, 85.11, 85.75, 83.89]  ok
+  capital_markets_daily_price impl  96.23  floor  95.67  baselines [96.37, 96.25, 96.3, 96.17]  ok
+  capital_markets_dividend impl  93.08  floor  92.78  baselines [93.3, 93.47, 93.31, 93.28]  ok
+  capital_markets_earnings impl  94.54  floor  94.15  baselines [94.91, 94.65, 95.02, 94.96]  ok
+  capital_markets_exchange impl  78.67  floor  75.01  baselines [75.51, 77.21, 82.31, 84.35]  ok
+  capital_markets_industry impl  93.08  floor  92.57  baselines [94.06, 93.69, 93.91, 93.07]  ok
+  capital_markets_insider_transaction impl  87.09  floor  86.70  baselines [87.2, 87.88, 88.18, 87.92]  ok
+  capital_markets_sector impl  73.15  floor  69.72  baselines [71.57, 79.03, 76.43, 70.22]  ok
+  capital_markets_split impl  77.63  floor  78.85  baselines [79.97, 81.54, 83.03, 79.35]  FAIL
+  capital_markets_trade impl  94.92  floor  94.16  baselines [94.66, 94.95, 94.93, 94.96]  ok
+  education_academic_standing impl  99.90  floor  98.85  baselines [99.89, 99.86, 99.35, 99.8]  ok
+  education_course   impl  93.30  floor  92.42  baselines [93.29, 92.92, 92.95, 93.31]  ok
+  education_course_section impl  98.79  floor  97.98  baselines [98.5, 98.86, 98.5, 98.48]  ok
+  education_department impl  78.00  floor  66.48  baselines [74.68, 76.85, 73.89, 66.98]  ok
+  education_enrollment impl  97.98  floor  97.29  baselines [98.26, 97.79, 99.84, 98.28]  ok
+  education_financial_aid impl  98.23  floor  97.57  baselines [99.72, 99.74, 98.07, 98.1]  ok
+  education_grade_appeal impl  98.41  floor  98.09  baselines [99.33, 98.59, 99.63, 99.34]  ok
+  education_instructor impl  77.55  floor  76.31  baselines [77.46, 77.5, 76.92, 76.81]  ok
+  education_student  impl  87.26  floor  87.33  baselines [88.15, 88.22, 87.83, 88.25]  FAIL
+  marketing_campaign impl  99.46  floor  98.31  baselines [99.24, 99.13, 99.43, 98.81]  ok
+  marketing_campaign_type impl  83.95  floor  78.53  baselines [85.92, 83.37, 79.03, 79.83]  ok
+  marketing_contact  impl  79.89  floor  79.35  baselines [79.91, 79.85, 79.9, 79.91]  ok
+  marketing_conversion impl  99.36  floor  98.69  baselines [99.24, 99.19, 99.39, 99.42]  ok
+  marketing_email_send impl  99.54  floor  98.97  baselines [99.47, 99.91, 99.67, 99.77]  ok
+  marketing_industry impl  85.21  floor  81.60  baselines [82.1, 84.73, 84.88, 87.04]  ok
+  marketing_lead     impl  99.74  floor  98.60  baselines [99.7, 99.1, 99.78, 99.49]  ok
+  marketing_lead_source impl  86.25  floor  83.05  baselines [85.57, 83.55, 83.69, 84.19]  ok
+  marketing_opportunity impl  98.97  floor  98.54  baselines [99.29, 99.37, 99.6, 99.04]  ok
+  marketing_web_visit impl  95.39  floor  94.70  baselines [95.86, 95.86, 95.85, 95.2]  ok
+
+COLUMNS EQUIVALENT: 188/188
+  NOT EQUIVALENT: (h) fidelity capital_markets_split: 77.63 < floor 78.85
+  NOT EQUIVALENT: (h) fidelity education_student: 87.26 < floor 87.33
+VERDICT: FAIL

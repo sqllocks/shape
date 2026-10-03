@@ -8,6 +8,7 @@ conformance, null constraints, primary-key uniqueness and foreign-key integrity;
 from __future__ import annotations
 
 import json
+import warnings
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -16,14 +17,23 @@ import pyarrow as pa  # type: ignore[import-untyped]
 
 from .gates import (
     DistributionGate,
+    FileFormatGate,
     GateResult,
     NullConstraintGate,
+    RangeConstraintGate,
     ReferentialIntegrityGate,
     SchemaConformanceGate,
+    SchemaDriftGate,
+    TemporalConsistencyGate,
     UniqueConstraintGate,
     ValidationContext,
 )
 from .gatespec import GateSchema
+from .memorization import MemorizationGate
+from .reconcile import ReconciliationGate
+from .timeseries import TimeSeriesGate
+from .utility import UtilityGate
+from .verifyconfig import VerifyConfig
 
 FORMATS = ("csv", "parquet", "jsonl")
 _GLOBS = {"csv": "*.csv", "parquet": "*.parquet", "jsonl": "*.jsonl"}
@@ -47,8 +57,10 @@ def load_tables(path: str | Path, fmt: str = "auto") -> dict[str, pa.Table]:
     """Load a data file, or every data file of a directory, as Arrow tables keyed by file stem.
 
     ``fmt`` is ``csv``, ``parquet`` or ``jsonl``; ``auto`` uses the file's extension, and for a
-    directory the first of parquet, csv, jsonl that it holds. Raises ``FileNotFoundError`` for
-    a missing path and ``ValueError`` for an unsupported format."""
+    directory loads every parquet, csv and jsonl file in it, each by its own extension. A
+    directory with a fixed ``fmt`` loads that format only and warns for each file of another
+    supported format that it skips. Raises ``FileNotFoundError`` for a missing path and
+    ``ValueError`` for an unsupported format, or for a table present in two formats."""
     if fmt != "auto" and fmt not in FORMATS:
         raise ValueError(f"Unsupported format '{fmt}'. Choose from: {FORMATS}")
     p = Path(path)
@@ -59,9 +71,42 @@ def load_tables(path: str | Path, fmt: str = "auto") -> dict[str, pa.Table]:
         if use is None:
             raise ValueError(f"Cannot tell the format of {p.name}; pass a format of {FORMATS}")
         return {p.stem: _read(p, use)}
-    if fmt == "auto":
-        fmt = next((f for f in ("parquet", "csv", "jsonl") if any(p.glob(_GLOBS[f]))), "parquet")
-    return {fp.stem: _read(fp, fmt) for fp in sorted(p.glob(_GLOBS[fmt]))}
+    chosen = _select(p, fmt)
+    return {fp.stem: _read(fp, f) for fp, f in chosen}
+
+
+def data_files(path: str | Path, fmt: str = "auto") -> list[Path]:
+    """The files :func:`load_tables` reads for ``path`` and ``fmt``."""
+    p = Path(path)
+    if p.is_file():
+        return [p]
+    return [fp for fp, _ in _select(p, fmt)]
+
+
+def _select(p: Path, fmt: str) -> list[tuple[Path, str]]:
+    chosen = [(fp, f) for f in FORMATS for fp in sorted(p.glob(_GLOBS[f])) if fmt in ("auto", f)]
+    chosen.sort(key=lambda item: (item[0].stem, item[0].name))
+    if fmt != "auto":
+        skipped = sorted(
+            fp.name for f in FORMATS if f != fmt for fp in p.glob(_GLOBS[f]) if fp.is_file()
+        )
+        for name in skipped:
+            warnings.warn(
+                f"skipped {name}: format {(kind := _SUFFIX_FORMAT[Path(name).suffix.lower()])} "
+                f"differs from the requested {fmt}; use --format {kind}, or --format auto "
+                "to load every file",
+                UserWarning,
+                stacklevel=2,
+            )
+    by_stem: dict[str, Path] = {}
+    for fp, _ in chosen:
+        if fp.stem in by_stem:
+            raise ValueError(
+                f"table '{fp.stem}' is in both {by_stem[fp.stem].name} and {fp.name}; "
+                "keep one of them or pass --format to pick a format"
+            )
+        by_stem[fp.stem] = fp
+    return chosen
 
 
 @dataclass
@@ -76,6 +121,8 @@ class VerifyResult:
     schema_path: str | None
     statistical: bool
     shape_version: str
+    config_path: str | None = None
+    source_path: str | None = None
 
 
 class VerifyRunner:
@@ -87,7 +134,18 @@ class VerifyRunner:
         statistical: bool = False,
         data_path: str = "",
         schema_path: str | None = None,
+        config: VerifyConfig | None = None,
+        config_path: str | None = None,
+        files: list[Path] | None = None,
+        *,
+        source: dict[str, pa.Table] | None = None,
+        source_path: str | None = None,
     ) -> None:
+        self._source = source or {}
+        self._source_path = source_path
+        self._config = config
+        self._config_path = config_path
+        self._files = files or []
         self._schema = schema
         self._statistical = statistical
         self._data_path = data_path
@@ -96,15 +154,41 @@ class VerifyRunner:
     def run(self, tables: dict[str, pa.Table]) -> VerifyResult:
         from shape import __version__
 
-        ctx = ValidationContext(tables=tables, schema=self._schema)
+        cfg = self._config
+        ctx = ValidationContext(
+            tables=tables,
+            schema=self._schema,
+            file_paths=[Path(f) for f in cfg.file_paths] if cfg else [],
+            config=dict(cfg.rules) if cfg else {},
+            source_tables=self._source,
+        )
+        if cfg and cfg.check_data_files:
+            ctx.file_paths.extend(self._files)
         results: list[GateResult] = []
         if self._schema is not None:
             results.append(SchemaConformanceGate().check(ctx))
             results.append(NullConstraintGate().check(ctx))
             results.append(UniqueConstraintGate().check(ctx))
             results.append(ReferentialIntegrityGate().check(ctx))
+        if cfg:
+            if "ranges" in cfg.rules:
+                results.append(RangeConstraintGate().check(ctx))
+            if cfg.temporal:
+                results.append(TemporalConsistencyGate().check(ctx))
+            if "baseline" in cfg.rules:
+                results.append(SchemaDriftGate().check(ctx))
+            if "timeseries" in cfg.rules:
+                results.append(TimeSeriesGate().check(ctx))
+            if "reconcile" in cfg.rules:
+                results.append(ReconciliationGate().check(ctx))
+            if ctx.file_paths:
+                results.append(FileFormatGate().check(ctx))
         if self._statistical:
             results.append(DistributionGate().check(ctx))
+        if self._source:
+            results.append(MemorizationGate().check(ctx))
+            if "utility" in ctx.config:
+                results.append(UtilityGate().check(ctx))
         return VerifyResult(
             passed=all(r.passed for r in results),
             gate_results=results,
@@ -114,6 +198,8 @@ class VerifyRunner:
             schema_path=self._schema_path,
             statistical=self._statistical,
             shape_version=__version__,
+            config_path=self._config_path,
+            source_path=self._source_path,
         )
 
 
@@ -122,6 +208,25 @@ _GATE_DESCRIPTIONS = {
     "null_constraint": "Non-nullable columns checked for null values.",
     "unique_constraint": "Primary key columns checked for duplicate values.",
     "referential_integrity": "FK column values verified against parent PK sets.",
+    "range_constraint": "Numeric columns checked against the configured minimum and maximum.",
+    "temporal_consistency": (
+        "Datetime columns checked against the configured date range, for future dates and "
+        "for start/end ordering."
+    ),
+    "schema_drift": "Tables and column types compared with the configured baseline.",
+    "timeseries_quality": (
+        "Time series checked for gaps, stuck values and daylight-saving transitions."
+    ),
+    "reconciliation": "Source and target compared on counts, partitions and aggregates.",
+    "file_format": "Data files checked to exist, be non-empty and read in full.",
+    "memorization": (
+        "Generated rows compared with the source rows: exact matches in columns classified "
+        "CONFIDENTIAL or above fail; nearest-neighbour distance is reported."
+    ),
+    "utility": (
+        "A model trained on the generated data is tested on held-out real data and compared "
+        "with a model trained on real data; fails below the minimum retention."
+    ),
     "distribution": (
         "KS test (numeric) and chi-squared test (enum) comparing observed "
         "distributions to schema-declared parameters (α=0.05)."
@@ -142,6 +247,8 @@ class VerifyReport:
             "run_at": r.run_at,
             "data_path": r.data_path,
             "schema_path": r.schema_path,
+            "config_path": r.config_path,
+            "source_path": r.source_path,
             "statistical": r.statistical,
             "passed": r.passed,
             "row_counts": r.row_counts,
@@ -166,6 +273,8 @@ class VerifyReport:
             f"**Generated:** {r.run_at}  ",
             f"**Data path:** {r.data_path}  ",
             f"**Schema:** {r.schema_path or '(none)'}  ",
+            f"**Config:** {r.config_path or '(none)'}  ",
+            f"**Source:** {r.source_path or '(none)'}  ",
             f"**Statistical tests:** {'Yes' if r.statistical else 'No'}  ",
             f"**Shape version:** {r.shape_version}  ",
             "",
@@ -207,6 +316,10 @@ class VerifyReport:
         reproduce = f"shape verify {r.data_path}"
         if r.schema_path:
             reproduce += f" --schema {r.schema_path}"
+        if r.config_path:
+            reproduce += f" --config {r.config_path}"
+        if r.source_path:
+            reproduce += f" --source {r.source_path}"
         if r.statistical:
             reproduce += " --statistical"
         lines += [

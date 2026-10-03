@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "api_version": {
+      "pattern": "^(0|[1-9][0-9]{0,3})\\.(0|[1-9][0-9]{0,3})$",
+      "type": "string"
+    },
+    "args": {
+      "additionalProperties": false,
+      "properties": {
+        "domain": {
+          "description": "an installed domain (see `list`) or a generation schema file",
+          "type": "string"
+        },
+        "format": {
+          "description": "summary (default: write nothing) or a file format",
+          "enum": [
+            "summary",
+            "csv",
+            "tsv",
+            "jsonl",
+            "parquet",
+            "excel",
+            "sql",
+            "delta"
+          ],
+          "type": "string"
+        },
+        "mode": {
+          "description": "the schema mode of a domain",
+          "enum": [
+            "3nf",
+            "star"
+          ],
+          "type": "string"
+        },
+        "output_dir": {
+          "description": "the directory to write the files to (needs a format)",
+          "type": "string"
+        },
+        "profile": {
+          "description": "a distribution profile of the domain (default: `default`)",
+          "type": "string"
+        },
+        "scale": {
+          "description": "a scale preset (see `describe`)",
+          "type": "string"
+        },
+        "seed": {
+          "description": "the seed (default: the schema's)",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "domain"
+      ],
+      "type": "object"
+    },
+    "command": {
+      "const": "generate"
+    },
+    "id": {
+      "maxLength": 128,
+      "type": [
+        "string",
+        "integer",
+        "null"
+      ]
+    },
+    "options": {
+      "additionalProperties": false,
+      "properties": {
+        "async": {
+          "default": false,
+          "description": "for a command that can run as a job: return a job id at once and run in the background",
+          "type": "boolean"
+        },
+        "include_raw_values": {
+          "default": false,
+          "description": "return raw values (minimum, maximum, category values, offending values) even for classified columns; off by default",
+          "type": "boolean"
+        },
+        "max_inline_bytes": {
+          "default": 262144,
+          "description": "a result part larger than this is written to a file and returned as a reference",
+          "minimum": 1024,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "command",
+    "args"
+  ],
+  "title": "generate request",
+  "type": "object",
+  "x-api-version": "1.0"
+}

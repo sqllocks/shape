@@ -31,6 +31,7 @@ from shape.errors import ShapeSchemaError
 FIELD_TABLE = "_shape_table"
 FIELD_SEQ = "_shape_seq"
 FIELD_TIME = "_shape_event_time"
+FIELD_POISON = "_shape_poison"  # a boolean marker column: the encoders corrupt those events
 ENVELOPES = ("flat", "cloudevents")
 _RESERVED = (FIELD_TABLE, FIELD_SEQ, FIELD_TIME)
 
@@ -96,8 +97,9 @@ def _json_column(col: pa.ChunkedArray | pa.Array) -> list[Any]:
 
 def rows_of(batch: pa.RecordBatch) -> list[dict[str, Any]]:
     """The JSON-safe rows of ``batch`` (see the module docstring for the value rules)."""
-    names = batch.schema.names
-    columns = [_json_column(batch.column(i)) for i in range(batch.num_columns)]
+    keep = [i for i, n in enumerate(batch.schema.names) if n != FIELD_POISON]
+    names = [batch.schema.names[i] for i in keep]
+    columns = [_json_column(batch.column(i)) for i in keep]
     return [dict(zip(names, values, strict=True)) for values in zip(*columns, strict=True)]
 
 
@@ -258,13 +260,39 @@ def _encode_parallel(batch: pa.RecordBatch, size: int) -> bytes:
     return b"".join(_pool.map(_encode_flat, parts))
 
 
+SMALL_BATCH_ROWS = 32
+"""A batch this small is cheaper through the row encoder (the column kernels cost about the same
+for 3 rows as for 3,000); the output is byte-identical."""
+
+
+def poison_body(body: bytes) -> bytes:
+    """``body`` (one JSON object) cut off part way: a message no JSON parser accepts."""
+    return body[: max(1, (len(body) * 2) // 3)]
+
+
+def _split_poison(batch: pa.RecordBatch) -> tuple[pa.RecordBatch, list[bool] | None]:
+    """``batch`` without the poison marker column, and the marks (``None`` when it has none)."""
+    if FIELD_POISON not in batch.schema.names:
+        return batch, None
+    marks = [bool(v) for v in batch.column(FIELD_POISON).to_pylist()]
+    keep = [n for n in batch.schema.names if n != FIELD_POISON]
+    return batch.select(keep), marks
+
+
 def encode_batch(batch: pa.RecordBatch, envelope: str = "flat", source: str = "shape") -> bytes:
-    """``batch`` of flat events as UTF-8 JSON lines, one per line, each ending in a newline."""
+    """``batch`` of flat events as UTF-8 JSON lines, one per line, each ending in a newline.
+
+    Rows marked in a ``_shape_poison`` column come out cut off (poison messages)."""
     if envelope not in ENVELOPES:
         raise ValueError(f"unknown envelope {envelope!r}; choose from {', '.join(ENVELOPES)}")
+    batch, marks = _split_poison(batch)
+    if marks is not None and any(marks):
+        lines = encode_batch(batch, envelope, source).split(b"\n")[:-1]
+        lines = [poison_body(x) if m else x for x, m in zip(lines, marks, strict=True)]
+        return b"\n".join(lines) + b"\n"
     if batch.num_rows == 0:
         return b""
-    if envelope == "flat":
+    if envelope == "flat" and batch.num_rows > SMALL_BATCH_ROWS:
         try:
             threads = encoder_threads() if batch.num_rows >= PARALLEL_ROWS else 1
             return _encode_parallel(batch, threads) if threads > 1 else _encode_flat(batch)
@@ -291,9 +319,10 @@ def encode_events(
     message per event (the same JSON as :func:`encode_batch`, line by line)."""
     if envelope not in ENVELOPES:
         raise ValueError(f"unknown envelope {envelope!r}; choose from {', '.join(ENVELOPES)}")
+    _, marks = _split_poison(batch)
     flat = rows_of(batch)
     wrapped = _wrap(flat, envelope, source)
-    return [
+    events = [
         EncodedEvent(
             f"{row[FIELD_TABLE]}/{row[FIELD_SEQ]}",
             row[FIELD_TABLE],
@@ -303,6 +332,12 @@ def encode_events(
         )
         for row, out in zip(flat, wrapped, strict=True)
     ]
+    if marks is not None:
+        events = [
+            e._replace(body=poison_body(e.body)) if m else e
+            for e, m in zip(events, marks, strict=True)
+        ]
+    return events
 
 
 def decode_line(line: str | bytes) -> dict[str, Any]:

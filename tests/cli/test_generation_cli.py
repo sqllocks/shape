@@ -157,7 +157,11 @@ def test_generate_excel(capsys, tmp_path):
     pytest.importorskip("openpyxl")
     code, *_ = run(capsys, "generate", "retail", "--scale", "small", "-f", "excel", "-o", tmp_path)
     assert code == 0
-    assert {p.stem for p in tmp_path.glob("*.xlsx")} == RETAIL_TABLES
+    (book,) = tmp_path.glob("*.xlsx")  # one workbook: a sheet per table and a _README
+    assert book.stem == "retail"
+    from shape.io.excel import sheet_infos
+
+    assert {i.name for i in sheet_infos(book)} == RETAIL_TABLES | {"_README"}
 
 
 def test_generate_delta(capsys, tmp_path):
@@ -328,6 +332,40 @@ def test_a_failed_program_run_still_reports(tmp_path):
     done = _as_program("generate", "retail", "--scale", "nope", "-f", "parquet", "-o", tmp_path)
     assert done.returncode == 2
     assert "unknown scale" in done.stderr
+
+
+def test_a_failed_generate_ends_without_the_interpreter_teardown(tmp_path):
+    """Arrow's thread pool is running once the schema is loaded; tearing the interpreter down with
+    it alive aborts now and then ("terminate called without an active exception", exit -6). A
+    failed ``generate`` ends the way a finished one does: flushed, then straight out."""
+    marker = tmp_path / "atexit.txt"
+    code = (
+        "import atexit, sys; from shape.cli.main import main; "
+        f"atexit.register(lambda: open({str(marker)!r}, 'w').close()); "
+        "sys.argv = ['shape', *sys.argv[1:]]; sys.exit(main())"
+    )
+    done = subprocess.run(
+        [sys.executable, "-c", code, "generate", "retail", "--scale", "nope", "-o", str(tmp_path)],
+        capture_output=True,
+        text=True,
+    )
+    assert done.returncode == 2
+    assert "unknown scale" in done.stderr
+    assert not marker.exists()
+
+
+def test_a_failed_program_run_exits_2_every_time(tmp_path):
+    """The abort showed in about 1 run in 100 under load; this many parallel runs caught it."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    def run_once(_):
+        done = _as_program("generate", "retail", "--scale", "nope", "-o", tmp_path)
+        return done.returncode, done.stderr
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        results = list(pool.map(run_once, range(160)))
+    bad = [(rc, err[-120:]) for rc, err in results if rc != 2]
+    assert not bad, bad[:3]
 
 
 def test_output_dir_is_created(capsys, tmp_path):

@@ -10,13 +10,16 @@ the DDL does not declare are found by the ``<table>_id`` naming convention. Smar
     from shape.generation.ddl import from_ddl
     schema, notes = from_ddl(open("tables.sql").read(), domain="shop", smart=True)
 
-Stable interface: :class:`DdlParser`, :func:`from_ddl`, :func:`apply_scale` and
-:class:`DdlError`.
+Stable interface: :class:`DdlParser`, :func:`from_ddl`, :func:`apply_scale`,
+:class:`DdlError` and, for importers of other schema sources (``shape-dbt``), the tables the
+parser builds, :class:`ParsedTable`, :class:`ParsedColumn` and :class:`ParsedForeignKey`, with
+:func:`schema_from_parsed`, which runs the same schema builder on them.
 """
 
 from __future__ import annotations
 
 import copy
+import math
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -245,6 +248,12 @@ _REFERENCES = re.compile(
 _REFERENCES_PK = re.compile(r"\bREFERENCES\s+([\w.\[\]\"`]+)", re.IGNORECASE)
 _STRING_LITERAL = re.compile(r"'(?:[^']|'')*'")
 _IDENTITY = re.compile(r"IDENTITY\s*(?:\(\s*\d+\s*,\s*\d+\s*\))?", re.IGNORECASE)
+
+
+# Keys and identifiers stay as their parents and the engine make them.
+_UNTYPED_STRATEGIES = frozenset(
+    {"foreign_key", "composite_foreign_key", "sequence", "uuid", "self_referencing"}
+)
 
 
 class DdlError(ShapeError):
@@ -600,13 +609,21 @@ class DdlParser:
                     if "." in ref:
                         parent, parent_col = ref.split(".", 1)
                         convention.append(_ForeignKey(pt.name, pc.name, parent, parent_col))
+                ctype = self._logical_type(pc)
+                precision = pc.precision
+                base = pc.base_type.lower()
+                if ctype == "timestamp" and base == "datetime":
+                    precision = 3  # DATETIME keeps about three fractional digits
+                elif ctype == "timestamp" and base in ("datetime2", "datetimeoffset", "timestamp"):
+                    # the parser files the `(n)` of a non-decimal type under `max_length`
+                    precision = None if pc.max_length is None else min(pc.max_length, 6)
                 columns[pc.name] = Column(
                     name=pc.name,
-                    type=self._logical_type(pc),
+                    type=ctype,
                     generator=generator,
                     nullable=pc.nullable,
                     max_length=pc.max_length,
-                    precision=pc.precision,
+                    precision=precision,
                     scale=pc.scale,
                 )
             tables[pt.name] = Table(name=pt.name, columns=columns, primary_key=pt.primary_key)
@@ -686,11 +703,16 @@ class DdlParser:
             length = col.max_length or 255
             if length <= 10:
                 return {"strategy": "pattern", "format": "{seq:6}"}
-            return {"strategy": "faker", "provider": "text", "max_nb_chars": min(length, 200)}
+            # `args` are the provider's keyword arguments; a top-level key is ignored
+            return {
+                "strategy": "faker",
+                "provider": "text",
+                "args": {"max_nb_chars": min(length, 200)},
+            }
         if base in TYPE_MAP:
             gen = TYPE_MAP[base]
             return None if gen is None else copy.deepcopy(gen)
-        return {"strategy": "faker", "provider": "text", "max_nb_chars": 50}
+        return {"strategy": "faker", "provider": "text", "args": {"max_nb_chars": 50}}
 
     @staticmethod
     def _table_for_singular(candidate: str, names: dict[str, str]) -> str | None:
@@ -865,6 +887,48 @@ def apply_scale(schema: GenSchema, spec: str) -> None:
     fit_string_lengths(schema)
 
 
+def _fit_decimal_range(col: Column) -> None:
+    """Keep a distribution's ``min`` and ``max`` inside what ``DECIMAL(p,s)`` holds. A family
+    without a ``max`` gets one only when six standard deviations would leave the range."""
+    gen = col.generator
+    if gen.get("strategy") != "distribution":
+        return
+    scale = col.scale or 0
+    top = 10 ** ((col.precision or 0) - scale) - 10.0**-scale
+    params = gen["params"] if isinstance(gen.get("params"), dict) else gen
+    low, high = params.get("min"), params.get("max")
+    if high is None:
+        mean = float(params.get("mean", 0))
+        spread = float(params.get("std_dev", params.get("std", params.get("sigma", 0))))
+        reach = (
+            math.exp(min(mean + 6 * spread, 700))
+            if gen.get("distribution") == "log_normal"
+            else mean + 6 * spread
+        )
+        if reach >= top:
+            params["max"] = top
+    elif float(high) > top:
+        params["max"] = top
+    if low is not None and float(low) < -top:
+        params["min"] = -top
+
+
+def declare_types(schema: GenSchema) -> None:
+    """Keep the declared SQL type of every column: a ``DECIMAL(p,s)`` is generated as
+    ``decimal128(p,s)``, and a ``DATETIME`` / ``DATETIME2(n)`` value has no more fractional
+    digits than the type holds (``output_type`` ``decimal`` / ``timestamp``, applied by the
+    engine to the finished table)."""
+    for table in schema.tables.values():
+        for col in table.columns.values():
+            if col.generator.get("strategy") in _UNTYPED_STRATEGIES:
+                continue
+            if col.type == "decimal" and col.precision:
+                col.generator["output_type"] = "decimal"
+                _fit_decimal_range(col)
+            elif col.type == "timestamp" and col.precision is not None and col.precision < 6:
+                col.generator["output_type"] = "timestamp"
+
+
 def from_ddl(
     sql: str,
     *,
@@ -879,6 +943,50 @@ def from_ddl(
     schema = DdlParser().parse_string(sql)
     schema.model.domain = domain
     schema.model.name = f"{domain}_ddl_import"
+    annotations: list[Any] = []
+    if smart:
+        from shape.generation.ddl_infer import SchemaInference
+
+        annotations = SchemaInference().run(schema)
+        fit_string_lengths(schema)
+    declare_types(schema)
+    if scale:
+        apply_scale(schema, scale)
+    return schema, annotations
+
+
+# The parsed form of a table, public so that an importer for another source of table definitions
+# (the ``shape-dbt`` plugin reads dbt projects) builds its schema with the same builder.
+ParsedColumn = _ParsedColumn
+ParsedTable = _ParsedTable
+ParsedForeignKey = _ForeignKey
+
+
+def schema_from_parsed(
+    tables: list[_ParsedTable],
+    foreign_keys: list[_ForeignKey],
+    *,
+    domain: str = "custom",
+    smart: bool = True,
+    scale: str | None = None,
+    description: str = "Imported from SQL DDL",
+    name_suffix: str = "ddl_import",
+) -> tuple[GenSchema, list[Any]]:
+    """The schema :func:`from_ddl` builds, from tables that were not read from DDL text.
+
+    ``tables`` and ``foreign_keys`` are what :class:`DdlParser` extracts: a foreign key that
+    names only its parent table is resolved against the parent's single-column primary key, and
+    one the parent does not give is dropped. ``domain``, ``smart`` and ``scale`` are
+    :func:`from_ddl`'s; the schema is named ``<domain>_<name_suffix>``. Returns
+    ``(schema, annotations)``."""
+    parser = DdlParser()
+    names = {t.name.lower(): t.name for t in tables}
+    schema = parser._build_schema(
+        tables, parser._resolve_key_references(tables, list(foreign_keys)), names
+    )
+    schema.model.domain = domain
+    schema.model.name = f"{domain}_{name_suffix}"
+    schema.model.description = description
     annotations: list[Any] = []
     if smart:
         from shape.generation.ddl_infer import SchemaInference

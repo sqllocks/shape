@@ -32,12 +32,15 @@ _DISTRIBUTION_MIN_SAMPLE = 20
 @dataclass
 class ValidationContext:
     """What every gate receives. ``config`` keys: ``ranges``, ``date_range``, ``no_future``,
-    ``ordering``, ``baseline``, ``distribution_alpha`` (see each gate)."""
+    ``ordering``, ``baseline``, ``distribution_alpha``, ``classifications``, ``memorization``,
+    ``utility`` (see each gate). ``source_tables`` are the real tables the generated ones are
+    compared with by the memorization and utility gates."""
 
     tables: dict[str, pa.Table] = field(default_factory=dict)
     schema: GateSchema | None = None
     file_paths: list[Path] = field(default_factory=list)
     config: dict[str, Any] = field(default_factory=dict)
+    source_tables: dict[str, pa.Table] = field(default_factory=dict)
 
 
 @dataclass
@@ -430,11 +433,13 @@ class TemporalConsistencyGate(ValidationGate):
         date_range = config.get("date_range", {})
 
         if date_range:
+            checked = 0
             for tname, table in context.tables.items():
                 for cname in table.column_names:
                     col = _column(table, cname)
                     if not pa.types.is_timestamp(col.type):
                         continue
+                    checked += 1
                     col = col.drop_null()
                     if len(col) == 0:
                         continue
@@ -453,6 +458,11 @@ class TemporalConsistencyGate(ValidationGate):
                         if after > 0:
                             errors.append(f"{key}: {after:,} dates after {date_range['end']}")
                             details.setdefault(key, {})["after_range"] = after
+            if not checked:
+                warnings.append(
+                    "date_range checked nothing: no column has a timestamp type "
+                    "(CSV and JSONL dates load as text; convert them first)"
+                )
 
         for spec in config.get("no_future", []):
             parts = spec.split(".", 1)
@@ -463,6 +473,7 @@ class TemporalConsistencyGate(ValidationGate):
                 continue
             col = _column(context.tables[tname], cname)
             if not pa.types.is_timestamp(col.type):
+                warnings.append(f"{spec}: not a timestamp column ({col.type}); not checked")
                 continue
             now = datetime.now(UTC) if col.type.tz else datetime.now()
             future = _count_true(pc.greater(col.drop_null(), _timestamp_scalar(now, col.type)))

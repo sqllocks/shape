@@ -15,19 +15,40 @@ is committed. A tape is only ever produced by running a scenario; none is writte
 
 from __future__ import annotations
 
+import contextlib
+import io
+import json
 import sys
-from collections.abc import Callable
+import tempfile
+import uuid
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from unittest import mock
 
 import pyarrow as pa  # type: ignore[import-untyped,unused-ignore]
 
+from ._auth import SCOPE_SQL, token_for
+from .auth import AuthSettings, build_credential
 from .eventhouse import EventhouseEmitter
 from .eventhouse_writer import EventhouseWriter
+from .fabric_api import FabricApi, tuple_transport
+from .keyvault import KeyVaultResolver
+from .notebook import generate_notebook, item_definition
 from .recording import Tape, TapeConnection, TapeTransport, jsonable, replay_tape, save
+from .setup_env import DEFAULT_ENVIRONMENT, DEFAULT_LAKEHOUSE
 from .sqldb import SqlDatabaseWriter
-from .testing import FakeKusto, FakeSqlServer, MemoryFS, sample_batch, sample_batches
+from .testing import (
+    FakeFabricItems,
+    FakeIdentity,
+    FakeKeyVault,
+    FakeKusto,
+    FakeSqlServer,
+    MemoryFS,
+    sample_batch,
+    sample_batches,
+)
 from .warehouse import WarehouseWriter
 
 KQL_URI = "eventhouse://kql.example.test/db1"
@@ -57,8 +78,8 @@ class OdbcService:
 @dataclass(frozen=True)
 class Scenario:
     name: str
-    channel: str  # "http" or "odbc"
-    run: Callable[[Any], Any]  # (service) -> result; a Kusto transport, or an OdbcService
+    channel: str  # "http", "odbc" or "identity"
+    run: Callable[[Any], Any]  # (service) -> result; a transport, an OdbcService or a FakeIdentity
     fake: Callable[[], Any]  # () -> the in-repo fake service, for recording
 
 
@@ -125,6 +146,203 @@ def _kusto_forbidden() -> Any:
         return 403, {}, b"Forbidden: principal has no ingestor role"
 
     return forbidden
+
+
+# --- HTTP: the Fabric Items API ----------------------------------------------------------
+
+
+def _fabric(transport: Any) -> FabricApi:
+    return FabricApi(
+        lambda scope: FAKE_TOKEN, transport=tuple_transport(transport), sleep=lambda _s: None
+    )
+
+
+def _notebook_body() -> dict[str, Any]:
+    notebook = generate_notebook("retail", "small", 42, "lakehouse", version="0.0.0")
+    return item_definition(notebook, "Shape_retail_small")
+
+
+def fabric_deploy_notebook(transport: Any) -> Any:
+    api = _fabric(transport)
+    return _outcome(
+        lambda: api.create_item(api.resolve_workspace("Demo"), _notebook_body())["displayName"]
+    )
+
+
+def fabric_workspace_by_name_across_pages(transport: Any) -> Any:
+    return _outcome(lambda: _fabric(transport).resolve_workspace("Demo"))
+
+
+def fabric_workspace_not_found(transport: Any) -> Any:
+    return _outcome(lambda: _fabric(transport).resolve_workspace("Nowhere"))
+
+
+def fabric_setup_environment_and_lakehouse(transport: Any) -> Any:
+    api = _fabric(transport)
+
+    def run() -> list[Any]:
+        ws = api.resolve_workspace("Demo")
+        return [
+            api.ensure_item(ws, {"displayName": DEFAULT_ENVIRONMENT, "type": "Environment"})[1],
+            api.ensure_item(ws, {"displayName": DEFAULT_LAKEHOUSE, "type": "Lakehouse"})[1],
+        ]
+
+    return _outcome(run)
+
+
+def _fabric_empty() -> FakeFabricItems:
+    return FakeFabricItems()
+
+
+def _fabric_accepted() -> FakeFabricItems:
+    return FakeFabricItems(accepted=True)
+
+
+def _fabric_operation_fails() -> FakeFabricItems:
+    return FakeFabricItems(accepted=True, operation_fails=True)
+
+
+def _fabric_name_in_use() -> FakeFabricItems:
+    return FakeFabricItems(
+        items=[
+            {
+                "id": "0000000a-0000-4000-8000-000000000000",
+                "displayName": "Shape_retail_small",
+                "type": "Notebook",
+            }
+        ]
+    )
+
+
+def _fabric_paged() -> FakeFabricItems:
+    return FakeFabricItems(
+        workspaces=[
+            ("Other", "22222222-2222-4222-8222-222222222222"),
+            ("Another", "33333333-3333-4333-8333-333333333333"),
+            ("Demo", "11111111-1111-4111-8111-111111111111"),
+        ],
+        page_size=1,
+    )
+
+
+def _fabric_set_up_before() -> FakeFabricItems:
+    return FakeFabricItems(
+        items=[
+            {
+                "id": "0000000b-0000-4000-8000-000000000000",
+                "displayName": DEFAULT_ENVIRONMENT,
+                "type": "Environment",
+            }
+        ]
+    )
+
+
+# --- the publish command, end to end ---------------------------------------------------------
+
+PUBLISH_ROWS = {"customer": 3, "order": 6}
+
+
+def _tiny_schema(folder: Path) -> str:
+    """A two-table generation schema (3 customers, 6 orders) in ``folder``."""
+
+    def col(name: str, strategy: str, **gen: Any) -> dict[str, Any]:
+        return {"name": name, "type": "integer", "generator": {"strategy": strategy, **gen}}
+
+    doc = {
+        "schema_version": 1,
+        "model": {"name": "tiny", "domain": "tiny", "seed": 5},
+        "tables": {
+            "customer": {
+                "name": "customer",
+                "primary_key": ["customer_id"],
+                "columns": {"customer_id": col("customer_id", "sequence")},
+            },
+            "order": {
+                "name": "order",
+                "primary_key": ["order_id"],
+                "columns": {
+                    "order_id": col("order_id", "sequence"),
+                    "customer_id": col("customer_id", "foreign_key", ref="customer.customer_id"),
+                },
+            },
+        },
+        "relationships": [
+            {
+                "name": "o_c",
+                "parent": "customer",
+                "child": "order",
+                "parent_columns": ["customer_id"],
+                "child_columns": ["customer_id"],
+            }
+        ],
+        "generation": {"scale": "small", "scales": {"small": PUBLISH_ROWS}},
+    }
+    path = folder / "tiny.json"
+    path.write_text(json.dumps(doc), encoding="utf-8")
+    return str(path)
+
+
+def _publish(argv_after_schema: list[str]) -> dict[str, Any]:
+    """``shape publish`` on the tiny schema, in this process, with a fake sign-in."""
+    from shape.cli.main import main
+
+    out = io.StringIO()
+    with tempfile.TemporaryDirectory() as folder, FakeIdentity().installed():
+        schema = _tiny_schema(Path(folder))
+        with contextlib.redirect_stdout(out):
+            code = main(["publish", schema, *argv_after_schema])
+    rows = [ln.strip() for ln in out.getvalue().splitlines() if ln.startswith("  ")]
+    return {"exit": code, "tables": rows}
+
+
+@contextlib.contextmanager
+def _odbc_patched(svc: OdbcService) -> Iterator[None]:
+    def connect(connection_string: str, credential: Any = None, **kw: Any) -> Any:
+        return svc.connect(connection_string, credential)
+
+    with (
+        mock.patch("shape_fabric._tsql.connect", connect),
+        mock.patch("shape.builtins.sources.azure._filesystem", lambda loc, options: svc.files),
+        mock.patch.object(uuid, "uuid4", return_value=uuid.UUID(int=1)),
+        mock.patch("shape_fabric.auth._notebookutils", lambda: None),
+    ):
+        yield
+
+
+def publish_eventhouse(transport: Any) -> Any:
+    with (
+        mock.patch("shape_fabric.kusto.urllib_transport", transport),
+        mock.patch("shape_fabric.auth._notebookutils", lambda: None),
+    ):
+        return _publish(
+            [
+                "-t",
+                "eventhouse",
+                "--connection-string",
+                "https://kql.example.test",
+                "--database",
+                "db1",
+            ]
+        )
+
+
+def publish_sql_database(svc: OdbcService) -> Any:
+    with _odbc_patched(svc):
+        return _publish(["-t", "sql-database", "--connection-string", SQL_CS.split(";UID")[0]])
+
+
+def publish_warehouse(svc: OdbcService) -> Any:
+    with _odbc_patched(svc):
+        return _publish(
+            [
+                "-t",
+                "warehouse",
+                "--connection-string",
+                WH_CS.split(";UID")[0],
+                "--staging-path",
+                STAGING,
+            ]
+        )
 
 
 # --- ODBC: SQL database ------------------------------------------------------------------
@@ -213,6 +431,75 @@ def _warehouse_no_rowcount() -> FakeSqlServer:
     return server
 
 
+# --- HTTP: Key Vault (credential references) -------------------------------------------
+
+
+def _vault(transport: Any) -> KeyVaultResolver:
+    return KeyVaultResolver(credential=lambda scope: FAKE_TOKEN, transport=transport)
+
+
+def keyvault_secret(transport: Any) -> Any:
+    resolver = _vault(transport)
+    return _outcome(lambda: {"resolved": bool(resolver("vault-one/sql-password"))})
+
+
+def keyvault_secret_version(transport: Any) -> Any:
+    resolver = _vault(transport)
+    return _outcome(lambda: {"resolved": bool(resolver("vault-one/sql-password/0123abcd"))})
+
+
+def keyvault_secret_not_found(transport: Any) -> Any:
+    return _outcome(lambda: _vault(transport)("vault-one/no-such-secret"))
+
+
+def keyvault_not_authorised(transport: Any) -> Any:
+    return _outcome(lambda: _vault(transport)("vault-one/sql-password"))
+
+
+def _keyvault() -> FakeKeyVault:
+    return FakeKeyVault()
+
+
+def _keyvault_forbidden() -> Any:
+    def forbidden(
+        method: str, url: str, headers: dict[str, str], body: bytes, timeout: float
+    ) -> Any:
+        return 403, {}, b'{"error":{"code":"Forbidden","message":"caller lacks get permission"}}'
+
+    return forbidden
+
+
+# --- identity: the token requests of each --auth mode -----------------------------------
+
+
+def _sign_in(settings: AuthSettings) -> Callable[[FakeIdentity], Any]:
+    def run(identity: FakeIdentity) -> Any:
+        with identity.installed():
+            credential = build_credential(settings)
+            return _outcome(lambda: {"token_issued": bool(token_for(credential, SCOPE_SQL))})
+
+    return run
+
+
+_SPN = AuthSettings(
+    mode="spn",
+    tenant_id="11111111-2222-3333-4444-555555555555",
+    client_id="66666666-7777-8888-9999-000000000000",
+    client_secret="fake-client-secret-for-the-contract-scenarios",  # nosec B106
+)
+_AUTH_SCENARIOS = {
+    "auth_cli": AuthSettings(mode="cli"),
+    "auth_spn": _SPN,
+    "auth_msi": AuthSettings(mode="msi"),
+    "auth_msi_user_assigned": AuthSettings(mode="msi", client_id=_SPN.client_id),
+    "auth_device_code": AuthSettings(mode="device-code", tenant_id=_SPN.tenant_id),
+}
+
+
+def _no_fake() -> None:
+    return None
+
+
 SCENARIOS: dict[str, Scenario] = {
     s.name: s
     for s in (
@@ -231,6 +518,52 @@ SCENARIOS: dict[str, Scenario] = {
         ),
         Scenario("eventhouse_not_authorised", "http", eventhouse_not_authorised, _kusto_forbidden),
         Scenario("eventhouse_emit_events", "http", eventhouse_emit_events, _kusto),
+        Scenario("fabric_deploy_notebook", "http", fabric_deploy_notebook, _fabric_empty),
+        Scenario(
+            "fabric_deploy_notebook_accepted", "http", fabric_deploy_notebook, _fabric_accepted
+        ),
+        Scenario(
+            "fabric_deploy_notebook_operation_fails",
+            "http",
+            fabric_deploy_notebook,
+            _fabric_operation_fails,
+        ),
+        Scenario(
+            "fabric_deploy_notebook_name_in_use",
+            "http",
+            fabric_deploy_notebook,
+            _fabric_name_in_use,
+        ),
+        Scenario(
+            "fabric_workspace_by_name_across_pages",
+            "http",
+            fabric_workspace_by_name_across_pages,
+            _fabric_paged,
+        ),
+        Scenario("fabric_workspace_not_found", "http", fabric_workspace_not_found, _fabric_empty),
+        Scenario(
+            "fabric_setup_environment_and_lakehouse",
+            "http",
+            fabric_setup_environment_and_lakehouse,
+            _fabric_empty,
+        ),
+        Scenario(
+            "fabric_setup_reuses_existing",
+            "http",
+            fabric_setup_environment_and_lakehouse,
+            _fabric_set_up_before,
+        ),
+        Scenario("publish_eventhouse", "http", publish_eventhouse, _kusto),
+        Scenario("publish_sql_database", "odbc", publish_sql_database, _sql_server),
+        Scenario("publish_warehouse", "odbc", publish_warehouse, _sql_server),
+        Scenario("keyvault_secret", "http", keyvault_secret, _keyvault),
+        Scenario("keyvault_secret_version", "http", keyvault_secret_version, _keyvault),
+        Scenario("keyvault_secret_not_found", "http", keyvault_secret_not_found, _keyvault),
+        Scenario("keyvault_not_authorised", "http", keyvault_not_authorised, _keyvault_forbidden),
+        *(
+            Scenario(name, "identity", _sign_in(settings), _no_fake)
+            for name, settings in _AUTH_SCENARIOS.items()
+        ),
         Scenario("sql_create_and_insert", "odbc", sql_create_and_insert, _sql_server),
         Scenario("sql_replace_with_key", "odbc", sql_replace_with_key, _sql_server),
         Scenario(
@@ -259,6 +592,8 @@ def _service(scenario: Scenario, tape: Tape, inner: Any) -> Any:
     """What the scenario is given: a transport or connect function that goes through ``tape``."""
     if scenario.channel == "http":
         return TapeTransport(tape, inner)
+    if scenario.channel == "identity":
+        return FakeIdentity(tape)
     if inner is None:
         return OdbcService(lambda cs, credential=None, **kw: TapeConnection(tape), MemoryFS())
     return OdbcService(

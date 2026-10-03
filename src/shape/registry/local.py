@@ -12,13 +12,43 @@ import time
 from pathlib import Path
 from typing import Any
 
+from shape import compat
 from shape.errors import ShapeError
+from shape.registry.layout import open_layout
 
+LAYOUT = "layout.json"
 _NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 
 
 class RegistryError(ShapeError):
     """A registry name, ref or path is invalid, or a ref is not recorded for that name."""
+
+
+class RawProfileError(RegistryError):
+    """A raw profile (real values) was offered to a registry without ``allow_raw``."""
+
+
+def is_raw_profile(data: bytes) -> bool:
+    """True for a raw profile: a ``.shape`` profile artifact or ``shape profile export`` JSON.
+
+    Both hold up to 500 real values per column. The safe form (``shape profile safe``) is not
+    raw, and neither is anything else."""
+    if data[:4] == b"PK\x03\x04":
+        import io
+        import zipfile
+
+        try:
+            with zipfile.ZipFile(io.BytesIO(data)) as z:
+                return bool(json.loads(z.read("manifest.json")).get("kind") == "profile")
+        except (OSError, ValueError, KeyError, zipfile.BadZipFile):
+            return False
+    if data.lstrip()[:1] == b"{":
+        try:
+            doc = json.loads(data)
+        except ValueError:
+            return False
+        return isinstance(doc, dict) and doc.get("format") == "shape-profile"
+    return False
 
 
 def _check(kind: str, value: object) -> str:
@@ -33,6 +63,7 @@ class LocalRegistry:
         for x in ("objects", "refs", "tags", "logs"):
             (self.root / x).mkdir(parents=True, exist_ok=True)
         self._real_root = self.root.resolve()
+        self.layout_version = open_layout(self.root, LAYOUT, "registry-layout", RegistryError)
 
     def _path(self, *parts: str) -> Path:
         """A path under the root; anything that resolves outside it raises RegistryError."""
@@ -41,11 +72,27 @@ class LocalRegistry:
             raise RegistryError(f"path escapes the registry root: {'/'.join(parts)}")
         return p
 
-    def commit(self, name: str, data: str | bytes, metadata: dict[str, Any] | None = None) -> str:
+    def commit(
+        self,
+        name: str,
+        data: str | bytes,
+        metadata: dict[str, Any] | None = None,
+        *,
+        allow_raw: bool = False,
+    ) -> str:
+        """Store ``data`` under ``name`` and return its content id (the sha256 of the bytes).
+
+        A raw profile holds real values, so it is refused unless ``allow_raw`` is true: commit the
+        safe form (``shape profile safe``) instead."""
         _check("name", name)
         log = self._path("logs", f"{name}.jsonl")
         self._path("refs", name)
         raw = data.encode() if isinstance(data, str) else data
+        if not allow_raw and is_raw_profile(raw):
+            raise RawProfileError(
+                f"{name}: this is a raw profile: it holds real values from the data (up to 500 per "
+                "column). Commit the safe form (`shape profile safe`), or pass allow_raw=True"
+            )
         h = hashlib.sha256(raw).hexdigest()
         p = self._path("objects", h)
         if not p.exists():
@@ -59,7 +106,13 @@ class LocalRegistry:
                 with contextlib.suppress(OSError):
                     os.unlink(tmp)
                 raise
-        e = {"name": name, "content_id": h, "created_at": time.time(), "metadata": metadata or {}}
+        e = {
+            "name": name,
+            "content_id": h,
+            "created_at": time.time(),
+            "created": compat.utc_iso(),
+            "metadata": metadata or {},
+        }
         with log.open("a") as f:
             f.write(json.dumps(e, sort_keys=True) + "\n")
         self._write_ref(name, "latest", h)
@@ -123,3 +176,22 @@ class LocalRegistry:
         _check("name", name)
         p = self._path("refs", name)
         return {x.name: x.read_text().strip() for x in p.iterdir()} if p.exists() else {}
+
+    def names(self) -> list[str]:
+        """The names with at least one commit, sorted."""
+        return sorted(p.name[: -len(".jsonl")] for p in self._path("logs").glob("*.jsonl"))
+
+    def tags(self, name: str) -> dict[str, str]:
+        """The tags of ``name`` and the content id each points at."""
+        _check("name", name)
+        p = self._path("tags", name)
+        return {x.name: x.read_text().strip() for x in sorted(p.iterdir())} if p.exists() else {}
+
+    def entry(self, name: str, ref: str = "latest") -> dict[str, Any]:
+        """The newest log entry whose content is ``ref`` (a ref, tag or content id) of ``name``."""
+        cid = self.resolve(name, ref)
+        entries: list[dict[str, Any]] = self.log(name)
+        for e in reversed(entries):
+            if e.get("content_id") == cid:
+                return dict(e)
+        raise RegistryError(f"{name}@{ref} is not recorded in the registry")

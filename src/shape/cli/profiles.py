@@ -17,9 +17,10 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-COMMANDS = ("export", "import", "list", "validate", "registry")
+from shape import compat
+
+COMMANDS = ("export", "import", "list", "validate", "registry", "merge")
 EXPORT_FORMAT = "shape-profile"
-EXPORT_VERSION = 1
 
 
 def routes(argv: Sequence[str]) -> bool:
@@ -63,6 +64,21 @@ def _parser() -> argparse.ArgumentParser:
     im.add_argument("input", metavar="IN.json")
     im.add_argument("-o", "--output", required=True, metavar="OUT.shape")
     im.add_argument("--name", help="profile name (default: the name in the file)")
+    mg = sub.add_parser(
+        "merge",
+        help="merge profiles of partitions or days into the profile of their union",
+        description="Combine profiles without reading the data again. Exact statistics (rows, "
+        "nulls, min, max, mean, std) always merge exactly; cardinality and quantiles need every "
+        "input to carry sketch state (`shape profile SRC -o OUT.shape --sketches`).",
+    )
+    mg.add_argument("profiles", nargs="+", metavar="PROFILE.shape")
+    mg.add_argument("-o", "--output", required=True, metavar="OUT.shape")
+    mg.add_argument("--name", help="the merged profile's name (default: the first input's)")
+    mg.add_argument(
+        "--exact-only",
+        action="store_true",
+        help="merge only the exact statistics, so profiles without sketch state can be merged",
+    )
     ls = sub.add_parser("list", help="list the .shape profiles in a directory")
     ls.add_argument("directory", nargs="?", default=".", metavar="DIR")
     ls.add_argument("--json", action="store_true", help="print JSON")
@@ -86,6 +102,16 @@ def _parser() -> argparse.ArgumentParser:
     sv.add_argument("--tags", default="", help="comma-separated")
     sv.add_argument("--description", default="")
     sv.add_argument("--overwrite", action="store_true", help="replace profiles that exist")
+    sv.add_argument(
+        "--safe",
+        action="store_true",
+        help="store the share-safe form (as `shape profile safe`) instead of the full profile, "
+        "which holds real values from the data",
+    )
+    sv.add_argument("--k", type=int, metavar="N", help="with --safe: minimum cohort (default 5)")
+    sv.add_argument(
+        "--sensitive", action="store_true", help="with --safe: raise the minimum cohort to 11"
+    )
     _root(sv)
     dl = rs.add_parser("delete", help="delete a profile")
     dl.add_argument("identity", metavar="SYSTEM/TABLE/NAME")
@@ -136,12 +162,9 @@ def _is_shape(path: str) -> bool:
 def export_document(prof: Any) -> dict[str, Any]:
     from shape.artifact import codec
 
-    return {
-        "format": EXPORT_FORMAT,
-        "format_version": EXPORT_VERSION,
-        "name": prof.name,
-        "profile": codec.encode(prof.to_dict()),
-    }
+    return compat.stamp(
+        "profile-export", {"name": prof.name, "profile": codec.encode(prof.to_dict())}
+    )
 
 
 def read_export(path: str) -> Any:
@@ -156,9 +179,7 @@ def read_export(path: str) -> Any:
         raise ValueError(f"{path} is not valid JSON: {e}") from e
     if not isinstance(doc, dict) or doc.get("format") != EXPORT_FORMAT:
         raise ValueError(f"{path} is not a Shape profile export (format {EXPORT_FORMAT!r})")
-    version = doc.get("format_version")
-    if not isinstance(version, int) or not 1 <= version <= EXPORT_VERSION:
-        raise ValueError(f"{path}: unsupported export version {version!r}")
+    compat.check_readable("profile-export", doc, path)
     body = codec.decode(doc.get("profile"))
     if not isinstance(body, dict):
         raise ValueError(f"{path}: the profile is not an object")
@@ -240,6 +261,28 @@ def _import(a: argparse.Namespace) -> int:
     return 0
 
 
+def _merge(a: argparse.Namespace) -> int:
+    import shape
+    from shape.profile.merge import merge_profiles
+
+    if len(a.profiles) < 2:
+        raise ValueError("merge needs at least two profiles")
+    merged = merge_profiles(
+        [_load_any(p) for p in a.profiles], exact_only=a.exact_only, name=a.name
+    )
+    cid = shape.save(merged, a.output)
+    _out(
+        {
+            "written": a.output,
+            "name": merged.name,
+            "shape_content_id": cid,
+            "mode": "exact-only" if a.exact_only else "sketched",
+            "merged_from": merged.merged_from,
+        }
+    )
+    return 0
+
+
 def _describe(path: Path) -> dict[str, Any]:
     prof = _load_any(str(path))
     return {
@@ -310,11 +353,12 @@ def _reg_list(a: argparse.Namespace) -> int:
     elif not rows:
         print("No profiles found.")
     else:
-        print(f"{'Identity':<45} {'Tags':<30} {'Rows':>10}")
-        print("-" * 87)
+        print(f"{'Identity':<45} {'Tags':<30} {'Rows':>10}  Form")
+        print("-" * 93)
         for e in rows:
             ident = f"{e['system']}/{e['table']}/{e['name']}"
-            print(f"{ident:<45} {', '.join(e['tags']):<30} {e['source_rows']:>10,}")
+            form = e.get("form", "full")
+            print(f"{ident:<45} {', '.join(e['tags']):<30} {e['source_rows']:>10,}  {form}")
     return 0
 
 
@@ -330,6 +374,13 @@ def _reg_save(a: argparse.Namespace) -> int:
         else shape.profile(a.source)
     )
     tags = [t.strip() for t in a.tags.split(",") if t.strip()]
+    if (a.k is not None or a.sensitive) and not a.safe:
+        raise ValueError("--k and --sensitive apply to --safe only")
+    config = None
+    if a.safe:
+        from shape.privacy.safe_profile import SafeConfig
+
+        config = SafeConfig(k=a.k, sensitive=a.sensitive)
     saved = reg.save(
         prof,
         system=a.system,
@@ -337,10 +388,19 @@ def _reg_save(a: argparse.Namespace) -> int:
         tags=tags,
         description=a.description,
         overwrite=a.overwrite,
+        safe=a.safe,
+        safe_config=config,
     )
     for i in saved:
         print(f"  Saved: {i}")
-    print(f"Saved {len(saved)} profile(s) to the registry.")
+    print(f"Saved {len(saved)} profile(s) to the registry" + (" (safe form)." if a.safe else "."))
+    if not a.safe:
+        print(
+            "shape: note: the full profile holds real values from the data (value counts and "
+            "extremes): keep this registry private, or save with --safe to store the share-safe "
+            "form",
+            file=sys.stderr,
+        )
     return 0
 
 
@@ -417,7 +477,7 @@ def _reg_validate(a: argparse.Namespace) -> int:
         if not a.identity:
             return _err("--data needs a profile identity")
         table = a.identity.split("/")[1]
-        stored = reg.load(a.identity).tables[table]
+        stored = reg.table(a.identity)
         observed = shape.profile(a.data)
         tables = observed.tables
         if table in tables:
@@ -443,6 +503,7 @@ _HANDLERS = {
     "import": _import,
     "list": _list,
     "validate": _validate,
+    "merge": _merge,
 }
 _REGISTRY = {
     "list": _reg_list,
@@ -463,4 +524,8 @@ def main(argv: Sequence[str]) -> int:
     try:
         return handler(a)
     except _INPUT_ERRORS as e:
-        return _err(str(e))
+        from shape.cli import errors
+
+        if errors.debug_enabled():
+            raise
+        return errors.fail(e)

@@ -6,6 +6,8 @@ Shape plugin for SQL Server, Azure SQL and Fabric SQL (warehouse and SQL databas
   give exact primary keys, foreign keys, types and row counts; a sample of rows per table
   (1000 by default) gives the distributions.
 - **`mssql://` source**: read one table as Arrow record batches (`shape.sources`).
+- **Writing** to a live SQL Server (the `sqlserver` sink, `mssql://` URIs, bulk insert) is in
+  `shape-fabric`, which builds on this plugin: see its README.
 - **Shared helpers** for other SQL Server code (such as `shape-fabric`): `shape_sqlserver.sql`
   (identifier quoting, connection strings and their redaction, catalog queries, type maps) and
   `shape_sqlserver.auth` (SQL logins and Microsoft Entra tokens).

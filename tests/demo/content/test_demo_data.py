@@ -38,7 +38,12 @@ EXPECTED_CHANGES = {
 # Side effects of the drift that the profiler reports; documented in DRIFT.md. Anything
 # outside EXPECTED_CHANGES | KNOWN_SIDE_EFFECTS fails the test.
 KNOWN_SIDE_EFFECTS = {
-    "orders": {("order_total", "new_categorical_values")},
+    "orders": {
+        ("order_total", "new_categorical_values"),
+        # the +40% price step also moves the value mix and stretches the range
+        ("order_total", "category_shift"),
+        ("order_total", "range_change"),
+    },
 }
 
 
@@ -215,11 +220,11 @@ def test_contracts_are_valid_json_and_named_after_tables():
     files = sorted(CONTRACTS.glob("*.json"))
     assert {f.stem for f in files} == {"customers", "orders", "products", "d2"}
     for f in files:
-        assert isinstance(json.loads(f.read_text()), dict)
+        assert isinstance(json.loads(f.read_text(encoding="utf-8")), dict)
 
 
 def test_talk_day2_numbers_match_real_results(profiles):
-    talk = (DEMO / "TALK.md").read_text()
+    talk = (DEMO / "TALK.md").read_text(encoding="utf-8")
     o2 = shape.check(profiles["orders", "day2"], CONTRACTS / "orders.json")
     top = next(v for v in o2.violations if v["rule"] == "max")["observed"]
     assert f"{top:g}" in talk
@@ -232,7 +237,7 @@ def test_talk_day2_numbers_match_real_results(profiles):
 
 
 def test_drift_doc_lists_every_drift():
-    text = (DEMO / "DRIFT.md").read_text()
+    text = (DEMO / "DRIFT.md").read_text(encoding="utf-8")
     for needle in (
         "customers.email",
         "orders.status",
@@ -267,7 +272,9 @@ def test_make_data_cli_writes_the_layout(tmp_path, capsys):
 
 def test_make_data_is_self_contained():
     """The generator needs no external checkout and imports nothing from benchmarks/."""
-    text = (DEMO / "make_data.py").read_text() + (DEMO / "d2_table.py").read_text()
+    text = (DEMO / "make_data.py").read_text(encoding="utf-8") + (DEMO / "d2_table.py").read_text(
+        encoding="utf-8"
+    )
     assert "benchmarks" not in text
     assert ("spin" + "dle") not in text.lower()
     assert "--" + "spin" not in text

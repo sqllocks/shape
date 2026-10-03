@@ -106,7 +106,8 @@ committable artifact.
 Emitters (Kafka, Event Hubs, Fabric Eventstream and Eventhouse), `shape stream` sources, SQL Server
 and ADLS access are outbound only; Shape opens no listening socket. Credentials come from the
 environment, an options file or Entra, never from a profile or pack. Zero-network behaviour of the
-offline commands is enforced by `tests/security/test_zero_network.py`.
+offline commands is enforced by `tests/security/test_zero_network.py`, and by the `zero_network`
+fixture that guards every test that needs no network (`docs/INSTALL.md`, offline installs).
 
 ## The artifact fuzzer
 

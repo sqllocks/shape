@@ -76,8 +76,7 @@
       "mean": 13.5,
       "sigma": 0.8,
       "min": 500000.0,
-      "max": 20000000.0,
-      "round": 2
+      "max": 20000000.0
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -432,8 +431,7 @@
       "mean": 3.0,
       "sigma": 0.5,
       "min": 0.0,
-      "max": 4.0,
-      "round": 2
+      "max": 4.0
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -684,8 +682,7 @@
       "mean": 8.5,
       "sigma": 0.8,
       "min": 500.0,
-      "max": 50000.0,
-      "round": 2
+      "max": 50000.0
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -1029,8 +1026,7 @@
       "mean": 3.0,
       "sigma": 0.5,
       "min": 0.0,
-      "max": 4.0,
-      "round": 2
+      "max": 4.0
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -1047,8 +1043,7 @@
       "mean": 3.0,
       "sigma": 0.6,
       "min": 0.0,
-      "max": 4.0,
-      "round": 2
+      "max": 4.0
      },
      "nullable": false,
      "null_rate": 0.0,

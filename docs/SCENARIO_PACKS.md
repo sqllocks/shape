@@ -19,7 +19,7 @@ needs PyYAML (`pip install 'sqllocks-shape[yaml]'`).
 ## A pack
 
 ```yaml
-pack_version: 1
+version: 1                 # the format version (`pack_version: 1` is still read)
 id: my_custom_pack
 kind: file_drop            # file_drop | stream | hybrid
 domain: retail
@@ -50,7 +50,9 @@ validation:
 
 The timing fields (cadence, partitioning, rates, jitter, replay, done flags, `lateness`,
 `duplicates`, `backfill`, `failure_injection`) describe the landing pattern for a consumer. A run
-does not simulate a clock: it writes the data once. Validation warns when `lateness`, `duplicates`,
+does not simulate a clock: it writes the data once. To produce that behaviour (late arrivals,
+duplicates, a backfill, replays, an event rate) use the simulators of `sqllocks-shape-simulation`
+(`shape simulate`, `docs/SIMULATION_FILES_EVENTS.md`), which write through the same file sinks. Validation warns when `lateness`, `duplicates`,
 `backfill` or `failure_injection` is enabled, because nothing would happen. Use `chaos` for
 faults.
 
@@ -131,7 +133,13 @@ Every run writes `<run_id>_manifest.json` into the output directory
 | `chaos` | category to the number of changes |
 | `timestamps` | `started`, `finished`, `elapsed_seconds` |
 | `workspace_id`, `lakehouse_id` | Fabric identifiers, empty unless set |
+| `format`, `version` | `shape-run-manifest`, `1` (a manifest from a newer Shape is refused; one without them loads with an empty `reproducibility` and `dataset_id`) |
+| `reproducibility` | the reproducibility tuple: `schema_version`, `profile_version`, `seed`, `scale`, `shape_version`, `kernel`, `platform` (`docs/REPRODUCIBILITY.md`) |
+| `dataset_id` | the content address of the output tables (`sha256:...`), over every generated table after chaos |
 | `sbom` | version of `sqllocks-shape`, `pandas`, `numpy`, `faker`, `pyarrow` and `scipy` (`not installed` when absent) |
+
+`shape pack replay MANIFEST TARGET` regenerates a run from its manifest and checks the dataset id
+(`docs/REPRODUCIBILITY.md`).
 
 ## Safety
 

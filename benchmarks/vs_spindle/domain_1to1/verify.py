@@ -45,8 +45,11 @@ from scipy import stats
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
+import allowlist  # noqa: E402
+import composites  # noqa: E402
 import dump_schema  # noqa: E402
 import generate  # noqa: E402
+from domain_differences import DELIBERATE  # noqa: E402
 from paths import BENCH_OUT_DIR, SHAPE_PY, SPINDLE_PY, SPINDLE_ROOT  # noqa: E402
 
 REF_SEED = 42
@@ -182,7 +185,7 @@ def column_pool(
     while (table, column) in fk_parent and (table, column) not in seen:
         seen.add((table, column))
         table, column = fk_parent[(table, column)]
-    return pools.pool_for(raw["tables"][table]["columns"][column]["generator"])
+    return pools.pool_for(raw["tables"][table]["columns"][column]["generator"], table)
 
 
 def same_values(a: pd.Series, b: pd.Series) -> bool:
@@ -270,15 +273,42 @@ class Pools:
         from sqllocks_spindle.engine.strategies.reference_data import _load_dataset
 
         self.names, self.native, self._load = names, native, _load_dataset
-        self.domain_path = SPINDLE_ROOT / "sqllocks_spindle" / "domains" / domain
-        self._datasets: dict[str, Any] = {}
+        root = SPINDLE_ROOT / "sqllocks_spindle" / "domains"
+        # A composite reads the reference data of each of its domains: the baseline finds a
+        # dataset by its name alone, so a table's own domain is looked at first (``dataset``).
+        self.children = (
+            composites.children(composites.spec_of(domain))
+            if composites.is_composite(domain)
+            else [domain]
+        )
+        self.composite = composites.is_composite(domain)
+        self.domain_path: Path | list[Path] = (
+            [root / c for c in self.children] if self.composite else root / domain
+        )
+        self._root = root
+        self._datasets: dict[tuple[str | None, str], Any] = {}
         self.first_l = {s.lower().replace(" ", "") for s in names.FIRST_NAMES}
         self.last_l = {s.lower().replace(" ", "") for s in names.LAST_NAMES}
 
-    def dataset(self, name: str):
-        if name not in self._datasets:
-            self._datasets[name] = self._load(name, self.domain_path)
-        return self._datasets[name]
+    def domain_of(self, table: str | None) -> str | None:
+        """The domain a table of a composite belongs to (the longest domain name it starts with)."""
+        if not self.composite or table is None:
+            return None
+        owners = [c for c in self.children if table.startswith(c + "_")]
+        return max(owners, key=len) if owners else None
+
+    def dataset(self, name: str, table: str | None = None):
+        domain = self.domain_of(table)
+        key = (domain, name)
+        if key not in self._datasets:
+            own = self._root / domain / "reference_data" / f"{name}.json" if domain else None
+            if (
+                own is not None and own.exists()
+            ):  # the table's own domain's file, not the cached one
+                self._datasets[key] = json.loads(own.read_text(encoding="utf-8"))
+            else:
+                self._datasets[key] = self._load(name, self.domain_path)
+        return self._datasets[key]
 
     def faker(self, provider: str) -> set[str] | None:
         n, nat = self.names, self.native
@@ -293,7 +323,7 @@ class Pools:
         fn = table.get(provider)
         return {str(x) for x in fn()} if fn else None
 
-    def pool_for(self, gen: dict) -> set[str] | None:
+    def pool_for(self, gen: dict, table: str | None = None) -> set[str] | None:
         """Values the strategy can draw from, or None when Spindle's output is the pool."""
         st = gen.get("strategy")
         if st == "faker":
@@ -301,7 +331,7 @@ class Pools:
         if st in ("weighted_enum", "enum") and isinstance(gen.get("values"), (dict, list)):
             return {str(v) for v in gen["values"]}  # the declared value set
         if st == "reference_data":
-            ds = self.dataset(gen["dataset"])
+            ds = self.dataset(gen["dataset"], table)
             out: set[str] = set()
             for item in ds:
                 if isinstance(item, dict):
@@ -310,7 +340,7 @@ class Pools:
                     out.add(str(item))
             return out
         if st in ("record_sample", "record_field"):
-            return {str(r[gen["field"]]) for r in self.dataset(gen["dataset"])}
+            return {str(r[gen["field"]]) for r in self.dataset(gen["dataset"], table)}
         return None
 
     def component_fn(self, gen: dict) -> tuple[Callable[[pd.Series], float], str] | None:
@@ -439,6 +469,32 @@ def merge_baselines(bs: list[dict]) -> dict:
         if any(not math.isnan(b[k]) for b in bs)
         else float("nan")
         for k in bs[0]
+    }
+
+
+def allowed_pool_column(
+    sp: pd.Series, im: pd.Series, pools: Pools, source: tuple[str, str], gen: dict
+) -> dict:
+    """CMP-2: the baseline draws the column from the wrong domain's dataset, so its values are not
+    the reference. Shape's values must all come from the right dataset (the domain's own file)."""
+    domain, name = source
+    path = (
+        SPINDLE_ROOT / "sqllocks_spindle" / "domains" / domain / "reference_data" / f"{name}.json"
+    )
+    field = gen.get("field", "name")
+    rows = json.loads(path.read_text(encoding="utf-8"))
+    pool = {str(r[field]) if isinstance(r, dict) else str(r) for r in rows}
+    shape_in = float(im.dropna().astype(str).isin(pool).mean())
+    base_in = float(sp.dropna().astype(str).isin(pool).mean())
+    return {
+        "kind": "allowed",
+        "allowed": "CMP-2",
+        "intended_pool": f"{domain}/{name}",
+        "shape_values_in_intended_pool": shape_in,
+        "baseline_values_in_intended_pool": base_in,
+        "null_rate": {"spindle": float(sp.isna().mean()), "impl": float(im.isna().mean())},
+        "checks": {"shape_values_in_intended_pool": shape_in >= 0.999},
+        "equivalent": shape_in >= 0.999,
     }
 
 
@@ -594,7 +650,7 @@ def record_coherence(T: dict[str, pd.DataFrame], raw: dict, pools: Pools) -> dic
                 groups.setdefault(g["dataset"], {})[cn] = g["field"]
         for ds, colmap in groups.items():
             cols = list(colmap)
-            ref = {tuple(_norm_val(r[colmap[cn]]) for cn in cols) for r in pools.dataset(ds)}
+            ref = {tuple(_norm_val(r[colmap[cn]]) for cn in cols) for r in pools.dataset(ds, tn)}
             df = T[tn][cols]
             keys = list(
                 zip(*[[_norm_val(v) for v in df[cn].tolist()] for cn in cols], strict=False)
@@ -719,6 +775,29 @@ def main(argv: list[str] | None = None) -> int:
     SP, sp_types, sp_order = load_run(ref, domain, scale, REF_SEED, tables)
     IM, im_types, im_order = load_run(impl, domain, scale, IMPL_SEED, tables)
     pools = Pools(domain)
+
+    # The named, narrow differences of composites (allowlist.py): columns Shape adds, foreign keys
+    # it moves to those columns, and columns drawn from the right domain's dataset.
+    extras = allowlist.extra_columns(domain)
+    redirected = allowlist.redirected(domain)
+    pool_cols = allowlist.pool_columns(domain)
+    IM_full = IM
+    allowed_report: dict = {}
+    if extras:
+        IM = {t: (df.drop(columns=[extras[t]]) if t in extras else df) for t, df in IM_full.items()}
+        im_types = {
+            t: {c: v for c, v in ty.items() if c != extras.get(t)} for t, ty in im_types.items()
+        }
+        allowed_report["CMP-1"] = {"extra_columns": extras, "redirected_keys": redirected}
+        for t, c in extras.items():  # the bridge column is a foreign key: the engine places it
+            if c not in IM_full[t].columns:
+                allowed_report.setdefault("problems", []).append(
+                    f"(a) {t}: the bridge column {c} is missing"
+                )
+    fks_cmp = [fk for fk in fks if redirected.get(fk[0]) != fk[1]]
+    fks_bridge = [
+        (c, extras[c], p, pc_) for c, cc, p, pc_ in fks if c in redirected and redirected[c] == cc
+    ]
     schema = rebuild_schema(raw)
     from sqllocks_spindle.engine.rules.business_rules import BusinessRulesEngine
     from sqllocks_spindle.inference.comparator import FidelityComparator
@@ -728,7 +807,7 @@ def main(argv: list[str] | None = None) -> int:
     fc_base = []
     sem_sp = [semantic_rates(SP, raw)]
     coh_sp = [record_coherence(SP, raw, pools)]
-    fan_sp = fanout(SP, fks)
+    fan_sp = fanout(SP, fks_cmp)
     for bs in BASELINE_SEEDS:  # one baseline in memory at a time
         BL, _, _ = load_run("spindle", domain, scale, bs, tables)
         for tn in tables:
@@ -738,7 +817,7 @@ def main(argv: list[str] | None = None) -> int:
                         baseline_distances(SP[tn][c], BL[tn][c])
                     )
         fc_base.append(fc.compare(SP, BL))
-        fan_bl = fanout(BL, fks)
+        fan_bl = fanout(BL, fks_cmp)
         for k, v in fan_sp.items():
             per_seed.setdefault(("fanout", k), []).append(
                 ks(v["_counts"].astype(float), fan_bl[k]["_counts"].astype(float))
@@ -758,12 +837,21 @@ def main(argv: list[str] | None = None) -> int:
         "baseline_seeds": list(BASELINE_SEEDS),
         "tables": {},
     }
-    flagged: list[str] = []
+    flagged: list[str] = list(allowed_report.get("problems", []))
     n_cols = n_pass = 0
 
     # (a) structure: tables, column names and order, Arrow types, row counts
     report["table_order"] = {"spindle": sp_order, "impl": im_order}
-    struct_ok = set(sp_order) == set(im_order) and sp_order == im_order
+    if extras:
+        # CMP-1: a bridge column is a new dependency edge, so the order may differ; it must still
+        # hold the same tables and put every parent before its children.
+        position = {t: i for i, t in enumerate(im_order)}
+        struct_ok = set(sp_order) == set(im_order) and all(
+            position[p] < position[c] for c, _, p, _ in fks_cmp + fks_bridge if c != p
+        )
+        allowed_report["CMP-1"]["table_order"] = {"spindle": sp_order, "impl": im_order}
+    else:
+        struct_ok = set(sp_order) == set(im_order) and sp_order == im_order
     if not struct_ok:
         flagged.append(f"(a) table order differs: spindle={sp_order} impl={im_order}")
     for tn in tables:
@@ -789,14 +877,26 @@ def main(argv: list[str] | None = None) -> int:
                 n_cols += 1
                 continue
             gen = raw["tables"][tn]["columns"][c]["generator"]
-            cr = compare_column(
-                sp[c],
-                im[c],
-                B[(tn, c)],
-                column_pool(pools, raw, fk_parent, tn, c),
-                pools.component_fn(gen),
-            )
+            if (tn, c) in pool_cols:
+                cr = allowed_pool_column(sp[c], im[c], pools, pool_cols[(tn, c)], gen)
+                allowed_report.setdefault("CMP-2", {})[f"{tn}.{c}"] = cr
+            else:
+                cr = compare_column(
+                    sp[c],
+                    im[c],
+                    B[(tn, c)],
+                    column_pool(pools, raw, fk_parent, tn, c),
+                    pools.component_fn(gen),
+                )
             cr["arrow_type_match"] = ts.get(c) == ti.get(c)
+            allowed = DELIBERATE.get((domain, tn, c)) if impl == "shape" else None
+            if allowed is not None:
+                failing = tuple(k for k, v in cr["checks"].items() if not v)
+                if not failing:
+                    flagged.append(f"(b-e) {tn}.{c}: stale entry in domain_differences.py")
+                elif failing == allowed.fails and allowed.accepts(im[c]):
+                    cr["equivalent"] = True
+                    cr["deliberate"] = allowed.reason
             cr["equivalent"] = cr["equivalent"] and cr["arrow_type_match"]
             tr["columns"][c] = cr
             n_cols += 1
@@ -809,11 +909,14 @@ def main(argv: list[str] | None = None) -> int:
         report["tables"][tn] = tr
 
     # (f) FK integrity + fan-out
-    report["fk_integrity"] = {"spindle": fk_checks(SP, fks), "impl": fk_checks(IM, fks)}
+    report["fk_integrity"] = {
+        "spindle": fk_checks(SP, fks),
+        "impl": fk_checks(IM_full, fks_cmp + fks_bridge),
+    }
     for k, v in report["fk_integrity"]["impl"].items():
         if v["integrity"] < 1.0:
             flagged.append(f"(f) FK integrity {k}: {v['integrity']:.6f}")
-    fi = fanout(IM, fks)
+    fi = fanout(IM, fks_cmp)
     fo = {}
     for k in fan_sp:
         cs, ci = fan_sp[k].pop("_counts"), fi[k].pop("_counts")
@@ -878,6 +981,8 @@ def main(argv: list[str] | None = None) -> int:
         "overall_baseline_spindle_vs_spindle": [b.overall_score for b in fc_base],
         "tables": fidelity_tables,
     }
+    if allowed_report:
+        report["allowed_differences"] = {k: v for k, v in allowed_report.items() if k != "problems"}
     report["summary"] = {
         "columns_total": n_cols,
         "columns_equivalent": n_pass,
@@ -913,6 +1018,14 @@ def summary_text(R) -> str:
             f"types identical={tr['types_identical']}"
         )
         for c, cr in tr["columns"].items():
+            if cr["kind"] == "allowed":
+                L.append(
+                    f"{tn + '.' + c:34s} ALLOWED {cr['allowed']}: Shape values in "
+                    f"{cr['intended_pool']} {cr['shape_values_in_intended_pool']:.4f}, baseline's "
+                    f"{cr['baseline_values_in_intended_pool']:.4f}  "
+                    f"{'EQUIVALENT' if cr['equivalent'] else 'NOT EQUIVALENT'}"
+                )
+                continue
             if "ks" in cr:
                 d, b, t = cr["ks"], cr["ks_baseline"], cr["ks_tol"]
                 tag = "KS"
@@ -930,13 +1043,18 @@ def summary_text(R) -> str:
                 f"{cr['null_rate']['spindle']:.4f}/{cr['null_rate']['impl']:.4f} "
                 f"{tag:>3s} {d:7.4f} {b:9.4f} {t:7.4f} {'' if vo is None else f'{vo:6.4f}':>6s}  "
                 f"{'EQUIVALENT' if cr['equivalent'] else 'NOT EQUIVALENT'}"
+                f"{' (deliberate, domain_differences.py)' if cr.get('deliberate') else ''}"
             )
     L += ["", "FK integrity (spindle / impl):"]
     for k in R["fk_integrity"]["spindle"]:
+        impl = R["fk_integrity"]["impl"].get(k)  # absent: a key CMP-1 moves to a bridge column
         L.append(
             f"  {k:55s} {R['fk_integrity']['spindle'][k]['integrity']:.4f} / "
-            f"{R['fk_integrity']['impl'][k]['integrity']:.4f}"
+            f"{'moved (CMP-1)' if impl is None else format(impl['integrity'], '.4f')}"
         )
+    for k in R["fk_integrity"]["impl"]:
+        if k not in R["fk_integrity"]["spindle"]:
+            L.append(f"  {k:55s} (bridge, CMP-1) / {R['fk_integrity']['impl'][k]['integrity']:.4f}")
     L.append(
         "FK fan-out (children per parent)  "
         "spindle p50/p90/p99/max/zero% | impl | KS (baseline max, tol)"

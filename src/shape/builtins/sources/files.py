@@ -16,7 +16,10 @@ def local_path(uri: str) -> Path:
     """The local path of ``uri``: a plain path or a ``file://`` URI."""
     parsed = urlparse(uri)
     if parsed.scheme == "file":
-        return Path(unquote(parsed.path))
+        path = unquote(parsed.path)
+        if len(path) > 2 and path[0] == "/" and path[1].isalpha() and path[2] == ":":
+            path = path[1:]  # file:///C:/x names the drive path C:/x (what Path.as_uri() writes)
+        return Path(path)
     return Path(uri)
 
 

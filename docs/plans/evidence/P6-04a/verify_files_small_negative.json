@@ -1,0 +1,405 @@
+{
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "cases": {
+  "file_drop": {
+   "allowed": {
+    "FD-1": {
+     "baseline": "the run raises (it splits a frame with numpy, which returns arrays, and then asks the array for .empty): a drop with several files per partition cannot be made",
+     "shape": "the partition is split into multi_file_chunks files of nearly equal size, each with a checksum in the manifest",
+     "what": "multi_file_enabled"
+    },
+    "FD-2": {
+     "baseline": "each source slot's late rows are written to <partition>_00900 immediately, so a later slot's late rows for the same partition replace the file: those rows are lost, and the result lists the replaced path twice",
+     "shape": "the late rows of every slot that land in one partition share that one 00900 file (oldest slot first); nothing is lost and each file is listed once",
+     "what": "late arrivals landing in the same partition"
+    },
+    "FD-3": {
+     "baseline": "a column named like a date (date, timestamp, created, updated) is the time column when pandas can parse its values: an integer column such as updated_count is read as nanoseconds since 1970, every row falls outside the date range and the drop silently writes nothing",
+     "shape": "only dates, timestamps and ISO-8601 text can be the time column; a table without one is dealt out round robin",
+     "what": "time column heuristic"
+    },
+    "FD-4": {
+     "baseline": "an unknown cadence is treated as daily (the manifest still says the unknown name), and an end date before the start date writes nothing without an error",
+     "shape": "both raise a ValueError that names the setting",
+     "what": "invalid configuration"
+    },
+    "FD-5": {
+     "baseline": "a timestamp is written to the millisecond (pandas to_json's default unit), so a value with microseconds or nanoseconds silently loses them: the JSON Lines file does not hold what the Parquet file of the same drop holds",
+     "shape": "the full precision of the column is written",
+     "what": "JSON Lines timestamps"
+    }
+   },
+   "checks": [
+    {
+     "detail": "tampered: data files equal",
+     "name": "caught: one changed value",
+     "ok": true
+    },
+    {
+     "detail": "tampered: same files; tampered: data files equal",
+     "name": "caught: a missing data file",
+     "ok": true
+    },
+    {
+     "detail": "tampered: data files equal",
+     "name": "caught: a renamed column",
+     "ok": true
+    },
+    {
+     "detail": "tampered: data files equal; tampered: manifests equal",
+     "name": "caught: a manifest file_count off by one",
+     "ok": true
+    },
+    {
+     "detail": "tampered: same files; tampered: data files equal",
+     "name": "caught: a missing _done flag",
+     "ok": true
+    },
+    {
+     "detail": "tampered: data files equal",
+     "name": "caught: a missing row",
+     "ok": true
+    },
+    {
+     "detail": "[]",
+     "name": "control: untouched Shape output passes T-21",
+     "ok": true
+    },
+    {
+     "detail": "KS",
+     "name": "caught: every order_date a year later",
+     "ok": true
+    },
+    {
+     "detail": "TVD / vocabulary",
+     "name": "caught: a third of status values replaced",
+     "ok": true
+    },
+    {
+     "detail": "null rate",
+     "name": "caught: a quarter of store_id nulled",
+     "ok": true
+    }
+   ],
+   "ok": true,
+   "seconds": 310.5
+  },
+  "hybrid": {
+   "allowed": {
+    "HY-1": {
+     "baseline": "the run's id is written only into the _correlation_id column of the rows; every manifest and every event has a correlation id of its own, so the files and the events cannot be joined on what the documentation says they share",
+     "shape": "the run id is also the correlation_id of every manifest and the correlationid of every event (with the natural_keys strategy nothing is stamped, as before)",
+     "what": "the run id in manifests and events"
+    },
+    "HY-2": {
+     "baseline": "names that are not tables are skipped without a word: a mistyped table silently leaves its stream or its batch out",
+     "shape": "raises a ValueError that names the table",
+     "what": "an unknown table name in stream_tables or batch_tables"
+    }
+   },
+   "checks": [
+    {
+     "detail": "tampered: data files equal",
+     "name": "caught: a changed value in the drop",
+     "ok": true
+    },
+    {
+     "detail": "tampered: every row of the drop and every event carries the run id (_correlation_id)",
+     "name": "caught: a row stamped with another run id",
+     "ok": true
+    },
+    {
+     "detail": "tampered: every manifest has the run id as its correlation_id (HY-1)",
+     "name": "caught: a manifest with another correlation id",
+     "ok": true
+    },
+    {
+     "detail": "tampered: every event has the run id as its correlationid (HY-1)",
+     "name": "caught: an event with another correlation id",
+     "ok": true
+    },
+    {
+     "detail": "tampered: same number of events",
+     "name": "caught: a missing event",
+     "ok": true
+    },
+    {
+     "detail": "tampered: same files",
+     "name": "caught: a missing data file",
+     "ok": true
+    }
+   ],
+   "ok": true,
+   "seconds": 42.7
+  },
+  "scd2_file_drops": {
+   "allowed": {
+    "SCD-1": {
+     "baseline": "the state is built from the table, not from the snapshot, so the first time a record changes its expired row has no valid_from (null) although the snapshot gave it one",
+     "shape": "the expired row keeps the valid_from of the version it expires (the initial date, or the day the entity was inserted)",
+     "what": "valid_from of an expired version"
+    },
+    "SCD-2": {
+     "baseline": "an insert copies the first entity's row as it is in the state; while that entity has never changed it has no version columns, so the insert has valid_from null, valid_to null and is_current null (not true)",
+     "shape": "an insert has valid_from = the day, valid_to null and is_current true",
+     "what": "version columns of an inserted entity"
+    },
+    "SCD-3": {
+     "baseline": "a delta's columns are the union of its rows' keys in order of first appearance: valid_to, is_current, _delta_type and valid_from come after the table's columns in an order that depends on the first row, and differs from the snapshot's",
+     "shape": "every delta has the snapshot's columns in the snapshot's order, then _delta_type",
+     "what": "column order of the delta files"
+    },
+    "SCD-4": {
+     "baseline": "pandas holds such a column as float, so a changed value is the product with the factor, unrounded: an id column ends with values such as 889.73",
+     "shape": "an integer stays an integer: the product is rounded to the nearest integer (halves to even)",
+     "what": "changing an integer column that has nulls"
+    },
+    "SCD-5": {
+     "baseline": "the first delta mixes text keys with the integer keys of the inserts, and the write fails with an Arrow conversion error after the snapshot is on disk",
+     "shape": "the run raises a ValueError that names the key column, before anything is written",
+     "what": "a business key that is not numeric"
+    }
+   },
+   "checks": [
+    {
+     "detail": "tampered: data files equal",
+     "name": "caught: a changed key",
+     "ok": true
+    },
+    {
+     "detail": "tampered: data files equal",
+     "name": "caught: a changed text column",
+     "ok": true
+    },
+    {
+     "detail": "tampered: data files equal",
+     "name": "caught: an expired row with another valid_from than the initial date",
+     "ok": true
+    },
+    {
+     "detail": "tampered: data files equal",
+     "name": "caught: an inserted row flagged not current",
+     "ok": true
+    },
+    {
+     "detail": "tampered: same files",
+     "name": "caught: a missing delta file",
+     "ok": true
+    },
+    {
+     "detail": "tampered: data files equal",
+     "name": "caught: a missing delta row",
+     "ok": true
+    },
+    {
+     "detail": "{'no_valid_from': 0, 'no_current_flag': 0, 'version_gaps': 0, 'not_exactly_one_current': 0, 'last_version_closed': 0}",
+     "name": "control: untouched Shape chain is consistent",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "caught: a version without valid_from",
+     "ok": true
+    },
+    {
+     "detail": "",
+     "name": "caught: a gap between versions",
+     "ok": true
+    }
+   ],
+   "ok": true,
+   "seconds": 15.2
+  },
+  "state_machine": {
+   "allowed": {
+    "WF-1": {
+     "baseline": "an entity whose initial state has no way out has no events, and its summary row says it started and ended in the first initial state of the workflow, whichever state it was actually given",
+     "shape": "its summary row names the state it started in",
+     "what": "entities that never move (their initial state)"
+    },
+    "WF-2": {
+     "baseline": "a new random UUID for every event on every run: the same seed gives a different event_id column each time",
+     "shape": "a UUID derived from the seed (a stream of its own, so no other draw moves): the same seed gives the same ids (a determinism rule, not a defect)",
+     "what": "event ids"
+    }
+   },
+   "checks": [
+    {
+     "detail": "tampered: events equal (event_id aside)",
+     "name": "caught: a changed to_state",
+     "ok": true
+    },
+    {
+     "detail": "tampered: events equal (event_id aside)",
+     "name": "caught: a transition time moved by one microsecond",
+     "ok": true
+    },
+    {
+     "detail": "tampered: events equal (event_id aside)",
+     "name": "caught: a dwell time changed in the fourth decimal",
+     "ok": true
+    },
+    {
+     "detail": "tampered: events equal (event_id aside)",
+     "name": "caught: a missing event",
+     "ok": true
+    },
+    {
+     "detail": "tampered: summaries equal for entities that moved",
+     "name": "caught: a changed final state in the summary",
+     "ok": true
+    },
+    {
+     "detail": "tampered: stats equal",
+     "name": "caught: a changed statistic",
+     "ok": true
+    },
+    {
+     "detail": "tampered: state_distribution equal",
+     "name": "caught: a changed state distribution",
+     "ok": true
+    },
+    {
+     "detail": "tampered: events equal (event_id aside)",
+     "name": "caught: events in another order",
+     "ok": true
+    },
+    {
+     "detail": "[]",
+     "name": "control: untouched Shape events pass T-21",
+     "ok": true
+    },
+    {
+     "detail": "KS",
+     "name": "caught: dwell times 30% longer",
+     "ok": true
+    },
+    {
+     "detail": "TVD",
+     "name": "caught: a tenth of the events flagged as anomalies",
+     "ok": true
+    },
+    {
+     "detail": "TVD",
+     "name": "caught: a quarter of the to_state values changed",
+     "ok": true
+    }
+   ],
+   "ok": true,
+   "seconds": 40.3
+  },
+  "stream_emit": {
+   "allowed": {
+    "SE-1": {
+     "baseline": "the setting is accepted and never read: a paced run with a burst window runs at the base rate throughout",
+     "shape": "the runtime's rate schedule applies the bursts (the rate is multiplied inside each window)",
+     "what": "burst_windows"
+    },
+    "SE-2": {
+     "baseline": "accepted and replaced by the console sink: the events go to standard output and nothing is sent anywhere",
+     "shape": "raises a ValueError (an emitter is named by its URI, eventstream://...); a sink type that is not console, file or a URI is never a silent console",
+     "what": "sink_type eventstream"
+    },
+    "SE-3": {
+     "baseline": "a new random correlation_id for every event, so no two events of a run share one and nothing can be joined on it",
+     "shape": "one correlationid for the whole run (the hybrid simulator passes its own run id to its manifests and events)",
+     "what": "correlation id"
+    },
+    "SE-4": {
+     "baseline": "the replay buffer survives between calls: a second emit() can send again events of the first call that are not among its own events",
+     "shape": "the window starts empty at every call: a replay is only ever of this call's events",
+     "what": "replay window across emit() calls"
+    }
+   },
+   "checks": [
+    {
+     "detail": "tampered: same number of events",
+     "name": "caught: a missing event",
+     "ok": true
+    },
+    {
+     "detail": "tampered: data values equal",
+     "name": "caught: a changed data value",
+     "ok": true
+    },
+    {
+     "detail": "tampered: same order of (table, row, replay) for every event; tampered: data values equal",
+     "name": "caught: two events swapped",
+     "ok": true
+    },
+    {
+     "detail": "tampered: envelope values equal (specversion, source, type, datacontenttype, topic, schemaversion)",
+     "name": "caught: a changed type",
+     "ok": true
+    },
+    {
+     "detail": "tampered: envelope values equal (specversion, source, type, datacontenttype, topic, schemaversion)",
+     "name": "caught: a changed topic",
+     "ok": true
+    },
+    {
+     "detail": "tampered: same order of (table, row, replay) for every event; tampered: envelope fields (mapped baseline names + shapetable, shapeseq); tampered: data values equal",
+     "name": "caught: an event without data",
+     "ok": true
+    },
+    {
+     "detail": "tampered: same order of (table, row, replay) for every event; tampered: envelope fields (mapped baseline names + shapetable, shapeseq)",
+     "name": "caught: a replay that lost its flag",
+     "ok": true
+    },
+    {
+     "detail": "tampered: data values equal",
+     "name": "caught: a renamed data field",
+     "ok": true
+    },
+    {
+     "detail": "tampered: same order of (table, row, replay) for every event; tampered: data values equal",
+     "name": "caught: a changed _shape_seq",
+     "ok": true
+    },
+    {
+     "detail": "[]",
+     "name": "control: untouched Shape events pass T-21",
+     "ok": true
+    },
+    {
+     "detail": "KS",
+     "name": "caught: every order_date a year later",
+     "ok": true
+    },
+    {
+     "detail": "TVD / vocabulary",
+     "name": "caught: a third of status values replaced",
+     "ok": true
+    },
+    {
+     "detail": "null rate",
+     "name": "caught: a quarter of store_id nulled",
+     "ok": true
+    }
+   ],
+   "ok": true,
+   "seconds": 20.4
+  }
+ },
+ "name_map_baseline_to_shape": {
+  "_replay": "replay",
+  "_replay_time": "replaytime",
+  "_spindle_seq": "_shape_seq",
+  "_spindle_table": "_shape_table",
+  "correlation_id": "correlationid",
+  "schema_version": "schemaversion",
+  "spindle": "shape",
+  "spindle_events.jsonl": "events.jsonl"
+ },
+ "ok": true,
+ "reference_seed": 42,
+ "scale": "small",
+ "seconds": 429.7,
+ "shape_seed": 1042
+}

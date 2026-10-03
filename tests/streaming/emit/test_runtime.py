@@ -21,6 +21,7 @@ from shape.streaming.emit import (
     EventPlan,
     MemorySink,
 )
+from shape.streaming.emit import runtime as emit_runtime
 from shape.streaming.emit.formats import FIELD_SEQ, FIELD_TABLE
 
 
@@ -66,6 +67,7 @@ def test_batch_size(retail_engine) -> None:
     assert len(sink.batches) == 50
 
 
+@pytest.mark.realtime
 def test_duration_stops_a_realtime_run(retail_engine, tmp_path: Path) -> None:
     sink = MemorySink()
     cfg = EmitConfig(realtime=True, rate=1000, duration=1.0, checkpoint_path=str(tmp_path / "c"))
@@ -76,6 +78,7 @@ def test_duration_stops_a_realtime_run(retail_engine, tmp_path: Path) -> None:
     assert doc["offset"] == report.events == report.end_offset and doc["complete"] is False
 
 
+@pytest.mark.realtime
 def test_duration_also_bounds_a_fast_run(retail_engine) -> None:
     class Slow(MemorySink):
         def send(self, batch: pa.RecordBatch) -> None:
@@ -99,6 +102,7 @@ def _assert_rate_holds(
     assert report.max_lag < max_lag, report.max_lag
 
 
+@pytest.mark.realtime
 def test_realtime_rate_within_five_percent(retail_engine) -> None:
     sink = MemorySink()
     cfg = EmitConfig(realtime=True, rate=2000, max_events=12000)
@@ -121,10 +125,12 @@ class _CollectNearSecondBoundary(MemorySink):
         super().send(batch)
 
 
+@pytest.mark.realtime
 def test_realtime_rate_holds_through_a_full_collection_of_a_large_heap(retail_engine) -> None:
     """A full collection scans every tracked object the process holds, and holds the GIL while it
     does. The pacing must not pay for the heap the host built before the run (the P5-01b cause of
     the rate test failing in a full suite run and never in isolation)."""
+    frozen_before = gc.get_freeze_count()  # not zero on every CPython (3.12 freezes at startup)
     heap: list[list[None]] = []
     while True:
         heap.extend([None] for _ in range(250_000))
@@ -142,12 +148,46 @@ def test_realtime_rate_holds_through_a_full_collection_of_a_large_heap(retail_en
         # Without the freeze the pacing waits out the whole collection (`full`); the allowance is
         # half of it, which is more than the stalls a busy shared host adds on its own.
         _assert_rate_holds(report, tolerance=0.10, max_lag=max(0.1, full / 2))
-        assert not gc.get_freeze_count()  # the freeze is lifted when the run ends
+        assert gc.get_freeze_count() <= frozen_before  # the freeze is lifted when the run ends
     finally:
         del heap
         gc.collect()
 
 
+def test_the_run_freezes_when_the_interpreter_already_froze_some_objects(monkeypatch) -> None:
+    """CPython 3.12 starts with objects in the permanent generation, so a nonzero freeze count is
+    not a freeze by the host: the run still freezes (the cause of the 0.27 s stall on 3.12)."""
+    baseline = gc.get_freeze_count()
+    monkeypatch.setattr(emit_runtime, "_GC_FROZEN_AT_IMPORT", baseline)
+    ballast = [[None] for _ in range(1000)]
+    with emit_runtime._gc_frozen():
+        during_first = gc.get_freeze_count()
+        assert during_first >= baseline + len(ballast)
+        later = [[None] for _ in range(1000)]  # made by the host while the first run paces
+        with emit_runtime._gc_frozen():  # a second, overlapping run covers them too
+            assert gc.get_freeze_count() >= during_first + len(later) - 100
+    assert gc.get_freeze_count() <= baseline
+    del ballast, later
+
+
+def test_a_freeze_made_by_the_host_is_left_alone(monkeypatch) -> None:
+    monkeypatch.setattr(emit_runtime, "_GC_FROZEN_AT_IMPORT", 0)
+    gc.unfreeze()
+    ballast = [[None] for _ in range(1000)]
+    gc.freeze()
+    try:
+        frozen = gc.get_freeze_count()
+        assert frozen >= len(ballast)
+        with emit_runtime._gc_frozen():
+            assert abs(gc.get_freeze_count() - frozen) < 100  # the run froze nothing of its own
+        # (frozen objects that die elsewhere leave the count; an unfreeze would take it to 0)
+        assert gc.get_freeze_count() > frozen - 100  # and did not unfreeze the host's
+    finally:
+        gc.unfreeze()
+        del ballast
+
+
+@pytest.mark.realtime
 def test_realtime_rate_holds_while_the_checkpoint_write_is_slow(
     retail_engine, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -176,6 +216,7 @@ def test_realtime_rate_holds_while_the_checkpoint_write_is_slow(
     assert saved[-1] == 8000 and sink.num_events == 8000
 
 
+@pytest.mark.realtime
 def test_bursts(retail_engine) -> None:
     sink = MemorySink()
     cfg = EmitConfig(realtime=True, rate=1000, bursts=(Burst(1, 1, 3),), max_events=5000)
@@ -185,6 +226,7 @@ def test_bursts(retail_engine) -> None:
     assert abs(ps[2] / 1000 - 1) < 0.1, ps
 
 
+@pytest.mark.realtime
 def test_realtime_resume_starts_its_own_clock(retail_engine, tmp_path: Path) -> None:
     cfg = EmitConfig(realtime=True, rate=2000, max_events=4000, checkpoint_path=str(tmp_path / "c"))
     EmitRunner(_plan(retail_engine), MemorySink(), cfg).run()
@@ -212,6 +254,7 @@ def test_backpressure_blocks_the_generator(retail_engine) -> None:
     assert report.max_queue_depth == 3  # the queue filled, so the generator had to wait
 
 
+@pytest.mark.realtime
 def test_slow_sink_in_realtime_falls_behind_without_dropping(retail_engine) -> None:
     class Slow(MemorySink):
         def send(self, batch: pa.RecordBatch) -> None:

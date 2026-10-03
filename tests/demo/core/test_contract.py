@@ -197,3 +197,20 @@ def test_multi_table_contract(orders, customers):
     assert missing.violations[0]["rule"] == "table_exists"
     col = shape.check(p, {"tables": {"customer": {"columns": {"name": {"dtype": "integer"}}}}})
     assert col.violations[0]["column"] == "customer.name"
+
+
+def test_min_and_max_of_a_decimal_column_compare_as_numbers():
+    """A decimal column is stored as text in the profile (``["Decimal", "1.50"]``); a contract's
+    numeric bounds used to report it as a violation of both rules (found by the dbt integration:
+    every dbt model with a money column has one)."""
+    from decimal import Decimal
+
+    import pyarrow as pa
+
+    import shape
+
+    values = [Decimal("1.50"), Decimal("2.25"), Decimal("10.00")] * 20
+    p = shape.profile(pa.table({"a": pa.array(values, pa.decimal128(18, 2))}), name="t")
+    assert shape.check(p, {"columns": {"a": {"min": 0, "max": 100}}}).passed
+    bad = shape.check(p, {"columns": {"a": {"min": 2, "max": 5}}})
+    assert {(v["rule"], v["observed"]) for v in bad.violations} == {("min", 1.5), ("max", 10.0)}

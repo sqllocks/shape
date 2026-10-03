@@ -1,0 +1,207 @@
+{
+ "args": {
+  "columns": [
+   "retail_order_line.unit_price",
+   "retail_order_line.line_total",
+   "retail_order.order_total",
+   "retail_return.refund_amount",
+   "retail_product.unit_price"
+  ],
+  "domain": "composite_digital_commerce",
+  "scale": "medium",
+  "n": 30,
+  "out": "docs/plans/evidence/P6-01e-seed/moments/moments_digital_commerce_medium.json"
+ },
+ "columns": {
+  "retail_order_line.unit_price": {
+   "mean": {
+    "baseline_mean": 31.36578403866666,
+    "baseline_sd": 13.611779887258132,
+    "shape_mean": 37.433892664000005,
+    "shape_sd": 23.782688938049056,
+    "p_mannwhitney": 0.5894511694056184,
+    "p_ks": 0.39294501397971776,
+    "p_levene": 0.07595802289834346
+   },
+   "median": {
+    "baseline_mean": 23.359666666666666,
+    "baseline_sd": 13.69500776984416,
+    "shape_mean": 28.932999999999996,
+    "shape_sd": 23.66497690827028,
+    "p_mannwhitney": 0.8072749507289148,
+    "p_ks": 0.5940706297759378,
+    "p_levene": 0.052305111245890656
+   },
+   "p99": {
+    "baseline_mean": 167.81766666666667,
+    "baseline_sd": 125.045361470957,
+    "shape_mean": 138.88733333333337,
+    "shape_sd": 54.0008019693535,
+    "p_mannwhitney": 0.5592250771793259,
+    "p_ks": 0.5940706297759378,
+    "p_levene": 0.2825726001755635
+   },
+   "sum": {
+    "baseline_mean": 39207230.048333324,
+    "baseline_sd": 17014724.859072663,
+    "shape_mean": 46792365.830000006,
+    "shape_sd": 29728361.17256132,
+    "p_mannwhitney": 0.5894511694056184,
+    "p_ks": 0.39294501397971776,
+    "p_levene": 0.07595802289834341
+   }
+  },
+  "retail_order_line.line_total": {
+   "mean": {
+    "baseline_mean": 49.0627259336,
+    "baseline_sd": 21.37269101348997,
+    "shape_mean": 58.5295643552,
+    "shape_sd": 37.21626805665322,
+    "p_mannwhitney": 0.6100075520376812,
+    "p_ks": 0.39294501397971776,
+    "p_levene": 0.07720568118037628
+   },
+   "median": {
+    "baseline_mean": 27.689666666666668,
+    "baseline_sd": 12.886122576534465,
+    "shape_mean": 34.85933333333333,
+    "shape_sd": 22.438787374779743,
+    "p_mannwhitney": 0.4119108371475996,
+    "p_ks": 0.23907300248018645,
+    "p_levene": 0.0194025517824838
+   },
+   "p99": {
+    "baseline_mean": 354.6218200000001,
+    "baseline_sd": 280.59922845785906,
+    "shape_mean": 361.60671333333363,
+    "shape_sd": 211.4680372680529,
+    "p_mannwhitney": 0.4289633888604326,
+    "p_ks": 0.39294501397971776,
+    "p_levene": 0.9975150573314192
+   },
+   "sum": {
+    "baseline_mean": 61328407.41700001,
+    "baseline_sd": 26715863.766862463,
+    "shape_mean": 73161955.444,
+    "shape_sd": 46520335.070816524,
+    "p_mannwhitney": 0.6100075520376812,
+    "p_ks": 0.39294501397971776,
+    "p_levene": 0.07720568118037631
+   }
+  },
+  "retail_order.order_total": {
+   "mean": {
+    "baseline_mean": 122.65681483399999,
+    "baseline_sd": 53.431727533724924,
+    "shape_mean": 146.32391088799997,
+    "shape_sd": 93.04067014163304,
+    "p_mannwhitney": 0.6100075520376812,
+    "p_ks": 0.39294501397971776,
+    "p_levene": 0.07720568118037636
+   },
+   "median": {
+    "baseline_mean": 80.78383333333335,
+    "baseline_sd": 31.844707287281565,
+    "shape_mean": 102.2065,
+    "shape_sd": 64.94995249858898,
+    "p_mannwhitney": 0.3554724725943107,
+    "p_ks": 0.39294501397971776,
+    "p_levene": 0.019852661024091455
+   },
+   "p99": {
+    "baseline_mean": 663.8177066666669,
+    "baseline_sd": 426.3136212465346,
+    "shape_mean": 693.1312266666669,
+    "shape_sd": 412.8968095730364,
+    "p_mannwhitney": 0.7061714882812296,
+    "p_ks": 0.39294501397971776,
+    "p_levene": 0.6597314547035708
+   },
+   "sum": {
+    "baseline_mean": 61328407.41700001,
+    "baseline_sd": 26715863.766862467,
+    "shape_mean": 73161955.444,
+    "shape_sd": 46520335.07081653,
+    "p_mannwhitney": 0.6100075520376812,
+    "p_ks": 0.39294501397971776,
+    "p_levene": 0.07720568118037643
+   }
+  },
+  "retail_return.refund_amount": {
+   "mean": {
+    "baseline_mean": 30.50008140392157,
+    "baseline_sd": 3.8678656851153774,
+    "shape_mean": 31.572236431372552,
+    "shape_sd": 5.905871028575746,
+    "p_mannwhitney": 0.4203863296078133,
+    "p_ks": 0.23907300248018645,
+    "p_levene": 0.00698303814599676
+   },
+   "median": {
+    "baseline_mean": 20.950499999999998,
+    "baseline_sd": 2.505613817699822,
+    "shape_mean": 21.225000000000005,
+    "shape_sd": 3.6351471534982194,
+    "p_mannwhitney": 0.5346295644271066,
+    "p_ks": 0.23907300248018645,
+    "p_levene": 0.03363589357766943
+   },
+   "p99": {
+    "baseline_mean": 156.04843999999974,
+    "baseline_sd": 24.9867286865289,
+    "shape_mean": 166.21486666666638,
+    "shape_sd": 38.29195408028197,
+    "p_mannwhitney": 0.4825169043645008,
+    "p_ks": 0.23907300248018645,
+    "p_levene": 0.016281803042190984
+   },
+   "sum": {
+    "baseline_mean": 2592506.919333333,
+    "baseline_sd": 328768.58323480707,
+    "shape_mean": 2683640.0966666667,
+    "shape_sd": 501999.0374289384,
+    "p_mannwhitney": 0.4203863296078133,
+    "p_ks": 0.23907300248018645,
+    "p_levene": 0.006983038145996735
+   }
+  },
+  "retail_product.unit_price": {
+   "mean": {
+    "baseline_mean": 33.161544066666664,
+    "baseline_sd": 0.5610692797174119,
+    "shape_mean": 32.996434266666675,
+    "shape_sd": 0.5126266942749237,
+    "p_mannwhitney": 0.30417681801970364,
+    "p_ks": 0.5940706297759378,
+    "p_levene": 0.7677600399926003
+   },
+   "median": {
+    "baseline_mean": 20.178333333333338,
+    "baseline_sd": 0.305338515741795,
+    "shape_mean": 20.171333333333333,
+    "shape_sd": 0.23094234738586122,
+    "p_mannwhitney": 0.9058273053846125,
+    "p_ks": 0.8079631540901643,
+    "p_levene": 0.0900599518546748
+   },
+   "p99": {
+    "baseline_mean": 203.25538333333367,
+    "baseline_sd": 10.410388989588284,
+    "shape_mean": 202.06888000000038,
+    "shape_sd": 9.740384736166828,
+    "p_mannwhitney": 0.9234421319782358,
+    "p_ks": 0.8079631540901643,
+    "p_levene": 0.982473744844246
+   },
+   "sum": {
+    "baseline_mean": 165807.72033333327,
+    "baseline_sd": 2805.3463985870594,
+    "shape_mean": 164982.17133333336,
+    "shape_sd": 2563.1334713746196,
+    "p_mannwhitney": 0.30417681801970364,
+    "p_ks": 0.5940706297759378,
+    "p_levene": 0.7677600399926008
+   }
+  }
+ }
+}

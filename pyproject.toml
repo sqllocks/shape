@@ -10,12 +10,13 @@ readme="README.md"
 requires-python=">=3.11"
 license = "MIT"
 license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
-dependencies=["numpy>=2.0,<3","pyarrow>=14.0.1"]
+dependencies=["numpy>=2.0,<3","pyarrow>=14.0.1","tzdata; sys_platform == 'win32'"]
 
 [project.optional-dependencies]
 yaml=["pyyaml>=6"]
 sign=["cryptography>=50,<51"]
 delta=["deltalake>=0.17"]
+delta-fallback=["deltalake>=0.17","duckdb>=1.2"]
 excel=["openpyxl>=3.1"]
 azure=["adlfs>=2024.4.1","azure-identity>=1.15","deltalake>=0.17"]
 pandas=["pandas>=2"]
@@ -24,10 +25,18 @@ advanced=["scikit-learn>=1.3,<2"]
 ctgan=["sdv>=1.0,<2"]
 kafka=["sqllocks-shape-kafka==0.9.0"]
 eventhubs=["sqllocks-shape-eventhubs==0.9.0"]
+fabric=["sqllocks-shape-fabric==0.9.0"]
 sqlserver=["sqllocks-shape-sqlserver==0.9.0"]
 domains=["sqllocks-shape-domains==0.9.0"]
+simulation=["sqllocks-shape-simulation==0.9.0"]
+dbt=["sqllocks-shape-dbt==0.9.0"]
+healthcare=["sqllocks-shape-behavior==0.9.0","sqllocks-shape-healthcare-codes==0.9.0","sqllocks-shape-healthcare-standards==0.9.0"]
+all=["sqllocks-shape-kafka==0.9.0","sqllocks-shape-eventhubs==0.9.0","sqllocks-shape-fabric==0.9.0","sqllocks-shape-sqlserver==0.9.0","sqllocks-shape-databases==0.9.0","sqllocks-shape-domains==0.9.0","sqllocks-shape-simulation==0.9.0","sqllocks-shape-dbt==0.9.0","sqllocks-shape-behavior==0.9.0","sqllocks-shape-healthcare-codes==0.9.0","sqllocks-shape-healthcare-standards==0.9.0","cryptography>=50,<51","scipy>=1.11","openpyxl>=3.1","deltalake>=0.17"]
+postgres=["sqllocks-shape-databases[postgres]==0.9.0"]
+mysql=["sqllocks-shape-databases[mysql]==0.9.0"]
+databases=["sqllocks-shape-databases[postgres,mysql]==0.9.0"]
 streaming=["confluent-kafka>=2.5,<4","azure-eventhub>=5.12,<6"]
-dev=["pytest>=8.3","pytest-cov>=6","hypothesis>=6.115","ruff>=0.8","mypy>=1.13","pip-audit>=2.7","build>=1.2","pyyaml>=6","pandas>=2","deltalake>=0.17","twine>=5","cryptography>=50,<51","xxhash>=3.5","maturin>=1.15,<2","import-linter>=2","vulture>=2.11","bandit>=1.8","py-spy>=0.4","sqlglot>=25","openpyxl>=3.1","scipy>=1.11","pyspark>=4.0,<5"]
+dev=["pytest>=8.3","pytest-cov>=6","hypothesis>=6.115","ruff>=0.8","mypy>=1.13","pip-audit>=2.7","build>=1.2","pyyaml>=6","pandas>=2","deltalake>=0.17","twine>=5","cryptography>=50,<51","xxhash>=3.5","maturin>=1.15,<2","import-linter>=2","vulture>=2.11","bandit>=1.8","py-spy>=0.4","sqlglot>=25","openpyxl>=3.1","scipy>=1.11","pyspark>=4.0,<5","faker>=24","duckdb>=1.2","fsspec>=2024.2"]
 
 [tool.maturin]
 # T-05: mixed Python/Rust layout. The kernel is `shape._kernel`, built from rust/shape-kernel.
@@ -51,7 +60,7 @@ include=[
 [tool.pytest.ini_options]
 testpaths=["tests"]
 addopts="-ra --strict-markers --import-mode=importlib"
-markers=["conformance: normative conformance","security: security invariant","zero_network: network forbidden","sign: needs the cryptography extra","contract: contract test (no external service)","emulator: needs a Docker emulator (CI nightly only)","live: needs live cloud resources","heavy: runs millions of values; CI runs these without coverage tracing"]
+markers=["conformance: normative conformance","security: security invariant","zero_network: network forbidden","sign: needs the cryptography extra","contract: contract test (no external service)","emulator: needs a Docker emulator (CI nightly only)","live: needs live cloud resources","heavy: runs millions of values; CI runs these without coverage tracing","realtime: wall-clock pacing assertions; run on Linux CI runners and the nightly soak","dbt: runs `dbt build` against DuckDB (needs dbt-duckdb; the CI dbt job, never core's own suites)"]
 
 [tool.ruff]
 target-version="py311"
@@ -133,6 +142,7 @@ ignore_errors=true
 
 [project.scripts]
 shape = "shape.cli.main:main"
+shape-migrate = "shape.cli.migrate:main_entry"
 
 [project.entry-points."shape.sources"]
 csv = "shape.builtins.sources:CsvSource"
@@ -151,6 +161,8 @@ tsv = "shape.builtins.sinks:TsvSink"
 sql = "shape.builtins.sinks:SqlSink"
 excel = "shape.builtins.sinks:ExcelSink"
 delta = "shape.builtins.sinks:DeltaSink"
+abfss = "shape.builtins.sinks:AbfssSink"
+fabric-mirror = "shape.builtins.sinks:FabricMirrorSink"
 
 [project.entry-points."shape.emitters"]
 console = "shape.builtins.emitters:ConsoleEmitter"
@@ -178,6 +190,7 @@ formula = "shape.builtins.strategies.formula:Formula"
 derived = "shape.builtins.strategies.derived:Derived"
 computed = "shape.builtins.strategies.derived:Computed"
 address = "shape.builtins.strategies:AddressStrategy"
+locale = "shape.builtins.strategies.locale_pack:Locale"
 uuid = "shape.builtins.strategies.basic:Uuid"
 weighted_enum = "shape.builtins.strategies.basic:WeightedEnum"
 distribution = "shape.builtins.strategies.numeric:Distribution"
@@ -189,6 +202,9 @@ correlated = "shape.builtins.strategies.linked:Correlated"
 reference_data = "shape.builtins.strategies.reference_data:ReferenceData"
 record_sample = "shape.builtins.strategies.reference_data:RecordSample"
 record_field = "shape.builtins.strategies.reference_data:RecordField"
+hierarchy = "shape.builtins.strategies.reference_hierarchy:Hierarchy"
+hierarchy_field = "shape.builtins.strategies.reference_hierarchy:HierarchyField"
+conditional_table = "shape.builtins.strategies.joint_table:ConditionalTable"
 bootstrap = "shape.builtins.strategies.bootstrap:Bootstrap"
 temporal = "shape.builtins.strategies.temporal:Temporal"
 foreign_key = "shape.builtins.strategies.keys:ForeignKey"
@@ -261,15 +277,20 @@ type = "forbidden"
 # Every top-level module except shape.builtins (a test fails when one is missing here: naming
 # the root "shape" would make import-linter skip its own subpackages).
 source_modules = [
+    "shape.__main__",
     "shape._callable",
     "shape._process",
     "shape.api",
     "shape.artifact",
+    "shape.bridge",
     "shape.capture",
     "shape.chaos",
+    "shape.compat",
     "shape.cli",
     "shape.connectors",
     "shape.contracts",
+    "shape.demo",
+    "shape.design",
     "shape.diff",
     "shape.dimensional",
     "shape.drift",
@@ -281,6 +302,8 @@ source_modules = [
     "shape.io",
     "shape.kernel",
     "shape.location",
+    "shape.masking",
+    "shape.migrate",
     "shape.model",
     "shape.runlog",
     "shape.scale",
@@ -288,12 +311,16 @@ source_modules = [
     "shape.packs",
     "shape.plugins",
     "shape.privacy",
+    "shape.project",
     "shape.profile",
+    "shape.proposals",
     "shape.quality",
     "shape.query",
     "shape.registry",
     "shape.relations",
+    "shape.repro",
     "shape.report",
+    "shape.resolve",
     "shape.schemacheck",
     "shape.security",
     "shape.spec",

@@ -19,7 +19,9 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.sinks` | `tsv` | Tab-separated file |
 | `shape.sinks` | `sql` | SQL `INSERT` script, with optional DDL (`tsql`, `tsql-fabric-warehouse`, `postgres`, `mysql`) |
 | `shape.sinks` | `excel` | Excel workbook (`pip install 'sqllocks-shape[excel]'`, openpyxl) |
-| `shape.sinks` | `delta` | Delta table (`pip install 'sqllocks-shape[delta]'`, deltalake) |
+| `shape.sinks` | `delta` | Delta table (`pip install 'sqllocks-shape[delta]'`, deltalake); `delta+abfss://` in OneLake and ADLS Gen2, with a commit per micro-batch (`commit_rows`) |
+| `shape.sinks` | `abfss` | Files (Parquet, CSV, TSV, JSONL, IPC) in OneLake and ADLS Gen2, dated Hive-style folders, rolling files, atomic publish (extra `[azure]`) |
+| `shape.sinks` | `fabric-mirror` | Fabric open mirroring landing zone, local or `abfss://` (`docs/FABRIC_MIRROR.md`) |
 | `shape.emitters` | `console` | events as JSON lines on standard output (`shape emit`; [../EMIT.md](../EMIT.md)) |
 | `shape.emitters` | `file` | events as JSON lines in one file (`file:///path.jsonl`) |
 | `shape.emitters` | `jsonl` | events as JSON lines, one `<table>.jsonl` file per table in a directory (`jsonl:///dir`) |
@@ -34,6 +36,7 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.strategies` | `uniform` | uniform on `[low, high)` |
 | `shape.strategies` | `normal` | normal with `mean` and `stddev` |
 | `shape.strategies` | `address` | coherent addresses from reference rows |
+| `shape.strategies` | `locale` | basic locale packs: places, postcodes, reserved-range phone numbers and first names for a country (`docs/LOCALES.md`) |
 | `shape.strategies` | `uuid` | version-4 UUID strings |
 | `shape.strategies` | `weighted_enum` | a value from a `{value: weight}` mapping (alias sampling) |
 | `shape.strategies` | `distribution` | values from a distribution family, clipped by `min`/`max` and rounded to the column's scale |
@@ -50,6 +53,9 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.strategies` | `reference_data` | a value or a weighted name from a named reference dataset |
 | `shape.strategies` | `record_sample` | one field of a randomly chosen reference record (the anchor of a record group) |
 | `shape.strategies` | `record_field` | another field of the record the table's `record_sample` column chose |
+| `shape.strategies` | `hierarchy` | one field of a reference record reached by walking a hierarchy (state, county, city, ZIP) level by level (the anchor of a hierarchy group) |
+| `shape.strategies` | `hierarchy_field` | another field of the record the table's `hierarchy` column reached |
+| `shape.strategies` | `conditional_table` | a category drawn given another column of the row, from a table of the probability of this value given the source value |
 | `shape.strategies` | `bootstrap` | a field of a source row of a reference dataset drawn with replacement (columns of a table share the row), numbers jittered by a fraction of their spread |
 | `shape.strategies` | `temporal` | timestamps, uniform or with month, weekday and hour profiles |
 | `shape.strategies` | `foreign_key` | keys of a parent table: uniform, Zipf or Pareto (optionally capped per parent), constrained by another column, sampled, or self-referencing |
@@ -113,6 +119,10 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 - The calendars' lift is neutral (1.0) unless `holiday_lift` or `lifts` is set (ramp-up and decay
   optional, `docs/GENERATION_CALENDARS.md`); `holidays(start, end)`
   returns the rule-derived dates.
+- Behavior modules (`shape.behaviors`) are registered by the plugin `shape-behavior`, not by
+  core: `subscription`, `equipment_maintenance` and `healthcare_screening` (a tiny
+  example written from scratch) appear in `shape plugins list` once `sqllocks-shape-behavior` is
+  installed ([behavior.md](behavior.md)).
 - Not built-ins: the Kafka and Event Hubs stream sources are the plugins `shape-kafka` and
   `shape-eventhubs` (`docs/plugins/streaming.md`). The DB-API adapter (`shape.connectors`) needs a
   live connection object, not a URI; it moves into a plugin with the Phase 6 work.

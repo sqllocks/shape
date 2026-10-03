@@ -9,6 +9,12 @@
   (:mod:`shape.streaming.emit.rate`), sleeping until each batch's absolute due time. If the sink
   is too slow the run falls behind schedule and never drops or skips an event; the report gives
   the worst lag.
+* **Virtual clock.** ``speed`` paces by the events' *event time* instead of a rate: an event stamped
+  ``t`` seconds after the first is due ``t / speed`` wall-clock seconds after the start, so
+  ``speed=60`` replays an hour of events in a minute (:class:`~shape.streaming.emit.rate.
+  VirtualClock`). It needs events with an event time (``shape stream`` delivers them in time
+  order). ``max_rate`` is a hard cap in events per second that holds whatever else is set: no
+  second of the run delivers more than that on average from the start.
 * **Backpressure.** The queue between the generator and the runner is bounded
   (``queue_batches``): a slow sink blocks the runner, the queue fills, and the generator waits.
 * **Limits.** ``max_events`` is a position in the sequence (the run stops with that many events
@@ -42,15 +48,17 @@ import time
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Protocol
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
 from shape.streaming.checkpoint import CheckpointError, FileCheckpointStore
-from shape.streaming.emit.rate import Burst, RateSchedule
+from shape.streaming.emit.anomaly import AnomalyInjector
+from shape.streaming.emit.formats import FIELD_TIME
+from shape.streaming.emit.rate import Burst, RateCap, RateSchedule, VirtualClock
 from shape.streaming.emit.sinks import EventSink
-from shape.streaming.emit.source import EventPlan
+from shape.streaming.emit.source import EventBlock
 
 CHECKPOINT_FORMAT = "shape-emit-v1"
 _END = object()
@@ -58,6 +66,10 @@ _END = object()
 _gc_lock = threading.Lock()
 _gc_holders = 0
 _gc_owned = False
+# CPython 3.12 starts with a few hundred objects already frozen (375 on 3.12.3), so "nothing is
+# frozen" is not how a freeze made by the caller is told apart. A freeze that is larger than what
+# the interpreter had when this module was imported is the caller's.
+_GC_FROZEN_AT_IMPORT = gc.get_freeze_count()
 
 
 @contextmanager
@@ -65,13 +77,14 @@ def _gc_frozen() -> Iterator[None]:
     """Keep full garbage collections cheap while a realtime run is pacing.
 
     Freezes the objects that exist now (they stay alive and are scanned again only after
-    ``gc.unfreeze``); runs may overlap, and a freeze the caller made itself is left alone."""
+    ``gc.unfreeze``). A run that starts while another is pacing freezes again, so the objects the
+    host created in between are covered too. A freeze the caller made itself is left alone."""
     global _gc_holders, _gc_owned
     with _gc_lock:
         if _gc_holders == 0:
-            _gc_owned = gc.get_freeze_count() == 0
-            if _gc_owned:
-                gc.freeze()
+            _gc_owned = gc.get_freeze_count() <= _GC_FROZEN_AT_IMPORT
+        if _gc_owned:
+            gc.freeze()
         _gc_holders += 1
     try:
         yield
@@ -129,6 +142,19 @@ class _CheckpointWriter:
                 return
 
 
+class EventSequence(Protocol):
+    """What the runner needs of a plan: a counted, resumable sequence of event blocks.
+    ``EventPlan`` is one (a schema's rows); the simulation plugin's stream emitter is another
+    (the rows of tables it is given)."""
+
+    total_events: int
+    anomaly: AnomalyInjector | None
+
+    def fingerprint(self) -> str: ...
+
+    def blocks(self, offset: int = 0) -> Iterator[EventBlock]: ...
+
+
 @dataclass
 class EmitConfig:
     realtime: bool = False
@@ -144,6 +170,8 @@ class EmitConfig:
     fresh: bool = False  # ignore an existing checkpoint
     retries: int = 3
     retry_backoff: float = 0.1
+    speed: float | None = None  # virtual clock: event time passes this many times faster
+    max_rate: float | None = None  # hard cap, events per second
 
     def effective_queue(self) -> int:
         if self.queue_batches is not None:
@@ -159,6 +187,10 @@ class EmitConfig:
         if self.realtime:
             # About 100 batches per second, so the pacing is fine-grained but sends are not tiny.
             return max(1, min(1000, int(self.rate // 100)))
+        if self.max_rate is not None:
+            return max(1, min(1000, int(self.max_rate // 100)))
+        if self.speed is not None:
+            return 100
         return 1000
 
 
@@ -180,6 +212,7 @@ class EmitReport:
     anomalies_selected: int = 0
     anomalies_affected: dict[str, int] = field(default_factory=dict)
     already_complete: bool = False
+    virtual_span: float = 0.0  # speed: seconds of event time replayed
 
     def as_dict(self) -> dict[str, Any]:
         return dict(self.__dict__)
@@ -188,7 +221,7 @@ class EmitReport:
 class EmitRunner:
     def __init__(
         self,
-        plan: EventPlan,
+        plan: EventSequence,
         sink: EventSink,
         config: EmitConfig | None = None,
         *,
@@ -206,7 +239,12 @@ class EmitRunner:
             raise ValueError("max_events must be 0 or more")
         if cfg.duration is not None and cfg.duration < 0:
             raise ValueError("duration must be 0 or more")
+        if cfg.speed is not None and cfg.realtime:
+            raise ValueError("speed paces by event time and --realtime by rate: choose one")
         self.schedule = RateSchedule(cfg.rate, cfg.bursts) if cfg.realtime else None
+        self.clock = VirtualClock(cfg.speed) if cfg.speed is not None else None
+        self.cap = RateCap(cfg.max_rate) if cfg.max_rate is not None else None
+        self.paced = self.schedule is not None or self.clock is not None or self.cap is not None
         self._stop = threading.Event()
         self._store = FileCheckpointStore(cfg.checkpoint_path) if cfg.checkpoint_path else None
         self._sleep_until = sleep_until
@@ -310,8 +348,22 @@ class EmitRunner:
                 report.retries += 1
                 time.sleep(cfg.retry_backoff * (2 ** (attempt - 1)))
 
+    def _due(self, batch: pa.RecordBatch, sent: int) -> float | None:
+        """Seconds after the start at which ``batch`` may be sent (``sent`` events have gone), or
+        ``None`` when the run is not paced."""
+        if not self.paced:
+            return None
+        due = 0.0
+        if self.schedule is not None:
+            due = self.schedule.due_time(sent)
+        if self.clock is not None:
+            due = max(due, self.clock.due(_event_seconds(batch)))
+        if self.cap is not None:
+            due = max(due, self.cap.due(sent + batch.num_rows))
+        return due
+
     def run(self) -> EmitReport:
-        if self.schedule is None:
+        if not self.paced:
             return self._run()
         with _gc_frozen():
             return self._run()
@@ -337,7 +389,7 @@ class EmitRunner:
         q: queue.Queue[Any] = queue.Queue(maxsize=cfg.effective_queue())
         errors: list[BaseException] = []
         writer: _CheckpointWriter | None = None
-        if self._store is not None and self.schedule is not None:
+        if self._store is not None and self.paced:
             writer = _CheckpointWriter(lambda off: self._save(off, False, report))
         producer = threading.Thread(
             target=self._producer, args=(q, offset, errors), name="shape-emit-gen", daemon=True
@@ -372,8 +424,9 @@ class EmitRunner:
                 if cfg.duration is not None and now - t0 >= cfg.duration:
                     stopped_by = "duration"
                     break
-                if self.schedule is not None:
-                    due = t0 + self.schedule.due_time(delivered - offset)
+                rel = self._due(batch, delivered - offset)
+                if rel is not None:
+                    due = t0 + rel
                     if cfg.duration is not None and due - t0 >= cfg.duration:
                         self._wait_until(t0 + cfg.duration)
                         stopped_by = "stop-request" if self._stop.is_set() else "duration"
@@ -430,6 +483,8 @@ class EmitRunner:
                 failure = failure or exc
                 stopped_by = "error"
             report.end_offset = delivered
+            if self.clock is not None:
+                report.virtual_span = self.clock.span
             report.complete = failure is None and delivered >= limit
             if errors and stopped_by != "error":
                 stopped_by = "error"
@@ -451,3 +506,25 @@ class EmitRunner:
         if failure is not None:
             raise failure
         return report
+
+
+def _event_seconds(batch: pa.RecordBatch) -> float | None:
+    """The earliest event time of ``batch`` as seconds since the epoch (UTC for a time without a
+    zone), or ``None`` when no event has one. A batch without the event-time column cannot be
+    paced by a virtual clock."""
+    import datetime as dt
+
+    import pyarrow.compute as pc  # type: ignore[import-untyped]
+
+    if FIELD_TIME not in batch.schema.names:
+        raise ShapeError(
+            "--speed paces by event time, and these events have none: the table needs a date or "
+            "timestamp column"
+        )
+    column = batch.column(FIELD_TIME)
+    if column.null_count == len(column):
+        return None
+    earliest = pc.min(column.cast(pa.timestamp("us"))).as_py()
+    if earliest.tzinfo is None:
+        earliest = earliest.replace(tzinfo=dt.UTC)
+    return float(earliest.timestamp())

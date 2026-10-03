@@ -6,6 +6,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from shape import compat
+
 _Fn = Callable[[dict[str, Any], dict[str, Any]], tuple[dict[str, Any], dict[str, Any]]]
 
 
@@ -48,9 +50,12 @@ class MigrationRegistry:
         m = dict(manifest)
         s = dict(shape)
         applied: list[str] = []
-        for x in self.path(int(m.get("format_version", 1)), target):
+        declares = compat.VERSION_KEY in m or "format_version" in m
+        source = compat.declared_version("artifact", m) if declares else 1
+        for x in self.path(source, target):
             m, s = x.fn(m, s)
             m["format_version"] = x.target
+            m["version"] = x.target
             applied.append(x.name)
         return m, s, tuple(applied)
 

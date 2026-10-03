@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "compat",
+    "seed": 7
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "zip": {
+          "name": "zip",
+          "type": "string",
+          "generator": {
+            "strategy": "hierarchy",
+            "dataset": "compat_regions",
+            "field": "zip",
+            "levels": [
+              "state",
+              "city"
+            ],
+            "weighting": "records",
+            "top_weights": {
+              "s0": 3,
+              "s1": 1
+            }
+          }
+        }
+      }
+    }
+  },
+  "relationships": [],
+  "generation": {
+    "scale": "small",
+    "scales": {
+      "small": {
+        "t": 20
+      }
+    }
+  }
+}

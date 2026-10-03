@@ -2,11 +2,23 @@
 
 ``uri`` is a path or ``file://`` URI. When it names an existing directory (or ends with a
 separator) the file is ``<table>.<extension>`` inside it.
+
+With ``roll_rows`` and/or ``roll_seconds`` (micro-batch mode) ``uri`` is a directory and the
+table is written as a series of files, ``{table}/{table}-{part}.{ext}`` unless
+``path_template`` says otherwise. Each file is written under a temporary name and renamed when
+complete, so a reader sees only whole files, and rows are readable while the stream is still
+running (see :mod:`shape.builtins.sinks._roll`). ``mode`` is ``overwrite``, ``append`` or ``fail``.
+
+With the option ``path_template`` (and ``batch_date``, ``YYYY-MM-DD``, when the template has a date
+token) ``uri`` is the landing root and the file is the template filled for the table, for example
+``{table}/ingest_date={date}/{table}_{yyyymmdd}.{ext}`` (see :mod:`shape.io.landing`). Folders are
+created as needed.
 """
 
 from __future__ import annotations
 
 import datetime as dt
+import io
 import json
 import os
 from collections.abc import Iterable
@@ -18,7 +30,11 @@ import pyarrow.csv as pacsv  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.builtins.sources.files import local_path
+from shape.io.landing import render_path
 from shape.kernel.dispatch import get_kernel
+from shape.plugins.schemes import require_scheme
+
+DEFAULT_ROLL_TEMPLATE = "{table}/{table}-{part}.{ext}"
 
 
 class _FileSink:
@@ -26,8 +42,17 @@ class _FileSink:
     schemes = ("file",)
     extension = ""
 
-    def _target(self, uri: str, table: str) -> Path:
+    def _target(self, uri: str, table: str, options: dict[str, Any] | None = None) -> Path:
         path = local_path(uri)
+        template = (options or {}).get("path_template")
+        if template:
+            root = path.resolve()
+            name = render_path(template, table, self.extension, (options or {}).get("batch_date"))
+            target = (root / name).resolve()
+            if not target.is_relative_to(root):
+                raise ValueError(f"path template {template!r} leaves the landing root")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            return target
         if path.is_dir() or uri.endswith(("/", "\\")):
             path.mkdir(parents=True, exist_ok=True)
             from shape.security.names import contained
@@ -36,8 +61,32 @@ class _FileSink:
         path.parent.mkdir(parents=True, exist_ok=True)
         return path
 
+    def open_table(
+        self, uri: str, table: str, schema: pa.Schema | None = None, **options: Any
+    ) -> Any:
+        """A streaming writer for ``table`` (``write_batch``, ``flush``, ``close``): files roll as
+        the options say (every batch is one file when neither threshold is given)."""
+        from shape.builtins.sinks._roll import RollingTableWriter
+        from shape.io.store import LocalStore
+
+        template = options.get("path_template") or DEFAULT_ROLL_TEMPLATE
+        return RollingTableWriter(
+            LocalStore(local_path(uri)), table, self, options, template=template
+        )
+
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
-        target = self._target(uri, table)
+        require_scheme(self, uri)
+        from shape.builtins.sinks._roll import wants_rolling
+
+        if wants_rolling(options):
+            rolling = self.open_table(uri, table, **options)
+            try:
+                rolling.write_all(batches)
+            except BaseException:
+                rolling.abort()
+                raise
+            return int(rolling.close(schema=options.get("schema")))
+        target = self._target(uri, table, options)
         rows = 0
         writer: Any = None
         try:
@@ -53,21 +102,27 @@ class _FileSink:
                 writer.close()
         return rows
 
-    def _open(self, target: Path, schema: pa.Schema, options: dict[str, Any]) -> Any:
+    def _open(self, target: Any, schema: pa.Schema, options: dict[str, Any]) -> Any:
+        """A writer for ``target``: a path, or an open binary file (rolling and cloud files)."""
         raise NotImplementedError
 
     def _write(self, writer: Any, batch: pa.RecordBatch) -> None:
         writer.write_batch(batch)
 
 
+def _sink_arg(target: Any) -> Any:
+    """A path as ``str``; an open file as it is."""
+    return target if hasattr(target, "write") else str(target)
+
+
 class CsvSink(_FileSink):
     name = "csv"
     extension = "csv"
 
-    def _open(self, target: Path, schema: pa.Schema, options: dict[str, Any]) -> Any:
+    def _open(self, target: Any, schema: pa.Schema, options: dict[str, Any]) -> Any:
         delimiter = options.get("delimiter", ",")
         return pacsv.CSVWriter(
-            str(target), schema, write_options=pacsv.WriteOptions(delimiter=delimiter)
+            _sink_arg(target), schema, write_options=pacsv.WriteOptions(delimiter=delimiter)
         )
 
 
@@ -75,7 +130,7 @@ class TsvSink(CsvSink):
     name = "tsv"
     extension = "tsv"
 
-    def _open(self, target: Path, schema: pa.Schema, options: dict[str, Any]) -> Any:
+    def _open(self, target: Any, schema: pa.Schema, options: dict[str, Any]) -> Any:
         return super()._open(target, schema, {**options, "delimiter": "\t"})
 
 
@@ -150,7 +205,7 @@ class ParquetSink(_FileSink):
     name = "parquet"
     extension = "parquet"
 
-    def open_native(self, target: Path, schema: pa.Schema, options: dict[str, Any]) -> Any:
+    def open_native(self, target: Any, schema: pa.Schema, options: dict[str, Any]) -> Any:
         """The native writer for ``target`` (``write_batch``, ``finish``, ``wait``, ``close``), or
         ``None`` when it cannot write this file (see ``_native_writer``); the caller then writes it
         through :meth:`write`. ``finish`` returns at once and the file is complete after ``wait``,
@@ -174,14 +229,15 @@ class ParquetSink(_FileSink):
         except ValueError:  # a type the native writer does not do
             return None
 
-    def _open(self, target: Path, schema: pa.Schema, options: dict[str, Any]) -> Any:
+    def _open(self, target: Any, schema: pa.Schema, options: dict[str, Any]) -> Any:
         # T-17: snappy, dictionary encoding on. The native writer encodes the row groups and
-        # columns of the file on several threads; pyarrow's writer (the twin) on one.
-        native = self.open_native(target, schema, options)
+        # columns of the file on several threads; pyarrow's writer (the twin) on one. An open
+        # file (rolling and cloud files) goes through pyarrow's writer.
+        native = None if hasattr(target, "write") else self.open_native(target, schema, options)
         if native is not None:
             return native
         writer = pq.ParquetWriter(
-            str(target),
+            _sink_arg(target),
             schema,
             compression=options.get("compression", "snappy"),
             use_dictionary=options.get("use_dictionary", True),
@@ -196,8 +252,8 @@ class IpcSink(_FileSink):
     name = "ipc"
     extension = "arrow"
 
-    def _open(self, target: Path, schema: pa.Schema, options: dict[str, Any]) -> Any:
-        return pa.ipc.new_file(str(target), schema)
+    def _open(self, target: Any, schema: pa.Schema, options: dict[str, Any]) -> Any:
+        return pa.ipc.new_file(_sink_arg(target), schema)
 
 
 def _json_default(value: Any) -> str:
@@ -208,8 +264,12 @@ def _json_default(value: Any) -> str:
 
 
 class _JsonlWriter:
-    def __init__(self, target: Path) -> None:
-        self._f = target.open("w", encoding="utf-8")
+    def __init__(self, target: Any) -> None:
+        self._binary = hasattr(target, "write")
+        if self._binary:
+            self._f: Any = io.TextIOWrapper(target, encoding="utf-8", newline="\n")
+        else:
+            self._f = Path(target).open("w", encoding="utf-8")
 
     def write_batch(self, batch: pa.RecordBatch) -> None:
         for row in batch.to_pylist():
@@ -219,12 +279,16 @@ class _JsonlWriter:
             self._f.write("\n")
 
     def close(self) -> None:
-        self._f.close()
+        if self._binary:  # the caller owns the file
+            self._f.flush()
+            self._f.detach()
+        else:
+            self._f.close()
 
 
 class JsonlSink(_FileSink):
     name = "jsonl"
     extension = "jsonl"
 
-    def _open(self, target: Path, schema: pa.Schema, options: dict[str, Any]) -> Any:
+    def _open(self, target: Any, schema: pa.Schema, options: dict[str, Any]) -> Any:
         return _JsonlWriter(target)

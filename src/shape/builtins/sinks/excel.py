@@ -7,13 +7,14 @@ longer table is refused instead of being truncated.
 from __future__ import annotations
 
 import datetime as dt
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.builtins.sources.files import local_path
+from shape.plugins.schemes import require_scheme
 
 MAX_SHEET_ROWS = 1_048_576
 SHEET_NAME_LIMIT = 31
@@ -30,8 +31,10 @@ def _cell(value: Any) -> Any:
 class ExcelSink:
     name = "excel"
     schemes = ("file",)
+    extension = "xlsx"
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+        require_scheme(self, uri)
         try:
             from openpyxl import Workbook
         except ImportError as exc:
@@ -71,6 +74,15 @@ class ExcelSink:
         finally:
             workbook.close()
         return rows
+
+    def write_workbook(self, uri: str, tables: Mapping[str, pa.Table], **options: Any) -> list[str]:
+        """Every table as a sheet of one workbook at ``uri``, with a ``_README`` sheet (see
+        ``shape.builtins.sinks.workbook``); returns the sheet names, in table order."""
+        from .workbook import write_workbook
+
+        path = local_path(uri)
+        sheets = write_workbook(path, tables, **options)
+        return list(sheets.values())
 
 
 def _save(workbook: Any, target: Path) -> None:

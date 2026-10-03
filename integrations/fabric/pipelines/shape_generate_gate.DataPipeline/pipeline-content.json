@@ -103,6 +103,10 @@
                 "type": "Expression"
               },
               "type": "string"
+            },
+            "_inlineInstallationEnabled": {
+              "value": true,
+              "type": "bool"
             }
           }
         }
@@ -170,6 +174,10 @@
                 "type": "Expression"
               },
               "type": "string"
+            },
+            "_inlineInstallationEnabled": {
+              "value": true,
+              "type": "bool"
             }
           }
         }

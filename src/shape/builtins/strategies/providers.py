@@ -36,6 +36,15 @@ PYSTR_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789"
 PYSTR_LENGTH = 12
 FAKER_POOL_ROWS = 50_000  # most values a faker pool holds
 
+# Identifier providers produce values that cannot belong to a real person unless the spec asks
+# (ISS-gen, owner issues 11 and 12): e-mail and URI hosts are the names RFC 2606 reserves, social
+# security numbers use the 9xx areas no one is assigned, and phone numbers are the fictional
+# 555-01xx lines. `"domains": "realistic"` and `"range": "assignable"` give the old, realistic
+# values (real mail providers, assignable numbers), which can collide with real people.
+RESERVED_DOMAINS = ("example.com", "example.org", "example.net")
+DOMAIN_MODES = ("reserved", "realistic")
+RANGE_MODES = ("reserved", "assignable")
+
 
 def _lines(raw: bytes) -> pa.Array:
     """The newline-terminated lines of ``raw`` (UTF-8) as a string array; text after the last
@@ -175,7 +184,46 @@ def _name(ctx: GenerationContext) -> pa.Array:
     )
 
 
-def _email(ctx: GenerationContext) -> pa.Array:
+def _ints(ctx: GenerationContext, label: str, low: int, high: int) -> npt.NDArray[np.int64]:
+    """Uniform integers in ``[low, high)``, one per row."""
+    return low + _pick(ctx, label, high - low)
+
+
+def _domains(spec: Mapping[str, Any], ctx: GenerationContext) -> str:
+    mode = str(spec.get("domains", "reserved"))
+    if mode not in DOMAIN_MODES:
+        raise StrategyError(
+            f"provider {_provider(spec)!r} takes domains {' or '.join(DOMAIN_MODES)}, "
+            f"not {mode!r} ({where(ctx)})"
+        )
+    return mode
+
+
+def _range_mode(spec: Mapping[str, Any], ctx: GenerationContext) -> str:
+    mode = str(spec.get("range", "reserved"))
+    if mode not in RANGE_MODES:
+        raise StrategyError(
+            f"provider {_provider(spec)!r} takes range {' or '.join(RANGE_MODES)}, "
+            f"not {mode!r} ({where(ctx)})"
+        )
+    return mode
+
+
+@cache
+def _reserved_domains() -> pa.Array:
+    return arrow_array(list(RESERVED_DOMAINS), type=pa.string())
+
+
+def _domain_piece(
+    ctx: GenerationContext, spec: Mapping[str, Any], name: str
+) -> kernel_ops.PoolPiece:
+    """The host of an e-mail or URI: the pool ``name`` with ``"domains": "realistic"``, else one of
+    the reserved names (the same draw: an entry picked uniformly per row)."""
+    realistic = _domains(spec, ctx) == "realistic"
+    return _pool_piece(ctx, "domain", pool(name) if realistic else _reserved_domains())
+
+
+def _email(ctx: GenerationContext, spec: Mapping[str, Any]) -> pa.Array:
     # The same row's first_name and last_name columns when the table has both.
     if "first_name" in ctx.columns and "last_name" in ctx.columns:
         names: list[Any] = [
@@ -193,7 +241,7 @@ def _email(ctx: GenerationContext) -> pa.Array:
         [
             *names,
             _int_piece(ctx, "suffix", 1, 999),
-            _pool_piece(ctx, "domain", pool("email_domains")),
+            _domain_piece(ctx, spec, "email_domains"),
         ],
     )
 
@@ -204,7 +252,14 @@ def _as_string(column: pa.Array) -> pa.Array:
     return column if pa.types.is_string(column.type) else pc.cast(column, pa.string())
 
 
-def _phone_number(ctx: GenerationContext) -> pa.Array:
+def _phone_number(ctx: GenerationContext, spec: Mapping[str, Any]) -> pa.Array:
+    if _range_mode(spec, ctx) == "reserved":
+        # (AAA) 555-0100 to 555-0199: the lines reserved for fiction
+        return _compose(
+            ctx,
+            ["(", ") 555-", ""],
+            [_int_piece(ctx, "area", 200, 999), _int_piece(ctx, "subscriber", 100, 200, 4)],
+        )
     return _compose(
         ctx,
         ["(", ") ", "-", ""],
@@ -216,13 +271,18 @@ def _phone_number(ctx: GenerationContext) -> pa.Array:
     )
 
 
-def _ssn(ctx: GenerationContext) -> pa.Array:
-    # AAA-GG-SSSS without the reserved area numbers 000, 666 and 900-999.
+def _ssn(ctx: GenerationContext, spec: Mapping[str, Any]) -> pa.Array:
+    # AAA-GG-SSSS. Reserved (default): area 900-999, which no one is assigned. Assignable: the
+    # areas the SSA can issue, without 000, 666 and 900-999.
+    if _range_mode(spec, ctx) == "reserved":
+        area = _int_piece(ctx, "area", 900, 1000, 3)
+    else:
+        area = _int_piece(ctx, "area", 1, 900, 3, (666, 665))
     return _compose(
         ctx,
         ["", "-", "-", ""],
         [
-            _int_piece(ctx, "area", 1, 900, 3, (666, 665)),
+            area,
             _int_piece(ctx, "group", 1, 100, 2),
             _int_piece(ctx, "serial", 1, 10_000, 4),
         ],
@@ -285,21 +345,23 @@ def _state_abbr(ctx: GenerationContext) -> pa.Array:
     return _from_pool(ctx, "state", "us_states")
 
 
-def _uri(ctx: GenerationContext) -> pa.Array:
+def _uri(ctx: GenerationContext, spec: Mapping[str, Any]) -> pa.Array:
     return _compose(
         ctx,
         ["https://", "/", ""],
         [
-            _pool_piece(ctx, "domain", pool("uri_domains")),
+            _domain_piece(ctx, spec, "uri_domains"),
             _pool_piece(ctx, "path", pool("uri_paths")),
         ],
     )
 
 
-def _company_email(ctx: GenerationContext) -> pa.Array:
+def _company_email(ctx: GenerationContext, spec: Mapping[str, Any]) -> pa.Array:
+    # `.example` is the top-level domain RFC 2606 reserves: it never resolves
+    tld = ".com" if _domains(spec, ctx) == "realistic" else ".example"
     return _compose(
         ctx,
-        ["", ".", "@", ".com"],
+        ["", ".", "@", tld],
         [
             _pool_piece(ctx, "first", _slugged_pool("first_names")),
             _pool_piece(ctx, "last", _slugged_pool("last_names")),
@@ -315,25 +377,62 @@ def _word(ctx: GenerationContext) -> pa.Array:
     )
 
 
-PROVIDERS: dict[str, Callable[[GenerationContext], pa.Array]] = {
-    "first_name": _first_name,
-    "last_name": _last_name,
-    "name": _name,
+_Provider = Callable[[GenerationContext, Mapping[str, Any]], pa.Array]
+
+
+def _plain(make: Callable[[GenerationContext], pa.Array]) -> _Provider:
+    return lambda ctx, spec: make(ctx)
+
+
+PROVIDERS: dict[str, _Provider] = {
+    "first_name": _plain(_first_name),
+    "last_name": _plain(_last_name),
+    "name": _plain(_name),
     "email": _email,
     "phone_number": _phone_number,
     "ssn": _ssn,
-    "company": _company,
-    "street_address": _street_address,
-    "sentence": _sentence,
-    "city": _city,
-    "state_abbr": _state_abbr,
+    "company": _plain(_company),
+    "street_address": _plain(_street_address),
+    "sentence": _plain(_sentence),
+    "city": _plain(_city),
+    "state_abbr": _plain(_state_abbr),
     "uri": _uri,
     "company_email": _company_email,
-    "ipv4": _ipv4,
-    "postcode": _postcode,
-    "zip_plus4": _zip_plus4,
-    "pystr": _word,
-    "word": _word,
+    "ipv4": _plain(_ipv4),
+    "postcode": _plain(_postcode),
+    "zip_plus4": _plain(_zip_plus4),
+    "pystr": _plain(_word),
+    "word": _plain(_word),
+}
+
+
+MAX_DIGITS = 18  # the widest zero-padded identifier (it must fit an int64)
+
+
+def _digit_width(spec: Mapping[str, Any]) -> int:
+    return max(1, min(int(spec.get("width", 8)), MAX_DIGITS))
+
+
+def _digits(spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
+    """Fixed-width digit text with leading zeros (ZIP codes, NDCs, member ids): ``spec['width']``
+    digits, drawn at random."""
+    width = _digit_width(spec)
+    numbers = _ints(ctx, "digits", 0, 10**width)
+    return kernel_ops.template_strings(["", ""], [(0, width)], [arrow_array(numbers)], ctx.n_rows)
+
+
+def _digit_ids(spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
+    """Fixed-width digit text counting up from 1 in row order, zero padded: unique identifiers."""
+    width = _digit_width(spec)
+    numbers = ctx.row_start + np.arange(1, ctx.n_rows + 1, dtype=np.int64)
+    if width < MAX_DIGITS:
+        numbers = numbers % 10**width
+    return kernel_ops.template_strings(["", ""], [(0, width)], [arrow_array(numbers)], ctx.n_rows)
+
+
+SPEC_PROVIDERS: dict[str, Callable[[Mapping[str, Any], GenerationContext], pa.Array]] = {
+    "digits": _digits,
+    "digit_ids": _digit_ids,
 }
 
 
@@ -366,20 +465,23 @@ class Native:
     ``name``, ``email``, ``phone_number``, ``ssn``, ``company``, ``street_address``, ``sentence``,
     ``city``, ``state_abbr``, ``uri``, ``company_email``, ``ipv4``, ``postcode``, ``zip_plus4``,
     ``pystr`` or
-    ``word`` (the default).
+    ``word`` (the default), or ``digits`` / ``digit_ids`` (``spec['width']`` zero-padded digits,
+    random or counting up).
     The column's ``max_length`` truncates."""
 
     name = "native"
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         provider = _provider(spec)
+        if provider in SPEC_PROVIDERS:
+            return SPEC_PROVIDERS[provider](spec, ctx)
         make = PROVIDERS.get(provider)
         if make is None:
             raise StrategyError(
                 f"native strategy does not handle provider {provider!r} for column {where(ctx)}; "
                 f"it serves {', '.join(sorted(PROVIDERS))}"
             )
-        return _truncate(make(ctx), ctx)
+        return _truncate(make(ctx, spec), ctx)
 
 
 @lru_cache(maxsize=16)
@@ -418,9 +520,11 @@ class Faker:
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         provider = _provider(spec)
+        if provider in SPEC_PROVIDERS:
+            return SPEC_PROVIDERS[provider](spec, ctx)
         make = PROVIDERS.get(provider)
         if make is not None:
-            return _truncate(make(ctx), ctx)
+            return _truncate(make(ctx, spec), ctx)
         engine = getattr(ctx, "engine", None)
         rows = engine.row_counts.get(ctx.table, FAKER_POOL_ROWS) if engine else FAKER_POOL_ROWS
         size = max(1, min(int(rows), FAKER_POOL_ROWS))

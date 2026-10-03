@@ -90,6 +90,29 @@ def find_secrets(text: str) -> list[str]:
 # --- values ------------------------------------------------------------------------------
 
 
+def readable_body(body: str) -> str:
+    """``body`` with the inline base64 parts of a Fabric item definition decoded.
+
+    A long base64 run looks like a storage key, so the scrubber would blank a notebook's payload
+    and the tape could no longer tell one notebook from another. The decoded text is what the
+    payload says (and the scrubber still reads it)."""
+    try:
+        doc = json.loads(body)
+        parts = doc["definition"]["parts"]
+    except (ValueError, KeyError, TypeError):
+        return body
+    if not isinstance(parts, list):
+        return body
+    for part in parts:
+        if isinstance(part, dict) and part.get("payloadType") == "InlineBase64":
+            try:
+                part["payloadType"] = "InlineText"
+                part["payload"] = base64.b64decode(part["payload"]).decode("utf-8")
+            except (ValueError, KeyError):
+                return body
+    return json.dumps(doc)
+
+
 def jsonable(value: Any) -> Any:
     """``value`` as plain JSON data, strings scrubbed; types JSON lacks become ``{"$type": ...}``
     objects so that equal values compare equal after a round trip."""
@@ -214,7 +237,7 @@ class TapeTransport:
             "method": method,
             "url": url,
             "headers": kept,
-            "body": body.decode("utf-8", "replace"),
+            "body": readable_body(body.decode("utf-8", "replace")),
         }
 
         def produce() -> dict[str, Any]:
@@ -223,6 +246,7 @@ class TapeTransport:
                 status, resp_headers, data = self._inner(method, url, headers, body, timeout)
             except Exception as exc:
                 return {"raises": type(exc).__name__, "message": str(exc)}
+            data = _hide_vault_value(url, data)
             return {
                 "status": status,
                 "headers": dict(resp_headers),
@@ -235,6 +259,21 @@ class TapeTransport:
                 response["raises"], RuntimeError
             )(response.get("message", ""))
         return int(response["status"]), dict(response["headers"]), response["body"].encode("utf-8")
+
+
+def _hide_vault_value(url: str, data: bytes) -> bytes:
+    """A Key Vault answer holds the secret itself: the tape keeps the shape of the answer, never
+    the value (the caller gets ``<redacted>`` in the recording as well, so both runs agree)."""
+    if ".vault.azure.net/secrets/" not in url:
+        return data
+    try:
+        doc = json.loads(data)
+    except ValueError:
+        return data
+    if isinstance(doc, dict) and "value" in doc:
+        doc["value"] = REDACTED
+        return json.dumps(doc).encode()
+    return data
 
 
 # --- ODBC --------------------------------------------------------------------------------

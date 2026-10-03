@@ -1,0 +1,651 @@
+{
+ "api": "1.0",
+ "groups": {
+  "shape.behaviors": {
+   "protocol": "Behavior",
+   "protocol_shape": {
+    "attributes": {
+     "attributes": "Sequence[str]",
+     "events": "Sequence[str]",
+     "name": "str",
+     "states": "Sequence[str]",
+     "version": "str"
+    },
+    "methods": {
+     "simulate": {
+      "params": [
+       {
+        "annotation": "int",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "population"
+       },
+       {
+        "annotation": "int",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "seed"
+       },
+       {
+        "annotation": "float",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "years"
+       }
+      ],
+      "returns": "pa.Table"
+     }
+    }
+   },
+   "types": {}
+  },
+  "shape.calendars": {
+   "protocol": "Calendar",
+   "protocol_shape": {
+    "attributes": {
+     "name": "str"
+    },
+    "methods": {
+     "lift": {
+      "params": [
+       {
+        "annotation": "date",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "start"
+       },
+       {
+        "annotation": "date",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "end"
+       }
+      ],
+      "returns": "pa.Array"
+     }
+    }
+   },
+   "types": {}
+  },
+  "shape.chaos": {
+   "protocol": "ChaosMutator",
+   "protocol_shape": {
+    "attributes": {
+     "name": "str"
+    },
+    "methods": {
+     "mutate": {
+      "params": [
+       {
+        "annotation": "pa.RecordBatch",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "batch"
+       },
+       {
+        "annotation": "int",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "seed"
+       }
+      ],
+      "returns": "tuple[pa.RecordBatch, ChaosReport]"
+     }
+    }
+   },
+   "types": {
+    "ChaosReport": {
+     "fields": [
+      {
+       "has_default": false,
+       "name": "mutator",
+       "type": "str"
+      },
+      {
+       "has_default": false,
+       "name": "rows_affected",
+       "type": "int"
+      },
+      {
+       "has_default": true,
+       "name": "details",
+       "type": "Mapping[str, Any]"
+      }
+     ],
+     "frozen": true
+    }
+   }
+  },
+  "shape.commands": {
+   "protocol": "Command",
+   "protocol_shape": {
+    "attributes": {
+     "help": "str",
+     "name": "str"
+    },
+    "methods": {
+     "configure": {
+      "params": [
+       {
+        "annotation": "Any",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "parser"
+       }
+      ],
+      "returns": "None"
+     },
+     "run": {
+      "params": [
+       {
+        "annotation": "Any",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "args"
+       }
+      ],
+      "returns": "int"
+     }
+    }
+   },
+   "types": {}
+  },
+  "shape.detectors": {
+   "protocol": "SemanticDetector",
+   "protocol_shape": {
+    "attributes": {
+     "name": "str"
+    },
+    "methods": {
+     "detect": {
+      "params": [
+       {
+        "annotation": "pa.Array",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "values"
+       },
+       {
+        "annotation": "str",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "column"
+       }
+      ],
+      "returns": "Detection | None"
+     }
+    }
+   },
+   "types": {
+    "Detection": {
+     "fields": [
+      {
+       "has_default": false,
+       "name": "label",
+       "type": "str"
+      },
+      {
+       "has_default": false,
+       "name": "confidence",
+       "type": "float"
+      }
+     ],
+     "frozen": true
+    }
+   }
+  },
+  "shape.distributions": {
+   "protocol": "Distribution",
+   "protocol_shape": {
+    "attributes": {
+     "name": "str"
+    },
+    "methods": {
+     "sample": {
+      "params": [
+       {
+        "annotation": "Mapping[str, float]",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "params"
+       },
+       {
+        "annotation": "GenerationContext",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "ctx"
+       }
+      ],
+      "returns": "pa.Array"
+     }
+    }
+   },
+   "types": {
+    "GenerationContext": {
+     "fields": [
+      {
+       "has_default": false,
+       "name": "seed",
+       "type": "int"
+      },
+      {
+       "has_default": false,
+       "name": "table",
+       "type": "str"
+      },
+      {
+       "has_default": false,
+       "name": "column",
+       "type": "str"
+      },
+      {
+       "has_default": false,
+       "name": "chunk",
+       "type": "int"
+      },
+      {
+       "has_default": false,
+       "name": "row_start",
+       "type": "int"
+      },
+      {
+       "has_default": false,
+       "name": "n_rows",
+       "type": "int"
+      },
+      {
+       "has_default": true,
+       "name": "columns",
+       "type": "Mapping[str, pa.Array]"
+      }
+     ],
+     "frozen": true
+    }
+   }
+  },
+  "shape.domains": {
+   "protocol": "Domain",
+   "protocol_shape": {
+    "attributes": {
+     "name": "str"
+    },
+    "methods": {
+     "definition": {
+      "params": [],
+      "returns": "DomainDefinition"
+     }
+    }
+   },
+   "types": {
+    "DomainDefinition": {
+     "fields": [
+      {
+       "has_default": false,
+       "name": "schema",
+       "type": "Mapping[str, Any]"
+      },
+      {
+       "has_default": true,
+       "name": "reference_data",
+       "type": "Mapping[str, pa.Table]"
+      },
+      {
+       "has_default": true,
+       "name": "profiles",
+       "type": "Mapping[str, Any]"
+      },
+      {
+       "has_default": true,
+       "name": "scale_presets",
+       "type": "Mapping[str, Mapping[str, int]]"
+      }
+     ],
+     "frozen": true
+    }
+   }
+  },
+  "shape.emitters": {
+   "protocol": "Emitter",
+   "protocol_shape": {
+    "attributes": {
+     "name": "str",
+     "schemes": "Sequence[str]"
+    },
+    "methods": {
+     "emit": {
+      "params": [
+       {
+        "annotation": "str",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "uri"
+       },
+       {
+        "annotation": "Iterable[pa.RecordBatch]",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "batches"
+       },
+       {
+        "annotation": "Any",
+        "default": null,
+        "kind": "VAR_KEYWORD",
+        "name": "options"
+       }
+      ],
+      "returns": "int"
+     }
+    }
+   },
+   "types": {}
+  },
+  "shape.fitters": {
+   "protocol": "DistributionFitter",
+   "protocol_shape": {
+    "attributes": {
+     "families": "Sequence[str]",
+     "name": "str"
+    },
+    "methods": {
+     "fit": {
+      "params": [
+       {
+        "annotation": "pa.Array",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "sample"
+       }
+      ],
+      "returns": "FitResult | None"
+     }
+    }
+   },
+   "types": {
+    "FitResult": {
+     "fields": [
+      {
+       "has_default": false,
+       "name": "family",
+       "type": "str"
+      },
+      {
+       "has_default": false,
+       "name": "params",
+       "type": "Mapping[str, float]"
+      },
+      {
+       "has_default": false,
+       "name": "ks",
+       "type": "float"
+      }
+     ],
+     "frozen": true
+    }
+   }
+  },
+  "shape.reports": {
+   "protocol": "ReportFormat",
+   "protocol_shape": {
+    "attributes": {
+     "extension": "str",
+     "name": "str"
+    },
+    "methods": {
+     "render": {
+      "params": [
+       {
+        "annotation": "Mapping[str, Any]",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "report"
+       }
+      ],
+      "returns": "bytes"
+     }
+    }
+   },
+   "types": {}
+  },
+  "shape.sinks": {
+   "protocol": "Sink",
+   "protocol_shape": {
+    "attributes": {
+     "name": "str",
+     "schemes": "Sequence[str]"
+    },
+    "methods": {
+     "write": {
+      "params": [
+       {
+        "annotation": "str",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "uri"
+       },
+       {
+        "annotation": "str",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "table"
+       },
+       {
+        "annotation": "Iterable[pa.RecordBatch]",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "batches"
+       },
+       {
+        "annotation": "Any",
+        "default": null,
+        "kind": "VAR_KEYWORD",
+        "name": "options"
+       }
+      ],
+      "returns": "int"
+     }
+    }
+   },
+   "types": {}
+  },
+  "shape.sources": {
+   "protocol": "Source",
+   "protocol_shape": {
+    "attributes": {
+     "name": "str",
+     "schemes": "Sequence[str]"
+    },
+    "methods": {
+     "can_open": {
+      "params": [
+       {
+        "annotation": "str",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "uri"
+       }
+      ],
+      "returns": "bool"
+     },
+     "read": {
+      "params": [
+       {
+        "annotation": "str",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "uri"
+       },
+       {
+        "annotation": "Any",
+        "default": null,
+        "kind": "VAR_KEYWORD",
+        "name": "options"
+       }
+      ],
+      "returns": "Iterator[pa.RecordBatch]"
+     },
+     "schema": {
+      "params": [
+       {
+        "annotation": "str",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "uri"
+       },
+       {
+        "annotation": "Any",
+        "default": null,
+        "kind": "VAR_KEYWORD",
+        "name": "options"
+       }
+      ],
+      "returns": "pa.Schema"
+     }
+    }
+   },
+   "types": {}
+  },
+  "shape.strategies": {
+   "protocol": "Strategy",
+   "protocol_shape": {
+    "attributes": {
+     "name": "str"
+    },
+    "methods": {
+     "generate": {
+      "params": [
+       {
+        "annotation": "Mapping[str, Any]",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "spec"
+       },
+       {
+        "annotation": "GenerationContext",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "ctx"
+       }
+      ],
+      "returns": "pa.Array"
+     }
+    }
+   },
+   "types": {
+    "GenerationContext": {
+     "fields": [
+      {
+       "has_default": false,
+       "name": "seed",
+       "type": "int"
+      },
+      {
+       "has_default": false,
+       "name": "table",
+       "type": "str"
+      },
+      {
+       "has_default": false,
+       "name": "column",
+       "type": "str"
+      },
+      {
+       "has_default": false,
+       "name": "chunk",
+       "type": "int"
+      },
+      {
+       "has_default": false,
+       "name": "row_start",
+       "type": "int"
+      },
+      {
+       "has_default": false,
+       "name": "n_rows",
+       "type": "int"
+      },
+      {
+       "has_default": true,
+       "name": "columns",
+       "type": "Mapping[str, pa.Array]"
+      }
+     ],
+     "frozen": true
+    }
+   }
+  },
+  "shape.stream_sources": {
+   "protocol": "StreamSource",
+   "protocol_shape": {
+    "attributes": {
+     "name": "str",
+     "schemes": "Sequence[str]"
+    },
+    "methods": {
+     "read": {
+      "params": [
+       {
+        "annotation": "str",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "uri"
+       },
+       {
+        "annotation": "StreamOffset | None",
+        "default": "None",
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "start"
+       },
+       {
+        "annotation": "Any",
+        "default": null,
+        "kind": "VAR_KEYWORD",
+        "name": "options"
+       }
+      ],
+      "returns": "Iterator[tuple[StreamOffset, pa.RecordBatch]]"
+     }
+    }
+   },
+   "types": {
+    "StreamOffset": {
+     "fields": [
+      {
+       "has_default": false,
+       "name": "value",
+       "type": "Mapping[str, Any]"
+      }
+     ],
+     "frozen": true
+    }
+   }
+  },
+  "shape.transforms": {
+   "protocol": "Transform",
+   "protocol_shape": {
+    "attributes": {
+     "name": "str"
+    },
+    "methods": {
+     "apply": {
+      "params": [
+       {
+        "annotation": "Mapping[str, pa.Table]",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "tables"
+       },
+       {
+        "annotation": "Any",
+        "default": null,
+        "kind": "VAR_KEYWORD",
+        "name": "options"
+       }
+      ],
+      "returns": "dict[str, pa.Table]"
+     }
+    }
+   },
+   "types": {}
+  }
+ }
+}

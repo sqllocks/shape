@@ -1,0 +1,169 @@
+{
+  "format": "shape-behavior/1",
+  "name": "equipment_maintenance",
+  "initial": "start",
+  "remarks": [
+    "Machines run, are inspected every 90 days, break down, are repaired, and are replaced after three breakdowns. Written from scratch for Shape."
+  ],
+  "population_defaults": {
+    "arrival": {
+      "kind": "uniform",
+      "days": 180
+    },
+    "age_at_start": {
+      "kind": "uniform",
+      "low": 0,
+      "high": 8
+    }
+  },
+  "attributes": {
+    "criticality": {
+      "kind": "categorical",
+      "values": {
+        "low": 0.5,
+        "medium": 0.35,
+        "high": 0.15
+      }
+    },
+    "failures": {
+      "kind": "constant",
+      "value": 0
+    }
+  },
+  "states": {
+    "start": {
+      "type": "initial",
+      "transition": {
+        "direct": "run"
+      }
+    },
+    "run": {
+      "type": "delay",
+      "delay": {
+        "kind": "exact",
+        "value": 90,
+        "unit": "days"
+      },
+      "transition": {
+        "direct": "inspect"
+      }
+    },
+    "inspect": {
+      "type": "observation",
+      "codes": [
+        {
+          "system": "example",
+          "code": "vibration",
+          "display": "Vibration"
+        }
+      ],
+      "unit": "mm/s",
+      "range": {
+        "low": 0.5,
+        "high": 9.0
+      },
+      "transition": {
+        "complex": [
+          {
+            "if": {
+              "type": "attribute",
+              "attribute": "criticality",
+              "op": "==",
+              "value": "high"
+            },
+            "distributed": [
+              {
+                "p": 0.2,
+                "to": "breakdown"
+              },
+              {
+                "p": 0.8,
+                "to": "run"
+              }
+            ]
+          },
+          {
+            "distributed": [
+              {
+                "p": 0.1,
+                "to": "breakdown"
+              },
+              {
+                "p": 0.9,
+                "to": "run"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "breakdown": {
+      "type": "event",
+      "event": "breakdown",
+      "text_from": "criticality",
+      "transition": {
+        "direct": "count"
+      }
+    },
+    "count": {
+      "type": "counter",
+      "attribute": "failures",
+      "transition": {
+        "direct": "decide"
+      }
+    },
+    "decide": {
+      "type": "simple",
+      "transition": {
+        "conditional": [
+          {
+            "if": {
+              "type": "attribute",
+              "attribute": "failures",
+              "op": ">=",
+              "value": 3
+            },
+            "to": "replace"
+          },
+          {
+            "to": "repair"
+          }
+        ]
+      }
+    },
+    "repair": {
+      "type": "delay",
+      "delay": {
+        "kind": "lognormal",
+        "mu": 1.0,
+        "sigma": 0.5,
+        "unit": "days"
+      },
+      "transition": {
+        "direct": "repaired"
+      }
+    },
+    "repaired": {
+      "type": "event",
+      "event": "repair_completed",
+      "transition": {
+        "direct": "run"
+      }
+    },
+    "replace": {
+      "type": "event",
+      "event": "unit_replaced",
+      "transition": {
+        "direct": "reset"
+      }
+    },
+    "reset": {
+      "type": "set_attribute",
+      "attribute": "failures",
+      "value": 0,
+      "transition": {
+        "direct": "run"
+      }
+    }
+  }
+}

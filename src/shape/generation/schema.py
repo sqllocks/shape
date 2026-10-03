@@ -18,12 +18,14 @@ import dataclasses
 import hashlib
 import json
 import os
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field, is_dataclass
 from functools import cache
 from importlib import resources
 from typing import Any
 
+from shape import compat
 from shape.errors import ShapeSchemaError
+from shape.generation.spec_keys import unknown_keys
 from shape.schemacheck import validate as _validate_document
 from shape.security.names import is_safe_name
 
@@ -53,13 +55,36 @@ STRATEGY_REQUIRED_KEYS: dict[str, frozenset[str]] = {
     "first_per_parent": frozenset({"parent_column"}),
     "record_sample": frozenset({"dataset", "field"}),
     "record_field": frozenset({"dataset", "field"}),
+    "conditional_table": frozenset({"source_column", "table", "values"}),
+    "hierarchy": frozenset({"dataset", "field", "levels"}),
+    "hierarchy_field": frozenset({"dataset", "field"}),
+    "locale": frozenset({"locale", "provider"}),
     "scd2": frozenset({"role", "business_key"}),
     "composite_foreign_key": frozenset({"ref_table", "ref_columns"}),
     "composite_fk_field": frozenset({"source_column", "ref_column"}),
     "native": frozenset(),
+    "address": frozenset(),
+    "bootstrap": frozenset({"dataset", "field"}),
+    "constant": frozenset({"value"}),
+    "choice": frozenset({"values"}),
+    "empirical": frozenset({"quantiles"}),
+    "normal": frozenset({"mean", "stddev"}),
+    "uniform": frozenset({"low", "high"}),
 }
 
 MODES = ("3nf", "star")
+
+
+def _plain_json(value: Any) -> Any:
+    """A copy of ``value`` made of JSON types only. A dataclass (an ``AddressReference`` or a
+    ``Location`` row of an address reference) becomes a dict, as a schema file would hold it."""
+
+    def default(obj: Any) -> Any:
+        if is_dataclass(obj) and not isinstance(obj, type):
+            return asdict(obj)
+        raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+    return json.loads(json.dumps(value, default=default))
 
 
 class GenSchemaError(ShapeSchemaError):
@@ -207,6 +232,8 @@ class GenSchema:
     business_rules: list[BusinessRule] = field(default_factory=list)
     generation: Generation = field(default_factory=Generation)
     correlated_columns: dict[str, list[list[Any]]] = field(default_factory=dict)
+    # ``x_`` fields a newer release or a tool wrote: ignored, and written back as read.
+    extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
 
     # ---- structure ----------------------------------------------------------------------
 
@@ -227,8 +254,12 @@ class GenSchema:
 
     def to_dict(self) -> dict[str, Any]:
         """The JSON document (``generation-schema-v1.json``). Round-trips through
-        :meth:`from_dict`."""
-        return {
+        :meth:`from_dict`. It is written without ``format``, ``version``, ``shape_version`` and
+        ``min_shape_version``: ``shape from-ddl`` and the schema dumps are pinned equal to the
+        baseline's file by the parity harnesses (``ddl_1to1`` and ``schema_import`` under
+        ``benchmarks/``), so the declaration waits for the owner's decision recorded in
+        ``docs/plans/lane_status/W1-01.md``. Readers already accept it."""
+        document = {
             "schema_version": SCHEMA_VERSION,
             "model": {
                 "name": self.model.name,
@@ -293,6 +324,7 @@ class GenSchema:
             },
             "correlated_columns": json.loads(json.dumps(self.correlated_columns)),
         }
+        return {**document, **{k: v for k, v in self.extra.items() if k not in document}}
 
     def clone(self) -> GenSchema:
         """A deep copy: nothing mutable is shared with ``self`` (about five times faster than
@@ -303,20 +335,28 @@ class GenSchema:
     @classmethod
     def from_dict(cls, doc: Any, *, validated: bool = False) -> GenSchema:
         """Parse a document; :class:`GenSchemaError` lists the first problems if it does not
-        follow the JSON Schema.
+        follow the JSON Schema. A newer version than this release reads is refused with the
+        minimum release that reads it; ``x_`` fields are kept in ``extra``.
 
         ``validated=True`` is for a document the caller has already checked against
-        ``generation-schema-v1.json`` (a packaged domain whose content digest is on record, see
-        ``shape_domains._packaged``) and that holds only JSON types: the check is skipped and the
-        generators are copied without a JSON round trip. Documents of unknown origin keep the
-        default and are checked."""
+        ``generation-schema-v1.json`` (a packaged domain whose content digest its plugin has on
+        record, ``DomainDefinition.validated``) and that holds only JSON types: the check is
+        skipped and the generators are copied without a JSON round trip. Documents of unknown
+        origin keep the default and are checked."""
+        extra: dict[str, Any] = {}
+        if isinstance(doc, dict):
+            compat.check_format("generation-schema", doc, error=GenSchemaError)
+            version = compat.check_readable("generation-schema", doc, error=GenSchemaError)
+            extra = {k: v for k, v in doc.items() if isinstance(k, str) and k.startswith("x_")}
+            doc = {k: v for k, v in doc.items() if k not in extra}
+            doc.setdefault("schema_version", version)
         if not validated:
             problems = schema_problems(doc)
             if problems:
                 more = f" (+{len(problems) - 5} more)" if len(problems) > 5 else ""
                 raise GenSchemaError("; ".join(problems[:5]) + more)
-        detach: Any = _clone if validated else _json_copy
-        m, g = doc["model"], doc["generation"]
+        detach: Any = _clone if validated else _plain_json
+        m, g = doc["model"], doc.get("generation", {})
         model = Model(
             name=m["name"],
             description=m.get("description", ""),
@@ -388,6 +428,7 @@ class GenSchema:
             correlated_columns={
                 k: [list(p) for p in v] for k, v in doc.get("correlated_columns", {}).items()
             },
+            extra=extra,
         )
 
     # ---- semantics ----------------------------------------------------------------------
@@ -529,6 +570,8 @@ class GenSchema:
                         out.append(
                             Issue("warning", f"Strategy '{c.strategy}' expects key '{key}'", where)
                         )
+                for _, message in unknown_keys(c.strategy, c.generator):
+                    out.append(Issue("warning", message, where))
         return out
 
 
@@ -563,10 +606,6 @@ def json_schema_digest() -> str:
 
 _ATOMS = (str, int, float, bool, type(None))
 _DATACLASS_FIELDS: dict[type, tuple[str, ...] | None] = {}
-
-
-def _json_copy(value: Any) -> Any:
-    return json.loads(json.dumps(value))
 
 
 def _clone(value: Any) -> Any:

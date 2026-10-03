@@ -1,0 +1,273 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shape-as-code.org/schema/1.0/shape-project-v1.json",
+  "title": "Shape project file (shape.yml), version 1",
+  "description": "The settings of a Shape project: named sources, a baseline per source, drift thresholds and ignore lists per column, validation gates with their modes (observe or enforce), and column owners and annotations. The file is YAML (JSON is YAML, so a JSON document works too). Rules the schema language cannot state are enforced by `shape project validate`: source names are letters, digits, . _ - (at most 128, starting with a letter or digit); strings must not be empty; `window` is required for and only valid with rolling_window; a pinned baseline has exactly one of `artifact` or `ref`; gate names are those of `shape verify`.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "sources"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "shape-project"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "The format version. A file with a newer version than the installed Shape understands is refused."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sources": {
+      "type": "object",
+      "description": "Source name to source. Names are also the default registry name of the source's baselines.",
+      "additionalProperties": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "gates": {
+      "type": "object",
+      "description": "Gate name to its mode. A gate that is not listed is enforced.",
+      "additionalProperties": {
+        "$ref": "#/$defs/gate"
+      }
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A file, folder, glob, Delta table or URI. Relative paths are relative to the folder holding shape.yml."
+        },
+        "dataset": {
+          "type": "boolean",
+          "description": "The path is a folder of table files: one table per file."
+        },
+        "contract": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The contract `shape check` uses for this source."
+        },
+        "baseline": {
+          "$ref": "#/$defs/baseline"
+        },
+        "thresholds": {
+          "$ref": "#/$defs/thresholds"
+        },
+        "ignore": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Columns left out of the drift comparison (a name, table.column or a glob)."
+        },
+        "columns": {
+          "type": "object",
+          "description": "Column name, table.column or glob to its settings.",
+          "additionalProperties": {
+            "$ref": "#/$defs/column"
+          }
+        }
+      }
+    },
+    "baseline": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "previous_run",
+            "same_weekday",
+            "rolling_window",
+            "month_end",
+            "pinned"
+          ]
+        },
+        "registry": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The registry folder (`shape registry`). Default: shapes/registry."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The name the baselines are committed under. Default: the source's name."
+        },
+        "window": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "rolling_window only: how many earlier runs."
+        },
+        "artifact": {
+          "type": "string",
+          "minLength": 1,
+          "description": "pinned only: a .shape file."
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1,
+          "description": "pinned only: a registry ref, tag or content id."
+        }
+      }
+    },
+    "thresholds": {
+      "type": "object",
+      "description": "Drift thresholds by name (docs/DRIFT.md). Thresholds are only ever added within version 1 (dependency_confidence through row_count_ratio_min came with the drift engine's later comparisons), so a file that was valid stays valid.",
+      "additionalProperties": false,
+      "properties": {
+        "null_rate": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cardinality_ratio_max": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cardinality_ratio_min": {
+          "type": "number",
+          "minimum": 0
+        },
+        "mean_shift_std": {
+          "type": "number",
+          "minimum": 0
+        },
+        "min_severity": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "category_tvd": {
+          "type": "number",
+          "minimum": 0
+        },
+        "true_rate": {
+          "type": "number",
+          "minimum": 0
+        },
+        "std_ratio_max": {
+          "type": "number",
+          "minimum": 0
+        },
+        "std_ratio_min": {
+          "type": "number",
+          "minimum": 0
+        },
+        "ks_distance": {
+          "type": "number",
+          "minimum": 0
+        },
+        "range_margin_std": {
+          "type": "number",
+          "minimum": 0
+        },
+        "length_ratio": {
+          "type": "number",
+          "minimum": 0
+        },
+        "outlier_rate": {
+          "type": "number",
+          "minimum": 0
+        },
+        "uniqueness_rate": {
+          "type": "number",
+          "minimum": 0
+        },
+        "temporal_tvd": {
+          "type": "number",
+          "minimum": 0
+        },
+        "min_rows": {
+          "type": "number",
+          "minimum": 0
+        },
+        "dependency_confidence": {
+          "type": "number",
+          "minimum": 0
+        },
+        "placeholder_share": {
+          "type": "number",
+          "minimum": 0
+        },
+        "implausible_rate": {
+          "type": "number",
+          "minimum": 0
+        },
+        "association_shift": {
+          "type": "number",
+          "minimum": 0
+        },
+        "reference_match_rate": {
+          "type": "number",
+          "minimum": 0
+        },
+        "row_count_ratio_max": {
+          "type": "number",
+          "minimum": 0
+        },
+        "row_count_ratio_min": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "column": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "thresholds": {
+          "$ref": "#/$defs/thresholds"
+        },
+        "ignore": {
+          "type": "boolean"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          }
+        }
+      }
+    },
+    "gate": {
+      "type": "object",
+      "required": [
+        "mode"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "observe",
+            "enforce"
+          ]
+        }
+      }
+    }
+  }
+}

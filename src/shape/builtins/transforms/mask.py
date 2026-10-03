@@ -46,6 +46,7 @@ class MaskConfig:
     """
 
     seed: int = 42
+    key: bytes | None = None  # keyed mode: see docs/MASK.md ("Keyed masking")
     pii_columns: Mapping[str, str] = field(default_factory=dict)
     exclude_columns: tuple[str, ...] = ()
 
@@ -134,6 +135,35 @@ def _detect(
     return None
 
 
+# Types masked per value, by the public masking API, when a key is given: type -> (kind, options,
+# whether two different originals must get different masks).
+_KEYED_KINDS: dict[str, tuple[str, dict[str, Any], bool]] = {
+    "email": ("email", {}, True),
+    "phone": ("phone", {}, True),
+    "first_name": ("name", {"part": "first"}, False),
+    "last_name": ("name", {"part": "last"}, False),
+    "name": ("name", {}, False),
+    "ssn": ("identifier", {}, True),
+    "zip": ("identifier", {}, False),
+    "date_of_birth": ("date", {}, False),
+}
+
+
+def _keyed_replacements(masker: Any, type_name: str, ordered: list[str]) -> list[str]:
+    kind, options, unique = _KEYED_KINDS[type_name]
+    try:
+        new = [str(masker.mask(kind, v, **options)) for v in ordered]
+    except ValueError as exc:
+        raise MaskError(str(exc)) from exc
+    if unique:
+        if len(set(new)) != len(new) or not set(new).isdisjoint(ordered):
+            raise MaskError(
+                f"keyed masking of {type_name} would merge distinct values or reuse an original; "
+                "the value space is too small"
+            )
+    return new
+
+
 def _distinct_text(column: pa.ChunkedArray) -> list[str]:
     values = pc.unique(pc.drop_null(column.cast(pa.string())))
     return sorted(values.to_pylist())
@@ -208,6 +238,14 @@ def mask_tables(
     if isinstance(tables, pa.Table):
         raise TypeError("mask_tables needs a mapping of table name to table, not one table")
     cfg = config or MaskConfig()
+    masker: Any = None
+    if cfg.key is not None:
+        from shape.masking import Masker, MaskingKeyError
+
+        try:
+            masker = Masker(cfg.key)
+        except MaskingKeyError as exc:
+            raise MaskError(str(exc)) from exc
     infos = _column_infos(tables, profile)
 
     kinds: dict[str, dict[str, str]] = {}
@@ -241,6 +279,9 @@ def mask_tables(
                 if _compatible(parent_type, kinds[tname][cname], table.column(cname)):
                     types[tname][cname] = parent_type
 
+    def seed_of(label: str) -> int:
+        return cfg.seed if masker is None else int(masker._derive_seed(label))
+
     # One mapping per type, from all the original values of that type in all the tables.
     maps: dict[str, tuple[pa.Array, pa.Array]] = {}
     for type_name in mv.TYPES:
@@ -257,8 +298,12 @@ def mask_tables(
         if not originals:
             continue
         ordered = sorted(originals)
+        if masker is not None and type_name in _KEYED_KINDS:
+            new = _keyed_replacements(masker, type_name, ordered)
+            maps[type_name] = (pa.array(ordered, pa.string()), pa.array(new, pa.string()))
+            continue
         try:
-            new = mv.replacements(type_name, ordered, _seed_for(cfg.seed, type_name))
+            new = mv.replacements(type_name, ordered, _seed_for(seed_of(type_name), type_name))
         except ValueError as exc:
             raise MaskError(str(exc)) from exc
         maps[type_name] = (pa.array(ordered, pa.string()), pa.array(new, pa.string()))
@@ -278,9 +323,13 @@ def mask_tables(
             column = table.column(cname)
             label = f"{tname}.{cname}"
             if kind in ("float", "float-text"):
-                new_col = _mask_floats(column, _seed_for(cfg.seed, label), kind == "float-text")
+                new_col = _mask_floats(
+                    column, _seed_for(seed_of(label), label), kind == "float-text"
+                )
+            elif kind == "temporal" and masker is not None:
+                new_col = masker.mask_column("date", column)
             elif kind == "temporal":
-                new_col = _mask_temporal(column, _seed_for(cfg.seed, label))
+                new_col = _mask_temporal(column, _seed_for(seed_of(label), label))
             else:
                 if kind_name not in maps:  # no values at all (an empty or all-null column)
                     continue
@@ -326,7 +375,9 @@ def _column_infos(
 
 
 class Mask:
-    """The ``mask`` transform: ``apply(tables, seed=42, exclude=(), pii={}, profile=None)``.
+    """The ``mask`` transform.
+
+    ``apply(tables, seed=42, exclude=(), pii={}, profile=None, key=None)``
 
     ``mask`` takes the same options and returns the :class:`MaskResult` (which columns were masked,
     and as what), where ``apply`` returns only the tables."""
@@ -334,12 +385,13 @@ class Mask:
     name = "mask"
 
     def mask(self, tables: Mapping[str, pa.Table], **options: Any) -> MaskResult:
-        known = {"seed", "exclude", "pii", "profile"}
+        known = {"seed", "exclude", "pii", "profile", "key"}
         unknown = sorted(set(options) - known)
         if unknown:
             raise TypeError(f"unknown mask option(s): {', '.join(unknown)}")
         config = MaskConfig(
             seed=int(options.get("seed", 42)),
+            key=options.get("key"),
             pii_columns=dict(options.get("pii") or {}),
             exclude_columns=tuple(options.get("exclude") or ()),
         )

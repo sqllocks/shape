@@ -1,0 +1,346 @@
+Spindle composite_telecom_bundle (seed 42) vs shape (seed 1042) - scale=small  (baseline = max distance of Spindle seeds [43, 44, 45, 46] to Spindle seed 42)
+table order identical: True
+
+table.column                       kind        type         null s/i       dist  baseline     tol  vocab  verdict
+-- telecom_plan: rows 20 / 20  cols identical+ordered=True  types identical=True
+telecom_plan.plan_id               numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.6165         EQUIVALENT
+telecom_plan.plan_name             categorical ok    0.0000/0.0000 TVD  0.4500    0.6000  1.9298 1.0000  EQUIVALENT
+telecom_plan.plan_type             categorical ok    0.0000/0.0000 TVD  0.4000    0.4000  1.0705 1.0000  EQUIVALENT
+telecom_plan.monthly_rate          numeric     ok    0.0000/0.0000  KS  0.3000    0.3000  0.6165         EQUIVALENT
+telecom_plan.data_limit_gb         categorical ok    0.0000/0.0000 TVD  0.1500    0.3000  1.1968 1.0000  EQUIVALENT
+telecom_plan.talk_minutes          categorical ok    0.0000/0.0000 TVD  0.2500    0.2500  0.9271 1.0000  EQUIVALENT
+-- telecom_device_model: rows 40 / 40  cols identical+ordered=True  types identical=True
+telecom_device_model.model_id      numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.4359         EQUIVALENT
+telecom_device_model.model_name    categorical ok    0.0000/0.0000 TVD  0.4250    0.6000  1.7344 1.0000  EQUIVALENT
+telecom_device_model.manufacturer  categorical ok    0.0000/0.0000 TVD  0.3000    0.2000  0.8463 1.0000  EQUIVALENT
+telecom_device_model.device_type   categorical ok    0.0000/0.0000 TVD  0.0500    0.1000  0.7569 1.0000  EQUIVALENT
+telecom_device_model.retail_price  numeric     ok    0.0000/0.0000  KS  0.3000    0.3000  0.4520         EQUIVALENT
+-- telecom_subscriber: rows 2,000 / 2,000  cols identical+ordered=True  types identical=True
+telecom_subscriber.subscriber_id   numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0616         EQUIVALENT
+telecom_subscriber.shared_person_financial_customer_id numeric     ok    0.0000/0.0000  KS  0.0320    0.0455  0.0702         EQUIVALENT
+telecom_subscriber.first_name      categorical ok    0.0000/0.0000 |dR-1|  0.0079    0.0079  0.0200 1.0000  EQUIVALENT
+telecom_subscriber.last_name       categorical ok    0.0000/0.0000 |dR-1|  0.0060    0.0103  0.0200 1.0000  EQUIVALENT
+telecom_subscriber.email           categorical ok    0.0450/0.0525 |dR-1|  0.0079    0.0178  0.0267 1.0000  EQUIVALENT
+telecom_subscriber.phone           categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+telecom_subscriber.address_city    categorical ok    0.0000/0.0000 |dR-1|  0.0222    0.0407  0.0610 1.0000  EQUIVALENT
+telecom_subscriber.account_status  categorical ok    0.0000/0.0000 TVD  0.0135    0.0180  0.0927 1.0000  EQUIVALENT
+telecom_subscriber.credit_class    categorical ok    0.0000/0.0000 TVD  0.0230    0.0345  0.1070 1.0000  EQUIVALENT
+telecom_subscriber.signup_date     datetime    ok    0.0000/0.0000  KS  0.0315    0.0350  0.0616         EQUIVALENT
+telecom_subscriber.address_state   categorical ok    0.0000/0.0000 TVD  0.0850    0.0995  0.3785 1.0000  EQUIVALENT
+telecom_subscriber.address_zip     categorical ok    0.0000/0.0000 |dR-1|  0.0041    0.0097  0.0200 1.0000  EQUIVALENT
+-- telecom_service_line: rows 3,600 / 3,600  cols identical+ordered=True  types identical=True
+telecom_service_line.line_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0459         EQUIVALENT
+telecom_service_line.subscriber_id numeric     ok    0.0000/0.0000  KS  0.0158    0.0186  0.0459         EQUIVALENT
+telecom_service_line.plan_id       numeric     ok    0.0000/0.0000  KS  0.0158    0.0258  0.0459         EQUIVALENT
+telecom_service_line.device_model_id numeric     ok    0.0000/0.0000  KS  0.0131    0.0294  0.0462         EQUIVALENT
+telecom_service_line.phone_number  categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+telecom_service_line.activation_date datetime    ok    0.0000/0.0000  KS  0.0108    0.0175  0.0459         EQUIVALENT
+telecom_service_line.status        categorical ok    0.0000/0.0000 TVD  0.0036    0.0239  0.0691 1.0000  EQUIVALENT
+telecom_service_line.is_primary    categorical ok    0.0000/0.0000 TVD  0.0053    0.0136  0.0564 1.0000  EQUIVALENT
+-- telecom_usage_record: rows 108,000 / 108,000  cols identical+ordered=True  types identical=True
+telecom_usage_record.record_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0084         EQUIVALENT
+telecom_usage_record.line_id       numeric     ok    0.0000/0.0000  KS  0.0043    0.0039  0.0084         EQUIVALENT
+telecom_usage_record.record_date   datetime    ok    0.0000/0.0000  KS  0.0030    0.0046  0.0088         EQUIVALENT
+telecom_usage_record.record_type   categorical ok    0.0000/0.0000 TVD  0.0020    0.0047  0.0146 1.0000  EQUIVALENT
+telecom_usage_record.duration_seconds numeric     ok    0.7016/0.6990  KS  0.0087    0.0096  0.0164         EQUIVALENT
+telecom_usage_record.data_mb       numeric     ok    0.5028/0.4994  KS  0.0096    0.0087  0.0150         EQUIVALENT
+telecom_usage_record.destination   categorical ok    0.4484/0.4477 |dR-1|  0.0013    0.0073  0.0200 1.0000  EQUIVALENT
+-- telecom_billing: rows 12,000 / 12,000  cols identical+ordered=True  types identical=True
+telecom_billing.bill_id            numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0252         EQUIVALENT
+telecom_billing.subscriber_id      numeric     ok    0.0000/0.0000  KS  0.0084    0.0159  0.0259         EQUIVALENT
+telecom_billing.billing_period_start datetime    ok    0.0000/0.0000  KS  0.0139    0.0179  0.0289         EQUIVALENT
+telecom_billing.total_amount       numeric     ok    0.0000/0.0000  KS  0.0087    0.0159  0.0259         EQUIVALENT
+telecom_billing.payment_status     categorical ok    0.0000/0.0000 TVD  0.0052    0.0105  0.0437 1.0000  EQUIVALENT
+telecom_billing.billing_period_end datetime    ok    0.0000/0.0000  KS  0.0139    0.0179  0.0289         EQUIVALENT
+telecom_billing.due_date           datetime    ok    0.0000/0.0000  KS  0.0139    0.0179  0.0289         EQUIVALENT
+-- telecom_payment: rows 12,000 / 12,000  cols identical+ordered=True  types identical=True
+telecom_payment.payment_id         numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0252         EQUIVALENT
+telecom_payment.bill_id            numeric     ok    0.0000/0.0000  KS  0.0217    0.0151  0.0252         EQUIVALENT
+telecom_payment.payment_date       datetime    ok    0.0000/0.0000  KS  0.0095    0.0162  0.0262         EQUIVALENT
+telecom_payment.amount             numeric     ok    0.0000/0.0000  KS  0.0113    0.0169  0.0274         EQUIVALENT
+telecom_payment.payment_method     categorical ok    0.0000/0.0000 TVD  0.0087    0.0109  0.0489 1.0000  EQUIVALENT
+-- telecom_network_event: rows 7,200 / 7,200  cols identical+ordered=True  types identical=True
+telecom_network_event.event_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0325         EQUIVALENT
+telecom_network_event.line_id      numeric     ok    0.0000/0.0000  KS  0.0124    0.0122  0.0325         EQUIVALENT
+telecom_network_event.event_type   categorical ok    0.0000/0.0000 TVD  0.0293    0.0278  0.1093 1.0000  EQUIVALENT
+telecom_network_event.event_timestamp datetime    ok    0.0000/0.0000  KS  0.0118    0.0160  0.0325         EQUIVALENT
+telecom_network_event.cell_tower_id categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+telecom_network_event.signal_strength_dbm numeric     ok    0.0000/0.0000  KS  0.0193    0.0261  0.0412         EQUIVALENT
+-- telecom_churn_indicator: rows 2,000 / 2,000  cols identical+ordered=True  types identical=True
+telecom_churn_indicator.indicator_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0616         EQUIVALENT
+telecom_churn_indicator.subscriber_id numeric     ok    0.0000/0.0000  KS  0.0240    0.0405  0.0627         EQUIVALENT
+telecom_churn_indicator.assessment_date datetime    ok    0.0000/0.0000  KS  0.0395    0.0415  0.0642         EQUIVALENT
+telecom_churn_indicator.churn_score numeric     ok    0.0000/0.0000  KS  0.0320    0.0370  0.0616         EQUIVALENT
+telecom_churn_indicator.risk_level categorical ok    0.0000/0.0000 TVD  0.0450    0.0280  0.1070 1.0000  EQUIVALENT
+telecom_churn_indicator.primary_factor categorical ok    0.0000/0.0000 TVD  0.0160    0.0275  0.1197 1.0000  EQUIVALENT
+telecom_churn_indicator.months_remaining numeric     ok    0.0000/0.0000  KS  0.0135    0.0235  0.0616         EQUIVALENT
+-- marketing_campaign_type: rows 15 / 15  cols identical+ordered=True  types identical=True
+marketing_campaign_type.type_id    numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.7118         EQUIVALENT
+marketing_campaign_type.type_name  categorical ok    0.0000/0.0000 TVD  0.4000    0.6667  2.0498 1.0000  EQUIVALENT
+marketing_campaign_type.channel    categorical ok    0.0000/0.0000 TVD  0.2000    0.4667  1.5139 1.0000  EQUIVALENT
+marketing_campaign_type.avg_conversion_rate numeric     ok    0.0000/0.0000  KS  0.4667    0.4667  0.7118         EQUIVALENT
+-- marketing_industry: rows 25 / 25  cols identical+ordered=True  types identical=True
+marketing_industry.industry_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.5514         EQUIVALENT
+marketing_industry.shared_organization_financial_branch_id numeric     ok    0.0000/0.0000  KS  0.3600    0.3600  0.5514         EQUIVALENT
+marketing_industry.industry_name   categorical ok    0.0000/0.0000 TVD  0.4800    0.5600  1.9149 1.0000  EQUIVALENT
+marketing_industry.sector          categorical ok    0.0000/0.0000 TVD  0.3600    0.4000  1.1726 1.0000  EQUIVALENT
+-- marketing_campaign: rows 200 / 200  cols identical+ordered=True  types identical=True
+marketing_campaign.campaign_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1949         EQUIVALENT
+marketing_campaign.campaign_type_id numeric     ok    0.0000/0.0000  KS  0.1050    0.1150  0.1949         EQUIVALENT
+marketing_campaign.campaign_name   categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+marketing_campaign.start_date      datetime    ok    0.0000/0.0000  KS  0.0600    0.0750  0.1949         EQUIVALENT
+marketing_campaign.budget          numeric     ok    0.0000/0.0000  KS  0.0950    0.0800  0.1949         EQUIVALENT
+marketing_campaign.status          categorical ok    0.0000/0.0000 TVD  0.1100    0.0950  0.3385 1.0000  EQUIVALENT
+marketing_campaign.end_date        datetime    ok    0.0000/0.0000  KS  0.0600    0.0750  0.1949         EQUIVALENT
+-- marketing_lead_source: rows 20 / 20  cols identical+ordered=True  types identical=True
+marketing_lead_source.source_id    numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.6165         EQUIVALENT
+marketing_lead_source.source_name  categorical ok    0.0000/0.0000 TVD  0.4500    0.5500  2.0027 1.0000  EQUIVALENT
+marketing_lead_source.source_type  categorical ok    0.0000/0.0000 TVD  0.2000    0.2500  1.0705 1.0000  EQUIVALENT
+marketing_lead_source.cost_per_lead numeric     ok    0.0000/0.0000  KS  0.2500    0.3500  0.6165         EQUIVALENT
+-- marketing_contact: rows 5,000 / 5,000  cols identical+ordered=True  types identical=True
+marketing_contact.contact_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0390         EQUIVALENT
+marketing_contact.industry_id      numeric     ok    0.0000/0.0000  KS  0.0110    0.0222  0.0390         EQUIVALENT
+marketing_contact.lead_source_id   numeric     ok    0.0000/0.0000  KS  0.0120    0.0184  0.0390         EQUIVALENT
+marketing_contact.shared_person_financial_customer_id numeric     ok    0.0000/0.0000  KS  0.0138    0.0274  0.0431         EQUIVALENT
+marketing_contact.first_name       categorical ok    0.0000/0.0000 |dR-1|  0.0032    0.0146  0.0218 1.0000  EQUIVALENT
+marketing_contact.last_name        categorical ok    0.0000/0.0000 |dR-1|  0.0019    0.0073  0.0200 1.0000  EQUIVALENT
+marketing_contact.email            categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+marketing_contact.phone            categorical ok    0.1566/0.1512 |dR-1|  0.0064    0.0116  0.0200 1.0000  EQUIVALENT
+marketing_contact.company          categorical ok    0.0000/0.0000 |dR-1|  0.0027    0.0049  0.0200 1.0000  EQUIVALENT
+marketing_contact.created_date     datetime    ok    0.0000/0.0000  KS  0.0146    0.0176  0.0390         EQUIVALENT
+-- marketing_lead: rows 2,000 / 2,000  cols identical+ordered=True  types identical=True
+marketing_lead.lead_id             numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0616         EQUIVALENT
+marketing_lead.contact_id          numeric     ok    0.0000/0.0000  KS  0.0170    0.0265  0.0616         EQUIVALENT
+marketing_lead.campaign_id         numeric     ok    0.0000/0.0000  KS  0.0305    0.0300  0.0616         EQUIVALENT
+marketing_lead.lead_score          numeric     ok    0.0000/0.0000  KS  0.0370    0.0520  0.0800         EQUIVALENT
+marketing_lead.status              categorical ok    0.0000/0.0000 TVD  0.0340    0.0235  0.1197 1.0000  EQUIVALENT
+marketing_lead.created_date        datetime    ok    0.0000/0.0000  KS  0.0200    0.0285  0.0616         EQUIVALENT
+-- marketing_opportunity: rows 1,000 / 1,000  cols identical+ordered=True  types identical=True
+marketing_opportunity.opp_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0872         EQUIVALENT
+marketing_opportunity.lead_id      numeric     ok    0.0000/0.0000  KS  0.0480    0.0660  0.1010         EQUIVALENT
+marketing_opportunity.opp_name     categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+marketing_opportunity.stage        categorical ok    0.0000/0.0000 TVD  0.0600    0.0660  0.1854 1.0000  EQUIVALENT
+marketing_opportunity.amount       numeric     ok    0.0000/0.0000  KS  0.0300    0.0450  0.0872         EQUIVALENT
+marketing_opportunity.close_date   datetime    ok    0.0000/0.0000  KS  0.0540    0.0540  0.0872         EQUIVALENT
+marketing_opportunity.probability  numeric     ok    0.0000/0.0000  KS  0.0330    0.0360  0.0872         EQUIVALENT
+-- marketing_email_send: rows 10,000 / 10,000  cols identical+ordered=True  types identical=True
+marketing_email_send.send_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0276         EQUIVALENT
+marketing_email_send.campaign_id   numeric     ok    0.0000/0.0000  KS  0.0105    0.0178  0.0287         EQUIVALENT
+marketing_email_send.contact_id    numeric     ok    0.0000/0.0000  KS  0.0138    0.0128  0.0276         EQUIVALENT
+marketing_email_send.sent_date     datetime    ok    0.0000/0.0000  KS  0.0103    0.0183  0.0295         EQUIVALENT
+marketing_email_send.opened        categorical ok    0.0000/0.0000 TVD  0.0005    0.0075  0.0339 1.0000  EQUIVALENT
+marketing_email_send.clicked       categorical ok    0.0000/0.0000 TVD  0.0063    0.0081  0.0339 1.0000  EQUIVALENT
+marketing_email_send.bounced       categorical ok    0.0000/0.0000 TVD  0.0002    0.0033  0.0339 1.0000  EQUIVALENT
+-- marketing_web_visit: rows 25,000 / 25,000  cols identical+ordered=True  types identical=True
+marketing_web_visit.visit_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0174         EQUIVALENT
+marketing_web_visit.contact_id     numeric     ok    0.0000/0.0000  KS  0.0071    0.0081  0.0174         EQUIVALENT
+marketing_web_visit.visit_date     datetime    ok    0.0000/0.0000  KS  0.0073    0.0101  0.0174         EQUIVALENT
+marketing_web_visit.page_url       categorical ok    0.0000/0.0000 |dR-1|  0.0032    0.0025  0.0200 1.0000  EQUIVALENT
+marketing_web_visit.referrer       categorical ok    0.0000/0.0000 TVD  0.0154    0.0118  0.0339 1.0000  EQUIVALENT
+marketing_web_visit.duration_seconds numeric     ok    0.0000/0.0000  KS  0.0069    0.0102  0.0174         EQUIVALENT
+marketing_web_visit.pages_viewed   numeric     ok    0.0000/0.0000  KS  0.0111    0.0134  0.0221         EQUIVALENT
+-- marketing_conversion: rows 600 / 600  cols identical+ordered=True  types identical=True
+marketing_conversion.conversion_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1126         EQUIVALENT
+marketing_conversion.lead_id       numeric     ok    0.0000/0.0000  KS  0.0583    0.0550  0.1126         EQUIVALENT
+marketing_conversion.campaign_id   numeric     ok    0.0000/0.0000  KS  0.0750    0.0750  0.1145         EQUIVALENT
+marketing_conversion.conversion_date datetime    ok    0.0000/0.0000  KS  0.0383    0.0667  0.1126         EQUIVALENT
+marketing_conversion.conversion_type categorical ok    0.0000/0.0000 TVD  0.0533    0.0783  0.1954 1.0000  EQUIVALENT
+marketing_conversion.revenue       numeric     ok    0.0000/0.0000  KS  0.0700    0.0550  0.1126         EQUIVALENT
+-- financial_branch: rows 200 / 200  cols identical+ordered=True  types identical=True
+financial_branch.branch_id         numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1949         EQUIVALENT
+financial_branch.branch_name       categorical ok    0.0000/0.0000 TVD  0.2500    0.2000  0.9271 1.0000  EQUIVALENT
+financial_branch.city              categorical ok    0.0000/0.0000 TVD  0.9500    0.9450  2.3635 1.0000  EQUIVALENT
+financial_branch.opened_date       datetime    ok    0.0000/0.0000  KS  0.1050    0.1400  0.2120         EQUIVALENT
+financial_branch.is_active         categorical ok    0.0000/0.0000 TVD  0.0200    0.0250  0.2394 1.0000  EQUIVALENT
+financial_branch.state             categorical ok    0.0000/0.0000 TVD  0.2600    0.2700  1.1480 1.0000  EQUIVALENT
+financial_branch.zip_code          categorical ok    0.0000/0.0000 TVD  0.9900    0.9950  2.3937 1.0000  EQUIVALENT
+financial_branch.lat               numeric     ok    0.0000/0.0000  KS  0.0750    0.1400  0.2120         EQUIVALENT
+financial_branch.lng               numeric     ok    0.0000/0.0000  KS  0.1100    0.1350  0.2045         EQUIVALENT
+-- financial_transaction_category: rows 40 / 40  cols identical+ordered=True  types identical=True
+financial_transaction_category.category_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.4359         EQUIVALENT
+financial_transaction_category.category_name categorical ok    0.0000/0.0000 TVD  0.6000    0.4750  1.8541 1.0000  EQUIVALENT
+financial_transaction_category.parent_category_id numeric     ok    0.2000/0.2000  KS  0.1250    0.1875  0.4874         EQUIVALENT
+financial_transaction_category.level numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.4359         EQUIVALENT
+-- financial_customer: rows 1,000 / 1,000  cols identical+ordered=True  types identical=True
+financial_customer.customer_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0872         EQUIVALENT
+financial_customer.primary_branch_id numeric     ok    0.0000/0.0000  KS  0.0460    0.0460  0.0872         EQUIVALENT
+financial_customer.first_name      categorical ok    0.0000/0.0000 TVD  0.8450    0.8400  2.2771 1.0000  EQUIVALENT
+financial_customer.last_name       categorical ok    0.0000/0.0000 TVD  0.8240    0.8280  2.2872 1.0000  EQUIVALENT
+financial_customer.email           categorical ok    0.0280/0.0330 |dR-1|  0.0051    0.0041  0.0200 1.0000  EQUIVALENT
+financial_customer.phone           categorical ok    0.1050/0.1050 |dR-1|  0.0000    0.0268  0.0402 1.0000  EQUIVALENT
+financial_customer.date_of_birth   datetime    ok    0.0000/0.0000  KS  0.0500    0.0460  0.0872         EQUIVALENT
+financial_customer.credit_tier     categorical ok    0.0000/0.0000 TVD  0.0170    0.0390  0.1514 1.0000  EQUIVALENT
+financial_customer.customer_since  datetime    ok    0.0000/0.0000  KS  0.0370    0.0320  0.0872         EQUIVALENT
+financial_customer.is_active       categorical ok    0.0000/0.0000 TVD  0.0030    0.0100  0.1070 1.0000  EQUIVALENT
+-- financial_account: rows 2,200 / 2,200  cols identical+ordered=True  types identical=True
+financial_account.account_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0588         EQUIVALENT
+financial_account.customer_id      numeric     ok    0.0000/0.0000  KS  0.0259    0.0277  0.0588         EQUIVALENT
+financial_account.account_type     categorical ok    0.0000/0.0000 TVD  0.0218    0.0232  0.1141 1.0000  EQUIVALENT
+financial_account.opened_date      datetime    ok    0.0000/0.0000  KS  0.0350    0.0318  0.0588         EQUIVALENT
+financial_account.current_balance  numeric     ok    0.0000/0.0000  KS  0.0273    0.0255  0.0588         EQUIVALENT
+financial_account.currency         categorical ok    0.0000/0.0000 TVD  0.0000    0.0000  0.0722 1.0000  EQUIVALENT
+financial_account.status           categorical ok    0.0000/0.0000 TVD  0.0227    0.0295  0.1021 1.0000  EQUIVALENT
+-- financial_card: rows 1,760 / 1,760  cols identical+ordered=True  types identical=True
+financial_card.card_id             numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0657         EQUIVALENT
+financial_card.account_id          numeric     ok    0.0000/0.0000  KS  0.0358    0.0369  0.0657         EQUIVALENT
+financial_card.card_type           categorical ok    0.0000/0.0000 TVD  0.0199    0.0284  0.0988 1.0000  EQUIVALENT
+financial_card.card_network        categorical ok    0.0000/0.0000 TVD  0.0364    0.0415  0.1141 1.0000  EQUIVALENT
+financial_card.last_four           categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+financial_card.issued_date         datetime    ok    0.0000/0.0000  KS  0.0290    0.0312  0.0657         EQUIVALENT
+financial_card.is_active           categorical ok    0.0000/0.0000 TVD  0.0040    0.0080  0.0807 1.0000  EQUIVALENT
+financial_card.expiry_date         datetime    ok    0.0000/0.0000  KS  0.0290    0.0312  0.0657         EQUIVALENT
+-- financial_transaction: rows 10,000 / 10,000  cols identical+ordered=True  types identical=True
+financial_transaction.transaction_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0276         EQUIVALENT
+financial_transaction.account_id   numeric     ok    0.0000/0.0000  KS  0.0104    0.0537  0.0826         EQUIVALENT
+financial_transaction.category_id  numeric     ok    0.0000/0.0000  KS  0.0063    0.0120  0.0276         EQUIVALENT
+financial_transaction.transaction_type categorical ok    0.0000/0.0000 TVD  0.0136    0.0166  0.0633 1.0000  EQUIVALENT
+financial_transaction.amount       numeric     ok    0.0000/0.0000  KS  0.0133    0.0108  0.0276         EQUIVALENT
+financial_transaction.transaction_date datetime    ok    0.0000/0.0000  KS  0.0059    0.0156  0.0276         EQUIVALENT
+financial_transaction.channel      categorical ok    0.0000/0.0000 TVD  0.0075    0.0128  0.0586 1.0000  EQUIVALENT
+financial_transaction.merchant_name categorical ok    0.3009/0.3009 TVD  0.0442    0.0448  0.1693 1.0000  EQUIVALENT
+financial_transaction.status       categorical ok    0.0000/0.0000 TVD  0.0067    0.0106  0.0479 1.0000  EQUIVALENT
+-- financial_loan: rows 400 / 400  cols identical+ordered=True  types identical=True
+financial_loan.loan_id             numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1378         EQUIVALENT
+financial_loan.customer_id         numeric     ok    0.0000/0.0000  KS  0.0575    0.0575  0.1378         EQUIVALENT
+financial_loan.loan_type           categorical ok    0.0000/0.0000 TVD  0.0450    0.0550  0.2676 1.0000  EQUIVALENT
+financial_loan.principal_amount    numeric     ok    0.0000/0.0000  KS  0.0575    0.0475  0.1378         EQUIVALENT
+financial_loan.interest_rate       numeric     ok    0.0000/0.0000  KS  0.0575    0.0725  0.1378         EQUIVALENT
+financial_loan.term_months         numeric     ok    0.0000/0.0000  KS  0.0725    0.0600  0.1378         EQUIVALENT
+financial_loan.origination_date    datetime    ok    0.0000/0.0000  KS  0.1250    0.1075  0.1633         EQUIVALENT
+financial_loan.status              categorical ok    0.0000/0.0000 TVD  0.0600    0.0475  0.2676 1.0000  EQUIVALENT
+financial_loan.outstanding_balance numeric     ok    0.0000/0.0000  KS  0.0400    0.0500  0.1378         EQUIVALENT
+-- financial_loan_payment: rows 4,800 / 4,800  cols identical+ordered=True  types identical=True
+financial_loan_payment.payment_id  numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0398         EQUIVALENT
+financial_loan_payment.loan_id     numeric     ok    0.0000/0.0000  KS  0.0138    0.0217  0.0398         EQUIVALENT
+financial_loan_payment.payment_date datetime    ok    0.0000/0.0000  KS  0.0240    0.0231  0.0398         EQUIVALENT
+financial_loan_payment.payment_amount numeric     ok    0.0000/0.0000  KS  0.0160    0.0188  0.0398         EQUIVALENT
+financial_loan_payment.payment_method categorical ok    0.0000/0.0000 TVD  0.0329    0.0237  0.0773 1.0000  EQUIVALENT
+financial_loan_payment.principal_portion numeric     ok    0.0000/0.0000  KS  0.0146    0.0265  0.0417         EQUIVALENT
+financial_loan_payment.interest_portion numeric     ok    0.0000/0.0000  KS  0.0296    0.0225  0.0398         EQUIVALENT
+-- financial_fraud_flag: rows 200 / 200  cols identical+ordered=True  types identical=True
+financial_fraud_flag.flag_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1949         EQUIVALENT
+financial_fraud_flag.transaction_id numeric     ok    0.0000/0.0000  KS  0.0750    0.0850  0.1949         EQUIVALENT
+financial_fraud_flag.flag_type     categorical ok    0.0000/0.0000 TVD  0.0400    0.0850  0.4146 1.0000  EQUIVALENT
+financial_fraud_flag.risk_score    numeric     ok    0.0000/0.0000  KS  0.1000    0.1100  0.1949         EQUIVALENT
+financial_fraud_flag.flagged_date  datetime    ok    0.0000/0.0000  KS  0.0700    0.1050  0.1949         EQUIVALENT
+financial_fraud_flag.resolution    categorical ok    0.0000/0.0000 TVD  0.0700    0.1000  0.3385 1.0000  EQUIVALENT
+-- financial_statement: rows 13,200 / 13,200  cols identical+ordered=True  types identical=True
+financial_statement.statement_id   numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0240         EQUIVALENT
+financial_statement.account_id     numeric     ok    0.0000/0.0000  KS  0.0090    0.0114  0.0240         EQUIVALENT
+financial_statement.statement_date datetime    ok    0.0000/0.0000  KS  0.0086    0.0105  0.0240         EQUIVALENT
+financial_statement.opening_balance numeric     ok    0.0000/0.0000  KS  0.0086    0.0128  0.0240         EQUIVALENT
+financial_statement.total_deposits numeric     ok    0.0000/0.0000  KS  0.0110    0.0094  0.0240         EQUIVALENT
+financial_statement.total_withdrawals numeric     ok    0.0000/0.0000  KS  0.0120    0.0113  0.0240         EQUIVALENT
+financial_statement.fees_charged   numeric     ok    0.0000/0.0000  KS  0.0077    0.0120  0.0240         EQUIVALENT
+financial_statement.closing_balance numeric     ok    0.0000/0.0000  KS  0.0083    0.0123  0.0240         EQUIVALENT
+
+FK integrity (spindle / impl):
+  telecom_service_line.subscriber_id->telecom_subscriber.subscriber_id 1.0000 / 1.0000
+  telecom_service_line.plan_id->telecom_plan.plan_id      1.0000 / 1.0000
+  telecom_service_line.device_model_id->telecom_device_model.model_id 1.0000 / 1.0000
+  telecom_usage_record.line_id->telecom_service_line.line_id 1.0000 / 1.0000
+  telecom_billing.subscriber_id->telecom_subscriber.subscriber_id 1.0000 / 1.0000
+  telecom_payment.bill_id->telecom_billing.bill_id        1.0000 / 1.0000
+  telecom_network_event.line_id->telecom_service_line.line_id 1.0000 / 1.0000
+  telecom_churn_indicator.subscriber_id->telecom_subscriber.subscriber_id 1.0000 / 1.0000
+  marketing_campaign.campaign_type_id->marketing_campaign_type.type_id 1.0000 / 1.0000
+  marketing_contact.industry_id->marketing_industry.industry_id 1.0000 / 1.0000
+  marketing_contact.lead_source_id->marketing_lead_source.source_id 1.0000 / 1.0000
+  marketing_lead.contact_id->marketing_contact.contact_id 1.0000 / 1.0000
+  marketing_lead.campaign_id->marketing_campaign.campaign_id 1.0000 / 1.0000
+  marketing_opportunity.lead_id->marketing_lead.lead_id   1.0000 / 1.0000
+  marketing_email_send.campaign_id->marketing_campaign.campaign_id 1.0000 / 1.0000
+  marketing_email_send.contact_id->marketing_contact.contact_id 1.0000 / 1.0000
+  marketing_web_visit.contact_id->marketing_contact.contact_id 1.0000 / 1.0000
+  marketing_conversion.lead_id->marketing_lead.lead_id    1.0000 / 1.0000
+  marketing_conversion.campaign_id->marketing_campaign.campaign_id 1.0000 / 1.0000
+  financial_customer.primary_branch_id->financial_branch.branch_id 1.0000 / 1.0000
+  financial_account.customer_id->financial_customer.customer_id 1.0000 / 1.0000
+  financial_card.account_id->financial_account.account_id 1.0000 / 1.0000
+  financial_transaction.account_id->financial_account.account_id 1.0000 / 1.0000
+  financial_transaction.category_id->financial_transaction_category.category_id 1.0000 / 1.0000
+  financial_loan.customer_id->financial_customer.customer_id 1.0000 / 1.0000
+  financial_loan_payment.loan_id->financial_loan.loan_id  1.0000 / 1.0000
+  financial_fraud_flag.transaction_id->financial_transaction.transaction_id 1.0000 / 1.0000
+  financial_statement.account_id->financial_account.account_id 1.0000 / 1.0000
+  marketing_contact.shared_person_financial_customer_id->financial_customer.customer_id 1.0000 / 1.0000
+  telecom_subscriber.shared_person_financial_customer_id->financial_customer.customer_id 1.0000 / 1.0000
+  marketing_industry.shared_organization_financial_branch_id->financial_branch.branch_id 1.0000 / 1.0000
+  financial_transaction_category.parent_category_id->financial_transaction_category.category_id 1.0000 / 1.0000
+FK fan-out (children per parent)  spindle p50/p90/p99/max/zero% | impl | KS (baseline max, tol)
+  telecom_subscriber->telecom_service_line.subscriber_id 2/4/5/7/0.159 | 2/4/5/8/0.159 | 0.0090 (0.0205, 0.0616)
+  telecom_plan->telecom_service_line.plan_id 66/343/1253/1412/0.000 | 73/358/1210/1356/0.000 | 0.1000 (0.1000, 0.6165)
+  telecom_device_model->telecom_service_line.device_model_id 30/194/884/1141/0.000 | 28/158/895/1133/0.000 | 0.0750 (0.1500, 0.4359)
+  telecom_service_line->telecom_usage_record.line_id 30/37/43/52/0.000 | 30/37/44/51/0.000 | 0.0133 (0.0214, 0.0459)
+  telecom_subscriber->telecom_billing.subscriber_id 6/9/12/16/0.002 | 6/9/12/16/0.001 | 0.0140 (0.0220, 0.0616)
+  telecom_billing->telecom_payment.bill_id 1/2/4/6/0.370 | 1/2/4/7/0.368 | 0.0024 (0.0079, 0.0252)
+  telecom_service_line->telecom_network_event.line_id 2/4/6/8/0.139 | 2/4/6/8/0.136 | 0.0111 (0.0083, 0.0459)
+  telecom_subscriber->telecom_churn_indicator.subscriber_id 1/2/4/6/0.370 | 1/2/4/6/0.384 | 0.0135 (0.0180, 0.0616)
+  marketing_campaign_type->marketing_campaign.campaign_type_id 13/19/20/20/0.000 | 14/18/20/20/0.000 | 0.2667 (0.2667, 0.7118)
+  marketing_industry->marketing_contact.industry_id 202/221/237/238/0.000 | 198/219/238/241/0.000 | 0.1600 (0.2000, 0.5514)
+  marketing_lead_source->marketing_contact.lead_source_id 250/266/275/277/0.000 | 251/268/272/272/0.000 | 0.1000 (0.2500, 0.6165)
+  marketing_contact->marketing_lead.contact_id 0/1/2/4/0.670 | 0/1/2/5/0.670 | 0.0004 (0.0038, 0.0390)
+  marketing_campaign->marketing_lead.campaign_id 2/12/153/588/0.240 | 2/11/128/631/0.280 | 0.0900 (0.0700, 0.1949)
+  marketing_lead->marketing_opportunity.lead_id 0/1/3/4/0.616 | 0/1/3/7/0.613 | 0.0035 (0.0145, 0.0616)
+  marketing_campaign->marketing_email_send.campaign_id 50/59/67/73/0.000 | 50/59/68/70/0.000 | 0.0350 (0.0650, 0.1949)
+  marketing_contact->marketing_email_send.contact_id 2/4/6/11/0.133 | 2/4/6/10/0.131 | 0.0038 (0.0120, 0.0390)
+  marketing_contact->marketing_web_visit.contact_id 5/8/11/15/0.007 | 5/8/11/16/0.007 | 0.0084 (0.0106, 0.0390)
+  marketing_lead->marketing_conversion.lead_id 0/1/2/4/0.742 | 0/1/2/3/0.742 | 0.0030 (0.0070, 0.0616)
+  marketing_campaign->marketing_conversion.campaign_id 3/6/8/9/0.055 | 3/5/7/8/0.030 | 0.0750 (0.0750, 0.1949)
+  financial_branch->financial_customer.primary_branch_id 1/5/78/318/0.415 | 1/7/66/315/0.355 | 0.0600 (0.0850, 0.1949)
+  financial_customer->financial_account.customer_id 2/4/6/8/0.113 | 2/4/6/9/0.117 | 0.0120 (0.0210, 0.0872)
+  financial_account->financial_card.account_id 1/2/4/6/0.444 | 1/2/4/5/0.456 | 0.0118 (0.0100, 0.0588)
+  financial_account->financial_transaction.account_id 1/4/114/200/0.415 | 1/4/119/200/0.406 | 0.0155 (0.0959, 0.1459)
+  financial_transaction_category->financial_transaction.category_id 62/426/2973/3922/0.000 | 58/421/2978/3920/0.000 | 0.0750 (0.1250, 0.4359)
+  financial_customer->financial_loan.customer_id 0/1/2/3/0.662 | 0/1/2/5/0.667 | 0.0050 (0.0140, 0.0872)
+  financial_loan->financial_loan_payment.loan_id 12/17/21/24/0.000 | 12/17/20/21/0.000 | 0.0225 (0.0375, 0.1378)
+  financial_transaction->financial_fraud_flag.transaction_id 0/0/1/2/0.980 | 0/0/1/2/0.980 | 0.0002 (0.0002, 0.0276)
+  financial_account->financial_statement.account_id 6/9/12/16/0.000 | 6/9/12/18/0.003 | 0.0205 (0.0155, 0.0588)
+  financial_customer->marketing_contact.shared_person_financial_customer_id 5/8/11/12/0.008 | 5/8/11/14/0.010 | 0.0130 (0.0370, 0.0872)
+  financial_customer->telecom_subscriber.shared_person_financial_customer_id 2/4/6/10/0.131 | 2/4/6/9/0.146 | 0.0320 (0.0220, 0.0872)
+  financial_branch->marketing_industry.shared_organization_financial_branch_id 0/1/1/1/0.875 | 0/1/1/2/0.885 | 0.0100 (0.0100, 0.1949)
+record_coherence (impl / min over Spindle seeds, floor):
+  telecom_subscriber.address_city+address_state+address_zip in us_zip_locations 1.0000 / 1.0000  floor 0.9950
+  financial_branch.city+state+zip_code+lat+lng in us_zip_locations 1.0000 / 1.0000  floor 0.9950
+strategy_semantics (impl / min over Spindle seeds, floor):
+Spindle BusinessRulesEngine violations on impl output: {}
+Spindle FidelityComparator (real=Spindle seed 42, synthetic=impl): overall impl=92.03  Spindle-vs-Spindle baselines=[92.36, 91.99, 92.14, 92.0]
+  financial_account  impl  95.97  floor  96.07  baselines [96.79, 96.79, 96.79, 96.57]  FAIL
+  financial_branch   impl  84.79  floor  84.88  baselines [85.38, 86.59, 85.57, 86.22]  FAIL
+  financial_card     impl  98.93  floor  98.18  baselines [99.13, 99.42, 99.04, 98.68]  ok
+  financial_customer impl  76.79  floor  76.21  baselines [77.37, 76.71, 76.73, 77.28]  ok
+  financial_fraud_flag impl  98.33  floor  97.28  baselines [98.24, 98.11, 97.78, 98.04]  ok
+  financial_loan     impl  96.66  floor  96.57  baselines [97.16, 98.46, 97.26, 97.07]  ok
+  financial_loan_payment impl  97.66  floor  97.68  baselines [98.33, 99.1, 99.32, 98.18]  FAIL
+  financial_statement impl  99.37  floor  97.04  baselines [99.55, 99.47, 98.54, 97.54]  ok
+  financial_transaction impl  95.80  floor  93.95  baselines [95.98, 94.45, 94.82, 95.74]  ok
+  financial_transaction_category impl  87.16  floor  85.13  baselines [86.93, 85.63, 89.59, 86.41]  ok
+  marketing_campaign impl  96.15  floor  96.22  baselines [97.64, 97.33, 98.38, 96.72]  FAIL
+  marketing_campaign_type impl  83.95  floor  78.53  baselines [85.92, 83.37, 79.03, 79.83]  ok
+  marketing_contact  impl  76.23  floor  75.48  baselines [75.98, 76.06, 76.18, 76.22]  ok
+  marketing_conversion impl  97.15  floor  95.93  baselines [96.43, 98.21, 97.92, 97.91]  ok
+  marketing_email_send impl  99.58  floor  98.91  baselines [99.59, 99.87, 99.71, 99.41]  ok
+  marketing_industry impl  81.49  floor  82.77  baselines [84.46, 83.4, 84.29, 83.27]  FAIL
+  marketing_lead     impl  98.68  floor  98.06  baselines [99.31, 98.56, 99.18, 99.08]  ok
+  marketing_lead_source impl  86.25  floor  83.05  baselines [85.57, 83.55, 83.69, 84.19]  ok
+  marketing_opportunity impl  98.06  floor  97.31  baselines [98.08, 97.81, 97.88, 99.31]  ok
+  marketing_web_visit impl  92.61  floor  92.74  baselines [93.24, 93.91, 93.25, 93.34]  FAIL
+  telecom_billing    impl  99.55  floor  98.45  baselines [99.8, 98.99, 98.95, 99.15]  ok
+  telecom_churn_indicator impl  98.40  floor  98.40  baselines [99.2, 99.06, 98.9, 98.91]  ok
+  telecom_device_model impl  86.26  floor  87.59  baselines [89.08, 88.09, 88.54, 88.3]  FAIL
+  telecom_network_event impl  97.66  floor  97.32  baselines [98.22, 98.4, 97.82, 98.45]  ok
+  telecom_payment    impl  99.49  floor  98.98  baselines [99.54, 99.61, 99.48, 99.56]  ok
+  telecom_plan       impl  80.02  floor  72.06  baselines [75.97, 72.56, 78.55, 77.38]  ok
+  telecom_service_line impl  99.77  floor  98.41  baselines [99.57, 98.91, 99.51, 99.19]  ok
+  telecom_subscriber impl  74.53  floor  73.70  baselines [74.44, 74.42, 74.2, 74.64]  ok
+  telecom_usage_record impl  91.51  floor  90.46  baselines [91.53, 90.96, 91.27, 91.45]  ok
+
+COLUMNS EQUIVALENT: 202/202
+  NOT EQUIVALENT: (h) fidelity financial_account: 95.97 < floor 96.07
+  NOT EQUIVALENT: (h) fidelity financial_branch: 84.79 < floor 84.88
+  NOT EQUIVALENT: (h) fidelity financial_loan_payment: 97.66 < floor 97.68
+  NOT EQUIVALENT: (h) fidelity marketing_campaign: 96.15 < floor 96.22
+  NOT EQUIVALENT: (h) fidelity marketing_industry: 81.49 < floor 82.77
+  NOT EQUIVALENT: (h) fidelity marketing_web_visit: 92.61 < floor 92.74
+  NOT EQUIVALENT: (h) fidelity telecom_device_model: 86.26 < floor 87.59
+VERDICT: FAIL

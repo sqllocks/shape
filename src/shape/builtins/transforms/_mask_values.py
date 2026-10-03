@@ -271,13 +271,17 @@ def _iban(originals: list[str], rng: np.random.Generator) -> list[str]:
 # ---- generators per type -------------------------------------------------------------------
 
 
+# Reserved by RFC 2606: a masked address can never reach a real mailbox (as in generation, #11).
+_RESERVED_EMAIL_DOMAINS = ("example.com", "example.org", "example.net")
+
+
 def _email(originals: list[str], rng: np.random.Generator) -> list[str]:
     n = len(originals)
     first = [f.lower() for f in _pick(rng, _pool("first_names"), n)]
     last = [x.lower() for x in _pick(rng, _pool("last_names"), n)]
     sep = _pick(rng, ["", ".", "_"], n)
     num = _digits(rng, n, 3)
-    domains = _pick(rng, _pool("email_domains"), n)
+    domains = _pick(rng, list(_RESERVED_EMAIL_DOMAINS), n)
     return [
         f"{f}{s}{ln}{d}@{dom}"
         for f, s, ln, d, dom in zip(first, sep, last, num, domains, strict=True)

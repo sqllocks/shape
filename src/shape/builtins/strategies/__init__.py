@@ -3,9 +3,7 @@ address. Each returns one Arrow array for the chunk its context names."""
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Mapping
-from dataclasses import fields
 from typing import Any
 
 import numpy as np
@@ -16,10 +14,7 @@ from shape.builtins.distributions import Uniform as _UniformDistribution
 from shape.generation import kernel_ops
 from shape.generation.arrowkit import array as arrow_array
 from shape.generation.strategy_kit import stream
-from shape.location import location_from_spec, scope_from_specs
 from shape.plugins.api.v1 import GenerationContext
-
-from .address import AddressPack, AddressReference, GeneratedAddress
 
 SHAPE_API = "1.0"
 
@@ -94,44 +89,29 @@ class Normal:
 
 
 class AddressStrategy:
-    """The ``address`` strategy: coherent addresses from reference rows, as an Arrow array.
+    """The ``address`` strategy: coherent addresses (street, city, state, postal code, latitude and
+    longitude) as an Arrow array, from a scope alone.
 
-    ``spec`` keys: ``reference`` (rows: :class:`AddressReference` or dicts with its fields;
-    required), ``scope`` (a list of location specs, see ``shape.location.location_from_spec``;
-    default: every state in the reference), ``weights`` (one per scope entry), ``mode`` (as
-    :meth:`AddressPack.generate`, default ``street_synthetic``) and ``field`` (one address field
-    as a plain column; default: a struct of all fields). Deterministic for a given context.
-    """
+    ``spec`` keys: ``scope`` (a list of places: ``{"state": "WA"}``, ``{"postal_code": "98101"}``,
+    ``{"city": "Seattle", "state": "WA"}``, ``"WA"``, ``"98101"`` or ``"Seattle, WA"``; default
+    every state of the reference), ``weights`` (one per scope entry), ``exclude`` (places to leave
+    out), ``reference`` (where the places come from: ``{"dataset": "us_zip_locations"}``, which
+    is the default and ships with ``sqllocks-shape-domains``, any registered dataset, or rows given
+    inline: ``AddressReference``, ``Location`` or dicts, or the output of
+    ``load_geonames_postal``), ``mode`` (``street_synthetic``, the default, ``geographic``,
+    ``reference`` or ``exact_reference``), ``field`` (one address field as a plain column:
+    ``address_line_1``, ``city``, ``county``, ``state``, ``postal_code``, ``country``,
+    ``latitude``, ``longitude``, ``timezone``, ``mode``, ``reference_id``; default: a struct of all
+    of them) and ``group`` (default ``address``). Row addressed: every address column of a table
+    that has the same ``group`` draws the same place for the same row, so separate ``city``,
+    ``state``, ``postal_code``, ``latitude`` and ``longitude`` columns agree."""
 
     name = "address"
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
-        rows = [
-            r if isinstance(r, AddressReference) else AddressReference(**r)
-            for r in spec.get("reference", ())
-        ]
-        if not rows:
-            raise ValueError("the address strategy needs spec['reference'] rows")
-        scope_specs = spec.get("scope") or sorted({(r.country, r.state) for r in rows})
-        locations = [
-            location_from_spec({"country": x[0], "state": x[1]}) if isinstance(x, tuple) else x
-            for x in scope_specs
-        ]
-        scope = scope_from_specs(locations, spec.get("weights"))  # type: ignore[no-untyped-call]
-        key = f"{ctx.seed}\x00{ctx.table}\x00{ctx.column}\x00{ctx.chunk}".encode()
-        seed = int.from_bytes(hashlib.blake2b(key, digest_size=8).digest(), "little")
-        out = AddressPack(rows).generate(
-            ctx.n_rows, scope, seed=seed, mode=spec.get("mode", "street_synthetic")
-        )
-        columns = {f.name: [getattr(a, f.name) for a in out] for f in fields(GeneratedAddress)}
-        field_name = spec.get("field")
-        if field_name is not None:
-            if field_name not in columns:
-                raise ValueError(f"unknown address field {field_name!r}")
-            return arrow_array(columns[field_name])
-        return pa.StructArray.from_arrays(
-            [arrow_array(v) for v in columns.values()], names=list(columns)
-        )
+        from . import address_rows
+
+        return address_rows.generate(spec, ctx)
 
 
 __all__ = ["SHAPE_API", "AddressStrategy", "Choice", "Constant", "Normal", "Sequence", "Uniform"]

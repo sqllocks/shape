@@ -1,4 +1,4 @@
-"""Write the data of the ``shape-domains`` plugin's non-retail domains (D-10, P6-01).
+"""Write the data of every ``shape-domains`` domain, retail included (D-10, P6-01, P6-01e).
 
     source scripts/env.sh
     "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/domain_1to1/export_domains.py          # write
@@ -16,6 +16,12 @@ lookup cannot resolve is the empty string in the baseline: ``capital_markets`` `
 names the nested field ``industries.industry_name``, which the baseline does not read, so it falls
 back to the missing ``name`` key and yields ``""`` for every row. The schema says so with
 ``constant ""``; ``--check`` proves nothing else differs.
+
+``UNREAD_KEYS`` are generator keys of the baseline's dumps that no generator reads, in the baseline
+or in Shape: ``round`` on a ``distribution`` (both round a number by the column's ``scale``) and
+``weight_field`` on ``reference_data`` and ``record_sample`` (the baseline weighs by a literal
+``weight`` key). They are left out, so the domains are valid under the published generation spec
+schema (``tests/generation/test_w1_06_spec_schema.py``); the generated data does not change.
 """
 
 from __future__ import annotations
@@ -40,6 +46,7 @@ SOURCE = SPINDLE_ROOT / "sqllocks_spindle" / "domains"
 # Reference datasets each domain ships (financial, healthcare and insurance also read retail's
 # ``us_zip_locations``, the same file as the baseline's shared one).
 DOMAINS: dict[str, tuple[str, ...]] = {
+    "retail": ("categories", "product_names", "promo_names", "us_zip_locations"),
     "capital_markets": ("exchanges", "gics_sectors", "index_memberships", "sp500_constituents"),
     "education": ("aid_types", "course_catalog", "department_names"),
     "financial": ("branch_names", "merchant_names", "transaction_categories"),
@@ -63,10 +70,20 @@ DOMAINS: dict[str, tuple[str, ...]] = {
 OVERRIDES: dict[tuple[str, str, str], dict[str, Any]] = {
     ("capital_markets", "industry", "industry_name"): {"strategy": "constant", "value": ""},
 }
+UNREAD_KEYS: dict[str, frozenset[str]] = {
+    "distribution": frozenset({"round"}),
+    "reference_data": frozenset({"weight_field"}),
+    "record_sample": frozenset({"weight_field"}),
+}
 
 
 def schema_document(domain: str, mode: str) -> dict[str, Any]:
     doc = export_retail.schema_document(FIXTURES / f"{domain}_{mode}.json")
+    for table in doc["tables"].values():
+        for column in table["columns"].values():
+            generator = column["generator"]
+            for key in UNREAD_KEYS.get(generator.get("strategy"), frozenset()):
+                generator.pop(key, None)
     for (d, table, column), generator in OVERRIDES.items():
         if d == domain:
             doc["tables"][table]["columns"][column]["generator"] = dict(generator)

@@ -10,8 +10,10 @@ import importlib
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from .azure import AbfssSink as AbfssSink
     from .delta import DeltaSink as DeltaSink
     from .excel import ExcelSink as ExcelSink
+    from .fabric_mirror import FabricMirrorSink as FabricMirrorSink
     from .files import CsvSink as CsvSink
     from .files import IpcSink as IpcSink
     from .files import JsonlSink as JsonlSink
@@ -22,9 +24,11 @@ if TYPE_CHECKING:
 SHAPE_API = "1.0"
 
 _EXPORTS = {
+    "AbfssSink": "azure",
     "CsvSink": "files",
     "DeltaSink": "delta",
     "ExcelSink": "excel",
+    "FabricMirrorSink": "fabric_mirror",
     "IpcSink": "files",
     "JsonlSink": "files",
     "ParquetSink": "files",

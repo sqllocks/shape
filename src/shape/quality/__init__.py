@@ -61,6 +61,7 @@ from .gatespec import (
     load_gate_schema as load_gate_schema,
 )
 from .infer import infer_rules as infer_rules
+from .memorization import MemorizationGate as MemorizationGate
 from .policy import (
     QualityResult as QualityResult,
 )
@@ -79,6 +80,28 @@ from .quarantine import (
 from .quarantine import (
     QuarantineManager as QuarantineManager,
 )
+from .reconcile import (
+    ReconcileResult as ReconcileResult,
+)
+from .reconcile import (
+    ReconciliationGate as ReconciliationGate,
+)
+from .reconcile import (
+    reconcile as reconcile,
+)
+from .reconcile import (
+    validate_reconcile_rules as validate_reconcile_rules,
+)
+from .timeseries import (
+    TimeSeriesGate as TimeSeriesGate,
+)
+from .timeseries import (
+    check_timeseries as check_timeseries,
+)
+from .timeseries import (
+    validate_timeseries_rules as validate_timeseries_rules,
+)
+from .utility import UtilityGate as UtilityGate
 from .verify import (
     VerifyReport as VerifyReport,
 )
@@ -90,4 +113,13 @@ from .verify import (
 )
 from .verify import (
     load_tables as load_tables,
+)
+from .verifyconfig import (
+    VerifyConfig as VerifyConfig,
+)
+from .verifyconfig import (
+    VerifyConfigError as VerifyConfigError,
+)
+from .verifyconfig import (
+    load_verify_config as load_verify_config,
 )

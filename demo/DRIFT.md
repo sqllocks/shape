@@ -41,18 +41,20 @@ Day 1 passes every contract in `demo/contracts/`. Day 2 fails on exactly these r
 | customers | `email` | `null_rate_change` (0.0497 to 0.20) |
 | orders | `status` | `new_categorical_values` |
 | orders | `order_total` | `mean_shift` — **needs `thresholds={"mean_shift_std": 0.25}`** |
-| products | `sku` | not reported: uniqueness is not a diff kind (section 12.3); the contract catches it |
+| products | `sku` | not reported: 50 duplicates in 5,050 rows move distinct values per row by 1%, under the `uniqueness_rate` default of 5%; the contract's `unique` rule catches it |
 
 Two things to know before the live run:
 
-- **The default threshold misses drift 3.** A +40% shift is 0.39 baseline standard
-  deviations, and the section 12.3 default is 0.5. With default thresholds the diff does not
-  show `mean_shift`; pass `thresholds={"mean_shift_std": 0.25}` (tested). The contract still
-  fails on `order_total.max`, so the gate is unaffected.
-- **Side effect the profiler also reports** (tests pin it, so new noise fails the suite):
-  `orders.order_total` `new_categorical_values` (the profiler keeps an enum list for this
-  float column and every day-2 value is new). That is the only one: the products diff is
-  empty.
+- **The default `mean_shift` threshold misses drift 3.** A +40% shift is 0.39 baseline
+  standard deviations, and the section 12.3 default is 0.5, so `mean_shift` only appears with
+  `thresholds={"mean_shift_std": 0.25}` (tested). The shift is not invisible with the defaults:
+  the profiler keeps an enum list for this float column, so the default diff reports it as
+  `category_shift` (medium) and `range_change` (low). The contract still fails on
+  `order_total.max`, so the gate is unaffected.
+- **Side effects the diff also reports** (tests pin them, so new noise fails the suite):
+  `orders.order_total` `new_categorical_values` (every day-2 value is new), `category_shift`
+  and `range_change`. The products diff is empty. The kinds, thresholds and per-column overrides
+  are in `docs/DRIFT.md`.
 
 ## Reproduce
 

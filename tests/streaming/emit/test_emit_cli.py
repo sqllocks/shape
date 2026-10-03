@@ -164,7 +164,29 @@ def test_repair_tail(tmp_path: Path) -> None:
 
 
 def _spawn(args: list[str]) -> subprocess.Popen[bytes]:
-    return subprocess.Popen([*SHAPE, *args], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # Windows: a process group of its own, so Ctrl-Break (its graceful stop) reaches only the child.
+    flags = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+    return subprocess.Popen(
+        [*SHAPE, *args], stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=flags
+    )
+
+
+def _hard_kill(proc: subprocess.Popen[bytes]) -> None:
+    """The platform's uncatchable kill: SIGKILL on POSIX, TerminateProcess on Windows."""
+    proc.kill()
+    proc.wait()
+    if sys.platform == "win32":
+        assert proc.returncode != 0
+    else:
+        assert proc.returncode == -signal.SIGKILL
+
+
+def _graceful_stop(proc: subprocess.Popen[bytes]) -> None:
+    """The platform's catchable stop: SIGTERM on POSIX, Ctrl-Break (SIGBREAK) on Windows."""
+    if sys.platform == "win32":
+        proc.send_signal(signal.CTRL_BREAK_EVENT)
+    else:
+        proc.send_signal(signal.SIGTERM)
 
 
 def _wait_for_events(
@@ -191,10 +213,18 @@ def reference(tmp_path_factory: pytest.TempPathFactory) -> list[bytes]:
     return lines
 
 
-@pytest.mark.parametrize("kill_at", [1500, 9000, 21000])
+# Events per second for each kill point. The kill must land while the run is still going: the
+# time left after the kill point is (21750 - kill_at) / rate, and a loaded runner can stall for a
+# few hundred ms between the poll that sees the kill point and the kill. A late kill point
+# therefore runs slower, so that at least a second of stream is always left.
+KILL_RATES = {1500: 6000, 9000: 6000, 21000: 750}
+
+
+@pytest.mark.parametrize("kill_at", sorted(KILL_RATES))
 def test_kill_9_then_restart_equals_an_uninterrupted_run(
     tmp_path: Path, reference: list[bytes], kill_at: int
 ) -> None:
+    assert (21750 - kill_at) / KILL_RATES[kill_at] >= 1.0
     out = tmp_path / "e.jsonl"
     args = [
         *BASE,
@@ -205,15 +235,13 @@ def test_kill_9_then_restart_equals_an_uninterrupted_run(
         *STREAM,
         "--realtime",
         "--rate",
-        "6000",
+        str(KILL_RATES[kill_at]),
         "--checkpoint-every",
         "100000",
     ]
     proc = _spawn(args)
-    _wait_for_events(out, kill_at, proc)
-    proc.send_signal(signal.SIGKILL)
-    proc.wait()
-    assert proc.returncode == -signal.SIGKILL
+    _wait_for_events(out, kill_at, proc, timeout=90)
+    _hard_kill(proc)
     killed_with = len(_lines(out))
     assert killed_with < 21750
     # restart: same command, finishes the stream
@@ -233,7 +261,7 @@ def test_sigterm_shuts_down_with_a_checkpoint_and_loses_nothing(
     args = [*BASE, "--sink", "file", "-o", str(out), *STREAM, "--realtime", "--rate", "6000"]
     proc = _spawn(args)
     _wait_for_events(out, 4000, proc)
-    proc.send_signal(signal.SIGTERM)
+    _graceful_stop(proc)
     assert proc.wait(timeout=30) == 0
     assert b"stop-request" in (proc.stdout.read() if proc.stdout else b"")
     first = _lines(out)
@@ -281,8 +309,7 @@ def test_kill_9_with_a_stale_checkpoint_sends_duplicates_that_dedupe_removes(
     ]
     proc = _spawn(live)
     _wait_for_events(out, 9000, proc)
-    proc.send_signal(signal.SIGKILL)
-    proc.wait()
+    _hard_kill(proc)
     delivered = len(_lines(out))
     assert 9000 <= delivered < 21750
     assert json.loads(Path(f"{out}.checkpoint").read_text())["offset"] == 3000  # stale

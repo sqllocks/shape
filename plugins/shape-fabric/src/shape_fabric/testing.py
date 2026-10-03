@@ -106,6 +106,98 @@ class FakeKusto:
         return 200, {}, b"{}"
 
 
+WORKSPACE_ID = "11111111-1111-4111-8111-111111111111"
+OPERATION_ID = "99999999-9999-4999-8999-999999999999"
+
+
+class FakeFabricItems:
+    """The Fabric REST calls ``shape fabric deploy-notebook`` and ``setup`` make: workspace
+    listing (paged), item listing, item creation (``201``, or ``202`` with an operation to follow;
+    ``409`` for a name in use) and the operation status. ``items`` holds what is in the
+    workspace; ``created`` is every item the tests created (the request bodies)."""
+
+    HOST = "https://api.fabric.microsoft.com"
+
+    def __init__(
+        self,
+        *,
+        workspaces: list[tuple[str, str]] | None = None,
+        items: list[dict[str, Any]] | None = None,
+        page_size: int = 100,
+        accepted: bool = False,
+        operation_fails: bool = False,
+    ) -> None:
+        self.workspaces = workspaces or [("Demo", WORKSPACE_ID)]
+        self.items: list[dict[str, Any]] = list(items or [])
+        self.page_size = page_size
+        self.accepted = accepted
+        self.operation_fails = operation_fails
+        self.created: list[dict[str, Any]] = []
+        self.calls: list[tuple[str, str]] = []
+        self.auth: list[str | None] = []
+        self._polls = 0
+        self._pending: dict[str, Any] | None = None
+
+    def __call__(
+        self, method: str, url: str, headers: dict[str, str], body: bytes, timeout: float
+    ) -> tuple[int, dict[str, str], bytes]:
+        self.auth.append(headers.get("Authorization"))
+        parts = urlsplit(url)
+        self.calls.append((method, parts.path))
+        query = parse_qs(parts.query)
+        path = parts.path
+        if method == "GET" and path == "/v1/workspaces":
+            rows = [{"id": i, "displayName": n} for n, i in self.workspaces]
+            return self._page(rows, query)
+        if method == "GET" and path == f"/v1/operations/{OPERATION_ID}":
+            self._polls += 1
+            if self._polls == 1:
+                return 200, {}, b'{"status": "Running"}'
+            if self.operation_fails:
+                err = {"status": "Failed", "error": {"errorCode": "Boom", "message": "no capacity"}}
+                return 200, {}, json.dumps(err).encode()
+            if self._pending is not None:
+                self.items.append(self._pending)
+                self._pending = None
+            return 200, {}, b'{"status": "Succeeded"}'
+        match = re.fullmatch(r"/v1/workspaces/([^/]+)/items", path)
+        if match is None:
+            return 404, {}, b'{"errorCode": "EntityNotFound"}'
+        if match.group(1) not in {i for _, i in self.workspaces}:
+            return 404, {}, b'{"errorCode": "WorkspaceNotFound"}'
+        if method == "GET":
+            kind = query.get("type", [None])[0]
+            rows = [i for i in self.items if kind in (None, i["type"])]
+            return self._page(rows, query)
+        doc = json.loads(body)
+        if any(
+            i["displayName"] == doc["displayName"] and i["type"] == doc["type"] for i in self.items
+        ):
+            return 409, {}, b'{"errorCode": "ItemDisplayNameAlreadyInUse"}'
+        self.created.append(doc)
+        item = {
+            "id": f"{len(self.items) + 1:08d}-0000-4000-8000-000000000000",
+            "displayName": doc["displayName"],
+            "type": doc["type"],
+            "workspaceId": match.group(1),
+        }
+        if self.accepted:
+            self._pending = item
+            location = f"{self.HOST}/v1/operations/{OPERATION_ID}"
+            return 202, {"Location": location, "Retry-After": "0"}, b""
+        self.items.append(item)
+        return 201, {}, json.dumps(item).encode()
+
+    def _page(
+        self, rows: list[dict[str, Any]], query: dict[str, list[str]]
+    ) -> tuple[int, dict[str, str], bytes]:
+        start = int(query.get("continuationToken", ["0"])[0])
+        doc: dict[str, Any] = {"value": rows[start : start + self.page_size]}
+        if start + self.page_size < len(rows):
+            doc["continuationToken"] = str(start + self.page_size)
+        return 200, {}, json.dumps(doc).encode()
+
+
 def _kql_names(csl: str) -> list[str]:
     """The ``['...']`` identifiers of a command, unescaped, in order."""
     return [
@@ -314,7 +406,9 @@ class FakeSqlCursor:
             server.fail(sql, params)
         text = " ".join(sql.split())
         self._result = []
-        if text.startswith("SELECT 1 FROM INFORMATION_SCHEMA.TABLES"):
+        if text == "SELECT 1":
+            self._result = [(1,)]
+        elif text.startswith("SELECT 1 FROM INFORMATION_SCHEMA.TABLES"):
             self._result = [(1,)] if (params[0], params[1]) in server.tables else []
         elif text.startswith("IF NOT EXISTS (SELECT 1 FROM sys.schemas"):
             made = re.search(rf"EXEC\('CREATE SCHEMA {_NAME}'\)", text)
@@ -458,3 +552,142 @@ def sample_batch(start: int = 0, n: int = 4) -> pa.RecordBatch:
 
 def sample_batches() -> list[pa.RecordBatch]:
     return [sample_batch(0, 4), sample_batch(4, 3)]
+
+
+# --- authentication ----------------------------------------------------------------------
+
+FAKE_ENTRA_TOKEN = "fake-entra-token-for-the-contract-scenarios"  # nosec B105  # not a credential
+FAKE_VAULT_SECRET = "fake-vault-secret-for-the-contract-scenarios"  # nosec B105  # not a secret
+
+
+class FakeKeyVault:
+    """An Azure Key Vault as an HTTP ``transport`` (``shape_fabric.kusto.Transport``): answers
+    ``GET https://<vault>.vault.azure.net/secrets/<name>[/<version>]`` for the secrets it holds,
+    and only for a bearer token. ``secrets`` maps ``(vault, name)`` to the value."""
+
+    def __init__(self, secrets: dict[tuple[str, str], str] | None = None) -> None:
+        self.secrets = dict(secrets or {("vault-one", "sql-password"): FAKE_VAULT_SECRET})
+        self.requests: list[tuple[str, str, dict[str, str]]] = []
+
+    def __call__(
+        self, method: str, url: str, headers: dict[str, str], body: bytes, timeout: float
+    ) -> tuple[int, dict[str, str], bytes]:
+        self.requests.append((method, url, dict(headers)))
+        parts = urlsplit(url)
+        vault = (parts.hostname or "").removesuffix(".vault.azure.net")
+        if not headers.get("Authorization", "").startswith("Bearer "):
+            return 401, {}, b'{"error":{"code":"Unauthorized"}}'
+        segments = parts.path.strip("/").split("/")
+        if method != "GET" or segments[0] != "secrets" or len(segments) not in (2, 3):
+            return 400, {}, b'{"error":{"code":"BadParameter"}}'
+        value = self.secrets.get((vault, segments[1]))
+        if value is None:
+            return 404, {}, b'{"error":{"code":"SecretNotFound"}}'
+        return 200, {}, json.dumps({"value": value, "id": url.split("?")[0]}).encode()
+
+
+class FakeIdentity:
+    """A stand-in for ``azure.identity``: ``module()`` is what ``import azure.identity`` should
+    find. Each credential class records its construction and every ``get_token`` in ``calls``
+    (secrets are recorded as ``<redacted>``, and kept apart in ``secrets_seen`` for the test), and
+    hands out ``FAKE_ENTRA_TOKEN``. ``fail`` names the classes whose ``get_token`` raises."""
+
+    CLASSES = (
+        "AzureCliCredential",
+        "ClientSecretCredential",
+        "ManagedIdentityCredential",
+        "DeviceCodeCredential",
+        "DefaultAzureCredential",
+    )
+
+    def __init__(self, tape: Any = None, fail: tuple[str, ...] = ()) -> None:
+        self.calls: list[dict[str, Any]] = []
+        self.secrets_seen: list[str] = []
+        self.tape = tape
+        self.fail = fail
+
+    def _log(self, entry: dict[str, Any]) -> None:
+        self.calls.append(entry)
+        if self.tape is not None:
+            self.tape.step(entry, None if self.tape.replaying else (lambda: {"ok": True}))
+
+    def module(self) -> Any:
+        import types
+
+        outer = self
+        mod = types.ModuleType("azure.identity")
+        for name in self.CLASSES:
+
+            def make(cls_name: str) -> type:
+                class Credential:
+                    def __init__(self, **kwargs: Any) -> None:
+                        shown = {}
+                        for k, v in kwargs.items():
+                            if k == "prompt_callback":
+                                continue
+                            if "secret" in k:
+                                outer.secrets_seen.append(str(v))
+                                shown[k] = "<redacted>"
+                            else:
+                                shown[k] = v
+                        self.kwargs = kwargs
+                        outer._log({"credential": cls_name, "created_with": shown})
+
+                    def get_token(self, *scopes: str, **_kw: Any) -> Any:
+                        import types as _t
+
+                        outer._log({"credential": cls_name, "get_token": list(scopes)})
+                        if cls_name in outer.fail:
+                            raise RuntimeError(f"{cls_name} could not sign in")
+                        prompt = self.kwargs.get("prompt_callback")
+                        if prompt is not None:
+                            prompt("https://example.test/devicelogin", "ABC123", None)
+                        return _t.SimpleNamespace(token=FAKE_ENTRA_TOKEN, expires_on=0)
+
+                Credential.__name__ = cls_name
+                return Credential
+
+            setattr(mod, name, make(name))
+        return mod
+
+    def installed(self) -> Any:
+        """A context manager: inside it ``import azure.identity`` gives this fake."""
+        import contextlib
+        import sys
+        import types
+
+        @contextlib.contextmanager
+        def swap() -> Any:
+            module = self.module()
+            package = sys.modules.get("azure") or types.ModuleType("azure")
+            saved = {k: sys.modules.get(k) for k in ("azure", "azure.identity")}
+            sys.modules["azure"] = package
+            sys.modules["azure.identity"] = module
+            old = getattr(package, "identity", None)
+            package.identity = module  # type: ignore[attr-defined]
+            try:
+                yield self
+            finally:
+                for key, value in saved.items():
+                    if value is None:
+                        sys.modules.pop(key, None)
+                    else:
+                        sys.modules[key] = value
+                if old is None:
+                    package.__dict__.pop("identity", None)
+                else:
+                    package.identity = old  # type: ignore[attr-defined]
+
+        return swap()
+
+    def install(self, monkeypatch: Any) -> FakeIdentity:
+        """Make ``import azure.identity`` give this fake (undone with the test's monkeypatch)."""
+        import sys
+        import types
+
+        module = self.module()
+        package = sys.modules.get("azure") or types.ModuleType("azure")
+        monkeypatch.setitem(sys.modules, "azure", package)
+        monkeypatch.setattr(package, "identity", module, raising=False)
+        monkeypatch.setitem(sys.modules, "azure.identity", module)
+        return self

@@ -7,6 +7,7 @@ from shape.streaming.emit.anomaly import (
     ValueAnomalyMutator,
     resolve_mutators,
 )
+from shape.streaming.emit.faults import AnswerKey, FanOutSink, FaultSink, read_answer_key
 from shape.streaming.emit.formats import (
     ENVELOPES,
     FIELD_SEQ,
@@ -17,12 +18,33 @@ from shape.streaming.emit.formats import (
     event_key,
     read_events,
 )
-from shape.streaming.emit.rate import Burst, RateSchedule, parse_burst
-from shape.streaming.emit.runtime import EmitConfig, EmitReport, EmitRunner
-from shape.streaming.emit.sinks import EmitterSink, EventSink, FileSink, MemorySink, StdoutSink
+from shape.streaming.emit.rate import (
+    Burst,
+    RateCap,
+    RateSchedule,
+    VirtualClock,
+    parse_burst,
+    parse_speed,
+)
+from shape.streaming.emit.runtime import EmitConfig, EmitReport, EmitRunner, EventSequence
+from shape.streaming.emit.sinks import (
+    EmitterSink,
+    EventSink,
+    FileSink,
+    MemorySink,
+    StdoutSink,
+    open_sink,
+)
 from shape.streaming.emit.source import EventBlock, EventPlan
 
 __all__ = [
+    "AnswerKey",
+    "FanOutSink",
+    "FaultSink",
+    "RateCap",
+    "VirtualClock",
+    "parse_speed",
+    "read_answer_key",
     "DEFAULT_MUTATOR",
     "ENVELOPES",
     "FIELD_SEQ",
@@ -36,6 +58,7 @@ __all__ = [
     "EmitterSink",
     "EventBlock",
     "EventPlan",
+    "EventSequence",
     "EventSink",
     "FileSink",
     "MemorySink",
@@ -45,6 +68,7 @@ __all__ = [
     "decode_line",
     "encode_batch",
     "event_key",
+    "open_sink",
     "parse_burst",
     "read_events",
     "resolve_mutators",

@@ -2,11 +2,16 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://shape-as-code.org/schema/1.0/generation-schema-v1.json",
   "title": "Shape generation schema, version 1",
-  "description": "What the generation engine reads: a model (seed, locale, date range, mode), tables whose columns each carry a generator (a strategy name plus its keys), relationships, business rules, scale presets and derived row counts, and correlated column pairs. Strategy keys are open: each strategy defines its own.",
+  "description": "What the generation engine reads: a model (seed, locale, date range, mode), tables whose columns each carry a generator (a strategy name plus its keys), relationships, business rules, scale presets and derived row counts, and correlated column pairs. Strategy keys are open: each strategy defines its own. A writer declares format, version, shape_version and min_shape_version (docs/specs/STATE_AND_COMPATIBILITY.md); schema_version is the same number under its older name, still written and still read. Fields starting with x_ are extensions: ignored on read, kept on rewrite.",
   "type": "object",
   "required": ["schema_version", "model", "tables"],
   "additionalProperties": false,
+  "patternProperties": {"^(x_|x-|\\$comment$)": {}},
   "properties": {
+    "format": {"const": "shape-generation-schema"},
+    "version": {"const": 1},
+    "shape_version": {"type": "string"},
+    "min_shape_version": {"type": "string"},
     "schema_version": {"const": 1},
     "model": {"$ref": "#/$defs/model"},
     "tables": {"type": "object", "additionalProperties": {"$ref": "#/$defs/table"}},
@@ -24,6 +29,7 @@
       "type": "object",
       "required": ["name"],
       "additionalProperties": false,
+      "patternProperties": {"^(x-|\\$comment$)": {}},
       "properties": {
         "name": {"type": "string"},
         "description": {"type": "string"},
@@ -38,6 +44,7 @@
       "type": "object",
       "required": ["name", "columns"],
       "additionalProperties": false,
+      "patternProperties": {"^(x-|\\$comment$)": {}},
       "properties": {
         "name": {"type": "string"},
         "description": {"type": "string"},
@@ -50,6 +57,7 @@
       "type": "object",
       "required": ["name", "type", "generator"],
       "additionalProperties": false,
+      "patternProperties": {"^(x-|\\$comment$)": {}},
       "properties": {
         "name": {"type": "string"},
         "type": {"type": "string"},
@@ -65,6 +73,7 @@
       "type": "object",
       "required": ["name", "parent", "child"],
       "additionalProperties": false,
+      "patternProperties": {"^(x-|\\$comment$)": {}},
       "properties": {
         "name": {"type": "string"},
         "parent": {"type": "string"},
@@ -80,6 +89,7 @@
       "type": "object",
       "required": ["name", "type", "rule"],
       "additionalProperties": false,
+      "patternProperties": {"^(x-|\\$comment$)": {}},
       "properties": {
         "name": {"type": "string"},
         "type": {"type": "string"},
@@ -92,6 +102,7 @@
     "generation": {
       "type": "object",
       "additionalProperties": false,
+      "patternProperties": {"^(x-|\\$comment$)": {}},
       "properties": {
         "scale": {"type": "string"},
         "scales": {

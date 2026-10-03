@@ -14,6 +14,8 @@ from pathlib import Path
 
 import pytest
 
+from shape.cli.gitcmds import python_textconv_command
+
 SHAPE = [sys.executable, "-m", "shape.cli.main"]
 GIT_OK = shutil.which("git") is not None
 
@@ -32,8 +34,9 @@ def _git(cwd: Path, *args: str) -> str:
     r = subprocess.run(
         ["git", "-c", "user.name=t", "-c", "user.email=t@example.org", "-c", "core.autocrlf=false",
          *args],
-        cwd=cwd, capture_output=True, text=True, check=True,
+        cwd=cwd, capture_output=True, text=True, check=False,
     )  # fmt: skip
+    assert r.returncode == 0, f"git {' '.join(args)} exited {r.returncode}: {r.stderr}"
     return r.stdout
 
 
@@ -68,7 +71,7 @@ def test_git_workflow_end_to_end(tmp_path):
         repo,
         "git-setup",
         "--command",
-        " ".join(SHAPE + ["cat"]),
+        python_textconv_command(),
         "--pattern",
         "*.shape",
         "--pattern",

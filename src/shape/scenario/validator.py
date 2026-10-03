@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import PurePosixPath, PureWindowsPath
 from typing import Any
 
+from shape import compat
 from shape.scenario.loader import PACK_KINDS, ScenarioPack
 
 KNOWN_GATES = (
@@ -94,6 +95,11 @@ class PackValidator:
             result.warnings.append(f"Pack domain '{pack.domain}' does not match domain '{name}'")
         if pack.pack_version < 1:
             result.errors.append(f"Invalid pack_version: {pack.pack_version}")
+        elif pack.pack_version > compat.KINDS["scenario-pack"].current:
+            result.errors.append(
+                f"Unsupported pack_version {pack.pack_version}: this Shape reads up to version "
+                f"{compat.KINDS['scenario-pack'].current}; {compat.newer_hint(pack.needs_release)}"
+            )
         if pack.kind not in PACK_KINDS:
             result.errors.append(
                 f"Invalid kind '{pack.kind}'. Must be one of: {', '.join(sorted(PACK_KINDS))}"

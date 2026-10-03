@@ -84,6 +84,9 @@ def test_uniform_timestamps_do_not_depend_on_chunking() -> None:
         {"range": {"start": "2020-02-29", "end": "2020-03-01"}},
         {"start": "1700-01-01", "end": "2250-01-01"},
         {"start": "1500-01-01", "end": "2500-01-01", "pattern": "uniform"},  # beyond nanoseconds
+        {"start": "2026-05-01", "end": "2026-05-01"},  # a date end is a possible day: one day
+        {"start": "2026-05-01T00:00:00", "end": "2026-05-01T00:00:00"},  # an empty instant range
+        {"start": "2026-05-02", "end": "2026-05-01"},  # ends before it starts
     ],
 )
 def test_the_fused_uniform_column_equals_the_stepwise_one(spec, n, unit, monkeypatch):
@@ -107,5 +110,20 @@ def test_the_fused_uniform_column_equals_the_stepwise_one(spec, n, unit, monkeyp
 
 
 def test_a_range_that_ends_before_it_starts_is_an_error() -> None:
-    with pytest.raises(StrategyError, match="must end after"):
+    with pytest.raises(StrategyError, match="is before the start"):
         T.Temporal().generate({"start": "2020-01-02", "end": "2020-01-01"}, _ctx())
+
+
+@pytest.mark.parametrize("unit", ["us", "ns"])
+def test_the_fused_column_keeps_the_end_day_of_a_date_range(unit: str) -> None:
+    """A date ``end`` stands for its whole day on the fused route too: a one-day range draws
+    inside that day, and an empty range of instants is the same error as on the stepwise one."""
+    one_day = T.Temporal().generate(
+        {"start": "2026-05-01", "end": "2026-05-01", "unit": unit}, _ctx()
+    )
+    days = one_day.cast(pa.timestamp("us")).cast(pa.int64()).to_numpy() // 86_400_000_000
+    assert set(days.tolist()) == {np.datetime64("2026-05-01", "D").astype(np.int64)}
+    with pytest.raises(StrategyError, match="exclusive time"):
+        T.Temporal().generate(
+            {"start": "2026-05-01T00:00:00", "end": "2026-05-01T00:00:00", "unit": unit}, _ctx()
+        )

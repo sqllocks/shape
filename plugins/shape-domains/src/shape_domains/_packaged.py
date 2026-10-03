@@ -19,7 +19,9 @@ from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
+from shape.generation.composite import Composition
 from shape.plugins.api.v1 import DomainDefinition
+from shape_domains.composition import composition
 
 _PACKAGE = "shape_domains"
 _FILES = {"3nf": "schema.json", "star": "schema_star.json"}
@@ -94,6 +96,10 @@ class PackagedDomain:
     datasets: tuple[str, ...] = ()
     borrowed: dict[str, tuple[str, str]] = {}
     modes = ("3nf", "star")
+
+    def composition(self) -> Composition:
+        """The composite presets and shared-entity tables (``shape composite``)."""
+        return composition()
 
     def definition(self, mode: str = "3nf") -> DomainDefinition:
         if mode not in _FILES:

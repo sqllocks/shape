@@ -354,7 +354,7 @@ def main(argv: list[str] | None = None) -> int:
     for p, rows in files:
         size = p.stat().st_size
         total += size
-        print(f"{p.relative_to(a.out)!s:28s} {rows:>10,} rows {size / 1e6:>8.2f} MB")
+        print(f"{p.relative_to(a.out).as_posix():28s} {rows:>10,} rows {size / 1e6:>8.2f} MB")
     print(f"total {total / 1e6:.1f} MB in {a.out}")
     return 0
 

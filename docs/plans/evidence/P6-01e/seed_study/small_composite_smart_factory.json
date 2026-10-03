@@ -1,0 +1,87 @@
+{
+ "domain": "composite_smart_factory",
+ "scale": "small",
+ "impl": "shape",
+ "seeds": [
+  "1042",
+  "1043",
+  "1044",
+  "1045",
+  "1046",
+  "1047",
+  "1048",
+  "1049"
+ ],
+ "findings_per_seed": {
+  "1042": 1,
+  "1043": 0,
+  "1044": 1,
+  "1045": 1,
+  "1046": 0,
+  "1047": 3,
+  "1048": 1,
+  "1049": 0
+ },
+ "by_finding": {
+  "(f) strategy_semantics: iot_alert.resolved_at - triggered_at in [#,#] days": {
+   "seeds": [
+    "1042",
+    "1047"
+   ],
+   "count": 2
+  },
+  "(h) fidelity manufacturing_bom:": {
+   "seeds": [
+    "1047"
+   ],
+   "count": 1
+  },
+  "(h) fidelity manufacturing_downtime_event:": {
+   "seeds": [
+    "1047"
+   ],
+   "count": 1
+  },
+  "(h) fidelity manufacturing_equipment:": {
+   "seeds": [
+    "1048"
+   ],
+   "count": 1
+  },
+  "(h) fidelity manufacturing_production_line:": {
+   "seeds": [
+    "1044"
+   ],
+   "count": 1
+  },
+  "(h) fidelity supply_chain_inventory:": {
+   "seeds": [
+    "1045"
+   ],
+   "count": 1
+  }
+ },
+ "systematic": [],
+ "flagged": {
+  "1042": [
+   "(f) strategy_semantics: iot_alert.resolved_at - triggered_at in [0,7] days impl 0.7000 < floor 0.7230"
+  ],
+  "1043": [],
+  "1044": [
+   "(h) fidelity manufacturing_production_line: 94.64 < floor 95.74"
+  ],
+  "1045": [
+   "(h) fidelity supply_chain_inventory: 94.24 < floor 97.00"
+  ],
+  "1046": [],
+  "1047": [
+   "(f) strategy_semantics: iot_alert.resolved_at - triggered_at in [0,7] days impl 0.7200 < floor 0.7230",
+   "(h) fidelity manufacturing_bom: 96.21 < floor 96.23",
+   "(h) fidelity manufacturing_downtime_event: 95.90 < floor 96.00"
+  ],
+  "1048": [
+   "(h) fidelity manufacturing_equipment: 95.24 < floor 95.64"
+  ],
+  "1049": []
+ }
+}

@@ -33,6 +33,32 @@ shape check customers.shape contract.json          # exit code 1 if the contract
 shape diff customers.shape customers_next.shape --fail-on-drift
 ```
 
+A Delta table can be profiled as it was: `shape profile events/ --version 3 -o v3.shape`, or
+`--as-of 2026-06-02T00:00:00Z` for the newest version committed at or before that time (no zone
+means UTC); the API is `shape.profile(path, version=3)` and `shape.profile(path, as_of=...)`.
+The Delta version and its commit time are recorded in the `.shape` manifest
+(`Profile.provenance`, printed by `shape profile` and `shape inspect`), outside the profile body,
+so they do not change the content id or a diff. The data of a version must still be in the table
+(not vacuumed).
+
+Tables that use **deletion vectors** (Fabric Spark writes them by default) or **column mapping**
+cannot be read by the `deltalake` package (it fails on deletion vectors, and for column mapping it
+fails or returns null columns, depending on its release). Shape detects them from the table's
+protocol and configuration and reads them with DuckDB `delta_scan` instead, after a one-line
+`shape: note: ...` on stderr; `Profile.provenance` then also carries `reader: "duckdb"`,
+`reader_features` and `fallback_reason`. The fallback is an optional extra:
+`pip install 'sqllocks-shape[delta-fallback]'` (DuckDB downloads its `delta` extension on first
+use; run `INSTALL delta` once on a machine with network access if yours has none). Without it,
+profiling such a table stops with an error that names the feature and the extra. A table
+`deltalake` can read is still read by `deltalake`, and both readers give the same profile (same
+content id) for it. `--version` and `--as-of` work with the fallback (an `--as-of` time is turned
+into a version from the table's history, as for any table). `delta+abfss://` tables (OneLake,
+ADLS Gen2) use the same fallback with the credentials the Delta source already resolves.
+`shape diff` compares types, null rates, distinct values, category mix, true rates, spread,
+quantiles, ranges, patterns and string lengths, with a documented default for each; thresholds can
+be set per column and columns ignored (`--ignore`, `--policy`). See `docs/DRIFT.md`, which also
+covers `shape generate-drift`, daily data with planted drift and an answer key.
+
 A folder is one table (its files are partitions) unless you pass `--dataset`, which profiles one
 table per file, named by the file name: `shape profile data/ --dataset -o data.shape`. A contract
 with a `tables` object is checked against such a dataset profile only; against a single table
@@ -42,6 +68,13 @@ with a `tables` object is checked against such a dataset profile only; against a
 shape --version
 shape inspect customers.shape                        # what a .shape file holds
 ```
+
+## A project file
+
+`shape init` writes a `shape.yml` that keeps a setup reviewable in git: named sources, a baseline
+per source, thresholds and ignore lists per column, gates (observe or enforce) and column owners.
+`shape profile`, `diff`, `check` and `verify` read it and every flag overrides it
+(`docs/PROJECT.md`).
 
 ## Version-controlling shapes
 
@@ -81,16 +114,20 @@ git diff                              # one changed line per changed property
   is the share-safe JSON, `shape profile safe orders.shape -o orders.safe.json`: sorted keys,
   one value per line, stable numbers, rare values suppressed. Check it with
   `shape profile validate --safe orders.safe.json` (exit 0 means no leak found).
+  A registry follows the same rule: `shape registry` refuses a raw profile (commit it with
+  `--safe`, or commit the safe JSON; `docs/REGISTRY.md`), and `shape profile registry` is a
+  private catalog of full profiles unless you save with `--safe` (`docs/PROFILE_REGISTRY.md`).
 - Signed files (`--sign KEY`) are reproducible too: the signature covers the manifest bytes,
   not the container.
 
 ## What's in early access
 
 Profiling, contracts (`check`) and drift (`diff`) are the supported surface, in Python
-and in the `shape` CLI. Generating data from a profile is planned but not in this release:
-`shape.generate()` raises `NotImplementedError` for a profile, and the legacy CLI commands
-`plan` and `query` exit 2 for one. Other legacy commands (such as `generate` and `fidelity`)
-are experimental and will change.
+and in the `shape` CLI. `shape.profile()` reads files, Arrow tables, DataFrames and a list of row
+dicts. Generating data from a profile works (`shape.generate(profile, n)`, `shape generate
+--from PROFILE.shape`), and `shape plan PROFILE.shape` lists what generation keeps. `shape.query`
+and `shape query` read Shape model files, not profiles, and exit 2 for a profile. Other legacy
+commands (such as `fidelity`) are experimental and will change.
 
 ## What a `.shape` file contains
 

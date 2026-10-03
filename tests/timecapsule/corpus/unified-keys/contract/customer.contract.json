@@ -1,0 +1,19 @@
+{
+  "fidelity": "gold",
+  "fields": [
+    {
+      "constraints": {},
+      "kind": "integer",
+      "name": "id",
+      "nullable": false,
+      "semantic_type": null,
+      "sensitivity": "CONFIDENTIAL"
+    }
+  ],
+  "format": "shape-contract-model",
+  "metadata": {},
+  "min_shape_version": "0.9.0",
+  "name": "customer",
+  "shape_version": "0.9.0",
+  "version": 1
+}

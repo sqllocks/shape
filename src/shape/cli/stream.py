@@ -49,7 +49,7 @@ def run(a: argparse.Namespace) -> int:
 
     if len(a.table) != 1:
         raise ShapeError("shape stream streams one table: give --table exactly once")
-    if a.batch_events is None and not a.realtime:
+    if a.batch_events is None and not a.realtime and not a.speed and a.max_rate is None:
         a.batch_events = BULK_BATCH
     return run_emit(a)
 

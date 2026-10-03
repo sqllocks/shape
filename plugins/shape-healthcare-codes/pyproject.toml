@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sqllocks-shape-healthcare-codes"
+# Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
+version = "0.9.0"
+description = "Shape plugin: Healthcare reference code sets, validators and detectors"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+dependencies = ["sqllocks-shape==0.9.0"]
+
+# Entry points (shape.* groups, plugin API v1); see docs/plugins/authoring.md.
+[project.entry-points."shape.commands"]
+healthcare-codes = "shape_healthcare_codes.cli:HealthcareCodesCommand"
+
+[project.entry-points."shape.detectors"]
+icd10 = "shape_healthcare_codes.detectors:Icd10Detector"
+ndc = "shape_healthcare_codes.detectors:NdcDetector"
+npi = "shape_healthcare_codes.detectors:NpiDetector"
+hcpcs = "shape_healthcare_codes.detectors:HcpcsDetector"
+cpt = "shape_healthcare_codes.detectors:CptDetector"
+member_id = "shape_healthcare_codes.detectors:MemberIdDetector"
+mbi = "shape_healthcare_codes.detectors:MbiDetector"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+shape_healthcare_codes = ["data/*.arrow", "data/*.json", "py.typed"]

@@ -215,8 +215,8 @@ instruction.
 | T-04 | **Wheels built with `PyO3/maturin-action`:** manylinux_2_28 and musllinux_1_2 for x86_64 (native) and aarch64 (native on `ubuntu-24.04-arm`); macOS arm64 and x86_64 (cross-compiled on `macos-14`); win_amd64. They are abi3 wheels, one per platform, test-installed on Python 3.11 and 3.14. The sdist builds with Rust ≥1.85. | Avoids redundant builds per Python version and slow QEMU emulation. |
 | T-05 | **Build backend:** maturin, with a mixed Python/Rust layout (`python-source = "src"`, `module-name = "shape._kernel"`). | Needed for T-02. |
 | T-06 | **Python 3.11–3.14.** Tests run on the full matrix on Linux, and on 3.11 plus 3.14 on macOS and Windows. | Current floor and current release. |
-| T-07 | **Core dependencies are `numpy>=2.0,<3` and `pyarrow>=14.0.1` (no upper bound).** Remove `pydantic` (unused) and `typing-extensions`. Move `cryptography` to `[sign]`, and make `shape.security` import `crypto` lazily. Remove the `pyarrow<24` pin. The install range must admit the Fabric UDF SDK, which pins `pyarrow>=19.0.1,<20` (`fabric-user-data-functions` 1.0.x), and Fabric runtimes' preinstalled pyarrow; 14.0.1 is the first release without CVE-2023-47248. The benchmark harness still pins pyarrow 25.0.1 in both venvs (§1), so every performance number uses the same pyarrow. CI tests both the newest pyarrow (main matrix) and 19.x (the `fabric-demo` job). | Import time, install size, Fabric UDF compatibility, and a fair Parquet comparison. |
-| T-08 | **Extras:** `[sign]`, `[scipy]`, `[kafka]`, `[eventhubs]`, `[fabric]`, `[sqlserver]`, `[domains]`, `[simulation]`, `[excel]`, `[delta]` and `[all]`. Each plugin extra depends on the matching `sqllocks-shape-*` distribution. `[dev]` adds pytest, pytest-cov, hypothesis, ruff, mypy, pip-audit, build, maturin, xxhash, import-linter, vulture, bandit and py-spy. | Mirrors Spindle's extras. |
+| T-07 | **Core dependencies are `numpy>=2.0,<3` and `pyarrow>=14.0.1` (no upper bound), plus `tzdata` on Windows only (`tzdata; sys_platform == "win32"`, owner 2026-10-02: named time zones work out of the box where the OS has no time-zone database).** Remove `pydantic` (unused) and `typing-extensions`. Move `cryptography` to `[sign]`, and make `shape.security` import `crypto` lazily. Remove the `pyarrow<24` pin. The install range must admit the Fabric UDF SDK, which pins `pyarrow>=19.0.1,<20` (`fabric-user-data-functions` 1.0.x), and Fabric runtimes' preinstalled pyarrow; 14.0.1 is the first release without CVE-2023-47248. The benchmark harness still pins pyarrow 25.0.1 in both venvs (§1), so every performance number uses the same pyarrow. CI tests both the newest pyarrow (main matrix) and 19.x (the `fabric-demo` job). | Import time, install size, Fabric UDF compatibility, and a fair Parquet comparison. |
+| T-08 | **Extras:** `[sign]`, `[scipy]`, `[kafka]`, `[eventhubs]`, `[fabric]`, `[sqlserver]`, `[domains]`, `[simulation]`, `[dbt]`, `[healthcare]`, `[excel]`, `[delta]` and `[all]`. Each plugin extra depends on the matching `sqllocks-shape-*` distribution. `[dev]` adds pytest, pytest-cov, hypothesis, ruff, mypy, pip-audit, build, maturin, xxhash, import-linter, vulture, bandit and py-spy. | Mirrors Spindle's extras. |
 | T-09 | **First-party plugins live under `plugins/<dist-name>/`,** each with its own `pyproject.toml`. Their versions are kept in lockstep with core, and they are released together. | One CI and atomic API changes. |
 | T-10 | **Package and version.** `sqllocks-shape` is not on PyPI (confirmed 404 on 2026-09-29). The version is `0.9.0.devN` during the build and becomes **1.0.0 at G8**. | Nothing published yet. |
 | T-11 | **Shape model v2 and `.shape` format v2,** with one schema for every path. There is a read-only v1→v2 migrator, and v1 writing is removed. | Unpublished, so it can break freely. |
@@ -243,7 +243,21 @@ instruction.
 
 | Date | ID | Change | Reason |
 |---|---|---|---|
+| 2026-10-03 | INT-15 | **Integration INT-15 merged into build/main-plan:** ISS2-sinks round 2, W1-02, W1-03, W2-03, W5-02, W6-02, W1-08, P6-11 (`shape bridge`) and P6-12 (`shape demo`). Lead fixes in INT-15: the `delta_scan` SQL `# nosec B608` with its escaping (see the row below), the publish test key set, and the fabric commands parity harness: W1-03 adds four declared keys to the run manifest (`format`, `version`, `reproducibility`, `dataset_id`); the harness now accepts exactly those four as Shape-only keys, requires every other key to match the baseline as before, checks the format declaration, and gained four negative controls (a Shape key removed, the declaration changed, a non-integer version, an unknown key added); with them its negative control passes. Verified by the lead before merging (54 steps, all exit 0): ruff, format, mypy, full suite in both kernels, heavy suites, demo, profile verifiers in both kernels, DDL, plugins (install, tests, kit, uninstall), db parity, domains, retail export and verify, tiers, simulation files and patterns with negative control, incremental, pack, stream profile and stream parity, fabric plugins, fabric commands parity with negative control, chaos parity. **Decisions:** every ported domain ships, listed by maturity (no top-ten cut; register R8-03); the lead tags `demo-2026-10-06` at the freeze once the owner sets the version (owner action). | Lead verification logs |
+| 2026-10-03 | §13 lanes launched; W4-02 rejected; W1-07 done; early-start dependencies | **Owner: speed is all that matters.** Every remaining §13 package without an open chain dependency now has a lane, specified by issues #79 to #106 (W1-10, W1-11, W1-12, W1-14, W1-15, W1-17, W1-18, W2-06, W2-08, W2-09, W2-10, W3-01, W3-02, W3-03, W3-05, W3-07, W3-11, W3-12, W3-13, W4-01, W5-04 to W5-10, W6-04). Lanes start from int/INT-15 and merge the finished, not yet integrated lanes they depend on (W1-01, W1-04, W1-05, W1-06, W2-01, W3-06, PLUG-INT); a lane merges into build/main-plan only after its dependencies have. **W4-02 rejected:** the open side already imports Synthea modules (`shape behave import-gmf`); a runner needs a Java runtime (poor fit for air-gapped use) and served calibration, which is not open work. **W1-07 done:** `docs/BRANDING.md` already carries it on build/main-plan (9e87cd8, c6b5d17). **W2-06 is open:** the sempy source plugin profiles semantic models; report and visual usage lookup is out of its scope. **W1-11:** safe capture becomes the default as §13 says (superseding SAC-01), redacting only what is written or printed, so the verifiers and T-22 parity are unchanged. **W1-17** is built now and merged after the 2026-10-07 demo. Held until their dependencies land: W1-13 (W1-12), W2-07 (ISS2-bugs), W3-08 (W3-07), W5-03 (W1-11), W6-01 (W1-14), W6-03 (W5-05); W2-05 waits on O-07. | Lead; issue specs written from the plan and the code |
+| 2026-10-03 | #46 vs ISS2-joint tests; #76; #78; INT-15 | **ZIP-as-text wins over the integer reading in five ISS2-joint tests:** with #46 (identifier columns stay text, owner request) the `city_zip` fixture's `zip` column is text, so its placeholder is `'00000'` and `02134` and `2134` are different values; ISS2-bugs round 5 updates exactly those five expectations (recomputed, each citing #46) and nothing else. **#76 is a pyarrow-floor question, not numpy:** the three failures occur with pyarrow < 25 (pulled in by `tests/demo/fabric/requirements.txt`) and are raised by the tests' own pyarrow calls; the core floor `pyarrow>=14.0.1` stays unless Shape's own code fails at it; BF-76 makes the tests build their data in a version-independent way with every assertion unchanged, and adds a minimum-versions check (a floor rises only on evidence that Shape fails below it). **#78 filed** (nightly sqlserver-e2e: pyodbc `Row` compared with a tuple; fabric-emit-e2e) with lane BF-78; W1-09 round 2 fixes the Fabric demo tests on Windows from nightly run 37110403910 (kafka-e2e passed there). **INT-15 lead fixes:** `delta_scan` SQL marked `# nosec B608` with the escaping it relies on (bandit gate; W2-03's tests pin the SQL text, so parameter binding was not used); the P6-07c publish test's exact manifest key set now includes W1-03's `format`, `version`, `reproducibility`, `dataset_id`, as W1-03's own runner test already does. | Lane reports ISS2-bugs round 4, BF-76 round 1; nightly run 37110403910 |
+| 2026-10-03 | INT-14, W1-05, issues #76 #77 | **Integration INT-14 merged into build/main-plan:** ISS2-joint round 2 (held decisions (1) and (6) built, G1 re-measured), P6-07c (`shape fabric publish\|notebook\|deploy-notebook\|setup\|export-model` with top-level aliases) and W2-04 (Excel named ranges, tables, merged cells, autofilter; Delta reader 1 / writer 2). Verified by the lead before merging: ruff, format, mypy, full suite in both kernels (5637 passed each), heavy suites, demo, profile verifier, plugins, domains, retail, tiers, fabric, simulation, incremental, pack, stream and chaos parity, and fabric commands parity with its negative control (all exit 0). The fabric commands parity harness needs the baseline installed in its venv (it reads the baseline's own package metadata for the SBOM comparison); the lead's local check installs a copy of the pinned checkout into a separate venv, the pinned checkout itself is untouched. **W1-05 deprecation window accepted:** nothing in plugin API v1 is removed in 1.x; a deprecated member keeps working until the next major version. **Issues #76 and #77 filed:** three tests fail with numpy 2.5.3 (allowed by `numpy>=2.0,<3`; fix lane BF-76, high), and an order-dependent credential-reference test (BF-77, low); the matching failures that lanes W3-04, W3-06 and W3-09 reported are these issues, not lane defects. build/main-plan CI is red on 3d65c49 for reasons outside INT-14 (bench-quick reference_port profile verifier, macOS kill-9 restart test, an intermittent abort at interpreter exit); CI-FIX round 5 owns them. | Lead integration; lane reports; local reproduction of #76 (numpy 2.4.6 passes) |
+| 2026-10-03 | CI, realtime tests | **Realtime timing tests (marker `realtime`, including the 10-minute soak) run on Linux only, now also excluded on Windows** (the 2026-10-02 owner decision excluded macOS). No bound or assertion changed; every other test still runs on Windows; G5's 1-hour soak is a Linux nightly. Evidence (lane CI-FIX round 4, run 37100249946): on the hosted Windows runner the whole process stopped for about 4 s (a probe thread that only sleeps woke 1.66 s and 0.97 s late; no garbage collection over 0.1 s), intermittently (3.11 two of two runs, 3.14 one of two); the rate outside the stall and the overall rate were exact. | Lead decision under the owner delegation, same reasoning as the macOS decision. |
+| 2026-10-03 | W2-04, Delta output | **Shape's Delta writer stores time-zone-less timestamps as UTC timestamps** (the wall-clock value is kept and reads back as UTC), so Shape's Delta tables stay at reader version 1 / writer version 2 with no table features: `deltalake` 1.6.6 otherwise adds the `timestampNtz` feature (reader 3 / writer 7), which not every Fabric engine reads. Documented as a behaviour change of Delta output; a regression test asserts the protocol. | Lead decision on the lane's finding; Fabric compatibility (readers 1 / writers 2 for Python notebooks, pipelines and Eventstreams). |
+| 2026-10-03 | INT-13, P6-07b, issues | **Integration INT-13 merged into build/main-plan:** CI-FIX round 3 (profile JSON depth limit, POSIX OneLake paths, domains in the bench-quick venv, synthetic-secret tests under `tests/security/`), ISS-profile (#2, #21, #22, #23, #24, #37), ISS-gen (#11, #12, #17, #18, #19, with #9 and #10 temporal and spec-key fixes), EXCEL (#50 Excel source, #51 multi-sheet workbook sink), FIN-CAP (financial simulator full-span window; `shape capture` reads every profile input), P6-07b (Fabric `--auth` modes and credential references; P6-07b done) and NIGHTLY-FIX (nightly soak and emulator jobs). Conflicts resolved by the lead keeping both sides: ISS-cli's `errors.guarded` plus ISS-gen's one-line program crash message; P6-07b's sign-in options passed through the shared `open_sink`, and its redaction moved into `errors.fail` so every one-line error is redacted; FIN-CAP's `load_table` with Excel workbook and CSV options. Three lead fixes found by verification: `spec_keys` lists the digits providers' `width`; `pack_1to1` applies the deliberate reserved-email difference already listed in `domain_differences.py` (only when `vocab` is the sole failing check and every address is at a reserved domain); the simulation fixtures state their two-day range with an inclusive end date (#10). Lead verification, every step exit 0: static checks, cargo debug and release, strategy baselines, full suite both kernels (5496 each), heavy, demo, profile verify both kernels, ddl, plugins and their kits, SQL Server parity, domains and export, retail T-21, tiers, fabric plugins, simulation file and pattern parity with negative controls, incremental, pack, stream and stream-profile parity, heavy streaming, simulation plugin (156), chaos parity. | Lead. |
+| 2026-10-03 | Owner delegation, §13 | **The owner delegated decisions to the lead** (2026-10-03): the lead decides with best practice and records each decision here; actions that spend money, publish packages to a public index or make a repository public, create legal obligations, contact outside parties, or delete repositories or rewrite published history stay with the owner. New §13 adds the roadmap work packages W1-01 to W5-02 (issues #52, #53, #55 to #65), with P6-11 specified further by #56. | Owner, 2026-10-03. |
+| 2026-10-03 | Decisions held since 2026-10-02 | Lead decisions under the delegation: (1) joint profiling (#47) is off by default for multi-table profiles, `--joint` turns it on (single tables keep it on); (2) `shape-dbt`, `shape-behavior`, `shape-healthcare-codes` and `shape-healthcare-standards` join the first-party plugins (T-09, §5) with extras `[dbt]` and `[healthcare]` (T-08 amended); (3) #39 non-local destinations: `--yes`, or `SHAPE_CONFIRM_REMOTE=1` for notebooks and pipelines, built after the 2026-10-07 talk; (4) NCPDP output and the NUCC taxonomy are bring-your-own only, nothing licensed ships; (5) this repository's healthcare scope is the behavior framework, the code-set loaders and the X12, FHIR and OMOP emitters with an NCPDP bring-your-own layer; other healthcare domain content is not part of this repository; (6) new optional contract rules are additive keys in contract v1 and an older reader refuses an unknown rule; (7) the new plugins' slow suites run nightly. | Owner delegation, 2026-10-03; recommendations of 2026-10-02 8:32 PM EDT. |
+| 2026-10-03 | INT-12, P6-04, issues | **Integration INT-12 merged into build/main-plan:** P6-04 (lanes P6-04a, P6-04b: simulation) and the issue lanes ISS-gaps (#13, #15, #16), ISS-sign (#38), ISS-stream (#33, #34, #36), ISS-verify (#7, #31, #32), ISS-cli (#6, #8, #27, #28, #29; #30 waits on a spec) and ISS-diff (#3, #4, #5, #14, #20, #34, #35). Hand-merged conflicts: `cli/main.py` (ISS-cli error handling kept with the warnings restore, `--version/--as-of`, `--fail-on-empty`), `registry/local.py` (raw-profile refusal plus atomic writes). Lead verification of the integrated tree, every step exit 0: static checks, debug and release `cargo test`, strategy baselines, full suite in both kernel modes (5212 each), heavy, demo, profile verify both kernels, ddl, plugins (install, tests, kit, uninstall), SQL Server plugin parity, domain tests and export, retail T-21 small, tiers, simulation file and pattern parity with negative controls, incremental, pack, stream and stream-profile parity, heavy streaming, simulation plugin kit, chaos parity (20,083 runs per tool, identical cell for cell). Each lane's status file names what it left undone; no gate, tolerance or D-xx/T-xx decision changed. | Lead. |
 | 2026-10-02 | P6-11, T-08, D-08, PR #48 | **The MCP server moves to a separate, private commercial component; it is not cancelled.** The `plugins/shape-mcp` skeleton (never published) is removed from this repository (sqllocks/shape#48), P6-11 keeps `shape bridge` (the JSON protocol the commercial MCP server builds on) and drops the `shape-mcp` deliverable and its MCP client e2e test, T-08 drops the `[mcp]` extra, and the first-party plugin list (T-09, §5, `scripts/check_plugin_skeletons.py`) has six distributions. No public MCP server is re-added. The skeleton stays in git history and was MIT licensed while public. | Owner. |
+| 2026-10-02 | T-07, issue #21 | **Owner: add `tzdata` as a Windows-only core dependency** so named time zones work out of the box on Windows (Linux and macOS use the OS database; unchanged). T-07 amended. | Owner, 2026-10-02: "Add tzdata on Windows". |
+| 2026-10-02 | T-22, issue #24 | **Owner: decimal columns keep `dtype: float`** with `precision` and `scale` beside it (no new `decimal` dtype; T-22 vocabulary unchanged). | Owner, 2026-10-02. |
+| 2026-10-02 | P6-01e, T-21 | **Owner: investigate the composites' seed-1042 misses before accepting them** (18 cells), as was done for the single domains. Lane `lane/P6-01e-seed`. | Owner, 2026-10-02: "Investigate first". |
+| 2026-10-02 | CI | **Lead: full CI runs on `main`, `build/main-plan` and `lane/CI-FIX` pushes (plus PRs and manual runs), with superseded runs cancelled per branch.** Every lane push ran the full matrix; the queue reached 179 runs and held the G5 soak for hours. Lanes are verified locally by the lead before merging; build/main-plan keeps the full matrix after every merge. The stream-plugins job now also tests the SQL Server and Fabric plugins. | Lead. |
 | 2026-10-02 | G5 | **Phase 5 done (P5-01..P5-04); G5 waits only on the 1-hour realtime soak** (nightly `emit-rate-soak`, run by hand on build/main-plan because the scheduled nightly runs on `main`). STREAM-EMIT 14.27x in-process (lead), live fidelity within 0.0072 of `shape fidelity`. The G5-gated packages P6-04, P6-07a, P6-13 and P7-04 started in parallel before the soak result, under the owner's standing "whatever can run in parallel, do it" (as PF-02 started before G1); G5 is marked done only when the soak passes. | Lead. |
 | 2026-10-02 | SAC-01, issue #1 | **Owner's issue sqllocks/shape#1 (Shape as Code) built as work package SAC-01**: byte-reproducible `.shape` containers (fixed member timestamps, order and attributes; members **stored, not deflated**, because deflate output differs between zlib builds and only stored members give identical bytes across machines; git compresses them itself; old deflated artifacts still read), `shape cat` and `shape git-setup` (one changed line per changed property in `git diff`), `shape profile --name` and a kept name when overwriting an existing `.shape`, docs naming `shape profile safe` output as the committable artifact (`--json` and the raw `.shape` hold real values, lead decision kept), and a real-git e2e test. Artifact spec rules unchanged (writer convention 9 added). | Owner, issue #1; lead. |
 | 2026-10-02 | P5-01b | **Realtime pacing under load:** a realtime run `gc.freeze()`s the objects that exist when it starts and writes checkpoints on a writer thread, removing two stall sources that broke `test_realtime_rate_within_five_percent` inside the full suite. Test and ±5% criterion unchanged. A residual whole-process host stall (no Python thread runnable) can still exceed 50 ms on a busy VM; if CI shows it, the options are the owner's (a quiet runner for the realtime tests, or a restated CI criterion). | Lead. |
@@ -2032,18 +2046,18 @@ Work packages are listed in execution order. The next work package is the first 
 | 62 | P6-01e | wip (lane/P6-01e, started early from lane/P6-01-int) | |
 | 63 | P6-02 | done | 0f8c36e |
 | 64 | P6-03 | done | 50d7be4 |
-| 65 | P6-04 | wip (lanes P6-04a and P6-04b, started before G5's 1-hour soak) | |
+| 65 | P6-04 | done | Lanes P6-04a and P6-04b, integrated in INT-12 (2026-10-03, §2.3). |
 | 66 | P6-05 | done | 3a85d86 |
 | 67 | P6-06 | done | e5d338f |
 | 68 | P6-07a | done (contract tests on recorded interactions; 5 baseline defects fixed: destructive default mode, unescaped SQL/KQL identifiers, COPY INTO location, bulk-load cleanup and row counts; emulator/live tests nightly) | 98f6ac6 |
-| 69 | P6-07b | wip (lane/P6-07b) | |
-| 70 | P6-07c | todo | |
+| 69 | P6-07b | done | Integrated in INT-13 (2026-10-03, §2.3). |
+| 70 | P6-07c | done | Integrated in INT-14 (2026-10-03, §2.3). |
 | 71 | P6-08 | done (nightly SQL Server e2e pending) | 29eac3e |
 | 71a | P6-08b | done (rounds 1-2: FIX-1..FIX-9; real-server parity 11/11) | 515d26e |
 | 72 | P6-09 | done (CI bench-quick verify_1to1 green on c7bd366, run 36850390984) | 3859a3c |
 | 73 | P6-10 | done | 1faff65 |
-| 74 | P6-11 | todo | |
-| 75 | P6-12 | todo | |
+| 74 | P6-11 | done | Integrated in INT-15 (2026-10-03, §2.3); issue #56. |
+| 75 | P6-12 | done | Integrated in INT-15 (2026-10-03, §2.3). |
 | 76 | P6-13 | done (lead scale_1to1: local_single and local_mp pass T-21 at retail medium, negative controls flagged; baseline local_mp row-count defect fixed) | 693c897 |
 | 77 | P6-14 | done | 62160c9 |
 | 78 | P7-01 | done | b04bf32 |
@@ -2055,6 +2069,64 @@ Work packages are listed in execution order. The next work package is the first 
 | 84 | P8-03 | todo | |
 | 85 | P8-04 | todo | |
 | 86 | P8-05 | todo | |
+| 87 | W1-01 | todo | |
+| 88 | W1-02 | done | Integrated in INT-15 (2026-10-03, §2.3); issue #57. |
+| 89 | W1-03 | done | Integrated in INT-15 (2026-10-03, §2.3); issue #58. |
+| 90 | W1-04 | todo | |
+| 91 | W1-05 | todo | |
+| 92 | W1-06 | todo | |
+| 93 | W1-07 | done | 9e87cd8, c6b5d17 |
+| 94 | W2-01 | todo | |
+| 95 | W2-02 | todo | |
+| 96 | W2-03 | done | Integrated in INT-15 (2026-10-03, §2.3); issue #53. |
+| 97 | W5-01 | todo | |
+| 98 | W5-02 | done | Integrated in INT-15 (2026-10-03, §2.3); issue #63. |
+| 99 | W1-08 | done | Integrated in INT-15 (2026-10-03, §2.3); issue #66. |
+| 100 | W1-09 | todo | |
+| 101 | W1-10 | todo | |
+| 102 | W1-11 | todo | |
+| 103 | W1-12 | todo | |
+| 104 | W1-13 | todo | |
+| 105 | W1-14 | todo | |
+| 106 | W1-15 | todo | |
+| 107 | W1-16 | todo | |
+| 108 | W1-17 | todo | |
+| 109 | W1-18 | todo | |
+| 110 | W2-04 | done | Integrated in INT-14 (2026-10-03, §2.3); issue #69. |
+| 111 | W2-05 | todo | |
+| 112 | W2-06 | todo | |
+| 113 | W2-07 | todo | |
+| 114 | W2-08 | todo | |
+| 115 | W2-09 | todo | |
+| 116 | W2-10 | todo | |
+| 117 | W3-01 | todo | |
+| 118 | W3-02 | todo | |
+| 119 | W3-03 | todo | |
+| 120 | W3-04 | todo | |
+| 121 | W3-05 | todo | |
+| 122 | W3-06 | todo | |
+| 123 | W3-07 | todo | |
+| 124 | W3-08 | todo | |
+| 125 | W3-09 | todo | |
+| 126 | W3-10 | todo | |
+| 127 | W3-11 | todo | |
+| 128 | W3-12 | todo | |
+| 129 | W3-13 | todo | |
+| 130 | W4-01 | todo | |
+| 131 | W4-02 | todo | |
+| 132 | W4-03 | todo | |
+| 133 | W5-03 | todo | |
+| 134 | W5-04 | todo | |
+| 135 | W5-05 | todo | |
+| 136 | W5-06 | todo | |
+| 137 | W5-07 | todo | |
+| 138 | W5-08 | todo | |
+| 139 | W5-09 | todo | |
+| 140 | W5-10 | todo | |
+| 141 | W6-01 | todo | |
+| 142 | W6-02 | done | Integrated in INT-15 (2026-10-03, §2.3); issue #75. |
+| 143 | W6-03 | todo | |
+| 144 | W6-04 | todo | |
 
 | Gate | Status |
 |---|---|
@@ -2521,6 +2593,75 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
 | DM-06 | L2 | done | c113422 |
 | DM-07 | L2 | done | 4c8725c |
 | DM-08 | L2 + L3 | done: runbook (4c8725c), talk kit (b211756); owner live dry run pending (DM-4) | b211756 |
+
+---
+
+## 13. Roadmap work packages (2026-10-03)
+
+The owner delegated decisions to the lead on 2026-10-03 (§2.3). These work packages build the open roadmap items. A package whose issue says "filed at start" gets its issue, which is then its specification, when its lane starts. Each one's deliverables are the numbered "Wanted" list of its issue, which is its specification; anything not on that list is out of scope (§0 default). Common acceptance for every package below: a test per deliverable item, including negative and boundary cases; the full suite in both kernel modes, `make check` and `python scripts/check_user_facing.py` pass; documentation for every new command, file format or API; a compatibility test for any persisted format (follows W1-01 once it lands); no gate, tolerance or D-xx/T-xx decision changed. Persisted formats declare `format` and an integer `version`.
+
+| WP | Issue | Title | Depends |
+|---|---|---|---|
+| W1-01 | #55 | State and compatibility policy, unified version keys, newer-version error, time-capsule corpus | none |
+| W1-02 | #57 | Proposals and decision files; relationship inference with evidence and confidence | none |
+| W1-03 | #58 | Memorization gate, utility gate, run reproducibility tuple, dataset id, replay | none |
+| W1-04 | #59 | `shape.yml` project file and `shape init` | none |
+| W1-05 | #60 | Plugin API v1 stability promise and per-group conformance kit | none |
+| W1-06 | #64 | Generation spec JSON Schema, stability promise and edit API | none |
+| W1-07 | #65 | `docs/BRANDING.md`: which product names refer to this repository | none |
+| W2-01 | #61 | Mergeable profiles | none |
+| W2-02 | #52 | `fabric-mirror` sink (open mirroring landing zone) | none |
+| W2-03 | #53 | Delta read fallback for deletion vectors and column mapping | none |
+| W5-01 | #62 | Stable public masking API | none |
+| W5-02 | #63 | Deterministic schema design engine | none |
+| W1-08 | #66 | Planted-drift regression sweep, `row_count_change`, quieter `distribution_change` | none |
+| W1-09 | #67 | Windows Fabric helper path, Kafka emulator flake, Spark Delta-catalog on Windows | none |
+| W1-10 | filed at start | v1.0 definition of done, CLI stability promise, what we are not building | W1-05 |
+| W1-11 | filed at start | Safe-by-default capture (sensitive columns keep statistics and formats only; count floor) | W1-01 |
+| W1-12 | filed at start | Planned-change registry read by `diff` and gates | W1-04 |
+| W1-13 | filed at start | Semantic versioning of diffs (breaking, additive, cosmetic) used by gates | W1-12 |
+| W1-14 | filed at start | CI outputs: JUnit, SARIF, documented exit codes, `--json` and `--dry-run` everywhere | W1-04 |
+| W1-15 | filed at start | Generator version pinning and a stability promise for pinned fixtures | W1-03, W1-06 |
+| W1-16 | #68 | `shape doctor`: Fabric access and broker reachability checks | none |
+| W1-17 | filed at start | Chaos safety and non-local confirmation (`--yes`, `SHAPE_CONFIRM_REMOTE=1`; after 2026-10-07) | ISS2-sinks |
+| W1-18 | filed at start | Plugin allow-list and opt-in signature check; statement of plugin reach | W1-05 |
+| W2-04 | #69 | Excel named ranges, tables, merged cells, autofilter; Delta reader 1 / writer 2 test | none |
+| W2-05 | filed at start | Fabric guidance and measurements: Eventstream ingestion, memory on 2 vCore/16 GB, numpy 2 on Fabric runtimes | O-07 |
+| W2-06 | filed at start | `sempy` source plugin for semantic models | W1-05 |
+| W2-07 | filed at start | Sampling controls recorded in the profile; type inference confidence and declared-versus-inferred report | ISS2-bugs |
+| W2-08 | filed at start | Sinks II: Snowflake, Databricks, Synapse | ISS2-sinks |
+| W2-09 | filed at start | Streaming II: schema registry formats, dead-letter routing, arrival processes, curves, drift plans, dry run and progress | ISS2-sinks |
+| W2-10 | filed at start | SQL Server write path II (Kerberos keytab, identity columns, constraint toggling, idempotent reruns); DuckDB writer | ISS2-sinks |
+| W3-01 | filed at start | Rule mutation testing and rule backtesting | W2-01 |
+| W3-02 | filed at start | Rule suggestion from a profile through proposal files | W1-02 |
+| W3-03 | filed at start | `shape bisect` (and layer bisect) and `shape timelapse` | W2-01, W1-04 |
+| W3-04 | #70 | `shape explain` and notebook display | none |
+| W3-05 | filed at start | Local synthetic-data report card | W1-03 |
+| W3-06 | #71 | Data quality scorecards by dimension; failing-row samples and flag column | none |
+| W3-07 | filed at start | Univariate depth (model selection, zero inflation, heaping, Benford, tail index) | ISS2-joint |
+| W3-08 | filed at start | Multivariate outliers, mixed-type copula, multi-column determinants | W3-07 |
+| W3-09 | #72 | Duplicate detection and entity resolution | none |
+| W3-10 | #73 | Reconciliation and time-series quality checks | none |
+| W3-11 | filed at start | Fairness slices and training-serving skew | W3-06 |
+| W3-12 | filed at start | Reference packs: ZIP-city, IBAN, ISO codes | ISS2-joint |
+| W3-13 | filed at start | Environment parity check; consumer data contracts checked in producer CI | W1-04 |
+| W4-01 | filed at start | Behavior models (event sequences, telemetry series, transaction streams, file arrivals, entity lifecycles) as `shape.behaviors` modules | PLUG-INT |
+| W4-02 | filed at start | Optional Synthea module runner plugin | PLUG-INT |
+| W4-03 | #74 | Basic locale packs | none |
+| W5-03 | filed at start | Value vault (envelope encryption, per-column policy, vault hash in signatures, vault generation mode) | W1-01, W1-11 |
+| W5-04 | filed at start | Contract emission: DDL, JSON Schema, pandera, Great Expectations | PLUG-INT |
+| W5-05 | filed at start | Starter scenario library, named CI suites, pytest plugin and database seeding | W1-05 |
+| W5-06 | filed at start | Importers (JSON Schema, OpenAPI, Avro, Protobuf, Pydantic, TMDL) and TMDL star export | W1-06, W5-02 |
+| W5-07 | filed at start | Nested and standards sources: JSON arrays and structs, XML, X12 835, HL7 | PLUG-INT |
+| W5-08 | filed at start | Integration plugins: OpenLineage, MLflow, Presidio, SDMetrics, Anonymeter, Ibis/DuckDB | W1-05 |
+| W5-09 | filed at start | Known-answer datasets for DAX measures; drift report template (`publish-report`) | P6-07c |
+| W5-10 | filed at start | File-footer fingerprint, safe-to-share bundle, skew rehearsal | W1-03 |
+| W6-01 | filed at start | PR bot action, status badge, plugin template, webhook notifications | W1-14 |
+| W6-02 | #75 | Air-gap hardening: zero-network tests, offline lockfile, shipped reference data | none |
+| W6-03 | filed at start | Failure mode catalog, data detective packs, public dataset library, canaries and game-day runner | W5-05 |
+| W6-04 | filed at start | VS Code extension and data dictionary from a profile | W1-04 |
+
+P6-11 (`shape bridge`) is specified further by issue #56; its `demo_*` commands follow P6-12 and the rest start now (owner standing instruction: whatever can run in parallel, do).
 
 ---
 

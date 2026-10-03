@@ -1,0 +1,18 @@
+{
+ "domain": "composite_smart_factory",
+ "scale": "medium",
+ "rates": {
+  "iot_alert.resolved_at - triggered_at in [0,7] days": {
+   "floor": 0.7386,
+   "baseline_mean": 0.7522615384615385,
+   "baseline_sd": 0.006914279538640423,
+   "shape_mean": 0.7516533333333334,
+   "shape_sd": 0.009919250991374563,
+   "shape_1042": 0.73,
+   "frac_fresh_baseline_below_floor": 0.0,
+   "frac_shape_below_floor": 0.1,
+   "p_mannwhitney": 0.8308077426442697,
+   "p_ks": 0.9251006540242004
+  }
+ }
+}

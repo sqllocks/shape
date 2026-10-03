@@ -204,6 +204,24 @@ class DriftReport:
     def to_dict(self) -> dict[str, Any]:
         return dict(clean(asdict(self)))
 
+    def _as_report(self) -> dict[str, Any]:
+        return {
+            "method": "ks+chi2+psi",
+            "drifted": bool(self.drifted_columns),
+            "tables": {"": self.to_dict()},
+        }
+
+    def _repr_html_(self) -> str:
+        """Notebook display: the drifted columns, with test statistics only."""
+        from shape.report.display import drift_html
+
+        return drift_html(self._as_report())
+
+    def _repr_markdown_(self) -> str:
+        from shape.report.display import drift_markdown
+
+        return drift_markdown(self._as_report())
+
 
 def population_stability_index(
     expected: npt.ArrayLike, actual: npt.ArrayLike, n_bins: int = 10

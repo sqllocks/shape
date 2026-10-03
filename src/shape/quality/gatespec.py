@@ -15,8 +15,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from shape import compat
+
 FORMAT = "shape-gates"
-VERSION = 1
+VERSION = compat.KINDS["gate-schema"].current
 
 _KIND_TYPES = {
     "int": "integer",
@@ -26,6 +28,9 @@ _KIND_TYPES = {
     "temporal": "datetime",
     "other": "string",
 }
+
+
+_RELATIONSHIP_KEYS = ("name", "parent", "child", "parent_columns", "child_columns")
 
 
 class GateSchemaError(ValueError):
@@ -92,7 +97,7 @@ class GateSchema:
             }
             for r in self.relationships
         ]
-        return {"format": FORMAT, "version": VERSION, "tables": tables, "relationships": rels}
+        return compat.stamp("gate-schema", {"tables": tables, "relationships": rels}, aliases=False)
 
     @classmethod
     def from_dict(cls, doc: Mapping[str, Any]) -> GateSchema:
@@ -104,8 +109,7 @@ class GateSchema:
             return cls.from_profile(doc)
         if doc.get("format") != FORMAT:
             raise GateSchemaError(f"not a gate schema: expected format {FORMAT!r}")
-        if doc.get("version") != VERSION:
-            raise GateSchemaError(f"unsupported gate schema version {doc.get('version')!r}")
+        compat.check_readable("gate-schema", doc, error=GateSchemaError)
         tables: dict[str, TableSpec] = {}
         raw_tables = doc.get("tables", {})
         if not isinstance(raw_tables, Mapping):
@@ -126,7 +130,15 @@ class GateSchema:
                 )
             tables[tname] = TableSpec(tname, columns, tuple(t.get("primary_key") or ()))
         rels: list[RelationshipSpec] = []
-        for r in doc.get("relationships") or ():
+        for i, r in enumerate(doc.get("relationships") or ()):
+            if not isinstance(r, Mapping):
+                raise GateSchemaError(f"relationships[{i}]: must be an object, not {r!r}")
+            for key in _RELATIONSHIP_KEYS:
+                if key not in r:
+                    raise GateSchemaError(
+                        f'relationships[{i}]: missing required key "{key}" (a {FORMAT} '
+                        f"relationship needs {', '.join(_RELATIONSHIP_KEYS)}; got {sorted(r)})"
+                    )
             try:
                 rels.append(
                     RelationshipSpec(
@@ -138,8 +150,8 @@ class GateSchema:
                         str(r.get("type", "one_to_many")),
                     )
                 )
-            except (KeyError, TypeError) as exc:
-                raise GateSchemaError(f"invalid relationship {r!r}: {exc!r}") from exc
+            except TypeError as exc:
+                raise GateSchemaError(f"relationships[{i}]: invalid value: {exc}") from exc
         return cls(tables, tuple(rels))
 
     @classmethod

@@ -2,8 +2,12 @@
 
 A Fabric **Environment** installs Shape once, so every **Spark** notebook or pipeline
 run attached to it gets `import shape` with no `%pip` cell. Environments attach to
-Spark notebooks and Spark job definitions only. The Python notebook
-(`shape_profile.ipynb`) installs the wheel itself.
+Spark notebooks and Spark job definitions only (Microsoft: "Environment integration isn't
+available on Python notebooks"). The Python notebooks (`shape_profile`, `shape_generate`,
+`shape_profile_domain`) install the wheel themselves with `%pip`; in a pipeline run that needs the
+Boolean notebook-activity parameter `_inlineInstallationEnabled = true`, which the shipped
+pipelines set (see `../RUNBOOK.md` section 4). A pipeline that must not install at run time
+uses the PySpark notebook with this Environment published in Full mode. **[VERIFY]**
 
 The distributed notebook (`shape_profile_distributed.ipynb`) runs Shape **on the executors**, so
 the Environment, which installs Shape on every node, is required for it.

@@ -1,0 +1,428 @@
+{
+  "tables": {
+    "customer": {
+      "row_count": {
+        "min": 10,
+        "max": 10
+      },
+      "required_columns": [
+        "customer_id",
+        "first_name",
+        "last_name",
+        "email",
+        "gender",
+        "loyalty_tier",
+        "signup_date",
+        "is_active"
+      ],
+      "allow_extra_columns": false,
+      "columns": {
+        "customer_id": {
+          "dtype": "integer",
+          "nullable": false,
+          "unique": true
+        },
+        "first_name": {
+          "nullable": false
+        },
+        "last_name": {
+          "nullable": false
+        },
+        "email": {
+          "max_null_rate": 0.494601
+        },
+        "gender": {
+          "allowed_values": [
+            "M",
+            "F"
+          ],
+          "dtype": "string",
+          "nullable": false
+        },
+        "loyalty_tier": {
+          "allowed_values": [
+            "Basic",
+            "Silver",
+            "Gold",
+            "Platinum"
+          ],
+          "dtype": "string",
+          "nullable": false
+        },
+        "signup_date": {
+          "dtype": "datetime",
+          "nullable": false
+        },
+        "is_active": {
+          "dtype": "boolean",
+          "nullable": false
+        }
+      }
+    },
+    "address": {
+      "row_count": {
+        "min": 10,
+        "max": 10
+      },
+      "required_columns": [
+        "address_id",
+        "customer_id",
+        "address_type",
+        "street",
+        "city",
+        "state",
+        "zip_code",
+        "lat",
+        "lng",
+        "is_primary"
+      ],
+      "allow_extra_columns": false,
+      "columns": {
+        "address_id": {
+          "dtype": "integer",
+          "nullable": false,
+          "unique": true
+        },
+        "customer_id": {
+          "dtype": "integer",
+          "nullable": false
+        },
+        "address_type": {
+          "allowed_values": [
+            "billing",
+            "shipping",
+            "both"
+          ],
+          "dtype": "string",
+          "nullable": false
+        },
+        "street": {
+          "nullable": false
+        },
+        "city": {
+          "nullable": false
+        },
+        "state": {
+          "nullable": false
+        },
+        "zip_code": {
+          "nullable": false
+        },
+        "lat": {
+          "nullable": false
+        },
+        "lng": {
+          "nullable": false
+        },
+        "is_primary": {
+          "dtype": "boolean",
+          "nullable": false
+        }
+      }
+    },
+    "product_category": {
+      "row_count": {
+        "min": 10,
+        "max": 10
+      },
+      "required_columns": [
+        "category_id",
+        "category_name",
+        "parent_category_id",
+        "level"
+      ],
+      "allow_extra_columns": false,
+      "columns": {
+        "category_id": {
+          "dtype": "integer",
+          "nullable": false,
+          "unique": true
+        },
+        "category_name": {
+          "nullable": false
+        },
+        "parent_category_id": {
+          "dtype": "integer"
+        },
+        "level": {
+          "dtype": "integer",
+          "nullable": false
+        }
+      }
+    },
+    "product": {
+      "row_count": {
+        "min": 10,
+        "max": 10
+      },
+      "required_columns": [
+        "product_id",
+        "product_name",
+        "category_id",
+        "unit_price",
+        "cost",
+        "product_status"
+      ],
+      "allow_extra_columns": false,
+      "columns": {
+        "product_id": {
+          "dtype": "integer",
+          "nullable": false,
+          "unique": true
+        },
+        "product_name": {
+          "nullable": false
+        },
+        "category_id": {
+          "dtype": "integer",
+          "nullable": false
+        },
+        "unit_price": {
+          "nullable": false
+        },
+        "cost": {
+          "nullable": false
+        },
+        "product_status": {
+          "nullable": false
+        }
+      }
+    },
+    "store": {
+      "row_count": {
+        "min": 10,
+        "max": 10
+      },
+      "required_columns": [
+        "store_id",
+        "store_name",
+        "store_type",
+        "city",
+        "state"
+      ],
+      "allow_extra_columns": false,
+      "columns": {
+        "store_id": {
+          "dtype": "integer",
+          "nullable": false,
+          "unique": true
+        },
+        "store_name": {
+          "nullable": false
+        },
+        "store_type": {
+          "allowed_values": [
+            "physical",
+            "online",
+            "warehouse"
+          ],
+          "dtype": "string",
+          "nullable": false
+        },
+        "city": {
+          "nullable": false
+        },
+        "state": {
+          "nullable": false
+        }
+      }
+    },
+    "promotion": {
+      "row_count": {
+        "min": 10,
+        "max": 10
+      },
+      "required_columns": [
+        "promotion_id",
+        "promo_name",
+        "promo_type",
+        "discount_pct",
+        "start_date",
+        "end_date"
+      ],
+      "allow_extra_columns": false,
+      "columns": {
+        "promotion_id": {
+          "dtype": "integer",
+          "nullable": false,
+          "unique": true
+        },
+        "promo_name": {
+          "nullable": false
+        },
+        "promo_type": {
+          "allowed_values": [
+            "percent_off",
+            "bogo",
+            "fixed_amount",
+            "bundle",
+            "free_shipping"
+          ],
+          "dtype": "string",
+          "nullable": false
+        },
+        "discount_pct": {
+          "nullable": false
+        },
+        "start_date": {
+          "dtype": "datetime",
+          "nullable": false
+        },
+        "end_date": {
+          "dtype": "datetime",
+          "nullable": false
+        }
+      }
+    },
+    "order": {
+      "row_count": {
+        "min": 10,
+        "max": 10
+      },
+      "required_columns": [
+        "order_id",
+        "customer_id",
+        "store_id",
+        "shipping_address_id",
+        "promotion_id",
+        "order_date",
+        "status",
+        "order_total"
+      ],
+      "allow_extra_columns": false,
+      "columns": {
+        "order_id": {
+          "dtype": "integer",
+          "nullable": false,
+          "unique": true
+        },
+        "customer_id": {
+          "dtype": "integer",
+          "nullable": false
+        },
+        "store_id": {
+          "dtype": "integer",
+          "nullable": false
+        },
+        "shipping_address_id": {
+          "dtype": "integer"
+        },
+        "promotion_id": {
+          "dtype": "integer",
+          "max_null_rate": 1.0
+        },
+        "order_date": {
+          "dtype": "datetime",
+          "nullable": false
+        },
+        "status": {
+          "allowed_values": [
+            "completed",
+            "shipped",
+            "processing",
+            "cancelled",
+            "returned"
+          ],
+          "dtype": "string",
+          "nullable": false
+        },
+        "order_total": {
+          "nullable": false
+        }
+      }
+    },
+    "order_line": {
+      "row_count": {
+        "min": 10,
+        "max": 10
+      },
+      "required_columns": [
+        "order_line_id",
+        "order_id",
+        "product_id",
+        "promotion_id",
+        "quantity",
+        "unit_price",
+        "discount_percent",
+        "line_total"
+      ],
+      "allow_extra_columns": false,
+      "columns": {
+        "order_line_id": {
+          "dtype": "integer",
+          "nullable": false,
+          "unique": true
+        },
+        "order_id": {
+          "dtype": "integer",
+          "nullable": false
+        },
+        "product_id": {
+          "dtype": "integer",
+          "nullable": false
+        },
+        "promotion_id": {
+          "dtype": "integer"
+        },
+        "quantity": {
+          "dtype": "integer",
+          "nullable": false
+        },
+        "unit_price": {
+          "nullable": false
+        },
+        "discount_percent": {
+          "nullable": false
+        },
+        "line_total": {
+          "nullable": false
+        }
+      }
+    },
+    "return": {
+      "row_count": {
+        "min": 10,
+        "max": 10
+      },
+      "required_columns": [
+        "return_id",
+        "order_id",
+        "return_date",
+        "reason",
+        "refund_amount"
+      ],
+      "allow_extra_columns": false,
+      "columns": {
+        "return_id": {
+          "dtype": "integer",
+          "nullable": false,
+          "unique": true
+        },
+        "order_id": {
+          "dtype": "integer",
+          "nullable": false
+        },
+        "return_date": {
+          "dtype": "datetime",
+          "nullable": false
+        },
+        "reason": {
+          "allowed_values": [
+            "wrong_size",
+            "changed_mind",
+            "not_as_described",
+            "defective",
+            "damaged_shipping",
+            "arrived_late",
+            "other"
+          ],
+          "dtype": "string",
+          "nullable": false
+        },
+        "refund_amount": {
+          "nullable": false
+        }
+      }
+    }
+  }
+}

@@ -41,6 +41,13 @@ class ColumnProfile:
     outlier_rate: float | None = None
     value_counts_ext: dict[str, float] | None = None
     fit_score: float | None = None
+    nan_count: int = 0  # float values that are NaN (not counted as nulls)
+    inf_count: int = 0  # float values that are +inf or -inf
+    precision: int | None = None  # decimal columns: the declared precision and scale (#24)
+    scale: int | None = None
+    pattern_rates: dict[str, float] | None = None  # share of values that are wholly a pattern
+    pattern_contains_rates: dict[str, float] | None = None  # share that contain an SSN/email/card
+    placeholders: list[dict[str, Any]] | None = None  # sentinel values and their evidence (#47)
 
 
 @dataclass
@@ -51,6 +58,8 @@ class TableProfile:
     primary_key: list[str]
     detected_fks: dict[str, str]
     correlation_matrix: dict[str, dict[str, float]] | None = None
+    correlation_truncated: bool = False  # only each column's strongest pairs are kept (#37)
+    joint: dict[str, Any] | None = None  # dependencies, keys, associations (#47)
 
 
 @dataclass

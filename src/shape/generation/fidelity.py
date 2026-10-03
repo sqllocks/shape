@@ -181,6 +181,11 @@ def _legacy_plan(shape: Mapping[str, Any]) -> ReconstructionPlan:
                 PlanItem(f"column:{n}.nulls", "approximate", "no value count: all rows assumed")
             )
     rel = shape.get("relationships", {}) or {}
+    if not isinstance(rel, Mapping):
+        raise ValueError(
+            "this document has a list of `relationships`, so it is a generation schema, not "
+            "evidence: `shape generate --dry-run` plans its run"
+        )
     for i, c in enumerate(rel.get("correlations", ())):
         a, b = c.get("source"), c.get("target")
         ok = a in columns and b in columns and columns[a].get("kind") == columns[b].get("kind")

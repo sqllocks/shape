@@ -1,0 +1,355 @@
+Spindle composite_digital_commerce (seed 42) vs shape (seed 1042) - scale=small  (baseline = max distance of Spindle seeds [43, 44, 45, 46] to Spindle seed 42)
+table order identical: True
+
+table.column                       kind        type         null s/i       dist  baseline     tol  vocab  verdict
+-- retail_customer: rows 1,000 / 1,000  cols identical+ordered=True  types identical=True
+retail_customer.customer_id        numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0872         EQUIVALENT
+retail_customer.first_name         categorical ok    0.0000/0.0000 TVD  0.8480    0.8540  2.2821 1.0000  EQUIVALENT
+retail_customer.last_name          categorical ok    0.0000/0.0000 TVD  0.8410    0.8500  2.2746 1.0000  EQUIVALENT
+retail_customer.email              categorical ok    0.0410/0.0470 |dR-1|  0.0063    0.0198  0.0297 1.0000  EQUIVALENT
+retail_customer.gender             categorical ok    0.0000/0.0000 TVD  0.0560    0.0560  0.1070 1.0000  EQUIVALENT
+retail_customer.loyalty_tier       categorical ok    0.0000/0.0000 TVD  0.0320    0.0380  0.1514 1.0000  EQUIVALENT
+retail_customer.signup_date        datetime    ok    0.0000/0.0000  KS  0.0570    0.0740  0.1130         EQUIVALENT
+retail_customer.is_active          categorical ok    0.0000/0.0000 TVD  0.0320    0.0170  0.1070 1.0000  EQUIVALENT
+-- retail_address: rows 1,500 / 1,500  cols identical+ordered=True  types identical=True
+retail_address.address_id          numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0712         EQUIVALENT
+retail_address.customer_id         numeric     ok    0.0000/0.0000  KS  0.0287    0.0293  0.0712         EQUIVALENT
+retail_address.address_type        categorical ok    0.0000/0.0000 TVD  0.0187    0.0313  0.1070 1.0000  EQUIVALENT
+retail_address.street              categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+retail_address.city                categorical ok    0.0000/0.0000 |dR-1|  0.0072    0.0040  0.0200 1.0000  EQUIVALENT
+retail_address.state               categorical ok    0.0000/0.0000 TVD  0.0933    0.1027  0.4414 1.0000  EQUIVALENT
+retail_address.zip_code            categorical ok    0.0000/0.0000 |dR-1|  0.0020    0.0047  0.0200 1.0000  EQUIVALENT
+retail_address.lat                 numeric     ok    0.0000/0.0000  KS  0.0313    0.0347  0.0712         EQUIVALENT
+retail_address.lng                 numeric     ok    0.0000/0.0000  KS  0.0200    0.0447  0.0712         EQUIVALENT
+retail_address.is_primary          categorical ok    0.0000/0.0000 TVD  0.0033    0.0180  0.0874 1.0000  EQUIVALENT
+-- retail_product_category: rows 50 / 50  cols identical+ordered=True  types identical=True
+retail_product_category.category_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3899         EQUIVALENT
+retail_product_category.category_name categorical ok    0.0000/0.0000 TVD  0.4800    0.5400  1.8848 1.0000  EQUIVALENT
+retail_product_category.parent_category_id numeric     ok    0.1600/0.1600  KS  0.0952    0.1190  0.4254         EQUIVALENT
+retail_product_category.level      numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3899         EQUIVALENT
+-- retail_product: rows 500 / 500  cols identical+ordered=True  types identical=True
+retail_product.product_id          numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1233         EQUIVALENT
+retail_product.category_id         numeric     ok    0.0000/0.0000  KS  0.0340    0.0680  0.1233         EQUIVALENT
+retail_product.product_name        categorical ok    0.0000/0.0000 TVD  0.2820    0.3100  1.1227 1.0000  EQUIVALENT
+retail_product.unit_price          numeric     ok    0.0000/0.0000  KS  0.0420    0.0520  0.1233         EQUIVALENT
+retail_product.product_status      categorical ok    0.0000/0.0000 TVD  0.0140    0.0500  0.1854 1.0000  EQUIVALENT
+retail_product.cost                numeric     ok    0.0000/0.0000  KS  0.0420    0.0440  0.1233         EQUIVALENT
+-- retail_store: rows 150 / 150  cols identical+ordered=True  types identical=True
+retail_store.store_id              numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2251         EQUIVALENT
+retail_store.store_name            categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+retail_store.store_type            categorical ok    0.0000/0.0000 TVD  0.0533    0.0600  0.3385 1.0000  EQUIVALENT
+retail_store.city                  categorical ok    0.0000/0.0000 TVD  0.4133    0.5267  1.7481 1.0000  EQUIVALENT
+retail_store.state                 categorical ok    0.0000/0.0000 TVD  0.3133    0.3600  1.3111 1.0000  EQUIVALENT
+-- retail_promotion: rows 200 / 200  cols identical+ordered=True  types identical=True
+retail_promotion.promotion_id      numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1949         EQUIVALENT
+retail_promotion.promo_name        categorical ok    0.0000/0.0000 TVD  0.2550    0.2950  1.1968 1.0000  EQUIVALENT
+retail_promotion.promo_type        categorical ok    0.0000/0.0000 TVD  0.0750    0.0900  0.3785 1.0000  EQUIVALENT
+retail_promotion.discount_pct      numeric     ok    0.0000/0.0000  KS  0.1400    0.1300  0.1970         EQUIVALENT
+retail_promotion.start_date        datetime    ok    0.0000/0.0000  KS  0.1050    0.1100  0.1949         EQUIVALENT
+retail_promotion.end_date          datetime    ok    0.0000/0.0000  KS  0.1100    0.1050  0.1949         EQUIVALENT
+-- retail_order: rows 5,000 / 5,000  cols identical+ordered=True  types identical=True
+retail_order.order_id              numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0390         EQUIVALENT
+retail_order.customer_id           numeric     ok    0.0000/0.0000  KS  0.0184    0.0310  0.0485         EQUIVALENT
+retail_order.store_id              numeric     ok    0.0000/0.0000  KS  0.0140    0.0192  0.0390         EQUIVALENT
+retail_order.shipping_address_id   numeric     ok    0.2354/0.2260  KS  0.0423    0.0799  0.1219         EQUIVALENT
+retail_order.promotion_id          numeric     ok    0.7060/0.7058  KS  0.0336    0.0392  0.0719         EQUIVALENT
+retail_order.order_date            datetime    ok    0.0000/0.0000  KS  0.0378    0.0640  0.0980         EQUIVALENT
+retail_order.status                categorical ok    0.0000/0.0000 TVD  0.0068    0.0158  0.0757 1.0000  EQUIVALENT
+retail_order.order_total           numeric     ok    0.0000/0.0000  KS  0.3358    0.2890  0.4355         EQUIVALENT
+-- retail_order_line: rows 12,500 / 12,500  cols identical+ordered=True  types identical=True
+retail_order_line.order_line_id    numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0247         EQUIVALENT
+retail_order_line.order_id         numeric     ok    0.0000/0.0000  KS  0.0144    0.0206  0.0328         EQUIVALENT
+retail_order_line.product_id       numeric     ok    0.0000/0.0000  KS  0.0078    0.0092  0.0247         EQUIVALENT
+retail_order_line.quantity         numeric     ok    0.0000/0.0000  KS  0.0024    0.0075  0.0247         EQUIVALENT
+retail_order_line.promotion_id     numeric     ok    0.7051/0.7034  KS  0.0498    0.0610  0.0935         EQUIVALENT
+retail_order_line.unit_price       numeric     ok    0.0000/0.0000  KS  0.5699    0.5555  0.8353         EQUIVALENT
+retail_order_line.discount_percent numeric     ok    0.0000/0.0000  KS  0.0415    0.0386  0.0598         EQUIVALENT
+retail_order_line.line_total       numeric     ok    0.0000/0.0000  KS  0.4892    0.4790  0.7204         EQUIVALENT
+-- retail_return: rows 850 / 850  cols identical+ordered=True  types identical=True
+retail_return.return_id            numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0946         EQUIVALENT
+retail_return.order_id             numeric     ok    0.0000/0.0000  KS  0.0400    0.0706  0.1079         EQUIVALENT
+retail_return.reason               categorical ok    0.0000/0.0000 TVD  0.0659    0.0729  0.2172 1.0000  EQUIVALENT
+retail_return.refund_amount        numeric     ok    0.0000/0.0000  KS  0.2047    0.2129  0.3214         EQUIVALENT
+retail_return.return_date          datetime    ok    0.0000/0.0000  KS  0.0365    0.0847  0.1291         EQUIVALENT
+-- marketing_campaign_type: rows 15 / 15  cols identical+ordered=True  types identical=True
+marketing_campaign_type.type_id    numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.7118         EQUIVALENT
+marketing_campaign_type.type_name  categorical ok    0.0000/0.0000 TVD  0.4000    0.6667  2.0498 1.0000  EQUIVALENT
+marketing_campaign_type.channel    categorical ok    0.0000/0.0000 TVD  0.2000    0.4667  1.5139 1.0000  EQUIVALENT
+marketing_campaign_type.avg_conversion_rate numeric     ok    0.0000/0.0000  KS  0.4667    0.4667  0.7118         EQUIVALENT
+-- marketing_industry: rows 25 / 25  cols identical+ordered=True  types identical=True
+marketing_industry.industry_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.5514         EQUIVALENT
+marketing_industry.shared_organization_financial_branch_id numeric     ok    0.0000/0.0000  KS  0.4000    0.2400  0.5514         EQUIVALENT
+marketing_industry.industry_name   categorical ok    0.0000/0.0000 TVD  0.4800    0.5600  1.9149 1.0000  EQUIVALENT
+marketing_industry.sector          categorical ok    0.0000/0.0000 TVD  0.3600    0.4000  1.1726 1.0000  EQUIVALENT
+-- marketing_campaign: rows 200 / 200  cols identical+ordered=True  types identical=True
+marketing_campaign.campaign_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1949         EQUIVALENT
+marketing_campaign.campaign_type_id numeric     ok    0.0000/0.0000  KS  0.0800    0.0500  0.1949         EQUIVALENT
+marketing_campaign.campaign_name   categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+marketing_campaign.start_date      datetime    ok    0.0000/0.0000  KS  0.0600    0.0750  0.1949         EQUIVALENT
+marketing_campaign.budget          numeric     ok    0.0000/0.0000  KS  0.0950    0.0800  0.1949         EQUIVALENT
+marketing_campaign.status          categorical ok    0.0000/0.0000 TVD  0.1100    0.0950  0.3385 1.0000  EQUIVALENT
+marketing_campaign.end_date        datetime    ok    0.0000/0.0000  KS  0.0600    0.0750  0.1949         EQUIVALENT
+-- marketing_lead_source: rows 20 / 20  cols identical+ordered=True  types identical=True
+marketing_lead_source.source_id    numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.6165         EQUIVALENT
+marketing_lead_source.source_name  categorical ok    0.0000/0.0000 TVD  0.4500    0.5500  2.0027 1.0000  EQUIVALENT
+marketing_lead_source.source_type  categorical ok    0.0000/0.0000 TVD  0.2000    0.2500  1.0705 1.0000  EQUIVALENT
+marketing_lead_source.cost_per_lead numeric     ok    0.0000/0.0000  KS  0.2500    0.3500  0.6165         EQUIVALENT
+-- marketing_contact: rows 5,000 / 5,000  cols identical+ordered=True  types identical=True
+marketing_contact.contact_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0390         EQUIVALENT
+marketing_contact.industry_id      numeric     ok    0.0000/0.0000  KS  0.0114    0.0194  0.0390         EQUIVALENT
+marketing_contact.lead_source_id   numeric     ok    0.0000/0.0000  KS  0.0158    0.0252  0.0398         EQUIVALENT
+marketing_contact.shared_person_retail_customer_id numeric     ok    0.0000/0.0000  KS  0.0112    0.0230  0.0390         EQUIVALENT
+marketing_contact.first_name       categorical ok    0.0000/0.0000 |dR-1|  0.0032    0.0146  0.0218 1.0000  EQUIVALENT
+marketing_contact.last_name        categorical ok    0.0000/0.0000 |dR-1|  0.0019    0.0073  0.0200 1.0000  EQUIVALENT
+marketing_contact.email            categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+marketing_contact.phone            categorical ok    0.1566/0.1512 |dR-1|  0.0064    0.0116  0.0200 1.0000  EQUIVALENT
+marketing_contact.company          categorical ok    0.0000/0.0000 |dR-1|  0.0027    0.0049  0.0200 1.0000  EQUIVALENT
+marketing_contact.created_date     datetime    ok    0.0000/0.0000  KS  0.0146    0.0176  0.0390         EQUIVALENT
+-- marketing_lead: rows 2,000 / 2,000  cols identical+ordered=True  types identical=True
+marketing_lead.lead_id             numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0616         EQUIVALENT
+marketing_lead.contact_id          numeric     ok    0.0000/0.0000  KS  0.0320    0.0265  0.0616         EQUIVALENT
+marketing_lead.campaign_id         numeric     ok    0.0000/0.0000  KS  0.0165    0.0200  0.0616         EQUIVALENT
+marketing_lead.lead_score          numeric     ok    0.0000/0.0000  KS  0.0370    0.0520  0.0800         EQUIVALENT
+marketing_lead.status              categorical ok    0.0000/0.0000 TVD  0.0340    0.0235  0.1197 1.0000  EQUIVALENT
+marketing_lead.created_date        datetime    ok    0.0000/0.0000  KS  0.0200    0.0285  0.0616         EQUIVALENT
+-- marketing_opportunity: rows 1,000 / 1,000  cols identical+ordered=True  types identical=True
+marketing_opportunity.opp_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0872         EQUIVALENT
+marketing_opportunity.lead_id      numeric     ok    0.0000/0.0000  KS  0.0510    0.0460  0.0872         EQUIVALENT
+marketing_opportunity.opp_name     categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+marketing_opportunity.stage        categorical ok    0.0000/0.0000 TVD  0.0600    0.0660  0.1854 1.0000  EQUIVALENT
+marketing_opportunity.amount       numeric     ok    0.0000/0.0000  KS  0.0300    0.0450  0.0872         EQUIVALENT
+marketing_opportunity.close_date   datetime    ok    0.0000/0.0000  KS  0.0540    0.0540  0.0872         EQUIVALENT
+marketing_opportunity.probability  numeric     ok    0.0000/0.0000  KS  0.0330    0.0360  0.0872         EQUIVALENT
+-- marketing_email_send: rows 10,000 / 10,000  cols identical+ordered=True  types identical=True
+marketing_email_send.send_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0276         EQUIVALENT
+marketing_email_send.campaign_id   numeric     ok    0.0000/0.0000  KS  0.0081    0.0186  0.0299         EQUIVALENT
+marketing_email_send.contact_id    numeric     ok    0.0000/0.0000  KS  0.0140    0.0184  0.0296         EQUIVALENT
+marketing_email_send.sent_date     datetime    ok    0.0000/0.0000  KS  0.0103    0.0183  0.0295         EQUIVALENT
+marketing_email_send.opened        categorical ok    0.0000/0.0000 TVD  0.0005    0.0075  0.0339 1.0000  EQUIVALENT
+marketing_email_send.clicked       categorical ok    0.0000/0.0000 TVD  0.0063    0.0081  0.0339 1.0000  EQUIVALENT
+marketing_email_send.bounced       categorical ok    0.0000/0.0000 TVD  0.0002    0.0033  0.0339 1.0000  EQUIVALENT
+-- marketing_web_visit: rows 25,000 / 25,000  cols identical+ordered=True  types identical=True
+marketing_web_visit.visit_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0174         EQUIVALENT
+marketing_web_visit.contact_id     numeric     ok    0.0000/0.0000  KS  0.0067    0.0103  0.0175         EQUIVALENT
+marketing_web_visit.visit_date     datetime    ok    0.0000/0.0000  KS  0.0073    0.0101  0.0174         EQUIVALENT
+marketing_web_visit.page_url       categorical ok    0.0000/0.0000 |dR-1|  0.0032    0.0025  0.0200 1.0000  EQUIVALENT
+marketing_web_visit.referrer       categorical ok    0.0000/0.0000 TVD  0.0154    0.0118  0.0339 1.0000  EQUIVALENT
+marketing_web_visit.duration_seconds numeric     ok    0.0000/0.0000  KS  0.0069    0.0102  0.0174         EQUIVALENT
+marketing_web_visit.pages_viewed   numeric     ok    0.0000/0.0000  KS  0.0111    0.0134  0.0221         EQUIVALENT
+-- marketing_conversion: rows 600 / 600  cols identical+ordered=True  types identical=True
+marketing_conversion.conversion_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1126         EQUIVALENT
+marketing_conversion.lead_id       numeric     ok    0.0000/0.0000  KS  0.0317    0.0600  0.1126         EQUIVALENT
+marketing_conversion.campaign_id   numeric     ok    0.0000/0.0000  KS  0.0550    0.0800  0.1220         EQUIVALENT
+marketing_conversion.conversion_date datetime    ok    0.0000/0.0000  KS  0.0383    0.0667  0.1126         EQUIVALENT
+marketing_conversion.conversion_type categorical ok    0.0000/0.0000 TVD  0.0533    0.0783  0.1954 1.0000  EQUIVALENT
+marketing_conversion.revenue       numeric     ok    0.0000/0.0000  KS  0.0700    0.0550  0.1126         EQUIVALENT
+-- financial_branch: rows 200 / 200  cols identical+ordered=True  types identical=True
+financial_branch.branch_id         numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1949         EQUIVALENT
+financial_branch.shared_location_retail_store_id numeric     ok    0.0000/0.0000  KS  0.1150    0.1300  0.1970         EQUIVALENT
+financial_branch.branch_name       categorical ok    0.0000/0.0000 TVD  0.2500    0.2000  0.9271 1.0000  EQUIVALENT
+financial_branch.city              categorical ok    0.0000/0.0000 TVD  0.9500    0.9450  2.3635 1.0000  EQUIVALENT
+financial_branch.opened_date       datetime    ok    0.0000/0.0000  KS  0.1050    0.1400  0.2120         EQUIVALENT
+financial_branch.is_active         categorical ok    0.0000/0.0000 TVD  0.0200    0.0250  0.2394 1.0000  EQUIVALENT
+financial_branch.state             categorical ok    0.0000/0.0000 TVD  0.2600    0.2700  1.1480 1.0000  EQUIVALENT
+financial_branch.zip_code          categorical ok    0.0000/0.0000 TVD  0.9900    0.9950  2.3937 1.0000  EQUIVALENT
+financial_branch.lat               numeric     ok    0.0000/0.0000  KS  0.0750    0.1400  0.2120         EQUIVALENT
+financial_branch.lng               numeric     ok    0.0000/0.0000  KS  0.1100    0.1350  0.2045         EQUIVALENT
+-- financial_transaction_category: rows 40 / 40  cols identical+ordered=True  types identical=True
+financial_transaction_category.category_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.4359         EQUIVALENT
+financial_transaction_category.category_name categorical ok    0.0000/0.0000 TVD  0.6000    0.4750  1.8541 1.0000  EQUIVALENT
+financial_transaction_category.parent_category_id numeric     ok    0.2000/0.2000  KS  0.1250    0.1875  0.4874         EQUIVALENT
+financial_transaction_category.level numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.4359         EQUIVALENT
+-- financial_customer: rows 1,000 / 1,000  cols identical+ordered=True  types identical=True
+financial_customer.customer_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0872         EQUIVALENT
+financial_customer.primary_branch_id numeric     ok    0.0000/0.0000  KS  0.0470    0.0430  0.0872         EQUIVALENT
+financial_customer.shared_person_retail_customer_id numeric     ok    0.0000/0.0000  KS  0.0480    0.0420  0.0872         EQUIVALENT
+financial_customer.first_name      categorical ok    0.0000/0.0000 TVD  0.8450    0.8400  2.2771 1.0000  EQUIVALENT
+financial_customer.last_name       categorical ok    0.0000/0.0000 TVD  0.8240    0.8280  2.2872 1.0000  EQUIVALENT
+financial_customer.email           categorical ok    0.0280/0.0330 |dR-1|  0.0051    0.0041  0.0200 1.0000  EQUIVALENT
+financial_customer.phone           categorical ok    0.1050/0.1050 |dR-1|  0.0000    0.0268  0.0402 1.0000  EQUIVALENT
+financial_customer.date_of_birth   datetime    ok    0.0000/0.0000  KS  0.0500    0.0460  0.0872         EQUIVALENT
+financial_customer.credit_tier     categorical ok    0.0000/0.0000 TVD  0.0170    0.0390  0.1514 1.0000  EQUIVALENT
+financial_customer.customer_since  datetime    ok    0.0000/0.0000  KS  0.0370    0.0320  0.0872         EQUIVALENT
+financial_customer.is_active       categorical ok    0.0000/0.0000 TVD  0.0030    0.0100  0.1070 1.0000  EQUIVALENT
+-- financial_account: rows 2,200 / 2,200  cols identical+ordered=True  types identical=True
+financial_account.account_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0588         EQUIVALENT
+financial_account.customer_id      numeric     ok    0.0000/0.0000  KS  0.0409    0.0523  0.0804         EQUIVALENT
+financial_account.account_type     categorical ok    0.0000/0.0000 TVD  0.0218    0.0232  0.1141 1.0000  EQUIVALENT
+financial_account.opened_date      datetime    ok    0.0000/0.0000  KS  0.0350    0.0318  0.0588         EQUIVALENT
+financial_account.current_balance  numeric     ok    0.0000/0.0000  KS  0.0273    0.0255  0.0588         EQUIVALENT
+financial_account.currency         categorical ok    0.0000/0.0000 TVD  0.0000    0.0000  0.0722 1.0000  EQUIVALENT
+financial_account.status           categorical ok    0.0000/0.0000 TVD  0.0227    0.0295  0.1021 1.0000  EQUIVALENT
+-- financial_card: rows 1,760 / 1,760  cols identical+ordered=True  types identical=True
+financial_card.card_id             numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0657         EQUIVALENT
+financial_card.account_id          numeric     ok    0.0000/0.0000  KS  0.0420    0.0415  0.0657         EQUIVALENT
+financial_card.card_type           categorical ok    0.0000/0.0000 TVD  0.0199    0.0284  0.0988 1.0000  EQUIVALENT
+financial_card.card_network        categorical ok    0.0000/0.0000 TVD  0.0364    0.0415  0.1141 1.0000  EQUIVALENT
+financial_card.last_four           categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+financial_card.issued_date         datetime    ok    0.0000/0.0000  KS  0.0290    0.0312  0.0657         EQUIVALENT
+financial_card.is_active           categorical ok    0.0000/0.0000 TVD  0.0040    0.0080  0.0807 1.0000  EQUIVALENT
+financial_card.expiry_date         datetime    ok    0.0000/0.0000  KS  0.0290    0.0312  0.0657         EQUIVALENT
+-- financial_transaction: rows 10,000 / 10,000  cols identical+ordered=True  types identical=True
+financial_transaction.transaction_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0276         EQUIVALENT
+financial_transaction.account_id   numeric     ok    0.0000/0.0000  KS  0.0321    0.0566  0.0869         EQUIVALENT
+financial_transaction.category_id  numeric     ok    0.0000/0.0000  KS  0.0124    0.0134  0.0276         EQUIVALENT
+financial_transaction.transaction_type categorical ok    0.0000/0.0000 TVD  0.0136    0.0166  0.0633 1.0000  EQUIVALENT
+financial_transaction.amount       numeric     ok    0.0000/0.0000  KS  0.0133    0.0108  0.0276         EQUIVALENT
+financial_transaction.transaction_date datetime    ok    0.0000/0.0000  KS  0.0059    0.0156  0.0276         EQUIVALENT
+financial_transaction.channel      categorical ok    0.0000/0.0000 TVD  0.0075    0.0128  0.0586 1.0000  EQUIVALENT
+financial_transaction.merchant_name categorical ok    0.3009/0.3009 TVD  0.0442    0.0448  0.1693 1.0000  EQUIVALENT
+financial_transaction.status       categorical ok    0.0000/0.0000 TVD  0.0067    0.0106  0.0479 1.0000  EQUIVALENT
+-- financial_loan: rows 400 / 400  cols identical+ordered=True  types identical=True
+financial_loan.loan_id             numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1378         EQUIVALENT
+financial_loan.customer_id         numeric     ok    0.0000/0.0000  KS  0.0625    0.0800  0.1378         EQUIVALENT
+financial_loan.loan_type           categorical ok    0.0000/0.0000 TVD  0.0450    0.0550  0.2676 1.0000  EQUIVALENT
+financial_loan.principal_amount    numeric     ok    0.0000/0.0000  KS  0.0575    0.0475  0.1378         EQUIVALENT
+financial_loan.interest_rate       numeric     ok    0.0000/0.0000  KS  0.0575    0.0725  0.1378         EQUIVALENT
+financial_loan.term_months         numeric     ok    0.0000/0.0000  KS  0.0725    0.0600  0.1378         EQUIVALENT
+financial_loan.origination_date    datetime    ok    0.0000/0.0000  KS  0.1250    0.1075  0.1633         EQUIVALENT
+financial_loan.status              categorical ok    0.0000/0.0000 TVD  0.0600    0.0475  0.2676 1.0000  EQUIVALENT
+financial_loan.outstanding_balance numeric     ok    0.0000/0.0000  KS  0.0400    0.0500  0.1378         EQUIVALENT
+-- financial_loan_payment: rows 4,800 / 4,800  cols identical+ordered=True  types identical=True
+financial_loan_payment.payment_id  numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0398         EQUIVALENT
+financial_loan_payment.loan_id     numeric     ok    0.0000/0.0000  KS  0.0137    0.0169  0.0398         EQUIVALENT
+financial_loan_payment.payment_date datetime    ok    0.0000/0.0000  KS  0.0240    0.0231  0.0398         EQUIVALENT
+financial_loan_payment.payment_amount numeric     ok    0.0000/0.0000  KS  0.0160    0.0188  0.0398         EQUIVALENT
+financial_loan_payment.payment_method categorical ok    0.0000/0.0000 TVD  0.0329    0.0237  0.0773 1.0000  EQUIVALENT
+financial_loan_payment.principal_portion numeric     ok    0.0000/0.0000  KS  0.0146    0.0265  0.0417         EQUIVALENT
+financial_loan_payment.interest_portion numeric     ok    0.0000/0.0000  KS  0.0296    0.0225  0.0398         EQUIVALENT
+-- financial_fraud_flag: rows 200 / 200  cols identical+ordered=True  types identical=True
+financial_fraud_flag.flag_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1949         EQUIVALENT
+financial_fraud_flag.transaction_id numeric     ok    0.0000/0.0000  KS  0.0600    0.1300  0.1970         EQUIVALENT
+financial_fraud_flag.flag_type     categorical ok    0.0000/0.0000 TVD  0.0400    0.0850  0.4146 1.0000  EQUIVALENT
+financial_fraud_flag.risk_score    numeric     ok    0.0000/0.0000  KS  0.1000    0.1100  0.1949         EQUIVALENT
+financial_fraud_flag.flagged_date  datetime    ok    0.0000/0.0000  KS  0.0700    0.1050  0.1949         EQUIVALENT
+financial_fraud_flag.resolution    categorical ok    0.0000/0.0000 TVD  0.0700    0.1000  0.3385 1.0000  EQUIVALENT
+-- financial_statement: rows 13,200 / 13,200  cols identical+ordered=True  types identical=True
+financial_statement.statement_id   numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0240         EQUIVALENT
+financial_statement.account_id     numeric     ok    0.0000/0.0000  KS  0.0132    0.0140  0.0240         EQUIVALENT
+financial_statement.statement_date datetime    ok    0.0000/0.0000  KS  0.0086    0.0105  0.0240         EQUIVALENT
+financial_statement.opening_balance numeric     ok    0.0000/0.0000  KS  0.0086    0.0128  0.0240         EQUIVALENT
+financial_statement.total_deposits numeric     ok    0.0000/0.0000  KS  0.0110    0.0094  0.0240         EQUIVALENT
+financial_statement.total_withdrawals numeric     ok    0.0000/0.0000  KS  0.0120    0.0113  0.0240         EQUIVALENT
+financial_statement.fees_charged   numeric     ok    0.0000/0.0000  KS  0.0077    0.0120  0.0240         EQUIVALENT
+financial_statement.closing_balance numeric     ok    0.0000/0.0000  KS  0.0083    0.0123  0.0240         EQUIVALENT
+
+FK integrity (spindle / impl):
+  retail_address.customer_id->retail_customer.customer_id 1.0000 / 1.0000
+  retail_product.category_id->retail_product_category.category_id 1.0000 / 1.0000
+  retail_order.customer_id->retail_customer.customer_id   1.0000 / 1.0000
+  retail_order.store_id->retail_store.store_id            1.0000 / 1.0000
+  retail_order.shipping_address_id->retail_address.address_id 1.0000 / 1.0000
+  retail_order.promotion_id->retail_promotion.promotion_id 1.0000 / 1.0000
+  retail_order_line.order_id->retail_order.order_id       1.0000 / 1.0000
+  retail_order_line.product_id->retail_product.product_id 1.0000 / 1.0000
+  retail_return.order_id->retail_order.order_id           1.0000 / 1.0000
+  marketing_campaign.campaign_type_id->marketing_campaign_type.type_id 1.0000 / 1.0000
+  marketing_contact.industry_id->marketing_industry.industry_id 1.0000 / 1.0000
+  marketing_contact.lead_source_id->marketing_lead_source.source_id 1.0000 / 1.0000
+  marketing_lead.contact_id->marketing_contact.contact_id 1.0000 / 1.0000
+  marketing_lead.campaign_id->marketing_campaign.campaign_id 1.0000 / 1.0000
+  marketing_opportunity.lead_id->marketing_lead.lead_id   1.0000 / 1.0000
+  marketing_email_send.campaign_id->marketing_campaign.campaign_id 1.0000 / 1.0000
+  marketing_email_send.contact_id->marketing_contact.contact_id 1.0000 / 1.0000
+  marketing_web_visit.contact_id->marketing_contact.contact_id 1.0000 / 1.0000
+  marketing_conversion.lead_id->marketing_lead.lead_id    1.0000 / 1.0000
+  marketing_conversion.campaign_id->marketing_campaign.campaign_id 1.0000 / 1.0000
+  financial_customer.primary_branch_id->financial_branch.branch_id 1.0000 / 1.0000
+  financial_account.customer_id->financial_customer.customer_id 1.0000 / 1.0000
+  financial_card.account_id->financial_account.account_id 1.0000 / 1.0000
+  financial_transaction.account_id->financial_account.account_id 1.0000 / 1.0000
+  financial_transaction.category_id->financial_transaction_category.category_id 1.0000 / 1.0000
+  financial_loan.customer_id->financial_customer.customer_id 1.0000 / 1.0000
+  financial_loan_payment.loan_id->financial_loan.loan_id  1.0000 / 1.0000
+  financial_fraud_flag.transaction_id->financial_transaction.transaction_id 1.0000 / 1.0000
+  financial_statement.account_id->financial_account.account_id 1.0000 / 1.0000
+  financial_customer.shared_person_retail_customer_id->retail_customer.customer_id 1.0000 / 1.0000
+  marketing_contact.shared_person_retail_customer_id->retail_customer.customer_id 1.0000 / 1.0000
+  financial_branch.shared_location_retail_store_id->retail_store.store_id 1.0000 / 1.0000
+  marketing_industry.shared_organization_financial_branch_id->financial_branch.branch_id 1.0000 / 1.0000
+  retail_product_category.parent_category_id->retail_product_category.category_id 1.0000 / 1.0000
+  financial_transaction_category.parent_category_id->financial_transaction_category.category_id 1.0000 / 1.0000
+  retail_order_line.promotion_id->retail_promotion.promotion_id 1.0000 / 1.0000
+FK fan-out (children per parent)  spindle p50/p90/p99/max/zero% | impl | KS (baseline max, tol)
+  retail_customer->retail_address.customer_id 1/3/5/6/0.236 | 1/3/5/6/0.231 | 0.0100 (0.0270, 0.0872)
+  retail_product_category->retail_product.category_id 10/14/16/16/0.000 | 10/14/17/17/0.000 | 0.0800 (0.1000, 0.3899)
+  retail_customer->retail_order.customer_id 3/8/50/50/0.061 | 3/7/50/50/0.046 | 0.0220 (0.0400, 0.0872)
+  retail_store->retail_order.store_id      6/39/499/1544/0.013 | 6/39/505/1593/0.020 | 0.0533 (0.0600, 0.2251)
+  retail_address->retail_order.shipping_address_id 1/5/27/50/0.269 | 1/5/25/50/0.267 | 0.0260 (0.0427, 0.0712)
+  retail_promotion->retail_order.promotion_id 7/11/13/18/0.005 | 7/11/14/14/0.000 | 0.0800 (0.0550, 0.1949)
+  retail_order->retail_order_line.order_id 2/5/7/11/0.083 | 2/5/7/11/0.078 | 0.0054 (0.0114, 0.0390)
+  retail_product->retail_order_line.product_id 1/13/324/4926/0.270 | 1/13/336/4894/0.260 | 0.0180 (0.0380, 0.1233)
+  retail_order->retail_return.order_id     0/1/2/2/0.841 | 0/1/2/3/0.841 | 0.0004 (0.0064, 0.0390)
+  marketing_campaign_type->marketing_campaign.campaign_type_id 13/19/21/21/0.000 | 14/18/20/20/0.000 | 0.1333 (0.1333, 0.7118)
+  marketing_industry->marketing_contact.industry_id 199/220/221/221/0.000 | 198/219/238/241/0.000 | 0.1200 (0.2800, 0.5514)
+  marketing_lead_source->marketing_contact.lead_source_id 252/273/279/280/0.000 | 251/268/272/272/0.000 | 0.1500 (0.3000, 0.6165)
+  marketing_contact->marketing_lead.contact_id 0/1/2/4/0.668 | 0/1/2/5/0.670 | 0.0030 (0.0052, 0.0390)
+  marketing_campaign->marketing_lead.campaign_id 2/13/155/603/0.205 | 2/11/128/631/0.280 | 0.0750 (0.0550, 0.1949)
+  marketing_lead->marketing_opportunity.lead_id 0/1/3/5/0.608 | 0/1/3/7/0.613 | 0.0045 (0.0115, 0.0616)
+  marketing_campaign->marketing_email_send.campaign_id 49/59/71/71/0.000 | 50/59/68/70/0.000 | 0.0600 (0.0600, 0.1949)
+  marketing_contact->marketing_email_send.contact_id 2/4/6/8/0.140 | 2/4/6/10/0.131 | 0.0092 (0.0112, 0.0390)
+  marketing_contact->marketing_web_visit.contact_id 5/8/11/16/0.006 | 5/8/11/16/0.007 | 0.0110 (0.0138, 0.0390)
+  marketing_lead->marketing_conversion.lead_id 0/1/2/4/0.749 | 0/1/2/3/0.742 | 0.0065 (0.0085, 0.0616)
+  marketing_campaign->marketing_conversion.campaign_id 3/5/8/8/0.060 | 3/5/7/8/0.030 | 0.0600 (0.0550, 0.1949)
+  financial_branch->financial_customer.primary_branch_id 1/7/82/293/0.405 | 1/7/66/315/0.355 | 0.0800 (0.1050, 0.1949)
+  financial_customer->financial_account.customer_id 2/4/6/7/0.125 | 2/4/6/9/0.117 | 0.0190 (0.0360, 0.0872)
+  financial_account->financial_card.account_id 1/2/3/7/0.438 | 1/2/4/5/0.456 | 0.0182 (0.0209, 0.0588)
+  financial_account->financial_transaction.account_id 1/4/113/200/0.341 | 1/4/119/200/0.406 | 0.0645 (0.1273, 0.1929)
+  financial_transaction_category->financial_transaction.category_id 60/404/3034/4044/0.000 | 58/421/2978/3920/0.000 | 0.1000 (0.1000, 0.4359)
+  financial_customer->financial_loan.customer_id 0/1/2/4/0.675 | 0/1/2/5/0.667 | 0.0100 (0.0190, 0.0872)
+  financial_loan->financial_loan_payment.loan_id 12/16/20/27/0.000 | 12/17/20/21/0.000 | 0.0275 (0.0400, 0.1378)
+  financial_transaction->financial_fraud_flag.transaction_id 0/0/1/2/0.980 | 0/0/1/2/0.980 | 0.0001 (0.0002, 0.0276)
+  financial_account->financial_statement.account_id 6/9/12/16/0.004 | 6/9/12/18/0.003 | 0.0200 (0.0136, 0.0588)
+  retail_customer->financial_customer.shared_person_retail_customer_id 1/2/4/5/0.368 | 1/2/4/5/0.380 | 0.0120 (0.0110, 0.0872)
+  retail_customer->marketing_contact.shared_person_retail_customer_id 5/8/11/16/0.009 | 5/8/11/12/0.010 | 0.0240 (0.0280, 0.0872)
+  retail_store->financial_branch.shared_location_retail_store_id 1/3/5/5/0.253 | 1/3/4/4/0.280 | 0.0267 (0.0467, 0.2251)
+  financial_branch->marketing_industry.shared_organization_financial_branch_id 0/1/1/1/0.875 | 0/1/1/2/0.885 | 0.0100 (0.0100, 0.1949)
+  retail_promotion->retail_order_line.promotion_id 17/29/39/45/0.010 | 18/29/36/38/0.000 | 0.0800 (0.0900, 0.1949)
+record_coherence (impl / min over Spindle seeds, floor):
+  retail_address.city+state+zip_code+lat+lng in us_zip_locations 1.0000 / 1.0000  floor 0.9950
+  financial_branch.city+state+zip_code+lat+lng in us_zip_locations 1.0000 / 1.0000  floor 0.9950
+strategy_semantics (impl / min over Spindle seeds, floor):
+  retail_promotion.end_date - start_date in [3,30] days        1.0000 / 1.0000  floor 0.9950
+  retail_order.order_total == sum(retail_order_line.line_total) 1.0000 / 1.0000  floor 0.9950
+  retail_order_line.promotion_id == lookup retail_order.promotion_id via order_id 1.0000 / 1.0000  floor 0.9950
+  retail_order_line.unit_price == lookup retail_product.unit_price via product_id 1.0000 / 1.0000  floor 0.9950
+  retail_return.return_date - retail_order.order_date in [1,90] days 0.9976 / 0.9988  floor 0.9938
+Spindle BusinessRulesEngine violations on impl output: {}
+Spindle FidelityComparator (real=Spindle seed 42, synthetic=impl): overall impl=91.35  Spindle-vs-Spindle baselines=[91.65, 91.8, 91.67, 91.46]
+  financial_account  impl  95.72  floor  95.72  baselines [96.33, 96.73, 96.74, 96.22]  FAIL
+  financial_branch   impl  85.83  floor  85.80  baselines [86.3, 87.39, 86.72, 86.78]  ok
+  financial_card     impl  98.78  floor  97.99  baselines [98.92, 99.53, 98.78, 98.49]  ok
+  financial_customer impl  78.52  floor  78.24  baselines [79.3, 78.78, 78.74, 79.15]  ok
+  financial_fraud_flag impl  98.61  floor  96.71  baselines [98.46, 97.72, 97.21, 97.55]  ok
+  financial_loan     impl  96.71  floor  96.35  baselines [96.85, 98.28, 97.3, 97.03]  ok
+  financial_loan_payment impl  97.69  floor  97.64  baselines [98.33, 99.23, 99.36, 98.14]  ok
+  financial_statement impl  99.34  floor  96.99  baselines [99.52, 99.48, 98.48, 97.49]  ok
+  financial_transaction impl  95.18  floor  93.87  baselines [95.15, 95.31, 94.37, 94.69]  ok
+  financial_transaction_category impl  87.16  floor  85.13  baselines [86.93, 85.63, 89.59, 86.41]  ok
+  marketing_campaign impl  96.28  floor  96.93  baselines [98.53, 97.43, 98.95, 97.46]  FAIL
+  marketing_campaign_type impl  83.95  floor  78.53  baselines [85.92, 83.37, 79.03, 79.83]  ok
+  marketing_contact  impl  76.22  floor  75.55  baselines [76.07, 76.11, 76.05, 76.2]  ok
+  marketing_conversion impl  97.67  floor  96.33  baselines [96.83, 98.41, 98.07, 97.99]  ok
+  marketing_email_send impl  99.57  floor  98.91  baselines [99.68, 99.8, 99.58, 99.41]  ok
+  marketing_industry impl  80.20  floor  82.35  baselines [82.85, 83.35, 86.02, 85.6]  FAIL
+  marketing_lead     impl  98.37  floor  98.42  baselines [99.03, 99.12, 98.92, 99.13]  FAIL
+  marketing_lead_source impl  86.25  floor  83.05  baselines [85.57, 83.55, 83.69, 84.19]  ok
+  marketing_opportunity impl  98.00  floor  97.33  baselines [98.07, 98.26, 97.83, 99.13]  ok
+  marketing_web_visit impl  92.64  floor  92.71  baselines [93.21, 93.85, 93.27, 93.36]  FAIL
+  retail_address     impl  85.36  floor  84.62  baselines [85.51, 85.12, 85.65, 85.34]  ok
+  retail_customer    impl  77.77  floor  77.04  baselines [78.36, 77.54, 77.9, 78.62]  ok
+  retail_order       impl  96.18  floor  95.69  baselines [96.5, 97.69, 96.86, 96.19]  ok
+  retail_order_line  impl  93.30  floor  93.29  baselines [93.79, 95.67, 94.82, 93.97]  ok
+  retail_product     impl  93.99  floor  91.62  baselines [92.12, 92.59, 93.22, 93.55]  ok
+  retail_product_category impl  88.55  floor  86.18  baselines [87.71, 88.12, 86.68, 87.98]  ok
+  retail_promotion   impl  91.85  floor  91.29  baselines [93.55, 92.56, 93.27, 91.79]  ok
+  retail_return      impl  93.63  floor  92.11  baselines [92.61, 95.82, 96.48, 95.04]  ok
+  retail_store       impl  85.78  floor  84.41  baselines [85.77, 85.7, 84.91, 85.66]  ok
+
+COLUMNS EQUIVALENT: 201/201
+  NOT EQUIVALENT: (h) fidelity financial_account: 95.72 < floor 95.72
+  NOT EQUIVALENT: (h) fidelity marketing_campaign: 96.28 < floor 96.93
+  NOT EQUIVALENT: (h) fidelity marketing_industry: 80.20 < floor 82.35
+  NOT EQUIVALENT: (h) fidelity marketing_lead: 98.37 < floor 98.42
+  NOT EQUIVALENT: (h) fidelity marketing_web_visit: 92.64 < floor 92.71
+VERDICT: FAIL

@@ -57,7 +57,8 @@ def rows_of(schema, table, order="id"):
         cursor.execute(
             f"SELECT * FROM {_tsql.qualified(schema, table)} ORDER BY {_tsql.ident(order)}"
         )  # nosec B608
-        return cursor.fetchall()
+        # plain tuples: newer pyodbc Row objects no longer compare equal to tuples
+        return [tuple(row) for row in cursor.fetchall()]
     finally:
         conn.close()
 

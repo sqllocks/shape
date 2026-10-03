@@ -80,6 +80,13 @@ COLUMN_FIELDS = (
     "dow_histogram",
     "temporal_histogram",
     "string_length",
+    "nan_count",
+    "inf_count",
+    "pattern_rates",
+    "pattern_contains_rates",
+    "precision",
+    "scale",
+    "placeholders",
     *_MARGINAL_FIELDS,
 )
 """Every field of a column of a profile; the plan reports each one that has a value."""
@@ -104,6 +111,8 @@ _NATIVE = (
     "zip_plus4",
     "pystr",
     "word",
+    "digits",
+    "digit_ids",
 )
 
 
@@ -521,6 +530,19 @@ def _plan_column(
             f"synthetic values from {provider}: the real values, their lengths and how often "
             "they repeat are not reproduced",
         )
+    mark(("nan_count", "inf_count"), _N, "generated numbers are always finite")
+    mark(
+        ("pattern_rates", "pattern_contains_rates"),
+        _N,
+        "the generated values are synthetic: how often they match a pattern is not the profile's",
+    )
+    mark(("precision", "scale"), _N, "generated numbers do not take the profile's decimal type")
+    mark(
+        ("placeholders",),
+        _N,
+        "placeholder values (`00000`, `-1`, `N/A`) are what the data got wrong: generated values "
+        "are drawn without them unless they are in the profile's own value counts",
+    )
     for f in sorted(present):  # a field no rule above covered is never reported as preserved
         add(f, _N, "not modelled")
     return items
@@ -530,6 +552,8 @@ def _has(col: ColumnProfile, field: str) -> bool:
     if field == "value_counts_ext_order":
         return bool(col.value_counts_ext)
     value = getattr(col, field, None)
+    if field in ("nan_count", "inf_count"):
+        return bool(value)  # zero is the usual case, and not worth a plan item
     return value is not None
 
 
@@ -539,12 +563,18 @@ def fit_schema(
     domain: str = "profile",
     copula_threshold: float = COPULA_THRESHOLD,
     rows: int | None = None,
+    decisions: Any = None,
 ) -> Fit:
     """The generation schema that reproduces ``profile``, and what it preserves.
 
     The schema's ``profile`` scale preset has the profile's row counts; ``rows`` replaces the row
     count of a single-table profile (the plan then reports the row-count dependent fields as
-    approximate)."""
+    approximate). ``decisions`` is a :class:`shape.proposals.DecisionFile`: the relationships a
+    person accepted are kept and the ones they rejected are left out (``docs/PROPOSALS.md``)."""
+    if decisions is not None:
+        from shape.proposals import apply_decisions
+
+        profile = apply_decisions(profile, decisions)
     dataset: DatasetProfile = as_dataset(profile)
     base = SchemaBuilder().build(dataset, domain_name=domain, correlation_threshold=2.0)
     doc = copy.deepcopy(base.to_dict())
@@ -597,10 +627,90 @@ def fit_schema(
             "copula_threshold": 0.0,
         }
 
+    for tname, tp in dataset.tables.items():
+        items.extend(_joint_tables(tname, tp, doc["tables"][tname], kinds))
+
     doc["generation"]["scales"][PRESET] = dict(parent_scale)
     doc["generation"]["scale"] = PRESET
     items.extend(_dataset_items(dataset))
     return Fit(GenSchema.from_dict(doc), ReconstructionPlan(tuple(items)))
+
+
+def _joint_tables(
+    tname: str,
+    tp: TableProfile,
+    table_doc: dict[str, Any],
+    kinds: Mapping[tuple[str, str], str],
+) -> list[PlanItem]:
+    """Categorical joint tables (#47): where the profile holds ``P(target | given)`` for two
+    enum columns, the target is drawn given the row's ``given`` value instead of on its own. Each
+    column has at most one parent and a parent is never its own descendant."""
+    joint = tp.joint or {}
+    items: list[PlanItem] = []
+    chosen: dict[tuple[str, str], dict[str, Any]] = {}
+    for cond in joint.get("conditionals", ()):
+        key = (min(cond["given"], cond["target"]), max(cond["given"], cond["target"]))
+        best = chosen.get(key)
+        # the column with more values is the given one: it is the one that fixes the other
+        if best is None or len(cond["table"]) > len(best["table"]):
+            chosen[key] = cond
+    parent: dict[str, str] = {}
+    for cond in chosen.values():
+        given, target = cond["given"], cond["target"]
+        evidence = f"{tname}.joint.conditionals[{given},{target}]"
+        if kinds.get((tname, given)) != "enum" or kinds.get((tname, target)) != "enum":
+            items.append(PlanItem(evidence, _N, "both columns must be enumerations to be linked"))
+            continue
+        up, cycle = given, False
+        while up in parent:
+            up = parent[up]
+            cycle = cycle or up == target
+        if target in parent or cycle or given == target:
+            items.append(
+                PlanItem(
+                    evidence, _N, "the target already follows another column: left independent"
+                )
+            )
+            continue
+        column = table_doc["columns"][target]
+        gen = column["generator"]
+        column["generator"] = {
+            **{k: v for k, v in gen.items() if k not in ("strategy", "values")},
+            "strategy": "conditional_table",
+            "source_column": given,
+            "table": {g: dict(row["p"]) for g, row in cond["table"].items()},
+            "values": gen["values"],
+        }
+        parent[target] = given
+        items.append(
+            PlanItem(
+                evidence,
+                _A,
+                f"{target} is drawn given {given} from the profile's table P({target} | {given}) "
+                f"(Cramer's V {cond['cramers_v']}); values the table does not list use the "
+                "column's own distribution",
+            )
+        )
+    if joint.get("dependencies"):
+        items.append(
+            PlanItem(
+                f"{tname}.joint.dependencies",
+                _N,
+                "functional dependencies are not generated from a profile: use a reference "
+                "hierarchy (the `hierarchy` strategy) for state, city and ZIP",
+            )
+        )
+    for field in ("keys", "associations", "implausible_rate"):
+        if joint.get(field):
+            items.append(
+                PlanItem(
+                    f"{tname}.joint.{field}",
+                    _N,
+                    "not modelled: the generated columns are "
+                    "linked only by the conditional tables and the numeric copula above",
+                )
+            )
+    return items
 
 
 def _table_items(tname: str, tp: TableProfile) -> list[PlanItem]:

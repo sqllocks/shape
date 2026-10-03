@@ -39,7 +39,8 @@ def generate(
     ``GenSchema``, or a generation schema ``dict``) through the engine and returns the
     ``GenerationResult``: ``result.tables`` maps each table name to a ``pyarrow.Table`` (so does
     ``result["order"]``). ``scale`` is a preset name, ``seed`` defaults to the schema's and ``mode``
-    (``3nf`` or ``star``) picks a domain's schema.
+    (``3nf`` or ``star``) picks a domain's schema. A composite preset (``"enterprise"``) or domains
+    joined by ``+`` (``"retail+hr"``) run those domains as one dataset (``shape composite``).
 
     The earlier form, ``generate(shape_model, n, seed, relationships)``, still generates rows from
     a Shape model.
@@ -54,9 +55,12 @@ def generate(
         fitted = fit_schema(shape, rows=rows)
         return Engine(fitted.schema, scale=scale or PRESET, seed=seed).generate()
     if isinstance(shape, str):
+        from shape.generation.composite import is_composite, resolve
         from shape.generation.domains import load_domain
         from shape.generation.engine import Engine
 
+        if is_composite(shape):  # a composite preset, or domains joined by "+": "retail+hr"
+            return Engine(resolve(shape).schema, scale=scale, seed=seed).generate()
         return Engine(load_domain(shape, mode=mode).schema, scale=scale, seed=seed).generate()
     if isinstance(shape, GenSchema) or (isinstance(shape, dict) and "tables" in shape):
         from shape.generation.engine import Engine

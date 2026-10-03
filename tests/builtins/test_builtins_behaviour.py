@@ -179,8 +179,9 @@ def test_address_strategy(host):
     assert set(oh.to_pylist()) == {"Columbus"}
     as_dict = [r.__dict__ if hasattr(r, "__dict__") else {} for r in REF]
     del as_dict
-    with pytest.raises(ValueError, match="reference"):
-        strat.generate({}, ctx(1))
+    # ISS-gen: no reference means the default dataset, so only an unknown one is an error
+    with pytest.raises(ValueError, match="reference dataset 'nowhere'"):
+        strat.generate({"reference": {"dataset": "nowhere"}}, ctx(1))
     with pytest.raises(ValueError, match="unknown address field"):
         strat.generate({"reference": REF, "field": "nope"}, ctx(1))
 

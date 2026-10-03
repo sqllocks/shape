@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "chunks_written": {
+      "type": "integer"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "rows_written": {
+      "type": "integer"
+    },
+    "running": {
+      "type": "boolean"
+    },
+    "status": {
+      "enum": [
+        "running",
+        "submitted",
+        "succeeded",
+        "failed",
+        "cancelled",
+        "interrupted"
+      ]
+    },
+    "stream_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "stream_id",
+    "status",
+    "chunks_written",
+    "rows_written",
+    "running",
+    "error"
+  ],
+  "title": "stream_status result",
+  "type": "object",
+  "x-api-version": "1.0"
+}

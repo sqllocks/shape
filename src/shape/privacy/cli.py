@@ -27,6 +27,25 @@ def _parser() -> argparse.ArgumentParser:
         "--column-k", action="append", default=[], metavar="COLUMN=N", help="per-column k"
     )
     sf.add_argument(
+        "--compact",
+        action="store_true",
+        help="write one line without null fields (smaller; reads back the same)",
+    )
+    sf.add_argument(
+        "--columns",
+        action="append",
+        default=[],
+        metavar="NAMES",
+        help="keep only these columns (comma-separated names or * patterns; repeatable)",
+    )
+    sf.add_argument(
+        "--exclude",
+        action="append",
+        default=[],
+        metavar="NAMES",
+        help="drop these columns (comma-separated names or * patterns; repeatable)",
+    )
+    sf.add_argument(
         "--unsafe-full-fidelity",
         action="store_true",
         help="turn the disclosure controls off; the result is stamped unsafe and fails "
@@ -79,7 +98,11 @@ def _validate(a: argparse.Namespace) -> int:
 def _safe(a: argparse.Namespace) -> int:
     cfg = SafeConfig(k=a.k, sensitive=a.sensitive, columns=_column_k(a.column_k))
     safe = to_safe_profile(a.profile, cfg, unsafe_full_fidelity=a.unsafe_full_fidelity)
-    safe.save(a.output)
+    include = [n for item in a.columns for n in item.split(",") if n]
+    exclude = [n for item in a.exclude for n in item.split(",") if n]
+    if include or exclude:
+        safe = safe.select_columns(include, exclude)
+    safe.save(a.output, compact=a.compact)
     print(json.dumps({"written": a.output, "unsafe": safe.unsafe}, sort_keys=True))
     return 0
 
@@ -90,5 +113,8 @@ def main(argv: Sequence[str]) -> int:
     try:
         return _validate(a) if a.cmd == "validate" else _safe(a)
     except (OSError, ValueError, KeyError, ImportError, zipfile.BadZipFile) as exc:
-        print(f"shape: error: {exc}", file=sys.stderr)
-        return 2
+        from shape.cli import errors
+
+        if errors.debug_enabled():
+            raise
+        return errors.fail(exc)

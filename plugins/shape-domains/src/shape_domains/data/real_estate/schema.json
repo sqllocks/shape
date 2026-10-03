@@ -98,8 +98,7 @@
       "mean": 11.0,
       "sigma": 0.5,
       "min": 25000.0,
-      "max": 500000.0,
-      "round": 2
+      "max": 500000.0
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -420,8 +419,7 @@
       "mean": 12.2,
       "sigma": 0.7,
       "min": 50000.0,
-      "max": 5000000.0,
-      "round": 2
+      "max": 5000000.0
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -518,8 +516,7 @@
       "mean": 12.5,
       "sigma": 0.7,
       "min": 50000.0,
-      "max": 5000000.0,
-      "round": 2
+      "max": 5000000.0
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -735,8 +732,7 @@
       "mean": 12.4,
       "sigma": 0.7,
       "min": 40000.0,
-      "max": 5000000.0,
-      "round": 2
+      "max": 5000000.0
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -826,8 +822,7 @@
       "mean": 12.5,
       "sigma": 0.7,
       "min": 50000.0,
-      "max": 5000000.0,
-      "round": 2
+      "max": 5000000.0
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -888,8 +883,7 @@
       "strategy": "distribution",
       "distribution": "uniform",
       "min": 2.5,
-      "max": 6.0,
-      "round": 2
+      "max": 6.0
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -1068,8 +1062,7 @@
       "mean": 12.5,
       "sigma": 0.7,
       "min": 50000.0,
-      "max": 5000000.0,
-      "round": 2
+      "max": 5000000.0
      },
      "nullable": false,
      "null_rate": 0.0,

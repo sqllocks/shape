@@ -71,6 +71,13 @@ iban = "my_plugin:IbanDetector"
 | `shape.transforms` | `Transform` | `check_transform` | `tables` |
 | `shape.commands` | `Command` | `check_command` | `argv` (optional `expect_exit`) |
 | `shape.reports` | `ReportFormat` | `check_report_format` | `report` |
+| `shape.behaviors` | `Behavior` | `check_behavior` | none (optional `population`, `seed`, `years`) |
+
+A behavior is a state-machine module for a simulator on a virtual clock
+([behavior.md](behavior.md)): it has `name`, `version`, the `states` it uses, the `attributes` and
+`events` it emits, and `simulate(population, seed, years)`, which returns the events as one Arrow
+table. `check_behavior` runs a small population twice, so a behavior that is not deterministic
+for a seed or emits an event or state it did not declare fails.
 
 A command adds `shape <name>`: it has `name`, `help`, `configure(parser)` and `run(args)`, and
 `run` returns the exit code. A built-in command always wins over a plugin command with the same
@@ -142,9 +149,12 @@ tests against it, and checks that `shape plugins list` shows it next to every bu
 ## 5. First-party plugins (monorepo)
 
 Features that ship with Shape but are not part of core live under `plugins/<dist-name>/`, one
-distribution each (decision T-09): `shape-kafka`, `shape-eventhubs`, `shape-fabric`,
-`shape-sqlserver`, `shape-domains` and `shape-simulation`. They publish as
-`sqllocks-shape-<name>`.
+distribution each (decision T-09, with the additions of 2026-10-03): `shape-kafka`,
+`shape-eventhubs`, `shape-fabric`, `shape-sqlserver`, `shape-databases`, `shape-domains`, `shape-simulation`,
+`shape-dbt`, `shape-behavior`, `shape-healthcare-codes` and `shape-healthcare-standards`. They
+publish as `sqllocks-shape-<name>` and are all MIT licensed. Install them with the extras
+`pip install 'sqllocks-shape[fabric]'`, `pip install 'sqllocks-shape[dbt]'` and `pip install 'sqllocks-shape[healthcare]'` (the three
+healthcare distributions), or one by one.
 
 ```
 plugins/shape-kafka/
@@ -159,7 +169,9 @@ Each one starts as a **skeleton**: it builds and installs, declares `SHAPE_API` 
 nothing. The work package that implements a plugin adds its entry points to `pyproject.toml`,
 its code under `src/`, and kit-based tests. `shape-sqlserver` is the first one implemented; its
 guide is [sqlserver.md](sqlserver.md). `shape-kafka` and `shape-eventhubs` follow it; their guide
-is [streaming.md](streaming.md).
+is [streaming.md](streaming.md). The guides of the later four are [DBT.md](../DBT.md),
+[behavior.md](behavior.md), [healthcare-codes.md](healthcare-codes.md) and the README of
+`plugins/shape-healthcare-standards` (X12, FHIR and OMOP writers).
 
 Rules that `python scripts/check_plugin_skeletons.py` enforces (and CI runs):
 
@@ -170,7 +182,7 @@ Rules that `python scripts/check_plugin_skeletons.py` enforces (and CI runs):
 - any entry-point group it declares is a real plugin API group;
 - with `--build OUT`, each one builds a pure-Python `py3-none-any` wheel.
 
-When core's version changes, change all seven `pyproject.toml` files in the same commit; the
+When core's version changes, change all eleven `pyproject.toml` files in the same commit; the
 script fails until they match.
 
 ## 6. Versioning
@@ -178,3 +190,6 @@ script fails until they match.
 `SHAPE_API` is `"MAJOR.MINOR"`. The host loads a plugin whose major version equals its own
 (`shape.plugins.api.v1.SHAPE_API`), so a plugin written for API 1.0 keeps loading on every 1.x
 release, and a future 2.0 host reports a clear error for it instead of misbehaving.
+
+What is stable within 1.x, what counts as a breaking change, and the deprecation process are
+in [stability.md](stability.md).

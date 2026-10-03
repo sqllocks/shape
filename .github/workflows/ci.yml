@@ -47,18 +47,62 @@ jobs:
       # The Fabric demo tests need Java, PySpark and unixODBC; they and the demo content tests
       # run in the fabric-demo job below.
       # --cov-fail-under is the measured coverage (86.55% on P0-06), rounded down.
+      # Owner decision 2026-10-02, extended 2026-10-03 (plan §2.3): wall-clock pacing tests
+      # (marker "realtime") run on Linux only; the macOS and Windows hosted runners freeze the
+      # whole process (20-90 ms on macOS, 4-5.6 s on Windows).
       - run: >-
-          python -m pytest -q -m "not emulator and not live and not heavy"
+          python -m pytest -q -m "not emulator and not live and not heavy${{ matrix.os != 'ubuntu-latest' && ' and not realtime' || '' }}"
           --ignore=tests/demo/fabric --ignore=tests/demo/content
           --cov=shape --cov-fail-under=86
       # million-value differential and property tests: run without coverage tracing (10x faster)
-      - run: python -m pytest -q -m heavy tests/kernel tests/profile tests/streaming
+      - run: python -m pytest -q -m "heavy${{ matrix.os != 'ubuntu-latest' && ' and not realtime' || '' }}" tests/kernel tests/profile tests/streaming
       # The pure-Python reference twin must pass on its own (SHAPE_KERNEL=python), and the
       # native kernel must be the one in use by default (SHAPE_KERNEL=rust fails loudly if not).
       - run: python -m pytest -q tests/kernel
         env: {SHAPE_KERNEL: python}
       - run: python -m pytest -q tests/kernel
         env: {SHAPE_KERNEL: rust}
+      # W1-08: the planted-drift sweep at its fast size, once per kernel (a change that misses
+      # planted drift, or makes a same-distribution pair drift, fails here)
+      - run: python -m pytest -q tests/diff/test_drift_sweep.py
+        env: {SHAPE_KERNEL: python, SHAPE_DRIFT_SWEEP: fast}
+      - run: python -m pytest -q tests/diff/test_drift_sweep.py
+        env: {SHAPE_KERNEL: rust, SHAPE_DRIFT_SWEEP: fast}
+  zero-network:
+    # W6-02: every test that needs no network (all but `emulator` and `live`) runs again with
+    # the network namespace emptied, so an outbound connection cannot succeed even if the
+    # in-process socket guard (tests/conftest.py) were bypassed. Loopback stays up for the
+    # in-process Spark gateway.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -U pip
+      - run: pip install -e '.[dev,streaming,advanced]' -e plugins/shape-domains
+      - name: Prove the namespace has no route out
+        run: |
+          sudo env "PATH=$PATH" unshare --net -- sh -c 'ip link set lo up
+          if python -c "import socket; socket.create_connection((\"1.1.1.1\", 53), 3)"; then
+            echo "network reachable inside the namespace"; exit 1
+          fi'
+      - name: Tests marked zero_network, networking disabled
+        run: |
+          sudo env "PATH=$PATH" unshare --net -- sh -c 'ip link set lo up
+          python -m pytest -q -p no:cacheprovider -m "zero_network and not heavy" --ignore=tests/demo/fabric --ignore=tests/demo/content'
+  offline-lock:
+    # W6-02: pinned, hashed requirements for core and each extra, built here (a network is
+    # needed to resolve) and checked against pyproject.toml. See docs/INSTALL.md.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -U pip uv packaging
+      - run: python scripts/offline_lock.py generate "$RUNNER_TEMP/offline-lock"
+      - run: python scripts/offline_lock.py check "$RUNNER_TEMP/offline-lock"
+      - uses: actions/upload-artifact@v4
+        with: {name: offline-lock, path: '${{ runner.temp }}/offline-lock/requirements-*.txt'}
   plugin-skeletons:
     # P2-06: every first-party plugin distribution builds a pure wheel, and the example plugin,
     # installed from outside the tree, passes the conformance kit (G2) on every OS.
@@ -82,6 +126,8 @@ jobs:
       - run: python -m pytest -q tests/plugins/test_kit.py tests/plugins/test_plugin_kit_install.py
   stream-plugins:
     # P3-04, P5-02, P6-07a, P6-08: the Kafka, Event Hubs, SQL Server and Fabric plugins' contract tests.
+    # PLUG-INT: also the dbt, behavior, healthcare-codes and healthcare-standards plugins' fast tests.
+    # Their slow suites (the dbt build against DuckDB, the official HL7 validator) run in nightly.yml.
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -91,9 +137,24 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: python -m pip install -U pip
-      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-kafka -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e plugins/shape-fabric
-      # The plugins' contract tests (no external service); emulator and live runs are nightly.
-      - run: python -m pytest -q -m "not emulator and not live" plugins/shape-kafka/tests plugins/shape-eventhubs/tests plugins/shape-sqlserver/tests plugins/shape-fabric/tests
+      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-kafka -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e plugins/shape-fabric -e plugins/shape-dbt -e plugins/shape-behavior -e plugins/shape-healthcare-codes -e 'plugins/shape-healthcare-standards[test]'
+      # The plugins' contract tests (no external service); emulator, live and dbt-build runs are nightly.
+      - run: python -m pytest -q -m "not emulator and not live and not dbt" plugins/shape-kafka/tests plugins/shape-eventhubs/tests plugins/shape-sqlserver/tests plugins/shape-fabric/tests plugins/shape-dbt/tests plugins/shape-behavior/tests plugins/shape-healthcare-codes/tests plugins/shape-healthcare-standards/tests
+  database-plugins:
+    # ISS2-sinks: the PostgreSQL and MySQL sinks, contract tests against an in-memory server
+    # (no driver is installed: the sinks load psycopg / PyMySQL only when they connect).
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -U pip
+      - run: pip install -e '.[dev]' -e plugins/shape-databases
+      - run: python -m pytest -q -m "not emulator and not live" plugins/shape-databases/tests
+      - run: python -m shape.plugins.kit sqllocks-shape-databases
   rust:
     # T-27: cargo fmt / clippy -D warnings / cargo test for rust/shape-kernel.
     runs-on: ubuntu-latest
@@ -123,7 +184,7 @@ jobs:
         with: {distribution: temurin, java-version: '17'}
       - run: sudo apt-get update -q && sudo apt-get install -y -q unixodbc
       - run: python -m pip install -U pip
-      - run: pip install -e '.[dev]' -r tests/demo/fabric/requirements.txt
+      - run: pip install -e '.[dev]' -e plugins/shape-dbt -r tests/demo/fabric/requirements.txt
       - run: python -m pytest -q tests/demo/fabric tests/demo/content
   pure-wheel:
     # PF-03: the T-29 pure wheel is py3-none-any and under 28.6 MB, and the UDF helpers and
@@ -154,8 +215,15 @@ jobs:
           source scripts/env.sh
           python -m venv "$SHAPE_VENV"
           "$SHAPE_VENV/bin/pip" install -U pip
-          "$SHAPE_VENV/bin/pip" install -e '.[dev]' 'pyarrow==25.0.1'
+          "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains 'pyarrow==25.0.1'
       - run: source scripts/env.sh && python benchmarks/vs_spindle/check_coverage.py
+      # P6-01e: the committed baseline fixtures (schemas, plans, composites) still equal the pinned
+      # baseline's output, and every domain and composite has the baseline's row counts at every scale.
+      - run: |
+          source scripts/env.sh
+          "$SHAPE_VENV/bin/pip" install -e plugins/shape-domains
+          "$SPINDLE_PY" benchmarks/vs_spindle/plan_fixtures.py --check
+          "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/domain_1to1/rowcounts.py
       - run: source scripts/env.sh && python benchmarks/vs_spindle/run.py --quick --out "$BENCH_OUT_DIR/results.json"
       # P6-09: `shape verify` against the baseline's `verify` on retail small (internal harness).
       - run: |
@@ -183,6 +251,8 @@ jobs:
       - run: python -m build
       - run: python -m twine check dist/*
       - run: python scripts/check_user_facing.py --wheel dist/*.whl
+      # W6-02: every reference data file is inside the wheel; nothing downloads at run time.
+      - run: python scripts/check_shipped_data.py --wheel dist/*.whl
       - run: pip-audit
       - uses: actions/upload-artifact@v4
         with: {name: distributions, path: dist/*}

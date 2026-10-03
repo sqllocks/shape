@@ -57,7 +57,7 @@ def spark(tmp_path_factory: pytest.TempPathFactory) -> Any:
     session = (
         SparkSession.builder.master("local[2]")
         .appName("shape-pf02")
-        .config("spark.sql.warehouse.dir", str(tmp_path_factory.mktemp("warehouse")))
+        .config("spark.sql.warehouse.dir", tmp_path_factory.mktemp("warehouse").as_uri())
         .config("spark.ui.enabled", "false")
         .config("spark.sql.shuffle.partitions", "4")
         .getOrCreate()
@@ -267,7 +267,7 @@ def test_executors_on_the_python_kernel_give_the_same_profile(
     session = (
         SparkSession.builder.master("local[2]")
         .appName("shape-pf02-python-kernel")
-        .config("spark.sql.warehouse.dir", str(tmp_path / "wh"))
+        .config("spark.sql.warehouse.dir", (tmp_path / "wh").as_uri())
         .config("spark.ui.enabled", "false")
         .config("spark.executorEnv.SHAPE_KERNEL", "python")
         .config("spark.sql.shuffle.partitions", "4")

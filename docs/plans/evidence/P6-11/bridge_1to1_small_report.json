@@ -1,0 +1,443 @@
+{
+  "checks": [
+    {
+      "command": "list",
+      "check": "every Shape domain is a baseline domain, with its profiles",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "list",
+      "check": "retail is listed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "describe",
+      "check": "retail 3nf: tables, columns, keys, relationships, rules, presets",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "describe",
+      "check": "retail star: tables, columns, keys, relationships, rules, presets",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "dry_run",
+      "check": "every preset (fabric_demo, large, medium, small, warehouse, xlarge, xxl, xxxl): planned rows and order",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "profile_info",
+      "check": "ratios and every baseline distribution",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "profile_info",
+      "check": "BR-7 the baseline's lifecycle weights are not the ones its schema generates with",
+      "ok": true,
+      "detail": "profile {'introduced': 0.08, 'active': 0.75, 'discontinued': 0.17}, schema {'active': 0.75, 'discontinued': 0.15, 'introduced': 0.1}"
+    },
+    {
+      "command": "profile_info",
+      "check": "BR-7 Shape reports the weights it generates with (the baseline schema's)",
+      "ok": true,
+      "detail": "shape {'active': 0.75, 'discontinued': 0.15, 'introduced': 0.1}, schema {'active': 0.75, 'discontinued': 0.15, 'introduced': 0.1}"
+    },
+    {
+      "command": "profile_info",
+      "check": "BR-6: the baseline names a column that does not exist",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "preview",
+      "check": "tables, columns, row counts and value types",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "preview",
+      "check": "categorical columns carry the same values",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "validate",
+      "check": "a good schema: valid, table and relationship counts",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "validate",
+      "check": "a schema with a relationship to a missing table is invalid in both",
+      "ok": true,
+      "detail": "baseline False, shape {'errors': [{'location': 'relationships.customer_addresses', 'message': \"Parent table 'no_such_table' not found\"}], 'kind': 'generation-schema', 'mode': '3nf', 'name': 'retail_3nf', 'relationship_count': 9, 'table_count': 9, 'valid': False, 'warnings': []}"
+    },
+    {
+      "command": "validate",
+      "check": "a missing file is an error in both",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "stream",
+      "check": "starts: stream_id and status started",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "stream_status",
+      "check": "keys, chunks_written, running, error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "stream",
+      "check": "same rows on disk: chunk_size per table per chunk",
+      "ok": true,
+      "detail": "baseline 360, shape 360"
+    },
+    {
+      "command": "stream_status",
+      "check": "BR-3 baseline rows_written is chunks x chunk_size, not the rows written",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "stream_status",
+      "check": "BR-3 Shape's rows_written is the rows written",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "stream_stop",
+      "check": "a running stream is stopped in both",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "stream_status",
+      "check": "after a stop: not running (the baseline forgets a stopped stream; Shape keeps it)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "stream_status",
+      "check": "an unknown id is reported (baseline: an error in a success; Shape: input.unknown_job)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "stream_stop",
+      "check": "an unknown id is reported (baseline: an error in a success; Shape: input.unknown_job)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "scale_status",
+      "check": "an unknown id is reported (baseline: an error in a success; Shape: input.unknown_job)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "scale_cancel",
+      "check": "an unknown id is reported (baseline: an error in a success; Shape: input.unknown_job)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "scale_generate",
+      "check": "BR-1 baseline local_mp writes the wrong row counts (medium)",
+      "ok": true,
+      "detail": "wrong tables {'order': 786160, 'order_line': 1965400}"
+    },
+    {
+      "command": "scale_generate",
+      "check": "BR-1 Shape local_mp writes the preset's rows (medium)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "scale_status",
+      "check": "BR-2 the baseline's job store is in memory and its record holds the token",
+      "ok": true,
+      "detail": "{'in_memory': True, 'token_field': True}"
+    },
+    {
+      "command": "scale_status",
+      "check": "BR-2 Shape's job is read by a new bridge process",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "generate",
+      "check": "BR-4 baseline: success with nothing written; Shape: usage.missing_argument",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "preview",
+      "check": "BR-5 baseline: an empty success; Shape: input.invalid_value naming the table",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "demo_list",
+      "check": "PENDING P6-12 (`shape demo`): Shape answers policy.capability_unavailable",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "demo_run",
+      "check": "PENDING P6-12 (`shape demo`): Shape answers policy.capability_unavailable",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "demo_status",
+      "check": "PENDING P6-12 (`shape demo`): Shape answers policy.capability_unavailable",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "demo_cleanup",
+      "check": "PENDING P6-12 (`shape demo`): Shape answers policy.capability_unavailable",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "generate",
+      "check": "summary at small: counts per table, totals, integrity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "generate",
+      "check": "csv: the same file names",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "generate",
+      "check": "jsonl: the same file names",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "generate",
+      "check": "parquet: the same file names",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "generate",
+      "check": "tsv: the same file names",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "generate",
+      "check": "T-21 on the bridges' own Parquet at small (domain verifier, clauses a-h)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "scale_generate",
+      "check": "local_single: result fields and exact rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "scale_generate",
+      "check": "local_single: T-21 on the Parquet part files at small (clauses a-h)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "scale_generate",
+      "check": "local_single: the default memory sink",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "scale_generate",
+      "check": "local_mp: result fields and exact rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "scale_generate",
+      "check": "local_mp: T-21 on the Parquet part files at small (clauses a-h)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "scale_generate",
+      "check": "local_mp: the default memory sink",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "scale_generate",
+      "check": "both refuse {'domain': 'nope'}",
+      "ok": true,
+      "detail": "baseline ok=False, shape {'code': 'input.unknown_domain', 'group': 'input', 'hint': 'run the `list` command', 'message': \"no domain named 'nope' (installed: retail); domains come from the 'sqllocks-shape-domains' package\"}"
+    },
+    {
+      "command": "scale_generate",
+      "check": "both refuse {'domain': 'retail', 'scale_mode': 'warp'}",
+      "ok": true,
+      "detail": "baseline ok=False, shape {'code': 'usage.invalid_argument', 'group': 'usage', 'hint': None, 'message': \"argument 'scale_mode' must be one of local_single, local_mp, fabric_spark, got 'warp'\"}"
+    },
+    {
+      "command": "scale_generate",
+      "check": "both refuse {'domain': 'retail', 'sinks': ['warp']}",
+      "ok": true,
+      "detail": "baseline ok=False, shape {'code': 'input.invalid_value', 'group': 'input', 'hint': None, 'message': \"unknown sink 'warp'; the sinks are: memory, parquet, lakehouse, warehouse, sql_database, kql\"}"
+    },
+    {
+      "command": "scale_generate",
+      "check": "fabric_spark without ids and a token is refused in both",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "control",
+      "check": "describe: a column type changed is flagged",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "control",
+      "check": "describe: a relationship dropped is flagged",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "control",
+      "check": "describe: a preset changed is flagged",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "control",
+      "check": "dry_run: a planned row count changed is flagged",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "control",
+      "check": "profile_info: a ratio changed is flagged",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "control",
+      "check": "profile_info: a weight changed is flagged",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "control",
+      "check": "profile_info: a distribution dropped is flagged",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "control",
+      "check": "preview: the columns reordered is flagged",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "control",
+      "check": "preview: a value type changed is flagged",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "control",
+      "check": "validate: a table count changed is flagged",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "command": "control",
+      "check": "generate: a row count changed is flagged",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "notes": {
+    "domains_not_in_shape": [
+      "capital_markets",
+      "education",
+      "financial",
+      "healthcare",
+      "hr",
+      "insurance",
+      "iot",
+      "manufacturing",
+      "marketing",
+      "pulse",
+      "real_estate",
+      "supply_chain",
+      "telecom"
+    ],
+    "profile_info_extra_keys": [
+      "product.unit_price",
+      "return.refund_amount"
+    ],
+    "pending_p6_12": {
+      "demo_list": {
+        "baseline_ok": true
+      },
+      "demo_run": {
+        "baseline_ok": true
+      },
+      "demo_status": {
+        "baseline_ok": true
+      },
+      "demo_cleanup": {
+        "baseline_ok": true
+      }
+    },
+    "commands_with_checks": [
+      "demo_cleanup",
+      "demo_list",
+      "demo_run",
+      "demo_status",
+      "describe",
+      "dry_run",
+      "generate",
+      "list",
+      "preview",
+      "profile_info",
+      "scale_cancel",
+      "scale_generate",
+      "scale_status",
+      "stream",
+      "stream_status",
+      "stream_stop",
+      "validate"
+    ],
+    "allow_list": {
+      "BR-1": "scale_generate local_mp writes the wrong number of rows: the baseline passes the sum of all tables' rows as the chunk budget, so order and order_line come out larger than the preset (medium: order 786,160 where the preset says 500,000). Shape: exact counts in every mode.",
+      "BR-2": "jobs are lost with the process: the baseline keeps them in memory, so scale_status and scale_cancel answer job_not_found for any job after a restart of the bridge. Shape keeps one versioned file per job, readable by a new process.",
+      "BR-3": "stream rows_written is chunks x chunk_size whatever was written: a stream of 2 chunks of 20 rows per table wrote 360 rows and said 40. Shape counts the rows written.",
+      "BR-4": "generate with a file format and no output_dir succeeds and writes nothing, so a caller believes files exist. Shape refuses (usage.missing_argument).",
+      "BR-5": "preview with a table name that does not exist returns an empty result as a success. Shape refuses (input.invalid_value) and names the table.",
+      "BR-6": "a profile_info distribution key names a column that does not exist (promotion.promotion_type: the column is promo_type), so its weights apply to nothing. Shape reports the weights under the real column.",
+      "BR-7": "profile_info reports weights generation never uses: the product_status lifecycle is introduced 0.08 / discontinued 0.17 in the profile, while the schema generates with 0.10 / 0.15. Shape reports the weights it generates with."
+    },
+    "not_run": {
+      "fabric_spark submit/status/cancel": "needs a live Fabric workspace; tested against recorded interactions in tests/bridge/test_scale.py"
+    }
+  },
+  "failed": 0
+}

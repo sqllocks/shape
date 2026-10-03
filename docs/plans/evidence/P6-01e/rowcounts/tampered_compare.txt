@@ -1,0 +1,5 @@
+negative control: the comparator finds a raised count, a dropped table, scale and schema
+37 schemas, 291 planned scales, 75 generated scales, 4944 table counts compared
+DIFF hr_3nf planned medium employee: baseline 5000 shape 5001
+1 differences: NOT equal
+exit 1

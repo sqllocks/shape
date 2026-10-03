@@ -42,7 +42,24 @@ schema, `row_counts`, `key_pool(table)`) and `column_def` (the column: `type`, `
    (`sequence`) as `int64`; numeric draws as `float64`; text as `string`. The one exception is a
    generator that asks for it: `"output_type": "int64"` (or `float64`, `bool`, `string`) casts the
    strategy's output (floats are rounded first), which is how a profile's integer and boolean
-   columns keep their type (`shape.generation.engine.cast_output`).
+   columns keep their type (`shape.generation.engine.cast_output`). Two more names read the
+   column's declared type and are applied to the finished table, so the passes in between still
+   work on numbers: `"output_type": "decimal"` is `decimal128(precision, scale)` (rounded to
+   `scale`; a value that does not fit `precision` is an error naming the column) and
+   `"output_type": "timestamp"` is `timestamp[us]` cut to the column's `precision` fractional
+   digits. `shape from-ddl` writes them for `DECIMAL(p,s)`, `DATETIME` (3 digits) and
+   `DATETIME2(n)` columns.
+
+### Unknown keys
+
+`GenSchema.validate()` warns about a key in a generator that its strategy does not read, with a "did
+you mean" hint for a close name (`sigmaa` for `sigma`), and says so when the key is a **column**
+property: `scale`, `null_rate`, `precision`, `max_length` and `nullable` belong on the column, so
+a `scale` in a `distribution` generator was ignored and the numbers kept 14 decimal places. The keys
+of every built-in strategy are in `shape.generation.spec_keys` (a test checks that no strategy reads
+a key that is missing there); a strategy or distribution family from a plugin is not checked.
+The same tables build the published JSON Schema, which reports these keys as errors at their place
+(`docs/GENERATION_SPEC.md`).
 
 ### Helpers
 
@@ -138,16 +155,26 @@ URI domains and paths). `provider` defaults to `word`. Every draw is row address
 |---|---|
 | `first_name`, `last_name`, `company`, `sentence`, `city`, `state_abbr` | one pool entry, uniformly |
 | `name` | `first last` |
-| `email` | `first.last<1..998>@domain`, lower case; follows the row's own `first_name` and `last_name` columns when the table has both |
-| `company_email` | `first.last@<company, lower case, no spaces, commas or dots, 20 characters>.com` |
-| `phone_number` | `(AAA) EEE-SSSS`, `AAA` and `EEE` 200 to 998, `SSSS` 1000 to 9998 |
-| `ssn` | `AAA-GG-SSSS`, `AAA` 1 to 899 without 666, `GG` 1 to 99, `SSSS` 1 to 9999 |
+| `email` | `first.last<1..998>@domain`, lower case, `domain` one of `example.com`, `example.org`, `example.net`; follows the row's own `first_name` and `last_name` columns when the table has both |
+| `company_email` | `first.last@<company, lower case, no spaces, commas or dots, 20 characters>.example` |
+| `phone_number` | `(AAA) 555-01SS`, `AAA` 200 to 998, `SS` 00 to 99: the 555-0100 to 555-0199 lines reserved for fiction |
+| `ssn` | `AAA-GG-SSSS`, `AAA` 900 to 999 (never assigned), `GG` 1 to 99, `SSSS` 1 to 9999 |
 | `street_address` | `<100..9998> <street> <St, Ave, Blvd, Dr, Ln, Way, Ct, Pl, Rd or Cir>` |
-| `uri` | `https://<domain>/<path>` |
+| `uri` | `https://<domain>/<path>`, `domain` one of `example.com`, `example.org`, `example.net` |
 | `ipv4` | `A.B.C.D`, `A` and `D` 1 to 254, `B` and `C` 0 to 255 |
 | `postcode` | five digits, 00501 to 99950 |
 | `zip_plus4` | `NNNNN-NNNN`: a `postcode` and four digits, 0001 to 9999 |
 | `pystr`, `word` | 12 characters from `a-z0-9` |
+
+**Values that cannot belong to a real person (the default).** Synthetic data is shared, emailed and
+loaded into test systems, so the identifier providers produce reserved values: the host names RFC 2606
+reserves (`email`, `uri`, and the `.example` top-level domain for `company_email`), the 9xx areas of
+`ssn`, which the SSA never assigns, and the 555-0100 to 555-0199 telephone lines. Two explicit
+options give realistic values instead; **they can produce real people's addresses and numbers, so
+never use them for data that leaves a test system**: `"domains": "realistic"` (`email`,
+`company_email`, `uri`: real mail providers and `.com` hosts) and `"range": "assignable"` (`ssn`:
+areas 001 to 899 without 666; `phone_number`: `(AAA) EEE-SSSS`, `EEE` 200 to 998, `SSSS` 1000 to
+9998). Any other value of either option is a `StrategyError`. The `ipv4` provider is unchanged.
 
 The column's `max_length` cuts the text. `native` raises `StrategyError` for any other provider.
 `faker` serves the same providers identically; for any other provider it needs the `faker` package
@@ -260,18 +287,40 @@ one defined decides the record.
 stream, so the pair agrees for any chunking, the anchor may be defined before or after the field,
 and the anchor's null rate does not touch the fields.
 
+### `hierarchy` and `hierarchy_field`
+`hierarchy` (`{"dataset": "us_zip", "field": "state", "levels": ["state", "city", "zip"]}`) is the
+anchor of a group of columns that follow one path down a hierarchy of a dataset of records: a state,
+a city of that state, a ZIP of that city, and one record under that ZIP. `hierarchy_field`
+(`{"dataset": "us_zip", "field": "lat"}`) gives another field of the same record, so a ZIP is always
+inside its city and the coordinates are the record's own. Optional keys of the anchor: `weighting`
+(`records`: every record equally likely, the default; `uniform`: every child of a node equally
+likely) and `top_weights` (a mapping from top-level value to weight, for example a profile's state
+shares). Draws are row addressed like `record_sample`'s. See `docs/JOINT.md`.
+
+### `conditional_table`
+`conditional_table` (`{"source_column": "dept", "table": {"cardio": {"A": 0.9, "B": 0.1}},
+"values": {"A": 1, "B": 1}}`) draws a category given the value of another column of the same row
+(defined earlier). `table` maps each source value to the weights of this column's values; a source
+value without an entry, or a null, draws from `values`, the column's own distribution. `shape
+generate --from` writes it from a profile's conditional probability tables.
+
 ### `temporal`
 `{"pattern": "seasonal", "start": "2022-01-01", "end": "2025-12-31", "profiles": {...}}`.
 
 * Range: `date_range` (or `range`) `{"start", "end"}`, else top-level `start`/`end`, else
   `range_ref: "model.date_range"` (the schema's own range), else 2022-01-01 to 2025-12-31.
-* `pattern: "uniform"` (the default, and what any other value means): uniform on `[start, end)`.
+* `end`: a date (`2026-05-01`) stands for the whole day, so the end day is a possible day for every
+  pattern and `start == end` is one single day (a business day's landing file). An `end` with a time
+  (`2026-05-01T12:00:00`) is the exact bound, exclusive for `uniform`. An `end` before the start is
+  an error that says so; `start == end` with a time is an error that asks for dates.
+* `pattern: "uniform"` (the default, and what any other value means): uniform on `[start, end]`
+  (`end` as above).
 * `pattern: "seasonal"`: `profiles.month` (`Jan`..`Dec`) and `profiles.day_of_week` (`Mon`..`Sun`)
   weigh the days (a name left out weighs `1/12` or `1/7`; `month_weights` and
   `day_of_week_weights` at the top level are accepted too). The probability of a (month, weekday)
   bucket is the product of the two weights, shared equally by the days of the range in it; the
   probability of a bucket with no day in the range is spread over the other days. The end date is a
-  possible day. Without a month or weekday profile the range is uniform.
+  possible day, as it is for `uniform`. Without a month or weekday profile the range is uniform.
 * `profiles.hour_of_day` replaces the time of day by a whole second in an hour drawn uniformly, from
   one weight per hour (`{"0": 0.01, ..., "23": 0.02}`, a profile's hour histogram), or from
   `{"distribution": "bimodal", "peaks": [12, 18], "std_dev": 2}`: equally likely Gaussian
@@ -294,6 +343,45 @@ holds Arrow columns; `unregister_dataset` and `clear_search_paths` undo the abov
 `tests/generation/test_strategies_p404c.py` follows the recipe above for these strategies; the
 cases are in `strategy_1to1/cases.py`. Datetime columns are compared on month, weekday and hour of
 day profiles (and the share of whole-second values) as well as KS.
+
+### `address`
+`{"strategy": "address", "scope": [{"state": "WA"}]}`: coherent addresses from a scope alone. The
+column is a struct of `address_line_1`, `city`, `county`, `state`, `postal_code`, `country`,
+`latitude`, `longitude`, `timezone`, `mode` and `reference_id`, or, with `"field": "city"` (also
+`zip`, `lat`, `lng`, ...), one of them as a plain column.
+
+* **Scope.** A list (or one entry) of `{"state": "WA"}`, `{"postal_code": "98101"}`,
+  `{"city": "Seattle", "state": "WA"}`, `{"county": ..., "state": ...}`, `"WA"`, `"98101"` or
+  `"Seattle, WA"`; `weights` (one per entry) and `exclude` (places to leave out). Without a scope
+  every state of the reference is an entry of equal weight. A place the reference does not have
+  is a `StrategyError` naming the column.
+* **Reference.** The places come from `reference`: `{"dataset": name}` (any dataset registered with
+  `shape.generation.reference.register_dataset`; its columns `city`, `state`, `postal_code` (or
+  `zip`), `latitude` (or `lat`) and `longitude` (or `lng`) are required, `county`, `country`,
+  `street`, `timezone` optional), or rows given inline (dicts, `AddressReference`, `Location`, or
+  what `shape.location.load_geonames_postal` returns). Without `reference` the dataset
+  `us_zip_locations` is used: 40,977 US ZIP codes with city, state and coordinates, shipped by the
+  `sqllocations-shape-domains` package (GeoNames data, attribution in `THIRD_PARTY_NOTICES.md`);
+  without that package the error says so. A named dataset keeps a schema small; the reference is
+  compiled once per engine, not per chunk.
+* **Coherence.** One place is drawn for every row, and the city, state, ZIP and coordinates are
+  that place's (the coordinates within 0.002 degrees of its reference point, or exactly at it in
+  `reference` and `exact_reference` modes). Every address column of a table with the same `group`
+  (default `address`) draws the same place for the same row, so separate `city`, `state`,
+  `postal_code`, `latitude` and `longitude` columns agree; give a second set of columns another
+  `group` for an independent address (a work address next to a home address).
+* **Mode.** `street_synthetic` (default): a house number 1 to 9999 and the reference street's name
+  (or, when the reference has no streets, a name and a suffix from Shape's street pools);
+  `geographic`: the number and `Synthetic Way`; `reference` and `exact_reference`: the reference's
+  street and point as they are (the reference needs streets).
+
+Row addressed: the value of row `r` depends on the seed, the table, the group, `r` and the spec,
+never on the chunk.
+
+### `locale`
+`{"strategy": "locale", "locale": "FR", "provider": "postcode"}`: places, postcodes, phone numbers in
+ranges reserved for fiction, and first names for a country, from data shipped with Shape. See
+`docs/LOCALES.md` for the countries, the sources and licences, and what is not shipped.
 
 ## Strategies of P4-04d
 
