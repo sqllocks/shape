@@ -334,6 +334,46 @@ def _is_schema(path: Any) -> bool:
     return isinstance(doc, dict) and "schema_version" in doc
 
 
+_LIVE_REPORT_FORMATS = (".json", ".md", ".html", ".htm")
+
+
+def _check_live_options(a: argparse.Namespace) -> None:
+    """The live options are checked before the first event is sent: they need ``--live-target``,
+    and the files they name must be writable, so a long run does not end in an error."""
+    from pathlib import Path
+
+    from shape.errors import ShapeError
+
+    given = {
+        "--live-report": a.live_report,
+        "--live-profile": a.live_profile,
+        "--live-alerts": a.live_alerts,
+        "--live-fail": a.live_fail,
+        "--live-min-column-score": a.live_min_column_score,
+        "--live-target-seed": a.live_target_seed,
+        "--live-target-scale": a.live_target_scale,
+        "--no-live-profile": a.no_live_profile,
+    }
+    if not a.live_target:
+        used = [flag for flag, value in given.items() if value not in (None, False)]
+        if used:
+            raise ShapeError(
+                f"{used[0]} needs --live-target (live fidelity is off without it): name the "
+                "domain, schema or reference data the stream is compared with"
+            )
+        return
+    if a.live_report and Path(a.live_report).suffix.lower() not in _LIVE_REPORT_FORMATS:
+        raise ShapeError(f"cannot tell the format of {a.live_report}: use .json, .md or .html")
+    for flag in ("--live-report", "--live-profile", "--live-alerts"):
+        value = given[flag]
+        if not value:
+            continue
+        path = Path(value)
+        if path.is_dir():
+            raise ShapeError(f"{flag} {value} is a directory: name a file")
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+
 def _live_setup(a: argparse.Namespace, engine: Any, schema: Any, plan: Any) -> Any:
     from shape.errors import ShapeError
     from shape.streaming.emit.live import (
@@ -504,6 +544,7 @@ def run(a: argparse.Namespace) -> int:
         raise ShapeError(str(exc)) from exc
     if speed is not None and a.realtime:
         raise ShapeError("--speed paces by event time and --realtime by rate: choose one")
+    _check_live_options(a)
     targets = _targets(a)
     schema = load_target(a.target, a.mode)
     engine = Engine(schema, scale=a.scale, seed=a.seed)
