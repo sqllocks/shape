@@ -26,14 +26,12 @@ from urllib.parse import parse_qs, unquote, urlparse
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from .auth import Credentials, connect
-from .catalog import read_catalog
+from .catalog import TableInfo, read_catalog
 from .sql import (
     DEFAULT_SCHEMA,
-    PRIMARY_KEY_QUERY,
     SqlServerError,
     build_connection_string,
     datetimeoffset_from_bytes,
-    fetch_dicts,
     qualified_name,
     quote_ident,
     register_converters,
@@ -138,19 +136,7 @@ class SqlServerSource:
                 conn.close()
 
     def _schema(self, cursor: Any, schema_name: str, table: str) -> pa.Schema:
-        found = read_catalog(cursor, schema_name, [table]).tables
-        if not found:
-            raise SqlServerError(f"table {schema_name}.{table} not found")
-        return pa.schema(
-            [
-                pa.field(
-                    c.name,
-                    sql_type_to_arrow(c.type_name, c.precision, c.scale),
-                    nullable=c.is_nullable,
-                )
-                for c in found[0].columns
-            ]
-        )
+        return _arrow_schema(_table_info(cursor, schema_name, table))
 
     def read(self, uri: str, **options: Any) -> Iterator[pa.RecordBatch]:
         _, _, _, schema_name, table = parse_uri(uri)
@@ -161,13 +147,9 @@ class SqlServerSource:
         try:
             cursor = conn.cursor()
             try:
-                found = read_catalog(cursor, schema_name, [table]).tables
-                if not found:
-                    raise SqlServerError(f"table {schema_name}.{table} not found")
-                info = found[0]
-                schema = self._schema(cursor, schema_name, table)
-                cursor.execute(PRIMARY_KEY_QUERY, (info.object_id,))
-                declared = [r["column_name"] for r in fetch_dicts(cursor)]
+                info = _table_info(cursor, schema_name, table)
+                schema = _arrow_schema(info)
+                declared = info.primary_key  # the catalog's declared key, in key order
                 sql = "SELECT " + ", ".join(quote_ident(c.name) for c in info.columns)
                 sql += " FROM " + qualified_name(schema_name, table)
                 if declared:
@@ -191,3 +173,23 @@ class SqlServerSource:
         finally:
             if owned:
                 conn.close()
+
+
+def _table_info(cursor: Any, schema_name: str, table: str) -> TableInfo:
+    found = read_catalog(cursor, schema_name, [table]).tables
+    if not found:
+        raise SqlServerError(f"table {schema_name}.{table} not found")
+    return found[0]
+
+
+def _arrow_schema(info: TableInfo) -> pa.Schema:
+    return pa.schema(
+        [
+            pa.field(
+                c.name,
+                sql_type_to_arrow(c.type_name, c.precision, c.scale),
+                nullable=c.is_nullable,
+            )
+            for c in info.columns
+        ]
+    )
