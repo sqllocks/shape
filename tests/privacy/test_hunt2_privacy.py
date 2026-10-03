@@ -227,10 +227,12 @@ def test_a_current_safe_profile_is_still_clean():
 
 
 def test_a_newer_version_is_a_finding_that_names_the_release():
-    result = SafeProfileValidator().validate_data(_safe_doc(version=99, schema_version=99))
+    result = SafeProfileValidator().validate_data(
+        _safe_doc(version=99, schema_version=99, min_shape_version="9.9.9")
+    )
     (finding,) = result.findings
     assert finding.rule == "unsupported-version"
-    assert "version 99" in finding.detail and "0.9.0" in finding.detail
+    assert "version 99" in finding.detail and "9.9.9" in finding.detail
 
 
 @pytest.mark.parametrize(
@@ -240,7 +242,7 @@ def test_a_newer_version_is_a_finding_that_names_the_release():
         {"version": True},
         {"schema_version": 0},
         {"version": 2.0},
-        {"version": 1, "schema_version": 2},
+        {"version": 1, "schema_version": "x"},
     ],
 )
 def test_a_malformed_version_is_a_finding(patch):

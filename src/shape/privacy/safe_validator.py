@@ -165,9 +165,26 @@ class SafeProfileValidator:
                 "$.unsafe",
                 "artifact is stamped unsafe (the full-fidelity opt-out); it is rejected",
             )
+        if isinstance(data, dict):
+            self._check_format_version(data, result)
         self._check_row_counts(data, result)
         self._walk(data, "$", None, result)
         return result
+
+    @staticmethod
+    def _check_format_version(data: dict[str, Any], result: ValidationResult) -> None:
+        """The scanner knows the value-bearing fields of the versions this release reads only: a
+        newer version (it may add fields), a malformed version or another format is not proven
+        clean."""
+        from shape import compat
+
+        try:
+            compat.check_format("safe-profile", data)
+            compat.check_readable("safe-profile", data)
+        except compat.UnsupportedVersionError as exc:
+            result.add("unsupported-version", "$.version", str(exc))
+        except compat.FormatError as exc:
+            result.add("format-version", "$", str(exc))
 
     def _check_row_counts(self, data: Any, result: ValidationResult) -> None:
         """Every table must carry a positive integer ``row_count``, or its safety is unknown."""
