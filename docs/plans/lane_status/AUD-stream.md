@@ -12,8 +12,8 @@ exercise it). Branch `lane/AUD-stream`, started from int/INT-15 (`f99563e`).
 
 ## Findings
 
-Severity, place, reproduction, expected, actual. Issue numbers and fix commits are filled in below
-as the lane files and fixes them.
+Severity, place, reproduction, expected, actual. Issue numbers and fix commits are in the table
+below the list.
 
 1. **high** — `streaming/cli.py:306-312` (`shape stream-profile`). Ctrl-C with `--checkpoint`, then
    the same command again: the windows file keeps the *partial* profile of each window that was open
@@ -80,3 +80,46 @@ as the lane files and fixes them.
     1,000 one-second events). This is the documented pane design (STREAMING_SEMANTICS §2); a faster
     scheme (two-stack aggregation) would be a design change.
 
+
+## Issues and fixes
+
+Each fix has a regression test in `tests/streaming/test_audit_regressions.py`, committed first
+with its failing output in the commit message.
+
+| finding | issue | severity | fix commit | status |
+|---|---|---|---|---|
+| 1 | #153 | high | 4604d9d | fixed: Ctrl-C windows written `"partial": true`, removed and rewritten complete on restart |
+| 2 | #154 | high | 531ddee | fixed |
+| 3 | #155 | high | b289a2e | fixed (`window_start`, whole microseconds) |
+| 4 | #156 | medium | 99a2a8d | fixed |
+| 5 | #157 | medium | 22ee04a | fixed |
+| 6 | #158 | medium | 984a63c | fixed |
+| 7 | #159 | medium | 0c673d1 | fixed |
+| 8 | #160 | medium | b9f022f | fixed (unbuffered write, truncate on failure) |
+| 9 | #161 | medium | f368cb3 | fixed |
+| 10 | #162 | low | d36f582 | fixed |
+| 11 | #163 | low | 7192345 | fixed |
+| 12 | #164 | low | 8478e49 | fixed (text re-read after the first-block type stops fitting) |
+| 13 | #165 | low | 410c488 | fixed |
+| 14 | #166 | low | — | **open, for the lead**: `tests/streaming/emit/test_formats.py:93` pins the zone-less CloudEvents `time`; changing it needs a decision (append `Z` for zone-less timestamps, midnight `Z` for dates?) |
+| 15 | — | — | — | observation only (pane design) |
+
+Improvements (behaviour-preserving): tests for `TableEventSink`'s threaded writer
+(`tests/streaming/emit/test_threaded_table_writer.py`, `emit/tables.py` 58% -> 97%; 5a8a131),
+a dead statement removed from `FullEvidenceEngine.process` (c1c7a17).
+
+## Notes for the lead
+
+* `benchmarks/vs_spindle/stream_1to1/verify.py` could not be run here: `$SPINDLE_ROOT` is not
+  checked out in this container. The only change to emitted bytes is #156 (the anomaly mutator),
+  and only for rows that hit the defect (a null or an integer above 2**53 in a column the row's
+  anomaly did not target, or an outlier past the int64 limit); the probe compares runs with and
+  without `--anomaly-fraction` and two runs with it, which stay deterministic. Please run it at
+  integration.
+* #153 adds an optional key, `"partial": true`, to the lines of `--windows` that Ctrl-C wrote; an
+  uninterrupted run's file is unchanged. Documented in `docs/plugins/streaming.md`.
+* `src/shape/streaming/windows.py`, `aggregate_windows.py`, `keyed.py`, `vectorized.py` (and other
+  files of the package) are stored with CRLF line endings; the fixes keep them.
+* No `.github/workflows` change is needed.
+
+## Commands and results
