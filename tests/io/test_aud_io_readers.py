@@ -70,3 +70,26 @@ def test_498_a_record_batch_reader_source_can_be_read_only_once():
     assert src.table().num_rows == 3
     with pytest.raises(ReaderError, match="only once"):
         src.table()
+
+
+def test_499_unreadable_files_raise_reader_error(tmp_path):
+    for name in ("junk.parquet", "junk.arrow"):
+        p = tmp_path / name
+        p.write_bytes(b"garbage")
+        with pytest.raises(ReaderError, match=r"cannot read .*junk"):
+            read_table(p)
+
+
+def test_499_an_unknown_column_raises_reader_error_for_every_file_kind(tmp_path):
+    t = pa.table({"a": [1, 2]})
+    pq.write_table(t, tmp_path / "t.parquet")
+    with pa.ipc.new_file(tmp_path / "t.arrow", t.schema) as w:
+        w.write_table(t)
+    _write(tmp_path / "t.csv", "a\n1\n2\n")
+    _write(tmp_path / "t.jsonl", '{"a": 1}\n{"a": 2}\n')
+    for name in ("t.parquet", "t.arrow", "t.csv", "t.jsonl"):
+        with pytest.raises(ReaderError, match=r"columns not found: \['zz'\]"):
+            read_table(tmp_path / name, columns=["a", "zz"])
+        assert read_table(tmp_path / name, columns=["a"])["a"].to_pylist() == [1, 2]
+    with pytest.raises(ReaderError, match="columns not found"):
+        read_table(tmp_path / "t.csv", columns=["zz"], csv=CsvOptions(stream=True))
