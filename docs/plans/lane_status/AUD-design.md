@@ -150,5 +150,21 @@ No `.github/workflows` change was needed.
 - `python scripts/check_user_facing.py`: clean.
 - `pytest tests/design tests/proposals tests/spec tests/model --cov=...`: 294 passed, 96% total
   (was 230 passed, 92%).
-- Full `pytest -m "not emulator and not live"` with `SHAPE_KERNEL=rust` and `python`: running;
-  results recorded below when they finish.
+- Full `pytest -m "not emulator and not live" --continue-on-collection-errors`, main-matrix
+  environment (pyarrow 25.0.1, first-party plugins installed):
+  - `SHAPE_KERNEL=rust`: 7111 passed, 0 failed, 8 errors;
+  - `SHAPE_KERNEL=python`: 7111 passed, 0 failed, 8 errors.
+  The 8 errors are `tests/demo/fabric/test_udf.py` and `test_generate_udf.py`, which import the
+  Fabric UDF SDK; it is not installed in that environment (it pins pyarrow 19, as CI's
+  `fabric-demo` job does).
+- `pytest -m "not emulator and not live" tests/demo/fabric`, Fabric environment
+  (`tests/demo/fabric/requirements.txt`, pyarrow 19.0.1, unixODBC): 216 passed with
+  `SHAPE_KERNEL=rust` and 216 passed with `SHAPE_KERNEL=python`.
+- An earlier full run with the Fabric requirements installed alongside everything else had 5
+  failures. One was this lane's: the #393 test wrote an invalid v1 shape as a literal, which
+  `tests/artifact/test_model_v2.py::test_every_v1_fixture_in_tests_migrates` scans as a valid
+  fixture. It is fixed in `e30149b` (the input is built at run time). The other four came from the
+  environment (pyarrow 19 float16 and hive-partition reads, and `azure.functions` imported by the
+  Fabric UDF SDK). All four pass with pyarrow 25.0.1 and without `azure-functions`, in both
+  kernel modes.
+- `git merge origin/build/main-plan`: already up to date.
