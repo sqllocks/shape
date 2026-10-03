@@ -297,6 +297,7 @@ def profile(
     joint: bool | None = None,
     sheet: str | None = None,
     include_hidden: bool = False,
+    time_column: str | None = None,
 ) -> Profile:
     """Profile a path, glob, directory, Delta table, Arrow table or DataFrame.
 
@@ -321,6 +322,11 @@ def profile(
     one table, off by default for a dataset (a dict of tables, a workbook), ``joint=True`` turns
     it on and ``joint=False`` off; without it ``SHAPE_PROFILE_JOINT`` decides (``0`` off, ``1`` on).
 
+    ``time_column`` names the date or timestamp column that each numeric column's ``seasonality``
+    is measured against (default: the table's only date or timestamp column; a dict of tables
+    uses it for the tables that have it). It is an error when no table has the column, or when it
+    is not a date or timestamp column. Workbook sheets are not analysed for seasonality.
+
     An ``.xlsx`` workbook is a dataset with one table per visible sheet (``"book.xlsx#Sheet"``
     or ``sheet=`` profiles that sheet alone, hidden or not; ``include_hidden=True`` reads the
     hidden sheets too), and the profile carries ``findings`` about its cells.
@@ -334,7 +340,7 @@ def profile(
             return Profile(data, name=title)
         if sheet is not None or include_hidden:
             raise SourceError("sheet and include_hidden apply to .xlsx workbooks only")
-        return _profile(source, name, version, as_of, fmt, reference_pairs, joint)
+        return _profile(source, name, version, as_of, fmt, reference_pairs, joint, time_column)
 
 
 def _load_tables(
@@ -397,6 +403,7 @@ def _profile(
     csv: CsvFormat | None = None,
     reference_pairs: Any = None,
     joint: bool | None = None,
+    time_column: str | None = None,
 ) -> Profile:
     check_delta_options(version, as_of)
     asked = version is not None or as_of is not None
@@ -406,7 +413,11 @@ def _profile(
         if not source:
             raise SourceError("an empty dict of tables cannot be profiled")
         cols_by_t = _load_tables({str(k): v for k, v in source.items()}, csv)
-        doc = dataset_to_dict(profile_dataset_columns(cols_by_t, None, joint))
+        if time_column is not None and not any(
+            c.name == time_column for cols, _ in cols_by_t.values() for c in cols
+        ):
+            raise ValueError(f"time_column {time_column!r} is not a column of any table")
+        doc = dataset_to_dict(profile_dataset_columns(cols_by_t, None, joint, time_column))
         if reference_pairs:
             if not isinstance(reference_pairs, dict):
                 raise ValueError("for several tables, reference_pairs maps a table name to a list")
@@ -431,7 +442,9 @@ def _profile(
     else:
         table, provenance = read_delta(delta, version=version, as_of=as_of)
         table_name, cols, rows = load_columns(table, name or delta.name)
-    table_profile = _profile_cols_table(table_name, cols, rows, None, None, joint)
+    if time_column is not None and all(c.name != time_column for c in cols):
+        raise ValueError(f"time_column {time_column!r} is not a column of {table_name!r}")
+    table_profile = _profile_cols_table(table_name, cols, rows, None, None, joint, time_column)
     doc = table_to_dict(table_profile)
     _attach_reference_pairs(doc, cols, rows, reference_pairs)
     return Profile(doc, name=name, provenance=provenance)

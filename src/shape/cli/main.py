@@ -353,6 +353,7 @@ def _cmd_profile(a):
         header=fmt.header,
         reference_pairs=_reference_pairs(a),
         joint=a.joint,
+        time_column=getattr(a, "time_column", None),
         **_workbook_options(a),
     )
     if settings:
@@ -984,6 +985,12 @@ def _build_parser(plugin_commands=()):
         help="the joint analysis (dependencies, keys, associations): on by default for one table, "
         "off for a dataset; --joint turns it on, --no-joint off (SHAPE_PROFILE_JOINT=0|1 when "
         "neither is given)",
+    )
+    pr.add_argument(
+        "--time-column",
+        metavar="COL",
+        help="the date or timestamp column each numeric column's seasonality is measured against "
+        "(default: the table's only date or timestamp column)",
     )
     pr.add_argument(
         "--sheet",

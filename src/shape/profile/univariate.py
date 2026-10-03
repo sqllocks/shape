@@ -45,8 +45,8 @@ FIELDS = (
     "mixture",
     "seasonality",
 )
-"""The column fields of the univariate depth (W3-07, W7-03) that a profile carries; ``mixture``
-comes from :mod:`shape.profile.mixture` and ``seasonality`` from :mod:`shape.profile.seasonality`."""
+"""The column fields of the univariate depth that a profile carries (W3-07, and W7-03's ``mixture``
+from :mod:`shape.profile.mixture` and ``seasonality`` from :mod:`shape.profile.seasonality`)."""
 FAMILIES = ("normal", "lognormal", "exponential", "uniform", "gamma", "weibull")
 _MAX_SHAPE = 1e5  # a gamma or Weibull shape above this is a point mass for practical purposes
 _HEAP_UNITS = (5, 10, 100, 1000)

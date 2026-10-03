@@ -438,6 +438,22 @@ def _finish_table(
     )
 
 
+def _attach_seasonality(works: list[_Work], cols: list[_Col], time_column: str | None) -> None:
+    """Add each numeric column's ``seasonality`` (W7-03) to its profile."""
+    from shape.profile.seasonality import table_seasonality
+
+    found = table_seasonality(cols, {w.prof.name: w.prof.dtype for w in works}, time_column)
+    for w in works:
+        entry = found.get(w.prof.name)
+        if entry is not None:
+            w.prof.univariate = {**(w.prof.univariate or {}), "seasonality": entry}
+
+
+def _time_for(time_column: str | None, cols: list[_Col]) -> str | None:
+    """The named time column when this table has it, else ``None`` (its only date column)."""
+    return time_column if time_column in {c.name for c in cols} else None
+
+
 def _profile_cols_table(
     name: str,
     cols: list[_Col],
@@ -445,6 +461,7 @@ def _profile_cols_table(
     threads: int | None,
     sample_rows: int | None = None,
     joint: bool | None = None,
+    time_column: str | None = None,
 ) -> TableProfile:
     cols, row_count = _sample_rows(cols, row_count, sample_rows)
     cstart, cresult = _spawn_correlation(cols, row_count, threads)
@@ -455,6 +472,7 @@ def _profile_cols_table(
         jstart()
 
     works = _profile_cols(cols, row_count, threads, on_ready=start)
+    _attach_seasonality(works, cols, time_column)
     pk = _detect_primary_key(works, row_count)
     return _finish_table(name, works, pk, {}, row_count, cresult(), jresult())
 
@@ -517,8 +535,10 @@ def profile_dataset_columns(
     cols_by_t: dict[str, tuple[list[_Col], int]],
     threads: int | None = None,
     joint: bool | None = None,
+    time_column: str | None = None,
 ) -> DatasetProfile:
-    """Multi-table profile (with FK detection) from already-read columns."""
+    """Multi-table profile (with FK detection) from already-read columns. ``time_column`` names
+    the date or timestamp column of the tables that have it (seasonality, W7-03)."""
     corr = {n: _spawn_correlation(c, rc, threads) for n, (c, rc) in cols_by_t.items()}
     on = resolve_joint(joint, dataset=True)
     jobs = {n: _spawn_joint(c, rc, threads, on) for n, (c, rc) in cols_by_t.items()}
@@ -529,6 +549,7 @@ def profile_dataset_columns(
     works = _profile_tables(cols_by_t, threads, [corr[n][0] for n in cols_by_t])
     for n in cols_by_t:
         jobs[n][0]()
+        _attach_seasonality(works[n], cols_by_t[n][0], _time_for(time_column, cols_by_t[n][0]))
     pks = {n: _detect_primary_key(w, cols_by_t[n][1]) for n, w in works.items()}
     profiles = {}
     for n, w in works.items():
