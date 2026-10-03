@@ -125,3 +125,15 @@ def test_without_a_connection_string_or_azure_identity_the_error_says_what_to_gi
     monkeypatch.setitem(sys.modules, "azure.identity", None)
     with pytest.raises(ShapeError, match="SHAPE_EVENTHUBS_CONNECTION_STRING"):
         EventHubsEmitter().emit("eventhubs://ns/h", [])
+
+
+def test_every_message_can_carry_the_synthetic_property_and_poison_is_accepted():
+    batch = next(iter(contract.default_plan().blocks(0))).batch.slice(0, 5)
+    h = EmitterHarness()
+    h.make().emit(h.uri, [batch])
+    assert all("shape_synthetic" not in e.properties for b in h.hub.batches for e in b.events)
+    h = EmitterHarness()
+    emitter = h.make()
+    emitter.emit(h.uri, [batch], synthetic=True)
+    assert all(e.properties["shape_synthetic"] is True for b in h.hub.batches for e in b.events)
+    assert emitter.supports_synthetic and emitter.accepts_poison

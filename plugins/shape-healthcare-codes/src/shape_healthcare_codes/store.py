@@ -64,7 +64,7 @@ def write_asset(
     meta["rows"] = table.num_rows
     meta["bytes"] = path.stat().st_size
     (d / f"{asset}.json").write_text(
-        json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
     )
     return path
 

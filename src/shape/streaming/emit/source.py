@@ -52,6 +52,7 @@ from shape.streaming.emit.formats import (
 
 if TYPE_CHECKING:
     from shape.generation.engine import Engine
+    from shape.streaming.emit.faults import AnswerKey
 
 BLOCK_TARGET = 8192
 TIMED_BLOCK_TARGET = 65536  # the whole table is in memory in event-time order: larger blocks
@@ -86,6 +87,7 @@ class EventPlan:
         anomaly: AnomalyInjector | None = None,
         envelope: str = "flat",
         by_event_time: bool = False,
+        answer_key: AnswerKey | None = None,
     ) -> None:
         if not 0.0 <= out_of_order <= 1.0:
             raise ValueError("out-of-order fraction must be between 0 and 1")
@@ -111,6 +113,9 @@ class EventPlan:
         target = TIMED_BLOCK_TARGET if by_event_time else BLOCK_TARGET
         self.block_rows = self.ooo_window * max(1, target // self.ooo_window)
         self.anomaly = anomaly
+        self.answer_key = answer_key
+        if anomaly is not None:
+            anomaly.answer_key = answer_key
         self.envelope = envelope
         self.counts = {t: int(engine.row_counts.get(t, 0)) for t in order}
         self.starts: dict[str, int] = {}
@@ -162,8 +167,11 @@ class EventPlan:
             [c.combine_chunks() for c in tab.columns], schema=tab.schema
         )
 
-    def _reorder(self, table: str, row_start: int, n: int) -> np.ndarray | None:
-        """The permutation that delivers late the rows chosen to be late, or ``None``."""
+    def _reorder(
+        self, table: str, row_start: int, n: int
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray] | None:
+        """``(permutation, late rows, their shifts)``: the order that delivers late the rows
+        chosen to be late, or ``None``."""
         if self.out_of_order <= 0 or n < 2:
             return None
         w = self.ooo_window
@@ -180,7 +188,7 @@ class EventPlan:
         window_of = index // w
         position = np.minimum(position, (window_of + 1) * w - 0.25)
         order = np.lexsort((index, position, window_of))
-        return order
+        return order, np.flatnonzero(late), np.floor(shift[late] * w).astype(np.int64) + 1
 
     def _columns(self, table: str) -> tuple[pa.Schema, list[Any]]:
         """The whole of ``table`` as ``(schema, columns)``, before the anomaly injection."""
@@ -234,18 +242,25 @@ class EventPlan:
         n = min(self.block_rows, self.counts[table] - start)
         if self.by_event_time:
             events = self._time_ordered(table).slice(start, n)
-            order = self._reorder(table, start, n)
-            if order is not None:
-                events = events.take(pa.array(order))
+            events = self._delay(table, start, n, events)
             return EventBlock(self.starts[table] + start, table, events)
         batch = self._rows(table, start, n)
         if self.anomaly is not None:
             batch = self.anomaly.apply(batch, table, start)
         events = with_event_fields(batch, table, start)
-        order = self._reorder(table, start, n)
-        if order is not None:
-            events = events.take(pa.array(order))
+        events = self._delay(table, start, n, events)
         return EventBlock(self.starts[table] + start, table, events)
+
+    def _delay(self, table: str, start: int, n: int, events: pa.RecordBatch) -> pa.RecordBatch:
+        """``events`` with the late ones moved later (and logged in the answer key)."""
+        moved = self._reorder(table, start, n)
+        if moved is None:
+            return events
+        order, late, shifts = moved
+        if self.answer_key is not None:
+            seqs = events.column(FIELD_SEQ).take(pa.array(late)).to_pylist()
+            self.answer_key.record("late", table, seqs, {"moved_up_to": shifts.tolist()})
+        return events.take(pa.array(order))
 
     def locate(self, offset: int) -> tuple[str, int] | None:
         """``(table, block index)`` of the block holding event ``offset``, or ``None`` past the

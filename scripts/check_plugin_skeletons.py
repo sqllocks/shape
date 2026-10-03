@@ -31,6 +31,7 @@ EXPECTED = (
     "eventhubs",
     "fabric",
     "sqlserver",
+    "databases",
     "domains",
     "simulation",
     "dbt",

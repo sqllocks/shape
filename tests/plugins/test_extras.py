@@ -18,8 +18,8 @@ def _pin(dist: str) -> str:
     return f"{dist}=={VERSION}"
 
 
-def test_there_are_ten_first_party_distributions() -> None:
-    assert len(DISTS) == 10
+def test_there_are_eleven_first_party_distributions() -> None:
+    assert len(DISTS) == 11
 
 
 def test_dbt_and_healthcare_extras_are_pinned_to_the_core_version() -> None:
@@ -40,3 +40,14 @@ def test_every_plugin_dependency_in_an_extra_is_pinned_to_the_core_version() -> 
         for req in reqs:
             if req.startswith("sqllocks-shape-"):
                 assert req == _pin(req.split("==")[0]), f"[{name}] {req}"
+
+
+def test_every_plugin_has_its_own_extra() -> None:
+    for dist in DISTS:
+        name = dist.removeprefix("sqllocks-shape-")
+        if name.startswith("healthcare-") or name == "behavior":
+            assert _pin(dist) in EXTRAS["healthcare"]
+        else:
+            assert _pin(dist) in EXTRAS[name] or any(
+                r.startswith(f"{dist}[") for r in EXTRAS.get(name, [])
+            ), name

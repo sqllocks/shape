@@ -16,6 +16,8 @@ from shape.drift.engine import DEFAULT_THRESHOLDS as DRIFT_DEFAULTS
 from shape.drift.engine import diff_tables, resolve_policy, view_of_profile_column
 from shape.profile.reference.profile import Profile
 
+from .joint import check_joint_rules, check_no_placeholder
+
 # --- contract check ---------------------------------------------------------------
 
 _CONTRACT_KEYS = {
@@ -25,6 +27,11 @@ _CONTRACT_KEYS = {
     "allow_extra_columns",
     "tables",
     "drift",  # the drift policy (thresholds, ignore, per-column thresholds): ignored by check
+    # joint rules (#47), all optional like every rule: absent from a contract, nothing changes
+    "fd",  # [{"determinant": "zip", "dependent": "city", "min_confidence": 0.99}]
+    "implies",  # [{"if": {"column": "state", "equals": "CA"}, "then": {...}, "min_confidence": 1}]
+    "reference_pair",  # [{"columns": ["city", "zip"], "reference": "...", "min_match_rate": 0.99}]
+    "max_implausible_rate",  # the share of rows that break a dependency or hold a placeholder
 }
 _ROW_COUNT_KEYS = {"min", "max"}
 _COLUMN_RULES = {
@@ -39,6 +46,7 @@ _COLUMN_RULES = {
     "distribution",
     "min_true_rate",  # the share of true values of a boolean (or 0/1) column
     "max_true_rate",
+    "no_placeholder",  # true, or {"max_share": 0.01, "allow": ["N/A"]} (#47)
 }
 
 
@@ -97,6 +105,99 @@ def _validate_contract(contract: dict[str, Any]) -> None:
     required = contract.get("required_columns", [])
     if not isinstance(required, list) or not all(isinstance(c, str) for c in required):
         raise ContractError("'required_columns' must be a list of column names")
+    for name, rules in columns.items():
+        _validate_no_placeholder(name, rules)
+    _validate_joint_rules(contract)
+
+
+def _validate_no_placeholder(name: str, rules: dict[str, Any]) -> None:
+    if "no_placeholder" not in rules:
+        return
+    rule = rules["no_placeholder"]
+    if isinstance(rule, bool):
+        return
+    if not isinstance(rule, dict) or set(rule) - {"max_share", "allow"}:
+        raise ContractError(
+            f"no_placeholder for column {name!r} must be true or an object with 'max_share' "
+            "and 'allow'"
+        )
+    if "max_share" in rule and not (_is_number(rule["max_share"]) and 0 <= rule["max_share"] <= 1):
+        raise ContractError(f"no_placeholder.max_share for column {name!r} must be from 0 to 1")
+    if "allow" in rule and not (
+        isinstance(rule["allow"], list) and all(isinstance(v, str) for v in rule["allow"])
+    ):
+        raise ContractError(f"no_placeholder.allow for column {name!r} must be a list of texts")
+
+
+def _names(value: Any) -> list[str] | None:
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list) and value and all(isinstance(v, str) for v in value):
+        return list(value)
+    return None
+
+
+def _validate_reference_pair(contract: dict[str, Any]) -> None:
+    if "reference_pair" not in contract:
+        return
+    rules = contract["reference_pair"]
+    if not isinstance(rules, list):
+        raise ContractError("'reference_pair' must be a list of rules")
+    for rule in rules:
+        if not isinstance(rule, dict) or set(rule) - {"columns", "reference", "min_match_rate"}:
+            raise ContractError(
+                "each 'reference_pair' rule is an object with 'columns', 'reference' and "
+                "'min_match_rate'"
+            )
+        if _names(rule.get("columns")) is None or not isinstance(rule.get("reference"), str):
+            raise ContractError(
+                "reference_pair: 'columns' is a list of column names, 'reference' the name the "
+                "profile gave the reference"
+            )
+        rate: Any = rule.get("min_match_rate")
+        if not (_is_number(rate) and 0 < rate <= 1):
+            raise ContractError("reference_pair needs 'min_match_rate' above 0 and up to 1")
+
+
+def _validate_joint_rules(contract: dict[str, Any]) -> None:
+    if "max_implausible_rate" in contract and not (
+        _is_number(contract["max_implausible_rate"]) and 0 <= contract["max_implausible_rate"] <= 1
+    ):
+        raise ContractError("max_implausible_rate must be a number from 0 to 1")
+    _validate_reference_pair(contract)
+    for key, needs in (("fd", ("determinant", "dependent")), ("implies", ("if", "then"))):
+        if key not in contract:
+            continue
+        rules = contract[key]
+        if not isinstance(rules, list):
+            raise ContractError(f"'{key}' must be a list of rules")
+        for rule in rules:
+            if not isinstance(rule, dict) or set(rule) - {*needs, "min_confidence"}:
+                raise ContractError(
+                    f"each '{key}' rule is an object with {', '.join(repr(n) for n in needs)} "
+                    "and 'min_confidence'"
+                )
+            if any(n not in rule for n in needs):
+                raise ContractError(f"a '{key}' rule needs {', '.join(repr(n) for n in needs)}")
+            conf: Any = rule.get("min_confidence")
+            if not (_is_number(conf) and 0 < conf <= 1):
+                raise ContractError(f"a '{key}' rule needs 'min_confidence' above 0 and up to 1")
+            if key == "fd":
+                if _names(rule["determinant"]) is None or not isinstance(rule["dependent"], str):
+                    raise ContractError(
+                        "fd: 'determinant' is a column name or a list of them, 'dependent' a name"
+                    )
+            else:
+                for side in ("if", "then"):
+                    cond = rule[side]
+                    if (
+                        not isinstance(cond, dict)
+                        or set(cond) != {"column", "equals"}
+                        or not isinstance(cond["column"], str)
+                    ):
+                        raise ContractError(
+                            f"implies: '{side}' is an object with 'column' and 'equals'"
+                        )
 
 
 def _is_number(v: Any) -> bool:
@@ -156,6 +257,8 @@ def _check_column(
     if "allowed_values" in rules:
         out.extend(_check_allowed(name, rules["allowed_values"], col))
     out.extend(_check_true_rate(name, rules, col, row_count))
+    if "no_placeholder" in rules:
+        out.extend(check_no_placeholder(name, rules["no_placeholder"], col))
     for bound in ("min", "max"):
         if bound not in rules:
             continue
@@ -238,6 +341,7 @@ def _check_table(
                 violations.append(_violation(name, "column_exists", "present", "missing"))
             continue
         violations.extend(_check_column(name, rules, columns[name], table["row_count"]))
+    violations.extend(check_joint_rules(contract, table))
     if contract.get("allow_extra_columns", True) is False:
         known = set(contract.get("columns", {})) | set(required)
         for name in columns:

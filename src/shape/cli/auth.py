@@ -117,6 +117,14 @@ def make_credential(settings: dict[str, str] | None) -> Any:
     return _plugin().build_credential(_plugin().AuthSettings.from_mapping(settings))
 
 
+def writer_options(
+    settings: dict[str, str], connection_string: str | None = None
+) -> dict[str, Any]:
+    """The options of a writer or sink for ``settings`` (``credential``, or for ``--auth sql`` the
+    connection string with the login added)."""
+    return dict(_plugin().writer_options(settings, connection_string=connection_string))
+
+
 def _plugin() -> Any:
     import importlib
 

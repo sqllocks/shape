@@ -150,10 +150,10 @@ tests against it, and checks that `shape plugins list` shows it next to every bu
 
 Features that ship with Shape but are not part of core live under `plugins/<dist-name>/`, one
 distribution each (decision T-09, with the additions of 2026-10-03): `shape-kafka`,
-`shape-eventhubs`, `shape-fabric`, `shape-sqlserver`, `shape-domains`, `shape-simulation`,
+`shape-eventhubs`, `shape-fabric`, `shape-sqlserver`, `shape-databases`, `shape-domains`, `shape-simulation`,
 `shape-dbt`, `shape-behavior`, `shape-healthcare-codes` and `shape-healthcare-standards`. They
 publish as `sqllocks-shape-<name>` and are all MIT licensed. Install them with the extras
-`pip install 'sqllocks-shape[dbt]'` and `pip install 'sqllocks-shape[healthcare]'` (the three
+`pip install 'sqllocks-shape[fabric]'`, `pip install 'sqllocks-shape[dbt]'` and `pip install 'sqllocks-shape[healthcare]'` (the three
 healthcare distributions), or one by one.
 
 ```
@@ -182,7 +182,7 @@ Rules that `python scripts/check_plugin_skeletons.py` enforces (and CI runs):
 - any entry-point group it declares is a real plugin API group;
 - with `--build OUT`, each one builds a pure-Python `py3-none-any` wheel.
 
-When core's version changes, change all ten `pyproject.toml` files in the same commit; the
+When core's version changes, change all eleven `pyproject.toml` files in the same commit; the
 script fails until they match.
 
 ## 6. Versioning

@@ -23,9 +23,21 @@ if TYPE_CHECKING:
     from shape.generation.schema import GenSchema
 
 DEFAULT_TEMPLATE = "{table}/ingest_date={date}/{table}_{yyyymmdd}.{ext}"
-FORMATS = ("summary", "csv", "tsv", "jsonl", "parquet", "excel", "sql", "delta")
 SQL_DIALECTS = ("tsql", "tsql-fabric-warehouse", "postgres", "mysql")
 MODES = ("3nf", "star")
+
+
+def _format(text: str) -> str:
+    """The ``--format`` type: any installed sink, checked when the option is given."""
+    if text == "summary":
+        return text
+    from shape.generation.output import format_argument
+
+    try:
+        return format_argument(text)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from None
+
 
 _TARGET_HELP = (
     "an installed domain (see `shape list`) or a generation schema file "
@@ -52,10 +64,11 @@ def add_arguments(sub: Any) -> None:
     ge.add_argument(
         "--format",
         "-f",
-        choices=FORMATS,
+        type=_format,
         default="summary",
+        metavar="FORMAT",
         help="summary (default: print the plan result, write nothing), or csv, tsv, jsonl, "
-        "parquet, excel, sql, delta",
+        "parquet, ipc, excel, sql, delta, or any installed sink (see `shape plugins list`)",
     )
     ge.add_argument(
         "-o", "--output", "--out", metavar="DIR", help="the output directory (needed to write)"
@@ -70,6 +83,11 @@ def add_arguments(sub: Any) -> None:
         dest="from_profile",
         metavar="X.shape",
         help="generate from a profile (a .shape file): fits strategies to it",
+    )
+    ge.add_argument(
+        "--decisions",
+        metavar="DECISIONS.json",
+        help="with --from: apply a decision file (`shape proposals`)",
     )
     ge.add_argument(
         "--rows",
@@ -115,6 +133,9 @@ def add_arguments(sub: Any) -> None:
     from shape.cli.landing import add_landing_arguments
 
     add_landing_arguments(ge, default_template=DEFAULT_TEMPLATE)
+    from shape.cli.to import add_to_arguments
+
+    add_to_arguments(ge)
 
     de = sub.add_parser(
         "describe",
@@ -244,6 +265,10 @@ def cmd_generate(a: argparse.Namespace) -> int:
     bare, per_table = _rows_arg(a)
     if a.scale_mode and a.from_profile:
         raise ValueError("--scale-mode does not combine with --from")
+    if a.decisions and not a.from_profile:
+        raise ValueError("--decisions goes with --from PROFILE.shape")
+    if a.to and a.scale_mode:
+        raise ValueError("--to does not combine with --scale-mode (use --sink there)")
     if a.from_profile:
         if per_table:
             raise ValueError("--rows TABLE=N is for a schema; with --from give --rows N")
@@ -313,7 +338,11 @@ def _generate_from_profile(a: argparse.Namespace, rows: int | None) -> int:
     from shape.runlog import current
 
     run = current()
-    fitted = fit_schema(shape.load(a.from_profile), rows=rows)
+    from shape.cli.proposals import load_decisions
+
+    fitted = fit_schema(
+        shape.load(a.from_profile), rows=rows, decisions=load_decisions(a.decisions)
+    )
     schema = fitted.schema
     _check_scale(schema, a.scale)
     counts = fitted.plan.counts()
@@ -351,6 +380,10 @@ def _generate(a: argparse.Namespace, engine: Any) -> int:
 
     run = current()
     started = time.perf_counter()
+    if a.to:
+        from shape.cli.to import run_to
+
+        return run_to(a, engine, started)
     from shape.cli.landing import landing_requested
 
     if landing_requested(a) and a.format == "summary":
@@ -570,4 +603,4 @@ def run(a: argparse.Namespace) -> int:
     return COMMANDS[a.cmd](a)
 
 
-__all__ = ["COMMANDS", "FORMATS", "add_arguments", "load_target", "run"]
+__all__ = ["COMMANDS", "add_arguments", "load_target", "run"]

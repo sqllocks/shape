@@ -46,7 +46,8 @@ MARTS = ("orders", "customers")
 
 
 def dbt_exe() -> str:
-    found = shutil.which("dbt") or str(Path(sys.executable).with_name("dbt"))
+    exe = "dbt.exe" if sys.platform == "win32" else "dbt"
+    found = shutil.which("dbt") or str(Path(sys.executable).with_name(exe))
     assert Path(found).exists(), "dbt is not installed here: pip install dbt-duckdb"
     return found
 

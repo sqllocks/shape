@@ -160,7 +160,9 @@ def _run(args: Any) -> int:
             str(u) for m in modules if m.import_report for u in m.import_report.unsupported
         ],
     }
-    (out / "run.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    (out / "run.json").write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     print(f"{total:,} events for {args.population:,} entities in {elapsed:.1f}s -> {out}")
     return 0
 
@@ -179,7 +181,7 @@ def _import(args: Any) -> int:
     print(result.report())
     if args.out:
         Path(args.out).write_text(
-            json.dumps(result.module.to_dict(), indent=2) + "\n", encoding="utf-8"
+            json.dumps(result.module.to_dict(), indent=2) + "\n", encoding="utf-8", newline="\n"
         )
         print(f"wrote {args.out}")
     return 0
@@ -200,6 +202,6 @@ def _examples(args: Any) -> int:
         text = (
             importlib.resources.files("shape_behavior") / "examples" / f"{name}.json"
         ).read_text(encoding="utf-8")
-        (out / f"{name}.json").write_text(text, encoding="utf-8")
+        (out / f"{name}.json").write_text(text, encoding="utf-8", newline="\n")
     print(f"wrote {len(names)} modules to {out}")
     return 0

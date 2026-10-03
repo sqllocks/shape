@@ -86,5 +86,10 @@ class ShapeMonitor:
         self.online.add(row)
         if self.online.total % self.every:
             return None
-        d = tuple(compare(self.reference, self._snapshot(), **self._options))
+        # the buffer is a window of the stream: its size says nothing about the stream's volume
+        d = tuple(
+            x
+            for x in compare(self.reference, self._snapshot(), **self._options)
+            if x.kind != "row_count_change"
+        )
         return MonitorEvent(self.online.total, max((x.score for x in d), default=0), d)

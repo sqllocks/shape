@@ -272,7 +272,7 @@ merged or released. The `exact=` switch arrives with the profile engine, P1-07, 
 | D3: 5M × 10 | 4.89 s | 1,021,983 | 2,107 MB |
 | D4: 100k × 200 | 4.40 s | 22,704 | 508 MB |
 
-Footer: "Values truncated, never rounded up. Output identical across the 3 runs (N-20 to N-25)."
+Footer: "Values truncated, never rounded up. Output identical across the 3 runs (N-20 to N-24, N-26)."
 
 **Say:** "These are timings of the library you're looking at, on a 4-core machine, not Fabric.
 A million rows by twenty columns took 1.9 seconds. Five million rows by ten took 4.8.
@@ -280,7 +280,7 @@ Notice the wide table: a hundred thousand rows but two hundred columns, and it's
 per row, because the work is per column. Every run's output was identical to the others. These
 are the numbers I'll hold the next version of the engine to."
 
-(Sources: N-20 to N-25, `demo/BENCHMARKS.md`.)
+(Sources: N-20 to N-24, N-26, `demo/BENCHMARKS.md`.)
 
 **Next:** "And in Fabric?"
 
@@ -462,7 +462,7 @@ slides."
 | D4: 100k × 200 | 100,000 | 508 MB |
 
 Footer: "Exact mode: memory grows with the data. **Bounded mode (flat memory): BEING BUILT, not
-measured.**" (N-20 to N-25.)
+measured.**" (N-20 to N-24, N-26.)
 
 **Say:** "Memory, same machine. In exact mode, memory grows with the data: about 2 gigabytes
 for five million rows. That's the honest number for today, and it's why the Fabric slide has
@@ -686,7 +686,7 @@ shape against last week's: you'll learn something about your data."
 
 ## Backup slides
 
-- **B1** Full profiling table: `demo/BENCHMARKS.md` profiling section (N-20 to N-25, with D2
+- **B1** Full profiling table: `demo/BENCHMARKS.md` profiling section (N-20 to N-24, N-26, with D2
   as CSV too), titled "`shape.profile`, exact mode".
 - **B2** Raw runs and start-up: the three run times per dataset from `product_bench.json`,
   and the start-up medians (N-26, N-27).

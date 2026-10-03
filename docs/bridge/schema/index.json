@@ -1,0 +1,227 @@
+{
+  "api_version": "1.0",
+  "commands": {
+    "check": {
+      "cancellable": false,
+      "job": "never",
+      "pending": null,
+      "request": "commands/check.request.schema.json",
+      "result": "commands/check.result.schema.json",
+      "summary": "Check a profile against a contract."
+    },
+    "demo_cleanup": {
+      "cancellable": false,
+      "job": "never",
+      "pending": "P6-12",
+      "request": "commands/demo_cleanup.request.schema.json",
+      "result": "commands/demo_cleanup.result.schema.json",
+      "summary": "Remove what a demo session created."
+    },
+    "demo_list": {
+      "cancellable": false,
+      "job": "never",
+      "pending": "P6-12",
+      "request": "commands/demo_list.request.schema.json",
+      "result": "commands/demo_list.result.schema.json",
+      "summary": "List the demo scenarios."
+    },
+    "demo_run": {
+      "cancellable": false,
+      "job": "never",
+      "pending": "P6-12",
+      "request": "commands/demo_run.request.schema.json",
+      "result": "commands/demo_run.result.schema.json",
+      "summary": "Run a demo scenario."
+    },
+    "demo_status": {
+      "cancellable": false,
+      "job": "never",
+      "pending": "P6-12",
+      "request": "commands/demo_status.request.schema.json",
+      "result": "commands/demo_status.result.schema.json",
+      "summary": "The manifest of a demo session (and a Fabric run's live state)."
+    },
+    "describe": {
+      "cancellable": false,
+      "job": "never",
+      "pending": null,
+      "request": "commands/describe.request.schema.json",
+      "result": "commands/describe.result.schema.json",
+      "summary": "A domain's or schema's tables, columns, relationships, rules and scale presets."
+    },
+    "diff": {
+      "cancellable": false,
+      "job": "never",
+      "pending": null,
+      "request": "commands/diff.request.schema.json",
+      "result": "commands/diff.result.schema.json",
+      "summary": "Compare two profiles and report the drift."
+    },
+    "dry_run": {
+      "cancellable": false,
+      "job": "never",
+      "pending": null,
+      "request": "commands/dry_run.request.schema.json",
+      "result": "commands/dry_run.result.schema.json",
+      "summary": "Plan a run (row counts, order, problems) without generating a row."
+    },
+    "generate": {
+      "cancellable": false,
+      "job": "optional",
+      "pending": null,
+      "request": "commands/generate.request.schema.json",
+      "result": "commands/generate.result.schema.json",
+      "summary": "Generate every table of a domain or schema; optionally write the files."
+    },
+    "job_cancel": {
+      "cancellable": false,
+      "job": "never",
+      "pending": null,
+      "request": "commands/job_cancel.request.schema.json",
+      "result": "commands/job_cancel.result.schema.json",
+      "summary": "Cancel a running job."
+    },
+    "job_list": {
+      "cancellable": false,
+      "job": "never",
+      "pending": null,
+      "request": "commands/job_list.request.schema.json",
+      "result": "commands/job_list.result.schema.json",
+      "summary": "List the jobs, oldest first."
+    },
+    "job_status": {
+      "cancellable": false,
+      "job": "never",
+      "pending": null,
+      "request": "commands/job_status.request.schema.json",
+      "result": "commands/job_status.result.schema.json",
+      "summary": "The state, progress and result of any job."
+    },
+    "list": {
+      "cancellable": false,
+      "job": "never",
+      "pending": null,
+      "request": "commands/list.request.schema.json",
+      "result": "commands/list.result.schema.json",
+      "summary": "List the installed domains."
+    },
+    "preview": {
+      "cancellable": false,
+      "job": "never",
+      "pending": null,
+      "request": "commands/preview.request.schema.json",
+      "result": "commands/preview.result.schema.json",
+      "summary": "Generate a small sample and return its first rows as JSON."
+    },
+    "profile": {
+      "cancellable": false,
+      "job": "optional",
+      "pending": null,
+      "request": "commands/profile.request.schema.json",
+      "result": "commands/profile.result.schema.json",
+      "summary": "Profile a file, folder, glob or Delta table into a .shape artifact."
+    },
+    "profile_info": {
+      "cancellable": false,
+      "job": "never",
+      "pending": null,
+      "request": "commands/profile_info.request.schema.json",
+      "result": "commands/profile_info.result.schema.json",
+      "summary": "The distribution weights and derived-count ratios a domain generates with."
+    },
+    "scale_cancel": {
+      "cancellable": false,
+      "job": "never",
+      "pending": null,
+      "request": "commands/scale_cancel.request.schema.json",
+      "result": "commands/scale_cancel.result.schema.json",
+      "summary": "Cancel a scale_generate job."
+    },
+    "scale_generate": {
+      "cancellable": true,
+      "job": "optional",
+      "pending": null,
+      "request": "commands/scale_generate.request.schema.json",
+      "result": "commands/scale_generate.result.schema.json",
+      "summary": "Generate at scale (local_single, local_mp or a Fabric Spark run) into sinks."
+    },
+    "scale_status": {
+      "cancellable": false,
+      "job": "never",
+      "pending": null,
+      "request": "commands/scale_status.request.schema.json",
+      "result": "commands/scale_status.result.schema.json",
+      "summary": "The state of a scale_generate job (a Fabric run is asked of Fabric)."
+    },
+    "stream": {
+      "cancellable": true,
+      "job": "always",
+      "pending": null,
+      "request": "commands/stream.request.schema.json",
+      "result": "commands/stream.result.schema.json",
+      "summary": "Start a background stream: a chunk of generated data to the sinks, every interval."
+    },
+    "stream_status": {
+      "cancellable": false,
+      "job": "never",
+      "pending": null,
+      "request": "commands/stream_status.request.schema.json",
+      "result": "commands/stream_status.result.schema.json",
+      "summary": "The state of a stream."
+    },
+    "stream_stop": {
+      "cancellable": false,
+      "job": "never",
+      "pending": null,
+      "request": "commands/stream_stop.request.schema.json",
+      "result": "commands/stream_stop.result.schema.json",
+      "summary": "Stop a stream."
+    },
+    "validate": {
+      "cancellable": false,
+      "job": "never",
+      "pending": null,
+      "request": "commands/validate.request.schema.json",
+      "result": "commands/validate.result.schema.json",
+      "summary": "Validate a generation schema file (or a contract)."
+    },
+    "verify": {
+      "cancellable": false,
+      "job": "optional",
+      "pending": null,
+      "request": "commands/verify.request.schema.json",
+      "result": "commands/verify.result.schema.json",
+      "summary": "Run the validation gates over data files."
+    }
+  },
+  "error_codes": {
+    "auth.missing_credentials": "a command needs a token or credential that was not given",
+    "auth.rejected": "a remote service rejected the credential",
+    "input.invalid_schema": "a schema, profile, contract or data file is not valid",
+    "input.invalid_value": "the data or settings given cannot be used",
+    "input.job_interrupted": "the process that ran a job ended before the job finished",
+    "input.job_state": "the job is not in a state the command needs",
+    "input.not_found": "a file or directory the request names does not exist",
+    "input.unknown_domain": "no installed domain has this name",
+    "input.unknown_job": "no job has this id",
+    "input.unsupported_format_version": "a stored file was written by a newer Shape",
+    "internal.error": "a bug in Shape: the message names the exception",
+    "io.read_failed": "a file could not be read",
+    "io.sink_failed": "a sink or remote service failed",
+    "io.write_failed": "a file could not be written",
+    "policy.capability_unavailable": "the operation needs something that is not installed here",
+    "policy.not_permitted": "a security or trust policy refuses the operation",
+    "policy.signature_invalid": "an artifact's signature does not verify",
+    "privacy.raw_values_withheld": "the operation would return raw values and was not asked to",
+    "usage.invalid_argument": "an argument or option has the wrong type or an impossible value",
+    "usage.invalid_json": "the request is not valid JSON",
+    "usage.invalid_request": "the request is not a well-formed envelope",
+    "usage.missing_argument": "a required argument is missing",
+    "usage.request_too_large": "the request is larger than the bridge accepts",
+    "usage.unknown_argument": "an argument or option the command does not take",
+    "usage.unknown_command": "no command has this name",
+    "usage.unsupported_version": "the request's api_version is not one this bridge serves"
+  },
+  "format": "shape-bridge-schema-index",
+  "version": 1
+}

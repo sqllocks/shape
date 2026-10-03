@@ -139,6 +139,7 @@ def test_skeleton_tree_follows_the_lockstep_rules():
         "eventhubs",
         "fabric",
         "sqlserver",
+        "databases",
         "domains",
         "simulation",
         "dbt",
@@ -158,7 +159,7 @@ def test_skeleton_check_catches_version_drift(monkeypatch):
 def test_every_skeleton_builds_a_pure_wheel(tmp_path):
     script = _script()
     assert script.build_wheels(tmp_path, isolated=not _pip_args()) == []
-    assert len(list(tmp_path.glob("*.whl"))) == 10
+    assert len(list(tmp_path.glob("*.whl"))) == 11
     assert not list((ROOT / "plugins").rglob("build")), "build left files in the source tree"
 
 

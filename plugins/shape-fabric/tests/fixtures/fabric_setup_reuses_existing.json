@@ -1,0 +1,76 @@
+{
+  "channel": "http",
+  "format": 1,
+  "result": {
+    "value": [
+      false,
+      true
+    ]
+  },
+  "scenario": "fabric_setup_reuses_existing",
+  "source": "in-repo fake service",
+  "steps": [
+    {
+      "request": {
+        "body": "",
+        "headers": {
+          "authorization": "Bearer <redacted>"
+        },
+        "method": "GET",
+        "url": "https://api.fabric.microsoft.com/v1/workspaces"
+      },
+      "response": {
+        "body": "{\"value\": [{\"id\": \"11111111-1111-4111-8111-111111111111\", \"displayName\": \"Demo\"}]}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"displayName\": \"shape-env\", \"type\": \"Environment\"}",
+        "headers": {
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://api.fabric.microsoft.com/v1/workspaces/11111111-1111-4111-8111-111111111111/items"
+      },
+      "response": {
+        "body": "{\"errorCode\": \"ItemDisplayNameAlreadyInUse\"}",
+        "headers": {},
+        "status": 409
+      }
+    },
+    {
+      "request": {
+        "body": "",
+        "headers": {
+          "authorization": "Bearer <redacted>"
+        },
+        "method": "GET",
+        "url": "https://api.fabric.microsoft.com/v1/workspaces/11111111-1111-4111-8111-111111111111/items?type=Environment"
+      },
+      "response": {
+        "body": "{\"value\": [{\"id\": \"0000000b-0000-4000-8000-000000000000\", \"displayName\": \"shape-env\", \"type\": \"Environment\"}]}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"displayName\": \"shape-lakehouse\", \"type\": \"Lakehouse\"}",
+        "headers": {
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://api.fabric.microsoft.com/v1/workspaces/11111111-1111-4111-8111-111111111111/items"
+      },
+      "response": {
+        "body": "{\"id\": \"00000002-0000-4000-8000-000000000000\", \"displayName\": \"shape-lakehouse\", \"type\": \"Lakehouse\", \"workspaceId\": \"11111111-1111-4111-8111-111111111111\"}",
+        "headers": {},
+        "status": 201
+      }
+    }
+  ]
+}

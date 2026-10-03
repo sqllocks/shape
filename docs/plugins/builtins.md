@@ -19,7 +19,8 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.sinks` | `tsv` | Tab-separated file |
 | `shape.sinks` | `sql` | SQL `INSERT` script, with optional DDL (`tsql`, `tsql-fabric-warehouse`, `postgres`, `mysql`) |
 | `shape.sinks` | `excel` | Excel workbook (`pip install 'sqllocks-shape[excel]'`, openpyxl) |
-| `shape.sinks` | `delta` | Delta table (`pip install 'sqllocks-shape[delta]'`, deltalake) |
+| `shape.sinks` | `delta` | Delta table (`pip install 'sqllocks-shape[delta]'`, deltalake); `delta+abfss://` in OneLake and ADLS Gen2, with a commit per micro-batch (`commit_rows`) |
+| `shape.sinks` | `abfss` | Files (Parquet, CSV, TSV, JSONL, IPC) in OneLake and ADLS Gen2, dated Hive-style folders, rolling files, atomic publish (extra `[azure]`) |
 | `shape.emitters` | `console` | events as JSON lines on standard output (`shape emit`; [../EMIT.md](../EMIT.md)) |
 | `shape.emitters` | `file` | events as JSON lines in one file (`file:///path.jsonl`) |
 | `shape.emitters` | `jsonl` | events as JSON lines, one `<table>.jsonl` file per table in a directory (`jsonl:///dir`) |
@@ -50,6 +51,9 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.strategies` | `reference_data` | a value or a weighted name from a named reference dataset |
 | `shape.strategies` | `record_sample` | one field of a randomly chosen reference record (the anchor of a record group) |
 | `shape.strategies` | `record_field` | another field of the record the table's `record_sample` column chose |
+| `shape.strategies` | `hierarchy` | one field of a reference record reached by walking a hierarchy (state, county, city, ZIP) level by level (the anchor of a hierarchy group) |
+| `shape.strategies` | `hierarchy_field` | another field of the record the table's `hierarchy` column reached |
+| `shape.strategies` | `conditional_table` | a category drawn given another column of the row, from a table of the probability of this value given the source value |
 | `shape.strategies` | `bootstrap` | a field of a source row of a reference dataset drawn with replacement (columns of a table share the row), numbers jittered by a fraction of their spread |
 | `shape.strategies` | `temporal` | timestamps, uniform or with month, weekday and hour profiles |
 | `shape.strategies` | `foreign_key` | keys of a parent table: uniform, Zipf or Pareto (optionally capped per parent), constrained by another column, sampled, or self-referencing |
