@@ -98,6 +98,12 @@ def canonical_bytes(value: Any) -> bytes | None:
     """Canonical bytes of a Python scalar; ``None`` for null and NaN (excluded from hashing)."""
     if value is None:
         return None
+    if isinstance(value, (np.datetime64, np.timedelta64)):
+        return _numpy_time_bytes(value)
+    if isinstance(value, pa.Scalar):
+        return _arrow_scalar_bytes(value)
+    if _is_pandas_missing(value):
+        return None
     if isinstance(value, np.generic):
         value = value.item()
     if isinstance(value, bool):
@@ -134,6 +140,51 @@ def canonical_bytes(value: Any) -> bytes | None:
     return bytes([TAG_OTHER]) + (type(value).__name__ + ":" + repr(value)).encode(
         "utf-8", "surrogatepass"
     )
+
+
+_FINER_THAN_NS = {"ps": 1_000, "fs": 1_000_000, "as": 1_000_000_000}
+
+
+def _numpy_time_bytes(value: np.datetime64 | np.timedelta64) -> bytes | None:
+    """A NumPy datetime or timedelta as a timestamp or duration column holds it: int64
+    microseconds, floored (``NaT`` is null)."""
+    if np.isnat(value):
+        return None
+    tag = TAG_TS if isinstance(value, np.datetime64) else TAG_DUR
+    unit, count = np.datetime_data(value.dtype)
+    raw = int(value.astype(np.int64)) * count
+    if unit in _UNIT_MUL or unit == "ns":
+        return _i64(tag, _time_us(raw, unit))
+    if unit in _FINER_THAN_NS:
+        return _i64(tag, raw // _FINER_THAN_NS[unit] // 1000)
+    kind = "datetime64" if tag == TAG_TS else "timedelta64"
+    return _i64(tag, int(value.astype(f"{kind}[us]").astype(np.int64)))
+
+
+def _arrow_scalar_bytes(value: Any) -> bytes | None:
+    """An Arrow scalar as ``hash_array`` hashes its type (a null scalar is null)."""
+    if not value.is_valid:
+        return None
+    t = value.type
+
+    def raw() -> int:
+        storage = pa.int32() if pa.types.is_time32(t) else pa.int64()
+        return int(pa.array([value]).cast(storage)[0].as_py())
+
+    if pa.types.is_timestamp(t) or pa.types.is_duration(t) or pa.types.is_time(t):
+        tag = (
+            TAG_TS if pa.types.is_timestamp(t) else TAG_DUR if pa.types.is_duration(t) else TAG_TIME
+        )
+        return _i64(tag, _time_us(raw(), t.unit))
+    if pa.types.is_date64(t):
+        return _i64(TAG_TS, _wrap_i64(raw() * 1000))
+    return canonical_bytes(value.as_py())
+
+
+def _is_pandas_missing(value: Any) -> bool:
+    """``pd.NA`` and ``pd.NaT`` (pandas is not imported for this)."""
+    kind = type(value)
+    return kind.__module__.startswith("pandas") and kind.__name__ in ("NAType", "NaTType")
 
 
 def hash_value(value: Any, seed: int = 0) -> int | None:
@@ -215,5 +266,9 @@ def _unscaled(d: _dc.Decimal, scale: int) -> int:
     """The unscaled integer of a decimal128 value at its column scale (exact, no rounding)."""
     sign, digits, exp = d.as_tuple()
     assert isinstance(exp, int)
-    n: int = int("".join(map(str, digits)) or "0") * 10 ** int(exp + scale)
+    coefficient = int("".join(map(str, digits)) or "0")
+    shift = int(exp + scale)
+    # A negative shift (a negative column scale, or trailing zeros pyarrow kept) divides; the
+    # value is a whole number at the column scale, so the division is exact.
+    n: int = coefficient * 10**shift if shift >= 0 else coefficient // 10 ** (-shift)
     return -n if sign else n
