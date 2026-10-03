@@ -59,3 +59,16 @@ def test_drift_doc_states_the_sweeps_bounds_and_the_new_threshold():
     assert f"**{sweep.MAX_COLUMN_FALSE_POSITIVE_RATE:.1%}**" in text
     for name in ("row_count_change", "row_count_ratio_max", "row_count_ratio_min"):
         assert name in text
+
+
+def test_the_size_check_holds_after_another_test_imported_the_sweep(monkeypatch):
+    """The size check runs even when the sweep module is already imported (#330)."""
+    sys.path.insert(0, str(ROOT / "tests/diff"))
+    try:
+        importlib.import_module("test_drift_sweep")
+    finally:
+        sys.path.remove(str(ROOT / "tests/diff"))
+    try:
+        test_the_sweep_size_comes_from_the_environment_and_rejects_unknown_sizes(monkeypatch)
+    finally:
+        sys.modules.pop("test_drift_sweep", None)
