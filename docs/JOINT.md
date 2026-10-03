@@ -76,7 +76,8 @@ neither `joint` nor `placeholders`: both hold values (violating groups, conditio
 Five analyses over several columns at once. Each is part of `joint`, so it follows the same rule:
 on for one table, off for a dataset unless `--joint`, off with `--no-joint` or
 `SHAPE_PROFILE_JOINT=0`; each is left out of the privacy-safe profile (its allow-list is
-unchanged); none stores a row value.
+unchanged). None stores a row; `cohorts` and `copula` hold category labels (a modal value, the
+stored order of the categories), so they are values in the sense of the conditional tables.
 
 **Two-column determinants** (`dependencies`, `"determinant": ["a", "b"]`). Over the categorical
 columns of the analysis, `(a, b) -> c` is listed when its confidence is at least 0.8, neither
