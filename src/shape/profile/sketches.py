@@ -5,9 +5,10 @@ state per table: the HyperLogLog, KLL and SpaceSaving sketches plus the exact co
 :func:`shape.profile.merge_profiles` combines. It is stored as the ``sketches.json`` component of
 the ``.shape`` file, so the profile body and its content id are the same with or without it.
 
-The document is ``{"format": "shape-profile-sketches", "version": 1, "tables": {name:
-{"rows", "schema", "state"}}}``; ``schema`` is the Arrow IPC schema and ``state`` the kernel's
-snapshot, both base64. Both kernels read and write the same bytes.
+The document is ``{"format": "shape-profile-sketches", "version": 1, "snapshot_version": 1,
+"tables": {name: {"rows", "schema", "state"}}}``; ``schema`` is the Arrow IPC schema and ``state``
+the kernel's snapshot (whose layout ``snapshot_version`` names), both base64. A newer ``version``
+or ``snapshot_version`` is refused by name. Both kernels read and write the same bytes.
 """
 
 from __future__ import annotations
@@ -98,6 +99,14 @@ def validate(doc: Any) -> dict[str, Any]:
         raise SketchStateError(
             f"the sketch state is version {version}, newer than the version {VERSION} this Shape "
             "reads: upgrade Shape to use it"
+        )
+    snapshot = doc.get("snapshot_version")
+    if not isinstance(snapshot, int) or isinstance(snapshot, bool) or snapshot < 1:
+        raise SketchStateError("the sketch state has no valid snapshot_version")
+    if snapshot > SNAPSHOT_VERSION:
+        raise SketchStateError(
+            f"the sketch state's kernel snapshot is version {snapshot}, newer than the version "
+            f"{SNAPSHOT_VERSION} this Shape reads: upgrade Shape to use it"
         )
     tables = doc.get("tables")
     if not isinstance(tables, dict):

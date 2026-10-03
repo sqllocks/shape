@@ -87,8 +87,11 @@ byte-for-byte what it was before.
 
 `sketches.json` holds, per table, the row count, the Arrow schema and the kernel's state
 snapshot (both base64). The native and the pure-Python kernel read and write the same state, and
-merge it to the same result. A reader of a newer `version` than it knows refuses the file with an
-error that asks for an upgrade; an unreadable `sketches.json` is an `ArtifactError`.
+merge it to the same result. A reader of a newer `version` than it knows, or of a newer
+`snapshot_version` (the layout of the kernel snapshot inside it), refuses the file with an error
+that asks for an upgrade; an unreadable `sketches.json` is an `ArtifactError`. The same holds for
+the `merge` block of a merged profile (`format: shape-profile-merge`, `version`): a newer version
+is refused when the profile is loaded or merged again.
 
 Limits: the sketches of two inputs combine only when their Arrow column types match (profile
 the partitions with a common schema; the exact statistics merge across `integer` and `float`

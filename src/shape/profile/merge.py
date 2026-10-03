@@ -115,6 +115,8 @@ def merge_profiles(
         (only,) = items[0].tables
         per_table = {only: [next(iter(p.tables.values())) for p in items]}
 
+    for p in items:
+        _check_input(p)
     labels = [p.name for p in items]
     for tname, parts in per_table.items():
         _check_columns(tname, parts, labels)
@@ -143,6 +145,36 @@ def merge_profiles(
     data["merge"] = merge_block
     sketches = _state_document(states) if use_sketches else None
     return Profile(data, name=name or items[0].name, sketches=sketches)
+
+
+def check_block(block: Any) -> None:
+    """Check the ``merge`` block of a merged profile body; a newer version is refused by name."""
+    if not isinstance(block, dict) or block.get("format") != MERGE_FORMAT:
+        raise MergeError(f"not a profile merge record (format {MERGE_FORMAT!r} expected)")
+    version = block.get("version")
+    if not isinstance(version, int) or isinstance(version, bool) or version < 1:
+        raise MergeError("the profile merge record has no valid version")
+    if version > MERGE_VERSION:
+        raise MergeError(
+            f"the profile merge record is version {version}, newer than the version "
+            f"{MERGE_VERSION} this Shape reads: upgrade Shape to use it"
+        )
+
+
+def _check_input(p: Any) -> None:
+    from shape.profile import sketches
+
+    block = p._data.get("merge")  # no deep copy of the whole body
+    if block is not None:
+        try:
+            check_block(block)
+        except MergeError as exc:
+            raise MergeError(f"{p.name!r}: {exc}") from exc
+    if p._sketches is not None:
+        try:
+            sketches.validate(p._sketches)
+        except sketches.SketchStateError as exc:
+            raise MergeError(f"{p.name!r}: {exc}") from exc
 
 
 # ------------------------------------------------------------------------------ messages

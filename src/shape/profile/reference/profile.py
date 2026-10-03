@@ -568,6 +568,13 @@ def load(path: str | Path) -> Profile:
         raise ArtifactError(f"invalid {PROFILE_COMPONENT}: {e}") from e
     if not isinstance(data, dict):
         raise ArtifactError(f"invalid {PROFILE_COMPONENT}: not an object")
+    if "merge" in data:
+        from shape.profile.merge import MergeError, check_block
+
+        try:
+            check_block(data["merge"])
+        except MergeError as e:
+            raise ArtifactError(f"invalid {PROFILE_COMPONENT}: {e}") from e
     provenance = manifest.get("provenance")
     return Profile(
         data,
