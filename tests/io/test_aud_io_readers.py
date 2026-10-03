@@ -93,3 +93,32 @@ def test_499_an_unknown_column_raises_reader_error_for_every_file_kind(tmp_path)
         assert read_table(tmp_path / name, columns=["a"])["a"].to_pylist() == [1, 2]
     with pytest.raises(ReaderError, match="columns not found"):
         read_table(tmp_path / "t.csv", columns=["zz"], csv=CsvOptions(stream=True))
+
+
+def test_506_a_file_source_is_named_without_its_format_and_compression_suffixes(tmp_path):
+    names = {
+        "my.data.csv": "my.data",
+        "sales.2024-01.csv.gz": "sales.2024-01",
+        "a.b.c.JSONL": "a.b.c",
+        "orders.parquet": "orders",  # one dot: unchanged
+        "plain.csv.gz": "plain",
+    }
+    for file_name, expected in names.items():
+        path = tmp_path / file_name
+        if file_name.endswith(".gz"):
+            import gzip
+
+            path.write_bytes(gzip.compress(b"k\n1\n"))
+        elif file_name.endswith(".parquet"):
+            pq.write_table(pa.table({"k": [1]}), path)
+        elif file_name.lower().endswith(".jsonl"):
+            _write(path, '{"k": 1}\n')
+        else:
+            _write(path, "k\n1\n")
+        assert open_source(path).name == expected, file_name
+    # two distinct files no longer collapse to one table name
+    a = _write(tmp_path / "sales.2024-02.csv", "k\n1\n")
+    b = _write(tmp_path / "sales.2024-03.csv", "k\n1\n")
+    assert open_source(a).name != open_source(b).name
+    # an explicit name still wins
+    assert open_source(a, name="t").name == "t"
