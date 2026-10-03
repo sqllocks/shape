@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import secrets
 import threading
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
@@ -31,6 +32,33 @@ if TYPE_CHECKING:
 PART_NAME = "part-{:06d}.parquet"
 COMPLETE = "_COMPLETE"
 _PART = re.compile(r"^part-(\d{6,})\.parquet(\.tmp\d*)?$")
+_TEMP = re.compile(r"^\.(part-\d{6,}\.parquet|_COMPLETE)\.[0-9a-f]{12}\.tmp$")
+
+
+def fresh_temp(directory: Path, stem: str) -> Path:
+    """A new, empty file in ``directory`` for ``stem`` to be written to and renamed from. It is
+    created with ``O_EXCL`` (and ``O_NOFOLLOW``), so it is never an existing file or a planted
+    symlink; its mode follows the umask, as a plain ``open`` would. The leading dot keeps a reader
+    of the directory from taking an unfinished file for data."""
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+    while True:
+        path = directory / f".{stem}.{secrets.token_hex(6)}.tmp"
+        try:
+            os.close(os.open(path, flags, 0o666))
+        except FileExistsError:
+            continue
+        return path
+
+
+def table_dir(base: Path, table: str) -> Path:
+    """``base / table``, created, and checked to stay inside ``base`` (a table name that is a
+    path, or a table directory that is a symlink to elsewhere, is refused)."""
+    from shape.security.names import contained
+
+    target = contained(base, table)
+    target.mkdir(parents=True, exist_ok=True)
+    contained(base, table)  # again: the directory may have been a symlink already
+    return target
 
 
 def part_rows_ok(path: Path, rows: int) -> bool:
@@ -95,7 +123,7 @@ class ParquetSink(BaseSink):
 
         self._parts.setdefault(table, 0)
         self._rows.setdefault(table, 0)
-        (self._base / table).mkdir(parents=True, exist_ok=True)
+        table_dir(self._base, table)
         pending = self._pending.setdefault(table, [])
         if batch.num_rows == 0:  # an empty table still gets one (empty) part, to carry its schema
             self._empty.setdefault(table, batch)
@@ -120,20 +148,19 @@ class ParquetSink(BaseSink):
         elif self._parts[table] == 0 and table in self._empty:
             self._submit(table, [self._empty[table]])
         self._drain()
-        target = self._base / table
-        target.mkdir(parents=True, exist_ok=True)
         self.mark_complete(table, self._rows[table], self._parts[table])
 
     def mark_complete(self, table: str, rows: int, parts: int) -> None:
         """Write ``table``'s ``_COMPLETE`` marker (workers made its part files), after removing
         what an earlier run left: parts numbered ``parts`` or more, and unfinished temp files."""
-        target = self._base / table
-        target.mkdir(parents=True, exist_ok=True)
+        target = table_dir(self._base, table)
         for path in target.iterdir():
             match = _PART.match(path.name)
-            if match and (match.group(2) or int(match.group(1)) >= parts):
+            if _TEMP.match(path.name) or (
+                match and (match.group(2) or int(match.group(1)) >= parts)
+            ):
                 path.unlink(missing_ok=True)
-        tmp = target / (COMPLETE + ".tmp")
+        tmp = fresh_temp(target, COMPLETE)
         tmp.write_text(json.dumps({"rows": rows, "parts": parts}), encoding="utf-8")
         os.replace(tmp, target / COMPLETE)
 
@@ -167,9 +194,13 @@ class ParquetSink(BaseSink):
             with self._lock:
                 self.parts_skipped += 1
             return False
-        tmp = path.with_name(path.name + ".tmp")
-        self._sink.write(str(tmp), table, iter(batches), schema=batches[0].schema)
-        os.replace(tmp, path)
+        tmp = fresh_temp(path.parent, path.name)
+        try:
+            self._sink.write(str(tmp), table, iter(batches), schema=batches[0].schema)
+            os.replace(tmp, path)
+        except BaseException:
+            tmp.unlink(missing_ok=True)
+            raise
         with self._lock:
             self.parts_written += 1
         return True

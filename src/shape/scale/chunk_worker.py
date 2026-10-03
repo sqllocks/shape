@@ -16,7 +16,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from shape.scale.sinks.parquet import PART_NAME, part_rows_ok
+from shape.scale.sinks.parquet import PART_NAME, fresh_temp, part_rows_ok, table_dir
 
 _ENGINES: dict[str, Any] = {}
 
@@ -47,7 +47,7 @@ def generate_chunk_file(
 
     Returns ``(table, index, rows, skipped)``; ``skipped`` is True when ``resume`` found the part
     already complete."""
-    path = Path(out_dir) / table / PART_NAME.format(index)
+    path = table_dir(Path(out_dir), table) / PART_NAME.format(index)
     if resume and part_rows_ok(path, rows):
         return table, index, rows, True
     from shape.plugins.host import default_host
@@ -55,10 +55,13 @@ def generate_chunk_file(
     engine = _engine(spec)
     raw = engine.generate_chunk(table, start, rows, chunk=start // int(spec["chunk_rows"]))
     batch = engine.finalize(table, raw)  # the declared output types, as every other path has
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + f".tmp{os.getpid()}")
-    default_host().get("shape.sinks", "parquet").write(
-        str(tmp), table, iter([batch]), schema=batch.schema
-    )
-    os.replace(tmp, path)
+    tmp = fresh_temp(path.parent, path.name)
+    try:
+        default_host().get("shape.sinks", "parquet").write(
+            str(tmp), table, iter([batch]), schema=batch.schema
+        )
+        os.replace(tmp, path)
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise
     return table, index, rows, False
