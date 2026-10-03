@@ -150,6 +150,15 @@ class _Writer:
             row.append(cell)
         return row
 
+    def header_plain(self, ws: Any, names: Sequence[str]) -> list[Any]:
+        """A header row of text cells without the styling of :meth:`header`."""
+        row = []
+        for name in names:
+            cell = self.cell(ws, value=self.illegal.sub("", str(name)))
+            cell.data_type = "s"
+            row.append(cell)
+        return row
+
     def value(self, ws: Any, value: Any, text_format: bool) -> Any:
         if value is None:
             return None

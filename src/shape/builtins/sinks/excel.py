@@ -6,7 +6,6 @@ longer table is refused instead of being truncated.
 
 from __future__ import annotations
 
-import datetime as dt
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
@@ -18,14 +17,6 @@ from shape.plugins.schemes import require_scheme
 
 MAX_SHEET_ROWS = 1_048_576
 SHEET_NAME_LIMIT = 31
-
-
-def _cell(value: Any) -> Any:
-    if isinstance(value, dt.datetime) and value.tzinfo is not None:
-        return value.replace(tzinfo=None)  # Excel has no time zones
-    if isinstance(value, (dict, list, tuple, bytes)):
-        return str(value)
-    return value
 
 
 class ExcelSink:
@@ -50,14 +41,19 @@ class ExcelSink:
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
             target = path
+        from .workbook import _Writer, valid_sheet_names
+
         workbook = Workbook(write_only=True)
-        sheet = workbook.create_sheet(title=table[:SHEET_NAME_LIMIT])
+        # the multi-sheet writer's rules: a valid sheet name, text stays text (never a formula
+        # or an error value), characters a worksheet cannot hold are removed
+        cells = _Writer(workbook)
+        sheet = workbook.create_sheet(title=valid_sheet_names([table], reserved=())[table])
         rows = 0
         header_done = False
         try:
             for batch in batches:
                 if not header_done:
-                    sheet.append(list(batch.schema.names))
+                    sheet.append(cells.header_plain(sheet, batch.schema.names))
                     header_done = True
                 rows += batch.num_rows
                 if rows + 1 > MAX_SHEET_ROWS:
@@ -67,9 +63,11 @@ class ExcelSink:
                     )
                 columns = [c.to_pylist() for c in batch.columns]
                 for record in zip(*columns, strict=True):
-                    sheet.append([_cell(v) for v in record])
+                    sheet.append([cells.value(sheet, v, False) for v in record])
             if not header_done:
-                sheet.append(list((options.get("schema") or pa.schema([])).names))
+                sheet.append(
+                    cells.header_plain(sheet, (options.get("schema") or pa.schema([])).names)
+                )
             _save(workbook, target)
         finally:
             workbook.close()
