@@ -1327,7 +1327,10 @@ def _main(argv):
         # An expected error is already one line (errors.guarded). As the program, an unexpected
         # failure is also one line and exit 2, never a traceback; `--debug` (or SHAPE_DEBUG=1)
         # lets it propagate. A call with an argv list (a library or test) always propagates it.
-        detail = str(exc) or "no detail"
+        from shape.security.redact import redact_text
+
+        # The text of a driver, broker or auth error can echo a connection string or a token.
+        detail = redact_text(str(exc)) or "no detail"
         print(
             f"shape: error: {type(exc).__name__}: {detail} (run with --debug for the traceback)",
             file=sys.stderr,
