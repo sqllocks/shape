@@ -18,10 +18,17 @@ from pathlib import Path
 from shape.validation.fuzz import run_fuzz, target_names
 
 
+def _positive(text: str) -> int:
+    n = int(text)
+    if n < 1:
+        raise argparse.ArgumentTypeError(f"must be at least 1, got {n}")
+    return n
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--seed", type=int, default=int(time.time()))
-    ap.add_argument("--iterations", type=int, default=1000, help="inputs per target")
+    ap.add_argument("--iterations", type=_positive, default=1000, help="inputs per target")
     ap.add_argument("--target", action="append", choices=target_names())
     ap.add_argument("--out", type=Path, help="write each finding's input here")
     a = ap.parse_args()
