@@ -646,13 +646,34 @@ def edge_deviations():
 
 ALL = {"D1": d1, "D2": d2, "D3": d3, "D4": d4, "MT": mt, "EDGE": edge, "EDGE2": edge_deviations}
 
-if __name__ == "__main__":
+
+def _positive(text: str) -> int:
+    try:
+        value = int(text)
+    except ValueError:
+        value = 0
+    if value < 1:
+        raise argparse.ArgumentTypeError(f"must be a positive integer, got {text!r}")
+    return value
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """The command line; ``datasets`` is the upper-case names to write (every one by default)."""
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("datasets", nargs="*", help="D1 D2 D3 D4 MT EDGE (default: all)")
-    ap.add_argument("--rows", type=int, default=None, help="row count for D3")
-    args = ap.parse_args()
-    for w in args.datasets or list(ALL):
-        if w.upper() == "D3":
+    ap.add_argument("datasets", nargs="*", help=f"{' '.join(ALL)} (default: all)")
+    ap.add_argument("--rows", type=_positive, default=None, help="row count for D3")
+    args = ap.parse_args(argv)
+    args.datasets = [w.upper() for w in args.datasets] or list(ALL)
+    unknown = [w for w in args.datasets if w not in ALL]
+    if unknown:
+        ap.error(f"invalid choice: {', '.join(unknown)} (choose from {' '.join(ALL)})")
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    for w in args.datasets:
+        if w == "D3":
             d3(args.rows)
         else:
-            ALL[w.upper()]()
+            ALL[w]()

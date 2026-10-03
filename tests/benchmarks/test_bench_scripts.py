@@ -186,3 +186,9 @@ def test_datasets_rejects_unknown_names_and_bad_row_counts(tmp_path, monkeypatch
     assert r.returncode == 2, r.stderr
     assert message in r.stderr and "Traceback" not in r.stderr
     assert list(tmp_path.iterdir()) == []
+
+
+def test_datasets_without_names_means_every_dataset():
+    datasets = _load("vs_spindle_profile_datasets", BENCH / "profile_1to1" / "datasets.py")
+    assert datasets.parse_args([]).datasets == list(datasets.ALL)
+    assert datasets.parse_args(["d2", "mt"]).datasets == ["D2", "MT"]
