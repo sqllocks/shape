@@ -59,7 +59,12 @@ def evaluate_contract(
     cols = columns_of(t)
     rows = int(t["rows"])
     out = []
-    for name, spec in contract.get("columns", {}).items():
+    columns = contract.get("columns", {})
+    if not isinstance(columns, Mapping):
+        raise ValueError("a contract's 'columns' must be an object of column name to rules")
+    for name, spec in columns.items():
+        if not isinstance(spec, Mapping):
+            raise ValueError(f"the rules for column {name!r} must be an object")
         c = cols.get(name)
         if c is None:
             if spec.get("required", True):
@@ -156,7 +161,7 @@ def compatibility(before: Any, after: Any, mode: str = "backward") -> Compatibil
     """Whether ``after`` can stand in for ``before`` (backward), the reverse (forward) or both
     (full). Both arguments are v2 models or v1 captures."""
     if mode not in ("backward", "forward", "full"):
-        raise ValueError("mode")
+        raise ValueError(f"mode must be backward, forward or full, not {mode!r}")
     old_model, new_model = model_of(before), model_of(after)
     many = len(old_model["tables"]) != 1 or len(new_model["tables"]) != 1
 
