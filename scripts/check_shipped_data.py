@@ -34,6 +34,8 @@ NETWORK_IMPORTS = {
     "pooch",
     "ftplib",
     "aiohttp",
+    "urllib3",
+    "socket",
 }
 
 
@@ -89,16 +91,20 @@ def _is_network(module: str) -> bool:
 
 
 def _network_imports(tree: ast.AST) -> set[str]:
+    """Network clients a module imports, in every form: ``import urllib.request``,
+    ``from urllib.request import urlopen`` and ``from urllib import request`` alike."""
     found: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
-            found |= {a.name for a in node.names if a.name in NETWORK_IMPORTS}
-            found |= {
-                a.name.split(".")[0] for a in node.names if a.name.split(".")[0] in NETWORK_IMPORTS
-            }
+            found |= {a.name for a in node.names if _is_network(a.name)}
         elif isinstance(node, ast.ImportFrom) and node.module:
             if _is_network(node.module):
                 found.add(node.module)
+            found |= {
+                f"{node.module}.{a.name}"
+                for a in node.names
+                if f"{node.module}.{a.name}" in NETWORK_IMPORTS
+            }
     return found
 
 
