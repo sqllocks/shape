@@ -314,13 +314,22 @@ def _dimensional(design: DesignInput, mode: str) -> SchemaDesign:
     tables: dict[str, Table] = {}
     used_by: dict[str, list[str]] = {}
 
+    def add(table: Table) -> None:
+        """Keep ``table``; two tables with one name would silently replace each other."""
+        if table.name in tables:
+            raise DesignError(
+                f"tables: duplicate name {table.name!r} ({_origin(tables[table.name])} and "
+                f"{_origin(table)}); rename an entity or a fact"
+            )
+        tables[table.name] = table
+
     def ensure(entity_name: str, fact: str) -> str:
         """The base dimension table for ``entity_name``, built once and shared (conformed)."""
         if entity_name not in dims:
             ent = design.entity(entity_name)
             dims[entity_name] = _dimension_tables(design, ent, snowflake)
             for t in dims[entity_name]:
-                tables[t.name] = t
+                add(t)
         name = f"dim_{snake(entity_name)}"
         used_by.setdefault(name, [])
         if fact not in used_by[name]:
@@ -365,7 +374,7 @@ def _dimensional(design: DesignInput, mode: str) -> SchemaDesign:
         if f.junk:
             junk_name = f"dim_{snake(f.name)}_junk"
             jcols = [_surrogate("sk_junk")] + [_column(src.attribute(a)) for a in f.junk]
-            tables[junk_name] = Table(junk_name, "junk", tuple(jcols), ("sk_junk",), (), src.name)
+            add(Table(junk_name, "junk", tuple(jcols), ("sk_junk",), (), src.name))
             cols.append(_surrogate("sk_junk"))
             fks.append(ForeignKey(("sk_junk",), junk_name, ("sk_junk",)))
         for e_name in f.many_to_many:
@@ -374,17 +383,19 @@ def _dimensional(design: DesignInput, mode: str) -> SchemaDesign:
             group = f"sk_{snake(e_name)}_group"
             member = f"sk_{snake(e_name)}"
             bridge = f"bridge_{snake(f.name)}_{snake(e_name)}"
-            tables[bridge] = Table(
-                bridge,
-                "bridge",
-                (
-                    _surrogate(group),
-                    _surrogate(member),
-                    Column("weighting_factor", "decimal", True, None, 9, 6),
-                ),
-                (group, member),
-                (ForeignKey((member,), dim, (_dimension_key(ent),)),),
-                ent.name,
+            add(
+                Table(
+                    bridge,
+                    "bridge",
+                    (
+                        _surrogate(group),
+                        _surrogate(member),
+                        Column("weighting_factor", "decimal", True, None, 9, 6),
+                    ),
+                    (group, member),
+                    (ForeignKey((member,), dim, (_dimension_key(ent),)),),
+                    ent.name,
+                )
             )
             cols.append(_surrogate(group))
         for a in f.degenerate:
@@ -408,9 +419,9 @@ def _dimensional(design: DesignInput, mode: str) -> SchemaDesign:
             for c in cols
         )
         fact_name = f"fact_{snake(f.name)}"
-        tables[fact_name] = Table(fact_name, "fact", fcols, tuple(pk), tuple(fks), src.name)
+        add(Table(fact_name, "fact", fcols, tuple(pk), tuple(fks), src.name))
     if date_needed:
-        tables["dim_date"] = _date_dimension()
+        add(_date_dimension())
     notes = tuple(
         f"conformed dimension {name}: shared by facts {', '.join(facts)}"
         for name, facts in used_by.items()
@@ -419,6 +430,12 @@ def _dimensional(design: DesignInput, mode: str) -> SchemaDesign:
     _check_unique([t.name for t in tables.values()], "tables")
     ordered = sorted(enumerate(tables.values()), key=lambda it: (_KIND_ORDER[it[1].kind], it[0]))
     return SchemaDesign(design.name, mode, tuple(t for _, t in ordered), notes)
+
+
+def _origin(table: Table) -> str:
+    if table.kind == "date":
+        return "the date dimension"
+    return f"a {table.kind} table from entity {table.source_entity!r}"
 
 
 def _dimension_key(entity: Entity) -> str:

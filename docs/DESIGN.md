@@ -80,6 +80,11 @@ Kimball's rules, per declared fact:
   to an outrigger table `dim_<entity>_<level>` (`sk_<entity>_<level>`), chained by surrogate keys.
   The date dimension and the facts are unchanged.
 
+Two tables of a star or snowflake that get the same name (an entity called `date` next to the date
+dimension, two entities or facts whose names differ only in case, an outrigger
+`dim_<entity>_<level>` next to an entity called `<entity>_<level>`) are an error that names both,
+never one table silently replacing the other.
+
 ## DDL
 
 `shape.design.ddl.emit_ddl` writes `CREATE TABLE` through the SQL sink's table emitter (so types
