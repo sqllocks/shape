@@ -46,3 +46,20 @@ def test_153_interrupt_then_resume_writes_complete_windows(tmp_path, monkeypatch
     assert main(run) == 0
     capsys.readouterr()
     assert _windows(resumed) == _windows(whole)
+
+
+@pytest.mark.parametrize("value", ["1e30", "99999999999999999999", "-1e30"])
+def test_154_an_out_of_range_event_time_is_not_a_time(value):
+    from shape.streaming.messages import DecodeStats, StreamMessage, decode_messages
+
+    stats = DecodeStats()
+    batch = decode_messages(
+        [
+            StreamMessage("0", 0, '{"x": 1}', timestamp_us=5),
+            StreamMessage("0", 1, '{"x": 2, "_shape_event_time": %s}' % value, timestamp_us=7),
+        ],
+        stats=stats,
+    )
+    assert batch is not None and batch.num_rows == 2
+    times = batch.column("_shape_event_time").cast("int64").to_pylist()
+    assert times == [5, 7]  # the broker's time, as for any value that is not a valid time
