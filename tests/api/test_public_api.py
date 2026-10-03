@@ -247,3 +247,88 @@ def test_public_modules_pass_mypy_strict(tmp_path):
     files = [str(PACKAGE / f) for f in ("__init__.py", "api.py", "types.py", "errors.py")]
     out, err, status = mypy_api.run(["--config-file", str(config), *files])
     assert status == 0, out + err
+
+
+# --- the remaining dispatch paths of shape.api -------------------------------------
+
+
+def _schema_doc(rows: int = 7) -> dict[str, typing.Any]:
+    def col(name: str, strategy: str, type_: str, **gen: typing.Any) -> dict[str, typing.Any]:
+        return {"name": name, "type": type_, "generator": {"strategy": strategy, **gen}}
+
+    return {
+        "schema_version": 1,
+        "model": {"name": "m", "seed": 3},
+        "tables": {
+            "t": {
+                "name": "t",
+                "primary_key": ["id"],
+                "columns": {
+                    "id": col("id", "sequence", "integer", start=1),
+                    "v": col("v", "distribution", "float", low=0.0, high=1.0),
+                },
+            }
+        },
+        "relationships": [],
+        "generation": {"scale": "small", "scales": {"small": {"t": rows}}},
+    }
+
+
+def test_generate_from_schema_dict_and_gen_schema():
+    from shape.generation.engine import GenerationResult
+    from shape.generation.schema import GenSchema
+
+    result = api.generate(_schema_doc(), seed=9)
+    assert isinstance(result, GenerationResult)
+    assert result.tables["t"].num_rows == 7
+    again = api.generate(GenSchema.from_dict(_schema_doc()), seed=9)
+    assert again.tables["t"].equals(result.tables["t"])
+    # seed defaults to the schema's
+    default = api.generate(_schema_doc()).tables["t"]
+    assert default.equals(api.generate(_schema_doc(), seed=3).tables["t"])
+
+
+def test_generate_accepts_profile_documents():
+    from shape.generation.engine import GenerationResult
+
+    one = api.profile(pa.table({"id": [1, 2, 3]}), name="t")
+    assert isinstance(api.generate(one.to_dict(), 2, seed=1), GenerationResult)
+    both = api.profile({"a": pa.table({"id": [1, 2]}), "b": pa.table({"k": [1, 1]})})
+    result = api.generate(both.to_dict(), seed=1)
+    assert isinstance(result, GenerationResult) and set(result.tables) == {"a", "b"}
+
+
+def test_generate_unknown_domain_raises_shape_error():
+    from shape.errors import ShapeError
+
+    with pytest.raises(ShapeError):
+        api.generate("no-such-domain-anywhere")
+
+
+_EVIDENCE_MODEL = {
+    "rows": 10,
+    "columns": {"email": {"kind": "text", "null_count": 2, "classification": "PII"}},
+}
+
+
+def test_query_and_view_read_a_model_document():
+    from shape.query import ShapeQueryError
+
+    assert api.query(_EVIDENCE_MODEL, 'column("email").null_count') == 2
+    assert api.query(_EVIDENCE_MODEL, 'column("missing")') is None
+    view = api.view(_EVIDENCE_MODEL)
+    assert view.query("rows") == 10
+    assert view.classification("email") == "PII"
+    with pytest.raises(ShapeQueryError):
+        api.query(_EVIDENCE_MODEL, "1 + 1")
+
+
+def test_query_and_view_on_a_profile_raise_model_error():
+    from shape.spec.model import ModelError
+
+    p = api.profile(pa.table({"id": [1]}), name="t")
+    with pytest.raises(ModelError):
+        api.query(p, "rows")
+    view = api.view(p)  # read on the first call
+    with pytest.raises(ModelError):
+        view.query("rows")
