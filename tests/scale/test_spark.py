@@ -262,6 +262,22 @@ class FakeSpark:
     def createDataFrame(self, pdf):  # noqa: N802
         return FakeFrame(self, pa.Table.from_pandas(pdf))
 
+    @property
+    def read(self):
+        """``spark.read.format("delta").load(path).count()``: the rows saved at ``path``."""
+        spark = self
+
+        class Reader:
+            def format(self, fmt):
+                assert fmt == "delta"
+                return self
+
+            def load(self, path):
+                frame = spark.saved[path][2]
+                return type("Loaded", (), {"count": lambda _: collect(frame).num_rows})()
+
+        return Reader()
+
 
 def collect(frame) -> pa.Table:
     if frame.mapper is None:
@@ -348,3 +364,40 @@ def test_arrow_to_ddl_maps_the_engine_types_and_refuses_others():
     )
     with pytest.raises(TypeError, match="no Spark type"):
         spark_worker.arrow_to_ddl(pa.schema([("x", pa.list_(pa.int64()))]))
+
+
+def test_the_driver_does_not_regenerate_the_tables_the_executors_make(monkeypatch):
+    # Regression #484: engine.generate() on the driver made order and order_line in full too.
+    from collections import Counter
+
+    made: Counter[str] = Counter()
+    original = Engine.generate_chunk
+
+    def spy(self, table, start, n_rows, chunk=0):
+        made[table] += n_rows
+        return original(self, table, start, n_rows, chunk=chunk)
+
+    monkeypatch.setattr(Engine, "generate_chunk", spy)
+    _, _, result, _ = run_worker(plain_doc(ROWS), ROWS, 500)  # the fake runs no executor code
+    assert result["distributed"] == ["order", "order_line"]
+    assert +made == Counter(customer=40)  # zero-row schema samples drop out
+
+
+def test_the_written_row_count_of_an_executor_table_is_measured(monkeypatch):
+    # Regression #485: run_job reported the spec's count for executor-made tables.
+    def lose_a_chunk(spec_json, table):
+        whole = original(spec_json, table)
+
+        def run(batches):
+            for i, batch in enumerate(whole(batches)):
+                if i or table != "order":
+                    yield batch
+
+        return run
+
+    original = spark_worker._chunk_batches
+    monkeypatch.setattr(spark_worker, "_chunk_batches", lose_a_chunk)
+    spec, _, result, _ = run_worker(plain_doc(ROWS), ROWS, 500)
+    assert result["tables"]["order"] == 700  # 1200 asked, the first 500-row chunk lost
+    with pytest.raises(RuntimeError, match="row counts differ"):
+        spark_worker.check_result(spec, result)
