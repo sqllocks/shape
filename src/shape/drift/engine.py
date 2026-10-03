@@ -35,6 +35,8 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     import numpy as np
 
+from .univariate import diff_univariate  # noqa: E402
+
 SEVERITY_RANK = {"low": 0, "medium": 1, "high": 2}
 
 # The first five are the §12.3 contract and keep their values. The rest are the defaults of the
@@ -63,6 +65,11 @@ DEFAULT_THRESHOLDS: dict[str, Any] = {
     "reference_match_rate": 0.02,  # absolute drop of the share of rows in a reference
     "row_count_ratio_max": 2.0,  # table rows over baseline's: more than double is a change
     "row_count_ratio_min": 0.5,  # fewer than half is one too (a 1.5x extract is not)
+    "zero_share": 0.05,  # absolute move of the share of zeros (never below sampling noise)
+    "heaping_ratio": 2.0,  # heaping ratio, current over baseline, for a column heaped on both
+    "benford_class_steps": 2,  # conformity classes (close .. nonconformity) the data got worse by
+    "tail_alpha_drop": 0.3,  # relative fall of the Hill tail index alpha
+    "tail_alpha_max": 3.0,  # ... and it must end below this
 }
 
 KIND_SEVERITY: dict[str, str] = {
@@ -93,6 +100,10 @@ KIND_SEVERITY: dict[str, str] = {
     "implausible_rate_change": "medium",
     "association_shift": "low",
     "reference_match_change": "high",
+    "zero_inflation_change": "medium",
+    "heaping_change": "low",
+    "benford_change": "medium",
+    "tail_change": "low",
 }
 
 _NUMERIC = ("integer", "float")
@@ -242,6 +253,8 @@ class View:
     origin: str = "profile"  # "profile" (the reference profiler) or "engine" (profile engine)
     placeholders: list[dict[str, Any]] = field(default_factory=list)  # sentinel values (#47)
     top_values: dict[str, float] | None = None  # share of the non-null values, most frequent first
+    # zero_share, zero_inflation, heaping, benford, tail_index (W3-07): the ones the profile has
+    univariate: dict[str, Any] = field(default_factory=dict)
 
     @property
     def unique_rate(self) -> float | None:
@@ -349,6 +362,7 @@ def _complete(proportions: Mapping[str, float] | None) -> dict[str, float] | Non
 
 
 _PATTERN_DATE = {"date"}
+_UNIVARIATE_FIELDS = ("zero_share", "zero_inflation", "heaping", "benford", "tail_index")
 
 
 def view_of_profile_column(col: Mapping[str, Any], rows: int) -> View:
@@ -381,6 +395,7 @@ def view_of_profile_column(col: Mapping[str, Any], rows: int) -> View:
         distribution=col.get("distribution"),
         placeholders=list(col.get("placeholders") or ()),
         top_values=col.get("value_counts_ext"),
+        univariate={k: col[k] for k in _UNIVARIATE_FIELDS if col.get(k) is not None},
     )
     if dtype == "datetime":
         view.hour = col.get("hour_histogram")
@@ -664,6 +679,7 @@ def _diff_column(name: str, base: View, cur: View, th: Mapping[str, Any]) -> lis
     flag = base.flag and cur.flag
     if base.dtype in _NUMERIC and cur.dtype in _NUMERIC and not keyed and not flag:
         out.extend(_diff_numeric(name, base, cur, th, enough))
+        out.extend(diff_univariate(name, base, cur, th, enough))
     fitted = "engine" not in (base.origin, cur.origin)  # the engine's documents carry no fit
     if (
         fitted

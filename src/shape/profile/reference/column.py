@@ -21,6 +21,7 @@ from shape.kernel.reference.exact import all_whole
 from shape.kernel.reference.exact import lerp as _lerp
 from shape.kernel.reference.exact import linear_index as _linear_index
 from shape.profile.fitting import detect_distribution as _kernel_detect_distribution
+from shape.profile.univariate import univariate_stats
 
 from . import dtparse
 from .model import ColumnProfile, Timedelta, Timestamp
@@ -646,6 +647,7 @@ def _profile_object_column(c: _Col, row_count: int, top_n: int = 500) -> _Work:
         outlier_rate=base.outlier_rate if base else None,
         value_counts_ext=value_counts_ext,
         fit_score=base.fit_score if base else None,
+        univariate=base.univariate if base else None,
         precision=c.arr.type.precision if kind == "objdec" else None,
         scale=c.arr.type.scale if kind == "objdec" else None,
     )
@@ -885,6 +887,7 @@ def _profile_column(
     quantiles = None
     outlier_rate_val = None
     fit_score_val = None
+    univariate = None
     if stype in ("integer", "float") and numeric is not None and len(numeric) > 0:
         numeric = np.ascontiguousarray(numeric, dtype=np.float64)
         cnt = len(numeric)
@@ -898,6 +901,7 @@ def _profile_column(
         fitted = _kernel_detect_distribution(numeric)
         dist_name, dist_params = fitted["distribution"], fitted["distribution_params"]
         fit_score_val = fitted["fit_score"]
+        univariate = univariate_stats(numeric, integer=stype == "integer") or None
         if st["has_quantiles"]:
             vals = st["quantiles"]
             quantiles = {f"p{p}": round(float(v), 6) for p, v in zip(_PCTS, vals[:9], strict=True)}
@@ -981,6 +985,7 @@ def _profile_column(
         outlier_rate=outlier_rate_val,
         value_counts_ext=value_counts_ext,
         fit_score=fit_score_val,
+        univariate=univariate,
         nan_count=nan_count,
         inf_count=inf_count,
         pattern_rates=rates or None,

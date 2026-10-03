@@ -79,3 +79,136 @@ with the table; it is on for a single table and off for a dataset (several table
 the call does not. `--reference-pair COLS=REFERENCE` checks
 that columns hold real combinations against a reference file.
 
+
+## Univariate depth: model selection, zeros, heaping, Benford, tail index
+
+Every numeric column with at least **20 finite values** (integers, floats, and decimals read as
+numbers) gains the fields below, each only where it applies; a text, boolean or date column gains
+none, and a column with fewer values gains none at all. They are computed once, in Python, over the
+column's values, so `SHAPE_KERNEL=rust` and `python` give the same numbers, and they do not need
+scipy. They sit beside `distribution`, `distribution_params` and `fit_score`, which are unchanged
+(the best of normal, uniform, exponential and lognormal by KS statistic on 2,000 values, still what
+generation uses); nothing here feeds generation, contract rules or the share-safe profile (its
+allow-list is unchanged, so none of these fields leave with a safe profile).
+
+**What is read.** The count of zeros, the range, and for a count column the mean and variance read
+every value, in steps of 262,144 values (no copy of the column). The rest reads a deterministic
+sample: at most **50,000** values for heaping, Benford and the tail index, and at most **10,000**
+for model selection. A column at or under a cap is read whole; a longer one is cut into as many runs
+of consecutive rows as the cap (as equal as possible) and one row is drawn at random from each, by
+`default_rng(42)`, so the sample is the same on every run, every row has the same chance of being
+in it, and a column that repeats with a period cannot line up with it. The caps are well under the
+100,000 values the issue allows because every numeric column pays for them on every profile. Cost is bounded in the number of rows: a test
+(`tests/profile/test_univariate_profile.py`, marked `heavy`) runs a 10-million-row column in under
+10 s with a peak of temporary memory under 20% of the column's own size.
+
+`shape.profile.univariate.univariate_stats(values, integer=...)` computes the fields for any array
+of numbers, and `describe(column)` gives a column's fields as short text lines.
+
+### Model selection: `distribution_candidates`, `distribution_by_bic`
+
+Six families are fitted by maximum likelihood to the model sample (n values), unlike the existing
+fit, which also allows a free location. The lognormal, exponential, gamma and Weibull are fitted
+only when **every** value is positive.
+
+| Family | Parameters (k) | Fit |
+|---|---|---|
+| `normal` | `mu`, `sigma` (2) | mean and population standard deviation |
+| `lognormal` | `mu`, `sigma` of ln x (2) | mean and population standard deviation of ln x |
+| `exponential` | `scale` = mean (1) | the mean (no location) |
+| `uniform` | `low`, `high` (2) | minimum and maximum |
+| `gamma` | `shape`, `scale` (2) | `ln k - psi(k) = ln(mean) - mean(ln x)` solved by Newton's method, `scale = mean / k` |
+| `weibull` | `shape`, `scale` (2) | the profile likelihood equation in the shape, solved by a bracketed Newton method |
+
+For each family: `params`, `log_likelihood`, `aic` = `2k - 2 LL`, `bic` = `k ln n - 2 LL`, and `ks`,
+the KS statistic of the model against the sample's empirical CDF. `distribution_by_bic` is the
+family with the lowest BIC (the first listed on a tie). The difference between two BICs says how
+much better one family is than another: a gap above 10 is strong evidence.
+
+Not computed (no fields): fewer than 20 finite values, a constant column, and a family whose fit is
+degenerate (a gamma or Weibull shape above 100,000, which is a point mass for practical purposes).
+Selection is by likelihood on the sample, so a heavily rounded or discrete column can favour the
+uniform or a skewed family by accident: read `distribution_by_bic` with `heaping` and `zero_share`.
+
+### Zeros: `zero_share`, `zero_inflation`
+
+`zero_share` is the share of zeros among the finite values, for float columns and for integer
+columns of non-negative values (an integer column with a negative value has neither field).
+`zero_inflation` is for integer columns of non-negative values only:
+
+```json
+{"observed": 0.335, "poisson_expected": 0.122, "nb_expected": 0.22, "inflated": true}
+```
+
+`poisson_expected` is `exp(-mean)`. `nb_expected` is the zero probability of a negative binomial
+fitted by moments: with mean m and sample variance v, `r = m^2 / (v - m)` and
+`(r / (r + m))^r`; a column whose variance does not exceed its mean has no overdispersion, and its
+negative binomial is its Poisson. `inflated` is true when the observed share exceeds **both**
+expected shares by more than three standard errors (`sqrt(p(1 - p) / n)` at that model's own `p`)
+**and** is at least 0.05. A column of all zeros is not inflated. The test is conservative: the
+overdispersion that zero inflation causes is partly absorbed by the negative binomial.
+
+### Heaping: `heaping`
+
+Values piled on round numbers (manual entry, estimation) are measured for the units 5, 10, 100
+and 1,000, on the non-zero values of the sample (a zero is a zero, not a round number):
+
+```json
+{"resolution": 1, "unit": 5, "observed_share": 0.68, "expected_share": 0.205, "ratio": 3.3171, "heaped": true}
+```
+
+- `resolution` is the coarsest of 0.001, 0.01, 0.1, 1, 5, 10, 100 and 1,000 that every value is a
+  multiple of. A column of whole hundreds has resolution 100 and is **not** heaped on 5, 10 or 100:
+  only a unit above its resolution is tested (here 1,000). A column whose values are on no grid of
+  0.001 or coarser (continuous measurements) has no `heaping` field.
+- `observed_share` is the share of values that are multiples of the unit.
+- `expected_share` is the share a column spread evenly over its grid would have: the number of
+  multiples of the unit between the sample's minimum and maximum (zero excluded), over the number of
+  grid points between them. A unit is tested only when the grid has at least 20 points and the
+  range holds at least two multiples of it, so a 1 to 10 rating scale is never "heaped on 5".
+- `ratio` is `observed_share / expected_share`. `heaped` is true when some unit has a ratio of at
+  least 2 and an observed share of at least 0.1. The reported unit is, among the units that satisfy
+  that, the one with the largest excess `observed_share - expected_share` (among all tested units
+  when none does), so values heaped on tens report 10, not the 5 and 100 that contain it.
+- An integer-valued float column counts as an integer column.
+
+A skewed column (many small values) can show a ratio above 1 with no manual rounding; the 2 and
+0.1 limits keep that rare, and the field is evidence, not proof.
+
+### Benford: `benford`
+
+```json
+{"applicable": true, "digits": [0.301, 0.176, ...], "mad": 0.0021, "conformity": "close"}
+```
+
+Computed when the column has **at least 100** finite values, **every value is positive**, and the
+largest is at least **100 times** the smallest (two orders of magnitude); otherwise
+`{"applicable": false, "reason": ...}` with the reason (`fewer than 100 values`, `contains values
+that are not positive`, `spans fewer than two orders of magnitude`). `digits` are the shares of the
+first significant digits 1 to 9 in the sample. `mad` is the mean absolute difference from Benford's
+shares `log10(1 + 1/d)`, and `conformity` is Nigrini's class: `close` below 0.006, `acceptable` below
+0.012, `marginal` below 0.015, else `nonconformity`. Amounts spread over several orders of
+magnitude follow the law; ages, ids, prices set by hand and anything with a fixed range do not, and
+the field then says nothing about fraud. The classes are bands of a noisy statistic: the MAD of 1,000
+values varies by about 0.003.
+
+### Tail index: `tail_index`
+
+```json
+{"alpha": 1.52, "k": 71, "se": 0.18, "heavy": true}
+```
+
+Computed from the **positive** values of the sample when there are at least **50**. With the values
+sorted, `k = max(10, round(sqrt(n)))` and `X(k+1)` the (k+1)-th largest, the Hill estimator is
+`alpha = 1 / mean(ln(X(i) / X(k+1)))` over the `k` largest, with standard error `alpha / sqrt(k)`.
+`heavy` is true when `alpha` is below 2 (the variance is infinite). Not computed for fewer than 50
+positive values or when the top values are all equal. The Hill estimator assumes a Pareto-like
+tail, and `alpha` depends on `k`: a lognormal or exponential column gets a finite `alpha` that
+means "tail heavier than normal", not a true power law.
+
+`shape diff` reports changes in these fields as `zero_inflation_change`, `heaping_change`,
+`benford_change` and `tail_change` (`docs/DRIFT.md`). `shape show` prints every field,
+`Profile.summary()` and `shape profile --json` carry them (the table of candidates stays in the
+profile), and the `--html` report states them in each column's card. A profile written before these
+fields existed loads, displays and diffs as before, with the fields absent and the four kinds not
+reported.

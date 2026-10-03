@@ -134,6 +134,8 @@ def _column_dict(cp: ColumnProfile) -> dict[str, Any]:
             del d[f]
     if cp.placeholders:  # absent when none, like the other optional fields
         d["placeholders"] = cp.placeholders
+    if cp.univariate:  # the univariate depth fields, each present only where it applies
+        d.update(cp.univariate)
     d["min_value"] = _tag_scalar(cp.min_value)
     d["max_value"] = _tag_scalar(cp.max_value)
     d["enum_values"] = _clean(cp.enum_values)
@@ -175,8 +177,18 @@ def _plain(tagged: Any) -> Any:
     return None
 
 
+_SUMMARY_UNIVARIATE = (
+    "distribution_by_bic",
+    "zero_share",
+    "zero_inflation",
+    "heaping",
+    "benford",
+    "tail_index",
+)
+
+
 def _column_summary(col: dict[str, Any]) -> dict[str, Any]:
-    return {
+    out = {
         "dtype": col["dtype"],
         "null_rate": col["null_rate"],
         "cardinality": col["cardinality"],
@@ -191,6 +203,10 @@ def _column_summary(col: dict[str, Any]) -> dict[str, Any]:
         "mean": col["mean"],
         "std": col["std"],
     }
+    for key in _SUMMARY_UNIVARIATE:  # the univariate depth fields, where the column has them
+        if key in col:
+            out[key] = col[key]
+    return out
 
 
 def _table_summary(table: dict[str, Any]) -> dict[str, Any]:

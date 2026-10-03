@@ -20,6 +20,10 @@ _FIELD = {
     "distribution_shift": "quantiles",
     "range_change": "range",
     "spread_change": "std",
+    "zero_inflation_change": "zero_inflation",
+    "heaping_change": "heaping",
+    "benford_change": "benford",
+    "tail_change": "tail_index",
 }
 
 

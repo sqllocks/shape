@@ -48,6 +48,9 @@ class ColumnProfile:
     pattern_rates: dict[str, float] | None = None  # share of values that are wholly a pattern
     pattern_contains_rates: dict[str, float] | None = None  # share that contain an SSN/email/card
     placeholders: list[dict[str, Any]] | None = None  # sentinel values and their evidence (#47)
+    # univariate depth (W3-07): distribution_candidates, distribution_by_bic, zero_share,
+    # zero_inflation, heaping, benford, tail_index; only the ones that apply are present
+    univariate: dict[str, Any] | None = None
 
 
 @dataclass

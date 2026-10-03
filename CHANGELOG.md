@@ -5,6 +5,21 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Univariate depth (`docs/PROFILING_NOTES.md`, #103). Each numeric column of a profile gains, where
+  it applies: `distribution_candidates` and `distribution_by_bic` (maximum-likelihood fits of the
+  normal, lognormal, exponential, uniform, gamma and Weibull with log-likelihood, AIC, BIC and KS;
+  the existing `distribution`, `distribution_params` and `fit_score` are unchanged), `zero_share`
+  and `zero_inflation` (observed against a Poisson and a moment-fitted negative binomial),
+  `heaping` (multiples of 5, 10, 100 and 1,000 against the share expected from the range and
+  resolution), `benford` (first-digit shares, MAD and Nigrini's class) and `tail_index` (the Hill
+  estimator with its standard error). Identical under both kernels; computed on all values in
+  chunks or on a deterministic sample of at most 50,000 (10,000 for model selection); not part of
+  the share-safe profile. `shape diff` reports `zero_inflation_change`, `heaping_change`,
+  `benford_change` and `tail_change` (thresholds `zero_share`, `heaping_ratio`,
+  `benford_class_steps`, `tail_alpha_drop`, `tail_alpha_max`; each held to sampling noise).
+  `Profile.summary()`, `shape profile --json` and the `--html` report show the fields, `shape show`
+  prints them. A profile written before this change loads, displays and diffs as before.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
