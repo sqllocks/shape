@@ -178,7 +178,7 @@ shape from-ddl tables.sql --explain            # print every inference decision
 |---|---|
 | `-o`, `--output` | where to write the schema (default: the input with the suffix `.gen.json`) |
 | `--domain` | the schema's domain; the model is named `<domain>_ddl_import` (default `custom`) |
-| `-s`, `--scale` | `preset:table=N,...`: select that scale preset and set those tables' row counts |
+| `-s`, `--scale` | `preset:table=N,...`: select that scale preset and set those tables' row counts (not negative; a table the file does not define stays in the preset, and `validate` warns about it) |
 | `--smart` / `--no-smart` | smart inference (the default), or keep the first generators |
 | `--explain` | print the inference report: rule, table and column, what changed, confidence |
 
