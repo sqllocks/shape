@@ -56,7 +56,7 @@ def test_154_an_out_of_range_event_time_is_not_a_time(value):
     batch = decode_messages(
         [
             StreamMessage("0", 0, '{"x": 1}', timestamp_us=5),
-            StreamMessage("0", 1, '{"x": 2, "_shape_event_time": %s}' % value, timestamp_us=7),
+            StreamMessage("0", 1, '{"x": 2, "_shape_event_time": ' + value + "}", timestamp_us=7),
         ],
         stats=stats,
     )
@@ -100,5 +100,5 @@ def test_156_the_value_anomaly_changes_one_value_per_row():
         changed = [k for k in old if old[k] != new[k] and not (old[k] is None and new[k] is None)]
         assert len(changed) <= 1, (old, new)
         assert all(not (isinstance(v, float) and v != v) for v in new.values()), new  # no NaN
-        b = new["b"]
-        assert b is None or b > 0, new  # an outlier of a positive value keeps its sign
+        b = new["b"]  # an outlier is -1, 100 or 1000 times the value: never a wrap past int64
+        assert b in (None, old["b"], -(2**60)) or b > 2**62, new
