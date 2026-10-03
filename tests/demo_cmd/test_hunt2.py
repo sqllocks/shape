@@ -199,3 +199,52 @@ def test_716_a_readable_file_still_runs(run, home, tmp_path):
     path.write_text("a,b\n" + "\n".join(f"{i},x{i % 3}" for i in range(50)), encoding="utf-8")
     code, out, _ = run("demo", "run", "retail", "--input-file", path, "--rows", "200")
     assert code == 0 and "Fidelity" in out
+
+
+# ---- #727: a cleanup of a composite run leaves nothing it made --------------------------------
+
+
+def two_schema_files(tmp_path: Path) -> tuple[Path, Path]:
+    from demo_helpers import write_schema
+
+    return (
+        write_schema(tmp_path / "alpha.json", name="alpha"),
+        write_schema(tmp_path / "beta.json", name="beta"),
+    )
+
+
+def test_727_cleanup_of_a_composite_run_removes_the_domain_folders_and_the_session_folder(
+    run, home, tmp_path
+):
+    from test_run_local import session_of
+
+    alpha, beta = two_schema_files(tmp_path)
+    land = tmp_path / "land"
+    assert run("demo", "init", "--name", "loc", "--local-path", land)[0] == 0
+    code, out, _ = run(
+        "demo", "run", "retail", "--mode", "seeding", "--connection", "loc",
+        "--domains", f"{alpha},{beta}", "--rows", "1000", "--seed", "3",
+    )  # fmt: skip
+    assert code == 0, out
+    session = session_of(out)
+    assert sorted(p.name for p in (land / session).iterdir() if p.is_dir()) == ["alpha", "beta"]
+    code, out, _ = run("demo", "cleanup", session)
+    assert code == 0, out
+    assert land.is_dir() and list(land.iterdir()) == []
+
+
+def test_727_cleanup_never_removes_a_file_it_did_not_make(run, home, tmp_path):
+    from test_run_local import session_of
+
+    alpha, beta = two_schema_files(tmp_path)
+    land = tmp_path / "land"
+    assert run("demo", "init", "--name", "loc", "--local-path", land)[0] == 0
+    code, out, _ = run(
+        "demo", "run", "retail", "--mode", "seeding", "--connection", "loc",
+        "--domains", f"{alpha},{beta}", "--rows", "1000", "--seed", "3",
+    )  # fmt: skip
+    session = session_of(out)
+    keep = land / session / "alpha" / "notes.txt"
+    keep.write_text("mine")
+    assert run("demo", "cleanup", session)[0] == 0
+    assert keep.read_text() == "mine"
