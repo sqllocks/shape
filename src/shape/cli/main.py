@@ -732,12 +732,11 @@ def _cmd_from_ddl(a):
     """``shape from-ddl FILE``: read ``CREATE TABLE`` DDL, write a generation schema."""
     from pathlib import Path
 
+    from shape.cli.validate import read_text
     from shape.generation.ddl import from_ddl
 
     src = Path(a.input_file)
-    schema, notes = from_ddl(
-        src.read_text(encoding="utf-8"), domain=a.domain, smart=a.smart, scale=a.scale
-    )
+    schema, notes = from_ddl(read_text(src), domain=a.domain, smart=a.smart, scale=a.scale)
     out = Path(a.output) if a.output else src.with_suffix(".gen.json")
     _write_json(out, schema.to_dict())
     print(f"Shape DDL import{' (smart)' if a.smart else ''}")
