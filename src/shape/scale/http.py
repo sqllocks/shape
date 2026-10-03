@@ -17,6 +17,7 @@ from typing import Any
 
 FABRIC_API = "https://api.fabric.microsoft.com/v1"
 ONELAKE_DFS = "https://onelake.dfs.fabric.microsoft.com"
+MAX_RETRY_WAIT = 60.0  # seconds a Retry-After header may ask for at most
 
 
 class HttpError(RuntimeError):
@@ -35,7 +36,25 @@ class HttpResponse:
     headers: dict[str, str] = field(default_factory=dict)
 
     def json(self) -> Any:
-        return json.loads(self.body.decode("utf-8")) if self.body else {}
+        try:
+            return json.loads(self.body.decode("utf-8")) if self.body else {}
+        except ValueError:  # not JSON, or not UTF-8
+            from shape.security.redact import redact_text
+
+            snippet = redact_text(self.text[:80].replace("\n", " "))
+            raise ValueError(
+                f"the service answered {self.status} with something that is not JSON: {snippet!r}"
+            ) from None
+
+    def json_object(self) -> dict[str, Any]:
+        """The JSON body, which must be an object (an empty body is an empty object)."""
+        doc = self.json()
+        if not isinstance(doc, dict):
+            raise ValueError(
+                f"the service answered {self.status} with a JSON {type(doc).__name__}, "
+                "not a JSON object"
+            )
+        return doc
 
     @property
     def text(self) -> str:
@@ -107,7 +126,8 @@ class Http:
             retryable = response.status in (429, 500, 502, 503, 504)
             if retryable and attempt < self._retries:
                 wait = response.headers.get("retry-after", "")
-                self._sleep(float(wait) if wait.isdigit() else min(2.0**attempt, 30.0))
+                backoff = min(2.0**attempt, 30.0)
+                self._sleep(min(float(wait), MAX_RETRY_WAIT) if wait.isdigit() else backoff)
                 continue
             raise HttpError(response.status, url, response.text)
         raise AssertionError("unreachable")  # pragma: no cover

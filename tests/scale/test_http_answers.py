@@ -46,5 +46,5 @@ def test_the_job_tracker_names_an_answer_that_is_not_a_json_object(body):
     def transport(method, url, headers, payload, timeout):
         return HttpResponse(200, body)
 
-    with pytest.raises(ValueError, match="not a JSON object"):
+    with pytest.raises(ValueError, match="not JSON|not a JSON object"):
         FabricJobTracker("t", transport).get_status("w", "i", "r")

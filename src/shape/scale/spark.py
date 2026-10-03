@@ -198,7 +198,7 @@ class FabricSparkRouter:
         seen: set[str] = set()
         while url:
             seen.add(url)
-            doc = self._http.request("GET", url).json()
+            doc = self._http.request("GET", url).json_object()
             found.extend(doc.get("value", []))
             url = doc.get("continuationUri") or ""
             if url:
@@ -268,7 +268,7 @@ class FabricSparkRouter:
             timeout=60.0,
         )
         if response.status == 201:
-            item_id = response.json().get("id")
+            item_id = response.json_object().get("id")
             if not item_id:
                 raise NotebookNotFoundError("the Items API returned 201 without an id")
             return str(item_id)
@@ -280,7 +280,7 @@ class FabricSparkRouter:
         _fabric_url(location, "operation URL (Location header)")
         for _ in range(60):
             self._sleep(2.0)
-            operation = self._http.request("GET", location).json()
+            operation = self._http.request("GET", location).json_object()
             state = operation.get("status", "")
             if state == "Succeeded":
                 created = self.find_notebook()
@@ -320,7 +320,7 @@ class FabricSparkRouter:
         if location:
             run_id = location.rstrip("/").split("/")[-1]
         else:
-            run_id = str(response.json().get("id", ""))
+            run_id = str(response.json_object().get("id", ""))
         if not run_id:
             raise RuntimeError("Fabric accepted the job but returned no run id")
         return run_id

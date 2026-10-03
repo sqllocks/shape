@@ -261,7 +261,7 @@ class FabricJobTracker:
     def get_status(self, workspace_id: str, item_id: str, run_id: str) -> dict[str, Any]:
         """``status`` (Shape's name), ``fabric_status`` (Fabric's), ``fabric_run_id`` and, when
         the run failed, ``error``."""
-        data = self._http.request("GET", self._url(workspace_id, item_id, run_id)).json()
+        data = self._http.request("GET", self._url(workspace_id, item_id, run_id)).json_object()
         raw = str(data.get("status", "Unknown"))
         out: dict[str, Any] = {
             "status": STATUS_MAP.get(raw, raw.lower()),
