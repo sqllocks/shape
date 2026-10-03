@@ -426,3 +426,23 @@ def test_reference_pairs_read_a_path_and_say_when_the_file_is_missing(tmp_path):
     missing = [{"columns": ["zip", "city"], "reference": str(tmp_path / "nope.csv")}]
     with pytest.raises(FileNotFoundError, match="nope.csv"):
         shape.profile(_zip_data(), reference_pairs=missing)
+
+
+# ---- #313: NaN in the joint analysis --------------------------------------------------------
+
+
+def test_nan_is_not_a_joint_placeholder(kernel):
+    r = np.random.default_rng(0)
+    score = r.choice([1.5, 2.5, 3.5], 2000)
+    score[r.random(2000) < 0.105] = np.nan
+    t = pa.table({"score": score, "grade": r.choice(["a", "b", "c"], 2000)})
+    assert shape.profile(t).to_dict()["joint"]["implausible_by_placeholder"] == 0.0
+
+
+def test_an_all_infinite_column_profiles_without_a_warning(kernel):
+    import warnings
+
+    t = pa.table({"x": [float("inf"), float("-inf")] * 10, "y": [float(i % 3) for i in range(20)]})
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        shape.profile(t)
