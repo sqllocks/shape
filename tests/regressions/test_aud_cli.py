@@ -394,3 +394,8 @@ def test_missing_paths_use_the_one_wording(
 ) -> None:
     assert main(args) == 2
     assert capsys.readouterr().err.strip() == "shape: error: file not found: nope.csv"
+
+
+def test_profile_registry_delete_of_a_missing_profile(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["profile", "registry", "delete", "crm/x/y", "--root", "preg"]) == 2
+    assert capsys.readouterr().err.strip() == "shape: error: profile not found: crm/x/y"
