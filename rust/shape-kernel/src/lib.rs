@@ -156,28 +156,42 @@ fn native_log_array(buf: &mut [f64]) {
     }
 }
 
+/// Set once every hook is in place: a fit may only start after that.
+static HOOKS_READY: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
 /// Point the fitting code's scalar exp/ln at numpy's (see `fit::set_scalar_hooks`): numpy's loops
 /// themselves when they validate, otherwise numpy called through Python.
 /// `SHAPE_NUMPY_LOOPS=python` forces the Python route.
+///
+/// Several threads may make the first fits of a process at once (the profiler's column pool), and
+/// importing numpy or loading its loops calls Python, which can hand the GIL to one of them. So
+/// "done" is recorded only after the hooks are set (a thread that saw it earlier would fit with
+/// libm's `exp`/`ln`, which differ from numpy's in the last bit, #323), and nothing here waits on
+/// a lock while Python runs (that thread could hold the GIL the other one needs): racing threads
+/// each load the loops, and every one installs the first result stored.
 fn install_numpy_hooks(py: Python<'_>) -> PyResult<()> {
-    if NP_EXP.get().is_none() {
-        let np = py.import("numpy")?;
-        let _ = NP_EXP.set(np.getattr("exp")?.unbind());
-        let _ = NP_LOG.set(np.getattr("log")?.unbind());
-        let force_python = std::env::var("SHAPE_NUMPY_LOOPS").is_ok_and(|v| v == "python");
-        let loops = NATIVE_LOOPS.get_or_init(|| {
-            if force_python {
-                None
-            } else {
-                numpy_loops::load(py)
-            }
-        });
-        if loops.is_some() {
-            fit::set_scalar_hooks(native_exp, native_log, native_log_array, true);
-        } else {
-            fit::set_scalar_hooks(numpy_exp, numpy_log, numpy_log_array, false);
-        }
+    use std::sync::atomic::Ordering;
+    if HOOKS_READY.load(Ordering::Acquire) {
+        return Ok(());
     }
+    let np = py.import("numpy")?;
+    let _ = NP_EXP.set(np.getattr("exp")?.unbind());
+    let _ = NP_LOG.set(np.getattr("log")?.unbind());
+    if NATIVE_LOOPS.get().is_none() {
+        let force_python = std::env::var("SHAPE_NUMPY_LOOPS").is_ok_and(|v| v == "python");
+        let loops = if force_python {
+            None
+        } else {
+            numpy_loops::load(py)
+        };
+        let _ = NATIVE_LOOPS.set(loops);
+    }
+    if native_loops().is_some() {
+        fit::set_scalar_hooks(native_exp, native_log, native_log_array, true);
+    } else {
+        fit::set_scalar_hooks(numpy_exp, numpy_log, numpy_log_array, false);
+    }
+    HOOKS_READY.store(true, Ordering::Release);
     Ok(())
 }
 
