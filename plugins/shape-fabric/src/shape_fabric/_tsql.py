@@ -70,7 +70,14 @@ def qualified(schema: str, table: str) -> str:
 
 def _meta_int(meta: Mapping[str, Any], key: str) -> int | None:
     value = meta.get(key)
-    return int(value) if value else None
+    if not value:
+        return None
+    if isinstance(value, bool) or not (
+        (isinstance(value, int) and value > 0)
+        or (isinstance(value, str) and value.strip().isdigit())
+    ):
+        raise ShapeError(f"{key} must be a positive whole number, not {value!r}")
+    return int(value)
 
 
 def column_type(
@@ -99,6 +106,11 @@ def column_type(
     if pat.is_decimal(t):
         if t.precision > 38:
             raise ShapeError(f"column {field.name!r}: SQL decimals hold at most 38 digits")
+        if t.scale < 0:
+            raise ShapeError(
+                f"column {field.name!r}: a SQL decimal cannot have a negative scale ({t}); "
+                "cast it to a scale of 0 or more first"
+            )
         return f"DECIMAL({t.precision},{t.scale})"
     if pat.is_timestamp(t):
         return "DATETIME2(6)"  # time zones are converted to UTC by normalize_batch
@@ -114,7 +126,15 @@ def column_type(
         declared = _meta_int(meta, "max_length")
         char = "VARCHAR" if warehouse else "NVARCHAR"
         if declared:
-            return f"{char}({declared})"
+            limit = 8000 if warehouse else 4000  # VARCHAR and NVARCHAR hold at most this
+            if declared <= limit:
+                return f"{char}({declared})"
+            if warehouse:
+                raise ShapeError(
+                    f"column {field.name!r}: a Warehouse string holds at most 8000 characters "
+                    f"(max_length {declared})"
+                )
+            return f"{char}(MAX)"
         if key:
             return f"{char}({_KEY_COLUMN_LENGTH})"
         return "VARCHAR(8000)" if warehouse else "NVARCHAR(MAX)"
