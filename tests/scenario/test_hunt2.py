@@ -13,7 +13,7 @@ from shape.generation.engine import Engine
 from shape.scenario import PackLoader, PackRunner
 from shape.scenario.manifest import ManifestBuilder
 from shape.scenario.runner import _apply_chaos
-from tests.scenario.conftest import write
+from tests.scenario.conftest import PACK, write
 
 SECTION = {"enabled": True, "intensity": "hurricane", "day": 40, "seed": 3}
 
@@ -141,3 +141,56 @@ def test_673_a_narrower_integer_key_is_not_a_failure(retail):
     narrow = orders.set_column(i, "customer_id", pc.cast(orders["customer_id"], pa.int32()))
     data = replace(data, tables={**data.tables, "order": narrow})
     assert _run_gate("referential_integrity", data) == (True, "")
+
+
+# ---- #667: a run manifest with a field of the wrong type is refused, naming the field -------
+
+
+def written_manifest(tmp_path, retail) -> Path:
+    pack = PackLoader().load(write(tmp_path / "p.yaml", PACK.format(fmt="csv")))
+    result = PackRunner().run(pack, retail, "fabric_demo", 42, tmp_path / "out")
+    return Path(result.files_written[-1])
+
+
+@pytest.mark.parametrize(
+    "key,value",
+    [
+        ("seed", "x"),
+        ("seed", 1.5),
+        ("seed", True),
+        ("seed", None),
+        ("scale", 5),
+        ("scale", None),
+        ("domain", 3),
+        ("pack_id", None),
+        ("reproducibility", []),
+        ("reproducibility", "x"),
+        ("tables", []),
+        ("tables", {"customer": 5}),
+        ("chaos", []),
+        ("sbom", []),
+        ("validation", "x"),
+        ("outputs", 1),
+        ("timestamps", []),
+        ("dataset_id", 5),
+        ("run_id", 7),
+    ],
+)
+def test_667_a_field_of_the_wrong_type_is_refused_with_its_name(tmp_path, retail, key, value):
+    path = written_manifest(tmp_path, retail)
+    doc = json.loads(path.read_text())
+    doc[key] = value
+    path.write_text(json.dumps(doc))
+    with pytest.raises(ValueError) as caught:
+        ManifestBuilder.from_file(path)
+    assert f"{key} must be" in str(caught.value) and str(path) in str(caught.value)
+
+
+def test_667_a_manifest_the_runner_wrote_and_an_old_one_still_load(tmp_path, retail):
+    path = written_manifest(tmp_path, retail)
+    assert ManifestBuilder.from_file(path).seed == 42
+    doc = json.loads(path.read_text())
+    for key in ("format", "version", "reproducibility", "dataset_id", "shape_version"):
+        doc.pop(key, None)
+    path.write_text(json.dumps(doc))
+    assert ManifestBuilder.from_file(path).reproducibility == {}
