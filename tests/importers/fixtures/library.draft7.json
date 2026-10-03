@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "author": {
+      "type": "object",
+      "required": ["author_id"],
+      "properties": {
+        "author_id": {"type": "string", "format": "uuid"},
+        "name": {"type": "string"}
+      }
+    },
+    "book": {
+      "type": "object",
+      "required": ["book_id", "author"],
+      "properties": {
+        "book_id": {"type": "integer"},
+        "title": {"type": "string", "maxLength": 60},
+        "pages": {"type": "integer", "minimum": 10, "maximum": 900},
+        "author": {"$ref": "#/definitions/author"},
+        "sequel": {"$ref": "#/definitions/book"}
+      }
+    }
+  }
+}
