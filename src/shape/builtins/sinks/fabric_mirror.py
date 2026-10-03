@@ -34,6 +34,7 @@ from urllib.parse import urlparse
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from shape.plugins.schemes import require_scheme
 from shape.security.names import safe_name
 
 MARKER = "__rowMarker__"
@@ -60,6 +61,17 @@ def _next_sequence(names: Iterable[str]) -> int:
     """One above the highest 20-digit data file name in ``names`` (1 when there is none)."""
     numbers = [int(m.group(1)) for n in names if (m := _DATA_FILE.match(n))]
     return max(numbers, default=0) + 1
+
+
+def _declared_keys(raw: bytes, path: str) -> Any:
+    """The ``keyColumns`` a landing zone's ``_metadata.json`` declares."""
+    try:
+        document = json.loads(raw)
+    except ValueError as exc:
+        raise ValueError(f"{path} is not valid JSON ({exc}): repair or delete it") from exc
+    if not isinstance(document, dict) or not isinstance(document.get("keyColumns", []), list):
+        raise ValueError(f"{path} must be a JSON object whose keyColumns is a list: repair it")
+    return document.get("keyColumns", [])
 
 
 def _marker_value(marker: Any) -> int:
@@ -222,6 +234,7 @@ class FabricMirrorSink:
     schemes = ("file", "abfss", "abfs")
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+        require_scheme(self, uri)
         fmt = options.get("format", "parquet")
         if fmt not in FORMATS:
             raise ValueError(f"unknown format {fmt!r}; choose one of {', '.join(FORMATS)}")
@@ -244,7 +257,7 @@ class FabricMirrorSink:
         meta_path = f"{folder}/_metadata.json"
         current = store.read(meta_path) if "_metadata.json" in existing else None
         if current is not None and keys:
-            declared = json.loads(current).get("keyColumns", [])
+            declared = _declared_keys(current, meta_path)
             if declared != keys:
                 raise ValueError(
                     f"{meta_path} declares keyColumns {declared}; they cannot be changed "
