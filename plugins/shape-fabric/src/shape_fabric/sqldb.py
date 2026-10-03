@@ -11,9 +11,15 @@ already there:
 ``truncate``  empty the table, then add rows; created when missing
 ``replace``   drop the table and create it again (destroys the old rows)
 
+``truncate`` and ``replace`` commit before the insert: the emptying (or the drop and the new
+``CREATE TABLE``) is committed first, then the rows are written. A failed write therefore leaves
+a ``truncate`` target empty and a ``replace`` target absent (the table this call re-created is
+dropped again), and the old rows are gone either way. Only ``create`` and ``append`` roll back to
+the state they started from.
+
 Rows are sent as parameterised ``INSERT`` statements, ``batch_size`` rows per round trip (default
 5,000). A table is written in one transaction by default: a failure rolls back its rows, and a
-table this call created is dropped again. With ``commit_rows=N`` the writer instead commits after
+table this call created is dropped again (but see ``truncate`` and ``replace`` above). With ``commit_rows=N`` the writer instead commits after
 every ``N`` rows (rounded up to a whole ``batch_size`` round trip) while it consumes the batches,
 so a reader sees the rows as they arrive (streaming use); a failure then rolls back only the open
 chunk, and the rows already committed, and the table, stay. (``replace`` has already dropped

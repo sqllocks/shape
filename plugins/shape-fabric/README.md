@@ -65,7 +65,9 @@ lists the tables completed before it. Nothing is reported written unless the des
 | `EventstreamWriter(uri)` | Eventstream | the emitter's transport, flat events with the `_shape_table`/`_shape_seq` key |
 
 `write_mode` (SQL, Warehouse, Eventhouse): `create` (default: an existing table is an error), `append`,
-`truncate`, `replace` (drops the old table). Names are quoted and checked, values are parameters; the
+`truncate`, `replace` (drops the old table). `truncate` and `replace` commit before the insert, so a
+failed write leaves the table empty (`truncate`) or absent (`replace`); only `create` and `append` roll
+back (see `docs/plugins/fabric-writers.md`). Names are quoted and checked, values are parameters; the
 one literal that cannot be a parameter (the `COPY INTO` location) is validated against a strict
 character set. `shape_fabric.sinks` has `Sink`-protocol adapters; `shape_fabric.onelake` builds
 OneLake paths.

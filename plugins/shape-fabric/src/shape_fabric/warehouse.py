@@ -12,6 +12,10 @@ which is all the Warehouse reads), (3) runs one ``COPY INTO`` over that folder, 
 ``https://onelake.dfs.fabric.microsoft.com/...`` form the statement requires, and (4) deletes the
 staged files, **also when a step failed**.
 
+``truncate`` and ``replace`` commit before the insert, exactly as in :mod:`shape_fabric.sqldb`:
+a failed write leaves a ``truncate`` target empty and a ``replace`` target absent; only ``create``
+and ``append`` roll back to where they started.
+
 The number of rows ``COPY INTO`` loaded must equal the number staged; if it differs the write
 fails (and a table this call created is dropped). The count is the statement's own; where the
 driver does not report one, rows are counted before and after.
