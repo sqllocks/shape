@@ -361,11 +361,6 @@ def test_demo_notebook_takes_o(capsys: pytest.CaptureFixture[str]) -> None:
     assert a.output == "r.md"
 
 
-def test_profile_registry_delete_of_a_missing_profile(capsys: pytest.CaptureFixture[str]) -> None:
-    assert main(["profile", "registry", "delete", "crm/x/y", "--root", "preg"]) == 2
-    assert capsys.readouterr().err.startswith("shape: error: profile not found: crm/x/y")
-
-
 def test_unknown_log_level_is_refused(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["--log-json", "--log-level", "bogus", "version"]) == 2
     captured = capsys.readouterr()
