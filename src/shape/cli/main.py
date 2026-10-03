@@ -1442,7 +1442,10 @@ def _cmd_evidence(a):
 
     contract = _load_json(a.contract)
     r = evaluate_contract(s, contract)
-    _dump(r.to_dict())
+    out = r.to_dict()
+    if a.json:
+        _write_json(a.json, out)
+    _dump(out)
     return 0 if r.passed else 4
 
 
