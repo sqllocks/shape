@@ -201,7 +201,7 @@ def save(path: Path, document: Mapping[str, Any]) -> None:
     if leaked:
         raise RecordingError(f"refusing to write {path.name}: it would hold a secret ({leaked[0]})")
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    path.write_text(text, encoding="utf-8", newline="\n")
 
 
 def load(path: Path) -> dict[str, Any]:
