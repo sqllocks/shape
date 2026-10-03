@@ -69,3 +69,26 @@ def test_517_a_profile_name_with_a_line_break_is_refused(home):
 
     with pytest.raises(DemoError):
         demo_init("here\n", local_path="x")
+
+
+# ---- #518: a session record that is not a JSON object is a DemoError ---------------------------
+
+
+@pytest.mark.parametrize("content", ["null", "5", '"text"', "[1]", "{bad"])
+def test_518_a_record_that_is_not_an_object_is_a_demo_error(home, content):
+    from shape.demo.errors import DemoError
+    from shape.demo.manifest import DemoManifest
+
+    folder = home / "sessions"
+    folder.mkdir(parents=True)
+    (folder / "demo-abc.json").write_text(content, encoding="utf-8")
+    with pytest.raises(DemoError, match="is not a demo session record"):
+        DemoManifest.load("abc")
+
+
+def test_518_status_of_such_a_record_is_a_message_and_exit_two(run, home):
+    folder = home / "sessions"
+    folder.mkdir(parents=True)
+    (folder / "demo-abc.json").write_text("null", encoding="utf-8")
+    code, _, err = run("demo", "status", "abc")
+    assert code == 2 and "is not a demo session record" in err
