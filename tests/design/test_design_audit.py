@@ -119,3 +119,33 @@ def test_an_outrigger_and_an_entity_with_the_same_table_name_are_refused() -> No
     derive(design, "star")  # no outrigger in a star: no collision
     with pytest.raises(DesignError, match="dim_geo_region"):
         derive(design, "snowflake")
+
+
+# ---- issue 385: a self-reference keeps its foreign key in 3NF --------------------------------
+
+
+def test_a_self_reference_gets_its_foreign_key() -> None:
+    from shape.design.ddl import emit_ddl
+    from shape.design.result import ForeignKey
+
+    design = DesignInput.from_dict(
+        _doc(
+            [
+                {
+                    "name": "emp",
+                    "attributes": [{"name": "id"}, {"name": "mgr", "references": "emp"}],
+                    "keys": [["id"]],
+                }
+            ]
+        )
+    )
+    result = derive(design, "3nf")
+    assert result.table("emp").foreign_keys == (ForeignKey(("mgr",), "emp", ("id",)),)
+    assert "FOREIGN KEY ([mgr]) REFERENCES [emp] ([id])" in emit_ddl(result)
+
+
+def test_a_key_that_references_its_own_entity_is_not_a_foreign_key() -> None:
+    design = DesignInput.from_dict(
+        _doc([{"name": "t", "attributes": [{"name": "id", "references": "t"}], "keys": [["id"]]}])
+    )
+    assert derive(design, "3nf").table("t").foreign_keys == ()
