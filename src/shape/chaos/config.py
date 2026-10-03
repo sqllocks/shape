@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import math
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
@@ -45,7 +46,10 @@ def _default_categories() -> dict[str, dict[str, Any]]:
 
 @dataclass
 class ChaosOverride:
-    """Forces one chaos event of ``category`` on ``day``, bypassing the probability draw."""
+    """Forces one chaos event of ``category`` on ``day``, bypassing the probability draw.
+
+    ``params`` is kept for configuration compatibility and is not read: the mutators take no
+    per-event parameters."""
 
     day: int
     category: str
@@ -111,7 +115,29 @@ class ChaosConfig:
                 f"warmup_days ({self.warmup_days})"
             )
         known = {c.value for c in ChaosCategory}
-        for name in self.categories:
+        for name, settings in self.categories.items():
             if name not in known:
                 errors.append(f"Unknown category '{name}' in categories dict")
+            if not isinstance(settings, dict):
+                errors.append(
+                    f"category '{name}' is a mapping like {{'enabled': true, 'weight': 0.1}}, "
+                    f"got {settings!r}"
+                )
+                continue
+            weight = settings.get("weight", 0.0)
+            if (
+                isinstance(weight, bool)
+                or not isinstance(weight, (int, float))
+                or not math.isfinite(weight)
+                or weight < 0
+            ):
+                errors.append(f"category '{name}': weight is a number 0 or more, got {weight!r}")
+        if isinstance(self.seed, bool) or not isinstance(self.seed, int) or self.seed < 0:
+            errors.append(f"seed is an integer 0 or more, got {self.seed!r}")
+        for ov in self.overrides:
+            if ov.category not in known:
+                errors.append(
+                    f"override on day {ov.day}: unknown category '{ov.category}'. "
+                    f"Choose from: {', '.join(sorted(known))}"
+                )
         return errors
