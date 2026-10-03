@@ -202,7 +202,9 @@ def test_the_notebook_writes_the_contract_and_a_manifest(lh):
     contract = json.loads((lh / "Files" / out["contractPath"]).read_text(encoding="utf-8"))
     assert out["contractPath"] == "shape/retail/contract.json"
     assert set(contract["tables"]) == {t["table"] for t in out["tables"]}
-    manifest = json.loads((lh / "Files" / "shape" / "retail" / "generation.json").read_text(encoding="utf-8"))
+    manifest = json.loads(
+        (lh / "Files" / "shape" / "retail" / "generation.json").read_text(encoding="utf-8")
+    )
     assert manifest["seed"] == 42 and len(manifest["tables"]) == RETAIL_TABLES
 
 
@@ -532,7 +534,9 @@ def test_bind_replaces_every_placeholder_of_the_new_pipeline(tmp_path):
         check=True, capture_output=True,
     )  # fmt: skip
     bound = json.loads(
-        (out / "shape_generate_gate.DataPipeline" / "pipeline-content.json").read_text(encoding="utf-8")
+        (out / "shape_generate_gate.DataPipeline" / "pipeline-content.json").read_text(
+            encoding="utf-8"
+        )
     )
     assert "<<" not in json.dumps(bound)
     ids = {a["typeProperties"].get("notebookId") for a in bound["properties"]["activities"]}

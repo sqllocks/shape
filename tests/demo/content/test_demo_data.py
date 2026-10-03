@@ -272,7 +272,9 @@ def test_make_data_cli_writes_the_layout(tmp_path, capsys):
 
 def test_make_data_is_self_contained():
     """The generator needs no external checkout and imports nothing from benchmarks/."""
-    text = (DEMO / "make_data.py").read_text(encoding="utf-8") + (DEMO / "d2_table.py").read_text(encoding="utf-8")
+    text = (DEMO / "make_data.py").read_text(encoding="utf-8") + (DEMO / "d2_table.py").read_text(
+        encoding="utf-8"
+    )
     assert "benchmarks" not in text
     assert ("spin" + "dle") not in text.lower()
     assert "--" + "spin" not in text

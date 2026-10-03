@@ -343,7 +343,9 @@ def test_the_notebook_writes_every_table_as_delta_and_the_contract(session, adls
     engine = expected["customer"].to_pandas()
     assert customer["customer_id"].tolist() == engine["customer_id"].tolist()
     assert customer["first_name"].tolist() == engine["first_name"].tolist()
-    contract = json.loads((adls / "shape" / "generated" / "retail" / "contract.json").read_text(encoding="utf-8"))
+    contract = json.loads(
+        (adls / "shape" / "generated" / "retail" / "contract.json").read_text(encoding="utf-8")
+    )
     assert set(contract["tables"]) == set(expected.tables)
     assert contract["tables"]["customer"]["row_count"] == {"min": 1000, "max": 1000}
 
