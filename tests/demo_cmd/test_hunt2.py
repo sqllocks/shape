@@ -6,11 +6,10 @@ import json
 from pathlib import Path
 
 import pytest
+from test_run_local import session_of  # noqa: E402  (the helper of the sibling module)
 
 from shape.demo.connections import ConnectionProfile, check_profile
 from shape.demo.errors import DemoError
-from test_run_local import session_of  # noqa: E402  (the helper of the sibling module)
-
 
 # ---- #662: a relative local folder is recorded as an absolute path -----------------------------
 
@@ -67,7 +66,10 @@ def test_664_a_profile_with_a_secret_in_any_field_is_refused(field, value):
         ("eventhouse_uri", "https://h.kusto.windows.net"),
         ("warehouse_staging_path", "abfss://c@acct.dfs.core.windows.net/staging/path"),
         ("warehouse_staging_path", "onelake://ws/lh/Files/staging"),
-        ("sql_db_conn_str", "Server=tcp:x.database.windows.net;Database=d;Authentication=ActiveDirectoryDefault"),
+        (
+            "sql_db_conn_str",
+            "Server=tcp:x.database.windows.net;Database=d;Authentication=ActiveDirectoryDefault",
+        ),
         ("eventhouse_uri", "env://EVENTHOUSE_URI"),
         ("local_path", "/tmp/a?b"),
     ],
@@ -88,10 +90,9 @@ def people_csv(path: Path) -> Path:
         out.writerow(["id", "email", "ssn", "plan", "city"])
         for i in range(400):
             who = names[i % 4]
-            out.writerow(
-                [i, f"{who.lower()}@secretcorp.example", f"{100 + i % 800}-{10 + i % 80}-{1000 + i}",
-                 ["basic", "plus", "pro"][i % 3], ["Springfield", "Gotham"][i % 2]]
-            )  # fmt: skip
+            ssn = f"{100 + i % 800}-{10 + i % 80}-{1000 + i}"
+            plan, city = ["basic", "plus", "pro"][i % 3], ["Springfield", "Gotham"][i % 2]
+            out.writerow([i, f"{who.lower()}@secretcorp.example", ssn, plan, city])
     return path
 
 

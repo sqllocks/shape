@@ -79,6 +79,7 @@ class ConnectionProfile:
 def check_profile(profile: ConnectionProfile) -> ConnectionProfile:
     """``profile`` when it can be stored: a plain name, a known sign-in, no secret in it."""
     from shape.security import credrefs
+
     check_name(profile.name, "connection profile name")
     if profile.auth_method not in AUTH_METHODS:
         raise DemoError(

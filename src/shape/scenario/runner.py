@@ -466,7 +466,7 @@ def _run_gate(gate: str, generated: GenerationResult) -> tuple[bool, str]:
 def _key_type_problems(generated: GenerationResult) -> list[str]:
     """The relationships whose child key cannot be compared with its parent key (chaos can
     retype a key to text): that is an integrity failure, not a crash."""
-    import pyarrow as pa  # type: ignore[import-untyped]
+    import pyarrow as pa
     import pyarrow.compute as pc  # type: ignore[import-untyped]
 
     problems: list[str] = []
