@@ -179,3 +179,21 @@ def test_wide_digits_are_uniform_in_every_position() -> None:
 def test_zero_padded_hour_keys_are_read_as_hours() -> None:
     values = _times({"pattern": "seasonal", "profiles": {"hour_of_day": {"00": 1, "07": 1}}})
     assert {v.hour for v in values} == {0, 7}
+
+
+# ---- #135: an nth-weekday rule stays in its month ----------------------------------------------
+
+
+def test_nth_weekday_rule_has_no_date_in_a_month_without_that_weekday() -> None:
+    from datetime import date
+
+    import pytest
+
+    from shape.builtins.calendars import rule_from_spec
+
+    fifth_monday = rule_from_spec({"month": 2, "weekday": "mon", "n": 5})
+    assert fifth_monday.on(2021) is None  # February 2021 has four Mondays
+    assert fifth_monday.on(2016) == date(2016, 2, 29)
+    for n in (0, -2, 6):
+        with pytest.raises(ValueError, match="n must be"):
+            rule_from_spec({"month": 2, "weekday": "mon", "n": n})
