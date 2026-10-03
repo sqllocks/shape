@@ -127,8 +127,11 @@ commands (such as `fidelity`) are experimental and will change.
 A profile keeps real values from your data: up to the 500
 most frequent values per column with their counts, and each column's minimum and maximum.
 Treat a `.shape` file, its HTML report and its JSON summary as you would the source data,
-and don't share one from a sensitive table. A privacy-safe profile, with rare values
-suppressed, is planned.
+and don't share one from a sensitive table. A text column whose values are nearly all
+different (an email address, say) keeps only its minimum and maximum. To share a profile,
+write its safe form: `shape profile safe PROFILE.shape -o PROFILE.safe.json` suppresses rare
+values and replaces extremes with bounds, and `shape profile validate --safe` scans the result
+(`docs/PRIVACY_MODEL.md`).
 
 ## Design principles
 
