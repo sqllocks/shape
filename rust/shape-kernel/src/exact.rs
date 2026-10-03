@@ -507,7 +507,7 @@ fn value_counts_impl<O: OffsetSizeTrait>(a: &GenericStringArray<O>) -> (ArrayRef
 }
 
 /// `pyarrow.compute.value_counts` of a string array without nulls, as `(values, counts)`:
-/// distinct values in first-appearance order with their counts (uint64).
+/// distinct values in first-appearance order with their counts (int64).
 #[pyfunction]
 fn value_counts_str(py: Python<'_>, values: PyArray) -> PyResult<(PyArray, PyArray)> {
     let (arr, _) = values.into_inner();

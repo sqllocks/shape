@@ -43,3 +43,29 @@ def fit_distribution(sample: Any, full: Any | None = None) -> dict[str, Any]:
         except (_FitError, ValueError, FloatingPointError, ZeroDivisionError):
             score = None
     return {"distribution": name, "distribution_params": params, "fit_score": score}
+
+
+def lognorm_probe(data: Any, loc: float) -> tuple[float, float, float, float]:
+    """``(shape, scale, dL/dloc, loglik)`` of the lognormal objective at ``loc``, evaluated as
+    the reference ``_lognorm_fit`` evaluates them (twin of the native probe)."""
+    import pyarrow as pa  # type: ignore[import-untyped]
+
+    from shape.profile.reference.numerics import _lognorm_nnlf
+
+    arr = data if isinstance(data, pa.Array) else pa.array(data)
+    if not pa.types.is_float64(arr.type):
+        raise ValueError("lognorm_probe needs a float64 array")
+    x = np.asarray(arr.to_numpy(zero_copy_only=False), dtype=np.float64)
+    with np.errstate(all="ignore"):
+        logs = np.log(x - loc)
+        scale = np.exp(logs.mean())
+        shape = np.sqrt(np.mean(np.square(logs - np.log(scale))))
+        shifted = x - loc
+        dl = np.sum((1 + np.log(shifted / scale) / shape**2) / shifted)
+        ll = -_lognorm_nnlf((shape, loc, scale), x)
+    return float(shape), float(scale), float(dl), float(ll)
+
+
+def numpy_loops_mode() -> str:
+    """``"native"``: the twin evaluates ``log``/``exp`` with numpy's own loops."""
+    return "native"

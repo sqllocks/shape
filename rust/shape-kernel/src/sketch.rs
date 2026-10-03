@@ -1,9 +1,9 @@
 //! Bounded, mergeable sketches (T-14): HyperLogLog (p=14 by default, Ertl's improved
 //! estimator), KLL (k=200, deterministic compaction) and SpaceSaving (capacity 64).
 //!
-//! Each has a pure-Python twin in `src/shape/profile/sketches.py` that defines the exact
-//! semantics; the differential tests require identical state (HLL registers, KLL levels,
-//! SpaceSaving entries) for identical inputs.
+//! Each has a pure-Python twin in `src/shape/kernel/reference/pysketch.py` (wrapped by
+//! `reference/sketch.py`) that defines the exact semantics; the differential tests require
+//! identical state (HLL registers, KLL levels, SpaceSaving entries) for identical inputs.
 
 use std::collections::HashMap;
 

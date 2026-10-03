@@ -20,6 +20,8 @@ from .exact import temporal_counts as temporal_counts
 from .exact import top_indices as top_indices
 from .exact import value_counts_str as value_counts_str
 from .fit import fit_distribution as fit_distribution
+from .fit import lognorm_probe as lognorm_probe
+from .fit import numpy_loops_mode as numpy_loops_mode
 from .gen import alias_build as alias_build
 from .gen import alias_sample as alias_sample
 from .gen import day_weights as day_weights
