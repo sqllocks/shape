@@ -88,10 +88,59 @@ Not defects, recorded only:
   today.
 - `docs/SCENARIO_PACKS.md` describes `shape.scenario`, which is outside this area.
 
-## Phase 2 — issues
+## Phase 2 — issues and Phase 3 — fixes
 
-(filled in below as filed)
+Every defect above was filed in `sqllocks/shape` and fixed on this branch: a regression test that
+failed first (its failing output is in the test commit's message), then the fix.
 
-## Phase 3 — fixes
+| # | sev | issue | test commit | fix commit |
+|---|---|---|---|---|
+| 1 | high | #366 ADF gate scripts exit 1 / no gate.json on an unexpected error | c9331c4 | ab0fb1f |
+| 2 | medium | #367 profileLakehouseTable reads every row before the cell guard | 272235e | ba4b6a0 |
+| 3 | medium | #368 Census county/place records have no state | 2c7e709 | 0f3b202 |
+| 4 | medium | #369 test_domain on slotted dataclass rows | 6b65502 | a701c2d |
+| 5 | medium | #370 NaN / infinite location weights | 12f31fe | 93cbd7d |
+| 6 | medium | #371 redact keeps query-string credentials | eabf30c | cc46978 |
+| 7 | low | #372 pre-release newer than its release | 85a9154 | db90a06 |
+| 8 | low | #373 load_domain bare KeyError/TypeError | 8b2c779 | 5372af2 |
+| 9 | low | #374 location_from_spec edge cases | 7fff873 | 29129ab |
+| 10 | low | #375 plugins info: discovery record, duplicates | 915fa4d | cdb6cd8 |
+| 11 | low | #376 sys.exit("message") lost | 915fa4d | 98fd4c4 |
+| 12 | low | #378 kit --samples traceback | 915fa4d | cabcd39 |
+| 13 | low | #379 parse_run_folder raises on an impossible date | 8763fb9 | 7385750 |
+| 14 | low | #380 gazetteer whole-file sniff, unknown kind | 3cd563b | 929b735 |
+| 15 | low | #381 person seeds of opposite sign collide | 633d23e | 3777675 |
+| 16 | low | #382 scope_from_specs "weights" error | 19a0c4e | f525228 |
 
-(filled in below)
+Notes on the fixes:
+
+- #366: both scripts keep `GateError` messages as they were; any other exception becomes an error
+  gate `"<Type>: <message>"` with exit 2, and `main` maps a crash to exit 2. `load_settings` also
+  refuses a `typeProperties` that is not an object. The PF-04/PF-06 tests in `tests/demo/fabric`
+  (`test_adf.py`, `test_generate_adf.py`) still pass (48 passed).
+- #367: rows are read with `fetchmany(10_000)` when the cursor has it (DB-API), and the read stops
+  as soon as the first `maxRows` rows pass the limit; the row after `maxRows` (which only tells
+  that the table is larger) never counts against it. A cursor without `fetchmany` is read as before.
+- #381: outputs for a non-negative seed and a row in `[0, 2**64)` are unchanged (same seed
+  expression); only the colliding inputs take a text seed.
+- #374, #370: inputs that were valid give the same `Location`s and weights, so the address
+  strategy's output for valid scopes is unchanged.
+
+Improvements (behaviour-preserving, one commit each): tests for `uri_scheme`, `local_path`,
+`sinks_by_scheme` and the `require_scheme` messages (706ea59; `plugins/schemes.py`
+coverage 36% → 94%); unused `tempfile`/`Path` imports removed from the Synapse generate notebook and its
+builder (e3b3ab5; `tests/demo/fabric/test_generate_synapse.py` and `test_synapse.py`: 46 passed).
+
+## Left open, and why
+
+- `ruff check integrations` still reports 14 E501 lines in `integrations/**` builders and two
+  generated notebooks. `integrations/` is outside the T-27 lint scope, and the long lines are inside
+  generated notebook sources: shortening them changes the committed notebooks, which their
+  staleness tests compare with the builders. Not a defect; left for whoever next regenerates them.
+- The "not defects" list in the findings above (tuple constraints, no `format` key in the domain
+  JSON, `SHAPE_API = "1"`) needs a lead decision, not an audit fix.
+- No workflow change is needed for this lane.
+
+## Commands and results
+
+(filled in at the end of the lane)

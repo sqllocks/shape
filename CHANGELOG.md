@@ -330,3 +330,21 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Repository cleaned up for public release: removed internal milestone and
   qualification records.
 - README and changelog rewritten to describe the current state.
+
+### Fixed
+
+- Plugin framework, integrations, packs and location (audit lane AUD-pluginfw): the ADF Batch gate
+  scripts report any unexpected error as an error gate (exit 2, `gate.json` written) instead of
+  exit 1, which means a contract violation (#366); `profileLakehouseTable` stops reading a table as
+  soon as it passes the cell limit (#367); Census county and place gazetteer records carry their
+  state (#368); `shape.packs.test_domain` reads dataclass rows with slots (#369); a location weight
+  must be positive and finite (#370); `redact` hides credentials in a URI's query string (`sig`,
+  `password`, `AccountKey`, `SharedAccessKey`, tokens) (#371); a pre-release domain version sorts
+  before its release (#372); `load_domain` names the file and the problem (#373);
+  `location_from_spec` accepts ZIP+4 with a dash and refuses blank parts and non-ASCII digits (#374);
+  `shape plugins info` handles duplicate registrations and the discovery-error record (#375); a
+  plugin command's `sys.exit("message")` reaches stderr (#376); the kit's `--samples` is a usage
+  error when it cannot be resolved (#378); `parse_run_folder` returns `None` for an impossible
+  date (#379); `load_census_gazetteer` reads only the head of a file to find its delimiter and
+  refuses an unknown kind (#380); `generate_person` keeps seeds of opposite sign apart (#381);
+  `scope_from_specs` says how many weights and locations it got (#382).
