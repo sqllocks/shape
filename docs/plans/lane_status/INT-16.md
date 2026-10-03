@@ -58,7 +58,7 @@ include numpy 2.4.6, pandas 3.0.6 and **pyarrow 19.0.1**. `fabric-user-data-func
 | make check: `SHAPE_KERNEL=python pytest tests/kernel` (same) | 263 passed, **2 failed** (#76) |
 | `cargo fmt --check`, `cargo clippy -D warnings`, `cargo test` | clean, clean, 34 passed |
 | `SHAPE_KERNEL=rust pytest -m "not emulator and not live"` (includes `tests/demo/fabric` and `tests/demo/content`) | 8779 passed, **3 failed** (#76), 16 deselected (2033 s) |
-| `SHAPE_KERNEL=python pytest -m "not emulator and not live"` | PYTHON_RESULT |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live"` | 8779 passed, **3 failed** (#76, same three as rust), 16 deselected (6399 s) |
 | `pytest -m "not emulator and not live"` in each `plugins/*` (`SHAPE_DBT_PACKAGES_FILE` local, see below) | behavior 86, databases 155, dbt 115, domains 6, eventhubs 42, fabric 463 + **1 failed**, healthcare-codes 100, healthcare-standards 138, kafka 46, simulation 155 + **1 failed**, sqlserver 150 passed |
 | `fabric_commands_1to1/verify.py` | VERDICT: PASS (exit 0); before 9770d13: FAIL on `publish` manifest keys |
 | `fabric_commands_1to1/verify.py --negative-control` | with pyarrow 19.0.1: exit 2, "restoring the landing zone did not restore equality". Same exit 2 on `build/main-plan` in this venv. With pyarrow 25.0.1 put first on `PYTHONPATH` (`pip install --no-deps --target`): **exit 0, PASS**, which includes the three new manifest controls |
