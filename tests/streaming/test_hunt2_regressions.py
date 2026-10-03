@@ -180,3 +180,31 @@ def test_699_poison_stays_a_strict_prefix():
     for body in (b'{"a":1}', b'{"_shape_seq":3}', b'{"x":"\xc3\xa9","_shape_seq":10,"b":2}'):
         cut = poison_body(body)
         assert body.startswith(cut) and len(cut) < len(body)
+
+
+def test_707_a_window_ending_after_year_9999_is_written(tmp_path, capsys):
+    src = tmp_path / "far.jsonl"
+    src.write_text(
+        '{"_shape_event_time":"2024-01-01T00:00:00Z","v":1}\n'
+        '{"_shape_event_time":"9999-12-31T12:00:00Z","v":2}\n'
+    )
+    out = tmp_path / "w.jsonl"
+    args = ["stream-profile", str(src), "--window", "tumbling", "--size", "1d"]
+    assert main([*args, "--windows", str(out)]) == 0
+    windows = [json.loads(x) for x in out.read_text().splitlines()]
+    assert [w["rows"] for w in windows] == [1, 1]
+    last = windows[-1]
+    assert last["start"] == "9999-12-31T00:00:00+00:00"
+    assert last["end"] == "9999-12-31T23:59:59.999999+00:00"  # clamped text ...
+    assert last["end_us"] - last["start_us"] == 86_400_000_000  # ... exact integers
+
+
+def test_707_window_bounds_outside_the_calendar_do_not_raise():
+    from shape.streaming.runtime import WindowProfile
+
+    big = 2**62
+    w = WindowProfile("tumbling", -big, big, 0, {})
+    doc = w.to_dict()
+    assert doc["start_us"] == -big and doc["end_us"] == big
+    assert doc["start"].startswith("0001-01-01") and doc["end"].startswith("9999-12-31")
+    assert w.start_time.year == 1 and w.end_time.year == 9999
