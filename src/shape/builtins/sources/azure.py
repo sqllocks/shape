@@ -5,6 +5,9 @@ microsoft.com/<lakehouse>.Lakehouse/Files/<path>``) names one file, a glob, or a
 files of one kind (CSV, Parquet, JSONL or Arrow IPC). ``abfss://<container>/<path>`` works with
 an ``account_name`` option or a connection string (the Azurite emulator uses that form).
 
+The host must be an Azure Storage, OneLake or sovereign-cloud storage host; any other host is
+refused before a credential is attached.
+
 Authentication follows :mod:`._azure_auth`. Files stream through ``adlfs``; nothing is imported
 from an Azure package until a read needs it. Options: ``token``, ``credential``,
 ``account_key``, ``sas_token``, ``connection_string``, ``account_name``, ``batch_rows``, and
@@ -14,6 +17,7 @@ from an Azure package until a read needs it. Options: ``token``, ``credential``,
 from __future__ import annotations
 
 import os
+import re
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import PurePosixPath
@@ -34,6 +38,23 @@ DEFAULT_BATCH_ROWS = 65_536
 _GLOB = "*?["
 _COMPRESSION = {".gz": "gzip", ".bz2": "bz2", ".zst": "zstd", ".lz4": "lz4"}
 _ADLS_SUFFIX = ".dfs.core.windows.net"
+# Storage account endpoints (public, US Government and China clouds) and OneLake (global and
+# regional). A credential is only ever sent to one of these, never to a host a URI names.
+_STORAGE_HOST = re.compile(
+    r"(?:[a-z0-9]+\.(?:dfs|blob)\.core\.(?:windows\.net|usgovcloudapi\.net|chinacloudapi\.cn)"
+    r"|(?:[a-z0-9]+-)?onelake\.(?:dfs|blob)\.fabric\.microsoft\.com)",
+    re.IGNORECASE,
+)
+
+
+def check_host(host: str) -> None:
+    """``ValueError`` unless ``host`` is an Azure Storage, OneLake or sovereign-cloud host."""
+    if not _STORAGE_HOST.fullmatch(host):
+        raise ValueError(
+            f"{host!r} is not an Azure Storage or OneLake host: use "
+            "<account>.dfs.core.windows.net or onelake.dfs.fabric.microsoft.com "
+            "(or the US Government and China cloud equivalents)"
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,6 +82,8 @@ def parse(uri: str) -> Location:
     container, _, host = parsed.netloc.partition("@")
     if not container:
         raise ValueError(f"{uri!r} has no container (abfss://<container>[@<host>]/<path>)")
+    if host:
+        check_host(host)
     return Location(container, host or None, unquote(parsed.path).lstrip("/"))
 
 
@@ -68,6 +91,8 @@ def _filesystem(loc: Location, options: Mapping[str, Any]) -> Any:
     given = options.get("filesystem")
     if given is not None:
         return given
+    if loc.host:
+        check_host(loc.host)  # before any credential is resolved or attached
     resolved = auth.resolve(options)
     try:
         import adlfs
