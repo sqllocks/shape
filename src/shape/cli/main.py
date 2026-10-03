@@ -839,6 +839,9 @@ def _build_parser(plugin_commands=()):
         help="pretty-printed JSON with sorted keys, one value per line (git-diffable)",
     )
     gitcmds.add_parsers(sub)
+    from shape.cli import design as design_cmd
+
+    design_cmd.add_parsers(sub)
     fd = sub.add_parser(
         "from-ddl",
         help="read SQL CREATE TABLE DDL into a generation schema",
@@ -1236,6 +1239,10 @@ def _dispatch(argv):
         from shape.cli.transform import run as run_transform
 
         return _run(run_transform, a)
+    if a.cmd == "design":
+        from shape.cli.design import run as run_design
+
+        return _run(run_design, a)
     if a.cmd in ("cat", "git-setup"):
         from shape.cli.gitcmds import run as run_gitcmds
 

@@ -41,6 +41,9 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
 - `shape capture DATA.csv` is the older command: it reads CSV only and writes a **model**
   (JSON, or a model `.shape` with `-o OUT.shape`), which `shape query`, `shape compatibility` and
   `shape plan` read. It is not a second way to profile; use `shape profile` for that.
+- `shape design INPUT.json` reads a **design input** and writes DDL for a 3NF, star or snowflake
+  schema, after linting it; `shape design DATA.csv --from-data` builds a design input from data.
+  See [DESIGN.md](DESIGN.md).
 - `shape compatibility BEFORE AFTER` compares two Shape **models** (made by `shape capture` or
   written as model JSON), not profiles. Compare two profiles with `shape diff`.
 - `shape fidelity REFERENCE SYNTHETIC` compares data with data: CSV, Parquet, JSONL or a folder
