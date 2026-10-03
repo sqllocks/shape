@@ -583,6 +583,13 @@ def test_a_safe_profile_in_the_registry_is_refused(run, history, tmp_path):
     assert code == 2 and "safe" in err and "--allow-raw" in err
 
 
+def test_a_safe_profile_file_is_refused(run, history, tmp_path):
+    safe = tmp_path / "safe-2026-03-01.json"
+    assert main(["profile", "safe", str(history[0]), "-o", str(safe)]) == 0
+    code, _, err = run("publish-report", str(history[0]), str(safe), "-o", "o")
+    assert code == 2 and "safe" in err and "--allow-raw" in err and str(safe) in err
+
+
 @pytest.mark.parametrize(
     "argv",
     [

@@ -154,7 +154,11 @@ A measure is sliced by an attribute of its own table or of a table reached by fo
 relationships from the many side to the one side (an `order_line` measure by `customer.first_name`
 through `order`). The relationships of the model filter in one direction, so a measure of a parent
 table is not sliced by an attribute of its child, and a measure with two relationship paths to the
-slice is ambiguous: those pairs are left out and listed under `skipped` with the reason. In
+slice is ambiguous: those pairs are left out and listed under `skipped` with the reason, and
+`known-answer` prints the number of skipped pairs on stderr. With the exporter's
+default measures and slices most skipped pairs are one-direction ones: a measure of a parent table
+(`product_category`, `product`) sliced by an attribute of a child or of an unrelated table
+(`customer.first_name`). In
 `queries.dax` each measure is referenced by its table (`'item'[Revenue]`) and returned as
 `"item.Revenue"`, because two tables can hold a measure of one name (the exporter's defaults do:
 `Total Unit Price` of `product` and of `order_line`; give them distinct names with `--measures`

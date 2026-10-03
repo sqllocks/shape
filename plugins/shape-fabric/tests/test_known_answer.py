@@ -126,7 +126,10 @@ def test_a_measure_the_slice_cannot_filter_is_listed_as_skipped(run, tmp_path, s
     code, _, err = run(
         "known-answer", shop_file, "--measures", write_measures(tmp_path, doc), "-o", str(out)
     )
-    assert (code, err) == (0, "")
+    assert code == 0
+    assert err.strip() == (
+        "shape: 1 (measure, slice) pair(s) skipped; see `skipped` in answers.json"
+    )
     answers = answers_of(out)
     q = query(answers, "item.qty")
     assert "item.Items" in q["measures"] and "category.Categories" not in q["measures"]
@@ -234,8 +237,12 @@ def test_a_domain_works_and_an_unknown_one_exits_2(run, tmp_path):
     code, _, err = run(
         "known-answer", "retail", "--scale", "fabric_demo", "-o", str(tmp_path / "r")
     )
-    assert (code, err) == (0, "")
     doc = answers_of(tmp_path / "r")
+    # the stderr line carries the number of pairs left out of the answers
+    assert code == 0 and err == (
+        f"shape: {len(doc['skipped'])} (measure, slice) pair(s) skipped; "
+        "see `skipped` in answers.json\n"
+    )
     assert doc["source"]["domain"] == "retail"
     assert doc["tables"]["customer"] == 200
     # two tables hold a measure of one name; the ids (and the queries) keep them apart
@@ -472,8 +479,8 @@ def test_a_measure_with_two_relationship_paths_to_the_slice_is_skipped(run, tmp_
         "-o",
         str(out),
     )
-    assert (code, err) == (0, "")
     answers = answers_of(out)
+    assert code == 0 and err.startswith(f"shape: {len(answers['skipped'])} (measure, slice)")
     skipped = {s["measure"]: s["reason"] for s in answers["skipped"]}
     assert "item.Items" in skipped and "2 relationship paths" in skipped["item.Items"]
     assert "ratio" not in "".join(skipped) or "item.Revenue per Item" in skipped

@@ -287,6 +287,13 @@ def _run_known_answer(a: argparse.Namespace) -> int:
         )
     except ka.PlantError as exc:
         return _fail(str(exc), EXIT_FAILED)
+    skipped = built.answers.get("skipped") or []
+    if skipped:
+        print(
+            f"shape: {len(skipped)} (measure, slice) pair(s) skipped; "
+            "see `skipped` in answers.json",
+            file=sys.stderr,
+        )
     print(f"Shape v{_version()} — Known-answer dataset")
     print()
     print(f"  Domain:   {a.domain}")

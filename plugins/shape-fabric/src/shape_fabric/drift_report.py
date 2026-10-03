@@ -223,6 +223,14 @@ def file_sources(paths: Sequence[str]) -> list[Source]:
         if not path.is_file():
             raise KnownAnswerError(f"the profile {text} does not exist")
         data = path.read_bytes()
+        from shape.registry.local import is_raw_profile
+
+        if not is_raw_profile(data):
+            raise KnownAnswerError(
+                f"{text} is not a full profile (a safe profile holds too little to compare): the "
+                "drift report diffs full profiles, so commit raw profiles (`.shape` files or "
+                "`shape profile export` JSON; in a registry, `--allow-raw`)"
+            )
         out.append(
             Source(
                 label=path.stem,

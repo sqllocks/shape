@@ -17,7 +17,8 @@ It needs the `sqllocks-shape-fabric` plugin ([fabric-commands](plugins/fabric-co
 
 * **Files.** `PROFILE.shape...` in the order given, oldest first (a `shape profile export` JSON file
   works too). A run's date is the first `YYYY-MM-DD` in its file name (`orders-2026-03-06.shape`);
-  a name with no date gives a run with no date.
+  a name with no date gives a run with no date. Files must be raw profiles too: a safe profile
+  (`shape profile safe`) is refused with exit 2, naming the file.
 * **Registry.** `--registry NAME --registry-root DIR` reads the commits of `NAME` in a
   [`shape registry`](REGISTRY.md), oldest first. A commit's date is its `business_date` (`--business-date`
   when it was committed), else the day it was committed (UTC). `--since DATE` keeps the runs dated
