@@ -706,3 +706,63 @@ def test_a_self_reference_is_not_a_cycle() -> None:
     schema = GenSchema.from_dict(doc)
     assert not [i for i in schema.validate() if "cycle" in i.message]
     assert Engine(schema).dry_run().ok
+
+
+# ---- #737: generate-drift refuses a bad plan before writing any day ---------------------------
+
+_DRIFT_SCHEMA = {
+    "schema_version": 1,
+    "model": {"name": "d", "seed": 9},
+    "tables": {
+        "t": {
+            "name": "t",
+            "primary_key": ["id"],
+            "columns": {
+                "id": {"name": "id", "type": "integer", "generator": {"strategy": "sequence"}},
+                "x": {
+                    "name": "x",
+                    "type": "float",
+                    "nullable": True,
+                    "generator": {"strategy": "normal", "mean": 10, "stddev": 2},
+                },
+            },
+        }
+    },
+}
+
+
+def test_a_plan_that_fails_on_a_later_day_writes_nothing(tmp_path: Path) -> None:
+    from shape.generation.drift_plan import DriftPlan, DriftPlanError
+
+    plan = DriftPlan.from_dict(
+        {
+            "start": "2026-03-01",
+            "days": 4,
+            "events": [
+                {"kind": "null_rate", "table": "t", "column": "x", "start": 1, "to": 0.4},
+                {"kind": "distribution", "table": "t", "column": "x", "start": 2, "scale": 1.5},
+            ],
+        }
+    )
+    out = tmp_path / "gd"
+    with pytest.raises(DriftPlanError) as info:
+        plan.write(GenSchema.from_dict(_DRIFT_SCHEMA), out, row_counts={"t": 20}, fmt="csv")
+    written = sorted(str(p.relative_to(out)) for p in out.rglob("*") if p.is_file())
+    assert written == []
+    assert "'distribution' strategy" in str(info.value)
+
+
+def test_a_good_plan_still_writes_every_day_and_the_answer_key(tmp_path: Path) -> None:
+    from shape.generation.drift_plan import DriftPlan
+
+    plan = DriftPlan.from_dict(
+        {
+            "start": "2026-03-01",
+            "days": 3,
+            "events": [{"kind": "null_rate", "table": "t", "column": "x", "start": 1, "to": 0.4}],
+        }
+    )
+    plan.write(GenSchema.from_dict(_DRIFT_SCHEMA), tmp_path, row_counts={"t": 20}, fmt="csv")
+    assert sorted(p.name for p in tmp_path.iterdir()) == [
+        "2026-03-01", "2026-03-02", "2026-03-03", "_specs", "ground_truth.json"
+    ]  # fmt: skip
