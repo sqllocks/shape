@@ -63,9 +63,6 @@ class Storage:
             fs = self._fs[loc.host] = azure._filesystem(loc, self._options)
         return fs, loc.fs_path
 
-    def is_remote(self, path: str) -> bool:
-        return is_remote(path)
-
     def write(self, path: str, writer: Callable[[BinaryIO], None]) -> None:
         """Create ``path`` (and its folders) and let ``writer`` fill it; replaces a file."""
         if is_remote(path):

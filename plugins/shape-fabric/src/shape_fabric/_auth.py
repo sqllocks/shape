@@ -24,8 +24,6 @@ from .errors import AuthError
 SCOPE_STORAGE = "https://storage.azure.com/.default"
 SCOPE_SQL = "https://database.windows.net/.default"
 
-TokenSource = Callable[[], str | None]
-
 
 class StaticCredential:
     """An already-issued bearer token as a credential (it cannot refresh itself)."""
