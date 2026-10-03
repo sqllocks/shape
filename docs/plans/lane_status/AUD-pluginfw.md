@@ -143,4 +143,40 @@ builder (e3b3ab5; `tests/demo/fabric/test_generate_synapse.py` and `test_synapse
 
 ## Commands and results
 
-(filled in at the end of the lane)
+Environment: §1 setup (`pip install -e '.[dev,streaming,advanced]' -e plugins/shape-domains`,
+`tests/demo/fabric/requirements.txt`, unixODBC, the pinned Spindle at 422e78d). All run in this
+session on the final branch head.
+
+| Command | Result |
+|---|---|
+| `ruff check src tests plugins benchmarks/vs_spindle` | All checks passed |
+| `ruff format --check src tests plugins benchmarks/vs_spindle` | 1090 files already formatted |
+| `mypy` | no issues in 436 source files |
+| `python scripts/check_user_facing.py` (D-13) | clean |
+| `lint-imports` | 1 kept, 0 broken |
+| area tests with coverage (`tests/plugins tests/integrations tests/packs tests/location`) | 280 passed; total coverage of the four packages 80% → 89% |
+| `pytest tests/demo/fabric/test_adf.py tests/demo/fabric/test_generate_adf.py` | 48 passed |
+| `pytest tests/demo/fabric/test_generate_synapse.py tests/demo/fabric/test_synapse.py` | 46 passed |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live"` | 7134 passed, 2 skipped, 6 failed |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live"` | 7134 passed, 2 skipped, 6 failed (the same 6) |
+
+The 6 failures are not from this lane: each one fails the same way on `origin/build/main-plan`
+(a worktree of it, same venv, run in this session), and none is in this area:
+
+- `tests/demo_cmd/test_notebook_and_outputs.py` (2): the semantic model needs the `shape-fabric`
+  plugin, which this venv does not install (CI's test job does not either; the job that does is
+  the plugins job).
+- `tests/iss_gaps/test_landing_and_batches.py::test_file_sinks_take_path_template_and_batch_date`:
+  reading a hive-partitioned folder back adds an `ingest_date` dictionary column with this pyarrow.
+- `tests/kernel/test_hashing.py` (2): float16 with this pyarrow/numpy (`if_else` has no halffloat
+  kernel; `Expected np.float16 instance`).
+- `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references`:
+  passes alone (41 passed); in a full run an earlier, pre-existing test imports the Fabric SDK from
+  `tests/demo/fabric/requirements.txt`, which pulls in `azure.*`. The same ordering fails on the
+  base branch (`test_fabric_udf_helpers.py` then this file: 1 failed). This lane's new tests do not
+  import `azure` (102 passed with this file last).
+
+No equivalence verifier compares an output this lane changed: the verifiers under
+`benchmarks/vs_spindle` do not use `shape.location`, `shape.packs`, `redact` or the changed
+integration code paths, and the address strategy's output for valid scopes is unchanged.
+`$SPINDLE_ROOT` was not modified. No workflow file was edited. No PR was opened.
