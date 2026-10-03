@@ -91,14 +91,17 @@ def _load(path: str | os.PathLike[str]) -> Project:
     return load_project(path)
 
 
-def context(a: argparse.Namespace, hint: str | None = None) -> Context | None:
+def context(
+    a: argparse.Namespace, hint: str | None = None, *, source_flag: bool = True
+) -> Context | None:
     """The project for a command, or None when there is none (or ``--no-project``). ``hint`` is
     the name of the thing being worked on (a profile's name), used to pick a source when the
-    file has several and ``--source`` was not given."""
+    file has several and ``--source`` was not given. ``source_flag=False`` for a command whose
+    ``--source`` is not the project's (``shape verify --source DATA``)."""
     from shape.project import find_project
 
     given = getattr(a, "project", None)
-    named = getattr(a, "source", None)
+    named = getattr(a, "source", None) if source_flag else None
     if getattr(a, "no_project", False):
         if given or named:
             raise ValueError("--no-project cannot be combined with --project or --source")
