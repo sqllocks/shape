@@ -270,11 +270,14 @@ class TapeTransport:
             "body": readable_body(body.decode("utf-8", "replace")),
         }
 
+        failure: list[Exception] = []
+
         def produce() -> dict[str, Any]:
             assert self._inner is not None
             try:
                 status, resp_headers, data = self._inner(method, url, headers, body, timeout)
             except Exception as exc:
+                failure.append(exc)
                 return {"raises": type(exc).__name__, "message": str(exc)}
             data = _hide_vault_value(url, data)
             return {
@@ -284,11 +287,34 @@ class TapeTransport:
             }
 
         response = self.tape.step(request, produce if not self.tape.replaying else None)
+        if failure:
+            raise failure[0]  # recording: the code under test sees what it would without a tape
         if "raises" in response:
-            raise {"ConnectionError": ConnectionError, "TimeoutError": TimeoutError}.get(
-                response["raises"], RuntimeError
-            )(response.get("message", ""))
+            raise replayed_error(str(response["raises"]), str(response.get("message", "")))
         return int(response["status"]), dict(response["headers"]), response["body"].encode("utf-8")
+
+
+# Network errors a transport raises that are not builtins: replayed as OSError, as they are.
+_OS_ERRORS = frozenset(
+    {"URLError", "HTTPError", "gaierror", "herror", "SSLError", "SSLCertVerificationError"}
+)
+
+
+def replayed_error(name: str, message: str) -> Exception:
+    """The exception a recorded failure replays as: the builtin of that name (``OSError``,
+    ``ConnectionError``, ``TimeoutError``, ...), else a class of the recorded name under
+    ``OSError`` for a network error and ``RuntimeError`` otherwise, so that a handler and a
+    message naming the class see the same thing in both runs."""
+    import builtins
+
+    known = getattr(builtins, name, None)
+    if isinstance(known, type) and issubclass(known, Exception):
+        try:
+            return known(message)
+        except TypeError:
+            pass
+    base: type[Exception] = OSError if name in _OS_ERRORS else RuntimeError
+    return type(name, (base,), {})(message)
 
 
 def _hide_vault_value(url: str, data: bytes) -> bytes:
@@ -381,10 +407,20 @@ class TapeConnection:
         return _TapeCursor(self.tape, self._inner.cursor() if self._inner is not None else None)
 
     def _do(self, op: str, call: Callable[[], Any]) -> None:
-        self.tape.step(
-            {"op": op},
-            None if self.tape.replaying else (lambda: {"value": call()}),
-        )
+        failure: list[Exception] = []
+
+        def produce() -> dict[str, Any]:
+            try:
+                return {"value": call()}
+            except Exception as exc:
+                failure.append(exc)
+                return {"raises": type(exc).__name__, "message": str(exc)}
+
+        response = self.tape.step({"op": op}, None if self.tape.replaying else produce)
+        if failure:
+            raise failure[0]
+        if "raises" in response:
+            raise RuntimeError(response.get("message", response["raises"]))
 
     def commit(self) -> None:
         self._do("commit", lambda: self._inner.commit())
