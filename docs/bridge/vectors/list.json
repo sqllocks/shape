@@ -15,8 +15,129 @@
         "id": "domains",
         "ok": true,
         "result": {
-          "count": 1,
+          "count": 14,
           "domains": [
+            {
+              "description": "Capital Markets domain \u2014 3nf schema",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "capital_markets",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Education domain \u2014 3nf schema",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "education",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Financial services domain \u2014 3nf schema",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "financial",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Healthcare domain \u2014 3nf schema",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "healthcare",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Human resources domain \u2014 3nf schema",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "hr",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Insurance domain \u2014 3nf schema",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "insurance",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "IoT domain \u2014 3nf schema",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "iot",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Manufacturing domain \u2014 3nf schema",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "manufacturing",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Marketing domain \u2014 3nf schema",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "marketing",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Pulse rideshare \u2014 3NF schema",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "pulse",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Real estate domain \u2014 3nf schema",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "real_estate",
+              "profiles": [
+                "default"
+              ]
+            },
             {
               "description": "Retail domain \u2014 3nf schema",
               "modes": [
@@ -24,6 +145,28 @@
                 "star"
               ],
               "name": "retail",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Supply chain domain \u2014 3nf schema",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "supply_chain",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Telecom domain \u2014 3nf schema",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "telecom",
               "profiles": [
                 "default"
               ]
