@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from pathlib import Path
 
+import pytest
+
 from shape.integrations.fabric.run_folder import (
     claim_run_folder,
     parse_run_folder,
@@ -55,3 +57,11 @@ def test_unique_run_name_skips_taken_names():
         "20260930T120000123456Z_3"
     )
     assert unique_run_name("s/orders", set().__contains__, now=SECOND) == "20260930T120000123456Z"
+
+
+@pytest.mark.parametrize(
+    "name", ["20261340T000000Z", "20260230T000000Z", "20260930T250000Z", "20260930T126000Z_2"]
+)
+def test_an_impossible_date_is_not_a_run_folder(name):
+    """#379: a name of the right shape but an impossible date or time returns None."""
+    assert parse_run_folder(name) is None
