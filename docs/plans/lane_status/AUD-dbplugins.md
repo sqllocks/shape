@@ -66,3 +66,37 @@ Not filed (judgement calls or behaviour the docs state):
 - SCD2 and file drop: an entity named `../x` writes outside `base_path` (names come from the
   user's own schema).
 - Clickstream: `bot_fraction=0` with bots enabled still gives one bot session.
+
+## Left open, and why
+
+- **#339** (high): the fix is one constant, but `plugins/shape-databases/tests/test_credentials.py:94`
+  asserts the wrong scope and the lane may not change an existing test's expectation. The lead
+  changes `ENTRA_DB_SCOPE` to `https://ossrdbms-aad.database.windows.net/.default`, that
+  assertion, and `plugins/shape-databases/README.md` line 84.
+- **#556** (medium): the `financial`, `iot` and `pulse` domains are not in `shape-domains` on
+  build/main-plan; porting them is another lane's work (or the docs must say which domains ship).
+- The items under "Not filed" above.
+
+No `.github/workflows` change is needed.
+
+## Verification (this session, final tree; build/main-plan merged: already up to date at 5c91ea5)
+
+Environment: `~/.venvs/shape` with `pip install -e '.[dev,streaming,advanced]'` and the plugins
+editable; pinned baseline from `benchmarks/vs_spindle/setup_spindle.sh` (checkout untouched).
+
+| Command | Result |
+|---|---|
+| `ruff check src tests plugins benchmarks/vs_spindle` | All checks passed |
+| `ruff format --check src tests plugins benchmarks/vs_spindle` | 1090 files already formatted |
+| `mypy` (project config) and `mypy` on the four plugins' `src` | no issues (436 and 34 files) |
+| `vulture`, `lint-imports`, `check_conformance_coverage.py`, `check_plugin_skeletons.py`, `check_user_facing.py` | clean |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live" --ignore=tests/demo/fabric --ignore=tests/demo/content` (CI's main job) | 6830 passed, 2 failed (below) |
+| same with `SHAPE_KERNEL=python` | 6830 passed, 2 failed (below) |
+| the two failures, `tests/demo_cmd/test_notebook_and_outputs.py` (needs `sqllocks-shape-fabric`, which was not installed in that venv), re-run after `pip install -e plugins/shape-fabric` (with kafka, eventhubs) | 14 passed, both kernels |
+| `pytest -m "not emulator and not live"` on the four plugins' tests, both kernels | 543 passed each |
+| `db_1to1/verify.py` (after #340, #341, #342) | 12/12 cases match, exit 0 |
+| `simulation_1to1/verify_patterns.py` (after #413, #422, #433; per case after #417, #426, #437, #439) | OK, 0 failures, exit 0 |
+| `simulation_1to1/verify_files.py --case file_drop / scd2_file_drops / stream_emit hybrid / state_machine` (after #345, #431, #435, #441) | ALL PASSED, exit 0 |
+
+Coverage after the audit (plugins' own tests): shape-sqlserver `auth.py` and `sql.py` 100%;
+shape-domains `retail.py` covered by its own tests; shape-simulation `_tables.py` 99%.
