@@ -156,21 +156,56 @@ def calculate_row_counts(
     counts: dict[str, int] = dict(schema.generation.scales.get(schema.generation.scale, {}))
     for tname, rule in schema.generation.derived_counts.items():
         if "fixed" in rule:
-            if isinstance(rule["fixed"], int):
-                counts[tname] = rule["fixed"]
+            counts[tname] = _count(rule["fixed"], tname, "fixed")
         elif "per_parent" in rule:
             parent_rows = counts.get(rule["per_parent"], DEFAULT_ROWS)
-            counts[tname] = int(parent_rows * rule.get("ratio", rule.get("mean", 1.0)))
+            ratio = _number(rule.get("ratio", rule.get("mean", 1.0)), tname, "ratio")
+            counts[tname] = int(parent_rows * ratio)
         elif "per_year" in rule:
             span = schema.model.date_range
             if span:
-                years = int(span.get("end", "2025")[:4]) - int(span.get("start", "2022")[:4]) + 1
-                counts[tname] = rule["per_year"] * years
+                per_year = _count(rule["per_year"], tname, "per_year")
+                counts[tname] = per_year * _years(span, tname)
     if overrides:
-        counts.update(overrides)
+        for tname, rows in overrides.items():
+            counts[tname] = _count(rows, tname, "row count")
     for tname in schema.tables:
         counts.setdefault(tname, DEFAULT_ROWS)
     return counts
+
+
+def _count(value: Any, table: str, what: str) -> int:
+    """``value`` as a row count (a whole, non-negative number), else a schema error."""
+    if isinstance(value, bool) or not isinstance(value, int | float) or value != int(value):
+        raise ShapeSchemaError(f"table '{table}': {what} must be a whole number, not {value!r}")
+    if value < 0:
+        raise ShapeSchemaError(f"table '{table}': {what} must not be negative, not {value!r}")
+    return int(value)
+
+
+def _number(value: Any, table: str, what: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, int | float) or not value >= 0:
+        raise ShapeSchemaError(
+            f"table '{table}': {what} must be a non-negative number, not {value!r}"
+        )
+    return float(value)
+
+
+def _years(span: Mapping[str, Any], table: str) -> int:
+    """The calendar years ``model.date_range`` covers, both ends included."""
+    if "start" not in span or "end" not in span:
+        raise ShapeSchemaError(
+            f"table '{table}': per_year needs model.date_range with a start and an end"
+        )
+    try:
+        start, end = int(str(span["start"])[:4]), int(str(span["end"])[:4])
+    except ValueError:
+        raise ShapeSchemaError(
+            f"table '{table}': per_year needs ISO dates in model.date_range, got {dict(span)!r}"
+        ) from None
+    if end < start:
+        raise ShapeSchemaError(f"table '{table}': model.date_range ends before it starts")
+    return end - start + 1
 
 
 def _dependency_graph(schema: GenSchema) -> dict[str, set[str]]:

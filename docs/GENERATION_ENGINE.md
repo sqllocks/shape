@@ -30,7 +30,9 @@ domain plugin, a profile fit, a DDL file or a hand-written JSON file. It holds
   on each other. The engine generates, and returns, tables level by level.
 * **Row counts**: `calculate_row_counts(schema, overrides)`: the current preset, then `fixed`,
   `per_parent` x `ratio` and `per_year` counts in the order the schema lists them, then overrides,
-  then 100 for any table still without a count.
+  then 100 for any table still without a count. A count that is not a whole, non-negative number
+  (a `ratio` that is text or negative, an override of -5), or a `per_year` count without a
+  `date_range` start and end in order, is a `ShapeSchemaError` naming the table.
 * **Column order**: `order_columns(table)`: sequence and UUID primary keys, then foreign keys, then
   independent columns, then dependent ones (formula, lookup, derived, conditional, ...), then
   computed ones. A table's output columns come out in this order.
