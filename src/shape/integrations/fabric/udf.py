@@ -40,6 +40,7 @@ import pyarrow.parquet as pq  # type: ignore[import-untyped]
 import shape
 from shape.integrations.fabric import generation
 from shape.security.jsondepth import check_json_depth
+from shape.security.redact import redact_text
 
 __all__ = [
     "LAKEHOUSE_ALIAS",
@@ -96,7 +97,9 @@ UserThrownError: type[Exception] = _error_type()
 
 
 def _fail(message: str, **properties: Any) -> Exception:
-    return UserThrownError(message, json_safe(properties))
+    """The error the function's caller gets. Messages quote exceptions from storage and SQL
+    drivers, which can echo a SAS URL or a connection string, so the text is redacted."""
+    return UserThrownError(redact_text(message), json_safe(properties))
 
 
 def json_safe(obj: Any) -> Any:
