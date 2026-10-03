@@ -80,6 +80,7 @@ class ExcelSink:
         ``shape.builtins.sinks.workbook``); returns the sheet names, in table order."""
         from .workbook import write_workbook
 
+        require_scheme(self, uri)
         path = local_path(uri)
         sheets = write_workbook(path, tables, **options)
         return list(sheets.values())

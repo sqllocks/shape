@@ -70,6 +70,7 @@ class _FileSink:
         from shape.builtins.sinks._roll import RollingTableWriter
         from shape.io.store import LocalStore
 
+        require_scheme(self, uri)
         template = options.get("path_template") or DEFAULT_ROLL_TEMPLATE
         return RollingTableWriter(
             LocalStore(local_path(uri)), table, self, options, template=template
