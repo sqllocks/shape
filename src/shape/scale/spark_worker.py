@@ -99,7 +99,8 @@ def _chunk_batches(spec_json: str, table: str) -> Callable[[Iterator[Any]], Iter
             for index in batch.column(0).to_pylist():
                 start = index * size
                 if start < total:
-                    yield engine.generate_chunk(table, start, min(size, total - start), chunk=index)
+                    raw = engine.generate_chunk(table, start, min(size, total - start), chunk=index)
+                    yield engine.finalize(table, raw)  # the declared output types
 
     return run
 
@@ -133,7 +134,7 @@ def run_job(
         for table in spread:
             total = int(engine.row_counts[table])
             chunks = math.ceil(total / chunk_rows)
-            sample = engine.generate_chunk(table, 0, 0, chunk=0)
+            sample = engine.finalize(table, engine.generate_chunk(table, 0, 0, chunk=0))
             ids = spark.range(0, chunks, 1, chunks)
             frame = ids.mapInArrow(
                 _chunk_batches(broadcast.value, table), arrow_to_ddl(sample.schema)

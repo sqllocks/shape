@@ -53,7 +53,8 @@ def generate_chunk_file(
     from shape.plugins.host import default_host
 
     engine = _engine(spec)
-    batch = engine.generate_chunk(table, start, rows, chunk=start // int(spec["chunk_rows"]))
+    raw = engine.generate_chunk(table, start, rows, chunk=start // int(spec["chunk_rows"]))
+    batch = engine.finalize(table, raw)  # the declared output types, as every other path has
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + f".tmp{os.getpid()}")
     default_host().get("shape.sinks", "parquet").write(
