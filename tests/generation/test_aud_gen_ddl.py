@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from shape.generation.ddl import from_ddl
-from shape.generation.engine import Engine
+from shape.generation.engine import Engine, calculate_row_counts
 
 
 def test_declared_foreign_keys_match_tables_and_columns_whatever_their_case():
@@ -118,3 +118,15 @@ def test_composite_primary_key_columns_are_never_null(smart):
     res = Engine(schema).generate()
     assert res.tables["order_product"]["order_id"].null_count == 0
     assert res.tables["order_product"]["product_id"].null_count == 0
+
+
+def test_a_scale_override_sets_the_row_count_over_smart_inference():
+    # 176: -s medium:order=7777 wrote scales.medium.order, but smart inference's derived count
+    # (per_parent) took precedence: order got 25000 rows.
+    schema, _ = from_ddl(
+        "CREATE TABLE customer (id INT PRIMARY KEY, name VARCHAR(40));"
+        "CREATE TABLE orders (id INT PRIMARY KEY, customer_id INT REFERENCES customer(id), "
+        "total DECIMAL(10,2))",
+        scale="medium:customer=5000,orders=7777",
+    )
+    assert calculate_row_counts(schema) == {"customer": 5000, "orders": 7777}
