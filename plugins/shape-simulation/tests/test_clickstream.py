@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime as dt
 
 import pyarrow as pa
+import pytest
 from shape_simulation.clickstream_patterns import (
     ClickstreamConfig,
     ClickstreamResult,
@@ -153,3 +154,34 @@ def test_custom_pool_and_stages():
     )
     humans = [d for d in r.sessions.column("device_type").to_pylist() if d != "bot"]
     assert set(humans) == {"d1"}
+
+
+@pytest.mark.parametrize("pages", [0, -3])
+def test_bot_pages_per_session_below_one_is_refused_with_its_name(pages):
+    # Issue #426: bot_pages_per_session=0 crashed with an IndexError when the last session by
+    # time was a bot (exit 1 from shape simulate).
+    with pytest.raises(ValueError, match="bot_pages_per_session"):
+        ClickstreamSimulator(
+            ClickstreamConfig(users=2, bot_fraction=0.5, bot_pages_per_session=pages, seed=1)
+        ).run()
+
+
+def test_cli_refuses_zero_bot_pages_with_exit_2(capsys):
+    from shape.cli.main import main
+
+    code = main(
+        [
+            "simulate",
+            "clickstream",
+            "--set",
+            "users=2",
+            "--set",
+            "bot_fraction=0.5",
+            "--set",
+            "bot_pages_per_session=0",
+            "--seed",
+            "1",
+        ]
+    )
+    assert code == 2
+    assert "bot_pages_per_session" in capsys.readouterr().err
