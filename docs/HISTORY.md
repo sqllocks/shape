@@ -224,3 +224,23 @@ understands.
 - Bisect assumes the change persists; use `--verify-all` to check.
 - A `ramp` change builds up slowly: the first version that crosses the thresholds is reported, and
   the step before it may show no change at all.
+
+## How the specification is read
+
+Where the wording of the specification allows more than one reading, this is the one built:
+
+1. **Candidates.** A search range of *n* is *n* candidate versions after the good version (a
+   history of one version has nothing to compare). The bound is `ceil(log2(n)) + 2` versions tested.
+2. **`--coarse` cost.** It saves full per-version diffs, not profile reads: the result reports
+   `cost.full_profile_tests` (fewer than a plain bisect's) and `cost.versions_read` (not fewer).
+3. **Share-safe versions.** The message says to commit raw profiles with `--allow-raw`, and that
+   `--contract` needs raw profiles as well; it does not offer `--contract` as a way round.
+4. **`--json`** on `bisect` and `bisect layers` is a flag that prints the JSON on standard output
+   (as `shape project validate --json` does); it does not take a file path as `shape diff --json`
+   does.
+5. **`bisect layers` is routed before argument parsing** (as `shape profile merge` is), so a
+   registry directory literally named `layers` is written `./layers`.
+6. **Change points** in `timelapse` are decided against the previous frame that has the column,
+   with `shape diff` at the thresholds of the source; no threshold or default is changed here.
+7. **Layers.** A layer after the origin *persists* when a column changed at the origin is also
+   changed in it, and otherwise *disappears*; a layer where the change comes back persists.
