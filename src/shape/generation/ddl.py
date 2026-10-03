@@ -317,7 +317,6 @@ class DdlError(ShapeError):
 @dataclass
 class _ParsedColumn:
     name: str
-    raw_type: str
     base_type: str
     max_length: int | None = None
     precision: int | None = None
@@ -327,7 +326,6 @@ class _ParsedColumn:
     is_serial: bool = False
     is_auto_increment: bool = False
     is_primary_key: bool = False
-    default: str | None = None
     references: tuple[str, str] | None = None  # (parent table, parent column or "" for its key)
     values: list[str] | None = None  # the values of a MySQL ENUM('a', 'b')
 
@@ -548,13 +546,8 @@ class DdlParser:
         if values:
             base, max_length, precision, scale = "enum", None, None, None
         references = self._column_references(rest)
-        default = None
-        m = re.search(r"DEFAULT\s+(\S+)", rest, re.IGNORECASE)
-        if m:
-            default = m.group(1).strip("'\"(),")
         return _ParsedColumn(
             name=name,
-            raw_type=type_part.strip(),
             base_type=base,
             max_length=max_length,
             precision=precision,
@@ -564,7 +557,6 @@ class DdlParser:
             is_serial=base.lower() in _SERIAL_TYPES,
             is_auto_increment=is_auto,
             is_primary_key="PRIMARY KEY" in upper,
-            default=default,
             references=references,
             values=values or None,
         )
