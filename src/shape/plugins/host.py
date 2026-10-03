@@ -17,37 +17,50 @@ Lifecycle of a plugin:
    :class:`PluginLoadError` for that one plugin only; :meth:`PluginHost.try_get` returns
    ``None``. A plugin that failed is not retried until :meth:`PluginHost.reload`.
 
-Plugins are trusted, in-process code (D-09): the host checks compatibility, not safety.
+Plugins are trusted, in-process code (D-09): the host checks compatibility, not safety. An
+opt-in allow-list (``shape.plugins.trust``, W1-18) decides *before the import* which
+distributions may load; a plugin it refuses has ``status == "blocked"`` and is never imported.
 """
 
 from __future__ import annotations
 
 import importlib
+import os
 import threading
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from importlib import metadata
 from typing import Any
 
 from shape.errors import ShapeError
+from shape.plugins import trust
 from shape.plugins.api import v1
 
 HOST_API = v1.SHAPE_API
 _UNLOADED = "unloaded"
 _LOADED = "ok"
 _ERROR = "error"
+_BLOCKED = "blocked"
 
 
 class PluginLoadError(ShapeError):
     """One plugin could not be loaded. Never raised by discovery or listing."""
 
 
+class PluginBlockedError(PluginLoadError):
+    """The plugin allow-list does not permit this plugin; it was not imported. The message is
+    the whole explanation (the CLI prints it as it is)."""
+
+
 @dataclass(slots=True)
 class PluginRecord:
     """Everything the host knows about one registered plugin.
 
-    ``status`` is ``"unloaded"`` (discovered, not imported), ``"ok"`` or ``"error"``.
-    ``error`` holds ``"<ExceptionType>: <message>"`` when ``status == "error"``.
+    ``status`` is ``"unloaded"`` (discovered, not imported), ``"ok"``, ``"error"`` or
+    ``"blocked"`` (the allow-list refused it; never imported). ``error`` holds
+    ``"<ExceptionType>: <message>"`` when ``status == "error"`` and the reason when blocked;
+    ``blocked_kind`` is then ``"not_permitted"`` (not on the list) or ``"check_failed"`` (listed,
+    but its version, files or signature failed).
     ``api`` is the plugin module's declared ``SHAPE_API`` once known, else ``None``.
     ``source`` is the distribution name for an entry point, or ``"<registered>"``.
     ``obj`` is the live plugin object once loaded.
@@ -61,6 +74,7 @@ class PluginRecord:
     api: str | None = None
     error: str | None = None
     obj: Any = None
+    blocked_kind: str | None = None
 
     def as_dict(self) -> dict[str, Any]:
         """JSON-safe view (never includes the live object)."""
@@ -115,7 +129,18 @@ class PluginHost:
     on first use; call :meth:`reload` to repeat it.
     """
 
-    def __init__(self, entry_points: EntryPointsFn | None = None) -> None:
+    def __init__(
+        self,
+        entry_points: EntryPointsFn | None = None,
+        *,
+        allowlist: str | os.PathLike[str] | None = None,
+        project_config: Mapping[str, Any] | None = None,
+    ) -> None:
+        # The allow-list is ``allowlist``, else SHAPE_PLUGIN_ALLOWLIST, else ``plugins.allowlist``
+        # of ``project_config`` (the parsed shape.yml); with none of them nothing is checked.
+        self._allowlist_arg = None if allowlist is None else os.fspath(allowlist)
+        self._project_config = project_config
+        self._enforcer: trust.Enforcer | None = None
         self._entry_points = entry_points or _installed_entry_points
         self._records: dict[tuple[str, str], PluginRecord] = {}
         self._unkeyed: list[PluginRecord] = []
@@ -129,6 +154,7 @@ class PluginHost:
             if self._discovered:
                 return
             self._discovered = True
+            self._enforcer = self._resolve_enforcer()
             try:
                 eps = sorted(self._entry_points(), key=lambda e: (e.group, e.name, e.value))
             except Exception as exc:  # broken metadata must not take the host down
@@ -163,7 +189,40 @@ class PluginHost:
                         )
                     )
                     continue
-                self._records[key] = PluginRecord(ep.group, ep.name, ep.value, source)
+                rec = PluginRecord(ep.group, ep.name, ep.value, source)
+                self._records[key] = rec
+                self._enforce(rec, dist)
+
+    def _resolve_enforcer(self) -> trust.Enforcer | None:
+        try:
+            path = self._allowlist_arg or trust.resolve_allowlist_path(project=self._project_config)
+        except trust.AllowlistError as exc:
+            return trust.Enforcer(None, f"the allow-list cannot be used: {exc}")
+        return trust.make_enforcer(path)
+
+    def _enforce(self, rec: PluginRecord, dist: Any) -> None:
+        """Apply the allow-list to a discovered entry point. Core's own entry points are built-ins
+        and always allowed. Nothing here imports the plugin."""
+        if self._enforcer is None or trust.is_core(rec.source):
+            return
+        decision = self._enforcer.decide(rec.group, rec.name, dist, rec.source)
+        if decision.reason is not None:
+            rec.status = _BLOCKED
+            rec.error = decision.reason
+            rec.blocked_kind = decision.kind
+
+    @property
+    def allowlist_active(self) -> bool:
+        """True when an allow-list is in force (even one that cannot be read, which blocks all)."""
+        self._discover()
+        return self._enforcer is not None
+
+    @property
+    def allowlist(self) -> trust.Allowlist | None:
+        """The allow-list in force, or ``None`` (none configured, or unreadable: see
+        :attr:`allowlist_active`)."""
+        self._discover()
+        return self._enforcer.allowlist if self._enforcer is not None else None
 
     def register(
         self, group: str, name: str, obj: Any, *, api: str = HOST_API, source: str = "<registered>"
@@ -189,6 +248,7 @@ class PluginHost:
         with self._lock:
             self._records.clear()
             self._unkeyed.clear()
+            self._enforcer = None
             self._discovered = False
 
     # -- queries (never import a plugin) --------------------------------------------------
@@ -225,6 +285,8 @@ class PluginHost:
             rec = self._records.get((group, name))
             if rec is None:
                 raise KeyError(f"no plugin {name!r} in group {group}")
+            if rec.status == _BLOCKED:
+                raise PluginBlockedError(rec.error or f"plugin {group}:{name} is blocked")
             if rec.status == _ERROR:
                 raise PluginLoadError(f"plugin {group}:{name} failed to load: {rec.error}")
             if rec.status == _LOADED:

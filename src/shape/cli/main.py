@@ -854,16 +854,23 @@ def _cmd_from_ddl(a):
 
 
 def _cmd_plugins(a):
-    """``shape plugins <sub>``: list and info inspect; doctor exits 0 when every plugin loads."""
+    """``shape plugins <sub>``: list and info inspect; doctor exits 0 when every plugin loads;
+    sign, verify and allowlist init are the allow-list and signature tools (W1-18)."""
     from shape.plugins import cli as plugin_cli
     from shape.plugins.doctor import diagnose, format_report
     from shape.plugins.host import default_host
 
+    if a.plugins_cmd == "sign":  # a wheel on disk: no plugin is discovered, none imported
+        return plugin_cli.cmd_sign(a, _private_key(a.key, a))
+    if a.plugins_cmd == "verify":
+        return plugin_cli.cmd_verify(a)
     host = default_host()
     if a.plugins_cmd == "list":
         return plugin_cli.cmd_list(host, a)
     if a.plugins_cmd == "info":
         return plugin_cli.cmd_info(host, a)
+    if a.plugins_cmd == "allowlist":
+        return plugin_cli.cmd_allowlist_init(host, a)
     report = diagnose(host)
     if a.json:
         _dump(report)
@@ -1013,6 +1020,48 @@ def _build_parser(plugin_commands=()):
     pli.add_argument("--json", action="store_true", help="print the description as JSON")
     pld = pls.add_parser("doctor", help="load every plugin and report failures")
     pld.add_argument("--json", action="store_true", help="print the report as JSON")
+    plsg = pls.add_parser(
+        "sign",
+        help="sign a plugin wheel (adds shape-plugin.sig and updates its RECORD)",
+        description="Sign a plugin wheel with an Ed25519 key (needs the [sign] extra). "
+        "The signature covers the wheel's file list; `require_signature` in a plugin "
+        "allow-list checks it at load.",
+    )
+    plsg.add_argument("wheel", metavar="WHEEL")
+    plsg.add_argument("--key", required=True, metavar="KEY", help=_KEY_HELP)
+    plsg.add_argument(
+        "-o", "--output", metavar="OUT", help="write the signed wheel here (default: in place)"
+    )
+    _add_passphrase_args(plsg)
+    plv = pls.add_parser(
+        "verify",
+        help="check a plugin's signature and files (exit 0 valid, 1 missing or invalid)",
+    )
+    plv.add_argument(
+        "target", metavar="DIST_OR_WHEEL", help="an installed distribution or a .whl file"
+    )
+    plv.add_argument(
+        "--key",
+        metavar="PUBLIC.pub",
+        help="the trusted public key (default: trusted_keys of the active allow-list)",
+    )
+    plv.add_argument("--json", action="store_true", help="print the result as JSON")
+    pla = pls.add_parser("allowlist", help="manage the plugin allow-list")
+    plas = pla.add_subparsers(dest="allowlist_cmd", required=True)
+    plai = plas.add_parser(
+        "init",
+        help="write an allow-list for the plugins installed now (imports none; never overwrites)",
+    )
+    plai.add_argument(
+        "-o",
+        "--output",
+        metavar="PATH",
+        help="the file to write (default: shape-plugin-allowlist.json)",
+    )
+    plai.add_argument(
+        "--pin-hashes", action="store_true", help="also pin the sha256 of each RECORD"
+    )
+    plai.add_argument("--json", action="store_true", help="print a summary as JSON")
     c = sub.add_parser(
         "capture",
         help="write a Shape model of a table (for `query`, `compatibility`, `plan`); "

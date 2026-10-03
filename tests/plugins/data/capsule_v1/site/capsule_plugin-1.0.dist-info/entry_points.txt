@@ -1,0 +1,2 @@
+[shape.detectors]
+one = capsule_mod:Det
