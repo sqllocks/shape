@@ -479,3 +479,16 @@ def test_a_cancel_from_another_process_stops_the_run_between_chunks(tmp_path):
     assert final["status"] == "cancelled"
     assert len(steps) < 200
     assert JobStore(tmp_path).get(job["job_id"]).status == "cancelled"
+
+
+@pytest.mark.parametrize(
+    "content", ["{}", "[]", '"text"', '{"job_id": "other-1", "kind": "local"}', '{"job_id": 5}']
+)
+def test_a_malformed_job_file_does_not_break_the_list(tmp_path, content):
+    # Regression #488: JobRecord.from_dict raised TypeError/AttributeError out of list().
+    store = JobStore(tmp_path)
+    good = store.put(JobRecord("local-good", "local"))
+    (tmp_path / "local-bad.json").write_text(content, encoding="utf-8")
+    assert [r.job_id for r in JobStore(tmp_path).list()] == [good.job_id]
+    with pytest.raises(ValueError, match="local-bad"):
+        JobStore(tmp_path).get("local-bad")
