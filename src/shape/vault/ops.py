@@ -13,7 +13,7 @@ import hashlib
 import os
 import re
 import stat
-import subprocess
+import subprocess  # nosec B404
 import tempfile
 from collections.abc import Iterable
 from pathlib import Path
@@ -117,8 +117,9 @@ def read_vault_bytes(path: str | os.PathLike[str]) -> bytes:
 
 def _git(args: list[str], cwd: Path) -> subprocess.CompletedProcess[bytes] | None:
     try:
-        return subprocess.run(  # noqa: S603 - fixed argument list, no shell
-            ["git", *args],  # noqa: S607
+        # only `git`, with an argument list of our own and no shell; a path is passed as data
+        return subprocess.run(  # nosec B603 B607
+            ["git", *args],
             cwd=cwd,
             capture_output=True,
             timeout=20,

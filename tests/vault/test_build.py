@@ -267,3 +267,26 @@ def test_git_setup_and_the_gitignore_line(tmp_path):
     (tmp_path / ".gitignore").write_text("build/\n")
     gitcmds.git_setup(ns)
     assert (tmp_path / ".gitignore").read_text().splitlines() == ["build/", "*.shapevault"]
+
+
+def test_a_multi_table_profile_gets_one_entry_per_withheld_column(tmp_path, kek):
+    a, b = tmp_path / "a.csv", tmp_path / "b.csv"
+    rng = random.Random(3)
+    a.write_text(
+        "id,kind\n"
+        + "\n".join(f"{i},{rng.choice(['x'] * 8 + ['y'] * 3)}" for i in range(200))
+        + "\nz1,RARE-A\n"
+    )
+    b.write_text("id,tag\n" + "\n".join(f"{i},{'t' if i % 2 else 'u'}" for i in range(200)) + "\n")
+    prof = shape.profile({"a": str(a), "b": str(b)})
+    out, vault = tmp_path / "m.shape", tmp_path / "m.shapevault"
+    shape.save(prof, out, vault=vault, vault_policy=_policy(default="categories"), kek=kek)
+    cols = {c["column"] for c in inspect_vault(vault.read_bytes())["columns"]}
+    assert "a.kind" in cols and "b.tag" not in cols  # b.tag is released in full: nothing to vault
+    assert RARE_A.encode() not in out.read_bytes()
+    assert RARE_A.encode() not in vault.read_bytes()
+    payload = open_vault(vault.read_bytes(), kek).columns["a.kind"].payload
+    assert RARE_A in {v for v, _ in payload["enum_values"] + payload["value_counts_ext"]}
+
+
+RARE_A = "RARE-A"

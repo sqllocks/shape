@@ -293,3 +293,153 @@ def test_the_shape_entry_point_routes_vault(tmp_path):
         check=False,
     )
     assert out.returncode == 0 and (tmp_path / "k").exists()
+
+
+TAMPER_PATHS = [
+    ("vault_id",),
+    ("profile_content_id",),
+    ("kek_id",),
+    ("wrapped_key", "nonce"),
+    ("wrapped_key", "ciphertext"),
+    ("columns", "orders.status", "nonce"),
+    ("columns", "orders.status", "ciphertext"),
+    ("columns", "orders.amount", "ciphertext"),
+]
+
+
+def _flip_one(text: str) -> str:
+    i = len(text) // 2
+    return text[:i] + ("0" if text[i] != "0" else "1") + text[i + 1 :]
+
+
+@pytest.mark.parametrize("path", TAMPER_PATHS, ids=lambda p: ".".join(p))
+def test_a_changed_part_exits_1_and_prints_no_value_even_when_the_profile_names_it(
+    capsys, pair, tmp_path, kek, path
+):
+    """The hash check is not the only defence: a profile rewritten to name the changed vault still
+    fails authentication (exit 1)."""
+    from shape.vault.ops import attach_vault
+
+    shape_path, vault = pair
+    doc = json.loads(vault.read_bytes())
+    node = doc
+    for key in path[:-1]:
+        node = node[key]
+    node[path[-1]] = _flip_one(node[path[-1]])
+    raw = json.dumps(doc).encode()
+    changed = tmp_path / "changed.shapevault"
+    changed.write_bytes(raw)
+    # 1. the profile still names the original: hash mismatch
+    code, out, err = run(capsys, "verify", str(changed), "--shape", str(shape_path))
+    assert code == 1
+    # 2. the profile now names the changed file (hash and id fixed up): authentication fails
+    forged = tmp_path / "forged.shape"
+    shutil.copy(shape_path, forged)
+    if path != ("vault_id",) and path != ("profile_content_id",):
+        attach_vault(forged, raw)
+        code, out, err = run(
+            capsys,
+            "verify",
+            str(changed),
+            "--shape",
+            str(forged),
+            "--kek",
+            kek_ref(tmp_path, kek),
+        )
+        assert code == 1
+    for text in (out, err):
+        assert not any(p in text for p in PLAIN)
+
+
+def test_two_column_ciphertexts_swapped_exits_1(capsys, pair, tmp_path, kek):
+    from shape.vault.ops import attach_vault
+
+    shape_path, vault = pair
+    doc = json.loads(vault.read_bytes())
+    a, b = doc["columns"]["orders.status"], doc["columns"]["orders.amount"]
+    a["ciphertext"], b["ciphertext"] = b["ciphertext"], a["ciphertext"]
+    a["nonce"], b["nonce"] = b["nonce"], a["nonce"]
+    swapped = tmp_path / "swapped.shapevault"
+    swapped.write_text(json.dumps(doc))
+    forged = tmp_path / "forged.shape"
+    shutil.copy(shape_path, forged)
+    attach_vault(forged, swapped.read_bytes())
+    code, out, err = run(
+        capsys, "verify", str(swapped), "--shape", str(forged), "--kek", kek_ref(tmp_path, kek)
+    )
+    assert code == 1 and not any(p in out + err for p in PLAIN)
+
+
+def test_a_vault_from_another_profile_exits_1(capsys, pair, tmp_path, kek):
+    from shape.vault.format import seal_vault
+
+    shape_path, vault = pair
+    other = tmp_path / "other.shapevault"
+    other.write_bytes(seal_vault({"t.c": ("categories", {"x": 1})}, "cd" * 32, kek))
+    code, out, err = run(
+        capsys, "verify", str(other), "--shape", str(shape_path), "--kek", kek_ref(tmp_path, kek)
+    )
+    assert code == 1 and not any(p in out + err for p in PLAIN)
+
+
+def test_profile_sign_covers_the_vault_hash(capsys, tmp_path, kek):
+    """`shape profile --vault ... --sign KEY` signs after the vault is written, so the signature
+    covers its hash; swapping the vault then fails `--verify`."""
+    from shape.artifact.signing import write_keypair
+    from shape.cli.main import main as shape_main
+    from shape.vault.format import seal_vault
+    from shape.vault.ops import write_file
+
+    src = tmp_path / "t.csv"
+    src.write_text("id,status\n" + "\n".join(f"{i},{'ab'[i % 2]}" for i in range(40)) + "\n")
+    key = kek_ref(tmp_path, kek)
+    policy = tmp_path / "p.json"
+    policy.write_text(json.dumps({"format": "shape-vault-policy", "version": 1, "default": "all"}))
+    priv, pub = write_keypair(tmp_path / "sk", unencrypted=True)
+    code = shape_main(
+        [
+            "profile",
+            str(src),
+            "-o",
+            str(tmp_path / "t.shape"),
+            "--vault",
+            str(tmp_path / "t.shapevault"),
+            "--vault-policy",
+            str(policy),
+            "--kek",
+            key,
+            "--sign",
+            str(priv),
+        ]
+    )
+    capsys.readouterr()
+    assert code == 0
+    code, out, _ = run(
+        capsys,
+        "verify",
+        str(tmp_path / "t.shapevault"),
+        "--shape",
+        str(tmp_path / "t.shape"),
+        "--kek",
+        key,
+        "--verify",
+        str(pub),
+    )
+    assert code == 0
+    from shape.artifact.io import read_artifact
+
+    manifest, _ = read_artifact(tmp_path / "t.shape", notice=False)
+    other = tmp_path / "swap.shapevault"
+    write_file(other, seal_vault({}, manifest["shape_content_id"], kek))
+    code, _, _ = run(
+        capsys,
+        "verify",
+        str(other),
+        "--shape",
+        str(tmp_path / "t.shape"),
+        "--kek",
+        key,
+        "--verify",
+        str(pub),
+    )
+    assert code == 1
