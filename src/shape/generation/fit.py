@@ -323,9 +323,15 @@ def _plan_column(
         )
     mark(("name", "dtype", "is_primary_key", "is_foreign_key", "fk_ref_table"), _P, "kept as it is")
     mark(
-        ("null_count", "null_rate"),
+        ("null_rate",),
         _P,
         "each row is null with the column's null rate, independently of the other columns",
+    )
+    mark(
+        ("null_count",),
+        _P if rows_match else _A,
+        "each row is null with the column's null rate, independently of the other columns"
+        + ("" if rows_match else "; the count scales with the generated row count"),
     )
 
     if kind == "sequence":
@@ -610,7 +616,7 @@ def fit_schema(
                     "source does not have",
                 )
             )
-        items.extend(_table_items(tname, tp))
+        items.extend(_table_items(tname, tp, parent_scale[tname]))
 
     # the copula: calibrated correlations between the numeric, non-key columns
     pairs_by_table: dict[str, list[list[Any]]] = {}
@@ -713,11 +719,14 @@ def _joint_tables(
     return items
 
 
-def _table_items(tname: str, tp: TableProfile) -> list[PlanItem]:
+def _table_items(tname: str, tp: TableProfile, rows: int | None = None) -> list[PlanItem]:
+    count = (
+        PlanItem(f"{tname}.row_count", _P, "the `profile` scale preset has the profile's row count")
+        if rows is None or rows == tp.row_count
+        else PlanItem(f"{tname}.row_count", _A, f"generated at {rows} rows, not the profile's")
+    )
     out = [
-        PlanItem(
-            f"{tname}.row_count", _P, "the `profile` scale preset has the profile's row count"
-        ),
+        count,
         PlanItem(f"{tname}.primary_key", _P, "generated as a unique key"),
     ]
     if tp.detected_fks:
