@@ -5,11 +5,13 @@ the form Fabric User Data Functions need for a private library (platform indepen
 28.6 MB), and it is the form the Fabric notebook and Environment install too.
 
 The wheel is written directly (a wheel is a zip file plus ``*.dist-info``), so the build needs
-nothing but the standard library. Its metadata is generated here rather than taken from
-``pyproject.toml``: the demo wheel declares ``numpy>=2.0,<3`` and ``pyarrow>=14.0.1`` so that the
-libraries preinstalled in Fabric are accepted, and it does not require ``cryptography``,
-``pydantic`` or ``typing-extensions`` (``import shape`` does not use them). The stricter pins in
-``pyproject.toml`` return with plan work package P0-05.
+nothing but the standard library. Its METADATA and ``entry_points.txt`` are derived from
+``pyproject.toml`` exactly as maturin derives them for the platform wheels and the sdist: the same
+``Requires-Dist``, ``Provides-Extra`` (every extra), project URLs, licence fields and entry points.
+Installers assume every distribution of one version has the same metadata (T-29 ships both forms
+under one version), so nothing here may differ from the platform wheels. Core dependencies are
+``numpy>=2.0,<3`` and ``pyarrow>=14.0.1`` (T-07), so the libraries preinstalled in Fabric are
+accepted.
 
     python scripts/build_pure_wheel.py                # build into dist/, run the self-checks
     python scripts/build_pure_wheel.py --verify       # also install it in a fresh venv and test
@@ -23,6 +25,7 @@ from __future__ import annotations
 import argparse
 import base64
 import hashlib
+import re
 import subprocess
 import sys
 import tempfile
@@ -48,7 +51,8 @@ FORBIDDEN_SUFFIXES = {
     ".pyx",
     ".rs",
 }
-DEMO_REQUIRES = ["numpy>=2.0,<3", "pyarrow>=14.0.1", "tzdata; sys_platform == 'win32'"]
+# maturin's content type for a Markdown README (the platform wheels and the sdist carry this one)
+DESCRIPTION_CONTENT_TYPE = "text/markdown; charset=UTF-8; variant=GFM"
 # packages the demo wheel is tested against in a clean environment (DM-03)
 VERIFY_PACKAGES = ["numpy", "pyarrow", "pandas", "deltalake", "pytest"]
 FIXED_TIME = (2026, 1, 1, 0, 0, 0)  # reproducible archives
@@ -84,6 +88,23 @@ def _license_files(project: dict) -> list[str]:
     return [f for f in project.get("license-files", ["LICENSE"]) if (ROOT / f).is_file()]
 
 
+def _requires_dist(project: dict) -> list[str]:
+    """``Requires-Dist`` values: core dependencies, then each extra's (as maturin writes them)."""
+    lines = list(project.get("dependencies", []))
+    for extra, reqs in sorted(project.get("optional-dependencies", {}).items()):
+        for text in reqs:
+            req, _, marker = text.partition(";")
+            marker = marker.strip()
+            when = f"({marker}) and extra == '{extra}'" if marker else f"extra == '{extra}'"
+            lines.append(f"{req.strip()}; {when}")
+    return lines
+
+
+def _normalized(requirement: str) -> str:
+    """Spelling-independent form of a requirement line (quotes and spacing around ``;``)."""
+    return re.sub(r"\s*;\s*", "; ", requirement.replace('"', "'")).strip()
+
+
 def _metadata(project: dict, version: str) -> str:
     lines = [
         "Metadata-Version: 2.4",
@@ -94,21 +115,29 @@ def _metadata(project: dict, version: str) -> str:
         f"License-Expression: {_license_expression(project)}",
     ]
     lines += [f"License-File: {name}" for name in _license_files(project)]
+    lines += [f"Classifier: {c}" for c in project.get("classifiers", [])]
     for label, url in project.get("urls", {}).items():
         lines.append(f"Project-URL: {label}, {url}")
-    lines += [f"Requires-Dist: {req}" for req in DEMO_REQUIRES]
-    for extra, reqs in project.get("optional-dependencies", {}).items():
-        if extra in {"delta", "pandas", "yaml"}:
-            lines.append(f"Provides-Extra: {extra}")
-            lines += [f"Requires-Dist: {req}; extra == '{extra}'" for req in reqs]
-    lines.append("Classifier: Programming Language :: Python :: 3")
-    lines.append("Classifier: Operating System :: OS Independent")
+    lines += [f"Requires-Dist: {req}" for req in _requires_dist(project)]
+    lines += [f"Provides-Extra: {e}" for e in sorted(project.get("optional-dependencies", {}))]
     readme = ROOT / "README.md"
     body = ""
     if readme.is_file():
-        lines.append("Description-Content-Type: text/markdown")
+        lines.append(f"Description-Content-Type: {DESCRIPTION_CONTENT_TYPE}")
         body = readme.read_text(encoding="utf-8")
-    return "\n".join(lines) + "\n\n" + body
+    return "\n".join(lines) + "\n\n" + body + "\n"
+
+
+def _entry_points(project: dict) -> str:
+    """``entry_points.txt``: console scripts, then every ``shape.*`` group of pyproject.toml."""
+    groups: dict[str, dict[str, str]] = {}
+    if project.get("scripts"):
+        groups["console_scripts"] = project["scripts"]
+    groups.update(project.get("entry-points", {}))
+    return "".join(
+        f"[{group}]\n" + "".join(f"{k} = {v}\n" for k, v in eps.items()) + "\n"
+        for group, eps in groups.items()
+    )
 
 
 def _record_hash(data: bytes) -> str:
@@ -131,10 +160,9 @@ def build(out_dir: Path, version: str | None = None) -> Path:
         f"Root-Is-Purelib: true\nTag: {TAG}\n"
     )
     entries.append((f"{dist_info}/WHEEL", wheel_meta.encode("utf-8")))
-    scripts = project.get("scripts", {})
-    if scripts:
-        console = "[console_scripts]\n" + "".join(f"{k} = {v}\n" for k, v in scripts.items())
-        entries.append((f"{dist_info}/entry_points.txt", console.encode("utf-8")))
+    entry_points = _entry_points(project)
+    if entry_points:
+        entries.append((f"{dist_info}/entry_points.txt", entry_points.encode("utf-8")))
     entries.append((f"{dist_info}/top_level.txt", b"shape\n"))
 
     names = [name for name, _ in entries]
@@ -187,12 +215,24 @@ def check(wheel: Path) -> list[str]:
             problems.append("METADATA missing")
         else:
             meta = z.read(meta_name).decode().split("\n\n", 1)[0]
-            for req in DEMO_REQUIRES:
-                if f"Requires-Dist: {req}" not in meta:
-                    problems.append(f"METADATA does not declare {req}")
+            project = _read_pyproject()["project"]
+            declared = {_normalized(r) for r in _requires_dist(project)}
+            lines = meta.splitlines()
+            found = {
+                _normalized(x.split(": ", 1)[1]) for x in lines if x.startswith("Requires-Dist: ")
+            }
+            for req in sorted(declared - found):
+                problems.append(f"METADATA does not declare {req}")
+            for req in sorted(found - declared):
+                problems.append(f"METADATA declares {req}, which pyproject.toml does not")
+            provided = {x.split(": ", 1)[1] for x in lines if x.startswith("Provides-Extra: ")}
+            if provided != set(project.get("optional-dependencies", {})):
+                problems.append("METADATA Provides-Extra differs from pyproject.toml")
             for banned in ("cryptography", "pydantic"):
-                if f"Requires-Dist: {banned}" in meta:
-                    problems.append(f"METADATA must not require {banned}")
+                if any(
+                    x.startswith(f"Requires-Dist: {banned}") and "extra ==" not in x for x in lines
+                ):
+                    problems.append(f"METADATA must not require {banned} in core")
         record = next((n for n in names if n.endswith(".dist-info/RECORD")), None)
         if record is None:
             problems.append("RECORD missing")

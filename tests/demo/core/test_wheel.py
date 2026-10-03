@@ -54,7 +54,15 @@ def test_wheel_metadata_declares_the_demo_dependencies(wheel: Path):
     assert "Requires-Dist: numpy>=2.0,<3" in header
     assert "Requires-Dist: pyarrow>=14" in header
     assert "Requires-Dist: tzdata; sys_platform == 'win32'" in header
-    assert "cryptography" not in header and "pydantic" not in header
+    assert "pydantic" not in header
+    # the pure wheel carries every extra of pyproject.toml (#252), so cryptography appears under
+    # the [sign] and [dev] extras; what must hold is that a plain install does not require it
+    core = [
+        line
+        for line in header.splitlines()
+        if line.startswith("Requires-Dist: ") and "extra ==" not in line
+    ]
+    assert not any("cryptography" in line for line in core)
     assert "Tag: py3-none-any" in wheel_meta and "Root-Is-Purelib: true" in wheel_meta
 
 
