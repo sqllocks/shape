@@ -139,3 +139,70 @@ installed is an error, never a download.
 **What is never sent or kept:** the analysis runs in-process; nothing leaves the machine. Values
 are never logged, printed, put in an error message or included in any report: the result is a
 label and a number.
+
+## SDMetrics and Anonymeter
+
+Two informational reports about synthetic data. Neither is a gate: they exit 0 when the
+evaluation ran and 2 on bad input, and no Shape gate or threshold reads them.
+
+**Install:** `pip install 'sqllocks-shape-integrations[sdmetrics]'` (`sdmetrics` 0.x).
+Anonymeter: see the note below.
+
+**Commands:**
+
+```
+shape evaluate sdmetrics  REAL_DIR SYNTH_DIR [--tables a,b] [-o REPORT.json] [--json]
+shape evaluate anonymeter REAL_DIR SYNTH_DIR --control CONTROL_DIR
+                          [--attacks singling-out,linkability,inference] [-o REPORT.json] [--json]
+```
+
+Tables are read from the directories the way `shape verify` reads them: every Parquet, CSV and
+JSONL file is one table, named by the file stem. `--tables` (SDMetrics) names the tables to
+evaluate; by default it is every table of `REAL_DIR`. Every table must exist in the other
+directories with the same column names (the order may differ). Without `-o` or `--json` a short
+summary is printed; `-o` writes the report; `--json` prints it.
+
+**The report** is a `shape-evaluation` document, version 1:
+
+```json
+{"format": "shape-evaluation", "version": 1, "tool": "sdmetrics",
+ "tool_version": "0.32.0", "results": {}}
+```
+
+`tool` is `sdmetrics` or `anonymeter`; `tool_version` is the installed library's version. A reader
+of version 1 refuses a report of a higher version
+(`shape_integrations.evaluation.read_report`). Not-a-number and infinity are written as `null`.
+
+`results` for `sdmetrics`: `tables`; `overall_score` (0 to 1); `properties` (score per SDMetrics
+property; `null` where it does not apply); `column_shapes` (`table`, `column`, `metric`, `score`);
+`column_pair_trends` (`table`, `column_1`, `column_2`, `metric`, `score`); `skipped_columns`
+(per table: columns of a type SDMetrics has no type for, such as lists and structs). The metadata
+is inferred from the Arrow types and has no relationships.
+
+`results` for `anonymeter`: `attacks`; `tables`, per table `rows`, then per attack run:
+`singling_out` and `linkability` (`n_attacks`, `n_success`, `n_baseline`, `n_control`,
+`attack_rate`, `baseline_rate`, `control_rate` each with `value` and `error`, `risk` with `value`
+and `ci`, and `notes` with the library's own warnings), and `inference` (the same per `secrets`
+column). 0 is the best risk and 1 the worst. `n_attacks` is 500, or fewer when the real or
+control table has fewer rows. Linkability splits the columns in two halves in table order.
+Singling out is seeded; Anonymeter does not seed the other two attacks, so their rates can
+differ a little between runs. A table with one column skips linkability and inference
+(`{"skipped": "needs at least 2 columns"}`).
+
+**What is written:** only the report file you name, or standard output. It holds scores, counts
+and column names, never row values. **What is never sent:** both libraries run in-process;
+nothing leaves the machine.
+
+**Anonymeter install note.** Anonymeter 1.1.0 declares `numpy<1.27` and `pyarrow<22`, while Shape
+requires `numpy>=2`, so `pip` cannot resolve `sqllocks-shape-integrations[anonymeter]` today. The
+library itself runs under NumPy 2 (the integration tests run it that way). Until Anonymeter
+publishes a release for NumPy 2, install it without its pins:
+
+```
+pip install sqllocks-shape-integrations
+pip install numba polars joblib 'scikit-learn~=1.2'
+pip install --no-deps 'anonymeter>=1,<2'
+```
+
+The `anonymeter` extra is declared so that the install command in every message stays the same
+once that release exists.

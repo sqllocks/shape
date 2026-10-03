@@ -63,3 +63,27 @@ def write_manifest(
     path = directory / name
     ManifestBuilder.to_file(m, path)
     return path
+
+
+def write_tables(
+    directory: Path, *, rows: int = 300, seed: int = 0, shift: float = 0.0, extra: bool = True
+) -> Path:
+    """Two small tables as Parquet files (``people``, and ``orders`` when ``extra``)."""
+    import numpy as np
+
+    directory.mkdir(parents=True, exist_ok=True)
+    rng = np.random.default_rng(seed)
+    people = pa.table(
+        {
+            "age": rng.integers(18, 80, rows) + int(shift),
+            "city": rng.choice(["Oslo", "Lima", "Kyiv", "Pune"], rows),
+            "income": (rng.normal(50, 10, rows) + shift).round(1),
+        }
+    )
+    pq.write_table(people, directory / "people.parquet")
+    if extra:
+        orders = pa.table(
+            {"qty": rng.integers(1, 9, rows), "status": rng.choice(["new", "paid"], rows)}
+        )
+        pq.write_table(orders, directory / "orders.parquet")
+    return directory

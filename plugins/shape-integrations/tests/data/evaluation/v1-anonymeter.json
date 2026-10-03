@@ -1,0 +1,165 @@
+{
+  "format": "shape-evaluation",
+  "results": {
+    "attacks": [
+      "singling-out",
+      "linkability",
+      "inference"
+    ],
+    "skipped_columns": {},
+    "tables": {
+      "people": {
+        "inference": {
+          "secrets": {
+            "age": {
+              "attack_rate": {
+                "error": 0.03008592607104493,
+                "value": 0.03008592607104493
+              },
+              "baseline_rate": {
+                "error": 0.03008592607104493,
+                "value": 0.03008592607104493
+              },
+              "control_rate": {
+                "error": 0.04280156874055718,
+                "value": 0.04574972853534343
+              },
+              "n_attacks": 60,
+              "n_baseline": 0,
+              "n_control": 1,
+              "n_success": 0,
+              "notes": [
+                "Attack is as good or worse as baseline model. Estimated rates: attack = 0.03008592607104493, baseline = 0.03008592607104493. Analysis results cannot be trusted."
+              ],
+              "risk": {
+                "ci": [
+                  0.0,
+                  0.03901511425779719
+                ],
+                "value": 0.0
+              }
+            },
+            "city": {
+              "attack_rate": {
+                "error": 0.11305270904072688,
+                "value": 0.312034370428418
+              },
+              "baseline_rate": {
+                "error": 0.11463949736905125,
+                "value": 0.32769817289271647
+              },
+              "control_rate": {
+                "error": 0.11606936012178815,
+                "value": 0.34336197535701496
+              },
+              "n_attacks": 60,
+              "n_baseline": 19,
+              "n_control": 20,
+              "n_success": 18,
+              "notes": [
+                "Attack is as good or worse as baseline model. Estimated rates: attack = 0.312034370428418, baseline = 0.32769817289271647. Analysis results cannot be trusted."
+              ],
+              "risk": {
+                "ci": [
+                  0.0,
+                  0.20515416537501363
+                ],
+                "value": 0.0
+              }
+            },
+            "income": {
+              "attack_rate": {
+                "error": 0.08625525097956323,
+                "value": 0.15539634578543293
+              },
+              "baseline_rate": {
+                "error": 0.08625525097956323,
+                "value": 0.15539634578543293
+              },
+              "control_rate": {
+                "error": 0.07228448179080668,
+                "value": 0.10840493839253744
+              },
+              "n_attacks": 60,
+              "n_baseline": 8,
+              "n_control": 5,
+              "n_success": 8,
+              "notes": [
+                "Attack is as good or worse as baseline model. Estimated rates: attack = 0.15539634578543293, baseline = 0.15539634578543293. Analysis results cannot be trusted."
+              ],
+              "risk": {
+                "ci": [
+                  0.0,
+                  0.17622579410347422
+                ],
+                "value": 0.05270487625646375
+              }
+            }
+          }
+        },
+        "linkability": {
+          "attack_rate": {
+            "error": 0.059927831299544765,
+            "value": 0.9229226665360596
+          },
+          "baseline_rate": {
+            "error": 0.08625525097956323,
+            "value": 0.8446036542145671
+          },
+          "control_rate": {
+            "error": 0.07228448179080668,
+            "value": 0.8915950616074625
+          },
+          "n_attacks": 60,
+          "n_baseline": 52,
+          "n_control": 55,
+          "n_success": 57,
+          "risk": {
+            "ci": [
+              0.0,
+              1.0
+            ],
+            "value": 0.28898688005484496
+          }
+        },
+        "rows": {
+          "real": 60,
+          "synthetic": 60
+        },
+        "singling_out": {
+          "attack_rate": {
+            "error": 0.07228448179080668,
+            "value": 0.10840493839253744
+          },
+          "baseline_rate": {
+            "error": 0.09008574244805402,
+            "value": 0.17106014824973145
+          },
+          "control_rate": {
+            "error": 0.09359218092211541,
+            "value": 0.18672395071402995
+          },
+          "n_attacks": 60,
+          "n_baseline": 9,
+          "n_control": 10,
+          "n_success": 5,
+          "notes": [
+            "Attack `multivariate` could generate only 31 singling out queries out of the requested 60. This can probably lead to an underestimate of the singling out risk.",
+            "Attack is as good or worse as baseline model. Estimated rates: attack = 0.10840493839253744, baseline = 0.17106014824973145. Analysis results cannot be trusted.",
+            "Reached maximum number of attempts 6000 when generating singling out queries. Returning 31 instead of the requested 60."
+          ],
+          "risk": {
+            "ci": [
+              0.0,
+              0.05802631648669582
+            ],
+            "value": 0.0
+          }
+        }
+      }
+    }
+  },
+  "tool": "anonymeter",
+  "tool_version": "1.1.0",
+  "version": 1
+}
