@@ -65,3 +65,19 @@ def test_chaos_config_validate_lists_bad_settings(config: ChaosConfig, message: 
 
 def test_chaos_config_validate_accepts_the_defaults() -> None:
     assert ChaosConfig().validate() == []
+
+
+@pytest.mark.parametrize(
+    "batch",
+    [
+        pa.record_batch({"x": pa.array([], pa.float64())}),  # nothing targeted
+        pa.record_batch({"x": pa.array([1, 2], pa.uint8())}),  # nothing eligible for the kinds
+    ],
+)
+def test_anomaly_report_details_have_the_same_keys_when_nothing_changes(
+    batch: pa.RecordBatch,
+) -> None:
+    """#418: ``fraction``, ``requested`` and ``kinds`` are always there."""
+    details = inject_anomalies(batch, fraction=1, seed=3, kinds=["encoding"]).report.details
+    assert set(details) == {"fraction", "requested", "kinds"}
+    assert details["kinds"] == {}
