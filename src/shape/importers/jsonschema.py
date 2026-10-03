@@ -30,6 +30,7 @@ from shape.importers.core import (
     ImpTable,
     Report,
     clean_name,
+    finish_model,
     unique_name,
 )
 from shape.importers.documents import Document
@@ -454,44 +455,9 @@ class SchemaWalker:
         child.foreign_keys.append(fk)
         self._owner_fks.append((child, fk, parent))
 
-    # ---- keys ----
-
     def finish(self) -> ImpModel:
         """Choose each table's key and point every generated foreign key at it."""
-        for table in self.model.tables:
-            self._choose_key(table)
-        for owner, fk, target in self._owner_fks:
-            fk.ref_column = target.primary_key[0]
-            col = owner.column(fk.column)
-            key = target.column(fk.ref_column)
-            if col is not None and key is not None:
-                col.type = key.type if key.type in ("integer", "uuid", "string") else "integer"
-                if key.type == "string":
-                    col.max_length = key.max_length
-        return self.model
-
-    def _choose_key(self, table: ImpTable) -> None:
-        if table.primary_key:
-            return
-        fk_cols = {f.column for f in table.foreign_keys}
-        for want in ("id", f"{table.name}_id", f"{table.name}id"):
-            col = next((c for c in table.columns if c.name.lower() == want.lower()), None)
-            if (
-                col is not None
-                and col.name not in fk_cols
-                and col.type in ("integer", "string", "uuid")
-                and col.enum is None
-            ):
-                table.primary_key = [col.name]
-                col.nullable = False
-                return
-        used = {c.name for c in table.columns}
-        key = unique_name("id", used)
-        table.columns.insert(
-            0,
-            ImpColumn(key, "integer", nullable=False, source=table.source, kind="generated column"),
-        )
-        table.primary_key = [key]
+        return finish_model(self.model, self._owner_fks)
 
 
 def _text(value: Any) -> str:

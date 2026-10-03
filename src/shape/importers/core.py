@@ -197,6 +197,119 @@ def add_key(table: ImpTable, name: str = "id") -> str:
     return key
 
 
+# ---- keys ------------------------------------------------------------------------------------
+
+
+def choose_key(table: ImpTable) -> None:
+    """The key of ``table``: a column named ``id`` or ``<table>_id`` of a key type, else a
+    generated integer ``id`` column."""
+    if table.primary_key:
+        return
+    fk_cols = {f.column for f in table.foreign_keys}
+    for want in ("id", f"{table.name}_id", f"{table.name}id"):
+        col = next((c for c in table.columns if c.name.lower() == want.lower()), None)
+        if (
+            col is not None
+            and col.name not in fk_cols
+            and col.type in ("integer", "string", "uuid")
+            and col.enum is None
+        ):
+            table.primary_key = [col.name]
+            col.nullable = False
+            return
+    used = {c.name for c in table.columns}
+    key = unique_name("id", used)
+    table.columns.insert(
+        0, ImpColumn(key, "integer", nullable=False, source=table.source, kind="generated column")
+    )
+    table.primary_key = [key]
+
+
+def finish_model(
+    model: ImpModel, links: list[tuple[ImpTable, ImpForeignKey, ImpTable]]
+) -> ImpModel:
+    """Choose every table's key, then point each foreign key of ``links`` (owner table, key,
+    referenced table) at the referenced table's key, taking the key's type."""
+    for table in model.tables:
+        choose_key(table)
+    for owner, fk, target in links:
+        fk.ref_column = target.primary_key[0]
+        col = owner.column(fk.column)
+        key = target.column(fk.ref_column)
+        if col is not None and key is not None:
+            col.type = key.type if key.type in ("integer", "uuid", "string") else "integer"
+            if key.type == "string":
+                col.max_length = key.max_length
+    return model
+
+
+def break_cycles(model: ImpModel, report: Report | None = None) -> None:
+    """The generator needs tables in an order where every table follows the ones it points at, so
+    a cycle of foreign keys (``A`` refers to ``B`` which refers to ``A``) cannot be generated.
+    Each cycle is broken at one foreign key, preferring a nullable reference between named
+    schemas to the link of a child table to its parent; that column becomes a plain integer
+    column, and the report says so (it is not imported as a key)."""
+    by_name = {t.name: t for t in model.tables}
+    while True:
+        cycle = _find_cycle(model, by_name)
+        if cycle is None:
+            return
+
+        def rank(edge: tuple[ImpTable, ImpForeignKey]) -> tuple[int, int]:
+            col = edge[0].column(edge[1].column)
+            return (
+                0 if col is not None and col.kind == "reference" else 1,
+                0 if col is not None and col.nullable else 1,
+            )
+
+        owner, fk = min(cycle, key=rank)
+        owner.foreign_keys.remove(fk)
+        col = owner.column(fk.column)
+        if col is not None:
+            col.type = "integer"
+            col.max_length = None
+            if report is not None:
+                path = " -> ".join([e[0].name for e in cycle] + [cycle[0][0].name])
+                report.skipped(
+                    col.source or f"{owner.name}.{col.name}",
+                    "foreign key",
+                    f"{owner.name}.{col.name} -> {fk.ref_table} closes a cycle ({path}): "
+                    "imported as a plain integer column",
+                )
+
+
+def _find_cycle(
+    model: ImpModel, by_name: dict[str, ImpTable]
+) -> list[tuple[ImpTable, ImpForeignKey]] | None:
+    state: dict[str, int] = {}
+    stack: list[tuple[ImpTable, ImpForeignKey]] = []
+
+    def visit(table: ImpTable) -> list[tuple[ImpTable, ImpForeignKey]] | None:
+        state[table.name] = 1
+        for fk in table.foreign_keys:
+            target = by_name.get(fk.ref_table)
+            if target is None or target is table:
+                continue
+            stack.append((table, fk))
+            if state.get(target.name) == 1:
+                start = next(i for i, (t, _) in enumerate(stack) if t is target)
+                return stack[start:]
+            if target.name not in state:
+                found = visit(target)
+                if found is not None:
+                    return found
+            stack.pop()
+        state[table.name] = 2
+        return None
+
+    for t in model.tables:
+        if t.name not in state:
+            found = visit(t)
+            if found is not None:
+                return found
+    return None
+
+
 # ---- strategy choice -------------------------------------------------------------------------
 
 _DEFAULT_INT = (1, 10000)
@@ -314,6 +427,7 @@ def choose_generator(
             "distribution": "uniform",
             "min": int(lo),
             "max": int(hi),
+            "output_type": "int64",
         }
     if t in ("decimal", "float"):
         gen: dict[str, Any]
@@ -394,6 +508,7 @@ def build_spec(model: ImpModel, report: Report | None = None) -> SpecDocument:
     )
     if not model.tables:
         raise ImportFormatError("the input defines no table")
+    break_cycles(model, report)
     for t in model.tables:
         doc.add_table(t.name, primary_key=list(t.primary_key))
         if report is not None and t.source:

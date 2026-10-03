@@ -195,3 +195,17 @@ def test_the_report_is_deterministic_and_lists_every_column() -> None:
     assert a.spec.dumps() == b.spec.dumps()
     imported = {i["element"] for i in a.report.imported}
     assert "#/properties/quantity" in imported and "#/properties/items" in imported
+
+
+def test_mutually_referencing_schemas_are_generated_by_breaking_the_cycle(tmp_path: Path) -> None:
+    f = tmp_path / "pair.json"
+    f.write_text(
+        '{"title":"a","type":"object","required":["a_id"],"properties":{"a_id":{"type":"integer"},'
+        '"b":{"$ref":"#/$defs/b"}},"$defs":{"b":{"type":"object","required":["b_id"],'
+        '"properties":{"b_id":{"type":"integer"},"a":{"$ref":"#"}}}}}'
+    )
+    result = import_schema(f)
+    kinds = [i for i in result.report.not_imported if i["kind"] == "foreign key"]
+    assert len(kinds) == 1 and "closes a cycle" in kinds[0]["reason"]
+    assert len(result.spec.to_dict()["relationships"]) == 1
+    generate(result.spec)
