@@ -64,7 +64,9 @@ class Pattern:
             last = m.end()
             token, width = m.group(1), int(m.group(2)) if m.group(2) else 0
             if width > MAX_TOKEN_WIDTH:
-                raise ValueError(f"pattern width {width} is over the limit of {MAX_TOKEN_WIDTH}")
+                raise StrategyError(
+                    f"pattern width {width} is over the limit of {MAX_TOKEN_WIDTH} ({where(ctx)})"
+                )
             if token == "seq":
                 numbers = np.arange(
                     ctx.row_start + 1, ctx.row_start + ctx.n_rows + 1, dtype=np.int64

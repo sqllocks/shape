@@ -310,14 +310,21 @@ MAX_DIGITS = 18  # the widest zero-padded identifier (it must fit an int64)
 EXACT_DIGITS = 15  # widest number one float64 uniform draws exactly
 
 
-def _digit_width(spec: Mapping[str, Any]) -> int:
-    return max(1, min(int(spec.get("width", 8)), MAX_DIGITS))
+def _digit_width(spec: Mapping[str, Any], ctx: GenerationContext) -> int:
+    raw = spec.get("width", 8)
+    try:
+        width = int(raw)
+    except (TypeError, ValueError):
+        raise StrategyError(
+            f"provider {_provider(spec)!r} needs a whole-number 'width', got {raw!r} ({where(ctx)})"
+        ) from None
+    return max(1, min(width, MAX_DIGITS))
 
 
 def _digits(spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
     """Fixed-width digit text with leading zeros (ZIP codes, NDCs, member ids): ``spec['width']``
     digits, drawn at random."""
-    width = _digit_width(spec)
+    width = _digit_width(spec, ctx)
     if width <= EXACT_DIGITS:
         numbers = _ints(ctx, "digits", 0, 10**width)
     else:
@@ -330,7 +337,7 @@ def _digits(spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
 
 def _digit_ids(spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
     """Fixed-width digit text counting up from 1 in row order, zero padded: unique identifiers."""
-    width = _digit_width(spec)
+    width = _digit_width(spec, ctx)
     numbers = ctx.row_start + np.arange(1, ctx.n_rows + 1, dtype=np.int64)
     if width < MAX_DIGITS:
         numbers = numbers % 10**width

@@ -6,6 +6,7 @@ column and ``r`` (``docs/GENERATION_STRATEGIES.md``).
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping
 from functools import lru_cache
 from typing import Any
@@ -29,6 +30,21 @@ class Uuid:
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         return kernel_ops.uuid4(stream(ctx, "v"), ctx.row_start, ctx.n_rows)
+
+
+def relative_weights(raw: Any, ctx: GenerationContext, strategy: str) -> list[float]:
+    """``raw`` as finite, non-negative weights with a positive sum, else a :class:`StrategyError`
+    naming the strategy and the column (#138)."""
+    try:
+        weights = [float(w) for w in raw]
+    except (TypeError, ValueError):
+        weights = []
+    if not weights or not all(math.isfinite(w) and w >= 0 for w in weights) or sum(weights) <= 0:
+        raise StrategyError(
+            f"{strategy} weights must be finite non-negative numbers with a positive sum, "
+            f"got {list(raw)!r} ({where(ctx)})"
+        )
+    return weights
 
 
 @lru_cache(maxsize=64)
@@ -58,11 +74,7 @@ class WeightedEnum:
             raise StrategyError(
                 f"weighted_enum strategy requires a non-empty 'values' mapping for {where(ctx)}"
             )
-        weights = [float(w) for w in values.values()]
-        if any(w < 0 or w != w for w in weights) or sum(weights) <= 0:
-            raise StrategyError(
-                f"weighted_enum weights must be non-negative with a positive sum ({where(ctx)})"
-            )
+        weights = relative_weights(values.values(), ctx, "weighted_enum")
         numbers, pool = _labels(tuple(str(k) for k in values))
         index = kernel_ops.alias_draw(
             kernel_ops.alias_table(weights), stream(ctx, "v"), ctx.row_start, ctx.n_rows
@@ -72,4 +84,4 @@ class WeightedEnum:
         return kernel_ops.pool_take(pool, index)
 
 
-__all__ = ["SHAPE_API", "Uuid", "WeightedEnum", "require"]
+__all__ = ["SHAPE_API", "Uuid", "WeightedEnum", "relative_weights", "require"]

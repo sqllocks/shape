@@ -12,6 +12,8 @@ from shape.generation.arrowkit import array as arrow_array
 from shape.generation.strategy_kit import StrategyError, stream, where
 from shape.plugins.api.v1 import GenerationContext
 
+from .basic import relative_weights
+
 SHAPE_API = "1.0"
 
 
@@ -31,11 +33,7 @@ class Lifecycle:
             raise StrategyError(
                 f"lifecycle strategy requires a non-empty 'phases' mapping for {where(ctx)}"
             )
-        weights = [float(w) for w in phases.values()]
-        if any(w < 0 or w != w for w in weights) or sum(weights) <= 0:
-            raise StrategyError(
-                f"lifecycle weights must be non-negative with a positive sum ({where(ctx)})"
-            )
+        weights = relative_weights(phases.values(), ctx, "lifecycle")
         index = kernel_ops.alias_draw(
             kernel_ops.alias_table(weights), stream(ctx, "v"), ctx.row_start, ctx.n_rows
         )

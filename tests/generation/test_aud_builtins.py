@@ -278,7 +278,27 @@ def test_derived_and_foreign_key_spec_mistakes_name_the_column() -> None:
     derived = {"strategy": "derived", "source": "a", "days": "x"}
     with pytest.raises(StrategyError, match=r"t\.y"):
         _table({"a": when, "y": {"type": "datetime", "generator": derived}}, rows=3)
-    key = {"type": "integer", "generator": {"strategy": "sequence"}}
-    fan = {"strategy": "foreign_key", "ref": "t.k", "fan_out": {"top_share": [1]}}
+    fan = {"strategy": "foreign_key", "ref": "p.k", "fan_out": {"top_share": [1]}}
     with pytest.raises(StrategyError, match=r"t\.y"):
-        _table({"k": key, "y": {"type": "integer", "generator": fan}}, rows=3)
+        _two_tables({"y": {"type": "integer", "generator": fan}})
+
+
+def _two_tables(child: dict[str, dict[str, Any]], rows: int = 3) -> pa.Table:
+    """``child`` as table ``t`` next to a parent ``p`` with a sequence primary key ``k``."""
+    doc = {
+        "schema_version": 1,
+        "model": {"name": "t", "seed": 7},
+        "tables": {
+            "p": {
+                "name": "p",
+                "primary_key": ["k"],
+                "columns": {
+                    "k": {"name": "k", "type": "integer", "generator": {"strategy": "sequence"}}
+                },
+            },
+            "t": {"name": "t", "columns": {k: {"name": k, **v} for k, v in child.items()}},
+        },
+        "relationships": [],
+        "generation": {"scale": "s", "scales": {"s": {"p": 5, "t": rows}}},
+    }
+    return Engine(GenSchema.from_dict(doc), seed=7).generate().tables["t"]

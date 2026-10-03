@@ -675,10 +675,10 @@ class Histogram(Family):
     words_per_row = 3
 
     def from_spec(self, spec: Mapping[str, Any]) -> dict[str, Any]:
-        return {
-            "edges": list(spec["edges"]),
-            "weights": list(spec.get("weights", spec.get("counts"))),
-        }
+        edges, weights = spec.get("edges"), spec.get("weights", spec.get("counts"))
+        if not isinstance(edges, Sequence) or not isinstance(weights, Sequence):
+            raise FamilyError("histogram needs 'edges' (k + 1 numbers) and 'weights' (k numbers)")
+        return {"edges": list(edges), "weights": list(weights)}
 
     def _check(self, params: Mapping[str, Any]) -> tuple[Floats, Floats]:
         edges = np.asarray(params.get("edges", ()), dtype=np.float64)
@@ -728,7 +728,10 @@ class Mixture(Family):
     words_per_row = 2
 
     def from_spec(self, spec: Mapping[str, Any]) -> dict[str, Any]:
-        return {"components": list(spec["components"])}
+        components = spec.get("components")
+        if not isinstance(components, Sequence) or isinstance(components, str):
+            raise FamilyError("mixture needs 'components', a list of weighted distributions")
+        return {"components": list(components)}
 
     def _components(self, params: Mapping[str, Any]) -> list[tuple[float, Family, dict[str, Any]]]:
         comps = params.get("components") or ()

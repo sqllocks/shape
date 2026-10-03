@@ -123,7 +123,13 @@ class Derived:
         values = self._source_values(source, via, ctx)
         if rule == "copy":
             return values
-        return _add_days(_timestamps(values, ctx), sample_days(ctx, params))
+        try:
+            days = sample_days(ctx, params)
+        except (TypeError, ValueError) as exc:
+            raise StrategyError(
+                f"derived add_days for {where(ctx)}: the day parameters must be numbers ({exc})"
+            ) from exc
+        return _add_days(_timestamps(values, ctx), days)
 
     def _source_values(self, source: str, via: Any, ctx: GenerationContext) -> pa.Array:
         if "." in source and via:

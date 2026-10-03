@@ -111,10 +111,15 @@ class ForeignKey:
         if fan_out is not None:
             if not isinstance(fan_out, Mapping):
                 raise StrategyError(f"fan_out must be a mapping for {where(ctx)}")
-            fan = engine_of(ctx, "foreign_key").cached(
-                ("fk-fan-out", ctx.table, ctx.column, len(pool), tuple(sorted(fan_out.items()))),
-                lambda: FanOut.from_spec(len(pool), dict(fan_out)),
-            )
+            try:
+                fan = engine_of(ctx, "foreign_key").cached(
+                    ("fk-fan-out", ctx.table, ctx.column, len(pool), repr(sorted(fan_out.items()))),
+                    lambda: FanOut.from_spec(len(pool), dict(fan_out)),
+                )
+            except (TypeError, ValueError) as exc:
+                if isinstance(exc, StrategyError):
+                    raise
+                raise StrategyError(f"fan_out for {where(ctx)}: {exc}") from exc
             return pool.take(fan.draw(stream(ctx, "fan"), ctx.row_start, ctx.n_rows))
         distribution = "uniform" if ref_table == ctx.table else spec.get("distribution", "uniform")
         if distribution == "pareto" and params.get("max_per_parent") is not None:

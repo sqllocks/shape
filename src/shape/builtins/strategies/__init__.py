@@ -13,8 +13,10 @@ from shape.builtins.distributions import Normal as _NormalDistribution
 from shape.builtins.distributions import Uniform as _UniformDistribution
 from shape.generation import kernel_ops
 from shape.generation.arrowkit import array as arrow_array
-from shape.generation.strategy_kit import stream
+from shape.generation.strategy_kit import StrategyError, require, stream, where
 from shape.plugins.api.v1 import GenerationContext
+
+from .basic import relative_weights
 
 SHAPE_API = "1.0"
 
@@ -25,6 +27,8 @@ class Constant:
     name = "constant"
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
+        if "value" not in spec:
+            raise StrategyError(f"constant strategy requires 'value' for column {where(ctx)}")
         return arrow_array([spec["value"]] * ctx.n_rows)
 
 
@@ -45,23 +49,31 @@ class Choice:
     name = "choice"
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
-        values = list(spec["values"])
+        values = list(require(spec, "values", ctx, "choice"))
         if not values:
-            raise ValueError("values cannot be empty")
+            raise StrategyError(f"choice strategy: 'values' cannot be empty ({where(ctx)})")
         weights = spec.get("weights")
         if weights is None:
-            w = np.ones(len(values), dtype=np.float64)
+            w = [1.0] * len(values)
         else:
-            w = np.asarray(weights, dtype=np.float64)
-            if len(w) != len(values) or (w < 0).any() or w.sum() <= 0:
-                raise ValueError("invalid weights")
+            w = relative_weights(weights, ctx, "choice")
+            if len(w) != len(values):
+                raise StrategyError(
+                    f"choice strategy: {len(w)} weights for {len(values)} values ({where(ctx)})"
+                )
+        try:
+            pool = arrow_array(values)
+        except (pa.ArrowInvalid, pa.ArrowTypeError) as exc:
+            raise StrategyError(
+                f"choice strategy: the values must share one type ({where(ctx)}): {exc}"
+            ) from exc
         picks = kernel_ops.alias_draw(
-            kernel_ops.alias_table(w.tolist()),
+            kernel_ops.alias_table(w),
             stream(ctx, "v"),
             ctx.row_start,
             ctx.n_rows,
         )
-        return arrow_array(values).take(arrow_array(picks))
+        return pool.take(arrow_array(picks))
 
 
 class Uniform:
@@ -70,7 +82,8 @@ class Uniform:
     name = "uniform"
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
-        low, high = float(spec["low"]), float(spec["high"])
+        low = float(require(spec, "low", ctx, "uniform"))
+        high = float(require(spec, "high", ctx, "uniform"))
         return _UniformDistribution().sample({"loc": low, "scale": high - low}, ctx)
 
 
@@ -80,7 +93,8 @@ class Normal:
     name = "normal"
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
-        mean, stddev = float(spec["mean"]), float(spec["stddev"])
+        mean = float(require(spec, "mean", ctx, "normal"))
+        stddev = float(require(spec, "stddev", ctx, "normal"))
         return _NormalDistribution().sample({"loc": mean, "scale": stddev}, ctx)
 
 
@@ -107,7 +121,12 @@ class AddressStrategy:
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         from . import address_rows
 
-        return address_rows.generate(spec, ctx)
+        try:
+            return address_rows.generate(spec, ctx)
+        except ValueError as exc:
+            if isinstance(exc, StrategyError):
+                raise
+            raise StrategyError(f"{exc} ({where(ctx)})") from exc
 
 
 __all__ = ["SHAPE_API", "AddressStrategy", "Choice", "Constant", "Normal", "Sequence", "Uniform"]
