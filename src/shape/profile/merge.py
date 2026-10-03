@@ -170,20 +170,9 @@ def _merge_states(
     schemas: dict[str, Any] = {}
     out: dict[str, dict[str, Any]] = {}
     for tname, parts in per_table.items():
-        merged = None
-        merged_schema = None
+        restored = []
         for item, part in zip(items, parts, strict=True):
-            held = (item.sketches or {}).get("tables", {})
-            # a table profile's sketch state is keyed by that profile's own table name, which
-            # differs between partitions (file stems); a dataset's by the shared table names
-            entry = held.get(tname) if item.is_dataset else next(iter(held.values()), None)
-            if entry is None or (not item.is_dataset and len(held) != 1):
-                raise MergeError(f"{item.name!r}: its sketch state has no table {tname!r}")
-            if entry["rows"] != part["row_count"]:
-                raise MergeError(
-                    f"{item.name!r}: the sketch state of table {tname!r} covers {entry['rows']} "
-                    f"rows but the profile has {part['row_count']}: it does not belong to it"
-                )
+            entry = _sketch_entry(item, part, tname)
             try:
                 schema, state = sketches.restore(entry)
             except sketches.SketchStateError as exc:
@@ -194,29 +183,106 @@ def _merge_states(
                     f"{item.name!r}: the sketch state of table {tname!r} has other columns than "
                     "the profile"
                 )
+            restored.append((entry, schema, state))
+        target = _common_schema(tname, items, [schema for _, schema, _ in restored])
+        merged = None
+        for item, (entry, schema, state) in zip(items, restored, strict=True):
+            if schema != target:
+                # the same columns in another order, or a column with no values in this part
+                state = _conform(item, entry, schema, target)
             if merged is None:
-                merged, merged_schema = state, schema
+                merged = state
                 continue
-            if merged_schema != schema:
-                raise MergeError(
-                    f"table {tname!r}: the column types differ between {items[0].name!r} and "
-                    f"{item.name!r} ({_schema_diff(merged_schema, schema)}), so their "
-                    "sketches cannot be combined: profile them with a common schema"
-                )
             try:
                 merged.merge(state)
             except ValueError as exc:
                 raise MergeError(f"table {tname!r}: {exc}") from exc
         assert merged is not None
         states[tname] = merged
-        schemas[tname] = merged_schema
+        schemas[tname] = target
         out[tname] = _sketch_columns(merged)
     return {t: (schemas[t], s) for t, s in states.items()}, out
 
 
-def _schema_diff(a: Any, b: Any) -> str:
-    diffs = [f"{x.name}: {x.type} vs {y.type}" for x, y in zip(a, b, strict=False) if x != y]
-    return "; ".join(diffs[:3]) or "column order or names"
+def _sketch_entry(item: Any, part: dict[str, Any], tname: str) -> Any:
+    held = (item.sketches or {}).get("tables", {})
+    # a table profile's sketch state is keyed by that profile's own table name, which differs
+    # between partitions (file stems); a dataset's by the shared table names
+    entry = held.get(tname) if item.is_dataset else next(iter(held.values()), None)
+    if entry is None or (not item.is_dataset and len(held) != 1):
+        raise MergeError(f"{item.name!r}: its sketch state has no table {tname!r}")
+    if entry["rows"] != part["row_count"]:
+        raise MergeError(
+            f"{item.name!r}: the sketch state of table {tname!r} covers {entry['rows']} "
+            f"rows but the profile has {part['row_count']}: it does not belong to it"
+        )
+    return entry
+
+
+def _common_schema(tname: str, items: list[Any], schemas: list[Any]) -> Any:
+    """The schema the states merge in: the first input's column order, each column typed by
+    the first input that has values in it (a column with no values in a partition is typed
+    ``null`` there). Two different value types for one column are a :class:`MergeError`."""
+    import pyarrow as pa  # type: ignore[import-untyped]
+
+    fields = []
+    for name in schemas[0].names:
+        owner, typ = items[0].name, schemas[0].field(name).type
+        for item, schema in zip(items, schemas, strict=True):
+            t = schema.field(name).type
+            if pa.types.is_null(typ) and not pa.types.is_null(t):
+                owner, typ = item.name, t
+        fields.append(pa.field(name, typ))
+        for item, schema in zip(items, schemas, strict=True):
+            t = schema.field(name).type
+            if not pa.types.is_null(t) and t != typ:
+                diffs = [
+                    f"{n}: {_value_type(schemas, n)} vs {schema.field(n).type}"
+                    for n in schemas[0].names
+                    if not pa.types.is_null(schema.field(n).type)
+                    and schema.field(n).type != _value_type(schemas, n)
+                ]
+                raise MergeError(
+                    f"table {tname!r}: the column types differ between {owner!r} and "
+                    f"{item.name!r} ({'; '.join(diffs[:3])}), so their sketches cannot be "
+                    "combined: profile them with a common schema"
+                )
+    return pa.schema(fields)
+
+
+def _value_type(schemas: list[Any], name: str) -> Any:
+    import pyarrow as pa
+
+    types = [s.field(name).type for s in schemas]
+    return next((t for t in types if not pa.types.is_null(t)), types[0])
+
+
+def _conform(item: Any, entry: Any, schema: Any, target: Any) -> Any:
+    """``item``'s state with ``target``'s columns: reordered by name, and a column that had no
+    values (typed ``null``) replaced by an all-null column of the target type. The snapshot
+    format is shared by both kernels, so the reference twin rebuilds it and the active kernel
+    reads the result."""
+
+    from shape.kernel.dispatch import get_kernel
+    from shape.kernel.reference import profile as twin
+    from shape.profile import sketches
+
+    try:
+        source = twin.ProfileState.from_snapshot(schema, sketches._unb64(entry["state"]))
+    except (ValueError, sketches.SketchStateError) as exc:
+        raise MergeError(f"{item.name!r}: the sketch state cannot be read: {exc}") from exc
+    by_name = {f.name: col for f, col in zip(schema, source._cols, strict=True)}
+    state = twin.ProfileState(target, "bounded")
+    state._rows = source.rows
+    columns = []
+    for f in target:
+        col = by_name[f.name]
+        if schema.field(f.name).type != f.type:  # no values here: all null, of the target type
+            col = twin._Column(f.name, f.type, "bounded")
+            col.count = col.nulls = source.rows
+        columns.append(col)
+    state._cols = columns
+    return get_kernel().ProfileState.from_snapshot(target, state.snapshot())
 
 
 def _state_document(states: dict[str, tuple[Any, Any]]) -> dict[str, Any]:

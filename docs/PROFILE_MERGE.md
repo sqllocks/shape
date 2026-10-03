@@ -92,7 +92,9 @@ error that asks for an upgrade; an unreadable `sketches.json` is an `ArtifactErr
 
 Limits: the sketches of two inputs combine only when their Arrow column types match (profile
 the partitions with a common schema; the exact statistics merge across `integer` and `float`
-regardless). `shape profile export` writes the profile only, without the sketch state.
+regardless). Columns are matched by name, so partitions that list them in another order merge,
+and a column with no values in a partition (an empty or all-null CSV column, typed `null`) takes
+the type of the partitions that have values. `shape profile export` writes the profile only, without the sketch state.
 
 ## Lineage and content ids
 
