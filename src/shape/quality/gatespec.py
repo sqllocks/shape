@@ -15,8 +15,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from shape import compat
+
 FORMAT = "shape-gates"
-VERSION = 1
+VERSION = compat.KINDS["gate-schema"].current
 
 _KIND_TYPES = {
     "int": "integer",
@@ -95,7 +97,7 @@ class GateSchema:
             }
             for r in self.relationships
         ]
-        return {"format": FORMAT, "version": VERSION, "tables": tables, "relationships": rels}
+        return compat.stamp("gate-schema", {"tables": tables, "relationships": rels}, aliases=False)
 
     @classmethod
     def from_dict(cls, doc: Mapping[str, Any]) -> GateSchema:
@@ -107,8 +109,7 @@ class GateSchema:
             return cls.from_profile(doc)
         if doc.get("format") != FORMAT:
             raise GateSchemaError(f"not a gate schema: expected format {FORMAT!r}")
-        if doc.get("version") != VERSION:
-            raise GateSchemaError(f"unsupported gate schema version {doc.get('version')!r}")
+        compat.check_readable("gate-schema", doc, error=GateSchemaError)
         tables: dict[str, TableSpec] = {}
         raw_tables = doc.get("tables", {})
         if not isinstance(raw_tables, Mapping):

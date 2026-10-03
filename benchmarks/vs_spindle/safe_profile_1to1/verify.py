@@ -8,9 +8,10 @@ The baseline runs in its own venv (spindle_safe_dump.py, cached as JSON under
 $BENCH_OUT_DIR/safe_cache keyed by the input's SHA-256); the product runs in-process on
 ``shape.profile`` of the same file. For each mapper configuration in VARIANTS every field of
 the safe profile must match: floats within 1e-9 relative (the T-22 profile tolerance, which the
-inputs already meet), everything else exactly, ``schema_version`` aside (the two formats number
-their own history). The validator must give the same ``(rule, path)`` findings on every safe
-artifact and fixture. Exit 0 only when everything matches; 2 when an input file is missing.
+inputs already meet), everything else exactly, ``schema_version`` and the declaration keys aside
+(the two formats number their own history). The validator must give the same ``(rule, path)``
+findings on every safe artifact and fixture. Exit 0 only when everything matches; 2 when an input
+file is missing.
 """
 
 from __future__ import annotations
@@ -34,6 +35,9 @@ REL = 1e-9
 # Keys the product adds to the baseline's format (P7-02: cells withheld by the minimum cohort).
 # Parity covers every baseline key; these are compared separately, by test.
 ADDED_KEYS = {"cells_suppressed"}
+# The declaration every persisted Shape file carries (W1-01): top level only, like
+# ``schema_version``, because the two formats number their own history.
+DECLARATION_KEYS = ("format", "version", "shape_version", "min_shape_version")
 
 
 def _configs() -> dict[str, tuple[Any, bool]]:
@@ -118,6 +122,8 @@ def verify(path: Path, refresh: bool) -> list[str]:
         got = _strip_added(dict(mine[name]))
         ref.pop("schema_version", None)
         got.pop("schema_version", None)
+        for key in DECLARATION_KEYS:
+            got.pop(key, None)
         diffs: list[str] = []
         _close(_norm(ref), got, name, diffs)
         bad += diffs[:20]

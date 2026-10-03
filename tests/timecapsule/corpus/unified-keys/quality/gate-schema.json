@@ -1,0 +1,36 @@
+{
+  "format": "shape-gates",
+  "min_shape_version": "0.9.0",
+  "relationships": [],
+  "shape_version": "0.9.0",
+  "tables": {
+    "orders": {
+      "columns": {
+        "amount": {
+          "nullable": false,
+          "type": "float"
+        },
+        "email": {
+          "nullable": false,
+          "type": "string"
+        },
+        "id": {
+          "nullable": false,
+          "type": "integer"
+        },
+        "placed": {
+          "nullable": false,
+          "type": "datetime"
+        },
+        "status": {
+          "nullable": false,
+          "type": "string"
+        }
+      },
+      "primary_key": [
+        "id"
+      ]
+    }
+  },
+  "version": 1
+}

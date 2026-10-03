@@ -17,8 +17,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from shape import compat
+
 FORMAT = "shape-verify-config"
-VERSION = 1
+VERSION = compat.KINDS["verify-config"].current
 
 _RULE_KEYS = (
     "ranges",
@@ -229,11 +231,12 @@ class VerifyConfig:
             raise VerifyConfigError("a verify configuration must be a JSON object")
         if doc.get("format") != FORMAT:
             raise VerifyConfigError(f"not a verify configuration: expected format {FORMAT!r}")
-        if doc.get("version") != VERSION:
-            raise VerifyConfigError(
-                f"unsupported verify configuration version {doc.get('version')!r}"
-            )
-        unknown = sorted(set(doc) - {"format", "version", *_KEYS})
+        compat.check_readable("verify-config", doc, error=VerifyConfigError)
+        unknown = sorted(
+            k
+            for k in doc
+            if k not in {*compat.BOOKKEEPING_KEYS, *_KEYS} and not str(k).startswith("x_")
+        )
         if unknown:
             raise VerifyConfigError(
                 f"unknown key {unknown[0]!r} in the verify configuration "

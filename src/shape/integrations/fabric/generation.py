@@ -31,6 +31,7 @@ from typing import TYPE_CHECKING, Any
 import pyarrow as pa  # type: ignore[import-untyped]
 
 import shape
+from shape import compat
 
 if TYPE_CHECKING:
     from shape.generation.engine import GenerationResult
@@ -206,7 +207,7 @@ def domain_contract(schema: GenSchema, row_counts: dict[str, int]) -> dict[str, 
             "allow_extra_columns": False,
             "columns": columns,
         }
-    return {"tables": tables}
+    return compat.stamp("contract", {"tables": tables}, aliases=False)
 
 
 def _load(domain: str, mode: str | None) -> Any:

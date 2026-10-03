@@ -6,7 +6,11 @@ shape registry ROOT ACTION ...
 
 `ROOT` is a directory. Every version of a name is stored as the bytes you committed, under their
 sha256 (`objects/<sha256>`); `logs/<name>.jsonl` records each commit, `refs/<name>/latest` and
-`tags/<name>/<tag>` point at versions. A registry is a plain directory, so it is natural to back
+`tags/<name>/<tag>` point at versions. `layout.json` at the root declares the layout version
+(`format` `shape-registry`, `version` 1; opening an older registry writes it); a registry whose
+layout is newer than this release reads is refused, naming the release that reads it. Each log
+entry has `created_at` (epoch seconds) and `created` (UTC ISO 8601). See
+[state and compatibility](specs/STATE_AND_COMPATIBILITY.md). A registry is a plain directory, so it is natural to back
 up or commit to git. That is why **a registry never holds a raw profile unless you ask for it**.
 
 ## What it stores: safe forms, not real values

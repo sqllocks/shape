@@ -1,0 +1,1 @@
+{"entries":[{"description":"capsule","name":"nightly","path":"erp/orders/nightly.shape","source_rows":60,"system":"erp","table":"orders","tags":["capsule"]},{"description":"safe","form":"safe","name":"shareable","path":"erp/orders/shareable.safe.json","source_rows":60,"system":"erp","table":"orders","tags":["capsule"]}],"problems":[]}
