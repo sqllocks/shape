@@ -41,9 +41,10 @@ OLD_COLUMN_MAPPING_ERROR = (
 )
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="module")
 def _delta_extension():
-    """The fallback needs DuckDB's ``delta`` extension (downloaded on first use)."""
+    """The fallback needs DuckDB's ``delta`` extension (downloaded on first use). Only the tests
+    that read through DuckDB use it, so the others run with no network (#331)."""
     try:
         con = duckdb.connect()
         try:
@@ -140,6 +141,7 @@ def test_a_duckdb_without_the_delta_extension_says_how_to_get_it(monkeypatch):
 # --- the fallback reads the right rows ---------------------------------------------------
 
 
+@pytest.mark.usefixtures("_delta_extension")
 def test_deletion_vectors_are_honoured(capsys):
     table, prov = read_delta(_table("dv"))
     assert table.num_rows == 90
@@ -149,6 +151,7 @@ def test_deletion_vectors_are_honoured(capsys):
     assert prov["version"] == 2
 
 
+@pytest.mark.usefixtures("_delta_extension")
 def test_the_notice_goes_to_stderr_and_names_the_feature(capsys):
     shape.profile(_table("dv"))
     out, err = capsys.readouterr()
@@ -158,6 +161,7 @@ def test_the_notice_goes_to_stderr_and_names_the_feature(capsys):
     assert err.count("\n") == 1  # one line, once per read
 
 
+@pytest.mark.usefixtures("_delta_extension")
 def test_provenance_records_the_fallback_and_why():
     prof = shape.profile(_table("dv"))
     prov = prof.provenance
@@ -168,12 +172,14 @@ def test_provenance_records_the_fallback_and_why():
     assert prov["as_of"] is None
 
 
+@pytest.mark.usefixtures("_delta_extension")
 def test_provenance_survives_save_and_load(tmp_path):
     prof = shape.profile(_table("dv"))
     shape.save(prof, tmp_path / "dv.shape")
     assert shape.load(tmp_path / "dv.shape").provenance == prof.provenance
 
 
+@pytest.mark.usefixtures("_delta_extension")
 def test_the_profile_counts_only_live_rows():
     d = shape.profile(_table("dv")).to_dict()
     assert d["row_count"] == 90
@@ -181,6 +187,7 @@ def test_the_profile_counts_only_live_rows():
     assert d["columns"]["id"]["min_value"] == ["int", 1]
 
 
+@pytest.mark.usefixtures("_delta_extension")
 @pytest.mark.parametrize(("version", "rows"), [(0, 0), (1, 100), (2, 90)])
 def test_version_is_honoured_by_the_fallback(version, rows):
     table, prov = read_delta(_table("dv"), version=version)
@@ -188,6 +195,7 @@ def test_version_is_honoured_by_the_fallback(version, rows):
     assert prov["version"] == version and prov["reader"] == "duckdb"
 
 
+@pytest.mark.usefixtures("_delta_extension")
 def test_as_of_is_honoured_by_the_fallback(dv_dated):
     dv = dv_dated
     table, prov = read_delta(dv, as_of=_commit_time(dv, 1))
@@ -213,6 +221,7 @@ def test_version_and_as_of_together_are_refused_before_any_read():
         read_delta(_table("dv"), version=1, as_of="2030-01-01T00:00:00Z")
 
 
+@pytest.mark.usefixtures("_delta_extension")
 def test_the_cli_profiles_a_deletion_vector_table(tmp_path, capsys):
     out = tmp_path / "dv.shape"
     assert main(["profile", str(_table("dv")), "-o", str(out)]) == 0
@@ -223,6 +232,7 @@ def test_the_cli_profiles_a_deletion_vector_table(tmp_path, capsys):
     assert shape.load(out).to_dict()["row_count"] == 90
 
 
+@pytest.mark.usefixtures("_delta_extension")
 def test_the_cli_honours_version(tmp_path, capsys):
     out = tmp_path / "dv1.shape"
     assert main(["profile", str(_table("dv")), "--version", "1", "-o", str(out)]) == 0
@@ -236,6 +246,7 @@ def test_the_cli_honours_version(tmp_path, capsys):
 # the table's configuration sends it to the fallback before delta-rs is asked.
 
 
+@pytest.mark.usefixtures("_delta_extension")
 def test_the_fallback_reads_a_column_mapped_table_with_logical_names():
     table = fb.read_via_duckdb(str(_table("cm")))
     assert table.column_names == ["id", "full name", "amount"]
@@ -243,6 +254,7 @@ def test_the_fallback_reads_a_column_mapped_table_with_logical_names():
     assert table.column("amount").to_pylist()[3] == 4.5
 
 
+@pytest.mark.usefixtures("_delta_extension")
 def test_a_column_mapped_table_is_never_read_with_delta_rs(capsys):
     table, prov = read_delta(_table("cm"))
     assert prov["reader"] == "duckdb" and prov["reader_features"] == ["columnMapping"]
@@ -251,6 +263,7 @@ def test_a_column_mapped_table_is_never_read_with_delta_rs(capsys):
     assert "columnMapping" in capsys.readouterr().err
 
 
+@pytest.mark.usefixtures("_delta_extension")
 def test_a_column_mapped_table_has_the_rows_of_the_same_table_without_mapping():
     mapped, _ = read_delta(_table("cm"))
     plain = deltalake.DeltaTable(str(_table("plain"))).to_pyarrow_table()
@@ -259,6 +272,7 @@ def test_a_column_mapped_table_has_the_rows_of_the_same_table_without_mapping():
     assert mapped.column("amount").to_pylist() == plain.column("amount").to_pylist()
 
 
+@pytest.mark.usefixtures("_delta_extension")
 def test_a_column_mapped_profile_is_correct_and_says_why(capsys):
     prof = shape.profile(_table("cm"))
     d = prof.to_dict()
@@ -275,6 +289,7 @@ def test_a_column_mapped_table_without_duckdb_is_an_error_not_null_columns(monke
     assert "sqllocks-shape[delta-fallback]" in str(err.value)
 
 
+@pytest.mark.usefixtures("_delta_extension")
 def test_an_old_delta_rs_failing_on_column_mapping_is_covered_too(monkeypatch):
     def old_read(self, *a, **k):
         raise deltalake.exceptions.DeltaProtocolError(OLD_COLUMN_MAPPING_ERROR)
@@ -291,6 +306,7 @@ def test_an_old_delta_rs_failing_on_column_mapping_is_covered_too(monkeypatch):
 # --- same table, same profile ------------------------------------------------------------
 
 
+@pytest.mark.usefixtures("_delta_extension")
 def test_both_readers_give_the_same_profile(tmp_path, capsys):
     path = _table("plain")
     via_delta_rs = shape.profile(path, name="t")
@@ -303,6 +319,7 @@ def test_both_readers_give_the_same_profile(tmp_path, capsys):
     assert capsys.readouterr().err == ""
 
 
+@pytest.mark.usefixtures("_delta_extension")
 def test_both_readers_agree_on_a_table_with_every_common_type(tmp_path):
     import datetime as dt
 
@@ -342,6 +359,7 @@ def test_other_errors_are_not_swallowed(monkeypatch):
         shape.profile(_table("plain"))
 
 
+@pytest.mark.usefixtures("_delta_extension")
 def test_a_different_unsupported_reader_feature_falls_back_too(monkeypatch, capsys):
     def v2(self, *a, **k):
         raise deltalake.exceptions.DeltaProtocolError(
@@ -368,6 +386,7 @@ def test_the_extra_is_declared_and_duckdb_is_not_a_core_dependency():
 # --- the source plugin (local and delta+abfss) -------------------------------------------
 
 
+@pytest.mark.usefixtures("_delta_extension")
 def test_the_delta_source_plugin_reads_a_deletion_vector_table(capsys):
     from shape.builtins.sources.delta import DeltaSource
 
