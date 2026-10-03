@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import contextlib
 import os
-import tempfile
+import secrets
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, BinaryIO
@@ -23,6 +23,19 @@ from shape.errors import ShapeError
 
 from ._auth import as_credential
 from .onelake import is_remote, path_segments, to_abfss
+
+
+def _temporary(target: Path) -> tuple[int, str]:
+    """A new, unique file next to ``target``, created with mode 0666 less the umask (the mode
+    ``open()`` gives; ``tempfile.mkstemp`` would make it 0600 and the rename would keep that)."""
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0)
+    for _ in range(100):
+        tmp = target.parent / f".{target.name}.{secrets.token_hex(6)}.tmp"
+        try:
+            return os.open(tmp, flags, 0o666), str(tmp)
+        except FileExistsError:
+            continue
+    raise FileExistsError(f"no free temporary name next to {target}")
 
 
 class Storage:
@@ -67,7 +80,7 @@ class Storage:
             return
         target = Path(path)
         target.parent.mkdir(parents=True, exist_ok=True)
-        fd, tmp = tempfile.mkstemp(prefix=f".{target.name}.", suffix=".tmp", dir=target.parent)
+        fd, tmp = _temporary(target)
         try:
             with os.fdopen(fd, "wb") as handle:
                 writer(handle)
