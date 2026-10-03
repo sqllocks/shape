@@ -446,7 +446,7 @@ class StreamEmitter:
         topics = topic_map(source, cfg)
         for topic in topics.values():
             self._schema_versions[topic] = cfg.envelope_schema_version
-        buffer = max(100, int(self._config.rate_per_sec * self._config.replay_window_minutes * 60))
+        buffer = max(100, int(cfg.rate_per_sec * cfg.replay_window_minutes * 60))
         plan = TablesEventPlan(source, cfg, topics, self._rng, self._correlation_id, buffer)
 
         sink = self._open_sink(cfg)
