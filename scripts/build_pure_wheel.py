@@ -6,10 +6,10 @@ the form Fabric User Data Functions need for a private library (platform indepen
 
 The wheel is written directly (a wheel is a zip file plus ``*.dist-info``), so the build needs
 nothing but the standard library. Its metadata is generated here rather than taken from
-``pyproject.toml``: the demo wheel declares ``numpy>=2.0,<3`` and ``pyarrow>=14.0.1`` so that the
-libraries preinstalled in Fabric are accepted, and it does not require ``cryptography``,
-``pydantic`` or ``typing-extensions`` (``import shape`` does not use them). The stricter pins in
-``pyproject.toml`` return with plan work package P0-05.
+``pyproject.toml``: the wheel declares the core requirements of T-07 (``numpy>=2.0,<3``,
+``pyarrow>=14.0.1``, ``tzdata`` on Windows), which accept the libraries preinstalled in Fabric,
+and only the ``delta``, ``pandas`` and ``yaml`` extras; it never requires ``cryptography`` or
+``pydantic`` (``import shape`` does not use them).
 
     python scripts/build_pure_wheel.py                # build into dist/, run the self-checks
     python scripts/build_pure_wheel.py --verify       # also install it in a fresh venv and test
