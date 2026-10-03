@@ -19,6 +19,7 @@ from shape.plugins.api.v1 import GenerationContext
 from .basic import relative_weights
 
 SHAPE_API = "1.0"
+_INT64_MIN, _INT64_MAX = -(2**63), 2**63 - 1
 
 
 class Constant:
@@ -39,6 +40,13 @@ class Sequence:
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         start, step = int(spec.get("start", 1)), int(spec.get("step", 1))
+        if ctx.n_rows:
+            ends = (start + ctx.row_start * step, start + (ctx.row_start + ctx.n_rows - 1) * step)
+            if not all(_INT64_MIN <= v <= _INT64_MAX for v in ends):  # numpy would wrap (#148)
+                raise StrategyError(
+                    f"sequence for {where(ctx)} leaves int64 (start {start}, step {step}, "
+                    f"rows {ctx.row_start}..{ctx.row_start + ctx.n_rows - 1})"
+                )
         index = np.arange(ctx.row_start, ctx.row_start + ctx.n_rows, dtype=np.int64)
         return arrow_array(start + index * step)
 
