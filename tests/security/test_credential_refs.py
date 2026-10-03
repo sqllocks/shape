@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import os
 import stat
+import subprocess
 import sys
 import types
 
@@ -119,14 +120,31 @@ def test_without_a_package_kv_says_what_to_install(no_providers):
         credrefs.resolve_reference("kv://v/n")
 
 
-def test_core_imports_no_cloud_sdk_to_resolve_references(tmp_path, monkeypatch, no_providers):
+_FRESH_INTERPRETER_CHECK = """
+import os, sys
+from shape.security import credrefs
+credrefs.resolve_reference("file://" + os.environ["SHAPE_T_FILE"])
+credrefs.resolve_reference("env://SHAPE_T_ENV")
+bad = sorted(m for m in sys.modules if m.startswith(("azure", "boto", "google.cloud")))
+sys.exit("cloud SDK modules imported: " + ", ".join(bad) if bad else 0)
+"""
+
+
+def test_core_imports_no_cloud_sdk_to_resolve_references(tmp_path, monkeypatch):
+    # A fresh interpreter, so an earlier test that imported an SDK cannot affect the result
+    # and the check covers everything resolving a reference imports.
     f = tmp_path / "s"
     f.write_text("x")
     f.chmod(0o600)
+    monkeypatch.setenv("SHAPE_T_FILE", str(f))
     monkeypatch.setenv("SHAPE_T_ENV", "y")
-    credrefs.resolve_reference(f"file://{f}")
-    credrefs.resolve_reference("env://SHAPE_T_ENV")
-    assert not [m for m in sys.modules if m.startswith(("azure", "boto", "google.cloud"))]
+    done = subprocess.run(
+        [sys.executable, "-c", _FRESH_INTERPRETER_CHECK],
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert done.returncode == 0, done.stderr
 
 
 def test_recognising_a_reference_imports_nothing():
