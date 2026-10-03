@@ -651,7 +651,8 @@ class DdlParser:
     def _canonical_fks(tables: list[_ParsedTable], fks: list[_ForeignKey]) -> list[_ForeignKey]:
         """Foreign keys with every table and column name spelled as its ``CREATE TABLE`` does:
         SQL identifiers are case-insensitive, so ``REFERENCES customer(id)`` is ``Customer.Id``.
-        A name the file does not define is kept as written."""
+        A key to a table the file does not define is dropped (the column is generated as a plain
+        value), and a column declared a key several ways is one key: its last declaration."""
         by_name = {t.name.lower(): t for t in tables}
 
         def column(table: str, name: str) -> str:
@@ -659,21 +660,20 @@ class DdlParser:
             cols = {} if parsed is None else {c.name.lower(): c.name for c in parsed.columns}
             return cols.get(name.lower(), name)
 
-        out = []
+        out: dict[tuple[str, str], _ForeignKey] = {}
         for fk in fks:
             child = by_name.get(fk.child_table.lower())
             parent = by_name.get(fk.parent_table.lower())
+            if parent is None:
+                continue
             child_table = child.name if child else fk.child_table
-            parent_table = parent.name if parent else fk.parent_table
-            out.append(
-                _ForeignKey(
-                    child_table,
-                    column(child_table, fk.child_column),
-                    parent_table,
-                    column(parent_table, fk.parent_column),
-                )
+            child_column = column(child_table, fk.child_column)
+            key = (child_table.lower(), child_column.lower())
+            out.pop(key, None)  # the last declaration wins, in its own place
+            out[key] = _ForeignKey(
+                child_table, child_column, parent.name, column(parent.name, fk.parent_column)
             )
-        return out
+        return list(out.values())
 
     # ---- schema -----------------------------------------------------------------------
 
