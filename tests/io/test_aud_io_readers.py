@@ -6,7 +6,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
 
-from shape.io import CsvOptions, expand_paths, iter_rows, open_source, read_table
+from shape.io import CsvOptions, ReaderError, expand_paths, iter_rows, open_source, read_table
 
 
 def _write(path, text):
@@ -62,3 +62,11 @@ def test_493_jsonl_and_parquet_null_columns_in_the_first_file(tmp_path):
     pq.write_table(pa.table({"k": [2], "opt": [2.5]}), tmp_path / "b.parquet")
     t = read_table([tmp_path / "a.parquet", tmp_path / "b.parquet"])
     assert t["opt"].to_pylist() == [None, 2.5]
+
+
+def test_498_a_record_batch_reader_source_can_be_read_only_once():
+    t = pa.table({"a": [1, 2, 3]})
+    src = open_source(pa.RecordBatchReader.from_batches(t.schema, t.to_batches()))
+    assert src.table().num_rows == 3
+    with pytest.raises(ReaderError, match="only once"):
+        src.table()
