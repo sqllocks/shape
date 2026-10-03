@@ -551,14 +551,22 @@ class SafeProfile:
     def from_dict(cls, data: Mapping[str, Any], source: object = "") -> SafeProfile:
         version = compat.check_readable("safe-profile", data, source)
         extra = compat.check_unknown("safe-profile", data, cls._KNOWN)
-        return cls(
-            tables={n: SafeTableProfile.from_dict(t) for n, t in data.get("tables", {}).items()},
-            relationships=list(data.get("relationships", [])),
-            schema_version=version,
-            redaction_manifest=dict(data.get("redaction_manifest", {})),
-            unsafe=bool(data.get("unsafe", False)),
-            extra={k: data[k] for k in extra},
-        )
+        try:
+            return cls(
+                tables={
+                    n: SafeTableProfile.from_dict(t) for n, t in data.get("tables", {}).items()
+                },
+                relationships=list(data.get("relationships", [])),
+                schema_version=version,
+                redaction_manifest=dict(data.get("redaction_manifest", {})),
+                unsafe=bool(data.get("unsafe", False)),
+                extra={k: data[k] for k in extra},
+            )
+        except (TypeError, AttributeError, KeyError) as exc:
+            where = f"{source}: " if str(source) else ""
+            raise compat.FormatError(
+                f"{where}safe profile is malformed ({type(exc).__name__}: {exc})"
+            ) from exc
 
     def to_json(self, *, compact: bool = False) -> str:
         """The JSON text. ``compact`` writes one line without ``null`` fields (a column or table

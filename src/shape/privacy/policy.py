@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .cells import suppress_column_cells
+from .cells import columns_of, suppress_column_cells
 from .classification import LEVELS as LEVELS
 
 # Any evidence capable of carrying original values or tight value bounds is stripped on downgrade.
@@ -119,11 +119,11 @@ def release_for(
     out["columns"] = {}
     hidden = {
         name
-        for name, c in shape.get("columns", {}).items()
+        for name, c in columns_of(shape).items()
         if LEVELS.get(str(classifications.get(name, c.get("classification", "PUBLIC"))).upper(), 0)
         > LEVELS[target]
     }
-    for name, c in shape.get("columns", {}).items():
+    for name, c in columns_of(shape).items():
         label = str(classifications.get(name, c.get("classification", "PUBLIC"))).upper()
         if label not in LEVELS:
             raise ValueError(f"unknown classification {label}")

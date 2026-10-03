@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from .cells import suppress_column_cells
+from .cells import columns_of, suppress_column_cells
 from .classification import DEFAULT_TAXONOMY
 
 
@@ -29,7 +29,7 @@ def suppress_shape(
     rows = shape.get("rows", 0)
     out: dict[str, Any] = {"rows": rows, "columns": {}}
     cells = 0
-    for name, c in shape.get("columns", {}).items():
+    for name, c in columns_of(shape).items():
         count = c.get("count", rows)
         if count < policy.min_count:
             out["columns"][name] = {
@@ -69,7 +69,7 @@ def redact_sensitive(
     """
     out: dict[str, Any] = {"rows": shape.get("rows", 0), "columns": {}}
     floor = min(DEFAULT_TAXONOMY.rank(x) for x in redact_at)
-    for name, c in shape.get("columns", {}).items():
+    for name, c in columns_of(shape).items():
         x = dict(c)
         label = str(classifications.get(name, "PUBLIC")).upper()
         if DEFAULT_TAXONOMY.rank(label) >= floor:

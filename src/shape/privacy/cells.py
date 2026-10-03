@@ -32,6 +32,17 @@ _COUNT_LIST_KEYS = ("histogram", "hour_histogram", "dow_histogram")
 _COUNT_MAP_KEYS = ("value_counts_ext", "enum_values")
 
 
+def columns_of(shape: Mapping[str, Any]) -> Mapping[str, Mapping[str, Any]]:
+    """The ``columns`` of a capture or profile document: a mapping of column name to column
+    mapping, else a ``ValueError`` that names the field."""
+    columns = shape.get("columns", {})
+    if not isinstance(columns, Mapping) or any(
+        not isinstance(c, Mapping) for c in columns.values()
+    ):
+        raise ValueError("columns must be a mapping of column name to column profile")
+    return columns
+
+
 def _is_int(x: Any) -> bool:
     return isinstance(x, int) and not isinstance(x, bool)
 
