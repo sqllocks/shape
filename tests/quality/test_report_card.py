@@ -755,6 +755,45 @@ def test_require_turns_a_not_run_section_into_a_failure(folders, capsys):
     assert rc == 0
 
 
+def test_required_privacy_without_a_holdout_exits_1_and_not_required_exits_0(folders, capsys):
+    base = (folders["real"], folders["good"], "--config", folders["config"], "--tiers", "2")
+    # not required: exit 0, the membership test is in the card as not_run with its reason
+    rc, out, _ = run(capsys, *base, "--json")
+    d = json.loads(out)
+    gates = {g["name"]: g for g in d["sections"]["privacy"]["gates"]}
+    assert rc == 0 and d["overall"] == "pass"
+    assert (
+        gates["membership_inference"]["status"] == "not_run"
+        and "holdout" in gates["membership_inference"]["reason"]
+    )
+    # required: the same run exits 1 and the reason names the membership test
+    rc, out, _ = run(capsys, *base, "--require", "privacy", "--json")
+    d = json.loads(out)
+    assert rc == 1 and d["overall"] == "fail"
+    assert any("membership" in r and "holdout" in r for r in d["overall_reasons"])
+    # with the holdout the same requirement is met
+    rc, _, _ = run(capsys, *base, "--holdout", folders["holdout"], "--require", "privacy")
+    assert rc == 0
+
+
+def test_a_tier_not_asked_for_does_not_count_as_not_run(real, independent):
+    card = report_card(real, independent, config=CONFIG_DOC, tiers=(2,), require=("fidelity",))
+    d = card.to_dict()
+    assert not any("fidelity" in r for r in d["overall_reasons"])
+
+
+def test_report_card_require_defaults_to_empty_and_matches_the_issue_signature(real, independent):
+    import inspect
+
+    sig = inspect.signature(report_card)
+    assert sig.parameters["require"].default == ()
+    assert sig.parameters["require"].kind is inspect.Parameter.KEYWORD_ONLY
+    d = report_card(real, independent, config=CONFIG_DOC, tiers=()).to_dict()
+    assert d["require"] == [] and d["overall"] == "pass"
+    same = report_card(real, independent, config=CONFIG_DOC, tiers=(), require=()).to_dict()
+    assert same == d
+
+
 def test_require_reports_which_sections_were_missing(folders, capsys):
     _, out, _ = run(
         capsys, folders["real"], folders["good"], "--require", "utility,privacy", "--json"
