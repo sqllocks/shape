@@ -6,6 +6,7 @@ from __future__ import annotations
 import io
 import json
 from contextlib import redirect_stderr, redirect_stdout
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
@@ -141,7 +142,9 @@ def test_a_decoded_batch_knows_its_partition_and_conform_keeps_it():
 
 
 def _profile(batches, *, per_partition: bool, skew: int | None = None, lateness: int = 0):
-    prof = TumblingProfiler(SCHEMA, 2 * SEC, allowed_lateness=lateness, name="t")
+    prof = TumblingProfiler(
+        SCHEMA, timedelta(seconds=2), allowed_lateness=timedelta(microseconds=lateness), name="t"
+    )
     if skew is not None:
         prof.max_partition_skew = skew
     if per_partition:
@@ -187,7 +190,7 @@ def test_one_partition_behaves_as_before():
 
 
 def test_windows_close_as_the_slowest_partition_advances():
-    prof = TumblingProfiler(SCHEMA, 2 * SEC, name="t")
+    prof = TumblingProfiler(SCHEMA, timedelta(seconds=2), name="t")
     prof.register_partitions(["0", "1"])
     assert prof.process(_batch("0", range(10)), "0") == []
     assert prof.process(_batch("0", range(10, 20)), "0") == []  # partition 1 has said nothing
@@ -196,7 +199,7 @@ def test_windows_close_as_the_slowest_partition_advances():
 
 
 def test_a_silent_partition_holds_windows_for_at_most_the_skew_cap():
-    prof = TumblingProfiler(SCHEMA, 2 * SEC, name="t")
+    prof = TumblingProfiler(SCHEMA, timedelta(seconds=2), name="t")
     prof.max_partition_skew = 30 * SEC
     prof.register_partitions(["0", "1"])
     closed = prof.process(_batch("0", range(20)), "0")
@@ -212,11 +215,11 @@ def test_a_silent_partition_holds_windows_for_at_most_the_skew_cap():
 
 def test_the_default_skew_cap_is_ten_minutes():
     assert DEFAULT_MAX_PARTITION_SKEW == 600 * SEC
-    assert TumblingProfiler(SCHEMA, SEC).max_partition_skew == 600 * SEC
+    assert TumblingProfiler(SCHEMA, timedelta(seconds=1)).max_partition_skew == 600 * SEC
 
 
 def test_an_idle_partition_stops_holding_the_watermark_and_comes_back():
-    prof = TumblingProfiler(SCHEMA, 2 * SEC, name="t")
+    prof = TumblingProfiler(SCHEMA, timedelta(seconds=2), name="t")
     prof.register_partitions(["0", "1"])
     assert prof.process(_batch("0", range(10)), "0") == []
     prof.set_idle("1")
@@ -226,7 +229,7 @@ def test_an_idle_partition_stops_holding_the_watermark_and_comes_back():
 
 
 def test_late_rows_record_how_far_behind_they_were():
-    prof = TumblingProfiler(SCHEMA, 2 * SEC, name="t")
+    prof = TumblingProfiler(SCHEMA, timedelta(seconds=2), name="t")
     prof.process(_batch(None, range(30)))
     assert prof.late_events == 0
     prof.process(_batch(None, range(0, 4), start_id=900))
@@ -237,7 +240,7 @@ def test_late_rows_record_how_far_behind_they_were():
 def test_a_snapshot_restores_the_partitions_and_the_run_is_exact():
     batches = _delivery(3, 20, chunk=4)
     whole, w_whole = _profile(batches, per_partition=True)
-    prof = TumblingProfiler(SCHEMA, 2 * SEC, name="t")
+    prof = TumblingProfiler(SCHEMA, timedelta(seconds=2), name="t")
     prof.register_partitions(["0", "1", "2"])
     seen = []
     for pid, batch in batches[:5]:
@@ -252,7 +255,7 @@ def test_a_snapshot_restores_the_partitions_and_the_run_is_exact():
 
 
 def test_an_old_snapshot_without_partitions_still_restores():
-    prof = TumblingProfiler(SCHEMA, 2 * SEC, name="t")
+    prof = TumblingProfiler(SCHEMA, timedelta(seconds=2), name="t")
     prof.process(_batch(None, range(4)))
     snap = prof.snapshot()
     del snap["partitions"]
@@ -267,7 +270,7 @@ def test_an_old_snapshot_without_partitions_still_restores():
 
 def test_the_consumer_learns_the_partitions_from_the_offsets():
     batches = _delivery(4, 20, chunk=5)
-    prof = TumblingProfiler(SCHEMA, 2 * SEC, name="t")
+    prof = TumblingProfiler(SCHEMA, timedelta(seconds=2), name="t")
     consumer = StreamConsumer(_Source(4, batches), "fake://x/t", prof)
     windows = list(consumer.run())
     assert sorted(prof.partitions) == ["0", "1", "2", "3"]
@@ -287,7 +290,7 @@ def test_the_consumer_marks_a_quiet_partition_idle_after_the_timeout():
     # last, so a 25 s timeout takes partition 1 out of the watermark after a few batches
     batches = [("0", _batch("0", range(s, s + 2))) for s in range(0, 20, 2)]
     clock = iter(range(0, 10_000, 10))
-    prof = TumblingProfiler(SCHEMA, 2 * SEC, name="t")
+    prof = TumblingProfiler(SCHEMA, timedelta(seconds=2), name="t")
     consumer = StreamConsumer(
         _Source(2, batches),
         "fake://x/t",
@@ -297,7 +300,7 @@ def test_the_consumer_marks_a_quiet_partition_idle_after_the_timeout():
     )
     assert _first_window_after(consumer, prof) < len(batches)
     # without the timeout the windows wait for partition 1 (here until the end of the stream)
-    prof2 = TumblingProfiler(SCHEMA, 2 * SEC, name="t")
+    prof2 = TumblingProfiler(SCHEMA, timedelta(seconds=2), name="t")
     consumer2 = StreamConsumer(_Source(2, batches), "fake://x/t", prof2)
     assert _first_window_after(consumer2, prof2) == len(batches)
 
