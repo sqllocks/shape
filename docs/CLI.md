@@ -38,6 +38,9 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   table with deletion vectors or column mapping is read with DuckDB (extra `delta-fallback`) and
   says so on stderr; see the README.
 - `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles.
+  `shape diff` also compares two captures (`shape capture ... -o X.json`): it prints the changes,
+  writes them with `--json OUT`, and exits 1 under `--fail-on-drift` when there is any. The
+  thresholds, `--ignore`, `--only` and `--policy` are the profile engine's and are refused there.
 - `shape inspect ARTIFACT.shape` prints what an artifact holds, a profile or a model. `shape show`
   is an alias of `shape inspect`.
 - `shape capture SRC` reads everything `shape profile` reads (CSV, Parquet, JSONL, a folder or

@@ -601,6 +601,40 @@ def _cmd_diff(a):
     return 1 if (a.fail_on_drift and result.drifted) else 0
 
 
+def _profile_only_diff_flags(a):
+    """The ``shape diff`` options given that only the profile engine reads."""
+    given = [flag for flag, key, _ in _DIFF_THRESHOLD_FLAGS if getattr(a, f"th_{key}") is not None]
+    for flag, value in (
+        ("--threshold", a.threshold),
+        ("--column-threshold", a.column_threshold),
+        ("--ignore", a.ignore),
+        ("--only", a.only),
+        ("--policy", a.policy),
+    ):
+        if value:
+            given.append(flag)
+    return given
+
+
+def _cmd_diff_documents(a):
+    """``shape diff`` of two captures or evidence documents: 0, or 1 under ``--fail-on-drift``
+    when anything changed. Thresholds and column filters are the profile engine's; they are
+    refused here rather than silently ignored."""
+    from shape.drift import compare
+
+    flags = _profile_only_diff_flags(a)
+    if flags:
+        raise ValueError(
+            f"{', '.join(flags)} apply to profiles (`shape profile SRC -o X.shape`); a diff of "
+            "two captures takes --json and --fail-on-drift only"
+        )
+    changes = [asdict(v) for v in compare(_load_json(a.before), _load_json(a.after))]
+    if a.json:
+        _write_json(a.json, changes)
+    _dump(changes)
+    return 1 if (a.fail_on_drift and changes) else 0
+
+
 def _cmd_verify(a):
     """``shape verify``: a ``.shape`` artifact is checked for its signature, anything else is
     data for the validation gates."""
@@ -1549,10 +1583,7 @@ def _dispatch(argv):
     if a.cmd == "capture":
         return _run(_cmd_capture, a)
     if a.cmd == "diff":
-        from shape.drift import compare
-
-        _dump([asdict(v) for v in compare(_load_json(a.before), _load_json(a.after))])
-        return 0
+        return _cmd_diff_documents(a)
     if a.cmd in ("show", "inspect"):
         return _run(_cmd_inspect, a)
     if a.cmd == "validate":
