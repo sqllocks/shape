@@ -143,6 +143,8 @@ def test_lakehouse_writes_the_landing_zone_and_the_manifest(world):
     assert set(manifest) == {
         "run_id", "spec_hash", "pack_id", "domain", "scale", "seed", "engine_version", "outputs",
         "tables", "validation", "chaos", "timestamps", "workspace_id", "lakehouse_id", "sbom",
+        # the run manifest's declaration and reproducibility fields (W1-03)
+        "format", "version", "reproducibility", "dataset_id",
     }  # fmt: skip
     assert re.fullmatch(r"\d{8}_\d{6}_retail_small_s42", manifest["run_id"])
     assert (manifest["domain"], manifest["scale"], manifest["seed"]) == ("retail", "small", 42)
