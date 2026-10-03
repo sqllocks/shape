@@ -9,6 +9,7 @@ import pytest
 
 from shape.proposals import (
     FORMAT,
+    MAX_VERSION,
     VERSION,
     Decision,
     DecisionError,
@@ -160,8 +161,9 @@ def valid_doc() -> dict:
 
 
 def test_a_newer_version_is_refused_with_a_message_that_names_both_versions():
-    doc = valid_doc() | {"version": VERSION + 1}
-    with pytest.raises(DecisionError, match=rf"version {VERSION + 1}.*(newer|upgrade)"):
+    # version 2 exists since W3-02 (rule proposals); the first version this Shape cannot read is 3
+    doc = valid_doc() | {"version": MAX_VERSION + 1}
+    with pytest.raises(DecisionError, match=rf"version {MAX_VERSION + 1}.*(newer|upgrade)"):
         DecisionFile.from_dict(doc)
 
 

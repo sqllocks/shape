@@ -5,6 +5,21 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Rule suggestion from a profile (W3-02, `docs/PROPOSALS.md#rules`). `shape proposals propose
+  PROFILE.shape [PROFILE.shape ...] --kinds rule` (and `shape.proposals.propose_rules`) proposes
+  contract v1 rules from what a profile measured: per column `dtype`, `nullable`, `unique`,
+  `range`, `pattern`, `allowed_values` (up to 20 values) and `no_placeholder`; per table a
+  `row_count` band, `fd` (confidence 0.99 or more) and `reference_pair`. Each has the exact
+  contract fragment as its claim, the profile figures as evidence and a documented confidence that
+  rises with the support and the number of profiles; a rule is proposed only when it holds on
+  every profile given and never from fewer than 30 non-null values. Personal-data columns get
+  value-free rules only. `shape proposals contract -d DECISIONS.json -o CONTRACT.json [--merge
+  EXISTING.json]` (and `DecisionFile.to_contract`) writes the accepted rules as a contract that
+  `shape check` reads. The decision file is version 2 (`decisions-v2.schema.json`) when it holds a
+  rule proposal and version 1, byte for byte as before, otherwise; version 2 adds the status
+  `stale` for an accepted rule whose evidence no longer holds (`shape proposals list --status
+  stale`). `propose` kinds default to `relationship,pii,semantic` as before.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
