@@ -330,3 +330,20 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Repository cleaned up for public release: removed internal milestone and
   qualification records.
 - README and changelog rewritten to describe the current state.
+
+### Fixed
+
+- Built-in generators (audit AUD-builtins, #129 to #149, #201): seasonal and hour-of-day
+  `temporal` values stay inside a start or end that has a time of day (the partial edge days weigh
+  their share of the day); hour keys such as `"07"` are hours, unknown month or weekday keys are
+  errors, and a bound with a time-zone offset is that instant in UTC; the `truncated` distribution
+  fills any table and gives the same values for any chunking (the interval must hold at least 5% of
+  the base distribution); `empirical` cubic interpolation stays within its outermost anchors; the
+  `digits` provider is uniform up to 18 digits; the hierarchy sampler cache never serves another
+  dataset's sampler; an nth-weekday holiday rule stays in its month; a monthly payday without
+  `days` pays on the 28th; `sequence` values past int64 are an error; a `foreign_key` into its own
+  table that cannot be built is a circular-reference error instead of a `RecursionError`; `faker`
+  serves only provider methods; `fit_family` refuses degenerate samples with `FamilyError`; spec
+  mistakes in `constant`, `choice`, `uniform`, `normal`, `weighted_enum`, `lifecycle`, `formula`,
+  `histogram`, `mixture`, `digits`, `pattern`, `address`, `derived` and `foreign_key` are
+  `StrategyError`s naming the column.
