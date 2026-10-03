@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime as dt
 
 import pyarrow as pa  # type: ignore[import-untyped]
+import pytest
 
 from shape.generation.engine import cast_output
 from shape.generation.schema import Column
@@ -67,3 +68,60 @@ def test_the_null_rate_applies_to_a_column_made_by_a_multi_column_strategy():
     # the whole composite key is missing together, never half of it
     assert c["pb"].is_null().to_pylist() == c["pa"].is_null().to_pylist()
     assert engine.generate_column("c", "pa", 0, 1000).null_count == nulls
+
+
+def _counted(derived=None, date_range=None):
+    from aud_gen_fixtures import build, col
+
+    from shape.generation.schema import GenSchema
+
+    s = build(
+        {
+            "p": (["id"], {"id": col("sequence")}),
+            "c": (["id"], {"id": col("sequence"), "p_id": col("foreign_key", ref="p.id")}),
+        },
+        {"p": 10},
+        rels=(("p", "c", "id", "p_id"),),
+    )
+    doc = s.to_dict()
+    doc["generation"]["derived_counts"] = derived or {}
+    if date_range is not None:
+        doc["model"]["date_range"] = date_range
+    return GenSchema.from_dict(doc)
+
+
+@pytest.mark.parametrize(
+    ("derived", "date_range"),
+    [
+        ({"c": {"per_parent": "p", "ratio": "2"}}, None),
+        ({"c": {"per_parent": "p", "ratio": -3}}, None),
+        ({"c": {"fixed": "ten"}}, None),
+        ({"c": {"fixed": -1}}, None),
+        ({"c": {"per_year": 10}}, {"start": "2030-01-01"}),
+        ({"c": {"per_year": 10}}, {"start": "2026-01-01", "end": "2024-12-31"}),
+    ],
+)
+def test_bad_derived_counts_are_errors_naming_the_table(derived, date_range):
+    # 187: a string ratio gave a 100-digit row count, a negative ratio an IndexError in
+    # generate(), per_year with no end assumed 2025 (a negative count) and start > end 0 rows.
+    from shape.errors import ShapeSchemaError
+    from shape.generation.engine import calculate_row_counts
+
+    with pytest.raises(ShapeSchemaError, match="'c'"):
+        calculate_row_counts(_counted(derived, date_range))
+
+
+def test_an_integral_float_fixed_count_is_a_count():
+    # 187: fixed 10.0 was ignored silently (the table got the default 100 rows).
+    from shape.generation.engine import calculate_row_counts
+
+    assert calculate_row_counts(_counted({"c": {"fixed": 10.0}}))["c"] == 10
+
+
+def test_a_negative_row_count_override_is_an_error():
+    # 187: Engine(s, row_counts={"c": -5}).generate() raised IndexError: list index out of range.
+    from shape.errors import ShapeSchemaError
+    from shape.generation.engine import Engine
+
+    with pytest.raises(ShapeSchemaError, match="'c'"):
+        Engine(_counted(), row_counts={"c": -5})
