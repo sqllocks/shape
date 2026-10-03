@@ -242,6 +242,7 @@ class View:
     origin: str = "profile"  # "profile" (the reference profiler) or "engine" (profile engine)
     placeholders: list[dict[str, Any]] = field(default_factory=list)  # sentinel values (#47)
     top_values: dict[str, float] | None = None  # share of the non-null values, most frequent first
+    unknown: frozenset[str] = frozenset()  # fields a merged profile could not compute (#618)
 
     @property
     def unique_rate(self) -> float | None:
@@ -483,15 +484,25 @@ class TableView:
         return _WINDOW_TIME in self.columns
 
 
+def _unknown_fields(obj: Any) -> frozenset[str]:
+    """The fields a merged profile leaves unknown (``merge.unavailable``): ``None`` there means
+    "not computed", not "none"."""
+    data = getattr(obj, "_data", None)
+    merge = data.get("merge") if isinstance(data, Mapping) else None
+    names = merge.get("unavailable") if isinstance(merge, Mapping) else None
+    return frozenset(str(n) for n in names) if isinstance(names, list) else frozenset()
+
+
 def _profile_tables(obj: Any) -> dict[str, TableView]:
     out: dict[str, TableView] = {}
+    unknown = _unknown_fields(obj)
     for name, table in obj.tables.items():
         rows = int(table["row_count"])
-        out[name] = TableView(
-            rows,
-            {c: view_of_profile_column(col, rows) for c, col in table["columns"].items()},
-            table.get("joint"),
-        )
+        views = {c: view_of_profile_column(col, rows) for c, col in table["columns"].items()}
+        if unknown:
+            for view in views.values():
+                view.unknown = unknown
+        out[name] = TableView(rows, views, table.get("joint"))
     return out
 
 
@@ -673,6 +684,7 @@ def _diff_column(name: str, base: View, cur: View, th: Mapping[str, Any]) -> lis
         fitted
         and not keyed
         and not flag
+        and "distribution" not in base.unknown | cur.unknown
         and base.distribution != cur.distribution
         and _family_evidence(base, cur, enough)
     ):
@@ -696,7 +708,12 @@ def _diff_column(name: str, base: View, cur: View, th: Mapping[str, Any]) -> lis
                 out.append(_change(name, "true_rate_change", b_rate, c_rate, abs(c_rate - b_rate)))
     elif base.categories is not None and cur.categories is not None:
         out.extend(_diff_categories(name, base, cur, th, enough))
-    if base.pattern != cur.pattern and "string" in (base.dtype, cur.dtype):
+    unknown = base.unknown | cur.unknown
+    if (
+        base.pattern != cur.pattern
+        and "string" in (base.dtype, cur.dtype)
+        and "pattern" not in unknown
+    ):
         out.append(_change(name, "pattern_change", base.pattern, cur.pattern, 1.0))
     if base.length_mean is not None and cur.length_mean is not None:
         rel = abs(cur.length_mean - base.length_mean) / max(base.length_mean, 1e-9)

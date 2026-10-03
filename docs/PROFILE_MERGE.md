@@ -43,7 +43,9 @@ week.content_id         # the content id of the merged profile itself
 decimals, text, dates and times, times of day, durations and binary values.
 
 Unknown means `None`: a merged profile never carries a number it could not compute. The names of
-the unknown fields are listed in `merge.unavailable` of the merged profile.
+the unknown fields are listed in `merge.unavailable` of the merged profile. `shape diff` reads them as
+unknown, so a merged profile compared with a direct profile of the same rows shows no
+`pattern_change` or `distribution_change` for them.
 
 Empty and single-row partitions merge like any other. A column with no values in a partition
 takes its type from the partitions that have values; `integer` and `float` merge to `float`, and
