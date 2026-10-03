@@ -275,6 +275,7 @@ class FakeRegistry:
     ``POST /subjects/{subject}/versions`` registers a schema (the same schema under the same
     subject gives the same id; a different one is refused with 409, as a registry in a
     compatibility mode that forbids the change does), ``GET /schemas/ids/{id}`` reads it back.
+    ``evolve`` accepts a changed schema as a new version of the subject.
     ``refuse`` maps a subject to the message of a 422 refusal; ``auth`` is ``(user, password)``
     that every request must present as basic authentication (401 otherwise); ``down`` makes
     every request fail with 503.
@@ -286,7 +287,9 @@ class FakeRegistry:
         refuse: Mapping[str, str] | None = None,
         auth: tuple[str, str] | None = None,
         down: bool = False,
+        evolve: bool = False,
     ) -> None:
+        self.evolve = evolve  # a changed schema is a new version, not a 409
         self.refuse = dict(refuse or {})
         self.auth = auth
         self.down = down
@@ -325,6 +328,8 @@ class FakeRegistry:
             assert doc is not None
             text, kind = doc["schema"], doc.get("schemaType", "AVRO")
             known = self.subjects.get(subject)
+            if known is not None and known[1] != text and self.evolve:
+                known = None  # a new version of the subject
             if known is not None:
                 if known[1] == text:
                     return 200, json.dumps({"id": known[0]}).encode()

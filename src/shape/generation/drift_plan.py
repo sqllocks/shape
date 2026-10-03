@@ -254,6 +254,22 @@ class DriftPlan:
         n = self.day_number(day)
         return [r.id for r in self._resolved if r.weight(n) > 0]
 
+    def effects(self, day: int | str | dt.date) -> list[dict[str, Any]]:
+        """The events in effect on ``day``: ``{id, kind, table, column, effect}`` with ``effect``
+        0 to 1 (how far the event has taken hold; the ``by_day`` weights of the answer key)."""
+        n = self.day_number(day)
+        return [
+            {
+                "id": r.id,
+                "kind": r.event.kind,
+                "table": r.event.table,
+                "column": r.event.column,
+                "effect": round(r.weight(n), 6),
+            }
+            for r in self._resolved
+            if r.weight(n) > 0
+        ]
+
     # ---- the schema on a day -----------------------------------------------------------------
 
     def schema_at(self, schema: GenSchema, day: int | str | dt.date) -> GenSchema:

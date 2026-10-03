@@ -88,9 +88,14 @@ def _value(raw: str) -> Any:
     return raw
 
 
-def _resolve(key: str, value: Any) -> Any:
-    """A credential reference as the secret it names; a literal secret is refused."""
+def _resolve(key: str, value: Any, offline: bool = False) -> Any:
+    """A credential reference as the secret it names; a literal secret is refused. ``offline``
+    (``--dry-run``) does not look a ``kv://`` reference up (that is a connection): its form is
+    checked and a placeholder stands in."""
     if credrefs.is_reference(value):
+        if offline and credrefs.scheme_of(value) == "kv":
+            credrefs.check_form(value)
+            return "<kv:// reference, not looked up>"
         return credrefs.resolve_reference(value)
     if isinstance(value, str) and any(s in key.lower() for s in _SECRET_KEYS):
         raise ValueError(
@@ -101,13 +106,13 @@ def _resolve(key: str, value: Any) -> Any:
     return value
 
 
-def sink_config(items: list[str] | None) -> dict[str, dict[str, Any]]:
+def sink_config(items: list[str] | None, *, offline: bool = False) -> dict[str, dict[str, Any]]:
     """``--sink-config SINK.KEY=VALUE`` entries, secrets resolved from references."""
     from shape.cli.scale import parse_sink_config
 
     parsed = parse_sink_config(list(items or []))
     return {
-        sink: {key: _resolve(key, value) for key, value in options.items()}
+        sink: {key: _resolve(key, value, offline) for key, value in options.items()}
         for sink, options in parsed.items()
     }
 
@@ -116,7 +121,7 @@ _SIGN_IN_SINKS = ("abfss", "delta", "sqlserver", "warehouse")
 _SQL_SINKS = ("sqlserver", "warehouse")
 
 
-def sign_in_options(a: argparse.Namespace, name: str) -> dict[str, Any]:
+def sign_in_options(a: argparse.Namespace, name: str, *, offline: bool = False) -> dict[str, Any]:
     """The options ``--auth`` and ``--connection-string`` give the sink called ``name`` (none
     when neither is used). The credential object comes from the ``shape-fabric`` plugin."""
     from shape.cli import auth
@@ -132,6 +137,15 @@ def sign_in_options(a: argparse.Namespace, name: str) -> dict[str, Any]:
             "variables or a password reference)"
         )
     options: dict[str, Any] = {}
+    if offline:  # --dry-run: the credential is made, and the string looked up, when the run starts
+        if conn and credrefs.is_reference(conn):
+            credrefs.check_form(conn)
+        if settings and settings.get("mode") == "sql":
+            if name not in _SQL_SINKS:
+                raise ValueError("--auth sql is a database login, not for a storage target")
+            if not conn:
+                raise ValueError("--auth sql needs --connection-string (the server and database)")
+        return options
     if conn:
         options["connection_string"] = (
             credrefs.resolve_reference(conn) if credrefs.is_reference(conn) else conn
@@ -147,18 +161,20 @@ def sign_in_options(a: argparse.Namespace, name: str) -> dict[str, Any]:
     return options
 
 
-def target_options(a: argparse.Namespace, fmt: str, targets: list[str] | None = None) -> Any:
+def target_options(
+    a: argparse.Namespace, fmt: str, targets: list[str] | None = None, *, offline: bool = False
+) -> Any:
     """The :class:`~shape.generation.output.TargetOptions` the command line describes.
     ``targets`` are the destinations, so ``--auth`` reaches the sinks that sign in."""
     from shape.generation.output import TargetOptions
     from shape.io.landing import parse_table_formats
     from shape.io.targets import scheme_of, sink_for_target, sink_names_by_scheme
 
-    extra = sink_config(getattr(a, "sink_config", None))
+    extra = sink_config(getattr(a, "sink_config", None), offline=offline)
     for target in targets or []:
         if (scheme_of(target) or "") in sink_names_by_scheme():  # an emitter signs in elsewhere
             name = sink_for_target(target)[0]
-            extra.setdefault(name, {}).update(sign_in_options(a, name))
+            extra.setdefault(name, {}).update(sign_in_options(a, name, offline=offline))
     return TargetOptions(
         fmt=fmt,
         formats=parse_table_formats(getattr(a, "table_format", None)),

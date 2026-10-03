@@ -639,3 +639,33 @@ def test_a_literal_registry_password_is_refused(monkeypatch, capsys):
     assert code == 2
     assert "hunter2" not in capsys.readouterr().err
     assert h.registry.requests == []
+
+
+@pytest.mark.parametrize("fmt", ALL_FORMATS)
+def test_a_table_whose_columns_change_during_the_run_registers_a_new_schema(fmt):
+    """A drift plan that adds a column: the new schema goes to the registry under the same
+    subject, the messages carry the new id, and each decodes against its own schema."""
+    first = typed_batch(4)
+    j = first.schema.get_field_index("name")
+    second = first.append_column("channel", pa.array(["web"] * 4))
+    dropped = first.remove_column(j)
+    registry = FakeRegistry(evolve=True)
+    h = EmitterHarness("orders", registry)
+    e = h.make()
+    kw = {"event_format": fmt, "schema_registry_url": REGISTRY_URL, "subject_strategy": "record"}
+    for b in (first, second, dropped):
+        e.emit(h.uri, [b], **kw)
+    ids = [struct.unpack(">I", v[1:5])[0] for _, _, v, _ in h.store.log]
+    assert ids == [100] * 4 + [101] * 4 + [102] * 4
+    assert len(registry.subjects) == 1  # one subject, three versions
+    for part, b in zip(
+        (slice(0, 4), slice(4, 8), slice(8, 12)), (first, second, dropped), strict=True
+    ):
+        values = [v for _, _, v, _ in h.store.log][part]
+        assert decode_messages(registry, values, b.schema) == rows_of(b)
+    # a registry that does not allow the change refuses the new schema, as it does anything else
+    strict = EmitterHarness("orders", FakeRegistry())
+    e = strict.make()
+    e.emit(strict.uri, [first], **kw)
+    with pytest.raises(ShapeError, match="refused the schema for subject"):
+        e.emit(strict.uri, [second], **kw)

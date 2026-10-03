@@ -86,6 +86,27 @@ whole once, so its rows equal `shape generate`'s; the others are read chunk by c
   100,000 scheduled events the realised mean rate is within 1% of `--rate` and the gaps' coefficient
   of variation is within 0.02 of 1 (tested with a fixed seed). The events themselves do not change,
   only when they are sent.
+* `--ramp START:DURATION:FROM:TO` (repeatable, needs `--realtime`): from START seconds for DURATION
+  seconds the rate multiplier moves linearly from FROM to TO. Before the first ramp the multiplier
+  is 1; **after a ramp it holds that ramp's TO** until the next ramp begins, so two ramps with a gap
+  between them make a plateau (`--ramp 0:60:0.1:1` is a one-minute warm-up; `--ramp 60:30:1:5 --ramp
+  120:30:5:1` goes up, holds 5 and comes down). Ramps may not overlap each other (exit 2, `ramps may
+  not overlap`; touching is fine), may overlap bursts (the multipliers multiply), and a ramp that ends
+  at 0 with no later ramp is refused (the rest of the events would never be due).
+* `--daily-curve NAME|FILE`: a 24-hour multiplier. Built-in `flat` (1 all day) and `business-hours`
+  (0.15 overnight, rising linearly from 07:00 to 1.0 at 09:00, 1.0 until 17:00, falling to 0.3 at
+  19:00 and to 0.15 at 22:00), or a JSON file
+  `{"format": "shape-rate-curve", "version": 1, "points": [["00:00", 0.2], ["09:00", 1.0], ["18:00", 0.4]]}`
+  (times `HH:MM` or `HH:MM:SS`, multipliers of 0 or more, at least one above 0; unknown keys and a
+  newer `version` are refused). The curve is interpolated linearly and **wraps at midnight**: the
+  last point continues to the first of the next day (a single point is a constant). It follows the
+  **wall clock** with `--realtime` (the multiplier at the run's start is the one for the local time
+  of day when the run begins) and the **event time** with `--speed` (a replay runs `multiplier`
+  times faster at an event's UTC time of day, so busy hours deliver more events per second of wall
+  time; every multiplier must then be above 0). Multipliers multiply `--rate`; a burst multiplies on
+  top. The schedule stays absolute-time: the rate is a function of the seconds since the start, so
+  the events delivered over any window equal the integral of the rate over it, within one event
+  (tested over windows spanning days, with ramps, bursts and a curve together).
 * `--speed 60x` (a virtual clock, instead of `--realtime`): pace by the events' **event time**, 60
   times faster than the clock, so a day of events replays in 24 minutes. An event stamped `t`
   seconds after the first is due `t / 60` seconds after the start; an event that is earlier than
@@ -303,6 +324,107 @@ rest counted as `other`). `--max-dead-letter` needs `--dead-letter`.
 An emitter's contract (`shape.streaming.emit.contract`) gains `check_rejections`, run for a harness
 that offers `inject_rejections(n)`: the other events are delivered first, the error is not retried,
 and delivered plus dead-lettered events are the stream, each once.
+
+## Drift plans in a stream (`--drift-plan`)
+
+`shape emit` and `shape stream` take the plan of `shape generate-drift` (`docs/DRIFT.md`) and plant
+its drift in the stream, day by day:
+
+```
+shape emit retail --drift-plan plan.json --rows customer=500 --rows order=2000 \
+    --sink kafka://broker:9092/orders --realtime --day-seconds 60 --answer-key key.jsonl
+```
+
+* **Day d is generated from `plan.schema_at(schema, d)` with seed + d**, exactly as `shape
+  generate-drift` does, so for the same `--rows TABLE=N` the event values of day d equal that day's
+  `generate-drift` tables (tested value for value). The days stream in order, and within a day the
+  tables stream in dependency order. `--rows TABLE=N` (repeatable) sets the rows per day of a table,
+  as in `generate-drift`; it is accepted only with `--drift-plan`.
+* **`_shape_seq` continues across days**: a table's day-1 events follow its day-0 events, so the key
+  `<table>/<seq>` is unique for the whole stream. **No event field is added**: a day's events are
+  its columns plus the usual `_shape_*` fields; a column the plan adds appears from its start day, a
+  column it drops is gone. `shape stream` (one table, event-time order) sorts each day by its event
+  time. Faults (`--out-of-order`, `--anomaly-fraction`, duplicates, poison) are drawn by the global
+  sequence number, so they are the same on every run.
+* **`--day-seconds S`** (needs `--realtime` and `--drift-plan`) gives each day S seconds of wall
+  time: day d starts S x d seconds after the start and its events are spread evenly over the S
+  seconds, so the plan plays in `days x S` seconds. The day sets the pace, so it cannot be combined
+  with `--rate`, `--burst`, `--ramp`, `--daily-curve` or `--arrivals` (`--max-rate` still caps it).
+* **`--answer-key`** also writes `kind: "drift"` records: when the stream reaches a day, one record
+  per plan event in effect that day, with `event` (the plan's event id), `table`, `column`, `day`
+  (ISO date), `day_number` (0 is the plan's start), `effect` (0 to 1: how far the event has taken
+  hold, following the plan's ramp) and `seq` (the first sequence number of the event's table that
+  day; `key` is `table/seq`). A resumed run writes its day's records again; `read_answer_key`
+  returns each `(kind, table, seq, event)` once.
+* **The plan's SHA-256 is part of the checkpoint fingerprint**, so a checkpoint made with another
+  plan is refused (`--fresh` starts over). The digest is of the plan file's bytes (`sha256sum
+  plan.json`), so even a whitespace change counts as another plan.
+
+A crashed and resumed run with `--arrivals poisson`, a daily curve and `--drift-plan` delivers,
+after deduplication on the key, exactly the events of the uninterrupted run (tested). `shape
+generate --drift-plan` (the Excel workbook README) is unchanged.
+
+## Dry run (`--dry-run`)
+
+`--dry-run` resolves everything a run would use and prints it, then exits without starting:
+
+```
+shape emit retail --table order_line --realtime --rate 200 --burst 30:10:4 \
+    --sink kafka://broker:9092/orders --dead-letter file:///dlq.jsonl \
+    --checkpoint ck.json --dry-run            # text
+shape emit ... --dry-run --json                # {"format": "shape-emit-plan", "version": 1, ...}
+```
+
+It prints: the target and its schema (name, seed, scale), the tables with their row counts and the
+event total; each destination (`--sink`, every `--to`, `--dead-letter`) with its kind, scheme, the
+plugin that provides it and its URI with any password redacted; the event format and envelope; the
+credential references in `--sink-config` (the option and the reference, **never the value**); the
+checkpoint (`fresh`, `resume` at offset N, `finished`, or `refused` with the reason); the rate
+schedule (mode, expected duration and peak events per minute); the drift plan (its SHA-256 and each
+day's date, events and the plan events in effect); the limits; and the answer-key file.
+
+* **It opens no connection, writes no file and sends no event.** No checkpoint, no answer key, no
+  `--output` file, no dead-letter file is created; a destination plugin is looked up and checked
+  (its scheme, `--event-format` support and `--sink-config` keys) but its `emit`, `flush` and
+  `close` are never called (tested with fakes that fail on connect and on write, and by listing the
+  directory before and after). A checkpoint file is read, never written.
+* **Exit 0 when the run would start; exit 2, with the same message the real run would give, when it
+  would be refused**: a bad flag combination, an unknown table, sink or plugin, a missing
+  `--output`, overlapping ramps, a checkpoint of another stream (the plan is printed with
+  `state: "refused"`, then the error), a drift plan that does not apply to the schema, a literal
+  secret, a missing environment variable behind an `env://` reference. What a dry run cannot see is
+  what only a connection shows (a broker that is down, a registry that refuses the schema).
+  `env://` and `file://` references are resolved (that touches only this machine) so a missing one
+  is refused as it would be at run time; a `kv://VAULT/NAME` reference would be a lookup in a
+  secret store, which is a connection, so only its form is checked.
+* **Rate schedule.** `expected_seconds` is how long the run takes by its schedule (`--rate`,
+  `--burst`, `--ramp`, `--daily-curve`, `--day-seconds`, and `--max-rate` as a floor; for
+  `--arrivals poisson` the mean). It is `null` when nothing paces the run (as fast as the sink
+  takes events) or when `--speed` paces it by event time. `peak_events_per_minute` is the highest
+  rate of the schedule times 60, capped by `--max-rate`. A `--daily-curve` starts at the local time
+  of day of the dry run (`curve_origin`, seconds after midnight), as a real run starts at its own.
+
+The plan is a persisted format: `format: "shape-emit-plan"`, `version: 1`. A reader refuses a newer
+version.
+
+## Progress (`--progress`)
+
+`--progress` / `--no-progress` (default: on when standard error is a terminal, off otherwise)
+writes one line to standard error, rewritten in place at most once a second, and a final line at
+exit:
+
+```
+emitted 120,400 / 1,000,000 events  9,980/s  lag 0.4s  retries 2  dead-lettered 0  eta 1m28s
+```
+
+`emitted` is the position in the stream (a resumed run starts from its checkpoint offset) out of
+the events the run will deliver (`--max-events` included); `/s` is the rate since the last update;
+`lag` is how far behind its schedule the latest batch was sent (0 when the run is not paced);
+`retries` and `dead-lettered` are the run's counts; `eta` is the remaining events at the current
+rate, and the line has no total and no ETA when they are not known. On a terminal the line is
+rewritten with a carriage return; on a pipe (`--progress` forced) each update is its own line.
+**Nothing is added to standard output**: `--sink console` output is byte-identical with and without
+the progress line, and `--json` is unchanged.
 
 ## Live fidelity
 

@@ -15,6 +15,7 @@ from __future__ import annotations
 import os
 import sys
 from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -185,6 +186,18 @@ class EmitterSink:
             close()
 
 
+@dataclass(frozen=True, slots=True)
+class ResolvedSink:
+    """What ``open_sink(..., dry=True)`` returns instead of opening a sink (``--dry-run``): the
+    kind (``console``, ``file``, ``emitter`` or ``table``), the URI's scheme and the name of the
+    plugin that provides it (``None`` for ``console`` and ``file``)."""
+
+    kind: str
+    scheme: str
+    plugin: str | None
+    event_format: str
+
+
 def open_sink(
     sink: str,
     *,
@@ -196,8 +209,9 @@ def open_sink(
     choices: str = "console, file, or the URI of an emitter plugin (kafka://, eventhubs://, ...)",
     event_format: str = "json",
     sink_config: Mapping[str, Mapping[str, Any]] | None = None,
+    dry: bool = False,
     **options: Any,
-) -> EventSink:
+) -> Any:
     """The sink a name or URI stands for: ``console``, ``file`` (JSON lines in ``output``), or
     the URI of a ``shape.emitters`` plugin (``kafka://``, ``eventhubs://``, ...). Shared by
     ``shape emit`` and ``shape stream`` and by the simulation plugin's stream emitter. Extra
@@ -206,7 +220,11 @@ def open_sink(
     ``event_format`` (``--event-format``) other than ``json`` is for an emitter that declares it
     in ``event_formats`` (``kafka://``); ``sink_config`` (``--sink-config NAME.KEY=VALUE``, secrets
     already resolved) gives an emitter the keys it lists in ``sink_config_keys``, under its own
-    name."""
+    name.
+
+    ``dry`` (``--dry-run``) makes every check an opening would make (the sink exists, its plugin
+    is installed, it takes ``event_format`` and the options, ``--output`` is given) and returns a
+    :class:`ResolvedSink` without creating a file, an emitter session or a connection."""
     from shape.errors import ShapeError
 
     def not_for(what: str) -> ShapeError:
@@ -218,12 +236,16 @@ def open_sink(
     if sink == "console":
         if event_format != "json":
             raise not_for("--sink console")
+        if dry:
+            return ResolvedSink("console", "console", None, event_format)
         return StdoutSink(envelope=envelope)
     if sink == "file":
         if event_format != "json":
             raise not_for("--sink file")
         if not output:
             raise ShapeError("--sink file needs --output FILE")
+        if dry:
+            return ResolvedSink("file", "file", None, event_format)
         return FileSink(output, envelope=envelope, append=resuming)
     scheme = sink.split("://", 1)[0] if "://" in sink else ""
     from shape.plugins.host import default_host
@@ -240,6 +262,8 @@ def open_sink(
                 given = (sink_config or {}).get(emitter.name, {})
                 if key in given:
                     options[key] = given[key]
+            if dry:
+                return ResolvedSink("emitter", scheme, str(emitter.name), event_format)
             return EmitterSink(
                 emitter,
                 sink,
@@ -254,6 +278,10 @@ def open_sink(
         if scheme in sink_names_by_scheme():
             if event_format != "json":
                 raise not_for(f"{scheme}://")
+            if dry:
+                from shape.io.targets import sink_for_target
+
+                return ResolvedSink("table", scheme, sink_for_target(sink)[0], event_format)
             from shape.streaming.emit.tables import TableEventSink
 
             return TableEventSink(

@@ -17,7 +17,15 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   (exit 1) past N; new `shape.streaming.emit.RejectedEvents`, an extended emitter contract, and
   `dead_lettered` counts by reason in the run report. `--arrivals constant|poisson`: Poisson
   arrivals with exponential gaps keyed by the seed and the event position (the same schedule on every
-  run and after a resume), combined with `--burst` and `--max-rate`.
+  run and after a resume), combined with `--burst` and `--max-rate`. `--ramp START:DURATION:FROM:TO` and `--daily-curve
+  flat|business-hours|FILE` (the `shape-rate-curve` format, version 1): linear rate ramps and a
+  24-hour multiplier following the wall clock (`--realtime`) or the event time (`--speed`).
+  `--drift-plan PLAN.json` (with `--rows TABLE=N`, `--day-seconds S`): the days of a `generate-drift`
+  plan emitted in order with a continuing `_shape_seq`, `kind: "drift"` answer-key records, and the
+  plan's SHA-256 in the checkpoint fingerprint. `--dry-run` (`--json`: `shape-emit-plan`, version 1):
+  prints the target, tables, destinations and their plugins, credential references, checkpoint
+  state, rate schedule summary and drift plan days, opening nothing, writing nothing and sending
+  nothing; `--progress/--no-progress`: a one-line progress report on standard error.
 
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and

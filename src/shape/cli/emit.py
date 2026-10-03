@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import signal
 import sys
 from typing import Any
@@ -89,13 +90,26 @@ def add_options(em: Any, *, stream: bool = False) -> None:
         help="pace to --rate events per second (default: --no-realtime, as fast as possible)",
     )
     rate.add_argument(
-        "--rate", type=float, default=rate_default, metavar="N", help=f"events/s ({rate_default:g})"
+        "--rate", type=float, default=None, metavar="N", help=f"events/s ({rate_default:g})"
     )
     rate.add_argument(
         "--burst",
         action="append",
         metavar="START:DURATION:MULT",
         help="from START seconds for DURATION seconds the rate is MULT times --rate (repeatable)",
+    )
+    rate.add_argument(
+        "--ramp",
+        action="append",
+        metavar="START:DURATION:FROM:TO",
+        help="from START seconds for DURATION seconds the rate multiplier moves linearly from FROM "
+        "to TO, and holds TO after (repeatable; ramps may not overlap; needs --realtime)",
+    )
+    rate.add_argument(
+        "--daily-curve",
+        metavar="NAME|FILE",
+        help="a 24-hour rate multiplier: flat, business-hours, or a shape-rate-curve JSON file; "
+        "follows the wall clock with --realtime and the event time with --speed",
     )
     rate.add_argument(
         "--arrivals",
@@ -119,6 +133,32 @@ def add_options(em: Any, *, stream: bool = False) -> None:
     )
     rate.add_argument("--max-events", type=int, metavar="N", help="stop after N events in all")
     rate.add_argument("--duration", type=float, metavar="SECONDS", help="stop after SECONDS")
+    dr = em.add_argument_group(
+        "drift plan",
+        "Plant the drift of a `shape generate-drift` plan in the stream, day by day "
+        "(docs/EMIT.md, 'Drift plans in a stream').",
+    )
+    dr.add_argument(
+        "--drift-plan",
+        metavar="PLAN.json",
+        help="emit the plan's days in order: day d is generated from the plan's schema for d with "
+        "seed + d, as `shape generate-drift` does; _shape_seq continues across days",
+    )
+    dr.add_argument(
+        "--rows",
+        action="append",
+        default=[],
+        metavar="TABLE=N",
+        help="rows per day for one table, as in `shape generate-drift` (repeatable; needs "
+        "--drift-plan)",
+    )
+    dr.add_argument(
+        "--day-seconds",
+        type=float,
+        metavar="S",
+        help="with --realtime: each day of the plan takes S seconds, its events spread evenly "
+        "(replaces --rate, --burst, --ramp, --daily-curve and --arrivals)",
+    )
     sh = em.add_argument_group("event shape")
     sh.add_argument(
         "--out-of-order",
@@ -216,7 +256,25 @@ def add_options(em: Any, *, stream: bool = False) -> None:
     dl.add_argument("--batch-events", type=int, metavar="N", help="events per delivery")
     dl.add_argument("--queue-batches", type=int, metavar="N", help="buffer depth")
     dl.add_argument("--retries", type=int, default=3, metavar="N", help="per failed delivery")
-    em.add_argument("--json", action="store_true", help="print the run report as JSON")
+    em.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="resolve everything the run would use (target, tables, destinations and their "
+        "plugins, checkpoint state, rate schedule, drift plan) and print it, opening no "
+        "connection, writing no file and sending no event; exit 2 when the run would be refused",
+    )
+    em.add_argument(
+        "--progress",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="one progress line on standard error, rewritten once a second (default: on when "
+        "standard error is a terminal)",
+    )
+    em.add_argument(
+        "--json",
+        action="store_true",
+        help="print the run report as JSON (with --dry-run: the plan, format shape-emit-plan)",
+    )
     _live_arguments(em)
 
 
@@ -363,19 +421,15 @@ def _is_schema(path: Any) -> bool:
     return isinstance(doc, dict) and "schema_version" in doc
 
 
-def _live_setup(a: argparse.Namespace, engine: Any, schema: Any, plan: Any) -> Any:
+def _live_config(a: argparse.Namespace, engine: Any) -> Any:
+    """The live fidelity settings of the command line (refused here when they do not hold)."""
     from shape.errors import ShapeError
-    from shape.streaming.emit.live import (
-        JsonLinesAlertSink,
-        LiveConfig,
-        LiveFidelity,
-        stderr_alert_sink,
-    )
+    from shape.streaming.emit.live import LiveConfig
 
     if a.no_live_profile and a.live_profile:
         raise ShapeError("--live-profile needs the stream profiler (drop --no-live-profile)")
     try:
-        config = LiveConfig(
+        return LiveConfig(
             sample_cap=a.live_sample,
             key_cap=a.live_key_cap,
             interval_events=a.live_interval,
@@ -391,6 +445,12 @@ def _live_setup(a: argparse.Namespace, engine: Any, schema: Any, plan: Any) -> A
         )
     except ValueError as exc:
         raise ShapeError(str(exc)) from exc
+
+
+def _live_setup(a: argparse.Namespace, engine: Any, schema: Any, plan: Any) -> Any:
+    from shape.streaming.emit.live import JsonLinesAlertSink, LiveFidelity, stderr_alert_sink
+
+    config = _live_config(a, engine)
     target = _live_target(a, engine, schema)
     sinks: list[Any] = [stderr_alert_sink]
     if a.live_alerts:
@@ -440,22 +500,207 @@ def _checkpoint_seconds(a: argparse.Namespace, targets: list[str]) -> float:
     return 30.0 if table_targets else 1.0
 
 
+def plan_digest(path: str) -> str:
+    """The SHA-256 of a drift plan file's bytes (what ``sha256sum`` prints)."""
+    import hashlib
+
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()
+
+
+def _load_drift_plan(path: str) -> Any:
+    import json
+
+    from shape.generation.drift_plan import DriftPlan, DriftPlanError
+
+    try:
+        with open(path, encoding="utf-8") as f:
+            doc = json.load(f)
+    except json.JSONDecodeError as exc:
+        raise DriftPlanError(f"drift plan {path} is not valid JSON: {exc}") from exc
+    if not isinstance(doc, dict):
+        raise DriftPlanError("a drift plan must be a JSON object")
+    return DriftPlan.from_dict(doc)
+
+
+def _rows(items: list[str], schema: Any) -> dict[str, int] | None:
+    """``--rows TABLE=N`` entries as ``{table: rows}`` (``None`` when there are none)."""
+    from shape.errors import ShapeError
+
+    rows: dict[str, int] = {}
+    for item in items:
+        table, sep, n = item.partition("=")
+        if not sep or not n.isdigit():
+            raise ShapeError(f"--rows wants TABLE=N, got {item!r}")
+        if table not in schema.tables:
+            raise ShapeError(f"--rows: the schema has no table {table!r}")
+        rows[table] = int(n)
+    return rows or None
+
+
+def _check_creatable(path: str) -> None:
+    """Raise the error opening ``path`` for writing would give, without creating anything."""
+    import errno
+    import os
+
+    parent = os.path.dirname(os.path.abspath(path))
+    if os.path.isdir(path):
+        raise IsADirectoryError(errno.EISDIR, os.strerror(errno.EISDIR), path)
+    if not os.path.isdir(parent):
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
+    if not os.access(parent, os.W_OK):
+        raise PermissionError(errno.EACCES, os.strerror(errno.EACCES), path)
+
+
+def _credentials(a: argparse.Namespace) -> list[dict[str, str]]:
+    """The credential references of ``--sink-config`` (the reference, never what it names)."""
+    from shape.security import credrefs
+
+    out = []
+    for item in a.sink_config or []:
+        left, _, value = item.partition("=")
+        scheme = credrefs.scheme_of(value)
+        if scheme is not None:
+            out.append(
+                {
+                    "option": left,
+                    "reference": value,
+                    "scheme": scheme,
+                    "checked": "syntax" if scheme == "kv" else "resolved",
+                }
+            )
+    return out
+
+
+def _dry_run(
+    a: argparse.Namespace, plan: Any, engine: Any, config: Any, targets: list[str], curve: Any
+) -> int:
+    """``--dry-run``: resolve what the run would use and print it (opens, writes, sends nothing)."""
+    import dataclasses
+
+    from shape.errors import ShapeError
+    from shape.plugins.schemes import redact
+    from shape.streaming.checkpoint import CheckpointError
+    from shape.streaming.emit import EmitRunner
+    from shape.streaming.emit.dryrun import (
+        PLAN_FORMAT,
+        PLAN_VERSION,
+        pacing_summary,
+        render_text,
+    )
+
+    refused: CheckpointError | None = None
+    try:
+        offset, _ = EmitRunner(plan, _NullSink(), config).load_offset()
+    except CheckpointError as exc:  # the plan is printed, then the error the real run gives
+        refused, offset = exc, 0
+    limit = plan.total_events if a.max_events is None else min(plan.total_events, a.max_events)
+    state = "fresh" if offset == 0 else ("finished" if offset >= limit else "resume")
+    checkpoint: dict[str, Any] = {"path": config.checkpoint_path, "state": state, "offset": offset}
+    if refused is not None:
+        checkpoint.update(state="refused", reason=str(refused))
+    destinations: list[dict[str, Any]] = []
+
+    def describe(role: str, uri: str, resolved: Any) -> None:
+        destinations.append(
+            {
+                "role": role,
+                "uri": redact(uri),
+                "kind": resolved.kind,
+                "scheme": resolved.scheme,
+                "plugin": resolved.plugin,
+                "event_format": resolved.event_format,
+            }
+        )
+
+    try:
+        for role, uri, resolved in zip(
+            ["sink" if t == a.sink else "to" for t in targets],
+            targets,
+            _sink(a, a.envelope, resuming=offset > 0, dry=True),
+            strict=True,
+        ):
+            describe(role, uri, resolved)
+        letter = _dead_letter(a, None, targets, offset > 0, dry=True)
+        if letter is not None:
+            describe("dead-letter", a.dead_letter, letter)
+        if a.live_target:
+            _live_config(a, engine)
+    except (ShapeError, ValueError, OSError):
+        if refused is None:
+            raise  # the real run would stop here, with this message
+    drift = None
+    if a.drift_plan:
+        from shape.streaming.emit.drift import describe_days
+
+        drift = {
+            "path": a.drift_plan,
+            "sha256": plan_digest(a.drift_plan),
+            "days": describe_days(plan),
+        }
+    doc: dict[str, Any] = {
+        "format": PLAN_FORMAT,
+        "version": PLAN_VERSION,
+        "command": a.cmd,
+        "target": {
+            "name": a.target,
+            "mode": a.mode,
+            "seed": engine.seed,
+            "scale": a.scale,
+            "tables": [{"name": t, "rows": plan.counts[t]} for t in plan.tables],
+            "total_events": plan.total_events,
+        },
+        "event_order": "event-time" if getattr(a, "by_event_time", False) else "row",
+        "limits": {"max_events": a.max_events, "duration": a.duration, "events": limit},
+        "event_format": a.event_format,
+        "envelope": a.envelope,
+        "destinations": destinations,
+        "credentials": _credentials(a),
+        "checkpoint": checkpoint,
+        "pacing": pacing_summary(
+            dataclasses.replace(config, max_events=a.max_events),
+            plan,
+            offset,
+            None if curve is None else curve.name,
+        ),
+        "drift_plan": drift,
+        "answer_key": a.answer_key,
+        "faults": {
+            "out_of_order": a.out_of_order,
+            "anomaly_fraction": a.anomaly_fraction,
+            "duplicate_fraction": a.duplicate_fraction,
+            "poison_fraction": a.poison_fraction,
+        },
+    }
+    print(
+        json.dumps(doc, indent=2, default=str) if a.json else render_text(doc),
+        end="\n" if a.json else "",
+    )
+    if refused is not None:
+        raise refused
+    return 0
+
+
 def _targets(a: argparse.Namespace) -> list[str]:
     """Every destination named: ``--sink`` and each ``--to`` (``console`` when none)."""
     named = ([a.sink] if a.sink else []) + list(a.to or [])
     return named or ["console"]
 
 
-def _sink(a: argparse.Namespace, envelope: str, resuming: bool) -> Any:
+def _sink(a: argparse.Namespace, envelope: str, resuming: bool, *, dry: bool = False) -> Any:
+    """The sink of every ``--sink`` and ``--to`` (a fan-out for several); with ``dry`` the list of
+    what they resolve to, nothing opened."""
     from shape.cli.to import target_options
     from shape.streaming.emit import FanOutSink
 
     targets = _targets(a)
-    options = target_options(a, a.format, targets)  # --auth for the table sinks
+    options = target_options(a, a.format, targets, offline=dry)  # --auth for the table sinks
     sinks = [
-        _open_target(a, t, envelope, resuming, options, event_format=a.event_format)
+        _open_target(a, t, envelope, resuming, options, event_format=a.event_format, dry=dry)
         for t in targets
     ]
+    if dry:
+        return sinks
     return sinks[0] if len(sinks) == 1 else FanOutSink(sinks)
 
 
@@ -467,6 +712,7 @@ def _open_target(
     options: Any,
     *,
     event_format: str,
+    dry: bool = False,
 ) -> Any:
     from shape.io.targets import scheme_of, sink_names_by_scheme
     from shape.streaming.emit import open_sink
@@ -482,14 +728,18 @@ def _open_target(
         choices=SINKS_HELP,
         event_format=event_format,
         sink_config=options.extra,
+        dry=dry,
         # --auth for an event sink; a table sink got it in `options`
-        **(_auth_options(a, scheme) if scheme not in sink_names_by_scheme() else {}),
+        **(_auth_options(a, scheme, offline=dry) if scheme not in sink_names_by_scheme() else {}),
     )
 
 
-def _dead_letter(a: argparse.Namespace, primary: Any, targets: list[str], resuming: bool) -> Any:
+def _dead_letter(
+    a: argparse.Namespace, primary: Any, targets: list[str], resuming: bool, *, dry: bool = False
+) -> Any:
     """``primary`` behind a :class:`DeadLetterSink` when ``--dead-letter`` is given (else
-    ``None``). The records are JSON whatever ``--event-format`` is."""
+    ``None``). The records are JSON whatever ``--event-format`` is. With ``dry``: what the
+    destination resolves to, nothing opened."""
     from shape.cli.to import target_options
     from shape.errors import ShapeError
     from shape.io.targets import scheme_of, sink_names_by_scheme
@@ -503,8 +753,10 @@ def _dead_letter(a: argparse.Namespace, primary: Any, targets: list[str], resumi
         return None
     if a.dead_letter in targets:
         raise ShapeError("--dead-letter must differ from --sink and --to")
-    options = target_options(a, a.format, [a.dead_letter])
-    dlq = _open_target(a, a.dead_letter, "flat", resuming, options, event_format="json")
+    options = target_options(a, a.format, [a.dead_letter], offline=dry)
+    dlq = _open_target(a, a.dead_letter, "flat", resuming, options, event_format="json", dry=dry)
+    if dry:
+        return dlq
     return DeadLetterSink(
         primary,
         dlq,
@@ -514,9 +766,10 @@ def _dead_letter(a: argparse.Namespace, primary: Any, targets: list[str], resumi
     )
 
 
-def _auth_options(a: argparse.Namespace, scheme: str) -> dict[str, Any]:
+def _auth_options(a: argparse.Namespace, scheme: str, *, offline: bool = False) -> dict[str, Any]:
     """The emitter options ``--auth`` and ``--connection-string`` give (none when neither is
-    used). Secrets stay references until here; the plugin resolves them."""
+    used). Secrets stay references until here; the plugin resolves them. ``offline``
+    (``--dry-run``) makes the checks and neither creates the credential nor looks a reference up."""
     from shape.cli import auth
     from shape.errors import ShapeError
     from shape.security import credrefs
@@ -536,13 +789,20 @@ def _auth_options(a: argparse.Namespace, scheme: str) -> dict[str, Any]:
     if conn:
         if scheme == "eventhouse":
             raise ShapeError("--connection-string is for eventstream:// (an eventhouse signs in)")
+        if offline:
+            if credrefs.is_reference(conn):
+                try:
+                    credrefs.check_form(conn)
+                except credrefs.CredentialReferenceError as exc:
+                    raise ShapeError(f"--connection-string: {exc}") from None
+            return options
         try:
             options["connection_string"] = (
                 credrefs.resolve_reference(conn) if credrefs.is_reference(conn) else conn
             )
         except credrefs.CredentialReferenceError as exc:
             raise ShapeError(f"--connection-string: {exc}") from None
-    if settings:
+    if settings and not offline:
         options["credential"] = auth.make_credential(settings)
     return options
 
@@ -559,7 +819,7 @@ def run(a: argparse.Namespace) -> int:
         parse_burst,
         resolve_mutators,
     )
-    from shape.streaming.emit.rate import parse_speed
+    from shape.streaming.emit.rate import load_curve, parse_ramp, parse_speed
 
     if a.out_of_order < 0 or a.out_of_order > 1:
         raise ShapeError("--out-of-order must be between 0 and 1")
@@ -572,6 +832,24 @@ def run(a: argparse.Namespace) -> int:
         )
     if a.burst and not a.realtime:
         raise ShapeError("--burst needs --realtime")
+    if a.rows and not a.drift_plan:
+        raise ShapeError("--rows needs --drift-plan")
+    if a.day_seconds is not None:
+        if not a.drift_plan:
+            raise ShapeError("--day-seconds needs --drift-plan")
+        if not a.realtime:
+            raise ShapeError("--day-seconds needs --realtime")
+        if not math.isfinite(a.day_seconds) or a.day_seconds <= 0:
+            raise ShapeError("--day-seconds must be positive")
+        if a.rate is not None or a.burst or a.ramp or a.daily_curve or a.arrivals != "constant":
+            raise ShapeError(
+                "--day-seconds sets the pace: it cannot be combined with --rate, --burst, "
+                "--ramp, --daily-curve or --arrivals"
+            )
+    if a.ramp and not a.realtime:
+        raise ShapeError("--ramp needs --realtime")
+    if a.daily_curve and not (a.realtime or a.speed):
+        raise ShapeError("--daily-curve needs --realtime or --speed")
     if a.arrivals != "constant" and not a.realtime:
         raise ShapeError(
             f"--arrivals {a.arrivals} needs --realtime (a replay by --speed keeps the events' own "
@@ -585,6 +863,11 @@ def run(a: argparse.Namespace) -> int:
         raise ShapeError(str(exc)) from exc
     if speed is not None and a.realtime:
         raise ShapeError("--speed paces by event time and --realtime by rate: choose one")
+    try:
+        ramps = tuple(parse_ramp(r) for r in a.ramp or ())
+    except ValueError as exc:
+        raise ShapeError(str(exc)) from exc
+    curve = load_curve(a.daily_curve) if a.daily_curve else None
     targets = _targets(a)
     schema = load_target(a.target, a.mode)
     engine = Engine(schema, scale=a.scale, seed=a.seed)
@@ -596,26 +879,42 @@ def run(a: argparse.Namespace) -> int:
     elif a.anomaly_mutator:
         raise ShapeError("--anomaly-mutator needs --anomaly-fraction above 0")
     answer_key = None
-    if a.answer_key:
+    if a.answer_key and a.dry_run:
+        _check_creatable(a.answer_key)  # the file is not created: only the error it would give
+    elif a.answer_key:
         from shape.streaming.emit.faults import AnswerKey
 
         answer_key = AnswerKey(a.answer_key, append=False)
-    plan = EventPlan(
-        engine,
-        tables=a.table,
-        out_of_order=a.out_of_order,
-        ooo_window=a.ooo_window,
-        anomaly=injector,
-        envelope=a.envelope,
-        by_event_time=getattr(a, "by_event_time", False),
-        answer_key=answer_key,
-    )
+    plan_options: dict[str, Any] = {
+        "tables": a.table,
+        "out_of_order": a.out_of_order,
+        "ooo_window": a.ooo_window,
+        "anomaly": injector,
+        "envelope": a.envelope,
+        "by_event_time": getattr(a, "by_event_time", False),
+        "answer_key": answer_key,
+    }
+    plan: Any
+    if a.drift_plan:
+        from shape.streaming.emit.drift import DriftEventPlan
+
+        plan = DriftEventPlan(
+            schema,
+            _load_drift_plan(a.drift_plan),
+            scale=a.scale,
+            seed=a.seed,
+            row_counts=_rows(a.rows, schema),
+            plan_sha256=plan_digest(a.drift_plan),
+            **plan_options,
+        )
+    else:
+        plan = EventPlan(engine, **plan_options)
     checkpoint = a.checkpoint or (
         f"{a.output}.checkpoint" if "file" in targets and a.output else None
     )
     config = EmitConfig(
         realtime=a.realtime,
-        rate=a.rate,
+        rate=a.rate if a.rate is not None else (10.0 if a.cmd == "stream" else 100.0),
         bursts=tuple(parse_burst(b) for b in a.burst or ()),
         max_events=a.max_events,
         duration=a.duration,
@@ -630,7 +929,12 @@ def run(a: argparse.Namespace) -> int:
         max_rate=a.max_rate,
         arrivals=a.arrivals,
         seed=engine.seed,
+        ramps=ramps,
+        curve=curve,
+        day_seconds=a.day_seconds,
     )
+    if a.dry_run:
+        return _dry_run(a, plan, engine, config, targets, curve)
     # The sink is opened for appending exactly when a checkpoint says a run is to be continued.
     probe = EmitRunner(plan, _NullSink(), config)
     offset, complete = probe.load_offset()
@@ -661,7 +965,12 @@ def run(a: argparse.Namespace) -> int:
 
         live = _live_setup(a, engine, schema, plan)
         sink = TeeSink(sink, live)
-    runner = EmitRunner(plan, sink, config, dead_letter=dead_letter)
+    progress = None
+    if a.progress if a.progress is not None else sys.stderr.isatty():
+        from shape.streaming.emit.progress import ProgressLine
+
+        progress = ProgressLine(sys.stderr, tty=sys.stderr.isatty(), start_offset=offset)
+    runner = EmitRunner(plan, sink, config, dead_letter=dead_letter, progress=progress)
 
     def stop(_signum: int, _frame: Any) -> None:
         runner.request_stop()

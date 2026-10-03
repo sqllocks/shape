@@ -14,10 +14,12 @@ every run and after a restart. Nothing is changed in the events the plan made: a
 key is intact, and its clean copy is never also a duplicate.
 
 ``AnswerKey`` is the log of every injection (``late`` and ``anomaly`` from the plan, ``duplicate``
-and ``poison`` from here) as JSON lines, one record per injected event: ``kind``, ``table``,
-``seq`` (the key is ``table/seq``) and details. A detector, a deduplicator or a dead-letter queue
+and ``poison`` from here, and ``drift`` from a drift plan: see :mod:`shape.streaming.emit.drift`)
+as JSON lines, one record per injected event: ``kind``, ``table``, ``seq`` (the key is
+``table/seq``) and details. A detector, a deduplicator or a dead-letter queue
 can be scored against it. A resumed run writes the events after its checkpoint again, so a record
-may appear twice: :func:`read_answer_key` returns each ``(kind, table, seq)`` once.
+may appear twice: :func:`read_answer_key` returns each ``(kind, table, seq)`` once (a ``drift``
+record: once per plan ``event`` as well).
 """
 
 from __future__ import annotations
@@ -36,7 +38,7 @@ from shape.streaming.emit.deadletter import RejectedEvents, Rejection
 from shape.streaming.emit.formats import FIELD_POISON, FIELD_SEQ, FIELD_TABLE
 from shape.streaming.emit.sinks import EventSink
 
-KINDS = ("late", "anomaly", "duplicate", "poison")
+KINDS = ("late", "anomaly", "duplicate", "poison", "drift")
 _MASK = (1 << 64) - 1
 
 
@@ -87,15 +89,16 @@ class AnswerKey:
 
 
 def read_answer_key(path: str) -> list[dict[str, Any]]:
-    """The records of an answer-key file, each ``(kind, table, seq)`` once (the first wins)."""
-    seen: set[tuple[str, str, int]] = set()
+    """The records of an answer-key file, each ``(kind, table, seq)`` once (the first wins; a
+    ``drift`` record is one per plan ``event`` as well)."""
+    seen: set[tuple[str, str, int, Any]] = set()
     out: list[dict[str, Any]] = []
     with open(path, encoding="utf-8") as f:
         for line in f:
             if not line.strip():
                 continue
             row = json.loads(line)
-            ident = (row["kind"], row["table"], int(row["seq"]))
+            ident = (row["kind"], row["table"], int(row["seq"]), row.get("event"))
             if ident not in seen:
                 seen.add(ident)
                 out.append(row)

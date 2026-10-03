@@ -145,7 +145,7 @@ class KafkaEmitter:
         self._registry_transport = registry_transport
         self._producers: dict[str, Any] = {}
         self._registries: dict[tuple[Any, ...], RegistryClient] = {}
-        self._codecs: dict[tuple[str, str, str, str], tuple[TableCodec, int]] = {}
+        self._codecs: dict[tuple[Any, ...], tuple[TableCodec, int]] = {}
 
     def _registry(self, url: str, user: str | None, password: str | None) -> RegistryClient:
         key = (url, user, password)
@@ -166,8 +166,11 @@ class KafkaEmitter:
         registry: RegistryClient,
     ) -> tuple[TableCodec, int]:
         """The codec of ``table`` and the id its schema got from the registry (registered on
-        the table's first batch, once per run)."""
-        key = (fmt, topic, strategy, table)
+        the table's first batch, once per run). A table whose columns change during the run (a
+        drift plan that adds or drops one) gets a new schema, registered under the same subject:
+        whether that is a compatible new version is the registry's decision."""
+        shape = tuple((f.name, str(f.type), f.nullable) for f in schema if f.name != FIELD_POISON)
+        key = (fmt, topic, strategy, table, shape)
         hit = self._codecs.get(key)
         if hit is None:
             codec = make_codec(fmt, table, schema)

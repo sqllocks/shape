@@ -57,7 +57,16 @@ from shape.streaming.checkpoint import CheckpointError, FileCheckpointStore
 from shape.streaming.emit.anomaly import AnomalyInjector
 from shape.streaming.emit.deadletter import DeadLetterSink
 from shape.streaming.emit.formats import FIELD_TIME
-from shape.streaming.emit.rate import Burst, RateCap, RateSchedule, VirtualClock
+from shape.streaming.emit.progress import ProgressLine
+from shape.streaming.emit.rate import (
+    Burst,
+    DailyCurve,
+    DaySchedule,
+    Ramp,
+    RateCap,
+    RateSchedule,
+    VirtualClock,
+)
 from shape.streaming.emit.sinks import EventSink
 from shape.streaming.emit.source import EventBlock
 
@@ -170,6 +179,10 @@ class EmitConfig:
     max_rate: float | None = None  # hard cap, events per second
     arrivals: str = "constant"  # realtime: constant spacing, or poisson (exponential gaps)
     seed: int = 0  # keys the poisson draws
+    ramps: tuple[Ramp, ...] = ()  # realtime: the multiplier moves linearly over a window
+    curve: DailyCurve | None = None  # realtime: by wall clock; speed: by event time
+    curve_origin: float | None = None  # seconds after midnight at the start (default: now)
+    day_seconds: float | None = None  # a drift plan: each day takes this long, events spread evenly
 
     def effective_queue(self) -> int:
         if self.queue_batches is not None:
@@ -226,10 +239,13 @@ class EmitRunner:
         *,
         sleep_until: Callable[[threading.Event, float], None] | None = None,
         dead_letter: DeadLetterSink | None = None,
+        progress: ProgressLine | None = None,
     ) -> None:
         self.plan = plan
         self.sink = sink
         self.dead_letter = dead_letter
+        self.progress = progress
+        self._lag = 0.0  # seconds the latest batch was sent after its due time
         self._reason = "stop-request"
         if dead_letter is not None:
             dead_letter.bind(self.request_stop)
@@ -245,14 +261,33 @@ class EmitRunner:
             raise ValueError("duration must be 0 or more")
         if cfg.speed is not None and cfg.realtime:
             raise ValueError("speed paces by event time and --realtime by rate: choose one")
-        self.schedule = (
-            RateSchedule(cfg.rate, cfg.bursts, arrivals=cfg.arrivals, seed=cfg.seed)
+        self.schedule: RateSchedule | DaySchedule | None = (
+            RateSchedule(
+                cfg.rate,
+                cfg.bursts,
+                ramps=cfg.ramps,
+                curve=cfg.curve,
+                day_origin=cfg.curve_origin or 0.0,
+                arrivals=cfg.arrivals,
+                seed=cfg.seed,
+            )
             if cfg.realtime
             else None
         )
+        if cfg.day_seconds is not None:
+            day_events = getattr(plan, "day_events", None)
+            if not cfg.realtime or day_events is None:
+                raise ValueError("day_seconds needs realtime pacing and a plan with days")
+            if cfg.bursts or cfg.ramps or cfg.curve is not None or cfg.arrivals != "constant":
+                raise ValueError("day_seconds sets the pace: no bursts, ramps, curve or arrivals")
+            self.schedule = DaySchedule(day_events, cfg.day_seconds)
         if cfg.arrivals != "constant" and not cfg.realtime:
             raise ValueError(f"arrivals={cfg.arrivals!r} needs realtime pacing")
-        self.clock = VirtualClock(cfg.speed) if cfg.speed is not None else None
+        if cfg.ramps and not cfg.realtime:
+            raise ValueError("ramps need realtime pacing")
+        if cfg.curve is not None and not (cfg.realtime or cfg.speed is not None):
+            raise ValueError("a curve needs realtime pacing or a speed")
+        self.clock = VirtualClock(cfg.speed, cfg.curve) if cfg.speed is not None else None
         self.cap = RateCap(cfg.max_rate) if cfg.max_rate is not None else None
         self.paced = self.schedule is not None or self.clock is not None or self.cap is not None
         self._stop = threading.Event()
@@ -361,6 +396,15 @@ class EmitRunner:
                 report.retries += 1
                 time.sleep(cfg.retry_backoff * (2 ** (attempt - 1)))
 
+    def _progress_finish(self, report: EmitReport) -> None:
+        if self.progress is not None:
+            self.progress.finish(report.end_offset, self.limit, **self._counts(report))
+
+    def _counts(self, report: EmitReport) -> dict[str, Any]:
+        """What the progress line shows besides the position."""
+        dead = self.dead_letter.total if self.dead_letter is not None else 0
+        return {"retries": report.retries, "lag": self._lag, "dead_lettered": dead}
+
     def _due(self, batch: pa.RecordBatch, sent: int) -> float | None:
         """Seconds after the start at which ``batch`` may be sent (``sent`` events have gone), or
         ``None`` when the run is not paced."""
@@ -392,12 +436,14 @@ class EmitRunner:
         if was_complete and offset >= limit:
             report.complete = report.already_complete = True
             report.stopped_by = "complete"
+            self._progress_finish(report)
             self.sink.close()
             return report
         if offset >= limit:
             report.complete = True
             report.stopped_by = "max-events" if limit < self.plan.total_events else "complete"
             self._save(offset, report.complete, report)
+            self._progress_finish(report)
             self.sink.close()
             return report
 
@@ -436,6 +482,10 @@ class EmitRunner:
                 now = time.perf_counter()
                 if t0 is None:
                     t0 = now
+                    if isinstance(self.schedule, RateSchedule) and cfg.curve_origin is None:
+                        self.schedule.set_day_origin(
+                            _seconds_of_day()
+                        )  # the curve follows the clock
                 if cfg.duration is not None and now - t0 >= cfg.duration:
                     stopped_by = "duration"
                     break
@@ -450,7 +500,8 @@ class EmitRunner:
                     if self._stop.is_set():
                         stopped_by = self._reason
                         break
-                    report.max_lag = max(report.max_lag, time.perf_counter() - due)
+                    self._lag = max(0.0, time.perf_counter() - due)
+                    report.max_lag = max(report.max_lag, self._lag)
                 self._send(batch, report)
                 now = time.perf_counter()
                 if first is None:
@@ -464,6 +515,8 @@ class EmitRunner:
                     report.per_second.extend([0] * (second + 1 - len(report.per_second)))
                 report.per_second[second] += n
                 since_checkpoint += n
+                if self.progress is not None:
+                    self.progress.update(delivered, self.limit, **self._counts(report))
                 if (
                     since_checkpoint >= cfg.checkpoint_every
                     or now - checkpoint_time >= cfg.checkpoint_seconds
@@ -511,6 +564,7 @@ class EmitRunner:
             report.elapsed = (last - first) if first is not None else 0.0
             if self.dead_letter is not None:
                 report.dead_lettered = dict(self.dead_letter.counts)
+            self._progress_finish(report)
             if self.plan.anomaly is not None:
                 report.anomalies_selected = self.plan.anomaly.stats.rows_selected
                 report.anomalies_affected = dict(self.plan.anomaly.stats.rows_affected)
@@ -523,6 +577,14 @@ class EmitRunner:
         if failure is not None:
             raise failure
         return report
+
+
+def _seconds_of_day() -> float:
+    """The local wall-clock time as seconds after midnight."""
+    import datetime as dt
+
+    now = dt.datetime.now()
+    return now.hour * 3600.0 + now.minute * 60.0 + now.second + now.microsecond / 1e6
 
 
 def _event_seconds(batch: pa.RecordBatch) -> float | None:

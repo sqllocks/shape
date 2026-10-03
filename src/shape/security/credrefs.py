@@ -147,6 +147,26 @@ def is_reference(text: str) -> bool:
     return scheme_of(text) is not None
 
 
+def check_form(ref: str) -> None:
+    """Check the form of ``ref`` without looking anything up (``shape emit --dry-run``: a ``kv://``
+    lookup is a connection). Raises :class:`CredentialReferenceError` for an empty ``env://``
+    name or ``file://`` path, or a ``kv://`` that is not ``kv://VAULT/NAME``."""
+    scheme = scheme_of(ref)
+    if scheme is None:
+        raise CredentialReferenceError(
+            "not a credential reference (expected env://, file:// or kv://)"
+        )
+    rest = ref[len(scheme) + 3 :]
+    if scheme == "env" and not rest:
+        raise CredentialReferenceError("env:// needs a variable name, as env://NAME")
+    if scheme == "file" and not rest:
+        raise CredentialReferenceError("file:// needs a path, as file://PATH")
+    if scheme == "kv":
+        vault, _, name = rest.partition("/")
+        if not vault or not name:
+            raise CredentialReferenceError("kv:// needs VAULT/NAME, as kv://VAULT/NAME")
+
+
 def resolve_reference(
     ref: str, *, environ: Mapping[str, str] | None = None, private: bool = True
 ) -> str:

@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -88,6 +88,7 @@ class EventPlan:
         envelope: str = "flat",
         by_event_time: bool = False,
         answer_key: AnswerKey | None = None,
+        seq_base: Mapping[str, int] | None = None,
     ) -> None:
         if not 0.0 <= out_of_order <= 1.0:
             raise ValueError("out-of-order fraction must be between 0 and 1")
@@ -114,6 +115,9 @@ class EventPlan:
         self.block_rows = self.ooo_window * max(1, target // self.ooo_window)
         self.anomaly = anomaly
         self.answer_key = answer_key
+        # The events of each table before this plan (a drift plan's earlier days): added to every
+        # ``_shape_seq``, so the sequence of a table continues instead of starting again at 0.
+        self.seq_base = dict(seq_base or {})
         if anomaly is not None:
             anomaly.answer_key = answer_key
         self.envelope = envelope
@@ -202,8 +206,9 @@ class EventPlan:
         """Every event of ``table`` in event-time order (computed once)."""
         if self._timed is not None:
             return self._timed
+        base = self.seq_base.get(table, 0)
         if self.anomaly is not None:
-            batch = self.anomaly.apply(self._rows(table, 0, self.counts[table]), table, 0)
+            batch = self.anomaly.apply(self._rows(table, 0, self.counts[table]), table, base)
             schema, columns = batch.schema, list(batch.columns)
         else:
             schema, columns = self._columns(table)
@@ -211,7 +216,7 @@ class EventPlan:
         if time_col is None:
             flat = [_flat(c) for c in columns]
             self._timed = with_event_fields(
-                pa.RecordBatch.from_arrays(flat, schema=schema), table, 0
+                pa.RecordBatch.from_arrays(flat, schema=schema), table, base
             )
             return self._timed
         check_reserved(schema, table)
@@ -229,7 +234,7 @@ class EventPlan:
         # the columns are gathered on several threads (the kernel releases the lock).
         with ThreadPoolExecutor(max_workers=encoder_threads()) as pool:
             taken = list(pool.map(lambda c: _flat(c.take(order)), columns))
-        table_col, seq_col = event_columns(table, order)
+        table_col, seq_col = event_columns(table, pc.add(order, base) if base else order)
         self._timed = pa.RecordBatch.from_arrays(
             [*taken, table_col, seq_col, taken[names.index(time_col)]],
             names=[*names, FIELD_TABLE, FIELD_SEQ, FIELD_TIME],
@@ -245,9 +250,10 @@ class EventPlan:
             events = self._delay(table, start, n, events)
             return EventBlock(self.starts[table] + start, table, events)
         batch = self._rows(table, start, n)
+        base = self.seq_base.get(table, 0)
         if self.anomaly is not None:
-            batch = self.anomaly.apply(batch, table, start)
-        events = with_event_fields(batch, table, start)
+            batch = self.anomaly.apply(batch, table, base + start)
+        events = with_event_fields(batch, table, base + start)
         events = self._delay(table, start, n, events)
         return EventBlock(self.starts[table] + start, table, events)
 
