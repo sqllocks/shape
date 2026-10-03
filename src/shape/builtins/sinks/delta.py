@@ -50,9 +50,14 @@ def _location(uri: str, table: str, options: dict[str, Any]) -> tuple[str, dict[
         from shape.builtins.sources.delta import _storage_options
         from shape.security.names import safe_name
 
+        from shape.builtins.sinks.azure import _with_environment_keys
+
         base = uri[len(CLOUD_PREFIX) :]
         parse(base)  # validates the URI
-        return f"{base.rstrip('/')}/{safe_name(table)}", _storage_options(base, options)
+        # a key in AZURE_STORAGE_* is used when no credential is given, as for abfss://
+        return f"{base.rstrip('/')}/{safe_name(table)}", _storage_options(
+            base, _with_environment_keys(options)
+        )
     from shape.security.names import contained
 
     target = contained(local_path(uri), table)
