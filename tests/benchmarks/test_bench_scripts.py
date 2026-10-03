@@ -123,3 +123,28 @@ def test_kernel_bench_reports_a_missing_results_file_before_timing(kernel_bench,
     rc = kernel_bench.main(["--rows", "100", "--runs", "1", "--out", str(tmp_path / "none.json")])
     assert rc == 2
     assert "none.json" in capsys.readouterr().err
+
+
+def test_live_fidelity_overhead_is_timed_under_the_benchmark_lock(monkeypatch, tmp_path):
+    """Section 1.4: the tee's overhead is a timed benchmark, so it holds the exclusive lock and
+    waits for the load gate before timing."""
+    mod = _load("benchmarks_live_fidelity_run", ROOT / "benchmarks" / "live_fidelity" / "run.py")
+    import common
+    monkeypatch.setattr(common, "BENCH_OUT_DIR", tmp_path)
+    monkeypatch.delenv("BENCH_LOCK_HELD", raising=False)
+    gated = []
+    monkeypatch.setattr(
+        mod, "wait_for_quiet", lambda *a, **k: gated.append(1) or 0.0, raising=False
+    )
+    monkeypatch.setattr(mod, "load_schema", lambda name, work: object())
+    monkeypatch.setattr(mod, "generate_tables", lambda schema, scale, seed: {})
+    held = []
+
+    def rate(schema, scale, reference, mode, sink_kind, work):
+        held.append(__import__("os").environ.get("BENCH_LOCK_HELD"))
+        return 100.0
+
+    monkeypatch.setattr(mod, "rate", rate)
+    mod.overhead("retail", "small", tmp_path, 1)
+    assert held and set(held) == {"1"}
+    assert gated
