@@ -349,6 +349,14 @@ parse, and 130 when a scale run is interrupted. See `docs/CLI.md` and `docs/CI.m
 | 0 | ok |
 | 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
 
+## `shape bridge`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 1 | with `--once`: the request failed |
+| 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
 ## `shape bridge schema`
 
 | Code | Meaning |

@@ -153,7 +153,7 @@ def test_registry_save_list_roundtrip(orders: Path, root: str):
     assert r.returncode == 0, r.stderr
     assert "crm/orders/v1" in r.stdout
     r = cli("profile", "registry", "list", "--root", root, "--json")
-    (entry,) = json.loads(r.stdout)
+    (entry,) = json.loads(r.stdout)["payload"]
     assert entry["tags"] == ["daily", "prod"]
     assert entry["source_rows"] == 120
     assert entry["description"] == "daily orders"
@@ -184,7 +184,9 @@ def test_registry_save_from_a_shape_profile_and_multi_table(
     assert r.returncode == 0, r.stderr
     idents = [
         e["table"]
-        for e in json.loads(cli("profile", "registry", "list", "--root", root, "--json").stdout)
+        for e in json.loads(cli("profile", "registry", "list", "--root", root, "--json").stdout)[
+            "payload"
+        ]
     ]
     assert sorted(idents) == ["a", "b", "orders"]
 
@@ -195,16 +197,16 @@ def test_registry_save_never_replaces_silently(orders: Path, tmp_path: Path, roo
     r = _save(root, bigger)
     assert r.returncode == 2 and "--overwrite" in r.stderr
     assert (
-        json.loads(cli("profile", "registry", "list", "--root", root, "--json").stdout)[0][
-            "source_rows"
-        ]
+        json.loads(cli("profile", "registry", "list", "--root", root, "--json").stdout)["payload"][
+            0
+        ]["source_rows"]
         == 120
     )
     assert _save(root, bigger, "--overwrite").returncode == 0
     assert (
-        json.loads(cli("profile", "registry", "list", "--root", root, "--json").stdout)[0][
-            "source_rows"
-        ]
+        json.loads(cli("profile", "registry", "list", "--root", root, "--json").stdout)["payload"][
+            0
+        ]["source_rows"]
         == 300
     )
 
@@ -232,7 +234,10 @@ def test_registry_delete(orders: Path, root: str):
     r = cli("profile", "registry", "delete", "crm/orders/v1", "--root", root)
     assert r.returncode == 0 and "Deleted" in r.stdout
     assert not (Path(root) / "crm").exists()  # empty folders go too
-    assert json.loads(cli("profile", "registry", "list", "--root", root, "--json").stdout) == []
+    assert (
+        json.loads(cli("profile", "registry", "list", "--root", root, "--json").stdout)["payload"]
+        == []
+    )
     assert cli("profile", "registry", "delete", "crm/orders/v1", "--root", root).returncode == 1
     assert cli("profile", "registry", "delete", "../../etc/passwd", "--root", root).returncode == 2
 
@@ -244,7 +249,7 @@ def test_registry_tag_add_and_remove(orders: Path, root: str):
 
     def tags() -> list[str]:
         out = cli("profile", "registry", "list", "--root", root, "--json").stdout
-        return json.loads(out)[0]["tags"]
+        return json.loads(out)["payload"][0]["tags"]
 
     assert tags() == ["a", "b", "c"]
     assert (
@@ -302,7 +307,14 @@ def test_registry_reindex_rebuilds_and_reports_skips(orders: Path, root: str):
     assert r.returncode == 0
     assert "Reindexed 1 profile(s)" in r.stdout
     assert "skipped crm/orders/broken.shape" in r.stderr
-    assert len(json.loads(cli("profile", "registry", "list", "--root", root, "--json").stdout)) == 1
+    assert (
+        len(
+            json.loads(cli("profile", "registry", "list", "--root", root, "--json").stdout)[
+                "payload"
+            ]
+        )
+        == 1
+    )
 
 
 def test_registry_validate_store_and_data(orders: Path, tmp_path: Path, root: str):

@@ -71,7 +71,7 @@ def shape(site, *args):
 def test_list_shows_every_plugin_without_importing_it(site):
     r = shape(site, "plugins", "list", "--json")
     assert r.returncode == 0, r.stderr
-    rows = {(x["group"], x["name"]): x for x in json.loads(r.stdout)}
+    rows = {(x["group"], x["name"]): x for x in json.loads(r.stdout)["payload"]}
     assert ("shape.sources", "lines") in rows and ("shape.detectors", "iban") in rows
     assert rows[("shape.commands", "hello")]["source"] == "shape-example-plugin"
     assert {x["status"] for x in rows.values()} == {"unloaded"}

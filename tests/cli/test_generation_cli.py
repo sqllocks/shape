@@ -39,7 +39,7 @@ def test_list_shows_retail(capsys):
     assert "retail" in out
     code, out, _ = run(capsys, "list", "--json")
     assert code == 0
-    assert {"name": "retail", "modes": ["3nf", "star"]} in json.loads(out)
+    assert {"name": "retail", "modes": ["3nf", "star"]} in json.loads(out)["payload"]
 
 
 def test_presets_for_retail(capsys):
@@ -294,7 +294,7 @@ def test_generate_as_a_program_flushes_and_ends_early(tmp_path):
         "parquet", "-o", out, "--json",
     )  # fmt: skip
     assert done.returncode == 0, done.stderr
-    assert json.loads(done.stdout)["format"] == "parquet"
+    assert json.loads(done.stdout)["payload"]["format"] == "parquet"
     assert "command finished" in done.stderr
     assert json.loads(metrics.read_text())["exit_code"] == 0
     import pyarrow.parquet as pq

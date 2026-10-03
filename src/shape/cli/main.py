@@ -1411,8 +1411,9 @@ def _build_parser(plugin_commands=()):
     add_project_arguments(sub)
     for rec in plugin_commands:  # listed in --help only; the plugin loads when it is run
         sub.add_parser(rec.name, help=f"(plugin {rec.source})", add_help=False)
-    from shape.cli import exitcodes
+    from shape.cli import exitcodes, machine
 
+    machine.install(p)
     exitcodes.apply(p)
     return p
 
@@ -1613,10 +1614,17 @@ def _dispatch(argv):
         from shape.plugins.host import default_host
 
         return run_command(default_host(), argv[0], argv[1:])
-    a = (_build_parser(plugin_cmds.values()) if plugin_cmds else parser).parse_args(argv)
+    used = _build_parser(plugin_cmds.values()) if plugin_cmds else parser
+    a = used.parse_args(argv)
     if a.version:
         print(f"shape {_version()}")
         return 0
+    from shape.cli import machine
+
+    return machine.run(machine.command_path(used, a), a, lambda: _route(a))
+
+
+def _route(a):
     if a.cmd in ("keygen", "sign", "verify"):
         return _run({"keygen": _cmd_keygen, "sign": _cmd_sign, "verify": _cmd_verify}[a.cmd], a)
     if getattr(a, "verify", None):

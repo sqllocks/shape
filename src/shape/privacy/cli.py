@@ -60,8 +60,9 @@ def _parser() -> argparse.ArgumentParser:
 
     ci.add_flags(va)
     add_project_flags(va, source=False)
-    from shape.cli import exitcodes
+    from shape.cli import exitcodes, machine
 
+    machine.install(p, ("profile",))
     exitcodes.apply(p, ("profile",))
     return p
 
@@ -123,12 +124,19 @@ def _safe(a: argparse.Namespace) -> int:
 
 def main(argv: Sequence[str]) -> int:
     """Run a ``profile safe|validate`` command: 0 ok, 1 leak found, 2 input error."""
-    a = _parser().parse_args(list(argv))
-    try:
-        return _validate(a) if a.cmd == "validate" else _safe(a)
-    except (OSError, ValueError, KeyError, ImportError, zipfile.BadZipFile) as exc:
-        from shape.cli import errors
+    from shape.cli import machine
 
-        if errors.debug_enabled():
-            raise
-        return errors.fail(exc)
+    parser = _parser()
+    a = parser.parse_args(list(argv))
+
+    def run() -> int:
+        try:
+            return _validate(a) if a.cmd == "validate" else _safe(a)
+        except (OSError, ValueError, KeyError, ImportError, zipfile.BadZipFile) as exc:
+            from shape.cli import errors
+
+            if errors.debug_enabled():
+                raise
+            return errors.fail(exc)
+
+    return machine.run(f"profile {a.cmd}", a, run)

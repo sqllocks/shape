@@ -92,6 +92,7 @@ _EXTRA: dict[str, dict[int, str]] = {
     "proposals propose": {},
     "proposals list": {},
     "proposals decide": {},
+    "bridge": {1: "with `--once`: the request failed"},
     "bridge schema": {1: "the schemas in DIR differ from the ones Shape ships (with `--check`)"},
     "demo init": {1: "the connection profile could not be saved"},
     "demo list": {},

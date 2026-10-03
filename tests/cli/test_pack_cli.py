@@ -180,7 +180,7 @@ def test_validate_bad_input_exits_two(capsys, tmp_path):
 
 def test_list_the_reference_inputs(capsys):
     code, out, _ = run(capsys, "pack", "list", FIXTURES, "--json")
-    rows = json.loads(out)
+    rows = json.loads(out)["payload"]
     assert code == 0
     assert sorted((r["kind"], r["id"]) for r in rows) == [
         ("file_drop", "my_custom_pack"),
@@ -198,12 +198,12 @@ def test_list_with_nothing_says_that_shape_ships_none(capsys, tmp_path, monkeypa
     code, out, _ = run(capsys, "pack", "list")
     assert code == 0 and "Shape ships none" in out
     code, out, _ = run(capsys, "pack", "list", "--json")
-    assert code == 0 and json.loads(out) == []
+    assert code == 0 and json.loads(out)["payload"] == []
     (tmp_path / "packs").mkdir()
     (tmp_path / "packs" / "x.yaml").write_text("id: x\nkind: stream\ndomain: hr\n")
     (tmp_path / "packs" / "broken.yaml").write_text("- 1\n")
     code, out, _ = run(capsys, "pack", "list", "--json")
-    rows = {r["id"]: r for r in json.loads(out)}
+    rows = {r["id"]: r for r in json.loads(out)["payload"]}
     assert code == 0 and rows["x"]["kind"] == "stream" and rows["broken"]["kind"] == "invalid"
     code, _, err = run(capsys, "pack", "list", tmp_path / "nodir")
     assert code == 2 and "not a directory" in err

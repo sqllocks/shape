@@ -194,7 +194,7 @@ def test_jobs_list_status_cancel_and_resume_a_local_job(capsys, tmp_path, schema
     code, text, _ = run(capsys, "jobs", "list")
     assert code == 0 and job_id in text and "succeeded" in text
     code, text, _ = run(capsys, "jobs", "list", "--json")
-    assert [j["job_id"] for j in json.loads(text)] == [job_id]
+    assert [j["job_id"] for j in json.loads(text)["payload"]] == [job_id]
     code, text, _ = run(capsys, "jobs", "cancel", job_id, "--json")
     assert code == 0 and json.loads(text)["cancelled"] is False  # already final
     # a run that died: its record says failed; resume finishes it without redoing finished parts

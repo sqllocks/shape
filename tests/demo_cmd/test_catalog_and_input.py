@@ -26,7 +26,11 @@ def test_the_four_scenarios_have_their_modes_domains_and_default_rows():
 def test_demo_list_has_the_payload_the_bridge_returns(run):
     code, out, _ = run("demo", "list", "--json")
     assert code == 0
-    payload = json.loads(out)
+    envelope = json.loads(out)
+    assert envelope["format"] == "shape-result" and envelope["command"] == "demo list"
+    payload = {
+        k: v for k, v in envelope.items() if k not in ("format", "version", "command", "exit_code")
+    }
     assert payload == demo_list()
     assert payload["count"] == 4
     assert set(payload["scenarios"][0]) == {

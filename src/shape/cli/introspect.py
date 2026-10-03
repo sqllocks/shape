@@ -40,6 +40,11 @@ def leaves(
         for a in parser._actions
         if not a.option_strings and a.nargs not in ("?", "*") and a is not actions[0]
     )
+    runs_alone = not actions[0].required and any(
+        a.option_strings and a.dest != "help" and a is not actions[0] for a in parser._actions
+    )
+    if runs_alone and prefix:  # `shape bridge` serves; `shape bridge schema` is a sub-command
+        yield prefix, parser, (), invoke
     by_parser: dict[int, list[str]] = {}
     parsers: dict[int, argparse.ArgumentParser] = {}
     for name, sub in actions[0].choices.items():
