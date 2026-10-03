@@ -235,10 +235,23 @@ def save_domain(domain, path):
 
 
 def load_domain(path):
+    """The domain saved at ``path`` by :func:`save_domain`; ``ValueError`` naming the file and
+    the problem when it is not valid JSON, not an object, or misses or misnames a key."""
     import json
     from pathlib import Path
 
-    d = domain_from_dict(json.loads(Path(path).read_text()))
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"{path}: not valid JSON: {exc}") from None
+    if not isinstance(data, dict):
+        raise ValueError(f"{path}: a domain file must hold a JSON object")
+    try:
+        d = domain_from_dict(data)
+    except KeyError as exc:
+        raise ValueError(f"{path}: missing key {exc}") from None
+    except (TypeError, AttributeError) as exc:
+        raise ValueError(f"{path}: malformed domain: {exc}") from None
     issues = validate_domain(d)
     if issues:
         raise ValueError(issues)
