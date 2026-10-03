@@ -272,3 +272,20 @@ def test_python_text_finalize_memory_does_not_scale_with_rows():
     assert peak < 5 * 2**20, peak
     assert out["length"]["p95"] == pytest.approx(7.25)  # 5% of the way from 7 to 12
     assert out["length"]["max"] == 12
+
+
+def _patterns(mod, values):
+    batch = pa.record_batch({"a": pa.array(values, pa.string())})
+    state = mod.ProfileState(batch.schema, "exact")
+    state.update(batch)
+    return state.finalize()["columns"][0]["patterns"]
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["123-45-6789\n", "USD\n", "12345\n", "1234567\x1c", "a@b.co\n", "12-34-56-78\x1f9", "USD\n\n"],
+)
+def test_text_patterns_follow_python_re_in_both_kernels(native, text):
+    # Regression #534: Python's `$` also matches before a final newline and its `\s` includes
+    # \x1c-\x1f; the native regexes did neither.
+    assert _patterns(native, [text]) == _patterns(reference, [text])
