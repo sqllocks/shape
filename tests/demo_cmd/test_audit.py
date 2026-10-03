@@ -92,3 +92,34 @@ def test_518_status_of_such_a_record_is_a_message_and_exit_two(run, home):
     (folder / "demo-abc.json").write_text("null", encoding="utf-8")
     code, _, err = run("demo", "status", "abc")
     assert code == 2 and "is not a demo session record" in err
+
+
+# ---- #520: a flag must be true or false, a list setting text or a list -------------------------
+
+
+@pytest.mark.parametrize("key", ["dry_run", "estimate_only", "auto_cleanup"])
+@pytest.mark.parametrize("value", ["false", "no", 0, 1])
+def test_520_a_flag_that_is_not_true_or_false_is_a_demo_error(key, value):
+    from shape.demo.api import params_from
+    from shape.demo.errors import DemoError
+
+    with pytest.raises(DemoError, match=key):
+        params_from({"scenario": "retail", key: value})
+
+
+@pytest.mark.parametrize("key", ["domains", "output_formats", "db_tables"])
+@pytest.mark.parametrize("value", [5, {"a": 1}, [1, 2]])
+def test_520_a_list_setting_that_is_not_names_is_a_demo_error(key, value):
+    from shape.demo.api import params_from
+    from shape.demo.errors import DemoError
+
+    with pytest.raises(DemoError, match=key):
+        params_from({"scenario": "retail", key: value})
+
+
+def test_520_flags_and_lists_that_are_right_still_work():
+    from shape.demo.api import params_from
+
+    p = params_from({"scenario": "retail", "dry_run": False, "domains": ("a", "b")})
+    assert p.dry_run is False and p.domains == ["a", "b"]
+    assert params_from({"scenario": "retail", "output_formats": "terminal, charts"}).output_formats
