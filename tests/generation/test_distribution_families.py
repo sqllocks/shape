@@ -3,6 +3,7 @@ strategy."""
 
 from __future__ import annotations
 
+import copy
 import importlib.util
 import math
 import sys
@@ -28,6 +29,12 @@ assert _spec and _spec.loader
 schema_import = importlib.util.module_from_spec(_spec)
 sys.modules["vs_spindle_schema_import"] = schema_import
 _spec.loader.exec_module(schema_import)
+
+
+def _schema_for(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    """A private copy of a case's schema: tests edit what they get, and the case harness
+    shares dicts with its module-level cases (#329)."""
+    return copy.deepcopy(cases_mod.schema_for(*args, **kwargs))
 
 
 def _tvd(a: np.ndarray[Any, Any], b: np.ndarray[Any, Any]) -> float:
@@ -130,7 +137,7 @@ def _column(generator: dict[str, Any], rows: int = 30_000, seed: int = 5) -> np.
         "regex": None,
         "column": cases_mod._col("x", "decimal", {"strategy": "distribution", **generator}),
     }
-    raw = cases_mod.schema_for(case, rows=rows)
+    raw = _schema_for(case, rows=rows)
     table = Engine(schema_import.import_dump(raw), seed=seed).generate_table("t")
     return np.asarray(table.column("x").to_pylist())
 

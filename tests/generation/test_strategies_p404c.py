@@ -9,6 +9,7 @@ also compared on their month, weekday and hour-of-day profiles.
 
 from __future__ import annotations
 
+import copy
 import importlib.util
 import json
 import os
@@ -59,6 +60,12 @@ FIXTURES = {
 }
 
 
+def _schema_for(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    """A private copy of a case's schema: tests edit what they get, and the case harness
+    shares dicts with its module-level cases (#329)."""
+    return copy.deepcopy(cases_mod.schema_for(*args, **kwargs))
+
+
 @pytest.fixture(autouse=True, scope="module")
 def _datasets():
     for name, rows in cases_mod.DATASETS.items():
@@ -69,7 +76,7 @@ def _datasets():
 
 
 def _engine(case_id: str, rows: int | None = None, seed: int = SHAPE_SEED) -> Engine:
-    raw = cases_mod.schema_for(CASES[case_id], rows=rows)
+    raw = _schema_for(CASES[case_id], rows=rows)
     return Engine(schema_import.import_dump(raw), seed=seed)
 
 
@@ -129,7 +136,7 @@ def test_the_comparison_can_fail():
         case["column"]["generator"].update(mutate)
         for name, change in (helper or {}).items():
             case["helpers"][name]["generator"].update(change)
-        engine = Engine(schema_import.import_dump(cases_mod.schema_for(case)), seed=SHAPE_SEED)
+        engine = Engine(schema_import.import_dump(_schema_for(case)), seed=SHAPE_SEED)
         col = engine.generate_table("t").column("x").combine_chunks()
         fps = FIXTURES[CASES[case_id]["strategy"]]["cases"][case_id]["fingerprints"]
         return bool(compare.check(fingerprint.fingerprint(col.to_pylist()), fps))
@@ -211,7 +218,7 @@ def _tables(
         "tables": {"p": {"rows": parent_rows, "primary_key": ["pid"], "columns": p_cols}},
         **(extra or {}),
     }
-    return Engine(schema_import.import_dump(cases_mod.schema_for(case, rows=child_rows)), seed=3)
+    return Engine(schema_import.import_dump(_schema_for(case, rows=child_rows)), seed=3)
 
 
 def _enum(values: dict[str, float], **extra: Any) -> dict[str, Any]:
@@ -351,7 +358,7 @@ def _conditional(condition: str, true: Any, false: Any, helpers: dict[str, Any])
             },
         ),
     }
-    engine = Engine(schema_import.import_dump(cases_mod.schema_for(case, rows=400)), seed=2)
+    engine = Engine(schema_import.import_dump(_schema_for(case, rows=400)), seed=2)
     return engine.generate_table("t")
 
 
@@ -399,9 +406,7 @@ def test_conditional_null_foreign_key_looks_up_zero():
             )
         },
     }
-    t = Engine(
-        schema_import.import_dump(cases_mod.schema_for(case, rows=300)), seed=2
-    ).generate_table("t")
+    t = Engine(schema_import.import_dump(_schema_for(case, rows=300)), seed=2).generate_table("t")
     got = {(k, v) for k, v in zip(t["pid"].to_pylist(), t["x"].to_pylist(), strict=True)}
     assert got == {(None, 0.0), (1.0, 10.0), (2.0, 20.0), (7.0, None)}
 
@@ -462,7 +467,7 @@ def test_correlated_bad_specs(spec, message):
         "regex": None,
         "column": cases_mod._col("x", "decimal", {"strategy": "correlated", **spec}),
     }
-    engine = Engine(schema_import.import_dump(cases_mod.schema_for(case, rows=20)), seed=1)
+    engine = Engine(schema_import.import_dump(_schema_for(case, rows=20)), seed=1)
     with pytest.raises(ValueError, match=re.escape(message)):
         engine.generate_table("t")
 
@@ -520,7 +525,7 @@ def test_last_record_sample_of_a_dataset_decides_the_record():
     case["helpers"]["second"] = cases_mod._col(
         "second", "string", {"strategy": "record_sample", "dataset": "p404c_places", "field": "zip"}
     )
-    raw = cases_mod.schema_for(case, rows=300)
+    raw = _schema_for(case, rows=300)
     t = Engine(schema_import.import_dump(raw), seed=4).generate_table("t")
     by_zip = {r["zip"]: r["state"] for r in cases_mod.PLACES}
     assert [by_zip[z] for z in t["second"].to_pylist()] == t["x"].to_pylist()
@@ -560,7 +565,7 @@ def test_reference_bad_specs(strategy, spec, message):
             "regex": None,
             "column": cases_mod._col("x", "string", {"strategy": strategy, **spec}),
         }
-        engine = Engine(schema_import.import_dump(cases_mod.schema_for(case, rows=10)), seed=1)
+        engine = Engine(schema_import.import_dump(_schema_for(case, rows=10)), seed=1)
         with pytest.raises(ValueError, match=re.escape(message)) as err:
             engine.generate_table("t")
     finally:
@@ -714,7 +719,7 @@ def test_temporal_bad_specs(spec, message):
         "regex": None,
         "column": cases_mod._col("x", "timestamp", {"strategy": "temporal", **spec}),
     }
-    engine = Engine(schema_import.import_dump(cases_mod.schema_for(case, rows=10)), seed=1)
+    engine = Engine(schema_import.import_dump(_schema_for(case, rows=10)), seed=1)
     with pytest.raises(ValueError, match=re.escape(message)):
         engine.generate_table("t")
 

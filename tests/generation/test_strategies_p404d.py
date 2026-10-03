@@ -10,6 +10,7 @@ Nothing here needs the baseline's venv.
 
 from __future__ import annotations
 
+import copy
 import datetime as dt
 import importlib.util
 import json
@@ -60,8 +61,14 @@ FIXTURES = {
 }
 
 
+def _schema_for(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    """A private copy of a case's schema: tests edit what they get, and the case harness
+    shares dicts with its module-level cases (#329)."""
+    return copy.deepcopy(rc.schema_for(*args, **kwargs))
+
+
 def _engine(case: dict[str, Any], seed: int = SHAPE_SEED, **kw: Any) -> Engine:
-    return Engine(schema_import.import_dump(rc.schema_for(case)), seed=seed, **kw)
+    return Engine(schema_import.import_dump(_schema_for(case)), seed=seed, **kw)
 
 
 def _lists(tables: dict[str, pa.Table]) -> dict[str, dict[str, list[Any]]]:
@@ -455,7 +462,7 @@ def test_bad_specs_name_the_column(spec, message):
     )
     case = _case({"p": parent, "c": child})
     # the schema validator accepts these specs (required keys are checked by the strategy)
-    engine = Engine(schema_import.import_dump(rc.schema_for(case)), seed=1)
+    engine = Engine(schema_import.import_dump(_schema_for(case)), seed=1)
     with pytest.raises(ValueError, match=re.escape(message)) as err:
         engine.generate_table("c")
     assert "c.x" in str(err.value) or message in str(err.value)
@@ -536,7 +543,7 @@ def test_lifecycle_zero_weight_phase_never_appears(generated):
 
 
 def test_scd2_end_date_and_flags_in_a_hand_checked_table():
-    raw = rc.schema_for(rc.CASES["scd2/gap_7_days"])
+    raw = _schema_for(rc.CASES["scd2/gap_7_days"])
     raw["generation"]["scales"]["s"] = {"customer": 3, "dim": 12}
     raw["model"]["date_range"] = {"start": "2024-01-01", "end": "2024-12-31"}
     t = _lists(Engine(schema_import.import_dump(raw), seed=5).generate().tables)["dim"]

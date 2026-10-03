@@ -8,6 +8,7 @@ checked by ``baseline_p404b.py``). Nothing here needs the baseline's venv.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import importlib.util
 import json
@@ -66,6 +67,12 @@ POOLS = {
 # ---------------------------------------------------------------- stand-ins for later packages
 
 
+def _schema_for(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    """A private copy of a case's schema: tests edit what they get, and the case harness
+    shares dicts with its module-level cases (#329)."""
+    return copy.deepcopy(cases_mod.schema_for(*args, **kwargs))
+
+
 class StandInDates:
     """Uniform timestamps between ``start`` and ``end`` (the ``temporal`` strategy is another work
     package; what ``derived`` adds to a date does not depend on where the date came from)."""
@@ -99,7 +106,7 @@ def _engine(raw: dict[str, Any], seed: int = SHAPE_SEED, **kw: Any) -> Engine:
 
 
 def _case_engine(case_id: str, seed: int = SHAPE_SEED, **kw: Any) -> Engine:
-    return _engine(cases_mod.schema_for(CASES[case_id], "shape"), seed, **kw)
+    return _engine(_schema_for(CASES[case_id], "shape"), seed, **kw)
 
 
 class _Lazy(Mapping[str, list[Any]]):
@@ -185,7 +192,7 @@ def test_the_comparison_can_fail(generated):
     def mutated(case_id: str, edit: Any) -> list[Any]:
         case = json.loads(json.dumps(CASES[case_id]))
         edit(case)
-        result = _engine(cases_mod.schema_for(case, "shape")).generate()
+        result = _engine(_schema_for(case, "shape")).generate()
         return parts.measure(case, {n: _Lazy(t) for n, t in result.tables.items()})
 
     def fails(case_id: str, series: list[Any]) -> bool:
@@ -273,7 +280,7 @@ def _text_engine(
         rows=rows,
         shape_generators=generators,
     )
-    return _engine(cases_mod.schema_for(case, "shape"), seed)
+    return _engine(_schema_for(case, "shape"), seed)
 
 
 @pytest.mark.parametrize("strategy", ["native", "faker"])
@@ -349,7 +356,7 @@ def test_native_email_follows_first_and_last_name_columns():
 
 
 def test_native_email_with_null_names_is_null():
-    raw = cases_mod.schema_for(CASES["native/email_follows_names"], "shape")
+    raw = _schema_for(CASES["native/email_follows_names"], "shape")
     raw["generation"]["scales"]["s"]["t"] = 3_000
     raw["tables"]["t"]["columns"]["first_name"].update(nullable=True, null_rate=0.3)
     table = _engine(raw, 5).generate_table("t")
@@ -372,7 +379,7 @@ def test_native_default_provider_is_word():
     case = cases_mod._case(
         "native", cases_mod._col("x", "string", {"strategy": "native"}), rows=1_000
     )
-    b = _engine(cases_mod.schema_for(case, "shape"), 11).generate_table("t").column("x")
+    b = _engine(_schema_for(case, "shape"), 11).generate_table("t").column("x")
     assert a.equals(b)
 
 
@@ -430,7 +437,7 @@ def _faker_engine(provider: str, rows: int, seed: int = 3, **spec: Any) -> Engin
         cases_mod._col("x", "string", {"strategy": "faker", "provider": provider, **spec}),
         rows=rows,
     )
-    return _engine(cases_mod.schema_for(case, "shape"), seed)
+    return _engine(_schema_for(case, "shape"), seed)
 
 
 def test_faker_exotic_provider_fills_from_a_pool(fake_faker):
@@ -456,7 +463,7 @@ def test_faker_pool_is_capped_and_sampled(fake_faker, monkeypatch):
 
 
 def test_faker_passes_args_and_the_models_locale(fake_faker):
-    raw = cases_mod.schema_for(
+    raw = _schema_for(
         cases_mod._case(
             "faker",
             cases_mod._col(
@@ -484,9 +491,7 @@ def test_faker_non_text_values_and_max_length(fake_faker):
         cases_mod._text("faker", "color_name", max_length=8),
         rows=100,
     )
-    values = (
-        _engine(cases_mod.schema_for(case, "shape")).generate_table("t").column("x").to_pylist()
-    )
+    values = _engine(_schema_for(case, "shape")).generate_table("t").column("x").to_pylist()
     assert max(len(v) for v in values) == 8
 
 
@@ -517,7 +522,7 @@ def _formula(expression: str, helpers: dict[str, Any] | None = None, rows: int =
         helpers=cols,
         rows=rows,
     )
-    return _engine(cases_mod.schema_for(case, "shape"), 21)
+    return _engine(_schema_for(case, "shape"), 21)
 
 
 _AB = {
@@ -610,7 +615,7 @@ def test_formula_identical_for_any_chunking_and_random_access():
 
 
 def test_formula_null_in_an_input_gives_null():
-    raw = cases_mod.schema_for(
+    raw = _schema_for(
         cases_mod._case(
             "formula",
             cases_mod._col("x", "decimal", {"strategy": "formula", "expression": "a + b"}),
@@ -671,7 +676,7 @@ def test_formula_rejects_what_the_grammar_does_not_allow(expression, message):
         rows=5,
     )
     with pytest.raises(ValueError, match=re.escape(message)) as err:
-        _engine(cases_mod.schema_for(case, "shape")).generate_table("t")
+        _engine(_schema_for(case, "shape")).generate_table("t")
     assert "t.x" in str(err.value)
 
 
@@ -698,7 +703,7 @@ def test_formula_text_column_is_rejected():
     with pytest.raises(
         StrategyError, match="reads column 'name' of type string; it must be numeric"
     ):
-        _engine(cases_mod.schema_for(case, "shape")).generate_table("t")
+        _engine(_schema_for(case, "shape")).generate_table("t")
 
 
 def test_formula_compile_is_cached_and_lists_columns():
@@ -722,7 +727,7 @@ def _derived_engine(
         "x", "timestamp", {"strategy": "derived", "source": "d", **generator}
     )
     case["tables"]["t"]["rows"] = rows
-    raw = cases_mod.schema_for(case, "shape")
+    raw = _schema_for(case, "shape")
     if source_type == "date":
         raw["tables"]["t"]["columns"]["d"]["generator"] = {"strategy": "test_date32"}
     if source_type == "text":
@@ -810,7 +815,7 @@ def test_derived_date_source_and_text_source():
 
 
 def test_derived_null_source_gives_null():
-    raw = cases_mod.schema_for(CASES["derived/add_days_uniform"], "shape")
+    raw = _schema_for(CASES["derived/add_days_uniform"], "shape")
     raw["generation"]["scales"]["s"]["t"] = 3_000
     raw["tables"]["t"]["columns"]["d"].update(nullable=True, null_rate=0.25)
     table = _engine(raw, 2).generate_table("t")
@@ -844,7 +849,7 @@ def _cross_engine(
     **gen: Any,
 ) -> Engine:
     case = cases_mod._derived({}, rule="copy")
-    raw = cases_mod.schema_for(CASES["derived/cross_table"], "shape")
+    raw = _schema_for(CASES["derived/cross_table"], "shape")
     raw["tables"]["order"]["columns"]["order_id"]["generator"] = parent_key
     raw["tables"]["order"]["columns"]["order_id"]["type"] = "string"
     child = raw["tables"]["return"]["columns"]
@@ -993,7 +998,7 @@ def test_computed_is_the_aggregate_of_the_children(case_id, func, column):
 
 
 def test_computed_lookup_parent_copies_the_parents_value():
-    raw = cases_mod.schema_for(CASES["computed/sum_children"], "shape")
+    raw = _schema_for(CASES["computed/sum_children"], "shape")
     raw["tables"]["parent"]["columns"]["size"] = cases_mod._col(
         "size",
         "decimal",
@@ -1023,7 +1028,7 @@ def test_computed_lookup_parent_copies_the_parents_value():
 
 
 def test_computed_unknown_rule_is_an_error():
-    raw = cases_mod.schema_for(CASES["computed/sum_children"], "shape")
+    raw = _schema_for(CASES["computed/sum_children"], "shape")
     raw["tables"]["parent"]["columns"]["x"]["generator"]["rule"] = "median_children"
     with pytest.raises(ValueError, match="Unknown computed rule: 'median_children'"):
         _engine(raw).generate()
@@ -1052,7 +1057,7 @@ def test_compute_rounds_the_way_numpy_does():
 
 
 def test_computed_parents_without_children_get_zero_of_the_natural_type():
-    raw = cases_mod.schema_for(CASES["computed/count_children"], "shape")
+    raw = _schema_for(CASES["computed/count_children"], "shape")
     raw["generation"]["scales"]["s"].update({"parent": 50, "line": 20})
     for rule, column in (("count_children", "units"), ("sum_children", "line_id")):
         raw["tables"]["parent"]["columns"]["x"]["generator"].update(rule=rule, child_column=column)

@@ -8,6 +8,7 @@ checked by ``baseline.py --check``). Nothing here needs the baseline's venv.
 
 from __future__ import annotations
 
+import copy
 import importlib.util
 import json
 import re
@@ -49,8 +50,14 @@ FIXTURES = {
 }
 
 
+def _schema_for(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    """A private copy of a case's schema: tests edit what they get, and the case harness
+    shares dicts with its module-level cases (#329)."""
+    return copy.deepcopy(cases_mod.schema_for(*args, **kwargs))
+
+
 def _engine(case_id: str, rows: int = cases_mod.ROWS, seed: int = SHAPE_SEED) -> Engine:
-    raw = cases_mod.schema_for(CASES[case_id], rows=rows)
+    raw = _schema_for(CASES[case_id], rows=rows)
     return Engine(schema_import.import_dump(raw), seed=seed)
 
 
@@ -117,7 +124,7 @@ def test_the_comparison_can_fail():
     def fails(case_id: str, mutate: dict[str, Any]) -> list[str]:
         case = json.loads(json.dumps(CASES[case_id]))
         case["column"]["generator"].update(mutate)
-        raw = cases_mod.schema_for(case)
+        raw = _schema_for(case)
         col = (
             Engine(schema_import.import_dump(raw), seed=SHAPE_SEED)
             .generate_table("t")
@@ -186,7 +193,7 @@ def test_distribution_families_hit_their_moments():
             "regex": None,
             "column": cases_mod._col("x", "decimal", generator),
         }
-        raw = cases_mod.schema_for(case, rows=n)
+        raw = _schema_for(case, rows=n)
         col = Engine(schema_import.import_dump(raw), seed=5).generate_table("t").column("x")
         return np.asarray(col.to_pylist())
 
@@ -218,7 +225,7 @@ def test_empirical_follows_its_quantiles(generated):
 def test_empirical_cubic_without_scipy_falls_back_to_linear(monkeypatch):
     case = json.loads(json.dumps(CASES["empirical/linear"]))
     case["column"]["generator"]["interpolation"] = "cubic"
-    raw = cases_mod.schema_for(case, rows=500)
+    raw = _schema_for(case, rows=500)
     monkeypatch.setitem(sys.modules, "scipy", None)
     monkeypatch.setitem(sys.modules, "scipy.interpolate", None)
     with warnings.catch_warnings(record=True) as caught:
@@ -238,7 +245,7 @@ def test_pattern_reference_and_unresolved_tokens(generated):
 
 
 def test_pattern_null_reference_gives_null():
-    raw = cases_mod.schema_for(CASES["pattern/column_reference"], rows=2_000)
+    raw = _schema_for(CASES["pattern/column_reference"], rows=2_000)
     raw["tables"]["t"]["columns"]["tier"]["nullable"] = True
     raw["tables"]["t"]["columns"]["tier"]["null_rate"] = 0.3
     table = Engine(schema_import.import_dump(raw), seed=9).generate_table("t")
@@ -272,7 +279,7 @@ def test_bad_specs_name_the_column(strategy, spec, message):
         "regex": None,
         "column": cases_mod._col("x", "string", {"strategy": strategy, **spec}),
     }
-    raw = cases_mod.schema_for(case, rows=10)
+    raw = _schema_for(case, rows=10)
     engine = Engine(schema_import.import_dump(raw), seed=1)
     with pytest.raises(ValueError, match=re.escape(message)) as err:
         engine.generate_table("t")
