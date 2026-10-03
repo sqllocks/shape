@@ -21,6 +21,13 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   for a single table and off for a dataset (several tables): `--joint` / `joint=True` turn it on,
   `--no-joint` / `joint=False` off, `SHAPE_PROFILE_JOINT` when the call does not choose.
 
+- `shape demo init|list|run|preflight|cleanup|status|notebook|report` (`docs/DEMO.md`): four scenarios in three
+  modes (inference, seeding, streaming); seeding writes to a folder, a Lakehouse, a Warehouse, a SQL database
+  or an Eventhouse and records a session that `cleanup` removes exactly; the operations are plain functions
+  (`shape.demo`) the JSON bridge calls too. A scenario runs its own domains, a failed run is rolled back,
+  `preflight` checks each target, a profile never stores a secret and reports are escaped. Harness:
+  `benchmarks/vs_spindle/demo_1to1/` (the fidelity report and the metadata exactly, the generated data by
+  T-21, an allow-list with probes, negative controls).
 - `shape fabric publish|notebook|deploy-notebook|setup|export-model` and the top-level `shape publish`,
   `shape notebook`, `shape deploy-notebook`, `shape setup-fabric`, `shape export-model`
   (`docs/plugins/fabric-commands.md`): publish a domain to a Lakehouse (landing zone and run manifest),

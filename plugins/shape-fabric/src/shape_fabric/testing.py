@@ -406,7 +406,9 @@ class FakeSqlCursor:
             server.fail(sql, params)
         text = " ".join(sql.split())
         self._result = []
-        if text.startswith("SELECT 1 FROM INFORMATION_SCHEMA.TABLES"):
+        if text == "SELECT 1":
+            self._result = [(1,)]
+        elif text.startswith("SELECT 1 FROM INFORMATION_SCHEMA.TABLES"):
             self._result = [(1,)] if (params[0], params[1]) in server.tables else []
         elif text.startswith("IF NOT EXISTS (SELECT 1 FROM sys.schemas"):
             made = re.search(rf"EXEC\('CREATE SCHEMA {_NAME}'\)", text)

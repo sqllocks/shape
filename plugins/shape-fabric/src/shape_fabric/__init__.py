@@ -12,6 +12,8 @@
   in OneLake or a folder), ``SqlDatabaseWriter`` (Fabric SQL database, Azure SQL, SQL Server),
   ``WarehouseWriter`` (Parquet staged in OneLake, then ``COPY INTO``), ``EventhouseWriter`` and
   ``EventstreamWriter``; ``Sink`` adapters in :mod:`shape_fabric.sinks`.
+* :mod:`shape_fabric.targets`: what ``shape demo`` needs of a destination besides writing to it:
+  drop a table, remove files, and check that a target answers.
 
 Other entry points are added by the work packages that implement them. Imports here are lazy:
 no Azure or ODBC library is loaded until a writer needs it.

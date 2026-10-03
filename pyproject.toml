@@ -280,6 +280,7 @@ source_modules = [
     "shape.cli",
     "shape.connectors",
     "shape.contracts",
+    "shape.demo",
     "shape.design",
     "shape.diff",
     "shape.dimensional",

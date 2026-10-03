@@ -1146,6 +1146,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.bridge import add_arguments as add_bridge_arguments
 
     add_bridge_arguments(sub)
+    from shape.cli.demo import add_arguments as add_demo_arguments
+
+    add_demo_arguments(sub)
     fi = sub.add_parser(
         "fidelity",
         aliases=["compare"],
@@ -1504,6 +1507,10 @@ def _dispatch(argv):
         from shape.cli.bridge import run as run_bridge
 
         return _run(run_bridge, a)
+    if a.cmd == "demo":
+        from shape.cli.demo import run as run_demo
+
+        return _run(run_demo, a)
     if a.cmd == "transform":
         from shape.cli.transform import run as run_transform
 
