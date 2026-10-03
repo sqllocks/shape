@@ -33,7 +33,7 @@ class Storage:
         if credential is not None:
             self._options["credential"] = as_credential(credential)
         self._given = filesystem
-        self._fs: Any = filesystem
+        self._fs: dict[str | None, Any] = {}  # by storage account host, when none was given
 
     def _remote(self, path: str) -> tuple[Any, str]:
         uri = to_abfss(path) if path.startswith("onelake://") else path
@@ -43,9 +43,12 @@ class Storage:
         except ImportError as exc:  # pragma: no cover - the core wheel always has it
             raise ShapeError("remote paths need sqllocks-shape[azure]") from exc
         loc = azure.parse(uri)
-        if self._fs is None:
-            self._fs = azure._filesystem(loc, self._options)
-        return self._fs, loc.fs_path
+        if self._given is not None:
+            return self._given, loc.fs_path
+        fs = self._fs.get(loc.host)
+        if fs is None:
+            fs = self._fs[loc.host] = azure._filesystem(loc, self._options)
+        return fs, loc.fs_path
 
     def is_remote(self, path: str) -> bool:
         return is_remote(path)
