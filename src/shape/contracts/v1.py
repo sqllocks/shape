@@ -33,7 +33,11 @@ _CONTRACT_KEYS = {
     "reference_pair",  # [{"columns": ["city", "zip"], "reference": "...", "min_match_rate": 0.99}]
     "max_implausible_rate",  # the share of rows that break a dependency or hold a placeholder
 }
-_ROW_COUNT_KEYS = {"min", "max"}
+_ROW_COUNT_KEYS = {"min", "max", "strength"}
+STRENGTHS = ("hard", "soft", "learned")
+"""Rule strengths (W7-03): ``hard`` fails the check, ``soft`` is a warning, ``learned`` (a rule
+inferred from data) is a warning unless ``enforce_learned``; ``strict`` fails on every rule."""
+_RANK = {"soft": 0, "learned": 1, "hard": 2}
 _COLUMN_RULES = {
     "dtype",
     "nullable",
@@ -47,6 +51,7 @@ _COLUMN_RULES = {
     "min_true_rate",  # the share of true values of a boolean (or 0/1) column
     "max_true_rate",
     "no_placeholder",  # true, or {"max_share": 0.01, "allow": ["N/A"]} (#47)
+    "strength",  # "hard" | "soft" | "learned", or {rule name: strength} (W7-03)
 }
 
 
@@ -60,13 +65,31 @@ class CheckResult:
 
     passed: bool
     violations: list[dict[str, Any]] = field(default_factory=list)
+    warnings: list[dict[str, Any]] = field(default_factory=list)
+    """Broken rules that do not fail the check: ``soft`` ones, and ``learned`` ones unless
+    ``enforce_learned`` (W7-03). Each carries its ``strength``."""
+    has_strength: bool = False
+    """True when the contract declares a ``strength`` anywhere: only then do the violations carry
+    ``strength`` and ``to_dict`` carry ``warnings``, so a contract without one gives the result it
+    always did."""
 
     def to_dict(self) -> dict[str, Any]:
-        return {"passed": self.passed, "violations": [dict(v) for v in self.violations]}
+        out: dict[str, Any] = {
+            "passed": self.passed,
+            "violations": [dict(v) for v in self.violations],
+        }
+        if self.has_strength:
+            out["warnings"] = [dict(v) for v in self.warnings]
+        return out
 
 
 def _violation(column: str | None, rule: str, expected: Any, observed: Any) -> dict[str, Any]:
     return {"column": column, "rule": rule, "expected": expected, "observed": observed}
+
+
+def _strong(v: dict[str, Any], strength: str = "hard") -> dict[str, Any]:
+    v["strength"] = strength
+    return v
 
 
 def _load_contract(contract: dict[str, Any] | str | Path) -> dict[str, Any]:
@@ -87,7 +110,9 @@ def _validate_contract(contract: dict[str, Any]) -> None:
         raise ContractError(f"unknown contract keys: {sorted(unknown)}")
     rc = contract.get("row_count", {})
     if not isinstance(rc, dict) or set(rc) - _ROW_COUNT_KEYS:
-        raise ContractError("row_count accepts only 'min' and 'max'")
+        raise ContractError("row_count accepts only 'min', 'max' and 'strength'")
+    if "strength" in rc:
+        _check_strength(rc["strength"], "row_count")
     columns = contract.get("columns", {})
     if not isinstance(columns, dict):
         raise ContractError("'columns' must be an object")
@@ -97,6 +122,8 @@ def _validate_contract(contract: dict[str, Any]) -> None:
         bad = set(rules) - _COLUMN_RULES
         if bad:
             raise ContractError(f"unknown rules for column {name!r}: {sorted(bad)}")
+        if "strength" in rules:
+            _validate_column_strength(name, rules)
         if "allowed_values" in rules and not isinstance(rules["allowed_values"], list):
             raise ContractError(f"allowed_values for column {name!r} must be a list")
         for key in ("min_true_rate", "max_true_rate"):
@@ -108,6 +135,35 @@ def _validate_contract(contract: dict[str, Any]) -> None:
     for name, rules in columns.items():
         _validate_no_placeholder(name, rules)
     _validate_joint_rules(contract)
+
+
+def _check_strength(value: Any, where: str) -> None:
+    if not isinstance(value, str) or value not in STRENGTHS:
+        raise ContractError(
+            f"unknown strength {value!r} for {where}: use one of {', '.join(STRENGTHS)}"
+        )
+
+
+def _rule_label(key: str, rule: dict[str, Any]) -> str:
+    if key == "fd":
+        return f"{rule.get('determinant')!r} -> {rule.get('dependent')!r}"
+    return f"{rule.get('if')!r} => {rule.get('then')!r}"
+
+
+def _validate_column_strength(name: str, rules: dict[str, Any]) -> None:
+    value = rules["strength"]
+    if isinstance(value, str):
+        _check_strength(value, f"column {name!r}")
+        return
+    if not isinstance(value, dict):
+        raise ContractError(
+            f"strength for column {name!r} must be one of {', '.join(STRENGTHS)} or an object "
+            "from rule name to strength"
+        )
+    for rule, strength in value.items():
+        if rule not in _COLUMN_RULES or rule == "strength":
+            raise ContractError(f"strength for column {name!r} names unknown rule {rule!r}")
+        _check_strength(strength, f"rule {rule!r} of column {name!r}")
 
 
 def _validate_no_placeholder(name: str, rules: dict[str, Any]) -> None:
@@ -144,10 +200,19 @@ def _validate_reference_pair(contract: dict[str, Any]) -> None:
     if not isinstance(rules, list):
         raise ContractError("'reference_pair' must be a list of rules")
     for rule in rules:
-        if not isinstance(rule, dict) or set(rule) - {"columns", "reference", "min_match_rate"}:
+        if not isinstance(rule, dict) or set(rule) - {
+            "columns",
+            "reference",
+            "min_match_rate",
+            "strength",
+        }:
             raise ContractError(
                 "each 'reference_pair' rule is an object with 'columns', 'reference' and "
-                "'min_match_rate'"
+                "'min_match_rate' (and optionally 'strength')"
+            )
+        if "strength" in rule:
+            _check_strength(
+                rule["strength"], f"the 'reference_pair' rule on {rule.get('columns')!r}"
             )
         if _names(rule.get("columns")) is None or not isinstance(rule.get("reference"), str):
             raise ContractError(
@@ -172,11 +237,13 @@ def _validate_joint_rules(contract: dict[str, Any]) -> None:
         if not isinstance(rules, list):
             raise ContractError(f"'{key}' must be a list of rules")
         for rule in rules:
-            if not isinstance(rule, dict) or set(rule) - {*needs, "min_confidence"}:
+            if not isinstance(rule, dict) or set(rule) - {*needs, "min_confidence", "strength"}:
                 raise ContractError(
                     f"each '{key}' rule is an object with {', '.join(repr(n) for n in needs)} "
-                    "and 'min_confidence'"
+                    "and 'min_confidence' (and optionally 'strength')"
                 )
+            if "strength" in rule:
+                _check_strength(rule["strength"], f"the '{key}' rule {_rule_label(key, rule)}")
             if any(n not in rule for n in needs):
                 raise ContractError(f"a '{key}' rule needs {', '.join(repr(n) for n in needs)}")
             conf: Any = rule.get("min_confidence")
@@ -214,7 +281,30 @@ def _key(value: Any) -> str:
     return str(value)
 
 
+def _column_strength(rules: dict[str, Any], rule: str) -> str:
+    """The strength of a column rule's violation: the column's ``strength`` when it is one word,
+    else that of the named rule (``hard`` when the object does not name it). A true-rate
+    violation takes the harder of the two bounds' strengths."""
+    value = rules.get("strength")
+    if value is None:
+        return "hard"
+    if isinstance(value, str):
+        return value
+    names = ("min_true_rate", "max_true_rate") if rule == "true_rate" else (rule,)
+    present = [value.get(n, "hard") for n in names if n in rules or rule != "true_rate"]
+    return max(present or ["hard"], key=_RANK.__getitem__)
+
+
 def _check_column(
+    name: str, rules: dict[str, Any], col: dict[str, Any], row_count: int
+) -> list[dict[str, Any]]:
+    out = _check_column_rules(name, rules, col, row_count)
+    for v in out:
+        v["strength"] = _column_strength(rules, v["rule"])
+    return out
+
+
+def _check_column_rules(
     name: str, rules: dict[str, Any], col: dict[str, Any], row_count: int
 ) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
@@ -323,14 +413,21 @@ def _check_table(
         violations.append(_violation(None, f"{prefix}row_count.min", rc["min"], table["row_count"]))
     if "max" in rc and table["row_count"] > rc["max"]:
         violations.append(_violation(None, f"{prefix}row_count.max", rc["max"], table["row_count"]))
+    for v in violations:
+        v["strength"] = rc.get("strength", "hard")
     required = contract.get("required_columns", [])
     for name in required:
         if name not in columns:
-            violations.append(_violation(name, "required_column", "present", "missing"))
+            violations.append(_strong(_violation(name, "required_column", "present", "missing")))
     for name, rules in contract.get("columns", {}).items():
         if name not in columns:
             if name not in required:
-                violations.append(_violation(name, "column_exists", "present", "missing"))
+                violations.append(
+                    _strong(
+                        _violation(name, "column_exists", "present", "missing"),
+                        _column_strength(rules, "column_exists"),
+                    )
+                )
             continue
         violations.extend(_check_column(name, rules, columns[name], table["row_count"]))
     violations.extend(check_joint_rules(contract, table))
@@ -338,17 +435,61 @@ def _check_table(
         known = set(contract.get("columns", {})) | set(required)
         for name in columns:
             if name not in known:
-                violations.append(_violation(name, "extra_column", "absent", "present"))
+                violations.append(_strong(_violation(name, "extra_column", "absent", "present")))
     return violations
 
 
-def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResult:
+def _declares_strength(contract: dict[str, Any]) -> bool:
+    """True when ``strength`` appears anywhere a contract may hold it."""
+    if "strength" in contract.get("row_count", {}):
+        return True
+    if any("strength" in rules for rules in contract.get("columns", {}).values()):
+        return True
+    if any(
+        "strength" in rule
+        for key in ("fd", "implies", "reference_pair")
+        for rule in contract.get(key, ())
+    ):
+        return True
+    tables = contract.get("tables")
+    return isinstance(tables, dict) and any(_declares_strength(t) for t in tables.values())
+
+
+def _finish(
+    violations: list[dict[str, Any]], contract: dict[str, Any], strict: bool, enforce_learned: bool
+) -> CheckResult:
+    """Split the broken rules into the ones that fail the check and the warnings."""
+    declared = _declares_strength(contract)
+    failing: list[dict[str, Any]] = []
+    warnings: list[dict[str, Any]] = []
+    for v in violations:
+        strength = v["strength"]
+        if not declared:
+            del v["strength"]  # no strength in the contract: the result is what it always was
+        hard = strict or strength == "hard" or (strength == "learned" and enforce_learned)
+        (failing if hard else warnings).append(v)
+    return CheckResult(
+        passed=not failing, violations=failing, warnings=warnings, has_strength=declared
+    )
+
+
+def check(
+    profile: Profile,
+    contract: dict[str, Any] | str | Path,
+    *,
+    strict: bool = False,
+    enforce_learned: bool = False,
+) -> CheckResult:
     """Check ``profile`` against a v1 contract (a dict, or the path to a JSON file).
 
     The contract and the profile must describe the same tables. A ``tables`` contract against a
     single-table profile raises :class:`ContractError`; against a dataset, a table the contract
     names and the profile lacks is a ``table_exists`` violation. Every rule is optional (§12.3), so
     a profile table the contract does not name is not checked.
+
+    A rule may carry a ``strength`` (``docs/CONTRACTS.md``, "Rule strength"): a broken ``hard``
+    rule (the default) fails the check, a broken ``soft`` one is a warning, and a ``learned`` one
+    is a warning unless ``enforce_learned``. ``strict`` makes every broken rule fail.
     """
     contract = _load_contract(contract)
     _validate_contract(contract)
@@ -363,7 +504,7 @@ def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResul
         for tname, sub in per_table.items():
             _validate_contract(sub)
             if tname not in profile.tables:
-                violations.append(_violation(None, "table_exists", tname, "missing"))
+                violations.append(_strong(_violation(None, "table_exists", tname, "missing")))
                 continue
             for v in _check_table(profile.tables[tname], sub):
                 if v["column"] is not None:
@@ -371,7 +512,7 @@ def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResul
                 else:
                     v["rule"] = f"{tname}:{v['rule']}"
                 violations.append(v)
-        return CheckResult(passed=not violations, violations=violations)
+        return _finish(violations, contract, strict, enforce_learned)
     if "tables" in contract:
         # A multi-table contract has nothing to say about one table: checking it would pass
         # without testing a single rule.
@@ -381,7 +522,7 @@ def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResul
             "(`shape profile --dataset FOLDER`, or `shape.profile({name: source, ...})`)"
         )
     violations = _check_table(next(iter(profile.tables.values())), contract)
-    return CheckResult(passed=not violations, violations=violations)
+    return _finish(violations, contract, strict, enforce_learned)
 
 
 # --- drift ------------------------------------------------------------------------

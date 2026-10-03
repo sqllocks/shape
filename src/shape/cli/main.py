@@ -481,7 +481,9 @@ def _cmd_inspect(a):
 def _cmd_check(a):
     import shape
 
-    result = shape.check(shape.load(a.shape), a.contract)
+    result = shape.check(
+        shape.load(a.shape), a.contract, strict=a.strict, enforce_learned=a.enforce_learned
+    )
     out = result.to_dict()
     if a.json:
         _write_json(a.json, out)
@@ -1209,6 +1211,17 @@ def _build_parser(plugin_commands=()):
     ck.add_argument("shape", metavar="PROFILE.shape")
     ck.add_argument("contract", metavar="CONTRACT.json")
     ck.add_argument("--json", metavar="RESULT.json")
+    ck.add_argument(
+        "--strict",
+        action="store_true",
+        help="every broken rule fails the check, whatever its strength (exit 1)",
+    )
+    ck.add_argument(
+        "--enforce-learned",
+        action="store_true",
+        help="a broken rule of strength 'learned' fails the check like a hard one "
+        "(without it, it is a warning)",
+    )
     ck.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     co = sub.add_parser(
         "compatibility",

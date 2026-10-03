@@ -1,0 +1,156 @@
+{
+  "passed": false,
+  "violations": [
+    {
+      "column": null,
+      "rule": "row_count.min",
+      "expected": 5000,
+      "observed": 300
+    },
+    {
+      "column": null,
+      "rule": "row_count.max",
+      "expected": 10,
+      "observed": 300
+    },
+    {
+      "column": "when",
+      "rule": "required_column",
+      "expected": "present",
+      "observed": "missing"
+    },
+    {
+      "column": "ghost2",
+      "rule": "required_column",
+      "expected": "present",
+      "observed": "missing"
+    },
+    {
+      "column": "visits",
+      "rule": "dtype",
+      "expected": "string",
+      "observed": "integer"
+    },
+    {
+      "column": "visits",
+      "rule": "unique",
+      "expected": true,
+      "observed": {
+        "cardinality": 10,
+        "null_count": 0,
+        "row_count": 300
+      }
+    },
+    {
+      "column": "visits",
+      "rule": "min",
+      "expected": 5,
+      "observed": 0
+    },
+    {
+      "column": "visits",
+      "rule": "max",
+      "expected": 2,
+      "observed": 9
+    },
+    {
+      "column": "age",
+      "rule": "distribution",
+      "expected": "normal",
+      "observed": "uniform"
+    },
+    {
+      "column": "age",
+      "rule": "min",
+      "expected": 30,
+      "observed": 18
+    },
+    {
+      "column": "age",
+      "rule": "max",
+      "expected": 40,
+      "observed": 90
+    },
+    {
+      "column": "city",
+      "rule": "pattern",
+      "expected": "email",
+      "observed": null
+    },
+    {
+      "column": "city",
+      "rule": "allowed_values",
+      "expected": [
+        "a",
+        "b"
+      ],
+      "observed": {
+        "unexpected_values": [
+          "c3",
+          "c1",
+          "c5",
+          "c7",
+          "c6",
+          "c9",
+          "c11",
+          "c2",
+          "c0",
+          "c10",
+          "c8",
+          "c4"
+        ]
+      }
+    },
+    {
+      "column": "flag",
+      "rule": "column_exists",
+      "expected": "present",
+      "observed": "missing"
+    },
+    {
+      "column": "ratio",
+      "rule": "column_exists",
+      "expected": "present",
+      "observed": "missing"
+    },
+    {
+      "column": "ghost",
+      "rule": "column_exists",
+      "expected": "present",
+      "observed": "missing"
+    },
+    {
+      "column": "city -> age",
+      "rule": "fd",
+      "expected": {
+        "min_confidence": 0.99
+      },
+      "observed": {
+        "confidence_below": 0.8,
+        "violations": []
+      }
+    },
+    {
+      "column": "city='c1' => age=5",
+      "rule": "implies",
+      "expected": {
+        "min_confidence": 0.9
+      },
+      "observed": "not measured: the profile holds no conditional table for these columns (strongly associated categorical pairs of few values only)"
+    },
+    {
+      "column": "city, age in zips",
+      "rule": "reference_pair",
+      "expected": {
+        "min_match_rate": 0.99
+      },
+      "observed": "not measured: profile with reference_pairs=[{'columns': ..., 'reference': ...}] (shape profile --reference-pair)"
+    },
+    {
+      "column": "amount",
+      "rule": "extra_column",
+      "expected": "absent",
+      "observed": "present"
+    }
+  ]
+}

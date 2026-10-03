@@ -215,14 +215,26 @@ def check_implausible(rate: float, table: dict[str, Any]) -> list[dict[str, Any]
     ]
 
 
+def _with_strength(found: list[dict[str, Any]], strength: str) -> list[dict[str, Any]]:
+    for v in found:
+        v["strength"] = strength
+    return found
+
+
 def check_joint_rules(contract: dict[str, Any], table: dict[str, Any]) -> list[dict[str, Any]]:
+    """The violations of the joint rules, each with the ``strength`` of its entry (``hard`` when
+    it has none; ``max_implausible_rate`` has no strength)."""
     out: list[dict[str, Any]] = []
     for rule in contract.get("fd", ()):
-        out.extend(check_fd(rule, table))
+        out.extend(_with_strength(check_fd(rule, table), rule.get("strength", "hard")))
     for rule in contract.get("implies", ()):
-        out.extend(check_implies(rule, table))
+        out.extend(_with_strength(check_implies(rule, table), rule.get("strength", "hard")))
     for rule in contract.get("reference_pair", ()):
-        out.extend(check_reference_pair(rule, table))
+        out.extend(_with_strength(check_reference_pair(rule, table), rule.get("strength", "hard")))
     if "max_implausible_rate" in contract:
-        out.extend(check_implausible(float(contract["max_implausible_rate"]), table))
+        out.extend(
+            _with_strength(
+                check_implausible(float(contract["max_implausible_rate"]), table), "hard"
+            )
+        )
     return out
