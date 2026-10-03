@@ -251,6 +251,34 @@ FILES: dict[str, dict[str, Any]] = {
             ),
         ]
     },
+    "suite_list": {
+        "cases": [
+            case("library", "suite_list"),
+            case("takes-no-arguments", "suite_list", {"suite": "smoke"}, valid_request=False),
+        ]
+    },
+    "suite_run": {
+        "cases": [
+            case(
+                "pair-met",
+                "suite_run",
+                {"suite": f"{D}/pair.suite.json", "scale": "tiny", "seed": 5},
+            ),
+            case(
+                "with-output",
+                "suite_run",
+                {"suite": f"{D}/pair.suite.json", "scale": "tiny", "output_dir": f"{D}/suite_out"},
+            ),
+            case("unknown-suite", "suite_run", {"suite": "no-such-suite"}),
+            case("unknown-scenario", "suite_run", {"suite": f"{D}/typo.suite.json"}),
+            case(
+                "not-local",
+                "suite_run",
+                {"suite": "smoke", "output_dir": "s3://bucket/out"},
+            ),
+            case("needs-a-suite", "suite_run", {"scale": "tiny"}, valid_request=False),
+        ]
+    },
     "chaos": {
         "cases": [
             case(
@@ -394,6 +422,14 @@ def _day(n: int) -> Any:
 def write_fixtures(folder: Path) -> None:
     from data_1_2 import real_tables, synthetic_tables, write_tables
 
+    for name, scenarios in (
+        ("pair", ["clean_baseline", "nulls_injected"]),
+        ("typo", ["clean_baseline", "no_such_scenario"]),
+    ):
+        (folder / f"{name}.suite.json").write_text(
+            json.dumps({"format": "shape-suite", "version": 1, "scenarios": scenarios}, indent=2)
+            + "\n"
+        )
     (folder / "unmarked").mkdir(exist_ok=True)
     (folder / "unmarked" / "orders.csv").write_text("id,amount\n1,5\n2,6\n3,7\n4,8\n")
 

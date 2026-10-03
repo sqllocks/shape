@@ -7,58 +7,38 @@
       "type": "string"
     },
     "args": {
+      "additionalProperties": false,
+      "properties": {
+        "output_dir": {
+          "description": "write each scenario's tables under output_dir/<scenario>/ (default: write nothing)",
+          "type": "string",
+          "x-path": "write",
+          "x-since": "1.2"
+        },
+        "scale": {
+          "description": "a scale preset of the scenarios' domain, or tiny (default: small)",
+          "type": "string",
+          "x-since": "1.2"
+        },
+        "seed": {
+          "description": "the seed (default: each scenario's own)",
+          "type": "integer",
+          "x-since": "1.2"
+        },
+        "suite": {
+          "description": "a built-in suite name (see `suite_list`) or the path of a suite file (format shape-suite)",
+          "type": "string",
+          "x-name-or-path": true,
+          "x-since": "1.2"
+        }
+      },
+      "required": [
+        "suite"
+      ],
       "type": "object"
     },
     "command": {
-      "enum": [
-        "bisect",
-        "bisect_layers",
-        "chaos",
-        "check",
-        "contract_validate",
-        "demo_cleanup",
-        "demo_list",
-        "demo_run",
-        "demo_status",
-        "describe",
-        "design",
-        "design_from_data",
-        "diff",
-        "dry_run",
-        "format_schema",
-        "generate",
-        "job_cancel",
-        "job_list",
-        "job_status",
-        "list",
-        "preview",
-        "profile",
-        "profile_info",
-        "profile_show",
-        "project_show",
-        "project_validate",
-        "proposals_contract",
-        "proposals_decide",
-        "proposals_list",
-        "proposals_propose",
-        "registry_diff",
-        "report_card",
-        "report_card_read",
-        "rules_backtest",
-        "rules_mutate",
-        "safe_scan",
-        "scale_cancel",
-        "scale_generate",
-        "scale_status",
-        "stream",
-        "stream_status",
-        "stream_stop",
-        "suite_list",
-        "suite_run",
-        "timelapse",
-        "validate",
-        "verify"
-      ]
+      "const": "suite_run"
     },
     "id": {
       "maxLength": 128,
@@ -95,9 +75,11 @@
     }
   },
   "required": [
-    "command"
+    "command",
+    "args"
   ],
-  "title": "bridge request",
+  "title": "suite_run request",
   "type": "object",
-  "x-api-version": "1.2"
+  "x-api-version": "1.2",
+  "x-since": "1.2"
 }

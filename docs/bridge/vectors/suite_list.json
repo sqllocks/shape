@@ -1,0 +1,107 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "library",
+      "request": {
+        "api_version": "1.2",
+        "args": {},
+        "command": "suite_list",
+        "id": "library"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "suite_list",
+        "id": "library",
+        "ok": true,
+        "result": {
+          "scenarios": [
+            {
+              "description": "Retail generated as is: every validation gate passes. The control the other scenarios are read against.",
+              "domain": "retail",
+              "id": "clean_baseline"
+            },
+            {
+              "description": "About 8% of customer last names are null although the column is not nullable: the null check must fail and nothing else may.",
+              "domain": "retail",
+              "id": "nulls_injected"
+            },
+            {
+              "description": "Return rows take over the primary key of another return, so keys repeat: the uniqueness gate must fail; the references into the table stay intact.",
+              "domain": "retail",
+              "id": "duplicate_rows"
+            },
+            {
+              "description": "About 3% of orders point at a customer that does not exist: the referential integrity gate must fail.",
+              "domain": "retail",
+              "id": "orphaned_foreign_keys"
+            },
+            {
+              "description": "About 10% of orders carry an order date 45 days before the rest of the batch, as when a late feed lands behind newer data. No gate is meant to catch it: the scenario checks that the late rows are planted and that the batch is otherwise sound.",
+              "domain": "retail",
+              "id": "late_arriving_data"
+            },
+            {
+              "description": "A column appears on a schedule: orders gain a channel on day 5. The diff of day 0 and day 10 must report it as added, and nothing else structural.",
+              "domain": "retail",
+              "id": "schema_add_column"
+            },
+            {
+              "description": "A column is renamed on a schedule: order status becomes order_status on day 5. The diff sees one column dropped and one added; the answer key records the pair as one rename.",
+              "domain": "retail",
+              "id": "schema_rename_column"
+            },
+            {
+              "description": "A column disappears on a schedule: stores lose their state on day 5. The diff of day 0 and day 10 must report it as removed.",
+              "domain": "retail",
+              "id": "schema_drop_column"
+            },
+            {
+              "description": "A column changes type on a schedule: the customer active flag turns from the text true or false into an integer on day 5. The diff must report a type change.",
+              "domain": "retail",
+              "id": "schema_retype_column"
+            },
+            {
+              "description": "All four schema changes on one schedule: a column is added on day 5, one renamed on day 10, one dropped on day 15 and one retyped on day 20. Four diffs, each against day 0, must report exactly the changes that have happened by then.",
+              "domain": "retail",
+              "id": "schema_evolution_schedule"
+            }
+          ],
+          "suites": [
+            "schema-evolution",
+            "smoke"
+          ]
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "takes-no-arguments",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "suite": "smoke"
+        },
+        "command": "suite_list",
+        "id": "takes-no-arguments"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "suite_list",
+        "error": {
+          "code": "usage.unknown_argument",
+          "group": "usage",
+          "hint": "it takes: no arguments",
+          "message": "suite_list does not take argument(s): suite"
+        },
+        "id": "takes-no-arguments",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "suite_list",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

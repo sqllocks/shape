@@ -1,0 +1,282 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "pair-met",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "scale": "tiny",
+          "seed": 5,
+          "suite": "${DIR}/pair.suite.json"
+        },
+        "command": "suite_run",
+        "id": "pair-met"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "suite_run",
+        "id": "pair-met",
+        "ok": true,
+        "result": {
+          "met": true,
+          "passed": true,
+          "scale": "tiny",
+          "scenarios": [
+            {
+              "met": true,
+              "mismatches": [],
+              "outcome": {
+                "defects": {},
+                "domain": "retail",
+                "drift": [],
+                "elapsed_seconds": "<any>",
+                "files": [],
+                "gate_messages": {},
+                "gates": {
+                  "null_check": true,
+                  "referential_integrity": true,
+                  "row_count": true,
+                  "schema_conformance": true,
+                  "uniqueness": true
+                },
+                "scale": "tiny",
+                "scenario": "clean_baseline",
+                "seed": 5
+              },
+              "scenario": "clean_baseline"
+            },
+            {
+              "met": true,
+              "mismatches": [],
+              "outcome": {
+                "defects": {
+                  "inject_nulls": 8
+                },
+                "domain": "retail",
+                "drift": [],
+                "elapsed_seconds": "<any>",
+                "files": [],
+                "gate_messages": {
+                  "null_check": "customer.last_name has nulls"
+                },
+                "gates": {
+                  "null_check": false,
+                  "referential_integrity": true,
+                  "row_count": true,
+                  "schema_conformance": true,
+                  "uniqueness": true
+                },
+                "scale": "tiny",
+                "scenario": "nulls_injected",
+                "seed": 5
+              },
+              "scenario": "nulls_injected"
+            }
+          ],
+          "suite": "pair.suite"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "with-output",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "output_dir": "${DIR}/suite_out",
+          "scale": "tiny",
+          "suite": "${DIR}/pair.suite.json"
+        },
+        "command": "suite_run",
+        "id": "with-output"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "suite_run",
+        "id": "with-output",
+        "ok": true,
+        "result": {
+          "met": true,
+          "passed": true,
+          "scale": "tiny",
+          "scenarios": [
+            {
+              "met": true,
+              "mismatches": [],
+              "outcome": {
+                "defects": {},
+                "domain": "retail",
+                "drift": [],
+                "elapsed_seconds": "<any>",
+                "files": [
+                  "${DIR}/suite_out/clean_baseline/customer.parquet",
+                  "${DIR}/suite_out/clean_baseline/address.parquet",
+                  "${DIR}/suite_out/clean_baseline/product_category.parquet",
+                  "${DIR}/suite_out/clean_baseline/product.parquet",
+                  "${DIR}/suite_out/clean_baseline/promotion.parquet",
+                  "${DIR}/suite_out/clean_baseline/store.parquet",
+                  "${DIR}/suite_out/clean_baseline/order.parquet",
+                  "${DIR}/suite_out/clean_baseline/order_line.parquet",
+                  "${DIR}/suite_out/clean_baseline/return.parquet"
+                ],
+                "gate_messages": {},
+                "gates": {
+                  "null_check": true,
+                  "referential_integrity": true,
+                  "row_count": true,
+                  "schema_conformance": true,
+                  "uniqueness": true
+                },
+                "scale": "tiny",
+                "scenario": "clean_baseline",
+                "seed": 42
+              },
+              "scenario": "clean_baseline"
+            },
+            {
+              "met": true,
+              "mismatches": [],
+              "outcome": {
+                "defects": {
+                  "inject_nulls": 8
+                },
+                "domain": "retail",
+                "drift": [],
+                "elapsed_seconds": "<any>",
+                "files": [
+                  "${DIR}/suite_out/nulls_injected/customer.parquet",
+                  "${DIR}/suite_out/nulls_injected/address.parquet",
+                  "${DIR}/suite_out/nulls_injected/product_category.parquet",
+                  "${DIR}/suite_out/nulls_injected/product.parquet",
+                  "${DIR}/suite_out/nulls_injected/promotion.parquet",
+                  "${DIR}/suite_out/nulls_injected/store.parquet",
+                  "${DIR}/suite_out/nulls_injected/order.parquet",
+                  "${DIR}/suite_out/nulls_injected/order_line.parquet",
+                  "${DIR}/suite_out/nulls_injected/return.parquet"
+                ],
+                "gate_messages": {
+                  "null_check": "customer.last_name has nulls"
+                },
+                "gates": {
+                  "null_check": false,
+                  "referential_integrity": true,
+                  "row_count": true,
+                  "schema_conformance": true,
+                  "uniqueness": true
+                },
+                "scale": "tiny",
+                "scenario": "nulls_injected",
+                "seed": 42
+              },
+              "scenario": "nulls_injected"
+            }
+          ],
+          "suite": "pair.suite"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-suite",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "suite": "no-such-suite"
+        },
+        "command": "suite_run",
+        "id": "unknown-suite"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "suite_run",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": "run `suite_list`",
+          "message": "no suite 'no-such-suite': not a file, and the built-in suites are schema-evolution, smoke"
+        },
+        "id": "unknown-suite",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-scenario",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "suite": "${DIR}/typo.suite.json"
+        },
+        "command": "suite_run",
+        "id": "unknown-scenario"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "suite_run",
+        "error": {
+          "code": "input.invalid_value",
+          "group": "input",
+          "hint": null,
+          "message": "suite typo.suite names unknown scenarios: no_such_scenario; the library has: clean_baseline, duplicate_rows, late_arriving_data, nulls_injected, orphaned_foreign_keys, schema_add_column, schema_drop_column, schema_evolution_schedule, schema_rename_column, schema_retype_column"
+        },
+        "id": "unknown-scenario",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "not-local",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "output_dir": "s3://bucket/out",
+          "suite": "smoke"
+        },
+        "command": "suite_run",
+        "id": "not-local"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "suite_run",
+        "error": {
+          "code": "policy.not_permitted",
+          "group": "policy",
+          "hint": "give a folder on this machine",
+          "message": "output_dir s3://bucket/out is not a local path: chaos writes local files only"
+        },
+        "id": "not-local",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "needs-a-suite",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "scale": "tiny"
+        },
+        "command": "suite_run",
+        "id": "needs-a-suite"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "suite_run",
+        "error": {
+          "code": "usage.missing_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "suite_run needs the argument 'suite'"
+        },
+        "id": "needs-a-suite",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "suite_run",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

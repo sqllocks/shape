@@ -780,6 +780,37 @@
       "since": "1.0",
       "summary": "Stop a stream."
     },
+    "suite_list": {
+      "args": {},
+      "cancellable": false,
+      "effects": [],
+      "job": "never",
+      "pending": null,
+      "request": "commands/suite_list.request.schema.json",
+      "result": "commands/suite_list.result.schema.json",
+      "since": "1.2",
+      "summary": "List the built-in suites and the scenarios of the starter library."
+    },
+    "suite_run": {
+      "args": {
+        "output_dir": "1.2",
+        "scale": "1.2",
+        "seed": "1.2",
+        "suite": "1.2"
+      },
+      "cancellable": true,
+      "effects": [
+        "reads_files",
+        "writes_files",
+        "cancels"
+      ],
+      "job": "optional",
+      "pending": null,
+      "request": "commands/suite_run.request.schema.json",
+      "result": "commands/suite_run.result.schema.json",
+      "since": "1.2",
+      "summary": "Run a suite of library scenarios and compare each outcome with its answer key (job-capable, cancellable between scenarios)."
+    },
     "timelapse": {
       "args": {
         "column": "1.2",

@@ -64,7 +64,8 @@ ADDED_1_2 = {
     "timelapse",
     "registry_diff",
     "chaos",
-    # still to come when W5-05 lands: suite_list, suite_run
+    "suite_list",
+    "suite_run",
 }
 
 

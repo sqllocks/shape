@@ -135,6 +135,7 @@ def test_write_paths_are_the_ones_a_command_writes():
         ("report_card", "output"),
         ("chaos", "output_dir"),
         ("chaos", "ground_truth"),
+        ("suite_run", "output_dir"),
     }
 
 
@@ -215,6 +216,7 @@ def test_the_commands_that_write_say_so():
         "proposals_contract",
         "report_card",
         "chaos",
+        "suite_run",
     }
     assert {n for n, c in COMMANDS.items() if "cancels" in c.effects} == {
         "scale_generate",
@@ -224,6 +226,7 @@ def test_the_commands_that_write_say_so():
         "job_cancel",
         "rules_mutate",  # bridge 1.2: cancellable between mutants
         "chaos",  # bridge 1.2: cancellable before the files are written
+        "suite_run",  # bridge 1.2: cancellable between scenarios
     }
     assert {n for n, c in COMMANDS.items() if "network" in c.effects} >= {
         "scale_generate",

@@ -23,6 +23,7 @@ def _build() -> dict[str, Command]:
         rules,
         scale,
         stored,
+        suites,
         workflow11,
     )
 
@@ -43,6 +44,7 @@ def _build() -> dict[str, Command]:
         history,
         registrydiff,
         chaos,
+        suites,
     ):
         for command in module.COMMANDS:
             if command.name in table:

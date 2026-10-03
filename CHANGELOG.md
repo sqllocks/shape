@@ -13,7 +13,10 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `bisect_layers` and `timelapse` (the values of a classified column are withheld unless
   `options.include_raw_values`), `registry_diff` and `chaos` (the input check of `shape chaos`
   unchanged: an input not marked as Shape-generated is `policy.unverified_input` before anything is
-  written, `allow_real_input` adds the warning `real_input_corrupted`; local output only). New error
+  written, `allow_real_input` adds the warning `real_input_corrupted`; local output only), and
+  `suite_list` and `suite_run` (`shape pack list --library` and `shape suite run`: per scenario the
+  answer key's expectation, the observed outcome and `met`, and `passed`; cancellable between
+  scenarios; local output only). New error
   codes `input.contract_conflict` and `policy.unverified_input`. `format_schema` names the formats of
   the new reports (`mutation-plan`, `mutation-report`, `incidents`, `backtest-report`). A request that
   declares `api_version` `1.0` or `1.1` is answered exactly as that version answers it (a 1.2

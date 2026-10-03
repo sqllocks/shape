@@ -167,7 +167,9 @@ def test_the_1_1_commands_are_published_as_since_1_0_or_1_1_and_the_new_ones_as_
     new = sorted(set(index) - set(old))
     assert new and all(index[n]["since"] == "1.2" for n in new)
     for name in new:
-        assert set(index[name]["args"].values()) == {"1.2"}
+        # every argument of a new command is new too (`suite_list` has none)
+        args = index[name]["args"]
+        assert set(args.values()) == ({"1.2"} if args else set())
 
 
 def test_what_1_2_adds_to_a_1_1_command_is_marked_and_nothing_else_changed():

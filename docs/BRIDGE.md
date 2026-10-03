@@ -172,6 +172,8 @@ working; Shape's own commands are added.
 | `timelapse` | one column across the versions of a name (1.2, job-capable) | `registry`\*, `name`\*, `column`\*, `table`, `since`, `until`, `window` |
 | `registry_diff` | drift between two versions in a registry, raw or share-safe (1.2) | `root`\*, `name`\*, `ref1`\*, `ref2`\*, `policy`, `thresholds` |
 | `chaos` | corrupt tables on purpose, with a ground-truth log (1.2, job-capable, cancellable) | `output_dir`\*, `corrupt`\*, `input`, `domain`, `mode`, `scale`, `seed`, `format`, `batch`, `start_date`, `ground_truth`, `allow_real_input` |
+| `suite_list` | the built-in suites and the starter scenarios (1.2) | none |
+| `suite_run` | run a suite of scenarios against their answer keys (1.2, job-capable, cancellable) | `suite`\*, `scale`, `seed`, `output_dir` |
 | `job_status`, `job_cancel`, `job_list` | any job's state, cancel, list | `job_id`\*, `token`; `status`, `limit` |
 | `demo_list`, `demo_run`, `demo_status`, `demo_cleanup` | the demo scenarios (see below) | see the schema |
 
@@ -652,12 +654,12 @@ It changes nothing a 1.0 or 1.1 client sees (see *The 1.0 promise* and *The 1.1 
 - **History**: `bisect`, `bisect_layers` and `timelapse`.
 - **Registry drift**: `registry_diff`, and `shape registry ROOT diff` for two safe forms
   (`docs/REGISTRY.md`).
-- **Chaos**: `chaos`, with the input check of `shape chaos`. (`suite_list` and `suite_run`, the
-  named scenario suites, follow when the scenario library lands.)
+- **Chaos and suites**: `chaos`, with the input check of `shape chaos`, and `suite_list` and
+  `suite_run`, the named scenario suites of the starter library.
 - New error codes `input.contract_conflict` and `policy.unverified_input`, the warning code
   `real_input_corrupted`, and `format_schema` names for the new formats (`mutation-plan`,
   `mutation-report`, `incidents`, `backtest-report`; `decisions` is version 2 for a 1.2 request).
-- Every new command carries `effects` and its path arguments `x-path`; `chaos`,
+- Every new command carries `effects` and its path arguments `x-path`; `chaos`, `suite_run`,
   `proposals_contract` and `report_card` (with `output`) list `writes_files`.
 
 **The 1.1 promise.** A request that declares `"api_version": "1.1"` (or `"1.0"`) is answered exactly
@@ -1078,6 +1080,84 @@ Errors: `policy.unverified_input`, `policy.not_permitted`, `input.not_found` (`i
 {"api_version": "1.2", "command": "chaos", "error": {"code": "policy.not_permitted", "group": "policy", "hint": "give a folder on this machine", "message": "output_dir s3://bucket/out is not a local path: chaos writes local files only"}, "id": "not-local", "ok": false, "warnings": []}
 ```
 
+## Suites
+
+### `suite_list`
+
+Lists what `shape pack list --library --json` lists (`shape.scenario.library`, `docs/SCENARIO_LIBRARY.md`):
+`suites` (the names of the built-in suites, sorted) and `scenarios` (the starter library: `id`,
+`domain` and `description` of each). It takes no arguments and touches no file.
+
+Errors: `usage.unknown_argument`.
+
+```json request
+{"api_version": "1.2", "args": {}, "command": "suite_list", "id": "library"}
+```
+
+```json response
+{"api_version": "1.2", "command": "suite_list", "id": "library", "ok": true, "result": {"scenarios": [{"description": "Retail generated as is: every validation gate passes. The control the other scenarios are read against.", "domain": "retail", "id": "clean_baseline"}, {"description": "About 8% of customer last names are null although the column is not nullable: the null check must fail and nothing else may.", "domain": "retail", "id": "nulls_injected"}, {"description": "Return rows take over the primary key of another return, so keys repeat: the uniqueness gate must fail; the references into the table stay intact.", "domain": "retail", "id": "duplicate_rows"}, {"description": "About 3% of orders point at a customer that does not exist: the referential integrity gate must fail.", "domain": "retail", "id": "orphaned_foreign_keys"}, {"description": "About 10% of orders carry an order date 45 days before the rest of the batch, as when a late feed lands behind newer data. No gate is meant to catch it: the scenario checks that the late rows are planted and that the batch is otherwise sound.", "domain": "retail", "id": "late_arriving_data"}, {"description": "A column appears on a schedule: orders gain a channel on day 5. The diff of day 0 and day 10 must report it as added, and nothing else structural.", "domain": "retail", "id": "schema_add_column"}, {"description": "A column is renamed on a schedule: order status becomes order_status on day 5. The diff sees one column dropped and one added; the answer key records the pair as one rename.", "domain": "retail", "id": "schema_rename_column"}, {"description": "A column disappears on a schedule: stores lose their state on day 5. The diff of day 0 and day 10 must report it as removed.", "domain": "retail", "id": "schema_drop_column"}, {"description": "A column changes type on a schedule: the customer active flag turns from the text true or false into an integer on day 5. The diff must report a type change.", "domain": "retail", "id": "schema_retype_column"}, {"description": "All four schema changes on one schedule: a column is added on day 5, one renamed on day 10, one dropped on day 15 and one retyped on day 20. Four diffs, each against day 0, must report exactly the changes that have happened by then.", "domain": "retail", "id": "schema_evolution_schedule"}], "suites": ["schema-evolution", "smoke"]}, "warnings": []}
+```
+
+```json request
+{"api_version": "1.2", "args": {"suite": "smoke"}, "command": "suite_list", "id": "takes-no-arguments"}
+```
+
+```json response
+{"api_version": "1.2", "command": "suite_list", "error": {"code": "usage.unknown_argument", "group": "usage", "hint": "it takes: no arguments", "message": "suite_list does not take argument(s): suite"}, "id": "takes-no-arguments", "ok": false, "warnings": []}
+```
+
+### `suite_run`
+
+Runs a suite of library scenarios and compares each outcome with its answer key: what `shape suite
+run --json` does (`shape.scenario.library.run_suite`). `suite` is a built-in name (see `suite_list`)
+or the path of a suite file (format `shape-suite`, version 1; a file of a newer version answers
+`input.unsupported_format_version`). `scale` is a scale preset of the scenarios' domain or `tiny`
+(default: `small`); `seed` replaces each scenario's own seed; `output_dir` writes each scenario's
+tables under `output_dir/<scenario>/` (default: nothing is written). The suite is written locally
+only: an `output_dir` that is a URL (`s3://`, `abfss://`, `https://`) answers
+`policy.not_permitted`. Job-capable and cancellable between scenarios: a cancelled job is `cancelled`
+and its result holds the counts so far (`suite`, `scenarios_run`, `scenarios_total`, `met`,
+`not_met`); no later scenario starts.
+
+All names are checked before anything runs, so a suite that names an unknown scenario runs nothing
+and writes nothing.
+
+Result, the document `shape suite run --json` prints plus `passed`: `suite`, `scale`, `met` and
+`passed` (every scenario met its answer key; the command line's exit code 0, and 1 when false) and
+`scenarios`, one per scenario in suite order: `scenario`, `met`, `mismatches` (each with the
+`expected` entry of the answer key and what was `observed`; empty when met) and `outcome` (`domain`,
+`scale`, `seed`, `gates` and `gate_messages`, `defects`, `drift`, `files`, `elapsed_seconds`). A
+scenario that missed its key is a result with `passed: false`, not an error.
+
+Errors: `input.not_found` (no such suite name or file), `input.invalid_value` (a malformed suite
+file, an unknown scenario, a scale that does not exist), `input.unsupported_format_version`,
+`policy.not_permitted`, `io.write_failed`, `usage.missing_argument`, `usage.invalid_argument`.
+
+```json request
+{"api_version": "1.2", "args": {"scale": "tiny", "seed": 5, "suite": "/work/pair.suite.json"}, "command": "suite_run", "id": "pair-met"}
+```
+
+```json response
+{"api_version": "1.2", "command": "suite_run", "id": "pair-met", "ok": true, "result": {"met": true, "passed": true, "scale": "tiny", "scenarios": [{"met": true, "mismatches": [], "outcome": {"defects": {}, "domain": "retail", "drift": [], "elapsed_seconds": "<any>", "files": [], "gate_messages": {}, "gates": {"null_check": true, "referential_integrity": true, "row_count": true, "schema_conformance": true, "uniqueness": true}, "scale": "tiny", "scenario": "clean_baseline", "seed": 5}, "scenario": "clean_baseline"}, {"met": true, "mismatches": [], "outcome": {"defects": {"inject_nulls": 8}, "domain": "retail", "drift": [], "elapsed_seconds": "<any>", "files": [], "gate_messages": {"null_check": "customer.last_name has nulls"}, "gates": {"null_check": false, "referential_integrity": true, "row_count": true, "schema_conformance": true, "uniqueness": true}, "scale": "tiny", "scenario": "nulls_injected", "seed": 5}, "scenario": "nulls_injected"}], "suite": "pair.suite"}, "warnings": []}
+```
+
+```json request
+{"api_version": "1.2", "args": {"suite": "/work/typo.suite.json"}, "command": "suite_run", "id": "unknown-scenario"}
+```
+
+```json response
+{"api_version": "1.2", "command": "suite_run", "error": {"code": "input.invalid_value", "group": "input", "hint": null, "message": "suite typo.suite names unknown scenarios: no_such_scenario; the library has: clean_baseline, duplicate_rows, late_arriving_data, nulls_injected, orphaned_foreign_keys, schema_add_column, schema_drop_column, schema_evolution_schedule, schema_rename_column, schema_retype_column"}, "id": "unknown-scenario", "ok": false, "warnings": []}
+```
+
+```json request
+{"api_version": "1.2", "args": {"output_dir": "s3://bucket/out", "suite": "smoke"}, "command": "suite_run", "id": "not-local"}
+```
+
+```json response
+{"api_version": "1.2", "command": "suite_run", "error": {"code": "policy.not_permitted", "group": "policy", "hint": "give a folder on this machine", "message": "output_dir s3://bucket/out is not a local path: chaos writes local files only"}, "id": "not-local", "ok": false, "warnings": []}
+```
+
+
 ## Annotations for clients
 
 A client that asks a person before it touches files needs to know which arguments are paths and what
@@ -1116,10 +1196,10 @@ A command that can take a while returns **a job** instead of a result when the r
   `result` of a success (what the synchronous command would have returned) and the `error` of a
   failure (the same object an error response carries).
 - `job_cancel` stops a job and answers `cancelled` (false when the job had already ended). Only a
-  scale run, a stream, `rules_mutate` (between mutants) and `chaos` (before its files are written)
-  notice a cancel request; for any other running job it answers
+  scale run, a stream, `rules_mutate` (between mutants), `suite_run` (between scenarios) and `chaos`
+  (before its files are written) notice a cancel request; for any other running job it answers
   `input.job_state` (`"cancellable": false` in the job says which). A cancelled stream keeps its
-  counts, and a cancelled `rules_mutate` or `chaos` job its partial counts (a cancelled `chaos` job
+  counts, and a cancelled `rules_mutate` or `suite_run` job its partial counts (a cancelled `chaos` job
   writes nothing).
 - `job_list` lists jobs oldest first (`status` filter, `limit` the most recent N).
 - `scale_status` and `scale_cancel` are `job_status` and `job_cancel` for scale jobs.
@@ -1225,6 +1305,7 @@ There is no second implementation: a command calls what the matching command lin
 | `rules_mutate`, `rules_backtest` | `shape rules mutate`, `shape rules backtest` (`shape.rules`: `mutation_test`, `backtest`) |
 | `bisect`, `bisect_layers`, `timelapse` | `shape bisect`, `shape bisect layers`, `shape timelapse` (`shape.history`: `bisect`, `bisect_layers`, `timelapse`) |
 | `registry_diff` | `shape registry ROOT diff` (`shape.registry.drift`: `diff_safe`; `shape.diff` for two raw versions) |
+| `suite_list`, `suite_run` | `shape pack list --library`, `shape suite run` (`shape.scenario.library`: `list_scenarios`, `list_suites`, `load_suite`, `run_scenario`) |
 | `chaos` | `shape chaos` (`shape.chaos`: `corrupt_tables`, `verify_chaos_input`, `write_ground_truth`) |
 | `safe_scan` | `shape profile validate --safe` (`shape.privacy.safe_validator.SafeProfileValidator`) |
 
