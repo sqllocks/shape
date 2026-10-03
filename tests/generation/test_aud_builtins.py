@@ -197,3 +197,26 @@ def test_nth_weekday_rule_has_no_date_in_a_month_without_that_weekday() -> None:
     for n in (0, -2, 6):
         with pytest.raises(ValueError, match="n must be"):
             rule_from_spec({"month": 2, "weekday": "mon", "n": n})
+
+
+# ---- #136: a monthly payday pays once a month --------------------------------------------------
+
+
+def test_monthly_payday_defaults_to_the_28th() -> None:
+    from datetime import date
+
+    from shape.builtins.calendars import Payday, calendar_from_spec
+
+    payday = Payday(1.5, "monthly", adjust="none")
+    assert payday._dates(date(2024, 3, 1), date(2024, 3, 31)) == [
+        date(2024, 2, 28),
+        date(2024, 3, 28),
+        date(2024, 4, 28),
+    ]
+    factors = calendar_from_spec({"payday": {"kind": "monthly", "lift": 2, "adjust": "none"}})
+    lifted = factors.factors(date(2024, 3, 1), date(2024, 3, 31))
+    assert [i + 1 for i, f in enumerate(lifted) if f != 1.0] == [28]
+    assert Payday(1.5)._dates(date(2024, 3, 2), date(2024, 3, 14))[2:4] == [
+        date(2024, 3, 1),
+        date(2024, 3, 15),
+    ]
