@@ -781,3 +781,15 @@ def test_declared_keys_are_never_replaced_by_a_guess():
     prof = profile_database(connection=scenario("mixed_keys")).to_dict()
     assert prof["tables"]["orders"]["primary_key"] == ["order_id"]
     assert prof["tables"]["region"]["primary_key"] == ["region_id"]
+
+
+def test_tables_or_a_schema_that_name_nothing_are_an_error_not_an_empty_profile():
+    # Issue #341: unknown --tables names were dropped and an empty schema gave an empty profile,
+    # exit 0, so a pipeline stored an empty profile as success.
+    with pytest.raises(SqlServerError, match=r"no table 'custmer'.*customer"):
+        profile_database(connection=scenario("retail"), tables=["customer", "custmer"])
+    with pytest.raises(SqlServerError, match=r"schema 'dbx' has no tables"):
+        profile_database(connection=scenario("retail"), schema="dbx")
+    assert list(profile_database(connection=scenario("retail"), tables=["customer"]).to_dict()[
+        "tables"
+    ]) == ["customer"]
