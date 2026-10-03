@@ -53,8 +53,9 @@ SECRETS = {
     + "11ABCDEFG0123456789_abcdefghijklmnopqrstuvwxyz",
     "aws key id": "aws = " + "AK" + "IA" + "ABCDEFGHIJKLMNOP",
     "client secret": "client" + "_secret = '" + "s3cr3t-v4lue-0123456789" + "'",
-    "encrypted private key": "-----BEGIN " + "ENCRYPTED PRIVATE KEY-----",
-    "dsa private key": "-----BEGIN " + "DSA PRIVATE KEY-----",
+    "encrypted private key": "-----BEGIN " + "ENCRYPTED PRIVATE KEY-----\n" + B64,
+    "dsa private key": "-----BEGIN " + "DSA PRIVATE KEY-----\n" + B64,
+    "key in a json string": '{"key": "-----BEGIN ' + "ENCRYPTED PRIVATE KEY-----\\n" + B64 + '"}',
     "rsa private key": "-----BEGIN " + "RSA PRIVATE KEY-----",
     "api key": "api" + "_key = '" + "0123456789abcdef" + "'",
 }
@@ -67,6 +68,22 @@ def test_each_credential_form_is_reported(tmp_path, kind):
     r = _scan(root)
     assert r.returncode == 1, (kind, r.stdout)
     assert "src/m.py" in r.stdout
+
+
+def test_code_that_names_a_secret_is_not_a_secret(tmp_path):
+    text = (
+        'ENCRYPTED = "-----BEGIN ' + 'ENCRYPTED PRIVATE KEY-----" in text\n'
+        'raise RuntimeError("detail client' + '_secret=" + SECRET)\n'
+        "fake = Credential(client" + '_secret="fake-client-secret-for-tests")  # nosec B106\n'
+    )
+    root = _repo(tmp_path, {"src/m.py": text})
+    r = _scan(root)
+    assert r.returncode == 0, r.stdout
+
+
+def test_findings_name_the_line(tmp_path):
+    root = _repo(tmp_path, {"src/m.py": "x = 1\n" + SECRETS["aws key id"] + "\n"})
+    assert "src/m.py:2" in _scan(root).stdout
 
 
 def test_placeholders_in_docs_are_not_secrets(tmp_path):
@@ -131,3 +148,9 @@ def test_the_repository_passes():
         check=False,
     )
     assert r.returncode == 0, r.stdout
+
+
+def test_form_feeds_and_lone_carriage_returns_do_not_break_line_numbers(tmp_path):
+    text = "a\x0cb\rc\x1cd\n" * 3 + SECRETS["aws key id"] + "\n"
+    root = _repo(tmp_path, {"src/m.py": text})
+    assert "src/m.py:4" in _scan(root).stdout
