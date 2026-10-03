@@ -163,6 +163,25 @@ def _validate(a: argparse.Namespace) -> int:
     return 0 if result.is_valid else 1
 
 
+def _failed_json(ident: str, errors: list[str], warnings: list[str]) -> dict[str, Any]:
+    """The ``--json`` of a run that did not start (an invalid spec): the keys of a failed run."""
+    return {
+        "success": False,
+        "valid": False,
+        "pack": ident,
+        "domain": "",
+        "scale": "",
+        "elapsed_seconds": 0.0,
+        "files": [],
+        "events": 0,
+        "gates": {},
+        "gate_messages": {},
+        "errors": errors,
+        "warnings": warnings,
+        "manifest": None,
+    }
+
+
 def _run(a: argparse.Namespace) -> int:
     from shape.scenario.gsl import GSLParser, is_spec_document
     from shape.scenario.loader import PackLoader
@@ -175,7 +194,7 @@ def _run(a: argparse.Namespace) -> int:
         checked = validate_spec(spec)
         if not checked.is_valid:
             if a.json:
-                _emit({"valid": False, "errors": checked.errors, "warnings": checked.warnings})
+                _emit(_failed_json(spec.name or path.name, checked.errors, checked.warnings))
             else:
                 print(checked.summary())
             return 1
@@ -261,12 +280,14 @@ def _list(a: argparse.Namespace) -> int:
     rows: list[dict[str, str]] = []
     for root in roots:
         for file in sorted([*root.rglob("*.yaml"), *root.rglob("*.yml")]):
+            if file.is_dir():  # a folder that happens to be named like a pack
+                continue
             try:
                 if is_spec_document(file):
                     rows.append({"kind": "spec", "id": file.stem, "domain": "", "path": str(file)})
                     continue
                 pack = PackLoader().load(file)
-            except PackError as exc:
+            except (PackError, OSError) as exc:  # unreadable, or a link to nothing
                 rows.append(
                     {
                         "kind": "invalid",
