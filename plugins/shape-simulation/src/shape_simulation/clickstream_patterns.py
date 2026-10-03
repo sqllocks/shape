@@ -144,6 +144,14 @@ class ClickstreamConfig:
     device_types: list[str] = field(default_factory=lambda: ["desktop", "mobile", "tablet"])
     seed: int = 42
 
+    def __post_init__(self) -> None:
+        # a bot session is the pages it crawls: without one it has no first page or time
+        if self.bot_traffic_enabled and not self.bot_pages_per_session >= 1:
+            raise ValueError(
+                f"bot_pages_per_session must be at least 1, got {self.bot_pages_per_session!r} "
+                "(set bot_traffic_enabled=False for no bots)"
+            )
+
 
 @dataclass
 class ClickstreamResult(TablesResult):
