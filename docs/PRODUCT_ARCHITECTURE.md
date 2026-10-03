@@ -181,7 +181,7 @@ Explicitly retained/generalized:
 - chaos -> Data Chaos
 - streaming/burst -> native streaming and Operational Shape
 - Fabric/Eventhouse/Kafka/Event Hub -> connectors
-- MCP -> Shape MCP
+- MCP -> the JSON bridge (`shape bridge`, `docs/BRIDGE.md`)
 - simulation patterns -> Behavior Models
 - scale tiers -> compiler-driven scale targets
 
@@ -199,4 +199,4 @@ Security is an execution constraint across the Shape algebra:
 - cross-domain transfer is a separately governed Release/Transfer operation
 - classification/release semantics require explicit human approval to change
 
-Detailed normative requirements are in `07_SENSITIVE_CLASSIFIED_SECURITY_SPEC.md`.
+Detailed normative requirements are in `docs/SECURITY_SPECIFICATION.md`.
