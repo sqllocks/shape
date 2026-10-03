@@ -5,6 +5,28 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+### Fixed
+
+- Privacy, security, artifacts and registries (AUD-privacy): `redact_sensitive` removes every
+  value-bearing key, not only `topk` and `examples` (#394); the safe profile of a column with fewer
+  non-null rows than `k` no longer publishes its mean, std, quantiles, bounds or distribution
+  parameters (#395); the JSON depth guard skips brackets inside strings, so a crafted JSONL line
+  cannot slip past it and crash the reader (#273); the registry's raw-profile check reads the
+  manifest within the size limit, never raises on odd input and recognises a raw profile with a
+  byte-order mark or in UTF-16/32 (#283, #396); `profile validate --safe` fails closed when
+  `tables` is not an object (#398); dates are no longer detected as phone numbers (#400); a
+  private key named by a plain path is refused when others can read it, as with `file://` (#402);
+  `redact_text` masks quoted, dict and prefixed keys (`sasl_password`, `api_key`, `account_key`),
+  `Authorization: Basic` and whole URI passwords containing `@`, in linear time (#291); the secret
+  scanner's Event Hubs pattern is linear (#292); `is_safe_name` refuses `:`, control characters,
+  trailing dots and spaces and Windows device names (#243); signing keeps the artifact's file mode
+  (#405); the reader refuses `content_hashes` naming `manifest.json` or `manifest.sig` (#407);
+  damaged registry logs, refs, objects and profile-registry indexes give errors that say what to
+  repair (#409, #420); non-finite numeric enum keys no longer crash the safe profile (#412);
+  differential privacy takes the range over finite values (#416); `suppress_shape` withholds a
+  column with an unknown count (#424); a malformed secure envelope is one `ShapeSecurityError`
+  (#428); `shape profile safe|validate` print the not-signed notice as a `shape: note:` line (#109).
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
