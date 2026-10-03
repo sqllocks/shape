@@ -128,7 +128,8 @@ class GenerationPlan:
     _scanned: dict[int, int] = field(default_factory=dict, compare=False, repr=False)
 
     def _eval_row(self, i: int, stop_at: str | None = None) -> dict[str, Any]:
-        rng = random.Random((self.seed << 64) ^ i)
+        # random.Random seeds an int with abs(): a negative seed is keyed as text instead
+        rng = random.Random((self.seed << 64) ^ i if self.seed >= 0 else f"{self.seed}:{i}")
         row: dict[str, Any] = {"__first_row__": self._first_row_of(i)}
         for name, strategy in self.fields:
             row[name] = strategy.generate(i, row, rng)

@@ -88,7 +88,8 @@ def format_argument(text: str) -> str:
 
 def _check_format(fmt: str) -> None:
     if fmt == "summary" or fmt not in default_host().names("shape.sinks"):
-        raise ValueError(f"unknown format {fmt!r}; choose one of {', '.join(available_formats())}")
+        writable = [f for f in available_formats() if f != "summary"]  # summary writes nothing
+        raise ValueError(f"unknown format {fmt!r}; choose one of {', '.join(writable)}")
 
 
 def _sink(fmt: str) -> Any:

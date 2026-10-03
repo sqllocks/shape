@@ -44,7 +44,8 @@ LEVELS = {
 
 
 def assess_fidelity(evidence: set[str]) -> str:
-    best = "bronze"
+    """The highest level whose required evidence ``evidence`` holds; ``none`` below bronze."""
+    best = "none"
     for n in ("bronze", "silver", "gold", "platinum"):
         if set(LEVELS[n].required).issubset(evidence):
             best = n
