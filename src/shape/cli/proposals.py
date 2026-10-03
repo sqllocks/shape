@@ -17,12 +17,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
+_KINDS = ("relationship", "pii", "semantic")  # shape.proposals.KINDS; a test keeps them equal
 _VERBS = {"accept": "accepted", "reject": "rejected", "defer": "deferred"}
 
 
 def add_arguments(sub: Any) -> None:
-    from shape.proposals import KINDS
-
+    KINDS = _KINDS
     top = sub.add_parser(
         "proposals",
         help="proposals Shape cannot settle alone (foreign keys, PII, meaning) and your decisions",
@@ -118,7 +118,7 @@ def _actor(given: str | None) -> str:
 
 
 def run(a: argparse.Namespace) -> int:
-    from shape.proposals import DecisionError, propose
+    from shape.proposals import KINDS, DecisionError, propose
 
     cmd = a.proposals_cmd
     if cmd == "propose":
@@ -126,7 +126,7 @@ def run(a: argparse.Namespace) -> int:
 
         kinds = [k.strip() for k in a.kinds.split(",") if k.strip()]
         for k in kinds:
-            if k not in __import__("shape.proposals", fromlist=["KINDS"]).KINDS:
+            if k not in KINDS:
                 raise DecisionError(f"unknown kind {k!r}")
         file = _load_or_new(a.decisions, create=True)
         found = propose(

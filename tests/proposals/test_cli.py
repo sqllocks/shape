@@ -155,3 +155,10 @@ def test_the_new_commands_are_documented():
     for needle in ("shape proposals propose", "shape proposals list", "shape proposals decide",
                    "shape-decisions", "--auto-accept", "--decisions"):  # fmt: skip
         assert needle in doc
+
+
+def test_the_cli_kind_list_matches_the_package():
+    from shape.cli.proposals import _KINDS
+    from shape.proposals import KINDS
+
+    assert _KINDS == KINDS
