@@ -128,7 +128,7 @@ class JobStore:
             raise BridgeError(
                 "input.invalid_schema", f"the job file for {job_id} is not valid JSON: {exc}"
             ) from exc
-        return check_record(record, job_id)
+        return check_fields(check_record(record, job_id), job_id)
 
     def ids(self) -> list[str]:
         if not self.dir.is_dir():
@@ -153,6 +153,34 @@ def check_record(record: Any, job_id: str) -> dict[str, Any]:
             f"the job file for {job_id} is version {version}, written by a newer Shape; this "
             f"Shape reads versions up to {JOB_VERSION}",
             "upgrade Shape to read it",
+        )
+    return record
+
+
+#: The fields a job record must hold, with the types they may have.
+_FIELDS: dict[str, tuple[type, ...]] = {
+    "job_id": (str,),
+    "command": (str,),
+    "status": (str,),
+    "created_at": (str,),
+    "progress": (dict, type(None)),
+    "worker": (dict, type(None)),
+    "external": (dict, type(None)),
+}
+
+
+def check_fields(record: dict[str, Any], job_id: str) -> dict[str, Any]:
+    """A record whose fields have the types the bridge reads them as, and which is the job its
+    file is named for (a copied or renamed file is not another job)."""
+    for name, types in _FIELDS.items():
+        if not isinstance(record.get(name), types):
+            raise BridgeError(
+                "input.invalid_schema", f"the job file for {job_id} has no valid {name!r}"
+            )
+    if record["job_id"] != job_id:
+        raise BridgeError(
+            "input.invalid_schema",
+            f"the job file for {job_id} holds the record of {record['job_id']}",
         )
     return record
 
