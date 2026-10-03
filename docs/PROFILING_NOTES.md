@@ -67,6 +67,22 @@ pick the columns with `--columns A,B,*_id` or `--exclude 'raw_*'`:
 shape profile safe daily.shape -o daily.safe.json --compact --exclude 'notes,raw_*'
 ```
 
+### Input budget for untrusted files
+
+A Parquet file of a few kilobytes can declare a hundred million rows and take gigabytes once read.
+Before a Parquet file is read, two optional budgets are checked against its footer (no data page is
+read for the check), summed over the files of one source:
+
+- `SHAPE_MAX_INPUT_ROWS`: the rows the footers declare;
+- `SHAPE_MAX_INPUT_BYTES`: the decoded size they imply (rows times the width of each fixed-width
+  column, and for string, binary and nested columns at least their uncompressed bytes and offsets).
+
+A file over either budget is refused with an error that names the variable. Unset or blank, nothing
+is checked; anything but a positive integer is an error. The decoded size of a dictionary-encoded
+string column depends on its values, which the footer does not hold, and compressed CSV or JSONL
+files declare no size, so for those the row budget (Parquet) or the process memory limit is the
+control. Set both budgets, and a memory limit, when profiling files you did not produce.
+
 ## Joint analysis and placeholders
 
 Beside the per-column statistics, `shape profile` records what holds across columns: placeholder

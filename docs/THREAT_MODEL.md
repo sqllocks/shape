@@ -60,6 +60,7 @@ Each row: the threat, the control, the test that enforces it.
 | Quadratic regex on a long string in a safe profile | the e-mail pattern starts only at the start of a local-part run | `tests/validation/test_fuzz_smoke.py` |
 | Cubic regex on DDL, quadratic regex on rule text | names exclude bare spaces; rule text is capped | `tests/security/test_p7_04_review.py` |
 | A JSONL file that crashes pyarrow (segfault on deep nesting) | a per-line depth check before pyarrow reads a file | `tests/security/test_p7_04_review.py` |
+| A Parquet decompression bomb (a few KB declaring 100M rows) exhausts memory | optional `SHAPE_MAX_INPUT_ROWS` and `SHAPE_MAX_INPUT_BYTES`, checked against the footer before any data page is read (`docs/PROFILING_NOTES.md`); unset, the process memory limit is the control (R8) | `tests/io/test_input_budget.py` |
 | A poison stream message stops the consumer | `RecursionError` is a decode failure, skipped or raised per `on_error` | `tests/security/test_p7_04_review.py` |
 | Pattern widths that exhaust memory | `{random:N}`-style widths are bounded | `tests/security/test_p7_04_review.py` |
 | Deserialization | no pickle, marshal or `eval` on data anywhere in `src` or the plugins; the formula strategy is an `ast` allow-list; `shape query` is a regex-limited dictionary walk | `bandit -r src` (P7-04 review), `tests/validation/test_requirements.py` |
@@ -132,6 +133,10 @@ fresh seed and uploads each finding's input.
 - **R6. URIs are echoed.** A URI with credentials in its userinfo or query string appears in
   stdout and checkpoints; pass credentials through the environment or an options file.
 - **R7. Signing is opt-in.** An unsigned artifact has only accident-level integrity.
+- **R8. Input size is bounded only on request.** The input budgets are off by default, and a
+  compressed CSV or JSONL file or a dictionary-encoded Parquet string column can decode to much more
+  than its size on disk. Set `SHAPE_MAX_INPUT_ROWS` and `SHAPE_MAX_INPUT_BYTES` and a process memory
+  limit when profiling files from someone else.
 
 ## Deployment controls still required
 

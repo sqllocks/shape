@@ -30,6 +30,7 @@ import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.security.jsondepth import check_json_file
 
+from .budget import check_parquet
 from .excel import (
     is_workbook_spec,
     read_selection,
@@ -421,6 +422,7 @@ def _files_source(
         return table.select(columns) if columns else table
 
     if kind == "parquet":
+        check_parquet(paths, columns)  # before any data page is read (#286)
         out_schema = pq.read_schema(paths[0])
         if columns:
             out_schema = pa.schema([out_schema.field(c) for c in columns])

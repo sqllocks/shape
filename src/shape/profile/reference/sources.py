@@ -15,6 +15,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.json as pajson  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
+from shape.io.budget import check_parquet
 from shape.io.excel import is_workbook_spec
 from shape.security.jsondepth import check_json_file
 
@@ -173,6 +174,8 @@ def _read_files(
     if len(kinds) != 1:
         raise SourceError(f"files of mixed types cannot be profiled as one table: {sorted(kinds)}")
     kind = kinds.pop()
+    if kind == "parquet":
+        check_parquet(paths)  # before any data page is read (#286)
     tables: list[pa.Table] = []
     for p in paths:
         if kind == "csv":

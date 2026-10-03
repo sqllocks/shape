@@ -14,6 +14,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
+from shape.io.budget import check_parquet
 from shape.profile.joint import analyze_table, detect_placeholders
 
 from ._blas import single_thread_blas
@@ -480,6 +481,7 @@ def profile_parquet(
 ) -> TableProfile:
     """Equivalent of DataProfiler().profile(pd.read_parquet(path), stem)."""
     n = _n_threads(threads)
+    check_parquet([path])  # before any data page is read (#286)
     t = pq.read_table(path, use_threads=n != 1)
     return _profile_cols_table(
         table_name or Path(path).stem, _arrow_cols(t), t.num_rows, threads, sample_rows
@@ -506,6 +508,7 @@ def profile_dataset(tables: dict[str, Any], threads: int | None = None) -> Datas
                 tt = read_csv(t, threads)
                 cols_by_t[name] = (_csv_cols(tt), tt.num_rows)
             else:
+                check_parquet([t])
                 tt = pq.read_table(t, use_threads=_n_threads(threads) != 1)
                 cols_by_t[name] = (_arrow_cols(tt), tt.num_rows)
         else:
