@@ -61,6 +61,41 @@ jobs:
         env: {SHAPE_KERNEL: python}
       - run: python -m pytest -q tests/kernel
         env: {SHAPE_KERNEL: rust}
+  zero-network:
+    # W6-02: every test that needs no network (all but `emulator` and `live`) runs again with
+    # the network namespace emptied, so an outbound connection cannot succeed even if the
+    # in-process socket guard (tests/conftest.py) were bypassed. Loopback stays up for the
+    # in-process Spark gateway.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -U pip
+      - run: pip install -e '.[dev,streaming,advanced]' -e plugins/shape-domains
+      - name: Prove the namespace has no route out
+        run: |
+          sudo env "PATH=$PATH" unshare --net -- sh -c 'ip link set lo up
+          if python -c "import socket; socket.create_connection((\"1.1.1.1\", 53), 3)"; then
+            echo "network reachable inside the namespace"; exit 1
+          fi'
+      - name: Tests marked zero_network, networking disabled
+        run: |
+          sudo env "PATH=$PATH" unshare --net -- sh -c 'ip link set lo up
+          python -m pytest -q -p no:cacheprovider -m "zero_network and not heavy" --ignore=tests/demo/fabric --ignore=tests/demo/content'
+  offline-lock:
+    # W6-02: pinned, hashed requirements for core and each extra, built here (a network is
+    # needed to resolve) and checked against pyproject.toml. See docs/INSTALL.md.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -U pip uv packaging
+      - run: python scripts/offline_lock.py generate "$RUNNER_TEMP/offline-lock"
+      - run: python scripts/offline_lock.py check "$RUNNER_TEMP/offline-lock"
+      - uses: actions/upload-artifact@v4
+        with: {name: offline-lock, path: '${{ runner.temp }}/offline-lock/requirements-*.txt'}
   plugin-skeletons:
     # P2-06: every first-party plugin distribution builds a pure wheel, and the example plugin,
     # installed from outside the tree, passes the conformance kit (G2) on every OS.
@@ -200,6 +235,8 @@ jobs:
       - run: python -m build
       - run: python -m twine check dist/*
       - run: python scripts/check_user_facing.py --wheel dist/*.whl
+      # W6-02: every reference data file is inside the wheel; nothing downloads at run time.
+      - run: python scripts/check_shipped_data.py --wheel dist/*.whl
       - run: pip-audit
       - uses: actions/upload-artifact@v4
         with: {name: distributions, path: dist/*}
