@@ -625,3 +625,84 @@ def test_an_empty_composite_child_of_an_empty_parent_generates() -> None:
     assert result.tables["c"].num_rows == 0 and result.tables["c"].column_names == ["k", "kb"]
     with pytest.raises(StrategyError, match="0 rows"):
         Engine(GenSchema.from_dict(doc), row_counts={"p": 0, "c": 2}).generate()
+
+
+# ---- #733: a foreign-key cycle is a validation error the dry run reports ----------------------
+
+
+def _cycle(names: tuple[str, str] = ("a", "b")) -> GenSchema:
+    one, two = names
+
+    def table(name: str, other: str) -> dict[str, object]:
+        return {
+            "name": name,
+            "primary_key": ["id"],
+            "columns": {
+                "id": {"name": "id", "type": "integer", "generator": {"strategy": "sequence"}},
+                "ref": {
+                    "name": "ref",
+                    "type": "integer",
+                    "generator": {"strategy": "foreign_key", "ref": f"{other}.id"},
+                },
+            },
+        }
+
+    doc = {
+        "schema_version": 1,
+        "model": {"name": "m"},
+        "tables": {one: table(one, two), two: table(two, one)},
+    }
+    return GenSchema.from_dict(doc)
+
+
+def test_a_foreign_key_cycle_is_a_validation_error() -> None:
+    issues = [i for i in _cycle().validate() if i.level == "error"]
+    assert any("a, b" in i.message and "cycle" in i.message for i in issues), issues
+    problems = SpecDocument.from_dict(_cycle().to_dict()).validate()
+    assert any("cycle" in p.message for p in problems)
+
+
+def test_the_dry_run_reports_a_cycle_instead_of_raising() -> None:
+    from shape.generation.engine import Engine
+
+    plan = Engine(_cycle()).dry_run()
+    assert not plan.ok
+    assert any("cycle" in i.message for i in plan.issues)
+    assert set(plan.tables) == {"a", "b"}
+    assert plan.to_dict()["ok"] is False
+
+
+def test_the_cycle_error_names_the_tables_in_order() -> None:
+    from shape.generation.engine import CircularDependencyError, resolve_order
+
+    for _ in range(3):
+        with pytest.raises(CircularDependencyError, match=r"tables: a, b$"):
+            resolve_order(_cycle())
+    with pytest.raises(CircularDependencyError, match=r"tables: x, z$"):
+        resolve_order(_cycle(("z", "x")))
+
+
+def test_a_self_reference_is_not_a_cycle() -> None:
+    from shape.generation.engine import Engine
+
+    doc = {
+        "schema_version": 1,
+        "model": {"name": "m"},
+        "tables": {
+            "t": {
+                "name": "t",
+                "primary_key": ["id"],
+                "columns": {
+                    "id": {"name": "id", "type": "integer", "generator": {"strategy": "sequence"}},
+                    "up": {
+                        "name": "up",
+                        "type": "integer",
+                        "generator": {"strategy": "foreign_key", "ref": "t.id"},
+                    },
+                },
+            }
+        },
+    }
+    schema = GenSchema.from_dict(doc)
+    assert not [i for i in schema.validate() if "cycle" in i.message]
+    assert Engine(schema).dry_run().ok
