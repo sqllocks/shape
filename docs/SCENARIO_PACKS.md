@@ -26,7 +26,7 @@ needs PyYAML (`pip install 'sqllocks-shape[yaml]'`).
 ## A pack
 
 ```yaml
-pack_version: 1
+version: 1                 # the format version (`pack_version: 1` is still read)
 id: my_custom_pack
 kind: file_drop            # file_drop | stream | hybrid
 domain: retail

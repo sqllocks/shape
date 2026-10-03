@@ -182,12 +182,35 @@ def _dependencies(
 
 
 def _placeholders(
-    table: str | None, bt: TableView, ct: TableView, th: Mapping[str, Any], policy: Policy
+    table: str | None,
+    bt: TableView,
+    ct: TableView,
+    th: Mapping[str, Any],
+    policy: Policy,
+    skipped: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for name, cv in ct.columns.items():
         bv = bt.columns.get(name)
-        if bv is None or not cv.placeholders or _skipped(policy, table, [name]):
+        if bv is None or _skipped(policy, table, [name]):
+            continue
+        blind = [
+            s for s, v in (("baseline", bv), ("current", cv)) if "placeholders" in v.suppressed
+        ]
+        if blind:  # a safe capture removed the sentinels on one side: no surge can be judged
+            if skipped is not None:
+                where = " and ".join(blind)
+                skipped.append(
+                    {
+                        "column": _label(table, name),
+                        "kind": "placeholder_surge",
+                        "captured_safe": blind,
+                        "reason": f"its placeholder values were captured safe (statistics and "
+                        f"formats only) on the {where} side; re-profile with --capture full",
+                    }
+                )
+            continue
+        if not cv.placeholders:
             continue
         for p in cv.placeholders:
             value = str(p["value"])
@@ -317,7 +340,11 @@ def _reference_pairs(
 
 
 def diff_joint(
-    table: str | None, bt: TableView, ct: TableView, policy: Policy
+    table: str | None,
+    bt: TableView,
+    ct: TableView,
+    policy: Policy,
+    skipped: list[dict[str, Any]] | None = None,
 ) -> list[tuple[str | None, str | None, dict[str, Any]]]:
     """Joint changes between two tables as ``(table, column, record)`` (the engine's shape)."""
     from .engine import SEVERITY_RANK
@@ -325,7 +352,7 @@ def diff_joint(
     th = policy.for_column(table, None)
     records = (
         _dependencies(table, bt, ct, th, policy)
-        + _placeholders(table, bt, ct, th, policy)
+        + _placeholders(table, bt, ct, th, policy, skipped)
         + _implausible(table, bt, ct, th)
         + _associations(table, bt, ct, th, policy)
         + _reference_pairs(table, bt, ct, th, policy)

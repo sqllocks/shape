@@ -186,6 +186,7 @@ class ScenarioPack:
     validation: ValidationSpec | None = None
     chaos: dict[str, Any] | None = None
     extra_keys: list[str] = field(default_factory=list)
+    needs_release: str | None = None  # the release the file says reads it (newer files)
 
     @property
     def entities(self) -> list[str]:
@@ -220,6 +221,7 @@ class Reader:
         self.path = path
         self._unknown = unknown
         self._seen: set[str] = set()
+        self.needs_release: str | None = None
 
     def _where(self, key: str) -> str:
         return f"{self.path}.{key}" if self.path else key
@@ -284,10 +286,27 @@ class Reader:
             raise PackError(f"{self._where(key)} must be a list, got {describe_type(value)}")
         return [Reader(v, f"{self._where(key)}[{i}]", self._unknown) for i, v in enumerate(value)]
 
+    def declare(self, kind: str) -> int:
+        """Read the file's declaration (``format``, ``version`` or the older ``pack_version``,
+        ``shape_version``, ``min_shape_version``); a newer version than this release reads is
+        refused. Returns the version."""
+        from shape import compat
+
+        version = compat.declared_version(kind, self.raw, error=PackError, positive=False)
+        compat.check_format(kind, self.raw, error=PackError)
+        self.needs_release = compat.needed_release(self.raw)
+        for key in (*compat.BOOKKEEPING_KEYS, *compat.KINDS[kind].legacy_version_keys):
+            self._seen.add(key)
+        return version
+
     def close(self) -> None:
+        from shape import compat
+
         for key in self.raw:
-            if key not in self._seen:
+            if key not in self._seen and not str(key).startswith("x_"):
                 self._unknown.append(self._where(str(key)))
+        if self._unknown and not self.path and compat.is_strict():
+            raise PackError(f"strict mode: unknown field(s) {', '.join(self._unknown[:5])}")
 
 
 def describe_type(value: Any) -> str:
@@ -401,7 +420,7 @@ class PackLoader:
         unknown: list[str] = []
         r = Reader(raw, "", unknown)
         pack = ScenarioPack(
-            pack_version=r.integer("pack_version", 1),
+            pack_version=r.declare("scenario-pack"),
             id=r.text("id", "unknown"),
             kind=r.text("kind", "file_drop"),
             domain=r.text("domain", ""),
@@ -416,6 +435,7 @@ class PackLoader:
         )
         r.close()
         pack.extra_keys = unknown
+        pack.needs_release = r.needs_release
         return pack
 
     def _file_drop(self, r: Reader | None) -> FileDropSpec | None:

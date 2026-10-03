@@ -343,6 +343,9 @@ def _cmd_profile(a):
     if named is not None:  # `shape profile orders`: the source of shape.yml, not a path
         a.src, a.dataset, a.name = named.path, a.dataset or named.dataset, a.name or named.name
     from shape.cli import auth
+    from shape.cli import capture as capture_args
+
+    capture_config = capture_args.config_from_args(a)  # a bad setting fails before any work
 
     settings = auth.settings_from_args(a)
     if settings and "://" not in a.src:
@@ -368,13 +371,19 @@ def _cmd_profile(a):
     else:
         prof = shape.profile(_profile_source(a), **options)
     _warn_empty(a, prof)
-    content_id = shape.save(prof, a.output)
+    from shape.privacy.redact import redact_profile
+    from shape.profile.reference.profile import save_captured
+
+    captured = redact_profile(prof, capture_config)  # what is written or printed below
+    content_id = save_captured(captured, a.output)
     key_id = _sign_output(a, a.output)
+    if captured.capture["mode"] == "full":
+        capture_args.warn_full(a.output)
     if a.html:
         with open(a.html, "w", encoding="utf-8") as fh:
-            fh.write(prof.to_html())
+            fh.write(captured.to_html())
     if a.json:
-        _write_json(a.json, prof.summary())
+        _write_json(a.json, captured.summary())
     out = {"written": a.output, "shape_content_id": content_id}
     if prof.provenance is not None:
         out["provenance"] = prof.provenance
@@ -511,7 +520,11 @@ def _cmd_check(a):
             _load_json(contract), result.violations, table, dataset=profile.is_dataset
         )
         ci.write_reports(a, "check", checks, contract, t0)
-    return 0 if result.passed else 1
+    for gap in result.not_evaluable:
+        print(f"shape: error: not evaluable: {gap['reason']}", file=sys.stderr)
+    if result.violations:
+        return 1
+    return 2 if result.not_evaluable else 0
 
 
 def _cmd_fidelity(a):
@@ -1058,6 +1071,9 @@ def _build_parser(plugin_commands=()):
     pr.add_argument("-o", "--output", metavar="OUT")
     pr.add_argument("--sign", metavar="KEY", help="sign the written .shape; KEY: " + _KEY_HELP)
     _add_passphrase_args(pr)
+    from shape.cli.capture import add_capture_args
+
+    add_capture_args(pr)
     pr.add_argument(
         "--dataset",
         action="store_true",
@@ -1198,6 +1214,12 @@ def _build_parser(plugin_commands=()):
         "generators (--no-smart)",
     )
     fd.add_argument("--explain", action="store_true", help="print the inference report")
+    mg = sub.add_parser(
+        "migrate",
+        help="write a migrated copy of a persisted file (never in place; keeps the original)",
+        add_help=False,
+    )
+    mg.add_argument("rest", nargs=argparse.REMAINDER)
     kg = sub.add_parser("keygen", help="generate an Ed25519 signing key pair")
     kg.add_argument(
         "prefix",
@@ -1590,6 +1612,10 @@ def _dispatch(argv):
     if argv[:1] in (["--version"], ["-V"]):
         print(f"shape {_version()}")
         return 0
+    if argv[:1] == ["migrate"]:
+        from shape.cli import migrate as migrate_cli
+
+        return migrate_cli.main(argv[1:])
     if argv[:1] == ["profile"] and argv[1:2] in (["safe"], ["validate"]):
         from shape.cli import profiles
 

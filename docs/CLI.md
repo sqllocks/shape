@@ -43,14 +43,47 @@ shape --debug registry reg checkout orders nope
 SHAPE_DEBUG=1 shape check missing.shape contract.json
 ```
 
+## `shape migrate`
+
+`shape migrate SRC DST` (also installed as `shape-migrate`) writes a migrated copy of a persisted
+file, offline: a `.shape` artifact, or a safe profile, model, run manifest, contract or any other
+JSON kind in [the state and compatibility policy](specs/STATE_AND_COMPATIBILITY.md).
+
+```bash
+shape migrate old.shape new.shape --dry-run   # print the plan, write nothing
+shape migrate old.shape new.shape             # new file + new.shape.receipt.json; old.shape kept
+shape migrate old.shape new.shape --verify old.pub --sign-key release.key   # a signed source
+```
+
+It never rewrites in place or overwrites a file, records `migrated_from` and `source_content_id`,
+refuses a downgrade (`--to N` below the file's version), reads its result back and checks the
+content id before publishing it, and migrates a file that is already current to nothing. `--kind
+KIND` names a JSON file that is not recognised by itself. Exit codes: 0 migrated, no-op or dry run;
+1 the source failed `--verify`; 2 refused or bad input. Strict reading of every format (`SHAPE_STRICT_FORMATS=1`) is described in
+the policy.
+
 ## What each command expects
 
 - `shape profile SRC -o OUT.shape` reads CSV, Parquet, JSONL, a folder or glob of them, or a Delta
-  table, and writes a **profile**. A table with 0 rows prints `shape: warning: ... has 0 rows`
+  table, and writes a **profile**. The profile is the **safe capture** by default (`--capture
+  safe`): a sensitive column keeps statistics and formats only, and a category is kept only if
+  every released category has at least `k` rows (`--k N`, default 5; `--column-k COLUMN=N`;
+  `--classify COLUMN=LEVEL`, where `CONFIDENTIAL` or higher makes a column sensitive). The `--json`
+  summary and the `--html` report are redacted the same way. `--capture full` keeps real values,
+  says so in the artifact and prints `shape: warning: --capture full keeps real values in OUT; do
+  not commit or share it` once; `--k`, `--column-k` and `--classify` are errors with it (exit 2).
+  `shape profile validate --safe OUT.shape` exits 0 for the default and 1 for a full capture.
+  `shape profile registry save` takes the same options. See `docs/PRIVACY_MODEL.md`. A table with 0 rows prints `shape: warning: ... has 0 rows`
   (the profile is still written); `--fail-on-empty` exits 2 instead and writes nothing. A Delta
   table with deletion vectors or column mapping is read with DuckDB (extra `delta-fallback`) and
   says so on stderr; see the README.
-- `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles.
+- `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles, safe captures
+  included. `shape diff` lists a comparison a safe capture makes impossible under
+  `not_evaluable` and does not count it as drift. `shape check` exits 0 when every rule passes, 1
+  when a rule is violated, and 2 when a rule needs a value a safe capture left out (`shape: error:
+  not evaluable: COLUMN was captured safe (statistics and formats only); re-profile with --capture
+  full`) and nothing is violated. `shape generate --from` and `shape plan` generate such a column
+  from its pattern and length distribution and mark it `approximate`.
 - `shape inspect ARTIFACT.shape` prints what an artifact holds, a profile or a model. `shape show`
   is an alias of `shape inspect`.
 - `shape capture SRC` reads everything `shape profile` reads (CSV, Parquet, JSONL, a folder or

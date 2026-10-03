@@ -6,13 +6,20 @@ shape registry ROOT ACTION ...
 
 `ROOT` is a directory. Every version of a name is stored as the bytes you committed, under their
 sha256 (`objects/<sha256>`); `logs/<name>.jsonl` records each commit, `refs/<name>/latest` and
-`tags/<name>/<tag>` point at versions. A registry is a plain directory, so it is natural to back
+`tags/<name>/<tag>` point at versions. `layout.json` at the root declares the layout version
+(`format` `shape-registry`, `version` 1; opening an older registry writes it); a registry whose
+layout is newer than this release reads is refused, naming the release that reads it. Each log
+entry has `created_at` (epoch seconds) and `created` (UTC ISO 8601). See
+[state and compatibility](specs/STATE_AND_COMPATIBILITY.md). A registry is a plain directory, so it is natural to back
 up or commit to git. That is why **a registry never holds a raw profile unless you ask for it**.
 
 ## What it stores: safe forms, not real values
 
-A raw profile (`shape profile -o X.shape`, or `shape profile export`) holds up to 500 real values
-per column and each column's minimum and maximum. `shape registry ... commit` refuses one:
+A raw profile (`shape profile -o X.shape --capture full`, or `shape profile export` of one)
+holds up to 500 real values per column and each column's minimum and maximum. The default
+`shape profile -o X.shape` is a safe capture (`docs/PRIVACY_MODEL.md`), which is not raw: it is
+scanned by the leak scanner and committed as it is (`profile_form` `safe`). `shape registry ...
+commit` refuses a raw one:
 
 ```
 $ shape registry reg commit customers cust.shape
@@ -73,7 +80,7 @@ A `REF` is `latest`, a tag, a promoted ref or a content id recorded for that nam
 
 | Store | Holds | Meant for |
 |---|---|---|
-| `.shape` files, `--json` summaries, HTML reports | real values (raw profile) | the pipeline; as private as the data |
+| `.shape` files, `--json` summaries, HTML reports | safe capture by default; real values with `--capture full` | a safe capture: anywhere; a full one: as private as the data |
 | `shape registry` | safe forms by default; raw only with `--allow-raw` | sharing, backup, git |
-| `shape profile registry` | full profiles by default; the safe form with `save --safe` | a local catalog; `--safe` for a shared one |
+| `shape profile registry` | safe captures by default; real values with `save --capture full`; the safe profile JSON with `save --safe` | a local catalog; a shared one holds safe captures |
 | `shape profile safe` output (`*.safe.json`) | no raw values | anywhere |

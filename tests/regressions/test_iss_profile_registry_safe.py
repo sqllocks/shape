@@ -62,9 +62,9 @@ def test_safe_save_from_a_profile_artifact(work: Path) -> None:
 
 
 def test_raw_save_says_it_holds_real_values(work: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    assert _save() == 0
+    assert _save("--capture", "full") == 0
     err = capsys.readouterr().err
-    assert "real values" in err and "--safe" in err
+    assert "real values" in err and "--capture full" in err
     assert EMAIL.findall(_all_text(work / "preg"))  # the raw form is still what it was
 
 
@@ -156,7 +156,7 @@ def test_delete_removes_a_safe_entry(work: Path, capsys: pytest.CaptureFixture[s
 
 
 def test_safe_options_need_safe(work: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    assert _save("--k", "9") == 2
+    assert _save("--sensitive") == 2
     assert "--safe" in capsys.readouterr().err
 
 

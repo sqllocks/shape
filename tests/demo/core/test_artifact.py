@@ -18,7 +18,7 @@ from shape.profile.reference import Profile
 def test_round_trip_equality(tmp_path: Path, orders):
     p = shape.profile(orders, name="orders")
     path = tmp_path / "orders.shape"
-    content_id = shape.save(p, path)
+    content_id = shape.save(p, path, capture="full")  # equality needs the real values
     assert len(content_id) == 64
     q = shape.load(path)
     assert q == p
@@ -30,14 +30,14 @@ def test_round_trip_equality(tmp_path: Path, orders):
 def test_round_trip_preserves_frequency_order(tmp_path: Path):
     values = ["c"] * 5 + ["a"] * 3 + ["b"] * 9
     p = shape.profile(pa.table({"s": values}))
-    shape.save(p, tmp_path / "x.shape")
+    shape.save(p, tmp_path / "x.shape", capture="full")
     q = shape.load(tmp_path / "x.shape")
     assert list(q.to_dict()["columns"]["s"]["enum_values"]) == ["b", "c", "a"]
 
 
 def test_round_trip_multi_table(tmp_path: Path, orders, customers):
     p = shape.profile({"orders": orders, "customer": customers})
-    shape.save(p, tmp_path / "m.shape")
+    shape.save(p, tmp_path / "m.shape", capture="full")
     q = shape.load(tmp_path / "m.shape")
     assert q == p and q.is_dataset
     assert q.to_dict()["relationships"] == p.to_dict()["relationships"]
@@ -51,7 +51,7 @@ def test_nan_and_infinity_round_trip(tmp_path: Path):
     # profile itself holds only finite numbers
     assert (col["nan_count"], col["inf_count"]) == (10, 20)
     assert col["std"] == pytest.approx(1.6329931618554523 * (30 / 29) ** 0.5)
-    shape.save(p, tmp_path / "n.shape")
+    shape.save(p, tmp_path / "n.shape", capture="full")
     q = shape.load(tmp_path / "n.shape")
     assert q == p
     assert q.to_dict()["columns"]["x"]["min_value"] == ["float", 1.0]
@@ -68,7 +68,7 @@ def test_raw_float_nan_and_inf_are_encoded_explicitly(tmp_path: Path):
     }
     p = Profile(data)
     path = tmp_path / "r.shape"
-    shape.save(p, path)
+    shape.save(p, path, capture="full")  # equality needs the real values
     with zipfile.ZipFile(path) as z:
         body = z.read("profile.json").decode()
     assert "NaN" not in body and "Infinity" not in body  # never bare JSON extensions
@@ -86,7 +86,8 @@ def test_artifact_is_a_shape_manifest(tmp_path: Path, orders):
         manifest = json.loads(z.read("manifest.json"))
     assert manifest["format"] == "shape"
     assert manifest["kind"] == "profile"
-    assert manifest["format_version"] == 1
+    assert manifest["format_version"] == 2  # version 2 records how the profile was captured
+    assert manifest["capture"] == {"mode": "safe", "k": 5}
 
 
 def test_load_rejects_non_profile_and_tampered_files(tmp_path: Path, orders):

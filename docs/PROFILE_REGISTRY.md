@@ -24,6 +24,7 @@ for the safe form below):
 ```
 <root>/<system>/<table>/<name>.shape      identity: system/table/name
 <root>/_index.json                        rebuilt from the files by `reindex`
+<root>/_layout.json                       the layout version (written when a registry is opened)
 ```
 
 The root is `--root DIR`, else `$SHAPE_PROFILE_REGISTRY`, else `~/.shape/profiles`. The
@@ -51,12 +52,16 @@ profile without `--overwrite`; `reindex` lists every file it could not read.
 
 ### Real values, and the safe form
 
-By default a stored profile is a full Shape profile, as written by `shape profile -o`: it holds
-**real values from the data** (up to 500 per column with their counts, and each column's minimum
-and maximum). The default root is under your home folder for that reason: this store is a private
-catalog, and `save` says so on stderr.
+By default a stored profile is a safe capture, as written by `shape profile -o`
+(`docs/PRIVACY_MODEL.md`): a sensitive column keeps statistics and formats only and a category is
+kept only when every released category has at least `k` rows (`--k N`, `--column-k COLUMN=N`,
+`--classify COLUMN=LEVEL`). `save --capture full` keeps **real values from the data** (up to 500
+per column with their counts, and each column's minimum and maximum), says so in the artifact and
+on stderr (`shape: warning: --capture full keeps real values in ROOT; do not commit or share it`);
+such a store is a private catalog, and the default root is under your home folder. `list` shows
+`safe capture` or `full` in its last column.
 
-For a registry that is shared or put under git, save the share-safe form:
+For the stricter share-safe profile JSON, save with `--safe`:
 
 ```bash
 shape profile registry save orders.csv --system crm --name 2026Q2 --safe [--k N] [--sensitive]

@@ -11,6 +11,7 @@ import shape
 d = shape.diff(shape.load("baseline.shape"), shape.profile("today.parquet"))
 d.drifted            # bool
 d.changes            # [{column, kind, baseline, current, severity, score}, ...]
+d.not_evaluable      # [{column, kind, captured_safe, reason}, ...]
 ```
 
 ```
@@ -20,6 +21,20 @@ shape diff baseline.shape today.shape --fail-on-drift --ignore order_id --null-r
 A change is reported only when it passes its threshold, so a stable column produces no record.
 `severity` is fixed per kind. `score` is the size of the change from 0 to 1: a structural change
 (column added, dtype changed) scores 1, the others their natural distance (see the table).
+
+## What cannot be compared: safe captures
+
+`shape profile` writes the safe capture by default (`docs/PRIVACY_MODEL.md`): a sensitive column
+has no raw minimum or maximum, no distribution fit that names the minimum, no placeholder values,
+and categories below `k` rows are folded into `__OTHER__`. `shape diff` compares what both sides
+hold. A comparison that needs something one side left out is not a change and not a pass: it is
+listed in `not_evaluable` (also in the `--json` output and the `shape diff` result), with the
+column, the `kind` that could not be judged (`range_change`, `distribution_change`,
+`category_shift`, `true_rate_change`, `placeholder_surge`), the side or sides that were captured
+safe (`captured_safe`: `baseline`, `current`) and a reason. It never sets `drifted` and never
+fails `--fail-on-drift`. Two safe captures fold alike, so their categories are compared as they are;
+a safe capture against a full one is compared on the statistics both keep (null rate, cardinality,
+mean, spread, quantiles, pattern, length). To judge the rest, re-profile with `--capture full`.
 
 ## What is compared
 

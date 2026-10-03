@@ -102,7 +102,7 @@ def orders(tmp_path):
     csv = tmp_path / "orders.csv"
     csv.write_text("\n".join(rows) + "\n", encoding="utf-8")
     out = tmp_path / "orders.shape"
-    shape.save(shape.profile(str(csv)), str(out))
+    shape.save(shape.profile(str(csv)), str(out), capture="full")  # the raw profile it scans
     return out
 
 

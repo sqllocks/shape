@@ -6,6 +6,77 @@ A Shape is not automatically anonymous. Aggregates, rare categories, small cohor
 One ordered taxonomy ranks every label in release, redaction and propagation:
 `PUBLIC < INTERNAL < CONFIDENTIAL < SECRET < TOP_SECRET`. `SENSITIVE` and `PII` are accepted aliases of `CONFIDENTIAL`: they rank the same and keep the label you gave them. An unknown label is an error, never ignored.
 
+## Safe-by-default capture
+
+What Shape **writes or prints** for a profile is the safe capture unless you ask for real values:
+`shape profile SRC -o OUT.shape`, its `--json` summary and `--html` report, `shape.save(profile,
+path)` and `shape profile registry save`. The profile that `shape.profile()` returns in memory is
+not changed, so everything that compares it (the equivalence verifiers, the kernel parity checks)
+sees the same values as before.
+
+```bash
+shape profile orders.csv -o orders.shape                      # --capture safe is the default
+shape profile orders.csv -o orders.shape --k 10 --column-k status=25
+shape profile orders.csv -o orders.shape --classify ssn=CONFIDENTIAL --classify salary=SECRET
+shape profile orders.csv -o orders.full.shape --capture full  # real values: do not commit or share
+```
+
+```python
+shape.save(profile, "orders.shape")                       # capture="safe"
+shape.save(profile, "orders.shape", k=10, column_k={"status": 25},
+           classifications={"ssn": "CONFIDENTIAL"})
+shape.save(profile, "orders.full.shape", capture="full")
+```
+
+**A sensitive column keeps statistics and formats only.** A column is sensitive when its declared
+classification (`--classify COLUMN=LEVEL`, `classifications=`) ranks at or above `CONFIDENTIAL` in
+the ordered taxonomy above (`PII` and `SENSITIVE` rank as `CONFIDENTIAL`), or when the rules of the
+safe profile make it pattern-only: a detected personal-data pattern, `pii_pattern_floor`, or nearly
+one distinct value per row. It keeps the row and null counts, the distinct estimate, the type, the
+length distribution, the detected pattern and its rates, the quantile fingerprint, the mean and
+spread, and, for a number, `bounds` (`lo` and `hi`, the 1st and 99th percentiles). It keeps **no**
+enum values, top values, placeholder values, raw minimum or maximum, or distribution fit that
+names the minimum (uniform, exponential and lognormal fits; a normal fit is the mean and spread).
+
+**Any other column keeps category values only if every released category has at least `k` rows**
+(default 5; `--k N`; `--column-k COLUMN=N`, the same flags as `shape profile safe`): it must be an
+enum by the profiler's rule, a category below `k` rows folds into `__OTHER__`, a `__OTHER__` that is
+itself below `k` absorbs the smallest categories until it is not, and a column with fewer than `k`
+rows releases nothing. Top-value entries, histogram bins (hour, weekday, month, year) and
+placeholder counts follow the same rule: a cell is absent or stands for at least `k` rows. A text
+column's minimum and maximum are values like the others, so they are kept only when they are
+released categories; a number's or date's are kept unless the column is sensitive. The joint
+analysis keeps its statistics but not the values: conditional tables, dependency violations and
+reference-pair examples follow the cell rule, and anything about a sensitive column is dropped; a
+workbook's findings lose their cell values and positions. `--column-k` and `--classify` name a
+column (`name`, or `table.name` in a dataset) and fail on a name that is not there, so a typo never
+leaves a column unprotected.
+
+**The artifact records how it was made.** The `.shape` manifest carries `capture`
+(`{"mode": "safe", "k": 5}`, or `{"mode": "full", "k": null}`) and, for a safe capture, the
+`redaction_manifest` (per column: `sensitive`, `reason`, `k`, `suppressed` and the counts of
+categories and cells withheld). A column that lost something lists it in its own `redacted` map
+(surface to reason, `sensitive` or `below_k`), so a reader can tell "left out" from "absent". A
+profile written before this existed has no `capture` and reads as full. Redaction is idempotent and
+one way: a safe capture can be saved again, never as full.
+
+**`--capture full` is the explicit choice.** It keeps today's content, stamps `capture.mode:
+"full"` and prints once on standard error: `shape: warning: --capture full keeps real values in
+OUT; do not commit or share it`. `shape profile validate --safe` reports it as a finding (rule
+`full-capture`, exit 1), as it does for `unsafe`, and the default `.shape` passes it (exit 0).
+`shape registry ... commit` takes a safe capture without `--allow-raw` and still refuses a full one.
+
+**Readers.** `shape diff` compares what both sides hold; a comparison that needs something a safe
+capture left out (the range of a sensitive column, a distribution fit, folded category counts, the
+placeholder values) is listed under `not_evaluable` and never counted as drift. `shape check`
+reports a rule that needs it as `not evaluable: COLUMN was captured safe (statistics and formats
+only); re-profile with --capture full`, lists it under `not_evaluable`, and exits 2 (1 when a rule
+is also violated). `shape generate --from` and `shape plan` generate a sensitive column from its
+pattern and length distribution and mark what was left out `approximate` in the plan.
+
+This is data minimisation, not anonymisation: a safe capture still holds statistics of the data,
+and the limits listed under "Minimum cohort and small cells" apply to it.
+
 ## The safe profile
 
 A full profile holds value-bearing evidence (exact minimum and maximum, every enum value, top value counts). `shape profile safe PROFILE.shape -o SAFE.json` writes the form that is meant to be shared. It has no field that can hold a raw extreme or a value list, and:

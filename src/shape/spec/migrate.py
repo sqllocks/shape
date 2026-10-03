@@ -21,6 +21,8 @@ import copy  # noqa: E402
 from collections.abc import Mapping  # noqa: E402
 from typing import Any  # noqa: E402
 
+from shape import compat  # noqa: E402
+
 from .model import MODEL_VERSION, ModelError, is_model, validate_model  # noqa: E402
 
 CAPTURE_ENGINE = "shape-capture-v1"
@@ -176,6 +178,10 @@ def migrate_engine_v1(doc: Mapping[str, Any]) -> dict[str, Any]:
 def to_model(obj: Any, name: str | None = None) -> dict[str, Any]:
     """Any Shape document as a validated v2 model: v2 as it is, an engine v1 document or a v1
     capture migrated."""
+    if isinstance(obj, Mapping):
+        declared = obj.get("schema_version")
+        if type(declared) is int and declared > MODEL_VERSION:
+            compat.check_readable("model", obj, error=ModelError)
     if is_model(obj):
         return validate_model(obj)
     if isinstance(obj, Mapping) and obj.get("schema_version") == 1 and "tables" in obj:

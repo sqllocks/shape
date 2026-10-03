@@ -40,7 +40,8 @@ def check_profile_cli(datasets: list[str], work: Path, fails: list[str]) -> None
         src = PROFILE_DATA_DIR / name
         sp, sh = work / f"spcli_{name}.json", work / f"shcli_{name}.shape"
         a = run([SPINDLE_PY, HERE / "spindle_cli_profile.py", src, "-o", sp])
-        b = run([SHAPE_CLI, "profile", src, "-o", sh])
+        # T-22 compares the profile with the baseline's, which keeps real values: ask for them
+        b = run([SHAPE_CLI, "profile", src, "-o", sh, "--capture", "full"])
         if a.returncode != 0 or b.returncode != 0:
             fails.append(f"profile {name}: exit spindle={a.returncode} shape={b.returncode}")
             continue

@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from shape import compat
 from shape.drift.engine import DEFAULT_THRESHOLDS as DRIFT_DEFAULTS
 from shape.drift.engine import diff_tables, resolve_policy, view_of_profile_column
 from shape.profile.reference.profile import Profile
@@ -60,9 +61,26 @@ class CheckResult:
 
     passed: bool
     violations: list[dict[str, Any]] = field(default_factory=list)
+    # rules that need a value a safe capture left out (W1-11): not passed, not violated
+    not_evaluable: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
-        return {"passed": self.passed, "violations": [dict(v) for v in self.violations]}
+        out: dict[str, Any] = {
+            "passed": self.passed,
+            "violations": [dict(v) for v in self.violations],
+        }
+        if self.not_evaluable:  # present only when a safe capture left out what a rule needs
+            out["not_evaluable"] = [dict(n) for n in self.not_evaluable]
+        return out
+
+
+def _gap(column: str, rule: str) -> dict[str, Any]:
+    return {
+        "column": column,
+        "rule": rule,
+        "reason": f"{column} was captured safe (statistics and formats only); "
+        "re-profile with --capture full",
+    }
 
 
 def _violation(column: str | None, rule: str, expected: Any, observed: Any) -> dict[str, Any]:
@@ -82,7 +100,15 @@ def _load_contract(contract: dict[str, Any] | str | Path) -> dict[str, Any]:
 
 
 def _validate_contract(contract: dict[str, Any]) -> None:
-    unknown = set(contract) - _CONTRACT_KEYS
+    compat.check_format("contract", contract, error=ContractError)
+    compat.check_readable("contract", contract, error=ContractError)
+    unknown = {
+        k
+        for k in contract
+        if k not in _CONTRACT_KEYS
+        and k not in compat.BOOKKEEPING_KEYS
+        and not str(k).startswith("x_")
+    }
     if unknown:
         raise ContractError(f"unknown contract keys: {sorted(unknown)}")
     rc = contract.get("row_count", {})
@@ -215,9 +241,22 @@ def _key(value: Any) -> str:
 
 
 def _check_column(
-    name: str, rules: dict[str, Any], col: dict[str, Any], row_count: int
+    name: str,
+    rules: dict[str, Any],
+    col: dict[str, Any],
+    row_count: int,
+    gaps: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
+    cut = frozenset(col["redacted"]) if isinstance(col.get("redacted"), dict) else frozenset()
+    folded = bool(cut & {"enum_values", "value_counts_ext"}) or "__OTHER__" in (
+        col.get("enum_values") or {}
+    )
+
+    def blind(rule: str) -> None:
+        if gaps is not None:
+            gaps.append(_gap(name, rule))
+
     if "dtype" in rules and col["dtype"] != rules["dtype"]:
         out.append(_violation(name, "dtype", rules["dtype"], col["dtype"]))
     if rules.get("nullable") is False and col["null_count"] > 0:
@@ -244,15 +283,31 @@ def _check_column(
         out.append(_violation(name, "max_null_rate", rules["max_null_rate"], col["null_rate"]))
     if "pattern" in rules and col["pattern"] != rules["pattern"]:
         out.append(_violation(name, "pattern", rules["pattern"], col["pattern"]))
-    if "distribution" in rules and col["distribution"] != rules["distribution"]:
-        out.append(_violation(name, "distribution", rules["distribution"], col["distribution"]))
+    if "distribution" in rules:
+        if "distribution_params" in cut:
+            blind("distribution")
+        elif col["distribution"] != rules["distribution"]:
+            out.append(_violation(name, "distribution", rules["distribution"], col["distribution"]))
     if "allowed_values" in rules:
-        out.extend(_check_allowed(name, rules["allowed_values"], col))
-    out.extend(_check_true_rate(name, rules, col, row_count))
-    if "no_placeholder" in rules:
-        out.extend(check_no_placeholder(name, rules["no_placeholder"], col))
+        found = _check_allowed(name, rules["allowed_values"], col)
+        out.extend(found)
+        if not found and folded:  # the values that were left out could be outside the set
+            blind("allowed_values")
+    if "min_true_rate" in rules or "max_true_rate" in rules:
+        if folded:
+            blind("true_rate")
+        else:
+            out.extend(_check_true_rate(name, rules, col, row_count))
+    if "no_placeholder" in rules and rules["no_placeholder"] is not False:
+        if "placeholders" in cut:
+            blind("no_placeholder")
+        else:
+            out.extend(check_no_placeholder(name, rules["no_placeholder"], col))
     for bound in ("min", "max"):
         if bound not in rules:
+            continue
+        if f"{bound}_value" in cut:
+            blind(bound)
             continue
         observed = _plain(col["min_value" if bound == "min" else "max_value"])
         expected = rules[bound]
@@ -314,7 +369,10 @@ def _check_allowed(name: str, allowed: list[Any], col: dict[str, Any]) -> list[d
 
 
 def _check_table(
-    table: dict[str, Any], contract: dict[str, Any], prefix: str = ""
+    table: dict[str, Any],
+    contract: dict[str, Any],
+    prefix: str = "",
+    gaps: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     violations: list[dict[str, Any]] = []
     columns = table["columns"]
@@ -332,7 +390,7 @@ def _check_table(
             if name not in required:
                 violations.append(_violation(name, "column_exists", "present", "missing"))
             continue
-        violations.extend(_check_column(name, rules, columns[name], table["row_count"]))
+        violations.extend(_check_column(name, rules, columns[name], table["row_count"], gaps))
     violations.extend(check_joint_rules(contract, table))
     if contract.get("allow_extra_columns", True) is False:
         known = set(contract.get("columns", {})) | set(required)
@@ -349,6 +407,10 @@ def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResul
     single-table profile raises :class:`ContractError`; against a dataset, a table the contract
     names and the profile lacks is a ``table_exists`` violation. Every rule is optional (§12.3), so
     a profile table the contract does not name is not checked.
+
+    A rule that needs a value a safe capture left out (an ``allowed_values`` set on a sensitive
+    column, a ``min`` or ``max`` whose extremes were removed) is neither passed nor violated: it is
+    listed in ``not_evaluable`` and ``passed`` is false (re-profile with ``capture="full"``).
     """
     contract = _load_contract(contract)
     _validate_contract(contract)
@@ -360,18 +422,24 @@ def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResul
                 "mapping table names to contracts"
             )
         violations: list[dict[str, Any]] = []
+        blind: list[dict[str, Any]] = []
         for tname, sub in per_table.items():
             _validate_contract(sub)
             if tname not in profile.tables:
                 violations.append(_violation(None, "table_exists", tname, "missing"))
                 continue
-            for v in _check_table(profile.tables[tname], sub):
+            gaps: list[dict[str, Any]] = []
+            found = _check_table(profile.tables[tname], sub, gaps=gaps)
+            blind.extend(_gap(f"{tname}.{g['column']}", g["rule"]) for g in gaps)
+            for v in found:
                 if v["column"] is not None:
                     v["column"] = f"{tname}.{v['column']}"
                 else:
                     v["rule"] = f"{tname}:{v['rule']}"
                 violations.append(v)
-        return CheckResult(passed=not violations, violations=violations)
+        return CheckResult(
+            passed=not violations and not blind, violations=violations, not_evaluable=blind
+        )
     if "tables" in contract:
         # A multi-table contract has nothing to say about one table: checking it would pass
         # without testing a single rule.
@@ -380,8 +448,11 @@ def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResul
             f"({profile.name!r}): profile the tables together as a dataset, one table per file "
             "(`shape profile --dataset FOLDER`, or `shape.profile({name: source, ...})`)"
         )
-    violations = _check_table(next(iter(profile.tables.values())), contract)
-    return CheckResult(passed=not violations, violations=violations)
+    gaps = []
+    violations = _check_table(next(iter(profile.tables.values())), contract, gaps=gaps)
+    return CheckResult(
+        passed=not violations and not gaps, violations=violations, not_evaluable=gaps
+    )
 
 
 # --- drift ------------------------------------------------------------------------
@@ -398,9 +469,17 @@ class DiffResult:
 
     drifted: bool
     changes: list[dict[str, Any]] = field(default_factory=list)
+    # comparisons a safe capture made impossible (W1-11): listed, never counted as drift
+    not_evaluable: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
-        return {"drifted": self.drifted, "changes": [dict(c) for c in self.changes]}
+        out: dict[str, Any] = {
+            "drifted": self.drifted,
+            "changes": [dict(c) for c in self.changes],
+        }
+        if self.not_evaluable:  # present only when a safe capture made a comparison impossible
+            out["not_evaluable"] = [dict(n) for n in self.not_evaluable]
+        return out
 
 
 def diff(
@@ -415,7 +494,9 @@ def diff(
 ) -> DiffResult:
     """Compare two profiles with the documented defaults (``docs/DRIFT.md``).
 
-    ``baseline`` and ``current`` are profiles; a window of the stream profiler works too.
+    ``baseline`` and ``current`` are profiles; a window of the stream profiler works too. A
+    comparison that needs a value a safe capture left out (see ``shape.save(capture=)``) is listed
+    in ``not_evaluable`` and never counted as drift.
     ``thresholds`` overrides the defaults for every column, ``column_thresholds`` for the columns
     its patterns match (``{"order_total": {"mean_shift_std": 0.25}, "*": {...}}``),
     ``ignore_columns`` drops columns (a name, ``table.column`` or a glob) and ``only_columns``
@@ -429,5 +510,6 @@ def diff(
         only_columns=only_columns,
         policy=policy,
     )
-    changes = diff_tables(baseline, current, resolved)
-    return DiffResult(drifted=bool(changes), changes=changes)
+    skipped: list[dict[str, Any]] = []
+    changes = diff_tables(baseline, current, resolved, skipped)
+    return DiffResult(drifted=bool(changes), changes=changes, not_evaluable=skipped)

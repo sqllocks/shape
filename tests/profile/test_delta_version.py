@@ -138,7 +138,7 @@ def test_a_file_profile_has_no_provenance(tmp_path):
 def test_provenance_survives_save_and_load_and_is_not_in_the_profile_body(table, tmp_path):
     prof = shape.profile(table, version=1)
     out = tmp_path / "v1.shape"
-    shape.save(prof, out)
+    shape.save(prof, out, capture="full")  # equality with the in-memory profile needs full
     again = shape.load(out)
     assert again.provenance == prof.provenance
     assert again == prof

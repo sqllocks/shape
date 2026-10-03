@@ -129,7 +129,7 @@ def evaluate(settings: dict[str, Any], work: Path, shape_cmd: list[str]) -> dict
     try:
         import shape
 
-        shape.save(profile_tables, str(profile))
+        shape.save(profile_tables, str(profile), capture=run_gate.GATE_CAPTURE)
         summary.write_text(json.dumps(profile_tables.summary()), encoding="utf-8")
     except Exception as exc:  # noqa: BLE001 - any failure here is an error gate
         raise GateError(f"cannot write the profile: {type(exc).__name__}: {exc}") from exc

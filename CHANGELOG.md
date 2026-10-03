@@ -33,6 +33,41 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   every command that writes prints a `shape-dry-run` plan of `write`, `create`, `delete` and `send`
   actions (secrets removed) without writing or opening a connection. Commands whose `--json` was
   a switch that printed a list now print it under `payload`; a coverage test walks the parser.
+
+- **Behaviour change: profiles are written safe by default (W1-11).** `shape profile -o OUT.shape`,
+  its `--json` summary and `--html` report, `shape.save(profile, path)` and `shape profile
+  registry save` now write the **safe capture**: a sensitive column (declared `CONFIDENTIAL` or
+  higher with `--classify COLUMN=LEVEL`, or pattern-only by the safe profile's own rules) keeps
+  statistics and formats only, and a category is kept only if every released category has at
+  least `k` rows (`--k N`, default 5; `--column-k COLUMN=N`), the rest folding into `__OTHER__`.
+  Before, these held real values (up to 500 per column, raw minimum and maximum). **To keep real
+  values, ask for them: `--capture full` / `shape.save(profile, path, capture="full")`**; the file
+  says so (`capture`), a warning goes to standard error, and `shape profile validate --safe`
+  reports it (`full-capture`, exit 1); the default passes (exit 0). The in-memory profile that
+  `shape.profile()` returns is unchanged. The profile artifact is version 2 (`capture`,
+  `redaction_manifest`); version 1 files still load and read as full (`shape migrate` stamps
+  them). `shape diff` lists comparisons a safe capture cannot make under `not_evaluable` (never
+  drift); `shape check` reports a rule that needs left-out values as `not evaluable: COLUMN was
+  captured safe ...` and exits 2; `shape generate --from` and `shape plan` mark such columns
+  `approximate`. `shape registry` commits a safe capture without `--allow-raw`. The bridge's
+  `profile` still writes a full capture. See `docs/PRIVACY_MODEL.md`.
+- State and compatibility policy (`docs/specs/STATE_AND_COMPATIBILITY.md`): every persisted file
+  declares `format`, an integer `version`, `shape_version` and `min_shape_version` (the old key
+  names `format_version`, `schema_version` and `pack_version` are still read, and still written
+  beside `version` in the 1.x series); every 1.x release reads every format version ever released;
+  a file from a newer release fails naming the minimum Shape release that reads it; unknown
+  optional fields are ignored on read and kept on rewrite; `SHAPE_STRICT_FORMATS=1` (or
+  `shape.compat.strict_formats()`) is the strict reader; deprecations warn with
+  `FormatDeprecationWarning` and are announced here under "Deprecated" (none today). Covers
+  `.shape` artifacts, safe profiles, models, generation schemas and specs, scenario packs,
+  registry layouts (`layout.json`, `_layout.json`), run manifests, contracts, signatures and
+  profile exports. Run manifests, registry logs and receipts write UTC ISO 8601 times with `Z`.
+- `shape migrate SRC DST` (and `shape-migrate`, `shape.migrate`): offline migration that never
+  rewrites in place, keeps the original, records `migrated_from` and `source_content_id`, has a
+  dry run, refuses downgrades, checks its result through the content id, and writes a receipt
+  (signed with `--sign-key`; a signed source needs it). Language-neutral test vectors for the
+  canonical forms and content ids (`docs/specs/vectors/state_vectors.json`) and a time-capsule
+  corpus loaded in CI (`tests/timecapsule`).
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

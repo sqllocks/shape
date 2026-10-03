@@ -139,6 +139,7 @@ ignore_errors=true
 
 [project.scripts]
 shape = "shape.cli.main:main"
+shape-migrate = "shape.cli.migrate:main_entry"
 
 [project.entry-points.pytest11]
 shape = "shape.testdata.pytest_plugin"
@@ -281,6 +282,7 @@ source_modules = [
     "shape.bridge",
     "shape.capture",
     "shape.chaos",
+    "shape.compat",
     "shape.cli",
     "shape.connectors",
     "shape.contracts",
@@ -297,6 +299,7 @@ source_modules = [
     "shape.io",
     "shape.kernel",
     "shape.location",
+    "shape.migrate",
     "shape.model",
     "shape.runlog",
     "shape.scale",

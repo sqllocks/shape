@@ -1,0 +1,1 @@
+{"files":[{"authored":false,"format_version":1,"id":"run-manifest-v1","kind":"run-manifest","note":"with reproducibility and dataset_id","path":"run/run-manifest.json","produced_by":"shape.scenario.manifest.ManifestBuilder.to_file","sha256":"fd7504687c79cbbcbb4ef2da8033a962a57d99b6d4939c9f649873184ea88d86","writer_shape_version":"0.9.0"}]}

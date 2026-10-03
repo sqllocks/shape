@@ -186,7 +186,9 @@ def _table_from_bytes(data: bytes, path: str) -> pa.Table:
 def _save_profile(lakehouse: Any, profile: Any, output_path: str) -> str:
     with tempfile.TemporaryDirectory() as tmp:
         local = Path(tmp) / "profile.shape"
-        shape.save(profile, str(local))
+        # check_profile and diff_profiles read the file back and need the real extremes and values
+        # (W1-11 made the default capture safe): this file is as private as the lakehouse folder
+        shape.save(profile, str(local), capture="full")
         return _write_bytes(lakehouse, output_path, local.read_bytes())
 
 

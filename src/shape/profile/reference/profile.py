@@ -7,12 +7,14 @@ import datetime as _dt
 import hashlib
 import math
 import warnings
+from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 
+from shape import compat
 from shape.artifact import codec
 from shape.artifact.io import ArtifactError, read_artifact, write_artifact
 from shape.io.excel import is_workbook_spec
@@ -25,7 +27,7 @@ from .sources import SourceError, check_delta_options, delta_dir, load_columns, 
 from .table import _profile_cols_table, profile_dataset_columns
 
 ARTIFACT_FORMAT = "shape"
-ARTIFACT_FORMAT_VERSION = 1
+ARTIFACT_FORMAT_VERSION = compat.KINDS["profile-artifact"].current
 ARTIFACT_KIND = "profile"
 PROFILE_COMPONENT = "profile.json"
 
@@ -214,11 +216,15 @@ class Profile:
         *,
         name: str | None = None,
         provenance: dict[str, Any] | None = None,
+        capture: dict[str, Any] | None = None,
+        redaction_manifest: dict[str, Any] | None = None,
     ) -> None:
         if "tables" not in data and "columns" not in data:
             raise ValueError("not a profile: expected a table or dataset profile dictionary")
         self._data = data
         self._provenance = None if provenance is None else dict(provenance)
+        self._capture = None if capture is None else dict(capture)
+        self._redaction = {} if redaction_manifest is None else copy.deepcopy(redaction_manifest)
         self.name = name or (data.get("name") if "columns" in data else None) or "dataset"
 
     @property
@@ -228,6 +234,36 @@ class Profile:
         otherwise. It is kept in the ``.shape`` file's manifest, not in the profile body, so it
         never changes the content id or a ``shape.diff``."""
         return None if self._provenance is None else dict(self._provenance)
+
+    @property
+    def capture_declared(self) -> bool:
+        """True when the profile says how it was captured: it came from a ``.shape`` artifact that
+        declares it, or from :func:`shape.privacy.redact.redact_profile`. A profile from
+        ``shape.profile`` or from an artifact written before capture modes existed does not."""
+        return self._capture is not None
+
+    @property
+    def capture(self) -> dict[str, Any]:
+        """How the profile was captured: ``{"mode": "safe" | "full", "k": N}`` (``k`` is ``None``
+        for a full capture). A profile that does not say reads as ``{"mode": "full", "k": None}``:
+        it holds what the data held."""
+        return dict(self._capture) if self._capture is not None else {"mode": "full", "k": None}
+
+    @property
+    def redaction_manifest(self) -> dict[str, Any]:
+        """What a safe capture suppressed, per table and column (empty for a full capture)."""
+        return copy.deepcopy(self._redaction)
+
+    def with_capture(self, capture: dict[str, Any], redaction_manifest: dict[str, Any]) -> Profile:
+        """The same profile data stamped with how it was captured (the data is shared, not
+        copied: do not modify what :meth:`to_dict` has not copied)."""
+        return Profile(
+            self._data,
+            name=self.name,
+            provenance=self._provenance,
+            capture=capture,
+            redaction_manifest=redaction_manifest,
+        )
 
     @property
     def is_dataset(self) -> bool:
@@ -250,6 +286,8 @@ class Profile:
         if not self.is_dataset:
             out = _table_summary(self._data)
             out["name"] = self.name if self.name else out["name"]
+            if self._capture is not None and self._capture["mode"] == "safe":
+                out["capture"] = dict(self._capture)  # a full capture's summary is as it was
             return out
         out = {
             "name": self.name,
@@ -259,6 +297,8 @@ class Profile:
         }
         if self._data.get("findings"):
             out["findings"] = copy.deepcopy(self._data["findings"])
+        if self._capture is not None and self._capture["mode"] == "safe":
+            out["capture"] = dict(self._capture)
         return out
 
     def to_html(self) -> str:
@@ -443,23 +483,73 @@ def _encode(data: dict[str, Any]) -> bytes:
     return codec.dumps(data, sort_keys=False)
 
 
-def save(p: Profile, path: str | Path) -> str:
-    """Write ``p`` to a ``.shape`` artifact and return its content id (sha256)."""
+def save(
+    p: Profile,
+    path: str | Path,
+    capture: str = "safe",
+    *,
+    k: int = 5,
+    column_k: Mapping[str, int] | None = None,
+    classifications: Mapping[str, str] | None = None,
+) -> str:
+    """Write ``p`` to a ``.shape`` artifact and return its content id (sha256).
+
+    ``capture`` chooses what is written. ``"safe"`` (the default) keeps statistics and formats
+    only for a sensitive column and category values only where every category has at least ``k``
+    rows (``column_k`` sets ``k`` for one column; ``classifications`` maps a column to its declared
+    classification, and ``CONFIDENTIAL`` or higher makes it sensitive). ``"full"`` keeps real
+    values, and the artifact says so; do not share it. ``p`` itself is not changed. A profile that
+    was captured safe cannot be saved as full.
+    """
+    from shape.privacy.redact import CaptureConfig, redact_profile
+
     if not isinstance(p, Profile):
         raise TypeError(f"save() expects a Profile, got {type(p).__name__}")
-    body = _encode(p._data)
+    out = redact_profile(
+        p,
+        CaptureConfig(
+            mode=capture, k=k, column_k=column_k or {}, classifications=classifications or {}
+        ),
+    )
+    return save_captured(out, path)
+
+
+def save_captured(out: Profile, path: str | Path) -> str:
+    """Write a profile that already carries how it was captured (see
+    :func:`shape.privacy.redact.redact_profile`) and return its content id."""
+    if not out.capture_declared:
+        raise ValueError("this profile does not say how it was captured: use save()")
+    body = _encode(out._data)
     content_id = hashlib.sha256(body).hexdigest()
-    manifest: dict[str, Any] = {
-        "format": ARTIFACT_FORMAT,
-        "format_version": ARTIFACT_FORMAT_VERSION,
-        "kind": ARTIFACT_KIND,
-        "name": p.name,
-        "shape_content_id": content_id,
-    }
-    if p.provenance is not None:
-        manifest["provenance"] = p.provenance
+    manifest: dict[str, Any] = compat.stamp(
+        "profile-artifact",
+        {
+            "kind": ARTIFACT_KIND,
+            "name": out.name,
+            "shape_content_id": content_id,
+            "capture": out.capture,
+        },
+    )
+    if out.redaction_manifest:
+        manifest["redaction_manifest"] = out.redaction_manifest
+    if out.provenance is not None:
+        manifest["provenance"] = out.provenance
     write_artifact(str(path), manifest, {PROFILE_COMPONENT: body})
     return content_id
+
+
+def check_capture(value: Any) -> dict[str, Any]:
+    """The ``capture`` record of an artifact manifest, checked; ``ValueError`` when malformed."""
+    if not isinstance(value, dict):
+        raise ValueError(f"capture must be an object, not {type(value).__name__}")
+    mode, k = value.get("mode"), value.get("k")
+    if mode not in ("safe", "full"):
+        raise ValueError(f"capture mode must be 'safe' or 'full', not {mode!r}")
+    if mode == "safe" and (isinstance(k, bool) or not isinstance(k, int) or k < 1):
+        raise ValueError(f"a safe capture needs k, an integer of at least 1, not {k!r}")
+    if mode == "full" and k is not None:
+        raise ValueError(f"a full capture has no k, not {k!r}")
+    return dict(value)
 
 
 def load(path: str | Path) -> Profile:
@@ -467,9 +557,7 @@ def load(path: str | Path) -> Profile:
     manifest, parts = read_artifact(str(path))
     if manifest.get("format") != ARTIFACT_FORMAT or manifest.get("kind") != ARTIFACT_KIND:
         raise ArtifactError(f"{path} is not a Shape profile artifact")
-    version = manifest.get("format_version")
-    if not isinstance(version, int) or not 1 <= version <= ARTIFACT_FORMAT_VERSION:
-        raise ArtifactError("unsupported Shape profile artifact version")
+    compat.check_readable("profile-artifact", manifest, error=ArtifactError)
     body = parts.get(PROFILE_COMPONENT)
     if body is None:
         raise ArtifactError("profile component missing")
@@ -483,8 +571,17 @@ def load(path: str | Path) -> Profile:
     if not isinstance(data, dict):
         raise ArtifactError(f"invalid {PROFILE_COMPONENT}: not an object")
     provenance = manifest.get("provenance")
+    capture = None
+    if "capture" in manifest:
+        try:
+            capture = check_capture(manifest["capture"])
+        except ValueError as e:
+            raise ArtifactError(f"invalid capture in the manifest of {path}: {e}") from e
+    redaction = manifest.get("redaction_manifest")
     return Profile(
         data,
         name=str(manifest.get("name") or "") or None,
         provenance=provenance if isinstance(provenance, dict) else None,
+        capture=capture,
+        redaction_manifest=redaction if isinstance(redaction, dict) else None,
     )

@@ -31,6 +31,8 @@ from fnmatch import fnmatchcase
 from pathlib import Path
 from typing import Any
 
+from shape import compat
+
 from .cells import OTHER_BUCKET as OTHER_BUCKET
 from .cells import non_null_base, suppress_bins, suppress_weights
 
@@ -253,6 +255,35 @@ def _winsorized_bounds(
     return {"lo": float(lo), "hi": float(hi)}
 
 
+def pii_gate_reason(
+    pattern: str | None,
+    cardinality: int,
+    row_count: int | None,
+    cfg: SafeConfig,
+    rates: Mapping[str, float] | None = None,
+) -> str | None:
+    """Why the column must be reduced to its pattern and length distribution only, or ``None``.
+
+    Three independent triggers, all independent of the column name: the detected value
+    pattern is a personal-data class (``"pii_pattern"``), the share of values matching a
+    personal-data pattern (``rates``: the whole-value and contained-in-text rates of the profile)
+    reaches ``pii_pattern_floor`` (``"pii_pattern_rate"``), or the distinct count is within
+    ``pii_cardinality_ratio`` of the row count, free text such as names or notes
+    (``"high_cardinality"``).
+    """
+    if not cfg.gate_on:
+        return None
+    if pattern is not None and pattern in PII_PATTERNS:
+        return "pii_pattern"
+    if rates and any(
+        rate >= cfg.pii_pattern_floor for fam, rate in rates.items() if fam in PII_RATE_FAMILIES
+    ):
+        return "pii_pattern_rate"
+    if row_count and row_count > 0 and cardinality / row_count >= cfg.pii_cardinality_ratio:
+        return "high_cardinality"
+    return None
+
+
 def pii_gate_fires(
     pattern: str | None,
     cardinality: int,
@@ -260,25 +291,9 @@ def pii_gate_fires(
     cfg: SafeConfig,
     rates: Mapping[str, float] | None = None,
 ) -> bool:
-    """True when the column must be reduced to its pattern and length distribution only.
-
-    Three independent triggers, all independent of the column name: the detected value
-    pattern is a personal-data class, the share of values matching a personal-data pattern
-    (``rates``: the whole-value and contained-in-text rates of the profile) reaches
-    ``pii_pattern_floor``, or the distinct count is within ``pii_cardinality_ratio`` of the row
-    count (free text such as names or notes).
-    """
-    if not cfg.gate_on:
-        return False
-    if pattern is not None and pattern in PII_PATTERNS:
-        return True
-    if rates and any(
-        rate >= cfg.pii_pattern_floor for fam, rate in rates.items() if fam in PII_RATE_FAMILIES
-    ):
-        return True
-    return bool(
-        row_count and row_count > 0 and cardinality / row_count >= cfg.pii_cardinality_ratio
-    )
+    """True when the column must be reduced to its pattern and length distribution only (see
+    :func:`pii_gate_reason` for the three triggers)."""
+    return pii_gate_reason(pattern, cardinality, row_count, cfg, rates) is not None
 
 
 def _column_rates(col: Mapping[str, Any]) -> dict[str, float]:
@@ -324,6 +339,8 @@ class SafeColumnProfile:
     temporal_histogram: dict[str, Any] | None = None
     # Cells withheld below the minimum cohort: folded categories plus zeroed histogram bins.
     cells_suppressed: int = 0
+    # Fields a newer release wrote that this one does not know: ignored, and written back as read.
+    extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
 
     @classmethod
     def from_column(
@@ -420,14 +437,15 @@ class SafeColumnProfile:
 
     def to_dict(self) -> dict[str, Any]:
         """Plain dict in a fixed key order, so the serialized artifact is byte-stable."""
-        return {f.name: getattr(self, f.name) for f in fields(self)}
+        out = {f.name: getattr(self, f.name) for f in fields(self) if f.name != "extra"}
+        return {**out, **{k: v for k, v in self.extra.items() if k not in out}}
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> SafeColumnProfile:
-        names = {f.name for f in fields(cls)}
+        names = {f.name for f in fields(cls)} - {"extra"}
         known = {k: v for k, v in data.items() if k in names}
         known.setdefault("null_rate", None)  # absent in the compact form
-        return cls(**known)
+        return cls(**known, extra={k: v for k, v in data.items() if k not in names})
 
 
 @dataclass
@@ -439,6 +457,7 @@ class SafeTableProfile:
     detected_fks: dict[str, str] = field(default_factory=dict)
     correlation_matrix: dict[str, dict[str, float]] | None = None
     correlation_truncated: bool = False
+    extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
 
     @classmethod
     def from_table(cls, table: Mapping[str, Any], cfg: SafeConfig) -> SafeTableProfile:
@@ -456,6 +475,18 @@ class SafeTableProfile:
             correlation_truncated=bool(table.get("correlation_truncated")),
         )
 
+    _KNOWN = frozenset(
+        {
+            "name",
+            "row_count",
+            "columns",
+            "primary_key",
+            "detected_fks",
+            "correlation_matrix",
+            "correlation_truncated",
+        }
+    )
+
     def to_dict(self) -> dict[str, Any]:
         out: dict[str, Any] = {
             "name": self.name,
@@ -467,7 +498,7 @@ class SafeTableProfile:
         }
         if self.correlation_truncated:
             out["correlation_truncated"] = True
-        return out
+        return {**out, **{k: v for k, v in self.extra.items() if k not in out}}
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> SafeTableProfile:
@@ -479,6 +510,7 @@ class SafeTableProfile:
             detected_fks=dict(data.get("detected_fks", {})),
             correlation_matrix=data.get("correlation_matrix"),
             correlation_truncated=bool(data.get("correlation_truncated")),
+            extra={k: v for k, v in data.items() if k not in cls._KNOWN},
         )
 
 
@@ -491,24 +523,35 @@ class SafeProfile:
     schema_version: int = SCHEMA_VERSION
     redaction_manifest: dict[str, Any] = field(default_factory=dict)
     unsafe: bool = False
+    # Fields a newer release wrote that this one does not know: ignored, and written back as read.
+    extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    _KNOWN = frozenset({"tables", "relationships", "redaction_manifest", "unsafe"})
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "schema_version": self.schema_version,
-            "unsafe": self.unsafe,
-            "tables": {n: t.to_dict() for n, t in self.tables.items()},
-            "relationships": self.relationships,
-            "redaction_manifest": self.redaction_manifest,
-        }
+        out = compat.stamp(
+            "safe-profile",
+            {
+                "unsafe": self.unsafe,
+                "tables": {n: t.to_dict() for n, t in self.tables.items()},
+                "relationships": self.relationships,
+                "redaction_manifest": self.redaction_manifest,
+            },
+            version=self.schema_version,
+        )
+        return {**out, **{k: v for k, v in self.extra.items() if k not in out}}
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> SafeProfile:
+    def from_dict(cls, data: Mapping[str, Any], source: object = "") -> SafeProfile:
+        version = compat.check_readable("safe-profile", data, source)
+        extra = compat.check_unknown("safe-profile", data, cls._KNOWN)
         return cls(
             tables={n: SafeTableProfile.from_dict(t) for n, t in data.get("tables", {}).items()},
             relationships=list(data.get("relationships", [])),
-            schema_version=data.get("schema_version", SCHEMA_VERSION),
+            schema_version=version,
             redaction_manifest=dict(data.get("redaction_manifest", {})),
             unsafe=bool(data.get("unsafe", False)),
+            extra={k: data[k] for k in extra},
         )
 
     def to_json(self, *, compact: bool = False) -> str:
@@ -561,10 +604,8 @@ class SafeProfile:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
         if not isinstance(data, dict) or "tables" not in data:
             raise ValueError(f"{path} is not a safe profile")
-        version = data.get("schema_version", SCHEMA_VERSION)
-        if not isinstance(version, int) or version > SCHEMA_VERSION:
-            raise ValueError(f"unsupported safe profile schema_version {version!r}")
-        return cls.from_dict(data)
+        compat.check_format("safe-profile", data)
+        return cls.from_dict(data, path)
 
 
 def _without_nulls(node: Any) -> Any:

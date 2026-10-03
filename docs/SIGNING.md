@@ -114,6 +114,23 @@ A plain read does not check it, so it says so. Whenever an artifact is read with
 The notice never changes what is accepted: an invalid, forged or wrong-key signature still fails
 closed with exit code 1 under `--verify`, and a plain read stays a plain read.
 
+## Signed artifacts and migration
+
+A migrated artifact is a new file with a new manifest, so the old signature cannot be copied onto
+it. `shape migrate` never touches the signed original (keep it: it is the evidence), writes the
+migrated artifact as a new file, and writes a **signed receipt** that names both files by SHA-256
+and records the source's signature:
+
+```bash
+shape migrate old.shape new.shape --verify old.pub --sign-key release.key
+```
+
+`--verify` checks the source's signature first and stops if it fails; `--sign-key` signs the new
+artifact and the receipt (`new.shape.receipt.json`). A signed source needs `--sign-key`, or
+`--unsigned-receipt` to accept an unsigned receipt on purpose. Every signature, in an artifact and
+in a receipt, carries its `algorithm`. See
+[the state and compatibility policy](specs/STATE_AND_COMPATIBILITY.md#6-signed-artifacts-and-migrations).
+
 ## Key handling
 
 - **Key files** are an encrypted PKCS#8 PEM (default) or the raw 32-byte Ed25519 key,
@@ -131,9 +148,14 @@ closed with exit code 1 under `--verify`, and a plain read stays a plain read.
   key's SHA-256) through a second channel.
 - **Pin the key you trust.** `--verify` takes one public key and accepts only signatures made
   by it. The key id inside the signature is a hint for error messages, not a trust anchor.
-- **Rotation.** Generate a new pair, re-sign the artifacts you still publish
-  (`shape sign` replaces an earlier signature), and retire the old public key. Verifiers
-  keep trusting a key until they are given a different one.
+- **Rotation.** Generate a new pair and sign with it from then on. Artifacts signed before the
+  rotation stay valid under the old key: keep its *public* half in your trust list for as long as
+  those artifacts matter (a signature names its `key_id`, and nothing about it expires), and
+  never sign with the retired private key again. To move an artifact you still publish to the new
+  key, re-sign it (`shape sign` replaces an earlier signature) and keep the original file if you
+  need the evidence. Verifiers keep trusting a key until they are given a different one, so a
+  verifier that gets only the new key rejects old artifacts with "signed by a different key":
+  give it both. `--verify` takes one key per call; verify old and new artifacts with their own.
 - **Compromise.** If a private key leaks, stop trusting its public key, generate a new pair
   and re-sign. Artifacts signed before the leak cannot be told apart from forgeries made
   with the stolen key, so re-sign from a source you trust.

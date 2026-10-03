@@ -48,6 +48,10 @@ class ColumnProfile:
     pattern_rates: dict[str, float] | None = None  # share of values that are wholly a pattern
     pattern_contains_rates: dict[str, float] | None = None  # share that contain an SSN/email/card
     placeholders: list[dict[str, Any]] | None = None  # sentinel values and their evidence (#47)
+    # a safe capture (W1-11): the surfaces it removed (name to reason), and whether categories
+    # below the minimum cohort were folded into one bucket that is not a value
+    redacted: dict[str, str] | None = None
+    folded: bool = False
 
 
 @dataclass

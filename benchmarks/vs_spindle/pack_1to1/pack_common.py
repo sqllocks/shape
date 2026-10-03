@@ -39,7 +39,8 @@ NAME_MAP_BACK: dict[str, str] = {
 }
 
 # Fields only Shape has, or only the baseline has, in the parsed structure of a pack or spec.
-SHAPE_ONLY_FIELDS = {"extra_keys", "path", "outputs.eventstream.topic_prefix"}
+# ``needs_release`` (W1-01): the release a newer file says reads it; None for every input here.
+SHAPE_ONLY_FIELDS = {"extra_keys", "path", "needs_release", "outputs.eventstream.topic_prefix"}
 BASELINE_ONLY_FIELDS = {"_base_dir"}
 
 # Trust-harming defects of the baseline that Shape fixes (owner's standing decision, 2026-10-01).

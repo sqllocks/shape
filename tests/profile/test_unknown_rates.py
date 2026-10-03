@@ -47,7 +47,7 @@ def test_the_unknown_profile_really_holds_none(unknown):
 
 def test_it_saves_and_loads(unknown, tmp_path):
     path = tmp_path / "u.shape"
-    shape.save(unknown, path)
+    shape.save(unknown, path, capture="full")
     again = shape.load(path)
     assert again == unknown
     assert again.to_dict()["columns"]["id"]["null_rate"] is None
