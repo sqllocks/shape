@@ -171,6 +171,7 @@ def capture_columns(columns: dict[str, Any], mode: str = "exact") -> dict[str, A
         raise ValueError(f"mode must be 'exact' or 'bounded', got {mode!r}")
     if not columns:
         return {"rows": 0, "columns": {}}
+    _check_names(columns)
     if len({len(v) for v in columns.values()}) != 1:
         raise ValueError("columns must have equal length")
     n = len(next(iter(columns.values())))
@@ -206,6 +207,20 @@ def capture_columns(columns: dict[str, Any], mode: str = "exact") -> dict[str, A
     return {"rows": n, "columns": {name: out[name] for name in columns}}
 
 
+def _as_float(v: Any) -> float:
+    """``v`` as a float; an int beyond the float range is an infinity of its sign."""
+    try:
+        return float(as_number(v))
+    except OverflowError:
+        return math.inf if v > 0 else -math.inf
+
+
+def _check_names(names: Iterable[Any]) -> None:
+    bad = [n for n in names if not isinstance(n, str)]
+    if bad:
+        raise TypeError(f"column names are strings, got {bad[0]!r}")
+
+
 class _ColumnState:
     """One column of ``capture_rows``: its kernel states and what has been seen."""
 
@@ -237,7 +252,7 @@ class _ColumnState:
                 numbers.append(None)
             elif is_number(v):
                 self.numeric_count += 1
-                numbers.append(float(as_number(v)))
+                numbers.append(_as_float(v))
             else:
                 self.other_count += 1
                 self.numeric_ok = False
@@ -270,6 +285,7 @@ def _capture_rows(rows: Iterable[Mapping[str, Any]], batch_size: int, mode: str)
         for row in batch:
             for key in row:
                 if key not in columns:
+                    _check_names([key])
                     col = columns[key] = _ColumnState(key, mode)
                     for start in range(0, seen, batch_size):  # rows before it first appeared
                         col.feed_nulls(min(batch_size, seen - start))
@@ -279,6 +295,11 @@ def _capture_rows(rows: Iterable[Mapping[str, Any]], batch_size: int, mode: str)
         batch.clear()
 
     for row in rows:
+        if not isinstance(row, Mapping):
+            raise TypeError(
+                f"capture_rows takes rows as mappings of column name to value, got "
+                f"{type(row).__name__}"
+            )
         batch.append(row)
         if len(batch) >= batch_size:
             flush()
