@@ -47,12 +47,14 @@ jobs:
       # The Fabric demo tests need Java, PySpark and unixODBC; they and the demo content tests
       # run in the fabric-demo job below.
       # --cov-fail-under is the measured coverage (86.55% on P0-06), rounded down.
+      # Owner decision 2026-10-02: wall-clock pacing tests (marker "realtime") run on Linux and
+      # Windows only; the macOS hosted runner freezes the whole process for 20-90 ms.
       - run: >-
-          python -m pytest -q -m "not emulator and not live and not heavy"
+          python -m pytest -q -m "not emulator and not live and not heavy${{ matrix.os == 'macos-latest' && ' and not realtime' || '' }}"
           --ignore=tests/demo/fabric --ignore=tests/demo/content
           --cov=shape --cov-fail-under=86
       # million-value differential and property tests: run without coverage tracing (10x faster)
-      - run: python -m pytest -q -m heavy tests/kernel tests/profile tests/streaming
+      - run: python -m pytest -q -m "heavy${{ matrix.os == 'macos-latest' && ' and not realtime' || '' }}" tests/kernel tests/profile tests/streaming
       # The pure-Python reference twin must pass on its own (SHAPE_KERNEL=python), and the
       # native kernel must be the one in use by default (SHAPE_KERNEL=rust fails loudly if not).
       - run: python -m pytest -q tests/kernel
@@ -169,7 +171,7 @@ jobs:
           source scripts/env.sh
           python -m venv "$SHAPE_VENV"
           "$SHAPE_VENV/bin/pip" install -U pip
-          "$SHAPE_VENV/bin/pip" install -e '.[dev]' 'pyarrow==25.0.1'
+          "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains 'pyarrow==25.0.1'
       - run: source scripts/env.sh && python benchmarks/vs_spindle/check_coverage.py
       - run: source scripts/env.sh && python benchmarks/vs_spindle/run.py --quick --out "$BENCH_OUT_DIR/results.json"
       # P6-09: `shape verify` against the baseline's `verify` on retail small (internal harness).

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import datetime as dt
+import sys
 import threading
 import time
+import types
 from typing import Any
 
 import fsspec
@@ -294,9 +296,11 @@ def test_the_abfss_sink_authenticates_like_the_source(monkeypatch: pytest.Monkey
             seen.update(kw)
             raise RuntimeError("stop")
 
-    import adlfs
-
-    monkeypatch.setattr(adlfs, "AzureBlobFileSystem", Adlfs)
+    # a stand-in module: the sink's authentication is what is checked, so the Azure SDK is not
+    # needed (and is not imported, which the no-cloud-SDK test of the credential resolver checks)
+    fake = types.ModuleType("adlfs")
+    fake.AzureBlobFileSystem = Adlfs  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "adlfs", fake)
     with pytest.raises(RuntimeError):
         AbfssSink().write(URI, "t", [batch(0, 1)], account_key="K")
     assert seen == {"account_key": "K", "account_name": "acct"}

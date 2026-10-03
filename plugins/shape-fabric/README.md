@@ -105,9 +105,17 @@ Each call writes one table and is safe to call again for each micro-batch of a s
 `write_mode=append`. The batches are consumed one at a time; nothing is held back until the end.
 A password is accepted as an option or in the URI's user information, never in the query string; no
 password, token or connection string appears in an exception message or a log record, and none
-should go on a command line (use an environment variable and pass it as an option). The `--auth`
-modes and `env://`, `kv://` and `file://` credential references are added to these writers by the
-sign-in work package and will apply here without a change to the sink.
+should go on a command line (use an environment variable and pass it as an option, or sign in
+with `--auth` and `--connection-string` on `shape generate --to mssql://...`; see the next section).
+
+## Sign-in and credential references
+
+`--auth cli|msi|spn|sql|device-code|fabric`, `--tenant-id`, `--client-id`, `--client-secret REF`,
+`--sql-user`, `--sql-password REF` and `--connection-string` on `shape generate --scale-mode`, `shape emit`,
+`shape stream`, `shape profile` and `shape jobs`; in Python `shape_fabric.auth` (`AuthSettings`,
+`build_credential`, `writer_options`) builds the `credential` every writer takes. Secrets are `env://`,
+`file://` (refused when others can read the file) or `kv://VAULT/SECRET` (`shape_fabric.keyvault`, Azure Key
+Vault over HTTPS) references, never command-line values. See `docs/plugins/fabric-auth.md`.
 
 ## Tests
 

@@ -278,3 +278,19 @@ def capture_rows(rows: Iterable[Mapping[str, Any]], batch_size: int = 10000) -> 
     if batch:
         flush()
     return CapturedShape(seen, {name: col.summary() for name, col in columns.items()})
+
+
+def capture_arrow(table: pa.Table, batch_size: int = 10000) -> CapturedShape:
+    """The capture of an Arrow table (what ``shape capture`` reads from any source). It goes
+    through :func:`capture_rows`, so a table gives the same document whether it was read from a
+    CSV, a Parquet file or a Delta table; a table with no rows still has its columns (as text)."""
+    if table.num_rows == 0:
+        return CapturedShape(
+            0, {name: _ColumnState(name, "bounded").summary() for name in table.schema.names}
+        )
+
+    def rows() -> Iterable[Mapping[str, Any]]:
+        for batch in table.to_batches(max_chunksize=batch_size):
+            yield from batch.to_pylist()
+
+    return capture_rows(rows(), batch_size)

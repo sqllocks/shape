@@ -410,8 +410,22 @@ def t21(
                 sp[c], im[c], B[(tn, c)], pools.pool_for(gen), pools.component_fn(gen)
             )
             cr["arrow_type_match"] = sp_types[tn].get(c) == im_types[tn].get(c)
+            # A deliberate difference from domain_1to1/domain_differences.py (the one list, with
+            # its reason): accepted only when the column fails exactly the listed checks and
+            # meets the replacement rule; anything else still fails.
+            allowed = DV.DELIBERATE.get((common.DOMAIN, tn, c))
+            deliberate = False
+            if allowed is not None:
+                failing = tuple(k for k, v in cr["checks"].items() if not v)
+                if failing == allowed.fails and allowed.accepts(im[c]):
+                    cr["equivalent"] = True
+                    deliberate = True
             cr["equivalent"] = cr["equivalent"] and cr["arrow_type_match"]
-            tr["columns"][c] = {"equivalent": cr["equivalent"], "checks": cr["checks"]}
+            tr["columns"][c] = {
+                "equivalent": cr["equivalent"],
+                "checks": cr["checks"],
+                "deliberate": deliberate,
+            }
             report["columns"] += 1
             report["columns_equivalent"] += int(cr["equivalent"])
             if not cr["equivalent"]:

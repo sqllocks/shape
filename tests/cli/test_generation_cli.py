@@ -157,7 +157,11 @@ def test_generate_excel(capsys, tmp_path):
     pytest.importorskip("openpyxl")
     code, *_ = run(capsys, "generate", "retail", "--scale", "small", "-f", "excel", "-o", tmp_path)
     assert code == 0
-    assert {p.stem for p in tmp_path.glob("*.xlsx")} == RETAIL_TABLES
+    (book,) = tmp_path.glob("*.xlsx")  # one workbook: a sheet per table and a _README
+    assert book.stem == "retail"
+    from shape.io.excel import sheet_infos
+
+    assert {i.name for i in sheet_infos(book)} == RETAIL_TABLES | {"_README"}
 
 
 def test_generate_delta(capsys, tmp_path):

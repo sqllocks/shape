@@ -2,9 +2,9 @@
 
 Order, first one that is set wins:
 
-1. the ``password`` option: the secret itself or a reference ``env://NAME`` / ``file://PATH``
-   (the same references the Fabric writers accept; ``file://`` must not be readable by other
-   users);
+1. the ``password`` option: the secret itself or a reference ``env://NAME``, ``file://PATH`` or
+   ``kv://VAULT/SECRET`` (the references of the Fabric writers, resolved by core's
+   ``shape.security.credrefs``; ``file://`` must not be readable by other users);
 2. the ``credential`` option: an object with ``get_token(scope)`` returning something with a
    ``.token`` (every ``azure-identity`` credential, for Microsoft Entra database logins), a
    function ``scope -> token``, or a reference string; the token is the password;
@@ -20,9 +20,7 @@ from __future__ import annotations
 
 import os
 import re
-import stat
 from collections.abc import Iterable, Mapping
-from pathlib import Path
 from typing import Any
 
 from .errors import CredentialError
@@ -52,39 +50,16 @@ class Secret:
 
 
 def _resolve_reference(text: str) -> str | None:
-    """The secret behind ``env://`` / ``file://``, or ``None`` when ``text`` is not one."""
-    if text.startswith("env://"):
-        name = text[len("env://") :]
-        if not name:
-            raise CredentialError("env:// needs a variable name, as env://NAME")
-        value = os.environ.get(name)
-        if not value:
-            raise CredentialError(f"environment variable {name} is not set or empty (env://{name})")
-        return value
-    if text.startswith("file://"):
-        path = text[len("file://") :]
-        if not path:
-            raise CredentialError("file:// needs a path, as file://PATH")
-        if os.name == "posix":
-            try:
-                mode = os.stat(path).st_mode
-            except OSError:
-                mode = 0
-            if mode & (stat.S_IRWXG | stat.S_IRWXO):
-                raise CredentialError(
-                    f"credential file {path} is accessible to other users: run chmod 600 {path}"
-                )
-        try:
-            body = Path(path).read_text(encoding="utf-8")
-        except OSError as exc:
-            raise CredentialError(
-                f"cannot read credential file {path} ({type(exc).__name__})"
-            ) from None
-        body = body.removesuffix("\n").removesuffix("\r")
-        if not body:
-            raise CredentialError(f"credential file {path} is empty")
-        return body
-    return None
+    """The secret behind ``env://``, ``file://`` or ``kv://`` (core's one resolver,
+    ``shape.security.credrefs``), or ``None`` when ``text`` is not a reference."""
+    from shape.security import credrefs
+
+    if not credrefs.is_reference(text):
+        return None
+    try:
+        return credrefs.resolve_reference(text)
+    except credrefs.CredentialReferenceError as exc:
+        raise CredentialError(str(exc)) from None
 
 
 def _token_from(credential: Any, scope: str) -> str:

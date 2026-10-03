@@ -3,21 +3,23 @@
 ``shape.sinks`` plugin that handles the URI's scheme. Repeat ``--to`` to write the same data to
 several targets in one run.
 
-Secrets never go on the command line. Sign in with the environment (managed identity, a
-service principal, ``az login``, ``AZURE_STORAGE_ACCOUNT_KEY`` / ``AZURE_STORAGE_SAS_TOKEN`` /
-``AZURE_STORAGE_CONNECTION_STRING``, ``PGPASSWORD`` ...) or pass a credential reference
-(``--sink-config abfss.account_key=env://NAME``). Nothing heavy loads at import time (T-18).
+Secrets never go on the command line. Sign in with ``--auth cli|msi|spn|sql|device-code|fabric``
+(``abfss://``, ``delta+abfss://``, ``mssql://`` and ``warehouse://`` targets; the sign-in is the
+``shape-fabric`` plugin's, ``docs/plugins/fabric-auth.md``), with the environment
+(``AZURE_STORAGE_ACCOUNT_KEY`` / ``AZURE_STORAGE_SAS_TOKEN`` / ``AZURE_STORAGE_CONNECTION_STRING``,
+``PGPASSWORD`` ...) or with a credential reference (``env://``, ``file://``, ``kv://``) in
+``--sink-config abfss.account_key=env://NAME`` or ``--client-secret``. References are resolved by
+``shape.security.credrefs``. Nothing heavy loads at import time (T-18).
 """
 
 from __future__ import annotations
 
 import argparse
-import importlib
-import os
 import time
 from typing import Any
 
-_REF = ("env://", "file://", "kv://")
+from shape.security import credrefs
+
 _SECRET_KEYS = ("key", "secret", "password", "token", "sas", "connection_string")
 
 
@@ -88,19 +90,7 @@ def _value(raw: str) -> Any:
 
 def _resolve(key: str, value: Any) -> Any:
     """A credential reference as the secret it names; a literal secret is refused."""
-    if isinstance(value, str) and value.startswith(_REF):
-        try:
-            credrefs = importlib.import_module("shape.security.credrefs")
-        except ImportError:
-            if value.startswith("env://"):
-                name = value[len("env://") :]
-                found = os.environ.get(name)
-                if not found:
-                    raise ValueError(f"environment variable {name} is not set ({value})") from None
-                return found
-            raise ValueError(
-                f"{value.split('://')[0]}:// references need credential support"
-            ) from None
+    if credrefs.is_reference(value):
         return credrefs.resolve_reference(value)
     if isinstance(value, str) and any(s in key.lower() for s in _SECRET_KEYS):
         raise ValueError(
@@ -122,11 +112,53 @@ def sink_config(items: list[str] | None) -> dict[str, dict[str, Any]]:
     }
 
 
-def target_options(a: argparse.Namespace, fmt: str) -> Any:
-    """The :class:`~shape.generation.output.TargetOptions` the command line describes."""
+_SIGN_IN_SINKS = ("abfss", "delta", "sqlserver", "warehouse")
+_SQL_SINKS = ("sqlserver", "warehouse")
+
+
+def sign_in_options(a: argparse.Namespace, name: str) -> dict[str, Any]:
+    """The options ``--auth`` and ``--connection-string`` give the sink called ``name`` (none
+    when neither is used). The credential object comes from the ``shape-fabric`` plugin."""
+    from shape.cli import auth
+
+    settings = auth.settings_from_args(a)
+    conn = auth.connection_string_from_args(a)
+    if not settings and not conn:
+        return {}
+    if name not in _SIGN_IN_SINKS:
+        raise ValueError(
+            f"--auth and --connection-string apply to abfss://, delta+abfss://, mssql:// and "
+            f"warehouse:// targets, not the {name} sink (it signs in with its own environment "
+            "variables or a password reference)"
+        )
+    options: dict[str, Any] = {}
+    if conn:
+        options["connection_string"] = (
+            credrefs.resolve_reference(conn) if credrefs.is_reference(conn) else conn
+        )
+    if settings and settings.get("mode") == "sql":
+        if name not in _SQL_SINKS:
+            raise ValueError("--auth sql is a database login, not for a storage target")
+        if "connection_string" not in options:
+            raise ValueError("--auth sql needs --connection-string (the server and database)")
+        options.update(auth.writer_options(settings, options["connection_string"]))
+    elif settings:
+        options["credential"] = auth.make_credential(settings)
+    return options
+
+
+def target_options(a: argparse.Namespace, fmt: str, targets: list[str] | None = None) -> Any:
+    """The :class:`~shape.generation.output.TargetOptions` the command line describes.
+    ``targets`` are the destinations, so ``--auth`` reaches the sinks that sign in."""
     from shape.generation.output import TargetOptions
     from shape.io.landing import parse_table_formats
+    from shape.io.targets import scheme_of, sink_for_target, sink_names_by_scheme
 
+    extra = sink_config(getattr(a, "sink_config", None))
+    for target in targets or []:
+        if (scheme_of(target) or "") in sink_names_by_scheme():  # an emitter signs in elsewhere
+            name = sink_for_target(target)[0]
+            extra.setdefault(name, {}).update(sign_in_options(a, name))
     return TargetOptions(
         fmt=fmt,
         formats=parse_table_formats(getattr(a, "table_format", None)),
@@ -138,7 +170,7 @@ def target_options(a: argparse.Namespace, fmt: str) -> Any:
         write_mode=a.write_mode,
         manifest=a.manifest,
         partition_by=list(a.partition_by) if getattr(a, "partition_by", None) else None,
-        extra=sink_config(getattr(a, "sink_config", None)),
+        extra=extra,
     )
 
 
@@ -151,7 +183,7 @@ def run_to(a: argparse.Namespace, engine: Any, started: float) -> int:
 
     if a.output:
         raise ValueError("-o DIR and --to are two ways to say where: use one")
-    options = target_options(a, "parquet" if a.format == "summary" else a.format)
+    options = target_options(a, "parquet" if a.format == "summary" else a.format, list(a.to))
     written = write_targets(engine, list(a.to), options, chunk_rows=a.chunk_rows)
     seconds = time.perf_counter() - started
     per_target = {target: sum(rows.values()) for target, rows in written.items()}

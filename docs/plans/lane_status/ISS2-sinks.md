@@ -173,3 +173,73 @@ and MariaDB 10.11 in the builder's session (see `ISS2-sinks-d.md`). The final su
 one commit before the last line-length edit in `src/shape/plugins/schemes.py` (a string split, no
 behavior change); ruff, mypy and `tests/generation/test_sink_formats_and_schemes.py` were re-run after it.
 
+
+## Round 2 (2026-10-03)
+
+Scope: merge `origin/build/main-plan` (ce8fe11, with P6-07b) and use P6-07b's credential references
+and `--auth` modes instead of the interim handling; record decision (3) as deferred.
+
+### Merge
+
+Merge commit (no rebase, no force-push) of `origin/build/main-plan` into `lane/ISS2-sinks`.
+Conflicts and how they were resolved (both sides' behaviour kept):
+
+| file | resolution |
+|---|---|
+| `docs/plans/COMPLETION_PLAN.md` | build/main-plan's version (lanes never edit §11 or §2.3) |
+| `CHANGELOG.md`, `plugins/shape-fabric/README.md` | both entries kept; the README no longer says the `--auth` modes "will apply" (they do) |
+| `src/shape/cli/emit.py` | `--sink` default `None` with repeatable `--to` (this lane) plus the `--auth` argument group; per target, an event sink gets `_auth_options` (P6-07b) and a table sink gets its sign-in through `TargetOptions` |
+| `src/shape/generation/output.py` | this lane's `_paths`/`_check_destination` (scheme check, lazy sinks) and P6-07b-era `_write_workbook` (EXCEL) both kept; the older `_paths` signature dropped |
+| `src/shape/streaming/emit/sinks.py` | `open_sink` keeps `synthetic`, `table_options` and the table-sink route, and passes `**options` (sign-in) to emitter sinks |
+
+### Interim credential handling replaced
+
+* `shape.cli.to`: the `importlib` fallback (`env://` only without P6-07b) is gone; `--sink-config`
+  references go through `shape.security.credrefs.resolve_reference` (`env://`, `file://` with the
+  private-file check, `kv://`). A literal secret is still refused.
+* `shape-databases` `_auth._resolve_reference`: the local `env://`/`file://` resolver is now a thin
+  wrapper over `credrefs` (errors keep the plugin's `CredentialError`); `kv://` now works there too.
+* `--auth cli|msi|spn|sql|device-code|fabric`, `--tenant-id`, `--client-id`, `--client-secret REF`,
+  `--sql-user`, `--sql-password REF`, `--connection-string` now apply to `shape generate --to` and
+  `shape emit/stream --to` for `abfss://`, `delta+abfss://`, `mssql://` and `warehouse://`
+  (`cli.to.sign_in_options`, `cli.auth.writer_options`): the credential goes to the sink as
+  `credential=`; `--auth sql` needs `--connection-string` and a SQL sink. PostgreSQL and MySQL
+  refuse `--auth` with a message (they sign in with a password reference or their environment
+  variables). Docs: `docs/SINKS.md` "Secrets".
+* Tests: `tests/cli/test_to_sign_in.py` (10).
+
+### Fixes found while verifying the merge (all kept minimal)
+
+* `target_options` looked up a table sink for every remote target, which broke `eventhouse://` and
+  `eventstream://` emitters (3 plugin tests in `shape-fabric`, 1 in `shape-kafka`); it now asks only
+  for schemes a table sink handles. The refusal message keeps the wording P6-07b's test pins.
+* `fsspec` added to the `dev` extra: the lane's tests import it at module level, and nothing CI
+  installs provided it (it only worked where `adlfs` was installed).
+* `test_the_abfss_sink_authenticates_like_the_source` imported the real `adlfs`; with `adlfs`
+  installed, the Azure SDK stayed in `sys.modules` and P6-07b's
+  `test_core_imports_no_cloud_sdk_to_resolve_references` failed later in the same run. The test now
+  puts a stand-in `adlfs` module in `sys.modules`. Its assertions are unchanged.
+
+### Decision (3), deferred
+
+"Refuse non-local destinations unless confirmed" (`--yes`, or `SHAPE_CONFIRM_REMOTE=1` for notebooks
+and pipelines) is decided (§2.3, 2026-10-03) and is built **after the 2026-10-07 talk**. Not built
+here. Section 4's "owner decision" on it is answered by that decision.
+
+### Checks (round 2)
+
+| check | result |
+|---|---|
+| `ruff check` / `ruff format --check` (src tests plugins benchmarks/vs_spindle) | clean / 927 files formatted |
+| `mypy` | no issues in 362 source files |
+| `python scripts/check_user_facing.py` | clean |
+| `pytest -m "not emulator and not live" --ignore=tests/demo/fabric`, `SHAPE_KERNEL=rust` (venv as CI's main job: `.[dev,streaming,advanced]` + shape-domains) | 5655 passed, 1 failed (the abfss auth test above, fixed after this run) |
+| the same, `SHAPE_KERNEL=python` | 5655 passed, 1 failed (the same test, same fix) |
+| after the fix: `tests/builtins/test_abfss_sink.py`, `tests/security`, `tests/cli/test_to_sign_in.py`, `test_generate_to.py`, `test_auth_cli.py`, `tests/streaming/emit/test_table_sink.py` | 240 passed |
+| plugin tests (not emulator, not live): fabric / databases / kafka / eventhubs / sqlserver | 311 / 155 / 46 / 42 / 150 passed |
+| `benchmarks/vs_spindle/stream_1to1/verify.py --scale small` | VERDICT PASS |
+
+The two full runs were not repeated after the one-test fix: the fix touches one test file, and the
+tests that could be affected by it were re-run (row 4). Not run: Docker emulators (postgres, mysql,
+SQL Server, Azurite) and every `live` test (no Docker, no secrets); `tests/demo/fabric` (ignored as
+in round 1). Spindle was set up per §1.2 for the harness; `$SPINDLE_ROOT` was not modified.

@@ -84,6 +84,14 @@ A secret is never a command-line value (it would be in the process list and the 
 must be a **credential reference** (`env://NAME`, `file://PATH` (mode 600), `kv://VAULT/NAME`); a
 literal is refused. Errors and logs never contain a password, key, token or SAS signature.
 
+`--auth cli|msi|spn|sql|device-code|fabric`, `--tenant-id`, `--client-id`, `--client-secret REF`,
+`--sql-user`, `--sql-password REF` and `--connection-string STR|REF` (the same options as
+`shape emit` to Fabric, `docs/plugins/fabric-auth.md`) sign in to `abfss://`, `delta+abfss://`,
+`mssql://` and `warehouse://` targets of `shape generate --to` and `shape emit/stream --to`;
+`--auth sql` needs `--connection-string`. PostgreSQL and MySQL sign in with their password
+environment variables or a `password` reference, and refuse `--auth`. References are resolved by
+one resolver in core, `shape.security.credrefs`.
+
 ## Writing a sink
 
 A sink takes `write(uri, table, batches, **options)` and consumes `batches` incrementally. Add

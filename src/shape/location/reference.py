@@ -67,7 +67,7 @@ def load_geonames_postal(path, country=None):
                 )
             )
     return out, ReferenceProvenance(
-        "GeoNames Postal Code Dataset", "downloaded", "CC-BY-3.0", sha256_file(p)
+        "GeoNames Postal Code Dataset", "downloaded", "CC-BY-4.0", sha256_file(p)
     )
 
 

@@ -458,3 +458,142 @@ def sample_batch(start: int = 0, n: int = 4) -> pa.RecordBatch:
 
 def sample_batches() -> list[pa.RecordBatch]:
     return [sample_batch(0, 4), sample_batch(4, 3)]
+
+
+# --- authentication ----------------------------------------------------------------------
+
+FAKE_ENTRA_TOKEN = "fake-entra-token-for-the-contract-scenarios"  # nosec B105  # not a credential
+FAKE_VAULT_SECRET = "fake-vault-secret-for-the-contract-scenarios"  # nosec B105  # not a secret
+
+
+class FakeKeyVault:
+    """An Azure Key Vault as an HTTP ``transport`` (``shape_fabric.kusto.Transport``): answers
+    ``GET https://<vault>.vault.azure.net/secrets/<name>[/<version>]`` for the secrets it holds,
+    and only for a bearer token. ``secrets`` maps ``(vault, name)`` to the value."""
+
+    def __init__(self, secrets: dict[tuple[str, str], str] | None = None) -> None:
+        self.secrets = dict(secrets or {("vault-one", "sql-password"): FAKE_VAULT_SECRET})
+        self.requests: list[tuple[str, str, dict[str, str]]] = []
+
+    def __call__(
+        self, method: str, url: str, headers: dict[str, str], body: bytes, timeout: float
+    ) -> tuple[int, dict[str, str], bytes]:
+        self.requests.append((method, url, dict(headers)))
+        parts = urlsplit(url)
+        vault = (parts.hostname or "").removesuffix(".vault.azure.net")
+        if not headers.get("Authorization", "").startswith("Bearer "):
+            return 401, {}, b'{"error":{"code":"Unauthorized"}}'
+        segments = parts.path.strip("/").split("/")
+        if method != "GET" or segments[0] != "secrets" or len(segments) not in (2, 3):
+            return 400, {}, b'{"error":{"code":"BadParameter"}}'
+        value = self.secrets.get((vault, segments[1]))
+        if value is None:
+            return 404, {}, b'{"error":{"code":"SecretNotFound"}}'
+        return 200, {}, json.dumps({"value": value, "id": url.split("?")[0]}).encode()
+
+
+class FakeIdentity:
+    """A stand-in for ``azure.identity``: ``module()`` is what ``import azure.identity`` should
+    find. Each credential class records its construction and every ``get_token`` in ``calls``
+    (secrets are recorded as ``<redacted>``, and kept apart in ``secrets_seen`` for the test), and
+    hands out ``FAKE_ENTRA_TOKEN``. ``fail`` names the classes whose ``get_token`` raises."""
+
+    CLASSES = (
+        "AzureCliCredential",
+        "ClientSecretCredential",
+        "ManagedIdentityCredential",
+        "DeviceCodeCredential",
+        "DefaultAzureCredential",
+    )
+
+    def __init__(self, tape: Any = None, fail: tuple[str, ...] = ()) -> None:
+        self.calls: list[dict[str, Any]] = []
+        self.secrets_seen: list[str] = []
+        self.tape = tape
+        self.fail = fail
+
+    def _log(self, entry: dict[str, Any]) -> None:
+        self.calls.append(entry)
+        if self.tape is not None:
+            self.tape.step(entry, None if self.tape.replaying else (lambda: {"ok": True}))
+
+    def module(self) -> Any:
+        import types
+
+        outer = self
+        mod = types.ModuleType("azure.identity")
+        for name in self.CLASSES:
+
+            def make(cls_name: str) -> type:
+                class Credential:
+                    def __init__(self, **kwargs: Any) -> None:
+                        shown = {}
+                        for k, v in kwargs.items():
+                            if k == "prompt_callback":
+                                continue
+                            if "secret" in k:
+                                outer.secrets_seen.append(str(v))
+                                shown[k] = "<redacted>"
+                            else:
+                                shown[k] = v
+                        self.kwargs = kwargs
+                        outer._log({"credential": cls_name, "created_with": shown})
+
+                    def get_token(self, *scopes: str, **_kw: Any) -> Any:
+                        import types as _t
+
+                        outer._log({"credential": cls_name, "get_token": list(scopes)})
+                        if cls_name in outer.fail:
+                            raise RuntimeError(f"{cls_name} could not sign in")
+                        prompt = self.kwargs.get("prompt_callback")
+                        if prompt is not None:
+                            prompt("https://example.test/devicelogin", "ABC123", None)
+                        return _t.SimpleNamespace(token=FAKE_ENTRA_TOKEN, expires_on=0)
+
+                Credential.__name__ = cls_name
+                return Credential
+
+            setattr(mod, name, make(name))
+        return mod
+
+    def installed(self) -> Any:
+        """A context manager: inside it ``import azure.identity`` gives this fake."""
+        import contextlib
+        import sys
+        import types
+
+        @contextlib.contextmanager
+        def swap() -> Any:
+            module = self.module()
+            package = sys.modules.get("azure") or types.ModuleType("azure")
+            saved = {k: sys.modules.get(k) for k in ("azure", "azure.identity")}
+            sys.modules["azure"] = package
+            sys.modules["azure.identity"] = module
+            old = getattr(package, "identity", None)
+            package.identity = module  # type: ignore[attr-defined]
+            try:
+                yield self
+            finally:
+                for key, value in saved.items():
+                    if value is None:
+                        sys.modules.pop(key, None)
+                    else:
+                        sys.modules[key] = value
+                if old is None:
+                    package.__dict__.pop("identity", None)
+                else:
+                    package.identity = old  # type: ignore[attr-defined]
+
+        return swap()
+
+    def install(self, monkeypatch: Any) -> FakeIdentity:
+        """Make ``import azure.identity`` give this fake (undone with the test's monkeypatch)."""
+        import sys
+        import types
+
+        module = self.module()
+        package = sys.modules.get("azure") or types.ModuleType("azure")
+        monkeypatch.setitem(sys.modules, "azure", package)
+        monkeypatch.setattr(package, "identity", module, raising=False)
+        monkeypatch.setitem(sys.modules, "azure.identity", module)
+        return self
