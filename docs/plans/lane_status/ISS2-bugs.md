@@ -246,3 +246,31 @@ and was fast-forwarded (`git merge --ff-only`) before the merge.
    `tests/joint/test_diff_contract_joint.py::{test_the_example_is_drift_that_names_the_dependency_and_the_value, test_contract_rules_pass_the_good_data_and_fail_the_bad, test_no_placeholder_object_form_allows_values_and_shares}`,
    `tests/joint/test_profile_joint.py::{test_the_example_reports_the_dependency_that_broke, test_every_input_kind_gets_the_same_joint_analysis}`.
    Cause: the `city_zip` fixture writes a CSV whose `zip` column holds `00000` placeholders and real ZIPs such as `02134`. #46 reads that column as text, so the placeholder is `'00000'`; the ISS2-joint tests assert `'0'` ("the placeholder, read as 0"), the integer reading that #46 reports as the bug, and one number moves (`confidence` 0.88225 against 0.87575, `violating_groups` 174 against 178, because `02134` and `2134` are no longer one value). Both sets of tests cannot pass unchanged. I did not edit those tests or weaken the identifier rule. Options: (a) update the five expectations to the text values (they would then also pin ZIP-as-text, which the owner asked for in #46); (b) give the fixture a `--types`/`string_columns` override and keep the numbers (still changes the test); (c) narrow the rule. Recommendation: (a).
+
+## Round 5b — lead decision (a) for the ISS2-joint ZIP tests, merge of `origin/int/INT-15` (f99563e)
+
+Merge commit (no rebase, no force-push) plus `b6702e1`'s test commit. No gate, tolerance, D-xx/T-xx, §11 or §2.3 text was touched; `$SPINDLE_ROOT` was not modified
+(baseline built into this fresh container with `benchmarks/vs_spindle/setup_spindle.sh`). The merge was conflict-free (INT-15's change is two test lines and `delta_fallback.py`).
+
+### The five ISS2-joint tests (decision 1, option a)
+
+Updated to the text reading of the zero-padded ZIP column, each with a one-line `#46` comment:
+`test_the_example_is_drift_that_names_the_dependency_and_the_value`, `test_contract_rules_pass_the_good_data_and_fail_the_bad`,
+`test_no_placeholder_object_form_allows_values_and_shares` (tests/joint/test_diff_contract_joint.py);
+`test_the_example_reports_the_dependency_that_broke`, `test_every_input_kind_gets_the_same_joint_analysis` (tests/joint/test_profile_joint.py).
+
+* Placeholder `'0'` becomes `'00000'` (diff `placeholders[0].value`, the message, `placeholder_surge.detail.value`, check `observed[0].value`, `allow`, and `violations[0].determinant_value`).
+* **No number moved.** I recomputed `zip -> city` on the `bad` fixture three independent ways: (1) plain Python over the CSV text (group by zip text, sum of the majority city per group / rows, groups with more than one city); (2) `shape.profile.dependencies.functional_dependency` on the text rows; (3) Shape's own joint entry. All give confidence 0.87575, 178 violating groups, 320 rows on `'00000'`, 3,501 groups, `implausible_rate` 0.08. The integer reading gives the same, because in this fixture no padded ZIP collides with an unpadded one. So `confidence` 0.87575, `violating_groups` 178 and the 0.08 shares are unchanged; the 0.88225 / 174 shift expected in round 4 does not occur.
+* One change beyond the placeholder: `test_every_input_kind_gets_the_same_joint_analysis` builds its table input with `zip` as a string (`pcsv.ConvertOptions(column_types={"zip": pa.string()})`) because the `_csv` helper casts it to int64, which makes the table/parquet inputs differ from the CSV profile (which is text under #46). `_csv` is unchanged (`test_a_dependency_matches_the_fd_command` still uses it and passes).
+
+### Commands and results (venv `$SHAPE_VENV` with `.[dev,advanced]` and the domains, kafka, eventhubs, sqlserver, fabric, databases plugins editable; pyarrow 25.0.1)
+
+* `ruff check` and `ruff format --check` on `src tests plugins benchmarks/vs_spindle`: clean (1,090 files). `mypy`: no issues (437 files).
+* `pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`: `SHAPE_KERNEL=python` 6,891 passed; `SHAPE_KERNEL=rust` 6,891 passed; 0 failures (55 deselected). #76 (pyarrow < 25) and #77 (credential-refs ordering) did not occur in this environment.
+* `SHAPE_KERNEL=rust pytest -m heavy tests/kernel tests/profile tests/streaming`: 42 passed (912 s). Not run under the Python kernel (as in earlier rounds).
+* `profile_1to1/verify.py --impl shape`: exit 0 under `SHAPE_KERNEL=rust` and `=python` (datasets built first with `datasets.py`). `stream_1to1/verify.py --scale small`: VERDICT PASS, exit 0. `stream_prof/verify.py`: exit 0 (stream == batch, identical across processes).
+* Not run: `tests/demo/fabric`, emulator and live tests, cargo (no Rust file changed).
+
+### Open failures
+
+None.
