@@ -642,7 +642,9 @@ def _publish_database(a: argparse.Namespace, result: Any, plan: dict[str, Any]) 
             for table_name, table in result.tables.items():
                 for batch in table.to_batches():
                     sink.write_batch(table_name, batch)
-                sink.finish_table(table_name)
+                finish = getattr(sink, "finish_table", None)
+                if finish is not None:
+                    finish(table_name)
                 print(f"  {table_name}: {table.num_rows:,} rows")
         finally:
             sink.close()
