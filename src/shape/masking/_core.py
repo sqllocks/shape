@@ -269,6 +269,15 @@ class Masker:
             raise ValueError("max_days must be at least 1")
         shift = self._date_shift(str(value) if subject is None else str(subject), max_days)
         delta = dt.timedelta(days=shift)
+        try:
+            return self._shift_date(value, delta)
+        except OverflowError:
+            raise MaskingError(
+                "the masked date is outside the supported range (year 1 to 9999)"
+            ) from None
+
+    @staticmethod
+    def _shift_date(value: Any, delta: dt.timedelta) -> Any:
         if isinstance(value, dt.datetime | dt.date):
             return value + delta
         text = str(value).strip()
@@ -384,7 +393,8 @@ class Masker:
         for a, b in zip(before.to_pylist(), after.to_pylist(), strict=True):
             if a is None:
                 continue
-            seen.setdefault(a, b)
+            # an email is masked after strip().lower(), so its spellings are one value
+            seen.setdefault(str(a).strip().lower() if kind == "email" else a, b)
         owners: dict[Any, Any] = {}
         for a, b in seen.items():
             if owners.setdefault(b, a) != a:
