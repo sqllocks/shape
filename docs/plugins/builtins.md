@@ -50,6 +50,9 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.strategies` | `reference_data` | a value or a weighted name from a named reference dataset |
 | `shape.strategies` | `record_sample` | one field of a randomly chosen reference record (the anchor of a record group) |
 | `shape.strategies` | `record_field` | another field of the record the table's `record_sample` column chose |
+| `shape.strategies` | `hierarchy` | one field of a reference record reached by walking a hierarchy (state, county, city, ZIP) level by level (the anchor of a hierarchy group) |
+| `shape.strategies` | `hierarchy_field` | another field of the record the table's `hierarchy` column reached |
+| `shape.strategies` | `conditional_table` | a category drawn given another column of the row, from a table of the probability of this value given the source value |
 | `shape.strategies` | `bootstrap` | a field of a source row of a reference dataset drawn with replacement (columns of a table share the row), numbers jittered by a fraction of their spread |
 | `shape.strategies` | `temporal` | timestamps, uniform or with month, weekday and hour profiles |
 | `shape.strategies` | `foreign_key` | keys of a parent table: uniform, Zipf or Pareto (optionally capped per parent), constrained by another column, sampled, or self-referencing |

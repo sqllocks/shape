@@ -91,10 +91,12 @@ _DEPENDENT = frozenset(
         "computed",
         "first_per_parent",
         "record_field",
+        "hierarchy_field",
         "self_ref_field",
         "composite_fk_field",
         "correlated",
         "conditional",
+        "conditional_table",
     }
 )
 
