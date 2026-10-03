@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib.metadata
 import importlib.util
+import re
 import shutil
 import subprocess
 import sys
@@ -181,3 +182,52 @@ def test_rust_notices_check_reports_a_crate_missing_from_the_file(tmp_path: Path
     out.write_text("| `zlib-rs` | 0.1.0 | MIT | x |\n", "utf-8")
     assert rust_notices.check(out, lock) == []
     assert "missing" in rust_notices.check(tmp_path / "absent.md", lock)[0]
+
+
+# -- metadata: classifiers and project URLs -----------------------------------------------------
+
+SUPPORTED_PYTHONS = ("3.11", "3.12", "3.13", "3.14")  # T-06
+CORE_URLS = {"Homepage", "Repository", "Issues"}
+
+
+def _pyprojects() -> dict[str, dict]:
+    paths = {"core": ROOT / "pyproject.toml"}
+    paths |= {s: ROOT / "plugins" / f"shape-{s}" / "pyproject.toml" for s in skeletons.EXPECTED}
+    return {k: tomllib.loads(p.read_text("utf-8"))["project"] for k, p in paths.items()}
+
+
+@pytest.mark.parametrize("dist", ["core", *skeletons.EXPECTED])
+def test_classifiers_match_requires_python_and_t06(dist: str) -> None:
+    project = _pyprojects()[dist]
+    classifiers = project.get("classifiers", [])
+    versions = tuple(
+        c.rsplit(" :: ", 1)[1]
+        for c in classifiers
+        if re.fullmatch(r"Programming Language :: Python :: 3\.\d+", c)
+    )
+    assert versions == SUPPORTED_PYTHONS, f"{dist}: {versions}"
+    assert project["requires-python"] == f">={SUPPORTED_PYTHONS[0]}"
+    assert "Programming Language :: Python :: 3 :: Only" in classifiers
+    # PEP 639: a License-Expression excludes licence classifiers (PyPI rejects both).
+    assert not [c for c in classifiers if c.startswith("License ::")]
+    typed = (
+        dist == "core"
+        or (ROOT / "plugins" / f"shape-{dist}" / "src" / f"shape_{dist}" / "py.typed").is_file()
+    )
+    assert ("Typing :: Typed" in classifiers) == typed
+
+
+@pytest.mark.parametrize("dist", ["core", *skeletons.EXPECTED])
+def test_every_distribution_links_the_repository(dist: str) -> None:
+    urls = _pyprojects()[dist].get("urls", {})
+    assert CORE_URLS <= set(urls), f"{dist}: {sorted(urls)}"
+    assert all(u.startswith("https://github.com/sqllocks/shape") for u in urls.values())
+
+
+def test_built_plugin_wheels_publish_classifiers_and_urls(plugin_wheels: dict[str, Path]) -> None:
+    for short, wheel in plugin_wheels.items():
+        files = _wheel_files(wheel)
+        meta = next(d for n, d in files.items() if n.endswith(".dist-info/METADATA")).decode()
+        header = meta.split("\n\n", 1)[0]
+        assert "Classifier: Programming Language :: Python :: 3.11" in header, short
+        assert "Project-URL: Repository, https://github.com/sqllocks/shape" in header, short
