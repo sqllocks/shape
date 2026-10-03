@@ -464,3 +464,33 @@ def test_a_merged_dataset_profile_generates_its_exact_value_sets(tmp_path: Path)
     tables = Engine(fit_schema(merged).schema, seed=4).generate().tables
     assert set(Counter(tables["customer"].column("segment").to_pylist())) == {"A", "B"}
     assert set(Counter(tables["orders"].column("status").to_pylist())) == {"new", "paid", "void"}
+
+
+# ---- #717: an explicit scale the schema does not define is an error ---------------------------
+
+
+def test_an_unknown_scale_preset_is_an_error() -> None:
+    from shape.generation.domains import load_domain
+    from shape.generation.engine import Engine
+
+    schema = load_domain("retail").schema
+    with pytest.raises(ValueError, match="unknown scale 'mediun'.*small"):
+        Engine(schema, scale="mediun")
+    assert Engine(schema, scale="medium").row_counts["customer"] > 100  # a preset still works
+    assert Engine(schema).schema.generation.scale == schema.generation.scale  # no scale: default
+
+
+def test_a_scale_for_a_schema_without_presets_is_an_error() -> None:
+    from shape.generation.engine import Engine
+
+    schema = GenSchema.from_dict(SPEC)
+    with pytest.raises(ValueError, match="no scale presets"):
+        Engine(schema, scale="medium")
+    assert Engine(schema).row_counts == {"t": 100}
+
+
+def test_shape_generate_refuses_an_unknown_scale() -> None:
+    import shape
+
+    with pytest.raises(ValueError, match="unknown scale"):
+        shape.generate("retail", scale="mediun")
