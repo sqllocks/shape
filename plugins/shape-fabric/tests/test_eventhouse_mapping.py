@@ -77,3 +77,19 @@ def test_one_table_per_shape_table_needs_one_mapping_each() -> None:
     EventhouseEmitter(kusto).emit("eventhouse://kql.example.test/db1?tls=false", batches)
     assert kusto.unmapped == []
     assert sum("mapping" in c for _, c in kusto.commands) == 2  # nothing to redo
+
+
+def test_each_emit_uses_its_own_token_retries_and_timeout() -> None:
+    kusto = FakeKusto()
+    emitter = EventhouseEmitter(kusto, busy_pause=0.0)
+    uri = "eventhouse://kql.example.test/db1?tls=false"
+    emitter.emit(uri, [_event("A", 0, a_col=1)], token="tok-1")
+    before = len(kusto.auth)
+    kusto.busy = 1  # one throttled answer: with busy_retries=0 it is not waited out
+    try:
+        emitter.emit(uri, [_event("A", 1, a_col=2)], token="tok-2", busy_retries=0, timeout=1)
+    except Exception:
+        pass
+    else:
+        raise AssertionError("busy_retries=0 was ignored: the throttled request was repeated")
+    assert set(kusto.auth[before:]) == {"Bearer tok-2"}
