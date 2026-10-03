@@ -119,13 +119,42 @@ def _literal(value: Any, dialect: str) -> str:
     return f"N'{text}'" if dialect == "tsql" else f"'{text}'"
 
 
-def _constraint_name(prefix: str, table: str, column: str, dialect: str) -> str:
+def _size(name: str, dialect: str) -> int:
+    """A name's length as the engine counts it: bytes for PostgreSQL, characters elsewhere."""
+    return len(name.encode("utf-8")) if dialect == "postgres" else len(name)
+
+
+def _cut(name: str, size: int, dialect: str) -> str:
+    if dialect == "postgres":
+        return name.encode("utf-8")[:size].decode("utf-8", errors="ignore")
+    return name[:size]
+
+
+def _constraint_name(
+    prefix: str,
+    table: str,
+    column: str,
+    dialect: str,
+    used: dict[str, tuple[str, str, str]] | None = None,
+) -> str:
+    """``PREFIX_table_column``, shortened with a digest to the dialect's limit. ``used`` holds
+    the names given so far in one script: a name another table and column already took (the
+    parts run together, ``order`` + ``line_id`` and ``order_line`` + ``id``) gets a digest of
+    its own parts instead, so constraint names stay unique per schema (#642)."""
+    used = {} if used is None else used
+    key = (prefix, table, column)
     name = f"{prefix}_{table}_{column}"
     limit = _NAME_LIMIT["tsql" if dialect == "tsql-fabric-warehouse" else dialect]
-    if len(name) <= limit:
-        return name
-    digest = hashlib.sha1(name.encode("utf-8")).hexdigest()[:8]
-    return f"{name[: limit - 9]}_{digest}"
+    candidates = []
+    if _size(name, dialect) <= limit:
+        candidates.append(name)
+    for text in (name, "\x1f".join(key)):
+        digest = hashlib.sha1(text.encode("utf-8")).hexdigest()[:8]
+        candidates.append(f"{_cut(name, limit - 9, dialect)}_{digest}")
+    for candidate in candidates:
+        if used.setdefault(candidate, key) == key:
+            return candidate
+    raise EmitError(f"cannot name a unique constraint for {table}.{column}")  # pragma: no cover
 
 
 def _guess_logical(rules: Mapping[str, Any]) -> str:
@@ -142,7 +171,13 @@ def _column_names(sub: Mapping[str, Any]) -> list[str]:
     return names
 
 
-def table_ddl(table: str, sub: Mapping[str, Any], dialect: str, notes: Notes) -> str:
+def table_ddl(
+    table: str,
+    sub: Mapping[str, Any],
+    dialect: str,
+    notes: Notes,
+    used: dict[str, tuple[str, str, str]] | None = None,
+) -> str:
     import pyarrow as pa  # type: ignore[import-untyped]
 
     from shape.plugins.host import default_host
@@ -157,6 +192,8 @@ def table_ddl(table: str, sub: Mapping[str, Any], dialect: str, notes: Notes) ->
 
     def lit(value: Any) -> str:
         return _literal(value, base)
+
+    used = {} if used is None else used
 
     columns = sub.get("columns", {})
     names = _column_names(sub)
@@ -184,7 +221,7 @@ def table_ddl(table: str, sub: Mapping[str, Any], dialect: str, notes: Notes) ->
             info["max_length"] = max(255, *(len(v) for v in texts))
         meta[name] = info
         if ok.get("unique") is True:
-            cname = q(_constraint_name("UQ", table, name, dialect))
+            cname = q(_constraint_name("UQ", table, name, dialect, used))
             tail = f" NONCLUSTERED ({q(name)}) NOT ENFORCED" if fabric else f" ({q(name)})"
             constraints.append(f"CONSTRAINT {cname} UNIQUE{tail}")
         lo, hi = ok.get("min"), ok.get("max")
@@ -195,15 +232,15 @@ def table_ddl(table: str, sub: Mapping[str, Any], dialect: str, notes: Notes) ->
                 expr = f"{q(name)} >= {lit(lo)}"
             else:
                 expr = f"{q(name)} <= {lit(hi)}"
-            cname = q(_constraint_name("CK", table, name + "_range", dialect))
+            cname = q(_constraint_name("CK", table, name + "_range", dialect, used))
             constraints.append(f"CONSTRAINT {cname} CHECK ({expr})")
         if "allowed_values" in ok:
             values = ", ".join(lit(v) for v in ok["allowed_values"] if v is not None)
-            cname = q(_constraint_name("CK", table, name + "_values", dialect))
+            cname = q(_constraint_name("CK", table, name + "_values", dialect, used))
             constraints.append(f"CONSTRAINT {cname} CHECK ({q(name)} IN ({values}))")
         if "pattern" in ok:
             op = "~" if dialect == "postgres" else "REGEXP"
-            cname = q(_constraint_name("CK", table, name + "_pattern", dialect))
+            cname = q(_constraint_name("CK", table, name + "_pattern", dialect, used))
             constraints.append(
                 f"CONSTRAINT {cname} CHECK ({q(name)} {op} {lit(PATTERNS[ok['pattern']])})"
             )
@@ -232,7 +269,8 @@ def render(tables: Mapping[str, Mapping[str, Any]], dialect: str, notes: Notes) 
 
     check_dialect(dialect)
     parts = [f"-- Contract emitted by Shape ({FORMAT}, version {VERSION}), dialect {dialect}"]
+    used: dict[str, tuple[str, str, str]] = {}  # constraint names are unique per schema
     for name, sub in tables.items():
         label = " ".join(name.splitlines())
-        parts.append(f"-- table: {label}\n" + table_ddl(name, sub, dialect, notes))
+        parts.append(f"-- table: {label}\n" + table_ddl(name, sub, dialect, notes, used))
     return "\n\n".join(parts) + "\n"
