@@ -28,3 +28,19 @@ def test_domain_validation_compose_extend_roundtrip(tmp_path):
         "bad", "1", (DomainField("x", "int"),), (DomainRelationship(("missing",), "x"),)
     )
     assert validate_domain(bad)
+
+
+def test_test_domain_reads_slotted_dataclass_rows():
+    """#369: generated addresses are slotted dataclasses (no __dict__)."""
+    from shape.builtins.strategies.address import AddressPack, AddressReference
+    from shape.location import Location, LocationScope
+    from shape.packs import US_ADDRESS
+
+    pack = AddressPack(
+        [AddressReference("1 Main St", "Columbus", "Franklin", "OH", "43215", "US", 39.9, -83.0)]
+    )
+    rows = pack.generate(2, LocationScope.one(Location.zip("43215")))
+    assert check_domain(US_ADDRESS, rows) == ()
+    short = DomainDefinition("s", "1", (DomainField("missing_field", "string"),))
+    (issue,) = check_domain(short, rows[:1])
+    assert issue.path == "rows.0" and "missing_field" in issue.message
