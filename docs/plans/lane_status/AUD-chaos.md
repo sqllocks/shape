@@ -86,3 +86,28 @@ failing, with its output in the commit message.
   six categories' output on finite inputs is unchanged (#406 only caps a baseline that overflowed).
 * No gate, tolerance, D-xx or T-xx decision changed; no existing test's expectation changed; no
   workflow edited.
+
+## Commands and results (this session, final tree)
+
+| Check | Result |
+|---|---|
+| `ruff check src tests plugins benchmarks/vs_spindle` | All checks passed |
+| `ruff format --check src tests plugins benchmarks/vs_spindle` | 1091 files already formatted |
+| `mypy` | no issues in 436 source files |
+| `python scripts/check_user_facing.py` (D-13) | clean |
+| vulture, lint-imports, check_conformance_coverage, check_plugin_skeletons, compileall | all exit 0 |
+| `benchmarks/vs_spindle/chaos_1to1/verify.py` (full) | PASS, 20083 runs per tool, 20083/20083 identical cell for cell |
+| `benchmarks/vs_spindle/fidelity_tiers_1to1/run.py` (medium) | PASS, 0 mismatches in every table |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live" --ignore=tests/demo/fabric --ignore=tests/demo/content` | 6867 passed, 2 skipped, 3 failed (below) |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live and not heavy"` (same ignores, as CI's main job) | 6825 passed, 2 skipped, 3 failed (below) |
+
+The 3 failures come from the environment, not from this lane:
+`tests/demo_cmd/test_notebook_and_outputs.py::test_the_semantic_model_is_a_bim_of_the_learned_schema`
+and `::test_all_writes_the_page_and_the_model` fail identically on `origin/build/main-plan`
+(they need the `shape-fabric` plugin, which this venv does not install);
+`tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references` passes
+alone (41 passed) and fails in the full run only because this venv also has the Fabric demo
+requirements (`fabric-user-data-functions`, so `azure.functions` is importable), which CI's
+main job does not install. The rust-kernel run included `heavy`; the python-kernel run with
+`heavy` was stopped after 25 minutes on one pure-Python 48M-row memory test, so it ran without
+`heavy`, as CI does. `origin/build/main-plan` had no new commits to merge at the end.
