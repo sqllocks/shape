@@ -226,9 +226,13 @@ class DriftReport:
 def population_stability_index(
     expected: npt.ArrayLike, actual: npt.ArrayLike, n_bins: int = 10
 ) -> float:
-    """PSI between two numeric samples, over ``n_bins`` equal-width bins of their joint range."""
+    """PSI between two numeric samples, over ``n_bins`` equal-width bins of their joint range.
+    NaN and infinite values are left out; 0.0 when either sample has no finite value."""
     e = np.asarray(expected, dtype=np.float64)
     a = np.asarray(actual, dtype=np.float64)
+    e, a = e[np.isfinite(e)], a[np.isfinite(a)]  # infinities have no bin; see psi_report
+    if not len(e) or not len(a):
+        return 0.0
     mn, mx = min(e.min(), a.min()), max(e.max(), a.max())
     if mn == mx:
         return 0.0
@@ -372,7 +376,14 @@ def psi_report(
         a, b = _pick(col, sample_size), _pick(other, sample_size)
         ordered = col.is_numeric or col.is_datetime
         if ordered and (other.is_numeric or other.is_datetime):
-            psi = population_stability_index(a.astype(np.float64), b.astype(np.float64))
+            fa, fb = a.astype(np.float64), b.astype(np.float64)
+            psi = population_stability_index(fa, fb)
+            if bool(np.isinf(fa).any()) != bool(np.isinf(fb).any()):
+                # a column that gained or lost infinite values has changed, whatever its bins say
+                results[col.name] = ColumnDriftResult(
+                    col.name, 1.0, psi, None, True, "psi", psi=psi
+                )
+                continue
         elif ordered or other.is_numeric or other.is_datetime:
             results[col.name] = ColumnDriftResult(col.name, 0.0, None, None, True, "error")
             continue
