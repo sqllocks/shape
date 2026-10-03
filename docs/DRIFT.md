@@ -224,7 +224,8 @@ shape generate-drift orders.gen.json plan.json -o feed/ --rows orders=4000 --for
 ```
 
 writes `feed/<date>/<table>.parquet`, `feed/_specs/<date>.json` (that day's schema) and
-`feed/ground_truth.json`. The seed of day N is the schema's seed (or `--seed`) plus N: a rerun gives
+`feed/ground_truth.json`. A plan may declare `"format": "shape-drift-plan"` and `"version": 1`;
+a plan of a newer version is refused with a message that asks for a newer Shape. The seed of day N is the schema's seed (or `--seed`) plus N: a rerun gives
 the same files and each day is a fresh sample.
 
 ```python
@@ -237,7 +238,7 @@ plan.ground_truth()                              # the answer key
 plan.expected_changes(0, 10)                     # what shape.diff should report between two days
 ```
 
-The answer key (`ground_truth.json`, version 1) lists every event (`id`, `kind`, `table`,
+The answer key (`ground_truth.json`, `"format": "shape-drift-ground-truth"`, version 1) lists every event (`id`, `kind`, `table`,
 `column`, `start`, `end`, `ramp_days`, `full_effect_from`, `shape`: `step`, `ramp`, `window` or
 `ramp_window`, `spec`, and `detected_as`: the `shape.diff` kinds that find it) and, for every day,
 which events had taken effect and how far (0 to 1). `expected_changes(a, b)` turns it into the

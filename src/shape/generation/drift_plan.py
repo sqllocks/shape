@@ -69,6 +69,9 @@ KINDS = (
 )
 _ON_OFF = ("add_column", "drop_column", "type_change")
 GROUND_TRUTH_VERSION = 1
+GROUND_TRUTH_FORMAT = "shape-drift-ground-truth"
+PLAN_FORMAT = "shape-drift-plan"
+PLAN_VERSION = 1
 
 # the shape.diff change kinds each event produces (any one of them satisfies the event)
 _DETECTED_AS = {
@@ -170,8 +173,24 @@ class DriftPlan:
 
     @classmethod
     def from_dict(cls, doc: Mapping[str, Any]) -> DriftPlan:
-        """``{"start": "2026-01-01", "days": 30, "events": [{...}, ...]}``."""
-        unknown = set(doc) - {"start", "days", "events"}
+        """``{"start": "2026-01-01", "days": 30, "events": [{...}, ...]}``, optionally declaring
+        ``"format": "shape-drift-plan"`` and ``"version": 1``; a newer version is refused."""
+        if "format" in doc and doc["format"] != PLAN_FORMAT:
+            raise DriftPlanError(
+                f"not a drift plan: its format is {doc['format']!r}, expected {PLAN_FORMAT!r}"
+            )
+        if "version" in doc:
+            version = doc["version"]
+            if not isinstance(version, int) or isinstance(version, bool) or version < 1:
+                raise DriftPlanError(
+                    f"a drift plan's version is an integer of at least 1, got {version!r}"
+                )
+            if version > PLAN_VERSION:
+                raise DriftPlanError(
+                    f"unsupported drift plan version {version}: this Shape reads up to version "
+                    f"{PLAN_VERSION}; it was written by a newer Shape release (upgrade Shape)"
+                )
+        unknown = set(doc) - {"format", "version", "start", "days", "events"}
         if unknown:
             raise DriftPlanError(f"unknown drift plan keys: {sorted(unknown)}")
         events = doc.get("events")
@@ -361,6 +380,7 @@ class DriftPlan:
             for n in range(self.days)
         ]
         return {
+            "format": GROUND_TRUTH_FORMAT,
             "version": GROUND_TRUTH_VERSION,
             "start": self.start.isoformat(),
             "days": self.days,
