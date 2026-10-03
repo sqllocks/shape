@@ -315,3 +315,29 @@ def test_transaction_dates_stay_in_the_models_date_range():
     dates = Engine(schema).generate().tables["orders"]["order_date"].to_pylist()
     low, high = dt.date.fromisoformat(span["start"]), dt.date.fromisoformat(span["end"])
     assert all(low <= d <= high for d in dates), (min(dates), max(dates), span)
+
+
+_CUSTOMERS = (
+    "CREATE TABLE customers (id INT PRIMARY KEY, email VARCHAR(80), first_name VARCHAR(40))"
+)
+_ORDERS = (
+    "CREATE TABLE orders (id INT PRIMARY KEY, customer_id INT REFERENCES customers(id), "
+    "order_date DATE, total DECIMAL(10,2))"
+)
+_ITEMS = (
+    "CREATE TABLE order_items (id INT PRIMARY KEY, order_id INT REFERENCES orders(id), "
+    "product_name VARCHAR(40), quantity INT, unit_price DECIMAL(10,2))"
+)
+
+
+@pytest.mark.parametrize(
+    "statements", [(_CUSTOMERS, _ORDERS, _ITEMS), (_ITEMS, _ORDERS, _CUSTOMERS)]
+)
+def test_roles_and_row_counts_do_not_depend_on_the_statement_order(statements):
+    # 196: order_items got 12500 rows in one order and 6250 in the other; a child classified
+    # before its parent read the parent's role as UNKNOWN.
+    schema, notes = from_ddl(";".join(statements))
+    reference, ref_notes = from_ddl(";".join((_CUSTOMERS, _ORDERS, _ITEMS)))
+    assert calculate_row_counts(schema) == calculate_row_counts(reference)
+    roles = {(n.table, n.rule_id) for n in notes if n.rule_id.startswith("TC-")}
+    assert roles == {(n.table, n.rule_id) for n in ref_notes if n.rule_id.startswith("TC-")}
