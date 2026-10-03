@@ -278,7 +278,7 @@ def _aware_datetimes(aware: pa.Array, tz: str) -> list[_dt.datetime | None]:
     """The values of a zoned column as aware datetimes (nanoseconds cut to microseconds), built
     from the integers so that pyarrow never needs a time-zone database."""
     tzinfo = _tzinfo(tz)
-    div, mul = _UNIT_TO_US[aware.type.unit]
+    mul, div = _UNIT_TO_US[aware.type.unit]
     epoch = _dt.datetime(1970, 1, 1, tzinfo=_dt.UTC)
     ints = pc.cast(aware, pa.int64()).to_pylist()
     return [
