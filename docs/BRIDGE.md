@@ -231,7 +231,9 @@ An entry about several columns (the joint analysis: a broken dependency `a -> b`
 and then its `message` and `detail`, which quote values, are `null` too.
 
 What stays is the column's shape (type, null rate, cardinality, pattern), which is not a value.
-`verify` messages come from the gate schema and counts, never from data values.
+`verify` messages come from the gate schema and counts, never from data values: the actual
+minimum or maximum a range gate reports is withheld (`(actual max withheld)`, and the gate has
+`"redacted": true`) unless the request sets `include_raw_values`.
 
 Two things the default does not do: it does not change the `.shape` file `profile` writes, which is
 the full profile and holds real values (the warning `profile_file_holds_values` says so; share a

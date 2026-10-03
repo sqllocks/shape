@@ -34,6 +34,8 @@ from shape.bridge.protocol import BridgeError
 from shape.bridge.spec import Arg, Command
 
 _RAW_SUMMARY_FIELDS = ("min", "max")
+#: The data values a gate message may quote (the range gate's actual extremes).
+_RAW_IN_MESSAGE = re.compile(r"\(actual (min|max): [^)]*\)")
 _RAW_ENTRY_FIELDS = ("baseline", "current", "observed", "message", "detail")
 #: What separates the columns in the label of an entry about several (the joint analysis):
 #: ``a -> b``, ``a, b -> c``, ``a ~ b``, ``(a, b) in ref``, ``a='x' => b='y'``.
@@ -258,12 +260,7 @@ def cmd_verify(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
         data_files(path, fmt),
     ).run(tables)
     gates = [
-        {
-            "name": g.gate_name,
-            "passed": bool(g.passed),
-            "errors": [str(e) for e in g.errors],
-            "warnings": [str(w) for w in g.warnings],
-        }
+        _gate(g.gate_name, g.passed, g.errors, g.warnings, ctx.include_raw)
         for g in result.gate_results
     ]
     has_warnings = any(g["warnings"] for g in gates)
@@ -274,6 +271,24 @@ def cmd_verify(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
         "row_counts": {n: int(c) for n, c in sorted(result.row_counts.items())},
         "statistical": bool(args.get("statistical")),
     }
+
+
+def _gate(
+    name: str, passed: bool, errors: list[Any], warnings: list[Any], include_raw: bool
+) -> dict[str, Any]:
+    """A gate's result. Unless raw values are asked for, a data value a message quotes (the
+    range gate's actual minimum or maximum) is withheld and the gate says ``"redacted": true``."""
+    texts = {"errors": [str(e) for e in errors], "warnings": [str(w) for w in warnings]}
+    redacted = False
+    if not include_raw:
+        for key, items in texts.items():
+            withheld = [_RAW_IN_MESSAGE.sub(r"(actual \1 withheld)", m) for m in items]
+            redacted = redacted or withheld != items
+            texts[key] = withheld
+    gate: dict[str, Any] = {"name": name, "passed": bool(passed), **texts}
+    if redacted:
+        gate["redacted"] = True
+    return gate
 
 
 _THRESHOLDS = Arg("object", "metric name to threshold, as for `shape diff --threshold`")
