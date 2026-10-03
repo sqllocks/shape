@@ -81,3 +81,17 @@ def test_anomaly_report_details_have_the_same_keys_when_nothing_changes(
     details = inject_anomalies(batch, fraction=1, seed=3, kinds=["encoding"]).report.details
     assert set(details) == {"fraction", "requested", "kinds"}
     assert details["kinds"] == {}
+
+
+def test_future_date_eligibility_matches_chaos_md() -> None:
+    """#421: CHAOS.md names the column types future_date applies to, and date64 is not one."""
+    from pathlib import Path
+
+    doc = (Path(__file__).parents[2] / "docs" / "CHAOS.md").read_text(encoding="utf-8")
+    row = next(line for line in doc.splitlines() if line.startswith("  | `future_date`"))
+    assert "timestamp and `date32` columns" in row
+    batch = pa.record_batch(
+        {"d32": pa.array([0, 1, 2], pa.date32()), "d64": pa.array([0, 1, 2], pa.date64())}
+    )
+    out = inject_anomalies(batch, fraction=1, seed=3, kinds=["future_date"])
+    assert set(out.columns) == {"d32"}
