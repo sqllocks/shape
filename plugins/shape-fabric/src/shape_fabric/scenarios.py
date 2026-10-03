@@ -27,10 +27,14 @@ from ._auth import SCOPE_SQL, token_for
 from .auth import AuthSettings, build_credential
 from .eventhouse import EventhouseEmitter
 from .eventhouse_writer import EventhouseWriter
+from .fabric_api import FabricApi, tuple_transport
 from .keyvault import KeyVaultResolver
+from .notebook import generate_notebook, item_definition
 from .recording import Tape, TapeConnection, TapeTransport, jsonable, replay_tape, save
+from .setup_env import DEFAULT_ENVIRONMENT, DEFAULT_LAKEHOUSE
 from .sqldb import SqlDatabaseWriter
 from .testing import (
+    FakeFabricItems,
     FakeIdentity,
     FakeKeyVault,
     FakeKusto,
@@ -136,6 +140,95 @@ def _kusto_forbidden() -> Any:
         return 403, {}, b"Forbidden: principal has no ingestor role"
 
     return forbidden
+
+
+# --- HTTP: the Fabric Items API ----------------------------------------------------------
+
+
+def _fabric(transport: Any) -> FabricApi:
+    return FabricApi(
+        lambda scope: FAKE_TOKEN, transport=tuple_transport(transport), sleep=lambda _s: None
+    )
+
+
+def _notebook_body() -> dict[str, Any]:
+    notebook = generate_notebook("retail", "small", 42, "lakehouse", version="0.0.0")
+    return item_definition(notebook, "Shape_retail_small")
+
+
+def fabric_deploy_notebook(transport: Any) -> Any:
+    api = _fabric(transport)
+    return _outcome(
+        lambda: api.create_item(api.resolve_workspace("Demo"), _notebook_body())["displayName"]
+    )
+
+
+def fabric_workspace_by_name_across_pages(transport: Any) -> Any:
+    return _outcome(lambda: _fabric(transport).resolve_workspace("Demo"))
+
+
+def fabric_workspace_not_found(transport: Any) -> Any:
+    return _outcome(lambda: _fabric(transport).resolve_workspace("Nowhere"))
+
+
+def fabric_setup_environment_and_lakehouse(transport: Any) -> Any:
+    api = _fabric(transport)
+
+    def run() -> list[Any]:
+        ws = api.resolve_workspace("Demo")
+        return [
+            api.ensure_item(ws, {"displayName": DEFAULT_ENVIRONMENT, "type": "Environment"})[1],
+            api.ensure_item(ws, {"displayName": DEFAULT_LAKEHOUSE, "type": "Lakehouse"})[1],
+        ]
+
+    return _outcome(run)
+
+
+def _fabric_empty() -> FakeFabricItems:
+    return FakeFabricItems()
+
+
+def _fabric_accepted() -> FakeFabricItems:
+    return FakeFabricItems(accepted=True)
+
+
+def _fabric_operation_fails() -> FakeFabricItems:
+    return FakeFabricItems(accepted=True, operation_fails=True)
+
+
+def _fabric_name_in_use() -> FakeFabricItems:
+    return FakeFabricItems(
+        items=[
+            {
+                "id": "0000000a-0000-4000-8000-000000000000",
+                "displayName": "Shape_retail_small",
+                "type": "Notebook",
+            }
+        ]
+    )
+
+
+def _fabric_paged() -> FakeFabricItems:
+    return FakeFabricItems(
+        workspaces=[
+            ("Other", "22222222-2222-4222-8222-222222222222"),
+            ("Another", "33333333-3333-4333-8333-333333333333"),
+            ("Demo", "11111111-1111-4111-8111-111111111111"),
+        ],
+        page_size=1,
+    )
+
+
+def _fabric_set_up_before() -> FakeFabricItems:
+    return FakeFabricItems(
+        items=[
+            {
+                "id": "0000000b-0000-4000-8000-000000000000",
+                "displayName": DEFAULT_ENVIRONMENT,
+                "type": "Environment",
+            }
+        ]
+    )
 
 
 # --- ODBC: SQL database ------------------------------------------------------------------
@@ -311,6 +404,41 @@ SCENARIOS: dict[str, Scenario] = {
         ),
         Scenario("eventhouse_not_authorised", "http", eventhouse_not_authorised, _kusto_forbidden),
         Scenario("eventhouse_emit_events", "http", eventhouse_emit_events, _kusto),
+        Scenario("fabric_deploy_notebook", "http", fabric_deploy_notebook, _fabric_empty),
+        Scenario(
+            "fabric_deploy_notebook_accepted", "http", fabric_deploy_notebook, _fabric_accepted
+        ),
+        Scenario(
+            "fabric_deploy_notebook_operation_fails",
+            "http",
+            fabric_deploy_notebook,
+            _fabric_operation_fails,
+        ),
+        Scenario(
+            "fabric_deploy_notebook_name_in_use",
+            "http",
+            fabric_deploy_notebook,
+            _fabric_name_in_use,
+        ),
+        Scenario(
+            "fabric_workspace_by_name_across_pages",
+            "http",
+            fabric_workspace_by_name_across_pages,
+            _fabric_paged,
+        ),
+        Scenario("fabric_workspace_not_found", "http", fabric_workspace_not_found, _fabric_empty),
+        Scenario(
+            "fabric_setup_environment_and_lakehouse",
+            "http",
+            fabric_setup_environment_and_lakehouse,
+            _fabric_empty,
+        ),
+        Scenario(
+            "fabric_setup_reuses_existing",
+            "http",
+            fabric_setup_environment_and_lakehouse,
+            _fabric_set_up_before,
+        ),
         Scenario("keyvault_secret", "http", keyvault_secret, _keyvault),
         Scenario("keyvault_secret_version", "http", keyvault_secret_version, _keyvault),
         Scenario("keyvault_secret_not_found", "http", keyvault_secret_not_found, _keyvault),
