@@ -430,4 +430,68 @@ def test_excel_sink_keeps_a_plain_table_name_and_empty_tables(tmp_path: Path) ->
     assert rows == [[("a", "s")]]
 
 
+# ---- #630: JSON Lines output is valid JSON --------------------------------------------------
+
+
+def _strict_lines(path: Path) -> list[dict[str, object]]:
+    import json
+
+    def refuse(constant: str) -> None:
+        raise ValueError(f"{constant} is not JSON")
+
+    return [
+        json.loads(line, parse_constant=refuse) for line in path.read_text("utf-8").splitlines()
+    ]
+
+
+def test_jsonl_writes_non_finite_floats_as_null(tmp_path: Path) -> None:
+    from shape.builtins.sinks.files import JsonlSink
+
+    t = pa.table(
+        {
+            "f": [float("nan"), float("inf"), float("-inf"), 1.5, -0.0, 1e300, None],
+            "n": [[1.0, float("nan")], None, [], [float("inf")], [2.5], [0.0], None],
+            "s": [{"x": float("nan"), "y": 1.0}, None, None, None, None, None, None],
+        }
+    )
+    JsonlSink().write(str(tmp_path / "o.jsonl"), "o", t.to_batches())
+    rows = _strict_lines(tmp_path / "o.jsonl")
+    assert [r["f"] for r in rows] == [None, None, None, 1.5, -0.0, 1e300, None]
+    assert [r["n"] for r in rows] == [[1.0, None], None, [], [None], [2.5], [0.0], None]
+    assert rows[0]["s"] == {"x": None, "y": 1.0}
+
+
+def test_jsonl_writes_binary_as_base64(tmp_path: Path) -> None:
+    import base64
+
+    from shape.builtins.sinks.files import JsonlSink
+
+    t = pa.table({"b": pa.array([b"\x00\xff", b"", None, b"abc"], pa.binary())})
+    JsonlSink().write(str(tmp_path / "o.jsonl"), "o", t.to_batches())
+    values = [r["b"] for r in _strict_lines(tmp_path / "o.jsonl")]
+    assert values == ["AP8=", "", None, "YWJj"]
+    assert base64.b64decode(str(values[0])) == b"\x00\xff"
+
+
+def test_jsonl_keeps_the_other_values_as_they_were(tmp_path: Path) -> None:
+    import decimal
+
+    from shape.builtins.sinks.files import JsonlSink
+
+    t = pa.table(
+        {
+            "s": ["é😀", None],
+            "i": [2**62, -1],
+            "d": pa.array([decimal.Decimal("1.50"), None], pa.decimal128(10, 2)),
+            "t": pa.array([dt.datetime(2026, 1, 2, 3, 4, 5), None]),
+            "dd": pa.array([dt.date(2026, 1, 2), None]),
+        }
+    )
+    JsonlSink().write(str(tmp_path / "o.jsonl"), "o", t.to_batches())
+    assert (tmp_path / "o.jsonl").read_text("utf-8").splitlines() == [
+        '{"s":"é😀","i":4611686018427387904,"d":"1.50","t":"2026-01-02T03:04:05","dd":"2026-01-02"}',
+        '{"s":null,"i":-1,"d":null,"t":null,"dd":null}',
+    ]
+
+
 _ = dt
