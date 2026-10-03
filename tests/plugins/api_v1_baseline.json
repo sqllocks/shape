@@ -1,6 +1,44 @@
 {
  "api": "1.0",
  "groups": {
+  "shape.behaviors": {
+   "protocol": "Behavior",
+   "protocol_shape": {
+    "attributes": {
+     "attributes": "Sequence[str]",
+     "events": "Sequence[str]",
+     "name": "str",
+     "states": "Sequence[str]",
+     "version": "str"
+    },
+    "methods": {
+     "simulate": {
+      "params": [
+       {
+        "annotation": "int",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "population"
+       },
+       {
+        "annotation": "int",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "seed"
+       },
+       {
+        "annotation": "float",
+        "default": null,
+        "kind": "POSITIONAL_OR_KEYWORD",
+        "name": "years"
+       }
+      ],
+      "returns": "pa.Table"
+     }
+    }
+   },
+   "types": {}
+  },
   "shape.calendars": {
    "protocol": "Calendar",
    "protocol_shape": {

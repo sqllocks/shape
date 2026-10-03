@@ -42,6 +42,7 @@ the interface, not about sandboxing.
 | `shape.transforms` | `Transform` | `check_transform` |
 | `shape.commands` | `Command` | `check_command` |
 | `shape.reports` | `ReportFormat` | `check_report_format` |
+| `shape.behaviors` | `Behavior` | `check_behavior` |
 
 The Protocols are in `shape.plugins.api.v1`; the checks are in `shape.plugins.kit`.
 

@@ -40,6 +40,7 @@ GROUP_TYPES: dict[str, list[str]] = {
     "shape.transforms": [],
     "shape.commands": [],
     "shape.reports": [],
+    "shape.behaviors": [],
 }
 
 

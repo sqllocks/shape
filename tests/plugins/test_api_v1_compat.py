@@ -163,6 +163,29 @@ class RefReport:
         return b"report"
 
 
+class RefBehavior:
+    name = "ref-behavior"
+    version = "1.0"
+    states = ("active", "closed")
+    attributes = ("balance",)
+    events = ("opened", "closed")
+
+    def simulate(self, population: int, seed: int, years: float) -> pa.Table:
+        ids = [i for i in range(population) for _ in range(2)]
+        day = 86_400 * 1_000_000  # microseconds
+        start = 1_577_836_800_000_000 + seed * day  # 2020-01-01T00:00:00Z
+        closes = int(years * 365) * day
+        times = [start + i * day + (closes if n % 2 else 0) for n, i in enumerate(ids)]
+        return pa.table(
+            {
+                "entity_id": pa.array(ids, type=pa.int64()),
+                "time": pa.array(times, type=pa.timestamp("us")),
+                "state": ["active", "closed"] * population,
+                "kind": ["opened", "closed"] * population,
+            }
+        )
+
+
 # group -> (reference plugin, the sample its kit check takes)
 REFERENCE: dict[str, tuple[Any, dict[str, Any]]] = {
     "shape.sources": (RefSource(), {"uri": "ref://x"}),
@@ -179,6 +202,7 @@ REFERENCE: dict[str, tuple[Any, dict[str, Any]]] = {
     "shape.transforms": (RefTransform(), {"tables": {"t": pa.table({"a": [1]})}}),
     "shape.commands": (RefCommand(), {"argv": ["--flag"]}),
     "shape.reports": (RefReport(), {"report": {"k": 1}}),
+    "shape.behaviors": (RefBehavior(), {}),
 }
 
 GROUPS = sorted(v1.GROUPS)
@@ -348,7 +372,7 @@ def test_api_major_change_is_breaking() -> None:
 
 def test_a_group_added_later_is_not_breaking() -> None:
     live = copy.deepcopy(compat.snapshot())
-    live["groups"]["shape.behaviors"] = copy.deepcopy(live["groups"]["shape.transforms"])
+    live["groups"]["shape.later"] = copy.deepcopy(live["groups"]["shape.transforms"])
     assert compat.compare(BASELINE, live) == []
 
 
