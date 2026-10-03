@@ -39,7 +39,7 @@ def trunc_int(x: float) -> str:
 
 
 def build() -> str:
-    d = json.loads(SRC.read_text())
+    d = json.loads(SRC.read_text(encoding="utf-8"))
     meta, su = d["_meta"], d["startup"]
     lines = [
         "# Benchmark sheet",
@@ -71,7 +71,10 @@ def build() -> str:
     ]
     for key, label in ROWS:
         r = d["profile"][key]
-        assert r["output_identical_across_runs"], key
+        if not r["output_identical_across_runs"]:
+            raise SystemExit(
+                f"{key}: the profile output was not identical across runs; not published"
+            )
         lines.append(
             f"| {label} | {trunc(r['median_s'])} | {trunc_int(r['rows_per_s'])} | "
             f"{trunc_int(r['peak_rss_mb'])} |"
@@ -108,11 +111,11 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
     text = build()
     if a.check:
-        if not OUT.exists() or OUT.read_text() != text:
+        if not OUT.exists() or OUT.read_text(encoding="utf-8") != text:
             print("demo/BENCHMARKS.md is out of date", file=sys.stderr)
             return 1
         return 0
-    OUT.write_text(text)
+    OUT.write_text(text, encoding="utf-8")
     return 0
 
 
