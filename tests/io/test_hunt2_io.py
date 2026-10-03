@@ -259,4 +259,56 @@ def test_abfss_source_skips_hidden_and_underscore_folders() -> None:
         fs.rm("/hunt2", recursive=True)
 
 
+# ---- #627: Delta overwrite replaces the schema too -----------------------------------------
+
+
+def _delta_rows(path: Path) -> dict[str, list[object]]:
+    from deltalake import DeltaTable
+
+    return DeltaTable(str(path)).to_pyarrow_table().sort_by("a").to_pydict()
+
+
+def test_delta_overwrite_with_a_changed_schema(tmp_path: Path) -> None:
+    pytest.importorskip("deltalake")
+    from deltalake import DeltaTable
+
+    from shape.builtins.sinks.delta import DeltaSink
+
+    sink = DeltaSink()
+    sink.write(str(tmp_path), "t", pa.table({"a": [1, 2]}).to_batches())
+    new = pa.table({"a": [3], "b": ["x"]})
+    assert sink.write(str(tmp_path), "t", new.to_batches()) == 1
+    assert _delta_rows(tmp_path / "t") == {"a": [3], "b": ["x"]}
+    protocol = DeltaTable(str(tmp_path / "t")).protocol()
+    assert (protocol.min_reader_version, protocol.min_writer_version) == (1, 2)
+    assert not protocol.reader_features and not protocol.writer_features
+    # and a column removed or retyped
+    sink.write(str(tmp_path), "t", pa.table({"a": ["s"]}).to_batches())
+    assert DeltaTable(str(tmp_path / "t")).to_pyarrow_table().schema.names == ["a"]
+
+
+def test_delta_overwrite_in_micro_batches_replaces_the_schema_once(tmp_path: Path) -> None:
+    pytest.importorskip("deltalake")
+    from shape.builtins.sinks.delta import DeltaSink
+
+    sink = DeltaSink()
+    sink.write(str(tmp_path), "t", pa.table({"a": [9]}).to_batches())
+    batches = [b for v in (1, 2, 3) for b in pa.table({"a": [v], "b": ["x"]}).to_batches()]
+    assert sink.write(str(tmp_path), "t", iter(batches), commit_rows=1) == 3
+    assert _delta_rows(tmp_path / "t") == {"a": [1, 2, 3], "b": ["x", "x", "x"]}
+
+
+def test_delta_append_still_refuses_a_different_schema(tmp_path: Path) -> None:
+    pytest.importorskip("deltalake")
+    from shape.builtins.sinks.delta import DeltaSink
+
+    sink = DeltaSink()
+    sink.write(str(tmp_path), "t", pa.table({"a": [1]}).to_batches())
+    with pytest.raises(Exception, match="(?i)schema"):
+        sink.write(
+            str(tmp_path), "t", pa.table({"a": [2], "b": ["x"]}).to_batches(), mode="append"
+        )
+    assert _delta_rows(tmp_path / "t") == {"a": [1]}
+
+
 _ = dt
