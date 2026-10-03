@@ -71,6 +71,11 @@ THRESHOLD_KEYS: dict[str, tuple[str, ...]] = {
     "implausible_rate_change": ("implausible_rate",),
     "association_shift": ("association_shift",),
     "reference_match_change": ("reference_match_rate",),
+    # W3-07: the univariate depth kinds (tail_change also needs alpha below tail_alpha_max)
+    "zero_inflation_change": ("zero_share",),
+    "heaping_change": ("heaping_ratio",),
+    "benford_change": ("benford_class_steps",),
+    "tail_change": ("tail_alpha_drop",),
 }
 NO_THRESHOLD = (
     "table_added",
