@@ -8,8 +8,10 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 |---|---|---|
 | `shape.sources` | `csv` | CSV and TSV files (`.csv`, `.tsv`, compression suffixes) |
 | `shape.sources` | `parquet` | Parquet files |
-| `shape.sources` | `jsonl` | JSON Lines files (`.jsonl`, `.ndjson`) |
+| `shape.sources` | `jsonl` | JSON Lines files (`.jsonl`, `.ndjson`); `flatten="tables"` splits nested data into related tables (see [SOURCES.md](../SOURCES.md)) |
 | `shape.sources` | `ipc` | Arrow IPC files (`.arrow`, `.ipc`, `.feather`) |
+| `shape.sources` | `json` | JSON files holding one document or an array of documents, flat, as structs or as related tables (`.json`; see [SOURCES.md](../SOURCES.md)) |
+| `shape.sources` | `xml` | XML files: the elements picked by a record path become rows, repeated children become child tables (`.xml`; see [SOURCES.md](../SOURCES.md)) |
 | `shape.sources` | `abfss` | CSV, Parquet, JSONL and IPC files in OneLake and ADLS Gen2, by `abfss://` URI (extra `[azure]`; see [cloud-sources.md](cloud-sources.md)) |
 | `shape.sources` | `delta` | Delta tables: a local directory, or `delta+abfss://` in OneLake and ADLS Gen2 (extra `[azure]` for cloud tables) |
 | `shape.sinks` | `csv` | CSV file |

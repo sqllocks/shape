@@ -150,6 +150,8 @@ csv = "shape.builtins.sources:CsvSource"
 parquet = "shape.builtins.sources:ParquetSource"
 jsonl = "shape.builtins.sources:JsonlSource"
 ipc = "shape.builtins.sources:IpcSource"
+json = "shape.builtins.sources:JsonSource"
+xml = "shape.builtins.sources:XmlSource"
 abfss = "shape.builtins.sources:AbfssSource"
 delta = "shape.builtins.sources:DeltaSource"
 

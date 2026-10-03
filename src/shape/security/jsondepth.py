@@ -80,3 +80,27 @@ def check_json_file(path: str | Path, limit: int = MAX_JSON_DEPTH) -> None:
                 continue
             check_json_depth(data[: cut + 1], limit)
             carry = data[cut + 1 :]
+
+
+def check_json_document(data: bytes, limit: int = MAX_JSON_DEPTH) -> None:
+    """``ValueError`` when ``data``, read as ONE document, nests deeper than ``limit``.
+
+    :func:`check_json_depth` counts per line, which is right for JSON lines but not for a
+    pretty-printed document spread over many lines. This one carries the running depth across
+    the whole buffer (in chunks, so memory stays bounded). Like the per-line check it counts a
+    bracket inside a string, which can only reject a pathological document, never accept a deep
+    one."""
+    import numpy as np
+
+    depth = 0
+    for start in range(0, len(data), _CHUNK):
+        buf = np.frombuffer(
+            data, dtype=np.uint8, count=min(_CHUNK, len(data) - start), offset=start
+        )
+        step = ((buf == 0x5B) | (buf == 0x7B)).astype(np.int32) - (
+            (buf == 0x5D) | (buf == 0x7D)
+        ).astype(np.int32)
+        walk = np.cumsum(step, dtype=np.int32) + depth
+        if int(walk.max()) > limit:
+            raise ValueError(f"JSON is nested deeper than {limit} levels")
+        depth = int(walk[-1])

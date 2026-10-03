@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "sqllocks-shape-healthcare-standards"
 # Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
 version = "0.9.0"
-description = "Shape plugin: healthcare standard outputs (X12 837/835/834, FHIR R4, OMOP CDM, NCPDP mapping)"
+description = "Shape plugin: healthcare standard outputs (X12 837/835/834, FHIR R4, OMOP CDM, NCPDP mapping) and X12 / HL7 v2 readers"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -26,6 +26,10 @@ fhir-ndjson = "shape_healthcare_standards.sinks:FhirNdjsonSink"
 fhir-bundle = "shape_healthcare_standards.sinks:FhirBundleSink"
 omop = "shape_healthcare_standards.sinks:OmopSink"
 ncpdp = "shape_healthcare_standards.sinks:NcpdpSink"
+
+[project.entry-points."shape.sources"]
+x12 = "shape_healthcare_standards.sources:X12Source"
+hl7v2 = "shape_healthcare_standards.sources:Hl7v2Source"
 
 [project.entry-points."shape.emitters"]
 fhir = "shape_healthcare_standards.emitters:FhirEmitter"
