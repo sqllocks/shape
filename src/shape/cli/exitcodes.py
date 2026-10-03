@@ -128,6 +128,9 @@ _EXTRA: dict[str, dict[int, str]] = {
     "registry diff": {},
     "init": {},
     "project validate": {},
+    "migrate": {1: SIGNATURE},
+    "seed": {1: "`--mode create` found an existing table (nothing was written)"},
+    "suite run": {1: "a scenario did not meet its answer key"},
     "detective list": {},
     "detective start": {},
     "detective hint": {2: "the pack does not exist, the hint number is out of range, or " + BAD},
@@ -178,6 +181,13 @@ class HelpFormatter(argparse.HelpFormatter):
             return out
         table = "\n".join(indent + line for line in raw.splitlines())
         return f"{out}\n\n{table}" if out else table
+
+
+def apply_to(parser: argparse.ArgumentParser, path: str) -> None:
+    """Put the exit codes of the command ``path`` at the end of ``parser``'s ``--help``, for a
+    command that has a parser of its own."""
+    parser.formatter_class = HelpFormatter
+    parser.epilog = (f"{parser.epilog}\n\n" if parser.epilog else "") + _RAW + epilog(path)
 
 
 def apply(parser: argparse.ArgumentParser, prefix: tuple[str, ...] = ()) -> None:

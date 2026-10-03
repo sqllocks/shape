@@ -50,6 +50,9 @@ def _parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--passphrase-stdin", action="store_true", help="read that passphrase from stdin"
     )
+    from shape.cli import exitcodes
+
+    exitcodes.apply_to(p, "migrate")  # the exit-code table ends the help, as for every command
     return p
 
 

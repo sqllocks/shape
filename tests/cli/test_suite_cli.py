@@ -123,7 +123,7 @@ def test_pack_list_library_names_every_scenario_and_suite(capsys):
     code, out, _ = run(capsys, "pack", "list", "--library", "--json")
     doc = json.loads(out)
     assert (
-        code == 0 and len(doc["scenarios"]) >= 8 and doc["suites"] == ["schema-evolution", "smoke"]
+        code == 0 and len(doc["scenarios"]) >= 8 and doc["suites"] == ["failure-modes", "schema-evolution", "smoke"]
     )
     assert all({"id", "domain", "description"} == set(s) for s in doc["scenarios"])
     code, _, err = run(capsys, "pack", "list", "--library", "somewhere")

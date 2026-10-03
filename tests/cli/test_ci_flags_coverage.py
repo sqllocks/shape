@@ -22,7 +22,7 @@ STATE_WRITERS = {
     "keygen", "init", "git-setup", "proposals propose", "proposals decide", "profile validate",
     "demo cleanup", "demo init", "jobs cancel", "jobs resume", "registry commit",
     "registry tag", "registry promote", "profile registry save", "profile registry delete",
-    "profile registry tag", "profile registry reindex",
+    "profile registry tag", "profile registry reindex", "seed",
 }  # fmt: skip
 
 

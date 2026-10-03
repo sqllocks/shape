@@ -142,6 +142,8 @@ CASES = {
     "profile registry delete": ["profile", "registry", "delete", "crm/a/v1"],
     "profile registry tag": ["profile", "registry", "tag", "crm/a/v1", "extra"],
     "profile registry reindex": ["profile", "registry", "reindex"],
+    "suite run": ["suite", "run", "smoke", "-o", "new/suite"],
+    "detective start": ["detective", "start", "first-case", "-o", "new/case"],
 }
 
 

@@ -236,6 +236,7 @@ SPECS: dict[str, Spec] = {
     "registry promote": Spec(plan=_plan_registry),
     "init": Spec(plan=_plan_init),
     "detective start": Spec(outputs=("output",)),
+    "suite run": Spec(outputs=("output",)),
     "git-setup": Spec(plan=_plan_git_setup),
     "profile export": Spec(inputs=("profile",), outputs=("output",)),
     "profile import": Spec(inputs=("input",), outputs=("output",)),
@@ -248,7 +249,7 @@ SPECS: dict[str, Spec] = {
 }
 
 #: commands that print only when asked and otherwise have a ``--dry-run`` of their own.
-NATIVE_DRY_RUN = frozenset({"generate", "demo run", "demo cleanup"})
+NATIVE_DRY_RUN = frozenset({"generate", "demo run", "demo cleanup", "seed"})
 
 
 # ---- parsers -------------------------------------------------------------------------------------

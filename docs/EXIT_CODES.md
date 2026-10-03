@@ -127,6 +127,14 @@ parse, and 130 when a scale run is interrupted. See `docs/CLI.md` and `docs/CI.m
 | 0 | ok |
 | 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
 
+## `shape migrate`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 1 | a `--verify` public key does not verify an input, or an input's signature is invalid |
+| 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
 ## `shape keygen`
 
 | Code | Meaning |
@@ -282,6 +290,65 @@ parse, and 130 when a scale run is interrupted. See `docs/CLI.md` and `docs/CI.m
 |---|---|
 | 0 | ok |
 | 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
+## `shape suite run`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 1 | a scenario did not meet its answer key |
+| 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
+## `shape seed`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 1 | `--mode create` found an existing table (nothing was written) |
+| 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
+## `shape failure-modes list`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
+## `shape failure-modes show`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 2 | the failure mode id is not in the catalog, or bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
+## `shape detective list`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
+## `shape detective start`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
+## `shape detective hint`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 2 | the pack does not exist, the hint number is out of range, or bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
+## `shape detective check`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 1 | a planted finding is missed or a named finding is not planted |
+| 2 | the answer is malformed or names an unknown failure mode, the pack does not exist, or bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
 
 ## `shape transform star`
 
