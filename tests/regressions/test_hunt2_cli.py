@@ -298,3 +298,34 @@ def test_output_next_to_the_input_is_not_refused(tmp_path: Path) -> None:
     csv.write_text("id,amount\n1,5\n2,6\n", encoding="utf-8")
     assert main(["profile", str(csv), "-o", str(tmp_path / "d.shape"), "--no-project"]) == 0
     assert main(["capture", str(csv), "-o", str(tmp_path / "d.capture.json")]) == 0
+
+
+# -- a column that is not in the file (key, fd, privacy-k) -------------------------------------
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["key", "n.csv", "zz"],
+        ["key", "n.csv", "a", "zz"],
+        ["privacy-k", "n.csv", "zz"],
+        ["privacy-k", "n.csv", "a", "zz"],
+        ["fd", "n.csv", "--determinant", "zz", "--dependent", "b"],
+        ["fd", "n.csv", "--determinant", "a", "--dependent", "zz"],
+    ],
+)
+def test_a_column_that_is_not_in_the_file_is_an_error(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], argv: list[str]
+) -> None:
+    (tmp_path / "n.csv").write_text("a,b\n1,x\n2,y\n", encoding="utf-8")
+    assert main(argv) == 2
+    err = capsys.readouterr().err
+    assert "zz" in err and "not a column" in err and "a, b" in err
+
+
+def test_existing_columns_still_measured(tmp_path: Path, capsys) -> None:
+    (tmp_path / "n.csv").write_text("a,b\n1,x\n2,y\n", encoding="utf-8")
+    assert main(["privacy-k", "n.csv", "a", "b"]) == 0
+    assert json.loads(capsys.readouterr().out)["k"] == 1
+    assert main(["key", "n.csv", "a"]) == 0
+    assert main(["fd", "n.csv", "--determinant", "a", "--dependent", "b"]) == 0
