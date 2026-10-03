@@ -359,3 +359,47 @@ def test_conditional_table_without_output_type_keeps_numbers() -> None:
 
     kind, codes, _ = _joint(None)  # documented: labels that all read as numbers are float64
     assert kind == pa.float64() and codes == {2134.0, 10001.0}
+
+
+# ---- #703: drift plans declare a format and version; the answer key declares its format --------
+
+_EVENT = {"kind": "null_rate", "table": "orders", "column": "status", "start": 1, "to": 0.3}
+
+
+def test_a_drift_plan_may_declare_its_format_and_version() -> None:
+    from shape.generation.drift_plan import DriftPlan
+
+    plan = DriftPlan.from_dict(
+        {"format": "shape-drift-plan", "version": 1, "start": "2026-03-01", "days": 3,
+         "events": [_EVENT]}  # fmt: skip
+    )
+    assert plan.days == 3
+    truth = plan.ground_truth()
+    assert truth["format"] == "shape-drift-ground-truth" and truth["version"] == 1
+
+
+@pytest.mark.parametrize(
+    ("extra", "match"),
+    [
+        ({"version": 2, "new_key": 1}, "version 2.*upgrade"),
+        ({"format": "shape-drift-plan", "version": 9}, "version 9.*upgrade"),
+        ({"format": "shape-model"}, "not a drift plan"),
+        ({"version": 0}, "version"),
+        ({"version": "1"}, "version"),
+        ({"version": True}, "version"),
+        ({"surprise": 1}, "unknown drift plan keys"),
+    ],
+)
+def test_a_drift_plan_of_another_kind_or_a_newer_version_is_refused(
+    extra: dict[str, object], match: str
+) -> None:
+    from shape.generation.drift_plan import DriftPlan, DriftPlanError
+
+    with pytest.raises(DriftPlanError, match=match):
+        DriftPlan.from_dict({"start": "2026-03-01", "days": 3, "events": [_EVENT], **extra})
+
+
+def test_a_plan_without_declaration_still_loads() -> None:
+    from shape.generation.drift_plan import DriftPlan
+
+    assert DriftPlan.from_dict({"start": "2026-03-01", "days": 2, "events": [_EVENT]}).days == 2
