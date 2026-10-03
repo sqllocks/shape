@@ -3568,6 +3568,10 @@
      "choices": null,
      "takes_value": true
     },
+    "--univariate": {
+     "choices": null,
+     "takes_value": false
+    },
     "--version": {
      "choices": null,
      "takes_value": true

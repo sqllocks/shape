@@ -113,8 +113,13 @@ that columns hold real combinations against a reference file.
 
 ## Univariate depth: model selection, zeros, heaping, Benford, tail index
 
-Every numeric column with at least **20 finite values** (integers, floats, and decimals read as
-numbers) gains the fields below, each only where it applies; a text, boolean or date column gains
+The fields below are **opt-in**: `shape profile --univariate` (`shape.profile(...,
+univariate=True)`) computes them; without it a profile carries none of them and is otherwise the
+same. They add Python work for every numeric column, more than the benchmark gate of the default
+profile allows, so they are not computed by default (`docs/plans/lane_status/INT-18.md`).
+
+With it, every numeric column with at least **20 finite values** (integers, floats, and decimals
+read as numbers) gains the fields below, each only where it applies; a text, boolean or date column gains
 none, and a column with fewer values gains none at all. They are computed once, in Python, over the
 column's values, so `SHAPE_KERNEL=rust` and `python` give the same numbers, and they do not need
 scipy. They sit beside `distribution`, `distribution_params` and `fit_score`, which are unchanged
@@ -129,7 +134,7 @@ for model selection. A column at or under a cap is read whole; a longer one is c
 of consecutive rows as the cap (as equal as possible) and one row is drawn at random from each, by
 `default_rng(42)`, so the sample is the same on every run, every row has the same chance of being
 in it, and a column that repeats with a period cannot line up with it. The caps are well under the
-100,000 values the issue allows because every numeric column pays for them on every profile. Cost is bounded in the number of rows: a test
+100,000 values the issue allows because every numeric column pays for them when they are asked for. Cost is bounded in the number of rows: a test
 (`tests/profile/test_univariate_profile.py`, marked `heavy`) runs a 10-million-row column in under
 10 s with a peak of temporary memory under 20% of the column's own size.
 

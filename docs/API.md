@@ -12,7 +12,7 @@ model and query functions are documented as they behave today and may change.
 ## Profiles
 
 ```python
-shape.profile(source, *, name=None, version=None, as_of=None, delimiter=None, encoding=None, quotechar=None, header=True, string_columns=(), types=None, infer_types='auto', reference_pairs=None, joint=None, sheet=None, include_hidden=False, sketches=False)
+shape.profile(source, *, name=None, version=None, as_of=None, delimiter=None, encoding=None, quotechar=None, header=True, string_columns=(), types=None, infer_types='auto', reference_pairs=None, joint=None, sheet=None, include_hidden=False, sketches=False, univariate=False)
 ```
 
 Profiles `source` and returns a `Profile`. `source` is a path (CSV, Parquet, JSONL, `.xlsx`, a
@@ -24,7 +24,8 @@ are CSV options (`docs/PROFILING_NOTES.md`); `reference_pairs` and `joint` contr
 analysis (`docs/JOINT.md`); `sheet` and `include_hidden` select workbook sheets
 (`docs/EXCEL.md`); `string_columns`, `types` and `infer_types` keep identifier columns as text
 (`docs/PROFILING_NOTES.md`); `sketches` keeps the mergeable sketch state
-(`docs/PROFILE_MERGE.md`).
+(`docs/PROFILE_MERGE.md`); `univariate=True` adds the univariate depth fields to numeric columns
+(`docs/PROFILING_NOTES.md`; off by default).
 
 A `Profile` has `to_dict()` (the full profile), `summary()` (a small JSON-safe dict),
 `to_html()` (a self-contained report), `name`, `tables`, `is_dataset` and `provenance`.

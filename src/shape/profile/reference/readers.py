@@ -95,6 +95,10 @@ class _Col:
     # ``string_columns``, an Excel cell stored as text): its digits are not re-typed as numbers,
     # dates or booleans by the profiler's own detectors, so ZIP codes keep their leading zeros.
     text: bool = False
+    # Compute the univariate depth fields (W3-07) for a numeric column: only when the profile
+    # asks for them (``shape.profile(..., univariate=True)``): they add Python work per column
+    # (docs/PROFILING_NOTES.md).
+    univariate: bool = False
 
 
 def _is_string_view(typ: pa.DataType) -> bool:

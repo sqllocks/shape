@@ -62,7 +62,7 @@ def _profile_in(kernel: str) -> dict[str, Any]:
         "import json, sys\n"
         "import numpy as np, pyarrow as pa, shape\n"
         "from tests.profile.test_univariate_profile import _table\n"
-        "d = shape.profile(_table()).to_dict()\n"
+        "d = shape.profile(_table(), univariate=True).to_dict()\n"
         "print(json.dumps(d['columns'], sort_keys=True, allow_nan=False))\n"
     )
     root = Path(__file__).parents[2]
@@ -88,9 +88,9 @@ def test_the_existing_fields_are_byte_identical_with_the_new_ones_removed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     table = _table()
-    new = _columns(shape.profile(table))
+    new = _columns(shape.profile(table, univariate=True))
     monkeypatch.setattr(column_module, "univariate_stats", lambda *a, **k: {})
-    old = _columns(shape.profile(table))
+    old = _columns(shape.profile(table, univariate=True))
     stripped = {c: {k: v for k, v in d.items() if k not in FIELDS} for c, d in new.items()}
     assert json.dumps(stripped, sort_keys=False) == json.dumps(old, sort_keys=False)
     # a continuous float column: model selection, zeros, Benford (not applicable here) and tail
@@ -104,17 +104,21 @@ def test_the_existing_fields_are_byte_identical_with_the_new_ones_removed(
 
 
 def test_only_numeric_columns_with_enough_values_gain_fields() -> None:
-    cols = _columns(shape.profile(_table()))
+    cols = _columns(shape.profile(_table(), univariate=True))
     for name in ("city", "flag", "when"):
         assert not set(FIELDS) & set(cols[name]), name
     assert set(FIELDS) <= set(cols["visits"])  # a count column: the whole set
     assert "zero_inflation" not in cols["amount"] and "zero_share" in cols["amount"]
-    nine = _columns(shape.profile(pa.table({"x": pa.array([float(i) + 0.5 for i in range(19)])})))
+    nine = _columns(
+        shape.profile(
+            pa.table({"x": pa.array([float(i) + 0.5 for i in range(19)])}), univariate=True
+        )
+    )
     assert not set(FIELDS) & set(nine["x"])
 
 
 def test_the_new_fields_are_json_safe_and_survive_save_and_load(tmp_path: Path) -> None:
-    prof = shape.profile(_table())
+    prof = shape.profile(_table(), univariate=True)
     path = tmp_path / "p.shape"
     shape.save(prof, path)
     again = shape.load(path)
@@ -133,11 +137,11 @@ def test_the_share_safe_profile_does_not_carry_the_new_fields() -> None:
     from shape.privacy.safe_profile import to_safe_profile
 
     table = _table()
-    new = to_safe_profile(shape.profile(table)).to_dict()
+    new = to_safe_profile(shape.profile(table, univariate=True)).to_dict()
     text = json.dumps(new)
     for field in FIELDS:
         assert f'"{field}"' not in text, field
-    old = shape.profile(table)
+    old = shape.profile(table, univariate=True)
     doc = old.to_dict()
     for col in doc["columns"].values():
         for field in FIELDS:
@@ -159,7 +163,7 @@ def test_an_older_profile_loads_displays_and_diffs() -> None:
     assert old.summary()["columns"]["visits"]["dtype"] == "integer"
     assert "visits" in old.to_html()
     assert shape.diff(old, old).changes == []
-    new = shape.profile(_table(300, 103), name="visits")
+    new = shape.profile(_table(300, 103), name="visits", univariate=True)
     d = shape.diff(old, new)
     assert not {
         c["kind"]
@@ -183,7 +187,7 @@ def test_an_older_profile_loads_displays_and_diffs() -> None:
 def test_html_and_show_carry_the_new_fields(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    prof = shape.profile(_table())
+    prof = shape.profile(_table(), univariate=True)
     s = prof.summary()["columns"]  # the summary's key set is a pinned contract: unchanged
     assert not set(FIELDS) & set(s["ratio"])
     html = prof.to_html()
@@ -201,7 +205,7 @@ def test_html_and_show_carry_the_new_fields(
 
 
 def test_describe_lines() -> None:
-    cols = _columns(shape.profile(_table()))
+    cols = _columns(shape.profile(_table(), univariate=True))
     lines = U.describe(cols["visits"])
     assert any(line.startswith("zero share ") and "inflated" in line for line in lines)
     assert U.describe(cols["city"]) == []
@@ -259,3 +263,49 @@ def test_the_sampled_statistics_read_at_most_the_documented_sample() -> None:
         U.heaping = real  # type: ignore[assignment]
     assert seen == [U.SAMPLE_CAP]
     assert len(U.sample_values(x, U.MODEL_CAP)) == U.MODEL_CAP
+
+
+# --- opt-in (INT-18: the T-19 benchmark gate) -----------------------------------------------------
+
+
+def test_without_univariate_the_profile_has_none_of_the_fields_and_is_otherwise_the_same() -> None:
+    table = _table()
+    plain = _columns(shape.profile(table))
+    assert not any(set(FIELDS) & set(c) for c in plain.values())
+    deep = _columns(shape.profile(table, univariate=True))
+    assert set(FIELDS) <= set(deep["visits"])
+    stripped = {c: {k: v for k, v in d.items() if k not in FIELDS} for c, d in deep.items()}
+    assert json.dumps(stripped, sort_keys=False) == json.dumps(plain, sort_keys=False)
+
+
+def test_univariate_reaches_a_dataset_and_a_workbook(tmp_path: Path) -> None:
+    both = shape.profile({"a": _table(), "b": _table(200, 7)}, univariate=True).to_dict()
+    assert all(set(FIELDS) <= set(t["columns"]["visits"]) for t in both["tables"].values())
+    plain = shape.profile({"a": _table(), "b": _table(200, 7)}).to_dict()
+    assert not any(
+        set(FIELDS) & set(c) for t in plain["tables"].values() for c in t["columns"].values()
+    )
+    openpyxl = pytest.importorskip("openpyxl")
+    book = openpyxl.Workbook()
+    sheet = book.active
+    sheet.title = "counts"
+    sheet.append(["visits"])
+    for v in _table()["visits"].to_pylist():
+        sheet.append([v])
+    path = tmp_path / "book.xlsx"
+    book.save(path)
+    one = f"{path}#counts"  # one sheet: a table profile
+    assert set(FIELDS) <= set(_columns(shape.profile(one, univariate=True))["visits"])
+    assert not set(FIELDS) & set(_columns(shape.profile(one))["visits"])
+
+
+def test_shape_profile_univariate_flag(tmp_path: Path) -> None:
+    import pyarrow.parquet as pq
+
+    src = tmp_path / "t.parquet"
+    pq.write_table(_table(), src)
+    deep, plain = tmp_path / "deep.shape", tmp_path / "plain.shape"
+    assert main(["profile", str(src), "-o", str(deep), "--univariate"]) == 0
+    assert main(["profile", str(src), "-o", str(plain)]) == 0
+    assert set(FIELDS) <= set(_columns(shape.load(deep))["visits"])
+    assert not any(set(FIELDS) & set(c) for c in _columns(shape.load(plain)).values())

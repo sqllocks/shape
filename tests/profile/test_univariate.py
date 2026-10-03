@@ -20,7 +20,9 @@ def _stats(values: object, *, integer: bool = False) -> dict:
 
 
 def _col(values: object, name: str = "c") -> dict:
-    return shape.profile(pa.table({name: pa.array(values)})).to_dict()["columns"][name]
+    return shape.profile(pa.table({name: pa.array(values)}), univariate=True).to_dict()["columns"][
+        name
+    ]
 
 
 # --- 1. model selection --------------------------------------------------------------------------

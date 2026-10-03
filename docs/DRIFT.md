@@ -67,8 +67,9 @@ section 12.3 and keep their values.
   samples of one distribution do not drift, however tight the setting.
 - **Univariate depth.** `zero_inflation_change`, `heaping_change`, `benford_change` and
   `tail_change` read the column fields `zero_share`, `zero_inflation`, `heaping`, `benford` and
-  `tail_index` of a profile (`docs/PROFILING_NOTES.md`). A profile written before those fields
-  existed, a stream window, and a key or a 0/1 column have none, and report none of the four kinds.
+  `tail_index` of a profile made with `shape profile --univariate` (`docs/PROFILING_NOTES.md`). A
+  profile made without it or before those fields existed, a stream window, and a key or a 0/1
+  column have none, and report none of the four kinds.
   Each is held to sampling noise, like the other rates: a flag can flip between two samples of one
   distribution that sits on its edge (a log-normal with sigma 0.8 has a Benford MAD of 0.0123, in
   the middle of the marginal band, and samples of 1,500 values land from `acceptable` to

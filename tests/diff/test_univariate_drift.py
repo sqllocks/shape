@@ -29,7 +29,7 @@ FIELDS = (
 
 
 def prof(values: Any, name: str = "x") -> Any:
-    return shape.profile(pa.table({name: pa.array(values)}))
+    return shape.profile(pa.table({name: pa.array(values)}), univariate=True)
 
 
 def kinds(diff: Any) -> list[str]:
@@ -353,7 +353,7 @@ def test_an_older_profile_diffs_without_the_new_kinds() -> None:
 def test_the_new_kinds_follow_ignore_only_and_column_thresholds() -> None:
     a = pa.table({"x": _counts(1), "y": _counts(1)})
     b = pa.table({"x": _counts(2, 0.3), "y": _counts(2, 0.3)})
-    pa_, pb = shape.profile(a), shape.profile(b)
+    pa_, pb = shape.profile(a, univariate=True), shape.profile(b, univariate=True)
     cols = sorted(c["column"] for c in only(shape.diff(pa_, pb), "zero_inflation_change"))
     assert cols == ["x", "y"]
     ignored = shape.diff(pa_, pb, ignore_columns=["y"])
@@ -367,12 +367,16 @@ def test_the_new_kinds_follow_ignore_only_and_column_thresholds() -> None:
 
 def test_keys_and_flags_have_no_univariate_changes() -> None:
     ids_a, ids_b = pa.table({"id": np.arange(N)}), pa.table({"id": np.arange(N) * 7})
-    assert not set(kinds(shape.diff(shape.profile(ids_a), shape.profile(ids_b)))) & set(KINDS)
+    assert not set(
+        kinds(
+            shape.diff(shape.profile(ids_a, univariate=True), shape.profile(ids_b, univariate=True))
+        )
+    ) & set(KINDS)
 
 
 def test_a_dataset_names_the_table_and_compare_names_the_field() -> None:
-    a = shape.profile({"t": pa.table({"x": _counts(1)})})
-    b = shape.profile({"t": pa.table({"x": _counts(2, 0.3)})})
+    a = shape.profile({"t": pa.table({"x": _counts(1)})}, univariate=True)
+    b = shape.profile({"t": pa.table({"x": _counts(2, 0.3)})}, univariate=True)
     drifts = [d for d in shape.drift.compare(a, b) if d.kind == "zero_inflation_change"]
     assert [d.path for d in drifts] == ["tables.t.columns.x.zero_inflation"]
 

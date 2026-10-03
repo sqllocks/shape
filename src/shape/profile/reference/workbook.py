@@ -48,12 +48,16 @@ def profile_workbook(
     sheet: str | None = None,
     include_hidden: bool = False,
     joint: bool | None = None,
+    univariate: bool = False,
 ) -> tuple[dict[str, Any], str]:
     """-> (the profile dict, the profile's name) for a workbook source."""
     path, picked = split_spec(spec)
     picked = sheet or picked
     wb = read_workbook(path, picked, include_hidden=include_hidden)
     cols_by_t = {n: (_to_cols("xlsx", s.table), s.table.num_rows) for n, s in wb.sheets.items()}
+    for cols, _rows in cols_by_t.values():
+        for c in cols:
+            c.univariate = univariate
     by_table = {n: s.findings for n, s in wb.sheets.items()}
     stem = Path(path).stem
     if picked is not None:

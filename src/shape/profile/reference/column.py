@@ -600,7 +600,13 @@ def _profile_object_column(c: _Col, row_count: int, top_n: int = 500) -> _Work:
             numeric = _numeric_of_objects(values)
     if numeric is not None:
         base = _profile_column(
-            _Col(c.name, "float", pa.chunked_array([pa.array(numeric)])), len(numeric)
+            _Col(
+                c.name,
+                "float",
+                pa.chunked_array([pa.array(numeric)]),
+                univariate=c.univariate,
+            ),
+            len(numeric),
         ).prof
         stype = base.dtype
     # ---- min / max ---------------------------------------------------------------------------
@@ -904,7 +910,8 @@ def _profile_column(
         fitted = _kernel_detect_distribution(numeric)
         dist_name, dist_params = fitted["distribution"], fitted["distribution_params"]
         fit_score_val = fitted["fit_score"]
-        univariate = univariate_stats(numeric, integer=stype == "integer") or None
+        if c.univariate:
+            univariate = univariate_stats(numeric, integer=stype == "integer") or None
         if st["has_quantiles"]:
             vals = st["quantiles"]
             quantiles = {f"p{p}": round(float(v), 6) for p, v in zip(_PCTS, vals[:9], strict=True)}

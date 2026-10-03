@@ -337,6 +337,7 @@ def profile(
     sheet: str | None = None,
     include_hidden: bool = False,
     sketches: bool = False,
+    univariate: bool = False,
 ) -> Profile:
     """Profile a path, glob, directory, Delta table, Arrow table or DataFrame.
 
@@ -380,6 +381,12 @@ def profile(
     bounded memory), so the profile can be combined with others by
     ``shape.profile.merge_profiles`` for its approximate statistics. The profile itself, and
     its content id, are the same with or without it.
+
+    ``univariate=True`` adds the univariate depth fields to every numeric column
+    (``distribution_candidates``, ``distribution_by_bic``, ``zero_share``, ``zero_inflation``,
+    ``heaping``, ``benford``, ``tail_index``; ``docs/PROFILING_NOTES.md``), which ``shape.diff``
+    compares when both profiles carry them. They are off by default: they add Python work for
+    every numeric column.
     """
     fmt = CsvFormat(
         delimiter,
@@ -394,13 +401,20 @@ def profile(
         if is_workbook_spec(source):
             from .workbook import profile_workbook
 
-            data, title = profile_workbook(source, name, sheet, include_hidden, joint)
+            data, title = profile_workbook(source, name, sheet, include_hidden, joint, univariate)
             if sketches:
                 raise SourceError("sketches are not kept for .xlsx workbooks")
             return Profile(data, name=title)
         if sheet is not None or include_hidden:
             raise SourceError("sheet and include_hidden apply to .xlsx workbooks only")
-        return _profile(source, name, version, as_of, fmt, reference_pairs, joint, sketches)
+        return _profile(
+            source, name, version, as_of, fmt, reference_pairs, joint, sketches, univariate
+        )
+
+
+def _mark_univariate(cols: list[Any], on: bool) -> None:
+    for c in cols:
+        c.univariate = on
 
 
 def _load_tables(
@@ -464,6 +478,7 @@ def _profile(
     reference_pairs: Any = None,
     joint: bool | None = None,
     sketches: bool = False,
+    univariate: bool = False,
 ) -> Profile:
     check_delta_options(version, as_of)
     asked = version is not None or as_of is not None
@@ -474,6 +489,8 @@ def _profile(
             raise SourceError("an empty dict of tables cannot be profiled")
         named = {str(k): v for k, v in source.items()}
         cols_by_t = _load_tables(named, csv)
+        for cols, _rows in cols_by_t.values():
+            _mark_univariate(cols, univariate)
         doc = dataset_to_dict(profile_dataset_columns(cols_by_t, None, joint))
         if reference_pairs:
             if not isinstance(reference_pairs, dict):
@@ -505,6 +522,7 @@ def _profile(
         table, provenance = read_delta(delta, version=version, as_of=as_of)
         table_name, cols, rows = load_columns(table, name or delta.name)
         sketch_source = table
+    _mark_univariate(cols, univariate)
     table_profile = _profile_cols_table(table_name, cols, rows, None, None, joint)
     doc = table_to_dict(table_profile)
     _attach_reference_pairs(doc, cols, rows, reference_pairs)

@@ -308,8 +308,9 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   a checkpoint resume; `telemetry_series` for 10,000 devices at a 1-hour interval for a year runs
   through `--window-years` in bounded memory.
 
-- Univariate depth (`docs/PROFILING_NOTES.md`, #103). Each numeric column of a profile gains, where
-  it applies: `distribution_candidates` and `distribution_by_bic` (maximum-likelihood fits of the
+- Univariate depth (`docs/PROFILING_NOTES.md`, #103). With `shape profile --univariate`
+  (`shape.profile(..., univariate=True)`; off by default, since it adds work for every numeric
+  column), each numeric column of a profile gains, where it applies: `distribution_candidates` and `distribution_by_bic` (maximum-likelihood fits of the
   normal, lognormal, exponential, uniform, gamma and Weibull with log-likelihood, AIC, BIC and KS;
   the existing `distribution`, `distribution_params` and `fit_score` are unchanged), `zero_share`
   and `zero_inflation` (observed against a Poisson and a moment-fitted negative binomial),

@@ -378,6 +378,7 @@ def _cmd_profile(a):
         reference_pairs=_reference_pairs(a),
         joint=a.joint,
         sketches=a.sketches,
+        univariate=a.univariate,
         **_workbook_options(a),
     )
     if settings:
@@ -1270,6 +1271,13 @@ def _build_parser(plugin_commands=()):
         help="also keep the mergeable sketch state in the .shape, so `shape profile merge` can "
         "combine this profile's cardinality and quantiles with others (one more pass over the "
         "data; the profile and its content id are unchanged)",
+    )
+    pr.add_argument(
+        "--univariate",
+        action="store_true",
+        help="also compute the univariate depth of every numeric column (best family by BIC, "
+        "zero inflation, heaping, Benford conformity, tail index), which `shape diff` compares "
+        "(docs/PROFILING_NOTES.md); off by default, as it adds work for every numeric column",
     )
     pr.add_argument(
         "--name",
