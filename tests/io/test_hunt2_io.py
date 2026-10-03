@@ -837,4 +837,34 @@ def test_fabric_mirror_publish_moves_the_file(tmp_path: Path) -> None:
     assert not temp.exists()
 
 
+# ---- #738: every sink entry point checks the scheme -------------------------------------------
+
+
+@pytest.mark.parametrize("uri", ["postgresql://host/db", "s3://bucket/x"])
+def test_open_table_and_write_workbook_refuse_other_schemes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, uri: str
+) -> None:
+    from shape.builtins import sinks
+    from shape.plugins.schemes import UnsupportedSchemeError
+
+    monkeypatch.chdir(tmp_path)
+    for sink in (sinks.CsvSink(), sinks.TsvSink(), sinks.JsonlSink(), sinks.ParquetSink()):
+        with pytest.raises(UnsupportedSchemeError, match=f"the {sink.name} sink"):
+            sink.open_table(uri, "t", roll_rows=1)
+    pytest.importorskip("openpyxl")
+    with pytest.raises(UnsupportedSchemeError, match="the excel sink"):
+        sinks.ExcelSink().write_workbook(uri + "/x.xlsx", {"t": pa.table({"a": [1]})})
+    assert os.listdir(tmp_path) == []
+
+
+def test_open_table_still_takes_a_path_and_a_file_uri(tmp_path: Path) -> None:
+    from shape.builtins.sinks.files import ParquetSink
+
+    for uri in (str(tmp_path / "a"), (tmp_path / "b").as_uri()):
+        writer = ParquetSink().open_table(uri, "t", roll_rows=1)
+        writer.write_all(_batches(1, 2))
+        assert writer.close() == 2
+    assert len(os.listdir(tmp_path / "a" / "t")) == 2
+
+
 _ = dt
