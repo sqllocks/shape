@@ -1,6 +1,7 @@
 # Fabric writers and the `onelake://` source (`sqllocks-shape-fabric`)
 
-Writers for Lakehouse files, SQL databases, Warehouses (`COPY INTO`), Eventhouses and Eventstreams,
+Writers for Lakehouse files, SQL databases, Warehouses and Synapse dedicated SQL pools (`COPY INTO`),
+Eventhouses and Eventstreams,
 and a source that reads lakehouse tables and files by `onelake://` URI. The API and the write modes
 are described in the plugin's README (`plugins/shape-fabric/README.md`).
 
@@ -14,8 +15,9 @@ The `onelake://<workspace>/<lakehouse>/Tables/<table>` form reads a Delta table 
 
 ## `mssql://`: a live SQL Server, Azure SQL or Fabric SQL sink
 
-`shape-fabric` registers two `shape.sinks` entries: `sqlserver` (URI schemes `mssql` and
-`sqlserver`, bulk insert into a live database) and `warehouse` (`warehouse://`, `COPY INTO`). The
+`shape-fabric` registers three `shape.sinks` entries: `sqlserver` (URI schemes `mssql` and
+`sqlserver`, bulk insert into a live database), `warehouse` (`warehouse://`, `COPY INTO`) and
+`synapse` (`synapse://`, below). The
 `sql` sink of core is different: it writes a script file and never connects.
 
 ```python
@@ -48,3 +50,51 @@ password, token or connection string appears in an exception message or a log re
 should go on a command line (use an environment variable and pass it as an option). The `--auth`
 modes and `env://`, `kv://` and `file://` credential references are added to these writers by the
 sign-in work package and will apply here without a change to the sink.
+
+## `synapse://`: a Synapse dedicated SQL pool
+
+`synapse` (`shape.sinks`, `shape_fabric.SynapseSink`; the writer is `shape_fabric.SynapseWriter`)
+writes a table into a **dedicated SQL pool** of an Azure Synapse workspace. It follows the Warehouse
+writer: it prepares the table with the same T-SQL helpers (same `write_mode` values, the safe `create`
+default, `schema_name`, `columns`, `primary_key`), stages the rows as Parquet files of at most
+`chunk_rows` rows (default 1,000,000) under `<staging_path>/staging/<run>/<table>/`, runs **one**
+`COPY INTO ... WITH (FILE_TYPE = 'PARQUET')` over that folder, checks that the number of rows it
+loaded equals the number staged (otherwise the write fails and a table this call created is dropped),
+and deletes the staged files, also when a step fails.
+
+```
+shape generate retail --to synapse://myws.sql.azuresynapse.net/pool1 \
+  --auth cli --sink-config synapse.staging_path=abfss://stage@myacct.dfs.core.windows.net/shape
+```
+
+| URI part or option | meaning |
+|---|---|
+| `synapse://<workspace>.sql.azuresynapse.net/<pool>` | the workspace's SQL endpoint and the dedicated pool. No user part, port or query: a serverless endpoint (`-ondemand`) is refused, and so is a password anywhere in the URI |
+| `staging_path` | **required**: an ADLS Gen2 folder, `abfss://<container>@<account>.dfs.core.windows.net/<folder>`, that the pool can read. `COPY INTO` reads it as `https://<account>.dfs.core.windows.net/<container>/<folder>/...` |
+| `copy_identity` | who `COPY INTO` reads the storage as: `managed_identity` (default; the workspace's managed identity, `CREDENTIAL = (IDENTITY = 'Managed Identity')`) or `signed_in` (the Microsoft Entra identity of the connection, no `CREDENTIAL` clause; refused with a SQL login, which has no such identity) |
+| `distribution` | `ROUND_ROBIN` (default), `REPLICATE` or `HASH(column)`; the column must be one of the table's and is quoted |
+| `index` | `CLUSTERED COLUMNSTORE INDEX` (default) or `HEAP` |
+| `write_mode`, `schema_name`, `chunk_rows`, `columns`, `primary_key`, `schema` | as the Warehouse writer (`schema` creates an empty table from no batches) |
+| `credential`, `connection_string`, `connection` | sign-in, below |
+
+`distribution` and `index` apply to a table this call creates; a table that already exists
+(`append`, `truncate`) keeps its own. Synapse applies its own limits to the hash column's type; a
+refusal from the pool fails the write and a table this call created is dropped. A primary key is
+declared `NONCLUSTERED ... NOT ENFORCED` (the pool does not enforce keys). Column types are the
+Warehouse's (`VARCHAR(8000)`, `DATETIME2(6)`, `BIT`, ...; no `(N)VARCHAR(MAX)`, which a clustered
+columnstore index cannot hold), and timestamps are staged in microseconds in UTC.
+
+**Sign-in** is the plugin's `--auth` modes ([fabric-auth](fabric-auth.md)): `cli`, `msi`, `spn`,
+`device-code` and `fabric` send a Microsoft Entra token for the SQL connection and for the storage;
+`--auth sql` adds a SQL login to `--connection-string synapse://<workspace>.sql.azuresynapse.net/<pool>`
+(the password a reference, never a command-line value). From Python give `credential=` or a
+`connection_string` with the login. No password, token or connection string appears in an exception
+message or a log record.
+
+**What a failure leaves behind.** The load is one `COPY INTO`, committed once the row count has been
+checked. A failure rolls back and drops a table this call created (`replace` has already dropped the
+old table and `truncate` has already emptied it); the staged files are removed in every case (a
+removal that itself fails is a `RuntimeWarning`).
+
+Out of scope: serverless SQL pools, Synapse Spark pools and Synapse pipelines (those are
+`integrations/synapse`).

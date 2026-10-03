@@ -132,9 +132,12 @@ def create_table_sql(
     warehouse: bool,
     columns: Mapping[str, Mapping[str, Any]] | None = None,
     primary_key: Sequence[str] = (),
+    options: str | None = None,
 ) -> str:
     """``CREATE TABLE`` for ``schema``. Key columns are ``NOT NULL``; a Warehouse key is
-    declared ``NONCLUSTERED ... NOT ENFORCED`` (the Warehouse does not enforce keys)."""
+    declared ``NONCLUSTERED ... NOT ENFORCED`` (the Warehouse does not enforce keys).
+    ``options`` is the text of a trailing ``WITH (...)`` clause (a Synapse pool's distribution
+    and index); the caller builds it from checked names only."""
     columns = columns or {}
     key = list(primary_key)
     unknown = [c for c in key if c not in schema.names]
@@ -155,7 +158,8 @@ def create_table_sql(
             lines.append(f"    CONSTRAINT {name} PRIMARY KEY ({cols})")
     body = ",\n".join(lines)
     # every name went through ident(); there are no values in this statement
-    return f"CREATE TABLE {qualified(schema_name, table)} (\n{body}\n)"  # nosec B608
+    tail = f"\nWITH ({options})" if options else ""
+    return f"CREATE TABLE {qualified(schema_name, table)} (\n{body}\n){tail}"  # nosec B608
 
 
 def drop_table_sql(schema_name: str, table: str, *, if_exists: bool = False) -> str:

@@ -103,3 +103,28 @@ def test_target_options_carry_the_sign_in_to_the_named_sink(monkeypatch):
     )
     options = to.target_options(args, "parquet", ["abfss://c@a.dfs.core.windows.net/x"])
     assert options.extra["abfss"]["credential"] == "cred"
+
+
+def test_synapse_takes_the_fabric_sign_in_options(monkeypatch):
+    from shape.cli import auth
+
+    monkeypatch.setattr(auth, "make_credential", lambda settings: ("credential", settings["mode"]))
+    assert to.sign_in_options(_args(auth="msi"), "synapse") == {"credential": ("credential", "msi")}
+    args = _args(auth="sql", sql_user="u", sql_password="env://X")
+    with pytest.raises(ValueError, match="needs --connection-string"):
+        to.sign_in_options(args, "synapse")
+
+
+def test_synapse_sql_login_turns_the_uri_into_an_odbc_string(monkeypatch):
+    pytest.importorskip("shape_fabric")
+    monkeypatch.setenv("SHAPE_TEST_SYN_PW", SECRET)
+    args = _args(
+        auth="sql",
+        sql_user="loader",
+        sql_password="env://SHAPE_TEST_SYN_PW",
+        connection_string="synapse://myws.sql.azuresynapse.net/pool1",
+    )
+    got = to.sign_in_options(args, "synapse")
+    conn = got["connection_string"]
+    assert "Server=myws.sql.azuresynapse.net" in conn and "Database=pool1" in conn
+    assert "UID={loader}" in conn and f"PWD={{{SECRET}}}" in conn

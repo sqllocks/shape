@@ -14,6 +14,7 @@ once.
 | `delta+abfss://.../lh.Lakehouse/Tables` | `delta` | core, extra `[azure]` | Delta tables in OneLake or ADLS Gen2 |
 | `mssql://host/db` | `sqlserver` | `sqllocks-shape-fabric` (needs `sqllocks-shape-sqlserver`) | SQL Server, Azure SQL, Fabric SQL database |
 | `warehouse://...` | `warehouse` | `sqllocks-shape-fabric` | Fabric Warehouse, `COPY INTO` from a staging path |
+| `synapse://workspace.sql.azuresynapse.net/pool` | `synapse` | `sqllocks-shape-fabric` | Synapse dedicated SQL pool, Parquet staged in ADLS Gen2 (`staging_path`), one `COPY INTO`, row count checked; `distribution`, `index` |
 | `postgresql://host/db` | `postgres` | `sqllocks-shape-databases[postgres]` | `COPY ... FROM STDIN` |
 | `mysql://host/db` | `mysql` | `sqllocks-shape-databases[mysql]` | batched multi-row `INSERT` |
 | `snowflake://user@account/db/schema` | `snowflake` | `sqllocks-shape-databases[snowflake]` | Parquet `PUT` to the table stage, one `COPY INTO`, row count checked |

@@ -485,7 +485,9 @@ class FakeSqlCursor:
             raise RuntimeError(
                 "COPY INTO reads OneLake as https://onelake.dfs.fabric.microsoft.com/"
             )
-        folder = url.path.strip("/")
+        self._load_folder(table, url.path.strip("/"))
+
+    def _load_folder(self, table: SqlTable, folder: str) -> None:
         loaded = 0
         for path in self.server.files.find(folder):
             parquet = pq.read_table(io.BytesIO(self.server.files.files[path]))
@@ -507,6 +509,63 @@ class FakeSqlCursor:
             table.rows.extend(rows)
             loaded += len(rows)
         self.rowcount = loaded if self.server.copy_reports_rowcount else -1
+
+
+# --- Synapse dedicated SQL pool ---------------------------------------------------------
+
+_SYNAPSE_COPY = re.compile(
+    rf"COPY INTO {_NAME}\.{_NAME} FROM 'https://([^/']+)/((?:[^']|'')*)' "
+    r"WITH \(FILE_TYPE = 'PARQUET'(, CREDENTIAL = \(IDENTITY = 'Managed Identity'\))?\)$"
+)
+
+
+class FakeSynapseCursor(FakeSqlCursor):
+    def _create(self, sql: str) -> None:
+        tail = re.search(r"\nWITH \((.*)\)\Z", sql, re.S)
+        options = tail.group(1) if tail else None
+        head = _QUALIFIED.search(sql)
+        assert head is not None
+        super()._create(sql[: tail.start()] if tail else sql)
+        server: FakeSynapsePool = self.server  # type: ignore[assignment]
+        server.table_options[tuple(_unbracket(g) for g in head.groups())] = options  # type: ignore[index]
+
+    def _copy(self, text: str) -> None:
+        match = _SYNAPSE_COPY.match(text)
+        if not match:
+            raise RuntimeError(f"the fake does not understand: {text[:80]}")
+        host = match.group(3)
+        if not host.endswith(".dfs.core.windows.net"):
+            raise RuntimeError(
+                "COPY INTO reads ADLS Gen2 as https://<account>.dfs.core.windows.net/"
+            )
+        table = self._table(match.group(1), match.group(2))
+        server: FakeSynapsePool = self.server  # type: ignore[assignment]
+        server.copy_identities.append("managed_identity" if match.group(5) else "signed_in")
+        self._load_folder(table, match.group(4).replace("''", "'").strip("/"))
+
+
+class FakeSynapseConnection(FakeSqlConnection):
+    def cursor(self) -> FakeSynapseCursor:
+        return FakeSynapseCursor(self.server)
+
+
+class FakeSynapsePool(FakeSqlServer):
+    """A dedicated SQL pool: :class:`FakeSqlServer` plus ``CREATE TABLE ... WITH (...)`` (recorded
+    in ``table_options``) and ``COPY INTO`` over ``https://<account>.dfs.core.windows.net/...``
+    (``copy_identities`` records which identity each ``COPY INTO`` named)."""
+
+    def __init__(self, files: MemoryFS | None = None) -> None:
+        super().__init__(files)
+        self.table_options: dict[tuple[str, str], str | None] = {}
+        self.copy_identities: list[str] = []
+        self.last_connection: tuple[str, Any] | None = None
+
+    def connect(
+        self, connection_string: str, credential: Any = None, **_kw: Any
+    ) -> FakeSqlConnection:
+        self.connections += 1
+        self.last_connection = (connection_string, credential)
+        return FakeSynapseConnection(self)
 
 
 # --- sample data -------------------------------------------------------------------------

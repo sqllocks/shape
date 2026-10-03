@@ -1,6 +1,7 @@
 # Signing in to Fabric and Azure (`--auth`) and credential references
 
 `shape generate --scale-mode` (the SQL Database, Warehouse, Lakehouse and KQL sinks, and `fabric_spark`),
+`shape generate --to synapse://...` (a Synapse dedicated SQL pool),
 `shape emit` / `shape stream` (`eventhouse://`, `eventstream://`), `shape profile` (`onelake://`, `abfss://`)
 and `shape jobs` take the same sign-in options. The sign-in itself is the `sqllocks-shape-fabric` plugin's
 (`shape_fabric.auth`); core only reads the options and has no cloud dependency.

@@ -1,9 +1,10 @@
 """``Sink`` adapters over the writers, for code that works with the ``shape.sinks`` Protocol.
 
 Each class has the Protocol's ``write(uri, table, batches, **options) -> int``: one table per call,
-the writer built from the URI and the options and closed afterwards. Two are registered as
+the writer built from the URI and the options and closed afterwards. Three are registered as
 ``shape.sinks`` entry points: ``sqlserver`` (:class:`SqlServerSink`, schemes ``mssql`` and
-``sqlserver``) and ``warehouse`` (:class:`WarehouseSink`). The others are not; the scale router's
+``sqlserver``), ``warehouse`` (:class:`WarehouseSink`) and ``synapse`` (:class:`SynapseSink`).
+The others are not; the scale router's
 sinks (and ``shape generate``) choose the names under which they appear. Use the writers
 directly (``LakehouseWriter``, ``SqlDatabaseWriter``, ``WarehouseWriter``, ``EventhouseWriter``,
 ``EventstreamWriter``) when you write several tables over one connection.
@@ -23,6 +24,10 @@ SqlDatabaseSink    ``sql-database://<host>/<database>``           connection_str
                                                                   columns, primary_key, schema
 WarehouseSink      ``warehouse://<host>/<database>``              the above, + staging_path,
                                                                   chunk_rows (not batch_size)
+SynapseSink        ``synapse://<workspace>.sql.azuresynapse.net/  the above, + staging_path (ADLS
+                   <pool>``                                       Gen2, required), chunk_rows,
+                                                                  distribution, index,
+                                                                  copy_identity, connection_string
 EventhouseSink     ``eventhouse://<host>/<database>[/<table>]``   write_mode, kql_table, token,
                                                                   credential, max_request_bytes,
                                                                   schema
@@ -46,10 +51,12 @@ from shape_sqlserver.sql import (
 
 from shape.errors import ShapeError
 
+from .errors import WriteError
 from .eventhouse_writer import EventhouseWriter
 from .eventstream_writer import EventstreamWriter
 from .lakehouse import LakehouseWriter
 from .sqldb import SqlDatabaseWriter
+from .synapse import SYNAPSE_HOST, SynapseWriter
 from .warehouse import WarehouseWriter
 
 log = logging.getLogger(__name__)
@@ -133,6 +140,160 @@ class WarehouseSink:
             keys = _take(opts, ("write_mode", "chunk_rows", "columns", "primary_key", "schema"))
             _unknown(self.name, opts)
             return writer.write_table(table, batches, **keys)
+
+
+class SynapseSink:
+    """Rows into a Synapse dedicated SQL pool: Parquet staged in ADLS Gen2, one ``COPY INTO``.
+
+    ``synapse://<workspace>.sql.azuresynapse.net/<pool>`` plus the options below; see
+    :class:`~shape_fabric.synapse.SynapseWriter`. Sign in with ``credential`` (Microsoft Entra,
+    the plugin's ``--auth`` modes) or give ``connection_string`` (``--auth sql`` adds the login).
+    A password, token or key is never accepted in the URI, which has no user part, and never
+    appears in a message or a log record. ``connect`` is a test seam, with the signature of
+    ``shape_fabric._tsql.connect``.
+    """
+
+    name = "synapse"
+    schemes = ("synapse",)
+
+    def __init__(self, *, connect: Callable[..., Any] | None = None) -> None:
+        self._connect = connect
+
+    def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+        opts = dict(options)
+        secrets = [str(v) for k in ("connection_string",) if (v := opts.get(k))]
+        secrets += _pwd_values(str(opts.get("connection_string") or ""))
+        masked: BaseException | None = None
+        try:
+            return self._write(uri, table, batches, opts)
+        except Exception as exc:
+            chain: list[BaseException] = []
+            seen: BaseException | None = exc
+            while seen is not None and len(chain) < 8:
+                chain.append(seen)
+                seen = seen.__cause__ or seen.__context__
+            if not any(sec in str(e) for e in chain for sec in secrets):
+                raise
+            text = str(exc)
+            for secret in secrets:
+                text = text.replace(secret, "***")
+            masked = type(exc)(text)
+        raise masked from None
+
+    def _write(
+        self, uri: str, table: str, batches: Iterable[pa.RecordBatch], opts: dict[str, Any]
+    ) -> int:
+        given = opts.pop("connection_string", None)
+        connection = opts.pop("connection", None)
+        conn = str(given) if given else None
+        host_and_pool = self._parse(uri)
+        if conn is None and connection is None:
+            conn = str(build_connection_string(*host_and_pool))
+        with SynapseWriter(
+            conn,
+            opts.pop("staging_path", None),
+            credential=opts.pop("credential", None),
+            connection=connection,
+            connect=self._connect,
+            filesystem=opts.pop("filesystem", None),
+            schema_name=opts.pop("schema_name", "dbo"),
+            copy_identity=opts.pop("copy_identity", "managed_identity"),
+        ) as writer:
+            keys = _take(
+                opts,
+                (
+                    "write_mode",
+                    "chunk_rows",
+                    "columns",
+                    "primary_key",
+                    "schema",
+                    "distribution",
+                    "index",
+                ),
+            )
+            commit_rows = opts.pop("commit_rows", None)
+            _unknown(self.name, opts)
+            if commit_rows is not None and (
+                isinstance(commit_rows, bool) or not isinstance(commit_rows, int) or commit_rows < 1
+            ):
+                raise ShapeError("commit_rows must be a positive integer")
+            log.debug("writing table %r to %s", table, writer.destination)
+            if commit_rows is None:
+                rows = writer.write_table(table, batches, **keys)
+            else:
+                rows = self._write_in_loads(writer, table, batches, keys, commit_rows)
+            log.debug("wrote %d rows of table %r to %s", rows, table, writer.destination)
+            return rows
+
+    @staticmethod
+    def _write_in_loads(
+        writer: SynapseWriter,
+        table: str,
+        batches: Iterable[pa.RecordBatch],
+        keys: dict[str, Any],
+        commit_rows: int,
+    ) -> int:
+        """One staged ``COPY INTO`` and commit per run of input batches that reaches
+        ``commit_rows`` rows (rounded up to whole batches: a ``COPY INTO`` is too heavy a
+        statement to run per row), so readers see rows during a stream. The first load applies
+        ``write_mode``; the others append. A failure keeps what was committed."""
+        total = 0
+        mode = keys.get("write_mode", "create")
+        group: list[pa.RecordBatch] = []
+        waiting = 0
+
+        def load() -> None:
+            nonlocal total, mode, group, waiting
+            try:
+                total += writer.write_table(table, group, **{**keys, "write_mode": mode})
+            except Exception as exc:
+                if not total:
+                    raise
+                failure = WriteError(
+                    f"{exc}; {total} rows were committed before it failed", rows_committed=total
+                )
+                raise failure from None
+            mode, group, waiting = "append", [], 0
+
+        for batch in batches:
+            group.append(batch)
+            waiting += batch.num_rows
+            if waiting >= commit_rows:
+                load()
+        if group or not total:
+            load()  # the rest, or the (empty) table of a stream that gave no rows
+        return total
+
+    def _parse(self, uri: str) -> tuple[str, str]:
+        """The workspace's SQL endpoint and the pool of ``synapse://<endpoint>/<pool>``."""
+        try:
+            parts = urlsplit(uri)
+            port = parts.port
+        except (ValueError, AttributeError):
+            raise ShapeError("the destination is not a valid URI") from None
+        if parts.scheme != "synapse":
+            raise ShapeError("the destination scheme must be synapse")
+        if parts.password is not None or parts.username is not None:
+            raise ShapeError(
+                "the destination has no user part: a Synapse sink signs in with credential= "
+                "or --auth (a password must never be part of the URI)"
+            )
+        if parts.query:
+            secret = any(w in parts.query.lower() for w in ("pw", "pass", "secret", "token", "key"))
+            hint = "; a password or token must never be part of the URI" if secret else ""
+            raise ShapeError(f"the Synapse destination takes no query parameters{hint}")
+        host = (parts.hostname or "").lower()
+        if host.endswith("-ondemand.sql.azuresynapse.net"):
+            raise ShapeError(
+                "a serverless SQL pool (-ondemand) cannot be written to; use the dedicated "
+                "pool's endpoint, <workspace>.sql.azuresynapse.net"
+            )
+        pool = unquote(parts.path.lstrip("/"))
+        if not SYNAPSE_HOST.match(host) or port or not pool or "/" in pool:
+            raise ShapeError(
+                "the destination must be synapse://<workspace>.sql.azuresynapse.net/<pool>"
+            )
+        return host, pool
 
 
 _CONN_KEYS = (
