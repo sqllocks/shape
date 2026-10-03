@@ -200,6 +200,16 @@ def _resolve(side: Any, tables: Mapping[str, pa.Table] | None, which: str) -> tu
     return load_table(side)[1], label
 
 
+def _sum_wide(col: Any) -> Any:
+    """``col`` as the type a sum is taken in: integers widen to 38 digits so the sum cannot wrap
+    around, which Arrow's own integer sum does silently."""
+    return pc.cast(col, pa.decimal128(38, 0)) if pa.types.is_integer(col.type) else col
+
+
+def _exact(value: Any, col_type: pa.DataType) -> Any:
+    return int(value) if value is not None and pa.types.is_integer(col_type) else value
+
+
 def _group(
     table: pa.Table, columns: list[str], aggs: list[tuple[str, str]]
 ) -> dict[tuple[Any, ...], dict[Any, Any]]:
@@ -211,12 +221,28 @@ def _group(
         for column, agg in aggs:
             stats[(column, agg)] = _scalar(table.column(column), agg)
         return {(): stats}
-    data = table.select([*columns, *dict.fromkeys(c for c, _ in aggs)])
+    wanted = list(dict.fromkeys([*columns, *(c for c, _ in aggs)]))
+    data = table.select(wanted)
     data = data.append_column(_COUNT, pa.array([1] * n, pa.int64()))
-    spec = [(_COUNT, "sum")] + [(c, a) for c, a in dict.fromkeys(aggs)]
+    spec = [(_COUNT, "sum")]
+    out_name: dict[tuple[str, str], str] = {}
+    for c, a in dict.fromkeys(aggs):
+        if a == "sum" and pa.types.is_integer(table.schema.field(c).type):
+            wide = f"{_COUNT}_wide_{len(out_name)}"
+            data = data.append_column(wide, _sum_wide(table.column(c)))
+            spec.append((wide, "sum"))
+            out_name[(c, a)] = f"{wide}_sum"
+        else:
+            spec.append((c, a))
+            out_name[(c, a)] = f"{c}_{a}"
     out = data.group_by(columns, use_threads=False).aggregate(spec)
     key_cols = [out.column(c).to_pylist() for c in columns]
-    value_cols = {(c, a): out.column(f"{c}_{a}").to_pylist() for c, a in dict.fromkeys(aggs)}
+    value_cols = {
+        pair: [_exact(v, table.schema.field(pair[0]).type) for v in out.column(name).to_pylist()]
+        if pair[1] == "sum"
+        else out.column(name).to_pylist()
+        for pair, name in out_name.items()
+    }
     counts = out.column(f"{_COUNT}_sum").to_pylist()
     result: dict[tuple[Any, ...], dict[Any, Any]] = {}
     for i, key in enumerate(zip(*([_canon(v) for v in col] for col in key_cols), strict=True)):
@@ -229,7 +255,7 @@ def _group(
 
 def _scalar(col: pa.ChunkedArray, agg: str) -> Any:
     if agg == "sum":
-        return pc.sum(col).as_py()
+        return _exact(pc.sum(_sum_wide(col)).as_py(), col.type)
     if agg == "mean":
         return pc.mean(col).as_py()
     if agg == "min":
@@ -239,6 +265,19 @@ def _scalar(col: pa.ChunkedArray, agg: str) -> Any:
     if agg == "count":
         return int(pc.count(col).as_py())
     return int(pc.count_distinct(col).as_py())
+
+
+def _supports(agg: str, type_: pa.DataType) -> bool:
+    """Whether ``agg`` can be taken over a column of ``type_``."""
+    if agg in ("sum", "mean"):
+        return bool(
+            pa.types.is_integer(type_) or pa.types.is_floating(type_) or pa.types.is_decimal(type_)
+        )
+    if agg in ("min", "max"):
+        return not (
+            pa.types.is_nested(type_) or pa.types.is_null(type_) or pa.types.is_dictionary(type_)
+        )
+    return True
 
 
 def _label(columns: list[str], key: tuple[Any, ...]) -> dict[str, Any]:
@@ -365,6 +404,25 @@ def _reconcile_tables(
         a.setdefault("target_column", a["column"])
         bad_a = missing(src, "source", [a["column"]])
         bad_a |= missing(tgt, "target", [a["target_column"]])
+        for side, table, column in (
+            ("source", src, a["column"]),
+            ("target", tgt, a["target_column"]),
+        ):
+            if column in table.column_names:
+                type_ = table.schema.field(column).type
+                if not _supports(a["agg"], type_):
+                    findings.append(
+                        _finding(
+                            name,
+                            "reconcile.column_type",
+                            column,
+                            f"{a['agg']}({column}) needs a different column type: the {side} "
+                            f"column is {type_}",
+                            {"agg": a["agg"]},
+                            {"side": side, "column": column, "type": str(type_)},
+                        )
+                    )
+                    bad_a = True
         if not bad_a:
             good_aggs.append(a)
 

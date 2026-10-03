@@ -428,8 +428,8 @@ def test_an_aggregate_of_the_wrong_type_is_a_finding_not_a_crash(agg, col):
         name="rule1",
     )
     assert not r.passed
-    [f] = r.findings
-    assert f["rule"] == "reconcile.column_type"
+    assert {f["rule"] for f in r.findings} == {"reconcile.column_type"}
+    f = r.findings[0]
     assert f["column"] == col
     assert "rule1" in f["message"] and agg in f["message"]
 
@@ -440,7 +440,7 @@ def test_min_max_count_work_on_text_and_the_good_aggregates_still_run():
         assert reconcile(t, t, aggregates=[{"column": "s", "agg": agg}]).passed
     u = pa.table({"s": ["a", "b"], "n": [1, 3]})
     r = reconcile(t, u, aggregates=[{"column": "s", "agg": "sum"}, {"column": "n", "agg": "sum"}])
-    assert sorted(f["rule"] for f in r.findings) == ["reconcile.aggregate", "reconcile.column_type"]
+    assert {f["rule"] for f in r.findings} == {"reconcile.aggregate", "reconcile.column_type"}
 
 
 def test_the_target_column_type_is_checked_too():
@@ -462,9 +462,9 @@ def test_integer_sums_do_not_wrap_around():
     a = pa.table({"x": pa.array([2**62] * 4 + [5], pa.int64())})
     b = pa.table({"x": pa.array([5], pa.int64())})
     r = reconcile(a, b, aggregates=[{"column": "x", "agg": "sum"}])
-    assert not r.passed
-    assert r.findings[0]["expected"] == 2**64 + 5
-    assert r.findings[0]["observed"]["target"] == 5
+    [f] = [f for f in r.findings if f["rule"] == "reconcile.aggregate"]
+    assert f["expected"] == 2**64 + 5
+    assert f["observed"]["target"] == 5
 
 
 def test_grouped_integer_sums_do_not_wrap_around():
