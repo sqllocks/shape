@@ -91,6 +91,7 @@ class RuleCalendar:
         return found
 
     def factors(self, start: date, end: date) -> Floats:
+        _check_range(start, end)
         out = np.ones((end - start).days + 1, dtype=np.float64)
         for event in self._events:
             out *= event.factors(start, end)

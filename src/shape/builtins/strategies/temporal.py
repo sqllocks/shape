@@ -150,11 +150,20 @@ def _uniform(window: _Range, ctx: GenerationContext) -> npt.NDArray[np.int64]:
     return start + offsets
 
 
-def _weights(profile: Mapping[str, Any], names: tuple[str, ...]) -> npt.NDArray[np.float64]:
+def _weights(
+    profile: Mapping[str, Any], names: tuple[str, ...], ctx: GenerationContext
+) -> npt.NDArray[np.float64]:
+    unknown = sorted(str(k) for k in profile if k not in names)
+    if unknown:  # a misspelt name would leave its weight out silently (#149)
+        raise StrategyError(
+            f"temporal profile keys {unknown} are not among {', '.join(names)} ({where(ctx)})"
+        )
     base = 1.0 / len(names)
     w = np.array([float(profile.get(n, base)) for n in names], dtype=np.float64)
     if (w < 0).any() or not np.isfinite(w).all() or w.sum() <= 0:
-        raise StrategyError("temporal profile weights must be non-negative with a positive sum")
+        raise StrategyError(
+            f"temporal profile weights must be non-negative with a positive sum ({where(ctx)})"
+        )
     out: npt.NDArray[np.float64] = w / w.sum()
     return out
 
@@ -253,7 +262,9 @@ class Temporal:
         if not month_w and not dow_w:
             days = np.ones(n_days)
         else:
-            days = _day_weights(first, n_days, _weights(month_w, _MONTHS), _weights(dow_w, _DOW))
+            days = _day_weights(
+                first, n_days, _weights(month_w, _MONTHS, ctx), _weights(dow_w, _DOW, ctx)
+            )
         edges = _Edges(window, first, n_days)
         values = kernel_ops.temporal_sample(
             arrow_array(edges.weigh(days)),

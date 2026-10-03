@@ -206,8 +206,10 @@ class Trend:
     ramps: tuple[tuple[date, date, float], ...] = ()
 
     def __post_init__(self) -> None:
-        if self.annual_growth <= -1.0:
-            raise ValueError("annual_growth must be above -1")
+        if not math.isfinite(self.annual_growth) or self.annual_growth <= -1.0:
+            raise ValueError(
+                f"annual_growth must be a finite number above -1, got {self.annual_growth}"
+            )
         for _, f in self.steps:
             _check_lift(f, "trend step")
         for s, e, f in self.ramps:
