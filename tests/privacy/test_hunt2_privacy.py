@@ -252,3 +252,32 @@ def test_a_malformed_version_is_a_finding(patch):
 def test_another_format_is_a_finding():
     assert _rules(_safe_doc(format="other")) == {"format-version"}
     assert _rules(_safe_doc(format=["x"])) == {"format-version"}
+
+
+# --- #669: the profile registry and the unsafe stamp ------------------------------------------
+
+from shape.registry.profiles import ProfileRegistry, ProfileRegistryError  # noqa: E402
+
+
+def test_the_profile_registry_refuses_an_unsafe_full_fidelity_save(rare_profile, tmp_path):
+    reg = ProfileRegistry(tmp_path / "reg")
+    profile = shape.load(str(rare_profile))
+    with pytest.raises(ProfileRegistryError, match="unsafe"):
+        reg.save(
+            profile,
+            system="s",
+            name="n",
+            safe=True,
+            safe_config=SafeConfig(unsafe_full_fidelity=True),
+        )
+    assert not list((tmp_path / "reg").rglob("*.safe.json"))
+
+
+def test_the_profile_registry_still_saves_the_safe_form(rare_profile, tmp_path):
+    reg = ProfileRegistry(tmp_path / "reg")
+    ids = reg.save(shape.load(str(rare_profile)), system="s", name="n", safe=True)
+    assert ids == ["s/d/n"]
+    (path,) = (tmp_path / "reg").rglob("*.safe.json")
+    text = path.read_text(encoding="utf-8")
+    assert json.loads(text)["unsafe"] is False and "Zed" not in text
+    assert reg.validate() == []
