@@ -39,6 +39,7 @@ if TYPE_CHECKING:
     from shape.scenario.gsl import GenerationSpec
 
 _FILE_FORMATS = {"parquet": "parquet", "csv": "csv", "jsonl": "jsonl", "json": "jsonl"}
+JSONL_BATCH_ROWS = 50_000  # rows turned into Python values at a time when events are written
 
 
 @dataclass
@@ -388,7 +389,7 @@ def _json_default(value: Any) -> Any:
 
 def _write_jsonl(table: pa.Table, path: Path) -> None:
     with path.open("w", encoding="utf-8", newline="\n") as fh:
-        for batch in table.to_batches():
+        for batch in table.to_batches(max_chunksize=JSONL_BATCH_ROWS):
             for row in batch.to_pylist():
                 fh.write(json.dumps(row, default=_json_default, ensure_ascii=False))
                 fh.write("\n")
