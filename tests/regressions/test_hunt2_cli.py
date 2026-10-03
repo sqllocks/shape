@@ -329,3 +329,33 @@ def test_existing_columns_still_measured(tmp_path: Path, capsys) -> None:
     assert json.loads(capsys.readouterr().out)["k"] == 1
     assert main(["key", "n.csv", "a"]) == 0
     assert main(["fd", "n.csv", "--determinant", "a", "--dependent", "b"]) == 0
+
+
+# -- #681 ------------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("flag", ["--pii", "--exclude"])
+def test_mask_options_naming_a_missing_column_are_refused(tmp_path: Path, capsys, flag) -> None:
+    (tmp_path / "t.csv").write_text("id,email\n1,a@b.com\n", encoding="utf-8")
+    value = "nosuch=email" if flag == "--pii" else "nosuch"
+    assert main(["mask", "t.csv", "-o", "out", flag, value]) == 2
+    err = capsys.readouterr().err
+    assert "nosuch" in err and "not a column" in err and "id, email" in err
+    assert not (tmp_path / "out").exists()
+
+
+def test_mask_options_naming_a_real_column_still_work(tmp_path: Path) -> None:
+    (tmp_path / "t.csv").write_text("id,email\n1,a@b.com\n", encoding="utf-8")
+    assert main(["mask", "t.csv", "-o", "out", "--exclude", "id", "--pii", "email=email"]) == 0
+
+
+@pytest.mark.parametrize("value", ["customer.nmae", "nosuchtable.name", "name"])
+def test_scorecard_classified_must_name_a_column_of_the_data(scored, capsys, value) -> None:
+    d, g = scored
+    assert main(["scorecard", str(d), "--schema", str(g), "--classified", value]) == 2
+    assert "--classified" in capsys.readouterr().err
+
+
+def test_scorecard_classified_real_column_still_works(scored) -> None:
+    d, g = scored
+    assert main(["scorecard", str(d), "--schema", str(g), "--classified", "customer.name"]) == 0
