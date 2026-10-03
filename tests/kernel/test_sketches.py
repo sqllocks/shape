@@ -343,3 +343,50 @@ def test_kll_update_skips_nan_in_both_kernels(native, kernel):
     for x in [float("nan")] + [float(i) for i in range(1000)] + [float("nan")]:
         many.update(x)
     assert many.n == 1000 and 400 <= many.quantile(0.5) <= 600
+
+
+# ---- restored state is validated (#532) ---------------------------------------------------------
+
+
+def _kernels(native):
+    return [native, reference]
+
+
+def test_hll_from_registers_rejects_impossible_register_values(native):
+    for mod in _kernels(native):
+        with pytest.raises(ValueError, match="register"):
+            mod.Hll.from_registers(4, bytes([255] * 16))
+        ok = mod.Hll.from_registers(4, bytes([61] * 16))  # 64 - p + 1 is the largest rank
+        assert ok.estimate() > 0
+
+
+def _bounded_snapshot(mod, values):
+    import struct
+
+    batch = pa.record_batch({"a": pa.array(values, pa.float64())})
+    state = mod.ProfileState(batch.schema, "bounded")
+    state.update(batch)
+    return batch.schema, bytearray(state.snapshot()), struct
+
+
+@pytest.mark.parametrize("damage", ["register", "nan_item", "small_k", "capacity"])
+def test_a_damaged_snapshot_is_a_value_error_in_both_kernels(native, damage):
+    for mod in _kernels(native):
+        if damage == "capacity":
+            schema, snap, struct = _bounded_snapshot(mod, [None])
+            regs = snap.find(b"\x0e" + b"\x00" * (1 << 14))  # p = 14, then empty registers
+            at = regs + 1 + (1 << 14)
+            snap[at : at + 4] = struct.pack("<I", 0)
+        else:
+            schema, snap, struct = _bounded_snapshot(mod, [12345.678])
+            kll = snap.find(struct.pack("<QQ", 200, 1))  # k, n, compactions, levels, length, item
+            if damage == "nan_item":
+                snap[kll + 32 : kll + 40] = struct.pack("<d", float("nan"))
+            elif damage == "small_k":
+                snap[kll : kll + 8] = struct.pack("<Q", 1)
+            else:
+                snap[kll + 41] = 255  # the first HLL register, after p
+        with pytest.raises(ValueError, match="snapshot"):
+            restored = mod.ProfileState.from_snapshot(schema, bytes(snap))
+            restored.update(pa.record_batch({"a": pa.array([1.0, 2.0])}))
+            restored.finalize()
