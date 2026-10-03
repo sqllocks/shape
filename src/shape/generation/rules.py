@@ -230,6 +230,29 @@ def _replace(
     return table.set_column(table.column_names.index(column), column, fixed)
 
 
+def _settle(
+    new: npt.NDArray[np.float64],
+    bound: npt.NDArray[Any],
+    op: str,
+    u: npt.NDArray[np.float64],
+    integer: bool,
+) -> npt.NDArray[np.float64]:
+    """``new`` where it keeps ``value OP bound`` as it will be stored (an integer column rounds
+    it), else a value past the bound by 5% to 70% of its size (at least 1 of a unit). Scaling the
+    bound, as the repairs do, holds only for a positive bound: below zero, at zero or close to it,
+    or for an integer, the scaled value can stay on the wrong side."""
+    stored = np.round(new) if integer else new
+    with np.errstate(invalid="ignore"):
+        keeps = {"<": stored < bound, "<=": stored <= bound, ">": stored > bound}[op]
+        step = np.maximum(np.abs(bound), 1.0) * (0.05 + u * 0.65)
+        if integer:
+            step = np.maximum(np.floor(step), 1.0)
+            past = np.floor(bound) - step if op in ("<", "<=") else np.ceil(bound) + step
+        else:
+            past = np.round(bound - step if op in ("<", "<=") else bound + step, 2)
+    return np.where(keeps, new, past)
+
+
 def _fix_cross_column(rule: BusinessRule, tables: Tables, seed: int) -> Tables:
     if not rule.table or rule.table not in tables:
         return tables
@@ -253,10 +276,11 @@ def _fix_cross_column(rule: BusinessRule, tables: Tables, seed: int) -> Tables:
         else:
             return tables
     else:
+        integer = pa.types.is_integer(lcol.type)
         if op == "<":
-            mask, new = lv >= rv, np.round(rv * (0.3 + u * 0.65), 2)
+            mask, new = lv >= rv, _settle(np.round(rv * (0.3 + u * 0.65), 2), rv, op, u, integer)
         elif op == ">":
-            mask, new = lv <= rv, np.round(rv * (1.05 + u * 0.95), 2)
+            mask, new = lv <= rv, _settle(np.round(rv * (1.05 + u * 0.95), 2), rv, op, u, integer)
         else:
             return tables
     if not mask.any():
@@ -290,7 +314,8 @@ def _fix_cross_table(rule: BusinessRule, tables: Tables, seed: int) -> Tables:
                 "timedelta64[us]"
             )
         else:
-            new = np.round(right_vals * (0.3 + u * 0.7), 2)
+            integer = pa.types.is_integer(left_col.type)
+            new = _settle(np.round(right_vals * (0.3 + u * 0.7), 2), right_vals, op, u, integer)
     else:
         return tables
     if not mask.any():
