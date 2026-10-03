@@ -13,15 +13,19 @@ import json
 import sys
 from collections.abc import Sequence
 
+DESCRIPTION = (
+    "Write a migrated copy of a persisted Shape file (a .shape artifact, a safe "
+    "profile, a model, a run manifest, a contract, ...) in the current form. The original is "
+    "kept, an existing destination is never overwritten, and a receipt "
+    "(DST.receipt.json) records what was done."
+)
+
 
 def _parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(
-        prog="shape migrate",
-        description="Write a migrated copy of a persisted Shape file (a .shape artifact, a safe "
-        "profile, a model, a run manifest, a contract, ...) in the current form. The original is "
-        "kept, an existing destination is never overwritten, and a receipt "
-        "(DST.receipt.json) records what was done.",
-    )
+    from shape.cli.stability import EXPERIMENTAL_MARK, level
+
+    mark = EXPERIMENTAL_MARK if level("migrate") == "experimental" else ""
+    p = argparse.ArgumentParser(prog="shape migrate", description=mark + DESCRIPTION)
     p.add_argument("src", metavar="SRC")
     p.add_argument("dst", metavar="DST", help="the new file (must not exist)")
     p.add_argument("--to", type=int, metavar="N", help="target version (default: the current one)")
