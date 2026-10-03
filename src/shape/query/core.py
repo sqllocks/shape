@@ -26,7 +26,11 @@ def _column(model: dict[str, Any], name: str) -> Any:
     tables = model["tables"]
     if len(tables) == 1:
         table = next(iter(tables.values()))
-        return columns_of(table).get(name)
+        found = columns_of(table).get(name)
+        tname, _, cname = name.partition(".")
+        if found is None and cname and tname in tables:  # "table.column" names it too
+            found = columns_of(table).get(cname)
+        return found
     if "." in name:
         tname, _, cname = name.partition(".")
         if tname in tables:
@@ -80,7 +84,11 @@ def query(shape: Any, expression: str) -> Any:
         if not a or not b:
             raise ShapeQueryError("relationship requires two fields")
         obj = _relationship(model, a, b)
-    for part in [x for x in m.group("path").split(".") if x]:
+    path = [x for x in m.group("path").split(".") if x]
+    if obj is None and path and root != "rows":
+        args = ", ".join(f'"{x}"' for x in (a, b) if x is not None)
+        raise ShapeQueryError(f"{root}({args}) was not found, so it has no .{path[0]}")
+    for part in path:
         if isinstance(obj, dict):
             obj = obj.get(part)
         else:
