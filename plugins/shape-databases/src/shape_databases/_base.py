@@ -51,6 +51,10 @@ class Target:
         return f"{who}{where}/{self.database or ''}"
 
 
+# URI query keys that would carry a credential: refused with a message that says so
+_SECRET_KEYS = ("password", "passwd", "pwd", "token", "secret", "private_key", "passphrase")
+
+
 def parse_uri(
     uri: str,
     schemes: Sequence[str],
@@ -77,6 +81,12 @@ def parse_uri(
     params: dict[str, Any] = {}
     for key, value in parse_qsl(parts.query, keep_blank_values=True):
         if key not in allowed:
+            if any(word in key.lower() for word in _SECRET_KEYS):
+                raise ShapeError(
+                    f"{key} must not be part of the URI (it would be logged and kept in shell "
+                    "history): pass it as an option, set its environment variable, or give an "
+                    "env:// or file:// reference"
+                )
             raise ShapeError(
                 f"unknown URI parameter {key!r}; allowed: {', '.join(sorted(allowed))}"
             )
@@ -133,6 +143,10 @@ class Plan:
     primary_key: Sequence[str]
     schema: pa.Schema | None
     secret: Secret | None
+    # sink-specific resolved sign-in material (never printed) and every secret to scrub
+    auth: dict[str, Any] = field(default_factory=dict)
+    secrets: tuple[Secret, ...] = ()
+    options: Mapping[str, Any] = field(default_factory=dict)
 
 
 class DatabaseSink:
@@ -150,6 +164,28 @@ class DatabaseSink:
         self._connect = connect
 
     # -- hooks -------------------------------------------------------------------------------
+    def parse_target(self, uri: str) -> Target:
+        return parse_uri(uri, self.schemes, self.uri_params)
+
+    def resolve_auth(self, options: Mapping[str, Any]) -> tuple[Secret | None, dict[str, Any]]:
+        """The password (and any other sign-in material) for a write, resolved before any
+        connection is opened."""
+        return resolve_password(options, self.password_env), {}
+
+    def create_table_sql(self, plan: Plan, schema: pa.Schema, first: pa.RecordBatch | None) -> str:
+        return _sql.create_table_sql(
+            plan.schema_name,
+            plan.table,
+            schema,
+            self.dialect,
+            first=first,
+            columns=plan.columns,
+            primary_key=plan.primary_key,
+        )
+
+    def check_schema(self, schema: pa.Schema, plan: Plan) -> None:
+        """Refuse, before any connection, a column the table cannot hold."""
+
     def connect_params(self, plan: Plan) -> dict[str, Any]:
         raise NotImplementedError
 
@@ -174,7 +210,7 @@ class DatabaseSink:
     # -- the flow ----------------------------------------------------------------------------
     def plan(self, uri: str, table: str, options: Mapping[str, Any]) -> Plan:
         dialect = self.dialect
-        target = parse_uri(uri, self.schemes, self.uri_params)
+        target = self.parse_target(uri)
         prefix = options.get("table_prefix") or ""
         if not isinstance(prefix, str):
             raise ShapeError("table_prefix must be a string")
@@ -188,6 +224,7 @@ class DatabaseSink:
         schema = options.get("schema")
         if schema is not None and not isinstance(schema, pa.Schema):
             raise ShapeError("schema must be a pyarrow Schema")
+        secret, auth = self.resolve_auth(options)
         return Plan(
             target=target,
             mode=_sql.check_mode(options.get("write_mode", "create")),
@@ -201,7 +238,10 @@ class DatabaseSink:
             columns=options.get("columns") or {},
             primary_key=key,
             schema=schema,
-            secret=resolve_password(options, self.password_env),
+            secret=secret,
+            auth=auth,
+            secrets=tuple(v for v in auth.values() if isinstance(v, Secret)),
+            options=options,
         )
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
@@ -214,9 +254,11 @@ class DatabaseSink:
             )
         for name in use_schema.names:
             _sql.check_identifier(name, "column", self.dialect)
+        _sql.check_unique(use_schema.names, self.dialect)
+        self.check_schema(use_schema, plan)
         injected = options.get("connection")
         label = plan.target.label
-        secrets = [plan.secret]
+        secrets = [plan.secret, *plan.secrets]
         conn = injected
         progress = [0]
         created = False
@@ -237,14 +279,14 @@ class DatabaseSink:
             self._undo(conn, plan, created, progress[0])
             raise
         except Exception as exc:
-            self._undo(conn, plan, created, progress[0])
-            kept = f"; {progress[0]} rows were committed before it failed" if progress[0] else ""
+            kept_rows = self._undo(conn, plan, created, progress[0])
+            kept = f"; {kept_rows} rows were committed before it failed" if kept_rows else ""
             # Raised after this block: inside it, the driver's exception (whose message may
             # hold what it was given) would stay reachable as __context__.
             failure = WriteError(
                 f"writing {name} at {label} failed ({type(exc).__name__}): "
                 f"{scrub(str(exc), secrets)}{kept}",
-                progress[0],
+                kept_rows,
             )
         finally:
             if conn is not None and injected is None:
@@ -306,17 +348,7 @@ class DatabaseSink:
                 return False
             if plan.schema_name:
                 cur.execute(self.create_schema_sql(plan.schema_name))
-            cur.execute(
-                _sql.create_table_sql(
-                    plan.schema_name,
-                    plan.table,
-                    schema,
-                    dialect,
-                    first=first,
-                    columns=plan.columns,
-                    primary_key=plan.primary_key,
-                )
-            )
+            cur.execute(self.create_table_sql(plan, schema, first))
             return True
         finally:
             cur.close()
@@ -324,11 +356,12 @@ class DatabaseSink:
     def create_schema_sql(self, schema_name: str) -> str:
         return f"CREATE SCHEMA IF NOT EXISTS {_sql.quote(schema_name, self.dialect)}"
 
-    def _undo(self, conn: Any, plan: Plan, created: bool, committed: int) -> None:
+    def _undo(self, conn: Any, plan: Plan, created: bool, committed: int) -> int:
         """After a failure: roll back the open transaction; drop a table this call made when
-        nothing of it was committed and the database could not roll the creation back."""
+        nothing of it was committed and the database could not roll the creation back. Returns
+        the number of committed rows still visible afterwards."""
         if conn is None:
-            return
+            return committed
         try:
             conn.rollback()
             if (
@@ -342,6 +375,7 @@ class DatabaseSink:
                 conn.commit()
         except Exception:  # noqa: S110  # nosec B110
             pass  # the original error is the one to report
+        return committed
 
 
 def chunks(

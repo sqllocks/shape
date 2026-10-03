@@ -39,11 +39,16 @@ class WriteResult:
 
 
 class WriteError(ShapeError):
-    """A write failed. ``result`` holds the tables that were written completely before it."""
+    """A write failed. ``result`` holds the tables that were written completely before it;
+    ``rows_committed`` is how many rows of the failed table a ``commit_rows`` write had already
+    committed (0 when the table was rolled back completely)."""
 
-    def __init__(self, message: str, result: WriteResult | None = None) -> None:
+    def __init__(
+        self, message: str, result: WriteResult | None = None, rows_committed: int = 0
+    ) -> None:
         super().__init__(message)
         self.result = result
+        self.rows_committed = rows_committed
 
 
 class AuthError(ShapeError):

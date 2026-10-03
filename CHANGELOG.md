@@ -38,6 +38,27 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `type`). `sempy` is the plugin extra `semantic-link`, imported only when a semantic-model URI is
   opened. A `many_to_many` relationship in a profile is recorded and no longer becomes a generated
   foreign key or a proposal's profiler-detected key.
+- Sinks II, part a (W2-08, #96): `shape generate --to` and `shape emit --to` write to Snowflake
+  (`snowflake://user@account/database/schema?warehouse=WH&role=ROLE`: Parquet files `PUT` to the
+  table stage, one `COPY INTO` whose loaded row count must equal the staged rows, staged files
+  removed also on failure; key-pair or password sign-in) and to Databricks
+  (`databricks://host/http_path?catalog=CAT&schema=SCH`: Delta tables in Unity Catalog through a SQL
+  warehouse, batched bound multi-row `INSERT`; token or OAuth machine-to-machine sign-in). Both are
+  in `plugins/shape-databases` (`shape_databases.SnowflakeSink`, `DatabricksSink`; drivers are the
+  plugin extras `[snowflake]` and `[databricks]`, none in core), take the same `write_mode`,
+  `schema_name`, `table_prefix`, `commit_rows`, `columns` and `primary_key` as the other database
+  sinks, check identifier limits (255 characters, names the database would change) before any
+  connection, refuse a secret in the URI and redact credentials in every message. Type maps and
+  what a failure leaves behind are in the plugin README.
+- Sinks II, part b (W2-08, #96): `shape generate --to synapse://<workspace>.sql.azuresynapse.net/<pool>`
+  and `shape emit --to` write to a Synapse dedicated SQL pool (`plugins/shape-fabric`,
+  `shape_fabric.SynapseSink` and `SynapseWriter`, `docs/plugins/fabric-writers.md`): the table is
+  prepared as the Warehouse writer does, the rows are staged as Parquet under the required
+  `staging_path` (an ADLS Gen2 `abfss://` folder), one `COPY INTO ... FILE_TYPE = 'PARQUET'` loads them
+  with the managed identity or the signed-in identity (`copy_identity`), the loaded row count must equal
+  the staged rows, and the staged files are deleted also when a step fails. Table options
+  `distribution` (`ROUND_ROBIN`, `HASH(column)`, `REPLICATE`) and `index` (`CLUSTERED COLUMNSTORE INDEX`,
+  `HEAP`). Sign-in is the plugin's `--auth` modes.
 
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and

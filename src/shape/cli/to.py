@@ -112,8 +112,8 @@ def sink_config(items: list[str] | None) -> dict[str, dict[str, Any]]:
     }
 
 
-_SIGN_IN_SINKS = ("abfss", "delta", "sqlserver", "warehouse")
-_SQL_SINKS = ("sqlserver", "warehouse")
+_SIGN_IN_SINKS = ("abfss", "delta", "sqlserver", "warehouse", "synapse")
+_SQL_SINKS = ("sqlserver", "warehouse", "synapse")
 
 
 def sign_in_options(a: argparse.Namespace, name: str) -> dict[str, Any]:
@@ -127,9 +127,9 @@ def sign_in_options(a: argparse.Namespace, name: str) -> dict[str, Any]:
         return {}
     if name not in _SIGN_IN_SINKS:
         raise ValueError(
-            f"--auth and --connection-string apply to abfss://, delta+abfss://, mssql:// and "
-            f"warehouse:// targets, not the {name} sink (it signs in with its own environment "
-            "variables or a password reference)"
+            f"--auth and --connection-string apply to abfss://, delta+abfss://, mssql://, "
+            f"warehouse:// and synapse:// targets, not the {name} sink (it signs in with its own "
+            "environment variables or a password reference)"
         )
     options: dict[str, Any] = {}
     if conn:

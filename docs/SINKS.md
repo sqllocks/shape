@@ -14,8 +14,11 @@ once.
 | `delta+abfss://.../lh.Lakehouse/Tables` | `delta` | core, extra `[azure]` | Delta tables in OneLake or ADLS Gen2 |
 | `mssql://host/db` | `sqlserver` | `sqllocks-shape-fabric` (needs `sqllocks-shape-sqlserver`) | SQL Server, Azure SQL, Fabric SQL database |
 | `warehouse://...` | `warehouse` | `sqllocks-shape-fabric` | Fabric Warehouse, `COPY INTO` from a staging path |
+| `synapse://workspace.sql.azuresynapse.net/pool` | `synapse` | `sqllocks-shape-fabric` | Synapse dedicated SQL pool, Parquet staged in ADLS Gen2 (`staging_path`), one `COPY INTO`, row count checked; `distribution`, `index` |
 | `postgresql://host/db` | `postgres` | `sqllocks-shape-databases[postgres]` | `COPY ... FROM STDIN` |
 | `mysql://host/db` | `mysql` | `sqllocks-shape-databases[mysql]` | batched multi-row `INSERT` |
+| `snowflake://user@account/db/schema` | `snowflake` | `sqllocks-shape-databases[snowflake]` | Parquet `PUT` to the table stage, one `COPY INTO`, row count checked |
+| `databricks://host/http_path?catalog=C&schema=S` | `databricks` | `sqllocks-shape-databases[databricks]` | Delta tables in Unity Catalog, batched bound multi-row `INSERT` |
 | `kafka://`, `eventhubs://`, `eventstream://`, `eventhouse://` | emitters | their plugins | streaming sinks (`shape.emitters`), `shape emit` only |
 
 An unknown scheme is an error that lists the schemes installed.
@@ -73,9 +76,12 @@ or `replace`; `--commit-rows N` commits every N rows so readers see rows during 
 commits every batch). Tables are created from the schema (types, primary key) with the same type
 mapping as the `sql` script sink. Identifiers are quoted and values are parameters. Passwords are
 never in a URI or on a command line: use the environment (`SHAPE_POSTGRES_PASSWORD`/`PGPASSWORD`,
-`SHAPE_MYSQL_PASSWORD`/`MYSQL_PWD`), a credential object (Entra token for SQL Server), or a
-credential reference. See `docs/plugins/fabric-writers.md` and the README of
-`sqllocks-shape-databases`.
+`SHAPE_MYSQL_PASSWORD`/`MYSQL_PWD`, `SNOWFLAKE_PASSWORD`, `DATABRICKS_TOKEN`), a credential object
+(Entra token for SQL Server), or a credential reference. Snowflake loads Parquet files from the
+table's stage with one `COPY INTO`; Databricks writes Delta tables with bound multi-row `INSERT`; a
+Synapse dedicated SQL pool loads Parquet staged in ADLS Gen2 (`--sink-config synapse.staging_path=`);
+each checks the loaded row count against the rows sent. See `docs/plugins/fabric-writers.md` and the
+README of `sqllocks-shape-databases`.
 
 ## Secrets
 
@@ -87,9 +93,11 @@ literal is refused. Errors and logs never contain a password, key, token or SAS 
 `--auth cli|msi|spn|sql|device-code|fabric`, `--tenant-id`, `--client-id`, `--client-secret REF`,
 `--sql-user`, `--sql-password REF` and `--connection-string STR|REF` (the same options as
 `shape emit` to Fabric, `docs/plugins/fabric-auth.md`) sign in to `abfss://`, `delta+abfss://`,
-`mssql://` and `warehouse://` targets of `shape generate --to` and `shape emit/stream --to`;
-`--auth sql` needs `--connection-string`. PostgreSQL and MySQL sign in with their password
-environment variables or a `password` reference, and refuse `--auth`. References are resolved by
+`mssql://`, `warehouse://` and `synapse://` targets of `shape generate --to` and
+`shape emit/stream --to`; `--auth sql` needs `--connection-string`. PostgreSQL, MySQL, Snowflake and
+Databricks sign in with their own secrets (a password environment variable or `password` reference;
+for Snowflake a key pair, `--sink-config snowflake.private_key=file://...`; for Databricks a token,
+`DATABRICKS_TOKEN`, or a client id and secret), and refuse `--auth`. References are resolved by
 one resolver in core, `shape.security.credrefs`.
 
 ## Writing a sink

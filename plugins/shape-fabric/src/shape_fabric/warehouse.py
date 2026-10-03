@@ -161,9 +161,7 @@ class WarehouseWriter:
         created = False
         db = self.db
         try:
-            created = prepare_table(
-                db, sname, table, mode, use_schema, columns=columns, primary_key=primary_key
-            )
+            created = self._prepare(sname, table, mode, use_schema, columns, primary_key)
             if first is None:
                 return 0
             staged = self._stage(table, folder, first, stream, chunk_rows)
@@ -182,6 +180,23 @@ class WarehouseWriter:
             raise WriteError(f"loading {sname}.{table} failed: {_tsql.redact(str(exc))}") from exc
         finally:
             self._cleanup(folder)
+
+    def _prepare(
+        self,
+        schema_name: str,
+        table: str,
+        mode: str,
+        schema: pa.Schema,
+        columns: Mapping[str, Mapping[str, Any]] | None,
+        primary_key: Sequence[str],
+    ) -> bool:
+        """Make the table ready for ``mode`` (a subclass adds table options here)."""
+        return prepare_table(
+            self.db, schema_name, table, mode, schema, columns=columns, primary_key=primary_key
+        )
+
+    def _copy_statement(self, schema_name: str, table: str, folder: Any) -> str:
+        return copy_into_sql(schema_name, table, folder.https() + "/")
 
     def _stage(
         self,
@@ -222,7 +237,7 @@ class WarehouseWriter:
         before = None
         if mode == "append" and not created:
             before = int(db.execute(_tsql.count_sql(schema_name, table)).fetchone()[0])
-        cursor = db.execute(copy_into_sql(schema_name, table, folder.https() + "/"))
+        cursor = db.execute(self._copy_statement(schema_name, table, folder))
         reported = getattr(cursor, "rowcount", -1)
         if isinstance(reported, int) and reported >= 0:
             return reported

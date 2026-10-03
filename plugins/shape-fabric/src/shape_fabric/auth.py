@@ -283,12 +283,13 @@ def connection_string_with_login(connection_string: str, user: str, password: st
 
 
 def _odbc(connection_string: str) -> str:
-    """An ODBC connection string; ``sql-database://host/db`` and ``warehouse://host/db`` (the
-    forms the sinks use) are turned into one."""
+    """An ODBC connection string; ``sql-database://host/db``, ``warehouse://host/db`` and
+    ``synapse://<workspace>.sql.azuresynapse.net/<pool>`` (the forms the sinks use) are turned
+    into one."""
     from urllib.parse import unquote, urlsplit
 
     parts = urlsplit(connection_string)
-    if parts.scheme in ("sql-database", "warehouse") and parts.netloc:
+    if parts.scheme in ("sql-database", "warehouse", "synapse") and parts.netloc:
         from shape_sqlserver.sql import (  # type: ignore[import-untyped,unused-ignore]
             build_connection_string,
         )

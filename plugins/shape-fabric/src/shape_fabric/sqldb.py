@@ -137,6 +137,7 @@ def prepare_table(
     *,
     columns: Mapping[str, Mapping[str, Any]] | None = None,
     primary_key: Sequence[str] = (),
+    options: str | None = None,
 ) -> bool:
     """Make the target ready for ``mode`` (see the module docstring); ``schema`` is normalized.
     Returns whether this call created the table."""
@@ -164,6 +165,7 @@ def prepare_table(
             warehouse=db.warehouse,
             columns=columns,
             primary_key=primary_key,
+            options=options,
         )
     )
     db.commit()

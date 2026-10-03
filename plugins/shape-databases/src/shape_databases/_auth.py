@@ -28,7 +28,13 @@ from .errors import CredentialError
 # Scope Microsoft Entra issues database access tokens for (Azure Database for PostgreSQL/MySQL).
 ENTRA_DB_SCOPE = "https://ossrh-postgresql.azure.com/.default"
 
-_KEYWORDS = re.compile(r"(?i)\b(password|passwd|pwd|passfile|token|secret)\b\s*[=:]\s*\S+")
+_KEYWORDS = re.compile(
+    r"(?i)\b(password|passwd|pwd|passfile|token|secret|client_secret|private_key|passphrase|"
+    r"access_token)\b\s*[=:]\s*\S+"
+)
+_PEM = re.compile(
+    r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?(?:-----END [A-Z ]*PRIVATE KEY-----|\Z)", re.S
+)
 _URI_PASSWORD = re.compile(r"(?i)(\b[a-z][a-z0-9+.-]*://[^\s:/@]*:)[^\s@]*@")
 
 
@@ -110,7 +116,7 @@ def resolve_password(
 def scrub(text: str, secrets: Iterable[Secret | str | None] = (), limit: int = 400) -> str:
     """``text`` on one line with every known secret, ``password=...`` pair and URI password
     hidden (a driver may echo what it was given in its message)."""
-    out = " ".join(str(text).split())
+    out = " ".join(_PEM.sub("***", str(text)).split())
     for secret in secrets:
         value = secret.reveal() if isinstance(secret, Secret) else secret
         if value:

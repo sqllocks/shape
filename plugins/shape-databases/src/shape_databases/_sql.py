@@ -30,7 +30,14 @@ WRITE_MODES = ("create", "append", "truncate", "replace")
 DEFAULT_BATCH_SIZE = 5000
 # PostgreSQL limits an identifier to 63 bytes and silently truncates longer names; MySQL to 64
 # characters. A write fails instead of creating a table under a different name.
-MAX_IDENTIFIER = {"postgres": 63, "mysql": 64}
+MAX_IDENTIFIER = {"postgres": 63, "mysql": 64, "snowflake": 255, "databricks": 255}
+# Quoting is core's for the two classic dialects; Snowflake quotes like PostgreSQL and Databricks
+# like MySQL (backticks).
+_QUOTE_AS = {"snowflake": "postgres", "databricks": "mysql"}
+# Characters Delta refuses in a column name (without column mapping), and those Unity Catalog
+# refuses in a table or schema name.
+_DELTA_COLUMN_BAD = frozenset(" ,;{}()\n\t=")
+_UC_NAME_BAD = frozenset(" ./`")
 # A string column longer than this becomes TEXT / LONGTEXT instead of VARCHAR(n).
 MAX_VARCHAR = 4000
 _TEXT = {"postgres": "TEXT", "mysql": "LONGTEXT"}
@@ -48,6 +55,8 @@ def check_identifier(name: Any, kind: str, dialect: str) -> str:
         raise ShapeError(
             f"{kind} name {name[:30]!r}... is longer than the {limit} {dialect} allows"
         )
+    if dialect in ("snowflake", "databricks"):
+        _check_cloud_identifier(name, kind, dialect)
     if dialect == "mysql":
         if "%" in name:
             # PyMySQL formats statements with %; a % in a name would be read as a placeholder.
@@ -57,9 +66,50 @@ def check_identifier(name: Any, kind: str, dialect: str) -> str:
     return name
 
 
+def _check_cloud_identifier(name: str, kind: str, dialect: str) -> None:
+    """What Snowflake and Databricks would change or refuse, said before any connection."""
+    if any(ord(c) < 32 or ord(c) == 127 for c in name):
+        raise ShapeError(f"{kind} name {name!r} contains a control character")
+    if dialect == "snowflake":
+        if name != name.strip():
+            raise ShapeError(
+                f"{kind} name {name!r}: Snowflake names cannot start or end with a space"
+            )
+        return
+    if kind == "column":
+        bad = sorted(c for c in name if c in _DELTA_COLUMN_BAD)
+        if bad:
+            raise ShapeError(
+                f"column name {name!r} contains {bad[0]!r}, which a Delta column name cannot hold"
+            )
+        return
+    # a table or schema: Unity Catalog stores these in lower case, so a name with capitals would
+    # be created under a different name than the one asked for
+    if any(c in _UC_NAME_BAD for c in name):
+        raise ShapeError(
+            f"{kind} name {name!r}: Unity Catalog names cannot contain a space, '.', '/' or '`'"
+        )
+    if name != name.lower():
+        raise ShapeError(
+            f"{kind} name {name!r}: Unity Catalog stores {kind} names in lower case; "
+            f"use {name.lower()!r}"
+        )
+
+
+def check_unique(names: Sequence[str], dialect: str) -> None:
+    """Column names that the database would take for one name are refused."""
+    seen: set[str] = set()
+    for name in names:
+        key = name.lower() if dialect == "databricks" else name
+        if key in seen:
+            raise ShapeError(f"column name {name!r} appears twice (or differs only in case)")
+        seen.add(key)
+
+
 def quote(name: str, dialect: str) -> str:
-    """One quoted identifier (core's quoting: ``"x"`` for PostgreSQL, backticks for MySQL)."""
-    return str(core_sql._quote(name, dialect))
+    """One quoted identifier (core's quoting: ``"x"`` for PostgreSQL and Snowflake, backticks for
+    MySQL and Databricks)."""
+    return str(core_sql._quote(name, _QUOTE_AS.get(dialect, dialect)))
 
 
 def qualified(schema_name: str | None, table: str, dialect: str) -> str:

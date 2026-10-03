@@ -11,10 +11,12 @@
   model with its declared relationships (:mod:`shape_fabric.semantic_profile`).
 * ``shape.sinks``: ``sqlserver`` writes to a live SQL Server, Azure SQL or Fabric SQL database
   (``mssql://`` and ``sqlserver://`` URIs, bulk insert) and ``warehouse`` to a Fabric Warehouse
-  (``warehouse://``, Parquet staged in OneLake then ``COPY INTO``).
+  (``warehouse://``, Parquet staged in OneLake then ``COPY INTO``), ``synapse`` to a Synapse
+  dedicated SQL pool (``synapse://``, Parquet staged in ADLS Gen2 then ``COPY INTO``).
 * Writers (a Python API; the scale router's sinks are built on it): ``LakehouseWriter`` (files
   in OneLake or a folder), ``SqlDatabaseWriter`` (Fabric SQL database, Azure SQL, SQL Server),
-  ``WarehouseWriter`` (Parquet staged in OneLake, then ``COPY INTO``), ``EventhouseWriter`` and
+  ``WarehouseWriter`` (Parquet staged in OneLake, then ``COPY INTO``), ``SynapseWriter``
+  (the same into a dedicated SQL pool), ``EventhouseWriter`` and
   ``EventstreamWriter``; ``Sink`` adapters in :mod:`shape_fabric.sinks`.
 * :mod:`shape_fabric.targets`: what ``shape demo`` needs of a destination besides writing to it:
   drop a table, remove files, and check that a target answers.
@@ -38,9 +40,11 @@ if TYPE_CHECKING:
     from .eventstream_writer import EventstreamWriter as EventstreamWriter
     from .lakehouse import LakehouseWriter as LakehouseWriter
     from .sinks import SqlServerSink as SqlServerSink
+    from .sinks import SynapseSink as SynapseSink
     from .sinks import WarehouseSink as WarehouseSink
     from .source import LakehouseSource as LakehouseSource
     from .sqldb import SqlDatabaseWriter as SqlDatabaseWriter
+    from .synapse import SynapseWriter as SynapseWriter
     from .warehouse import WarehouseWriter as WarehouseWriter
 
 SHAPE_API = "1.0"
@@ -55,6 +59,8 @@ _EXPORTS = {
     "LakehouseWriter": "lakehouse",
     "SqlDatabaseWriter": "sqldb",
     "SqlServerSink": "sinks",
+    "SynapseSink": "sinks",
+    "SynapseWriter": "synapse",
     "WarehouseSink": "sinks",
     "WarehouseWriter": "warehouse",
     "WriteError": "errors",

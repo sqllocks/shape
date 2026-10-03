@@ -42,6 +42,7 @@ def test_registered_under_the_sinks_group_with_both_schemes():
     assert eps == {
         "sqlserver": "shape_fabric:SqlServerSink",
         "warehouse": "shape_fabric:WarehouseSink",
+        "synapse": "shape_fabric:SynapseSink",
     }
     assert SqlServerSink.name == "sqlserver" and SqlServerSink.schemes == ("mssql", "sqlserver")
     assert WarehouseSink.name == "warehouse"

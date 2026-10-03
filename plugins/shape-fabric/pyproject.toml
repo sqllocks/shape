@@ -43,6 +43,7 @@ profile-model = "shape_fabric.commands:ProfileModelCommand"
 [project.entry-points."shape.sinks"]
 sqlserver = "shape_fabric:SqlServerSink"
 warehouse = "shape_fabric:WarehouseSink"
+synapse = "shape_fabric:SynapseSink"
 
 [project.entry-points."shape.sources"]
 onelake = "shape_fabric:LakehouseSource"
