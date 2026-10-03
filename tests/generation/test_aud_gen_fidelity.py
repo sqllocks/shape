@@ -104,3 +104,22 @@ def test_an_event_on_a_column_absent_that_day_has_no_effect(events, day, columns
 
     schema = DriftPlan(events, days=10).schema_at(_feed(), day)
     assert list(schema.tables["orders"].columns) == columns
+
+
+def test_a_ramp_longer_than_its_window_never_reaches_full_effect():
+    # 215: ramp_days 10 in a 3-day window reported full_effect_from 2026-01-10, after the event
+    # ended at weight 0.3.
+    from shape.generation.drift_plan import DriftPlan
+
+    event = {
+        "kind": "null_rate",
+        "table": "orders",
+        "column": "status",
+        "start": 0,
+        "end": 3,
+        "ramp_days": 10,
+        "to": 0.5,
+    }
+    (truth,) = DriftPlan([event], days=10).ground_truth()["events"]
+    assert truth["full_effect_from"] is None
+    assert truth["peak_weight"] == 0.3
