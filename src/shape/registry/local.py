@@ -34,10 +34,17 @@ def is_raw_profile(data: bytes) -> bool:
         import io
         import zipfile
 
+        from shape.artifact.io import ArtifactError, read_manifest_bytes
+
         try:
-            with zipfile.ZipFile(io.BytesIO(data)) as z:
-                return bool(json.loads(z.read("manifest.json")).get("kind") == "profile")
+            manifest = read_manifest_bytes(io.BytesIO(data))
+        except ArtifactError as exc:  # a manifest no Shape reader accepts: never inflate it
+            raise RegistryError(f"not a Shape container: {exc}") from exc
         except (OSError, ValueError, KeyError, zipfile.BadZipFile):
+            return False
+        try:
+            return bool(json.loads(manifest).get("kind") == "profile")
+        except (ValueError, AttributeError):
             return False
     if data.lstrip()[:1] == b"{":
         try:
