@@ -122,3 +122,19 @@ def test_start_time_prefix_and_transition_limit() -> None:
     for e in result.events.to_pylist():
         per_entity[e["entity_id"]] = per_entity.get(e["entity_id"], 0) + 1
     assert max(per_entity.values()) <= 2
+
+
+def test_every_entity_has_a_summary_row_even_when_none_moves():
+    # Issue #441: with no event at all the summary was empty and total_entities was 0, while a
+    # run where some entities moved listed the others too.
+    states = [StateDefinition("done", is_initial=True, is_terminal=True)]
+    transitions = [TransitionRule("done", "done")]
+    r = WorkflowSimulator(
+        WorkflowConfig(states=states, transitions=transitions, entity_count=5, seed=1)
+    ).run()
+    assert r.events.num_rows == 0
+    assert r.entity_summary.num_rows == 5
+    assert r.entity_summary.column("final_state").to_pylist() == ["done"] * 5
+    assert r.entity_summary.column("total_transitions").to_pylist() == [0] * 5
+    assert r.stats["total_entities"] == 5
+    assert r.state_distribution == {"done": 5}
