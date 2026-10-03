@@ -10,15 +10,29 @@ from __future__ import annotations
 
 from pathlib import Path
 
+# Windows reinterprets these (#243): ``a:b`` is an NTFS alternate data stream of ``a``, a trailing
+# dot or space is stripped (``a.`` is ``a``), the device names open a device whatever the
+# extension (``con.parquet``), and control characters are invalid. ``<>"|?*`` are invalid there
+# too, but only fail the write (``OSError``), so they are left to the platform.
+_WINDOWS_BAD = frozenset(":") | frozenset(chr(c) for c in range(32))
+_DEVICES = frozenset(
+    {"CON", "PRN", "AUX", "NUL"}
+    | {f"COM{i}" for i in range(1, 10)}
+    | {f"LPT{i}" for i in range(1, 10)}
+)
+
 
 def is_safe_name(name: object) -> bool:
-    """True when ``name`` is one plain path component: no separator, drive, NUL or dot-dot."""
+    """True when ``name`` is one plain path component on every platform: no separator, drive,
+    NUL, dot-dot, ``:``, control character, trailing dot or space, or device name."""
     return (
         isinstance(name, str)
         and bool(name)
         and name not in (".", "..")
-        and not any(c in name for c in ("/", "\\", "\x00"))
-        and ":" not in name[:2]
+        and not any(c in name for c in ("/", "\\"))
+        and not any(c in _WINDOWS_BAD for c in name)
+        and name[-1] not in ". "
+        and name.split(".", 1)[0].rstrip(" ").upper() not in _DEVICES
     )
 
 
