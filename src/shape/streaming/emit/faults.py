@@ -152,6 +152,7 @@ class FaultSink:
         self._pending: list[tuple[int, pa.RecordBatch]] = []  # (due after this many events, copy)
         self._last: pa.RecordBatch | None = None  # a retried batch is not injected twice
         self._last_marked: pa.RecordBatch | None = None
+        self._delivered: pa.RecordBatch | None = None  # the last batch whose own send succeeded
         self._poisoned: list[tuple[str, np.ndarray[Any, Any]]] = []
 
     @property
@@ -205,26 +206,33 @@ class FaultSink:
             self._last = batch
             self._last_marked = self._plan(batch)
         assert self._last_marked is not None
-        self.sink.send(self._last_marked)
-        self._sent += batch.num_rows
-        if self.answer_key is not None:
-            for table, seqs in self._poisoned:
-                self.answer_key.record("poison", table, seqs.tolist())
-        self._poisoned = []
+        if batch is not self._delivered:  # a retry after a failed copy does not resend it
+            self.sink.send(self._last_marked)
+            self._delivered = batch
+            self._sent += batch.num_rows
+            if self.answer_key is not None:
+                for table, seqs in self._poisoned:
+                    self.answer_key.record("poison", table, seqs.tolist())
+            self._poisoned = []
         self._release()
 
     def _release(self, *, everything: bool = False) -> None:
         due = [p for p in self._pending if everything or p[0] <= self._sent]
-        self._pending = [p for p in self._pending if not (everything or p[0] <= self._sent)]
-        for _, copy in due:
-            self.sink.send(copy)
-            if self.answer_key is not None:
-                self.answer_key.record(
-                    "duplicate",
-                    copy.column(FIELD_TABLE)[0].as_py(),
-                    [copy.column(FIELD_SEQ)[0].as_py()],
-                    delivered_after_events=self._sent,
-                )
+        sent: set[int] = set()
+        try:
+            for entry in due:
+                copy = entry[1]
+                self.sink.send(copy)
+                sent.add(id(entry))
+                if self.answer_key is not None:
+                    self.answer_key.record(
+                        "duplicate",
+                        copy.column(FIELD_TABLE)[0].as_py(),
+                        [copy.column(FIELD_SEQ)[0].as_py()],
+                        delivered_after_events=self._sent,
+                    )
+        finally:  # a copy leaves the queue only once delivered: a failed one is retried
+            self._pending = [p for p in self._pending if id(p) not in sent]
 
     def flush(self) -> None:
         self.sink.flush()
