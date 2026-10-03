@@ -60,6 +60,41 @@ shape generate retail --to delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.
   (`AZURE_STORAGE_ACCOUNT_KEY`, `AZURE_STORAGE_SAS_TOKEN`, `AZURE_STORAGE_CONNECTION_STRING`).
   From Python pass `credential=`, `token=`, `account_key=`, `sas_token=` or `connection_string=`.
 
+### OneLake targets
+
+Before the first byte is written, the `abfss` sink checks a OneLake target (host
+`onelake.dfs.fabric.microsoft.com`, or its regional form `<region>-onelake.dfs.fabric.microsoft.com`)
+and stops with one line that names the fix. The command exits 2 as `shape: error: <the line>` and
+nothing is written. An ADLS Gen2 host (`*.dfs.core.windows.net`) is not checked: the sink behaves as
+before and makes no extra storage call.
+
+Accepted forms (the folder is optional, and may be nested):
+
+```
+abfss://<workspace>@onelake.dfs.fabric.microsoft.com/<name>.Lakehouse/Files/<folder>
+abfss://<workspace-id>@onelake.dfs.fabric.microsoft.com/<item-id>/Files/<folder>
+```
+
+The first is the name form: the item is `<name>.<ItemType>` (`Lakehouse`, `Warehouse`, `Notebook`,
+`SemanticModel`, `KQLDatabase`, and the other types OneLake exposes by name). The second is the GUID
+form: the workspace GUID and the item GUID, with no type suffix. Use the GUID form whenever a
+workspace or item name contains a space (OneLake addresses by such names are fragile); copy both
+IDs from the item's URL in Fabric. Both forms are checked by the same rules.
+
+| Error | Fix |
+|---|---|
+| `OneLake workspace or item name "<name>" contains a space; use the workspace and item IDs instead: abfss://<workspace-id>@onelake.dfs.fabric.microsoft.com/<item-id>/Files/<folder>` | Use the GUID form, or rename the workspace or item. A literal space and `%20` are both caught. |
+| `OneLake item "<segment>" is not <name>.<ItemType> (for example lh.Lakehouse) or an item ID; ...` | Write the first path segment as `<name>.Lakehouse` (or another item type), or as the item GUID. |
+| `OneLake target has no item; ...` | Add the item after the workspace. |
+| `OneLake only accepts files below <item>/Files/ (or Delta tables below <item>/Tables/ with the delta sink)` | Write below `<item>/Files/` (not at the item root, and not in another folder). |
+| `OneLake item "<item>" does not exist in workspace "<workspace>"; the storage API cannot create Fabric items: create the Lakehouse in Fabric first (or with shape fabric setup)` | Create the item in Fabric first. The storage API cannot create items. |
+| `Warehouse tables are written through T-SQL, not OneLake storage: use the Fabric warehouse writer (the shape-fabric warehouse target)` | A Warehouse is not written through storage; use the `shape-fabric` warehouse target. |
+| `files under Tables/ are not tables: write Delta with delta+abfss://... (the delta sink), or write files below Files/` | Plain files under a Lakehouse's `Tables/` are not tables: write Delta with `delta+abfss://...`, or write files below `Files/`. |
+
+The item check asks the filesystem for the item folder once per target; a sign-in failure at that
+point is the usual "not authorized" message. No message contains a credential, a token or a SAS
+query.
+
 ## Databases
 
 ```bash

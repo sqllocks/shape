@@ -5,6 +5,13 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- OneLake targets in the `abfss` sink (`docs/SINKS.md`, #141). Before the first byte is written, a
+  OneLake target is checked once and refused with one line that names the fix: a workspace or item
+  name with a space (use the workspace and item IDs), an item that is neither `<name>.<ItemType>` nor
+  a GUID, a path outside `<item>/Files/`, an item that does not exist (the storage API cannot create
+  Fabric items), a Warehouse (written through T-SQL), and plain files under `Tables/`. ADLS Gen2
+  hosts are unchanged and make no extra storage call.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
