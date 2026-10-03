@@ -330,3 +330,25 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Repository cleaned up for public release: removed internal milestone and
   qualification records.
 - README and changelog rewritten to describe the current state.
+
+### Fixed (kernels, Rust, scale; AUD-kernel)
+
+- Scale sinks: `--sink-config memory.max_memory_gb=0.5` no longer builds a 3 GiB string, and numeric
+  settings written as text are parsed and checked (#482). The Parquet sink removes the parts an
+  earlier, larger run left in a table directory (#483), writes through fresh `O_EXCL` temp files and
+  refuses a table directory that leaves the output directory (#288). A Fabric writer that returns
+  before reading every batch is an error instead of a hang (#487).
+- `fabric_spark`: the driver no longer regenerates the tables the executors make (#484), every
+  table's written row count is read back from Delta before success is recorded (#485), and executor
+  and `--processes` chunks carry the declared `decimal`/`timestamp` output types (#509).
+- Jobs: `shape jobs cancel` from another process stops a running local job (#486); one malformed job
+  file no longer breaks `shape jobs list` (#488); a failed or cancelled run reports its own error, not
+  a sink's close error (#490); row overrides must name a schema table and be non-negative (#491).
+- Kernel: `Kll.update(NaN)` is skipped instead of panicking (#531); restored sketch state and
+  snapshots are validated (#532); native and reference agree on text patterns (#534), temporal
+  values outside years 1-9999 (#536), `hash_value` of NumPy, pandas and Arrow scalars and nulls
+  (#538), negative-scale decimals (#540) and nulls in dense inputs (#550); every native function has
+  a twin and a stub (#553).
+- Generation kernel: keys, slots and word addresses no longer overflow (#549); oversized calls are
+  `ValueError`s ("use smaller chunks") instead of interpreter aborts (#548); very wide or non-finite
+  hour peaks, days outside the timestamp range and extreme SCD2 gaps are handled (#551).
