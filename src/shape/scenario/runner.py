@@ -424,7 +424,7 @@ def _run_gate(gate: str, generated: GenerationResult) -> tuple[bool, str]:
     schema = generated.schema
     tables = generated.tables
     if gate == "referential_integrity":
-        problems = generated.verify_integrity()
+        problems = _key_type_problems(generated) or generated.verify_integrity()
         return (not problems, "; ".join(problems[:3]))
     if gate == "schema_conformance":
         for name, tdef in schema.tables.items():
@@ -456,6 +456,34 @@ def _run_gate(gate: str, generated: GenerationResult) -> tuple[bool, str]:
                 return False, f"{name} has duplicate primary keys"
         return True, ""
     return False, f"unknown gate (known: {', '.join(sorted(KNOWN_GATES))})"
+
+
+def _key_type_problems(generated: GenerationResult) -> list[str]:
+    """The relationships whose child key cannot be compared with its parent key (chaos can
+    retype a key to text): that is an integrity failure, not a crash."""
+    import pyarrow as pa  # type: ignore[import-untyped]
+    import pyarrow.compute as pc  # type: ignore[import-untyped]
+
+    problems: list[str] = []
+    tables = generated.tables
+    for rel in generated.schema.relationships:
+        if rel.type == "self_referencing" or rel.parent not in tables or rel.child not in tables:
+            continue
+        parent, child = tables[rel.parent], tables[rel.child]
+        for p_col, c_col in zip(rel.parent_columns, rel.child_columns, strict=False):
+            if p_col not in parent.column_names or c_col not in child.column_names:
+                continue
+            try:  # the same comparison verify_integrity makes, on no rows
+                pc.is_in(
+                    child[c_col].slice(0, 0), value_set=parent[p_col].combine_chunks().slice(0, 0)
+                )
+            except (pa.ArrowException, TypeError):
+                p_type, c_type = parent.schema.field(p_col).type, child.schema.field(c_col).type
+                problems.append(
+                    f"{rel.child}.{c_col} ({c_type}) cannot be compared with "
+                    f"{rel.parent}.{p_col} ({p_type})"
+                )
+    return problems
 
 
 def _has_duplicates(table: pa.Table, keys: list[str]) -> bool:
