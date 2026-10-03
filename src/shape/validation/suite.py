@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import os
 import tempfile
+import warnings
 
-from shape.artifact.io import read_artifact, write_artifact
+from shape.artifact.io import ArtifactNotVerifiedWarning, read_artifact, write_artifact
 from shape.capture import capture_rows
 from shape.generation.strategies import GenerationPlan, SequenceStrategy
 from shape.validation.conformance import Check, run
@@ -34,5 +35,8 @@ def conformance() -> list[Check]:
             3,
         ]
 
-    smoke = run({"artifact": artifact, "capture": capture, "generation": generation})
-    return [*smoke, *run_requirements()]
+    # The suite reads its own unsigned temporary artifacts; the notice about that is not news.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", ArtifactNotVerifiedWarning)
+        smoke = run({"artifact": artifact, "capture": capture, "generation": generation})
+        return [*smoke, *run_requirements()]
