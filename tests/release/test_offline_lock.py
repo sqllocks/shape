@@ -50,6 +50,15 @@ def test_first_party_extras_expand_to_third_party_dependencies():
     assert not any(n.startswith("sqllocks-shape") for n in names)
 
 
+def test_first_party_extras_carry_their_plugin_extras():
+    # #259: "sqllocks-shape-databases[postgres]" needs the plugin's postgres driver too
+    sets = offline_lock.declared_sets(ROOT)
+    names = {k: {offline_lock.canonical(r.name) for r in v} for k, v in sets.items()}
+    assert "psycopg" in names["postgres"] and "pymysql" not in names["postgres"]
+    assert "pymysql" in names["mysql"] and "psycopg" not in names["mysql"]
+    assert {"psycopg", "pymysql"} <= names["databases"]
+
+
 def test_check_passes_for_a_matching_lock(tmp_path):
     reqs = [offline_lock.parse_requirement("numpy>=2.0,<3")]
     lock = _lock(_entry("numpy", "2.1.0"))
