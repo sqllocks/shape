@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sqllocks/shape/schemas/shape-incidents-v1.schema.json",
+  "title": "Shape incidents file, version 1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "version", "incidents"],
+  "properties": {
+    "format": {"const": "shape-incidents"},
+    "version": {"const": 1},
+    "incidents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "from"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "from": {"type": "string", "pattern": "^\\d{4}-\\d\\d-\\d\\d$"},
+          "to": {"type": "string", "pattern": "^\\d{4}-\\d\\d-\\d\\d$"},
+          "note": {"type": "string"}
+        }
+      }
+    }
+  }
+}

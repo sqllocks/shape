@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sqllocks/shape/schemas/shape-mutation-report-v1.schema.json",
+  "title": "Shape mutation report, version 1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "version", "seed", "rate", "diff", "mutants", "score", "rules", "rules_killed_none", "baseline_failed_rules"],
+  "properties": {
+    "format": {"const": "shape-mutation-report"},
+    "version": {"const": 1},
+    "seed": {"type": "integer"},
+    "rate": {"type": "number", "minimum": 0, "maximum": 1},
+    "diff": {"type": "boolean"},
+    "mutants": {"type": "array", "items": {"$ref": "#/$defs/mutant"}},
+    "score": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["overall", "by_kind", "by_table"],
+      "properties": {
+        "overall": {"$ref": "#/$defs/score"},
+        "by_kind": {"type": "object", "additionalProperties": {"$ref": "#/$defs/score"}},
+        "by_table": {"type": "object", "additionalProperties": {"$ref": "#/$defs/score"}}
+      }
+    },
+    "rules": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["killed"],
+        "properties": {"killed": {"type": "array", "items": {"type": "string"}}}
+      }
+    },
+    "rules_killed_none": {"type": "array", "items": {"type": "string"}},
+    "baseline_failed_rules": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "score": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["killed", "applicable", "score"],
+      "properties": {
+        "killed": {"type": "integer", "minimum": 0},
+        "applicable": {"type": "integer", "minimum": 0},
+        "score": {"type": ["number", "null"], "minimum": 0, "maximum": 1}
+      }
+    },
+    "mutant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "table", "column", "rate", "seed", "cells_changed", "status", "killed", "killed_by"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "kind": {"type": "string"},
+        "table": {"type": "string"},
+        "column": {"type": ["string", "null"]},
+        "rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "seed": {"type": "integer"},
+        "cells_changed": {"type": "integer", "minimum": 0},
+        "status": {"enum": ["killed", "survived", "not_applicable"]},
+        "killed": {"type": "boolean"},
+        "killed_by": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

@@ -1138,6 +1138,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.chaos import add_arguments as add_chaos_arguments
 
     add_chaos_arguments(sub)
+    from shape.cli.rules import add_arguments as add_rules_arguments
+
+    add_rules_arguments(sub)
     from shape.cli.drift_plan import add_arguments as add_drift_plan_arguments
 
     add_drift_plan_arguments(sub)
@@ -1495,6 +1498,10 @@ def _dispatch(argv):
         from shape.cli.chaos import run as run_chaos
 
         return _run(run_chaos, a)
+    if a.cmd == "rules":
+        from shape.cli.rules import run as run_rules
+
+        return _run(run_rules, a)
     if a.cmd == "generate-drift":
         from shape.cli.drift_plan import run as run_drift_plan
 

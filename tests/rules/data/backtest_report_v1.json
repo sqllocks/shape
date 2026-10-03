@@ -1,0 +1,161 @@
+{
+  "format": "shape-backtest-report",
+  "version": 1,
+  "name": "t",
+  "window": "day",
+  "since": null,
+  "until": null,
+  "summary": {
+    "entries": 3,
+    "pass": 0,
+    "fail": 3,
+    "not_measured": 0
+  },
+  "entries": [
+    {
+      "id": "2026-05-01@59af6e949382",
+      "window": "day",
+      "from": "2026-05-01",
+      "to": "2026-05-01",
+      "first_date": "2026-05-01",
+      "last_date": "2026-05-01",
+      "versions": [
+        "59af6e949382d4e7a8216a66857bf171ed950118a97c4fb77621ccb445c405d9"
+      ],
+      "status": "fail",
+      "rules": {
+        "passed": 2,
+        "failed": 1,
+        "not_measured": 0
+      },
+      "failed_rules": [
+        "t.x.pattern"
+      ],
+      "not_measured_rules": []
+    },
+    {
+      "id": "2026-05-02@59af6e949382",
+      "window": "day",
+      "from": "2026-05-02",
+      "to": "2026-05-02",
+      "first_date": "2026-05-02",
+      "last_date": "2026-05-02",
+      "versions": [
+        "59af6e949382d4e7a8216a66857bf171ed950118a97c4fb77621ccb445c405d9"
+      ],
+      "status": "fail",
+      "rules": {
+        "passed": 2,
+        "failed": 1,
+        "not_measured": 0
+      },
+      "failed_rules": [
+        "t.x.pattern"
+      ],
+      "not_measured_rules": []
+    },
+    {
+      "id": "2026-05-03@c6834d7e752d",
+      "window": "day",
+      "from": "2026-05-03",
+      "to": "2026-05-03",
+      "first_date": "2026-05-03",
+      "last_date": "2026-05-03",
+      "versions": [
+        "c6834d7e752dc152164a1716af52546f3bb8daa76616b764b64178d037281e54"
+      ],
+      "status": "fail",
+      "rules": {
+        "passed": 0,
+        "failed": 3,
+        "not_measured": 0
+      },
+      "failed_rules": [
+        "t.x.max_null_rate",
+        "t.x.unique",
+        "t.x.pattern"
+      ],
+      "not_measured_rules": []
+    }
+  ],
+  "rules": {
+    "t.x.pattern": {
+      "failed": 3,
+      "not_measured": 0
+    },
+    "t.x.max_null_rate": {
+      "failed": 1,
+      "not_measured": 0
+    },
+    "t.x.unique": {
+      "failed": 1,
+      "not_measured": 0
+    }
+  },
+  "incidents": [
+    {
+      "id": "i1",
+      "from": "2026-05-02",
+      "to": "2026-05-03",
+      "note": "nulls",
+      "status": "caught",
+      "first_caught_by": "2026-05-02@59af6e949382",
+      "caught_by": [
+        "2026-05-02@59af6e949382",
+        "2026-05-03@c6834d7e752d"
+      ],
+      "entries_inside": 2
+    },
+    {
+      "id": "i2",
+      "from": "2026-05-01",
+      "to": "2026-05-01",
+      "note": "",
+      "status": "caught",
+      "first_caught_by": "2026-05-01@59af6e949382",
+      "caught_by": [
+        "2026-05-01@59af6e949382"
+      ],
+      "entries_inside": 1
+    }
+  ],
+  "incident_summary": {
+    "caught": 2,
+    "missed": 0
+  },
+  "alarms_outside_incidents": [],
+  "compare": {
+    "disagreements": 3,
+    "entries": [
+      {
+        "id": "2026-05-01@59af6e949382",
+        "status": "fail",
+        "old_status": "pass",
+        "failed_rules": [
+          "t.x.pattern"
+        ],
+        "old_failed_rules": []
+      },
+      {
+        "id": "2026-05-02@59af6e949382",
+        "status": "fail",
+        "old_status": "pass",
+        "failed_rules": [
+          "t.x.pattern"
+        ],
+        "old_failed_rules": []
+      },
+      {
+        "id": "2026-05-03@c6834d7e752d",
+        "status": "fail",
+        "old_status": "pass",
+        "failed_rules": [
+          "t.x.max_null_rate",
+          "t.x.unique",
+          "t.x.pattern"
+        ],
+        "old_failed_rules": []
+      }
+    ]
+  }
+}
