@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Any
 
 SEED = b"\x01" * 32  # a published test key: never use it for anything but this corpus
+RECEIPT_SEED = b"\x02" * 32  # signs the migration receipt (same warning)
 ROOT = Path(__file__).resolve().parent
 PACK_SOURCE = ROOT.parent / "fixtures" / "packs" / "tutorial_custom_pack.yaml"
 GSL_SOURCE = ROOT.parent / "fixtures" / "packs" / "retail_basic.gsl.yaml"
@@ -229,7 +230,13 @@ def generate(out: Path) -> list[dict[str, Any]]:
     (out / "generation" / "retail.json").write_text(
         json.dumps(schema.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
-    add("generation-spec-v1", "generation-spec", 1, "generation/retail.json", "GenSchema.to_dict")
+    add(
+        "generation-schema-v1",
+        "generation-schema",
+        1,
+        "generation/retail.json",
+        "GenSchema.to_dict",
+    )
 
     # --- scenario pack -------------------------------------------------------------------
     (out / "pack").mkdir()
@@ -247,8 +254,8 @@ def generate(out: Path) -> list[dict[str, Any]]:
     shutil.copy(GSL_SOURCE, out / "pack" / "retail_basic.gsl.yaml")
     shutil.copy(PACK_SOURCE, out / "pack" / "tutorial_custom_pack.yaml")  # the spec's pack
     add(
-        "generation-spec-gsl-v1",
-        "generation-spec-gsl",
+        "generation-spec-v1",
+        "generation-spec",
         1,
         "pack/retail_basic.gsl.yaml",
         "GSL spec YAML as users write it (tests/fixtures/packs/retail_basic.gsl.yaml)",
@@ -262,8 +269,8 @@ def generate(out: Path) -> list[dict[str, Any]]:
     local.commit("orders", (out / "artifact" / "model-v2.shape").read_bytes(), {"note": "second"})
     local.tag("orders", "v1", "latest")
     add(
-        "registry-local-v1",
-        "registry-local",
+        "registry-layout-v1",
+        "registry-layout",
         1,
         "registry-local",
         "shape.registry.LocalRegistry.commit/tag",
@@ -274,8 +281,8 @@ def generate(out: Path) -> list[dict[str, Any]]:
         profile, system="erp", name="shareable", tags=["capsule"], description="safe", safe=True
     )
     add(
-        "registry-profiles-v1",
-        "registry-profiles",
+        "profile-registry-layout-v1",
+        "profile-registry-layout",
         1,
         "registry-profiles",
         "shape.registry.profiles.ProfileRegistry.save",
@@ -308,8 +315,8 @@ def generate(out: Path) -> list[dict[str, Any]]:
         encoding="utf-8",
     )
     add(
-        "contract-check-v1",
-        "contract-check",
+        "contract-v1",
+        "contract",
         1,
         "contract/check-contract.json",
         "shape.integrations.fabric.generation.domain_contract",
@@ -361,6 +368,38 @@ def generate(out: Path) -> list[dict[str, Any]]:
         "documented example (docs/VERIFY.md); users write these",
         authored=True,
     )
+
+    # --- migration (written only by a release that has `shape migrate`) -----------------------
+    try:
+        from shape import migrate
+    except ImportError:
+        migrate = None
+    if migrate is not None:
+        (out / "migration").mkdir()
+        result = migrate.migrate_file(
+            d / "capture-v1-signed.shape",
+            out / "migration" / "capture-v2.shape",
+            sign_key=RECEIPT_SEED,
+            verify_key=public_key,
+        )
+        (out / "migration" / "receipt-signer.pub").write_bytes(
+            signing.public_key_of(RECEIPT_SEED).hex().encode()
+        )
+        add(
+            "artifact-v2-migrated",
+            "artifact",
+            2,
+            "migration/capture-v2.shape",
+            "shape.migrate.migrate_file (a signed version 1 artifact, migrated, re-signed)",
+        )
+        add(
+            "migration-receipt-v1",
+            "migration-receipt",
+            1,
+            "migration/capture-v2.shape.receipt.json",
+            "shape.migrate.migrate_file (signed receipt)",
+            note=f"source: artifact/capture-v1-signed.shape; written as {result.receipt.name}",
+        )
 
     shutil.rmtree(work, ignore_errors=True)
     (out / "index.json").write_bytes(canonical_json({"files": entries}) + b"\n")

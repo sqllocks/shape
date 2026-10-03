@@ -1,0 +1,321 @@
+{
+  "bodies": [
+    {
+      "body": "{\"schema_version\":2,\"tables\":{}}",
+      "id": "empty-model-body",
+      "shape_content_id": "7e30f79e0390eccd3721f804be3d75e47db84bab8ff1f4bb1976a8fa801b3729",
+      "why": "shape_content_id is the SHA-256 of the body bytes as written"
+    }
+  ],
+  "codec": [
+    {
+      "canonical": "{}",
+      "canonical_hex": "7b7d",
+      "id": "empty-object",
+      "input_json": "{}",
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "why": "an empty object"
+    },
+    {
+      "canonical": "{\"B\":3,\"_\":4,\"a\":2,\"b\":1,\"é\":5}",
+      "canonical_hex": "7b2242223a332c225f223a342c2261223a322c2262223a312c22c3a9223a357d",
+      "id": "key-order",
+      "input_json": "{\"b\":1,\"a\":2,\"B\":3,\"_\":4,\"é\":5}",
+      "sha256": "314fd727834dd4bfd759c24dba39ea267361eeed890416c911e51f55418898cc",
+      "why": "keys sorted by Unicode code point"
+    },
+    {
+      "canonical": "{\"z\":3,\"￿\":2,\"😀\":1}",
+      "canonical_hex": "7b227a223a332c22efbfbf223a322c22f09f9880223a317d",
+      "id": "key-order-astral",
+      "input_json": "{\"\\ud83d\\ude00\":1,\"\\uffff\":2,\"z\":3}",
+      "sha256": "ee0448f401397e05098248a25cb0c638fdf6002cdf69edda02986c02f2c6ed15",
+      "why": "code point order, not UTF-16 order: U+FFFF sorts before U+1F600"
+    },
+    {
+      "canonical": "{\"a\":[],\"z\":{\"x\":false,\"y\":[1,{\"a\":true,\"b\":null}]}}",
+      "canonical_hex": "7b2261223a5b5d2c227a223a7b2278223a66616c73652c2279223a5b312c7b2261223a747275652c2262223a6e756c6c7d5d7d7d",
+      "id": "nesting",
+      "input_json": "{\"z\":{\"y\":[1,{\"b\":null,\"a\":true}],\"x\":false},\"a\":[]}",
+      "sha256": "03a0822448fd1cf415f5fc0711064b39d96c16ffa7aca0f121a86e214d48b312",
+      "why": "nested objects sorted"
+    },
+    {
+      "canonical": "{\"a\":[1,2],\"b\":\"x\"}",
+      "canonical_hex": "7b2261223a5b312c325d2c2262223a2278227d",
+      "id": "whitespace",
+      "input_json": " { \"a\" : [ 1 , 2 ] , \"b\" : \"x\" } ",
+      "sha256": "d0f56dda38d34376527524ddd98f7ec117d5cbfb240f86e11bfb9d2d01a717d9",
+      "why": "insignificant whitespace is dropped"
+    },
+    {
+      "canonical": "{\"name\":\"Zoë é 中文 😀\"}",
+      "canonical_hex": "7b226e616d65223a225a6fc3ab20c3a920e4b8ade6968720f09f9880227d",
+      "id": "unicode-text",
+      "input_json": "{\"name\":\"Zoë \\u00e9 \\u4e2d\\u6587 😀\"}",
+      "sha256": "929acf8aaf1a5f0c95a411a67507a1f25787b6457b67c4b0511fe00fcdc5c294",
+      "why": "non-ASCII is written as UTF-8"
+    },
+    {
+      "canonical": "{\"s\":\"quote\\\" back\\\\ nl\\n tab\\t cr\\r bs\\b ff\\f nul\\u0000 us\\u001f del\"}",
+      "canonical_hex": "7b2273223a2271756f74655c22206261636b5c5c206e6c5c6e207461625c742063725c722062735c622066665c66206e756c5c75303030302075735c75303031662064656c7f227d",
+      "id": "escapes",
+      "input_json": "{\"s\":\"quote\\\" back\\\\ nl\\n tab\\t cr\\r bs\\b ff\\f nul\\u0000 us\\u001f del\\u007f\"}",
+      "sha256": "0ee8592238e9ff7540e744f65177a9bf8820290741dfe84381c59a6dd7932c3f",
+      "why": "short escapes for quote, backslash, \\n \\r \\t \\b \\f; \\u00XX for the other C0 controls; DEL raw"
+    },
+    {
+      "canonical": "{\"line\":\"a b c\"}",
+      "canonical_hex": "7b226c696e65223a2261e280a862e280a963227d",
+      "id": "separators",
+      "input_json": "{\"line\":\"a\\u2028b\\u2029c\"}",
+      "sha256": "dbad189d45a71f389374662c276adeeafe4d5ee21d82bca1e9d4a62097e6c409",
+      "why": "U+2028 and U+2029 are written raw"
+    },
+    {
+      "canonical": "[0,-1,9007199254740993,18446744073709551616]",
+      "canonical_hex": "5b302c2d312c393030373139393235343734303939332c31383434363734343037333730393535313631365d",
+      "id": "integers",
+      "input_json": "[0,-1,9007199254740993,18446744073709551616]",
+      "sha256": "0da3e7eb1dd57a106b5850270ca26fffeef84d994a48aba30de389a5dcc64c94",
+      "why": "integers are exact, any size"
+    },
+    {
+      "canonical": "[0.1,1.5,-2.25,100.0,1e+22,1e-07,1.7976931348623157e+308,5e-324]",
+      "canonical_hex": "5b302e312c312e352c2d322e32352c3130302e302c31652b32322c31652d30372c312e37393736393331333438363233313537652b3330382c35652d3332345d",
+      "id": "floats",
+      "input_json": "[0.1,1.5,-2.25,100.0,1e22,1e-7,1.7976931348623157e308,5e-324]",
+      "sha256": "bca855a7d695f16ccc90defbd27fb96fa8766e8deab87a547b28ac9847cc9623",
+      "why": "float repr"
+    },
+    {
+      "canonical": "[1.0,-0.0,0.0,1e+16,1.2345678901234568e+17]",
+      "canonical_hex": "5b312e302c2d302e302c302e302c31652b31362c312e32333435363738393031323334353638652b31375d",
+      "id": "float-integral",
+      "input_json": "[1.0,-0.0,0.0,1e16,123456789012345680.0]",
+      "sha256": "92c5ba334bad766fedc15fc3ba215d2968b3928569d54def31c934dbdc943388",
+      "why": "integral floats keep .0"
+    },
+    {
+      "canonical": "[true,false,null]",
+      "canonical_hex": "5b747275652c66616c73652c6e756c6c5d",
+      "id": "bools-null",
+      "input_json": "[true,false,null]",
+      "sha256": "4d0f18de2133118249c26acc481838d4f6bb6bc1de882d99abbd19ae9397e8df",
+      "why": "literals"
+    },
+    {
+      "canonical": "{\"x\":{\"$float\":\"nan\"}}",
+      "canonical_hex": "7b2278223a7b2224666c6f6174223a226e616e227d7d",
+      "id": "nan",
+      "input_json": "{\"x\":{\"$float\":\"nan\"}}",
+      "sha256": "529fb45fb37f0801d72c1d9025528ec6f5cbc58fe31c7f09bfc7ccba6abb34ef",
+      "why": "a non-finite float is a tagged object"
+    },
+    {
+      "canonical": "[{\"$float\":\"inf\"},{\"$float\":\"-inf\"}]",
+      "canonical_hex": "5b7b2224666c6f6174223a22696e66227d2c7b2224666c6f6174223a222d696e66227d5d",
+      "id": "infinities",
+      "input_json": "[{\"$float\":\"inf\"},{\"$float\":\"-inf\"}]",
+      "sha256": "674e2bd8f185ae7e10feedd3ebd26f8c4ba4ca0142c1ad2677cfd481e5ea6f55",
+      "why": "both infinities"
+    },
+    {
+      "canonical": "{\"t\":{\"$tuple\":[1,\"a\",{\"$tuple\":[]}]}}",
+      "canonical_hex": "7b2274223a7b22247475706c65223a5b312c2261222c7b22247475706c65223a5b5d7d5d7d7d",
+      "id": "tuple",
+      "input_json": "{\"t\":{\"$tuple\":[1,\"a\",{\"$tuple\":[]}]}}",
+      "sha256": "1d5837b86805aaf3b4506dbd74a56c0fdfcfb83db110e4fe4ecef662c699c8d6",
+      "why": "a tuple is a tagged object"
+    },
+    {
+      "canonical": "{\"$dict\":[[\"$float\",\"not a tag\"],[\"a\",1]]}",
+      "canonical_hex": "7b222464696374223a5b5b2224666c6f6174222c226e6f74206120746167225d2c5b2261222c315d5d7d",
+      "id": "dollar-keys",
+      "input_json": "{\"$dict\":[[\"$float\",\"not a tag\"],[\"a\",1]]}",
+      "sha256": "593ca9c84ff715b086cff6fa15e8463fbbfde505892f0eb0a8140ce380287490",
+      "why": "a mapping with a $ key is written as $dict pairs, in insertion order"
+    },
+    {
+      "canonical": "[[[[[[[[1]]]]]]]]",
+      "canonical_hex": "5b5b5b5b5b5b5b5b315d5d5d5d5d5d5d5d",
+      "id": "deep-list",
+      "input_json": "[[[[[[[[1]]]]]]]]",
+      "sha256": "61c273c6684f7d2b840576aeb305c594421e20edef2d5e57e297c0167a867a91",
+      "why": "nesting depth"
+    }
+  ],
+  "codec_errors": [
+    {
+      "id": "bare-nan",
+      "input_json": "{\"x\":NaN}",
+      "why": "bare NaN is not JSON and is refused"
+    },
+    {
+      "id": "bare-infinity",
+      "input_json": "{\"x\":Infinity}",
+      "why": "bare Infinity is refused"
+    },
+    {
+      "id": "bare-minus-infinity",
+      "input_json": "{\"x\":-Infinity}",
+      "why": "bare -Infinity is refused"
+    },
+    {
+      "id": "bad-float-tag",
+      "input_json": "{\"$float\":\"1.5\"}",
+      "why": "$float takes nan, inf or -inf only"
+    },
+    {
+      "id": "tag-with-neighbours",
+      "input_json": "{\"$float\":\"nan\",\"a\":1}",
+      "why": "a tag key may only appear alone"
+    },
+    {
+      "id": "tuple-not-a-list",
+      "input_json": "{\"$tuple\":3}",
+      "why": "$tuple needs a list"
+    },
+    {
+      "id": "dict-not-pairs",
+      "input_json": "{\"$dict\":[[\"a\"]]}",
+      "why": "$dict needs [[key, value], ...]"
+    },
+    {
+      "id": "unterminated",
+      "input_json": "{\"a\":",
+      "why": "not JSON"
+    }
+  ],
+  "description": "Language-neutral vectors for the canonical forms and content ids of docs/specs/STATE_AND_COMPATIBILITY.md. Regenerate with tests/state/vectors.py --write; a change to any vector is a format change and needs a version bump.",
+  "documents": [
+    {
+      "content_id": "caf70e3c6ff2f0e605025f35ce5f0883ffde0e643aa2745c58ec66cc64c1a1f7",
+      "document": {
+        "format": "shape-safe-profile",
+        "min_shape_version": "0.9.0",
+        "redaction_manifest": {},
+        "relationships": [],
+        "schema_version": 1,
+        "shape_version": "1.0.0",
+        "tables": {},
+        "unsafe": false,
+        "version": 1
+      },
+      "id": "safe-profile-new-keys",
+      "kind": "safe-profile",
+      "why": "declaration, old key and migration record are not part of the content id"
+    },
+    {
+      "content_id": "caf70e3c6ff2f0e605025f35ce5f0883ffde0e643aa2745c58ec66cc64c1a1f7",
+      "document": {
+        "redaction_manifest": {},
+        "relationships": [],
+        "schema_version": 1,
+        "tables": {},
+        "unsafe": false
+      },
+      "id": "safe-profile-old-keys",
+      "kind": "safe-profile",
+      "why": "the same document written before the unified keys: the same content id"
+    },
+    {
+      "content_id": "65de3aaa8de441be59292cb8c78bb4815df68eef136fd9b8444c00de34b43318",
+      "document": {
+        "pack_id": "p",
+        "run_id": "r",
+        "seed": 1,
+        "spec_hash": "",
+        "version": 1
+      },
+      "id": "run-manifest",
+      "kind": "run-manifest",
+      "why": "a document of another kind"
+    }
+  ],
+  "format": "shape-test-vectors",
+  "manifests": [
+    {
+      "canonical": "{\"format\":\"shape\",\"format_version\":2,\"name\":\"m\",\"version\":2}",
+      "id": "minimal",
+      "manifest": {
+        "format": "shape",
+        "format_version": 2,
+        "name": "m",
+        "version": 2
+      },
+      "sha256": "8be7811ca43b754fd1259f59bee6cea83ef9d1e34ccd4713bc45edd7e3c126dc",
+      "why": "the manifest: sorted keys, no spaces"
+    },
+    {
+      "canonical": "{\"content_hashes\":{\"shape.json\":\"0000000000000000000000000000000000000000000000000000000000000000\"},\"format\":\"shape\",\"format_version\":2,\"metadata\":{\"a\":null,\"b\":[1,2]},\"name\":\"ünïcode\",\"shape_content_id\":\"0000000000000000000000000000000000000000000000000000000000000000\"}",
+      "id": "with-hashes",
+      "manifest": {
+        "content_hashes": {
+          "shape.json": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "format": "shape",
+        "format_version": 2,
+        "metadata": {
+          "a": null,
+          "b": [
+            1,
+            2
+          ]
+        },
+        "name": "ünïcode",
+        "shape_content_id": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "sha256": "42a96caf2f6d857e445a775f266fd1fb3540d7adac98708251532ff9344b0384",
+      "why": "content hashes and metadata"
+    }
+  ],
+  "signature": {
+    "algorithm": "Ed25519",
+    "domain": "shape-artifact-signature-v1\n",
+    "key_id": "34750f98bd59fcfc",
+    "manifest_canonical": "{\"format\":\"shape\",\"format_version\":2,\"name\":\"vector\"}",
+    "private_key_seed_hex": "0101010101010101010101010101010101010101010101010101010101010101",
+    "public_key_hex": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+    "signature_base64": "N87XkiE3HAQKadaYWzRASO1vdPFI0UOSaDc1POr7MMyYFX0f/ANFpKP7g/2kgjOqTW2FK+LzLhlAuwJkt0hwBA==",
+    "why": "Ed25519 (deterministic, RFC 8032) over domain + canonical manifest bytes"
+  },
+  "utc": [
+    {
+      "input": "2026-10-03T04:05:06Z",
+      "utc_iso": "2026-10-03T04:05:06Z",
+      "why": "whole seconds: no fraction"
+    },
+    {
+      "input": "2026-10-03T04:05:06.123456Z",
+      "utc_iso": "2026-10-03T04:05:06.123456Z",
+      "why": "microseconds"
+    },
+    {
+      "input": "2026-10-03T06:05:06+02:00",
+      "utc_iso": "2026-10-03T04:05:06Z",
+      "why": "an offset becomes UTC"
+    },
+    {
+      "input": "2026-10-03T04:05:06+00:00",
+      "utc_iso": "2026-10-03T04:05:06Z",
+      "why": "+00:00 is read, Z is written"
+    },
+    {
+      "input": "2026-10-03T04:05:06",
+      "utc_iso": null,
+      "why": "a local (naive) time is refused"
+    },
+    {
+      "input": "2026-10-03 04:05:06Z",
+      "utc_iso": null,
+      "why": "a space is not T"
+    },
+    {
+      "input": "03/10/2026",
+      "utc_iso": null,
+      "why": "a locale form is refused"
+    }
+  ],
+  "version": 1
+}

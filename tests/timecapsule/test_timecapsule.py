@@ -54,7 +54,12 @@ def test_generation_is_frozen(generation: Path) -> None:
         assert generate._tree_digest(path) == e["sha256"], f"{e['id']} was modified"
         listed.add(e["path"])
         assert (EXPECTED / generation.name / f"{e['id']}.json").is_file(), f"{e['id']}: no expected"
-    support = {"index.json", "artifact/trusted.pub", "signature/manifest-v1.json"}
+    support = {
+        "index.json",
+        "artifact/trusted.pub",
+        "signature/manifest-v1.json",
+        "migration/receipt-signer.pub",
+    }
     support |= {"pack/tutorial_custom_pack.yaml"}
     files = {p.relative_to(generation).as_posix() for p in generation.rglob("*") if p.is_file()}
     owned = {
@@ -79,3 +84,67 @@ def test_loading_never_modifies_the_corpus(generation: Path, entry: dict) -> Non
 def test_every_kind_has_a_loader() -> None:
     kinds = {e["kind"] for _, e in ENTRIES}
     assert kinds <= set(LOADERS), sorted(kinds - set(LOADERS))
+
+
+def test_every_kind_and_version_has_a_golden_file() -> None:
+    """Every format version of every persisted kind that this release knows has a file in the
+    corpus (the older ones from the release that wrote them), so dropping a reader is a failure."""
+    from shape.compat import KINDS
+
+    have = {(e["kind"], e["format_version"]) for _, e in ENTRIES}
+    # a profile artifact and a model artifact are both kind "shape" files; the corpus names them
+    # by what they hold
+    want = {(k.name, v) for k in KINDS.values() for v in range(1, k.current + 1)}
+    assert want <= have, f"no golden file for {sorted(want - have)}"
+
+
+def test_every_corpus_kind_is_a_kind_of_the_policy() -> None:
+    from shape.compat import KINDS
+
+    assert {e["kind"] for _, e in ENTRIES} <= set(KINDS)
+
+
+# What the writers of the first generation and of the unified-keys generation wrote reads to the
+# same content: renaming the version keys changed no content.
+DETERMINISTIC = [
+    "artifact-v1",
+    "artifact-v2",
+    "artifact-v1-signed",
+    "artifact-v2-signed",
+    "model-v2",
+    "model-engine-v1",
+    "safe-profile-v1",
+    "generation-schema-v1",
+    "scenario-pack-v1",
+    "generation-spec-v1",
+    "gate-schema-v1",
+    "verify-config-v1",
+    "contract-v1",
+    "contract-model-v1",
+    "profile-artifact-v1",
+    "profile-export-v1",
+    "signature-v1",
+]
+
+
+@pytest.mark.parametrize("entry_id", DETERMINISTIC)
+def test_old_and_new_writers_give_the_same_content(entry_id: str) -> None:
+    old = (EXPECTED / "base" / f"{entry_id}.json").read_text(encoding="utf-8")
+    new = (EXPECTED / "unified-keys" / f"{entry_id}.json").read_text(encoding="utf-8")
+    assert old == new
+
+
+def test_the_unified_generation_declares_the_unified_keys() -> None:
+    """...and it really is the unified form (the old generation is the one without)."""
+    import zipfile
+
+    def manifest(generation: str, name: str) -> dict:
+        with zipfile.ZipFile(CORPUS / generation / "artifact" / name) as z:
+            return json.loads(z.read("manifest.json"))
+
+    old, new = manifest("base", "model-v2.shape"), manifest("unified-keys", "model-v2.shape")
+    assert "version" not in old and "shape_version" not in old
+    assert new["version"] == 2 and new["format_version"] == 2 and "shape_version" in new
+    safe_old = json.loads((CORPUS / "base" / "safe" / "orders.safe.json").read_text())
+    safe_new = json.loads((CORPUS / "unified-keys" / "safe" / "orders.safe.json").read_text())
+    assert "format" not in safe_old and safe_new["format"] == "shape-safe-profile"

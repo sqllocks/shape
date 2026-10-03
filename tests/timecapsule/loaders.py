@@ -21,7 +21,7 @@ from typing import Any
 BOOKKEEPING = {"format", "version", "shape_version", "min_shape_version"}
 
 # Kinds in which ``version`` is the document's own content (a contract's revision) and is kept.
-KEEP_VERSION = {"contract-model", "gate-schema", "verify-config"}
+KEEP_VERSION = {"contract-model", "gate-schema", "verify-config", "generation-spec"}
 KEEP_FORMAT = {"gate-schema", "verify-config"}
 
 
@@ -72,6 +72,24 @@ def _artifact(path: Path, corpus: Path, kind: str) -> Any:
     }
 
 
+def _receipt(path: Path, corpus: Path, kind: str) -> Any:
+    from shape import migrate
+
+    pub = bytes.fromhex((path.parent / "receipt-signer.pub").read_text())
+    source = corpus / "artifact" / "capture-v1-signed.shape"
+    doc = migrate.verify_receipt(
+        path, pub, source=source, result=path.with_name(path.name.removesuffix(".receipt.json"))
+    )
+    return {
+        "kind": doc["kind"],
+        "steps": doc["steps"],
+        "source": {k: v for k, v in doc["source"].items() if k != "file_name"},
+        "result": {k: v for k, v in doc["result"].items() if k != "file_name"},
+        "signature": {k: v for k, v in doc["signature"].items() if k != "signature"},
+        "verified": True,
+    }
+
+
 def _signature(path: Path, corpus: Path, kind: str) -> Any:
     from shape.artifact.signing import verify_manifest_signature
 
@@ -111,7 +129,7 @@ def _model(path: Path, corpus: Path, kind: str) -> Any:
     return to_model(codec.loads(path.read_bytes()))
 
 
-def _generation_spec(path: Path, corpus: Path, kind: str) -> Any:
+def _generation_schema(path: Path, corpus: Path, kind: str) -> Any:
     from shape.generation.schema import GenSchema
 
     return _strip(kind, GenSchema.from_dict(json.loads(path.read_text())).to_dict())
@@ -211,17 +229,18 @@ def _verify_config(path: Path, corpus: Path, kind: str) -> Any:
 LOADERS = {
     "artifact": _artifact,
     "signature": _signature,
+    "migration-receipt": _receipt,
     "profile-artifact": _profile_artifact,
     "profile-export": _profile_export,
     "safe-profile": _safe_profile,
     "model": _model,
-    "generation-spec": _generation_spec,
-    "generation-spec-gsl": _gsl,
+    "generation-schema": _generation_schema,
+    "generation-spec": _gsl,
     "scenario-pack": _pack,
-    "registry-local": _registry_local,
-    "registry-profiles": _registry_profiles,
+    "registry-layout": _registry_local,
+    "profile-registry-layout": _registry_profiles,
     "run-manifest": _run_manifest,
-    "contract-check": _contract_check,
+    "contract": _contract_check,
     "contract-model": _contract_model,
     "gate-schema": _gate_schema,
     "verify-config": _verify_config,
