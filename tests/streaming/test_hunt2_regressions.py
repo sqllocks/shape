@@ -576,3 +576,25 @@ def test_710_argument_errors_say_what_is_wrong_and_what_to_pass():
     ShapeMonitor(object(), every=1)  # the boundary is accepted
     OnlineShape(max_buffer=1)
     KeyedState(0.001, 1)
+
+
+def test_118_negative_or_zero_delivery_options_are_refused(tmp_path, capsys):
+    base = ["emit", "retail", "--scale", "tiny", "--max-events", "10", "--sink", "file", "--fresh"]
+    for extra, text in (
+        (["--poison-fraction", "-1"], "poison fraction"),
+        (["--duplicate-fraction", "-0.5"], "duplicate fraction"),
+        (["--retries", "-1"], "retries"),
+        (["--checkpoint-every", "0"], "checkpoint_every"),
+        (["--checkpoint-seconds", "-1"], "checkpoint_seconds"),
+    ):
+        out = tmp_path / "e.jsonl"
+        assert main([*base, "-o", str(out), *extra]) == 2, extra
+        assert text in capsys.readouterr().err
+        assert not out.exists()  # refused before the sink was opened
+    for extra in (
+        ["--poison-fraction", "0"],
+        ["--retries", "0"],
+        ["--checkpoint-every", "1"],
+        ["--checkpoint-seconds", "0"],
+    ):
+        assert main([*base, "-o", str(tmp_path / "ok.jsonl"), *extra]) == 0, extra
