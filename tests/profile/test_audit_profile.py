@@ -88,3 +88,35 @@ def test_integers_past_two_to_the_53_keep_their_numeric_associations(kernel):
     t = pa.table({"a": pa.array([2**53 + s * 7 for s in steps]), "x": [s * 2.0 for s in steps]})
     kinds = [a["kind"] for a in shape.profile(t).to_dict()["joint"]["associations"]]
     assert "numeric" in kinds
+
+
+# ---- #167: duplicate and blank CSV header names are renamed as the baseline does ----------
+
+
+@pytest.mark.parametrize(
+    ("header", "names"),
+    [
+        ("a,a", ["a", "a.1"]),
+        ("a,a.1,a", ["a", "a.1", "a.2"]),
+        ("a,a,a.1", ["a", "a.2", "a.1"]),
+        (",b", ["Unnamed: 0", "b"]),
+        ("a,,", ["a", "Unnamed: 1", "Unnamed: 2"]),
+        (",,Unnamed: 0", ["Unnamed: 0.1", "Unnamed: 1", "Unnamed: 0"]),
+    ],
+)
+def test_csv_header_names_are_made_unique_as_the_baseline_does(tmp_path, header, names):
+    width = header.count(",") + 1
+    rows = "\n".join(",".join(str(r * width + i) for i in range(width)) for r in range(5))
+    path = tmp_path / "h.csv"
+    path.write_text(f"{header}\n{rows}\n")
+    cols = shape.profile(str(path)).to_dict()["columns"]
+    assert list(cols) == names
+    for i, name in enumerate(names):  # each column keeps its own values
+        assert cols[name]["min_value"] == ["int", i]
+
+
+def test_duplicate_csv_header_with_signed_integers_profiles(tmp_path):
+    path = tmp_path / "h.csv"
+    path.write_text("a,a\n+1,+2\n+3,+4\n")
+    cols = shape.profile(str(path)).to_dict()["columns"]
+    assert cols["a"]["max_value"] == ["int", 3] and cols["a.1"]["max_value"] == ["int", 4]
