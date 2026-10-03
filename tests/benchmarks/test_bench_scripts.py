@@ -165,3 +165,24 @@ def test_peak_rss_is_megabytes_on_every_platform(monkeypatch, platform, maxrss, 
     monkeypatch.setattr(sys, "platform", platform)
     monkeypatch.setattr(resource, "getrusage", lambda who: Usage())
     assert gen._peak_rss_mb() == mb
+
+
+@pytest.mark.parametrize(
+    ("args", "message"),
+    [
+        (["D5"], "invalid choice"),
+        (["D3", "--rows", "-5"], "positive"),
+        (["D3", "--rows", "0"], "positive"),
+    ],
+)
+def test_datasets_rejects_unknown_names_and_bad_row_counts(tmp_path, monkeypatch, args, message):
+    """An unknown dataset or a row count below 1 is a usage error (exit 2) that says what is
+    accepted; nothing is written."""
+    import subprocess
+
+    monkeypatch.setenv("PROFILE_DATA_DIR", str(tmp_path))
+    script = BENCH / "profile_1to1" / "datasets.py"
+    r = subprocess.run([sys.executable, str(script), *args], capture_output=True, text=True)
+    assert r.returncode == 2, r.stderr
+    assert message in r.stderr and "Traceback" not in r.stderr
+    assert list(tmp_path.iterdir()) == []
