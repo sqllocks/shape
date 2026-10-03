@@ -211,3 +211,96 @@ means "tail heavier than normal", not a true power law.
 column's card (`Profile.summary()` and `--json` keep their pinned key set). A profile written before these
 fields existed loads, displays and diffs as before, with the fields absent and the four kinds not
 reported.
+
+## Mixtures and seasonality: `mixture`, `seasonality`
+
+Two more fields describe a numeric column beyond one family: whether it is a blend of populations
+(`mixture`) and whether it repeats over time (`seasonality`). Both are computed in Python over numpy,
+so `SHAPE_KERNEL=rust` and `python` give the same numbers. Neither is in the share-safe profile: a
+component mean or a standard deviation is a value, so `shape profile safe` leaves both out (its
+allow-list is unchanged, and the leak scanner passes a safe profile of a table that has both).
+`distribution`, `distribution_candidates` and the other fields are unchanged, and nothing here feeds
+generation. `shape diff` reports changes as `mixture_change` and `seasonality_change`
+(`docs/DRIFT.md`).
+
+### Gaussian mixture: `mixture`
+
+```json
+{"k": 2, "components": [{"weight": 0.3, "mean": 0.0, "sd": 1.0}, {"weight": 0.7, "mean": 4.0, "sd": 1.0}],
+ "bic_by_k": {"1": 43083.9, "2": 39350.2, "3": 39373.3, "4": 39399.0}, "multimodal": true}
+```
+
+**Minimum sample:** at least **200 finite values**; a constant column has none. **Sample:** a column
+of more than **4,000** values is read through the same deterministic stratified sample as the rest
+of the univariate depth (`default_rng(42)`, one row per run of consecutive rows, so the same on every
+run); a shorter one is read whole. The cap is under the 100,000 values the specification allows
+because EM runs four times per numeric column on every profile.
+
+**Fit.** For each `k` from 1 to 4 a mixture of `k` normal densities is fitted by expectation
+maximisation on the sample, standardised first. The start is deterministic and quantile-based: the
+sorted sample is cut into `k` runs of equal size, and each run's share, mean and standard deviation
+are the starting weight, mean and spread (no random state). Each iteration computes the
+responsibilities `r_ij = w_j N(x_i; mu_j, sd_j) / sum_l w_l N(x_i; mu_l, sd_l)` and sets
+`w_j = mean_i r_ij`, `mu_j = sum_i r_ij x_i / sum_i r_ij` and `sd_j^2 = sum_i r_ij (x_i - mu_j)^2 /
+sum_i r_ij`. A standard deviation never falls below 0.1% of the column's (so a spike of repeated
+values does not make the likelihood infinite). EM stops after **200 iterations**, or when the mean
+log-likelihood per value improves by less than **1e-6**. The model has `3k - 1` parameters and
+`BIC = (3k - 1) ln n - 2 LL`, with `LL` the log-likelihood of the values on their own scale; `bic_by_k`
+lists the four, and `k` is the lowest (the smaller `k` on a tie).
+
+`components` are in order of mean, each with its `weight`, `mean` and `sd`. `multimodal` is true
+when `k >= 2` and every component's weight is at least **0.05**. It says "BIC prefers several
+components, none of them marginal", not that the density has several peaks: a skewed column
+(a log-normal, an exponential) is often fitted with three or four overlapping components and reads
+`multimodal`. Read it with `distribution_by_bic` and the component means: components a fraction of a
+standard deviation apart are one skewed population, not two.
+
+### Seasonality: `seasonality`
+
+```json
+{"applicable": true, "time_column": "day", "granularity": "day", "period": 7,
+ "strength": 0.81, "acf": 0.66, "seasonal": true}
+```
+
+**The time column** is the table's only date or timestamp column, or the one named by the profile
+option `time_column` (`shape.profile(..., time_column="day")`, `shape profile --time-column day`).
+For a dict of tables the name applies to each table that has it, and is an error when none does; a
+name that is not a date or timestamp column is an error. Workbook sheets are not analysed. Rows with
+a null time and values that are not finite are left out; a time zone is ignored (the stored instant
+is used).
+
+**Aggregation, in one pass.** Each numeric column is averaged per **day**, or per **hour** when the
+time column spans fewer than 14 days. The pass reads the table 262,144 rows at a time, so its cost
+is linear in the rows and its memory does not grow with them (`tests/profile/test_seasonality.py`,
+marked `heavy`, runs a 10-million-row table under 10 s with a peak of temporary memory under 20% of
+one column). A period with no value is filled by linear interpolation; a series in which fewer than
+half of the periods hold a value is not computed.
+
+**Candidate periods.** 24 on the hourly series, 7 on the daily series, 12 on the monthly means of
+daily data (the mean of all values in each calendar month) and 52 on the weekly means (consecutive
+runs of 7 days from the first day); a candidate counts only when **at least three full periods**
+exist (72 hours, 21 days, 36 months, 156 weeks).
+
+**Statistics for each candidate.** `acf` is the sample autocorrelation of the series at the period,
+`sum (y_t - m)(y_{t+p} - m) / sum (y_t - m)^2`. `strength` comes from a classical decomposition
+`y = trend + seasonal + remainder`: the trend is the centred moving average of window `p` (a 2 x p
+average when `p` is even), the seasonal figure is the mean of the detrended values at each position
+of the period, centred to sum to zero, and
+
+`strength = max(0, 1 - var(remainder) / var(seasonal + remainder))`
+
+so 0 means no repeating pattern and 1 a pattern with no noise. The candidate with the largest
+strength is reported (the smaller period on a tie), with its `granularity` (`hour`, `day`, `week`
+or `month`); `seasonal` is true when its strength is **at least 0.6**. A trend alone is not seasonal,
+because the moving average removes it. White noise gives a strength near `1 / (periods)` and is not
+seasonal.
+
+**Not computed** (`applicable: false` and a `reason`, a column still gets the entry): no date or
+timestamp column; more than one and none named; fewer than three full periods of any candidate; a
+constant series; more than half of the periods empty; a time column spanning more than 2,000,000
+days. A text, boolean or date column has no `seasonality`, and neither has the time column itself.
+
+A profile written before these fields existed loads, displays and diffs as before, with the fields
+absent and the two diff kinds not reported. `shape show` prints both fields, and the `--html` report
+states them in each column's card as `mixture: k=2 ...` and `seasonality: period 7 days, strength
+0.81 (seasonal)`.

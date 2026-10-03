@@ -36,12 +36,20 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   table, and writes a **profile**. A table with 0 rows prints `shape: warning: ... has 0 rows`
   (the profile is still written); `--fail-on-empty` exits 2 instead and writes nothing. A Delta
   table with deletion vectors or column mapping is read with DuckDB (extra `delta-fallback`) and
-  says so on stderr; see the README.
-- `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles.
+  says so on stderr; see the README. `--time-column COL` names the date or timestamp column that
+  each numeric column's seasonality is measured against (default: the table's only one;
+  `docs/PROFILING_NOTES.md`).
+- `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles. `shape check
+  PROFILE CONTRACT [--json OUT] [--strict] [--enforce-learned]`: exit 0 when the contract holds,
+  1 when a rule that counts as failing is broken, 2 when the contract is malformed (an unknown
+  rule or strength names the rule). A rule may carry a `strength`: `hard` (the default) fails,
+  `soft` is a warning, `learned` is a warning unless `--enforce-learned`, and `--strict` makes every
+  broken rule fail (`docs/CONTRACTS.md`, "Rule strength").
 - `shape inspect ARTIFACT.shape` prints what an artifact holds, a profile or a model. `shape show`
   is an alias of `shape inspect`.
   A numeric column of a profile carries the univariate depth fields (best family by BIC and the
-  fitted candidates, zero share and zero inflation, heaping, Benford conformity, tail index), so
+  fitted candidates, zero share and zero inflation, heaping, Benford conformity, tail index, a
+  Gaussian mixture and seasonality against the time column), so
   `shape show` prints them; `shape profile --json` and `--html` show them too
   (`docs/PROFILING_NOTES.md`).
 - `shape capture SRC` reads everything `shape profile` reads (CSV, Parquet, JSONL, a folder or
