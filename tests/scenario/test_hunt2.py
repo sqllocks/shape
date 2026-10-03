@@ -195,3 +195,49 @@ def test_667_a_manifest_the_runner_wrote_and_an_old_one_still_load(tmp_path, ret
         doc.pop(key, None)
     path.write_text(json.dumps(doc))
     assert ManifestBuilder.from_file(path).reproducibility == {}
+
+
+# ---- #712: the JSON Lines writer works in bounded batches ------------------------------------
+
+
+class SpyTable:
+    """The part of a table ``_write_jsonl`` uses, recording how it was asked for batches."""
+
+    def __init__(self, table):
+        self.table = table
+        self.asked: list[object] = []
+        self.num_columns = table.num_columns
+        self.num_rows = table.num_rows
+
+    def to_batches(self, max_chunksize=None):
+        self.asked.append(max_chunksize)
+        return self.table.to_batches(max_chunksize=max_chunksize)
+
+
+def test_712_the_writer_asks_for_bounded_batches(tmp_path):
+    import pyarrow as pa
+
+    from shape.scenario.runner import _write_jsonl
+
+    table = pa.table({"id": list(range(2500)), "s": [f"v{i}" for i in range(2500)]})
+    spy = SpyTable(table)
+    _write_jsonl(spy, tmp_path / "x.jsonl")
+    assert spy.asked and isinstance(spy.asked[0], int) and 0 < spy.asked[0] <= 100_000
+    lines = (tmp_path / "x.jsonl").read_text(encoding="utf-8").splitlines()
+    assert [json.loads(x)["id"] for x in lines] == list(range(2500))
+
+
+def test_712_the_output_is_the_rows_in_order_whatever_the_batching(tmp_path):
+    import pyarrow as pa
+
+    from shape.scenario.runner import _write_jsonl
+
+    rows = 130_000  # more than one batch of any bounded size up to 100,000
+    table = pa.table(
+        {"id": list(range(rows)), "s": [None if i % 9 == 0 else f"\u00e9{i}" for i in range(rows)]}
+    )
+    _write_jsonl(table, tmp_path / "a.jsonl")
+    expected = "".join(
+        json.dumps(row, ensure_ascii=False) + "\n" for row in table.to_pylist()
+    ).encode("utf-8")
+    assert (tmp_path / "a.jsonl").read_bytes() == expected
