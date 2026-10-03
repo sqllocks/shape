@@ -168,7 +168,10 @@ class GeoGridEvidence:
     def update(self, lat: Any, lon: Any) -> None:
         if lat is None or lon is None:
             return
-        key = (round(float(lat) / self.resolution), round(float(lon) / self.resolution))
+        y, x = float(lat), float(lon)
+        if not (math.isfinite(y) and math.isfinite(x)):  # a missing coordinate is no cell
+            return
+        key = (round(y / self.resolution), round(x / self.resolution))
         if key in self.cells or len(self.cells) < self.max_cells:
             self.cells[key] += 1
         else:
@@ -286,6 +289,10 @@ def relational_batch(fk: Any, parent_count: int) -> RelationalEvidence:
     import numpy as np
 
     a = np.asarray(fk)
+    if a.dtype.kind == "f":
+        a = a[~np.isnan(a)]  # a missing key is not checked, as in RelationalEvidence.update
+    elif a.dtype.kind == "O":
+        a = np.asarray([v for v in a.tolist() if v is not None and v == v], dtype=np.float64)
     valid = (a >= 0) & (a < parent_count)
     return RelationalEvidence(int(a.size), int(a.size - np.count_nonzero(valid)))
 
@@ -295,8 +302,11 @@ def geo_grid_batch(
 ) -> GeoGridEvidence:
     import numpy as np
 
-    la = np.rint(np.asarray(lat, dtype=np.float64) / resolution).astype(np.int64)
-    lo = np.rint(np.asarray(lon, dtype=np.float64) / resolution).astype(np.int64)
+    y = np.asarray(lat, dtype=np.float64)
+    x = np.asarray(lon, dtype=np.float64)
+    ok = np.isfinite(y) & np.isfinite(x)  # a missing coordinate is no cell
+    la = np.rint(y[ok] / resolution).astype(np.int64)
+    lo = np.rint(x[ok] / resolution).astype(np.int64)
     # Pack signed 32-bit grid coordinates into one int64 so np.unique stays on its fast 1-D path.
     ula = la.astype(np.uint64) & np.uint64(0xFFFFFFFF)
     ulo = lo.astype(np.uint64) & np.uint64(0xFFFFFFFF)

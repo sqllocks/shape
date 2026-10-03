@@ -39,6 +39,14 @@ from .runtime import WindowedProfiler, WindowProfile, restore_profiler
 
 CHECKPOINT_FORMAT = "shape-stream-checkpoint-v1"
 _IDENTITY = ("kind", "schema", "event_time", "allowed_lateness_us", "top_n", "config")
+_COUNTERS = (
+    "batches_read",
+    "batches_processed",
+    "duplicate_batches",
+    "duplicate_rows",
+    "reconnects",
+    "checkpoints",
+)
 
 
 class _Offset(Protocol):
@@ -129,6 +137,8 @@ class StreamConsumer:
         self.source_offset = doc["offset"]
         self.positions = {str(k): int(v) for k, v in doc["positions"].items()}
         for name, value in doc["counters"].items():
+            if name not in _COUNTERS:  # never an arbitrary attribute from a file
+                raise CheckpointError(f"the checkpoint holds an unknown counter {name!r}")
             setattr(self, name, int(value))
 
     def commit(self) -> None:
@@ -143,17 +153,7 @@ class StreamConsumer:
                 "uri": self.uri,
                 "offset": self.source_offset,
                 "positions": self.positions,
-                "counters": {
-                    name: getattr(self, name)
-                    for name in (
-                        "batches_read",
-                        "batches_processed",
-                        "duplicate_batches",
-                        "duplicate_rows",
-                        "reconnects",
-                        "checkpoints",
-                    )
-                },
+                "counters": {name: getattr(self, name) for name in _COUNTERS},
                 "profiler": self.profiler.snapshot(),
             }
         )

@@ -66,18 +66,25 @@ class ValueAnomalyMutator:
             col = columns[ci]
             t = col.type
             nulls = rows & (kind == 0)
+            outliers = pa.array(rows & (kind > 0))
             if pa.types.is_integer(t) or pa.types.is_floating(t):
+                # Only the targeted rows take the computed value: a float64 round trip would
+                # turn the other rows' nulls into 0 or NaN and cut integers above 2**53.
+                missing = np.asarray(col.is_null())
                 values = col.to_numpy(zero_copy_only=False).astype(np.float64)
-                factor = _OUTLIER_FACTORS[np.maximum(kind - 1, 0)]
-                values = np.where(rows & (kind > 0), values * factor, values)
+                values = values * _OUTLIER_FACTORS[np.maximum(kind - 1, 0)]
                 if pa.types.is_integer(t):
                     info = np.iinfo(t.to_pandas_dtype())
-                    values = np.clip(np.nan_to_num(values), info.min, info.max)
-                    out = pa.array(values.astype(t.to_pandas_dtype()), t)
+                    top = np.float64(info.max)
+                    if int(top) > info.max:  # 2**63 does not fit int64: the float below it does
+                        top = np.nextafter(top, 0.0)
+                    values = np.clip(np.nan_to_num(values), info.min, top)
+                    computed = pa.array(values.astype(t.to_pandas_dtype()), t, mask=missing)
                 else:
-                    out = pa.array(values, t)
+                    computed = pa.array(values, t, mask=missing)
+                out = pc.if_else(outliers, computed, col)
             else:
-                out = pc.if_else(pa.array(rows & (kind > 0)), pa.scalar("", t), col)
+                out = pc.if_else(outliers, pa.scalar("", t), col)
             if nulls.any():
                 out = pc.if_else(pa.array(nulls), pa.scalar(None, t), out)
             columns[ci] = out

@@ -45,13 +45,19 @@ def deduplicate_ids(ids: Iterable[Any], seen: MutableSet[Any]) -> np.ndarray:
     asked once per distinct id, not once per row (S5). For a window that is bounded by size and
     time, and a batch that costs a few array operations, use ``Deduplicator``.
     """
-    a = np.asarray(ids)
+    values = ids if isinstance(ids, np.ndarray) else list(ids)
+    # numpy turns a list of mixed types into one type (1 and "1" both become "1"), so only a
+    # list of one type takes the array path; anything else is compared as the set compares it
+    mixed = not isinstance(values, np.ndarray) and len({type(v) for v in values}) > 1
+    a = np.asarray(values, dtype=object) if mixed else np.asarray(values)
     keep = np.zeros(len(a), dtype=bool)
     try:
+        if mixed:
+            raise TypeError
         unique, first = np.unique(a, return_index=True)
-    except TypeError:  # unorderable mixed types: fall back to one dict pass
+    except TypeError:  # mixed or unorderable types: fall back to one dict pass
         firsts: dict[Any, int] = {}
-        for i, x in enumerate(a.tolist()):
+        for i, x in enumerate(values if mixed else a.tolist()):
             firsts.setdefault(x, i)
         unique, first = np.asarray(list(firsts), dtype=object), np.asarray(list(firsts.values()))
     for value, row in zip(unique.tolist(), first.tolist(), strict=True):

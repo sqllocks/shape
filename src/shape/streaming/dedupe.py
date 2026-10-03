@@ -121,6 +121,8 @@ class Deduplicator:
         arr = keys if isinstance(keys, pa.Array | pa.ChunkedArray) else pa.array(keys)
         if isinstance(arr, pa.ChunkedArray):
             arr = arr.combine_chunks()
+        if pa.types.is_null(arr.type):  # no key at all (an empty or all-null batch): no kind
+            return np.zeros(len(arr), dtype=np.int64), np.zeros(len(arr), dtype=bool)
         kind = "int" if pa.types.is_integer(arr.type) else "hash"
         if self._kind is None:
             self._kind = kind

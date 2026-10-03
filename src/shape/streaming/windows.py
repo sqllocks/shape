@@ -7,6 +7,18 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+_EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
+_US = timedelta(microseconds=1)
+
+
+def window_start(ts: datetime, size: timedelta) -> datetime:
+    """The start of the epoch-aligned window of ``size`` that holds ``ts``, in whole
+    microseconds (float seconds put an event at ``1.3`` s into ``[1.2, 1.3)`` for 100 ms)."""
+    if ts.tzinfo is None:
+        raise ValueError("event time must be timezone-aware")
+    us, size_us = (ts - _EPOCH) // _US, size // _US
+    return _EPOCH + timedelta(microseconds=(us // size_us) * size_us)
+
 
 @dataclass(frozen=True, slots=True)
 class WindowResult:
@@ -28,11 +40,7 @@ class TumblingWindow:
         self.late_dropped = 0
 
     def _start(self, ts: datetime) -> datetime:
-        if ts.tzinfo is None:
-            raise ValueError("event time must be timezone-aware")
-        epoch = ts.timestamp()
-        n = self.size.total_seconds()
-        return datetime.fromtimestamp((epoch // n) * n, tz=UTC)
+        return window_start(ts, self.size)
 
     @property
     def watermark(self) -> datetime | None:

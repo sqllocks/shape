@@ -41,6 +41,7 @@ PARTITION_KEY = b"shape.partition"  # schema metadata of a batch that came from 
 _UNITS = {"s": 1_000_000, "ms": 1_000, "us": 1}
 _EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
 EVENT_TIME_TYPE = pa.timestamp("us", tz="UTC")
+_MIN_US, _MAX_US = -(2**63), 2**63 - 1
 
 
 class StreamSourceError(ShapeError):
@@ -88,7 +89,8 @@ def _event_us(value: Any, unit: str) -> int | None:
     if isinstance(value, int | float):
         if isinstance(value, float) and not math.isfinite(value):
             return None
-        return int(value * _UNITS[unit])
+        us = int(value * _UNITS[unit])
+        return us if _MIN_US <= us <= _MAX_US else None  # a timestamp column holds int64
     if isinstance(value, str):
         try:
             when = datetime.fromisoformat(value)

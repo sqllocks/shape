@@ -16,7 +16,8 @@ lines unless told otherwise):
   envelopes, whose ``data`` is read); one object per line, blank lines skipped;
 * **CSV** and **Parquet**: one event per row. A row is decoded as a JSON event is (nested values
   as text, a timestamp as ISO text, so a column is a timestamp only as the event-time column,
-  named by ``--event-time``).
+  named by ``--event-time``). A CSV column takes the type of its first rows; a later value that
+  does not fit it is a rejected row, as for a broker message.
 
 Decoding, ``_shape_event_time``, rejected rows and undecodable lines are the broker sources'
 (``shape.streaming.messages``). There is no broker timestamp: a row with no valid event time has
@@ -180,14 +181,59 @@ def _lines(src: BinaryIO) -> Iterator[bytes]:
         yield line
 
 
+_TRUE = {"1", "True", "TRUE", "true"}  # Arrow's CSV boolean spellings
+_FALSE = {"0", "False", "FALSE", "false"}
+
+
+def _as_type(value: str | None, typ: pa.DataType) -> Any:
+    """A CSV text value as the column's first-block type when it is one, else the text (the
+    decoder then counts the row as rejected). Times stay text, as they are encoded anyway."""
+    if value is None:
+        return None
+    try:
+        if pa.types.is_integer(typ):
+            return int(value)
+        if pa.types.is_floating(typ):
+            return float(value)
+    except ValueError:
+        return value
+    if pa.types.is_boolean(typ) and (value in _TRUE or value in _FALSE):
+        return value in _TRUE
+    return value
+
+
 def _csv_rows(src: BinaryIO, batch_size: int) -> Iterator[str]:
     import pyarrow.csv as pacsv  # type: ignore[import-untyped]
 
     options = pacsv.ReadOptions(block_size=max(1 << 20, batch_size * 64))
-    with pacsv.open_csv(src, read_options=options) as reader:
-        for batch in reader:
-            for row in batch.to_pylist():
-                yield _dumps(row)
+    schema: pa.Schema | None = None
+    done = 0
+    try:
+        with pacsv.open_csv(src, read_options=options) as reader:
+            schema = reader.schema
+            for batch in reader:
+                for row in batch.to_pylist():
+                    yield _dumps(row)
+                    done += 1
+        return
+    except pa.ArrowInvalid as exc:
+        # Arrow fixes a column's type from the first block; a later value that does not fit
+        # stops its reader. Read the rest as text, each value in the column's type where it
+        # can be, so the decoder counts a misfit row as rejected instead of the run ending.
+        if schema is None or not (hasattr(src, "seekable") and src.seekable()):
+            raise StreamSourceError(
+                f"{exc}; a CSV column changes type after its first rows (convert the file to "
+                "JSON lines, or put it in a file rather than standard input)"
+            ) from exc
+    src.seek(0)
+    text = pacsv.ConvertOptions(
+        column_types={name: pa.string() for name in schema.names}, strings_can_be_null=True
+    )
+    types = {f.name: f.type for f in schema}
+    with pacsv.open_csv(src, read_options=options, convert_options=text) as reader:
+        rows = (row for batch in reader for row in batch.to_pylist())
+        for row in islice(rows, done, None):
+            yield _dumps({k: _as_type(v, types[k]) for k, v in row.items()})
 
 
 def _parquet_rows(src: BinaryIO, batch_size: int) -> Iterator[str]:

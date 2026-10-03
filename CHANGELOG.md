@@ -130,6 +130,19 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `--allowed-lateness` that would have kept them.
 - `generate --from PROFILE` (and any schema with correlated columns) wrote no files while reporting
   success; the table is now handed to the writer after the correlation pass.
+- Fixed (streaming audit, #153 to #165): `shape stream-profile` writes complete windows after
+  Ctrl-C and a resume (windows Ctrl-C closed early are marked `"partial": true` and replaced), cuts
+  a half-written last line of `--windows` on restart, and reads a CSV whose column changes type
+  after its first rows (the misfits are rejected rows); a numeric event time outside the timestamp
+  range no longer ends a stream read; `TumblingWindow` and `AggregateTumblingWindow` place events in
+  the window that holds them for sub-second sizes; the default anomaly mutator changes only the
+  value it targets (nulls, large integers and the int64 limit kept); `KeyedSketches` starts a fresh
+  sketch for a key that returns after its TTL; `Deduplicator` accepts integer keys after an empty
+  or all-null batch; `deduplicate_ids` keeps `1` and `"1"` apart; the emit file sink leaves the
+  file as it was when a write fails part way; `FaultSink` does not resend a delivered batch when a
+  duplicate copy fails; checkpoint and snapshot counters cannot set other attributes; the platinum
+  batch helpers skip missing coordinates and keys.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

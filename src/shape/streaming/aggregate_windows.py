@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
+
+from .windows import window_start
 
 
 @dataclass(slots=True)
@@ -55,10 +57,7 @@ class AggregateTumblingWindow:
         self.late_dropped = 0
 
     def _start(self, ts):
-        if ts.tzinfo is None:
-            raise ValueError("event time must be timezone-aware")
-        n = self.size.total_seconds()
-        return datetime.fromtimestamp((ts.timestamp() // n) * n, tz=UTC)
+        return window_start(ts, self.size)
 
     @property
     def watermark(self):

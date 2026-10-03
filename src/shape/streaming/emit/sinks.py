@@ -79,16 +79,30 @@ class FileSink:
         self.source = source
         self.fsync = fsync
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        # Unbuffered: a batch is one write, and a failed one leaves nothing in a buffer.
         if append:
             self.repaired_bytes = repair_tail(self.path)
-            self._f = open(self.path, "ab")
+            self._f = open(self.path, "ab", buffering=0)
         else:
             self.repaired_bytes = 0
-            self._f = open(self.path, "wb")
+            self._f = open(self.path, "wb", buffering=0)
 
     def send(self, batch: pa.RecordBatch) -> None:
-        self._f.write(encode_batch(batch, self.envelope, self.source))
-        self._f.flush()
+        data = memoryview(encode_batch(batch, self.envelope, self.source))
+        start = self._f.tell()
+        try:
+            while data:
+                n = self._f.write(data)
+                if not n:
+                    raise OSError(f"{self.path}: the file took no bytes")
+                data = data[n:]
+            self._f.flush()
+        except OSError:
+            # The part that reached the file would merge with the retried batch into one
+            # corrupt line: cut it, so the retry starts on a line boundary.
+            self._f.truncate(start)
+            self._f.seek(start)
+            raise
 
     def flush(self) -> None:
         self._f.flush()
