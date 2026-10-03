@@ -241,3 +241,50 @@ def test_712_the_output_is_the_rows_in_order_whatever_the_batching(tmp_path):
         json.dumps(row, ensure_ascii=False) + "\n" for row in table.to_pylist()
     ).encode("utf-8")
     assert (tmp_path / "a.jsonl").read_bytes() == expected
+
+
+# ---- #723: a duplicate key in a pack or a spec is an error -----------------------------------
+
+GOOD_PACK = (
+    "version: 1\nid: a\nkind: file_drop\ndomain: retail\n"
+    "file_drop: {formats: [csv], entities: [store]}\n"
+)
+
+
+@pytest.mark.parametrize(
+    "text,key,line",
+    [
+        (GOOD_PACK + "id: b\n", "id", 6),
+        (GOOD_PACK + "file_drop: {formats: [csv]}\n", "file_drop", 6),
+        (
+            "version: 1\nid: a\nkind: file_drop\ndomain: retail\n"
+            "file_drop:\n  formats: [csv]\n  formats: [parquet]\n",
+            "formats",
+            7,
+        ),
+    ],
+)
+def test_723_a_pack_with_a_duplicate_key_is_refused(tmp_path, text, key, line):
+    from shape.scenario import PackError
+
+    with pytest.raises(PackError, match=rf"duplicate key '{key}' at line {line}"):
+        PackLoader().load(write(tmp_path / "p.yaml", text))
+
+
+def test_723_a_spec_with_a_duplicate_key_is_refused(tmp_path):
+    from shape.scenario import GSLParser, PackError
+
+    text = "version: 1\nname: n\nscenario: {pack: p.yaml}\nscenario: {pack: q.yaml}\n"
+    with pytest.raises(PackError, match="duplicate key 'scenario' at line 4"):
+        GSLParser().parse(write(tmp_path / "s.gsl.yaml", text))
+
+
+def test_723_the_same_key_in_different_mappings_and_merge_keys_are_not_duplicates(tmp_path):
+    text = (
+        "version: 1\nid: a\nkind: file_drop\ndomain: retail\n"
+        "x_base: &base {formats: [csv], entities: [store]}\n"
+        "file_drop:\n  <<: *base\n  entities: [customer]\n"
+        "validation: {required_gates: [row_count]}\nfabric_targets: {entities: 1}\n"
+    )
+    pack = PackLoader().load(write(tmp_path / "p.yaml", text))
+    assert pack.file_drop.entities == ["customer"] and pack.file_drop.formats == ["csv"]
