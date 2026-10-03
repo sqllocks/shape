@@ -12,13 +12,11 @@ const US_PER_DAY: i64 = 86_400_000_000;
 /// Month (0 = January) of a day number (Howard Hinnant's `civil_from_days`).
 pub fn month_of(days: i64) -> usize {
     let z = days + 719_468;
-    let era = z.div_euclid(146_097);
-    let doe = z.rem_euclid(146_097);
+    let doe = z.rem_euclid(146_097); // the month does not depend on the 400-year era
     let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
     let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
     let mp = (5 * doy + 2) / 153;
     let m = if mp < 10 { mp + 3 } else { mp - 9 };
-    let _ = era;
     (m - 1) as usize
 }
 

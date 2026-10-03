@@ -18,7 +18,7 @@
     clippy::needless_range_loop
 )]
 
-use std::f64::consts::{LN_2, PI};
+use std::f64::consts::PI;
 
 use rayon::prelude::*;
 
@@ -1588,12 +1588,6 @@ pub fn fit_score(full: &[f64], d: Dist) -> Option<f64> {
     }
     format!("{:.4}", 1.0 - stat).parse::<f64>().ok()
 }
-
-pub fn dist_from_name(name: &str) -> Option<Dist> {
-    CANDIDATES.iter().copied().find(|d| d.name() == name)
-}
-
-pub const _LN2: f64 = LN_2;
 
 #[cfg(test)]
 mod tests {
