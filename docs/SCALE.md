@@ -65,7 +65,8 @@ shape jobs cancel JOB
 shape jobs resume JOB          # a failed or cancelled job
 ```
 
-* **Local jobs.** `cancel` stops the run between chunks. `resume` runs the stored request again and
+* **Local jobs.** `cancel` stops the run between chunks, also when the run is in another process
+  (it reads its record as it reports progress). `resume` runs the stored request again and
   skips the part files already written whole (a part counts when it is readable and has the right
   number of rows); a run killed outright is `failed` or still `running` with nothing behind it, and
   `cancel` then marks it cancelled. A secret in the request is masked in the record: give it again

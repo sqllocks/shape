@@ -465,6 +465,15 @@ class LocalRunner:
         if now - self._last < 0.25:  # a file write per chunk would slow a fast run
             return
         self._last = now
+        # `shape jobs cancel` in another process can only write the record: read it here, so
+        # the run stops before its next chunk (the router checks ``cancel`` between chunks).
+        try:
+            stored = self.store.get(self.job_id).status
+        except (JobNotFoundError, OSError, ValueError):
+            stored = None  # a record that cannot be read does not stop the run
+        if stored == "cancelled":
+            self.cancel.set()
+            return
         self.store.update(self.job_id, progress=info)
 
     def run(self) -> None:
