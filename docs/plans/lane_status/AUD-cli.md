@@ -129,6 +129,7 @@ first (the failing output is in the test commits: 9399734 for #107, c3e968a for 
 | #119 | 13 | 164f1cf | `--live-report` extension checked before streaming |
 | #120 | 14 | 276f2d4, f429fb4 | a closed standard output: exit 141, nothing printed (docs/CLI.md exit table) |
 | #121 | 15 | ca052ca | `demo notebook` and `demo report` take `-o` |
+| #122 | 16 | e774e35 (test), aaa1a67 (fix) | `profile registry delete` of a missing profile: exit 2, `shape: error: profile not found: NAME`, as `tag`/`diff`; per the lead's decision (2026-10-03) the one assertion in `tests/cli/test_profile_registry_cli.py::test_registry_delete` changed from `== 1` to `== 2` |
 | #123 | 17, 18 | a8b4986 | an unknown `--log-level` (with `--log-json`) and a `--metrics` path in a missing folder are refused before the command |
 | #124 | 19 | c1c8274 | `--chunk-rows 0` reaches the engine, which refuses it |
 | #125 | 20 | 0aee269 | `learn`, `mask`, `profile registry save`: `file not found: PATH` |
@@ -137,10 +138,6 @@ CHANGELOG.md: "Fixed (command line)" (586175f).
 
 ## Left open, and why
 
-- **#122** (finding 16), for the lead: `tests/cli/test_profile_registry_cli.py::test_registry_delete`
-  asserts that deleting a missing profile exits **1**. Making it 2 like `tag`/`diff` would change an
-  existing test's expectation, which this lane may not do. My own regression test for it was
-  removed (f158930). Decide: keep 1 (and document it), or change the test and the code to 2.
 - **#126** (finding 21): `shape cat` as a git textconv prints a "not signed" note on every
   `git diff`. docs/SIGNING.md says every CLI read prints the note, so silencing it for `cat` is the
   owner's call.
@@ -177,3 +174,22 @@ version the plan pins) they pass.
   missed).
 - No benchmark or equivalence verifier output was touched (CLI messages, exit codes and option
   checks only).
+
+## Commands and results (this session, #122; origin/build/main-plan still at 5c91ea5, no merge)
+
+Fresh container, venvs built per plan section 1: `~/.venvs/shape` (`.[dev,streaming,advanced]`,
+`plugins/shape-domains|eventhubs|sqlserver|fabric`, pyarrow 25.0.1), `~/.venvs/fabric`
+(`tests/demo/fabric/requirements.txt`, pyarrow 19.0.1, unixodbc installed), Spindle baseline from
+`benchmarks/vs_spindle/setup_spindle.sh` (read only).
+
+- `pytest tests/regressions/test_aud_cli.py -k registry_delete`: failed first (`assert 1 == 2`),
+  in e774e35; both files `tests/regressions/test_aud_cli.py` and
+  `tests/cli/test_profile_registry_cli.py`: 61 passed after the fix.
+- `make check`: exit 0 (ruff, format, mypy, vulture, lint-imports, the check scripts, coverage
+  gate run 6827 passed 2 skipped, the heavy Rust run, `SHAPE_KERNEL=python tests/kernel`,
+  cargo fmt, clippy, test).
+- `python scripts/check_user_facing.py`: clean.
+- `SHAPE_KERNEL=rust pytest -m "not emulator and not live" --ignore=tests/demo/fabric`: 6907
+  passed, 2 skipped, 13 deselected (by the marker expression), exit 0.
+- `tests/demo/fabric` in the pyarrow 19 venv: 216 passed. `tests/demo/content`: 38 passed.
+- `SHAPE_KERNEL=python` full suite: IN PROGRESS when this was committed (see the next commit).
