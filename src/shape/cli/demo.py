@@ -119,12 +119,12 @@ def add_arguments(sub: Any) -> None:
     nb = actions.add_parser("notebook", help="write a Fabric notebook for a scenario")
     nb.add_argument("scenario")
     nb.add_argument("--mode", choices=MODES, default="inference")
-    nb.add_argument("--output", help="the .ipynb path (default: shape_SCENARIO_MODE.ipynb)")
+    nb.add_argument("-o", "--output", help="the .ipynb path (default: shape_SCENARIO_MODE.ipynb)")
 
     rp = actions.add_parser("report", help="write the report of a demo session")
     rp.add_argument("session_id")
     rp.add_argument("--format", dest="fmt", choices=("md", "html"), default="md")
-    rp.add_argument("--output", help="write to this file instead of printing")
+    rp.add_argument("-o", "--output", help="write to this file instead of printing")
 
 
 def _dump(obj: Any) -> None:
