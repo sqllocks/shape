@@ -258,6 +258,39 @@ jobs:
         run: pip install -e '.[dev,azure]'
       - if: env.HAVE_ABFSS == 'true'
         run: python -m pytest -m live tests/builtins/test_abfss_sink_live.py -q
+  fabric-git-sync-live:
+    # W7-01: a shape/ folder of .shape files next to Fabric items survives Fabric Git integration in
+    # both directions. Runs only where the owner's O-02 secrets and the Git remote exist; uploads the
+    # shape-live-check JSON result (no secret, tenant or workspace id).
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      HAVE_GIT_SYNC: ${{ secrets.FABRIC_CLIENT_ID != '' && secrets.FABRIC_WORKSPACE_ID != '' && secrets.FABRIC_GIT_REMOTE != '' }}
+      FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+      FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
+      FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+      FABRIC_WORKSPACE_ID: ${{ secrets.FABRIC_WORKSPACE_ID }}
+      FABRIC_GIT_REMOTE: ${{ secrets.FABRIC_GIT_REMOTE }}
+      FABRIC_GIT_TOKEN: ${{ secrets.FABRIC_GIT_TOKEN }}
+      SHAPE_LIVE_RESULT: ${{ github.workspace }}/git-sync-result.json
+    steps:
+      - if: env.HAVE_GIT_SYNC != 'true'
+        run: echo "no Fabric Git sync secrets configured; nothing to run"
+      - if: env.HAVE_GIT_SYNC == 'true'
+        uses: actions/checkout@v4
+      - if: env.HAVE_GIT_SYNC == 'true'
+        uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - if: env.HAVE_GIT_SYNC == 'true'
+        run: pip install -e '.[dev]' -e 'plugins/shape-fabric[entra]'
+      - if: env.HAVE_GIT_SYNC == 'true'
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_git_sync.py -q
+      - if: always() && env.HAVE_GIT_SYNC == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-git-sync-result
+          path: git-sync-result.json
+          if-no-files-found: ignore
   sqlserver-e2e:
     # P6-08: shape-sqlserver against a real SQL Server 2022 (ci/emulators/docker-compose.yml),
     # then T-22 parity of the database profiler against the pinned baseline on the same data.
@@ -376,6 +409,27 @@ jobs:
         with: {python-version: '3.11'}
       - uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: '17'}
+      # W1-09: Spark's Hadoop client needs winutils.exe and hadoop.dll on Windows (HADOOP_HOME\bin).
+      # Hadoop 3.4.0 x64 binaries from a pinned commit of kontext-tech/winutils (Apache-2.0),
+      # each checked against its SHA-256 before use.
+      - name: Hadoop winutils (pinned, SHA-256 checked)
+        shell: pwsh
+        run: |
+          $base = "https://raw.githubusercontent.com/kontext-tech/winutils/ff8e529a72bde2ec95b06ab76e797bdcbade9685/hadoop-3.4.0-win10-x64/bin"
+          $hadoop = Join-Path $env:RUNNER_TEMP "hadoop"
+          New-Item -ItemType Directory -Force -Path (Join-Path $hadoop "bin") | Out-Null
+          $pinned = @{
+            "winutils.exe" = "f7294eca96ba9f2efcf66ff89db16ace67ae667692a09b49f024472b32fb354c"
+            "hadoop.dll"   = "8769e86a8ad1bffb6a6038215eb82f523b25d92cca3d4dd32f62d4ff02418f8a"
+          }
+          foreach ($name in $pinned.Keys) {
+            $out = Join-Path (Join-Path $hadoop "bin") $name
+            Invoke-WebRequest -Uri "$base/$name" -OutFile $out
+            $got = (Get-FileHash -Algorithm SHA256 $out).Hash.ToLower()
+            if ($got -ne $pinned[$name]) { throw "$name has SHA-256 $got, expected $($pinned[$name])" }
+          }
+          "HADOOP_HOME=$hadoop" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          (Join-Path $hadoop "bin") | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
       - run: python -m pip install -U pip
       - run: pip install -e '.[dev]' -r tests/demo/fabric/requirements.txt
       - run: python -m pytest -q tests/demo/fabric tests/demo/content
