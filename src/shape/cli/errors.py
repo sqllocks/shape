@@ -21,6 +21,9 @@ from collections.abc import Callable
 from shape.errors import ShapeError
 
 EXIT_INPUT_ERROR = 2
+#: The reader of standard output went away (``shape ... | head``): 128 + SIGPIPE, as a shell
+#: reports a Unix tool that stopped on a closed pipe.
+EXIT_PIPE_CLOSED = 141
 
 #: The exception types that mean "the user gave something Shape cannot use". ``JSONDecodeError``
 #: is a ``ValueError`` and ``FileNotFoundError`` an ``OSError``, so both are covered.
@@ -80,10 +83,24 @@ def fail(exc: BaseException) -> int:
     return EXIT_INPUT_ERROR
 
 
+def pipe_closed() -> int:
+    """Stop quietly when standard output's reader has gone: point standard output at the null
+    device so the interpreter's last flush cannot fail again, and return 141."""
+    try:
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+    except (OSError, ValueError):  # no file descriptor (a test's captured stdout)
+        pass
+    return EXIT_PIPE_CLOSED
+
+
 def guarded(fn: Callable[[], int], *, debug: bool = False) -> int:
-    """Run ``fn`` and turn an expected error into a message and exit code 2."""
+    """Run ``fn`` and turn an expected error into a message and exit code 2 (a closed standard
+    output is not an error: exit 141, nothing printed)."""
     try:
         return fn()
+    except BrokenPipeError:
+        return pipe_closed()
     except EXPECTED as exc:
         if debug_enabled(debug):
             raise

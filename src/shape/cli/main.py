@@ -83,6 +83,8 @@ def _run(fn, a):
     restore = _notices_to_stderr()
     try:
         return fn(a)
+    except BrokenPipeError:
+        return errors.pipe_closed()
     except errors.EXPECTED as exc:
         if errors.debug_enabled():
             raise
@@ -1375,7 +1377,15 @@ def main(argv=None):
     from shape.cli import lifecycle
 
     lifecycle.quick_exit_allowed = argv is None
-    return _main(argv)
+    code = _main(argv)
+    if argv is None:
+        from shape.cli import errors
+
+        try:
+            sys.stdout.flush()  # what is still buffered, while a closed pipe can be handled
+        except BrokenPipeError:
+            return errors.pipe_closed()
+    return code
 
 
 def _main(argv):
