@@ -81,6 +81,23 @@ def test_runtime_download_is_reported(tmp_path):
         assert any("m.py" in p and "network" in p for p in csd.check_tree(root)), code
 
 
+def test_network_submodule_imported_from_its_package_is_reported(tmp_path):
+    # #261: `from urllib import request` is the same client as `import urllib.request`
+    for code in (
+        "from urllib import request\n",
+        "from urllib import parse, request as r\n",
+        "from http import client\n",
+        "import urllib3\n",
+    ):
+        root = _tree(tmp_path, {"m.py": code})
+        assert any("m.py" in p and "network" in p for p in csd.check_tree(root)), code
+
+
+def test_harmless_names_from_network_packages_pass(tmp_path):
+    for code in ("from urllib import parse\n", "from http import HTTPStatus\n"):
+        assert csd.check_tree(_tree(tmp_path, {"m.py": code})) == [], code
+
+
 def test_urllib_parse_is_not_a_download(tmp_path):
     root = _tree(tmp_path, {"m.py": "from urllib.parse import urlparse\n"})
     assert csd.check_tree(root) == []
