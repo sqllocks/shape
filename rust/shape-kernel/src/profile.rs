@@ -44,20 +44,26 @@ fn pattern_set() -> &'static RegexSet {
             r"|^::(?:[0-9a-fA-F]{1,4}:){0,5}[0-9a-fA-F]{1,4}$",
             r"|^::$"
         );
-        RegexSet::new([
-            r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$",
-            r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
-            r"^\d{3}-\d{2}-\d{4}$",
-            r"^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$|^([0-9a-fA-F]{2}-){5}[0-9a-fA-F]{2}$",
-            ipv4.as_str(),
-            ipv6,
-            r"^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$",
-            r"^\d{5}(-\d{4})?$",
-            r"^\d{4}[-/]\d{1,2}[-/]\d{1,2}$",
-            r"^[\+]?[\d\s\-\(\)\.]{7,20}$",
-            r"^[A-Z]{3}$",
-            r"^[a-z]{2}(-[A-Z]{2})?$",
-        ])
+        // The twin and the baseline use Python `re`: there `$` also matches before a final
+        // "\n", and `\s` also covers \x1c-\x1f. Spell both out so the counts agree.
+        let python_re = |p: &str| p.replace('$', r"\n?\z").replace(r"\s", r"\s\x1c-\x1f");
+        RegexSet::new(
+            [
+                r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$",
+                r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+                r"^\d{3}-\d{2}-\d{4}$",
+                r"^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$|^([0-9a-fA-F]{2}-){5}[0-9a-fA-F]{2}$",
+                ipv4.as_str(),
+                ipv6,
+                r"^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$",
+                r"^\d{5}(-\d{4})?$",
+                r"^\d{4}[-/]\d{1,2}[-/]\d{1,2}$",
+                r"^[\+]?[\d\s\-\(\)\.]{7,20}$",
+                r"^[A-Z]{3}$",
+                r"^[a-z]{2}(-[A-Z]{2})?$",
+            ]
+            .map(python_re),
+        )
         .expect("valid patterns")
     })
 }
