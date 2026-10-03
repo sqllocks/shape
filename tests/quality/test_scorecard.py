@@ -461,3 +461,95 @@ def test_newer_scorecard_version_in_history_is_refused(tmp_path):
     )
     with pytest.raises(ScorecardError, match="newer"):
         scorecard_trend(reg, "x")
+
+
+# -- HUNT2-quality ----------------------------------------------------------------------------
+
+
+def _pk_schema():
+    from shape.quality.gatespec import GateSchema
+
+    return GateSchema.from_dict(
+        {
+            "format": "shape-gates",
+            "version": 1,
+            "tables": {"t": {"columns": {"id": {"type": "integer"}}, "primary_key": ["id"]}},
+        }
+    )
+
+
+@pytest.mark.parametrize("rows", [1_000, 200_000])
+def test_one_failing_row_never_scores_100(rows):
+    """#569: a rate below 0.005% used to round up to 100 and hide the failure."""
+    ids = list(range(rows))
+    ids[1] = ids[0]
+    t = {"t": pa.table({"id": ids})}
+    schema = _pk_schema()
+    card = build_scorecard(VerifyRunner(schema).run(t), t, schema=schema)
+    check = card.dimensions["uniqueness"].checks[0]
+    assert check.failing == 1
+    assert check.score < 100
+    assert card.dimensions["uniqueness"].score < 100
+    assert card.overall < 100
+    assert f"| uniqueness | {card.dimensions['uniqueness'].score:g} |" in card.to_markdown()
+    assert "## Failing checks" in card.to_markdown()
+
+
+def test_clean_check_still_scores_exactly_100():
+    t = {"t": pa.table({"id": list(range(200_000))})}
+    schema = _pk_schema()
+    card = build_scorecard(VerifyRunner(schema).run(t), t, schema=schema)
+    assert card.dimensions["uniqueness"].score == 100.0
+    assert card.overall == 100.0
+
+
+def test_a_failed_gate_is_not_scored_100_when_other_checks_ran():
+    """#570: a relationship whose child column is missing was dropped from the score."""
+    from shape.quality.gatespec import GateSchema
+
+    schema = GateSchema.from_dict(
+        {
+            "format": "shape-gates",
+            "version": 1,
+            "tables": {
+                "p": {"columns": {"id": {"type": "integer"}}, "primary_key": ["id"]},
+                "c": {"columns": {"pid": {"type": "integer"}}},
+                "e": {"columns": {"pid": {"type": "integer"}}},
+            },
+            "relationships": [
+                {
+                    "name": "r1",
+                    "parent": "p",
+                    "child": "c",
+                    "parent_columns": ["id"],
+                    "child_columns": ["pid"],
+                    "type": "one_to_many",
+                },
+                {
+                    "name": "r2",
+                    "parent": "p",
+                    "child": "e",
+                    "parent_columns": ["id"],
+                    "child_columns": ["pid"],
+                    "type": "one_to_many",
+                },
+            ],
+        }
+    )
+    t = {
+        "p": pa.table({"id": [1, 2]}),
+        "c": pa.table({"pid": [1, 2]}),
+        "e": pa.table({"other": [1]}),
+    }
+    result = VerifyRunner(schema).run(t)
+    assert not next(g for g in result.gate_results if g.gate_name == "referential_integrity").passed
+    card = build_scorecard(result, t, schema=schema)
+    assert card.dimensions["consistency"].score < 100
+    assert any(c.score == 0 for c in card.dimensions["consistency"].checks)
+
+
+def test_a_passing_gate_adds_no_binary_check():
+    t = {"t": pa.table({"id": [1, 2, 3]})}
+    schema = _pk_schema()
+    card = build_scorecard(VerifyRunner(schema).run(t), t, schema=schema)
+    assert [c.table for c in card.dimensions["uniqueness"].checks] == ["t"]
