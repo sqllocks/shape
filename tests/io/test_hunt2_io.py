@@ -624,4 +624,87 @@ def test_excel_reader_still_reads_a_wide_and_a_tall_sheet(tmp_path: Path) -> Non
     assert (table.num_rows, table.num_columns) == (2000, 200)
 
 
+# ---- #724, #725: the SQL sink ----------------------------------------------------------------
+
+
+def _script(tmp_path: Path, table: pa.Table, **options: object) -> str:
+    from shape.builtins.sinks.sql import SqlSink
+
+    SqlSink().write(str(tmp_path / "o.sql"), "t", table.to_batches(), **options)
+    return (tmp_path / "o.sql").read_text("utf-8")
+
+
+def _go_lines(script: str) -> int:
+    import re
+
+    return len(re.findall(r"(?im)(?:^|[\r\n])[ \t]*go(?:\W|$)", script))
+
+
+def test_tsql_value_with_a_go_line_does_not_split_the_batch(tmp_path: Path) -> None:
+    t = pa.table({"s": ["x\nGO\nDROP TABLE victim;\nGO\nSELECT '"]})
+    script = _script(tmp_path, t, ddl=False)
+    assert _go_lines(script) == 1  # the separator the sink writes after the INSERT
+    expected = (
+        "(N'x' + NCHAR(10) + N'GO' + NCHAR(10) + N'DROP TABLE victim;' + NCHAR(10) + N'GO'"
+        " + NCHAR(10) + N'SELECT ''')"
+    )
+    assert expected in script
+
+
+def test_fabric_warehouse_value_with_a_go_line_uses_char(tmp_path: Path) -> None:
+    t = pa.table({"s": ["a\r\n  go 3\r\nb"]})
+    script = _script(tmp_path, t, ddl=False, sql_dialect="tsql-fabric-warehouse")
+    assert _go_lines(script) == 1
+    assert "('a' + CHAR(13) + CHAR(10) + '  go 3' + CHAR(13) + CHAR(10) + 'b')" in script
+
+
+@pytest.mark.parametrize("dialect", ["postgres", "mysql"])
+def test_other_dialects_keep_line_breaks_in_a_literal(tmp_path: Path, dialect: str) -> None:
+    t = pa.table({"s": ["x\nGO\ny"]})
+    assert "('x\nGO\ny')" in _script(tmp_path, t, ddl=False, sql_dialect=dialect)
+
+
+def test_tsql_text_without_a_go_line_is_unchanged(tmp_path: Path) -> None:
+    t = pa.table({"s": ["a\nb", "GOTO\nlabel", "ago\nx", "-- go", "it's"]})
+    script = _script(tmp_path, t, ddl=False)
+    assert "(N'a\nb')" in script
+    assert "(N'GOTO\nlabel')" not in script  # a line that starts with go is written in pieces
+    assert "(N'ago\nx')" in script
+    assert "(N'-- go')" in script
+    assert "(N'it''s')" in script
+    assert _go_lines(script) == 1
+
+
+@pytest.mark.parametrize("name", ["a\nGO\nb", "a\rb"])
+def test_tsql_refuses_a_name_with_a_line_break(tmp_path: Path, name: str) -> None:
+    from shape.builtins.sinks.sql import SqlSink
+
+    with pytest.raises(ValueError, match="line break"):
+        SqlSink().write(str(tmp_path / "o.sql"), "t", pa.table({name: [1]}).to_batches(), ddl=False)
+    with pytest.raises(ValueError, match="line break"):
+        SqlSink().write(str(tmp_path / "o.sql"), name, pa.table({"a": [1]}).to_batches())
+    # other dialects can quote such a name
+    assert name in _script(tmp_path, pa.table({name: [1]}), ddl=False, sql_dialect="postgres")
+
+
+@pytest.mark.parametrize(
+    ("key", "message"),
+    [(["zz"], r"\['zz'\].*not columns of table 't'"), (["k", "k"], "more than once"), ("zz", "zz")],
+)
+def test_primary_key_must_name_columns_of_the_table(
+    tmp_path: Path, key: object, message: str
+) -> None:
+    from shape.builtins.sinks.sql import SqlSink
+
+    with pytest.raises(ValueError, match=message):
+        SqlSink().write(
+            str(tmp_path / "o.sql"), "t", pa.table({"k": [1]}).to_batches(), primary_key=key
+        )
+
+
+def test_primary_key_as_one_string_is_one_column(tmp_path: Path) -> None:
+    script = _script(tmp_path, pa.table({"key": [1]}), primary_key="key")
+    assert "PRIMARY KEY ([key])" in script
+
+
 _ = dt
