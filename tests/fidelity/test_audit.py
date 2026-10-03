@@ -41,3 +41,16 @@ def test_bootstrap_table_names_a_negative_n_rows() -> None:
 
     with pytest.raises(ValueError, match=r"n_rows is 0 or more, got -1"):
         bootstrap_table(pa.table({"x": [1, 2, 3]}), n_rows=-1)
+
+
+def test_frame_refuses_a_timestamp_outside_the_nanosecond_range() -> None:
+    """#555: the conversion to nanoseconds never wraps; the error names the column."""
+    import pytest
+
+    from shape.fidelity._frame import Frame
+
+    with pytest.raises(ValueError, match=r"column 't'.*outside the nanosecond range"):
+        Frame.from_arrow(pa.table({"t": pa.array([2**62], pa.timestamp("s"))}))
+    ok = Frame.from_arrow(pa.table({"t": pa.array([10**9, None], pa.timestamp("s"))}))["t"]
+    assert ok.values.tolist() == [10**18, 0]
+    assert ok.valid.tolist() == [True, False]
