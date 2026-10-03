@@ -99,3 +99,45 @@ def test_660_a_volume_event_that_changes_nothing_is_not_counted(retail, monkeypa
     builder = ManifestBuilder()
     _apply_chaos(data, SECTION, builder)
     assert "volume" not in builder._m.chaos
+
+
+# ---- #673: a key whose type no longer matches fails the gate, it does not crash it -----------
+
+
+def retyped_key(retail):
+    import pyarrow as pa
+    import pyarrow.compute as pc
+
+    data = generated(retail)
+    orders = data.tables["order"]
+    i = orders.schema.get_field_index("customer_id")
+    bad = orders.set_column(i, "customer_id", pc.cast(orders["customer_id"], pa.string()))
+    return replace(data, tables={**data.tables, "order": bad})
+
+
+def test_673_a_retyped_foreign_key_fails_the_referential_integrity_gate(retail):
+    from shape.scenario.runner import _run_gate
+
+    passed, message = _run_gate("referential_integrity", retyped_key(retail))
+    assert passed is False
+    assert "order.customer_id" in message
+
+
+def test_673_an_untouched_dataset_still_passes_the_gate(retail):
+    from shape.scenario.runner import _run_gate
+
+    assert _run_gate("referential_integrity", generated(retail)) == (True, "")
+
+
+def test_673_a_narrower_integer_key_is_not_a_failure(retail):
+    import pyarrow as pa
+    import pyarrow.compute as pc
+
+    from shape.scenario.runner import _run_gate
+
+    data = generated(retail)
+    orders = data.tables["order"]
+    i = orders.schema.get_field_index("customer_id")
+    narrow = orders.set_column(i, "customer_id", pc.cast(orders["customer_id"], pa.int32()))
+    data = replace(data, tables={**data.tables, "order": narrow})
+    assert _run_gate("referential_integrity", data) == (True, "")
