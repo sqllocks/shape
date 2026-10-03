@@ -29,6 +29,7 @@ from typing import Any
 SEED = b"\x01" * 32  # a published test key: never use it for anything but this corpus
 ROOT = Path(__file__).resolve().parent
 PACK_SOURCE = ROOT.parent / "fixtures" / "packs" / "tutorial_custom_pack.yaml"
+GSL_SOURCE = ROOT.parent / "fixtures" / "packs" / "retail_basic.gsl.yaml"
 
 
 def _tree_digest(path: Path) -> str:
@@ -241,6 +242,18 @@ def generate(out: Path) -> list[dict[str, Any]]:
         "pack YAML as users write it (tests/fixtures/packs/tutorial_custom_pack.yaml)",
         authored=True,
         note="packs are authored, not written by a command",
+    )
+
+    shutil.copy(GSL_SOURCE, out / "pack" / "retail_basic.gsl.yaml")
+    shutil.copy(PACK_SOURCE, out / "pack" / "tutorial_custom_pack.yaml")  # the spec's pack
+    add(
+        "generation-spec-gsl-v1",
+        "generation-spec-gsl",
+        1,
+        "pack/retail_basic.gsl.yaml",
+        "GSL spec YAML as users write it (tests/fixtures/packs/retail_basic.gsl.yaml)",
+        authored=True,
+        note="its pack is pack/tutorial_custom_pack.yaml",
     )
 
     # --- registries ----------------------------------------------------------------------

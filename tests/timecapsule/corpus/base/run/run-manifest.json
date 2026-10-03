@@ -1,5 +1,5 @@
 {
-  "run_id": "20261003_035557_retail_small_s42",
+  "run_id": "20261003_035638_retail_small_s42",
   "spec_hash": "6d5724b7f60ee99d5ce06d71d188a8d3e0574ae8cb6e833647c7cfda266e9faa",
   "pack_id": "capsule_pack",
   "domain": "retail",
@@ -23,8 +23,8 @@
     "duplicates": 2
   },
   "timestamps": {
-    "started": "2026-10-03T03:55:57.900549+00:00",
-    "finished": "2026-10-03T03:55:57.907684+00:00",
+    "started": "2026-10-03T03:56:38.830828+00:00",
+    "finished": "2026-10-03T03:56:38.836581+00:00",
     "elapsed_seconds": 0.01
   },
   "workspace_id": "",
