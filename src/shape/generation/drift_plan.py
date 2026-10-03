@@ -338,6 +338,8 @@ class DriftPlan:
         for r in self._resolved:
             e = r.event
             ramp_end = r.start + max(e.ramp_days, 1) - 1
+            last = ramp_end if r.end is None else min(ramp_end, r.end - 1)
+            peak = r.weight(last)  # below 1 when the window ends before the ramp does
             events.append(
                 {
                     "id": r.id,
@@ -347,7 +349,8 @@ class DriftPlan:
                     "start": self.date_of(r.start).isoformat(),
                     "end": None if r.end is None else self.date_of(r.end).isoformat(),
                     "ramp_days": e.ramp_days,
-                    "full_effect_from": self.date_of(ramp_end).isoformat(),
+                    "full_effect_from": self.date_of(ramp_end).isoformat() if peak >= 1 else None,
+                    "peak_weight": round(peak, 6),
                     "shape": _shape_name(e),
                     "spec": json.loads(json.dumps(dict(e.spec), default=str)),
                     "detected_as": list(_DETECTED_AS[e.kind]),

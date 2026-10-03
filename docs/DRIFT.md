@@ -235,7 +235,8 @@ plan.expected_changes(0, 10)                     # what shape.diff should report
 ```
 
 The answer key (`ground_truth.json`, version 1) lists every event (`id`, `kind`, `table`,
-`column`, `start`, `end`, `ramp_days`, `full_effect_from`, `shape`: `step`, `ramp`, `window` or
+`column`, `start`, `end`, `ramp_days`, `full_effect_from` (null when the window ends before the
+ramp does), `peak_weight` (the most the event takes effect, 0 to 1), `shape`: `step`, `ramp`, `window` or
 `ramp_window`, `spec`, and `detected_as`: the `shape.diff` kinds that find it) and, for every day,
 which events had taken effect and how far (0 to 1). `expected_changes(a, b)` turns it into the
 changes to expect between two days, so a test can plant drift, profile two days and check the diff:
