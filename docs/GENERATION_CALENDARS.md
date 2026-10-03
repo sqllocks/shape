@@ -11,7 +11,7 @@ work offline and give the same answer everywhere (D-11).
 | Rule | Spec | Example |
 |---|---|---|
 | fixed date | `{"month": 12, "day": 25}` (`from_year`, `until_year`) | Christmas |
-| nth weekday | `{"month": 11, "weekday": "thu", "n": 4}` (`n: -1` for the last) | Thanksgiving |
+| nth weekday | `{"month": 11, "weekday": "thu", "n": 4}` (`n` 1 to 5, `-1` for the last; a year without a fifth such weekday has no date) | Thanksgiving |
 | Easter | `{"easter": 0}` (days from Easter Sunday, Gregorian computus) | Good Friday: `-2` |
 | relative | `{"after": <rule>, "days": 1}` | Black Friday |
 | observed | `{"observed": <rule>}` | a Saturday holiday on the Friday, a Sunday one on the Monday |

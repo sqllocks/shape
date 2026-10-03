@@ -21,8 +21,16 @@ class Rule(Protocol):
     def on(self, year: int) -> date | None: ...
 
 
+def _check_n(n: int) -> int:
+    if not (1 <= n <= 5 or n == -1):
+        raise ValueError(f"n must be 1 to 5, or -1 for the last, got {n}")
+    return n
+
+
 def nth_weekday(year: int, month: int, weekday: int, n: int) -> date:
-    """The ``n``-th ``weekday`` (Monday is 0) of the month; ``n == -1`` means the last."""
+    """The ``n``-th ``weekday`` (Monday is 0) of the month; ``n == -1`` means the last. A fifth
+    weekday the month does not have falls in the next month: :class:`NthWeekday` checks it."""
+    _check_n(n)
     if n > 0:
         first = date(year, month, 1)
         return first + timedelta(days=(weekday - first.weekday()) % 7 + 7 * (n - 1))
@@ -76,7 +84,8 @@ class FixedDate:
 
 @dataclass(frozen=True, slots=True)
 class NthWeekday:
-    """The ``n``-th weekday of a month (``n = -1`` for the last)."""
+    """The ``n``-th weekday of a month (``n`` 1 to 5, or -1 for the last). A year whose month has
+    no ``n``-th such weekday (a fifth Monday) has no date (#135)."""
 
     month: int
     weekday: int
@@ -84,10 +93,14 @@ class NthWeekday:
     from_year: int = 0
     until_year: int = 9999
 
+    def __post_init__(self) -> None:
+        _check_n(self.n)
+
     def on(self, year: int) -> date | None:
         if not self.from_year <= year <= self.until_year:
             return None
-        return nth_weekday(year, self.month, self.weekday, self.n)
+        found = nth_weekday(year, self.month, self.weekday, self.n)
+        return found if found.month == self.month else None
 
 
 @dataclass(frozen=True, slots=True)
@@ -139,7 +152,8 @@ def rule_from_spec(spec: Mapping[str, Any]) -> Rule:
     """A rule from a mapping, one of:
 
     * ``{"month": 12, "day": 25}`` (optional ``from_year``, ``until_year``);
-    * ``{"month": 11, "weekday": "thu", "n": 4}`` (``n = -1`` for the last);
+    * ``{"month": 11, "weekday": "thu", "n": 4}`` (``n`` 1 to 5, ``-1`` for the last; a year
+      without that weekday has no date);
     * ``{"easter": 0}`` (days from Easter Sunday);
     * ``{"after": <rule>, "days": 1}`` (another rule's date plus days; negative for before);
     * ``{"observed": <rule>}``.
