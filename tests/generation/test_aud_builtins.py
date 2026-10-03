@@ -316,3 +316,20 @@ def test_self_foreign_key_without_primary_key_is_a_circular_error() -> None:
     ref = {"type": "integer", "generator": {"strategy": "foreign_key", "ref": "t.k"}}
     with pytest.raises(StrategyError, match=r"circular.*t\.y|t\.y.*circular"):
         _table({"k": key, "y": ref}, rows=5)
+
+
+# ---- #140: only Faker's public provider methods are providers ----------------------------------
+
+
+def test_faker_accepts_only_provider_methods() -> None:
+    import pytest
+
+    from shape.generation.strategy_kit import StrategyError
+
+    pytest.importorskip("faker")
+    for name in ("seed_instance", "__class__", "add_provider", "_Faker__config"):
+        generator = {"strategy": "faker", "provider": name}
+        with pytest.raises(StrategyError, match="unknown faker provider"):
+            _table({"y": {"type": "string", "generator": generator}}, rows=3)
+    generator = {"strategy": "faker", "provider": "color_name"}
+    assert _table({"y": {"type": "string", "generator": generator}}, rows=3)["y"].null_count == 0
