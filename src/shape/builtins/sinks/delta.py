@@ -46,11 +46,10 @@ def _deltalake() -> Any:
 def _location(uri: str, table: str, options: dict[str, Any]) -> tuple[str, dict[str, str] | None]:
     """The table's location and delta-rs storage options."""
     if uri.startswith(CLOUD_PREFIX):
+        from shape.builtins.sinks.azure import _with_environment_keys
         from shape.builtins.sources.azure import parse
         from shape.builtins.sources.delta import _storage_options
         from shape.security.names import safe_name
-
-        from shape.builtins.sinks.azure import _with_environment_keys
 
         base = uri[len(CLOUD_PREFIX) :]
         parse(base)  # validates the URI
