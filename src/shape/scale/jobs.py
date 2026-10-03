@@ -474,13 +474,29 @@ def _merged(base: dict[str, Any], overrides: dict[str, Any] | None) -> dict[str,
                     out[key][inner_key] = inner
         else:
             out[key] = value
-    masked = [s for s, cfg in out.get("sink_config", {}).items() for v in cfg.values() if v == MASK]
+    masked = [
+        s for s, cfg in out.get("sink_config", {}).items() for v in cfg.values() if _masked(v)
+    ]
     if masked:
         raise JobStateError(
             f"the stored request holds masked settings for sink(s) {sorted(set(masked))}: "
             "give them again to resume (--sink-config)"
         )
+    auth = out.get("auth")
+    if isinstance(auth, dict) and any(_masked(v) for v in auth.values()):
+        raise JobStateError(
+            "the stored request holds masked sign-in settings (auth): give them again to resume"
+        )
     return out
+
+
+# A mask inside a string: ``Pwd=***;`` in a connection string, ``user:***@host`` in a URL.
+_EMBEDDED_MASK = re.compile(r"[=:]\s*" + re.escape(MASK) + r"(?=[;&@\s'\"}]|$)")
+
+
+def _masked(value: Any) -> bool:
+    """True for a setting that is the mask, or a string that holds it in place of a secret."""
+    return value == MASK or (isinstance(value, str) and _EMBEDDED_MASK.search(value) is not None)
 
 
 def _need_token(token: str | None) -> str:

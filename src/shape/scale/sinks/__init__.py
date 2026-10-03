@@ -6,7 +6,6 @@ and the bridge give them. Nothing here imports pyarrow or a writer until a sink 
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -15,9 +14,6 @@ from shape.scale.sinks.base import BaseSink, FabricConnectionProfile, Sink, Sink
 SINK_NAMES = ("memory", "parquet", "lakehouse", "warehouse", "sql_database", "kql")
 
 _SECRET_KEYS = ("client_secret", "password", "token", "sas", "secret", "key")
-_CONN_SECRET = re.compile(
-    r"(?i)\b(pwd|password|accountkey|sharedaccesskey|sharedaccesssignature)\s*=[^;]*"
-)
 
 
 def _check(name: str, cfg: Mapping[str, Any], allowed: Sequence[str]) -> None:
@@ -132,15 +128,30 @@ def redact(config: Mapping[str, Mapping[str, Any]]) -> dict[str, dict[str, Any]]
     """``config`` with every secret-looking setting, and the password of a connection string,
     masked: what a job record may keep."""
     from shape.scale.jobs import MASK
+    from shape.security.redact import redact_text
 
     def one(key: str, value: Any) -> Any:
         if any(s in key.lower() for s in _SECRET_KEYS) and value:
             return MASK
         if isinstance(value, str):
-            return _CONN_SECRET.sub(lambda m: m.group(0).split("=", 1)[0] + "=" + MASK, value)
+            return redact_text(value)
         return value
 
     return {sink: {k: one(k, v) for k, v in cfg.items()} for sink, cfg in config.items()}
+
+
+def redact_auth(auth: Mapping[str, Any]) -> dict[str, Any]:
+    """``auth`` (the sign-in settings of a request) with every secret that is not a credential
+    reference masked: what a job record may keep. ``env://``, ``file://`` and ``kv://``
+    references name a secret without holding it, so they stay."""
+    from shape.scale.jobs import MASK
+    from shape.security import credrefs
+
+    out: dict[str, Any] = {}
+    for key, value in auth.items():
+        secret = any(s in key.lower() for s in _SECRET_KEYS) and value
+        out[key] = MASK if secret and not credrefs.is_reference(str(value)) else value
+    return out
 
 
 __all__ = [
@@ -152,4 +163,5 @@ __all__ = [
     "build_sink",
     "build_sinks",
     "redact",
+    "redact_auth",
 ]

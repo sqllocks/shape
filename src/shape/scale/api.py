@@ -148,6 +148,17 @@ def run_local(
     }
 
 
+def stored_request(request: Mapping[str, Any]) -> dict[str, Any]:
+    """``request`` as a job record may keep it: secrets of the sink settings and of the sign-in
+    masked."""
+    from shape.scale.sinks import redact, redact_auth
+
+    stored = {**request, "sink_config": redact(request["sink_config"])}
+    if isinstance(request.get("auth"), Mapping):
+        stored["auth"] = redact_auth(request["auth"])
+    return stored
+
+
 def submit_spark(
     request: Mapping[str, Any],
     token: str,
@@ -190,9 +201,7 @@ def submit_spark(
     record = router.job_record(run, dict(request))
     if jobs is None:
         return {"fabric": record.fabric}
-    from shape.scale.sinks import redact
-
-    record.request = {**request, "sink_config": redact(request["sink_config"])}
+    record.request = stored_request(request)
     record = jobs.register_spark(record)
     return {
         **jobs.describe(record),
@@ -246,9 +255,7 @@ def scale_generate(
     ) -> dict[str, Any]:
         return run_local(req, event, report, resume)
 
-    from shape.scale.sinks import redact
-
-    stored = {**request, "sink_config": redact(request["sink_config"])}
+    stored = stored_request(request)
     job = jobs.start_local(request, run, stored=stored, wait=not background)
     result = dict(job.get("result") or {})
     return {**result, "job_id": job["job_id"], "status": job["status"], "error": job["error"]}
@@ -284,4 +291,4 @@ def _env_token() -> str:
     return os.environ.get(TOKEN_ENV, "")
 
 
-__all__ = ["normalize", "run_local", "scale_generate", "submit_spark"]
+__all__ = ["normalize", "run_local", "scale_generate", "stored_request", "submit_spark"]
