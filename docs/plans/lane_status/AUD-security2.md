@@ -355,3 +355,53 @@ changed here): #273 and #291, #292 (AUD-privacy, `src/shape/security/`); #276, #
 #297 (AUD-builtins); #278 (AUD-cli); #286, #296 (AUD-profile); #298 (AUD-stream); #301
 (AUD-packaging); #294 (owner decision: requiring TLS by default changes local and emulator use).
 No `.github/workflows` change is needed.
+
+## Checks (final session, at 7f75dc6 plus this status update)
+
+`origin/build/main-plan` is 5c91ea5 (INT-15), already the lane's base, so there was nothing to
+merge. Environment: Python 3.11.15, `~/.venvs/shape` with `pip install -e ".[dev,streaming,advanced]"`
+and every plugin under `plugins/` installed editable, pyarrow 25.0.1, numpy 2.4.6, Rust stable,
+unixODBC from apt.
+
+| Command | Result |
+|---|---|
+| `make check PYTHON=python` | exit 0. ruff, format, mypy, compileall, vulture, lint-imports and every `scripts/check_*.py` clean; 6832 passed, coverage 92.62% (gate 86); heavy 42 passed; `SHAPE_KERNEL=python` kernel 265 passed; cargo fmt, clippy `-D warnings` and 34 cargo tests pass |
+| `python scripts/check_user_facing.py` | `check_user_facing: clean` |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live" --ignore=tests/demo/fabric --ignore=tests/demo/content` | 6874 passed, 13 deselected (the marker), exit 0 |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live" --ignore=tests/demo/fabric --ignore=tests/demo/content --ignore=tests/profile` | 6582 passed, 13 deselected (the marker), exit 0 |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live" tests/profile` | 292 passed, exit 0 (`test_bounded_mode_memory_does_not_grow_with_rows` alone took 81 min on the Python kernel) |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live" tests/demo/fabric tests/demo/content` (demo venv) | 254 passed, exit 0 |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live" tests/demo/fabric tests/demo/content` (demo venv) | 254 passed, exit 0 |
+
+Together these runs cover the whole `pytest -m "not emulator and not live"` suite in both kernel
+modes. Nothing was deselected beyond the marker, and nothing was skipped or xfailed.
+
+How the suite was split, and why (the spec is silent here, so this is the choice that runs every
+test without widening scope):
+
+- `tests/demo/fabric` and `tests/demo/content` ran in a second venv, `~/.venvs/shape-demo`
+  (`pip install -e '.[dev]' -r tests/demo/fabric/requirements.txt`), the same way the CI demo job
+  in `ci.yml` installs them. That requirements file includes `fabric-user-data-functions`, which
+  pins `pyarrow<20` and installs `azure-functions`. Installed into the main venv, it downgraded
+  pyarrow to 19.0.1, and a full rust run there failed 5 tests (float16 hashing, a dictionary-typed
+  partition column, the cloud-SDK import guard and the bounded-memory ratio). All 5 pass again
+  after restoring pyarrow 25.0.1 and removing those packages. They come from the venv, not this
+  lane. Without that package, `tests/demo/fabric/test_udf.py` cannot be collected (`No module
+  named 'fabric'`), which is why the main runs pass the two `--ignore`s.
+- The Python-kernel run did `tests/profile` separately. Inside one run it went past the tool's
+  2-hour limit, because the heavy bounded-memory test is slow on the Python kernel.
+- `pip install -e plugins/*` leaves `plugins/*/build/` behind (git-ignored). The first
+  `make check` then failed `test_every_skeleton_builds_a_pure_wheel` ("build left files in the
+  source tree"). The directories were removed before each run; this is an artefact of the
+  environment.
+
+### Pre-existing intermittent failure (not this lane's; filed #512)
+
+`tests/cli/test_generate_to.py::test_to_postgresql_routes_to_the_database_sink` failed once in
+the first `make check` with `writing "order" ... failed (RuntimeError): dictionary changed size
+during iteration`. Cause: `shape_databases.testing.FakeServer` is shared across the CLI's writer
+threads, and `begin()` deep-copies `tables` while another thread appends to it. Evidence: 60
+repeated runs on `origin/build/main-plan` (5c91ea5) in the same venv failed 3 times with the same
+error, and 40 runs on this branch failed twice. This lane does not touch the file
+(`plugins/shape-databases`), so it was filed as #512 with a suggested lock, not fixed here. The
+second `make check` passed.
