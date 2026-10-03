@@ -1,4 +1,4 @@
-"""W7-05 item 3 (part): ``rule`` in the kinds of ``proposals_propose`` and ``proposals_contract``."""
+"""W7-05 item 3 (part): `rule` in `proposals_propose`'s kinds, and `proposals_contract`."""
 
 from __future__ import annotations
 
