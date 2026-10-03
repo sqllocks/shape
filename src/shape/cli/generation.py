@@ -82,7 +82,8 @@ def add_arguments(sub: Any) -> None:
         "--from",
         dest="from_profile",
         metavar="X.shape",
-        help="generate from a profile (a .shape file): fits strategies to it",
+        help="generate from a profile (a .shape file, or dataset:NAME for one of the dataset "
+        "library): fits strategies to it",
     )
     ge.add_argument(
         "--decisions",
@@ -333,6 +334,7 @@ def _generate_from_profile(a: argparse.Namespace, rows: int | None) -> int:
     if a.mode is not None:
         raise ValueError("--mode is for domains; a profile has one schema")
     import shape
+    from shape import library
     from shape.generation.engine import Engine
     from shape.generation.fit import PRESET, fit_schema
     from shape.runlog import current
@@ -341,7 +343,9 @@ def _generate_from_profile(a: argparse.Namespace, rows: int | None) -> int:
     from shape.cli.proposals import load_decisions
 
     fitted = fit_schema(
-        shape.load(a.from_profile), rows=rows, decisions=load_decisions(a.decisions)
+        shape.load(library.resolve_profile_ref(a.from_profile)),
+        rows=rows,
+        decisions=load_decisions(a.decisions),
     )
     schema = fitted.schema
     _check_scale(schema, a.scale)

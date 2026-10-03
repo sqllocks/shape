@@ -1317,6 +1317,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.detective import add_arguments as add_detective_arguments
 
     add_detective_arguments(sub)
+    from shape.cli.library import add_arguments as add_library_arguments
+
+    add_library_arguments(sub)
     from shape.cli.transform import add_arguments as add_transform_arguments
 
     add_transform_arguments(sub)
@@ -1712,6 +1715,10 @@ def _route(a):
         from shape.cli.seed import run as run_seed
 
         return _run(run_seed, a)
+    if a.cmd == "library":
+        from shape.cli.library import run as run_library
+
+        return _run(run_library, a)
     if a.cmd == "detective":
         from shape.cli.detective import run as run_detective
 

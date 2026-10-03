@@ -144,6 +144,7 @@ CASES = {
     "profile registry reindex": ["profile", "registry", "reindex"],
     "suite run": ["suite", "run", "smoke", "-o", "new/suite"],
     "detective start": ["detective", "start", "first-case", "-o", "new/case"],
+    "library get": ["library", "get", "iris", "-o", "new/iris.shape"],
 }
 
 

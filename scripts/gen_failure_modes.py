@@ -1,7 +1,7 @@
 """Generate ``docs/FAILURE_MODES.md`` from the failure mode catalog (W6-03).
 
 python scripts/gen_failure_modes.py            # write the document
-python scripts/gen_failure_modes.py --check    # exit 1 when it is out of date (make check runs this)
+python scripts/gen_failure_modes.py --check    # exit 1 when out of date (make check runs this)
 """
 
 from __future__ import annotations

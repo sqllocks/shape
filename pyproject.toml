@@ -298,6 +298,7 @@ source_modules = [
     "shape.integrations",
     "shape.io",
     "shape.kernel",
+    "shape.library",
     "shape.location",
     "shape.migrate",
     "shape.model",

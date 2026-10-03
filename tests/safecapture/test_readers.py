@@ -281,7 +281,9 @@ def test_a_dataset_contract_qualifies_the_column(tmp_path: Path) -> None:
     assert [n["column"] for n in result.not_evaluable] == ["a.v"]
 
 
-def test_check_result_dict_has_the_key_only_when_something_is_not_evaluable(files: dict[str, Path]) -> None:
+def test_check_result_dict_has_the_key_only_when_something_is_not_evaluable(
+    files: dict[str, Path],
+) -> None:
     ok = shape.check(load(files["full"]), {"columns": {"age": {"min": 0}}})
     assert ok.to_dict() == {"passed": True, "violations": []}  # the 12.2 shape, unchanged
 

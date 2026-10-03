@@ -43,3 +43,51 @@ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVI
 DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
 WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
 WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+## Public dataset library
+
+`src/shape/library/datasets/` holds safe profiles (statistics and formats, never rows) of the public
+datasets below. No source data is shipped. Each profile was built from the file at the source URL
+(its SHA-256 is recorded in `index.json`), and each dataset is under the licence named here.
+
+### Abalone (`dataset:abalone`)
+
+- Source: https://archive.ics.uci.edu/static/public/1/data.csv
+- Licence: Creative Commons Attribution 4.0 International (CC-BY-4.0), https://creativecommons.org/licenses/by/4.0/
+- Retrieved: 2026-10-03
+- Attribution: Nash, W., Sellers, T., Talbot, S., Cawthorn, A. and Ford, W. (1994). Abalone. UCI Machine Learning Repository. https://doi.org/10.24432/C55C7W. Licensed under CC BY 4.0.
+
+### Adult (census income) (`dataset:adult-income`)
+
+- Source: https://archive.ics.uci.edu/static/public/2/data.csv
+- Licence: Creative Commons Attribution 4.0 International (CC-BY-4.0), https://creativecommons.org/licenses/by/4.0/
+- Retrieved: 2026-10-03
+- Attribution: Becker, B. and Kohavi, R. (1996). Adult. UCI Machine Learning Repository. https://doi.org/10.24432/C5XW20. Licensed under CC BY 4.0.
+
+### Breast Cancer Wisconsin (Diagnostic) (`dataset:breast-cancer-wisconsin`)
+
+- Source: https://archive.ics.uci.edu/static/public/17/data.csv
+- Licence: Creative Commons Attribution 4.0 International (CC-BY-4.0), https://creativecommons.org/licenses/by/4.0/
+- Retrieved: 2026-10-03
+- Attribution: Wolberg, W., Mangasarian, O., Street, N. and Street, W. (1993). Breast Cancer Wisconsin (Diagnostic). UCI Machine Learning Repository. https://doi.org/10.24432/C5DW2B. Licensed under CC BY 4.0.
+
+### Iris (`dataset:iris`)
+
+- Source: https://archive.ics.uci.edu/static/public/53/data.csv
+- Licence: Creative Commons Attribution 4.0 International (CC-BY-4.0), https://creativecommons.org/licenses/by/4.0/
+- Retrieved: 2026-10-03
+- Attribution: Fisher, R. A. (1936). Iris. UCI Machine Learning Repository. https://doi.org/10.24432/C56C76. Licensed under CC BY 4.0.
+
+### Palmer penguins (`dataset:palmer-penguins`)
+
+- Source: https://raw.githubusercontent.com/allisonhorst/palmerpenguins/main/inst/extdata/penguins.csv
+- Licence: Creative Commons CC0 1.0 Universal (public domain dedication), https://creativecommons.org/publicdomain/zero/1.0/
+- Retrieved: 2026-10-03
+- Attribution: Horst AM, Hill AP, Gorman KB (2020). palmerpenguins: Palmer Archipelago (Antarctica) penguin data. R package version 0.1.1; data collected by Kristen Gorman and the Palmer Station LTER, released under CC0 (https://allisonhorst.github.io/palmerpenguins/).
+
+### Wine (`dataset:wine`)
+
+- Source: https://archive.ics.uci.edu/static/public/109/data.csv
+- Licence: Creative Commons Attribution 4.0 International (CC-BY-4.0), https://creativecommons.org/licenses/by/4.0/
+- Retrieved: 2026-10-03
+- Attribution: Aeberhard, S. and Forina, M. (1992). Wine. UCI Machine Learning Repository. https://doi.org/10.24432/C5PC7J. Licensed under CC BY 4.0.

@@ -996,11 +996,14 @@ class Engine:
         copula = {t for t, pairs in self.schema.correlated_columns.items() if t in tables and pairs}
         emitted: set[str] = set()
 
-        def release(after_rule: int) -> None:
-            """Hand over the touched tables that no later rule repair or copula changes."""
+        def release(after_rule: int, final: bool = False) -> None:
+            """Hand over the touched tables that no later rule repair or copula changes (the
+            last call, after the copula, hands over whatever is left)."""
             if on_table is None:
                 return
-            later = {repair_target(r) for r in rules[after_rule + 1 :]} | copula
+            later = {repair_target(r) for r in rules[after_rule + 1 :]}
+            if not final:
+                later |= copula
             for name in flat:
                 if name in touched and name not in later and name not in emitted:
                     emitted.add(name)
@@ -1024,7 +1027,7 @@ class Engine:
                     ),
                     nulls=str(self.schema.generation.output.get("copula_nulls", "skip")),
                 )
-        release(len(rules))
+        release(len(rules), final=True)
         tables = {name: self.finalize(name, t) for name, t in tables.items()}
         lineage = [
             ColumnLineage(name, cname, col.strategy, dict(col.generator))

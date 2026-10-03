@@ -139,6 +139,9 @@ _EXTRA: dict[str, dict[int, str]] = {
         2: "the answer is malformed or names an unknown failure mode, the pack does not "
         "exist, or " + BAD,
     },
+    "library list": {},
+    "library show": {2: "the dataset is not in the library, or " + BAD},
+    "library get": {2: "the dataset is not in the library, the output exists, or " + BAD},
     "failure-modes list": {},
     "failure-modes show": {2: "the failure mode id is not in the catalog, or " + BAD},
 }
