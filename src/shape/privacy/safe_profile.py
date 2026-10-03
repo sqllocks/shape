@@ -366,6 +366,13 @@ class SafeColumnProfile:
             bounds = None
             distribution_params = None
 
+        # A column with fewer non-null rows than its minimum cohort releases no value statistic:
+        # with one row the mean is the value, with two the mean and std give both (#395).
+        mean, std = col.get("mean"), col.get("std")
+        if not cfg.unsafe_full_fidelity and base < k:
+            mean = std = None
+            quantiles = bounds = distribution_params = None
+
         # Every other cell surface obeys the same minimum cohort: temporal histogram bins are
         # zeroed when they stand for fewer than k rows.
         cells = 0
@@ -398,8 +405,8 @@ class SafeColumnProfile:
             dtype=dtype,
             null_rate=col.get("null_rate"),
             cardinality=cardinality,
-            mean=col.get("mean"),
-            std=col.get("std"),
+            mean=mean,
+            std=std,
             quantiles=quantiles,
             distribution=col.get("distribution"),
             distribution_params=distribution_params,
