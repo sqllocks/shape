@@ -255,6 +255,52 @@ _UNTYPED_STRATEGIES = frozenset(
 )
 
 
+_QUOTES = {"'": "'", '"': '"', "`": "`", "[": "]"}
+
+
+def _quoted_end(sql: str, i: int, absent: dict[str, int] | None = None) -> int:
+    """The index just past the string literal or quoted name that opens at ``sql[i]`` (a doubled
+    closing character is part of it: ``'it''s'``). An opening character that is never closed is
+    an ordinary character: ``i + 1``."""
+    close = _QUOTES[sql[i]]
+    j = i + 1
+    while True:
+        # ``absent``: where a closing character was last searched for in vain (none comes after
+        # it either), so a scan full of unclosed openers stays linear.
+        if absent is not None and close in absent and j >= absent[close]:
+            return i + 1
+        found = sql.find(close, j)
+        if found == -1:
+            if absent is not None:
+                absent[close] = j
+            return i + 1
+        j = found
+        if close != "]" and j + 1 < len(sql) and sql[j + 1] == close:
+            j += 2
+            continue
+        return j + 1
+
+
+def _matching_parens(sql: str) -> dict[int, int]:
+    """Every ``(`` outside literals and quoted names, mapped to its ``)``; an unclosed one is not
+    listed."""
+    found: dict[int, int] = {}
+    stack: list[int] = []
+    absent: dict[str, int] = {}
+    i, n = 0, len(sql)
+    while i < n:
+        ch = sql[i]
+        if ch in _QUOTES:
+            i = _quoted_end(sql, i, absent)
+            continue
+        if ch == "(":
+            stack.append(i)
+        elif ch == ")" and stack:
+            found[stack.pop()] = i
+        i += 1
+    return found
+
+
 class DdlError(ShapeError):
     """The DDL could not be read."""
 
@@ -330,26 +376,17 @@ class DdlParser:
     @staticmethod
     def _strip_comments(sql: str) -> str:
         """Remove ``/* */`` and ``--`` comments (before anything counts parentheses or commas),
-        leaving single-quoted string literals alone."""
+        leaving string literals and quoted names (``'..'``, ``".."``, ``[..]``, backquoted)
+        alone: ``[a--b]`` is a name, not the start of a comment."""
         out: list[str] = []
+        absent: dict[str, int] = {}
         i, n = 0, len(sql)
-        in_string = False
         while i < n:
             ch = sql[i]
-            if in_string:
-                out.append(ch)
-                if ch == "'":
-                    if i + 1 < n and sql[i + 1] == "'":
-                        out.append(sql[i + 1])
-                        i += 2
-                        continue
-                    in_string = False
-                i += 1
-                continue
-            if ch == "'":
-                in_string = True
-                out.append(ch)
-                i += 1
+            if ch in _QUOTES:
+                j = _quoted_end(sql, i, absent)
+                out.append(sql[i:j])
+                i = j
                 continue
             if ch == "-" and i + 1 < n and sql[i + 1] == "-":
                 j = sql.find("\n", i)
@@ -371,25 +408,13 @@ class DdlParser:
 
     def _extract_tables(self, sql: str) -> list[_ParsedTable]:
         tables = []
+        closing = _matching_parens(sql)  # one pass for every header: linear time
         for match in _CREATE_TABLE_HEADER.finditer(sql):
-            body = self._paren_body(sql, match.end() - 1)
-            if body is not None:
+            open_pos = match.end() - 1
+            if open_pos in closing:
+                body = sql[open_pos + 1 : closing[open_pos]].strip()
                 tables.append(self._parse_create_table(match.group(1), body))
         return tables
-
-    @staticmethod
-    def _paren_body(sql: str, open_pos: int) -> str | None:
-        if sql[open_pos] != "(":
-            return None
-        depth = 0
-        for i in range(open_pos, len(sql)):
-            if sql[i] == "(":
-                depth += 1
-            elif sql[i] == ")":
-                depth -= 1
-                if depth == 0:
-                    return sql[open_pos + 1 : i].strip()
-        return None
 
     def _parse_create_table(self, raw_name: str, body: str) -> _ParsedTable:
         table = _ParsedTable(name=_table_name(raw_name))
@@ -449,6 +474,8 @@ class DdlParser:
         if not rest:
             return None
         rest = " ".join(rest.split())  # NOT  NULL, NOT<newline>NULL: one space between words
+        # Keywords are read with string literals blanked: DEFAULT 'NOT NULL' is text.
+        rest = _STRING_LITERAL.sub("''", rest)
 
         upper = rest.upper()
         is_identity = bool(_IDENTITY.search(upper))
@@ -529,22 +556,27 @@ class DdlParser:
 
     @staticmethod
     def _split_columns(body: str) -> list[str]:
-        """Split a ``CREATE TABLE`` body at top-level commas."""
+        """Split a ``CREATE TABLE`` body at top-level commas (not in parentheses, a string
+        literal or a quoted name)."""
         parts: list[str] = []
         depth = 0
-        current: list[str] = []
-        for ch in body:
-            if ch == "," and depth == 0:
-                parts.append("".join(current))
-                current = []
+        start = i = 0
+        absent: dict[str, int] = {}
+        while i < len(body):
+            ch = body[i]
+            if ch in _QUOTES:
+                i = _quoted_end(body, i, absent)
                 continue
-            if ch == "(":
+            if ch == "," and depth == 0:
+                parts.append(body[start:i])
+                start = i + 1
+            elif ch == "(":
                 depth += 1
             elif ch == ")":
                 depth -= 1
-            current.append(ch)
-        if current:
-            parts.append("".join(current))
+            i += 1
+        if start < len(body):
+            parts.append(body[start:])
         return parts
 
     @staticmethod
