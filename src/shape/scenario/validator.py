@@ -125,7 +125,14 @@ class PackValidator:
 
     @staticmethod
     def _topics(pack: ScenarioPack, tables: set[str], result: PackValidationResult) -> None:
+        seen: set[tuple[str, str]] = set()
         for topic in pack.topics:
+            if topic.name and (topic.name, topic.event_type) in seen:
+                result.errors.append(
+                    f"Topic '{topic.name}' (event type '{topic.event_type}') is listed twice: "
+                    f"both would write {topic.name}_{topic.event_type}.jsonl"
+                )
+            seen.add((topic.name, topic.event_type))
             if not topic.name:
                 result.errors.append("Stream topic has empty name")
             elif unsafe_name(topic.name) or (topic.event_type and unsafe_name(topic.event_type)):
