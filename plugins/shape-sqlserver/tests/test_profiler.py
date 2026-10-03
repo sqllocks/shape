@@ -790,6 +790,35 @@ def test_tables_or_a_schema_that_name_nothing_are_an_error_not_an_empty_profile(
         profile_database(connection=scenario("retail"), tables=["customer", "custmer"])
     with pytest.raises(SqlServerError, match=r"schema 'dbx' has no tables"):
         profile_database(connection=scenario("retail"), schema="dbx")
-    assert list(profile_database(connection=scenario("retail"), tables=["customer"]).to_dict()[
-        "tables"
-    ]) == ["customer"]
+    assert list(
+        profile_database(connection=scenario("retail"), tables=["customer"]).to_dict()["tables"]
+    ) == ["customer"]
+
+
+@pytest.mark.parametrize("table", ["factory", "dimension", "facts", "Factory"])
+def test_a_table_whose_name_merely_starts_with_dim_or_fact_keeps_its_own_key(table):
+    # Issue #342: the stem dropped a leading "fact"/"dim" from any name ("factory" -> "ory"),
+    # so factory_id was not guessed as the key and was linked to its own table by name.
+    key = f"{table}_id"
+    t = FakeTable(
+        table,
+        [FakeColumn(key, "int"), FakeColumn("name", "nvarchar")],
+        [(i, f"n{i}") for i in range(1, 30)],
+    )
+    other = FakeTable(
+        "orders",
+        [FakeColumn("order_id", "int"), FakeColumn(key, "int")],
+        [(i, i % 29 + 1) for i in range(1, 100)],
+    )
+    d = profile_database(connection=FakeConnection([t, other])).to_dict()
+    assert d["tables"][table]["primary_key"] == [key]
+    links = [(r["child"], tuple(r["child_columns"]), r["parent"]) for r in d["relationships"]]
+    assert (table, (key,), table) not in links
+    assert ("orders", (key,), table) in links
+
+
+def test_a_warehouse_prefix_is_still_removed():
+    t = FakeTable("dimcustomer", [FakeColumn("customer_id", "int")], [(i,) for i in range(1, 9)])
+    d = profile_database(connection=FakeConnection([t])).to_dict()
+    assert d["tables"]["dimcustomer"]["primary_key"] == ["customer_id"]
+    assert d["relationships"] == []
