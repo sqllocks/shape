@@ -121,6 +121,11 @@ class Corruption:
             raise ValueError(f"pii_fill pii is one of {', '.join(PII_KINDS)}")
         if self.kind == "null_creep" and float(self.options.get("step", 0.0)) < 0:
             raise ValueError("null_creep step cannot be negative")
+        if self.kind == "duplicates" and self.column is not None:
+            raise ValueError(
+                f"duplicates applies to whole rows: name a table (duplicates=RATE@TABLE), "
+                f"not the column {self.column!r}"
+            )
         if self.kind in ("pii_fill", "type_change", "null_creep") and self.column is None:
             raise ValueError(f"{self.kind} needs a column: {self.kind}=RATE@TABLE.COLUMN")
 
@@ -172,15 +177,23 @@ class Corruption:
                 raise ValueError(f"an option in {text!r} is NAME=VALUE, got {item!r}")
             key = key.strip()
             if key in ("from", "to"):
-                kwargs["start_batch" if key == "from" else "end_batch"] = int(value)
+                kwargs["start_batch" if key == "from" else "end_batch"] = _option(key, value, int)
             elif key in ("days",):
-                options[key] = int(value)
+                options[key] = _option(key, value, int)
             elif key == "step":
-                options[key] = float(value)
+                options[key] = _option(key, value, float)
             else:
                 options[key] = value.strip()
         kwargs["options"] = options
         return cls(**kwargs)
+
+
+def _option(key: str, value: str, kind: type[int] | type[float]) -> Any:
+    try:
+        return kind(value.strip())
+    except ValueError:
+        what = "an integer" if kind is int else "a number"
+        raise ValueError(f"the option {key} is {what}, got {value.strip()!r}") from None
 
 
 @dataclass
@@ -691,6 +704,9 @@ def corrupt_tables(
     Returns:
         A :class:`ChaosOutcome` with the corrupted tables and the log records.
     """
+    for name, value in (("seed", seed), ("batch", batch)):
+        if isinstance(value, bool) or not isinstance(value, (int, np.integer)) or value < 0:
+            raise ValueError(f"the {name} is an integer 0 or more, got {value!r}")
     run = _Run(tables, seed, batch, keys or {}, references or {})
     rows_in = {n: t.num_rows for n, t in tables.items()}
     seen: dict[tuple[str, str | None, str | None], int] = {}
