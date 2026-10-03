@@ -10,6 +10,7 @@ detected) also serve, with the nullability and types they record.
 from __future__ import annotations
 
 import json
+import math
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -29,6 +30,47 @@ _KIND_TYPES = {
 
 
 _RELATIONSHIP_KEYS = ("name", "parent", "child", "parent_columns", "child_columns")
+
+
+def _names(where: str, value: Any, needed: bool = False) -> tuple[str, ...]:
+    """A list of column names (a bare string is refused: it would read as its characters)."""
+    if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
+        raise GateSchemaError(f"{where} must be a list of column names, not {value!r}")
+    if needed and not value:
+        raise GateSchemaError(f"{where} must name at least one column")
+    return tuple(value)
+
+
+def _number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def _column(where: str, name: str, c: Mapping[str, Any]) -> ColumnSpec:
+    """One column of a gate schema, every value checked (never coerced)."""
+    typ = c.get("type", "string")
+    if not isinstance(typ, str):
+        raise GateSchemaError(f"column {where}: `type` must be a text, not {typ!r}")
+    nullable = c.get("nullable", False)
+    if not isinstance(nullable, bool):
+        raise GateSchemaError(f"column {where}: `nullable` must be true or false, not {nullable!r}")
+    dist = c.get("distribution")
+    if dist is not None and (
+        not isinstance(dist, Mapping)
+        or not isinstance(dist.get("name"), str)
+        or not isinstance(dist.get("params", {}), Mapping)
+    ):
+        raise GateSchemaError(
+            f'column {where}: `distribution` must be {{"name": <scipy.stats name>, '
+            f'"params": {{...}}}}, not {dist!r}'
+        )
+    enum = c.get("enum")
+    if enum is not None and (
+        not isinstance(enum, Mapping) or not all(_number(w) and w >= 0 for w in enum.values())
+    ):
+        raise GateSchemaError(
+            f"column {where}: `enum` must map each value to a weight of 0 or more, not {enum!r}"
+        )
+    return ColumnSpec(name, typ, nullable, dist, enum)
 
 
 class GateSchemaError(ValueError):
@@ -117,17 +159,15 @@ class GateSchema:
             if not isinstance(t, Mapping):
                 raise GateSchemaError(f"table {tname!r} must be an object")
             columns: dict[str, ColumnSpec] = {}
-            for cname, c in (t.get("columns") or {}).items():
+            raw_columns = t.get("columns") or {}
+            if not isinstance(raw_columns, Mapping):
+                raise GateSchemaError(f"table {tname!r}: `columns` must be an object")
+            for cname, c in raw_columns.items():
                 if not isinstance(c, Mapping):
                     raise GateSchemaError(f"column {tname}.{cname} must be an object")
-                columns[cname] = ColumnSpec(
-                    cname,
-                    str(c.get("type", "string")),
-                    bool(c.get("nullable", False)),
-                    c.get("distribution"),
-                    c.get("enum"),
-                )
-            tables[tname] = TableSpec(tname, columns, tuple(t.get("primary_key") or ()))
+                columns[cname] = _column(f"{tname}.{cname}", cname, c)
+            primary_key = _names(f"table {tname!r}: `primary_key`", t.get("primary_key") or [])
+            tables[tname] = TableSpec(tname, columns, primary_key)
         rels: list[RelationshipSpec] = []
         for i, r in enumerate(doc.get("relationships") or ()):
             if not isinstance(r, Mapping):
@@ -144,8 +184,8 @@ class GateSchema:
                         str(r["name"]),
                         str(r["parent"]),
                         str(r["child"]),
-                        tuple(r["parent_columns"]),
-                        tuple(r["child_columns"]),
+                        _names(f"relationships[{i}]: `parent_columns`", r["parent_columns"], True),
+                        _names(f"relationships[{i}]: `child_columns`", r["child_columns"], True),
                         str(r.get("type", "one_to_many")),
                     )
                 )

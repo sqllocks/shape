@@ -191,6 +191,9 @@ The schema is a JSON document of Shape's own:
 Types: `integer`, `bigint`, `string`, `float`, `decimal`, `date`, `datetime`, `boolean`, `uuid`
 (any other type is not type-checked). Columns are non-nullable unless `"nullable": true`.
 `distribution.name` is a `scipy.stats` distribution and `params` its parameters.
+Every value is checked when the schema is read: `nullable` must be `true` or `false`,
+`primary_key`, `parent_columns` and `child_columns` lists of column names, `enum` an object of
+weights and `distribution` an object with a `name`; anything else is refused with exit `2`.
 
 `--schema` also accepts a profile made by `shape profile` (a `.shape` file, or its JSON): a
 column is nullable if the profile saw nulls in it, and the primary keys and foreign keys the
