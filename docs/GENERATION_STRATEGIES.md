@@ -307,7 +307,8 @@ generate --from` writes it from a profile's conditional probability tables.
 `{"pattern": "seasonal", "start": "2022-01-01", "end": "2025-12-31", "profiles": {...}}`.
 
 * Range: `date_range` (or `range`) `{"start", "end"}`, else top-level `start`/`end`, else
-  `range_ref: "model.date_range"` (the schema's own range), else 2022-01-01 to 2025-12-31.
+  `range_ref: "model.date_range"` (the schema's own range), else 2022-01-01 to 2025-12-31. A bound
+  with a time-zone offset (`2024-01-01T05:00:00+05:00`) is that instant in UTC.
 * `end`: a date (`2026-05-01`) stands for the whole day, so the end day is a possible day for every
   pattern and `start == end` is one single day (a business day's landing file). An `end` with a time
   (`2026-05-01T12:00:00`) is the exact bound, exclusive for `uniform`. An `end` before the start is

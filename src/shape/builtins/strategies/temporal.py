@@ -5,7 +5,7 @@ from the generation kernel's temporal sampler (five words per row)."""
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 import numpy as np
@@ -30,6 +30,8 @@ def _microseconds(text: Any, what: str, ctx: GenerationContext) -> int:
         parsed = datetime.fromisoformat(str(text))
     except ValueError as exc:
         raise StrategyError(f"temporal {what} {text!r} is not an ISO date ({where(ctx)})") from exc
+    if parsed.tzinfo is not None:  # an offset names an instant: the column holds it in UTC (#147)
+        parsed = parsed.astimezone(UTC).replace(tzinfo=None)
     return int(np.datetime64(parsed, "us").astype(np.int64))
 
 
