@@ -24,6 +24,7 @@ Stable interface: :class:`SchemaBuilder`, :func:`profile_from_dict`, :func:`lear
 
 from __future__ import annotations
 
+import datetime as dt
 from collections.abc import Mapping
 from typing import Any
 
@@ -201,6 +202,19 @@ def as_dataset(profile: Any) -> DatasetProfile:
 
 
 # ---- the builder ----------------------------------------------------------------------------
+
+
+def _iso_bound(value: Any) -> str | None:
+    """``value`` as the ISO text a temporal ``start``/``end`` takes, or ``None`` when it is not a
+    date or timestamp in ISO form."""
+    if value is None:
+        return None
+    text = value.isoformat() if isinstance(value, dt.date) else str(value)
+    try:
+        dt.datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    return str(value)
 
 
 def _is_covered_enum(col: ColumnProfile) -> bool:
@@ -439,10 +453,19 @@ class SchemaBuilder:
     @staticmethod
     def _temporal(col: ColumnProfile) -> dict[str, Any]:
         gen: dict[str, Any] = {"strategy": "temporal", "type": col.dtype}
-        if col.min_value is not None:
-            gen["start"] = str(col.min_value)
-        if col.max_value is not None:
-            gen["end"] = str(col.max_value)
+        start, end = _iso_bound(col.min_value), _iso_bound(col.max_value)
+        if (col.min_value is None or start) and (col.max_value is None or end):
+            if start:
+                gen["start"] = start
+            if end:
+                gen["end"] = end
+        else:
+            # Dates read from text in another format (01/31/1950): the profile's bounds are that
+            # text, ordered as text, so the range comes from the observed years instead.
+            years = col.temporal_histogram or {}
+            if isinstance(years.get("lo_year"), int) and isinstance(years.get("hi_year"), int):
+                gen["start"] = f"{years['lo_year']:04d}-01-01"
+                gen["end"] = f"{years['hi_year']:04d}-12-31"
         if col.hour_histogram or col.dow_histogram:
             gen["pattern"] = "seasonal"
             profiles: dict[str, Any] = {}
