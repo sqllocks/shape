@@ -83,6 +83,9 @@ STRATEGY_KEYS: dict[str, frozenset[str]] = {
     "self_ref_field": frozenset({"field"}),
     "lifecycle": frozenset({"phases", "values"}),
     "scd2": frozenset({"role", "business_key", "min_gap_days", "effective_date_column"}),
+    "conditional_table": frozenset({"source_column", "table", "values"}),
+    "hierarchy": frozenset({"dataset", "field", "levels", "weighting", "top_weights"}),
+    "hierarchy_field": frozenset({"dataset", "field"}),
     "address": frozenset({"reference", "scope", "weights", "exclude", "mode", "field", "group"}),
 }
 
