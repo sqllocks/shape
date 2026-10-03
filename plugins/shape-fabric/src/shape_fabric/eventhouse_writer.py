@@ -56,6 +56,7 @@ class EventhouseWriter:
         busy_pause: float = 0.5,
         busy_retries: int = 6,
         timeout: float = 100.0,
+        ready_timeout: float = 120.0,
     ) -> None:
         self.target: EventhouseTarget = parse_uri(uri)
         self.client = KustoClient(
@@ -65,6 +66,7 @@ class EventhouseWriter:
             busy_pause=busy_pause,
             busy_retries=busy_retries,
             timeout=timeout,
+            ready_timeout=ready_timeout,
         )
 
     @property

@@ -9,6 +9,7 @@ import pyarrow as pa
 import pytest
 from shape_fabric import EventhouseEmitter
 from shape_fabric.eventhouse import (
+    column_names,
     create_mapping_command,
     create_table_command,
     dedupe_query,
@@ -169,9 +170,10 @@ def test_type_mapping_and_commands_quote_names():
         "int", "long", "datetime", "decimal", "dynamic", "real", "bool", "string",
     ]  # fmt: skip
     cmd = create_table_command("t'x", schema)
-    assert cmd.startswith(".create-merge table ['t\\'x'] (['a b']:int, ['c\\'d']:long,")
+    assert cmd.startswith(".create-merge table ['t\\'x'] (['a b']:int, ['c_d']:long,")
     mapping = create_mapping_command("t", schema)
-    assert _mapping_doc(mapping)[1]["path"] == '$["c\'d"]'
+    assert _mapping_doc(mapping)[1]["path"] == '$["c\'d"]'  # the path keeps the event's key
+    assert _mapping_doc(mapping)[1]["column"] == "c_d"
 
 
 def _mapping_doc(command):
@@ -184,11 +186,37 @@ def _mapping_doc(command):
 def test_mapping_survives_kql_unescaping_for_awkward_column_names():
     # P5-02 left every JSON path as `$[\"x\"]` inside the literal; a KQL engine turns `\"` into
     # `"`, which broke the document for every column. Names with quotes and backslashes too.
+    # The JSON path is always the event's own key; the column is its valid KQL name (BF-223).
     names = ["plain", 'say "hi"', "back\\slash", "it's"]
     schema = pa.schema([(n, pa.string()) for n in names])
     doc = _mapping_doc(create_mapping_command("t", schema))
-    assert [c["column"] for c in doc] == names
+    assert [c["column"] for c in doc] == ["plain", "say _hi_", "back_slash", "it_s"]
     assert [json.loads(c["path"][1:].strip("[]")) for c in doc] == names
+
+
+def test_column_names_the_engine_would_refuse_are_mapped_to_valid_ones():
+    # BF-223: Nightly run 37118342528 -- `BadRequest_EntityNameIsNotValid` for the column
+    # `say "hi"`. Quoting cannot help: only letters, digits, `_`, space, `.` and `-` are valid
+    # in a Kusto entity name, so `"`, `'`, `\\` etc. are replaced, and the create and mapping
+    # commands use the same column names.
+    schema = pa.schema(
+        [('say "hi"', pa.int64()), ("it's", pa.string()), ("ok name-1.x_y", pa.string())]
+    )
+    assert column_names(schema) == ["say _hi_", "it_s", "ok name-1.x_y"]
+    cmd = create_table_command("t", schema)
+    assert cmd == (
+        ".create-merge table ['t'] (['say _hi_']:long, ['it_s']:string, ['ok name-1.x_y']:string)"
+    )
+    assert '"' not in cmd
+    doc = _mapping_doc(create_mapping_command("t", schema))
+    assert [c["column"] for c in doc] == column_names(schema)
+
+
+def test_names_that_collide_after_mapping_stay_distinct():
+    schema = pa.schema([("a'b", pa.int64()), ('a"b', pa.int64()), ("a_b", pa.int64())])
+    names = column_names(schema)
+    assert len(set(names)) == 3 and names[0] == "a_b"
+    assert [c["column"] for c in _mapping_doc(create_mapping_command("t", schema))] == names
 
 
 @pytest.mark.parametrize(

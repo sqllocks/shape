@@ -22,4 +22,7 @@ def test_kql_mapping_literal_escapes_backslashes():
     # Decode the KQL single-quoted literal the way the service does, then parse the JSON.
     decoded = re.sub(r"\\(.)", r"\1", literal)
     cols = json.loads(decoded)
-    assert len(cols) == 1 and cols[0]["column"] == name
+    # still one column whose JSON path is the event's own key (the injection stayed inside the
+    # string); the column itself is a valid Kusto name (BF-223: `"` is not allowed in one)
+    assert len(cols) == 1 and json.loads(cols[0]["path"][1:].strip("[]")) == name
+    assert re.fullmatch(r"[\w .-]+", cols[0]["column"]) and '"' not in cols[0]["column"]

@@ -10,7 +10,14 @@ ingestion (``/v1/rest/ingest``), with the same retry rules for both callers:
 
 Every name that reaches a command is quoted (``['...']``, ``\\`` and ``'`` escaped) and checked,
 and the mapping document is a proper KQL string literal, so a column called ``a'b`` or ``a"b``
-cannot change the command.
+cannot change the command. Quoting does not make a name *valid*, though: the engine accepts only
+letters, digits, ``_``, space, ``.`` and ``-`` in a column name, so any other character is
+replaced by ``_`` in the column (see :func:`column_names`); the mapping's JSON path keeps the
+event's own key, so the values still land in the column.
+
+A table created a moment ago is not always ready: its first ingest request waits (with backoff,
+up to ``ready_timeout``) while the answer is "entity not found" or a streaming-ingestion
+initialisation error.
 """
 
 from __future__ import annotations
@@ -99,14 +106,42 @@ def kusto_type(t: pa.DataType) -> str:
     return "string"  # strings, time of day, binary (base64)
 
 
+def column_name(name: str) -> str:
+    """``name`` as a valid Kusto column name: every character other than a letter, digit, ``_``,
+    space, ``.`` or ``-`` becomes ``_`` (``say "hi"`` -> ``say _hi_``)."""
+    check_name(name)
+    return "".join(ch if ch.isalnum() or ch in "_ .-" else "_" for ch in name)
+
+
+def column_names(schema: pa.Schema) -> list[str]:
+    """The column of each field of ``schema``: :func:`column_name`, made distinct by a numeric
+    suffix when two names map to the same column (``a'b`` and ``a"b``)."""
+    taken: set[str] = set()
+    out: list[str] = []
+    for f in schema:
+        base = name = column_name(f.name)
+        n = 1
+        while name in taken:
+            n += 1
+            name = f"{base}_{n}"
+        taken.add(name)
+        out.append(name)
+    return out
+
+
+def _column_list(schema: pa.Schema) -> str:
+    return ", ".join(
+        f"{q(col)}:{kusto_type(f.type)}"
+        for col, f in zip(column_names(schema), schema, strict=True)
+    )
+
+
 def create_table_command(table: str, schema: pa.Schema) -> str:
-    cols = ", ".join(f"{q(f.name)}:{kusto_type(f.type)}" for f in schema)
-    return f".create-merge table {q(table)} ({cols})"
+    return f".create-merge table {q(table)} ({_column_list(schema)})"
 
 
 def create_strict_table_command(table: str, schema: pa.Schema) -> str:
-    cols = ", ".join(f"{q(f.name)}:{kusto_type(f.type)}" for f in schema)
-    return f".create table {q(table)} ({cols})"
+    return f".create table {q(table)} ({_column_list(schema)})"
 
 
 def mapping_name(table: str) -> str:
@@ -115,8 +150,8 @@ def mapping_name(table: str) -> str:
 
 def create_mapping_command(table: str, schema: pa.Schema) -> str:
     cols = [
-        {"column": f.name, "path": "$[" + json.dumps(f.name) + "]", "datatype": kusto_type(f.type)}
-        for f in schema
+        {"column": col, "path": "$[" + json.dumps(f.name) + "]", "datatype": kusto_type(f.type)}
+        for col, f in zip(column_names(schema), schema, strict=True)
     ]
     return (
         f".create-or-alter table {q(table)} ingestion json mapping "
@@ -142,6 +177,13 @@ def dedupe_query(table: str) -> str:
     return f"{q(table)} | summarize take_any(*) by _shape_table, _shape_seq"
 
 
+def not_ready(exc: Exception) -> bool:
+    """A new table the service has not finished setting up: it is not found yet, or streaming
+    ingestion on it is still initialising."""
+    text = str(exc)
+    return "EntityNotFound" in text or "StreamingIngestion" in text
+
+
 # --- client ------------------------------------------------------------------------------
 
 
@@ -161,6 +203,7 @@ class KustoClient:
         busy_pause: float = _BUSY_PAUSE,
         busy_retries: int = 6,
         timeout: float = 100.0,
+        ready_timeout: float = 120.0,
     ) -> None:
         self.target = target
         self._token = token
@@ -168,6 +211,8 @@ class KustoClient:
         self._busy_pause = busy_pause
         self.busy_retries = busy_retries
         self.timeout = timeout
+        self.ready_timeout = ready_timeout
+        self._warm: set[str] = set()  # tables that have accepted a request
         self._prepared: set[tuple[str, str]] = set()
         self.accepted = 0  # ingestion requests the service has accepted, over the client's life
 
@@ -249,9 +294,29 @@ class KustoClient:
 
     def forget(self, table: str) -> None:
         self._prepared = {m for m in self._prepared if m[0] != table}
+        self._warm.discard(table)
 
-    def ingest(self, table: str, body: bytes) -> None:
-        """One streaming-ingestion request: JSON lines for ``table`` (at most 4 MB)."""
+    def ingest(self, table: str, body: bytes, *, wait_ready: bool = False) -> None:
+        """One streaming-ingestion request: JSON lines for ``table`` (at most 4 MB). With
+        ``wait_ready``, the first request to a table waits up to ``ready_timeout`` for a table
+        created a moment ago (nothing was ingested by a request answered "not ready")."""
+        if wait_ready and table not in self._warm:
+            deadline = time.monotonic() + self.ready_timeout
+            pause = self._busy_pause
+            while True:
+                try:
+                    self._ingest_once(table, body)
+                    break
+                except (ShapeError, ConnectionError) as exc:
+                    if not not_ready(exc) or time.monotonic() + pause > deadline:
+                        raise
+                    time.sleep(pause)
+                    pause = min(pause * 2, 10.0)
+            self._warm.add(table)
+            return
+        self._ingest_once(table, body)
+
+    def _ingest_once(self, table: str, body: bytes) -> None:
         url = (
             f"{self.target.base}/v1/rest/ingest/{quote(self.target.database, safe='')}/"
             f"{quote(table, safe='')}?streamFormat=JSON&mappingName={mapping_name(table)}"
@@ -267,12 +332,12 @@ class KustoClient:
         size = 0
         for line in lines:
             if chunk and size + len(line) + 1 > max_bytes:
-                self.ingest(table, b"\n".join(chunk) + b"\n")
+                self.ingest(table, b"\n".join(chunk) + b"\n", wait_ready=True)
                 requests += 1
                 chunk, size = [], 0
             chunk.append(line)
             size += len(line) + 1
         if chunk:
-            self.ingest(table, b"\n".join(chunk) + b"\n")
+            self.ingest(table, b"\n".join(chunk) + b"\n", wait_ready=True)
             requests += 1
         return requests
