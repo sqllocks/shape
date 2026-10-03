@@ -736,4 +736,47 @@ def test_sql_sink_refusing_a_primary_key_leaves_no_file(tmp_path: Path) -> None:
     assert os.listdir(tmp_path) == []
 
 
+# ---- #734: duplicate or empty CSV column names ------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("text", "names"),
+    [
+        ("a,a,a\n1,2,3\n", "['a']"),
+        ("a,a\nx,y\n", "['a']"),
+        (",,\n1,2,3\n", "['']"),
+        ("a,b,a,b\n1,2,3,4\n", "['a', 'b']"),
+    ],
+)
+@pytest.mark.parametrize("stream", [False, True])
+def test_csv_with_duplicate_names_is_refused_clearly(
+    tmp_path: Path, text: str, names: str, stream: bool
+) -> None:
+    from shape.io import CsvOptions, ReaderError, open_source, read_table
+
+    path = tmp_path / "dup.csv"
+    path.write_text(text)
+    with pytest.raises(ReaderError, match=r"duplicate column names") as caught:
+        read_table(path, csv=CsvOptions(stream=stream))
+    assert names in str(caught.value)
+    assert "dup.csv" in str(caught.value)
+    with pytest.raises(ReaderError, match="duplicate column names"):
+        open_source(path, csv=CsvOptions(stream=stream)).table()
+
+
+def test_csv_with_unique_names_and_a_named_header_still_reads(tmp_path: Path) -> None:
+    from shape.io import CsvOptions, read_table
+
+    path = tmp_path / "ok.csv"
+    path.write_text("a,b\n1,x\n")
+    assert read_table(path).to_pydict() == {"a": [1], "b": ["x"]}
+    # headerless files name their own columns
+    nohead = tmp_path / "nohead.csv"
+    nohead.write_text("1,x\n2,y\n")
+    table = read_table(nohead, csv=CsvOptions(has_header=False))
+    assert table.num_rows == 2
+    named = read_table(nohead, csv=CsvOptions(has_header=False, column_names=("k", "v")))
+    assert named.column_names == ["k", "v"]
+
+
 _ = dt
