@@ -36,6 +36,8 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   table, and writes a **profile**. A table with 0 rows prints `shape: warning: ... has 0 rows`
   (the profile is still written); `--fail-on-empty` exits 2 instead and writes nothing.
 - `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles.
+- `shape explain DIFF.json` explains a `shape diff --json` or `shape drift` result in plain
+  English, deterministically (`docs/EXPLAIN.md`).
 - `shape inspect ARTIFACT.shape` prints what an artifact holds, a profile or a model. `shape show`
   is an alias of `shape inspect`.
 - `shape capture SRC` reads everything `shape profile` reads (CSV, Parquet, JSONL, a folder or

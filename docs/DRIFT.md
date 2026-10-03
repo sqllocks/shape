@@ -116,6 +116,9 @@ shape diff BASE.shape CURRENT.shape
     [--json RESULT.json] [--fail-on-drift]
 ```
 
+`shape explain DIFF.json` turns the `--json` result into a plain-English narrative (see
+`docs/EXPLAIN.md`).
+
 Contract rules for flags: `"min_true_rate"` and `"max_true_rate"` on a column (a number from 0 to
 1; a column that is not a boolean or 0/1 is a violation).
 

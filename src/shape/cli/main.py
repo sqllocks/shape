@@ -583,6 +583,27 @@ def _cmd_diff(a):
     return 1 if (a.fail_on_drift and result.drifted) else 0
 
 
+def _cmd_explain(a):
+    """``shape explain DIFF``: a plain-English narrative of a diff or drift report (JSON), the
+    same text every time; ``--json`` prints the structure under it. Exit 0, or 2 on bad input."""
+    import shape
+    from shape.report.explain import explain
+
+    report = _load_json(a.report)
+    classified = [c.strip() for c in (a.classified or "").split(",") if c.strip()]
+    result = explain(
+        report,
+        baseline=shape.load(a.baseline) if a.baseline else None,
+        current=shape.load(a.current) if a.current else None,
+        classified=classified,
+    )
+    if a.json:
+        _dump(result.to_dict())
+    else:
+        print(result.text)
+    return 0
+
+
 def _cmd_verify(a):
     """``shape verify``: a ``.shape`` artifact is checked for its signature, anything else is
     data for the validation gates."""
@@ -967,6 +988,22 @@ def _build_parser(plugin_commands=()):
     d.add_argument("--fail-on-drift", action="store_true")
     d.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     _diff_policy_arguments(d)
+    ex = sub.add_parser(
+        "explain",
+        help="explain a diff or drift report (JSON) in plain English",
+        description="A deterministic narrative of `shape diff --json` or `shape drift` output: "
+        "what changed, how much, which columns and likely kinds of cause. No model, no network, "
+        "and no raw value for a classified column.",
+    )
+    ex.add_argument("report", metavar="DIFF.json")
+    ex.add_argument("--json", action="store_true", help="print the structure under the text")
+    ex.add_argument("--classified", metavar="COL1,COL2", help="columns to withhold values for")
+    ex.add_argument(
+        "--baseline", metavar="BASE.shape", help="profile whose sensitive columns are withheld"
+    )
+    ex.add_argument(
+        "--current", metavar="CURRENT.shape", help="profile whose sensitive columns are withheld"
+    )
     sh = sub.add_parser(
         "inspect",
         aliases=["show"],
@@ -1445,6 +1482,8 @@ def _dispatch(argv):
         return _run(_cmd_check, a)
     if a.cmd == "diff" and _is_profile_or_missing(a.before):
         return _run(_cmd_diff, a)
+    if a.cmd == "explain":
+        return _run(_cmd_explain, a)
     if a.cmd == "plugins":
         return _cmd_plugins(a)
     if a.cmd == "version":

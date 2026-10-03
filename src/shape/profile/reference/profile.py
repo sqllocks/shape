@@ -263,6 +263,17 @@ class Profile:
 
         return render_html(self)
 
+    def _repr_html_(self) -> str:
+        """Notebook display: a small table of safe statistics (never extremes or categories)."""
+        from shape.report.display import profile_html
+
+        return profile_html(self)
+
+    def _repr_markdown_(self) -> str:
+        from shape.report.display import profile_markdown
+
+        return profile_markdown(self)
+
     def __repr__(self) -> str:
         if self.is_dataset:
             return f"Profile(dataset, tables={list(self._data['tables'])})"
