@@ -19,7 +19,15 @@ from shape.io.excel import is_workbook_spec
 from shape.security.jsondepth import check_json_file
 
 from . import delta_fallback
-from .readers import CsvFormat, _arrow_cols, _Col, _csv_cols, _csv_options, read_csv
+from .readers import (
+    CsvFormat,
+    _arrow_cols,
+    _Col,
+    _csv_cols,
+    _csv_options,
+    read_csv,
+    read_csv_detect,
+)
 
 _SUFFIXES = (".csv", ".parquet", ".jsonl", ".ndjson")
 
@@ -174,6 +182,8 @@ def _read_files(
         raise SourceError(f"files of mixed types cannot be profiled as one table: {sorted(kinds)}")
     kind = kinds.pop()
     tables: list[pa.Table] = []
+    if kind == "csv" and len(paths) > 1:
+        return kind, _concat(_read_csv_files(paths, threads, csv))
     for p in paths:
         if kind == "csv":
             tables.append(read_csv(p, threads, csv))
@@ -184,6 +194,21 @@ def _read_files(
             tables.append(pajson.read_json(p))
     table = tables[0] if len(tables) == 1 else _concat(tables)
     return kind, table
+
+
+def _read_csv_files(
+    paths: list[Path], threads: int | None, csv: CsvFormat | None
+) -> list[pa.Table]:
+    """The files of one table. A column that holds identifiers in any file is text in all of them
+    (the files of a table share their types)."""
+    first = [read_csv_detect(p, threads, csv, warn=i == 0) for i, p in enumerate(paths)]
+    union = {name for _, found in first for name in found}
+    return [
+        table
+        if all(name in found for name in union)
+        else read_csv_detect(p, threads, csv, force_text=union)[0]
+        for p, (table, found) in zip(paths, first, strict=True)
+    ]
 
 
 def _concat(tables: list[pa.Table]) -> pa.Table:
@@ -408,5 +433,5 @@ def _to_cols(kind: str, table: pa.Table) -> list[_Col]:
     cols = _csv_cols(table) if kind == "csv" else _arrow_cols(table)  # xlsx: Arrow semantics
     for c in cols:
         c.strict = True
-        c.text = kind == "xlsx" and c.kind == "str"
+        c.text = c.text or (kind == "xlsx" and c.kind == "str")
     return cols

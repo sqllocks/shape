@@ -8,7 +8,9 @@ tumbling, sliding or session windows, profiles each window with the kernel's bou
 
 * event time is the ``_shape_event_time`` column (``event_time=`` names another);
 * the watermark is the largest event time seen, minus ``allowed_lateness``, and it advances at
-  batch boundaries (a micro-batch is classified against the watermark it started with);
+  batch boundaries (a micro-batch is classified against the watermark it started with); when the
+  batches say which partition they came from, it is the *smallest* of the partitions' largest
+  event times (see ``max_partition_skew``), so partitions read at different speeds lose nothing;
 * a window closes when the watermark reaches its end; a row is *late* when every window it
   belongs to has already closed. Late rows are counted and either dropped or handed to
   ``late_sink``;
@@ -38,8 +40,12 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape.kernel.dispatch import get_kernel
 from shape.profile.engine import table_entry
+from shape.streaming.messages import partition_of
 
 SNAPSHOT_FORMAT = "shape-stream-window-v1"
+# How far (in event time) the slowest partition may trail the newest event before it stops holding
+# the watermark back: ten minutes, in microseconds. See ``WindowedProfiler.max_partition_skew``.
+DEFAULT_MAX_PARTITION_SKEW = 600_000_000
 EVENT_TIME = "_shape_event_time"
 _US = timedelta(microseconds=1)
 _DAY_US = 86_400_000_000
@@ -197,7 +203,7 @@ class WindowedProfiler:
         name: str = "stream",
         top_n: int = 500,
     ) -> None:
-        self.schema = pa.schema(schema)
+        self.schema = pa.schema(schema).remove_metadata()
         self.event_time = event_time
         self.allowed_lateness = _micros(allowed_lateness, "allowed_lateness", positive=False)
         self.late_sink = late_sink
@@ -214,6 +220,13 @@ class WindowedProfiler:
             if not (pa.types.is_timestamp(t) or pa.types.is_date32(t) or pa.types.is_date64(t)):
                 raise TypeError(f"event-time column {event_time!r} must be a timestamp or a date")
         self._max_event_time: int | None = None
+        # Per-partition watermarks (issue #41). Empty until a partition is registered; then the
+        # watermark is the smallest newest-event time over the partitions that are not idle.
+        self.max_partition_skew = DEFAULT_MAX_PARTITION_SKEW
+        self._partitions: dict[str, int | None] = {}  # partition -> its newest event time
+        self._idle: set[str] = set()
+        self._wm_peak: int | None = None  # the watermark never moves back
+        self.max_late_lag = 0  # microseconds: the furthest behind the watermark a late row was
         self.batches = 0
         self.rows_in = 0
         self.late_events = 0
@@ -225,9 +238,41 @@ class WindowedProfiler:
     @property
     def watermark(self) -> int | None:
         """Microseconds since the epoch, or ``None`` before the first event."""
+        if self._partitions:
+            return self._wm_peak
         if self._max_event_time is None:
             return None
         return self._max_event_time - self.allowed_lateness
+
+    @property
+    def partitions(self) -> dict[str, int | None]:
+        """Each known partition's newest event time in microseconds (``None``: none yet)."""
+        return dict(self._partitions)
+
+    def register_partitions(self, partitions: Iterable[str]) -> None:
+        """Name the partitions of the stream. From then on the watermark waits for every one of
+        them that is not idle (``max_partition_skew`` bounds the wait), so a partition that has
+        not delivered yet does not see its first events called late."""
+        for p in partitions:
+            self._partitions.setdefault(str(p), None)
+
+    def set_idle(self, partition: str, idle: bool = True) -> None:
+        """Take a partition out of the watermark (it has nothing to say for now) or put it back.
+        A partition that delivers again is active again."""
+        if partition in self._partitions:
+            (self._idle.add if idle else self._idle.discard)(partition)
+
+    def _partition_watermark(self) -> int | None:
+        newest = self._max_event_time
+        if newest is None:
+            return None
+        floor = newest - self.max_partition_skew  # a partition further behind than this is ignored
+        lows = [
+            floor if seen is None else max(seen, floor)
+            for p, seen in self._partitions.items()
+            if p not in self._idle
+        ]
+        return (min(lows) if lows else newest) - self.allowed_lateness
 
     @property
     def finished(self) -> bool:
@@ -242,14 +287,20 @@ class WindowedProfiler:
         return WindowProfile(self.kind, start, end, int(state.rows), entry)
 
     # ----------------------------------------------------------- processing
-    def process(self, batch: pa.RecordBatch | pa.Table) -> list[WindowProfile]:
-        """Take one micro-batch; return the windows it caused to close, oldest first."""
+    def process(
+        self, batch: pa.RecordBatch | pa.Table, partition: str | None = None
+    ) -> list[WindowProfile]:
+        """Take one micro-batch; return the windows it caused to close, oldest first.
+
+        ``partition`` names the partition the batch came from (``None``: the batch carries it in
+        its schema metadata, as ``decode_messages`` writes it, or it is unknown). Once partitions
+        are known the watermark is kept per partition."""
         if self._finished:
             raise RuntimeError("the stream has finished; no more batches can be processed")
         if isinstance(batch, pa.Table):
             out: list[WindowProfile] = []
             for part in batch.to_batches():
-                out.extend(self.process(part))
+                out.extend(self.process(part, partition))
             return out
         if not batch.schema.equals(self.schema, check_metadata=False):
             raise ValueError("batch schema differs from the stream schema")
@@ -260,18 +311,42 @@ class WindowedProfiler:
             return []
         ts, valid = self._times(batch)
         self.null_event_time += int(n - np.count_nonzero(valid))
-        late = self._route(batch, ts, valid, self.watermark)
+        before = self.watermark
+        late = self._route(batch, ts, valid, before)
         n_late = int(np.count_nonzero(late))
         if n_late:
             self.late_events += n_late
+            if before is not None:
+                self.max_late_lag = max(self.max_late_lag, int(before - ts[late].min()))
             if self.late_sink is not None:
                 self.late_sink(batch.filter(pa.array(late)))
         if self._time_index is not None and valid.any():
             newest = int(ts[valid].max())
             if self._max_event_time is None or newest > self._max_event_time:
                 self._max_event_time = newest
+            if self._partitions:
+                self._advance_partitions(
+                    partition if partition is not None else partition_of(batch), newest
+                )
         wm = self.watermark
         return [] if wm is None else self._close(wm)
+
+    def _advance_partitions(self, partition: str | None, newest: int) -> None:
+        """Record ``newest`` for the batch's partition (every partition, when it is not known)
+        and move the watermark forward."""
+        if partition is None:
+            names = list(self._partitions)
+        else:
+            self._partitions.setdefault(partition, None)
+            names = [partition]
+        for p in names:
+            seen = self._partitions[p]
+            if seen is None or newest > seen:
+                self._partitions[p] = newest
+            self._idle.discard(p)
+        candidate = self._partition_watermark()
+        if candidate is not None and (self._wm_peak is None or candidate > self._wm_peak):
+            self._wm_peak = candidate
 
     def finish(self) -> list[WindowProfile]:
         """End of stream: close every open window, oldest first."""
@@ -326,11 +401,18 @@ class WindowedProfiler:
             "top_n": self.top_n,
             "config": self._config(),
             "max_event_time_us": self._max_event_time,
+            "partitions": {
+                "newest_us": self._partitions,
+                "idle": sorted(self._idle),
+                "watermark_us": self._wm_peak,
+                "max_skew_us": self.max_partition_skew,
+            },
             "finished": self._finished,
             "counters": {
                 "batches": self.batches,
                 "rows_in": self.rows_in,
                 "late_events": self.late_events,
+                "max_late_lag_us": self.max_late_lag,
                 "null_event_time": self.null_event_time,
                 "windows_emitted": self.windows_emitted,
             },
@@ -351,6 +433,13 @@ class WindowedProfiler:
         obj = target._from_snapshot(snapshot, late_sink)
         counters = snapshot["counters"]
         obj._max_event_time = snapshot["max_event_time_us"]
+        parts = snapshot.get("partitions")  # absent in a snapshot taken before partitions
+        if parts is not None:
+            obj._partitions = {str(k): v for k, v in parts["newest_us"].items()}
+            obj._idle = set(parts["idle"])
+            obj._wm_peak = parts["watermark_us"]
+            obj.max_partition_skew = int(parts["max_skew_us"])
+        obj.max_late_lag = int(counters.get("max_late_lag_us", 0))
         obj._finished = bool(snapshot["finished"])
         obj.batches = int(counters["batches"])
         obj.rows_in = int(counters["rows_in"])

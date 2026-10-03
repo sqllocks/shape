@@ -103,6 +103,11 @@ def _extension(fmt: str, sink: Any) -> str:
     return value if isinstance(value, str) else fmt
 
 
+def file_extension(fmt: str) -> str:
+    """The file extension of installed format ``fmt``; empty for a sink that writes a directory."""
+    return _extension(fmt, _sink(fmt))
+
+
 class _LazySink:
     """The sink of ``fmt``, loaded by the first thread that writes to it. The format is checked
     now; importing the sink (Parquet alone is about 15 ms) happens on a writer thread, while the
@@ -129,7 +134,7 @@ class _LazySink:
 
 def _target(fmt: str, sink: Any, output_dir: Path, table: str) -> Path:
     # A sink with an empty extension (Delta) writes <output_dir>/<table>/ itself; the others write
-    # <output_dir>/<table>.<extension>.
+    # <output_dir>/<table>.<extension>, which may not leave the output directory.
     from shape.security.names import contained
 
     extension = _extension(fmt, sink)
@@ -182,6 +187,8 @@ def _write_workbook(
 
     schema = result.schema
     model = schema.model
+    sink = _sink("excel")
+    out = _check_destination(sink, out)
     out.mkdir(parents=True, exist_ok=True)
     target = contained(out, str(options.get("workbook") or model.domain or "workbook"), ".xlsx")
     keys: dict[str, list[str]] = {
@@ -197,7 +204,7 @@ def _write_workbook(
         "scale": scale or schema.generation.scale,
         "elapsed_seconds": round(result.elapsed_seconds, 3),
     }
-    _sink("excel").write_workbook(
+    sink.write_workbook(
         str(target),
         {name: result.tables[name] for name in result.generation_order},
         meta=meta,

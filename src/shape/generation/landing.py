@@ -14,24 +14,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from shape.generation.output import FORMATS
+from shape.generation.output import available_formats, file_extension
 from shape.io.landing import DEFAULT_TEMPLATE, parse_date, render_path
 from shape.plugins.host import default_host
 
 if TYPE_CHECKING:
     import pyarrow as pa  # type: ignore[import-untyped]
 
-# The file extension of each format that writes one file per table.
-EXTENSIONS = {
-    "csv": "csv",
-    "tsv": "tsv",
-    "jsonl": "jsonl",
-    "parquet": "parquet",
-    "excel": "xlsx",
-    "sql": "sql",
-}
-# Formats that write one file per table (a Delta table is a directory and has no file name).
-LANDING_FORMATS = tuple(f for f in FORMATS if f in EXTENSIONS)
+
+def landing_formats() -> tuple[str, ...]:
+    """The formats that write one file per table: every installed sink with a file extension (a
+    Delta table is a directory and has no file name)."""
+    return tuple(f for f in available_formats() if f != "summary" and file_extension(f))
 
 
 @dataclass(frozen=True)
@@ -48,10 +42,11 @@ class LandedFile:
 def landing_format(table: str, formats: Mapping[str, str], default: str) -> str:
     """The format of ``table``: its entry in ``formats``, else ``default``."""
     fmt = formats.get(table, default)
-    if fmt not in LANDING_FORMATS:
+    choices = landing_formats()
+    if fmt not in choices:
         raise ValueError(
             f"format {fmt!r} for table {table!r} cannot be a landing file; "
-            f"choose one of {', '.join(LANDING_FORMATS)}"
+            f"choose one of {', '.join(choices)}"
         )
     return fmt
 
@@ -83,7 +78,7 @@ def write_landing(
     plan: list[tuple[str, str, Path]] = []
     for name in tables:
         fmt = landing_format(name, formats, default_format)
-        relative = render_path(template, name, EXTENSIONS[fmt], day)
+        relative = render_path(template, name, file_extension(fmt), day)
         target = (base / relative).resolve()
         if not target.is_relative_to(base):
             raise ValueError(f"path template {template!r} leaves the output directory")
@@ -100,4 +95,4 @@ def write_landing(
     return landed
 
 
-__all__ = ["LANDING_FORMATS", "LandedFile", "landing_format", "write_landing"]
+__all__ = ["LandedFile", "landing_format", "landing_formats", "write_landing"]

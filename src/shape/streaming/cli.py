@@ -23,6 +23,7 @@ one); rows that cannot take it are counted as ``rejected``, never coerced.
 from __future__ import annotations
 
 import json
+import math
 import os
 import sys
 import tempfile
@@ -49,6 +50,8 @@ from .runtime import (
 
 GROUP = "shape.stream_sources"
 WINDOWS = ("global", "tumbling", "sliding", "session")
+DEFAULT_IDLE_TIMEOUT = 30.0  # seconds, for a followed stream (--partition-idle-timeout)
+LATE_WARN_SHARE = 1.0  # percent of events: from here the late report is a warning, not a note
 duration_us = parse_duration
 
 
@@ -188,6 +191,34 @@ def _profiler(args: Any, schema: pa.Schema) -> WindowedProfiler:
     return SlidingProfiler(schema, size, _duration(args.slide, "--slide"), **common)
 
 
+def _idle_timeout(args: Any) -> float | None:
+    """Seconds without a delivery before a partition stops holding the watermark: only a followed
+    stream has partitions that go quiet while the run goes on (a bounded read ends)."""
+    given = getattr(args, "partition_idle_timeout", None)
+    if given is None:
+        return DEFAULT_IDLE_TIMEOUT if args.follow else None
+    if given < 0:
+        raise ValueError("--partition-idle-timeout cannot be negative")
+    return given or None
+
+
+def _late_report(prof: WindowedProfiler, rows: int) -> str | None:
+    """The line that tells the user how many events were left out of the windows, and what
+    ``--allowed-lateness`` would have kept them; ``None`` when none was late."""
+    late = prof.late_events
+    if not late:
+        return None
+    share = 100.0 * late / max(rows, 1)
+    wanted = math.ceil((prof.allowed_lateness + prof.max_late_lag) / 1_000_000)
+    kind = "warning" if share >= LATE_WARN_SHARE else "note"
+    return (
+        f"shape: {kind}: {late:,} of {rows:,} events ({share:.1f}%) arrived after their window "
+        f"had closed and are not in the window profiles (late_events in the summary). The "
+        f"furthest behind was {prof.max_late_lag / 1_000_000:.1f}s past the watermark; "
+        f"--allowed-lateness {wanted}s would have kept them (it delays each window by as much)."
+    )
+
+
 def _checkpoint_schema(store: FileCheckpointStore) -> pa.Schema | None:
     doc = store.load_document()
     if doc is None or doc.get("format") != CHECKPOINT_FORMAT:
@@ -275,6 +306,9 @@ def run(args: Any) -> int:
         reader = _Primed(source, first, gen)
 
     profiler = _profiler(args, schema)
+    profiler.max_partition_skew = duration_us(
+        getattr(args, "max_partition_skew", None) or "10m", "--max-partition-skew"
+    )
     consumer = StreamConsumer(
         reader,
         args.uri,
@@ -282,6 +316,7 @@ def run(args: Any) -> int:
         store,
         checkpoint_every=args.checkpoint_every,
         max_attempts=args.max_reconnects,
+        partition_idle_timeout=_idle_timeout(args),
         options=options,
     )
     if consumer.profiler.finished:
@@ -343,5 +378,10 @@ def run(args: Any) -> int:
         summary["rejected"] = stats.rejected
     if interrupted:
         summary["interrupted"] = True
+    report = _late_report(prof, prof.rows_in)
+    if report is not None:
+        print(report, file=sys.stderr)
+        summary["late_share"] = round(prof.late_events / max(prof.rows_in, 1), 6)
+        summary["late_lag_seconds"] = round(prof.max_late_lag / 1_000_000, 3)
     print(json.dumps(summary))
     return 0

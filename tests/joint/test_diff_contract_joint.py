@@ -21,6 +21,7 @@ def _by_kind(result: object) -> dict[str, list[dict]]:
 
 
 def test_the_example_is_drift_that_names_the_dependency_and_the_value(profiles) -> None:
+    # #46: the zero-padded ZIP column is text, so the placeholder is '00000', not 0
     good, bad = profiles
     result = shape.diff(good, bad)
     assert result.drifted
@@ -31,11 +32,11 @@ def test_the_example_is_drift_that_names_the_dependency_and_the_value(profiles) 
     assert zc["baseline"] == 1.0 and zc["current"] == pytest.approx(0.87575)
     assert zc["detail"]["violating_groups"] == 178
     # the placeholder responsible is named, with its share
-    assert zc["detail"]["placeholders"][0]["value"] == "0"
+    assert zc["detail"]["placeholders"][0]["value"] == "00000"
     assert zc["detail"]["placeholders"][0]["share_of_rows"] == pytest.approx(0.08)
-    assert "'0'" in zc["message"] and "zip" in zc["message"] and "city" in zc["message"]
+    assert "'00000'" in zc["message"] and "zip" in zc["message"] and "city" in zc["message"]
     surge = kinds["placeholder_surge"][0]
-    assert surge["column"] == "zip" and surge["detail"]["value"] == "0"
+    assert surge["column"] == "zip" and surge["detail"]["value"] == "00000"
     assert (surge["baseline"], surge["current"]) == (0.0, pytest.approx(0.08))
     assert kinds["implausible_rate_change"][0]["current"] == pytest.approx(0.08)
 
@@ -103,13 +104,14 @@ CONTRACT = {
 
 
 def test_contract_rules_pass_the_good_data_and_fail_the_bad(profiles) -> None:
+    # #46: the zero-padded ZIP column is text, so the placeholder is '00000', not 0
     good, bad = profiles
     assert shape.check(good, CONTRACT).passed
     result = shape.check(bad, CONTRACT)
     assert not result.passed
     rules = {v["rule"]: v for v in result.violations}
     assert rules["no_placeholder"]["column"] == "zip"
-    assert rules["no_placeholder"]["observed"][0]["value"] == "0"
+    assert rules["no_placeholder"]["observed"][0]["value"] == "00000"
     assert rules["fd"]["column"] == "zip -> city"
     assert rules["fd"]["observed"]["confidence"] == pytest.approx(0.87575)
     assert rules["max_implausible_rate"]["observed"]["implausible_rate"] == pytest.approx(0.08)
@@ -117,8 +119,9 @@ def test_contract_rules_pass_the_good_data_and_fail_the_bad(profiles) -> None:
 
 
 def test_no_placeholder_object_form_allows_values_and_shares(profiles) -> None:
+    # #46: the zero-padded ZIP column is text, so the placeholder is '00000', not 0
     _, bad = profiles
-    allow = {"columns": {"zip": {"no_placeholder": {"allow": ["0"]}}}}
+    allow = {"columns": {"zip": {"no_placeholder": {"allow": ["00000"]}}}}
     assert shape.check(bad, allow).passed
     cap = {"columns": {"zip": {"no_placeholder": {"max_share": 0.1}}}}
     assert shape.check(bad, cap).passed
