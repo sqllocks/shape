@@ -693,7 +693,9 @@ def _check_only(a, *profiles):
     for name in wanted:
         if not any(fnmatch.fnmatchcase(k, name) for k in known):
             shown = ", ".join(dict.fromkeys(bare))
-            raise ValueError(f"--only {name!r} matches no column of the profiles (columns: {shown})")
+            raise ValueError(
+                f"--only {name!r} matches no column of the profiles (columns: {shown})"
+            )
 
 
 def _cmd_diff(a):
