@@ -5,6 +5,20 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Fairness slices and training-serving skew (`docs/FAIRNESS_AND_SKEW.md`, W3-11, #104).
+  `shape scorecard --slice-by COLUMN[,COLUMN] [--min-slice-rows N] [--max-slice-gap G]
+  [--reference REF] [--label COLUMN]` scores every dimension per slice with the gap and worst slice,
+  each slice's share of rows (and reference share and ratio), the positive rate and disparity ratio
+  of a label (flagged below 0.8, a screening heuristic), and null rates; slices under the minimum are
+  pooled and never shown alone, classified slice columns show `slice 1`, `slice 2`, ...
+  `--max-slice-gap` exits 1 when exceeded. A scorecard with `slices` is `shape-scorecard` version 2
+  (JSON Schemas for versions 1 and 2 in `src/shape/schemas/`); one without is still version 1, byte
+  for byte; trends compare slice gaps. New `shape skew TRAIN SERVING [--features] [--label]
+  [--slice-by] [--threshold KEY=VALUE] [--project] [-o REPORT.json] [--json]`
+  and `shape.quality.skew(...)`: schema, null-rate and PSI skew (the PSI of `shape drift --psi`),
+  unseen categories and out-of-range values per feature, ranked by PSI, per slice with `--slice-by`,
+  on data or profiles (`shape-skew-report` version 1).
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

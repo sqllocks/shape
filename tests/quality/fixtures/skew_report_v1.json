@@ -1,0 +1,72 @@
+{
+  "format": "shape-skew-report",
+  "version": 1,
+  "shape_version": "SV",
+  "thresholds": {
+    "psi": 0.2,
+    "null_rate": 0.05,
+    "unseen_category_share": 0.01,
+    "out_of_range_share": 0.01,
+    "label_rate_diff": null,
+    "min_slice_rows": 30
+  },
+  "flagged": true,
+  "missing_tables": [],
+  "tables": {
+    "d": {
+      "mode": "data",
+      "train_rows": 100,
+      "serving_rows": 100,
+      "features": [
+        {
+          "feature": "c",
+          "schema": {
+            "status": "ok",
+            "train_type": "string",
+            "serving_type": "string"
+          },
+          "train_null_rate": 0.0,
+          "serving_null_rate": 0.0,
+          "null_rate_difference": 0.0,
+          "psi": 22.33270374958051,
+          "unseen_category_share": 0.5,
+          "out_of_range_share": null,
+          "notes": {
+            "out_of_range_share": "not a numeric or date column"
+          },
+          "flags": [
+            "psi",
+            "unseen_category_share"
+          ],
+          "flagged": true
+        },
+        {
+          "feature": "x",
+          "schema": {
+            "status": "ok",
+            "train_type": "float",
+            "serving_type": "float"
+          },
+          "train_null_rate": 0.0,
+          "serving_null_rate": 0.0,
+          "null_rate_difference": 0.0,
+          "psi": 19.0564043619266,
+          "unseen_category_share": null,
+          "out_of_range_share": 0.5,
+          "notes": {
+            "unseen_category_share": "not a text column"
+          },
+          "flags": [
+            "psi",
+            "out_of_range_share"
+          ],
+          "flagged": true
+        }
+      ],
+      "extra_in_serving": [],
+      "label": null,
+      "slices": null,
+      "flagged": true
+    }
+  }
+}

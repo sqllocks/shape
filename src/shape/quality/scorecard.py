@@ -26,11 +26,22 @@ import pyarrow as pa  # type: ignore[import-untyped]
 
 from .gates import ValidationContext
 from .rowlevel import CheckOutcome, row_outcomes, sample_failures
+from .slicing import (
+    DEFAULT_MIN_SLICE_ROWS,
+    SliceError,
+    build_slices,
+    gap_trend,
+    slice_gaps,
+)
 from .verify import VerifyResult
 from .verifyconfig import VerifyConfig
 
 FORMAT = "shape-scorecard"
+#: A scorecard without slices is written as version 1, one with ``slices`` as version 2; this
+#: release reads both.
 VERSION = 1
+SLICED_VERSION = 2
+READ_VERSION = SLICED_VERSION
 SUPPRESSIONS_FORMAT = "shape-scorecard-suppressions"
 SUPPRESSIONS_VERSION = 1
 PROJECT_FILE = "shape.yml"
@@ -244,11 +255,17 @@ class Scorecard:
     trend: dict[str, dict[str, Any]] | None = None
     #: The row-level checks that count toward the score (not those hidden as known issues).
     outcomes: list[CheckOutcome] = field(default_factory=list, repr=False)
+    #: Scores by slice, representation and outcome rates (W3-11); None without ``slice_by``.
+    slices: dict[str, Any] | None = None
+
+    @property
+    def version(self) -> int:
+        return VERSION if self.slices is None else SLICED_VERSION
 
     def to_dict(self, include_samples: bool = True) -> dict[str, Any]:
         out: dict[str, Any] = {
             "format": FORMAT,
-            "version": VERSION,
+            "version": self.version,
             "shape_version": self.shape_version,
             "run_at": self.run_at,
             "data_path": self.data_path,
@@ -260,6 +277,8 @@ class Scorecard:
             out["samples"] = self.samples
         if self.trend is not None:
             out["trend"] = self.trend
+        if self.slices is not None:
+            out["slices"] = self.slices
         return out
 
     def to_json(self, indent: int = 2) -> str:
@@ -320,7 +339,87 @@ class Scorecard:
                     f"| {s['gate']} | {s['table']} | {s['row']} | "
                     f"{json.dumps(s['values'], default=str)} |"
                 )
+        if self.slices is not None:
+            lines += _slices_markdown(self.slices)
         return "\n".join(lines) + "\n"
+
+
+def _slices_markdown(sl: Mapping[str, Any]) -> list[str]:
+    lines = [
+        "",
+        "## Slices",
+        "",
+        f"Sliced by {', '.join(sl['by'])}; slices under "
+        f"{sl['min_slice_rows']} rows are pooled as `(small slices)`.",
+        "",
+    ]
+    trend = sl.get("trend") or {}
+    for table, td in sl["tables"].items():
+        lines += [f"### {table}", ""]
+        lines += [
+            "| Dimension | Gap | Worst slice | Trend |",
+            "|-----------|-----|-------------|-------|",
+        ]
+        for dim, v in td["dimensions"].items():
+            t = trend.get(f"{table}.{dim}")
+            gap = "n/a" if v["gap"] is None else f"{v['gap']:g}"
+            lines.append(f"| {dim} | {gap} | {v['worst_slice'] or ''} | {_slice_trend_text(t)} |")
+        header = ["Slice", "Rows", "Share"]
+        has_ref = any("reference_share" in e for e in td["slices"])
+        has_label = "label" in td
+        if has_ref:
+            header += ["Reference share", "Ratio"]
+        if has_label:
+            header += ["Positive rate"]
+        lines += ["", "| " + " | ".join(header) + " |", "|" + "---|" * len(header)]
+        for e in td["slices"]:
+            row = [e["slice"], f"{e['rows']:,}", f"{e['share']:g}"]
+            if has_ref:
+                row += [f"{e['reference_share']:g}", _fmt(e["ratio"])]
+            if has_label:
+                row += [_fmt(e.get("positive_rate"))]
+            lines.append("| " + " | ".join(row) + " |")
+        if td["small_slices"]["slices"] and not td["small_slices"]["reported"]:
+            lines += ["", "One slice below the minimum size is not shown."]
+        for m in td.get("missing_from_data", []):
+            lines.append(
+                f"- In the reference but not in the data: {m['slice']} "
+                f"(reference share {m['reference_share']:g})"
+            )
+        lab = td.get("label")
+        if lab:
+            ratio = _fmt(lab["disparity_ratio"])
+            flag = (
+                f" **below {lab['threshold']:g}: flagged** (four-fifths screening heuristic, "
+                "not a legal test)"
+                if lab["flagged"]
+                else ""
+            )
+            lines += [
+                "",
+                f"Disparity ratio of `{lab['column']}` (lowest rate over highest): {ratio}{flag}",
+            ]
+        if td["null_rate_flags"]:
+            lines += ["", "Null rates more than 0.1 above the table's:", ""]
+            for f in td["null_rate_flags"]:
+                lines.append(
+                    f"- {f['slice']}: {f['column']} {f['null_rate']:g} "
+                    f"(table {f['table_null_rate']:g})"
+                )
+        lines.append("")
+    if "max_slice_gap" in sl:
+        if sl["exceeded"]:
+            lines.append(f"Gaps above {sl['max_slice_gap']:g}:")
+            lines += [f"- {x['table']}.{x['dimension']}: {x['gap']:g}" for x in sl["exceeded"]]
+        else:
+            lines.append(f"No gap above {sl['max_slice_gap']:g}.")
+    return lines
+
+
+def _slice_trend_text(t: Mapping[str, Any] | None) -> str:
+    if not t or t.get("direction") == "no data":
+        return "-"
+    return f"{t['direction']} ({t['change']:+g})"
 
 
 def _fmt(score: float | None) -> str:
@@ -378,17 +477,33 @@ def build_scorecard(
     classified: Mapping[str, Collection[str]] | None = None,
     show_classified: bool = False,
     history: Sequence[Mapping[str, Any]] | None = None,
+    slice_by: Sequence[str] | None = None,
+    min_slice_rows: int = DEFAULT_MIN_SLICE_ROWS,
+    label: str | None = None,
+    reference: Any = None,
+    max_slice_gap: float | None = None,
 ) -> Scorecard:
     """Score the gates of a verify ``result`` run on ``tables``, by dimension.
 
     ``schema`` and ``config`` are the ones the gates ran with. ``samples`` is how many failing
     rows to show per failing check (safe by default: ``classified`` columns, and any column that
     looks like personal data, show ``[redacted]`` unless ``show_classified``). ``history`` is
-    the earlier scorecards of :func:`scorecard_trend`; give it to get a trend."""
+    the earlier scorecards of :func:`scorecard_trend`; give it to get a trend.
+
+    ``slice_by`` (column names) also scores every dimension per slice, with each slice's share of
+    rows (and, given ``reference``, data or a profile of the population, the reference share and
+    the ratio), the positive rate and disparity ratio of a boolean or two-valued ``label`` column,
+    and null rates; the card then has ``slices`` and is written as version 2. Slices under
+    ``min_slice_rows`` rows are pooled and never shown alone. ``max_slice_gap`` records which gaps
+    exceed it (``slices["exceeded"]``)."""
     from shape import __version__
 
     if samples < 0:
         raise ScorecardError("samples must be zero or more")
+    if slice_by is None and (label is not None or reference is not None):
+        raise ScorecardError("label and reference need slice_by")
+    if slice_by is None and max_slice_gap is not None:
+        raise ScorecardError("max_slice_gap needs slice_by")
     day = today or datetime.now(UTC).date()
     live = [s for s in suppressions if s.active(day)]
     ctx = ValidationContext(
@@ -454,6 +569,41 @@ def build_scorecard(
         for d, checks in by_dim.items()
     }
     scored = [d.score for d in dimensions.values() if d.score is not None]
+    slices: dict[str, Any] | None = None
+    if slice_by is not None:
+        row_gates = [g.gate_name for g in result.gate_results if g.gate_name in GATE_DIMENSION]
+
+        def score_slice(name: str, sub: pa.Table) -> dict[str, float | None]:
+            sub_ctx = ValidationContext(
+                tables={**ctx.tables, name: sub}, schema=schema, config=ctx.config
+            )
+            found: dict[str, list[float]] = {d: [] for d in DIMENSIONS}
+            for gate in row_gates:
+                for o in row_outcomes(gate, sub_ctx) or ():
+                    if o.table != name or (o.failing and hidden(o.gate, o.table, o.columns)):
+                        continue
+                    found[GATE_DIMENSION[gate]].append(
+                        100.0 if o.rows == 0 else round(100.0 * (1 - o.failing / o.rows), 2)
+                    )
+            return {d: _mean(v) for d, v in found.items()}
+
+        try:
+            slices = build_slices(
+                tables,
+                slice_by,
+                score=score_slice,
+                min_slice_rows=min_slice_rows,
+                label=label,
+                reference=reference,
+                classified=classified,
+                show_classified=show_classified,
+                max_slice_gap=max_slice_gap,
+            )
+        except SliceError as exc:
+            raise ScorecardError(str(exc)) from None
+        if history is not None:
+            last = history[-1].get("slice_gaps") if history else None
+            slices["trend"] = gap_trend(slice_gaps(slices), last)
     return Scorecard(
         dimensions=dimensions,
         overall=_mean(scored),
@@ -466,6 +616,7 @@ def build_scorecard(
         ),
         trend=_trend(dimensions, history) if history is not None else None,
         outcomes=counted,
+        slices=slices,
     )
 
 
@@ -499,21 +650,22 @@ def scorecard_trend(registry: Any, name: str) -> list[dict[str, Any]]:
         version = doc.get("version")
         if not isinstance(version, int) or isinstance(version, bool) or version < 1:
             continue
-        if version > VERSION:
+        if version > READ_VERSION:
             raise ScorecardError(
                 f"{key} holds a scorecard of version {version}, newer than the version "
-                f"{VERSION} this release reads; upgrade Shape"
+                f"{READ_VERSION} this release reads; upgrade Shape"
             )
         dims = {
             d: v.get("score")
             for d, v in (doc.get("dimensions") or {}).items()
             if isinstance(v, dict)
         }
-        points.append(
-            {
-                "at": datetime.fromtimestamp(entry.get("created_at", 0), UTC).isoformat(),
-                "content_id": entry["content_id"],
-                "dimensions": dims,
-            }
-        )
+        point: dict[str, Any] = {
+            "at": datetime.fromtimestamp(entry.get("created_at", 0), UTC).isoformat(),
+            "content_id": entry["content_id"],
+            "dimensions": dims,
+        }
+        if isinstance(doc.get("slices"), dict):
+            point["slice_gaps"] = slice_gaps(doc["slices"])
+        points.append(point)
     return points

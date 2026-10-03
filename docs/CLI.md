@@ -69,6 +69,12 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   (foreign keys, personal data, meaning) in a decision file; `shape generate --from` and
   `shape plan` take it with `--decisions`. See [PROPOSALS.md](PROPOSALS.md).
 
+- `shape scorecard DATA` scores data quality by dimension ([SCORECARD.md](SCORECARD.md)); with
+  `--slice-by COLUMN` it scores every slice and exits 1 when `--max-slice-gap` is exceeded.
+  `shape skew TRAIN SERVING` compares serving data with training data (data or profiles) and
+  exits 0 when nothing is flagged, 1 when a feature is flagged, 2 for unusable input
+  ([FAIRNESS_AND_SKEW.md](FAIRNESS_AND_SKEW.md)).
+
 - `shape bridge` serves Shape's commands as a versioned JSON protocol on standard input and output
   (one request and one response per line; `--once` for a single request; `--jobs-dir DIR` for the
   job files). `shape bridge schema --out DIR` writes its JSON Schemas and `--check DIR` verifies a

@@ -9,11 +9,13 @@ shape scorecard out/ --schema gates.json                      # Markdown on stan
 shape scorecard out/ --schema gates.json --json -o card.json  # JSON
 shape scorecard out/ --schema gates.json --config verify.json --samples 3
 shape scorecard out/ --schema gates.json --flag-output flagged/   # add a flag column to copies
+shape scorecard out/ --schema gates.json --slice-by region --max-slice-gap 10   # per slice
 ```
 
 Exit `0` when the scorecard was produced and `2` on an input error (missing data, bad schema,
-bad suppression file). The command reports quality; it does not fail a build. Use
-`shape verify` for a pass or fail exit code.
+bad suppression file). The command reports quality; it does not fail a build, with one
+exception: `--max-slice-gap G` exits `1` when a dimension's slice gap is above `G` (see
+[FAIRNESS_AND_SKEW.md](FAIRNESS_AND_SKEW.md)). Use `shape verify` for a pass or fail exit code.
 
 ## The six dimensions and the checks behind them
 
@@ -57,7 +59,8 @@ file format is owned by `shape init`; the scorecard reads only this one mapping.
 With `--history DIR --name NAME` the scorecard compares each dimension with the last scorecard
 stored under `NAME` in that registry (a local registry, as `shape registry` uses) and reports
 `improving`, `declining`, `steady` or `no data`. Add `--record` to store this scorecard for next
-time. The registry keeps the scores only, never samples.
+time. The registry keeps the scores only, never samples. With `--slice-by` the slice gaps are
+compared as well (`widening`, `narrowing`, `steady`, `no data`).
 
 ## Snooze and suppress
 
@@ -119,6 +122,22 @@ print(card.to_markdown())
 `record_scorecard(registry, name, card)` and `scorecard_trend(registry, name)` store and read the
 history; `load_suppressions(path)` reads a known-issue file.
 
+## Slices
+
+`--slice-by COLUMN[,COLUMN]` scores every dimension per slice, reports each slice's share of
+rows, outcome rates and null rates, and adds a `slices` object to the JSON. The measures, the
+small-slice rule and their limits are in [FAIRNESS_AND_SKEW.md](FAIRNESS_AND_SKEW.md);
+`build_scorecard(..., slice_by=, label=, reference=)` is the same from Python.
+
 ## Stored format
 
-The JSON scorecard declares `"format": "shape-scorecard"` and an integer `"version"` (1).
+The JSON scorecard declares `"format": "shape-scorecard"` and an integer `"version"`.
+
+- **Version 1** is a scorecard without slices, as before. Its JSON Schema is
+  `src/shape/schemas/scorecard-v1.schema.json`.
+- **Version 2** is version 1 plus the `slices` object, written only when `--slice-by` (or
+  `slice_by=`) is given. Its JSON Schema is `src/shape/schemas/scorecard-v2.schema.json`.
+
+A scorecard without slices is still written as version 1, byte for byte, so a stored trend
+history keeps loading; this release reads both versions from `--history`, and refuses a newer
+one with an error that says to upgrade Shape.
