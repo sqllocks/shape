@@ -10,7 +10,7 @@ from shape.capture import capture_rows
 class OnlineShape:
     def __init__(self, max_buffer=10000):
         if max_buffer < 1:
-            raise ValueError("max_buffer")
+            raise ValueError("max_buffer must be at least 1 (the number of rows kept)")
         self.max_buffer = max_buffer
         self.buffer = deque(maxlen=max_buffer)
         self.total = 0

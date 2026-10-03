@@ -63,7 +63,9 @@ class ShapeMonitor:
         policy: Mapping[str, Any] | str | Path | None = None,
     ) -> None:
         if every < 1:
-            raise ValueError("every")
+            raise ValueError(
+                "every must be at least 1 (the number of rows between two comparisons)"
+            )
         self.reference = reference
         self.every = every
         self.online = OnlineShape(max_buffer)

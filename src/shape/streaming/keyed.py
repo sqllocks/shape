@@ -63,8 +63,12 @@ class KeyedState:
     """
 
     def __init__(self, ttl_seconds: float, max_keys: int = 100000) -> None:
-        if ttl_seconds <= 0 or max_keys < 1:
-            raise ValueError("invalid state bounds")
+        if ttl_seconds <= 0:
+            raise ValueError(
+                f"ttl_seconds must be positive (seconds a key lives), not {ttl_seconds}"
+            )
+        if max_keys < 1:
+            raise ValueError(f"max_keys must be at least 1 (the cap on keys), not {max_keys}")
         self.ttl = ttl_seconds
         self.max_keys = max_keys
         self._d: dict[Hashable, _Entry] = {}
@@ -138,7 +142,7 @@ class PartitionedKeyedState:
         self, partitions: int, ttl_seconds: float, max_keys_per_partition: int = 100000
     ) -> None:
         if partitions < 1:
-            raise ValueError("partitions")
+            raise ValueError("partitions must be at least 1 (the number of shards)")
         self.partitions = partitions
         self.states = [KeyedState(ttl_seconds, max_keys_per_partition) for _ in range(partitions)]
 
