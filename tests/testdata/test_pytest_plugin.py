@@ -61,7 +61,8 @@ def test_a_whole_session_that_does_not_use_the_plugin_imports_nothing_heavy(pyte
         import sys
 
         def test_it():
-            loaded = [m for m in {HEAVY!r} if any(k == m or k.startswith(m + ".") for k in sys.modules)]
+            names = list(sys.modules)
+            loaded = [m for m in {HEAVY!r} if any(k == m or k.startswith(m + ".") for k in names)]
             assert loaded == []
         """
     )
