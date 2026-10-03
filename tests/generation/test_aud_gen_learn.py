@@ -46,3 +46,20 @@ def test_a_new_row_count_makes_the_row_count_fields_approximate():
     assert plan["t.row_count"] == "approximate"
     same = {i.evidence: i.status for i in fit_schema(shape.profile(t, name="t")).plan.items}
     assert same["t.a.null_count"] == same["t.row_count"] == "preserved"
+
+
+def test_a_real_row_id_column_is_kept_and_the_surrogate_takes_another_name():
+    # 180: the surrogate key overwrote the data's own _row_id (constant 5 became 1, 2, 3, ...)
+    # and the plan called its minimum and uniqueness preserved.
+    from shape.generation.fit import fit_schema
+
+    t = pa.table({"_row_id": [5] * 200, "a": [i % 3 for i in range(200)]})
+    fit = fit_schema(shape.profile(t, name="t"))
+    columns = fit.schema.tables["t"].columns
+    assert columns["_row_id"].generator["strategy"] != "sequence"
+    (surrogate,) = fit.schema.tables["t"].primary_key
+    assert surrogate != "_row_id" and surrogate in columns
+    out = Engine(fit.schema, row_counts={"t": 50}).generate().tables["t"]
+    assert set(out["_row_id"].to_pylist()) == {5}
+    plan = {i.evidence: i.status for i in fit.plan.items}
+    assert plan[f"t.{surrogate}"] == "approximate"
