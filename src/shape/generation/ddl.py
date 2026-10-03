@@ -352,12 +352,22 @@ def _unquote(name: str) -> str:
     return _UNQUOTE.sub("", name).strip()
 
 
+_NAME_PART = re.compile(r"\[[^\]]*\]|\"[^\"]*\"|`[^`]*`|[^.\s]+")
+
+
+def _name_parts(raw: str) -> list[str]:
+    """The dotted parts of a possibly schema-qualified, quoted name (``[dbo].[my.table]`` is
+    ``dbo`` and ``my.table``)."""
+    return [_unquote(part) for part in _NAME_PART.findall(raw.strip())] or [_unquote(raw)]
+
+
 def _table_name(raw: str) -> str:
     """The unqualified table name of a possibly schema-qualified, quoted one."""
-    name = _unquote(raw)
-    if "." in name:
-        name = name.rsplit(".", 1)[-1]
-    return name.strip()
+    return _name_parts(raw)[-1].strip()
+
+
+def _qualified(raw: str) -> str:
+    return ".".join(part.strip() for part in _name_parts(raw))
 
 
 class DdlParser:
@@ -419,11 +429,26 @@ class DdlParser:
     def _extract_tables(self, sql: str) -> list[_ParsedTable]:
         tables = []
         closing = _matching_parens(sql)  # one pass for every header: linear time
+        seen: dict[str, str] = {}  # table name (lower case) -> its qualified name
         for match in _CREATE_TABLE_HEADER.finditer(sql):
             open_pos = match.end() - 1
             if open_pos in closing:
+                raw = match.group(1)
+                name, qualified = _table_name(raw), _qualified(raw)
+                if "." in name:
+                    raise DdlError(
+                        f"table {name!r}: a generation schema names columns as table.column, so "
+                        "a table name cannot hold a dot; rename the table in the DDL"
+                    )
+                earlier = seen.setdefault(name.lower(), qualified)
+                # an unqualified name may be the default schema's: only two schemas clash
+                if "." in earlier and "." in qualified and earlier.lower() != qualified.lower():
+                    raise DdlError(
+                        f"two tables are named {name!r}: {earlier} and {qualified}; a generation "
+                        "schema has one namespace, so import each schema's file on its own"
+                    )
                 body = sql[open_pos + 1 : closing[open_pos]].strip()
-                tables.append(self._parse_create_table(match.group(1), body))
+                tables.append(self._parse_create_table(raw, body))
         return tables
 
     def _parse_create_table(self, raw_name: str, body: str) -> _ParsedTable:
