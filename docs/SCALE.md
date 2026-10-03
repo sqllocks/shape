@@ -84,7 +84,7 @@ the `--auth` modes come with the Fabric auth work package.
 
 The Fabric sinks use the writers of the `shape-fabric` plugin (`pip install 'sqllocks-shape[fabric]'`). A table flows into its writer as it
 is generated (a few batches in flight), not held until the end. Every sink gets every chunk;
-a failing sink fails the run, after the others have finished the same chunk, and every sink is closed.
+a failing sink fails the run, after the others have finished the same chunk, and every sink that opened is closed. A run that stops early (a cancel or an error) calls an optional `abort()` on the sinks first: the Parquet sink then writes no `_COMPLETE` marker for the table it was writing, and a Fabric sink's writer gets an error instead of a clean end for a table that was cut short.
 
 ## Chunk size and processes
 
@@ -97,7 +97,7 @@ cross a process boundary, and a stopped run resumes at a chunk.
 ## Jobs
 
 Every scale run is a job in the job store (`$SHAPE_JOBS_DIR`, default `~/.shape/jobs`; one JSON file
-per job, readable only by its owner). A record holds what was asked, with secrets masked, and never
+per job, readable only by its owner, declaring `format: shape-job` and an integer `version`; a record from a newer release fails naming the release that reads it, and its unknown fields are kept on rewrite). A record holds what was asked, with secrets masked (sink settings, and the secrets of the `auth` block unless they are credential references), local output folders as absolute paths, and never
 a token.
 
 ```bash

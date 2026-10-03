@@ -503,6 +503,21 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ### Fixed
 
+- Fabric Spark, job store and scale router (HUNT2-fabric, #631 #632 #633 #634 #635 #636 #637 #638 #639 #704 #713 #715 #718):
+  the Fabric Spark router follows only `https://` URLs on the Fabric API host for `Location` and
+  `continuationUri`, ends paging on a repeated continuation URI and reports a cancelled notebook
+  creation at once; a job record masks the secrets of `auth` (credential references stay), hides
+  every form of password in sink settings (braced, quoted, URL, spaced keys), and a resume notices
+  a mask inside a connection string; job records declare `format: shape-job` and an integer
+  `version`, refuse a newer version naming the release that reads it, and keep fields they do not
+  know; `Retry-After` waits are capped at 60 s and an unreadable or non-object Fabric answer gets a
+  clear error; a relative output folder is stored as an absolute path so a resume from another
+  folder continues the first run; `scale_generate` checks the types of `chunk_size`, `processes`,
+  `max_workers`, `seed`, `domain`, `sinks` and `sink_config` before any job exists;
+  `parse_run_folder` returns `None` for a name that is not a time; the router closes the sinks that
+  opened when another fails to open; a cancelled or failed run no longer marks the Parquet table
+  it was writing complete (`_COMPLETE`) or hands a Fabric sink's writer a clean end for a table
+  that was cut short (sinks may define an optional `abort()`).
 - `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references` no longer depends on test order (#77): it resolves the references in a fresh interpreter and reports which cloud SDK modules got imported, so `azure*` modules left in `sys.modules` by `tests/demo/fabric` cannot fail it.
 - Issue #76. The three tests that failed were not numpy-dependent: they called pyarrow in ways older
   releases reject (float16 from Python floats, `if_else` on half-float, hive partition inference on a
