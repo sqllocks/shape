@@ -69,6 +69,11 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   (foreign keys, personal data, meaning) in a decision file; `shape generate --from` and
   `shape plan` take it with `--decisions`. See [PROPOSALS.md](PROPOSALS.md).
 
+- `shape bridge` serves Shape's commands as a versioned JSON protocol on standard input and output
+  (one request and one response per line; `--once` for a single request; `--jobs-dir DIR` for the
+  job files). `shape bridge schema --out DIR` writes its JSON Schemas and `--check DIR` verifies a
+  directory against them. See [`BRIDGE.md`](BRIDGE.md).
+
 ## `shape doctor`
 
 ```

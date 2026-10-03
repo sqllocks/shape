@@ -58,6 +58,19 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   differ by more than sampling noise, so two samples of one distribution no longer trigger it. A
   planted-drift sweep (`tests/diff/test_drift_sweep.py`; fast in CI, full nightly) guards both
   (`docs/DRIFT.md`).
+- `shape bridge` (`docs/BRIDGE.md`): a versioned JSON request/response protocol on standard input
+  and output (`api_version` `1.0`, request id, `result` and `warnings`, or an `error` with a stable
+  code in the groups usage, input, policy, privacy, io, auth and internal). It serves the 17
+  commands of the original JSON bridge (the four `demo_*` commands are specified and answer
+  `policy.capability_unavailable` until `shape demo` exists) plus `profile`, `diff`, `check`,
+  `verify` and `job_status`, `job_cancel`, `job_list`. Long-running commands return a job id
+  (`options.async`); job state is a versioned file per job under `--jobs-dir`, so jobs survive a
+  restart (a job whose process died reads as `interrupted`); large results come back as a file
+  reference with a content id; results never include the raw values of a classified column unless
+  `options.include_raw_values` is set. JSON Schemas for every request and result are published in
+  `docs/bridge/schema/` (`shape bridge schema --out|--check`) with test vectors in
+  `docs/bridge/vectors/`; a compatibility test per command keeps them from changing silently.
+  Harness: `benchmarks/vs_spindle/bridge_1to1/`.
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it

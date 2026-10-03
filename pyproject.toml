@@ -274,6 +274,7 @@ source_modules = [
     "shape._callable",
     "shape.api",
     "shape.artifact",
+    "shape.bridge",
     "shape.capture",
     "shape.chaos",
     "shape.cli",
