@@ -88,6 +88,9 @@ def _validate_contract(contract: dict[str, Any]) -> None:
     rc = contract.get("row_count", {})
     if not isinstance(rc, dict) or set(rc) - _ROW_COUNT_KEYS:
         raise ContractError("row_count accepts only 'min' and 'max'")
+    for key, value in rc.items():
+        if not _is_number(value):
+            raise ContractError(f"row_count.{key} must be a number, not {value!r}")
     columns = contract.get("columns", {})
     if not isinstance(columns, dict):
         raise ContractError("'columns' must be an object")
@@ -99,7 +102,7 @@ def _validate_contract(contract: dict[str, Any]) -> None:
             raise ContractError(f"unknown rules for column {name!r}: {sorted(bad)}")
         if "allowed_values" in rules and not isinstance(rules["allowed_values"], list):
             raise ContractError(f"allowed_values for column {name!r} must be a list")
-        for key in ("min_true_rate", "max_true_rate"):
+        for key in ("max_null_rate", "min_true_rate", "max_true_rate"):
             if key in rules and not (_is_number(rules[key]) and 0 <= rules[key] <= 1):
                 raise ContractError(f"{key} for column {name!r} must be a number from 0 to 1")
     required = contract.get("required_columns", [])
