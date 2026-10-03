@@ -32,10 +32,14 @@ def sources(plugin: str):
 
 def test_every_plugin_has_a_row():
     assert PLUGINS == [
+        "shape-behavior",
         "shape-databases",
+        "shape-dbt",
         "shape-domains",
         "shape-eventhubs",
         "shape-fabric",
+        "shape-healthcare-codes",
+        "shape-healthcare-standards",
         "shape-kafka",
         "shape-simulation",
         "shape-sqlserver",

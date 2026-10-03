@@ -816,7 +816,9 @@ def test_doctor_separates_blocked_and_exit_codes(site, tmp_path):
     (site / "acme_mod.py").write_text("# edited\n")
     assert not diagnose(host_for(site, al3))["ok"]
     j = json.loads(shape(site, al3, "plugins", "doctor", "--json").stdout)
-    assert j["ok"] is False and j["blocked"][0]["kind"] == "check_failed"
+    # Other installed distributions (shape-dbt, shape-domains) are blocked too, as not listed.
+    acme = [b for b in j["blocked"] if b["source"] == "acme-plugin"]
+    assert j["ok"] is False and acme and all(b["kind"] == "check_failed" for b in acme)
 
 
 def test_allowlist_init_round_trip(site, tmp_path):
