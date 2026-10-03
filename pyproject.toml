@@ -152,6 +152,7 @@ tsv = "shape.builtins.sinks:TsvSink"
 sql = "shape.builtins.sinks:SqlSink"
 excel = "shape.builtins.sinks:ExcelSink"
 delta = "shape.builtins.sinks:DeltaSink"
+fabric-mirror = "shape.builtins.sinks:FabricMirrorSink"
 
 [project.entry-points."shape.emitters"]
 console = "shape.builtins.emitters:ConsoleEmitter"

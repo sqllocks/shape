@@ -20,6 +20,7 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.sinks` | `sql` | SQL `INSERT` script, with optional DDL (`tsql`, `tsql-fabric-warehouse`, `postgres`, `mysql`) |
 | `shape.sinks` | `excel` | Excel workbook (`pip install 'sqllocks-shape[excel]'`, openpyxl) |
 | `shape.sinks` | `delta` | Delta table (`pip install 'sqllocks-shape[delta]'`, deltalake) |
+| `shape.sinks` | `fabric-mirror` | Fabric open mirroring landing zone, local or `abfss://` (`docs/FABRIC_MIRROR.md`) |
 | `shape.emitters` | `console` | events as JSON lines on standard output (`shape emit`; [../EMIT.md](../EMIT.md)) |
 | `shape.emitters` | `file` | events as JSON lines in one file (`file:///path.jsonl`) |
 | `shape.emitters` | `jsonl` | events as JSON lines, one `<table>.jsonl` file per table in a directory (`jsonl:///dir`) |
