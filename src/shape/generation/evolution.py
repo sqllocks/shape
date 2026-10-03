@@ -16,7 +16,9 @@ def interpolate(a: ShapePoint, b: ShapePoint, t: float) -> dict:
         raise ValueError("t outside interval or zero interval")
     w = (t - a.at) / (b.at - a.at)
     out = {"columns": {}}
-    for k in set(a.shape.get("columns", {})) | set(b.shape.get("columns", {})):
+    # the first shape's columns in order, then the second's new ones: never a set, whose order
+    # changes from process to process and with it every value drawn after it (#652)
+    for k in dict.fromkeys([*a.shape.get("columns", {}), *b.shape.get("columns", {})]):
         x = a.shape.get("columns", {}).get(k)
         y = b.shape.get("columns", {}).get(k)
         if x is None:
