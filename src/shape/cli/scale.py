@@ -116,7 +116,7 @@ def build_request(a: argparse.Namespace) -> dict[str, Any]:
         raise ValueError(f"--scale-mode writes through sinks: drop --format {a.format}")
     if a.from_profile or a.rows is not None:
         raise ValueError("--scale-mode does not combine with --from or --rows")
-    if a.chunk_rows:
+    if a.chunk_rows is not None:
         raise ValueError("--scale-mode sizes chunks with --chunk-size")
     sinks = list(a.sink or [])
     config = parse_sink_config(a.sink_config)

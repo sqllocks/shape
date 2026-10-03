@@ -304,7 +304,7 @@ def cmd_generate(a: argparse.Namespace) -> int:
     schema = load_target(a.target, a.mode)
     _check_scale(schema, a.scale)
     kwargs: dict[str, Any] = {}
-    if a.chunk_rows:
+    if a.chunk_rows is not None:
         kwargs["chunk_rows"] = a.chunk_rows
     unknown = sorted(set(per_table) - set(schema.tables))
     if unknown:
@@ -358,7 +358,7 @@ def _generate_from_profile(a: argparse.Namespace, rows: int | None) -> int:
         file=sys.stderr,
     )
     kwargs: dict[str, Any] = {}
-    if a.chunk_rows:
+    if a.chunk_rows is not None:
         kwargs["chunk_rows"] = a.chunk_rows
     engine = Engine(schema, scale=a.scale or PRESET, seed=a.seed, **kwargs)
     run.set(
