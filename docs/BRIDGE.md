@@ -16,6 +16,8 @@ $ echo '{"api_version": "1.0", "id": "r1", "command": "dry_run", "args": {"domai
 - `--jobs-dir DIR` says where job state is kept (below). Without it: `$SHAPE_JOBS_DIR`, else
   `~/.shape/jobs`.
 - Standard output carries only responses. Anything a command prints goes to standard error.
+- Requests are read as UTF-8 whatever the locale (JSON text is UTF-8); a line that is not UTF-8
+  is answered `usage.invalid_json`. Responses are ASCII (other characters are `\u` escapes).
 - Every command calls the code the matching `shape` command calls. There is no second
   implementation, so a result and the CLI's agree.
 

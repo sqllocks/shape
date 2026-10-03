@@ -2,11 +2,13 @@
 
 ``serve`` reads one request per line (JSON Lines) and writes one response per line, until end of
 input. ``serve(once=True)`` reads the whole input as one request (it may span lines) and answers
-once. Standard output carries only responses: anything a command prints goes to standard error."""
+once. Standard output carries only responses: anything a command prints goes to standard error.
+Standard input is read as UTF-8 (JSON text is UTF-8), whatever the locale."""
 
 from __future__ import annotations
 
 import contextlib
+import io
 import sys
 from collections.abc import Callable
 from typing import IO, Any
@@ -23,7 +25,8 @@ def serve(
     once: bool = False,
 ) -> int:
     """Serve until end of input. Returns 0, or in ``once`` mode 1 when the answer is an error."""
-    source = stdin if stdin is not None else sys.stdin
+    utf8 = _utf8_reader(sys.stdin) if stdin is None else None
+    source = stdin if stdin is not None else (utf8 or sys.stdin)
     sink = stdout if stdout is not None else sys.stdout
 
     def send(response: dict[str, Any]) -> None:
@@ -37,6 +40,17 @@ def serve(
             return _serve_lines(bridge, source, send)
         finally:
             bridge.close()  # streams stop, other jobs finish, so the job files say what happened
+            if utf8 is not None:
+                utf8.detach()  # standard input itself stays open
+
+
+def _utf8_reader(stream: IO[str]) -> io.TextIOWrapper | None:
+    """``stream``'s bytes read as UTF-8, or None when it has no byte buffer (a test's StringIO).
+    Bytes that are not UTF-8 are kept as surrogates, which the request parser refuses."""
+    buffer = getattr(stream, "buffer", None)
+    if buffer is None:
+        return None
+    return io.TextIOWrapper(buffer, encoding="utf-8", errors="surrogateescape")
 
 
 def _serve_once(bridge: Bridge, source: IO[str], send: Callable[[dict[str, Any]], None]) -> int:

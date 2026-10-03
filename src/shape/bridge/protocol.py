@@ -70,6 +70,8 @@ ERROR_CODES: dict[str, str] = {
 _ID_TYPES = (str, int)
 _KEYS = frozenset({"api_version", "id", "command", "args", "options"})
 _VERSION = re.compile(r"^(0|[1-9][0-9]{0,3})\.(0|[1-9][0-9]{0,3})$")
+#: What a byte that is not UTF-8 becomes when standard input is read with ``surrogateescape``.
+_NOT_UTF8 = re.compile("[\udc80-\udcff]")
 
 
 def _reject_constant(name: str) -> Any:
@@ -157,6 +159,8 @@ def parse_request(raw: str | bytes | Any) -> Request:
                 f"a request may be at most {MAX_REQUEST_BYTES} bytes",
                 "pass large inputs as file paths",
             )
+        if isinstance(raw, str) and _NOT_UTF8.search(raw):
+            raise BridgeError("usage.invalid_json", "not valid JSON: the request is not UTF-8")
         try:
             doc = json.loads(raw, parse_constant=_reject_constant)
         except (ValueError, RecursionError) as exc:
