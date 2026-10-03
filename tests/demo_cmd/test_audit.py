@@ -182,3 +182,22 @@ def test_523_streaming_with_one_domain_still_streams(tmp_path, capsys):
         {"scenario": "retail", "mode": "streaming", "domain": str(a), "max_events": 3}
     )
     assert result["success"] is True
+
+
+# ---- #524: a new session never takes the id of a saved one -------------------------------------
+
+
+def test_524_a_new_session_does_not_replace_a_saved_record(home, monkeypatch):
+    import uuid
+
+    import shape.demo.manifest as manifest_module
+
+    ids = iter([uuid.UUID(int=0xAAAAAAAA << 96), uuid.UUID(int=0xBBBBBBBB << 96)])
+    monkeypatch.setattr(manifest_module.uuid, "uuid4", lambda: next(ids))
+    folder = home / "sessions"
+    folder.mkdir(parents=True)
+    old = folder / "demo-aaaaaaaa.json"
+    old.write_text('{"session_id": "aaaaaaaa", "scenario": "old"}', encoding="utf-8")
+    result = demo_run({"scenario": "retail", "rows": 1000, "estimate_only": True})
+    assert result["session_id"] == "bbbbbbbb"
+    assert old.read_text(encoding="utf-8") == '{"session_id": "aaaaaaaa", "scenario": "old"}'
