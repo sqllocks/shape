@@ -249,12 +249,12 @@ def test_two_runs_in_the_same_instant_keep_both_artifacts(lakehouse, monkeypatch
 @pytest.fixture(scope="module")
 def spark(tmp_path_factory):
     delta = pytest.importorskip("delta", reason="delta-spark is a [dev] dependency")
-    import os
     import sys
 
     from pyspark.sql import SparkSession
 
-    os.environ["PYSPARK_PYTHON"] = sys.executable  # mapInArrow workers import the same shape
+    env = pytest.MonkeyPatch()  # restored at teardown
+    env.setenv("PYSPARK_PYTHON", sys.executable)  # mapInArrow workers import the same shape
     wh = tmp_path_factory.mktemp("warehouse")
     builder = (
         SparkSession.builder.master("local[1]")
@@ -270,6 +270,7 @@ def spark(tmp_path_factory):
     session = delta.configure_spark_with_delta_pip(builder).getOrCreate()
     yield session
     session.stop()
+    env.undo()
 
 
 @pytest.fixture()

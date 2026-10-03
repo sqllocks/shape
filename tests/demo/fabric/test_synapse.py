@@ -13,7 +13,6 @@ from __future__ import annotations
 import ast
 import importlib.util
 import json
-import os
 import re
 import sys
 from pathlib import Path
@@ -107,7 +106,8 @@ def spark(tmp_path_factory):
     delta = pytest.importorskip("delta", reason="delta-spark is a test requirement")
     from pyspark.sql import SparkSession
 
-    os.environ["PYSPARK_PYTHON"] = sys.executable
+    env = pytest.MonkeyPatch()  # restored at teardown
+    env.setenv("PYSPARK_PYTHON", sys.executable)
     builder_ = (
         SparkSession.builder.master("local[2]")
         .appName("shape-synapse-tests")
@@ -122,6 +122,7 @@ def spark(tmp_path_factory):
     session = delta.configure_spark_with_delta_pip(builder_).getOrCreate()
     yield session
     session.stop()
+    env.undo()
 
 
 @pytest.fixture()

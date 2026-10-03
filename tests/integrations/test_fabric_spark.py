@@ -53,7 +53,8 @@ def _d3(n: int) -> pa.Table:
 def spark(tmp_path_factory: pytest.TempPathFactory) -> Any:
     from pyspark.sql import SparkSession
 
-    os.environ["PYSPARK_PYTHON"] = sys.executable  # executors import the same shape
+    env = pytest.MonkeyPatch()  # restored at teardown
+    env.setenv("PYSPARK_PYTHON", sys.executable)  # executors import the same shape
     builder = (
         SparkSession.builder.master("local[2]")
         .appName("shape-pf02")
@@ -70,6 +71,7 @@ def spark(tmp_path_factory: pytest.TempPathFactory) -> Any:
     session = builder.getOrCreate()
     yield session
     session.stop()
+    env.undo()
 
 
 @pytest.fixture(scope="module")
