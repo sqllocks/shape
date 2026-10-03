@@ -22,7 +22,8 @@ SECRET_PATTERNS = (
     ("private_key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
     ("aws_access_key", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
     ("github_token", re.compile(r"\bgh[pousr]_[A-Za-z0-9_]{30,}\b")),
-    ("azure_connection", re.compile(r"Endpoint=sb://[^;\s]+;SharedAccessKeyName=")),
+    # bounded run: unbounded, every repeated "Endpoint=sb://" rescanned to the end (#292)
+    ("azure_connection", re.compile(r"Endpoint=sb://[^;\s]{1,512};SharedAccessKeyName=")),
     ("storage_account_key", re.compile(r"(?i)\bAccountKey=[A-Za-z0-9+/=]{20,}")),
     ("shared_access_key", re.compile(r"(?i)\bSharedAccessKey=[A-Za-z0-9+/=]{20,}")),
     ("sas_signature", re.compile(r"[?&]sig=[A-Za-z0-9%+/=]{20,}")),
