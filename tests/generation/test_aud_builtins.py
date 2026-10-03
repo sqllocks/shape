@@ -121,3 +121,23 @@ def test_truncated_does_not_depend_on_chunking() -> None:
     whole = _table(column, rows=300)["x"].to_pylist()
     assert _table(column, rows=300, chunk_rows=1)["x"].to_pylist() == whole
     assert _table(column, rows=300, chunk_rows=7)["x"].to_pylist() == whole
+
+
+# ---- #131: the hierarchy sampler cache never serves another dataset's sampler ----------------
+
+
+def test_hierarchy_sampler_cache_survives_a_reused_object_id(monkeypatch: Any) -> None:
+    from shape.builtins.strategies import reference_hierarchy as rh
+    from shape.generation.reference import Dataset
+    from shape.plugins.api.v1 import GenerationContext
+
+    # a freed dataset's id() can be given to a new dataset; simulate it for every object
+    monkeypatch.setattr(rh, "id", lambda obj: 1, raising=False)
+    monkeypatch.setattr(rh, "_CACHE", {})
+    ctx = GenerationContext(1, "t", "c", 0, 0, 2000)
+    spec = {"levels": ["state", "city"]}
+    small = Dataset.from_rows("geo", [{"state": "S0", "city": "x"}])
+    rh._sampler(small, spec, ctx)
+    big = Dataset.from_rows("geo", [{"state": f"S{i}", "city": "x"} for i in range(4)])
+    rows = rh._sampler(big, spec, ctx).records(2000, 1, start=0, table="t", key="c")
+    assert set(rh._take(big, "state", rows, ctx).to_pylist()) == {"S0", "S1", "S2", "S3"}
