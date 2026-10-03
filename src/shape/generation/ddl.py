@@ -321,7 +321,8 @@ class DdlParser:
         alter_fks = self._extract_alter_fks(sql)
         names = {t.name.lower(): t.name for t in parsed}
         fks = self._collect_fks(parsed, alter_fks)
-        return self._build_schema(parsed, self._resolve_key_references(parsed, fks), names)
+        fks = self._canonical_fks(parsed, self._resolve_key_references(parsed, fks))
+        return self._build_schema(parsed, fks, names)
 
     # ---- comments ---------------------------------------------------------------------
 
@@ -579,6 +580,34 @@ class DdlParser:
                     continue
                 fk = _ForeignKey(fk.child_table, fk.child_column, fk.parent_table, key[0])
             out.append(fk)
+        return out
+
+    @staticmethod
+    def _canonical_fks(tables: list[_ParsedTable], fks: list[_ForeignKey]) -> list[_ForeignKey]:
+        """Foreign keys with every table and column name spelled as its ``CREATE TABLE`` does:
+        SQL identifiers are case-insensitive, so ``REFERENCES customer(id)`` is ``Customer.Id``.
+        A name the file does not define is kept as written."""
+        by_name = {t.name.lower(): t for t in tables}
+
+        def column(table: str, name: str) -> str:
+            parsed = by_name.get(table.lower())
+            cols = {} if parsed is None else {c.name.lower(): c.name for c in parsed.columns}
+            return cols.get(name.lower(), name)
+
+        out = []
+        for fk in fks:
+            child = by_name.get(fk.child_table.lower())
+            parent = by_name.get(fk.parent_table.lower())
+            child_table = child.name if child else fk.child_table
+            parent_table = parent.name if parent else fk.parent_table
+            out.append(
+                _ForeignKey(
+                    child_table,
+                    column(child_table, fk.child_column),
+                    parent_table,
+                    column(parent_table, fk.parent_column),
+                )
+            )
         return out
 
     # ---- schema -----------------------------------------------------------------------
