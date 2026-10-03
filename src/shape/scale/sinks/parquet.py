@@ -6,13 +6,16 @@ encoded by Shape's own Parquet sink (snappy, dictionary encoding, T-17) on a few
 renamed into place only when complete, so a part that exists is a whole part.
 
 ``resume=True`` skips a part that already exists with the right number of rows (a run that was
-stopped and is run again). A table that is finished gets ``_COMPLETE`` (its row and part count).
+stopped and is run again). A table that is finished gets ``_COMPLETE`` (its row and part count),
+and the part files an earlier run left beyond that count are removed, so the directory holds
+exactly the table.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import re
 import threading
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
@@ -27,6 +30,7 @@ if TYPE_CHECKING:
 
 PART_NAME = "part-{:06d}.parquet"
 COMPLETE = "_COMPLETE"
+_PART = re.compile(r"^part-(\d{6,})\.parquet(\.tmp\d*)?$")
 
 
 def part_rows_ok(path: Path, rows: int) -> bool:
@@ -121,9 +125,14 @@ class ParquetSink(BaseSink):
         self.mark_complete(table, self._rows[table], self._parts[table])
 
     def mark_complete(self, table: str, rows: int, parts: int) -> None:
-        """Write ``table``'s ``_COMPLETE`` marker (workers made its part files)."""
+        """Write ``table``'s ``_COMPLETE`` marker (workers made its part files), after removing
+        what an earlier run left: parts numbered ``parts`` or more, and unfinished temp files."""
         target = self._base / table
         target.mkdir(parents=True, exist_ok=True)
+        for path in target.iterdir():
+            match = _PART.match(path.name)
+            if match and (match.group(2) or int(match.group(1)) >= parts):
+                path.unlink(missing_ok=True)
         tmp = target / (COMPLETE + ".tmp")
         tmp.write_text(json.dumps({"rows": rows, "parts": parts}), encoding="utf-8")
         os.replace(tmp, target / COMPLETE)

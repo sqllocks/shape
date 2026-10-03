@@ -29,7 +29,7 @@ sink is `parquet`; with nothing, `memory`.
 | sink | settings | writes |
 |---|---|---|
 | `memory` | `max_memory_gb` | keeps the tables in memory (library use: `MemorySink.result()`) |
-| `parquet` | `output_dir`, `chunk_rows`, `writer_threads` | `<dir>/<table>/part-NNNNNN.parquet`, part *i* holding rows `i*chunk` to `(i+1)*chunk`, then `_COMPLETE` |
+| `parquet` | `output_dir`, `chunk_rows`, `writer_threads` | `<dir>/<table>/part-NNNNNN.parquet`, part *i* holding rows `i*chunk` to `(i+1)*chunk`, then `_COMPLETE`; parts an earlier run left beyond these are removed |
 | `lakehouse` | `base_path` (local folder, `abfss://` or `onelake://`), `format` (`parquet`, `csv`, `jsonl`) | `<base_path>/<table>/part-0001.<format>` |
 | `warehouse` | `connection_string` (or `warehouse://host/db`), `staging_path`, `schema_name`, `write_mode`, `chunk_size` | `COPY INTO` from Parquet staged at `staging_path` |
 | `sql_database` | `connection_string` (or `sql-database://host/db`), `schema_name`, `write_mode`, `batch_size` | inserts |
