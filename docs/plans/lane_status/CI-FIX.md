@@ -259,3 +259,39 @@ not run for 3 s (they name the code holding the GIL), the list of seconds off th
 and the queue depth, all printed in the assertion message. The next Windows run decides: a gap in the
 probe with `none` for dumps and no long collection is the host (then this item goes to the owner, as
 for macOS); a dump naming shape or numpy code, or a long collection, is a runtime cause to fix.
+
+### Windows soak stall: evidence (run 37100249946, 167e6e7)
+
+Every job was green on the evidence push except Windows 3.11, and there only the soak failed (the main
+suite passed again: 5188 passed). Windows 3.14 passed the same soak in this run (so it is intermittent:
+3.11 failed in two of two runs, 3.14 in one of two). The failure message of the 3.11 run:
+
+* `per_second` off the rate: `[(42, 8600), (43, 0), (44, 5700), (45, 1300), (46, 34400)]`: events stop
+  for about 4 s from second 42 and the schedule then catches up (34,400 in one second); the overall
+  rate and every other window are exact (`min 9990, max 10010`); `max_lag` 2.46 s.
+* The probe thread, which does nothing but `sleep(0.02)`, woke 1.66 s late and 0.97 s late (45.1 s into
+  the run, and one earlier gap): the whole process was not running, not just the pacing thread.
+* `gc` collections over 0.1 s: none. `faulthandler` dump after 3 s without the probe running: none
+  (each gap was under 3 s, so no stack was captured; the gaps are intermittent pieces of one stall).
+* Not the runtime's own memory or queue: on the builder VM (Linux) a 150 s run holds a flat 139 MB RSS
+  (no growth) and `max_queue_depth` 100 (the generator stays a full queue ahead of the sink), so the
+  pacing thread was not waiting for data, and no thread has heavy Python or C work to hold the GIL for
+  a second at a time. `q.put`/`q.get` time out at 0.05 s and delivery retries total 0.7 s at most.
+
+Conclusion: a thread that only sleeps is scheduled 1 to 1.7 s late, in pieces, several times in one
+10-minute run on the Windows hosted runner, with no collection, no memory growth and a full prefetch
+queue: the host (the same signature as the macOS runner in item 5 of round 2, which stopped every thread
+for 20 to 90 ms). It is outside the process. No runtime change was made on this item and no bound,
+tolerance or duration was touched. **For the owner:** the realtime soak
+(`test_realtime_rate_holds_at_10000_events_per_second`, marker `realtime` and `heavy`) is not reliable on
+`windows-latest`; the macOS decision (run the realtime tests on Linux only) would extend to the
+Windows leg of the heavy step, or the soak is allowed to retry on a stalled host. I did neither. The
+probe stays in the test: any future failure prints its own evidence.
+
+### Final state of this round
+
+* Fixed and confirmed in CI (runs 37097912266 and 37100249946): items 1, 2a, 2b, 2c, 2d, 3, and the
+  three extra Windows 3.11 findings (verify-report encoding, job-store ACL, YAML flow depth). macOS and
+  Linux legs, `stream-plugins`, `bench-quick`, `build`, `rust`, `audit`, `pure-wheel`, `fabric-demo` and
+  `plugin-skeletons`: green.
+* Open, owner's decision: the Windows realtime soak above (host stall).
