@@ -47,6 +47,9 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   of one file per table. Given a captured evidence document (`REFERENCE.json`) it certifies the
   CSV against it instead. A profile is not a fidelity reference; profile the synthetic data and
   run `shape diff`.
+- `shape proposals propose|list|decide` keeps the answers to what a profile cannot settle alone
+  (foreign keys, personal data, meaning) in a decision file; `shape generate --from` and
+  `shape plan` take it with `--decisions`. See [PROPOSALS.md](PROPOSALS.md).
 
 ## `shape doctor`
 

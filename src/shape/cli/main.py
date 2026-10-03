@@ -324,9 +324,10 @@ def _cmd_profile(a):
 def _cmd_plan_profile(a):
     """``shape plan PROFILE.shape``: the fitted schema's plan."""
     import shape
+    from shape.cli.proposals import load_decisions
     from shape.generation.fit import fit_schema
 
-    plan = fit_schema(shape.load(a.shape), rows=a.rows).plan
+    plan = fit_schema(shape.load(a.shape), rows=a.rows, decisions=load_decisions(a.decisions)).plan
     out = plan.to_dict()
     if a.status:
         out["items"] = [x for x in out["items"] if x["status"] in a.status]
@@ -941,6 +942,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.jobs import add_arguments as add_jobs_arguments
 
     add_jobs_arguments(sub)
+    from shape.cli.proposals import add_arguments as add_proposals_arguments
+
+    add_proposals_arguments(sub)
     fi = sub.add_parser(
         "fidelity",
         aliases=["compare"],
@@ -1021,6 +1025,11 @@ def _build_parser(plugin_commands=()):
         help="list only items with this status (repeatable)",
     )
     gp.add_argument("--rows", type=int, metavar="N", help="plan for N rows (a one-table profile)")
+    gp.add_argument(
+        "--decisions",
+        metavar="DECISIONS.json",
+        help="apply a decision file (`shape proposals`): accepted relationships are kept",
+    )
     gp.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     fc = sub.add_parser("certify-shapes")
     fc.add_argument("target")
@@ -1228,6 +1237,10 @@ def _dispatch(argv):
         from shape.cli.mask import run as run_mask
 
         return _run(run_mask, a)
+    if a.cmd == "proposals":
+        from shape.cli.proposals import run as run_proposals
+
+        return _run(run_proposals, a)
     if a.cmd == "jobs":
         from shape.cli.jobs import run as run_jobs
 

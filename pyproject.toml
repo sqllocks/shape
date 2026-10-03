@@ -290,6 +290,7 @@ source_modules = [
     "shape.plugins",
     "shape.privacy",
     "shape.profile",
+    "shape.proposals",
     "shape.quality",
     "shape.query",
     "shape.registry",

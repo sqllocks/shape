@@ -1,0 +1,87 @@
+{
+  "format": "shape-decisions",
+  "version": 1,
+  "proposals": [
+    {
+      "claim": {
+        "pii": "email"
+      },
+      "confidence": 0.98,
+      "evidence": {
+        "name": {
+          "confidence": 0.6,
+          "hint": "email"
+        },
+        "values": {
+          "detector": "email",
+          "matched": 50,
+          "sampled": 50
+        }
+      },
+      "id": "pii:customers.email",
+      "kind": "pii",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "customers.email"
+    },
+    {
+      "claim": {
+        "child": "orders",
+        "child_columns": [
+          "customer_id"
+        ],
+        "parent": "customers",
+        "parent_columns": [
+          "customer_id"
+        ],
+        "type": "one_to_many"
+      },
+      "confidence": 0.9575,
+      "evidence": {
+        "containment": {
+          "child_distinct": 50,
+          "fraction": 1.0
+        },
+        "name": {
+          "rule": "same name as the parent key",
+          "score": 1.0
+        }
+      },
+      "id": "relationship:orders.customer_id->customers.customer_id",
+      "kind": "relationship",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "orders.customer_id->customers.customer_id"
+    },
+    {
+      "claim": {
+        "semantic": "email"
+      },
+      "confidence": 0.95,
+      "evidence": {
+        "name": {
+          "confidence": 0.7,
+          "hint": "email"
+        }
+      },
+      "id": "semantic:customers.email",
+      "kind": "semantic",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "customers.email"
+    }
+  ],
+  "decisions": [
+    {
+      "actor": "ana",
+      "at": "2026-10-04T08:30:00Z",
+      "note": "test addresses only",
+      "proposal": "pii:customers.email",
+      "status": "rejected"
+    },
+    {
+      "actor": "ana",
+      "at": "2026-10-04T08:31:00Z",
+      "note": "orders belong to customers",
+      "proposal": "relationship:orders.customer_id->customers.customer_id",
+      "status": "accepted"
+    }
+  ]
+}
