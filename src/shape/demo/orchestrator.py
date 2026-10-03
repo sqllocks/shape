@@ -58,6 +58,7 @@ class DemoOrchestrator:
             profile = self._rt.reg().load(params.connection)
 
         manifest = DemoManifest(scenario=params.scenario, mode=params.mode)
+        manifest.take_free_id(self._rt.manifest_dir)
         manifest.params = {
             k: str(getattr(params, k)) for k in _RECORDED if getattr(params, k) is not None
         }

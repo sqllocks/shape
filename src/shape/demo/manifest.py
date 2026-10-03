@@ -81,6 +81,13 @@ class DemoManifest:
         self._path = path
         return path
 
+    def take_free_id(self, directory: Path | None = None) -> None:
+        """Draw a new id while this one already has a saved record (call before anything is
+        written: the id is part of the folder and table names a run creates)."""
+        dir_ = directory or sessions_dir()
+        while (dir_ / f"demo-{self.session_id}.json").exists():
+            self.session_id = str(uuid.uuid4())[:8]
+
     @classmethod
     def load(cls, session_id: str, directory: Path | None = None) -> DemoManifest:
         try:
