@@ -172,3 +172,18 @@ def test_timezone_follows_the_start_time():
     assert run(start_time="2024-02-01T00:00:00+00:00").logs.schema.field(
         "timestamp"
     ).type == pa.timestamp("us", "UTC")
+
+
+@pytest.mark.parametrize("hours", [0.05, 1.02, 2.5])
+def test_error_bursts_stay_inside_a_fractional_window(hours):
+    # Issue #437: a burst's errors were spread over five minutes of its hour even when the window
+    # ended sooner, so they landed after the end of the run.
+    import datetime as dt
+
+    r = OperationalLogSimulator(
+        OperationalLogConfig(
+            duration_hours=hours, error_burst_probability=1.0, service_count=2, seed=1
+        )
+    ).run()
+    end = dt.datetime(2024, 1, 1) + dt.timedelta(hours=hours)
+    assert max(r.logs.column("timestamp").to_pylist()) < end
