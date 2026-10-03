@@ -7,23 +7,38 @@ that can be reported on and cleaned up.
 shape demo list                                            # the scenarios
 shape demo run retail --rows 1000                          # inference: learn, generate, compare
 shape demo init --name here --local-path ./landing         # a connection profile: a folder
-shape demo run retail --mode seeding --connection here     # write the tables there
+shape demo run retail --mode seeding --connection here --rows 1000  # write the tables there
 shape demo status SESSION                                  # what a session made
 shape demo report SESSION --format html --output report.html
 shape demo cleanup SESSION                                 # remove exactly what it made
-shape demo notebook retail --mode seeding -o retail.ipynb  # a Fabric notebook for the scenario
+shape demo notebook retail --mode seeding --output retail.ipynb  # a Fabric notebook for the scenario
 ```
 
-Install the domains (`pip install 'sqllocks-shape[domains]'`) for the scenarios that generate
-a domain, and the Fabric plugin (`pip install sqllocks-shape-fabric`) for the Lakehouse,
-Warehouse, SQL database and Eventhouse targets, the semantic model and the Spark mode.
+Install the domains plugin (`sqllocks-shape-domains`) for the scenarios that generate a domain,
+and the Fabric plugin (`sqllocks-shape-fabric`) for the Lakehouse, Warehouse, SQL database and
+Eventhouse targets, the semantic model and the Spark mode. **Install from the release's wheels,
+not from PyPI:** the `sqllocks-shape` 0.9.0 on PyPI is the early-access profiler and has no
+`shape demo` command, and the plugins are not on PyPI yet, so `pip install
+'sqllocks-shape[domains]'` cannot find them. From the release checkout:
+
+```bash
+python scripts/build_pure_wheel.py --out wheels
+pip wheel --no-deps -w wheels plugins/shape-domains plugins/shape-fabric \
+    plugins/shape-eventhubs plugins/shape-sqlserver
+pip install wheels/*.whl
+```
+
+The Fabric plugin needs the Event Hubs and SQL Server plugins, and the SQL Server plugin needs
+`pyodbc` (on Linux, the `unixodbc` system package). The `healthcare` scenario's inference mode
+learns columns that need the optional `faker` package (`pip install faker`); without it the run
+fails and says so.
 
 ## Scenarios
 
 | scenario | modes | domains | default rows |
 |---|---|---|---|
 | `retail` | inference, streaming, seeding | retail | 100,000 |
-| `adventureworks` | inference, seeding | retail | 50,000 |
+| `adventureworks` | inference, seeding | retail (its tables, under the AdventureWorks talk title) | 50,000 |
 | `healthcare` | inference, streaming, seeding | healthcare | 50,000 |
 | `enterprise` | seeding | retail, hr, financial | 200,000 |
 
@@ -33,7 +48,20 @@ not installed fails the run and names it.
 
 `--rows N` picks the scale preset that is generated: `small` up to 2,000, `medium` up to 50,000,
 `large` up to 500,000, `xlarge` above. It is not an exact count: the tables have the rows of the
-preset.
+preset, and the run, `--dry-run` and `--estimate` print the rows of the preset (`small scale
+preset: 21,750 rows`). The presets are much larger than the number that picks them; for the
+`retail` domain, all tables together:
+
+| `--rows` | preset | rows generated (retail) |
+|---|---|---:|
+| up to 2,000 | `small` | 21,750 |
+| up to 50,000 | `medium` | 1,965,400 |
+| up to 500,000 (the scenario's default, 100,000) | `large` | 19,625,400 |
+
+These are the seeding counts. Inference generates from the schema it learns, whose presets
+are smaller (for `retail`, 21,800 rows at `small` and 2,180,000 at `large`); its `--dry-run`
+learns that schema to count them. On stage, give `--rows 1000`: the default generates the
+`large` preset. Streaming always generates the `small` preset.
 
 ## Modes
 

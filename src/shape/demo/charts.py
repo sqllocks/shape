@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import html
 import importlib
+import re
 from pathlib import Path
 from typing import Any, TextIO
 
@@ -32,9 +33,33 @@ def _bar(share: float, css: str) -> str:
     return f'<span class="bar {css}" style="width:{width}px"></span> {share:.1%}'
 
 
+_INTEGRAL_FLOAT = re.compile(r"-?\d+\.0+")
+
+
 def _shares(column: Any) -> dict[str, float]:
+    """A column's value shares. An integer column's values written as floats (``3.0``, as the
+    profile of generated data can key them) become ``3``, so they meet the real values."""
     values = getattr(column, "enum_values", None)
-    return dict(values) if values else {}
+    if not values:
+        return {}
+    if str(getattr(column, "dtype", "")) != "integer":
+        return dict(values)
+    shares: dict[str, float] = {}
+    for key, share in values.items():
+        name = str(key)
+        if _INTEGRAL_FLOAT.fullmatch(name):
+            name = name.split(".", 1)[0]
+        shares[name] = shares.get(name, 0.0) + share
+    return shares
+
+
+def _categories(real: dict[str, float], synthetic: dict[str, float]) -> list[str]:
+    """Every value of either side, the most frequent real values first; ties by synthetic share,
+    then by name, so the page is the same bytes on every run."""
+    return sorted(
+        set(real) | set(synthetic),
+        key=lambda k: (-real.get(k, 0.0), -synthetic.get(k, 0.0), str(k)),
+    )
 
 
 def render_html(real: Any, synthetic: Any, score: float, scenario: str) -> str:
@@ -65,7 +90,7 @@ def render_html(real: Any, synthetic: Any, score: float, scenario: str) -> str:
             )
             rs, ss = _shares(rc), _shares(sc)
             if rs and len(rs) <= 12:
-                cats = sorted(set(rs) | set(ss), key=lambda k: -rs.get(k, 0.0))
+                cats = _categories(rs, ss)
                 body = "".join(
                     f"<tr><td>{e(str(k))}</td><td>{_bar(rs.get(k, 0.0), 'real')}</td>"
                     f"<td>{_bar(ss.get(k, 0.0), 'syn')}</td></tr>"
