@@ -298,7 +298,9 @@ def _unquote(value: str) -> str:
 def normalize_connection_string(cs: str, driver: str = DEFAULT_DRIVER) -> str:
     """``cs`` as an ODBC connection string. The Fabric portal gives the ADO.NET form
     (``Data Source=...;Initial Catalog=...``); an ODBC string (it has ``Driver=``) is returned
-    unchanged."""
+    unchanged. ``Encrypt=Strict`` is kept, ``Application Name`` and ``MultipleActiveResultSets``
+    become ODBC's ``APP`` and ``MARS_Connection``; other ADO.NET-only settings (``Persist Security
+    Info``, pooling) have no ODBC meaning and are left out."""
     if re.search(r"(^|;)\s*driver\s*=", cs, re.IGNORECASE):
         return cs
     parts = {m.group(1).strip().lower(): _unquote(m.group(2)) for m in _ADO_PAIR.finditer(cs)}
@@ -318,9 +320,18 @@ def normalize_connection_string(cs: str, driver: str = DEFAULT_DRIVER) -> str:
     encrypt = flag("encrypt")
     trust = flag("trust server certificate", "trustservercertificate")
     timeout = parts.get("connect timeout") or parts.get("connection timeout")
+    if timeout and not timeout.strip().isdigit():
+        raise ShapeError(f"the connection timeout must be whole seconds, not {timeout!r}")
     extra: dict[str, str] = {}
     if "authentication" in parts:
         extra["Authentication"] = parts["authentication"].replace(" ", "")
+    if parts.get("encrypt", "").strip().lower() == "strict":
+        extra["Encrypt"] = "strict"  # TDS 8 with strict certificate checks: never weakened
+    if parts.get("application name"):
+        extra["APP"] = parts["application name"]
+    mars = flag("multipleactiveresultsets", "multiple active result sets")
+    if mars is not None:
+        extra["MARS_Connection"] = "yes" if mars else "no"
     return str(
         build_connection_string(
             server,
@@ -330,7 +341,7 @@ def normalize_connection_string(cs: str, driver: str = DEFAULT_DRIVER) -> str:
             driver=driver,
             encrypt=True if encrypt is None else encrypt,
             trust_server_certificate=bool(trust),
-            timeout=int(timeout) if timeout and timeout.isdigit() else 30,
+            timeout=int(timeout) if timeout else 30,
             extra=extra,
         )
     )
