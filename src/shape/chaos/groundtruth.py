@@ -398,6 +398,8 @@ def _columns(run: _Run, c: Corruption, table: str) -> list[str]:
         if c.kind == "date_shift" and _is_date(f.type):
             out.append(f.name)
         elif c.kind == "negative_amounts" and _is_amount(f.type):
+            if pa.types.is_unsigned_integer(f.type):
+                continue  # cannot hold a negative
             if f.name != key and f.name not in fks and not f.name.endswith(("_id", "_key")):
                 out.append(f.name)
         elif c.kind == "case_whitespace" and _is_text(f.type):
@@ -508,6 +510,11 @@ def _negative_amounts(run: _Run, c: Corruption, pos: int, table: str, column: st
     col = _col(t, i)
     if not _is_amount(col.type):
         raise ValueError(f"negative_amounts: {table}.{column} is {col.type}, not a number")
+    if pa.types.is_unsigned_integer(col.type):
+        raise ValueError(
+            f"negative_amounts: {table}.{column} is {col.type}, which cannot hold a negative; "
+            "name a signed number column"
+        )
     positive = np.array(
         pc.fill_null(pc.greater(col, 0), False).to_numpy(zero_copy_only=False), dtype=bool
     )
