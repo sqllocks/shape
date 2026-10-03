@@ -17,6 +17,7 @@ Safety rules:
 from __future__ import annotations
 
 import logging
+import os
 import re
 import shutil
 from dataclasses import dataclass, field
@@ -184,10 +185,14 @@ class CleanupEngine:
 
 
 def _drop_session_folder(folder: Path) -> None:
-    """Remove the marker, then the folder itself when nothing else is in it."""
+    """Remove the marker, then the empty folders below it (a composite run makes one per domain)
+    and the folder itself when nothing else is in it. A folder that holds a file is left."""
     try:
         (folder / MARKER).unlink(missing_ok=True)
-        if not any(folder.iterdir()):
-            folder.rmdir()
+        for current, _, _ in os.walk(folder, topdown=False):  # deepest first
+            try:
+                Path(current).rmdir()  # only an empty folder can be removed
+            except OSError:
+                pass
     except OSError:
         logger.warning("could not remove the session folder %s", folder)
