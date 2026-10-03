@@ -382,14 +382,20 @@ def _unify(batches: list[pa.RecordBatch], schema: pa.Schema) -> pa.Table:
         return schema.empty_table()
     if all(b.schema.equals(batches[0].schema) for b in batches):
         return pa.Table.from_batches(batches)
-    names = batches[0].schema.names
+    names: list[str] = []
+    for b in batches:  # a row iterable can add columns in a later batch
+        names.extend(n for n in b.schema.names if n not in names)
     fields, columns = [], []
     for name in names:
-        chunks = [b.column(name) for b in batches]
-        if len({c.type for c in chunks}) > 1:
-            chunks = [c.cast(pa.string()) for c in chunks]
-        fields.append(pa.field(name, chunks[0].type))
-        columns.append(pa.chunked_array(chunks))
+        present = [b.column(name) for b in batches if name in b.schema.names]
+        types = {c.type for c in present if not pa.types.is_null(c.type)}
+        target = types.pop() if len(types) == 1 else pa.string() if types else pa.null()
+        chunks = [
+            b.column(name).cast(target) if name in b.schema.names else pa.nulls(b.num_rows, target)
+            for b in batches
+        ]
+        fields.append(pa.field(name, target))
+        columns.append(pa.chunked_array(chunks, type=target))
     return pa.Table.from_arrays(columns, schema=pa.schema(fields))
 
 
@@ -520,26 +526,37 @@ def _rows_source(rows: Iterable[Mapping[str, Any]], name: str | None, size: int)
         state["used"] = True
         if head:
             yield first
+        seen = list(names)
+        types = {f.name: f.type for f in schema}
         while True:
             chunk = list(itertools.islice(it, size))
             if not chunk:
                 return
-            yield _coerce_text(chunk, names, schema)
+            for r in chunk:  # a key first seen now becomes a column (earlier rows are null)
+                seen.extend(k for k in r if k not in seen)
+            yield _coerce_text(chunk, seen, types)
 
     return Source(name or "rows", "rows", schema, open_batches, None)
 
 
 def _coerce_text(
-    chunk: list[Mapping[str, Any]], names: list[str], schema: pa.Schema
+    chunk: list[Mapping[str, Any]], names: list[str], types: dict[str, Any]
 ) -> pa.RecordBatch:
-    """Cast each column to the first chunk's type when possible, else to string."""
+    """Cast each column to the type it had so far when possible, else to string. A column that
+    is new, or had only nulls so far, takes the type of its values here (``types`` is updated)."""
     arrays = []
     fields = []
-    for n, f in zip(names, schema, strict=True):
+    for n in names:
         col = _column_from_values([r.get(n) for r in chunk])
+        known = types.get(n)
+        if known is None or pa.types.is_null(known):
+            types[n] = col.type
+            arrays.append(col)
+            fields.append(pa.field(n, col.type))
+            continue
         try:
-            arrays.append(col.cast(f.type))
-            fields.append(f)
+            arrays.append(col.cast(known))
+            fields.append(pa.field(n, known))
         except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
             arrays.append(
                 pa.array([None if v is None else str(v) for v in col.to_pylist()], pa.string())
