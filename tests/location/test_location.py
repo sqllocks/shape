@@ -60,3 +60,18 @@ def test_a_weight_must_be_positive_and_finite(weight):
     """#370: NaN passed `weight <= 0`, and infinity made the normalised weights NaN."""
     with pytest.raises(ValueError, match="positive finite"):
         LocationScope.weighted([(Location.state_scope("OH"), weight)])
+
+
+def test_location_specs_parse_zip_plus_four_and_refuse_blanks():
+    """#374: ZIP+4 with a dash, a null zip next to a postal code, blank parts, non-ASCII
+    digits."""
+    from shape.location import location_from_spec
+
+    assert location_from_spec("43215-0001").postal_code == "43215"
+    assert location_from_spec("432150001").postal_code == "43215"
+    assert location_from_spec({"zip": None, "postal_code": "43215"}).postal_code == "43215"
+    for bad in (" , ", "Columbus, ", ", OH", "٤٣٢١٥", "4321-0001"):
+        with pytest.raises(ValueError):
+            location_from_spec(bad)
+    with pytest.raises(ValueError):
+        location_from_spec({"zip": None})
