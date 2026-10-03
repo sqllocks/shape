@@ -422,10 +422,6 @@ def _t_gsl_yaml(data: bytes, scratch: Path, seeds: Seeds) -> None:
 Gen = Callable[[random.Random, Seeds], bytes]
 
 
-def _pick(rng: random.Random, members: dict[str, bytes]) -> dict[str, bytes]:
-    return dict(members)
-
-
 def _g_container(rng: random.Random, s: Seeds) -> bytes:
     base = s.shape
     mode = rng.randrange(5)
