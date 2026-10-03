@@ -321,7 +321,9 @@ def _cut_timestamp(arr: pa.Array, where: str, column: Column | None) -> pa.Array
     if digits < 6:
         unit = 10 ** (6 - digits)
         micros = arr.cast(pa.int64())
-        arr = pc.multiply(pc.divide(micros, unit), unit).cast(pa.timestamp("us"))
+        cut = pc.multiply(pc.divide(micros, unit), unit)  # integer divide truncates toward zero
+        cut = pc.if_else(pc.less(micros, cut), pc.subtract(cut, unit), cut)  # so floor below 0
+        arr = cut.cast(pa.timestamp("us"))
     return arr
 
 
