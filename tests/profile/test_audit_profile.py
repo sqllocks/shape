@@ -395,3 +395,34 @@ def test_an_existing_file_with_glob_characters_in_its_name_is_read(tmp_path):
     assert shape.profile(str(path)).to_dict()["row_count"] == 2
     (tmp_path / "y1.csv").write_text("a\n5\n")
     assert shape.profile(str(tmp_path / "y[0-9].csv")).to_dict()["row_count"] == 1  # still a glob
+
+
+# ---- #302: reference pairs with NaN, infinity, a Path, a missing file ---------------------
+
+
+def _zip_data() -> pa.Table:
+    zips = pa.array([2872.0, float("nan"), 10001.0, float("inf"), 99.0] * 4)
+    return pa.table({"zip": zips, "city": ["a", "b", "c", "d", "e"] * 4})
+
+
+_ZIP_REF = pa.table({"zip": ["02872", "10001"], "city": ["a", "c"]})
+
+
+def test_reference_pairs_skip_nan_and_compare_infinity_as_text():
+    spec = [{"columns": ["zip", "city"], "reference": _ZIP_REF}]
+    (pair,) = shape.profile(_zip_data(), reference_pairs=spec).to_dict()["joint"]["reference_pairs"]
+    assert pair["rows"] == 16  # the NaN rows are missing values
+    assert pair["mismatched"] == 8 and pair["match_rate"] == 0.5
+
+
+def test_reference_pairs_read_a_path_and_say_when_the_file_is_missing(tmp_path):
+    import pyarrow.csv as pacsv
+
+    ref = tmp_path / "zips.csv"
+    pacsv.write_csv(_ZIP_REF, ref)
+    spec = [{"columns": ["zip", "city"], "reference": ref}]
+    (pair,) = shape.profile(_zip_data(), reference_pairs=spec).to_dict()["joint"]["reference_pairs"]
+    assert pair["rows"] == 16
+    missing = [{"columns": ["zip", "city"], "reference": str(tmp_path / "nope.csv")}]
+    with pytest.raises(FileNotFoundError, match="nope.csv"):
+        shape.profile(_zip_data(), reference_pairs=missing)
