@@ -461,10 +461,18 @@ class GenSchema:
                     out.append(
                         Issue("warning", f"Column '{cname}' has no generator defined", where)
                     )
-                if c.null_rate < 0 or c.null_rate > 1:
+                if not 0 <= c.null_rate <= 1:  # NaN fails this too
                     out.append(
                         Issue(
                             "error", f"null_rate must be between 0 and 1, got {c.null_rate}", where
+                        )
+                    )
+                if isinstance(c.max_length, int) and c.max_length < 0:
+                    out.append(
+                        Issue(
+                            "error",
+                            f"max_length must be 0 (no limit) or more, got {c.max_length}",
+                            where,
                         )
                     )
         return out
