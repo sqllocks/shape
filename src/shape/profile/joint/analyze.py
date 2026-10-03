@@ -158,7 +158,10 @@ def _build_view(name: str, kind: str, arr: Any, idx: np.ndarray | None) -> _View
     if kind in _NUMERIC_KINDS:
         try:
             src = pc.cast(a, pa.int64()) if kind == "dt64" else a
-            vals = pc.cast(src, pa.float64()).to_numpy(zero_copy_only=False).astype(np.float64)
+            # unsafe: integers past 2**53 (every ns timestamp after 1970-04) round to the
+            # nearest double instead of failing the cast and losing the view (#151)
+            vals = pc.cast(src, pa.float64(), safe=False).to_numpy(zero_copy_only=False)
+            vals = vals.astype(np.float64)
         except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
             vals = None
         if vals is not None:

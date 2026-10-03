@@ -84,6 +84,7 @@ def test_nanosecond_timestamps_are_in_the_joint_analysis(kernel):
 
 
 def test_integers_past_two_to_the_53_keep_their_numeric_associations(kernel):
-    t = pa.table({"a": pa.array([2**53 + i * 7 for i in range(200)]), "x": np.arange(200) * 2.0})
+    steps = [i % 50 for i in range(200)]  # repeated values: neither column is a unique key
+    t = pa.table({"a": pa.array([2**53 + s * 7 for s in steps]), "x": [s * 2.0 for s in steps]})
     kinds = [a["kind"] for a in shape.profile(t).to_dict()["joint"]["associations"]]
     assert "numeric" in kinds
