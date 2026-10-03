@@ -338,12 +338,46 @@ def read_yaml(path: Path, what: str) -> Any:
     if path.stat().st_size > MAX_BYTES:
         raise PackError(f"{what} {path} is larger than {MAX_BYTES} bytes")
     try:
-        return safe_load_yaml(path.read_text(encoding="utf-8"))
+        text = path.read_text(encoding="utf-8")
+        document = safe_load_yaml(text)
+        duplicate = _duplicate_key(text)
     except yaml.YAMLError as exc:
         raise PackError(f"{what} {path} is not valid YAML: {exc}") from exc
     except (ValueError, UnicodeDecodeError) as exc:
         # Too many aliases, too deep, or not UTF-8: a rejection, not a crash (P7-04).
         raise PackError(f"{what} {path} cannot be parsed: {exc}") from exc
+    if duplicate is not None:
+        raise PackError(
+            f"{what} {path} has a duplicate key {duplicate[0]!r} at line {duplicate[1]}"
+        )
+    return document
+
+
+def _duplicate_key(text: str) -> tuple[str, int] | None:
+    """The first key (and its line) that a mapping of the document holds twice: YAML keeps the
+    last of two equal keys without a word, and a pack or a spec must not (as a project file)."""
+    import yaml
+
+    root = yaml.compose(text, Loader=yaml.SafeLoader)
+    seen: set[int] = set()
+    stack = [root] if root is not None else []
+    while stack:
+        node = stack.pop()
+        if id(node) in seen:
+            continue
+        seen.add(id(node))
+        if isinstance(node, yaml.SequenceNode):
+            stack.extend(reversed(node.value))
+        elif isinstance(node, yaml.MappingNode):
+            keys: set[tuple[str, str]] = set()
+            for key_node, value_node in node.value:
+                if isinstance(key_node, yaml.ScalarNode):
+                    ident = (key_node.tag, key_node.value)
+                    if ident in keys:
+                        return key_node.value, key_node.start_mark.line + 1
+                    keys.add(ident)
+                stack.append(value_node)
+    return None
 
 
 # ---- the loader ----------------------------------------------------------------------------
