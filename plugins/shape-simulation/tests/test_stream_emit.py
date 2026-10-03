@@ -290,3 +290,30 @@ def test_bad_settings_are_refused() -> None:
 def test_a_table_with_a_reserved_column_name_is_refused(tmp_path: Path) -> None:
     with pytest.raises(Exception, match="reserved"):
         emit(tmp_path, {"t": pa.table({"_shape_seq": [1, 2]})})
+
+
+def test_a_config_given_to_emit_sizes_the_replay_window_as_the_constructor_would(
+    tmp_path: Path, orders: pa.Table
+) -> None:
+    # Issue #435: emit(config=...) took the replay window from the constructor's config.
+    settings: dict[str, Any] = {
+        "replay_enabled": True,
+        "rate_per_sec": 1,
+        "replay_window_minutes": 1,
+        "replay_probability": 0.01,
+        "replay_burst_size": 1000,
+        "seed": 42,
+    }
+
+    def run(path: Path, *, override: bool) -> list[dict[str, Any]]:
+        cfg = StreamEmitConfig(sink_type="file", sink_connection={"path": str(path)}, **settings)
+        if override:
+            StreamEmitter({"order": orders}, StreamEmitConfig(seed=42)).emit(config=cfg)
+        else:
+            StreamEmitter({"order": orders}, cfg).emit()
+        return [
+            {k: v for k, v in e.items() if k not in ("time", "replaytime", "correlationid")}
+            for e in read(path)
+        ]
+
+    assert run(tmp_path / "a.jsonl", override=True) == run(tmp_path / "b.jsonl", override=False)
