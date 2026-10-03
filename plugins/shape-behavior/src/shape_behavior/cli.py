@@ -20,6 +20,13 @@ import time
 from pathlib import Path
 from typing import Any
 
+from shape_behavior.params import (
+    PRIMITIVE_NAMES,
+    PrimitiveParamsError,
+    read_params,
+    unknown_primitive,
+)
+
 SHAPE_API = "1.0"
 
 
@@ -61,6 +68,12 @@ class BehaveCommand:
             "--poll", default="7 days", help="guard polling interval (default '7 days')"
         )
         run.add_argument("--strict", action="store_true", help="fail on unsupported GMF elements")
+        run.add_argument(
+            "--params",
+            metavar="FILE.json",
+            help="parameters of a primitive named in MODULES "
+            '({"format": "shape-behavior-params", "version": 1, "primitive": NAME, "params": {}})',
+        )
         run.set_defaults(fn=_run)
         check = sub.add_parser("check", help="validate modules; exit 1 when one is invalid")
         check.add_argument("modules", nargs="+", metavar="MODULES")
@@ -80,7 +93,7 @@ class BehaveCommand:
     def run(self, args: Any) -> int:
         try:
             return int(args.fn(args))
-        except (FileNotFoundError, json.JSONDecodeError) as exc:
+        except (FileNotFoundError, json.JSONDecodeError, PrimitiveParamsError) as exc:
             print(f"shape behave: {exc}", file=sys.stderr)
             return 2
         except ValueError as exc:  # includes ModuleError, UnsupportedGmfError
@@ -88,12 +101,27 @@ class BehaveCommand:
             return 1
 
 
-def _load(sources: list[str], strict: bool) -> list[Any]:
+def _load(sources: list[str], strict: bool, params: str | None = None) -> list[Any]:
     from shape_behavior.model import load_module
 
+    primitive, values = read_params(Path(params)) if params else ("", {})
+    if params and primitive not in sources:
+        if primitive not in PRIMITIVE_NAMES:
+            raise unknown_primitive(primitive)
+        raise PrimitiveParamsError(
+            f"--params is for primitive {primitive!r}, which is not among the modules to run "
+            f"({', '.join(sources)})",
+            "primitive",
+        )
+    if params:
+        from shape_behavior.primitives import build
     modules = []
     for src in sources:
-        module = load_module(src, strict=strict)
+        module = (
+            build(primitive, values)
+            if params and src == primitive
+            else load_module(src, strict=strict)
+        )
         report = module.import_report
         if report is not None and (report.unsupported or report.warnings):
             print(f"{src}:\n{report.report()}", file=sys.stderr)
@@ -115,7 +143,7 @@ def _run(args: Any) -> int:
             file=sys.stderr,
         )
         return 2
-    modules = _load(args.modules, args.strict)
+    modules = _load(args.modules, args.strict, args.params)
     if args.population_spec:
         spec = json.loads(Path(args.population_spec).read_text(encoding="utf-8"))
     else:
@@ -149,10 +177,7 @@ def _run(args: Any) -> int:
         "years": args.years,
         "start": args.start,
         "population": population.to_dict(),
-        "modules": [
-            {"name": m.name, "digest": m.digest(), "source": s}
-            for m, s in zip(modules, args.modules, strict=True)
-        ],
+        "modules": [_module_entry(m, s) for m, s in zip(modules, args.modules, strict=True)],
         "events": total,
         "windows": windows,
         "seconds": round(elapsed, 3),
@@ -165,6 +190,14 @@ def _run(args: Any) -> int:
     )
     print(f"{total:,} events for {args.population:,} entities in {elapsed:.1f}s -> {out}")
     return 0
+
+
+def _module_entry(module: Any, source: str) -> dict[str, Any]:
+    entry: dict[str, Any] = {"name": module.name, "digest": module.digest(), "source": source}
+    if "primitive" in module.doc:  # a primitive: record the parameters it ran with
+        entry["primitive"] = module.doc["primitive"]
+        entry["parameters"] = module.doc["parameters"]
+    return entry
 
 
 def _check(args: Any) -> int:

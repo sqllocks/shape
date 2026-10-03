@@ -287,6 +287,16 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   one table per 835 loop) and `hl7v2` source (`.hl7`, MLLP framing, escapes decoded; `hl7_segment`, and
   `segments="tables"` for one table per segment id). Structural only: no codes are interpreted.
 
+- Behavior primitives (`docs/plugins/behavior.md`, section 11, #79): `event_sequence`,
+  `telemetry_series`, `transaction_stream`, `file_arrival` and `entity_lifecycle` as parameterised,
+  deterministic `shape.behaviors` modules (`shape_behavior.primitives` builders, registered by
+  `sqllocks-shape-behavior`, passing the plugin conformance kit). `shape behave run NAME --params
+  FILE.json` takes the new persisted format `shape-behavior-params` (version 1; a wrong format, a
+  newer version, an unknown primitive or an unknown parameter exits 2 naming the key) and `run.json`
+  records the parameters used. Same seed and parameters give byte-identical event files, also across
+  a checkpoint resume; `telemetry_series` for 10,000 devices at a 1-hour interval for a year runs
+  through `--window-years` in bounded memory.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
