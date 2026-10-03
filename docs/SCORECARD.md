@@ -47,10 +47,12 @@ A *check* is one gate on one table and column set (for example `null_constraint`
 
 ## Column owners
 
-Each failing check shows the owner of its column, read from the `owners` mapping of the project
-file `shape.yml` (`"table.column": owner`) in the directory of `--project` (default: the current
-directory). With no project file there are no owners and the column stays empty. The project
-file format is owned by `shape init`; the scorecard reads only this one mapping.
+Each failing check shows the owner of its column, read from the project file `shape.yml`
+([PROJECT.md](PROJECT.md)): `sources.NAME.columns.COLUMN.owner`. The file is found from the working
+folder upwards; `--project FILE` (or a folder holding `shape.yml`) names one, `--no-project` ignores
+it. The source is `--source NAME`, else the only source, else the one named like the table. With no
+project file there are no owners and the column stays empty. A file that is not a valid project but
+has the older top-level `owners` mapping (`"table.column": owner`) is still read.
 
 ## Trends
 
