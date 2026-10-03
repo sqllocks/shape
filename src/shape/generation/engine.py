@@ -348,8 +348,18 @@ def cast_output(value: Any, name: str, where: str, column: Column | None = None)
             f"timestamp, not {name!r}"
         )
     if pa.types.is_floating(arr.type) and pa.types.is_integer(target):
-        arr = pc.round(arr)
+        arr = _integral(arr, np.iinfo(target.to_pandas_dtype()))
     return arr.cast(target, safe=False)
+
+
+def _integral(arr: pa.Array, info: np.iinfo) -> pa.Array:
+    """Floats rounded and held inside an integer type's range (an unsafe cast wraps 2**63 to its
+    minimum); NaN, which has no integer, is null."""
+    top = float(np.nextafter(np.float64(info.max), np.float64(0)))  # the largest float below it
+    arr = pc.round(arr)
+    arr = pc.if_else(pc.is_nan(arr), pa.scalar(None, arr.type), arr)
+    low = pc.max_element_wise(arr, float(info.min), skip_nulls=False)
+    return pc.min_element_wise(low, top, skip_nulls=False)
 
 
 def _cast_decimal(arr: pa.Array, where: str, column: Column | None) -> pa.Array:
