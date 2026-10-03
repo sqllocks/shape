@@ -518,3 +518,63 @@ def test_a_changed_domain_definition_does_not_leak_into_later_loads() -> None:
     domain.star_map().clear()
     domain.cdm_entities().clear()
     assert domain.star_map() and domain.cdm_entities()
+
+
+# ---- #220: an empty child of an empty parent generates ----------------------------------------
+
+
+def _parent_child(child_gen: dict[str, object], counts: dict[str, int]) -> dict[str, int]:
+    from shape.generation.engine import Engine
+
+    doc = {
+        "schema_version": 1,
+        "model": {"name": "m"},
+        "tables": {
+            "p": {
+                "name": "p",
+                "primary_key": ["id"],
+                "columns": {
+                    "id": {"name": "id", "type": "integer", "generator": {"strategy": "sequence"}},
+                    "v": {
+                        "name": "v",
+                        "type": "float",
+                        "generator": {"strategy": "uniform", "low": 0, "high": 1},
+                    },
+                },
+            },
+            "c": {
+                "name": "c",
+                "primary_key": ["cid"],
+                "columns": {
+                    "cid": {
+                        "name": "cid",
+                        "type": "integer",
+                        "generator": {"strategy": "sequence"},
+                    },
+                    "pid": {"name": "pid", "type": "integer", "generator": child_gen},
+                },
+            },
+        },
+    }
+    result = Engine(GenSchema.from_dict(doc), row_counts=counts).generate()
+    return {name: t.num_rows for name, t in result.tables.items()}
+
+
+@pytest.mark.parametrize(
+    "gen",
+    [
+        {"strategy": "foreign_key", "ref": "p.id"},
+        {"strategy": "foreign_key", "ref": "p.id", "distribution": "zipf"},
+        {"strategy": "foreign_key", "ref": "p.id", "sample_rate": 0.5},
+    ],
+)
+def test_an_empty_child_of_an_empty_parent_generates(gen: dict[str, object]) -> None:
+    assert _parent_child(gen, {"p": 0, "c": 0}) == {"p": 0, "c": 0}
+    assert _parent_child(gen, {"p": 2, "c": 0}) == {"p": 2, "c": 0}
+
+
+def test_rows_that_need_a_parent_that_has_none_are_still_an_error() -> None:
+    from shape.generation.strategy_kit import StrategyError
+
+    with pytest.raises(StrategyError, match="has no rows"):
+        _parent_child({"strategy": "foreign_key", "ref": "p.id"}, {"p": 0, "c": 3})
