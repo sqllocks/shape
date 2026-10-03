@@ -29,3 +29,20 @@ def test_dates_written_as_text_in_another_format_generate(tmp_path):
     values = [v for v in out.to_pylist() if v is not None]
     assert values
     assert all(dt.datetime(1949, 1, 1) <= v <= dt.datetime(1981, 1, 1) for v in values)
+
+
+def test_a_new_row_count_makes_the_row_count_fields_approximate():
+    # 179: fit_schema(rows=N) planned null_count and row_count as preserved, although the
+    # data then has N rows and about N x null rate nulls.
+    from shape.generation.fit import fit_schema
+
+    t = pa.table(
+        {"id": list(range(1000)), "a": [None if i % 5 == 0 else f"v{i % 7}" for i in range(1000)]}
+    )
+    plan = {
+        i.evidence: i.status for i in fit_schema(shape.profile(t, name="t"), rows=10_000).plan.items
+    }
+    assert plan["t.a.null_count"] == "approximate"
+    assert plan["t.row_count"] == "approximate"
+    same = {i.evidence: i.status for i in fit_schema(shape.profile(t, name="t")).plan.items}
+    assert same["t.a.null_count"] == same["t.row_count"] == "preserved"
