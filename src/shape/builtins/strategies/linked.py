@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
+from numbers import Real
 from typing import Any
 
 import numpy as np
@@ -117,10 +118,9 @@ def _branch(gen: Mapping[str, Any], ctx: GenerationContext, side: str) -> pa.Arr
         value = gen["fixed"]
         if value is None:
             return pa.nulls(n, pa.float64())
-        try:
+        if isinstance(value, Real):  # a number (or true/false); text stays text, "02134" too
             return arrow_array(np.full(n, float(value)))
-        except (TypeError, ValueError):
-            return arrow_array([str(value)] * n, type=pa.string())
+        return arrow_array([str(value)] * n, type=pa.string())
     name = gen.get("strategy", "")
     if name == "lookup":
         missing = [k for k in ("source_table", "source_column", "via") if not gen.get(k)]
@@ -154,7 +154,8 @@ class Conditional:
     numbers, anything else as text; a null equals nothing). ``true_generator`` and
     ``false_generator`` each give ``{"fixed": value}`` or an inline ``lookup`` (the keys of
     :class:`Lookup`; a null key gives 0); ``{}`` gives 0. The column is ``float64`` unless a branch
-    is text, in which case it is ``string``.
+    is text, in which case it is ``string``. A fixed value is text when it is a JSON string, even
+    one that looks like a number (``"02134"`` stays ``"02134"``).
     """
 
     name = "conditional"
