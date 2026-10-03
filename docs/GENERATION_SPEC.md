@@ -76,7 +76,7 @@ for problem in doc.validate():                  # errors and warnings, each with
 doc.set_generator("orders", "total", {"strategy": "normal", "mean": 5.0, "stddev": 1.0})
 doc.add_column("orders", "note", "string", {"strategy": "constant", "value": "n"}, nullable=True)
 doc.set("/model/seed", 9)                       # any place, by JSON Pointer; get(), remove() too
-doc.save("shop.json")                           # atomic: written aside, then renamed
+doc.save("shop.json")                           # atomic: written aside, then renamed (mode kept)
 
 schema = doc.to_schema()                        # the typed GenSchema the engine runs
 ```

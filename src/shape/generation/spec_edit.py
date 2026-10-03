@@ -17,7 +17,8 @@ from __future__ import annotations
 import copy
 import json
 import os
-import tempfile
+import secrets
+import stat
 from bisect import bisect_right
 from dataclasses import dataclass
 from json import JSONDecodeError
@@ -165,14 +166,22 @@ class _Scan:
         self.i += 1
 
 
+_TOO_DEEP = "the spec is nested too deeply to read (arrays and objects inside each other)"
+
+
 def _parse(text: str) -> tuple[dict[str, Any], dict[str, Position]]:
     try:
         parsed = json.loads(text)
     except JSONDecodeError as exc:
         raise SpecError([SpecProblem("error", "", exc.msg, exc.lineno, exc.colno)]) from exc
+    except RecursionError:
+        raise SpecError([SpecProblem("error", "", _TOO_DEEP, 1, 1)]) from None
     if not isinstance(parsed, dict):
         raise SpecError([SpecProblem("error", "", "a generation spec must be an object", 1, 1)])
-    scan = _Scan(text)
+    try:
+        scan = _Scan(text)
+    except RecursionError:
+        raise SpecError([SpecProblem("error", "", _TOO_DEEP, 1, 1)]) from None
     if scan.duplicates:
         pointer, key, (line, col) = scan.duplicates[0]
         raise SpecError(
@@ -235,15 +244,24 @@ class SpecDocument:
         return json.dumps(self._doc, indent=2, ensure_ascii=False) + "\n"
 
     def save(self, path: str | os.PathLike[str]) -> None:
-        """Write the spec to ``path`` (to a temporary file first, then renamed over it)."""
+        """Write the spec to ``path`` (to a temporary file first, then renamed over it). A new
+        file gets the mode the umask gives; an existing one keeps its mode."""
         target = Path(path)
-        fd, tmp = tempfile.mkstemp(dir=target.parent, prefix=f".{target.name}.", suffix=".tmp")
+        try:
+            mode: int | None = stat.S_IMODE(target.stat().st_mode)
+        except FileNotFoundError:
+            mode = None
+        tmp = target.parent / f".{target.name}.{secrets.token_hex(6)}.tmp"
+        # 0o666 less the umask, as for any new file (``mkstemp`` would make it 0o600)
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o666)
         try:
             with os.fdopen(fd, "w", encoding="utf-8", newline="") as handle:
                 handle.write(self.dumps())
+            if mode is not None:
+                os.chmod(tmp, mode)
             os.replace(tmp, target)
         except BaseException:
-            Path(tmp).unlink(missing_ok=True)
+            tmp.unlink(missing_ok=True)
             raise
 
     def to_schema(self) -> GenSchema:
