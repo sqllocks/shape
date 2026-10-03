@@ -5,6 +5,11 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Air-gap hardening: every test that needs no network runs under a `zero_network` guard that
+  fails any connection leaving the machine, and again in CI with networking disabled; pinned,
+  hashed lock files for core and each extra (`scripts/offline_lock.py`) are built in CI and
+  checked against the declared dependencies; `scripts/check_shipped_data.py` checks that all
+  reference data is in the wheel and that nothing downloads at run time (`docs/INSTALL.md`).
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it
