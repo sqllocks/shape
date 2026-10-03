@@ -25,6 +25,7 @@ from shape.scale.router import (
 )
 
 DEFAULT_SINKS = ("memory",)
+FABRIC_API_SCOPE = "https://api.fabric.microsoft.com/.default"
 _KEYS = (
     "domain",
     "mode",
@@ -37,6 +38,7 @@ _KEYS = (
     "max_workers",
     "processes",
     "fabric",
+    "auth",
 )
 
 
@@ -68,7 +70,13 @@ def normalize(params: Mapping[str, Any]) -> dict[str, Any]:
         from shape.scale.sinks import build_sinks
 
         # Building the sinks checks their names and settings now, before any job is made.
-        build_sinks(request["sinks"], request["sink_config"], chunk_rows=int(request["chunk_size"]))
+        build_sinks(
+            request["sinks"],
+            request["sink_config"],
+            chunk_rows=int(request["chunk_size"]),
+            auth=request.get("auth"),
+            resolve=False,
+        )
     _engine(request)  # an unknown domain, schema file or scale fails here, not inside a job
     return request
 
@@ -110,7 +118,11 @@ def run_local(
     engine = _engine(request)
     chunk = int(request["chunk_size"])
     sinks = build_sinks(
-        request["sinks"], request.get("sink_config"), chunk_rows=chunk, resume=resume
+        request["sinks"],
+        request.get("sink_config"),
+        chunk_rows=chunk,
+        resume=resume,
+        auth=request.get("auth"),
     )
     if keep_sinks is not None:
         keep_sinks.extend(sinks)
@@ -209,11 +221,16 @@ def scale_generate(
     request = normalize(params)
     token = token or params.get("token") or None
     if request["scale_mode"] == "fabric_spark":
+        token = token or _env_token()
+        storage_token = storage_token or params.get("storage_token")
+        if not token and request.get("auth"):
+            token, signed_storage = _auth_tokens(request["auth"])
+            storage_token = storage_token or signed_storage
         return submit_spark(
             request,
-            token or _env_token(),
+            token,
             jobs=jobs or Jobs(),
-            storage_token=storage_token or params.get("storage_token"),
+            storage_token=storage_token,
             transport=transport,
         )
     if jobs is None:
@@ -235,6 +252,28 @@ def scale_generate(
     job = jobs.start_local(request, run, stored=stored, wait=not background)
     result = dict(job.get("result") or {})
     return {**result, "job_id": job["job_id"], "status": job["status"], "error": job["error"]}
+
+
+def _auth_tokens(auth: Mapping[str, Any]) -> tuple[str, str]:
+    """The Fabric API token and the OneLake (storage) token of the sign-in ``auth``."""
+    import importlib
+
+    try:
+        mod = importlib.import_module("shape_fabric.auth")
+        base = importlib.import_module("shape_fabric._auth")
+    except ImportError as exc:
+        raise ValueError(
+            "--auth needs the shape-fabric plugin: pip install 'sqllocks-shape[fabric]'"
+        ) from exc
+    credential = mod.build_credential(mod.AuthSettings.from_mapping(auth))
+    if credential is None:
+        raise ValueError(
+            "--auth sql is a database login: fabric_spark signs in to the Fabric service"
+        )
+    return (
+        str(base.token_for(credential, FABRIC_API_SCOPE)),
+        str(base.token_for(credential, base.SCOPE_STORAGE)),
+    )
 
 
 def _env_token() -> str:

@@ -28,6 +28,9 @@ def add_arguments(sub: Any) -> None:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--jobs-dir", metavar="DIR", help="the job store (default ~/.shape/jobs)")
     common.add_argument("--json", action="store_true", help="print JSON")
+    from shape.cli.auth import add_arguments as add_auth_arguments
+
+    add_auth_arguments(common, connection_string=False)
     js = jb.add_subparsers(dest="jobs_cmd", required=True)
     js.add_parser("list", help="list the jobs", parents=[common])
     for name, text in (
@@ -75,7 +78,10 @@ def run(a: argparse.Namespace) -> int:
     store = JobStore(Path(a.jobs_dir)) if a.jobs_dir else JobStore.default()
     jobs = Jobs(store)
     token = os.environ.get(TOKEN_ENV) or None
+    storage_token = os.environ.get("SHAPE_FABRIC_STORAGE_TOKEN") or None
     try:
+        if a.jobs_cmd != "list" and not token:
+            token, storage_token = _sign_in(a, store, storage_token)
         if a.jobs_cmd == "list":
             rows = [Jobs.describe(r) for r in store.list()]
             if a.json:
@@ -90,7 +96,7 @@ def run(a: argparse.Namespace) -> int:
         elif a.jobs_cmd == "cancel":
             job = jobs.cancel(a.job_id, token)
         else:
-            job = _resume(jobs, a, token)
+            job = _resume(jobs, a, token, storage_token)
     except JobNotFoundError:
         print(f"shape: error: no job {a.job_id!r}", file=sys.stderr)
         return 2
@@ -104,7 +110,32 @@ def run(a: argparse.Namespace) -> int:
     return 1 if job["status"] == "failed" else 0
 
 
-def _resume(jobs: Any, a: argparse.Namespace, token: str | None) -> dict[str, Any]:
+def _sign_in(
+    a: argparse.Namespace, store: Any, storage_token: str | None
+) -> tuple[str | None, str | None]:
+    """A Fabric API token from ``--auth`` (or the sign-in the job was made with: its record keeps
+    references, never secrets), when ``SHAPE_FABRIC_TOKEN`` is not set. A job that does not talk
+    to Fabric needs none."""
+    from shape.cli import auth
+    from shape.scale.api import _auth_tokens
+    from shape.scale.jobs import JobNotFoundError
+
+    try:
+        record = store.get(a.job_id)
+    except JobNotFoundError:
+        return None, storage_token
+    if record.kind != "fabric_spark":
+        return None, storage_token
+    settings = auth.settings_from_args(a) or (record.request or {}).get("auth")
+    if not settings or settings.get("mode") == "sql":
+        return None, storage_token
+    token, signed_storage = _auth_tokens(settings)
+    return token, storage_token or signed_storage
+
+
+def _resume(
+    jobs: Any, a: argparse.Namespace, token: str | None, storage_token: str | None = None
+) -> dict[str, Any]:
     from shape.cli.scale import parse_sink_config
     from shape.scale.api import run_local, submit_spark
     from shape.scale.jobs import JobStateError
@@ -119,7 +150,7 @@ def _resume(jobs: Any, a: argparse.Namespace, token: str | None) -> dict[str, An
                 request,
                 token,
                 jobs=None,
-                storage_token=os.environ.get("SHAPE_FABRIC_STORAGE_TOKEN") or None,
+                storage_token=storage_token,
             )
             return dict(fresh["fabric"])
 
