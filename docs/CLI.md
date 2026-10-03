@@ -56,6 +56,11 @@ the policy.
   (the profile is still written); `--fail-on-empty` exits 2 instead and writes nothing. A Delta
   table with deletion vectors or column mapping is read with DuckDB (extra `delta-fallback`) and
   says so on stderr; see the README.
+- `shape profile SRC -o OUT.shape --sketches` also keeps the mergeable sketch state in the file;
+  `shape profile merge A.shape B.shape ... -o OUT.shape [--name N] [--exact-only]` combines profiles
+  of partitions or days into the profile of their union, without reading the data again. Exit 2
+  when an input lacks the sketch state the statistics need (and `--exact-only` is not given), or
+  the profiles do not share their columns. See `docs/PROFILE_MERGE.md`.
 - `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles.
 - `shape inspect ARTIFACT.shape` prints what an artifact holds, a profile or a model. `shape show`
   is an alias of `shape inspect`.

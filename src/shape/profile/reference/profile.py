@@ -215,10 +215,12 @@ class Profile:
         *,
         name: str | None = None,
         provenance: dict[str, Any] | None = None,
+        sketches: dict[str, Any] | None = None,
     ) -> None:
         if "tables" not in data and "columns" not in data:
             raise ValueError("not a profile: expected a table or dataset profile dictionary")
         self._data = data
+        self._sketches = sketches
         self._provenance = None if provenance is None else dict(provenance)
         self.name = name or (data.get("name") if "columns" in data else None) or "dataset"
 
@@ -229,6 +231,27 @@ class Profile:
         otherwise. It is kept in the ``.shape`` file's manifest, not in the profile body, so it
         never changes the content id or a ``shape.diff``."""
         return None if self._provenance is None else dict(self._provenance)
+
+    @property
+    def sketches(self) -> dict[str, Any] | None:
+        """The optional sketch state (``shape.profile(..., sketches=True)``) that lets this
+        profile be merged for its approximate statistics; ``None`` without it. It is kept in the
+        ``.shape`` file beside the profile body, so it never changes the content id."""
+        return None if self._sketches is None else copy.deepcopy(self._sketches)
+
+    @property
+    def content_id(self) -> str:
+        """The sha256 of the profile body: what ``save`` returns and the file's
+        ``shape_content_id``."""
+        return hashlib.sha256(_encode(self._data)).hexdigest()
+
+    @property
+    def merged_from(self) -> list[dict[str, Any]]:
+        """For a profile made by ``merge_profiles``: its inputs, each with ``name``,
+        ``shape_content_id`` and ``row_count``, in merge order. Empty for any other profile."""
+        merge = self._data.get("merge")
+        inputs = merge.get("inputs") if isinstance(merge, dict) else None
+        return copy.deepcopy(inputs) if isinstance(inputs, list) else []
 
     @property
     def is_dataset(self) -> bool:
@@ -296,6 +319,7 @@ def profile(
     joint: bool | None = None,
     sheet: str | None = None,
     include_hidden: bool = False,
+    sketches: bool = False,
 ) -> Profile:
     """Profile a path, glob, directory, Delta table, Arrow table or DataFrame.
 
@@ -323,6 +347,11 @@ def profile(
     An ``.xlsx`` workbook is a dataset with one table per visible sheet (``"book.xlsx#Sheet"``
     or ``sheet=`` profiles that sheet alone, hidden or not; ``include_hidden=True`` reads the
     hidden sheets too), and the profile carries ``findings`` about its cells.
+
+    ``sketches=True`` also keeps the mergeable sketch state (one more pass over the data,
+    bounded memory), so the profile can be combined with others by
+    ``shape.profile.merge_profiles`` for its approximate statistics. The profile itself, and
+    its content id, are the same with or without it.
     """
     fmt = CsvFormat(delimiter, encoding, quotechar, header)
     with np.errstate(all="ignore"):  # inf / NaN inputs are data, not numpy warnings
@@ -330,10 +359,12 @@ def profile(
             from .workbook import profile_workbook
 
             data, title = profile_workbook(source, name, sheet, include_hidden, joint)
+            if sketches:
+                raise SourceError("sketches are not kept for .xlsx workbooks")
             return Profile(data, name=title)
         if sheet is not None or include_hidden:
             raise SourceError("sheet and include_hidden apply to .xlsx workbooks only")
-        return _profile(source, name, version, as_of, fmt, reference_pairs, joint)
+        return _profile(source, name, version, as_of, fmt, reference_pairs, joint, sketches)
 
 
 def _load_tables(
@@ -396,6 +427,7 @@ def _profile(
     csv: CsvFormat | None = None,
     reference_pairs: Any = None,
     joint: bool | None = None,
+    sketches: bool = False,
 ) -> Profile:
     check_delta_options(version, as_of)
     asked = version is not None or as_of is not None
@@ -404,7 +436,8 @@ def _profile(
             raise SourceError("version and as_of read one Delta table, not a dict of tables")
         if not source:
             raise SourceError("an empty dict of tables cannot be profiled")
-        cols_by_t = _load_tables({str(k): v for k, v in source.items()}, csv)
+        named = {str(k): v for k, v in source.items()}
+        cols_by_t = _load_tables(named, csv)
         doc = dataset_to_dict(profile_dataset_columns(cols_by_t, None, joint))
         if reference_pairs:
             if not isinstance(reference_pairs, dict):
@@ -417,7 +450,11 @@ def _profile(
                 _attach_reference_pairs(
                     doc["tables"][tname], cols_by_t[tname][0], cols_by_t[tname][1], specs
                 )
-        return Profile(doc, name=name)
+        return Profile(
+            doc,
+            name=name,
+            sketches=_sketch_state(named, csv) if sketches else None,
+        )
     delta = delta_dir(source)
     if delta is None:
         if asked:
@@ -427,13 +464,26 @@ def _profile(
         table_name, cols, rows = load_columns(source, name, None, csv)
         _warn_delimiter(table_name, source, cols, csv)
         provenance = None
+        sketch_source = source
     else:
         table, provenance = read_delta(delta, version=version, as_of=as_of)
         table_name, cols, rows = load_columns(table, name or delta.name)
+        sketch_source = table
     table_profile = _profile_cols_table(table_name, cols, rows, None, None, joint)
     doc = table_to_dict(table_profile)
     _attach_reference_pairs(doc, cols, rows, reference_pairs)
-    return Profile(doc, name=name, provenance=provenance)
+    return Profile(
+        doc,
+        name=name,
+        provenance=provenance,
+        sketches=_sketch_state({table_name: sketch_source}, csv) if sketches else None,
+    )
+
+
+def _sketch_state(sources: dict[str, Any], csv: CsvFormat | None) -> dict[str, Any]:
+    from shape.profile import sketches  # only when asked for
+
+    return sketches.build_document(sources, csv)
 
 
 # --- .shape artifact ---------------------------------------------------------------
@@ -456,7 +506,13 @@ def save(p: Profile, path: str | Path) -> str:
     )
     if p.provenance is not None:
         manifest["provenance"] = p.provenance
-    write_artifact(str(path), manifest, {PROFILE_COMPONENT: body})
+    components = {PROFILE_COMPONENT: body}
+    if p._sketches is not None:
+        from shape.profile import sketches
+
+        manifest["sketches"] = {"format": sketches.FORMAT, "version": sketches.VERSION}
+        components[sketches.COMPONENT] = codec.dumps(p._sketches, sort_keys=True)
+    write_artifact(str(path), manifest, components)
     return content_id
 
 
@@ -483,4 +539,21 @@ def load(path: str | Path) -> Profile:
         data,
         name=str(manifest.get("name") or "") or None,
         provenance=provenance if isinstance(provenance, dict) else None,
+        sketches=_load_sketches(manifest, parts),
     )
+
+
+def _load_sketches(manifest: dict[str, Any], parts: dict[str, Any]) -> dict[str, Any] | None:
+    from shape.profile import sketches
+
+    body = parts.get(sketches.COMPONENT)
+    if body is None:
+        if manifest.get("sketches") is not None:
+            raise ArtifactError(f"{sketches.COMPONENT} is named in the manifest but missing")
+        return None
+    try:
+        doc = codec.loads(body)
+        validate_structure(doc, allow_nonfinite=False)
+        return sketches.validate(doc)
+    except (ValueError, TypeError, RecursionError) as e:  # SketchStateError is a ValueError
+        raise ArtifactError(f"invalid {sketches.COMPONENT}: {e}") from e

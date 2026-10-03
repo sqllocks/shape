@@ -104,6 +104,12 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `shape init` scaffolds `shape.yml`, folders, `.gitattributes` and an example CI workflow;
   `shape project validate` reports every problem with its key path. PyYAML stays an optional
   extra (`yaml`).
+- Mergeable profiles (`docs/PROFILE_MERGE.md`): `shape profile --sketches` keeps an optional,
+  versioned sketch state beside the profile (the profile and its content id are unchanged), and
+  `shape profile merge A.shape B.shape -o OUT.shape` / `shape.profile.merge_profiles` combine
+  profiles of partitions or days without re-reading the data: exact statistics exactly,
+  cardinality, quantiles and top values within each sketch's documented error. Merged profiles
+  carry their inputs' content ids (`Profile.merged_from`).
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it

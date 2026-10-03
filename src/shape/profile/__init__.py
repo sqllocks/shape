@@ -39,6 +39,8 @@ from .dependencies import (
 from .error import ErrorModel as ErrorModel
 from .error import hll_error as hll_error
 from .error import kll_error as kll_error
+from .merge import MergeError as MergeError
+from .merge import merge_profiles as merge_profiles
 from .temporal import lag_autocorrelation as lag_autocorrelation
 
 make_callable(__name__, "profile")  # shape.profile(source) is also the public function
