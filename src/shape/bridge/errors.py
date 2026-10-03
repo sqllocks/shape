@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import logging
 import sys
+import traceback
 import zipfile
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
@@ -23,9 +24,11 @@ logger = logging.getLogger("shape.bridge")
 
 
 def _describe(exc: BaseException) -> str:
+    """The exception's message, with any secret in its text redacted (as the CLI does)."""
     from shape.cli.errors import describe
+    from shape.security.redact import redact_text
 
-    return describe(exc)
+    return redact_text(describe(exc))
 
 
 def _is(exc: BaseException, module: str, *names: str) -> bool:
@@ -108,10 +111,13 @@ def to_bridge_error(exc: BaseException) -> BridgeError:
         if any(_is(exc, mod, *names) for mod, names in schemaish):
             return BridgeError("input.invalid_schema", message)
         return BridgeError("input.invalid_value", message)
-    logger.error("bridge internal error: %s: %s", type(exc).__name__, exc, exc_info=exc)
+    from shape.security.redact import redact_text
+
+    trace = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+    logger.error("bridge internal error: %s", redact_text(trace.rstrip()))
     return BridgeError(
         "internal.error",
-        f"{type(exc).__name__}: {' '.join(str(exc).split())}",
+        f"{type(exc).__name__}: {redact_text(' '.join(str(exc).split()))}",
         "this is a bug in Shape: please report it with the request that caused it",
     )
 

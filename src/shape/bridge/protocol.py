@@ -114,7 +114,9 @@ class Request:
 
 
 def warning(code: str, message: str) -> dict[str, str]:
-    return {"code": code, "message": message}
+    from shape.security.redact import redact_text
+
+    return {"code": code, "message": redact_text(message)}
 
 
 def parse_version(text: Any) -> tuple[int, int]:
