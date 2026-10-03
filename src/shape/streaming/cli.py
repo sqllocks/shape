@@ -52,6 +52,7 @@ from .runtime import (
 
 GROUP = "shape.stream_sources"
 WINDOWS = ("global", "tumbling", "sliding", "session")
+RECONNECT_BACKOFF = 1.0  # seconds before the second retry of a source that stays down, doubling
 DEFAULT_IDLE_TIMEOUT = 30.0  # seconds, for a followed stream (--partition-idle-timeout)
 LATE_WARN_SHARE = 1.0  # percent of events: from here the late report is a warning, not a note
 duration_us = parse_duration
@@ -354,6 +355,7 @@ def run(args: Any) -> int:
         max_attempts=args.max_reconnects,
         partition_idle_timeout=_idle_timeout(args),
         options=options,
+        backoff=RECONNECT_BACKOFF,
     )
     if consumer.profiler.finished:
         print(

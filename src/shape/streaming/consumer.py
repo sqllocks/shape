@@ -93,6 +93,10 @@ class StreamConsumer:
 
     ``run()`` yields each closed window. With a ``store`` (a ``FileCheckpointStore``) the
     consumer starts from its checkpoint when there is one.
+
+    A source that fails again and again, with no batch in between, is retried ``max_attempts``
+    times; from the second retry on the consumer waits ``backoff`` seconds, doubling each time up
+    to ``max_backoff`` (the default 0 retries at once, as before).
     """
 
     def __init__(
@@ -111,9 +115,14 @@ class StreamConsumer:
         retry_on: tuple[type[BaseException], ...] = (ConnectionError, TimeoutError),
         on_reconnect: Callable[[int, BaseException], None] | None = None,
         options: Mapping[str, Any] | None = None,
+        backoff: float = 0.0,
+        max_backoff: float = 30.0,
+        sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         if checkpoint_every < 1 or max_attempts < 1:
             raise ValueError("checkpoint_every and max_attempts must be positive")
+        if backoff < 0 or max_backoff < 0:
+            raise ValueError("backoff and max_backoff cannot be negative")
         if partition_column is not None and offset_column is None:
             raise ValueError("partition_column needs offset_column")
         self.source = source
@@ -130,6 +139,9 @@ class StreamConsumer:
         self._started: float | None = None
         self.retry_on = retry_on
         self.on_reconnect = on_reconnect
+        self.backoff = float(backoff)
+        self.max_backoff = float(max_backoff)
+        self._sleep = sleep
         self.options = dict(options or {})
         self.source_offset: dict[str, Any] | None = None  # position after the last new batch
         self.positions: dict[str, int] = {}  # partition -> next expected offset
@@ -294,5 +306,9 @@ class StreamConsumer:
                     raise
                 if self.on_reconnect is not None:
                     self.on_reconnect(stalled, exc)
+                if stalled >= 2 and self.backoff > 0:
+                    # the first retry is at once (a dropped connection); a source that is still
+                    # down waits twice as long each time, so a restarting broker is given time
+                    self._sleep(min(self.max_backoff, self.backoff * 2 ** (stalled - 2)))
         yield from self.profiler.finish()
         self.commit()
