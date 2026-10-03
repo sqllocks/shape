@@ -1,0 +1,33 @@
+{
+  "channel": "identity",
+  "format": 1,
+  "result": {
+    "value": {
+      "token_issued": true
+    }
+  },
+  "scenario": "auth_cli",
+  "source": "in-repo fake service",
+  "steps": [
+    {
+      "request": {
+        "created_with": {},
+        "credential": "AzureCliCredential"
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "request": {
+        "credential": "AzureCliCredential",
+        "get_token": [
+          "https://database.windows.net/.default"
+        ]
+      },
+      "response": {
+        "ok": true
+      }
+    }
+  ]
+}

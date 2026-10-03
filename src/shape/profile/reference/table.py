@@ -112,14 +112,36 @@ def _correlation(all_cols: list[_Col], row_count: int) -> dict[str, dict[str, fl
         div = np.sqrt(va * va.T)
         r = np.where((div != 0) & (N >= 1), cov / div, np.nan)
     names = [c.name for c in cols]
-    out: dict[str, dict[str, float]] = {}
+    keep = _strongest_pairs(r) if k > CORR_FULL_MAX_COLUMNS else None
+    out: dict[str, dict[str, float]] = _TruncatedCorr() if keep is not None else {}
     for i, a in enumerate(names):
         for j, b in enumerate(names):
-            if i != j:
+            if i != j and (keep is None or keep[i, j]):
                 v = r[i, j]
                 if not np.isnan(v):
                     out.setdefault(a, {})[b] = round(float(v), 4)
     return out
+
+
+# A table's correlation matrix grows with the square of its numeric columns (4 million entries,
+# over 100 MB of JSON, for 2,000 columns). Past ``CORR_FULL_MAX_COLUMNS`` numeric columns it keeps,
+# for each column, only its ``CORR_KEEP_PER_COLUMN`` strongest partners (a pair stays when either
+# column keeps it) and the table is marked ``correlation_truncated`` (#37).
+CORR_FULL_MAX_COLUMNS = 256
+CORR_KEEP_PER_COLUMN = 25
+
+
+class _TruncatedCorr(dict[str, dict[str, float]]):
+    """A correlation matrix cut to each column's strongest pairs."""
+
+
+def _strongest_pairs(r: np.ndarray) -> np.ndarray:
+    strength = np.abs(np.where(np.isnan(r), 0.0, r))
+    np.fill_diagonal(strength, -1.0)
+    top = np.argpartition(-strength, CORR_KEEP_PER_COLUMN, axis=1)[:, :CORR_KEEP_PER_COLUMN]
+    keep = np.zeros(r.shape, dtype=bool)
+    np.put_along_axis(keep, top, True, axis=1)
+    return keep | keep.T
 
 
 def _quiet_correlation(cols: list[_Col], row_count: int) -> dict[str, dict[str, float]]:
@@ -362,6 +384,7 @@ def _finish_table(
         primary_key=pk,
         detected_fks=fks,
         correlation_matrix=corr if corr else None,
+        correlation_truncated=isinstance(corr, _TruncatedCorr),
     )
 
 

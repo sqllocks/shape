@@ -164,7 +164,29 @@ def test_repair_tail(tmp_path: Path) -> None:
 
 
 def _spawn(args: list[str]) -> subprocess.Popen[bytes]:
-    return subprocess.Popen([*SHAPE, *args], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # Windows: a process group of its own, so Ctrl-Break (its graceful stop) reaches only the child.
+    flags = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+    return subprocess.Popen(
+        [*SHAPE, *args], stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=flags
+    )
+
+
+def _hard_kill(proc: subprocess.Popen[bytes]) -> None:
+    """The platform's uncatchable kill: SIGKILL on POSIX, TerminateProcess on Windows."""
+    proc.kill()
+    proc.wait()
+    if sys.platform == "win32":
+        assert proc.returncode != 0
+    else:
+        assert proc.returncode == -signal.SIGKILL
+
+
+def _graceful_stop(proc: subprocess.Popen[bytes]) -> None:
+    """The platform's catchable stop: SIGTERM on POSIX, Ctrl-Break (SIGBREAK) on Windows."""
+    if sys.platform == "win32":
+        proc.send_signal(signal.CTRL_BREAK_EVENT)
+    else:
+        proc.send_signal(signal.SIGTERM)
 
 
 def _wait_for_events(
@@ -211,9 +233,7 @@ def test_kill_9_then_restart_equals_an_uninterrupted_run(
     ]
     proc = _spawn(args)
     _wait_for_events(out, kill_at, proc)
-    proc.send_signal(signal.SIGKILL)
-    proc.wait()
-    assert proc.returncode == -signal.SIGKILL
+    _hard_kill(proc)
     killed_with = len(_lines(out))
     assert killed_with < 21750
     # restart: same command, finishes the stream
@@ -233,7 +253,7 @@ def test_sigterm_shuts_down_with_a_checkpoint_and_loses_nothing(
     args = [*BASE, "--sink", "file", "-o", str(out), *STREAM, "--realtime", "--rate", "6000"]
     proc = _spawn(args)
     _wait_for_events(out, 4000, proc)
-    proc.send_signal(signal.SIGTERM)
+    _graceful_stop(proc)
     assert proc.wait(timeout=30) == 0
     assert b"stop-request" in (proc.stdout.read() if proc.stdout else b"")
     first = _lines(out)
@@ -281,8 +301,7 @@ def test_kill_9_with_a_stale_checkpoint_sends_duplicates_that_dedupe_removes(
     ]
     proc = _spawn(live)
     _wait_for_events(out, 9000, proc)
-    proc.send_signal(signal.SIGKILL)
-    proc.wait()
+    _hard_kill(proc)
     delivered = len(_lines(out))
     assert 9000 <= delivered < 21750
     assert json.loads(Path(f"{out}.checkpoint").read_text())["offset"] == 3000  # stale

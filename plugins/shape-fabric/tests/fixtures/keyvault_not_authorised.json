@@ -1,0 +1,28 @@
+{
+  "channel": "http",
+  "format": 1,
+  "result": {
+    "error": "CredentialReferenceError",
+    "message": "kv://vault-one/sql-password: <redacted> vault answered HTTP 403"
+  },
+  "scenario": "keyvault_not_authorised",
+  "source": "in-repo fake service",
+  "steps": [
+    {
+      "request": {
+        "body": "",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>"
+        },
+        "method": "GET",
+        "url": "https://vault-one.vault.azure.net/secrets/sql-password?api-version=7.4"
+      },
+      "response": {
+        "body": "{\"error\":{\"code\":\"Forbidden\",\"message\":\"caller lacks get permission\"}}",
+        "headers": {},
+        "status": 403
+      }
+    }
+  ]
+}

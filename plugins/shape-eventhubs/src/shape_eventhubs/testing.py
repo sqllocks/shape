@@ -284,7 +284,9 @@ def read_raw(
             return
         for e in events:
             props = {
-                (k.decode() if isinstance(k, bytes) else k): v
+                (k.decode() if isinstance(k, bytes) else k): (
+                    v.decode() if isinstance(v, bytes) else v
+                )
                 for k, v in (e.properties or {}).items()
             }
             got[p].append((props, b"".join(e.body)))
