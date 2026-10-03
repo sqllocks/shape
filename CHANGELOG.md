@@ -330,3 +330,41 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Repository cleaned up for public release: removed internal milestone and
   qualification records.
 - README and changelog rewritten to describe the current state.
+
+### Fixed (generation engine audit, AUD-gen)
+
+- Post-passes: the copula runs before the compute phase and rule repair, so computed sums match
+  their rows and repaired rules hold; `remaining_violations` is what the finished tables break
+  (#169). Temporal `cross_table` rules with `<=` are repaired instead of raising (#170); a
+  numeric repair holds for zero, negative, small and integer bounds (#192); `x BETWEEN a AND b`
+  constraints are checked (#327).
+- Engine: `null_rate` applies to columns made by multi-column strategies (#185); derived counts
+  and row-count overrides are checked (#187); lookup and composite-key parents are generated in
+  an earlier level and once, whatever the thread count (#186); timestamps cut to a precision
+  before 1970 round down (#188); integer output near the int64 bounds no longer wraps (#181);
+  `date` and `time` declared output types (#202); `BatchGenerator` applies declared types (#191).
+- `GenSchema`: `generation` is optional in `from_dict` and `to_dict` writes dataclass rows (#205);
+  `validate()` reports malformed rules, correlations, computed columns, generator references,
+  uneven relationships and unknown tables in counts (#193).
+- `shape from-ddl`: case-insensitive foreign keys (#172); bracket-quoted types (#173); `ALTER TABLE
+  ... WITH CHECK ADD` and unnamed or key-only foreign keys (#174); one-to-one and composite
+  primary keys are unique and never null (#175); `-s` overrides win over inferred counts (#176)
+  and refuse negative counts (#217); transaction dates use the model's range (#195); inference
+  does not depend on statement order (#196); literals and quoted names are opaque, in linear time
+  (#197, #204); `NOT  NULL` with any whitespace (#198); MySQL/PostgreSQL types, `ENUM` and `KEY`
+  lines (#199); two schemas' same-named tables and dotted names are errors (#200); a foreign key
+  to a missing table is a plain column, one key per column (#203); `*_type` template, CR-02 and
+  CR-05 fixes (#218).
+- `learn` / `generate --from`: non-ISO and zoned temporal bounds (#177, #207); a real `_row_id`
+  column is kept (#180); the plan marks row-count fields approximate with `rows=` (#179); decimal
+  scale and undefined correlations (#213); provider guesses match whole words (#214).
+- `continue` / time travel: values stay inside small integer and decimal types (#171); integer and
+  boolean state transitions (#189); `as_of` in UTC and reusable `TimeTravelEngine` (#190);
+  composite keys, all-null keys, empty delta schemas and dotted table names (#208).
+- Fidelity: `certify` refuses a reference that is not a capture (#168); `shape fidelity` scores an
+  all-empty column (#178); `quantile_fidelity` fails on NaN or missing quartiles (#183).
+- Others: drift events on a column absent that day (#184) and ramps longer than their window
+  (#215); the shape compiler's keys, correlated targets and errors (#206); reference files that
+  are not lists (#209); fan-out, FK index, permutation and timeline input checks (#210);
+  `assess_fidelity`, the format message and negative `GenerationPlan` seeds (#211); NaN levels of
+  the Chow-Liu model (#212).
