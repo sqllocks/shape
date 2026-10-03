@@ -24,6 +24,7 @@ for the safe form below):
 ```
 <root>/<system>/<table>/<name>.shape      identity: system/table/name
 <root>/_index.json                        rebuilt from the files by `reindex`
+<root>/_layout.json                       the layout version (written when a registry is opened)
 ```
 
 The root is `--root DIR`, else `$SHAPE_PROFILE_REGISTRY`, else `~/.shape/profiles`. The

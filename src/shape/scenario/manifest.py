@@ -2,11 +2,13 @@
 
 The keys are ``run_id``, ``spec_hash``, ``pack_id``, ``domain``, ``scale``, ``seed``,
 ``engine_version``, ``outputs``, ``tables`` (``rows``, ``columns``, ``file_paths`` each),
-``validation``, ``chaos``, ``timestamps`` (``started``, ``finished``, ``elapsed_seconds``),
-``workspace_id``, ``lakehouse_id``, ``sbom``, and, from manifest version 1, ``format``
-(``shape-run-manifest``), ``version``, ``reproducibility`` (the tuple of
-``shape.repro``) and ``dataset_id`` (the content address of the output tables). The run
-id is ``YYYYMMDD_HHMMSS_{domain}_{scale}_s{seed}``. A manifest written before ``format`` and
+``validation``, ``chaos``, ``timestamps`` (``started`` and ``finished`` in UTC ISO 8601 with
+``Z``, ``elapsed_seconds``), ``workspace_id``, ``lakehouse_id``, ``sbom``, ``reproducibility``
+(the tuple of ``shape.repro``) and ``dataset_id`` (the content address of the output tables),
+then the declaration every persisted file carries (``format`` = ``shape-run-manifest``,
+``version``, ``shape_version``, ``min_shape_version``;
+``docs/specs/STATE_AND_COMPATIBILITY.md``). The run id is
+``YYYYMMDD_HHMMSS_{domain}_{scale}_s{seed}``. A manifest written before ``format`` and
 ``version`` existed loads with an empty ``reproducibility`` and ``dataset_id``.
 """
 
@@ -21,16 +23,41 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from shape import compat
 from shape.repro import dataset_id, reproducibility_tuple
 
-MANIFEST_FORMAT = "shape-run-manifest"
-MANIFEST_VERSION = 1
+MANIFEST_FORMAT = compat.KINDS["run-manifest"].format
+MANIFEST_VERSION = compat.KINDS["run-manifest"].current
 SBOM_PACKAGES = ("sqllocks-shape", "pandas", "numpy", "faker", "pyarrow", "scipy")
 NOT_INSTALLED = "not installed"
 
 
+_KNOWN = frozenset(
+    {
+        "run_id",
+        "spec_hash",
+        "pack_id",
+        "domain",
+        "scale",
+        "seed",
+        "engine_version",
+        "outputs",
+        "tables",
+        "validation",
+        "chaos",
+        "timestamps",
+        "workspace_id",
+        "lakehouse_id",
+        "sbom",
+        "reproducibility",
+        "dataset_id",
+    }
+)
+
+
 class ManifestVersionError(ValueError):
-    """A manifest is not one this Shape can read."""
+    """A manifest was written by a newer Shape than this one reads (compat raises it combined
+    with :class:`shape.compat.UnsupportedVersionError`)."""
 
 
 @dataclass
@@ -54,6 +81,8 @@ class RunManifest:
     sbom: dict[str, str] = field(default_factory=dict)
     reproducibility: dict[str, Any] = field(default_factory=dict)
     dataset_id: str = ""
+    # Fields a newer release wrote that this one does not know: ignored, and written back as read.
+    extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
 
     def summary(self) -> str:
         lines = [
@@ -77,6 +106,10 @@ class RunManifest:
         return "\n".join(lines)
 
     def to_dict(self) -> dict[str, Any]:
+        out = compat.stamp("run-manifest", self._body(), aliases=False)
+        return {**out, **{k: v for k, v in self.extra.items() if k not in out}}
+
+    def _body(self) -> dict[str, Any]:
         return {
             "run_id": self.run_id,
             "spec_hash": self.spec_hash,
@@ -93,8 +126,6 @@ class RunManifest:
             "workspace_id": self.workspace_id,
             "lakehouse_id": self.lakehouse_id,
             "sbom": self.sbom,
-            "format": MANIFEST_FORMAT,
-            "version": MANIFEST_VERSION,
             "reproducibility": self.reproducibility,
             "dataset_id": self.dataset_id,
         }
@@ -122,7 +153,7 @@ class ManifestBuilder:
         from shape import __version__
 
         now = datetime.now(UTC)
-        self._started_iso = now.isoformat()
+        self._started_iso = compat.utc_iso(now)
         self._started = time.perf_counter()
         self._m = RunManifest(
             run_id=f"{now.strftime('%Y%m%d_%H%M%S')}_{domain_name}_{scale}_s{seed}",
@@ -163,7 +194,7 @@ class ManifestBuilder:
         m = self._m
         m.timestamps = {
             "started": self._started_iso,
-            "finished": datetime.now(UTC).isoformat(),
+            "finished": compat.utc_iso(),
             "elapsed_seconds": round(elapsed, 2),
         }
         m.workspace_id = self._workspace_id
@@ -174,7 +205,7 @@ class ManifestBuilder:
 
     @staticmethod
     def to_json(manifest: RunManifest) -> str:
-        return json.dumps(manifest.to_dict(), indent=2, default=str)
+        return json.dumps(manifest.to_dict(), indent=2, default=compat.json_default)
 
     @staticmethod
     def to_file(manifest: RunManifest, path: str | Path) -> None:
@@ -187,18 +218,11 @@ class ManifestBuilder:
         raw = json.loads(Path(path).read_text(encoding="utf-8"))
         if not isinstance(raw, dict):
             raise ValueError(f"{path} is not a run manifest")
-        if "format" in raw and raw["format"] != MANIFEST_FORMAT:
-            raise ValueError(
-                f"{path} is not a run manifest (format {raw['format']!r}, expected "
-                f"{MANIFEST_FORMAT!r})"
-            )
-        version = raw.get("version", MANIFEST_VERSION)
-        if not isinstance(version, int) or version > MANIFEST_VERSION:
-            raise ManifestVersionError(
-                f"{path} is run manifest version {version!r}, written by a newer Shape; this Shape "
-                f"reads versions up to {MANIFEST_VERSION}. Upgrade Shape to read it"
-            )
+        compat.check_format("run-manifest", raw)
+        compat.check_readable("run-manifest", raw, path, error=ManifestVersionError)
+        unknown = compat.check_unknown("run-manifest", raw, _KNOWN)
         return RunManifest(
+            extra={k: raw[k] for k in unknown},
             run_id=raw.get("run_id", ""),
             spec_hash=raw.get("spec_hash", ""),
             pack_id=raw.get("pack_id", ""),

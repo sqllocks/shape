@@ -1,0 +1,25 @@
+pack_version: 1
+id: my_custom_pack
+kind: file_drop
+domain: retail
+description: Custom daily batch for demo
+
+fabric_targets:
+  lakehouse_files_root: Files/landing/retail
+
+file_drop:
+  cadence: daily
+  partitioning: dt=YYYY-MM-DD
+  formats: [parquet]
+  entities: [customer, order]
+  manifest:
+    enabled: true
+  done_flag:
+    enabled: true
+  lateness:
+    enabled: false
+  duplicates:
+    enabled: false
+
+validation:
+  required_gates: [schema_conformance]

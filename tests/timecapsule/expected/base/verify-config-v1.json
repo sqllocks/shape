@@ -1,0 +1,1 @@
+{"check_data_files":false,"file_paths":[],"rules":{"no_future":["orders.placed"],"ranges":{"orders.amount":{"max":1000,"min":0}}}}

@@ -78,4 +78,8 @@ the same tables there, and a difference in the tuple does not by itself fail a m
 
 The manifest declares `format: "shape-run-manifest"` and `version: 1`. A manifest without them (a
 run made before this change) still loads, with an empty `reproducibility` and `dataset_id`. A
-manifest whose version is newer than this Shape's is refused with a message that says to upgrade.
+manifest whose version is newer than this Shape's is refused with a message that names the Shape
+release that reads it (`ManifestVersionError`, which is also `shape.compat.UnsupportedVersionError`).
+The declaration follows `docs/specs/STATE_AND_COMPATIBILITY.md`: `format`, `version`,
+`shape_version` and `min_shape_version`; fields this Shape does not know are kept when the manifest
+is written back.

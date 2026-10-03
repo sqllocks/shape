@@ -99,6 +99,7 @@ class GenerationSpec:
     validation: ValidationGateSpec | None = None
     path: Path | None = None
     extra_keys: list[str] = field(default_factory=list)
+    needs_release: str | None = None  # the release the file says reads it (newer files)
     _base_dir: Path = field(default_factory=lambda: Path("."), repr=False)
 
     def resolve_path(self, relative: str) -> Path:
@@ -131,7 +132,7 @@ class GSLParser:
         unknown: list[str] = []
         r = Reader(raw, "", unknown)
         spec = GenerationSpec(
-            version=r.integer("version", 1),
+            version=r.declare("generation-spec"),
             name=r.text("name", ""),
             schema=self._schema(r.section("schema")),
             scenario=self._scenario(r.section("scenario")),
@@ -139,6 +140,7 @@ class GSLParser:
             outputs=self._outputs(r.section("outputs")),
             validation=self._validation(r.section("validation")),
             extra_keys=unknown,
+            needs_release=r.needs_release,
             _base_dir=base_dir,
         )
         r.close()

@@ -5,6 +5,23 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- State and compatibility policy (`docs/specs/STATE_AND_COMPATIBILITY.md`): every persisted file
+  declares `format`, an integer `version`, `shape_version` and `min_shape_version` (the old key
+  names `format_version`, `schema_version` and `pack_version` are still read, and still written
+  beside `version` in the 1.x series); every 1.x release reads every format version ever released;
+  a file from a newer release fails naming the minimum Shape release that reads it; unknown
+  optional fields are ignored on read and kept on rewrite; `SHAPE_STRICT_FORMATS=1` (or
+  `shape.compat.strict_formats()`) is the strict reader; deprecations warn with
+  `FormatDeprecationWarning` and are announced here under "Deprecated" (none today). Covers
+  `.shape` artifacts, safe profiles, models, generation schemas and specs, scenario packs,
+  registry layouts (`layout.json`, `_layout.json`), run manifests, contracts, signatures and
+  profile exports. Run manifests, registry logs and receipts write UTC ISO 8601 times with `Z`.
+- `shape migrate SRC DST` (and `shape-migrate`, `shape.migrate`): offline migration that never
+  rewrites in place, keeps the original, records `migrated_from` and `source_content_id`, has a
+  dry run, refuses downgrades, checks its result through the content id, and writes a receipt
+  (signed with `--sign-key`; a signed source needs it). Language-neutral test vectors for the
+  canonical forms and content ids (`docs/specs/vectors/state_vectors.json`) and a time-capsule
+  corpus loaded in CI (`tests/timecapsule`).
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

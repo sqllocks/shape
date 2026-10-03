@@ -19,6 +19,7 @@ from functools import cache
 from importlib import resources
 from typing import Any
 
+from shape import compat
 from shape.errors import ShapeSchemaError
 from shape.generation.spec_keys import unknown_keys
 from shape.schemacheck import validate as _validate_document
@@ -226,6 +227,8 @@ class GenSchema:
     business_rules: list[BusinessRule] = field(default_factory=list)
     generation: Generation = field(default_factory=Generation)
     correlated_columns: dict[str, list[list[Any]]] = field(default_factory=dict)
+    # ``x_`` fields a newer release or a tool wrote: ignored, and written back as read.
+    extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
 
     # ---- structure ----------------------------------------------------------------------
 
@@ -246,8 +249,12 @@ class GenSchema:
 
     def to_dict(self) -> dict[str, Any]:
         """The JSON document (``generation-schema-v1.json``). Round-trips through
-        :meth:`from_dict`."""
-        return {
+        :meth:`from_dict`. It is written without ``format``, ``version``, ``shape_version`` and
+        ``min_shape_version``: ``shape from-ddl`` and the schema dumps are pinned equal to the
+        baseline's file by the parity harnesses (``ddl_1to1`` and ``schema_import`` under
+        ``benchmarks/``), so the declaration waits for the owner's decision recorded in
+        ``docs/plans/lane_status/W1-01.md``. Readers already accept it."""
+        document = {
             "schema_version": SCHEMA_VERSION,
             "model": {
                 "name": self.model.name,
@@ -312,11 +319,20 @@ class GenSchema:
             },
             "correlated_columns": json.loads(json.dumps(self.correlated_columns)),
         }
+        return {**document, **{k: v for k, v in self.extra.items() if k not in document}}
 
     @classmethod
     def from_dict(cls, doc: Any) -> GenSchema:
         """Parse a document; :class:`GenSchemaError` lists the first problems if it does not
-        follow the JSON Schema."""
+        follow the JSON Schema. A newer version than this release reads is refused with the
+        minimum release that reads it; ``x_`` fields are kept in ``extra``."""
+        extra: dict[str, Any] = {}
+        if isinstance(doc, dict):
+            compat.check_format("generation-schema", doc, error=GenSchemaError)
+            version = compat.check_readable("generation-schema", doc, error=GenSchemaError)
+            extra = {k: v for k, v in doc.items() if isinstance(k, str) and k.startswith("x_")}
+            doc = {k: v for k, v in doc.items() if k not in extra}
+            doc.setdefault("schema_version", version)
         problems = schema_problems(doc)
         if problems:
             more = f" (+{len(problems) - 5} more)" if len(problems) > 5 else ""
@@ -393,6 +409,7 @@ class GenSchema:
             correlated_columns={
                 k: [list(p) for p in v] for k, v in doc.get("correlated_columns", {}).items()
             },
+            extra=extra,
         )
 
     # ---- semantics ----------------------------------------------------------------------

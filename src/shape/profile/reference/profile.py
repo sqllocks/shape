@@ -13,6 +13,7 @@ from typing import Any
 
 import numpy as np
 
+from shape import compat
 from shape.artifact import codec
 from shape.artifact.io import ArtifactError, read_artifact, write_artifact
 from shape.io.excel import is_workbook_spec
@@ -25,7 +26,7 @@ from .sources import SourceError, check_delta_options, delta_dir, load_columns, 
 from .table import _profile_cols_table, profile_dataset_columns
 
 ARTIFACT_FORMAT = "shape"
-ARTIFACT_FORMAT_VERSION = 1
+ARTIFACT_FORMAT_VERSION = compat.KINDS["profile-artifact"].current
 ARTIFACT_KIND = "profile"
 PROFILE_COMPONENT = "profile.json"
 
@@ -449,13 +450,10 @@ def save(p: Profile, path: str | Path) -> str:
         raise TypeError(f"save() expects a Profile, got {type(p).__name__}")
     body = _encode(p._data)
     content_id = hashlib.sha256(body).hexdigest()
-    manifest: dict[str, Any] = {
-        "format": ARTIFACT_FORMAT,
-        "format_version": ARTIFACT_FORMAT_VERSION,
-        "kind": ARTIFACT_KIND,
-        "name": p.name,
-        "shape_content_id": content_id,
-    }
+    manifest: dict[str, Any] = compat.stamp(
+        "profile-artifact",
+        {"kind": ARTIFACT_KIND, "name": p.name, "shape_content_id": content_id},
+    )
     if p.provenance is not None:
         manifest["provenance"] = p.provenance
     write_artifact(str(path), manifest, {PROFILE_COMPONENT: body})
@@ -467,9 +465,7 @@ def load(path: str | Path) -> Profile:
     manifest, parts = read_artifact(str(path))
     if manifest.get("format") != ARTIFACT_FORMAT or manifest.get("kind") != ARTIFACT_KIND:
         raise ArtifactError(f"{path} is not a Shape profile artifact")
-    version = manifest.get("format_version")
-    if not isinstance(version, int) or not 1 <= version <= ARTIFACT_FORMAT_VERSION:
-        raise ArtifactError("unsupported Shape profile artifact version")
+    compat.check_readable("profile-artifact", manifest, error=ArtifactError)
     body = parts.get(PROFILE_COMPONENT)
     if body is None:
         raise ArtifactError("profile component missing")
