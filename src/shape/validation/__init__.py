@@ -6,12 +6,6 @@ from .statistics import (
     ValidationResult as ValidationResult,
 )
 from .statistics import (
-    dataclass as dataclass,
-)
-from .statistics import (
-    random as random,
-)
-from .statistics import (
     relative_error as relative_error,
 )
 from .statistics import (
