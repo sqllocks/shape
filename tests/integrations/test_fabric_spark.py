@@ -317,6 +317,15 @@ def test_executors_on_the_python_kernel_give_the_same_profile(
             _same(d[name][key], s[name][key], f"{name}.{key}")
 
 
+def test_the_jvm_it_starts_can_run_the_delta_tests_after_it(spark: Any) -> None:
+    """One JVM serves every Spark session of the process, and ``spark.jars.packages`` only
+    applies when it starts: a session started here must leave Delta loadable for the Delta
+    modules that may run after this one (#335)."""
+    pytest.importorskip("delta", reason="delta-spark is a tests/demo/fabric requirement")
+    loader = spark.sparkContext._jvm.java.lang.Thread.currentThread().getContextClassLoader()
+    assert loader.loadClass("io.delta.sql.DeltaSparkSessionExtension") is not None
+
+
 def test_rejects_bad_arguments(d3_frame: Any) -> None:
     with pytest.raises(ValueError, match="top_n"):
         profile_distributed(d3_frame, top_n=0)
