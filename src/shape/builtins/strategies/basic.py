@@ -26,6 +26,7 @@ class Uuid:
     per row). Unique with overwhelming probability, and reproducible for a seed."""
 
     name = "uuid"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         return kernel_ops.uuid4(stream(ctx, "v"), ctx.row_start, ctx.n_rows)
@@ -51,6 +52,7 @@ class WeightedEnum:
     """
 
     name = "weighted_enum"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         values = spec.get("values")

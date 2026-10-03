@@ -45,6 +45,7 @@ class FirstPerParent:
     parent column count as one value."""
 
     name = "first_per_parent"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         parent_column = str(require(spec, "parent_column", ctx, "first_per_parent"))
@@ -94,6 +95,7 @@ class Scd2:
     """
 
     name = "scd2"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         role = str(spec.get("role", "effective_date"))

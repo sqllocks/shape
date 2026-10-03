@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "relational_case",
+    "description": "",
+    "domain": "relational_case",
+    "schema_mode": "3nf",
+    "locale": "en_US",
+    "seed": 42,
+    "date_range": {
+      "start": "2022-01-01",
+      "end": "2025-12-31"
+    }
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "description": "",
+      "cdm_mapping": null,
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence",
+            "start": 1
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        },
+        "x": {
+          "name": "x",
+          "type": "string",
+          "generator": {
+            "strategy": "lifecycle",
+            "phases": {
+              "on": 2,
+              "off": 0,
+              "idle": 1
+            }
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        }
+      }
+    }
+  },
+  "relationships": [],
+  "business_rules": [],
+  "generation": {
+    "scale": "s",
+    "scales": {
+      "s": {
+        "t": 60
+      }
+    },
+    "derived_counts": {},
+    "output": {}
+  },
+  "correlated_columns": {},
+  "generators": {
+    "lifecycle": 1,
+    "sequence": 1
+  }
+}

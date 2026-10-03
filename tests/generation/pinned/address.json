@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "t",
+    "seed": 1
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "a": {
+          "name": "a",
+          "type": "struct",
+          "generator": {
+            "strategy": "address"
+          }
+        }
+      }
+    }
+  },
+  "relationships": [],
+  "generation": {
+    "scale": "s",
+    "scales": {
+      "s": {
+        "t": 3
+      }
+    }
+  },
+  "generators": {
+    "address": 1,
+    "sequence": 1
+  }
+}

@@ -54,6 +54,7 @@ class SelfReferencing:
     """
 
     name = "self_referencing"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> Mapping[str, pa.Array]:
         engine = engine_of(ctx, "self_referencing")
@@ -92,6 +93,7 @@ class SelfRefField:
     default): the 1-based level of the row."""
 
     name = "self_ref_field"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         field = str(spec.get("field", "level"))

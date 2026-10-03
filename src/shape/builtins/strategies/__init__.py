@@ -23,6 +23,7 @@ class Constant:
     """``spec['value']`` repeated ``n_rows`` times."""
 
     name = "constant"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         return arrow_array([spec["value"]] * ctx.n_rows)
@@ -32,6 +33,7 @@ class Sequence:
     """``start + (row_start + i) * step``: the same values however the rows are chunked."""
 
     name = "sequence"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         start, step = int(spec.get("start", 1)), int(spec.get("step", 1))
@@ -43,6 +45,7 @@ class Choice:
     """Values drawn with optional ``weights`` (``spec['values']``, ``spec['weights']``)."""
 
     name = "choice"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         values = list(spec["values"])
@@ -68,6 +71,7 @@ class Uniform:
     """Uniform on ``[low, high)`` (``spec['low']``, ``spec['high']``)."""
 
     name = "uniform"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         low, high = float(spec["low"]), float(spec["high"])
@@ -78,6 +82,7 @@ class Normal:
     """Normal with ``spec['mean']`` and ``spec['stddev']``."""
 
     name = "normal"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         mean, stddev = float(spec["mean"]), float(spec["stddev"])
@@ -103,6 +108,7 @@ class AddressStrategy:
     ``state``, ``postal_code``, ``latitude`` and ``longitude`` columns agree."""
 
     name = "address"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         from . import address_rows

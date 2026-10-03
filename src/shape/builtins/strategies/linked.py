@@ -41,6 +41,7 @@ class Lookup:
     """
 
     name = "lookup"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         missing = [k for k in ("source_table", "source_column", "via") if not spec.get(k)]
@@ -158,6 +159,7 @@ class Conditional:
     """
 
     name = "conditional"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         mask = _mask(str(require(spec, "condition", ctx, "conditional")), ctx)
@@ -178,6 +180,7 @@ class Correlated:
     """
 
     name = "correlated"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         source_name = str(require(spec, "source_column", ctx, "correlated"))

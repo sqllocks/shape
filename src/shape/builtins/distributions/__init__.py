@@ -42,6 +42,7 @@ class Normal:
     """``loc + scale * N(0, 1)``."""
 
     name = "normal"
+    generator_version = 1
 
     def sample(self, params: Mapping[str, float], ctx: GenerationContext) -> pa.Array:
         z = stream(ctx, "dist").normal(ctx.row_start, ctx.n_rows)
@@ -52,6 +53,7 @@ class Uniform:
     """Uniform on ``[loc, loc + scale)``."""
 
     name = "uniform"
+    generator_version = 1
 
     def sample(self, params: Mapping[str, float], ctx: GenerationContext) -> pa.Array:
         u = stream(ctx, "dist").uniform(ctx.row_start, ctx.n_rows)
@@ -62,6 +64,7 @@ class Exponential:
     """``loc + scale * Exp(1)``."""
 
     name = "exponential"
+    generator_version = 1
 
     def sample(self, params: Mapping[str, float], ctx: GenerationContext) -> pa.Array:
         u = stream(ctx, "dist").uniform(ctx.row_start, ctx.n_rows)
@@ -72,6 +75,7 @@ class Lognormal:
     """``loc + scale * exp(s * N(0, 1))``."""
 
     name = "lognormal"
+    generator_version = 1
 
     def sample(self, params: Mapping[str, float], ctx: GenerationContext) -> pa.Array:
         s = _param(params, "s")
@@ -87,8 +91,27 @@ class FamilyDistribution:
     name = ""
     family: Family
 
+    @property
+    def generator_version(self) -> int:
+        """The version of the family this entry wraps."""
+        return int(self.family.generator_version)
+
+    @property
+    def generator_version_range(self) -> tuple[int, int]:
+        latest = self.generator_version
+        return (1, latest) if hasattr(self.family, "sample_versioned") else (latest, latest)
+
     def sample(self, params: Mapping[str, float], ctx: GenerationContext) -> pa.Array:
         values = self.family.sample(stream(ctx, "dist"), ctx.row_start, ctx.n_rows, params)
+        return arrow_array(values)
+
+    def sample_versioned(
+        self, params: Mapping[str, float], ctx: GenerationContext, version: int
+    ) -> pa.Array:
+        select = getattr(self.family, "sample_versioned", None)
+        if select is None:
+            return self.sample(params, ctx)
+        values = select(stream(ctx, "dist"), ctx.row_start, ctx.n_rows, params, version)
         return arrow_array(values)
 
 

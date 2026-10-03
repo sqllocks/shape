@@ -14,6 +14,11 @@
     "relationships": {"type": "array", "items": {"$ref": "#/$defs/relationship"}},
     "business_rules": {"type": "array", "items": {"$ref": "#/$defs/rule"}},
     "generation": {"$ref": "#/$defs/generation"},
+    "generators": {
+      "type": "object",
+      "description": "Generator version pins: strategy or distribution name -> the integer generator version to run (docs/GENERATION_STABILITY.md). A name that is not pinned runs at its latest version.",
+      "additionalProperties": {"type": "integer", "minimum": 1}
+    },
     "correlated_columns": {
       "type": "object",
       "description": "table -> [column_a, column_b, r] triples for the Gaussian-copula post-pass.",

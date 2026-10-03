@@ -75,6 +75,7 @@ class Family:
     """A distribution family. ``defaults`` lists the numeric parameters and their defaults."""
 
     name = ""
+    generator_version = 1  # raise it when a change alters the values (docs/GENERATION_STABILITY.md)
     defaults: Mapping[str, float] = {}
     words_per_row = 1
     discrete = False
@@ -117,6 +118,7 @@ class Family:
 
 class Uniform(Family):
     name = "uniform"
+    generator_version = 1
     defaults = {"low": 0.0, "high": 1.0}
 
     def from_spec(self, spec: Mapping[str, Any]) -> dict[str, Any]:
@@ -139,6 +141,7 @@ class Uniform(Family):
 
 class Normal(Family):
     name = "normal"
+    generator_version = 1
     defaults = {"mu": 0.0, "sigma": 1.0}
     words_per_row = 2
 
@@ -161,6 +164,7 @@ class Normal(Family):
 
 class LogNormal(Normal):
     name = "log_normal"
+    generator_version = 1
 
     def from_spec(self, spec: Mapping[str, Any]) -> dict[str, Any]:
         return {
@@ -181,6 +185,7 @@ class Pareto(Family):
     """Type I Pareto: ``P(X > x) = (xm / x) ** alpha`` for ``x >= xm``."""
 
     name = "pareto"
+    generator_version = 1
     defaults = {"alpha": 1.5, "xm": 1.0}
 
     def from_spec(self, spec: Mapping[str, Any]) -> dict[str, Any]:
@@ -216,6 +221,7 @@ class Zipf(Family):
     """Zipf on ``1 .. max``: ``P(k)`` proportional to ``k ** -a`` (truncated at ``max``)."""
 
     name = "zipf"
+    generator_version = 1
     defaults = {"a": 1.5, "max": 1000.0}
     discrete = True
 
@@ -260,6 +266,7 @@ class Geometric(Family):
     """Trials up to and including the first success (support ``1, 2, ...``)."""
 
     name = "geometric"
+    generator_version = 1
     defaults = {"p": 0.5}
     discrete = True
 
@@ -301,6 +308,7 @@ def _poisson_cdf(lam: float) -> tuple[int, Floats]:
 
 class Poisson(Family):
     name = "poisson"
+    generator_version = 1
     defaults = {"lam": 5.0}
     discrete = True
 
@@ -325,6 +333,7 @@ class Poisson(Family):
 
 class Bernoulli(Family):
     name = "bernoulli"
+    generator_version = 1
     defaults = {"p": 0.5}
     discrete = True
 
@@ -351,6 +360,7 @@ class Exponential(Family):
     """Rate ``lam``: mean ``1 / lam``."""
 
     name = "exponential"
+    generator_version = 1
     defaults = {"lam": 1.0}
 
     def from_spec(self, spec: Mapping[str, Any]) -> dict[str, Any]:
@@ -400,6 +410,7 @@ class Gamma(Family):
     """Shape ``k`` and scale ``theta``: mean ``k * theta``."""
 
     name = "gamma"
+    generator_version = 1
     defaults = {"k": 1.0, "theta": 1.0}
     words_per_row = 3
 
@@ -430,6 +441,7 @@ class Gamma(Family):
 
 class Beta(Family):
     name = "beta"
+    generator_version = 1
     defaults = {"a": 1.0, "b": 1.0}
     words_per_row = 3
 
@@ -468,6 +480,7 @@ class Weibull(Family):
     """Shape ``k`` and scale ``lam``: ``P(X > x) = exp(-(x / lam) ** k)``."""
 
     name = "weibull"
+    generator_version = 1
     defaults = {"k": 1.0, "lam": 1.0}
 
     def check(self, params: Mapping[str, Any]) -> None:
@@ -502,6 +515,7 @@ class Triangular(Family):
     """Support ``[low, high]`` with its peak at ``mode``."""
 
     name = "triangular"
+    generator_version = 1
     defaults = {"low": 0.0, "mode": 0.5, "high": 1.0}
 
     def check(self, params: Mapping[str, Any]) -> None:
@@ -550,6 +564,7 @@ class NegativeBinomial(Family):
     """Failures before the ``r``-th success, success probability ``p``: mean ``r (1 - p) / p``."""
 
     name = "negative_binomial"
+    generator_version = 1
     defaults = {"r": 1.0, "p": 0.5}
     discrete = True
 
@@ -603,6 +618,7 @@ class PowerLawCutoff(Family):
     """Density proportional to ``x ** -alpha * exp(-lam * x)`` for ``x >= xmin``."""
 
     name = "power_law_cutoff"
+    generator_version = 1
     defaults = {"alpha": 2.0, "lam": 0.01, "xmin": 1.0}
 
     def check(self, params: Mapping[str, Any]) -> None:
@@ -673,6 +689,7 @@ class Histogram(Family):
     uniformly (a third word)."""
 
     name = "histogram"
+    generator_version = 1
     words_per_row = 3
 
     def from_spec(self, spec: Mapping[str, Any]) -> dict[str, Any]:
@@ -726,6 +743,7 @@ class Mixture(Family):
     comes from its own derived stream, so each row still depends on its own words only."""
 
     name = "mixture"
+    generator_version = 1
     words_per_row = 2
 
     def from_spec(self, spec: Mapping[str, Any]) -> dict[str, Any]:
@@ -808,6 +826,7 @@ class Truncated(Family):
     ``base`` names the base family and ``base_params`` holds its parameters."""
 
     name = "truncated"
+    generator_version = 1
 
     def from_spec(self, spec: Mapping[str, Any]) -> dict[str, Any]:
         if "base" not in spec:

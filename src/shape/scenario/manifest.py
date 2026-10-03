@@ -5,7 +5,9 @@ The keys are ``run_id``, ``spec_hash``, ``pack_id``, ``domain``, ``scale``, ``se
 ``validation``, ``chaos``, ``timestamps`` (``started``, ``finished``, ``elapsed_seconds``),
 ``workspace_id``, ``lakehouse_id``, ``sbom``, and, from manifest version 1, ``format``
 (``shape-run-manifest``), ``version``, ``reproducibility`` (the tuple of
-``shape.repro``) and ``dataset_id`` (the content address of the output tables). The run
+``shape.repro``, plus ``generators``: the generator version of every strategy and distribution the
+run used, ``docs/GENERATION_STABILITY.md``) and ``dataset_id`` (the content address of the output
+tables). The run
 id is ``YYYYMMDD_HHMMSS_{domain}_{scale}_s{seed}``. A manifest written before ``format`` and
 ``version`` existed loads with an empty ``reproducibility`` and ``dataset_id``.
 """
@@ -140,6 +142,11 @@ class ManifestBuilder:
         self, table_name: str, rows: int, columns: int, paths: list[str] | None = None
     ) -> None:
         self._m.tables[table_name] = {"rows": rows, "columns": columns, "file_paths": paths or []}
+
+    def record_generators(self, versions: Mapping[str, int]) -> None:
+        """Record the generator version of every strategy and distribution the run used, in
+        ``reproducibility`` (``generators``)."""
+        self._m.reproducibility["generators"] = {k: int(v) for k, v in sorted(versions.items())}
 
     def record_dataset(self, tables: Mapping[str, Any]) -> None:
         """Record the dataset id of the run's output tables."""

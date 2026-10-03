@@ -11,8 +11,8 @@ easy path:
 * :func:`require` and :func:`spec_params` read the generator spec with clear errors.
 * :func:`column_scale` and :func:`round_to_scale` apply the column's decimal scale.
 
-Stable interface: ``stream``, ``require``, ``spec_params``, ``column_scale``, ``round_to_scale``
-and ``StrategyError``.
+Stable interface: ``stream``, ``require``, ``spec_params``, ``column_scale``, ``round_to_scale``,
+``pinned_version`` and ``StrategyError``.
 """
 
 from __future__ import annotations
@@ -55,6 +55,14 @@ def spec_params(spec: Mapping[str, Any]) -> Mapping[str, Any]:
     non-empty one, else the spec itself (both forms are accepted)."""
     nested = spec.get("params")
     return nested if isinstance(nested, Mapping) and nested else spec
+
+
+def pinned_version(ctx: GenerationContext, name: str, latest: int = 1) -> int:
+    """The generator version of ``name`` in effect for this run: the spec's pin, else ``latest``
+    (also the answer outside an engine). For a strategy that picks a distribution or another
+    versioned part itself (``docs/GENERATION_STABILITY.md``)."""
+    engine = getattr(ctx, "engine", None)
+    return latest if engine is None else int(engine.generator_version(name, latest))
 
 
 def column_scale(ctx: GenerationContext) -> int | None:

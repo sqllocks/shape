@@ -154,6 +154,7 @@ class Temporal:
     """
 
     name = "temporal"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         values = self._microseconds(spec, ctx)

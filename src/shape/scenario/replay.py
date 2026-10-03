@@ -7,6 +7,9 @@ manifest records a dataset id, names the same pack, and, for a spec, the spec fi
 (its SHA-256 must equal ``spec_hash``). A match means the output tables hold the same content; the
 files written for the run are not touched.
 
+The generation uses the generator versions the manifest recorded (``reproducibility.generators``;
+a manifest without them replays with the spec's pins and the latest versions).
+
 The reproducibility tuple of the manifest is compared with the one of this environment and every
 difference is reported (``shape_version``, ``kernel``, ``platform`` ...). A difference does not fail
 a match, and on a mismatch it is the first place to look.
@@ -81,8 +84,17 @@ def replay(
     elif spec is not None:
         raise ValueError("the run used no generation spec, but the target is a spec")
     with tempfile.TemporaryDirectory(prefix="shape-replay-") as scratch:
+        # The versions the run recorded win over the spec's pins and over the latest ones, so a
+        # run made unpinned on an older release replays with the algorithms it was made with.
+        recorded = manifest.reproducibility.get("generators") or None
         result = PackRunner().run(
-            pack, domain, manifest.scale, manifest.seed, Path(scratch), spec=spec
+            pack,
+            domain,
+            manifest.scale,
+            manifest.seed,
+            Path(scratch),
+            spec=spec,
+            generators=recorded,
         )
     if result.manifest is None or not result.manifest.dataset_id:
         raise ValueError("replay could not regenerate the run: " + "; ".join(result.errors))

@@ -41,6 +41,14 @@
     "generation": {
       "$ref": "#/$defs/generation"
     },
+    "generators": {
+      "type": "object",
+      "description": "Generator version pins: strategy or distribution name -> the integer generator version to run (docs/GENERATION_STABILITY.md). A name that is not pinned runs at its latest version.",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
     "correlated_columns": {
       "type": "object",
       "description": "table -> [column_a, column_b, r] triples for the Gaussian-copula post-pass.",
@@ -313,6 +321,7 @@
             "composite_foreign_key",
             "computed",
             "conditional",
+            "conditional_table",
             "constant",
             "correlated",
             "derived",
@@ -322,6 +331,8 @@
             "first_per_parent",
             "foreign_key",
             "formula",
+            "hierarchy",
+            "hierarchy_field",
             "lifecycle",
             "lookup",
             "native",
@@ -651,6 +662,48 @@
             },
             "required": [
               "condition"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "conditional_table"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "source_column": {},
+              "strategy": {
+                "const": "conditional_table"
+              },
+              "table": {},
+              "values": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "source_column",
+              "table",
+              "values"
             ]
           }
         },
@@ -1873,6 +1926,90 @@
             },
             "required": [
               "expression"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "hierarchy"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "dataset": {},
+              "field": {},
+              "levels": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "hierarchy"
+              },
+              "top_weights": {},
+              "weighting": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "dataset",
+              "field",
+              "levels"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "hierarchy_field"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "dataset": {},
+              "field": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "hierarchy_field"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "dataset",
+              "field"
             ]
           }
         },

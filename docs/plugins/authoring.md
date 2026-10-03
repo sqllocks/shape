@@ -178,3 +178,9 @@ script fails until they match.
 `SHAPE_API` is `"MAJOR.MINOR"`. The host loads a plugin whose major version equals its own
 (`shape.plugins.api.v1.SHAPE_API`), so a plugin written for API 1.0 keeps loading on every 1.x
 release, and a future 2.0 host reports a clear error for it instead of misbehaving.
+
+A strategy or distribution may also declare `generator_version` (an integer, default 1), the version
+of its algorithm; it is optional and additive in API v1, so a plugin that does not declare it keeps
+loading and counts as version 1. A plugin that raises it keeps the older versions selectable
+(`generate_versioned` / `sample_versioned`) so specs that pin them keep their data. See
+[GENERATION_STABILITY.md](../GENERATION_STABILITY.md).

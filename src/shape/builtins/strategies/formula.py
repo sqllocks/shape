@@ -222,6 +222,7 @@ class Formula:
     """A column computed from other columns of the same row (see the module docstring)."""
 
     name = "formula"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         expression = require(spec, "expression", ctx, "formula")

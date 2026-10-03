@@ -358,6 +358,7 @@ class Native:
     The column's ``max_length`` truncates."""
 
     name = "native"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         provider = _provider(spec)
@@ -405,6 +406,7 @@ class Faker:
     """
 
     name = "faker"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         provider = _provider(spec)

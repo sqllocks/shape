@@ -226,6 +226,8 @@ class GenSchema:
     business_rules: list[BusinessRule] = field(default_factory=list)
     generation: Generation = field(default_factory=Generation)
     correlated_columns: dict[str, list[list[Any]]] = field(default_factory=dict)
+    # strategy or distribution name -> generator version (``shape.generation.versions``)
+    generators: dict[str, int] = field(default_factory=dict)
 
     # ---- structure ----------------------------------------------------------------------
 
@@ -247,6 +249,12 @@ class GenSchema:
     def to_dict(self) -> dict[str, Any]:
         """The JSON document (``generation-schema-v1.json``). Round-trips through
         :meth:`from_dict`."""
+        doc = self._to_dict()
+        if self.generators:  # an unpinned schema stays as it was before pinning existed
+            doc["generators"] = dict(self.generators)
+        return doc
+
+    def _to_dict(self) -> dict[str, Any]:
         return {
             "schema_version": SCHEMA_VERSION,
             "model": {
@@ -393,6 +401,7 @@ class GenSchema:
             correlated_columns={
                 k: [list(p) for p in v] for k, v in doc.get("correlated_columns", {}).items()
             },
+            generators={str(k): int(v) for k, v in doc.get("generators", {}).items()},
         )
 
     # ---- semantics ----------------------------------------------------------------------
@@ -407,6 +416,7 @@ class GenSchema:
         out += self._rule_issues()
         out += self._generation_issues()
         out += self._strategy_issues()
+        out += self._pin_issues()
         return out
 
     def validate_or_raise(self) -> None:
@@ -517,6 +527,24 @@ class GenSchema:
                 Issue("warning", f"Scale '{g.scale}' not defined in scales", "generation.scale")
             ]
         return []
+
+    def _pin_issues(self) -> list[Issue]:
+        if not self.generators:
+            return []
+        from shape.generation import versions
+
+        usage = versions.usage_of(self.tables)
+        out: list[Issue] = []
+        for name in sorted(self.generators):
+            where = f"generators.{name}"
+            if name not in usage:
+                out.append(Issue("warning", "pinned, but the spec does not use it", where))
+                continue
+            low, high = versions.version_range(usage[name])
+            if not low <= self.generators[name] <= high:
+                err = versions.GeneratorPinError("the spec", name, self.generators[name], low, high)
+                out.append(Issue("error", str(err), where))
+        return out
 
     def _strategy_issues(self) -> list[Issue]:
         out: list[Issue] = []

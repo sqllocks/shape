@@ -295,6 +295,35 @@ class SpecDocument:
             del parent[int(tokens[-1])]
         self._positions = None
 
+    # ---- generator version pins (``docs/GENERATION_STABILITY.md``) ----
+
+    @property
+    def generators(self) -> dict[str, int]:
+        """The ``generators`` map: strategy or distribution name to the pinned generator version
+        (empty when the spec pins nothing)."""
+        raw = self._doc.get("generators")
+        return {str(k): v for k, v in raw.items()} if isinstance(raw, dict) else {}
+
+    def set_generator_version(self, name: str, version: int) -> None:
+        """Pin ``name`` at generator ``version`` (the map is created when the spec has none)."""
+        if isinstance(version, bool) or not isinstance(version, int) or version < 1:
+            raise ValueError(f"a generator version is an integer of at least 1, got {version!r}")
+        pins = self._doc.setdefault("generators", {})
+        if not isinstance(pins, dict):
+            raise ValueError("`generators` must be an object")
+        pins[name] = version
+        self._positions = None
+
+    def remove_generator_version(self, name: str) -> None:
+        """Drop the pin of ``name``; the map goes with its last entry. ``KeyError`` if absent."""
+        pins = self._doc.get("generators")
+        if not isinstance(pins, dict) or name not in pins:
+            raise KeyError(f"/generators/{name}")
+        del pins[name]
+        if not pins:
+            del self._doc["generators"]
+        self._positions = None
+
     # ---- tables and columns ----
 
     def _table(self, table: str) -> dict[str, Any]:

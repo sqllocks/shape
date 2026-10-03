@@ -74,6 +74,12 @@ def check_common(obj: Any, group: str) -> None:
         bool(_NAME.match(str(name))),
         f"`name` {name!r} must be lowercase letters, digits, '_' or '-', starting with a letter",
     )
+    if group in ("shape.strategies", "shape.distributions") and hasattr(obj, "generator_version"):
+        declared = obj.generator_version  # optional, additive in API v1; missing means 1
+        _require(
+            isinstance(declared, int) and not isinstance(declared, bool) and declared >= 1,
+            f"`generator_version` must be an integer of at least 1, got {declared!r}",
+        )
     schemes = getattr(obj, "schemes", None)
     if "schemes" in getattr(proto, "__annotations__", {}):
         _require(

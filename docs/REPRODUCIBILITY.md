@@ -17,6 +17,12 @@ run comparable and replayable: the reproducibility tuple and the dataset id.
 | `kernel` | `rust` or `python` (`SHAPE_KERNEL`) |
 | `platform` | operating system and machine, such as `linux-x86_64` |
 
+A manifest also records `generators` in `reproducibility`: the generator version of every strategy
+and distribution the run used (`{"normal": 1, "sequence": 1}`). It is not one of the seven facts
+above (they describe the environment); it names the algorithms. See
+[GENERATION_STABILITY.md](GENERATION_STABILITY.md) for the promise that a pinned spec gives the same
+dataset id in every 1.x release.
+
 `seed` and `scale` are also top-level keys of the manifest, as before. The schema and profile
 versions are those of the build that made the run, so a run made after a format change is told
 apart from one made before it.
@@ -71,6 +77,12 @@ tuple and this environment (`kernel`, `platform`, `shape_version` ...). Exit cod
   another pack or domain than the run's, the run used a spec and a pack was given (or the reverse),
   or the spec file changed since the run (its SHA-256 must equal the manifest's `spec_hash`).
 
+`replay` generates with the generator versions the manifest recorded (`reproducibility.generators`),
+over the pins of the spec, so a run made from an unpinned spec on an older 1.x release replays to
+the same dataset id on a newer one as long as those versions exist. A recorded version this Shape
+does not have exits 2 (`... pins sequence at generator version 3; this Shape has version 1
+(upgrade Shape)`). See [GENERATION_STABILITY.md](GENERATION_STABILITY.md).
+
 A replay on another platform or kernel is a legitimate check: it matches when the generator gives
 the same tables there, and a difference in the tuple does not by itself fail a match.
 
@@ -79,3 +91,5 @@ the same tables there, and a difference in the tuple does not by itself fail a m
 The manifest declares `format: "shape-run-manifest"` and `version: 1`. A manifest without them (a
 run made before this change) still loads, with an empty `reproducibility` and `dataset_id`. A
 manifest whose version is newer than this Shape's is refused with a message that says to upgrade.
+A manifest without `reproducibility.generators` (made before generator versions) loads, and replays
+with the spec's pins and the latest versions; the field is additive, so `version` stays 1.

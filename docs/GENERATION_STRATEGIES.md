@@ -21,6 +21,15 @@ are internal (later strategies read them from `ctx.columns`; they are not output
 `n_rows`, `columns`: the columns of this chunk built so far) plus, in the engine, `engine` (the
 schema, `row_counts`, `key_pool(table)`) and `column_def` (the column: `type`, `scale`, ...).
 
+### Generator version
+
+A strategy may declare `generator_version` (an integer, default 1): the version of the algorithm
+that maps parameters, seed and row index to values. A change that alters the output for the same
+inputs raises it, and the old version stays selectable through
+`generate_versioned(spec, ctx, version)`; a spec pins versions in its `generators` map. Read the
+version in effect for a name with `strategy_kit.pinned_version(ctx, name, latest)`. See
+[GENERATION_STABILITY.md](GENERATION_STABILITY.md).
+
 ### Rules every strategy follows
 
 1. **Row addressed.** The value of row `r` depends on the run seed, the table, the column, `r`,

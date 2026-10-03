@@ -33,6 +33,7 @@ class Bootstrap:
     only, which then become ``float64``. Nulls stay null."""
 
     name = "bootstrap"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         dataset = str(require(spec, "dataset", ctx, "bootstrap"))

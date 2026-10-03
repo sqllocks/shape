@@ -1031,6 +1031,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli import design as design_cmd
 
     design_cmd.add_parsers(sub)
+    from shape.cli import pin as pin_cmd
+
+    pin_cmd.add_parsers(sub)
     fd = sub.add_parser(
         "from-ddl",
         help="read SQL CREATE TABLE DDL into a generation schema",
@@ -1515,6 +1518,10 @@ def _dispatch(argv):
         from shape.cli.transform import run as run_transform
 
         return _run(run_transform, a)
+    if a.cmd == "pin":
+        from shape.cli.pin import run as run_pin
+
+        return _run(run_pin, a)
     if a.cmd == "design":
         from shape.cli.design import run as run_design
 

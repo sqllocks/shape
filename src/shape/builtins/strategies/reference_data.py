@@ -53,6 +53,7 @@ class ReferenceData:
     """
 
     name = "reference_data"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         ds = _dataset(str(require(spec, "dataset", ctx, "reference_data")), ctx)
@@ -127,6 +128,7 @@ class RecordSample:
     decides the record."""
 
     name = "record_sample"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         dataset, field = _check_fields(spec, ctx, "record_sample")
@@ -151,6 +153,7 @@ class RecordField:
     after this one."""
 
     name = "record_field"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         dataset, field = _check_fields(spec, ctx, "record_field")

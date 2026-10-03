@@ -52,6 +52,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape.errors import ShapeSchemaError
+from shape.generation import versions
 from shape.generation.arrowkit import array as arrow_array
 from shape.generation.arrowkit import scalar as arrow_scalar
 from shape.generation.compute import (
@@ -538,6 +539,7 @@ class Engine:
         row_counts: Mapping[str, int] | None = None,
         strategies: Mapping[str, Any] | None = None,
         chunk_rows: int = DEFAULT_CHUNK_ROWS,
+        generators: Mapping[str, int] | None = None,
     ) -> None:
         if chunk_rows < 1:
             raise ValueError("chunk_rows must be at least 1")
@@ -548,6 +550,15 @@ class Engine:
             self.schema.model.seed = int(seed)
         self.chunk_rows = chunk_rows
         self._strategies = dict(strategies or {})
+        # The generator versions to run: the schema's pins, overridden by ``generators`` (a replay
+        # passes the versions its manifest recorded). A name that is not here runs at its latest.
+        self._pins: dict[str, int] = {
+            **self.schema.generators,
+            **{str(k): int(v) for k, v in (generators or {}).items()},
+        }
+        self._usage: dict[str, list[Any]] | None = None
+        if self._pins:
+            versions.warn_unused(versions.check_pins(self._pins, self._used()))
         self._chunk_rows_given = chunk_rows != DEFAULT_CHUNK_ROWS
         self._overrides = dict(row_counts or {})
         self._lock = threading.RLock()
@@ -583,6 +594,21 @@ class Engine:
 
     def column_order(self, table: str) -> list[str]:
         return order_columns(self.schema.tables[table])
+
+    def _used(self) -> dict[str, list[Any]]:
+        if self._usage is None:
+            self._usage = versions.usage_of(self.schema.tables, self._strategy)
+        return self._usage
+
+    @property
+    def generator_versions(self) -> dict[str, int]:
+        """The generator version of every strategy and distribution this run uses: the pin, or
+        the latest version (what a run manifest records, ``docs/GENERATION_STABILITY.md``)."""
+        return versions.effective(self._pins, self._used())
+
+    def generator_version(self, name: str, latest: int = 1) -> int:
+        """The version of ``name`` in effect: its pin, else ``latest``."""
+        return self._pins.get(name, latest)
 
     def _strategy(self, name: str) -> Any:
         found = self._strategies.get(name)
@@ -729,7 +755,15 @@ class Engine:
             engine=self,
             column_def=col,
         )
-        produced = impl.generate(col.generator, ctx)
+        select = getattr(impl, "generate_versioned", None)
+        if select is None:
+            produced = impl.generate(col.generator, ctx)
+        else:
+            produced = select(
+                col.generator,
+                ctx,
+                self.generator_version(strategy, versions.generator_version(impl)),
+            )
         output_type = col.generator.get("output_type")
         if output_type is None or isinstance(produced, Mapping) or output_type in DECLARED_TYPES:
             return produced
