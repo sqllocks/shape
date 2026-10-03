@@ -166,11 +166,24 @@ def sign_artifact(
         raise
     # Replace only after the source is closed: Windows cannot replace a file that is open.
     try:
+        # mkstemp creates the file 0600: give it the target's mode, or a new file's (#405)
+        os.chmod(tmp_name, _mode_for(target))
         os.replace(tmp_name, target)
     except BaseException:
         Path(tmp_name).unlink(missing_ok=True)
         raise
     return key_id(public_key)
+
+
+def _mode_for(target: Path) -> int:
+    """The permission bits a signed file gets: the existing file's, or ``0o666`` less the
+    umask for a new one (what any other write of the artifact would give)."""
+    try:
+        return os.stat(target).st_mode & 0o7777
+    except FileNotFoundError:
+        umask = os.umask(0)
+        os.umask(umask)
+        return 0o666 & ~umask
 
 
 def verify_artifact(path: str | os.PathLike[str], public_key: bytes) -> dict[str, Any]:
