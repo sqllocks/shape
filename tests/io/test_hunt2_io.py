@@ -311,4 +311,55 @@ def test_delta_append_still_refuses_a_different_schema(tmp_path: Path) -> None:
     assert _delta_rows(tmp_path / "t") == {"a": [1]}
 
 
+# ---- #628: delta+abfss reads the documented AZURE_STORAGE_* variables -------------------------
+
+_DELTA_URI = "delta+abfss://c@acct.dfs.core.windows.net/Tables"
+
+
+def test_delta_cloud_location_uses_the_storage_key_from_the_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from shape.builtins.sinks.delta import _location
+
+    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT_KEY", "the-key")
+    location, storage = _location(_DELTA_URI, "t", {})
+    assert location == "abfss://c@acct.dfs.core.windows.net/Tables/t"
+    assert storage == {"azure_storage_account_key": "the-key"}
+
+
+def test_delta_cloud_location_uses_the_sas_token_from_the_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from shape.builtins.sinks.delta import _location
+
+    monkeypatch.delenv("AZURE_STORAGE_ACCOUNT_KEY", raising=False)
+    monkeypatch.setenv("AZURE_STORAGE_SAS_TOKEN", "sig=1")
+    assert _location(_DELTA_URI, "t", {})[1] == {"azure_storage_sas_key": "sig=1"}
+
+
+def test_delta_cloud_location_prefers_an_explicit_credential_to_the_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from shape.builtins.sinks.delta import _location
+
+    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT_KEY", "from-env")
+    assert _location(_DELTA_URI, "t", {"account_key": "explicit"})[1] == {
+        "azure_storage_account_key": "explicit"
+    }
+    storage = _location(_DELTA_URI, "t", {"token": "tok"})[1]
+    assert storage == {"azure_storage_token": "tok"}
+
+
+def test_delta_cloud_location_says_a_connection_string_cannot_open_a_delta_table(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from shape.builtins.sinks.delta import _location
+
+    for name in ("AZURE_STORAGE_ACCOUNT_KEY", "AZURE_STORAGE_SAS_TOKEN"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("AZURE_STORAGE_CONNECTION_STRING", "UseDevelopmentStorage=true")
+    with pytest.raises(ValueError, match="connection string"):
+        _location(_DELTA_URI, "t", {})
+
+
 _ = dt
