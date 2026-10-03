@@ -481,8 +481,8 @@ def _merge_column(
         "is_unique": None,
         "is_enum": None,
         "enum_values": None,
-        "min_value": _extreme(where, cols, "min_value", min),
-        "max_value": _extreme(where, cols, "max_value", max),
+        "min_value": _promote(_extreme(where, cols, "min_value", min), dtype, cols, nn),
+        "max_value": _promote(_extreme(where, cols, "max_value", max), dtype, cols, nn),
         "mean": _clean(mean),
         "std": _clean(std),
         "distribution": None,
@@ -555,6 +555,30 @@ def _unify_dtype(where: str, cols: list[dict[str, Any]], nn: list[int]) -> str:
     if seen <= {"date", "datetime"}:
         return "datetime"
     raise MergeError(f"{where}: the types differ between the profiles ({', '.join(sorted(seen))})")
+
+
+def _promote(tagged: Any, dtype: str, cols: list[dict[str, Any]], nn: list[int]) -> Any:
+    """An extreme of a partition whose type was promoted (integer to float, date to datetime),
+    tagged as the profile of the union tags it."""
+    if tagged is None or tagged[1] is None:
+        return tagged
+    tag, value = tagged
+    if dtype == "float" and tag == "int":
+        return ["float", float(value)]
+    if dtype == "datetime" and tag == "date":
+        tags = [
+            c[f][0]
+            for c, n in zip(cols, nn, strict=True)
+            if n > 0 and c["dtype"] == "datetime"
+            for f in ("min_value", "max_value")
+            if c.get(f) and c[f][0] in ("timestamp", "datetime")
+        ]
+        try:
+            moment = _dt.datetime.fromisoformat(value)
+        except (ValueError, TypeError):
+            return tagged
+        return [tags[0] if tags else "timestamp", str(moment)]
+    return tagged
 
 
 # ------------------------------------------------------------------------ exact statistics
