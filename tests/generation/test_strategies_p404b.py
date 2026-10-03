@@ -936,6 +936,19 @@ def test_derived_cross_table_errors():
         run(source="order.missing")
 
 
+def test_editing_a_schema_leaves_the_cases_unchanged():
+    """The helpers edit the schemas they build; the shared cases must not change (#329)."""
+    before = json.dumps(CASES, sort_keys=True, default=str)
+    _cross_engine(
+        {"strategy": "sequence", "start": 1},
+        {"strategy": "sequence", "start": 1},
+        via="nope",
+        source="order.missing",
+        rule="copy",
+    )
+    assert json.dumps(CASES, sort_keys=True, default=str) == before
+
+
 def test_computed_placeholder_and_registration():
     out = Computed().generate({"rule": "sum_children"}, types.SimpleNamespace(n_rows=4))
     assert out.type == pa.float64() and out.null_count == 4
