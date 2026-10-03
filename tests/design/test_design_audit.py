@@ -149,3 +149,55 @@ def test_a_key_that_references_its_own_entity_is_not_a_foreign_key() -> None:
         _doc([{"name": "t", "attributes": [{"name": "id", "references": "t"}], "keys": [["id"]]}])
     )
     assert derive(design, "3nf").table("t").foreign_keys == ()
+
+
+# ---- issue 386: decimal scale larger than precision ------------------------------------------
+
+
+def test_a_decimal_scale_larger_than_its_precision_is_refused() -> None:
+    doc = _doc([_sale({"name": "v", "type": "decimal", "precision": 5, "scale": 9})])
+    with pytest.raises(DesignError, match=r"scale 9 .*precision 5"):
+        DesignInput.from_dict(doc)
+
+
+def test_a_decimal_scale_without_precision_is_accepted() -> None:
+    DesignInput.from_dict(_doc([_sale({"name": "v", "type": "decimal", "scale": 2})]))
+
+
+def test_from_data_gives_a_precision_that_holds_the_scale() -> None:
+    from decimal import Decimal
+
+    from shape.design.from_data import design_from_rows
+
+    for values in (
+        [Decimal("1E-50"), Decimal("2")],
+        [Decimal("12345678901234567890123456789012345678901234.5"), Decimal("1")],
+    ):
+        rows = [{"id": i, "v": v} for i, v in enumerate(values)]
+        attr = design_from_rows(rows, name="t").entities[0].attribute("v")
+        assert attr.precision is not None and attr.scale is not None
+        assert attr.scale <= attr.precision
+        digits = max(len(v.as_tuple().digits) + max(0, int(v.as_tuple().exponent)) for v in values)
+        assert attr.precision >= max(digits, attr.scale)
+    small = design_from_rows([{"id": 1, "v": Decimal("1.25")}], name="t")
+    assert small.entities[0].attribute("v").precision == 38  # unchanged for ordinary values
+
+
+# ---- issue 387: repeated names in a key, a dependency or a hierarchy ------------------------
+
+
+@pytest.mark.parametrize(
+    ("entity", "extra", "where"),
+    [
+        ({"keys": [["id", "id"]]}, {}, "key"),
+        ({"dependencies": [{"determinant": ["a", "a"], "dependent": ["b"]}]}, {}, "dependency"),
+        ({"dependencies": [{"determinant": ["a"], "dependent": ["b", "b"]}]}, {}, "dependency"),
+        ({}, {"hierarchies": [{"name": "h", "entity": "s", "levels": ["a", "a"]}]}, "hierarchy"),
+    ],
+)
+def test_a_repeated_attribute_name_is_refused(
+    entity: dict[str, Any], extra: dict[str, Any], where: str
+) -> None:
+    ent = {"name": "s", "attributes": [{"name": "id"}, {"name": "a"}, {"name": "b"}], **entity}
+    with pytest.raises(DesignError, match=rf"{where}.*repeats attribute"):
+        DesignInput.from_dict(_doc([ent], **extra))
