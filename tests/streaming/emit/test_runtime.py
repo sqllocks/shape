@@ -355,3 +355,33 @@ def test_a_generator_error_is_raised_after_checkpointing(retail_engine, tmp_path
     with pytest.raises(RuntimeError, match="boom"):
         EmitRunner(plan, sink, EmitConfig(checkpoint_path=str(ck))).run()
     assert json.loads(ck.read_text())["offset"] == sink.num_events == plan.block_rows
+
+
+class _SlowSink(MemorySink):
+    def send(self, batch: pa.RecordBatch) -> None:
+        time.sleep(0.05)
+        super().send(batch)
+
+
+def test_a_one_batch_run_reports_its_elapsed_time_and_rate(retail_engine) -> None:
+    """#473: when every event fits in one batch, elapsed and rate must not read 0.0."""
+    sink = _SlowSink()
+    report = EmitRunner(_plan(retail_engine), sink, EmitConfig(max_events=500)).run()
+    assert len(sink.batches) == 1 and report.complete
+    assert report.elapsed >= 0.05, report.elapsed
+    assert report.rate > 0
+    assert report.rate == pytest.approx(report.events / report.elapsed)
+
+
+def test_a_two_batch_run_reports_elapsed_and_rate(retail_engine) -> None:
+    sink = _SlowSink()
+    report = EmitRunner(
+        _plan(retail_engine), sink, EmitConfig(max_events=200, batch_events=100)
+    ).run()
+    assert len(sink.batches) == 2
+    assert report.elapsed >= 0.05 and report.rate > 0
+
+
+def test_a_run_with_no_events_reports_zero_elapsed_and_rate(retail_engine) -> None:
+    report = EmitRunner(_plan(retail_engine), MemorySink(), EmitConfig(max_events=0)).run()
+    assert report.events == 0 and report.elapsed == 0.0 and report.rate == 0.0
