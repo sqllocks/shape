@@ -132,7 +132,8 @@ def run_job(
         for table in spread:
             total = int(engine.row_counts[table])
             chunks = math.ceil(total / chunk_rows)
-            sample = engine.generate_chunk(table, 0, 0, chunk=0)
+            # one row, not zero: a chunk of no rows can type a column ``null``
+            sample = engine.generate_chunk(table, 0, 1, chunk=0)
             ids = spark.range(0, chunks, 1, chunks)
             frame = ids.mapInArrow(
                 _chunk_batches(broadcast.value, table), arrow_to_ddl(sample.schema)

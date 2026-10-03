@@ -20,6 +20,7 @@ def test_a_distributed_table_whose_empty_chunk_has_a_null_column_still_gets_its_
     assert "`industry_name` string" in ddl
     direct = Engine(schema, seed=9, row_counts=rows).generate()
     made = collect(frame)
-    assert made.column("industry_name").to_pylist() == direct.tables["industry"][
-        "industry_name"
-    ].to_pylist()
+    assert (
+        made.column("industry_name").to_pylist()
+        == direct.tables["industry"]["industry_name"].to_pylist()
+    )
