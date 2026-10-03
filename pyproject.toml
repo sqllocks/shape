@@ -40,17 +40,11 @@ python-source="src"
 module-name="shape._kernel"
 manifest-path="rust/shape-kernel/Cargo.toml"
 profile="release"
+# The sdist holds what maturin needs to build (pyproject.toml, src/shape, rust/shape-kernel), the
+# README and the licence files; no tests, plans, benchmarks or CI files
+# (tests/release/test_packaging.py).
 include=[
-  {path="tests/**/*", format="sdist"},
-  {path="docs/**/*", format="sdist"},
-  {path="scripts/**/*", format="sdist"},
-  {path="examples/**/*", format="sdist"},
-  {path="benchmarks/**/*", format="sdist"},
-  {path="security/**/*", format="sdist"},
-  {path=".github/**/*", format="sdist"},
-  {path="*.md", format="sdist"},
-  {path="Makefile", format="sdist"},
-  {path="CODEOWNERS", format="sdist"},
+  {path="THIRD_PARTY_NOTICES.md", format="sdist"},
 ]
 
 [tool.pytest.ini_options]
