@@ -1066,6 +1066,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.mask import add_arguments as add_mask_arguments
 
     add_mask_arguments(sub)
+    from shape.cli.scorecard import add_arguments as add_scorecard_arguments
+
+    add_scorecard_arguments(sub)
     from shape.cli.incremental import add_arguments as add_incremental_arguments
 
     add_incremental_arguments(sub)
@@ -1425,6 +1428,10 @@ def _dispatch(argv):
         from shape.cli.mask import run as run_mask
 
         return _run(run_mask, a)
+    if a.cmd == "scorecard":
+        from shape.cli.scorecard import run as run_scorecard
+
+        return _run(run_scorecard, a)
     if a.cmd == "jobs":
         from shape.cli.jobs import run as run_jobs
 

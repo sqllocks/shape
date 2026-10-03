@@ -143,3 +143,9 @@ components, so Shape refuses any that is not a plain name (letters, digits, `.`,
 `shape verify` also checks signatures (see `docs/SIGNING.md`): when its argument is a `.shape`
 file it verifies that artifact against `--key PUBLIC.pub`, and for any other path it runs the
 gates above.
+
+## Scores by dimension and failing rows
+
+`shape scorecard` runs these gates and scores accuracy, completeness, conformity, consistency,
+timeliness and uniqueness from them, with failing-row samples and an optional flag column. See
+[SCORECARD.md](SCORECARD.md).

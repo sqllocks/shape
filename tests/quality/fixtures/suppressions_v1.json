@@ -1,0 +1,8 @@
+{
+  "format": "shape-scorecard-suppressions",
+  "version": 1,
+  "entries": [
+    {"action": "suppress", "check": "null_constraint", "table": "customer", "column": "name", "reason": "legacy import"},
+    {"action": "snooze", "check": "unique_constraint", "until": "2027-01-31", "reason": "fix scheduled"}
+  ]
+}
