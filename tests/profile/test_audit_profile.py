@@ -186,3 +186,27 @@ def test_an_impossible_date_among_many_repeats_is_found_from_the_distinct_values
     assert shape.profile(str(path)).to_dict()["columns"]["d"]["dtype"] == "string"
     path.write_text("d\n" + "\n".join([good] * 81) + "\n")
     assert shape.profile(str(path)).to_dict()["columns"]["d"]["dtype"] == "datetime"
+
+
+# ---- #224: text holding a NaN word is text, as in the baseline ----------------------------
+
+
+@pytest.mark.parametrize("values", [["1", "NaN"] * 15, ["1", "nan", "2"] * 10])
+def test_text_with_a_nan_word_is_text(kernel, tmp_path, values):
+    import pandas as pd
+    import pyarrow.parquet as pq
+
+    assert _col(pa.array(values))["dtype"] == "string"
+    assert shape.profile(pd.DataFrame({"c": values})).to_dict()["columns"]["c"]["dtype"] == "string"
+    path = tmp_path / "t.parquet"
+    pq.write_table(pa.table({"c": pa.array(values)}), path)
+    assert shape.profile(str(path)).to_dict()["columns"]["c"]["dtype"] == "string"
+
+
+def test_text_infinity_in_a_file_still_fails_as_the_baseline_does(kernel, tmp_path):
+    import pyarrow.parquet as pq
+
+    path = tmp_path / "t.parquet"
+    pq.write_table(pa.table({"c": pa.array(["1.5", "inf", "2.5"] * 10)}), path)
+    with pytest.raises(ValueError, match="non-finite"):
+        shape.profile(str(path))
