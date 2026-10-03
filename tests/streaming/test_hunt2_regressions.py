@@ -598,3 +598,39 @@ def test_118_negative_or_zero_delivery_options_are_refused(tmp_path, capsys):
         ["--checkpoint-seconds", "0"],
     ):
         assert main([*base, "-o", str(tmp_path / "ok.jsonl"), *extra]) == 0, extra
+
+
+def test_298_compressed_state_is_inflated_within_its_declared_size():
+    import base64
+    import zlib
+
+    import numpy as np
+
+    from shape.streaming.checkpoint import inflate
+    from shape.streaming.dedupe import Deduplicator
+    from shape.streaming.keyed import KeyedSketches, _pack, _unpack
+
+    raw = zlib.compress(bytes(4 << 20))  # 4 MiB of zeros in a few KiB
+    assert len(raw) < 10_000
+    assert inflate(raw, 4 << 20) == bytes(4 << 20)  # exactly the limit is fine
+    with pytest.raises(ValueError, match="size limit"):
+        inflate(raw, (4 << 20) - 1)
+    with pytest.raises(ValueError, match="truncated"):
+        inflate(raw[:-8], 8 << 20)
+    # an array field holds at most max_items values of its dtype
+    text = base64.b64encode(raw).decode()
+    with pytest.raises(ValueError, match="size limit"):
+        _unpack(text, np.int64, max_items=1000)
+    assert len(_unpack(_pack(np.arange(5)), np.int64, max_items=5)) == 5
+    # restore bounds the arrays of a snapshot by the cap the snapshot declares
+    d = Deduplicator(max_keys=10)
+    d.filter(np.arange(5))
+    snap = d.snapshot()
+    snap["runs"][0]["keys"] = text
+    with pytest.raises(ValueError, match="size limit"):
+        Deduplicator.restore(snap)
+    s = KeyedSketches(10)
+    snap = s.snapshot()
+    snap["arrays"]["count"] = text
+    with pytest.raises(ValueError, match="size limit"):
+        KeyedSketches.restore(snap)
