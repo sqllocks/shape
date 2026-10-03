@@ -27,7 +27,9 @@ in `--format`).
 | `--table-format TABLE=FORMAT` | the format of one table (repeatable); the other tables use `--format`. A table name that does not exist is an error |
 
 Tokens: `{table}`, `{ext}` (the format's extension), `{date}` (`2026-08-04`), `{yyyymmdd}`, `{yyyy}`,
-`{mm}`, `{dd}`. A template must contain `{table}`, is relative to `-o` and cannot leave it. Other
+`{mm}`, `{dd}`; for rolling writers (`--roll-rows`, `--roll-seconds`, `shape stream`) also `{part}`
+(the file's number in its table, five digits) and `{hhmmss}` (the time the file was opened, UTC).
+A template must contain `{table}`, is relative to `-o` and cannot leave it. Other
 layouts are only a template away: `{table}/{yyyy}/{mm}/{dd}/part-000000.{ext}` is a
 Hive-like date tree, and `table={table}/date={date}/part-000000.{ext}` is a Hive partition path.
 
@@ -59,8 +61,9 @@ ParquetSink().write("landing/", "orders", batches,
 
 ## What this does not do
 
-- **Cloud targets** (ADLS Gen2, OneLake paths) are not written by these sinks: the layout is
-  local. Point a landing run at a mounted or synchronised path, or copy the folder.
+- **Cloud targets** (ADLS Gen2, OneLake Files) are not written by the local file sinks above:
+  `--to abfss://...` takes the same `--path-template`, `--batch-date` and `--table-format` and
+  writes the layout there, publishing each file whole (`docs/SINKS.md`).
 - Tables are written whole (a landing run generates them first), not streamed chunk by chunk.
 - One date per run, one file per table: late arrivals, repeated drops, `_done` flags and manifests
   over a date range belong to scenario packs (`docs/SCENARIO_PACKS.md`).
