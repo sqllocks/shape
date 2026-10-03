@@ -55,11 +55,13 @@ from .kusto import (
     KustoClient,
     KustoTarget,
     Transport,
+    column_names,
     create_mapping_command,
     create_table_command,
     dedupe_query,
     kusto_type,
     mapping_name,
+    not_ready,
     streaming_policy_command,
 )
 
@@ -68,6 +70,7 @@ __all__ = [
     "EventhouseEmitter",
     "EventhouseTarget",
     "Transport",
+    "column_names",
     "create_mapping_command",
     "create_table_command",
     "dedupe_query",
@@ -130,13 +133,6 @@ def token_source(target: KustoTarget, token: Any = None, credential: Any = None)
                 "Microsoft Entra sign-in"
             ) from exc
     return lambda: token_for(credential, scope)
-
-
-def _not_ready(exc: Exception) -> bool:
-    """A new table the service has not finished setting up: it is not found yet, or streaming
-    ingestion on it is still initialising."""
-    text = str(exc)
-    return "EntityNotFound" in text or "StreamingIngestion" in text
 
 
 class EventhouseEmitter:
@@ -263,7 +259,7 @@ class EventhouseEmitter:
                 client.ingest(table, body)
                 break
             except (ShapeError, ConnectionError) as exc:
-                if not _not_ready(exc) or time.monotonic() + pause > deadline:
+                if not not_ready(exc) or time.monotonic() + pause > deadline:
                     raise
                 time.sleep(pause)
                 pause = min(pause * 2, 10.0)

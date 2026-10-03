@@ -147,3 +147,51 @@ def test_client_is_usable_on_its_own():
     client.mgmt(".create table ['x'] (['a']:long)")
     assert client.table_exists("x") is True
     assert ("db1", ".create table ['x'] (['a']:long)") in kusto.commands
+
+
+def _flaky_ingest(answers):
+    """A FakeKusto whose first ingest requests get ``answers`` (status, body) before it works."""
+    kusto = FakeKusto()
+    seen = []
+
+    def transport(method, url, headers, body, timeout):
+        if "/v1/rest/ingest/" in url:
+            seen.append(url)
+            if answers:
+                status, text = answers.pop(0)
+                return status, {}, text
+        return kusto(method, url, headers, body, timeout)
+
+    return kusto, transport, seen
+
+
+NOT_FOUND = (400, b'{"error": {"code": "BadRequest_EntityNotFound"}}')
+
+
+def test_the_first_write_waits_for_a_table_created_a_moment_ago(batches):
+    # BF-223: the writer made the table and wrote at once; the engine answered `Entity ... of
+    # kind 'Table' was not found` and the write failed after 0 accepted requests.
+    kusto, transport, seen = _flaky_ingest([NOT_FOUND, NOT_FOUND])
+    w = EventhouseWriter(URI, transport=transport, busy_pause=0.001)
+    assert w.write_table("t", batches) == 7
+    assert len(seen) == 3 and len(kusto.by_table["t"]) == 7
+
+    # once the table has accepted a request, the same answer is an error at once
+    w.client._transport = lambda *a: (NOT_FOUND[0], {}, NOT_FOUND[1])
+    with pytest.raises(WriteError, match="EntityNotFound"):
+        w.write_table("t", batches, write_mode="append")
+
+
+def test_a_table_that_never_becomes_ready_fails_the_write_after_the_wait(batches):
+    calls = []
+
+    def transport(method, url, headers, body, timeout):
+        if "/v1/rest/ingest/" in url:
+            calls.append(url)
+            return NOT_FOUND[0], {}, NOT_FOUND[1]
+        return 200, {}, b"{}"
+
+    w = EventhouseWriter(URI, transport=transport, busy_pause=0.001, ready_timeout=0.05)
+    with pytest.raises(WriteError, match="EntityNotFound"):
+        w.write_table("t", batches)
+    assert len(calls) > 1
