@@ -129,6 +129,14 @@ def test_core_imports_no_cloud_sdk_to_resolve_references(tmp_path, monkeypatch, 
     assert not [m for m in sys.modules if m.startswith(("azure", "boto", "google.cloud"))]
 
 
+def test_the_cloud_sdk_check_holds_after_other_tests_imported_an_sdk(
+    tmp_path, monkeypatch, no_providers
+):
+    """Another test of the same process may have imported a cloud SDK (#77)."""
+    monkeypatch.setitem(sys.modules, "azure", types.ModuleType("azure"))
+    test_core_imports_no_cloud_sdk_to_resolve_references(tmp_path, monkeypatch, no_providers)
+
+
 def test_recognising_a_reference_imports_nothing():
     before = set(sys.modules)
     assert credrefs.is_reference("https://example.test/x") is False
