@@ -158,10 +158,16 @@ class _FallbackCredential:
     def get_token(self, *scopes: str, **kwargs: Any) -> Any:
         try:
             return self._first.get_token(*scopes, **kwargs)
-        except Exception:
-            if self._second is None:
-                self._second = self._second_factory()
-            return self._second.get_token(*scopes, **kwargs)
+        except Exception as first:
+            try:
+                if self._second is None:
+                    self._second = self._second_factory()
+                return self._second.get_token(*scopes, **kwargs)
+            except Exception as second:
+                raise AuthError(
+                    f"sign-in failed: {_brief_text(str(first) or type(first).__name__)}; "
+                    f"then: {_brief_text(str(second) or type(second).__name__)}"
+                ) from None
 
     def __repr__(self) -> str:
         return "FallbackCredential()"

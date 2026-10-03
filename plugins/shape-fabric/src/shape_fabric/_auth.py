@@ -46,9 +46,9 @@ def token_for(credential: Any, scope: str) -> str:
     """The bearer token ``credential`` gives for ``scope``."""
     try:
         if hasattr(credential, "get_token"):
-            return str(credential.get_token(scope).token)
+            return _usable(credential.get_token(scope).token, scope)
         if callable(credential):
-            return str(credential(scope))
+            return _usable(credential(scope), scope)
     except AuthError:
         raise
     except Exception as exc:
@@ -56,6 +56,14 @@ def token_for(credential: Any, scope: str) -> str:
             f"the credential could not give a token for {scope}: {_brief(exc)}"
         ) from exc
     raise AuthError("a credential needs get_token(scope) or must be a function scope -> token")
+
+
+def _usable(token: Any, scope: str) -> str:
+    """``token`` as text; ``None`` or blank would go out as ``Bearer None`` and come back as a
+    401 that hides the cause."""
+    if token is None or not str(token).strip():
+        raise AuthError(f"the credential gave no token for {scope}")
+    return str(token)
 
 
 class _FunctionCredential:

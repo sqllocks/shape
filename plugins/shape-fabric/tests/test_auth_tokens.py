@@ -27,7 +27,8 @@ class _Fails:
 
 
 def test_the_fallback_names_both_failures() -> None:
-    both = _FallbackCredential(_Fails("notebook identity gave nothing"), lambda: _Fails("IMDS down"))
+    first = _Fails("notebook identity gave nothing")
+    both = _FallbackCredential(first, lambda: _Fails("IMDS down"))
     with pytest.raises(AuthError) as err:
         both.get_token("https://example/.default")
     text = str(err.value)
