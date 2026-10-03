@@ -76,7 +76,8 @@ pass. Columns that start with `_shape_` are internal and are not scored for card
   numbers get a two-sample KS test, everything else a chi-squared test, both on samples of 5,000, and
   drift is a p-value below `--pvalue` (default 0.05) or, for numbers, a PSI above the threshold. The
   KS test needs SciPy and raises an error naming `[advanced]` without it. A column that cannot be
-  tested fails closed (`method: "error"`, drifted). Exit 0 if no column drifted, 1 if one did.
+  tested fails closed (`method: "error"`, drifted): a number column against a text one, or a
+  column holding an infinite value (no finite bins, so no PSI). Exit 0 if no column drifted, 1 if one did.
 * **Bootstrap** (`shape.fidelity.bootstrap_table`; the `bootstrap` generation strategy): rows
   resampled with replacement from a source table, numbers jittered by normal noise of 1% of their
   standard deviation. The strategy is `{"strategy": "bootstrap", "dataset": "people", "field":

@@ -287,6 +287,8 @@ class DriftMonitor:
         af, bf = a.astype(np.float64), b.astype(np.float64)
         stat, p = stats.ks_2samp(af, bf)
         psi = population_stability_index(af, bf)
+        if not np.isfinite(psi):  # an infinite value leaves no finite bins: fail closed
+            return ColumnDriftResult(name, 0.0, None, None, True, "error")
         return ColumnDriftResult(
             column=name,
             drift_score=float(min(1.0, stat + psi / 2)),
@@ -355,6 +357,9 @@ def psi_report(
         ordered = col.is_numeric or col.is_datetime
         if ordered and (other.is_numeric or other.is_datetime):
             psi = population_stability_index(a.astype(np.float64), b.astype(np.float64))
+            if not np.isfinite(psi):  # an infinite value leaves no finite bins: fail closed
+                results[col.name] = ColumnDriftResult(col.name, 0.0, None, None, True, "error")
+                continue
         elif ordered or other.is_numeric or other.is_datetime:
             results[col.name] = ColumnDriftResult(col.name, 0.0, None, None, True, "error")
             continue
