@@ -12,7 +12,7 @@ model and query functions are documented as they behave today and may change.
 ## Profiles
 
 ```python
-shape.profile(source, *, name=None, version=None, as_of=None, delimiter=None, encoding=None, quotechar=None, header=True, reference_pairs=None, joint=None, sheet=None, include_hidden=False)
+shape.profile(source, *, name=None, version=None, as_of=None, delimiter=None, encoding=None, quotechar=None, header=True, string_columns=(), types=None, infer_types='auto', reference_pairs=None, joint=None, sheet=None, include_hidden=False, sketches=False)
 ```
 
 Profiles `source` and returns a `Profile`. `source` is a path (CSV, Parquet, JSONL, `.xlsx`, a
@@ -22,7 +22,9 @@ foreign-key detection). Every argument after `source` is keyword-only. `version`
 select a Delta table version (`README.md`); `delimiter`, `encoding`, `quotechar` and `header`
 are CSV options (`docs/PROFILING_NOTES.md`); `reference_pairs` and `joint` control the joint
 analysis (`docs/JOINT.md`); `sheet` and `include_hidden` select workbook sheets
-(`docs/EXCEL.md`).
+(`docs/EXCEL.md`); `string_columns`, `types` and `infer_types` keep identifier columns as text
+(`docs/PROFILING_NOTES.md`); `sketches` keeps the mergeable sketch state
+(`docs/PROFILE_MERGE.md`).
 
 A `Profile` has `to_dict()` (the full profile), `summary()` (a small JSON-safe dict),
 `to_html()` (a self-contained report), `name`, `tables`, `is_dataset` and `provenance`.
@@ -47,23 +49,26 @@ the file raises `ArtifactError` (a `ShapeError`); a missing file raises `FileNot
 ## Contracts and drift
 
 ```python
-shape.check(profile, contract)
+shape.check(profile, contract, data=None)
 ```
 
 Checks a profile against a v1 contract, a `dict` or the path to a JSON file, and returns a
 `CheckResult` with `passed` (bool), `violations` (a list of
 `{column, rule, expected, observed}`) and `to_dict()`. Every rule is optional; a profile of
-several tables needs a contract with a `tables` object. A malformed contract raises
-`ContractError` (a `ValueError`).
+several tables needs a contract with a `tables` object. `data` (tables read with
+`shape.quality.load_tables`) is what the contract's `timeseries` and `reconcile` rules check
+(`docs/VERIFY.md`). A malformed contract raises `ContractError` (a `ValueError`).
 
 ```python
-shape.diff(baseline, current, *, thresholds=None, ignore_columns=None, column_thresholds=None, only_columns=None, policy=None)
+shape.diff(baseline, current, *, thresholds=None, ignore_columns=None, column_thresholds=None, only_columns=None, policy=None, planned=None, on=None, source=None, fail_on=None)
 ```
 
 Compares two profiles (a stream window profile or a profile document works too) with the
 defaults in `docs/DRIFT.md` and returns a `DiffResult` with `drifted` (bool), `changes` (a list
 of `{column, kind, baseline, current, severity, score}`) and `to_dict()`. Every argument after
-`current` is keyword-only. `shape.diff` is also the `shape.diff` package; calling it runs this
+`current` is keyword-only. `planned`, `on` and `source` apply planned changes
+(`docs/PLANNED_CHANGES.md`); `fail_on` and the change classes are in `docs/DRIFT.md`
+("Change classes"). `shape.diff` is also the `shape.diff` package; calling it runs this
 function.
 
 ## Generation
