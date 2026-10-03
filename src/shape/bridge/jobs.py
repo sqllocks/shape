@@ -57,8 +57,8 @@ def default_jobs_dir() -> Path:
 
 
 def mask_secrets(value: Any) -> Any:
-    """``value`` with every secret-named key's value replaced by ``***`` (a job file never holds a
-    credential)."""
+    """``value`` with every secret-named key's value replaced by ``***`` and every string redacted
+    (a password inside a URI or a connection string): a job file never holds a credential."""
     if isinstance(value, dict):
         return {
             k: (MASK if _SECRET_KEY.search(str(k)) and v not in (None, "") else mask_secrets(v))
@@ -66,6 +66,10 @@ def mask_secrets(value: Any) -> Any:
         }
     if isinstance(value, list):
         return [mask_secrets(v) for v in value]
+    if isinstance(value, str):
+        from shape.security.redact import redact_text
+
+        return redact_text(value)
     return value
 
 
