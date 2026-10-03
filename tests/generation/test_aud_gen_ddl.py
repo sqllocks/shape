@@ -300,3 +300,18 @@ def test_declared_logical_types_are_kept_in_the_data(smart):
     assert t.schema.field("d").type == pa.date32()
     assert t.schema.field("tm").type == pa.time64("us")
     assert all(isinstance(v, dt.time) for v in t["tm"].to_pylist() if v is not None)
+
+
+def test_transaction_dates_stay_in_the_models_date_range():
+    # 195: the seasonal transaction-date generator had no range_ref: values from 2022-01-01.
+    import datetime as dt
+
+    schema, _ = from_ddl(
+        "CREATE TABLE customer (id INT PRIMARY KEY, name VARCHAR(40));"
+        "CREATE TABLE orders (id INT PRIMARY KEY, customer_id INT REFERENCES customer(id), "
+        "order_date DATE NOT NULL)"
+    )
+    span = schema.model.date_range
+    dates = Engine(schema).generate().tables["orders"]["order_date"].to_pylist()
+    low, high = dt.date.fromisoformat(span["start"]), dt.date.fromisoformat(span["end"])
+    assert all(low <= d <= high for d in dates), (min(dates), max(dates), span)
