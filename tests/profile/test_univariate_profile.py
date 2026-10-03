@@ -180,16 +180,12 @@ def test_an_older_profile_loads_displays_and_diffs() -> None:
 # --- display -------------------------------------------------------------------------------------
 
 
-def test_the_summary_html_and_show_carry_the_new_fields(
+def test_html_and_show_carry_the_new_fields(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     prof = shape.profile(_table())
-    s = prof.summary()["columns"]
-    assert s["ratio"]["distribution_by_bic"] == "gamma"
-    assert s["visits"]["zero_inflation"]["inflated"] is True
-    assert s["amount"]["benford"]["conformity"] in ("close", "acceptable")  # 2,000 log-uniform
-    assert "distribution_candidates" not in s["ratio"]  # the table of fits stays in the profile
-    assert "city" in s and not set(FIELDS) & set(s["city"])
+    s = prof.summary()["columns"]  # the summary's key set is a pinned contract: unchanged
+    assert not set(FIELDS) & set(s["ratio"])
     html = prof.to_html()
     assert "best by BIC: gamma" in html
     assert "zero-inflated" in html and "Benford: " in html

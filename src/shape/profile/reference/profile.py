@@ -177,18 +177,8 @@ def _plain(tagged: Any) -> Any:
     return None
 
 
-_SUMMARY_UNIVARIATE = (
-    "distribution_by_bic",
-    "zero_share",
-    "zero_inflation",
-    "heaping",
-    "benford",
-    "tail_index",
-)
-
-
 def _column_summary(col: dict[str, Any]) -> dict[str, Any]:
-    out = {
+    return {
         "dtype": col["dtype"],
         "null_rate": col["null_rate"],
         "cardinality": col["cardinality"],
@@ -203,10 +193,6 @@ def _column_summary(col: dict[str, Any]) -> dict[str, Any]:
         "mean": col["mean"],
         "std": col["std"],
     }
-    for key in _SUMMARY_UNIVARIATE:  # the univariate depth fields, where the column has them
-        if key in col:
-            out[key] = col[key]
-    return out
 
 
 def _table_summary(table: dict[str, Any]) -> dict[str, Any]:

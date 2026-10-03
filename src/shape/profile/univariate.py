@@ -34,6 +34,16 @@ ZERO_SHARE_FLOOR = 0.05
 HEAP_RATIO = 2.0
 HEAP_SHARE = 0.1
 
+FIELDS = (
+    "distribution_candidates",
+    "distribution_by_bic",
+    "zero_share",
+    "zero_inflation",
+    "heaping",
+    "benford",
+    "tail_index",
+)
+"""The column fields this module writes into a profile."""
 FAMILIES = ("normal", "lognormal", "exponential", "uniform", "gamma", "weibull")
 _MAX_SHAPE = 1e5  # a gamma or Weibull shape above this is a point mass for practical purposes
 _HEAP_UNITS = (5, 10, 100, 1000)

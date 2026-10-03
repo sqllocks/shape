@@ -207,8 +207,7 @@ tail, and `alpha` depends on `k`: a lognormal or exponential column gets a finit
 means "tail heavier than normal", not a true power law.
 
 `shape diff` reports changes in these fields as `zero_inflation_change`, `heaping_change`,
-`benford_change` and `tail_change` (`docs/DRIFT.md`). `shape show` prints every field,
-`Profile.summary()` and `shape profile --json` carry them (the table of candidates stays in the
-profile), and the `--html` report states them in each column's card. A profile written before these
+`benford_change` and `tail_change` (`docs/DRIFT.md`). `shape show` and `shape cat` print every field, and the `--html` report states them in each
+column's card (`Profile.summary()` and `--json` keep their pinned key set). A profile written before these
 fields existed loads, displays and diffs as before, with the fields absent and the four kinds not
 reported.
