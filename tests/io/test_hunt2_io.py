@@ -789,4 +789,52 @@ def test_profile_of_a_csv_with_duplicate_names_says_so(tmp_path: Path) -> None:
             shape.profile(str(path))
 
 
+# ---- #736: the fabric-mirror sink ------------------------------------------------------------
+
+
+@pytest.mark.parametrize("uri", ["postgresql://host/db", "s3://bucket/x", "https://h/c"])
+def test_fabric_mirror_refuses_a_scheme_it_does_not_write(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, uri: str
+) -> None:
+    from shape.builtins.sinks.fabric_mirror import FabricMirrorSink
+    from shape.plugins.schemes import UnsupportedSchemeError
+
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(UnsupportedSchemeError, match="fabric-mirror sink"):
+        FabricMirrorSink().write(uri, "t", _batches(1))
+    assert os.listdir(tmp_path) == []
+
+
+def test_fabric_mirror_still_writes_a_path_and_a_file_uri(tmp_path: Path) -> None:
+    from shape.builtins.sinks.fabric_mirror import FabricMirrorSink
+
+    assert FabricMirrorSink().write(str(tmp_path / "a"), "t", _batches(1)) == 1
+    assert FabricMirrorSink().write((tmp_path / "b").as_uri(), "t", _batches(1, 2)) == 2
+    assert os.listdir(tmp_path / "b" / "t") == ["00000000000000000001.parquet"]
+
+
+@pytest.mark.parametrize("damaged", ["{not json", "", "[1]", "null", '{"keyColumns": 5}'])
+def test_fabric_mirror_names_a_damaged_metadata_file(tmp_path: Path, damaged: str) -> None:
+    from shape.builtins.sinks.fabric_mirror import FabricMirrorSink
+
+    sink = FabricMirrorSink()
+    table = pa.table({"k": [1], "v": ["a"]})
+    sink.write(str(tmp_path), "t", table.to_batches(), key_columns=["k"])
+    (tmp_path / "t" / "_metadata.json").write_text(damaged)
+    with pytest.raises(ValueError, match="_metadata.json"):
+        sink.write(str(tmp_path), "t", table.to_batches(), key_columns=["k"])
+    assert sorted(os.listdir(tmp_path / "t")) == ["00000000000000000001.parquet", "_metadata.json"]
+
+
+def test_fabric_mirror_publish_moves_the_file(tmp_path: Path) -> None:
+    from shape.builtins.sinks.fabric_mirror import _Local
+
+    final = tmp_path / "00000000000000000001.parquet"
+    temp = tmp_path / "_00000000000000000001.parquet"
+    temp.write_bytes(b"mine")
+    _Local(tmp_path).publish(str(temp), str(final))
+    assert final.read_bytes() == b"mine"
+    assert not temp.exists()
+
+
 _ = dt
