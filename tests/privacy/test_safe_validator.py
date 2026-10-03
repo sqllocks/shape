@@ -69,6 +69,32 @@ def test_unreadable_and_malformed_files_fail_closed(tmp_path):
     assert [f.rule for f in v.validate_file(bad).findings] == ["malformed"]
 
 
+@pytest.mark.parametrize("depth", [65, 500, 993, 5000])
+@pytest.mark.parametrize("shape_", ["list", "dict"])
+def test_over_deep_nesting_is_rejected_not_a_recursion_error(tmp_path, depth, shape_):
+    """Fuzz finding (profile-json, seed 20261002): JSON nested just under the parser's own limit
+    parsed fine, then overflowed the recursive scan. Deep nesting is a clean `malformed` finding."""
+    leaf = '"a@b.com"'
+    text = (
+        "[" * depth + leaf + "]" * depth
+        if shape_ == "list"
+        else '{"a":' * depth + leaf + "}" * depth
+    )
+    deep = tmp_path / "deep.json"
+    deep.write_text(text, encoding="utf-8")
+    result = SafeProfileValidator().validate_file(deep)
+    assert [f.rule for f in result.findings] == ["malformed"]
+
+
+def test_nesting_at_the_limit_is_still_scanned():
+    doc = {"schema_version": 1}
+    node = doc
+    for _ in range(60):
+        node["a"] = {}
+        node = node["a"]
+    assert "malformed" not in rules(doc)
+
+
 @pytest.fixture()
 def orders(tmp_path):
     rows = ["id,status,email,amount"]

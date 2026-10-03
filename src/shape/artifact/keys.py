@@ -104,13 +104,14 @@ def read_source(
     what: str,
     *,
     stdin: IO[str] | None = None,
+    private: bool = True,
 ) -> str:
     """The text a key source points to. ``-`` reads standard input."""
     s = os.fspath(source)
     if s == STDIN:
         return credrefs.read_stdin_text(stdin)
     if credrefs.is_reference(s):
-        return credrefs.resolve_reference(s)
+        return credrefs.resolve_reference(s, private=private)
     try:
         return Path(s).read_text(encoding="ascii")
     except UnicodeDecodeError:
@@ -133,7 +134,7 @@ def load_public_key(source: str | os.PathLike[str], *, stdin: IO[str] | None = N
     """A public key file written by ``shape keygen``, or any other key source."""
     s = os.fspath(source)
     what = "public key from standard input" if s == STDIN else f"public key {s}"
-    return decode_raw_key(read_source(s, what, stdin=stdin), what)
+    return decode_raw_key(read_source(s, what, stdin=stdin, private=False), what)
 
 
 def read_passphrase(

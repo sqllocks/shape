@@ -123,6 +123,37 @@ TABLE_RULES = ["row_count", "primary_key", "detected_fks", "correlation_matrix"]
 # uniqueness, and Shape must equal that. Allow-list: exactly these two fields. Nothing else is
 # derived from them (value_counts_ext keeps the same first 500 values for an enum or not, and no
 # other field reads is_enum), and every other field is still compared with the baseline as it is.
+# Intentional difference from the baseline (owner decision of 2026-10-01, ISS-profile #22): infinity
+# in a float column is a value to count, not an error. The baseline raises ValueError on the CSV
+# below (its whole-number test casts inf to an integer); Shape profiles the file and reports the
+# infinities in `inf_count`, outside every statistic. Allow-list: exactly this dataset and the
+# baseline error named here; for it the check is "Shape succeeds and counts the infinities".
+NONFINITE_RULE = {"edge/x_csv_inf.csv": "IntCastingNaNError"}
+
+# Intentional difference from the baseline (owner decision of 2026-10-01, ISS-profile #37): a text
+# column whose values are nearly all different (more than 500 distinct values, at least 95% of the
+# non-null count) lists no values: its top 500 would be an arbitrary few, stored whole. The
+# baseline column is turned into what the rule gives (no `value_counts_ext`, no order list) and
+# Shape must equal that. Allow-list: exactly these two fields, for string columns that meet the
+# condition. A text value longer than 256 characters is also cut in `value_counts_ext`,
+# `enum_values`, `min_value` and `max_value`; no dataset has one, so nothing is allow-listed for it.
+LONG_TEXT_RULE_FIELDS = ("value_counts_ext", "value_counts_ext_order")
+LONG_TEXT_TALLY = {"dropped": 0}
+TOP_N = 500
+
+
+def long_text_rule_baseline(scol: dict, n_nn: int) -> dict:
+    """The baseline column as the near-unique text rule defines it (counted in LONG_TEXT_TALLY)."""
+    if (
+        scol["dtype"] == "string"
+        and scol["cardinality"] > TOP_N
+        and scol["cardinality"] >= 0.95 * n_nn
+    ):
+        LONG_TEXT_TALLY["dropped"] += 1
+        return {**scol, "value_counts_ext": None, "value_counts_ext_order": None}
+    return scol
+
+
 ENUM_RULE_FIELDS = ("is_enum", "enum_values")
 ENUM_TALLY = {"flipped": 0, "kept": 0}
 
@@ -282,9 +313,8 @@ def check_table(sp: dict, po: dict, prefix: str, matrix: dict, fails: list, enum
     if list(sp["columns"]) != list(po["columns"]):
         fails.append(f"{prefix} column list differs")
     for c, scol in sp["columns"].items():
-        scol = enum_rule_baseline(
-            scol, enum_nn(sp, scol) if enum_nn else sp["row_count"] - scol["null_count"]
-        )
+        n_nn = enum_nn(sp, scol) if enum_nn else sp["row_count"] - scol["null_count"]
+        scol = long_text_rule_baseline(enum_rule_baseline(scol, n_nn), n_nn)
         pcol = po["columns"].get(c)
         for f, (rule, tol) in RULES.items():
             m = matrix.setdefault(f, [0, 0, 0])
@@ -324,11 +354,18 @@ def main():
             # Spindle itself fails on this input: Shape must raise an error of the same category
             want = sp["__error__"]["category"]
             try:
-                port_impl(ds)
+                profiled = port_impl(ds)
                 got = None
             except Exception as exc:
+                profiled = None
                 got = sd.error_category(exc)
-            ok = got == want
+            if NONFINITE_RULE.get(ds) == sp["__error__"]["type"]:
+                cols = (profiled or {}).get("columns", {})
+                ok = any(c.get("inf_count", 0) > 0 for c in cols.values())
+                got = "profiled" if profiled is not None else got
+                want = "profiled with inf_count > 0"
+            else:
+                ok = got == want
             matrix["dataset.error_category"] = [1, int(ok), int(ok)]
             if not ok:
                 fails.append(
@@ -385,7 +422,14 @@ def main():
         f"{', '.join(ENUM_RULE_FIELDS)} (enum rule, P1-18): "
         f"{ENUM_TALLY['flipped']} columns no longer enums, {ENUM_TALLY['kept']} stay enums"
     )
+    print(
+        f"Intentional differences from the baseline, fields {', '.join(LONG_TEXT_RULE_FIELDS)} "
+        f"(near-unique text, ISS-profile #37): {LONG_TEXT_TALLY['dropped']} columns list no values"
+    )
     missed = False
+    if wanted == ALL and not LONG_TEXT_TALLY["dropped"]:
+        print("MISMATCH the near-unique text rule never dropped a list")
+        missed = True
     if (
         wanted == ALL
     ):  # a full run must exercise the rule both ways, or the allow-list proves nothing
