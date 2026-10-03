@@ -139,6 +139,8 @@ def _build_view(name: str, kind: str, arr: Any, idx: np.ndarray | None) -> _View
     a = _take(arr, idx)
     if pa.types.is_dictionary(a.type):
         a = a.dictionary_decode()
+    if pa.types.is_floating(a.type):  # a NaN is a missing value, never a category (#313)
+        a = pc.if_else(pc.is_nan(a), pa.scalar(None, a.type), a)
     n = len(a)
     nn = n - a.null_count
     if nn < 3:
@@ -166,7 +168,7 @@ def _build_view(name: str, kind: str, arr: Any, idx: np.ndarray | None) -> _View
             vals = None
         if vals is not None:
             vals = np.where(np.isfinite(vals), vals, np.nan)
-            if np.nanstd(vals) > 0:
+            if np.count_nonzero(~np.isnan(vals)) > 1 and np.nanstd(vals) > 0:
                 v.values = vals
     if v.codes is None and v.values is None:
         return None
