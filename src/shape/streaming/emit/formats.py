@@ -7,8 +7,9 @@ row's position in its table, so a replay produces the same key for the same row.
 
 The *cloudevents* envelope wraps the flat event as the ``data`` of a CloudEvents 1.0 structured
 JSON event: ``id`` is ``<table>/<seq>``, ``type`` is ``shape.<table>.row``, ``time`` is the event
-time when there is one, and ``shapetable`` and ``shapeseq`` are extension attributes (CloudEvents
-names are lower-case letters and digits).
+time when there is one, as RFC 3339 with an offset (a zone-less time is UTC, a date is midnight
+UTC; ``data`` keeps the value as the flat event has it), and ``shapetable`` and ``shapeseq`` are
+extension attributes (CloudEvents names are lower-case letters and digits).
 
 JSON values: timestamps and dates are ISO-8601 strings (UTC ``Z`` when the type has a time zone),
 decimals are strings (no precision loss), binary is base64, non-finite floats are ``null``.
