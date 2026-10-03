@@ -123,3 +123,32 @@ a dead statement removed from `FullEvidenceEngine.process` (c1c7a17).
 * No `.github/workflows` change is needed.
 
 ## Commands and results
+Run on the merged branch (origin/build/main-plan merged at 5618be3), venv per plan §1.1 with
+`.[dev,streaming,advanced]`, `plugins/shape-domains` and `tests/demo/fabric/requirements.txt`.
+
+* `python scripts/check_user_facing.py`: clean, exit 0.
+* `ruff check src tests plugins benchmarks/vs_spindle`: all checks passed.
+* `ruff format --check src tests plugins benchmarks/vs_spindle`: 1089 files already formatted.
+* `mypy`: no issues in 436 source files.
+* Streaming tests (`tests/streaming tests/test_streaming_async.py`), coverage baseline before the
+  fixes: 373 passed, 1 skipped, 92%; each fix's regression test and its module's tests pass after it.
+* `SHAPE_KERNEL=rust pytest -m "not emulator and not live"`: 7105 passed, 2 skipped, **6 failed**.
+* `SHAPE_KERNEL=python pytest -m "not emulator and not live"`, in two halves (one run of the whole
+  suite exceeded the session's 2-hour limit for a background command): 4310 + 2795 passed, 2
+  skipped, **5 failed**, 1 deselected.
+
+None of the failures are in this lane's area, and none come from its changes:
+
+* 5 fail the same way on base `origin/build/main-plan` (checked in a worktree of it):
+  `tests/demo_cmd/test_notebook_and_outputs.py::test_the_semantic_model_is_a_bim_of_the_learned_schema`
+  and `::test_all_writes_the_page_and_the_model` (they need the `shape-fabric` plugin, not
+  installed here), `tests/iss_gaps/test_landing_and_batches.py::test_file_sinks_take_path_template_and_batch_date`,
+  `tests/kernel/test_hashing.py::test_rust_equals_reference_on_a_million_values[float16]` and
+  `::test_one_and_one_point_zero_hash_equal` (installing the Fabric test requirements brought
+  pyarrow down to 19.0.1; CI runs those requirements in a separate job).
+* `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references`
+  (rust run only) depends on test order (issue #77); it passes on its own (41 passed).
+* Deselected in the python run: `tests/profile/test_engine.py::test_bounded_mode_memory_does_not_grow_with_rows`
+  (profile engine, outside this area, untouched by the lane). Under the python kernel it ran more
+  than an hour without finishing in two full-suite runs. It passes under the rust kernel.
+* Not run: `benchmarks/vs_spindle/stream_1to1/verify.py`, because the pinned checkout is absent (see the notes above).
