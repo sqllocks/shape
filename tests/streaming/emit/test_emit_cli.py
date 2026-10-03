@@ -213,10 +213,18 @@ def reference(tmp_path_factory: pytest.TempPathFactory) -> list[bytes]:
     return lines
 
 
-@pytest.mark.parametrize("kill_at", [1500, 9000, 21000])
+# Events per second for each kill point. The kill must land while the run is still going: the
+# time left after the kill point is (21750 - kill_at) / rate, and a loaded runner can stall for a
+# few hundred ms between the poll that sees the kill point and the kill. A late kill point
+# therefore runs slower, so that at least a second of stream is always left.
+KILL_RATES = {1500: 6000, 9000: 6000, 21000: 750}
+
+
+@pytest.mark.parametrize("kill_at", sorted(KILL_RATES))
 def test_kill_9_then_restart_equals_an_uninterrupted_run(
     tmp_path: Path, reference: list[bytes], kill_at: int
 ) -> None:
+    assert (21750 - kill_at) / KILL_RATES[kill_at] >= 1.0
     out = tmp_path / "e.jsonl"
     args = [
         *BASE,
@@ -227,12 +235,12 @@ def test_kill_9_then_restart_equals_an_uninterrupted_run(
         *STREAM,
         "--realtime",
         "--rate",
-        "6000",
+        str(KILL_RATES[kill_at]),
         "--checkpoint-every",
         "100000",
     ]
     proc = _spawn(args)
-    _wait_for_events(out, kill_at, proc)
+    _wait_for_events(out, kill_at, proc, timeout=90)
     _hard_kill(proc)
     killed_with = len(_lines(out))
     assert killed_with < 21750
