@@ -365,3 +365,16 @@ def test_leak_finding_detail_never_reaches_a_report():
         ci.sarif_doc("profile validate", checks, "p.json", "x")
     )
     assert SECRET not in text and "raw-value" in text
+
+
+def test_check_on_a_model_writes_reports_too(work):
+    assert main(["capture", "a.csv", "-o", "m.shape"]) == 0
+    (work / "ev.json").write_text(json.dumps({"columns": {"zzz": {}}}))
+    assert main(["check", "m.shape", "ev.json", "--junit", "m.xml", "--sarif", "m.sarif"]) == 4
+    cases = _assert_structure(_suite(work / "m.xml"), "check")
+    assert [c.get("name") for c in cases if c.find("failure") is not None] == [
+        "columns.zzz:missing"
+    ]
+    doc = _sarif(work / "m.sarif")
+    _assert_sarif_schema(doc)
+    assert doc["runs"][0]["results"][0]["ruleId"] == "missing"

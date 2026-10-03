@@ -60,6 +60,9 @@ def _parser() -> argparse.ArgumentParser:
 
     ci.add_flags(va)
     add_project_flags(va, source=False)
+    from shape.cli import exitcodes
+
+    exitcodes.apply(p, ("profile",))
     return p
 
 

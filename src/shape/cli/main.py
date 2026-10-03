@@ -1411,6 +1411,9 @@ def _build_parser(plugin_commands=()):
     add_project_arguments(sub)
     for rec in plugin_commands:  # listed in --help only; the plugin loads when it is run
         sub.add_parser(rec.name, help=f"(plugin {rec.source})", add_help=False)
+    from shape.cli import exitcodes
+
+    exitcodes.apply(p)
     return p
 
 

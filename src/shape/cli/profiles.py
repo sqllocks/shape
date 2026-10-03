@@ -122,6 +122,9 @@ def _parser() -> argparse.ArgumentParser:
     rv.add_argument("--tolerance", type=float, default=0.05, help="null-rate drift (default 0.05)")
     rv.add_argument("--json", action="store_true")
     _root(rv)
+    from shape.cli import exitcodes
+
+    exitcodes.apply(p, ("profile",))
     return p
 
 
