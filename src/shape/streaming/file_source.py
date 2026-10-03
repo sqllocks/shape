@@ -202,7 +202,19 @@ def _as_type(value: str | None, typ: pa.DataType) -> Any:
     return value
 
 
-def _csv_rows(src: BinaryIO, batch_size: int) -> Iterator[str]:
+def _check_names(names: Iterable[str], where: str) -> None:
+    """A column name that appears twice would keep only the last column's values."""
+    first: dict[str, int] = {}
+    for i, name in enumerate(names, 1):
+        if name in first:
+            raise StreamSourceError(
+                f"{where}: the column name {name!r} appears more than once (columns "
+                f"{first[name]} and {i}); rename one of them, a profile has one column per name"
+            )
+        first[name] = i
+
+
+def _csv_rows(src: BinaryIO, batch_size: int, where: str = "the CSV") -> Iterator[str]:
     import pyarrow.csv as pacsv  # type: ignore[import-untyped]
 
     options = pacsv.ReadOptions(block_size=max(1 << 20, batch_size * 64))
@@ -211,6 +223,7 @@ def _csv_rows(src: BinaryIO, batch_size: int) -> Iterator[str]:
     try:
         with pacsv.open_csv(src, read_options=options) as reader:
             schema = reader.schema
+            _check_names(schema.names, where)
             for batch in reader:
                 for row in batch.to_pylist():
                     yield _dumps(row)
@@ -236,11 +249,13 @@ def _csv_rows(src: BinaryIO, batch_size: int) -> Iterator[str]:
             yield _dumps({k: _as_type(v, types[k]) for k, v in row.items()})
 
 
-def _parquet_rows(src: BinaryIO, batch_size: int) -> Iterator[str]:
+def _parquet_rows(src: BinaryIO, batch_size: int, where: str = "the Parquet file") -> Iterator[str]:
     import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
     data = src if hasattr(src, "seekable") and src.seekable() else io.BytesIO(src.read())
-    for batch in pq.ParquetFile(data).iter_batches(batch_size=batch_size):
+    parquet = pq.ParquetFile(data)
+    _check_names(parquet.schema_arrow.names, where)
+    for batch in parquet.iter_batches(batch_size=batch_size):
         for row in batch.to_pylist():
             yield _dumps(row)
 
@@ -252,9 +267,9 @@ def _bodies(inputs: list[_Input], fmt: str, batch_size: int) -> Iterator[bytes |
             if fmt == "jsonl":
                 yield from _lines(src)
             elif fmt == "csv":
-                yield from _csv_rows(src, batch_size)
+                yield from _csv_rows(src, batch_size, item.name)
             else:
-                yield from _parquet_rows(src, batch_size)
+                yield from _parquet_rows(src, batch_size, item.name)
         finally:
             if item.name != STDIN:
                 src.close()
