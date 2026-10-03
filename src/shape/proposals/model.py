@@ -36,6 +36,19 @@ PENDING = "pending"
 AUTO_ACCEPT_ACTOR = "auto-accept"
 
 _TIME = re.compile(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$")
+
+
+def _is_time(text: Any) -> bool:
+    """A real UTC time written like ``2026-10-03T12:00:00Z`` (not ``2026-02-30T...``)."""
+    if not isinstance(text, str) or not _TIME.match(text):
+        return False
+    try:
+        datetime.strptime(text, "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        return False
+    return True
+
+
 _TOP_KEYS = {"format", "version", "proposals", "decisions"}
 _PROPOSAL_KEYS = {"id", "kind", "subject", "claim", "confidence", "evidence", "proposed_at"}
 _DECISION_KEYS = {"proposal", "status", "actor", "at", "note"}
@@ -133,7 +146,7 @@ def stamp(now: datetime | str | None = None) -> str:
     if now is None:
         now = datetime.now(UTC)
     if isinstance(now, str):
-        if not _TIME.match(now):
+        if not _is_time(now):
             raise DecisionError(f"a time must look like 2026-10-03T12:00:00Z, got {now!r}")
         return now
     if now.tzinfo is None:
@@ -254,7 +267,7 @@ class DecisionFile:
         pid, kind, subject = raw["id"], raw["kind"], raw["subject"]
         _check_identity(pid, kind, subject, raw["claim"], raw["evidence"], where)
         when = raw["proposed_at"]
-        if not isinstance(when, str) or not _TIME.match(when):
+        if not _is_time(when):
             raise DecisionError(f"{where}: proposed_at must be UTC like 2026-10-03T12:00:00Z")
         return Proposal(
             pid, kind, subject, raw["claim"], _check_confidence(raw["confidence"], where),
@@ -277,7 +290,7 @@ class DecisionFile:
             )
         if not raw["actor"].strip():
             raise DecisionError(f"{where}: actor must not be empty")
-        if not _TIME.match(raw["at"]):
+        if not _is_time(raw["at"]):
             raise DecisionError(f"{where}: at must be UTC like 2026-10-03T12:00:00Z")
         return Decision(raw["proposal"], raw["status"], raw["actor"], raw["at"], raw["note"])
 
