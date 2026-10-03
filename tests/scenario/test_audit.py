@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from shape.generation.schema import GenSchema
-from shape.scenario import PackLoader, PackRunner
+from shape.scenario import GSLParser, PackLoader, PackRunner, PackValidator, validate_spec
 
 FILE_DROP = {
     "pack_version": 1,
@@ -57,3 +59,77 @@ def test_281_a_domain_name_with_a_path_does_not_leave_the_output(tmp_path, retai
     assert Path(result.files_written[-1]).parent.resolve() == out.resolve()
     escaped = [p for p in tmp_path.rglob("*ESCAPED_DOMAIN*") if p.parent.resolve() != out.resolve()]
     assert escaped == []
+
+
+# ---- #510: the chaos section is validated ------------------------------------------------------
+
+
+def chaos_pack(chaos: dict) -> dict:
+    return {**FILE_DROP, "domain": "retail", "chaos": chaos}
+
+
+@pytest.mark.parametrize(
+    ("chaos", "key"),
+    [
+        ({"enabled": True, "seed": "abc"}, "chaos.seed"),
+        ({"enabled": True, "warmup_days": [1]}, "chaos.warmup_days"),
+        ({"enabled": True, "day": "x"}, "chaos.day"),
+        ({"enabled": True, "breaking_change_day": True}, "chaos.breaking_change_day"),
+        ({"enabled": "false"}, "chaos.enabled"),
+        ({"enabled": True, "intensity": 3}, "chaos.intensity"),
+        ({"enabled": True, "categories": ["value"]}, "chaos.categories"),
+        ({"enabled": True, "categories": {"value": "x"}}, "chaos.categories.value"),
+        ({"enabled": True, "config": [1]}, "chaos.config"),
+        ({"enabled": True, "config": {"seed": "abc"}}, "chaos.config.seed"),
+    ],
+)
+def test_510_a_chaos_value_of_the_wrong_type_is_an_error_naming_the_key(retail, chaos, key):
+    pack = PackLoader().parse(chaos_pack(chaos))
+    result = PackValidator().validate(pack, retail)
+    assert not result.is_valid
+    assert any(key in e for e in result.errors), result.errors
+
+
+def test_510_a_run_with_a_wrong_chaos_value_fails_validation_without_a_crash(tmp_path, retail):
+    pack = PackLoader().parse(chaos_pack({"enabled": "false", "day": "x"}))
+    result = PackRunner().run(pack, retail, "small", 1, tmp_path / "out")
+    assert not result.is_success and not result.chaos_applied
+    assert any("chaos.enabled" in e for e in result.errors), result.errors
+
+
+def test_510_an_unknown_chaos_key_is_warned_about(retail):
+    pack = PackLoader().parse(chaos_pack({"enabled": True, "intensty": "stormy"}))
+    result = PackValidator().validate(pack, retail)
+    assert result.is_valid
+    assert "Unknown key 'chaos.intensty' is ignored" in result.warnings
+
+
+SPEC = """\
+version: 1
+schema: {type: domain, domain: retail}
+scenario: {pack: pack.yaml, scale: small, seed: 1}
+chaos: {chaos_body}
+"""
+
+
+def spec_with_chaos(tmp_path, body: str):
+    import yaml
+
+    (tmp_path / "pack.yaml").write_text(yaml.safe_dump(FILE_DROP | {"domain": "retail"}))
+    (tmp_path / "s.gsl.yaml").write_text(SPEC.replace("{chaos_body}", body))
+    return GSLParser().parse(tmp_path / "s.gsl.yaml")
+
+
+def test_510_validate_spec_reports_a_wrong_chaos_value(tmp_path):
+    spec = spec_with_chaos(tmp_path, "{enabled: true, seed: abc, intensty: x}")
+    result = validate_spec(spec)
+    assert any("chaos.seed" in e for e in result.errors), result.errors
+    assert any("chaos.intensty" in w for w in result.warnings), result.warnings
+
+
+def test_510_a_spec_run_validates_the_spec_chaos(tmp_path, retail):
+    spec = spec_with_chaos(tmp_path, "{enabled: true, config: {seed: abc}}")
+    pack = PackLoader().parse(FILE_DROP | {"domain": "retail"})
+    result = PackRunner().run(pack, retail, "small", 1, tmp_path / "out", spec=spec)
+    assert not result.is_success and not result.chaos_applied
+    assert any("chaos.seed" in e or "chaos.config.seed" in e for e in result.errors), result.errors
