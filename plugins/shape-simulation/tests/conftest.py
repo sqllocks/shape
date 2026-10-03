@@ -199,3 +199,18 @@ def schema_files(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Path]:
         path.write_text(json.dumps(schema_doc(*spec(kind))))
         out[kind] = path
     return out
+
+
+@pytest.fixture
+def windows_text_io(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Text files behave as on Windows: the locale encoding is cp1252 and a text-mode write turns
+    ``"\\n"`` into ``"\\r\\n"`` unless ``newline=`` says otherwise."""
+    import _pyio
+    import builtins
+    import io
+    import os
+
+    monkeypatch.setattr(os, "linesep", "\r\n")
+    monkeypatch.setattr(_pyio.TextIOWrapper, "_get_locale_encoding", lambda self: "cp1252")
+    monkeypatch.setattr(io, "open", _pyio.open)
+    monkeypatch.setattr(builtins, "open", _pyio.open)
