@@ -138,5 +138,13 @@ Notes on scope:
   `tests/kernel/test_hashing.py::test_rust_equals_reference_on_a_million_values[float16]`,
   `::test_one_and_one_point_zero_hash_equal`; #333): `tests/demo/fabric/requirements.txt`
   installs pyarrow 19.0.1 in this venv.
+- `SHAPE_KERNEL=python pytest -m "not emulator and not live" --deselect
+  tests/profile/test_engine.py::test_bounded_mode_memory_does_not_grow_with_rows`: 7198 passed, the
+  same 4 failed (all pre-existing, above). That one test was deselected in this local run only
+  (it is not changed): under the pure-Python kernel it profiles a 48M-row CSV in a subprocess and
+  had run 36 minutes when stopped; it passed in the rust-kernel run. CI runs only `tests/kernel`
+  under `SHAPE_KERNEL=python`.
+- `origin/build/main-plan` has no commits this branch lacks (fetched at the end), so no merge was
+  needed.
 - `plugins/shape-fabric/tests/test_lakehouse.py::test_parquet_to_a_local_folder_round_trips`
   fails the same way on base (dictionary index width under pyarrow 19.0.1).
