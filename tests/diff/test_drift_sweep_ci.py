@@ -28,6 +28,7 @@ def test_nightly_runs_the_full_sweep_in_both_kernels():
 
 def test_the_sweep_size_comes_from_the_environment_and_rejects_unknown_sizes(monkeypatch):
     sys.path.insert(0, str(ROOT / "tests/diff"))
+    sys.modules.pop("test_drift_sweep", None)  # an import by another test must not hide it (#330)
     try:
         monkeypatch.setenv("SHAPE_DRIFT_SWEEP", "bogus")
         with pytest.raises(RuntimeError, match="SHAPE_DRIFT_SWEEP"):
@@ -54,6 +55,7 @@ def test_drift_doc_states_the_sweeps_bounds_and_the_new_threshold():
         sweep = importlib.import_module("test_drift_sweep")
     finally:
         sys.path.remove(str(ROOT / "tests/diff"))
+        sys.modules.pop("test_drift_sweep", None)
     text = (ROOT / "docs/DRIFT.md").read_text(encoding="utf-8")
     assert f"**{sweep.MAX_PAIRS_WITH_A_CHANGE:.0%}**" in text
     assert f"**{sweep.MAX_COLUMN_FALSE_POSITIVE_RATE:.1%}**" in text
