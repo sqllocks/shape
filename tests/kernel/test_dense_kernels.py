@@ -136,3 +136,63 @@ def test_bad_arguments_are_refused(nat):
             impl.group_sums(pa.array([1], type=pa.int64()), pa.array(["x"]), 1, 1)
         with pytest.raises(ValueError, match="negative"):
             impl.group_sums(pa.array([1], type=pa.int64()), pa.array([1.0]), 1, -1)
+
+
+# ---- overflow of keys, slots and word addresses (#549) ----------------------------------------
+
+I64_MIN, I64_MAX = -(2**63), 2**63 - 1
+
+
+def _both():
+    from shape.kernel import dispatch, reference
+
+    return [dispatch._import_native(), reference]
+
+
+@pytest.mark.parametrize(
+    ("keys", "start", "size"),
+    [([1, 5], I64_MIN, 10), ([I64_MAX, 0], -2, I64_MAX), ([I64_MIN, 7], 1, 5)],
+)
+def test_keys_outside_the_sequence_are_null_even_when_the_difference_overflows(keys, start, size):
+    # Regression #549: key - start wrapped, giving a negative row (dense_rows) or a panic
+    # (group_sums).
+    for mod in _both():
+        rows = pa.array(mod.dense_rows(pa.array(keys, pa.int64()), start, size)).to_pylist()
+        assert rows == [None, None], mod.NAME
+        small = min(size, 10)
+        sums, counts = mod.group_sums(
+            pa.array(keys, pa.int64()), pa.array([1.0, 2.0]), start, small
+        )
+        assert pa.array(sums).to_pylist() == [0.0] * small, mod.NAME
+        assert pa.array(counts).to_pylist() == [0] * small, mod.NAME
+
+
+def test_a_slot_whose_end_overflows_is_rejected():
+    for mod in _both():
+        with pytest.raises(ValueError, match="does not fit"):
+            mod.philox_uniform(1, 2, 0, 3, 2, 2**64 - 1)
+        with pytest.raises(ValueError, match="does not fit"):
+            mod.philox_normal(1, 2, 0, 3, 3, 2**64 - 2)
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        lambda m: m.philox_words(1, 2, 0, 2**62, 4),
+        lambda m: m.philox_words(1, 2, 2**63, 2, 2),
+        lambda m: m.philox_uniform(1, 2, 2**64 - 1, 2),
+        lambda m: m.uuid4_strings(1, 2, 2**64 - 1, 2),
+    ],
+)
+def test_rows_past_the_end_of_the_stream_are_rejected(call):
+    # Regression #549: row * per_row wrapped, so rows near 2**63 aliased rows near 0.
+    for mod in _both():
+        with pytest.raises(ValueError, match="end of the stream"):
+            call(mod)
+
+
+def test_the_last_rows_of_the_stream_still_work():
+    native, reference = _both()
+    for args in ((2**63 - 1, 1, 2), (2**64 - 4, 4, 1)):
+        a = pa.array(native.philox_words(1, 2, *args)).to_pylist()
+        assert a == pa.array(reference.philox_words(1, 2, *args)).to_pylist()
