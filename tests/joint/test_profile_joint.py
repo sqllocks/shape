@@ -71,7 +71,7 @@ def test_every_input_kind_gets_the_same_joint_analysis(city_zip: dict, tmp_path)
         got = _table(shape.profile(source))["joint"]
         assert got["dependencies"] == expect["dependencies"]
         assert got["implausible_rate"] == expect["implausible_rate"]
-    multi = shape.profile({"a": t, "b": t}).to_dict()["tables"]
+    multi = shape.profile({"a": t, "b": t}, joint=True).to_dict()["tables"]
     assert multi["a"]["joint"]["dependencies"] == expect["dependencies"]
 
 

@@ -202,7 +202,7 @@ def test_v1_contracts_without_the_new_rules_behave_as_before(profiles) -> None:
 
 
 def test_the_rules_work_per_table_in_a_dataset(city_zip: dict) -> None:
-    ds = shape.profile({"places": city_zip["bad"]})
+    ds = shape.profile({"places": city_zip["bad"]}, joint=True)
     result = shape.check(ds, {"tables": {"places": CONTRACT}})
     assert {(v["column"], v["rule"]) for v in result.violations} == {
         ("places.zip", "no_placeholder"),

@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import glob as _glob
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -12,11 +15,28 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.json as pajson  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
+from shape.io.excel import is_workbook_spec
 from shape.security.jsondepth import check_json_file
 
 from .readers import CsvFormat, _arrow_cols, _Col, _csv_cols, _csv_options, read_csv
 
 _SUFFIXES = (".csv", ".parquet", ".jsonl", ".ndjson")
+
+_SOURCE_OPTIONS: ContextVar[dict[str, Any] | None] = ContextVar(
+    "shape_source_options", default=None
+)
+
+
+@contextmanager
+def source_options(**options: Any) -> Iterator[None]:
+    """Options (a ``credential``) every cloud source opened inside the block receives: how
+    ``shape profile --auth`` reaches a ``shape.sources`` plugin without changing ``profile``'s
+    signature."""
+    token = _SOURCE_OPTIONS.set({**(_SOURCE_OPTIONS.get() or {}), **options})
+    try:
+        yield
+    finally:
+        _SOURCE_OPTIONS.reset(token)
 
 
 class SourceError(ValueError):
@@ -205,7 +225,7 @@ def _is_url(text: str) -> bool:
     return bool(sep) and len(scheme) > 1 and scheme.lower() != "file"
 
 
-def _load_remote(text: str, name: str | None) -> tuple[str, list[_Col], int]:
+def _remote_table(text: str, name: str | None) -> tuple[str, pa.Table]:
     """A URL source: the first installed ``shape.sources`` plugin that can open it (PF-01)."""
     from shape.plugins.host import default_host
 
@@ -214,10 +234,11 @@ def _load_remote(text: str, name: str | None) -> tuple[str, list[_Col], int]:
         source = host.try_get(rec.group, rec.name)
         if source is None or not source.can_open(text):
             continue
-        schema = source.schema(text)
-        table = pa.Table.from_batches(list(source.read(text)), schema=schema)
+        options = _SOURCE_OPTIONS.get() or {}
+        schema = source.schema(text, **options)
+        table = pa.Table.from_batches(list(source.read(text, **options)), schema=schema)
         stem = PurePosixPath(urlparse(text).path).stem
-        return name or stem or "table", _to_cols("parquet", table), table.num_rows
+        return name or stem or "table", table
     raise SourceError(
         f"no installed source plugin reads {text!r}; check the scheme, install the extra "
         "(pip install 'sqllocks-shape[azure]' for abfss:// and Delta) and run "
@@ -225,25 +246,34 @@ def _load_remote(text: str, name: str | None) -> tuple[str, list[_Col], int]:
     )
 
 
-def _load_path(
+def _load_workbook_sheet(text: str, name: str | None) -> tuple[str, list[_Col], int]:
+    from shape.io import open_source
+
+    src = open_source(text, name=name)
+    table = src.table()
+    return src.name, _to_cols("xlsx", table), table.num_rows
+
+
+def _path_table(
     text: str, name: str | None, threads: int | None, csv: CsvFormat | None = None
-) -> tuple[str, list[_Col], int]:
+) -> tuple[str, str, pa.Table]:
+    """-> (table name, kind, Arrow table) of a path, glob, directory, Delta table or URL."""
     if _is_url(text):
-        return _load_remote(text, name)
+        table_name, table = _remote_table(text, name)
+        return table_name, "remote", table
     if any(ch in text for ch in "*?["):
         matches = sorted(Path(m) for m in _glob.glob(text, recursive=True) if Path(m).is_file())
         if not matches:
             raise FileNotFoundError(f"no files match {text!r}")
         kind, table = _read_files(matches, threads, csv)
         stem = Path(text.split("*")[0].split("?")[0].split("[")[0]).name or "table"
-        return name or stem, _to_cols(kind, table), table.num_rows
+        return name or stem, kind, table
     path = Path(text)
     if not path.exists():
         raise FileNotFoundError(f"source not found: {text}")
     if path.is_dir():
         if (path / "_delta_log").is_dir():
-            table = _read_delta(path)
-            return name or path.name, _arrow_cols(table), table.num_rows
+            return name or path.name, "delta", _read_delta(path)
         files = sorted(
             p
             for p in path.rglob("*")
@@ -252,9 +282,55 @@ def _load_path(
         if not files:
             raise SourceError(f"directory {text} holds no {'/'.join(_SUFFIXES)} files")
         kind, table = _read_files(files, threads, csv)
-        return name or path.name, _to_cols(kind, table), table.num_rows
+        return name or path.name, kind, table
     kind, table = _read_files([path], threads, csv)
-    return name or _default_name(path), _to_cols(kind, table), table.num_rows
+    return name or _default_name(path), kind, table
+
+
+def _load_path(
+    text: str, name: str | None, threads: int | None, csv: CsvFormat | None = None
+) -> tuple[str, list[_Col], int]:
+    if is_workbook_spec(text):
+        return _load_workbook_sheet(text, name)
+    table_name, kind, table = _path_table(text, name, threads, csv)
+    if kind == "delta":
+        return table_name, _arrow_cols(table), table.num_rows
+    return table_name, _to_cols("parquet" if kind == "remote" else kind, table), table.num_rows
+
+
+def load_table(
+    source: Any,
+    name: str | None = None,
+    threads: int | None = None,
+    *,
+    version: int | None = None,
+    as_of: Any = None,
+) -> tuple[str, pa.Table, dict[str, Any] | None]:
+    """-> (table name, Arrow table, provenance) for one table-shaped source: the same inputs
+    and readers as :func:`load_columns` (CSV, Parquet, JSONL, globs, folders, Delta tables with
+    ``version``/``as_of``, URL sources, Arrow tables, DataFrames, row dicts), for callers that
+    want the typed Arrow table rather than the profiler's columns. ``provenance`` is that of a
+    Delta read, else ``None``."""
+    check_delta_options(version, as_of)
+    delta = delta_dir(source)
+    if delta is not None:
+        table, provenance = read_delta(delta, version=version, as_of=as_of)
+        return name or delta.name, table, provenance
+    if version is not None or as_of is not None:
+        raise SourceError("version and as_of read a Delta table: the source is not a Delta table")
+    if isinstance(source, pa.Table):
+        return name or "table", source, None
+    if _is_pandas(source):
+        return name or "table", pa.Table.from_pandas(source, preserve_index=False), None
+    if _is_row_dicts(source):
+        return name or "table", _rows_table(source), None
+    if not isinstance(source, (str, Path)):
+        raise SourceError(
+            f"unsupported source type {type(source).__name__}; expected a path, glob, "
+            "pyarrow.Table, pandas.DataFrame or a list of row dicts"
+        )
+    table_name, _, table = _path_table(str(source), name, threads)
+    return table_name, table, None
 
 
 def folder_tables(folder: str | Path) -> dict[str, Path]:
@@ -316,7 +392,8 @@ def folder_is_one_table(folder: str | Path, csv: CsvFormat | None = None) -> boo
 
 def _to_cols(kind: str, table: pa.Table) -> list[_Col]:
     # CSV keeps pandas.read_csv dtype semantics; everything else Table.to_pandas() semantics.
-    cols = _csv_cols(table) if kind == "csv" else _arrow_cols(table)
+    cols = _csv_cols(table) if kind == "csv" else _arrow_cols(table)  # xlsx: Arrow semantics
     for c in cols:
         c.strict = True
+        c.text = kind == "xlsx" and c.kind == "str"
     return cols

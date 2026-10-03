@@ -33,6 +33,27 @@ MAX_RAW_STRING_LIST = 2
 SAFE_MINMAX_CONTAINERS = frozenset({"string_length", "length_dist"})
 _MIN_KEYS = ("min", "min_value", "minimum")
 _MAX_KEYS = ("max", "max_value", "maximum")
+# A safe profile is a shallow document. Anything nested deeper is rejected before it is walked, so a
+# hostile artifact cannot exhaust the interpreter stack (RecursionError) in the recursive scan.
+MAX_NESTING_DEPTH = 64
+
+
+def _nesting_depth(data: Any, limit: int) -> int:
+    """Depth of ``data`` (iterative, stops once it exceeds ``limit``)."""
+    deepest = 0
+    stack: list[tuple[Any, int]] = [(data, 1)]
+    while stack:
+        node, depth = stack.pop()
+        deepest = max(deepest, depth)
+        if deepest > limit:
+            return deepest
+        if isinstance(node, dict):
+            stack.extend((v, depth + 1) for v in node.values())
+        elif isinstance(node, list):
+            stack.extend((v, depth + 1) for v in node)
+    return deepest
+
+
 SAFE_SCHEMA_MARKERS = frozenset({"schema_version", "redaction_manifest"})
 
 # Unanchored on purpose: personal data embedded anywhere inside a value must be found.
@@ -124,6 +145,13 @@ class SafeProfileValidator:
     def validate_data(self, data: Any, path: str = "<data>") -> ValidationResult:
         """Scan an already parsed artifact."""
         result = ValidationResult(path=path)
+        if _nesting_depth(data, MAX_NESTING_DEPTH) > MAX_NESTING_DEPTH:
+            result.add(
+                "malformed",
+                "$",
+                f"nesting deeper than {MAX_NESTING_DEPTH} levels; a safe profile is shallow",
+            )
+            return result
         if not (isinstance(data, dict) and SAFE_SCHEMA_MARKERS & data.keys()):
             result.add(
                 "not-safe-profile",

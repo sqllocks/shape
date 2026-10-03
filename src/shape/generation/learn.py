@@ -209,6 +209,28 @@ def _is_covered_enum(col: ColumnProfile) -> bool:
     return values is not None and len(values) > 0 and len(values) >= col.cardinality
 
 
+def _zero_padded_width(col: ColumnProfile) -> int:
+    """The width of a text column whose values are all the same number of digits and some start
+    with a zero (so that read as numbers they would lose their zeros), else 0."""
+    if col.dtype != "string" or col.is_foreign_key or not col.string_length:
+        return 0
+    low, high = col.string_length.get("min"), col.string_length.get("max")
+    if low is None or low != high or not 2 <= low <= 18:
+        return 0
+    lo, hi = _text_of(col.min_value), _text_of(col.max_value)
+    if (
+        lo is None
+        or hi is None
+        or not (lo.isascii() and lo.isdigit() and hi.isascii() and hi.isdigit())
+    ):
+        return 0
+    return int(low) if lo.startswith("0") else 0
+
+
+def _text_of(value: Any) -> str | None:
+    return value if isinstance(value, str) else None
+
+
 def guess_provider(column_name: str) -> str:
     """A faker provider guessed from a column name."""
     lower = column_name.lower().strip()
@@ -362,6 +384,11 @@ class SchemaBuilder:
         self, col: ColumnProfile, parent_pk: Mapping[str, str], fit_threshold: float = 0.80
     ) -> dict[str, Any]:
         """The generator of one column: the first rule that applies."""
+        width = _zero_padded_width(col)
+        if width:  # an identifier kept as text (ZIP, NDC, member id): never a number or a pattern
+            if col.is_primary_key or col.is_unique:
+                return {"strategy": "faker", "provider": "digit_ids", "width": width}
+            return {"strategy": "faker", "provider": "digits", "width": width}
         if col.is_primary_key:
             if col.pattern == "uuid" or col.dtype == "string":
                 return {"strategy": "uuid"}

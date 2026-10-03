@@ -418,9 +418,10 @@ def _gap_distribution(stats: Any, gaps: npt.NDArray[np.float64]) -> str | None:
             p_exp = stats.kstest(
                 positive, "expon", args=(float(positive.min()), float(positive.mean()))
             )[1]
-            p_norm = stats.kstest(gaps, "norm", args=(float(gaps.mean()), float(gaps.std(ddof=1))))[
-                1
-            ]
+            # A frozen distribution's cdf, not the string "norm" with args: SciPy 1.18 resolves
+            # the string to the bare ``ndtr`` ufunc and calls it with (x, loc, scale).
+            normal = stats.norm(float(gaps.mean()), float(gaps.std(ddof=1)))
+            p_norm = stats.kstest(gaps, normal.cdf)[1]
     except ValueError:
         return None
     return "exponential" if p_exp > p_norm else "normal"

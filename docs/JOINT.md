@@ -9,8 +9,22 @@ given for the diagnosis. `shape profile` records what holds across columns, `sha
 
 Every table profile has an optional `joint` entry, and a column profile has an optional
 `placeholders` list. Both are additive: a profile without them is still valid, and nothing else in
-the profile changes. They cost a bounded amount (below) and can be switched off with
-`SHAPE_PROFILE_JOINT=0` (the `joint` entry only).
+the profile changes. They cost a bounded amount (below). The `placeholders` list always comes
+with the column; the `joint` entry follows this rule:
+
+| Profile | Default | Turn on | Turn off |
+|---|---|---|---|
+| One table (a file, a folder read as one table, a table, a data frame) | on | `joint=True`, `--joint` | `joint=False`, `--no-joint` |
+| A dataset (several tables: a dict of sources, `--dataset`, a workbook) | **off** | `joint=True`, `--joint` | `joint=False`, `--no-joint` |
+
+When the call does not choose, `SHAPE_PROFILE_JOINT` does: `0`, `false` or `no` switches the
+analysis off, any other non-empty value (`1`) switches it on, for a dataset too. An explicit
+`joint=` or `--joint` / `--no-joint` always wins over the variable. A dataset profile without the
+entry is otherwise identical to one with it, so `shape profile --dataset DIR --joint` can add it
+when the dependencies, associations or `fd` contract rules are wanted. A contract
+rule that needs the entry (`fd`, `implies`, `max_implausible_rate`) reports "not measured" for a
+profile that lacks it, never a pass, and `shape diff` reports joint changes only where both
+profiles carry it.
 
 ### Placeholders (column `placeholders`)
 

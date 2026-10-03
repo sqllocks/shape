@@ -57,7 +57,11 @@ class SinkError(Exception):
 
     def __init__(self, errors: list[tuple[str, Exception]]) -> None:
         self.sink_errors = errors
-        super().__init__("sink failures: " + "; ".join(f"{name}: {exc}" for name, exc in errors))
+        from shape.security.redact import redact_text
+
+        super().__init__(
+            redact_text("sink failures: " + "; ".join(f"{name}: {exc}" for name, exc in errors))
+        )
 
 
 def sink_name(sink: object) -> str:

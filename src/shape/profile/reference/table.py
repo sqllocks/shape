@@ -175,13 +175,20 @@ def _spawn_correlation(
     return start, result
 
 
-def _joint_enabled() -> bool:
-    """``SHAPE_PROFILE_JOINT=0`` turns the joint analysis (dependencies, associations) off."""
-    return os.environ.get("SHAPE_PROFILE_JOINT", "1").strip().lower() not in ("0", "false", "no")
+def resolve_joint(joint: bool | None, dataset: bool = False) -> bool:
+    """Whether the joint analysis (dependencies, associations) runs. An explicit ``joint`` wins;
+    else a set ``SHAPE_PROFILE_JOINT`` (``0``/``false``/``no`` off, anything else on); else it is
+    on for a single table and off for a dataset (several tables)."""
+    if joint is not None:
+        return joint
+    env = os.environ.get("SHAPE_PROFILE_JOINT", "").strip().lower()
+    if env:
+        return env not in ("0", "false", "no")
+    return not dataset
 
 
 def _spawn_joint(
-    cols: list[_Col], row_count: int, threads: int | None
+    cols: list[_Col], row_count: int, threads: int | None, enabled: bool
 ) -> tuple[Callable[[], None], Callable[[], dict[str, Any] | None]]:
     """Like ``_spawn_correlation``: the table's joint analysis (``shape.profile.joint``), on its
     own thread beside the column work when the table is large and the run is parallel."""
@@ -193,14 +200,14 @@ def _spawn_joint(
             return analyze_table(cols, row_count)
 
     def start() -> None:
-        if _joint_enabled() and _n_threads(threads) != 1 and row_count >= 100_000:
+        if enabled and _n_threads(threads) != 1 and row_count >= 100_000:
             box.append(ex.submit(run))
 
     def result() -> dict[str, Any] | None:
         try:
             if box:
                 return box[0].result()
-            return run() if _joint_enabled() else None
+            return run() if enabled else None
         finally:
             ex.shutdown(wait=False)
 
@@ -437,10 +444,11 @@ def _profile_cols_table(
     row_count: int,
     threads: int | None,
     sample_rows: int | None = None,
+    joint: bool | None = None,
 ) -> TableProfile:
     cols, row_count = _sample_rows(cols, row_count, sample_rows)
     cstart, cresult = _spawn_correlation(cols, row_count, threads)
-    jstart, jresult = _spawn_joint(cols, row_count, threads)
+    jstart, jresult = _spawn_joint(cols, row_count, threads, resolve_joint(joint))
 
     def start() -> None:
         cstart()
@@ -506,23 +514,26 @@ def profile_dataset(tables: dict[str, Any], threads: int | None = None) -> Datas
 
 
 def profile_dataset_columns(
-    cols_by_t: dict[str, tuple[list[_Col], int]], threads: int | None = None
+    cols_by_t: dict[str, tuple[list[_Col], int]],
+    threads: int | None = None,
+    joint: bool | None = None,
 ) -> DatasetProfile:
     """Multi-table profile (with FK detection) from already-read columns."""
     corr = {n: _spawn_correlation(c, rc, threads) for n, (c, rc) in cols_by_t.items()}
-    joint = {n: _spawn_joint(c, rc, threads) for n, (c, rc) in cols_by_t.items()}
+    on = resolve_joint(joint, dataset=True)
+    jobs = {n: _spawn_joint(c, rc, threads, on) for n, (c, rc) in cols_by_t.items()}
 
     # The joint analyses start once every column is profiled, not beside the column work: a table's
     # column pool may fork, and a fork while another table's analysis runs on a thread would copy
     # that thread's locks (a single table forks before its own analysis starts).
     works = _profile_tables(cols_by_t, threads, [corr[n][0] for n in cols_by_t])
     for n in cols_by_t:
-        joint[n][0]()
+        jobs[n][0]()
     pks = {n: _detect_primary_key(w, cols_by_t[n][1]) for n, w in works.items()}
     profiles = {}
     for n, w in works.items():
         fks = _detect_fks(n, w, works, pks)
-        profiles[n] = _finish_table(n, w, pks[n], fks, cols_by_t[n][1], corr[n][1](), joint[n][1]())
+        profiles[n] = _finish_table(n, w, pks[n], fks, cols_by_t[n][1], corr[n][1](), jobs[n][1]())
     rels = []
     for n, tp in profiles.items():
         for col, parent in tp.detected_fks.items():

@@ -74,6 +74,8 @@ values (`00000`, `-1`, `N/A`, `1900-01-01`, ...), approximate functional depende
 keys, association measures, conditional tables and the share of implausible rows (`docs/JOINT.md`).
 The cross-column analysis reads a deterministic sample (at most 20,000 rows for a table that
 small, 5,000 for a larger one) and a bounded number of columns and pairs, so its cost does not grow
-with the table; `SHAPE_PROFILE_JOINT=0` switches it off. `--reference-pair COLS=REFERENCE` checks
+with the table; it is on for a single table and off for a dataset (several tables), `--joint` /
+`joint=True` turn it on and `--no-joint` / `joint=False` off, and `SHAPE_PROFILE_JOINT=0|1` decides when
+the call does not. `--reference-pair COLS=REFERENCE` checks
 that columns hold real combinations against a reference file.
 

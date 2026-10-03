@@ -15,6 +15,7 @@ import numpy as np
 
 from shape.artifact import codec
 from shape.artifact.io import ArtifactError, read_artifact, write_artifact
+from shape.io.excel import is_workbook_spec
 from shape.security.hardening import validate_structure
 
 from .column import MAX_VALUE_CHARS
@@ -193,12 +194,15 @@ def _column_summary(col: dict[str, Any]) -> dict[str, Any]:
 
 
 def _table_summary(table: dict[str, Any]) -> dict[str, Any]:
-    return {
+    out = {
         "name": table["name"],
         "row_count": table["row_count"],
         "primary_key": list(table["primary_key"]),
         "columns": {c: _column_summary(col) for c, col in table["columns"].items()},
     }
+    if table.get("findings"):
+        out["findings"] = copy.deepcopy(table["findings"])
+    return out
 
 
 class Profile:
@@ -247,12 +251,15 @@ class Profile:
             out = _table_summary(self._data)
             out["name"] = self.name if self.name else out["name"]
             return out
-        return {
+        out = {
             "name": self.name,
             "row_count": sum(t["row_count"] for t in self._data["tables"].values()),
             "tables": {n: _table_summary(t) for n, t in self._data["tables"].items()},
             "relationships": copy.deepcopy(self._data["relationships"]),
         }
+        if self._data.get("findings"):
+            out["findings"] = copy.deepcopy(self._data["findings"])
+        return out
 
     def to_html(self) -> str:
         """A self-contained HTML report (no external assets)."""
@@ -285,6 +292,9 @@ def profile(
     quotechar: str | None = None,
     header: bool = True,
     reference_pairs: Any = None,
+    joint: bool | None = None,
+    sheet: str | None = None,
+    include_hidden: bool = False,
 ) -> Profile:
     """Profile a path, glob, directory, Delta table, Arrow table or DataFrame.
 
@@ -304,10 +314,25 @@ def profile(
     tables, a dict of table name to such a list). The share of rows whose tuple is in the
     reference is stored in the table's ``joint`` entry, where the ``reference_pair`` contract
     rule and ``shape.diff`` read it.
+
+    ``joint`` chooses the joint analysis (dependencies, keys, associations): on by default for
+    one table, off by default for a dataset (a dict of tables, a workbook), ``joint=True`` turns
+    it on and ``joint=False`` off; without it ``SHAPE_PROFILE_JOINT`` decides (``0`` off, ``1`` on).
+
+    An ``.xlsx`` workbook is a dataset with one table per visible sheet (``"book.xlsx#Sheet"``
+    or ``sheet=`` profiles that sheet alone, hidden or not; ``include_hidden=True`` reads the
+    hidden sheets too), and the profile carries ``findings`` about its cells.
     """
     fmt = CsvFormat(delimiter, encoding, quotechar, header)
     with np.errstate(all="ignore"):  # inf / NaN inputs are data, not numpy warnings
-        return _profile(source, name, version, as_of, fmt, reference_pairs)
+        if is_workbook_spec(source):
+            from .workbook import profile_workbook
+
+            data, title = profile_workbook(source, name, sheet, include_hidden, joint)
+            return Profile(data, name=title)
+        if sheet is not None or include_hidden:
+            raise SourceError("sheet and include_hidden apply to .xlsx workbooks only")
+        return _profile(source, name, version, as_of, fmt, reference_pairs, joint)
 
 
 def _load_tables(
@@ -369,6 +394,7 @@ def _profile(
     as_of: Any,
     csv: CsvFormat | None = None,
     reference_pairs: Any = None,
+    joint: bool | None = None,
 ) -> Profile:
     check_delta_options(version, as_of)
     asked = version is not None or as_of is not None
@@ -378,7 +404,7 @@ def _profile(
         if not source:
             raise SourceError("an empty dict of tables cannot be profiled")
         cols_by_t = _load_tables({str(k): v for k, v in source.items()}, csv)
-        doc = dataset_to_dict(profile_dataset_columns(cols_by_t))
+        doc = dataset_to_dict(profile_dataset_columns(cols_by_t, None, joint))
         if reference_pairs:
             if not isinstance(reference_pairs, dict):
                 raise ValueError("for several tables, reference_pairs maps a table name to a list")
@@ -403,7 +429,7 @@ def _profile(
     else:
         table, provenance = read_delta(delta, version=version, as_of=as_of)
         table_name, cols, rows = load_columns(table, name or delta.name)
-    table_profile = _profile_cols_table(table_name, cols, rows, None)
+    table_profile = _profile_cols_table(table_name, cols, rows, None, None, joint)
     doc = table_to_dict(table_profile)
     _attach_reference_pairs(doc, cols, rows, reference_pairs)
     return Profile(doc, name=name, provenance=provenance)
