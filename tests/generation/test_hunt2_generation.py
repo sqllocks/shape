@@ -309,3 +309,53 @@ def test_a_merged_column_with_too_many_values_is_not_an_enum(tmp_path: Path) -> 
     gen = fit_schema(merged).schema.tables["p"].columns["note"].generator
     assert gen["strategy"] != "weighted_enum"
 
+
+# ---- #693: conditional_table keeps output_type "string" labels as text -------------------------
+
+
+def _joint(output_type: str | None) -> list[object]:
+    from shape.generation.engine import Engine
+
+    gen: dict[str, object] = {
+        "strategy": "conditional_table",
+        "source_column": "state",
+        "table": {"WA": {"02134": 0.5, "10001": 0.5}, "OR": {"10001": 1.0}, "CA": {"02134": 1.0}},
+        "values": {"02134": 0.5, "10001": 0.5},
+    }
+    if output_type is not None:
+        gen["output_type"] = output_type
+    cols = {
+        "state": {
+            "name": "state",
+            "type": "string",
+            "generator": {"strategy": "choice", "values": ["WA", "OR", "CA"]},
+        },
+        "code": {"name": "code", "type": "string", "generator": gen},
+    }
+    doc = {
+        "schema_version": 1,
+        "model": {"name": "m", "seed": 2},
+        "tables": {"t": {"name": "t", "primary_key": [], "columns": cols}},
+        "generation": {"scales": {"s": {"t": 60}}, "scale": "s"},
+    }
+    table = Engine(GenSchema.from_dict(doc)).generate().tables["t"]
+    return [table.column("code").type, set(table.to_pylist()[i]["code"] for i in range(60)), table]
+
+
+def test_conditional_table_keeps_string_labels_as_text() -> None:
+    import pyarrow as pa
+
+    kind, codes, table = _joint("string")
+    assert kind == pa.string() and codes == {"02134", "10001"}
+    for row in table.to_pylist():
+        if row["state"] == "OR":
+            assert row["code"] == "10001"
+        if row["state"] == "CA":
+            assert row["code"] == "02134"
+
+
+def test_conditional_table_without_output_type_keeps_numbers() -> None:
+    import pyarrow as pa
+
+    kind, codes, _ = _joint(None)  # documented: labels that all read as numbers are float64
+    assert kind == pa.float64() and codes == {2134.0, 10001.0}
