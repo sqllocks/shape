@@ -84,7 +84,7 @@ their speaker notes replaced:**
 | 12 | Slide text and notes: "what every timing in this talk uses" |
 | 13 | **Rewritten**: wall-clock, rows per second, peak memory; header strip; footer; notes |
 | 15 | **Rewritten**: how the profile is checked || 18 | Callout and notes: "0.43 σ" → "0.39 σ" (N-74) |
-| 20 | **Bullet and notes**: "502 of the 47,515 customer email addresses", synthetic; in production they'd be your customers' (N-77) |
+| 20 | **Bullet and notes**: "every first name, last name, city and state, and 2 of the 47,515 email addresses (min and max)", synthetic; in production they'd be your customers' (N-77) |
 
 | 21 | **Rewritten**: memory per dataset; bounded mode "being built, not measured" |
 | 22 | **Rewritten**: live profile of the 1M × 20 file with a clock; new code block |

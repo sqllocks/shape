@@ -429,9 +429,11 @@ includes `b2dd663`: the TestPyPI 0.9.0 wheel predates it.)
 - A `.shape` keeps **up to 500 real values per column** (the most frequent, with counts),
   plus each column's **min and max**. That's by design: value counts are part of the
   profile.
-- In our stand-in, the saved `retail_prod.shape` contains 502 of the 47,515 customer email
-  addresses: 500 top values plus the min and max (asserted by `verify_snippets.sh`). They
-  are synthetic, email-shaped addresses; in production they'd be your customers'.
+- In our stand-in, the saved `retail_prod.shape` contains every first name, last name, city
+  and state of the customers table (30, 30, 15 and 14 distinct values), and the smallest and
+  largest of its 47,515 email addresses (asserted by `verify_snippets.sh`). A column whose
+  values are nearly all different, like `email`, keeps no top values: only its min and max.
+  The values are synthetic; in production they'd be your customers'.
 - README: "**Treat a `.shape` file, its HTML report and its JSON summary as you would the
   source data**, and don't share one from a sensitive table."
 - Fabric runbook: the notebooks write them under `Files/shape/`; "**Grant access as you
@@ -439,7 +441,8 @@ includes `b2dd663`: the TestPyPI 0.9.0 wheel predates it.)
 - Chip: "Safe profile (rare values suppressed, minimum group size): **PLANNED**, slide 25."
 
 **Say:** "A raw profile is not anonymous. It keeps the top 500 values of every column. I
-checked our stand-in: 502 of its email addresses are in that file. They're synthetic, but
+checked our stand-in: every customer's first name, last name, city and state is in that file,
+and so are two of its email addresses, the smallest and the largest. They're synthetic, but
 in production they'd be real people's. So today the rule is simple,
 and it's written in the README and the Fabric runbook: treat a `.shape` as you would the
 source data. Keep it in production, and grant access the same way. A safe profile

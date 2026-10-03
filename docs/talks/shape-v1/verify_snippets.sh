@@ -76,12 +76,18 @@ assert "http://" not in html and "https://" not in html
 print("report ok")
 
 # --- slide 20: a raw profile contains real values ---------------------------
-import zipfile, pyarrow.parquet as pq
+import json, zipfile, pyarrow.parquet as pq
 raw = zipfile.ZipFile("retail_prod.shape").read("profile.json").decode()
-emails = [e for e in pq.read_table("prod/customers.parquet").column("email").to_pylist() if e]
+customers = pq.read_table("prod/customers.parquet")
+emails = [e for e in customers.column("email").to_pylist() if e]
 found = sum(1 for e in emails if e in raw)
 print(f"raw .shape contains {found} of {len(emails):,} customer email addresses")
-assert found == 502, "slide 20 quotes 502 (500 top values plus min and max); update the slide"
+assert found == 2, "slide 20 quotes 2 (the min and max email); update the slide"
+for col, n in (("first_name", 30), ("last_name", 30), ("city", 15), ("state", 14)):
+    vals = {v for v in customers.column(col).to_pylist() if v is not None}
+    kept = sum(1 for v in vals if json.dumps(v) in raw)
+    print(f"raw .shape contains {kept} of {len(vals)} distinct customer {col} values")
+    assert kept == len(vals) == n, f"slide 20 quotes all {n} {col} values; update the slide"
 EOF
 
 echo "== slide 20: the README and the Fabric runbook carry the warnings the slide quotes"

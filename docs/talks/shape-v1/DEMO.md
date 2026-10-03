@@ -107,7 +107,7 @@ open("retail_prod.html", "w").write(p.to_html())
 ```
 
 and open it in the browser (slide 11). Point at a fitted distribution, the `email` pattern
-on `customer.email`, the `segment` enum, and the relationships. On `customer.email`,
+on `customer.email`, the `segment` enum, and the relationships. On `customer.last_name`,
 point at the top values: "real-looking values; in production they'd be real; slide 20."
 
 **Say while it runs:** "Four tables, 640,000 rows. One call, and it finds three foreign keys."

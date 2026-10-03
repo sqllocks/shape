@@ -62,7 +62,7 @@ What changed on the talk with that data (all re-measured 2026-09-30, sources in 
 | Was | Now |
 |---|---|
 | 9 tables, 1,965,400 rows, 8 foreign keys | 4 tables, 640,000 rows, 3 foreign keys (N-75, N-76) |
-| "real customer emails" in the `.shape` | 502 synthetic, email-shaped addresses (500 top values plus min and max) of 47,515 (N-77) |
+| "real customer emails" in the `.shape` | every first name, last name, city and state of the customers, and 2 of 47,515 synthetic email addresses (min and max) (N-77) |
 | `loyalty_tier` enum (slide 11, B5) | `segment` enum on `customer` |
 | `order_total` mean 110.93 → 155.30; shift 0.43 σ | mean 105.94 → 148.31; shift 0.39 σ (N-72, N-74) |
 
