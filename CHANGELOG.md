@@ -503,6 +503,20 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ### Fixed
 
+- Command line second pass (HUNT2-cli, #604, #608-#614, #670, #672, #680, #681, #692):
+  a failed `--json` report no longer truncates the file (and names it); a NaN drift threshold
+  (`--null-rate nan`, `.nan` in `shape.yml`) is refused instead of switching the check off;
+  `shape init` checks every precondition before writing and quotes number-like names so the file
+  validates; `profile NAME` and `verify NAME` no longer say a named source was not selected;
+  `shape scorecard` reads owners from `sources.*.columns.*.owner` of a valid `shape.yml`
+  (`--project FILE`, `--no-project`, `--source`); `from-ddl` refuses a script with no `CREATE
+  TABLE` and reads UTF-16 and UTF-32 scripts; `check`, `diff` and `plan` say a JSON file that is not
+  an object is not a Shape document; `project validate --json` always prints JSON;
+  `continue -o` the input folder, and `profile`, `capture`, `learn`, `dictionary` and `from-ddl`
+  with `-o` the input file, are refused instead of replacing the input; `key`, `fd` and
+  `privacy-k` refuse a column that is not in the file; `mask --pii/--exclude`, `scorecard
+  --classified` and `diff --only` refuse a name that matches nothing.
+
 - `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references` no longer depends on test order (#77): it resolves the references in a fresh interpreter and reports which cloud SDK modules got imported, so `azure*` modules left in `sys.modules` by `tests/demo/fabric` cannot fail it.
 - Issue #76. The three tests that failed were not numpy-dependent: they called pyarrow in ways older
   releases reject (float16 from Python floats, `if_else` on half-float, hive partition inference on a
