@@ -1314,6 +1314,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.failure_modes import add_arguments as add_failure_modes_arguments
 
     add_failure_modes_arguments(sub)
+    from shape.cli.detective import add_arguments as add_detective_arguments
+
+    add_detective_arguments(sub)
     from shape.cli.transform import add_arguments as add_transform_arguments
 
     add_transform_arguments(sub)
@@ -1709,6 +1712,10 @@ def _route(a):
         from shape.cli.seed import run as run_seed
 
         return _run(run_seed, a)
+    if a.cmd == "detective":
+        from shape.cli.detective import run as run_detective
+
+        return _run(run_detective, a)
     if a.cmd == "failure-modes":
         from shape.cli.failure_modes import run as run_failure_modes
 

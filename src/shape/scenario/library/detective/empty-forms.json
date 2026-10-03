@@ -1,0 +1,21 @@
+{
+  "format": "shape-detective-pack",
+  "version": 1,
+  "name": "empty-forms",
+  "level": "beginner",
+  "brief": "Customer names look fine at a glance, yet the welcome emails greet some people with an odd word. A sign-up form was changed last week.",
+  "hints": [
+    "Names are text: look at which text values are most common now.",
+    "A stand-in value such as N/A or TBD can fill a column without leaving a single null.",
+    "Compare the most common values of the customer name columns with the baseline."
+  ],
+  "scenario": "library:placeholder_values",
+  "seed": 7102,
+  "findings": [
+    {
+      "table": "customer",
+      "column": "first_name",
+      "mode": "placeholder-values"
+    }
+  ]
+}

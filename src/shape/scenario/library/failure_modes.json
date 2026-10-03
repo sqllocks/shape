@@ -109,6 +109,7 @@
         "Two source systems with different units were merged."
       ],
       "detected_by": [
+        "drift:distribution_shift",
         "drift:mean_shift",
         "drift:range_change",
         "drift:spread_change",
@@ -258,8 +259,7 @@
         "A fixed-width export cut long values."
       ],
       "detected_by": [
-        "drift:length_change",
-        "drift:pattern_change"
+        "drift:length_change"
       ],
       "reproduce": "library:truncated_strings"
     },

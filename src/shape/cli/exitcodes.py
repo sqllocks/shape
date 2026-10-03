@@ -128,6 +128,14 @@ _EXTRA: dict[str, dict[int, str]] = {
     "registry diff": {},
     "init": {},
     "project validate": {},
+    "detective list": {},
+    "detective start": {},
+    "detective hint": {2: "the pack does not exist, the hint number is out of range, or " + BAD},
+    "detective check": {
+        1: "a planted finding is missed or a named finding is not planted",
+        2: "the answer is malformed or names an unknown failure mode, the pack does not "
+        "exist, or " + BAD,
+    },
     "failure-modes list": {},
     "failure-modes show": {2: "the failure mode id is not in the catalog, or " + BAD},
 }

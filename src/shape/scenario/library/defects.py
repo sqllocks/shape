@@ -30,6 +30,12 @@ Every function returns the table and the number of rows it changed.
                       by a placeholder text (default ``N/A``).
 ``corrupt_encoding``  ``column``, ``fraction``: that share of the values end in ``Ã©``, the
                       result of reading UTF-8 text as Latin-1.
+``rename_column``     ``column``, ``to``: the column gets the new name, in its place.
+``drop_column``       ``column``: the column is gone.
+``retype_column``     ``column``, ``to`` (``string``, ``integer`` or ``float``): the column changes
+                      type; the texts ``true`` and ``false`` become 1 and 0.
+``add_column``        ``column`` (a name the table does not have), ``value``: a new text column,
+                      the same value in every row (default ``web``).
 """
 
 from __future__ import annotations
@@ -285,6 +291,64 @@ def corrupt_encoding(
     return _replace(table, i, pc.if_else(pa.array(mask), broken, table[i])), changed
 
 
+def rename_column(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    i = _column(table, defect, str(defect["column"]))
+    new = defect.get("to")
+    if not isinstance(new, str) or not new:
+        raise DefectError("rename_column needs 'to', the new name")
+    if new in table.column_names:
+        raise DefectError(f"rename_column: the table already has a column {new!r}")
+    names = list(table.column_names)
+    names[i] = new
+    return table.rename_columns(names), table.num_rows
+
+
+def drop_column(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    i = _column(table, defect, str(defect["column"]))
+    return table.remove_column(i), table.num_rows
+
+
+def retype_column(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    i = _column(table, defect, str(defect["column"]))
+    target = {"string": pa.string(), "integer": pa.int64(), "float": pa.float64()}.get(
+        str(defect.get("to"))
+    )
+    if target is None:
+        raise DefectError("retype_column: 'to' is string, integer or float")
+    values = table[i]
+    if _is_text(values.type) and _is_number(target):
+        lowered = pc.utf8_lower(values)  # a flag kept as text: true and false become 1 and 0
+        one, zero = pa.scalar("1"), pa.scalar("0")
+        values = pc.if_else(
+            pc.equal(lowered, "true"), one, pc.if_else(pc.equal(lowered, "false"), zero, values)
+        )
+    try:
+        cast = pc.cast(values, target)
+    except pa.ArrowInvalid as exc:
+        raise DefectError(
+            f"retype_column: {defect['table']}.{defect['column']} cannot become {defect['to']}"
+        ) from exc
+    return table.set_column(i, pa.field(table.column_names[i], target), cast), table.num_rows
+
+
+def add_column(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    name = str(defect["column"])
+    if name in table.column_names:
+        raise DefectError(f"add_column: the table already has a column {name!r}")
+    value = str(defect.get("value", "web"))
+    return table.append_column(
+        name, pa.array([value] * table.num_rows, pa.string())
+    ), table.num_rows
+
+
 DEFECTS: dict[str, Callable[..., tuple[pa.Table, int]]] = {
     "inject_nulls": inject_nulls,
     "duplicate_keys": duplicate_keys,
@@ -298,6 +362,10 @@ DEFECTS: dict[str, Callable[..., tuple[pa.Table, int]]] = {
     "truncate_strings": truncate_strings,
     "placeholder_values": placeholder_values,
     "corrupt_encoding": corrupt_encoding,
+    "rename_column": rename_column,
+    "drop_column": drop_column,
+    "retype_column": retype_column,
+    "add_column": add_column,
 }
 
 #: defects that act on the whole table and need no ``column``
@@ -315,6 +383,10 @@ def check_defect(defect: Any, schema: GenSchema) -> None:
     column = defect.get("column")
     if column is None and defect["kind"] not in _TABLE_WIDE:
         raise DefectError(f"{defect['kind']} needs a 'column'")
+    if defect["kind"] == "add_column":
+        if column in table.columns:
+            raise DefectError(f"add_column: {defect['table']} already has a column {column!r}")
+        return
     if column is not None and column not in table.columns:
         raise DefectError(f"{defect['kind']}: no column {defect['table']}.{column}")
 

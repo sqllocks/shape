@@ -235,6 +235,7 @@ SPECS: dict[str, Spec] = {
     "registry tag": Spec(plan=_plan_registry),
     "registry promote": Spec(plan=_plan_registry),
     "init": Spec(plan=_plan_init),
+    "detective start": Spec(outputs=("output",)),
     "git-setup": Spec(plan=_plan_git_setup),
     "profile export": Spec(inputs=("profile",), outputs=("output",)),
     "profile import": Spec(inputs=("input",), outputs=("output",)),

@@ -1,0 +1,21 @@
+{
+  "format": "shape-detective-pack",
+  "version": 1,
+  "name": "twice-the-price",
+  "level": "intermediate",
+  "brief": "Finance reports that revenue doubled overnight, but the number of orders is the same. Something changed in how an amount is recorded.",
+  "hints": [
+    "Row counts and keys did not change: look at the numbers themselves.",
+    "Compare the average, the spread and the largest value of each numeric column.",
+    "Only part of the batch is affected, so the column's range grew without the typical value moving much."
+  ],
+  "scenario": "library:unit_change",
+  "seed": 7103,
+  "findings": [
+    {
+      "table": "order",
+      "column": "order_total",
+      "mode": "unit-change-mid-series"
+    }
+  ]
+}

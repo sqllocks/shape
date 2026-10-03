@@ -19,7 +19,7 @@ for the entry's scenario; the suite fails when one does not. An entry no check c
 | [`timezone-offset-shift`](#timezone-offset-shift) | high | `rule:max` |
 | [`dst-boundary-timestamps`](#dst-boundary-timestamps) | low | `drift:day_of_week_change`, `drift:hour_of_day_change` |
 | [`encoding-corruption`](#encoding-corruption) | medium | `drift:pattern_change` |
-| [`unit-change-mid-series`](#unit-change-mid-series) | high | `drift:mean_shift`, `drift:range_change`, `drift:spread_change`, `rule:max` |
+| [`unit-change-mid-series`](#unit-change-mid-series) | high | `drift:distribution_shift`, `drift:mean_shift`, `drift:range_change`, `drift:spread_change`, `rule:max` |
 | [`column-added`](#column-added) | medium | `drift:column_added` |
 | [`column-renamed`](#column-renamed) | high | `drift:column_added`, `drift:column_removed`, `rule:required_column` |
 | [`column-dropped`](#column-dropped) | high | `drift:column_removed`, `rule:required_column` |
@@ -27,7 +27,7 @@ for the entry's scenario; the suite fails when one does not. An entry no check c
 | [`class-imbalance-shift`](#class-imbalance-shift) | medium | `drift:category_shift` |
 | [`concept-drift`](#concept-drift) | high | `drift:dependency_broken` |
 | [`duplicate-keys`](#duplicate-keys) | high | `gate:uniqueness`, `rule:unique` |
-| [`truncated-strings`](#truncated-strings) | medium | `drift:length_change`, `drift:pattern_change` |
+| [`truncated-strings`](#truncated-strings) | medium | `drift:length_change` |
 | [`null-flood`](#null-flood) | critical | `drift:null_rate_change`, `gate:null_check`, `rule:nullable` |
 | [`referential-orphans`](#referential-orphans) | high | `drift:range_change`, `gate:referential_integrity`, `rule:max` |
 | [`volume-spike`](#volume-spike) | high | `drift:row_count_change`, `gate:uniqueness`, `rule:row_count.max` |
@@ -151,7 +151,7 @@ Common causes:
 - A feed switched from dollars to cents, kilograms to grams, or seconds to milliseconds.
 - Two source systems with different units were merged.
 
-Detected by: `drift:mean_shift`, `drift:range_change`, `drift:spread_change`, `rule:max`
+Detected by: `drift:distribution_shift`, `drift:mean_shift`, `drift:range_change`, `drift:spread_change`, `rule:max`
 
 Reproduce: `shape pack run library:unit_change`
 
@@ -300,7 +300,7 @@ Common causes:
 - A column was loaded into a narrower one.
 - A fixed-width export cut long values.
 
-Detected by: `drift:length_change`, `drift:pattern_change`
+Detected by: `drift:length_change`
 
 Reproduce: `shape pack run library:truncated_strings`
 

@@ -1,0 +1,22 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "detective_renovations",
+  "gates_fail": [
+    "schema_conformance"
+  ],
+  "defects": {
+    "add_column": {
+      "min": 1
+    },
+    "drop_column": {
+      "min": 1
+    },
+    "rename_column": {
+      "min": 1
+    },
+    "retype_column": {
+      "min": 1
+    }
+  }
+}

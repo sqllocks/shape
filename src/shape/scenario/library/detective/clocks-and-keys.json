@@ -1,0 +1,36 @@
+{
+  "format": "shape-detective-pack",
+  "version": 1,
+  "name": "clocks-and-keys",
+  "level": "advanced",
+  "brief": "The nightly load passes its own checks, yet downstream dashboards show orders from the past, dates that are off, return ids that repeat and customers in the wrong places. Four problems, in three tables.",
+  "hints": [
+    "Two of the four problems are in the same column.",
+    "A contract written from the baseline catches range problems that a plain comparison does not: the earliest and the latest date it allows.",
+    "One problem changes no column on its own: each column looks as before, but a pair of columns no longer agree."
+  ],
+  "scenario": "library:detective_clocks_and_keys",
+  "seed": 7106,
+  "findings": [
+    {
+      "table": "order",
+      "column": "order_date",
+      "mode": "late-arriving-records"
+    },
+    {
+      "table": "order",
+      "column": "order_date",
+      "mode": "timezone-offset-shift"
+    },
+    {
+      "table": "return",
+      "column": "return_id",
+      "mode": "duplicate-keys"
+    },
+    {
+      "table": "address",
+      "column": "city",
+      "mode": "concept-drift"
+    }
+  ]
+}

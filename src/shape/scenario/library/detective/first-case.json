@@ -1,0 +1,21 @@
+{
+  "format": "shape-detective-pack",
+  "version": 1,
+  "name": "first-case",
+  "level": "beginner",
+  "brief": "The customer team says some people are missing from the mailing list. The batch looks complete, with the same tables and the same number of rows as always. Find the one thing that changed.",
+  "hints": [
+    "Compare the baseline with today's batch table by table; most tables will look the same.",
+    "Look at how many values are missing in each column.",
+    "One column of the customer table was filled in for every row in the baseline and is now empty for many rows."
+  ],
+  "scenario": "library:null_flood",
+  "seed": 7101,
+  "findings": [
+    {
+      "table": "customer",
+      "column": "last_name",
+      "mode": "null-flood"
+    }
+  ]
+}

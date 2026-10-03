@@ -136,6 +136,21 @@
       "id": "late_backfill",
       "domain": "retail",
       "description": "About 20% of orders carry an order date 200 days before the rest of the batch, as when a backfill lands in the live table. No gate is meant to catch it: the scenario checks that the late rows are planted and that the batch is otherwise sound."
+    },
+    {
+      "id": "detective_text_trouble",
+      "domain": "retail",
+      "description": "Customer emails end in the characters that UTF-8 text turns into when it is read as Latin-1, and half of the customer last names are cut to three characters. The two problems are in different columns. No gate is meant to catch them."
+    },
+    {
+      "id": "detective_renovations",
+      "domain": "retail",
+      "description": "Four schema changes at once, one in each of four tables: order status is renamed, store state is dropped, the customer active flag turns into an integer and products gain a channel. The schema conformance gate fails."
+    },
+    {
+      "id": "detective_clocks_and_keys",
+      "domain": "retail",
+      "description": "Order dates arrive 200 days late for 20% of the rows and every date is eight hours off; return ids repeat; address cities are swapped between rows. The uniqueness gate fails."
     }
   ]
 }
