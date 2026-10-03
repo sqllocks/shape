@@ -78,3 +78,45 @@ def test_names_unsafe_on_windows_are_refused(name):
 )
 def test_ordinary_names_are_still_accepted(name):
     assert is_safe_name(name) is True
+
+
+# --- #291: redact_text forms, URI passwords with @, linear time --------------------------------
+
+import time  # noqa: E402
+
+from shape.security.redact import MASK, redact_text  # noqa: E402
+
+
+@pytest.mark.parametrize(
+    "text, hidden",
+    [
+        ("{'password': 'hunter2', 'sasl.password': 'kpw'}", "hunter2"),
+        ("{'password': 'hunter2', 'sasl.password': 'kpw'}", "kpw"),
+        ('{"password": "hunter2"}', "hunter2"),
+        ("sasl_password=kpw1", "kpw1"),
+        ("{'api_key': 'ak-123', 'client_secret': 'cs-456'}", "ak-123"),
+        ("{'api_key': 'ak-123', 'client_secret': 'cs-456'}", "cs-456"),
+        ("{'sas_token': 'sv=x', 'account_key': 'KEYSECRET=='}", "KEYSECRET"),
+        ("apikey: XYZ12345", "XYZ12345"),
+        ("x-api-key: XYZ12345", "XYZ12345"),
+        ("Authorization: Basic dXNlcjpwYXNz", "dXNlcjpwYXNz"),
+        ("mssql+pyodbc://sa:P@ss@w0rd@host/db", "ss@w0rd"),
+        ("mssql+pyodbc://sa:P@ss@w0rd@host/db", "P@ss"),
+    ],
+)
+def test_redact_text_masks_the_forms_of_issue_291(text, hidden):
+    out = redact_text(text)
+    assert hidden not in out and MASK in out
+
+
+def test_a_uri_password_with_at_signs_keeps_the_host():
+    assert redact_text("mssql+pyodbc://sa:P@ss@w0rd@host/db") == "mssql+pyodbc://sa:***@host/db"
+
+
+@pytest.mark.parametrize(
+    "text", ["a." * 100_000, "eyJ" * 70_000, "://a:" * 50_000, "x://" * 50_000]
+)
+def test_redact_text_is_linear_on_adversarial_text(text):
+    start = time.monotonic()
+    redact_text(text)
+    assert time.monotonic() - start < 1.0
