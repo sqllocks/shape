@@ -281,3 +281,62 @@ def test_the_profile_registry_still_saves_the_safe_form(rare_profile, tmp_path):
     text = path.read_text(encoding="utf-8")
     assert json.loads(text)["unsafe"] is False and "Zed" not in text
     assert reg.validate() == []
+
+
+# --- #671: registry ref, tag and metadata failure paths ---------------------------------------
+
+import datetime  # noqa: E402
+
+from shape.registry.local import LocalRegistry, RegistryError  # noqa: E402
+
+
+@pytest.fixture
+def registry(tmp_path: Path) -> LocalRegistry:
+    r = LocalRegistry(tmp_path / "reg")
+    r.commit("n", b"content")
+    return r
+
+
+@pytest.mark.parametrize("damage", ["", "   \n", "not-a-hash", "../../layout.json", "A" * 64])
+@pytest.mark.parametrize("where", ["refs", "tags"])
+def test_a_damaged_ref_or_tag_is_a_registry_error(registry, damage, where):
+    directory = registry.root / where / "n"
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / "bad").write_text(damage, encoding="utf-8")
+    with pytest.raises(RegistryError, match="damaged"):
+        registry.checkout("n", "bad")
+    with pytest.raises(RegistryError, match="damaged"):
+        registry.resolve("n", "bad")
+
+
+def test_good_refs_tags_and_hashes_still_resolve(registry):
+    h = registry.resolve("n")
+    registry.tag("n", "v1")
+    registry.promote("n", "latest", "prod")
+    assert registry.checkout("n", "v1") == registry.checkout("n", "prod") == b"content"
+    assert registry.resolve("n", h) == h
+
+
+def test_a_metadata_value_that_is_not_json_writes_nothing(registry):
+    before = sorted(p.name for p in (registry.root / "objects").iterdir())
+    log_before = registry.log("n")
+    with pytest.raises(RegistryError, match="metadata"):
+        registry.commit("n", b"zzz", {"d": datetime.datetime.now()})
+    assert sorted(p.name for p in (registry.root / "objects").iterdir()) == before
+    assert registry.log("n") == log_before
+    assert registry.resolve("n") == log_before[-1]["content_id"]
+
+
+def test_tag_replaces_the_file_atomically(registry, monkeypatch):
+    registry.tag("n", "v1")
+    seen = []
+    real = Path.write_text
+
+    def spy(self, *a, **k):
+        seen.append(self.name)
+        return real(self, *a, **k)
+
+    monkeypatch.setattr(Path, "write_text", spy)
+    registry.tag("n", "v1")
+    assert "v1" not in seen, "tag() truncates the tag file in place"
+    assert not [p for p in (registry.root / "tags" / "n").iterdir() if p.name.startswith(".tmp-")]
