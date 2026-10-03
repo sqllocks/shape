@@ -132,3 +132,60 @@ def test_same_seed_same_run_and_formats_and_manifests(tmp_path: Path, orders: pa
         assert x.read_bytes() == y.read_bytes()
     assert {p.suffix for p in a.delta_paths} == {".parquet", ".csv", ".jsonl"}  # type: ignore[attr-defined]
     assert len(a.manifest_paths) == 1 + 8  # type: ignore[attr-defined]
+
+
+# Issue #431: inputs that broke the "exactly one current version per entity" invariant, or the
+# settings, were accepted.
+
+
+@pytest.mark.parametrize("tracked", ["order_id", "valid_from", "is_current"])
+def test_tracking_the_key_or_a_version_column_is_refused(tracked: str) -> None:
+    with pytest.raises(ValueError, match=rf"scd2_columns.*{tracked}"):
+        SCD2FileDropConfig(business_key_column="order_id", scd2_columns=["status", tracked])
+
+
+@pytest.mark.parametrize(("keys", "what"), [([1, 1, 2], "repeat"), ([1, None, 2], "null")])
+def test_repeated_or_null_business_keys_are_refused_before_anything_is_written(
+    tmp_path: Path, keys: list[object], what: str
+) -> None:
+    table = pa.table({"id": pa.array(keys, pa.int64()), "tier": ["a", "b", "c"]})
+    with pytest.raises(ValueError, match=what):
+        SCD2FileDropSimulator(
+            {"c": table}, SCD2FileDropConfig(base_path=str(tmp_path), num_delta_days=1)
+        ).run()
+    assert not any(tmp_path.rglob("*.*"))
+
+
+@pytest.mark.parametrize("name", ["daily_change_rate", "daily_new_rate"])
+@pytest.mark.parametrize("rate", [-0.5, 1.5, float("nan")])
+def test_rates_outside_zero_to_one_are_refused(name: str, rate: float) -> None:
+    with pytest.raises(ValueError, match=name):
+        SCD2FileDropConfig(**{name: rate})  # type: ignore[arg-type]
+
+
+def test_rates_of_zero_make_no_change_of_that_kind(tmp_path: Path, orders: pa.Table) -> None:
+    _, deltas, res = run_rates(tmp_path, orders, change=0.0, new=0.0)
+    assert res.stats["total_updates"] == 0 and res.stats["total_new"] == 0  # type: ignore[attr-defined]
+    assert sum(d.num_rows for d in deltas) == 0
+    _, _, res = run_rates(tmp_path / "updates", orders, change=0.1, new=0.0)
+    assert res.stats["total_new"] == 0 and res.stats["total_updates"] > 0  # type: ignore[attr-defined]
+
+
+def run_rates(
+    tmp_path: Path, table: pa.Table, *, change: float, new: float
+) -> tuple[pa.Table, list[pa.Table], object]:
+    cfg = SCD2FileDropConfig(
+        base_path=str(tmp_path),
+        business_key_column="order_id",
+        scd2_columns=["status"],
+        num_delta_days=3,
+        daily_change_rate=change,
+        daily_new_rate=new,
+        seed=9,
+    )
+    res = SCD2FileDropSimulator({"orders": table}, cfg).run()
+    return (
+        pq.read_table(res.initial_load_path),
+        [pq.read_table(p) for p in res.delta_paths if p.suffix == ".parquet"],
+        res,
+    )
