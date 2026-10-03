@@ -355,7 +355,7 @@ column is a struct of `address_line_1`, `city`, `county`, `state`, `postal_code`
   `street`, `timezone` optional), or rows given inline (dicts, `AddressReference`, `Location`, or
   what `shape.location.load_geonames_postal` returns). Without `reference` the dataset
   `us_zip_locations` is used: 40,977 US ZIP codes with city, state and coordinates, shipped by the
-  `sqllocations-shape-domains` package (GeoNames data, attribution in `THIRD_PARTY_NOTICES.md`);
+  `sqllocks-shape-domains` package (GeoNames data, attribution in `THIRD_PARTY_NOTICES.md`);
   without that package the error says so. A named dataset keeps a schema small; the reference is
   compiled once per engine, not per chunk.
 * **Coherence.** One place is drawn for every row, and the city, state, ZIP and coordinates are

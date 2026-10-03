@@ -13,7 +13,7 @@ group) and `r`, never on the chunk.
 
 | Locale | Places and postcodes | Phone numbers (reserved for fiction) | Names |
 |---|---|---|---|
-| `US` | 40,977 ZIP codes (`sqllocations-shape-domains`) | `+1 (AAA) 555-0100` to `555-0199` | Shape's own pools |
+| `US` | 40,977 ZIP codes (`sqllocks-shape-domains`) | `+1 (AAA) 555-0100` to `555-0199` | Shape's own pools |
 | `CA` | 1,651 first-three-character areas, completed with a random local part | same NANP lines as `US` | not shipped |
 | `GB` | 2,980 outward codes, completed with a random inward code | not shipped | not shipped |
 | `DE` | 8,172 places | not shipped | not shipped |

@@ -2,7 +2,7 @@
 
 A locale is a country: places and postcodes (GeoNames, CC BY 4.0), phone numbers only in the
 ranges a country reserves for fiction, first names where an openly licensed list is shipped. The
-data is shipped by ``sqllocations-shape-domains``; every source is quoted in
+data is shipped by ``sqllocks-shape-domains``; every source is quoted in
 ``THIRD_PARTY_NOTICES.md``. No provider makes a national identifier.
 """
 

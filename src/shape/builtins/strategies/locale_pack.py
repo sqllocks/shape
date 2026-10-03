@@ -102,8 +102,8 @@ def _us_places() -> dict[str, list[Any]]:
             ds = load_dataset("us_zip_locations")
         except (DomainNotFoundError, DatasetNotFoundError):
             raise StrategyError(
-                "the US places of the locale strategy ship with sqllocations-shape-domains: "
-                "pip install sqllocations-shape-domains"
+                "the US places of the locale strategy ship with sqllocks-shape-domains: "
+                "pip install sqllocks-shape-domains"
             ) from None
     cols = {f.casefold(): ds.column(f).to_pylist() for f in ds.fields}
     return {
