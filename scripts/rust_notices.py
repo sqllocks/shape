@@ -22,6 +22,7 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 CRATE = ROOT / "rust" / "shape-kernel"
@@ -72,7 +73,7 @@ def check(out: Path = OUT, lock: Path = LOCK) -> list[str]:
     ]
 
 
-def _metadata() -> list[dict]:
+def _metadata() -> list[dict[str, Any]]:
     run = subprocess.run(
         [
             "cargo",
@@ -90,7 +91,7 @@ def _metadata() -> list[dict]:
     return list(json.loads(run.stdout)["packages"])
 
 
-def _licence_texts(pkg: dict) -> list[tuple[str, str]]:
+def _licence_texts(pkg: dict[str, Any]) -> list[tuple[str, str]]:
     folder = Path(pkg["manifest_path"]).parent
     texts = [
         (p.name, p.read_text(encoding="utf-8", errors="replace").strip())
@@ -104,7 +105,7 @@ def _licence_texts(pkg: dict) -> list[tuple[str, str]]:
     return texts
 
 
-def render(packages: list[dict]) -> str:
+def render(packages: list[dict[str, Any]]) -> str:
     wanted = set(locked_crates())
     pkgs = sorted(
         (p for p in packages if (p["name"], p["version"]) in wanted),
@@ -131,7 +132,7 @@ def render(packages: list[dict]) -> str:
         source = p.get("repository") or f"https://crates.io/crates/{p['name']}"
         lines.append(f"| `{p['name']}` | {p['version']} | {p.get('license') or '?'} | {source} |")
     groups: dict[str, tuple[str, str, list[str]]] = {}
-    no_file: list[dict] = []
+    no_file: list[dict[str, Any]] = []
     for p in pkgs:
         texts = _licence_texts(p)
         if not texts:
