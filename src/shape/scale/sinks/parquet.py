@@ -13,12 +13,14 @@ from __future__ import annotations
 
 import json
 import os
+import tempfile
 import threading
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from shape.scale.sinks.base import BaseSink
+from shape.security.names import contained
 
 if TYPE_CHECKING:
     import pyarrow as pa  # type: ignore[import-untyped]
@@ -27,6 +29,22 @@ if TYPE_CHECKING:
 
 PART_NAME = "part-{:06d}.parquet"
 COMPLETE = "_COMPLETE"
+
+
+def table_dir(base: str | Path, table: str) -> Path:
+    """``base/table``, created, after checking it stays inside ``base`` (a table directory that is
+    a link to elsewhere is refused)."""
+    target = contained(base, table)
+    target.mkdir(parents=True, exist_ok=True)
+    return target
+
+
+def temp_beside(path: Path) -> Path:
+    """A new, empty temp file next to ``path`` (``O_EXCL``, an unpredictable name), so a write
+    never follows a link that someone planted under a fixed temp name."""
+    fd, name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
+    os.close(fd)
+    return Path(name)
 
 
 def part_rows_ok(path: Path, rows: int) -> bool:
@@ -91,7 +109,7 @@ class ParquetSink(BaseSink):
 
         self._parts.setdefault(table, 0)
         self._rows.setdefault(table, 0)
-        (self._base / table).mkdir(parents=True, exist_ok=True)
+        table_dir(self._base, table)
         pending = self._pending.setdefault(table, [])
         if batch.num_rows == 0:  # an empty table still gets one (empty) part, to carry its schema
             self._empty.setdefault(table, batch)
@@ -116,17 +134,18 @@ class ParquetSink(BaseSink):
         elif self._parts[table] == 0 and table in self._empty:
             self._submit(table, [self._empty[table]])
         self._drain()
-        target = self._base / table
-        target.mkdir(parents=True, exist_ok=True)
         self.mark_complete(table, self._rows[table], self._parts[table])
 
     def mark_complete(self, table: str, rows: int, parts: int) -> None:
         """Write ``table``'s ``_COMPLETE`` marker (workers made its part files)."""
-        target = self._base / table
-        target.mkdir(parents=True, exist_ok=True)
-        tmp = target / (COMPLETE + ".tmp")
-        tmp.write_text(json.dumps({"rows": rows, "parts": parts}), encoding="utf-8")
-        os.replace(tmp, target / COMPLETE)
+        target = table_dir(self._base, table)
+        tmp = temp_beside(target / COMPLETE)
+        try:
+            tmp.write_text(json.dumps({"rows": rows, "parts": parts}), encoding="utf-8")
+            os.replace(tmp, target / COMPLETE)
+        except BaseException:
+            tmp.unlink(missing_ok=True)
+            raise
 
     def close(self) -> None:
         try:
@@ -158,9 +177,13 @@ class ParquetSink(BaseSink):
             with self._lock:
                 self.parts_skipped += 1
             return False
-        tmp = path.with_name(path.name + ".tmp")
-        self._sink.write(str(tmp), table, iter(batches), schema=batches[0].schema)
-        os.replace(tmp, path)
+        tmp = temp_beside(path)
+        try:
+            self._sink.write(str(tmp), table, iter(batches), schema=batches[0].schema)
+            os.replace(tmp, path)
+        except BaseException:
+            tmp.unlink(missing_ok=True)
+            raise
         with self._lock:
             self.parts_written += 1
         return True
