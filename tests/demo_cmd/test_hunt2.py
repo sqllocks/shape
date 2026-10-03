@@ -74,3 +74,44 @@ def test_664_a_profile_with_a_secret_in_any_field_is_refused(field, value):
 )
 def test_664_a_profile_without_a_secret_is_accepted(field, value):
     assert check_profile(ConnectionProfile(name="a", **{field: value})).name == "a"
+
+
+# ---- #663: the comparison page does not print the values of a personal-data column --------------
+
+
+def people_csv(path: Path) -> Path:
+    import csv
+
+    names = ["Alice", "Bob", "Carla", "Dmitri"]
+    with path.open("w", newline="") as fh:
+        out = csv.writer(fh)
+        out.writerow(["id", "email", "ssn", "plan", "city"])
+        for i in range(400):
+            who = names[i % 4]
+            out.writerow(
+                [i, f"{who.lower()}@secretcorp.example", f"{100 + i % 800}-{10 + i % 80}-{1000 + i}",
+                 ["basic", "plus", "pro"][i % 3], ["Springfield", "Gotham"][i % 2]]
+            )  # fmt: skip
+    return path
+
+
+def test_663_the_page_withholds_the_values_of_a_classified_column(tmp_path):
+    from shape.demo.charts import render_html
+    from shape.generation.learn import as_dataset
+    from shape.profile.reference import profile
+
+    real = as_dataset(profile(people_csv(tmp_path / "people.csv")))
+    page = render_html(real, real, 1.0, "people")
+    assert "secretcorp.example" not in page and "alice@" not in page
+    # the shape of the column stays; the values of ordinary categories stay
+    assert "<td>email</td>" in page
+    assert "basic" in page and "Springfield" in page
+
+
+def test_663_the_page_says_a_column_is_withheld(tmp_path):
+    from shape.demo.charts import render_html
+    from shape.generation.learn import as_dataset
+    from shape.profile.reference import profile
+
+    real = as_dataset(profile(people_csv(tmp_path / "people.csv")))
+    assert "values withheld" in render_html(real, real, 1.0, "people")
