@@ -7,6 +7,7 @@ import datetime as _dt
 import hashlib
 import math
 import warnings
+from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
@@ -20,7 +21,7 @@ from shape.security.hardening import validate_structure
 
 from .column import MAX_VALUE_CHARS
 from .model import ColumnProfile, DatasetProfile, TableProfile
-from .readers import CsvFormat
+from .readers import CsvFormat, single_threaded_pools
 from .sources import SourceError, check_delta_options, delta_dir, load_columns, read_delta
 from .table import _profile_cols_table, profile_dataset_columns
 
@@ -242,8 +243,8 @@ class Profile:
     def tables(self) -> dict[str, dict[str, Any]]:
         """Table profile dictionaries by name (one entry for a single-table profile)."""
         if self.is_dataset:
-            return dict(self._data["tables"])
-        return {self._data["name"]: self._data}
+            return copy.deepcopy(self._data["tables"])
+        return {self._data["name"]: copy.deepcopy(self._data)}
 
     def to_dict(self) -> dict[str, Any]:
         """The full profile as JSON-ready dicts."""
@@ -328,15 +329,37 @@ def profile(
     hidden sheets too), and the profile carries ``findings`` about its cells.
     """
     fmt = CsvFormat(delimiter, encoding, quotechar, header)
-    with np.errstate(all="ignore"):  # inf / NaN inputs are data, not numpy warnings
+    # inf / NaN inputs are data, not numpy warnings
+    with np.errstate(all="ignore"), single_threaded_pools():
         if is_workbook_spec(source):
             from .workbook import profile_workbook
 
-            data, title = profile_workbook(source, name, sheet, include_hidden, joint)
+            _refuse_workbook_options(
+                version=version,
+                as_of=as_of,
+                delimiter=delimiter,
+                encoding=encoding,
+                quotechar=quotechar,
+                header=None if header else header,
+            )
+            data, title = profile_workbook(
+                source, name, sheet, include_hidden, joint, reference_pairs
+            )
             return Profile(data, name=title)
         if sheet is not None or include_hidden:
             raise SourceError("sheet and include_hidden apply to .xlsx workbooks only")
         return _profile(source, name, version, as_of, fmt, reference_pairs, joint)
+
+
+def _refuse_workbook_options(**given: Any) -> None:
+    """A workbook has no Delta versions and no CSV format: refuse those options by name (#319),
+    as a CSV source refuses ``sheet=``."""
+    for option, value in given.items():
+        if value is not None:
+            raise SourceError(
+                f"{option} does not apply to an .xlsx workbook (it reads a Delta table or a CSV "
+                "file); leave it out"
+            )
 
 
 def _load_tables(
@@ -370,18 +393,63 @@ def _warn_delimiter(name: str, src: Any, cols: list[Any], csv: CsvFormat | None)
             f"{found[0]!r}: the file may use that delimiter. Pass delimiter={found[0]!r} "
             "(shape profile --delimiter).",
             UserWarning,
-            stacklevel=4,
+            stacklevel=_caller_stacklevel(),
         )
 
 
-def _attach_reference_pairs(
-    doc: dict[str, Any], cols: list[Any], rows: int, specs: Any, table: str | None = None
-) -> None:
-    """Add the reference-pair measurements to a table document's ``joint`` entry."""
+_PACKAGE_DIR = str(Path(__file__).resolve().parents[2])  # .../shape
+
+
+def _caller_stacklevel() -> int:
+    """The ``stacklevel`` that points a warning at the first frame outside the ``shape`` package
+    (the caller's line), however many internal frames lie between (#325)."""
+    import sys
+
+    frame = sys._getframe(1)
+    level = 1
+    while frame is not None and frame.f_code.co_filename.startswith(_PACKAGE_DIR):
+        frame = frame.f_back  # type: ignore[assignment]
+        level += 1
+    return level
+
+
+def check_reference_pairs(specs: Any, cols: list[Any]) -> None:
+    """Refuse a malformed ``reference_pairs`` list (one table's) before the table is profiled,
+    so a typo does not cost a whole profile (#325). The references themselves are read later."""
     if not specs:
         return
     if not isinstance(specs, (list, tuple)):
         raise ValueError("reference_pairs is a list of {columns, reference} objects")
+    from shape.profile.joint.reference import _mapping
+
+    names = {c.name for c in cols}
+    for spec in specs:
+        if not isinstance(spec, Mapping):
+            raise ValueError("reference_pairs is a list of {columns, reference} objects")
+        for key in ("columns", "reference"):
+            if key not in spec:
+                raise ValueError(f"a reference pair needs {key!r}: {dict(spec)!r}")
+        absent = [c for c in _mapping(spec["columns"]) if c not in names]
+        if absent:
+            raise ValueError(f"reference pair: the data has no column {absent[0]!r}")
+
+
+def check_reference_tables(specs: Any, cols_by_t: dict[str, tuple[list[Any], int]]) -> None:
+    """``check_reference_pairs`` for several tables: a dict of table name to list."""
+    if not specs:
+        return
+    if not isinstance(specs, Mapping):
+        raise ValueError("for several tables, reference_pairs maps a table name to a list")
+    for tname, table_specs in specs.items():
+        if tname not in cols_by_t:
+            raise ValueError(f"reference_pairs names the table {tname!r}, which is not here")
+        check_reference_pairs(table_specs, cols_by_t[tname][0])
+
+
+def attach_reference_pairs(doc: dict[str, Any], cols: list[Any], rows: int, specs: Any) -> None:
+    """Add the reference-pair measurements to a table document's ``joint`` entry."""
+    if not specs:
+        return
     from shape.profile.joint.reference import measure_reference_pairs
 
     measured = measure_reference_pairs(cols, rows, specs)
@@ -408,18 +476,11 @@ def _profile(
         if not source:
             raise SourceError("an empty dict of tables cannot be profiled")
         cols_by_t = _load_tables({str(k): v for k, v in source.items()}, csv)
+        check_reference_tables(reference_pairs, cols_by_t)
         doc = dataset_to_dict(profile_dataset_columns(cols_by_t, None, joint))
-        if reference_pairs:
-            if not isinstance(reference_pairs, dict):
-                raise ValueError("for several tables, reference_pairs maps a table name to a list")
-            for tname, specs in reference_pairs.items():
-                if tname not in cols_by_t:
-                    raise ValueError(
-                        f"reference_pairs names the table {tname!r}, which is not here"
-                    )
-                _attach_reference_pairs(
-                    doc["tables"][tname], cols_by_t[tname][0], cols_by_t[tname][1], specs
-                )
+        for tname, specs in (reference_pairs or {}).items():
+            cols, rows = cols_by_t[tname]
+            attach_reference_pairs(doc["tables"][tname], cols, rows, specs)
         return Profile(doc, name=name)
     delta = delta_dir(source)
     if delta is None:
@@ -433,9 +494,10 @@ def _profile(
     else:
         table, provenance = read_delta(delta, version=version, as_of=as_of)
         table_name, cols, rows = load_columns(table, name or delta.name)
+    check_reference_pairs(reference_pairs, cols)
     table_profile = _profile_cols_table(table_name, cols, rows, None, None, joint)
     doc = table_to_dict(table_profile)
-    _attach_reference_pairs(doc, cols, rows, reference_pairs)
+    attach_reference_pairs(doc, cols, rows, reference_pairs)
     return Profile(doc, name=name, provenance=provenance)
 
 

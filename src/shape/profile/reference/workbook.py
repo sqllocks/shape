@@ -48,8 +48,12 @@ def profile_workbook(
     sheet: str | None = None,
     include_hidden: bool = False,
     joint: bool | None = None,
+    reference_pairs: Any = None,
 ) -> tuple[dict[str, Any], str]:
-    """-> (the profile dict, the profile's name) for a workbook source."""
+    """-> (the profile dict, the profile's name) for a workbook source. ``reference_pairs`` is a
+    list for one sheet, and a dict of sheet name to list for the whole workbook (#319)."""
+    from .profile import attach_reference_pairs, check_reference_pairs, check_reference_tables
+
     path, picked = split_spec(spec)
     picked = sheet or picked
     wb = read_workbook(path, picked, include_hidden=include_hidden)
@@ -58,9 +62,15 @@ def profile_workbook(
     stem = Path(path).stem
     if picked is not None:
         ((table_name, (cols, rows)),) = cols_by_t.items()
+        check_reference_pairs(reference_pairs, cols)
         table = _profile_cols_table(table_name, cols, rows, None, None, joint)
         findings = by_table[table_name] + wb.findings
-        return _table_dict(table, findings), name or table_name
-    return _dataset_dict(
-        profile_dataset_columns(cols_by_t, None, joint), by_table, wb.findings
-    ), name or stem
+        out = _table_dict(table, findings)
+        attach_reference_pairs(out, cols, rows, reference_pairs)
+        return out, name or table_name
+    check_reference_tables(reference_pairs, cols_by_t)
+    out = _dataset_dict(profile_dataset_columns(cols_by_t, None, joint), by_table, wb.findings)
+    for tname, specs in (reference_pairs or {}).items():
+        cols, rows = cols_by_t[tname]
+        attach_reference_pairs(out["tables"][tname], cols, rows, specs)
+    return out, name or stem

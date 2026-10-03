@@ -476,10 +476,14 @@ def analyze_table(cols: list[Any], row_count: int) -> dict[str, Any] | None:
     cats: list[_View] = []
     nums: list[_View] = []
     for c in cols:
-        if c.kind not in set(_NUMERIC_KINDS) | set(_CATEGORY_KINDS):
+        # a view is built only for a role that still has room (#326): once the categorical role
+        # is full, a text column (which has no numeric role) costs nothing, however wide the table
+        wants_cat = c.kind in _CATEGORY_KINDS and len(cats) < budget.max_columns
+        wants_num = c.kind in _NUMERIC_KINDS and len(nums) < budget.max_columns
+        if not (wants_cat or wants_num):
+            if len(cats) >= budget.max_columns and len(nums) >= budget.max_columns:
+                break
             continue
-        if len(cats) >= budget.max_columns and len(nums) >= budget.max_columns:
-            break
         v = _build_view(c.name, c.kind, c.arr, idx)
         if v is None:
             continue

@@ -24,7 +24,7 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape.kernel.reference.exact import all_whole
 
-from .reference.column import _all_parse_datetime, _coerce_datetime_strings
+from .reference.column import _all_parse_datetime, _coerce_datetime_strings, _local_timestamp
 from .reference.readers import _arrow_cols, _csv_cols
 
 _BOOL_WORDS = ["true", "false", "0", "1", "yes", "no"]
@@ -86,6 +86,8 @@ def infer_column_type(array: Any, source: str = "arrow") -> str:
         if not n:
             return "datetime"
         per_day = _PER_DAY[non_null.type.unit]
+        if info.tz:  # midnight on the zone's wall clock, as the profile reads it (#326)
+            non_null = _local_timestamp(non_null.combine_chunks(), info.tz)
         ints = pc.cast(non_null, pa.int64()).to_numpy()
         return "datetime" if np.any(ints % per_day) else "date"
     if kind == "objdate":

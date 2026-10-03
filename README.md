@@ -60,7 +60,9 @@ be set per column and columns ignored (`--ignore`, `--policy`). See `docs/DRIFT.
 covers `shape generate-drift`, daily data with planted drift and an answer key.
 
 A folder is one table (its files are partitions) unless you pass `--dataset`, which profiles one
-table per file, named by the file name: `shape profile data/ --dataset -o data.shape`. A contract
+table per file, named by the file name: `shape profile data/ --dataset -o data.shape`. Files with
+the same columns in any order are one table; `shape profile` refuses a folder whose files have
+different columns, and `shape.profile(folder)` refuses files that have no column in common. A contract
 with a `tables` object is checked against such a dataset profile only; against a single table
 `shape check` exits 2, and a table of the profile that the contract does not name fails it.
 

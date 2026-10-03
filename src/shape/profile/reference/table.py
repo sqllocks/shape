@@ -67,7 +67,9 @@ def _correlation(all_cols: list[_Col], row_count: int) -> dict[str, dict[str, fl
     def fill(j: int) -> None:
         a = _combine(cols[j].arr)
         if cols[j].kind == "objdur":
-            a = pc.cast(pc.cast(a, pa.duration("ns")), pa.int64()).cast(pa.float64())
+            # the integers of the column's own unit (a correlation does not change with the
+            # unit); a cast to nanoseconds overflows for spans past 292 years (#325)
+            a = pc.cast(a, pa.int64()).cast(pa.float64())
         X[:, j] = a.to_numpy(zero_copy_only=False)
         if cols[j].kind in ("float", "objdur"):
             has_nan[j] = bool(np.isnan(X[:, j]).any())

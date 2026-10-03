@@ -5,6 +5,27 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+### Fixed
+
+- Profiling engine audit (lane AUD-profile): zoned timestamps in every unit (#128), nanosecond timestamps keep their
+  nanoseconds (#318) and enter the joint analysis (#151); the joint sample never repeats a row (#150) and integers
+  past 2**53 stay in it (#151); CSV header names are made unique (#167); each fork pool reads its own columns (#216);
+  impossible ISO dates, NaN words and zoned date text are handled as the baseline does or refused with the way out
+  (#221, #224, #269); zoned instants that share a wall-clock time stay apart (#225); mixed pandas object columns and
+  duplicate column names (#228, #229); integers wider than 64 bits are float (#236) and CSV integers of up to 76
+  digits are read (#320); the date tokenizer is linear (#270); folders skip hidden and underscore folders, refuse a
+  nested Delta table (#271) and files with no column in common, and compare columns as a set, JSONL included (#321);
+  a file name with glob characters is read (#272); reference pairs skip NaN, read a `Path`, work on a workbook, and
+  a malformed spec is refused before profiling (#302, #319, #325); NaN in the joint analysis (#313); the row evidence
+  functions and temporal profiles (#315, #316); binary minimum and maximum are cut to 256 characters (#317); a
+  workbook refuses the Delta and CSV options by name (#319); a trailing delimiter and a header-only CSV read as the
+  baseline reads them (#320); the engine document is strict JSON when moments overflow (#322); clear errors for
+  non-UTF-8 files, empty files, unknown time zones, `PROFILE_THREADS`, `quotechar`, an empty list and undecodable
+  bytes, and `file://` and `~` paths are read; `PROFILE_THREADS=1` restores pyarrow's pools afterwards (#324);
+  Cramer's V, dictionary columns with a null or repeated value, long durations, `Profile.tables` copies and the
+  delimiter warning's location (#325); `infer_column_type` reads a zoned column's wall clock, and the joint analysis
+  builds no view for a column it cannot use (#326).
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

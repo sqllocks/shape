@@ -250,10 +250,23 @@ def _tzinfo(tz: str) -> _dt.tzinfo:
     try:
         return ZoneInfo(tz)
     except (ZoneInfoNotFoundError, ValueError, OSError) as exc:
-        raise ValueError(
-            f"cannot read the time zone {tz!r}: this system has no time-zone database. "
-            "Install the 'tzdata' package (pip install tzdata)."
-        ) from exc
+        raise _zone_error(tz) from exc
+
+
+def _zone_error(tz: str) -> ValueError:
+    """The error for a zone that cannot be read: an unknown name when this system has a time-zone
+    database (#324), else the missing database."""
+    from zoneinfo import available_timezones
+
+    if available_timezones():
+        return ValueError(
+            f"unknown time zone {tz!r}: it is not in the time-zone database; use an IANA name "
+            "(such as 'America/New_York'), 'UTC' or a fixed offset such as '+05:30'"
+        )
+    return ValueError(
+        f"cannot read the time zone {tz!r}: this system has no time-zone database. "
+        "Install the 'tzdata' package (pip install tzdata)."
+    )
 
 
 def _local_timestamp(aware: pa.Array, tz: str) -> pa.Array:
@@ -269,10 +282,7 @@ def _local_timestamp(aware: pa.Array, tz: str) -> pa.Array:
     try:
         return pc.local_timestamp(aware)
     except pa.ArrowInvalid as exc:
-        raise ValueError(
-            f"cannot read the time zone {tz!r}: this system has no time-zone database. "
-            "Install the 'tzdata' package (pip install tzdata)."
-        ) from exc
+        raise _zone_error(tz) from exc
 
 
 def _aware_datetimes(aware: pa.Array, tz: str) -> list[_dt.datetime | None]:
@@ -611,7 +621,7 @@ def _numeric_of_objects(values: list[Any]) -> np.ndarray | None:
 def _object_text(kind: str, v: Any) -> str:
     """``Series.astype(str)`` of one value: bytes are decoded (strictly), the rest use str()."""
     if kind == "objbin":
-        return bytes(v).decode("utf-8")
+        return bytes(v).decode("utf-8")  # (a failure is named by _profile_object_column)
     return _object_key(kind, v)
 
 
@@ -655,7 +665,13 @@ def _profile_object_column(c: _Col, row_count: int, top_n: int = 500) -> _Work:
     entries, cardinality, values = object_entries(c)
     n_nn = len(values)
     null_count = n_total - n_nn  # (a union array has no validity bitmap of its own)
-    text = [_object_text(kind, v) for v in values]
+    try:
+        text = [_object_text(kind, v) for v in values]
+    except UnicodeDecodeError as exc:  # the baseline's astype(str) fails the same way (#324)
+        raise ValueError(
+            f"column {c.name!r} holds bytes that are not UTF-8 text ({exc.reason} at byte "
+            f"{exc.start}); decode or drop the column before profiling it"
+        ) from exc
     ukeys = [_object_key(kind, v) for v, _ in entries]
     row_count = row_count or 0
     cardinality_ratio = cardinality / row_count if row_count else 0.0

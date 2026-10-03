@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import glob as _glob
+import re
 from collections import Counter
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -10,7 +11,7 @@ from contextvars import ContextVar
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.json as pajson  # type: ignore[import-untyped]
@@ -70,7 +71,7 @@ def delta_dir(source: Any) -> Path | None:
     """The directory of a local Delta table, when ``source`` names one."""
     if not isinstance(source, (str, Path)) or _is_url(str(source)):
         return None
-    path = Path(source)
+    path = Path(local_path(str(source)))
     return path if (path / "_delta_log").is_dir() else None
 
 
@@ -191,8 +192,27 @@ def _read_files(
         else:
             check_json_file(p)
             tables.append(pajson.read_json(p))
+    if len(tables) > 1:
+        _check_shared_columns(paths, [t.column_names for t in tables])
     table = tables[0] if len(tables) == 1 else _concat(tables)
     return kind, table
+
+
+def _check_shared_columns(paths: list[Path], names: list[list[str]]) -> None:
+    """Files read as one table must have a column in common: files with none are different
+    tables, and merging them would give every column a null for the other files' rows (#321).
+    Files whose columns are the same set in another order, or overlap, are one table."""
+    common = set(names[0]).intersection(*names[1:])
+    if common:
+        return
+    first = set(names[0])
+    other = next(
+        (p for p, n in zip(paths[1:], names[1:], strict=True) if not first & set(n)), paths[-1]
+    )
+    raise SourceError(
+        f"{paths[0].name} and {other.name} have no column in common, so they are not one table: "
+        "profile them as several tables (a dict of sources, or shape profile --dataset)"
+    )
 
 
 def _concat(tables: list[pa.Table]) -> pa.Table:
@@ -217,7 +237,9 @@ def load_columns(
         _check_unique_names([str(c) for c in source.columns])
         return name or "table", _pandas_cols(source), len(source)
     if isinstance(source, (str, Path)):
-        return _load_path(str(source), name, threads, csv)
+        return _load_path(local_path(str(source)), name, threads, csv)
+    if isinstance(source, (list, tuple)) and not source:
+        raise SourceError("an empty list has no rows and no columns to profile")
     if _is_row_dicts(source):
         table = _rows_table(source)
         return name or "table", _arrow_cols(table), table.num_rows
@@ -272,6 +294,21 @@ def _rows_table(rows: Any) -> pa.Table:
 def _is_pandas(obj: Any) -> bool:
     mod = type(obj).__module__
     return mod.startswith("pandas") and hasattr(obj, "columns") and hasattr(obj, "dtypes")
+
+
+def local_path(text: str) -> str:
+    """A ``file://`` URL as its path, and a leading ``~`` expanded (#324); other text as it is."""
+    if text[:7].lower() == "file://":
+        parsed = urlparse(text)
+        if parsed.netloc not in ("", "localhost"):
+            raise SourceError(f"{text}: a file:// URL must name a local file (no host)")
+        path = unquote(parsed.path)
+        if re.match(r"/[A-Za-z]:[/\\]", path):  # file:///C:/x.csv is C:/x.csv
+            path = path[1:]
+        return path
+    if text.startswith("~"):
+        return str(Path(text).expanduser())
+    return text
 
 
 def _is_url(text: str) -> bool:
@@ -400,7 +437,7 @@ def load_table(
             f"unsupported source type {type(source).__name__}; expected a path, glob, "
             "pyarrow.Table, pandas.DataFrame or a list of row dicts"
         )
-    table_name, _, table = _path_table(str(source), name, threads)
+    table_name, _, table = _path_table(local_path(str(source)), name, threads)
     return table_name, table, None
 
 
@@ -440,23 +477,38 @@ def folder_is_one_table(folder: str | Path, csv: CsvFormat | None = None) -> boo
     root = Path(folder)
     if (root / "_delta_log").is_dir():
         return True
-    seen: set[tuple[str, ...]] = set()
+    seen: set[frozenset[str]] = set()
     for p in _folder_files(root):
         suffix = p.suffix.lower()
         if suffix == ".parquet":
-            seen.add(tuple(pq.read_schema(p).names))
+            seen.add(frozenset(pq.read_schema(p).names))
         elif suffix == ".csv":
-            import pyarrow.csv as pacsv  # type: ignore[import-untyped]
-
-            f, po = _csv_options(p, csv)
-            ro = pacsv.ReadOptions(
-                encoding=f.encoding or "utf8", autogenerate_column_names=not f.header
-            )
-            with pacsv.open_csv(p, read_options=ro, parse_options=po) as reader:
-                seen.add(tuple(reader.schema.names))
-        if len(seen) > 1:
+            seen.add(frozenset(_csv_header(p, csv)))
+        elif suffix in (".jsonl", ".ndjson"):
+            check_json_file(p)
+            seen.add(frozenset(pajson.read_json(p).column_names))
+        if len(seen) > 1:  # the same columns in any order are one table (#321)
             return False
     return True
+
+
+def _csv_header(path: Path, csv: CsvFormat | None) -> list[str]:
+    """The column names of a CSV file (its header row; ``f0``, ``f1``... without one)."""
+    import itertools
+
+    import pyarrow.csv as pacsv  # type: ignore[import-untyped]
+
+    f, po = _csv_options(path, csv)
+    if not f.header:
+        ro = pacsv.ReadOptions(encoding=f.encoding or "utf8", autogenerate_column_names=True)
+        with pacsv.open_csv(path, read_options=ro, parse_options=po) as reader:
+            return list(reader.schema.names)
+    import csv as pycsv
+
+    with open(path, encoding=f.encoding or "utf8", newline="") as fh:
+        reader = pycsv.reader(fh, delimiter=po.delimiter, quotechar=po.quote_char)
+        rows = list(itertools.islice(reader, 1))
+    return list(rows[0]) if rows else []
 
 
 def _to_cols(kind: str, table: pa.Table) -> list[_Col]:

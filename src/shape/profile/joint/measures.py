@@ -43,7 +43,9 @@ def mutual_information(t: np.ndarray) -> float:
 
 
 def cramers_v(t: np.ndarray) -> float:
-    """Cramer's V with Bergsma's bias correction (0: independent, 1: one determines the other)."""
+    """Cramer's V with Bergsma's bias correction (0: independent, 1: one determines the other).
+    Categories with no rows (all dropped as pairwise missing) do not count in r and c (#325)."""
+    t = t[t.sum(axis=1) > 0][:, t.sum(axis=0) > 0]
     n = float(t.sum())
     r, c = t.shape
     if n < 2 or r < 2 or c < 2:

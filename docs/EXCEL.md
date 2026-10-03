@@ -20,6 +20,10 @@ shape.profile("book.xlsx#Members")              # one table, named after the she
 shape.io.open_source("book.xlsx#Members")       # Arrow batches; open_workbook("book.xlsx") gives every sheet
 ```
 
+`reference_pairs` works on a workbook as on any source: a list for one sheet, and a dict of sheet name to list for the
+whole workbook. The Delta options (`version`, `as_of`) and the CSV options (`delimiter`, `encoding`, `quotechar`,
+`header=False`) do not apply to a workbook and are refused by name.
+
 The first non-empty row of a sheet is its header. Sheets are read in read-only streaming mode. Cached formula results
 are read, not the formulas. `.xls` (legacy), `.xlsb` and password-protected files are refused with an error that says
 what to do; an archive that inflates absurdly is refused as well.

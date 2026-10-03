@@ -1,7 +1,8 @@
 # Profiling notes: inputs, odd values and size
 
 What `shape profile` (and `shape.profile`) does with CSV files, non-finite numbers, decimals, time zones and large
-inputs. Each statement here has a test in `tests/profile/test_profile_issues.py`.
+inputs. Each statement here has a test in `tests/profile/test_profile_issues.py` or
+`tests/profile/test_audit_profile.py`.
 
 ## CSV files
 
@@ -22,6 +23,21 @@ A CSV that still comes out as one column whose name contains `;`, tab, `|` or `,
 delimiter to pass. `shape.io.CsvOptions` (the fused engine and `stream-profile`) has the same `delimiter`, `encoding` and
 `quotechar`, and sniffs when `delimiter` is not set.
 
+Shapes of file that are read rather than refused:
+
+- A file whose first data row has one field more than the header (a trailing delimiter on every row, for example) has
+  its first field read as a row label, not as a column: the header names the remaining fields. A file where only a later
+  row has the extra field is refused.
+- A file with a header and no rows is a table of no rows, with text columns.
+- Whole numbers of up to 76 digits are read (as `dtype: float` past 64 bits); wider ones are refused naming the column.
+
+Clear errors: a file that is not UTF-8 (or not in the `encoding` given) names the file and says to pass `encoding=` /
+`--encoding`; an empty file names the file; a `quotechar` or `delimiter` longer than one character is a `ValueError`.
+A path may be a `file://` URL or start with `~`.
+
+`PROFILE_THREADS` sets the profiler's thread count (a positive integer; `0` or unset: every core). With `1`, pyarrow's
+process-wide thread pools hold one thread while the profile runs and get their sizes back when it returns.
+
 ## NaN, infinity and single values
 
 A float column keeps three things apart: nulls (`null_count`), NaN (`nan_count`) and +/- infinity (`inf_count`). The last
@@ -39,7 +55,7 @@ column.
 A timestamp column with a time zone is profiled on its wall clock, with the UTC offset kept in the min, max and value
 keys. UTC and fixed offsets (`+05:30`) need no time-zone database. A named zone (`America/New_York`) does: on a system
 without one (Windows without the `tzdata` package) the profile stops with an error that names the zone and says
-`pip install tzdata`.
+`pip install tzdata`. A zone name the database does not know (`Mars/Base`) is reported as an unknown time zone.
 
 ## Personal-data patterns
 

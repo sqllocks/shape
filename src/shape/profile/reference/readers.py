@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import os
 import re
+from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -22,12 +24,37 @@ from shape.kernel.dispatch import get_kernel
 
 
 def _n_threads(threads: int | None) -> int:
+    """The profiler's thread count: the argument, else ``PROFILE_THREADS`` (``0`` or unset: every
+    core). A malformed ``PROFILE_THREADS`` is refused by name (#324)."""
     if threads is None:
-        threads = int(os.environ.get("PROFILE_THREADS", "0")) or (os.cpu_count() or 1)
-    if threads == 1:
-        pa.set_cpu_count(1)
-        pa.set_io_thread_count(1)
+        raw = os.environ.get("PROFILE_THREADS", "").strip()
+        threads = 0
+        if raw:
+            if not raw.isdigit():
+                raise ValueError(
+                    f"PROFILE_THREADS must be a positive integer, got {raw!r} (0 or unset: "
+                    "every core)"
+                )
+            threads = int(raw)
+        threads = threads or (os.cpu_count() or 1)
     return threads
+
+
+@contextmanager
+def single_threaded_pools(threads: int | None = None) -> Iterator[None]:
+    """With one thread (``PROFILE_THREADS=1``), pyarrow's process-wide CPU and I/O pools hold
+    one thread while the block runs, and get their sizes back when it ends (#324)."""
+    if _n_threads(threads) != 1:
+        yield
+        return
+    before = (pa.cpu_count(), pa.io_thread_count())
+    pa.set_cpu_count(1)
+    pa.set_io_thread_count(1)
+    try:
+        yield
+    finally:
+        pa.set_cpu_count(before[0])
+        pa.set_io_thread_count(before[1])
 
 
 # ---------------------------------------------------------------------------
@@ -38,7 +65,8 @@ def _n_threads(threads: int | None) -> int:
 #   objtime  object column of datetime.time          objbin  object column of bytes
 #   objdur   timedelta64 (pandas Timedelta values)   cat     pandas category (Arrow dictionary)
 #   objmix   object column of mixed Python ints/floats/bools/str (Arrow dense union here)
-#   objint   object column of Python ints wider than 64 bits (decimal128(38, 0) here)
+#   objint   object column of Python ints wider than 64 bits (decimal128(38, 0) here,
+#            decimal256(76, 0) past 38 digits)
 #   float    numpy float64 (incl. int-with-nulls, all-empty CSV column)
 #   bool     numpy bool (no nulls)
 #   objbool  object array of Python bools + NaN (bool with nulls)
@@ -198,13 +226,36 @@ def object_column(name: str, values: list[Any]) -> _Col:
     )
 
 
+def _clean_dictionary(col: Any) -> Any:
+    """A dictionary column whose dictionary holds a null or a value twice, rebuilt so that a null
+    entry is a missing value and a repeated value is one category (#325). The dictionary keeps
+    its order (unused values included); a clean column is returned as it is."""
+    if not len(col.chunks):
+        return col
+    raw = col.chunks[0].dictionary
+    if raw.null_count == 0 and len(pc.unique(raw)) == len(raw):
+        return col
+    values = raw.to_pylist()
+    cats = list(dict.fromkeys(v for v in values if v is not None))
+    slot = {v: i for i, v in enumerate(cats)}
+    remap = pa.array([None if v is None else slot[v] for v in values], pa.int32())
+    dictionary = pa.array(cats, raw.type)
+    return pa.chunked_array(
+        [
+            pa.DictionaryArray.from_arrays(remap.take(chunk.indices), dictionary)
+            for chunk in col.chunks
+        ],
+        pa.dictionary(pa.int32(), raw.type),
+    )
+
+
 def _arrow_cols(t: pa.Table) -> list[_Col]:
     """pa.Table -> pandas semantics of Table.to_pandas() / pd.read_parquet()."""
     out = []
     for name, col in zip(t.column_names, t.columns, strict=True):
         typ = col.type
         if pa.types.is_dictionary(typ):
-            out.append(_Col(name, "cat", col.unify_dictionaries()))
+            out.append(_Col(name, "cat", _clean_dictionary(col.unify_dictionaries())))
             continue
         if pa.types.is_nested(typ):
             # pandas holds dicts / ndarrays here; value hashing then raises
@@ -275,6 +326,8 @@ class CsvFormat:
 def _csv_options(path: str | Path, fmt: CsvFormat | None) -> tuple[CsvFormat, Any]:
     """``(the format, Arrow parse options)`` for a file: the delimiter is sniffed if not given."""
     f = fmt or CsvFormat()
+    if f.quotechar is not None and len(f.quotechar) != 1:
+        raise ValueError(f"the CSV quote character must be one character, got {f.quotechar!r}")
     delimiter = f.delimiter or sniff_delimiter(path, f.encoding, f.quotechar) or ","
     if len(delimiter) != 1:
         raise ValueError(f"the CSV delimiter must be one character, got {delimiter!r}")
@@ -301,7 +354,20 @@ def read_csv(
         false_values=["False", "FALSE", "false"],
         timestamp_parsers=["@@never%Y"],  # pandas.read_csv does not parse datetimes
     )
-    table = pacsv.read_csv(path, read_options=ro, parse_options=po, convert_options=co)
+    try:
+        table = pacsv.read_csv(path, read_options=ro, parse_options=po, convert_options=co)
+    except pa.ArrowInvalid as exc:
+        table, ro = _read_csv_fallback(path, f, po, ro, co, exc)
+    for name, col in zip(table.column_names, table.columns, strict=True):
+        # Arrow keeps text that does not decode as binary: say what to pass instead (#324)
+        if pa.types.is_binary(col.type) or pa.types.is_large_binary(col.type):
+            raise ValueError(
+                f"{Path(path).name} is not {f.encoding or 'UTF-8'} text (column {name!r}): "
+                "pass its encoding, for example encoding='latin-1' (shape profile --encoding "
+                "latin-1)"
+            )
+    if table.num_rows == 0:  # a header-only file: pandas gives text (object) columns (#320)
+        table = pa.table({n: pa.array([], pa.string()) for n in table.column_names})
     if f.header:
         names = _header_names(table.column_names)
         if names != table.column_names:
@@ -316,6 +382,68 @@ def read_csv(
             )
     table = _refine_integers(path, table, ro, po, co)
     return _mixed_chunk_columns(table)
+
+
+_INDEX_COLUMN = "\x00index"
+
+
+def _first_records(path: str | Path, f: CsvFormat, po: Any, n: int = 2) -> list[list[str]]:
+    """The first ``n`` records of a CSV file, parsed with Python's ``csv`` module."""
+    import csv
+    import itertools
+
+    with open(path, encoding=f.encoding or "utf8", newline="") as fh:
+        reader = csv.reader(fh, delimiter=po.delimiter, quotechar=po.quote_char)
+        return list(itertools.islice(reader, n))
+
+
+def _read_csv_fallback(
+    path: str | Path, f: CsvFormat, po: Any, ro: Any, co: Any, exc: pa.ArrowInvalid
+) -> tuple[pa.Table, Any]:
+    """The files Arrow refuses that pandas reads (#320), and clear errors for the rest (#324):
+
+    * an empty file is refused naming the file;
+    * a header with no rows is a table of no rows (text columns);
+    * a first data row with one field more than the header, a trailing delimiter for example,
+      makes pandas read the first field of every row as the index (not a column), as here.
+
+    Returns ``(table, read options)``; the read options re-read the same columns."""
+    name = Path(path).name
+    message = str(exc)
+    if "Invalid UTF8" in message or "invalid utf" in message.lower():
+        raise ValueError(
+            f"{name} is not UTF-8 text: pass its encoding, for example encoding='latin-1' "
+            "(shape profile --encoding latin-1)"
+        ) from exc
+    if "Empty CSV file" not in message and "Expected" not in message:
+        raise exc
+    try:
+        records = _first_records(path, f, po)
+    except UnicodeDecodeError:
+        raise exc from None
+    if not records:
+        raise ValueError(f"{name} is empty: a CSV file needs at least a header row") from exc
+    if "Empty CSV file" in message:
+        if not f.header:
+            raise exc
+        names = _header_names(records[0])
+        return pa.table({n: pa.array([], pa.string()) for n in names}), ro
+    header, first = records[0], (records[1] if len(records) > 1 else [])
+    if not (f.header and len(first) == len(header) + 1):
+        raise exc
+    names = [_INDEX_COLUMN, *_header_names(header)]
+    ro = pacsv.ReadOptions(
+        use_threads=ro.use_threads,
+        block_size=ro.block_size,
+        encoding=ro.encoding,
+        column_names=names,
+        skip_rows=1,
+    )
+    try:
+        table = pacsv.read_csv(path, read_options=ro, parse_options=po, convert_options=co)
+    except pa.ArrowInvalid:
+        raise exc from None  # a later row has the header's field count: pandas refuses it too
+    return table.drop_columns([_INDEX_COLUMN]), ro
 
 
 def _header_names(names: list[str]) -> list[str]:
@@ -466,6 +594,7 @@ _INT_TEXT = r"^\s*[+-]?[0-9]+\s*$"
 _I64 = (-(2**63), 2**63 - 1)
 _U64_MAX = 2**64 - 1
 _DEC_MAX = 10**38
+_DEC256_MAX = 10**76
 
 
 def _refine_integers(path: str | Path, table: pa.Table, ro: Any, po: Any, co: Any) -> pa.Table:
@@ -485,6 +614,9 @@ def _refine_integers(path: str | Path, table: pa.Table, ro: Any, po: Any, co: An
                 cands.append(name)
     if not cands:
         return table
+    if ro.column_names and ro.column_names[0] == _INDEX_COLUMN:  # never re-read the index
+        cands_set = set(cands)
+        cands = [n for n in ro.column_names if n in cands_set]
     co2 = pacsv.ConvertOptions(
         null_values=co.null_values,
         strings_can_be_null=True,
@@ -509,8 +641,14 @@ def _refine_integers(path: str | Path, table: pa.Table, ro: Any, po: Any, co: An
             new = pa.chunked_array(
                 [pa.array([decimal.Decimal(i) for i in ints], pa.decimal128(38, 0))]
             )
+        elif -_DEC256_MAX < lo and hi < _DEC256_MAX:  # #320: up to 76 digits
+            import decimal
+
+            new = pa.chunked_array(
+                [pa.array([decimal.Decimal(i) for i in ints], pa.decimal256(76, 0))]
+            )
         else:
-            raise NotImplementedError(f"column {name}: integers wider than 38 digits")
+            raise NotImplementedError(f"column {name}: integers wider than 76 digits")
         table = table.set_column(table.schema.get_field_index(name), name, new)
     return table
 

@@ -51,6 +51,12 @@ class EngineOptions:
             raise ValueError("batch_size must be positive")
         if self.top_n < 1:
             raise ValueError("top_n must be positive")
+        if self.threads is not None and (
+            not isinstance(self.threads, int) or isinstance(self.threads, bool) or self.threads < 0
+        ):
+            raise ValueError(
+                f"threads must be a non-negative integer (0: every core), got {self.threads!r}"
+            )
 
 
 def resolve_threads(threads: int | None = None) -> int:
@@ -85,6 +91,9 @@ def _json_value(v: Any) -> Any:
     return v
 
 
+_MOMENTS = ("mean", "m2", "variance_population", "variance_sample")
+
+
 def _column_doc(stats: dict[str, Any], arrow_type: str, mode: str) -> dict[str, Any]:
     d = dict(stats)
     d["arrow_type"] = arrow_type
@@ -102,6 +111,10 @@ def _column_doc(stats: dict[str, Any], arrow_type: str, mode: str) -> dict[str, 
         n = d["finite_count"]
         d["variance_population"] = d["m2"] / n if n else None
         d["variance_sample"] = d["m2"] / (n - 1) if n > 1 else None
+        for key in _MOMENTS:  # moments that overflowed are unknown: strict JSON has no inf (#322)
+            v = d.get(key)
+            if isinstance(v, float) and not math.isfinite(v):
+                d[key] = None
     if kind == "text":
         length = d["length"]
         if "hist" in length:
