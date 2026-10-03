@@ -399,3 +399,23 @@ def test_sequence_past_int64_is_a_strategy_error() -> None:
     assert _table({"y": {"type": "integer", "generator": edge}}, rows=3)["y"].to_pylist()[-1] == (
         2**63 - 1
     )
+
+
+# ---- #149: calendar and seasonal-profile inputs are checked -------------------------------------
+
+
+def test_calendar_inputs_are_checked() -> None:
+    from datetime import date
+
+    import pytest
+
+    from shape.builtins.calendars import Trend, UsFederalCalendar
+    from shape.generation.strategy_kit import StrategyError
+
+    with pytest.raises(ValueError, match="annual_growth"):
+        Trend(float("nan"))
+    with pytest.raises(ValueError, match="end must not be before start"):
+        UsFederalCalendar().factors(date(2024, 1, 5), date(2024, 1, 1))
+    for profiles in ({"month": {"January": 100}}, {"day_of_week": {"Monday": 2}}):
+        with pytest.raises(StrategyError, match=r"Jan|Mon"):
+            _times({"pattern": "seasonal", "profiles": profiles}, rows=10)
