@@ -330,3 +330,15 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Repository cleaned up for public release: removed internal milestone and
   qualification records.
 - README and changelog rewritten to describe the current state.
+
+### Fixed (packaging)
+
+- The core sdist holds only what a build needs (`pyproject.toml`, `src/shape`, `rust/shape-kernel`)
+  and the README and licence files; it no longer ships the plans, tests, benchmarks or CI files
+  (#246).
+- The platform wheels and the sdist carry `THIRD_PARTY_NOTICES_RUST.md`, the licence texts and
+  notices of every Rust crate in the kernel (`python scripts/rust_notices.py write|check`) (#248).
+- `sqllocks-shape-domains` carries the GeoNames CC-BY-4.0 attribution for its ZIP location data
+  (#250).
+- Every distribution declares Python 3.11–3.14 classifiers, and the plugins link the repository,
+  the issue tracker and their documentation (#254).
