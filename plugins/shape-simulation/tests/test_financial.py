@@ -315,3 +315,36 @@ def test_default_window_without_a_time_column_is_a_day(financial_tables):
     }
     r = sim(bare).run()
     assert r.stats["duration_hours"] == 24.0 and r.settlements.num_rows == 6
+
+
+def test_a_far_future_time_or_huge_window_is_refused_not_simulated():
+    # Issue #413: one sentinel date (9999-12-31) made the default window ~70M hours, and the
+    # run made a settlement batch and a fraud draw for each of them (6.7 GB, 47 s).
+    import datetime as dt
+
+    tx = pa.table(
+        {
+            "transaction_id": [1, 2, 3],
+            "account_id": [1, 2, 3],
+            "amount": [5.0, 6.0, 7.0],
+            "transaction_time": [
+                dt.datetime(2024, 1, 1),
+                dt.datetime(2024, 1, 2),
+                dt.datetime(9999, 12, 31),
+            ],
+        }
+    )
+    accounts = pa.table({"account_id": [1, 2, 3]})
+    with pytest.raises(ValueError, match="duration_hours"):
+        FinancialStreamSimulator(tx, accounts, FinancialStreamConfig()).run()
+    with pytest.raises(ValueError, match="duration_hours"):
+        FinancialStreamSimulator(tx, accounts, FinancialStreamConfig(duration_hours=1e10)).run()
+    with pytest.raises(ValueError, match="settlement_batch_hours"):
+        FinancialStreamSimulator(
+            tx, accounts, FinancialStreamConfig(duration_hours=24 * 365, settlement_batch_hours=1e-4)
+        ).run()
+    # a year of data is fine
+    ok = FinancialStreamSimulator(
+        tx.slice(0, 2), accounts, FinancialStreamConfig(duration_hours=24 * 365)
+    ).run()
+    assert ok.settlements.num_rows == 24 * 365 // 4  # one batch per settlement_batch_hours
