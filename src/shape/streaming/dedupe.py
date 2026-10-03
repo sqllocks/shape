@@ -28,6 +28,7 @@ import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.kernel.hashing import hash_column
+from shape.streaming import versions
 from shape.streaming.keyed import _pack, _unpack
 
 DEDUPE_FORMAT = "shape-dedupe-v1"
@@ -194,24 +195,27 @@ class Deduplicator:
     # -------------------------------------------------------------- snapshot
     def snapshot(self) -> dict[str, Any]:
         """A JSON-safe copy of the window."""
-        return {
-            "format": DEDUPE_FORMAT,
-            "max_keys": self.max_keys,
-            "ttl": self.ttl,
-            "seq": self._seq,
-            "now": self._now,
-            "kind": self._kind,
-            "counters": {"rows": self.rows, "duplicates": self.duplicates},
-            "runs": [
-                {"keys": _pack(r.keys), "seq": _pack(r.seq), "time": _pack(r.time)}
-                for r in self._runs
-            ],
-        }
+        return versions.stamp(
+            versions.DEDUPE_SNAPSHOT,
+            {
+                "max_keys": self.max_keys,
+                "ttl": self.ttl,
+                "seq": self._seq,
+                "now": self._now,
+                "kind": self._kind,
+                "counters": {"rows": self.rows, "duplicates": self.duplicates},
+                "runs": [
+                    {"keys": _pack(r.keys), "seq": _pack(r.seq), "time": _pack(r.time)}
+                    for r in self._runs
+                ],
+            },
+        )
 
     @classmethod
     def restore(cls, snap: dict[str, Any]) -> Deduplicator:
         if snap.get("format") != DEDUPE_FORMAT:
             raise ValueError("not a deduplicator snapshot")
+        versions.check(versions.DEDUPE_SNAPSHOT, snap, error=ValueError)
         obj = cls(snap["max_keys"], snap["ttl"])
         obj._seq, obj._now, obj._kind = int(snap["seq"]), snap["now"], snap["kind"]
         obj.rows = int(snap["counters"]["rows"])

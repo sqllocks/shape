@@ -40,6 +40,7 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape.kernel.dispatch import get_kernel
 from shape.profile.engine import table_entry
+from shape.streaming import versions
 from shape.streaming.messages import partition_of
 
 SNAPSHOT_FORMAT = "shape-stream-window-v1"
@@ -399,33 +400,35 @@ class WindowedProfiler:
     # ------------------------------------------------------------ snapshots
     def snapshot(self) -> dict[str, Any]:
         """Everything needed to resume: configuration, watermark, counters and window state."""
-        return {
-            "format": SNAPSHOT_FORMAT,
-            "kind": self.kind,
-            "name": self.name,
-            "schema": _encode_schema(self.schema),
-            "event_time": self.event_time,
-            "allowed_lateness_us": self.allowed_lateness,
-            "top_n": self.top_n,
-            "config": self._config(),
-            "max_event_time_us": self._max_event_time,
-            "partitions": {
-                "newest_us": self._partitions,
-                "idle": sorted(self._idle),
-                "watermark_us": self._wm_peak,
-                "max_skew_us": self.max_partition_skew,
+        return versions.stamp(
+            versions.WINDOW_SNAPSHOT,
+            {
+                "kind": self.kind,
+                "name": self.name,
+                "schema": _encode_schema(self.schema),
+                "event_time": self.event_time,
+                "allowed_lateness_us": self.allowed_lateness,
+                "top_n": self.top_n,
+                "config": self._config(),
+                "max_event_time_us": self._max_event_time,
+                "partitions": {
+                    "newest_us": self._partitions,
+                    "idle": sorted(self._idle),
+                    "watermark_us": self._wm_peak,
+                    "max_skew_us": self.max_partition_skew,
+                },
+                "finished": self._finished,
+                "counters": {
+                    "batches": self.batches,
+                    "rows_in": self.rows_in,
+                    "late_events": self.late_events,
+                    "max_late_lag_us": self.max_late_lag,
+                    "null_event_time": self.null_event_time,
+                    "windows_emitted": self.windows_emitted,
+                },
+                "state": self._dump_state(),
             },
-            "finished": self._finished,
-            "counters": {
-                "batches": self.batches,
-                "rows_in": self.rows_in,
-                "late_events": self.late_events,
-                "max_late_lag_us": self.max_late_lag,
-                "null_event_time": self.null_event_time,
-                "windows_emitted": self.windows_emitted,
-            },
-            "state": self._dump_state(),
-        }
+        )
 
     @classmethod
     def restore(
@@ -434,6 +437,7 @@ class WindowedProfiler:
         """Rebuild a profiler from ``snapshot()``. ``late_sink`` is code, so it is not stored."""
         if snapshot.get("format") != SNAPSHOT_FORMAT:
             raise ValueError("not a stream window snapshot")
+        versions.check(versions.WINDOW_SNAPSHOT, snapshot, error=ValueError)
         kind = snapshot["kind"]
         target = _KINDS.get(kind)
         if target is None or not issubclass(target, cls):

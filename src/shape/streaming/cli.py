@@ -38,7 +38,7 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from .checkpoint import FileCheckpointStore
-from .consumer import CHECKPOINT_FORMAT, StreamConsumer
+from .consumer import CHECKPOINT_FORMAT, StreamConsumer, checkpoint_profiler
 from .messages import EVENT_TIME, StreamSourceError
 from .runtime import (
     GlobalProfiler,
@@ -48,7 +48,6 @@ from .runtime import (
     WindowedProfiler,
     WindowProfile,
     parse_duration,
-    restore_profiler,
 )
 
 GROUP = "shape.stream_sources"
@@ -259,7 +258,7 @@ def _checkpoint_schema(store: FileCheckpointStore) -> pa.Schema | None:
     doc = store.load_document()
     if doc is None or doc.get("format") != CHECKPOINT_FORMAT:
         return None  # a missing file starts afresh; a foreign one is refused by the consumer
-    return restore_profiler(doc["profiler"]).schema
+    return checkpoint_profiler(doc, store.path).schema
 
 
 def _validate(args: Any) -> None:

@@ -64,6 +64,7 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
 from shape.generation.report import compare as cmp
+from shape.streaming import versions
 from shape.streaming.emit.formats import FIELD_SEQ, FIELD_TABLE, FIELD_TIME
 from shape.streaming.emit.sinks import EventSink
 from shape.streaming.runtime import GlobalProfiler
@@ -979,29 +980,31 @@ class LiveFidelity:
 
     def summary(self) -> dict[str, Any]:
         snap = self.last
-        return {
-            "format": REPORT_FORMAT,
-            "events": self.events,
-            "overall": None if snap is None or snap.overall is None else snap.overall,
-            "tables": {} if snap is None else snap.tables,
-            "pending": [] if snap is None else list(snap.pending),
-            "evaluations": self.evaluations,
-            "alerts": [a.to_dict() for a in self.alerts],
-            "alert_count": sum(1 for a in self.alerts if a.kind != KIND_RECOVERED),
-            "error_alerts": sum(1 for a in self.alerts if a.level == "error"),
-            "approximate": self.approximate(),
-            "failed": self.failed,
-            "observe_seconds": self.observe_seconds,
-            "thresholds": {
-                "min_progress": self.config.min_progress,
-                "min_score": self.config.min_score,
-                "min_table_score": self.config.min_table_score,
-                "min_column_score": self.config.min_column_score,
-                "drop": self.config.drop,
-                "min_events": self.config.min_events,
+        return versions.stamp(
+            versions.LIVE_REPORT,
+            {
+                "events": self.events,
+                "overall": None if snap is None or snap.overall is None else snap.overall,
+                "tables": {} if snap is None else snap.tables,
+                "pending": [] if snap is None else list(snap.pending),
+                "evaluations": self.evaluations,
+                "alerts": [a.to_dict() for a in self.alerts],
+                "alert_count": sum(1 for a in self.alerts if a.kind != KIND_RECOVERED),
+                "error_alerts": sum(1 for a in self.alerts if a.level == "error"),
+                "approximate": self.approximate(),
+                "failed": self.failed,
+                "observe_seconds": self.observe_seconds,
+                "thresholds": {
+                    "min_progress": self.config.min_progress,
+                    "min_score": self.config.min_score,
+                    "min_table_score": self.config.min_table_score,
+                    "min_column_score": self.config.min_column_score,
+                    "drop": self.config.drop,
+                    "min_events": self.config.min_events,
+                },
+                "trajectory": self.trajectory,
             },
-            "trajectory": self.trajectory,
-        }
+        )
 
 
 # ---- the tee ----------------------------------------------------------------------------------

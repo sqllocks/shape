@@ -118,6 +118,14 @@ interleaving; `--allowed-lateness` is for events that really arrive late. Delive
 A checkpoint belongs to one URI and one profiler configuration; another is refused. A checkpoint
 of a *finished* run is final: running the same command again reads nothing and says so.
 
+The checkpoint and the state inside it (the window snapshot, the deduplicator's and the keyed
+sketches' snapshots, the emit checkpoint, live alerts and reports) follow the policy of
+`docs/specs/STATE_AND_COMPATIBILITY.md`: each declares `format` (the first release's string, such as
+`shape-stream-checkpoint-v1`), an integer `version` (now 1), `shape_version` and `min_shape_version`.
+A file without a version is version 1. A file of a newer version is refused with the release that
+reads it; a checkpoint whose profile state cannot be read says so, names the file and suggests
+removing it or using another `--checkpoint`.
+
 ## Source options
 
 Passed as `--option KEY=VALUE` or in `--options-file`; the first five are also set by flags.

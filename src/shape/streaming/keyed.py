@@ -25,6 +25,7 @@ import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.kernel.hashing import hash_column, hash_value
+from shape.streaming import versions
 
 
 @dataclass
@@ -32,6 +33,24 @@ class _Entry:
     value: object
     expires_at: float
     version: int
+
+
+_TUPLE_TAG = "__tuple__"
+
+
+def _encode_key(key: Hashable) -> Any:
+    """A key as JSON holds it: a tuple (a composite key) becomes {"__tuple__": [...]}."""
+    if isinstance(key, tuple):
+        return {_TUPLE_TAG: [_encode_key(part) for part in key]}
+    return key
+
+
+def _decode_key(key: Any) -> Hashable:
+    if isinstance(key, dict) and set(key) == {_TUPLE_TAG}:
+        return tuple(_decode_key(part) for part in key[_TUPLE_TAG])
+    if isinstance(key, list):  # a snapshot written before keys were tagged and sent through JSON
+        return tuple(_decode_key(part) for part in key)
+    return key  # type: ignore[no-any-return]
 
 
 class KeyedState:
@@ -83,20 +102,29 @@ class KeyedState:
         return None if e is None else e.value
 
     def snapshot(self) -> dict[str, Any]:
-        return {
-            "ttl_seconds": self.ttl,
-            "max_keys": self.max_keys,
-            "items": [(k, e.value, e.expires_at) for k, e in self._d.items()],
-        }
+        """A copy of the state. A tuple key is written as a tagged list, so the snapshot keeps its
+        keys through JSON (which has no tuples); the values must be JSON-safe to be written."""
+        return versions.stamp(
+            versions.KEYED_STATE,
+            {
+                "ttl_seconds": self.ttl,
+                "max_keys": self.max_keys,
+                "items": [(_encode_key(k), e.value, e.expires_at) for k, e in self._d.items()],
+            },
+        )
 
     @classmethod
     def restore(cls, s: dict[str, Any]) -> KeyedState:
+        if "format" in s and s["format"] != versions.KEYED_STATE.format:
+            raise ValueError("not a keyed-state snapshot")
+        versions.check(versions.KEYED_STATE, s, error=ValueError)
         x = cls(s["ttl_seconds"], s["max_keys"])
         for k, v, exp in s["items"]:
+            key = _decode_key(k)
             x._version += 1
             e = _Entry(v, exp, x._version)
-            x._d[k] = e
-            heapq.heappush(x._heap, (exp, e.version, k))
+            x._d[key] = e
+            heapq.heappush(x._heap, (exp, e.version, key))
         return x
 
     def __len__(self) -> int:
@@ -127,10 +155,16 @@ class PartitionedKeyedState:
         return self.states[self.partition_for(key)].get(key, now)
 
     def snapshot(self) -> dict[str, Any]:
-        return {"partitions": self.partitions, "states": [s.snapshot() for s in self.states]}
+        return versions.stamp(
+            versions.PARTITIONED_KEYED_STATE,
+            {"partitions": self.partitions, "states": [s.snapshot() for s in self.states]},
+        )
 
     @classmethod
     def restore(cls, s: dict[str, Any]) -> PartitionedKeyedState:
+        if "format" in s and s["format"] != versions.PARTITIONED_KEYED_STATE.format:
+            raise ValueError("not a partitioned keyed-state snapshot")
+        versions.check(versions.PARTITIONED_KEYED_STATE, s, error=ValueError)
         obj = cls.__new__(cls)
         obj.partitions = s["partitions"]
         obj.states = [KeyedState.restore(x) for x in s["states"]]
@@ -529,7 +563,6 @@ class KeyedSketches:
         """A JSON-safe copy of the live keys (slot numbers are not kept; the LRU order is)."""
         live = np.flatnonzero(self._alive)
         out: dict[str, Any] = {
-            "format": SKETCH_FORMAT,
             "max_keys": self.max_keys,
             "ttl": self.ttl,
             "distinct": self.distinct,
@@ -550,12 +583,13 @@ class KeyedSketches:
         }
         if self._registers is not None:
             out["arrays"]["registers"] = _pack(self._registers[live])
-        return out
+        return versions.stamp(versions.SKETCHES_SNAPSHOT, out)
 
     @classmethod
     def restore(cls, snap: dict[str, Any]) -> KeyedSketches:
         if snap.get("format") != SKETCH_FORMAT:
             raise ValueError("not a keyed-sketches snapshot")
+        versions.check(versions.SKETCHES_SNAPSHOT, snap, error=ValueError)
         obj = cls(snap["max_keys"], snap["ttl"], distinct=snap["distinct"], hll_p=snap["hll_p"])
         n = int(snap["live"])
         if n > obj.max_keys:

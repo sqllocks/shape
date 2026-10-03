@@ -53,6 +53,7 @@ from typing import Any, Protocol
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
+from shape.streaming import versions
 from shape.streaming.checkpoint import CheckpointError, FileCheckpointStore
 from shape.streaming.emit.anomaly import AnomalyInjector
 from shape.streaming.emit.formats import FIELD_TIME
@@ -273,6 +274,7 @@ class EmitRunner:
             return 0, False
         if doc.get("format") != CHECKPOINT_FORMAT:
             raise CheckpointError(f"{self._store.path} is not an emit checkpoint")
+        versions.check(versions.EMIT_CHECKPOINT, doc, self._store.path, error=CheckpointError)
         if doc.get("fingerprint") != self.plan.fingerprint():
             raise CheckpointError(
                 f"{self._store.path} belongs to a different stream (another schema, seed, scale "
@@ -287,13 +289,15 @@ class EmitRunner:
         if self._store is None:
             return
         self._store.save_document(
-            {
-                "format": CHECKPOINT_FORMAT,
-                "fingerprint": self.plan.fingerprint(),
-                "offset": offset,
-                "total": self.plan.total_events,
-                "complete": complete,
-            }
+            versions.stamp(
+                versions.EMIT_CHECKPOINT,
+                {
+                    "fingerprint": self.plan.fingerprint(),
+                    "offset": offset,
+                    "total": self.plan.total_events,
+                    "complete": complete,
+                },
+            )
         )
         report.checkpoints += 1
 

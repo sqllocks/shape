@@ -33,6 +33,7 @@ import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
+from . import versions
 from .checkpoint import CheckpointError, FileCheckpointStore
 from .messages import partition_of
 from .runtime import WindowedProfiler, WindowProfile, restore_profiler
@@ -47,6 +48,29 @@ _COUNTERS = (
     "reconnects",
     "checkpoints",
 )
+
+
+def checkpoint_profiler(
+    doc: Mapping[str, Any], path: object, *, late_sink: Any = None
+) -> WindowedProfiler:
+    """The profiler a stream-profile checkpoint holds. A checkpoint of a newer version than this
+    release reads is refused as such, and one whose profile state cannot be read (damaged, or
+    written by something else) is an error that names the file and says how to start again."""
+    if doc.get("format") != CHECKPOINT_FORMAT:
+        raise CheckpointError("not a stream consumer checkpoint")
+    versions.check(versions.STREAM_CHECKPOINT, doc, path, error=CheckpointError)
+    state = doc.get("profiler")
+    if not isinstance(state, Mapping):
+        raise CheckpointError(f"cannot read the checkpoint {path}: it holds no profiler state")
+    versions.check(versions.WINDOW_SNAPSHOT, state, path, error=CheckpointError)
+    try:
+        return restore_profiler(dict(state), late_sink=late_sink)
+    except Exception as exc:  # zlib.error, binascii.Error, KeyError, ValueError, ...
+        raise CheckpointError(
+            f"cannot read the checkpoint {path}: its profile state is damaged "
+            f"({type(exc).__name__}: {exc}); remove the file, or use another --checkpoint file, "
+            "to start the profile again"
+        ) from exc
 
 
 class _Offset(Protocol):
@@ -125,6 +149,8 @@ class StreamConsumer:
             return
         if doc.get("format") != CHECKPOINT_FORMAT:
             raise CheckpointError("not a stream consumer checkpoint")
+        assert self.store is not None
+        restored = checkpoint_profiler(doc, self.store.path, late_sink=self.profiler.late_sink)
         if doc["uri"] != self.uri:
             raise CheckpointError(
                 f"the checkpoint is for {doc['uri']!r}, not {self.uri!r}; use another file"
@@ -133,7 +159,7 @@ class StreamConsumer:
         theirs = doc["profiler"]
         if any(mine[k] != theirs.get(k) for k in _IDENTITY):
             raise CheckpointError("the checkpoint was taken with a different profiler")
-        self.profiler = restore_profiler(theirs, late_sink=self.profiler.late_sink)
+        self.profiler = restored
         self.source_offset = doc["offset"]
         self.positions = {str(k): int(v) for k, v in doc["positions"].items()}
         for name, value in doc["counters"].items():
@@ -148,14 +174,16 @@ class StreamConsumer:
             return
         self.checkpoints += 1
         self.store.save_document(
-            {
-                "format": CHECKPOINT_FORMAT,
-                "uri": self.uri,
-                "offset": self.source_offset,
-                "positions": self.positions,
-                "counters": {name: getattr(self, name) for name in _COUNTERS},
-                "profiler": self.profiler.snapshot(),
-            }
+            versions.stamp(
+                versions.STREAM_CHECKPOINT,
+                {
+                    "uri": self.uri,
+                    "offset": self.source_offset,
+                    "positions": self.positions,
+                    "counters": {name: getattr(self, name) for name in _COUNTERS},
+                    "profiler": self.profiler.snapshot(),
+                },
+            )
         )
 
     # ----------------------------------------------------------- deduplicate
