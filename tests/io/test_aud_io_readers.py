@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import pyarrow as pa
+import pyarrow.parquet as pq
 import pytest
 
-from shape.io import expand_paths, iter_rows, read_table
+from shape.io import CsvOptions, expand_paths, iter_rows, open_source, read_table
 
 
 def _write(path, text):
@@ -38,3 +40,25 @@ def test_492_a_key_first_seen_after_the_first_batch_is_kept():
     # a column that is empty in the first batch takes the type of its first values
     t = read_table(iter([{"x": None}, {"x": 1}, {"x": 2}]), batch_size=1)
     assert str(t.schema.field("x").type) == "int64" and t["x"].to_pylist() == [None, 1, 2]
+
+
+@pytest.mark.parametrize("stream", [False, True])
+def test_493_a_column_empty_in_the_first_file_takes_its_type_from_a_later_file(tmp_path, stream):
+    a = _write(tmp_path / "a.csv", "k,opt\n1,\n2,\n")
+    b = _write(tmp_path / "b.csv", "k,opt\n3,\n")
+    c = _write(tmp_path / "c.csv", "k,opt\n4,7\n")
+    src = open_source([a, b, c], csv=CsvOptions(stream=stream))
+    assert str(src.schema.field("opt").type) == "int64"
+    t = src.table()
+    assert t["opt"].to_pylist() == [None, None, None, 7]
+    assert str(t.schema.field("opt").type) == "int64"
+
+
+def test_493_jsonl_and_parquet_null_columns_in_the_first_file(tmp_path):
+    a = _write(tmp_path / "a.jsonl", '{"k": 1, "opt": null}\n')
+    b = _write(tmp_path / "b.jsonl", '{"k": 2, "opt": "x"}\n')
+    assert read_table([a, b])["opt"].to_pylist() == [None, "x"]
+    pq.write_table(pa.table({"k": [1], "opt": pa.nulls(1)}), tmp_path / "a.parquet")
+    pq.write_table(pa.table({"k": [2], "opt": [2.5]}), tmp_path / "b.parquet")
+    t = read_table([tmp_path / "a.parquet", tmp_path / "b.parquet"])
+    assert t["opt"].to_pylist() == [None, 2.5]
