@@ -9,7 +9,7 @@ import pytest
 
 import shape
 from shape.privacy.cli import main as privacy_main
-from shape.privacy.safe_profile import ColumnConfig, SafeConfig, to_safe_profile
+from shape.privacy.safe_profile import ColumnConfig, SafeConfig, SafeProfile, to_safe_profile
 
 
 @pytest.fixture
@@ -340,3 +340,49 @@ def test_tag_replaces_the_file_atomically(registry, monkeypatch):
     registry.tag("n", "v1")
     assert "v1" not in seen, "tag() truncates the tag file in place"
     assert not [p for p in (registry.root / "tags" / "n").iterdir() if p.name.startswith(".tmp-")]
+
+
+# --- #679: wrongly typed documents are a ValueError -------------------------------------------
+
+from shape.privacy.release import redact_sensitive, suppress_shape  # noqa: E402
+
+_BAD_COLUMNS = ["oops", 7, [1], None, {"a": 5}, {"a": "x"}, {"a": [1]}]
+
+
+@pytest.mark.parametrize("columns", _BAD_COLUMNS)
+@pytest.mark.parametrize(
+    "call",
+    [
+        lambda d: suppress_shape(d),
+        lambda d: redact_sensitive(d, {}),
+        lambda d: release_for(d, {}),
+    ],
+    ids=["suppress_shape", "redact_sensitive", "release_for"],
+)
+def test_a_wrongly_typed_columns_field_is_a_value_error(call, columns):
+    with pytest.raises(ValueError, match="columns"):
+        call({"rows": 10, "columns": columns})
+
+
+@pytest.mark.parametrize(
+    "table",
+    [
+        {"name": "t", "row_count": 3, "columns": "oops"},
+        {"name": "t", "row_count": 3, "columns": {"a": 5}},
+        {"name": "t", "row_count": 3, "primary_key": 5},
+        {"name": "t", "row_count": 3, "detected_fks": [1]},
+        {"row_count": 3},
+        5,
+    ],
+)
+def test_a_malformed_safe_profile_table_is_a_value_error(table):
+    with pytest.raises(ValueError, match="safe profile"):
+        SafeProfile.from_dict({"tables": {"t": table}})
+
+
+def test_well_formed_documents_are_unchanged_by_the_type_checks():
+    doc = {"rows": 10, "columns": {"a": {"kind": "numeric", "count": 10}}}
+    assert release_for(doc, {}).shape["columns"]["a"]["count"] == 10
+    assert suppress_shape(doc)["columns"]["a"]["count"] == 10
+    assert redact_sensitive(doc, {})["columns"]["a"]["count"] == 10
+    assert SafeProfile.from_dict({"tables": {}}).tables == {}
