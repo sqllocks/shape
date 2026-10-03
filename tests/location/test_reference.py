@@ -26,3 +26,32 @@ def test_census_county_and_place_records_carry_their_state(tmp_path):
     place.write_text("USPS|GEOID|NAME|INTPTLAT|INTPTLONG\nOH|3918000|Columbus city|39.98|-82.98\n")
     (row,), _ = load_census_gazetteer(place, "place", "2024")
     assert (row.city, row.state) == ("Columbus city", "OH")
+
+
+def test_census_gazetteer_refuses_an_unknown_kind(tmp_path):
+    """#380: an unknown kind used to produce records that carry only an id."""
+    import pytest
+
+    from shape.location import load_census_gazetteer
+
+    p = tmp_path / "zips.txt"
+    p.write_text("GEOID\tINTPTLAT\tINTPTLONG\n43215\t39.96\t-83.0\n")
+    with pytest.raises(ValueError, match="zcta"):
+        load_census_gazetteer(p, "zip", "2024")
+
+
+def test_census_gazetteer_sniffs_only_the_head_of_the_file(tmp_path, monkeypatch):
+    """#380: the delimiter sniff must not read the whole file into memory."""
+    from pathlib import Path
+
+    from shape.location import load_census_gazetteer
+
+    p = tmp_path / "zips.txt"
+    p.write_text("GEOID\tINTPTLAT\tINTPTLONG\n" + "43215\t39.96\t-83.0\n" * 2000)
+
+    def no_read_text(self, *args, **kwargs):
+        raise AssertionError("read_text reads the whole file")
+
+    monkeypatch.setattr(Path, "read_text", no_read_text)
+    rows, _ = load_census_gazetteer(p, "zcta", "2024")
+    assert len(rows) == 2000 and rows[0].postal_code == "43215"
