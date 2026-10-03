@@ -89,13 +89,13 @@ def write_provenance(
     domain: str | None = None,
     scale: str | None = None,
     spec_hash: str | None = None,
-) -> Path:
+) -> Path | None:
     """Record ``files`` (``(path, rows)`` pairs, each inside ``folder``) in the folder's sidecar.
-    Directories, missing files and files outside the folder are left out."""
+    Directories, missing files and files outside the folder are left out; a folder that has no
+    file to record gets no sidecar (``None``)."""
     import shape
 
     root = Path(folder)
-    root.mkdir(parents=True, exist_ok=True)
     existing = None
     try:
         existing = read_provenance(root)
@@ -114,6 +114,8 @@ def write_provenance(
         except ValueError:
             continue
         entries[rel] = {"path": rel, "sha256": sha256_file(path), "rows": rows}
+    if not entries:
+        return None
     doc: dict[str, Any] = {
         "format": FORMAT,
         "version": VERSION,
@@ -124,6 +126,7 @@ def write_provenance(
         "spec_hash": spec_hash,
         "files": [entries[k] for k in sorted(entries)],
     }
+    root.mkdir(parents=True, exist_ok=True)
     target = root / PROVENANCE_FILE
     temp = root / f".{PROVENANCE_FILE}.{os.getpid()}.tmp"
     temp.write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -136,7 +139,7 @@ def record_tables(
     paths: Iterable[str | Path],
     rows: Mapping[str, int] | None = None,
     **header: Any,
-) -> Path:
+) -> Path | None:
     """:func:`write_provenance` for files named after their table (``orders.csv`` is ``orders``);
     ``rows`` maps the table name to its row count. ``header`` is ``seed``, ``domain``, ``scale``
     and ``spec_hash``."""

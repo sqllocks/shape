@@ -83,6 +83,12 @@ def test_rows_may_be_null_and_paths_use_forward_slashes(tmp_path: Path) -> None:
     assert doc["files"][0]["path"] == "sub/orders.csv" and doc["files"][0]["rows"] is None
 
 
+def test_a_folder_with_nothing_to_record_gets_no_sidecar(tmp_path: Path) -> None:
+    out = tmp_path / "none"
+    assert prov.write_provenance(out, [], seed=1) is None
+    assert not out.exists()
+
+
 def test_no_sidecar_reads_as_none(tmp_path: Path) -> None:
     assert prov.read_provenance(tmp_path) is None
 

@@ -1,4 +1,4 @@
-"""W1-17: chaos refuses input that is not marked as Shape-generated; it never writes into its input."""
+"""W1-17: chaos refuses input not marked as Shape-generated and never writes into it."""
 
 from __future__ import annotations
 

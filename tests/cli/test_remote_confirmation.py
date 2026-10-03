@@ -367,7 +367,8 @@ def test_emit_to_console_and_file_never_ask(
     code, out, err = run(capsys, "emit", schema_file, "--max-events", "3")
     assert code == 0, err
     code, _, err = run(
-        capsys, "emit", schema_file, "--max-events", "3", "--sink", "file", "-o", tmp_path / "e.jsonl"
+        capsys, "emit", schema_file, "--max-events", "3", "--sink", "file",
+        "-o", tmp_path / "e.jsonl",
     )  # fmt: skip
     assert code == 0, err
 

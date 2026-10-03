@@ -20,6 +20,12 @@ SHAPE = [sys.executable, "-c", "import sys; from shape.cli.main import main; sys
 BASE = ["emit", "retail", "--scale", "small", "--seed", "3"]
 
 
+@pytest.fixture(autouse=True)
+def _confirm_remote(monkeypatch):
+    # These tests are about the sinks, not the confirmation (tests/cli/test_remote_confirmation.py).
+    monkeypatch.setenv("SHAPE_CONFIRM_REMOTE", "1")
+
+
 def _lines(path: Path) -> list[bytes]:
     return path.read_bytes().splitlines()
 

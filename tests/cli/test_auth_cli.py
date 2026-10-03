@@ -17,6 +17,12 @@ from shape.cli.main import main
 pytestmark = pytest.mark.contract
 
 
+@pytest.fixture(autouse=True)
+def _confirm_remote(monkeypatch):
+    # These tests are about the sinks, not the confirmation (tests/cli/test_remote_confirmation.py).
+    monkeypatch.setenv("SHAPE_CONFIRM_REMOTE", "1")
+
+
 def parse(*argv: str) -> argparse.Namespace:
     p = argparse.ArgumentParser()
     auth.add_arguments(p)
