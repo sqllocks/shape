@@ -521,9 +521,14 @@ class TemporalConsistencyGate(ValidationGate):
         for spec in config.get("no_future", []):
             parts = spec.split(".", 1)
             if len(parts) != 2:
+                warnings.append(f"Invalid no_future entry '{spec}' — expected 'table.column'")
                 continue
             tname, cname = parts
-            if tname not in context.tables or cname not in context.tables[tname].column_names:
+            if tname not in context.tables:
+                warnings.append(f"{spec}: table '{tname}' not found in data; not checked")
+                continue
+            if cname not in context.tables[tname].column_names:
+                warnings.append(f"{spec}: column '{cname}' not found in '{tname}'; not checked")
                 continue
             col = _column(context.tables[tname], cname)
             if not pa.types.is_timestamp(col.type):
