@@ -344,6 +344,7 @@ def write_workbook(
     identifier_columns_by_table: Mapping[str, Iterable[str]] | None = None,
     chaos_log: Any = None,
     drift_plan: Any = None,
+    autofilter: bool = True,
 ) -> dict[str, str]:
     """Write ``tables`` (name -> Arrow table, in dependency order) as one workbook at ``path``:
     a ``_README`` sheet, then one sheet per table. Returns ``{table: sheet name}``.
@@ -351,7 +352,8 @@ def write_workbook(
     ``meta`` may hold ``domain``, ``schema_mode``, ``seed``, ``scale`` and ``elapsed_seconds`` for
     the ``_README``. ``chaos_log`` is a chaos ground-truth log (path or parsed records) and
     ``drift_plan`` a drift plan or its answer key (path or dict); what they plant is listed in the
-    ``_README``. ``identifier_columns_by_table`` adds text-format columns to the detected ones."""
+    ``_README``. ``identifier_columns_by_table`` adds text-format columns to the detected ones.
+    ``autofilter`` (on by default) puts a filter on the header row of every table sheet."""
     openpyxl = _import_openpyxl()
     check_fits(tables)
     info = dict(meta or {})
@@ -368,7 +370,13 @@ def write_workbook(
         w = _Writer(wb)
         readme = wb.create_sheet(title=README_SHEET)
         for name, table in tables.items():
-            _write_sheet(w, wb.create_sheet(title=sheets[name]), table, set(identifiers[name]))
+            _write_sheet(
+                w,
+                wb.create_sheet(title=sheets[name]),
+                table,
+                set(identifiers[name]),
+                autofilter=autofilter,
+            )
         _write_readme(
             w,
             readme,
@@ -387,10 +395,14 @@ def write_workbook(
     return sheets
 
 
-def _write_sheet(w: _Writer, ws: Any, table: pa.Table, identifiers: set[str]) -> None:
+def _write_sheet(
+    w: _Writer, ws: Any, table: pa.Table, identifiers: set[str], *, autofilter: bool = True
+) -> None:
     for i, width in enumerate(_widths(table), 1):
         ws.column_dimensions[_letters(i)].width = width
     ws.freeze_panes = "A2"
+    if autofilter and table.num_columns:
+        ws.auto_filter.ref = f"A1:{_letters(table.num_columns)}{table.num_rows + 1}"
     ws.append(w.header(ws, table.schema.names))
     text_flags = [f.name in identifiers for f in table.schema]
     for batch in table.to_batches(max_chunksize=BATCH_ROWS):

@@ -106,6 +106,98 @@ class FakeKusto:
         return 200, {}, b"{}"
 
 
+WORKSPACE_ID = "11111111-1111-4111-8111-111111111111"
+OPERATION_ID = "99999999-9999-4999-8999-999999999999"
+
+
+class FakeFabricItems:
+    """The Fabric REST calls ``shape fabric deploy-notebook`` and ``setup`` make: workspace
+    listing (paged), item listing, item creation (``201``, or ``202`` with an operation to follow;
+    ``409`` for a name in use) and the operation status. ``items`` holds what is in the
+    workspace; ``created`` is every item the tests created (the request bodies)."""
+
+    HOST = "https://api.fabric.microsoft.com"
+
+    def __init__(
+        self,
+        *,
+        workspaces: list[tuple[str, str]] | None = None,
+        items: list[dict[str, Any]] | None = None,
+        page_size: int = 100,
+        accepted: bool = False,
+        operation_fails: bool = False,
+    ) -> None:
+        self.workspaces = workspaces or [("Demo", WORKSPACE_ID)]
+        self.items: list[dict[str, Any]] = list(items or [])
+        self.page_size = page_size
+        self.accepted = accepted
+        self.operation_fails = operation_fails
+        self.created: list[dict[str, Any]] = []
+        self.calls: list[tuple[str, str]] = []
+        self.auth: list[str | None] = []
+        self._polls = 0
+        self._pending: dict[str, Any] | None = None
+
+    def __call__(
+        self, method: str, url: str, headers: dict[str, str], body: bytes, timeout: float
+    ) -> tuple[int, dict[str, str], bytes]:
+        self.auth.append(headers.get("Authorization"))
+        parts = urlsplit(url)
+        self.calls.append((method, parts.path))
+        query = parse_qs(parts.query)
+        path = parts.path
+        if method == "GET" and path == "/v1/workspaces":
+            rows = [{"id": i, "displayName": n} for n, i in self.workspaces]
+            return self._page(rows, query)
+        if method == "GET" and path == f"/v1/operations/{OPERATION_ID}":
+            self._polls += 1
+            if self._polls == 1:
+                return 200, {}, b'{"status": "Running"}'
+            if self.operation_fails:
+                err = {"status": "Failed", "error": {"errorCode": "Boom", "message": "no capacity"}}
+                return 200, {}, json.dumps(err).encode()
+            if self._pending is not None:
+                self.items.append(self._pending)
+                self._pending = None
+            return 200, {}, b'{"status": "Succeeded"}'
+        match = re.fullmatch(r"/v1/workspaces/([^/]+)/items", path)
+        if match is None:
+            return 404, {}, b'{"errorCode": "EntityNotFound"}'
+        if match.group(1) not in {i for _, i in self.workspaces}:
+            return 404, {}, b'{"errorCode": "WorkspaceNotFound"}'
+        if method == "GET":
+            kind = query.get("type", [None])[0]
+            rows = [i for i in self.items if kind in (None, i["type"])]
+            return self._page(rows, query)
+        doc = json.loads(body)
+        if any(
+            i["displayName"] == doc["displayName"] and i["type"] == doc["type"] for i in self.items
+        ):
+            return 409, {}, b'{"errorCode": "ItemDisplayNameAlreadyInUse"}'
+        self.created.append(doc)
+        item = {
+            "id": f"{len(self.items) + 1:08d}-0000-4000-8000-000000000000",
+            "displayName": doc["displayName"],
+            "type": doc["type"],
+            "workspaceId": match.group(1),
+        }
+        if self.accepted:
+            self._pending = item
+            location = f"{self.HOST}/v1/operations/{OPERATION_ID}"
+            return 202, {"Location": location, "Retry-After": "0"}, b""
+        self.items.append(item)
+        return 201, {}, json.dumps(item).encode()
+
+    def _page(
+        self, rows: list[dict[str, Any]], query: dict[str, list[str]]
+    ) -> tuple[int, dict[str, str], bytes]:
+        start = int(query.get("continuationToken", ["0"])[0])
+        doc: dict[str, Any] = {"value": rows[start : start + self.page_size]}
+        if start + self.page_size < len(rows):
+            doc["continuationToken"] = str(start + self.page_size)
+        return 200, {}, json.dumps(doc).encode()
+
+
 def _kql_names(csl: str) -> list[str]:
     """The ``['...']`` identifiers of a command, unescaped, in order."""
     return [

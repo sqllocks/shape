@@ -122,7 +122,7 @@ def _options(fmt: str, schema: GenSchema, table: str, options: Mapping[str, Any]
     return merged
 
 
-_WORKBOOK_OPTIONS = ("chaos_log", "drift_plan")
+_WORKBOOK_OPTIONS = ("chaos_log", "drift_plan", "autofilter")
 
 
 def _write_workbook(
@@ -133,7 +133,8 @@ def _write_workbook(
     scale: str | None = None,
 ) -> list[Path]:
     """``excel``: one workbook, ``<domain>.xlsx``, a sheet per table and a ``_README`` sheet. The
-    ``chaos_log`` and ``drift_plan`` options name the files whose planted changes it lists."""
+    ``chaos_log`` and ``drift_plan`` options name the files whose planted changes it lists;
+    ``autofilter=False`` leaves the header row without a filter."""
     from shape.security.names import contained
 
     schema = result.schema
