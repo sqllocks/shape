@@ -25,6 +25,24 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   bridge. The job file `shape-bridge-job` and the vector files `shape-bridge-vectors` stay at
   version 1.
 
+- Rule mutation testing and backtesting (`docs/RULES_TESTING.md`, W3-01, #99). `shape rules mutate
+  DATA CONTRACT.json` plants the corruptions of `shape chaos` one at a time (every applicable one, or a
+  `shape-mutation-plan`), profiles each mutant in memory, checks it against the contract (and, with
+  `--diff` or a `drift` section, compares it with the unmutated profile) and reports the mutation
+  score overall, per corruption kind and per table, the surviving mutants and the rules that killed
+  none; `--min-score` gates it. `shape rules backtest REGISTRY NAME CONTRACT.json` replays a contract
+  over every committed version of a registry name by business date, with `--window week|month`
+  through mergeable profiles, `not measured` for rules the stored form cannot evaluate, `--incidents`
+  (caught, missed, alarms outside incidents, `--fail-on-miss`) and `--compare OLD_CONTRACT.json`.
+  Python API `shape.rules.mutation_test` and `shape.rules.backtest`; JSON Schemas for the plan, the
+  incidents file and both reports (formats `shape-mutation-plan`, `shape-mutation-report`,
+  `shape-incidents`, `shape-backtest-report`, version 1).
+- Mergeable profiles (`docs/PROFILE_MERGE.md`): `shape profile --sketches` keeps an optional,
+  versioned sketch state beside the profile (the profile and its content id are unchanged), and
+  `shape profile merge A.shape B.shape -o OUT.shape` / `shape.profile.merge_profiles` combine
+  profiles of partitions or days without re-reading the data: exact statistics exactly,
+  cardinality, quantiles and top values within each sketch's documented error. Merged profiles
+  carry their inputs' content ids (`Profile.merged_from`).
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

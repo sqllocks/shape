@@ -358,6 +358,7 @@ def _cmd_profile(a):
         header=fmt.header,
         reference_pairs=_reference_pairs(a),
         joint=a.joint,
+        sketches=a.sketches,
         **_workbook_options(a),
     )
     if settings:
@@ -1022,7 +1023,9 @@ def _build_parser(plugin_commands=()):
         epilog="also: `shape profile safe PROFILE.shape -o SAFE.json` writes the share-safe "
         "form; `shape profile validate --safe ARTIFACT` scans it for leaks; "
         "`shape profile export|import|list|validate` and `shape profile registry "
-        "list|save|delete|tag|diff|reindex|validate` manage profiles and the profile registry",
+        "list|save|delete|tag|diff|reindex|validate` manage profiles and the profile registry; "
+        "`shape profile merge A.shape B.shape -o OUT.shape` combines profiles of partitions "
+        "or days",
     )
     pr.add_argument("src", metavar="SRC")
     pr.add_argument("-o", "--output", metavar="OUT")
@@ -1033,6 +1036,13 @@ def _build_parser(plugin_commands=()):
         action="store_true",
         help="SRC is a folder of table files: profile one table per file, named by the file name "
         "without its extension (without it a folder is one table)",
+    )
+    pr.add_argument(
+        "--sketches",
+        action="store_true",
+        help="also keep the mergeable sketch state in the .shape, so `shape profile merge` can "
+        "combine this profile's cardinality and quantiles with others (one more pass over the "
+        "data; the profile and its content id are unchanged)",
     )
     pr.add_argument(
         "--name",
@@ -1245,6 +1255,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.chaos import add_arguments as add_chaos_arguments
 
     add_chaos_arguments(sub)
+    from shape.cli.rules import add_arguments as add_rules_arguments
+
+    add_rules_arguments(sub)
     from shape.cli.drift_plan import add_arguments as add_drift_plan_arguments
 
     add_drift_plan_arguments(sub)
@@ -1550,7 +1563,13 @@ def _dispatch(argv):
         from shape.privacy.cli import main as privacy_main
 
         return privacy_main(argv[1:])
-    if argv[:1] == ["profile"] and argv[1:2] in (["export"], ["import"], ["list"], ["registry"]):
+    if argv[:1] == ["profile"] and argv[1:2] in (
+        ["export"],
+        ["import"],
+        ["list"],
+        ["registry"],
+        ["merge"],
+    ):
         from shape.cli import profiles
 
         return profiles.main(argv[1:])
@@ -1609,6 +1628,10 @@ def _dispatch(argv):
         from shape.cli.chaos import run as run_chaos
 
         return _run(run_chaos, a)
+    if a.cmd == "rules":
+        from shape.cli.rules import run as run_rules
+
+        return _run(run_rules, a)
     if a.cmd == "generate-drift":
         from shape.cli.drift_plan import run as run_drift_plan
 

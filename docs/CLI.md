@@ -37,7 +37,19 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   (the profile is still written); `--fail-on-empty` exits 2 instead and writes nothing. A Delta
   table with deletion vectors or column mapping is read with DuckDB (extra `delta-fallback`) and
   says so on stderr; see the README.
+- `shape profile SRC -o OUT.shape --sketches` also keeps the mergeable sketch state in the file;
+  `shape profile merge A.shape B.shape ... -o OUT.shape [--name N] [--exact-only]` combines profiles
+  of partitions or days into the profile of their union, without reading the data again. Exit 2
+  when an input lacks the sketch state the statistics need (and `--exact-only` is not given), or
+  the profiles do not share their columns. See `docs/PROFILE_MERGE.md`.
 - `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles.
+- `shape rules mutate DATA CONTRACT.json` plants the corruptions of `shape chaos` one at a time and
+  reports which rules of the contract catch them (`--plan`, `--seed`, `--rate`, `--diff`,
+  `--min-score S`: exit 1 below S, `-o REPORT.json`, `--json`). `shape rules backtest REGISTRY NAME
+  CONTRACT.json` replays a contract over every committed version of a registry name (`--since`,
+  `--until`, `--window day|week|month`, `--incidents FILE`, `--fail-on-miss`: exit 1 on a missed
+  incident, `--compare OLD_CONTRACT.json`, `-o`, `--json`). Exit 2 for unusable input. See
+  `docs/RULES_TESTING.md`.
 - `shape inspect ARTIFACT.shape` prints what an artifact holds, a profile or a model. `shape show`
   is an alias of `shape inspect`.
 - `shape capture SRC` reads everything `shape profile` reads (CSV, Parquet, JSONL, a folder or

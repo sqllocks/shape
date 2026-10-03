@@ -1,0 +1,13 @@
+{
+  "columns": {
+    "order_id": {
+      "unique": true
+    },
+    "status": {
+      "allowed_values": [
+        "new",
+        "paid"
+      ]
+    }
+  }
+}

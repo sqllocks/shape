@@ -1,0 +1,21 @@
+{
+  "format": "shape-mutation-plan",
+  "version": 1,
+  "corruptions": [
+    {
+      "kind": "duplicates",
+      "table": "orders"
+    },
+    {
+      "kind": "null_creep",
+      "table": "orders",
+      "column": "status",
+      "rate": 0.2
+    },
+    {
+      "kind": "negative_amounts",
+      "table": "orders",
+      "column": "amount"
+    }
+  ]
+}

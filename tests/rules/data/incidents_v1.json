@@ -1,0 +1,16 @@
+{
+  "format": "shape-incidents",
+  "version": 1,
+  "incidents": [
+    {
+      "id": "i1",
+      "from": "2026-05-02",
+      "to": "2026-05-03",
+      "note": "nulls"
+    },
+    {
+      "id": "i2",
+      "from": "2026-05-01"
+    }
+  ]
+}
