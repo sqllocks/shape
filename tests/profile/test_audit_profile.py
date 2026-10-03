@@ -155,3 +155,24 @@ def test_concurrent_profiles_on_the_fork_pool_keep_their_own_columns(monkeypatch
         for t in threads:
             t.join()
         assert out == {k: sorted(df.columns) for k, df in frames.items()}
+
+
+# ---- #221: impossible ISO dates are text, not rolled into the next month ------------------
+
+
+@pytest.mark.parametrize(
+    ("values", "dtype"),
+    [
+        (["2023-02-29", "2023-03-01"], "string"),
+        (["2023-02-28", "2023-02-29", "2023-03-01"], "string"),
+        (["2024-06-31", "2024-07-01"], "string"),
+        (["2016-12-31 23:59:60", "2017-01-01 00:00:00"], "string"),
+        (["2023-01-01 10:60:00", "2023-01-01 10:00:00"], "string"),
+        (["2024-02-29", "2023-03-01"], "datetime"),  # a real leap day
+        (["2023-01-01T10:00:59", "2023-01-01T23:59:00"], "datetime"),
+    ],
+)
+def test_impossible_iso_dates_are_text_as_in_the_baseline(kernel, tmp_path, values, dtype):
+    path = tmp_path / "d.csv"
+    path.write_text("d\n" + "\n".join(values) + "\n")
+    assert shape.profile(str(path)).to_dict()["columns"]["d"]["dtype"] == dtype
