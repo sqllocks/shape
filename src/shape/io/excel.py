@@ -25,15 +25,20 @@ deterministically), merged cells and sentinel values.
 from __future__ import annotations
 
 import datetime as dt
+import functools
 import re
 import zipfile
+import zlib
 from collections import Counter
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, ParamSpec, TypeVar
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
+P = ParamSpec("P")
+R = TypeVar("R")
 XLSX_SUFFIXES = (".xlsx", ".xlsm")
 MAX_CELLS = 10  # cell positions kept per finding
 MAX_EXAMPLES = 5  # example values kept per finding
@@ -84,6 +89,30 @@ _DATE_TEXT = (
 
 class WorkbookError(ValueError):
     """The file is not a readable ``.xlsx`` workbook (legacy format, password, damaged)."""
+
+
+# What a workbook whose parts are damaged raises (an XML parser's SyntaxError subclass, ``zlib``
+# or ``zipfile`` for a damaged compressed part) before the file is known to be unreadable.
+_DAMAGE = (SyntaxError, zlib.error, zipfile.BadZipFile, EOFError)
+
+
+def _reads_workbook(fn: Callable[P, R]) -> Callable[P, R]:
+    """A reader entry point: damage to the workbook's parts is a :class:`WorkbookError` that names
+    the file (the first argument)."""
+
+    @functools.wraps(fn)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        try:
+            return fn(*args, **kwargs)
+        except WorkbookError:
+            raise
+        except _DAMAGE as exc:
+            name = Path(str(args[0])).name if args else "the workbook"
+            raise WorkbookError(
+                f"{name} is damaged ({type(exc).__name__}: {exc}): open it in Excel and save a copy"
+            ) from exc
+
+    return wrapper
 
 
 def is_workbook_path(path: str | Path) -> bool:
@@ -185,6 +214,7 @@ class SheetInfo:
     state: str  # "visible", "hidden" or "veryHidden"
 
 
+@_reads_workbook
 def sheet_infos(path: str | Path) -> list[SheetInfo]:
     """The sheets of a workbook in workbook order, with their visibility."""
     p = check_workbook_file(path)
@@ -310,6 +340,7 @@ def _unique_headers(raw: list[Any]) -> tuple[list[str], list[dict[str, Any]]]:
     return names, notes
 
 
+@_reads_workbook
 def read_sheet(path: str | Path, sheet: str) -> SheetRead:
     """Read one sheet (hidden or not) into a :class:`SheetRead`."""
     p = check_workbook_file(path)
@@ -488,6 +519,7 @@ def _add_range(names: _Names, el: Any, sheets: list[str], taken: set[str]) -> No
     names.blocks.append(Block(name, "range", sheet, *box))
 
 
+@_reads_workbook
 def resolve_block(path: Path, name: str, sheets: list[str]) -> Block | None:
     """The table or named range called ``name`` (exact match first, then ignoring case), or
     ``None``. A name that exists but cannot be read as a block raises :class:`WorkbookError`."""
@@ -507,6 +539,7 @@ def resolve_block(path: Path, name: str, sheets: list[str]) -> Block | None:
     return None
 
 
+@_reads_workbook
 def read_block(path: str | Path, block: Block) -> SheetRead:
     """Read a table or named range into a :class:`SheetRead` named after it."""
     p = check_workbook_file(path)
@@ -518,6 +551,7 @@ def read_block(path: str | Path, block: Block) -> SheetRead:
         wb.close()
 
 
+@_reads_workbook
 def read_selection(path: str | Path, name: str) -> SheetRead:
     """Read what ``book.xlsx#name`` names: a sheet, else an Excel table, else a named range."""
     p = check_workbook_file(path)
@@ -907,6 +941,7 @@ def _text(value: Any) -> str:
     return str(value)
 
 
+@_reads_workbook
 def read_workbook(
     path: str | Path, sheet: str | None = None, *, include_hidden: bool = False
 ) -> WorkbookRead:
@@ -945,6 +980,7 @@ def read_workbook(
     return WorkbookRead(str(p), sheets, findings)
 
 
+@_reads_workbook
 def workbook_sheet_names(path: str | Path, *, include_hidden: bool = False) -> list[str]:
     """The visible sheets (and the hidden ones with ``include_hidden``), in workbook order."""
     return [i.name for i in sheet_infos(path) if i.state == "visible" or include_hidden]
