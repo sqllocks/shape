@@ -7,6 +7,12 @@ from shape.streaming.emit.anomaly import (
     ValueAnomalyMutator,
     resolve_mutators,
 )
+from shape.streaming.emit.deadletter import (
+    DeadLetterSink,
+    RejectedEvents,
+    Rejection,
+    read_dead_letters,
+)
 from shape.streaming.emit.faults import AnswerKey, FanOutSink, FaultSink, read_answer_key
 from shape.streaming.emit.formats import (
     ENVELOPES,
@@ -38,6 +44,10 @@ from shape.streaming.emit.sinks import (
 from shape.streaming.emit.source import EventBlock, EventPlan
 
 __all__ = [
+    "DeadLetterSink",
+    "RejectedEvents",
+    "Rejection",
+    "read_dead_letters",
     "AnswerKey",
     "FanOutSink",
     "FaultSink",

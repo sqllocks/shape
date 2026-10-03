@@ -30,6 +30,11 @@ An emitter's tests build a *harness* over a fake client (or a real service) and 
 ``congest(n)``          the next ``n`` attempts find the destination full and clear only when the
                         emitter waits (polls, backs off); returns nothing;
 ``congestion_hits()``   how many times the destination reported full;
+``inject_rejections(n)``  optional (an emitter that can be refused per message): the next ``n``
+                        messages the destination receives are refused for good, with a
+                        non-retryable per-message error. The emitter must then deliver every
+                        other event and raise :class:`~shape.streaming.emit.RejectedEvents`
+                        naming exactly the refused keys (see ``check_rejections``);
 ``ordered``             optional, default true: ``delivered()`` lists events in delivery order.
                         A destination of several partitions has no total order; set it false and
                         streams are compared in key order.
@@ -268,6 +273,71 @@ def check_checkpoint(
     )
 
 
+def check_rejections(
+    new_harness: Callable[[], Harness], plan: Callable[[], EventPlan] = default_plan
+) -> None:
+    """A per-message refusal is a :class:`RejectedEvents`, not a failure: the other events of the
+    batch are delivered first, the error is not retried, and with a dead-letter destination
+    every event ends up delivered or dead-lettered exactly once. Needs ``inject_rejections`` on
+    the harness (an emitter that cannot be refused per message has nothing to check)."""
+    from shape.streaming.emit.deadletter import DeadLetterSink, RejectedEvents
+
+    ref = reference(plan())
+    all_keys = [f"{e[FIELD_TABLE]}/{e[FIELD_SEQ]}" for e in ref]
+    # the emitter alone: everything but the refused events is delivered, then RejectedEvents
+    h = new_harness()
+    h.inject_rejections(3)  # type: ignore[attr-defined]
+    emitter = h.make()
+    batch = next(iter(plan().blocks(0))).batch.slice(0, 300)
+    try:
+        emitter.emit(h.uri, [batch])
+    except RejectedEvents as caught:
+        rejection = caught
+        refused = caught.keys
+        _require(not isinstance(caught, OSError), "RejectedEvents must not be retried (an OSError)")
+    else:
+        raise AssertionError("a destination that refused 3 events raised no RejectedEvents")
+    _close(emitter)
+    _require(len(refused) == 3 and len(set(refused)) == 3, f"expected 3 refused keys: {refused}")
+    _require(all(r.reason for r in rejection.rejections), "a rejection has no reason")
+    batch_keys = all_keys[:300]
+    _require(set(refused) <= set(batch_keys), "a refused key is not in the batch")
+    delivered = [k for k, _ in h.delivered()]
+    _require(
+        sorted(delivered) == sorted(set(batch_keys) - set(refused)),
+        "the events that were not refused were not all delivered before RejectedEvents",
+    )
+    # through the runner and a dead-letter sink: delivered plus dead-lettered is the stream
+    h = new_harness()
+    h.inject_rejections(7)  # type: ignore[attr-defined]
+    dead = MemorySink()
+    sink = DeadLetterSink(EmitterSink(h.make(), h.uri), dead, destination=h.uri)
+    report = EmitRunner(plan(), sink, _config(retries=0), dead_letter=sink).run()
+    lettered = [
+        f"{t}/{s}"
+        for b in dead.batches
+        for t, s in zip(
+            b.column(FIELD_TABLE).to_pylist(), b.column(FIELD_SEQ).to_pylist(), strict=True
+        )
+    ]
+    _require(report.complete and report.events == EVENTS, "the run did not complete")
+    _require(len(lettered) == 7 and bool(report.dead_lettered), "7 events should be dead-lettered")
+    held = [k for k, _ in h.delivered()]
+    _require(
+        sorted(set(held) | set(lettered)) == sorted(all_keys) and not set(held) & set(lettered),
+        "delivered and dead-lettered events are not the stream, each once",
+    )
+    # without a dead-letter destination the run stops, naming what was refused
+    h = new_harness()
+    h.inject_rejections(1)  # type: ignore[attr-defined]
+    try:
+        _run(h, plan(), retries=3)
+    except RejectedEvents as exc:
+        _require(len(exc.keys) == 1, "the run should stop on the first rejection")
+    else:
+        raise AssertionError("a rejection without a dead-letter destination did not stop the run")
+
+
 def check_contract(
     new_harness: Callable[[], Harness],
     *,
@@ -275,12 +345,15 @@ def check_contract(
     plan: Callable[[], EventPlan] = default_plan,
     envelopes: tuple[str, ...] = ("flat", "cloudevents"),
 ) -> None:
-    """All four checks; each uses fresh harnesses. ``envelopes`` are the formats the emitter
+    """All four checks (and the rejection check, for a harness that has ``inject_rejections``);
+    each uses fresh harnesses. ``envelopes`` are the formats the emitter
     accepts (a destination of typed columns takes only ``flat``)."""
     check_idempotency_key(new_harness, plan, envelopes)
     check_at_least_once(new_harness, plan)
     check_backpressure(new_harness, plan)
     check_checkpoint(new_harness, plan, directory=directory)
+    if hasattr(new_harness(), "inject_rejections"):
+        check_rejections(new_harness, plan)
 
 
 def _close(emitter: Any) -> None:

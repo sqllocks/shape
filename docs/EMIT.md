@@ -239,11 +239,61 @@ shape emit retail --table order_line --sink kafka://broker:9092/orders \
 * `--envelope cloudevents` with a non-JSON format is refused (exit 2). A missing encoder extra
   stops with exit 2 and the `pip install` command that provides it. An event with a value the
   format cannot hold (a `uint64` above 2**63-1 in Avro, a table or column name that is not a valid
-  Avro or Protobuf identifier) stops the run naming the event.
+  Avro or Protobuf identifier) stops the run naming the event, or goes to `--dead-letter` when that is set.
 * `--poison-fraction` cuts the payload of a chosen message short, as it does for JSON.
 * The type mapping (decimal, date, timestamp with and without zone, uuid, binary, nullable) is in
   the `sqllocks-shape-kafka` README. A nullable column is a nullable field; a float column is
   always nullable because a non-finite float is sent as `null` in every format.
+
+## Dead letters (`--dead-letter`)
+
+An event the destination refuses for good no longer has to stop the run. `--dead-letter URI` takes
+any URI that `--sink` or `--to` takes (`file:///dlq.jsonl`, `kafka://host:9092/orders.dlq`, a
+table target) and sends such an event there instead. An event goes to it when
+
+* the destination rejects it with a **non-retryable per-message error**: an emitter delivers every
+  other event of the batch, then raises `shape.streaming.emit.RejectedEvents` with the keys and
+  reasons (`Rejection(key, reason, body=None)`; it is not an `OSError`, so the runtime never retries
+  it). The Kafka emitter does this for a message that is too large or an invalid record
+  (`MSG_SIZE_TOO_LARGE`, `INVALID_MSG`, ...); errors about the cluster or topic (authorisation,
+  brokers down) and retryable errors keep stopping the run after `--retries`;
+* it **cannot be encoded** in the chosen `--event-format` (a value that does not fit the format).
+
+Without `--dead-letter`, a rejection stops the run with exit 2 and
+`the destination rejected N events (first KEY: REASON); use --dead-letter URI ...`; every other
+behaviour is unchanged. `--dead-letter` may not name the same URI as `--sink` or `--to`.
+
+**The record** (`format: "shape-dead-letter"`, `version: 1`), one JSON object per line:
+
+| field | meaning |
+|---|---|
+| `format`, `version` | `"shape-dead-letter"` and `1` (a newer version is refused by `read_dead_letters`) |
+| `key`, `table`, `seq` | the event's D-12 key `<table>/<seq>` and its parts |
+| `reason` | why: the destination's error, or `cannot encode as avro: ...` |
+| `destination` | the URI that refused the event, password redacted |
+| `attempts` | deliveries of its batch up to the rejection |
+| `at` | UTC time, ISO 8601 with microseconds and `Z` |
+| `body` | the message the destination refused, as text; or base64 with `body_encoding: "base64"` when it is not UTF-8 (`body_encoding` is absent for text). When the event could not be encoded, the body is its flat JSON event |
+
+Where the destination is an emitter, the record also holds `_shape_table` and `_shape_seq` (the same
+values as `table` and `seq`), so a Kafka dead-letter message is keyed by the original event's key,
+and a transport with headers carries the header `shape-dead-letter-reason` (Kafka). A table target
+stores the records in the table `dead_letter`.
+
+**Checkpoint.** A batch counts as delivered only after the dead-letter destination acknowledged its
+records, so the checkpoint never moves past a dead-lettered event before that. A failed dead-letter
+write is retried (`--retries`) without sending the batch to the primary destination again.
+Delivery is at-least-once: after a crash an event can be dead-lettered twice; the key removes the
+repeat.
+
+**`--max-dead-letter N`** stops the run, after the batch in hand, once more than N events were
+dead-lettered; exit 1, `stopped_by: "dead-letter-limit"`, a checkpoint at the end of that batch.
+The run report (`--json`) gains `dead_lettered`: a count by reason (at most 50 distinct reasons, the
+rest counted as `other`). `--max-dead-letter` needs `--dead-letter`.
+
+An emitter's contract (`shape.streaming.emit.contract`) gains `check_rejections`, run for a harness
+that offers `inject_rejections(n)`: the other events are delivered first, the error is not retried,
+and delivered plus dead-lettered events are the stream, each once.
 
 ## Live fidelity
 

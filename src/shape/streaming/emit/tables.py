@@ -29,7 +29,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
-from shape.streaming.emit.formats import FIELD_POISON, FIELD_TABLE
+from shape.streaming.emit.formats import FIELD_TABLE, MARKER_FIELDS
 
 SYNTHETIC_METADATA = {b"shape_synthetic": b"true"}
 
@@ -151,7 +151,7 @@ class TableEventSink:
             raise ShapeError("a stream event has no _shape_table column")
         tables = batch.column(FIELD_TABLE)
         names = pc.unique(tables).to_pylist()
-        keep = [n for n in batch.schema.names if n not in (FIELD_TABLE, FIELD_POISON)]
+        keep = [n for n in batch.schema.names if n != FIELD_TABLE and n not in MARKER_FIELDS]
         for table in names:
             part = batch if len(names) == 1 else batch.filter(pc.equal(tables, table))
             part = part.select(keep)

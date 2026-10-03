@@ -32,6 +32,9 @@ FIELD_TABLE = "_shape_table"
 FIELD_SEQ = "_shape_seq"
 FIELD_TIME = "_shape_event_time"
 FIELD_POISON = "_shape_poison"  # a boolean marker column: the encoders corrupt those events
+FIELD_DEAD_REASON = "_shape_dead_letter_reason"  # a marker column: why a dead-letter record is
+# there; never part of a body, a header on the transports that have them
+MARKER_FIELDS = (FIELD_POISON, FIELD_DEAD_REASON)
 ENVELOPES = ("flat", "cloudevents")
 _RESERVED = (FIELD_TABLE, FIELD_SEQ, FIELD_TIME)
 
@@ -97,7 +100,7 @@ def _json_column(col: pa.ChunkedArray | pa.Array) -> list[Any]:
 
 def rows_of(batch: pa.RecordBatch) -> list[dict[str, Any]]:
     """The JSON-safe rows of ``batch`` (see the module docstring for the value rules)."""
-    keep = [i for i, n in enumerate(batch.schema.names) if n != FIELD_POISON]
+    keep = [i for i, n in enumerate(batch.schema.names) if n not in MARKER_FIELDS]
     names = [batch.schema.names[i] for i in keep]
     columns = [_json_column(batch.column(i)) for i in keep]
     return [dict(zip(names, values, strict=True)) for values in zip(*columns, strict=True)]
@@ -271,12 +274,14 @@ def poison_body(body: bytes) -> bytes:
 
 
 def _split_poison(batch: pa.RecordBatch) -> tuple[pa.RecordBatch, list[bool] | None]:
-    """``batch`` without the poison marker column, and the marks (``None`` when it has none)."""
-    if FIELD_POISON not in batch.schema.names:
-        return batch, None
-    marks = [bool(v) for v in batch.column(FIELD_POISON).to_pylist()]
-    keep = [n for n in batch.schema.names if n != FIELD_POISON]
-    return batch.select(keep), marks
+    """``batch`` without the marker columns, and the poison marks (``None`` when it has none)."""
+    names = batch.schema.names
+    marks = (
+        [bool(v) for v in batch.column(FIELD_POISON).to_pylist()] if FIELD_POISON in names else None
+    )
+    if any(n in MARKER_FIELDS for n in names):
+        batch = batch.select([n for n in names if n not in MARKER_FIELDS])
+    return batch, marks
 
 
 def encode_batch(batch: pa.RecordBatch, envelope: str = "flat", source: str = "shape") -> bytes:

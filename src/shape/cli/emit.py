@@ -191,6 +191,19 @@ def add_options(em: Any, *, stream: bool = False) -> None:
         metavar="S",
         help="at least this often (default 1; 30 with a table target, so files are not tiny)",
     )
+    dl.add_argument(
+        "--dead-letter",
+        metavar="URI",
+        help="send an event the destination rejects for good (or that cannot be encoded in "
+        "--event-format) to this destination, any URI --sink or --to takes, instead of stopping "
+        "the run (docs/EMIT.md, 'Dead letters')",
+    )
+    dl.add_argument(
+        "--max-dead-letter",
+        type=int,
+        metavar="N",
+        help="stop the run (exit 1) once more than N events were dead-lettered",
+    )
     dl.add_argument("--fresh", action="store_true", help="ignore an existing checkpoint")
     dl.add_argument("--batch-events", type=int, metavar="N", help="events per delivery")
     dl.add_argument("--queue-batches", type=int, metavar="N", help="buffer depth")
@@ -427,30 +440,70 @@ def _targets(a: argparse.Namespace) -> list[str]:
 
 def _sink(a: argparse.Namespace, envelope: str, resuming: bool) -> Any:
     from shape.cli.to import target_options
-    from shape.io.targets import scheme_of, sink_names_by_scheme
-    from shape.streaming.emit import FanOutSink, open_sink
+    from shape.streaming.emit import FanOutSink
 
     targets = _targets(a)
     options = target_options(a, a.format, targets)  # --auth for the table sinks
-    sinks = []
-    for target in targets:
-        scheme = scheme_of(target) or ""
-        sinks.append(
-            open_sink(
-                target,
-                output=a.output,
-                envelope=envelope,
-                resuming=resuming,
-                synthetic=a.synthetic_header,
-                table_options={"options": options},
-                choices=SINKS_HELP,
-                event_format=a.event_format,
-                sink_config=options.extra,
-                # --auth for an event sink; a table sink got it in `options`
-                **(_auth_options(a, scheme) if scheme not in sink_names_by_scheme() else {}),
-            )
-        )
+    sinks = [
+        _open_target(a, t, envelope, resuming, options, event_format=a.event_format)
+        for t in targets
+    ]
     return sinks[0] if len(sinks) == 1 else FanOutSink(sinks)
+
+
+def _open_target(
+    a: argparse.Namespace,
+    target: str,
+    envelope: str,
+    resuming: bool,
+    options: Any,
+    *,
+    event_format: str,
+) -> Any:
+    from shape.io.targets import scheme_of, sink_names_by_scheme
+    from shape.streaming.emit import open_sink
+
+    scheme = scheme_of(target) or ""
+    return open_sink(
+        target,
+        output=a.output,
+        envelope=envelope,
+        resuming=resuming,
+        synthetic=a.synthetic_header,
+        table_options={"options": options},
+        choices=SINKS_HELP,
+        event_format=event_format,
+        sink_config=options.extra,
+        # --auth for an event sink; a table sink got it in `options`
+        **(_auth_options(a, scheme) if scheme not in sink_names_by_scheme() else {}),
+    )
+
+
+def _dead_letter(a: argparse.Namespace, primary: Any, targets: list[str], resuming: bool) -> Any:
+    """``primary`` behind a :class:`DeadLetterSink` when ``--dead-letter`` is given (else
+    ``None``). The records are JSON whatever ``--event-format`` is."""
+    from shape.cli.to import target_options
+    from shape.errors import ShapeError
+    from shape.io.targets import scheme_of, sink_names_by_scheme
+    from shape.streaming.emit import DeadLetterSink
+
+    if a.max_dead_letter is not None and not a.dead_letter:
+        raise ShapeError("--max-dead-letter needs --dead-letter")
+    if a.max_dead_letter is not None and a.max_dead_letter < 0:
+        raise ShapeError("--max-dead-letter must be 0 or more")
+    if not a.dead_letter:
+        return None
+    if a.dead_letter in targets:
+        raise ShapeError("--dead-letter must differ from --sink and --to")
+    options = target_options(a, a.format, [a.dead_letter])
+    dlq = _open_target(a, a.dead_letter, "flat", resuming, options, event_format="json")
+    return DeadLetterSink(
+        primary,
+        dlq,
+        destination=targets[0],
+        max_dead_letter=a.max_dead_letter,
+        table_target=(scheme_of(a.dead_letter) or "") in sink_names_by_scheme(),
+    )
 
 
 def _auth_options(a: argparse.Namespace, scheme: str) -> dict[str, Any]:
@@ -573,6 +626,9 @@ def run(a: argparse.Namespace) -> int:
         if injector is not None:
             injector.answer_key = answer_key
     sink = _sink(a, a.envelope, resuming=offset > 0)
+    dead_letter = _dead_letter(a, sink, targets, offset > 0)
+    if dead_letter is not None:
+        sink = dead_letter
     if a.duplicate_fraction > 0 or a.poison_fraction > 0 or answer_key is not None:
         from shape.streaming.emit.faults import FaultSink
 
@@ -590,7 +646,7 @@ def run(a: argparse.Namespace) -> int:
 
         live = _live_setup(a, engine, schema, plan)
         sink = TeeSink(sink, live)
-    runner = EmitRunner(plan, sink, config)
+    runner = EmitRunner(plan, sink, config, dead_letter=dead_letter)
 
     def stop(_signum: int, _frame: Any) -> None:
         runner.request_stop()
@@ -611,6 +667,13 @@ def run(a: argparse.Namespace) -> int:
     summary: dict[str, Any] | None = None
     if live is not None:
         summary, code = _live_finish(a, live)
+    if dead_letter is not None and dead_letter.limit_exceeded:
+        code = 1
+        print(
+            f"shape {a.cmd}: stopped, more than {a.max_dead_letter:,} events were dead-lettered "
+            f"({dead_letter.total:,} so far)",
+            file=sys.stderr,
+        )
     if a.json:
         doc = report.as_dict()
         if summary is not None:
@@ -621,7 +684,8 @@ def run(a: argparse.Namespace) -> int:
         print(
             f"shape {a.cmd}: {report.events:,} events delivered, offset {report.end_offset:,}"
             f" of {report.total_events:,}, {report.stopped_by}{note}"
-            + (f", {report.rate:,.0f} events/s" if report.events else ""),
+            + (f", {report.rate:,.0f} events/s" if report.events else "")
+            + (f", {dead_letter.total:,} dead-lettered" if dead_letter is not None else ""),
             file=out,
         )
         if summary is not None:

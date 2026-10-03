@@ -161,7 +161,18 @@ class EmitterSink:
         return bool(getattr(self.emitter, "accepts_poison", False))
 
     def send(self, batch: pa.RecordBatch) -> None:
-        self.emitter.emit(self.uri, [batch], **self.options)
+        from dataclasses import replace
+
+        from shape.plugins.schemes import redact
+        from shape.streaming.emit.deadletter import RejectedEvents
+
+        try:
+            self.emitter.emit(self.uri, [batch], **self.options)
+        except RejectedEvents as exc:
+            where = redact(self.uri)  # the destination that refused, for the dead-letter record
+            raise RejectedEvents(
+                [replace(r, destination=r.destination or where) for r in exc.rejections]
+            ) from None
 
     def flush(self) -> None:
         flush = getattr(self.emitter, "flush", None)

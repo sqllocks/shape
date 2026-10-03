@@ -426,7 +426,7 @@ def make_avro(table: str, schema: pa.Schema) -> TableCodec:
             except EncodeError as exc:
                 out.append(exc)
             except Exception as exc:  # fastavro reports a bad value in many exception types
-                out.append(EncodeError(f"avro: {exc}"))
+                out.append(EncodeError(f"{type(exc).__name__}: {str(exc)[:200]}"))
         return out
 
     return TableCodec(
@@ -446,9 +446,9 @@ _LONG_MAX = (1 << 63) - 1
 def _check_avro_ranges(cols: Sequence[Col], row: Sequence[Any]) -> None:
     for c, v in zip(cols, row, strict=True):
         if c.kind == "uint64" and v is not None and v > _LONG_MAX:
-            raise EncodeError(f"avro: column {c.name!r} value {v} does not fit a long")
+            raise EncodeError(f"column {c.name!r} does not fit a long")
         if c.kind == "decimal" and v is not None and len(v.as_tuple().digits) > c.precision:
-            raise EncodeError(f"avro: column {c.name!r} value {v} exceeds precision {c.precision}")
+            raise EncodeError(f"column {c.name!r} exceeds precision {c.precision}")
 
 
 def make_protobuf(table: str, schema: pa.Schema) -> TableCodec:
@@ -492,14 +492,14 @@ def make_protobuf(table: str, schema: pa.Schema) -> TableCodec:
                 for c, v in zip(cols, row, strict=True):
                     if v is None:
                         if not c.nullable:
-                            raise EncodeError(f"protobuf: column {c.name!r} is null but required")
+                            raise EncodeError(f"column {c.name!r} is null but required")
                         continue
                     setattr(m, c.name, v)
                 out.append(m.SerializeToString())
             except EncodeError as exc:
                 out.append(exc)
             except (ValueError, TypeError) as exc:
-                out.append(EncodeError(f"protobuf: {exc}"))
+                out.append(EncodeError(f"{type(exc).__name__}: {str(exc)[:200]}"))
         return out
 
     return TableCodec(

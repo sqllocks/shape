@@ -32,6 +32,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
 from shape.generation.rng import stream_key
+from shape.streaming.emit.deadletter import RejectedEvents, Rejection
 from shape.streaming.emit.formats import FIELD_POISON, FIELD_SEQ, FIELD_TABLE
 from shape.streaming.emit.sinks import EventSink
 
@@ -250,6 +251,7 @@ class FanOutSink:
         self.sinks = list(sinks)
         self._current: pa.RecordBatch | None = None
         self._done: set[int] = set()
+        self._rejected: list[Rejection] = []
 
     @property
     def accepts_poison(self) -> bool:
@@ -257,7 +259,7 @@ class FanOutSink:
 
     def send(self, batch: pa.RecordBatch) -> None:
         if batch is not self._current:
-            self._current, self._done = batch, set()
+            self._current, self._done, self._rejected = batch, set(), []
         first: BaseException | None = None
         for i, sink in enumerate(self.sinks):
             if i in self._done:
@@ -265,11 +267,18 @@ class FanOutSink:
             try:
                 sink.send(batch)
                 self._done.add(i)
+            except RejectedEvents as exc:
+                # it delivered everything else: done, and its rejections are raised together
+                self._done.add(i)
+                self._rejected.extend(exc.rejections)
             except BaseException as exc:
                 first = first or exc
         if first is not None:
             raise first
+        rejected, self._rejected = self._rejected, []
         self._current, self._done = None, set()
+        if rejected:
+            raise RejectedEvents(rejected)
 
     def _each(self, name: str) -> None:
         first: BaseException | None = None

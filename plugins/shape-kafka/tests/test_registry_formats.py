@@ -19,7 +19,7 @@ from shape_kafka.registry import RegistryClient, check_url, subject_name
 from shape_kafka.testing import EmitterHarness, FakeRegistry, decode_messages
 
 from shape.errors import ShapeError
-from shape.streaming.emit import EmitConfig, EmitRunner
+from shape.streaming.emit import EmitConfig, EmitRunner, RejectedEvents
 from shape.streaming.emit.formats import FIELD_POISON, encode_events, rows_of, with_event_fields
 from shape.streaming.emit.sinks import EmitterSink
 
@@ -498,11 +498,13 @@ def test_json_schema_needs_no_extra(monkeypatch):
 # ---- encoding limits and poison --------------------------------------------------------------
 
 
-def test_a_value_that_does_not_fit_the_format_stops_the_run_naming_the_event():
+def test_a_value_that_does_not_fit_the_format_is_a_rejection_naming_the_event():
     big = pa.array([(1 << 63) + 5], pa.uint64())
     batch = with_event_fields(pa.RecordBatch.from_arrays([big], names=["n"]), "t", 7)
-    with pytest.raises(ShapeError, match=r"cannot encode event t/7 as avro: .*does not fit a long"):
+    with pytest.raises(RejectedEvents) as err:
         _wires(FakeRegistry(), "avro", batch)
+    assert err.value.keys == ["t/7"]
+    assert err.value.reasons == ["cannot encode as avro: column 'n' does not fit a long"]
     # protobuf has a uint64
     registry = FakeRegistry()
     h = _wires(registry, "protobuf", batch)

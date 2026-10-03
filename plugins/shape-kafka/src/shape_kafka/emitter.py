@@ -29,6 +29,12 @@ Options of :meth:`KafkaEmitter.emit`:
 ``flush_timeout``  seconds to wait for acknowledgements (default 60).
 ``resuming``       accepted and ignored (a topic has no file to continue).
 
+Rejections: a non-retryable error about one message (too large, an invalid record) or an event the
+chosen ``event_format`` cannot hold does not fail the batch. Every other event is delivered and
+acknowledged, then :class:`shape.streaming.emit.RejectedEvents` is raised with the keys and
+reasons (``shape emit --dead-letter`` routes them). A dead-letter record (batch column
+``_shape_dead_letter_reason``) also carries the header ``shape-dead-letter-reason``.
+
 ``confluent-kafka`` is imported when the first message is sent, never at plugin load.
 """
 
@@ -36,14 +42,17 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable, Iterable, Mapping
+from functools import partial
 from typing import Any
 from urllib.parse import unquote, urlsplit
 
 import pyarrow as pa
 
 from shape.errors import ShapeError
+from shape.streaming.emit import RejectedEvents, Rejection
 from shape.streaming.emit.formats import (
     ENVELOPES,
+    FIELD_DEAD_REASON,
     FIELD_POISON,
     FIELD_SEQ,
     FIELD_TABLE,
@@ -58,6 +67,21 @@ from .registry import SUBJECT_STRATEGIES, RegistryClient, Transport, subject_nam
 DEFAULT_CONFIG: dict[str, Any] = {"acks": "all", "enable.idempotence": True, "linger.ms": 5}
 HEADER_TABLE = "shape-table"
 HEADER_SYNTHETIC = "shape-synthetic"
+HEADER_DEAD_LETTER_REASON = "shape-dead-letter-reason"
+# Errors about one message, not about the cluster or the topic: the broker or the client refuses
+# this message for good. Such a message is a rejection (dead-lettered when there is a destination
+# for them); every other failure is the destination's and stops the run after the retries.
+PER_MESSAGE_ERRORS = frozenset(
+    {
+        "MSG_SIZE_TOO_LARGE",
+        "_MSG_SIZE_TOO_LARGE",
+        "INVALID_MSG",
+        "INVALID_MSG_SIZE",
+        "INVALID_RECORD",
+        "CORRUPT_MESSAGE",
+        "RECORD_LIST_TOO_LARGE",
+    }
+)
 _POLL = 0.05  # seconds one wait for a full queue to drain
 
 
@@ -70,6 +94,18 @@ def parse_uri(uri: str) -> tuple[str, str]:
     if not topic or "/" in topic:
         raise ShapeError(f"the kafka URI needs one topic name: {uri!r}")
     return parts.netloc, topic
+
+
+def _per_message_error(err: Any) -> str | None:
+    """The name of ``err`` when it is a non-retryable error about one message, else ``None``."""
+    name = getattr(err, "name", None)
+    if not callable(name):
+        return None
+    retriable = getattr(err, "retriable", None)
+    if callable(retriable) and retriable():
+        return None
+    text = str(name())
+    return text if text in PER_MESSAGE_ERRORS else None
 
 
 def _confluent_producer(config: dict[str, Any]) -> Any:
@@ -149,8 +185,10 @@ class KafkaEmitter:
         topic: str,
         strategy: str,
         registry: RegistryClient,
-    ) -> list[EncodedEvent]:
-        """``batch`` as wire-format events (one per row, in order) for ``fmt``."""
+    ) -> tuple[list[EncodedEvent], list[Rejection]]:
+        """``batch`` as wire-format events, in order, for ``fmt``; an event the format cannot
+        hold is a :class:`Rejection` (the original flat JSON is its body) and is not in the
+        list."""
         marks = (
             [bool(v) for v in batch.column(FIELD_POISON).to_pylist()]
             if FIELD_POISON in batch.schema.names
@@ -174,16 +212,18 @@ class KafkaEmitter:
                 bodies[i] = (
                     payload if isinstance(payload, EncodeError) else wire(schema_id, payload, fmt)
                 )
-        events = []
+        events: list[EncodedEvent] = []
+        rejected: list[Rejection] = []
         for i, body in enumerate(bodies):
             key = f"{tables[i]}/{seqs[i]}"
             if isinstance(body, EncodeError):
-                raise ShapeError(f"cannot encode event {key} as {fmt}: {body}")
+                rejected.append(Rejection(key, f"cannot encode as {fmt}: {body}"))
+                continue
             assert body is not None
             if marks is not None and marks[i]:
                 body = poison_body(body)
             events.append(EncodedEvent(key, tables[i], seqs[i], times[i], body))
-        return events
+        return events, rejected
 
     def _producer(self, servers: str, extra: Mapping[str, Any] | None) -> Any:
         config = {**DEFAULT_CONFIG, **(extra or {}), "bootstrap.servers": servers}
@@ -242,33 +282,55 @@ class KafkaEmitter:
         servers, topic = parse_uri(uri)
         producer = self._producer(servers, config)
         failures: list[Any] = []
+        rejected: list[Rejection] = []
 
-        def delivered(err: Any, _msg: Any) -> None:
-            if err is not None:
+        def reported(key: str, body: bytes, err: Any, _msg: Any = None) -> None:
+            if err is None:
+                return
+            name = _per_message_error(err)
+            if name is not None:
+                rejected.append(Rejection(key, name, body))
+            else:
                 failures.append(err)
 
         sent = 0
         marker = [(HEADER_SYNTHETIC, b"true")] if synthetic else []
         for batch in batches:
-            events = (
-                encode_events(batch, envelope)
-                if registry is None
-                else self._registry_events(batch, event_format, topic, subject_strategy, registry)
+            reasons = (
+                batch.column(FIELD_DEAD_REASON).to_pylist()
+                if FIELD_DEAD_REASON in batch.schema.names
+                else None
             )
-            for event in events:
+            if registry is None:
+                events = encode_events(batch, envelope)
+            else:
+                events, refused = self._registry_events(
+                    batch, event_format, topic, subject_strategy, registry
+                )
+                rejected.extend(refused)
+            for i, event in enumerate(events):
+                headers = [(HEADER_TABLE, event.table.encode("utf-8")), *marker]
+                if reasons is not None:
+                    headers.append((HEADER_DEAD_LETTER_REASON, str(reasons[i]).encode("utf-8")))
                 while True:
                     try:
                         producer.produce(
                             topic,
                             value=event.body,
                             key=event.key.encode("utf-8"),
-                            headers=[(HEADER_TABLE, event.table.encode("utf-8")), *marker],
-                            on_delivery=delivered,
+                            headers=headers,
+                            on_delivery=partial(reported, event.key, event.body),
                         )
                         break
                     except BufferError:
                         # The local queue is full: serve delivery reports until it drains.
                         producer.poll(_POLL)
+                    except Exception as exc:  # a KafkaException: the client refuses the message
+                        name = _per_message_error(exc.args[0] if exc.args else None)
+                        if name is None:
+                            raise
+                        rejected.append(Rejection(event.key, name, event.body))
+                        break
                 sent += 1
             producer.poll(0)
         pending = producer.flush(flush_timeout)
@@ -281,6 +343,8 @@ class KafkaEmitter:
             raise TimeoutError(
                 f"kafka: {pending} messages to {topic!r} not acknowledged in {flush_timeout}s"
             )
+        if rejected:
+            raise RejectedEvents(rejected)
         return sent
 
     def flush(self) -> None:

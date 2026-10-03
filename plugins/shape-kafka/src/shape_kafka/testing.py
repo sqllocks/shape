@@ -154,6 +154,10 @@ def json_messages(
     ]
 
 
+class FakeKafkaException(Exception):  # noqa: N818 - named like confluent_kafka.KafkaException
+    """What ``produce`` raises for a message the client refuses: ``args[0]`` is the error."""
+
+
 class FakeProducer:
     """The slice of ``confluent_kafka.Producer`` the emitter uses, over an in-memory log.
 
@@ -181,6 +185,9 @@ class FakeProducer:
         if self.store.full > 0:
             self.store.hits += 1
             raise BufferError("Local: Queue full")
+        if self.store.refuse_at_produce > 0:
+            self.store.refuse_at_produce -= 1
+            raise FakeKafkaException(FakeError("_MSG_SIZE_TOO_LARGE"))
         self.queue.append((topic, key, value, headers, on_delivery))
 
     def poll(self, timeout: float = 0) -> int:
@@ -195,7 +202,12 @@ class FakeProducer:
             self.store.failures -= 1
         cut = len(queue) // 2 if fail else len(queue)
         for i, (topic, key, value, headers, cb) in enumerate(queue):
-            if i < cut:
+            if self.store.reject > 0 and i < cut:
+                self.store.reject -= 1
+                self.store.rejected.append(key.decode() if key else "")
+                if cb is not None:
+                    cb(FakeError("MSG_SIZE_TOO_LARGE"), None)
+            elif i < cut:
                 self.store.log.append((topic, key, value, headers))
                 if cb is not None:
                     cb(None, None)
@@ -212,6 +224,9 @@ class FakeProducerStore:
         self.full = 0
         self.failures = 0
         self.hits = 0
+        self.reject = 0  # the next messages the broker refuses for good (MSG_SIZE_TOO_LARGE)
+        self.refuse_at_produce = 0  # the next produce() calls the client itself refuses
+        self.rejected: list[str] = []  # keys refused
         self.producers: list[FakeProducer] = []
 
     def factory(self, config: Mapping[str, Any]) -> FakeProducer:
@@ -244,6 +259,10 @@ class EmitterHarness:
 
     def congestion_hits(self) -> int:
         return self.store.hits
+
+    def inject_rejections(self, n: int) -> None:
+        """The next ``n`` messages delivered are refused for good (a per-message error)."""
+        self.store.reject = n
 
 
 # ---- schema registry fake and decoders (formats tests) ----------------------------------------

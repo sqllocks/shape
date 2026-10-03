@@ -55,6 +55,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 from shape.errors import ShapeError
 from shape.streaming.checkpoint import CheckpointError, FileCheckpointStore
 from shape.streaming.emit.anomaly import AnomalyInjector
+from shape.streaming.emit.deadletter import DeadLetterSink
 from shape.streaming.emit.formats import FIELD_TIME
 from shape.streaming.emit.rate import Burst, RateCap, RateSchedule, VirtualClock
 from shape.streaming.emit.sinks import EventSink
@@ -208,6 +209,7 @@ class EmitReport:
     anomalies_affected: dict[str, int] = field(default_factory=dict)
     already_complete: bool = False
     virtual_span: float = 0.0  # speed: seconds of event time replayed
+    dead_lettered: dict[str, int] = field(default_factory=dict)  # events sent to --dead-letter
 
     def as_dict(self) -> dict[str, Any]:
         return dict(self.__dict__)
@@ -221,9 +223,14 @@ class EmitRunner:
         config: EmitConfig | None = None,
         *,
         sleep_until: Callable[[threading.Event, float], None] | None = None,
+        dead_letter: DeadLetterSink | None = None,
     ) -> None:
         self.plan = plan
         self.sink = sink
+        self.dead_letter = dead_letter
+        self._reason = "stop-request"
+        if dead_letter is not None:
+            dead_letter.bind(self.request_stop)
         self.config = config or EmitConfig()
         cfg = self.config
         if cfg.queue_batches is not None and cfg.queue_batches < 1:
@@ -246,9 +253,12 @@ class EmitRunner:
 
     # ---- control ------------------------------------------------------------------------
 
-    def request_stop(self) -> None:
+    def request_stop(self, reason: str = "stop-request") -> None:
         """Ask the run to finish: the batch in hand is delivered, a checkpoint is written, and
-        ``run`` returns. Safe to call from a signal handler or another thread."""
+        ``run`` returns (``stopped_by`` is ``reason``). Safe to call from a signal handler or
+        another thread."""
+        if not self._stop.is_set():
+            self._reason = reason
         self._stop.set()
 
     @property
@@ -402,7 +412,7 @@ class EmitRunner:
             t0: float | None = None
             while True:
                 if self._stop.is_set():
-                    stopped_by = "stop-request"
+                    stopped_by = self._reason
                     break
                 try:
                     item = q.get(timeout=0.05)
@@ -424,11 +434,11 @@ class EmitRunner:
                     due = t0 + rel
                     if cfg.duration is not None and due - t0 >= cfg.duration:
                         self._wait_until(t0 + cfg.duration)
-                        stopped_by = "stop-request" if self._stop.is_set() else "duration"
+                        stopped_by = self._reason if self._stop.is_set() else "duration"
                         break
                     self._wait_until(due)
                     if self._stop.is_set():
-                        stopped_by = "stop-request"
+                        stopped_by = self._reason
                         break
                     report.max_lag = max(report.max_lag, time.perf_counter() - due)
                 self._send(batch, report)
@@ -489,6 +499,8 @@ class EmitRunner:
             if first is not None and last > first:
                 report.rate = (report.events - first_n) / (last - first)
             report.elapsed = (last - first) if first is not None else 0.0
+            if self.dead_letter is not None:
+                report.dead_lettered = dict(self.dead_letter.counts)
             if self.plan.anomaly is not None:
                 report.anomalies_selected = self.plan.anomaly.stats.rows_selected
                 report.anomalies_affected = dict(self.plan.anomaly.stats.rows_affected)
