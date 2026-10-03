@@ -7,6 +7,7 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import pyarrow as pa
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -105,7 +106,7 @@ def test_kernel_bench_checks_the_timed_output_itself(kernel_bench, monkeypatch, 
         if n == 2000:  # the timed size: corrupt the first value of one kernel's result
             case = next(c for c in out if c["name"] == "philox_uniform")
             native = case["native"]
-            case["native"] = lambda: [-1.0, *list(native())[1:]]
+            case["native"] = lambda: [-1.0, *pa.array(native()).to_pylist()[1:]]
         return out
 
     monkeypatch.setattr(kernel_bench, "cases", cases)

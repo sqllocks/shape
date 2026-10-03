@@ -8,8 +8,10 @@ two baselines:
 * ``numpy_s``: the numpy call that does the same job (Philox ``random_raw``, ``Generator.random``,
   ``standard_normal``, ``Generator.choice``) where there is one.
 
-Equivalence comes before timing: every kernel result is compared with its twin on the very output
-being timed (integers and strings equal, floats within 1e-12) and nothing is recorded otherwise.
+Equivalence comes before timing: the first ``--ref-rows`` rows of the very output being timed are
+compared with the twin's output for those rows (the kernels have random access by row, so a prefix
+of a longer call is the shorter call; integers and strings equal, floats within 1e-12), and
+nothing is recorded otherwise.
 Writes the ``kernel_microbench`` key of ``results.json`` and leaves every other key alone.
 
     python benchmarks/vs_spindle/kernel_bench.py [--rows N] [--runs N] [--out FILE]
@@ -163,16 +165,25 @@ def main(argv: list[str] | None = None) -> int:
     )
     a = ap.parse_args(argv)
     n = a.rows
+    ref_rows = min(a.ref_rows, n)
+    try:
+        doc = json.loads(Path(a.out).read_text())
+    except (OSError, ValueError) as exc:
+        print(
+            f"ERROR: cannot read {a.out} ({exc}); --out must be an existing JSON file",
+            file=sys.stderr,
+        )
+        return 2
     kernels: dict[str, dict[str, Any]] = {}
+    small = {c["name"]: c for c in cases(ref_rows)}
     with bench_lock():
         load = wait_for_quiet()
         for case in cases(n):
             name = case["name"]
-            got = case["native"]()
-            # equivalence first, on a slice the twin can do quickly (same rows, same keys)
-            small = cases(a.ref_rows)
-            small_case = next(c for c in small if c["name"] == name)
-            if not same(small_case["native"](), small_case["reference"]()):
+            got = pa.array(case["native"]())
+            small_case = small[name]
+            # equivalence first, on the timed output: its first rows against the twin's
+            if not same(got.slice(0, ref_rows), small_case["reference"]()):
                 print(f"FAIL: {name}: native result differs from its twin", file=sys.stderr)
                 return 1
             rec: dict[str, Any] = {
@@ -181,8 +192,8 @@ def main(argv: list[str] | None = None) -> int:
                 "equivalent_to_reference": True,
             }
             ref_s = median_s(small_case["reference"], max(1, min(a.runs, 3)))
-            rec["reference_s"] = ref_s * n / a.ref_rows
-            rec["reference_rows_measured"] = a.ref_rows
+            rec["reference_s"] = ref_s * n / ref_rows
+            rec["reference_rows_measured"] = ref_rows
             rec["speedup_vs_reference"] = rec["reference_s"] / rec["native_s"]
             if case["numpy"] is not None:
                 rec["baseline_s"] = median_s(case["numpy"], a.runs)
@@ -199,8 +210,7 @@ def main(argv: list[str] | None = None) -> int:
                     else ""
                 )
             )
-        del got
-    doc = json.loads(Path(a.out).read_text())
+            del got
     doc["kernel_microbench"] = {
         "measured_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "machine": {**machine_meta(), "loadavg_start": load, "threads": native.set_threads(0)},
