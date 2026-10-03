@@ -52,7 +52,9 @@ def test_a_spark_record_masks_the_secret_in_auth(tmp_path):
         "auth": {"mode": "sql", "sql_user": "u", "sql_password": "SUPERSECRET-2"},
         "fabric": {"workspace_id": WS, "lakehouse_id": LH},
     }
-    submit_spark(request, "tok", jobs=Jobs(JobStore(tmp_path)), storage_token="s", transport=FakeFabric())
+    submit_spark(
+        request, "tok", jobs=Jobs(JobStore(tmp_path)), storage_token="s", transport=FakeFabric()
+    )
     assert "SUPERSECRET-2" not in _files(tmp_path)
 
 

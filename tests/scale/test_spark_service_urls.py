@@ -56,7 +56,10 @@ def test_an_operation_url_on_another_host_is_not_polled():
 
 @pytest.mark.parametrize(
     "url",
-    ["http://api.fabric.microsoft.com/v1/operations/1", "https://api.fabric.microsoft.com.evil.example/v1/x"],
+    [
+        "http://api.fabric.microsoft.com/v1/operations/1",
+        "https://api.fabric.microsoft.com.evil.example/v1/x",
+    ],
 )
 def test_only_https_on_the_fabric_host_counts(url):
     seen: list[str] = []
