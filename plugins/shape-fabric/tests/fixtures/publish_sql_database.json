@@ -1,0 +1,200 @@
+{
+  "channel": "odbc",
+  "format": 1,
+  "result": {
+    "exit": 0,
+    "tables": [
+      "customer: 3 rows",
+      "order: 6 rows"
+    ]
+  },
+  "scenario": "publish_sql_database",
+  "source": "in-repo fake service",
+  "steps": [
+    {
+      "request": {
+        "op": "execute",
+        "params": [
+          "dbo",
+          "customer"
+        ],
+        "sql": "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "fetchone"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [],
+        "sql": "CREATE TABLE [dbo].[customer] (\n    [customer_id] BIGINT NOT NULL,\n    CONSTRAINT [PK_customer] PRIMARY KEY ([customer_id])\n)"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "commit"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "name": "fast_executemany",
+        "op": "set",
+        "value": true
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "executemany",
+        "rows": [
+          [
+            1
+          ],
+          [
+            2
+          ],
+          [
+            3
+          ]
+        ],
+        "sql": "INSERT INTO [dbo].[customer] ([customer_id]) VALUES (?)"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "commit"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "close"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [
+          "dbo",
+          "order"
+        ],
+        "sql": "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "fetchone"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [],
+        "sql": "CREATE TABLE [dbo].[order] (\n    [order_id] BIGINT NOT NULL,\n    [customer_id] BIGINT NOT NULL,\n    CONSTRAINT [PK_order] PRIMARY KEY ([order_id])\n)"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "commit"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "name": "fast_executemany",
+        "op": "set",
+        "value": true
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "executemany",
+        "rows": [
+          [
+            1,
+            3
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            3
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            6,
+            2
+          ]
+        ],
+        "sql": "INSERT INTO [dbo].[order] ([order_id], [customer_id]) VALUES (?, ?)"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "commit"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "close"
+      },
+      "response": {
+        "value": null
+      }
+    }
+  ]
+}

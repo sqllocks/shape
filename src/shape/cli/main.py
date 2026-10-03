@@ -261,6 +261,21 @@ def _csv_format(a):
     )
 
 
+def _reference_pairs(a):
+    """``--reference-pair COLS=REFERENCE`` as the profile's ``reference_pairs`` list."""
+    out = []
+    for text in getattr(a, "reference_pair", None) or ():
+        cols, sep, reference = text.rpartition("=")
+        if not sep or not cols or not reference:
+            raise ValueError(f"--reference-pair {text!r}: expected COLS=REFERENCE")
+        mapping = {}
+        for item in cols.split(","):
+            column, _, field = item.partition(":")
+            mapping[column.strip()] = (field or column).strip()
+        out.append({"columns": mapping, "reference": reference})
+    return out or None
+
+
 def _profile_source(a):
     """What ``shape profile`` reads. A folder is one table (its files are partitions) unless
     ``--dataset`` asks for one table per file, named by the file's stem. A folder whose files
@@ -336,6 +351,8 @@ def _cmd_profile(a):
         encoding=fmt.encoding,
         quotechar=fmt.quotechar,
         header=fmt.header,
+        reference_pairs=_reference_pairs(a),
+        joint=a.joint,
         **_workbook_options(a),
     )
     if settings:
@@ -938,6 +955,22 @@ def _build_parser(plugin_commands=()):
         action=argparse.BooleanOptionalAction,
         default=True,
         help="the CSV's first row is a header (--no-header: columns are named f0, f1, ...)",
+    )
+    pr.add_argument(
+        "--reference-pair",
+        action="append",
+        metavar="COLS=REFERENCE",
+        help="check that columns hold real combinations: COLS is a comma list (COLUMN or "
+        "COLUMN:FIELD), REFERENCE a CSV, Parquet or JSONL file, e.g. city,zip=zips.csv "
+        "(repeatable; stored in the profile for the reference_pair contract rule)",
+    )
+    pr.add_argument(
+        "--joint",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="the joint analysis (dependencies, keys, associations): on by default for one table, "
+        "off for a dataset; --joint turns it on, --no-joint off (SHAPE_PROFILE_JOINT=0|1 when "
+        "neither is given)",
     )
     pr.add_argument(
         "--sheet",
