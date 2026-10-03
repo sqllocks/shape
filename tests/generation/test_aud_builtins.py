@@ -370,3 +370,15 @@ def test_faker_docs_do_not_promise_distinct_values() -> None:
     for text in (doc, providers.Faker.__doc__ or ""):
         assert "every value distinct" not in text and "all values distinct" not in text
         assert "pool entry" in " ".join(text.split())
+
+
+# ---- #147: a time-zone offset on a temporal bound is converted to UTC, without warnings --------
+
+
+def test_temporal_bound_with_an_offset_is_the_utc_instant() -> None:
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        values = _times({"start": "2024-01-01T05:00:00+05:00", "end": "2024-01-01T01:00:00Z"})
+    assert min(values) >= datetime(2024, 1, 1) and max(values) < datetime(2024, 1, 1, 1)
