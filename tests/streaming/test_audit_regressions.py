@@ -141,3 +141,38 @@ def test_159_a_torn_last_window_line_is_cut_on_restart(tmp_path, capsys):
     assert main([*args, str(torn)]) == 0
     capsys.readouterr()
     assert torn.read_text() == whole.read_text()
+
+
+def test_160_a_failed_file_write_leaves_the_file_as_it_was(tmp_path):
+    import pyarrow as pa
+
+    from shape.streaming.emit.formats import encode_batch, with_event_fields
+    from shape.streaming.emit.sinks import FileSink
+
+    batch = with_event_fields(pa.record_batch({"v": list(range(5))}), "t", 0)
+    path = tmp_path / "e.jsonl"
+    sink = FileSink(path)
+    sink.send(batch.slice(0, 2))
+    real = sink._f
+
+    class Full:  # the disk fills part way through the write, once
+        failed = False
+
+        def write(self, data):
+            if not Full.failed:
+                Full.failed = True
+                real.write(data[: len(data) // 2])
+                real.flush()
+                raise OSError(28, "No space left on device")
+            return real.write(data)
+
+        def __getattr__(self, name):
+            return getattr(real, name)
+
+    sink._f = Full()
+    with pytest.raises(OSError):
+        sink.send(batch.slice(2))
+    sink.send(batch.slice(2))  # the runtime's retry
+    sink._f = real
+    sink.close()
+    assert path.read_bytes() == encode_batch(batch)
