@@ -119,6 +119,10 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 - The calendars' lift is neutral (1.0) unless `holiday_lift` or `lifts` is set (ramp-up and decay
   optional, `docs/GENERATION_CALENDARS.md`); `holidays(start, end)`
   returns the rule-derived dates.
+- Behavior modules (`shape.behaviors`) are registered by the plugin `shape-behavior`, not by
+  core: `subscription`, `equipment_maintenance` and `healthcare_screening` (a tiny
+  example written from scratch) appear in `shape plugins list` once `sqllocks-shape-behavior` is
+  installed ([behavior.md](behavior.md)).
 - Not built-ins: the Kafka and Event Hubs stream sources are the plugins `shape-kafka` and
   `shape-eventhubs` (`docs/plugins/streaming.md`). The DB-API adapter (`shape.connectors`) needs a
   live connection object, not a URI; it moves into a plugin with the Phase 6 work.

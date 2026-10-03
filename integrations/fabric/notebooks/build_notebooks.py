@@ -727,6 +727,166 @@ value outside an enumerated set, a duplicated primary key.
     ("code", EXIT),
 ]
 
+# ------------------------------------------------------------ dbt notebook (ISS2-dbt)
+
+DBT_INSTALL_CELL = (
+    "code",
+    f"""# Upload the wheel(s) to this notebook's built-in resources folder (Resources > builtin):
+# the platform wheel (Rust kernel), {WHEEL} (pure Python) and
+# sqllocks_shape_dbt-{VERSION}-py3-none-any.whl (reads the dbt run output; needs PyYAML, which
+# the Fabric runtime has). Once the packages are on PyPI the same line works without the upload.
+# In a pipeline run inline %pip is off by default; the notebook activity must pass the Boolean
+# parameter _inlineInstallationEnabled = true (the shipped pipeline does). Not supported in High
+# Concurrency mode or in a reference run (notebookutils.notebook.run).
+%pip install --find-links builtin "sqllocks-shape=={VERSION}" "sqllocks-shape-dbt=={VERSION}"
+""",
+)
+
+DBT_PARAMETERS = """# Parameters cell (toggle "parameter cell" in Fabric). A pipeline overrides these.
+# Paths are relative to the lakehouse Files/ folder, or absolute.
+models = "orders,customers"   # the dbt models to profile: Delta tables <tableRoot>/<model>
+tableRoot = "/lakehouse/default/Tables"  # where the model tables are (a OneLake path also works)
+contractPath = ""         # optional multi-table contract: {"tables": {model: contract}}
+baselinePath = ""         # optional earlier .shape artifact (of these models) to diff against
+runResultsPath = ""       # run_results.json of the dbt run (the dbt job's output in OneLake)
+manifestPath = ""         # manifest.json of the dbt run (names each test's model and column)
+outputDir = "shape"       # artifacts go to Files/<outputDir>/dbt/<timestamp>/
+failOnDrift = False       # True: drift against the baseline also fails the gate
+"""
+
+DBT_HELPERS = """import json
+import os
+from pathlib import Path
+
+import shape
+from shape.integrations.fabric.run_folder import claim_run_folder
+from shape.kernel.dispatch import get_kernel
+from shape_dbt import report as dbt_report
+
+KERNEL = get_kernel().NAME
+print(f"Shape {shape.__version__}, kernel: {KERNEL}")
+
+LAKEHOUSE = "/lakehouse/default"
+FILES = f"{LAKEHOUSE}/Files"
+MAX_LISTED = 100  # keep the exit value small (well under 1 MB)
+
+
+def _as_bool(value) -> bool:
+    \"\"\"Pipeline parameters may arrive as strings.\"\"\"
+    if isinstance(value, str):
+        return value.strip().lower() in ("1", "true", "yes", "y")
+    return bool(value)
+
+
+def _resolve(path: str) -> str:
+    return path if os.path.isabs(path) else f"{FILES}/{path}"
+
+
+failOnDrift = _as_bool(failOnDrift)
+safe_name = "dbt"
+out_parent = f"{outputDir.strip('/')}/{safe_name}"  # one new folder per run is created below it
+"""
+
+DBT_PROFILE = """import re
+
+from deltalake import DeltaTable
+
+names = [m.strip() for m in str(models).split(",") if m.strip()]
+for name in names:
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
+        raise ValueError(f"{name!r} is not a model name (letters, digits and _)")
+sources = {name: DeltaTable(f"{tableRoot.rstrip('/')}/{name}").to_pyarrow_table() for name in names}
+total_rows = sum(t.num_rows for t in sources.values())
+profile = shape.profile(sources, name="dbt")
+print(f"Profiled {total_rows:,} rows in {len(sources)} models")
+"""
+
+DBT_CHECK = """check, drift = None, None
+
+if contractPath:
+    check = shape.check(profile, _resolve(contractPath)).to_dict()
+
+if baselinePath:
+    drift = shape.diff(shape.load(_resolve(baselinePath)), profile).to_dict()
+
+run_results = dbt_report.load_json(_resolve(runResultsPath), "run_results") if runResultsPath else None
+manifest = dbt_report.load_json(_resolve(manifestPath), "manifest") if manifestPath else None
+if run_results is None:
+    run_results = {"results": []}  # no dbt run given: the report has Shape's findings only
+report = dbt_report.build_report(
+    run_results, manifest, check=check, drift=drift, fail_on_drift=failOnDrift
+)
+passed = report["ok"]
+violations = (check or {}).get("violations", [])
+changes = (drift or {}).get("changes", [])
+"""
+
+DBT_ARTIFACTS = """out_dir = claim_run_folder(Path(FILES) / out_parent)  # a folder no other run owns
+out_rel = f"{out_parent}/{out_dir.name}"
+shape.save(profile, str(out_dir / "dbt.shape"))
+(out_dir / "dbt.html").write_text(profile.to_html(), encoding="utf-8")
+(out_dir / "report.json").write_text(json.dumps(report, default=str), encoding="utf-8")
+(out_dir / "report.md").write_text(dbt_report.render_markdown(report), encoding="utf-8")
+artifact_path = f"{out_rel}/dbt.shape"  # relative to Files/, usable as baselinePath
+report_path = f"{out_rel}/report.md"
+print("Artifacts written to", out_dir)
+"""
+
+DBT_DISPLAY = """from IPython.display import HTML, Markdown, display
+
+display(Markdown(dbt_report.render_markdown(report)))
+display(HTML(profile.to_html()))
+"""
+
+DBT_RESULT = """result = {
+    "models": {name: t.num_rows for name, t in sources.items()},
+    "rows": total_rows,
+    "passed": passed,
+    "dbtFailed": report["summary"]["dbt_failed"],
+    "dbtTotal": report["summary"]["dbt_total"],
+    "violations": violations[:MAX_LISTED],
+    "drifted": bool(changes),
+    "changes": changes[:MAX_LISTED],
+    "byColumn": sorted(report["by_column"])[:MAX_LISTED],
+    "artifactPath": artifact_path,
+    "reportPath": report_path,
+    "truncated": len(violations) > MAX_LISTED or len(changes) > MAX_LISTED,
+    "kernel": KERNEL,
+}
+print(json.dumps(result, indent=2, default=str)[:4000])
+"""
+
+DBT_CELLS = [
+    (
+        "markdown",
+        """# Shape: gate the outputs of a dbt run (Python notebook)
+
+Run after a dbt job. Reads the dbt models' Delta tables, profiles them together, checks the
+profile against a contract, optionally diffs it against a baseline, reads the dbt job's
+`run_results.json` and `manifest.json`, and writes **one report** in which a failed dbt test and a
+Shape finding about the same column appear together (`report.md`, `report.json`).
+
+The exit value is `{models, rows, passed, dbtFailed, dbtTotal, violations, drifted, changes,
+byColumn, artifactPath, reportPath, truncated, kernel}`. `passed` is false when a dbt test or model
+failed, a contract rule was violated, or (with `failOnDrift`) the data drifted.
+
+**[VERIFY]** where the dbt job writes `run_results.json` and `manifest.json` in OneLake, and how
+the model tables of a Fabric Data Warehouse are read from a notebook (`tableRoot`), are checked
+on the first live run (`integrations/fabric/RUNBOOK.md`, section 10).
+""",
+    ),
+    ("code", '%%configure\n{"vCores": 8}\n'),
+    DBT_INSTALL_CELL,
+    ("code", DBT_PARAMETERS),
+    ("code", DBT_HELPERS),
+    ("code", DBT_PROFILE),
+    ("code", DBT_CHECK),
+    ("code", DBT_ARTIFACTS),
+    ("code", DBT_DISPLAY),
+    ("code", DBT_RESULT),
+    ("code", EXIT),
+]
+
 # --------------------------------------------------------------------------- output
 
 
@@ -777,6 +937,7 @@ def build() -> dict[str, dict]:
         "shape_profile_distributed.ipynb": _notebook(DISTRIBUTED_CELLS, spark=True),
         "shape_generate.ipynb": _notebook(GENERATE_CELLS, spark=False),
         "shape_profile_domain.ipynb": _notebook(PROFILE_DOMAIN_CELLS, spark=False),
+        "shape_profile_dbt.ipynb": _notebook(DBT_CELLS, spark=False),
     }
 
 

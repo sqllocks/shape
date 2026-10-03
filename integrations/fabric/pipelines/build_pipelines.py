@@ -3,7 +3,7 @@
     python integrations/fabric/pipelines/build_pipelines.py     # regenerate the committed JSON
     python integrations/fabric/pipelines/build_pipelines.py bind OUT_DIR \\
         --workspace-id GUID --notebook shape_profile=GUID --notebook shape_profile_spark=GUID \\
-        --function-set GUID
+        --function-set GUID --notebook shape_profile_dbt=GUID --dbt-job GUID
 
 Each pipeline is written as ``<name>/pipeline-content.json`` plus ``<name>/.platform``, the
 item-definition parts Fabric imports (Git integration layout / Items REST API). Committed
@@ -298,6 +298,110 @@ def _generate_gate() -> dict:
     }
 
 
+# ISS2-dbt: a dbt job, then the Shape notebook on the model outputs, then the contract and drift gate.
+DBT_EXIT_VALUE = "json(activity('ProfileDbtOutputs').output.result.exitValue)"
+DBT_NOTEBOOK_PARAMETERS = {
+    "models": "string",
+    "tableRoot": "string",
+    "contractPath": "string",
+    "baselinePath": "string",
+    "runResultsPath": "string",
+    "manifestPath": "string",
+    "outputDir": "string",
+    "failOnDrift": "bool",
+}
+
+
+def _dbt_gate() -> dict:
+    """dbt job, Shape profile of its outputs and one report, gate.
+
+    **[VERIFY]** The dbt job activity (its type name ``DbtJob`` and the property names of its
+    ``typeProperties``) is the builder's best reading of the Fabric item model: the dbt job item is
+    a preview and could not be reached from a build session. Replace the ``RunDbt`` activity with
+    one exported from a workspace where the preview is enabled (RUNBOOK, section 10); everything
+    after it uses the activity types the other pipelines here use.
+
+    The notebook depends on the dbt job being *completed*, not succeeded: a failed dbt test must
+    still produce the combined report, and the gate then fails the run.
+    """
+    parameters = {
+        "dbtCommand": {"type": "string", "defaultValue": "build"},
+        "models": {"type": "string", "defaultValue": "orders,customers"},
+        "tableRoot": {"type": "string", "defaultValue": "/lakehouse/default/Tables"},
+        "contractPath": {"type": "string", "defaultValue": "contracts/dbt_models.json"},
+        "baselinePath": {"type": "string", "defaultValue": ""},
+        "runResultsPath": {"type": "string", "defaultValue": "dbt/run_results.json"},
+        "manifestPath": {"type": "string", "defaultValue": "dbt/manifest.json"},
+        "outputDir": {"type": "string", "defaultValue": "shape"},
+        "failOnDrift": {"type": "bool", "defaultValue": False},
+    }
+    notebook_args = {
+        name: {"value": _expr(f"@pipeline().parameters.{name}"), "type": kind}
+        for name, kind in DBT_NOTEBOOK_PARAMETERS.items()
+    }
+    return {
+        "properties": {
+            "description": (
+                "Shape: run a dbt job, profile the model outputs, read the dbt run results and "
+                "check the contract and drift in one report. [VERIFY] the dbt job activity."
+            ),
+            "parameters": parameters,
+            "activities": [
+                {
+                    "name": "RunDbt",
+                    "type": "DbtJob",
+                    "dependsOn": [],
+                    "policy": POLICY,
+                    "typeProperties": {
+                        "dbtJobId": "<<DBT_JOB_ID>>",
+                        "workspaceId": "<<WORKSPACE_ID>>",
+                        "command": _expr("@pipeline().parameters.dbtCommand"),
+                    },
+                },
+                {
+                    "name": "ProfileDbtOutputs",
+                    "type": "TridentNotebook",
+                    "dependsOn": [{"activity": "RunDbt", "dependencyConditions": ["Completed"]}],
+                    "policy": POLICY,
+                    "typeProperties": {
+                        "notebookId": "<<NOTEBOOK_ID:shape_profile_dbt>>",
+                        "workspaceId": "<<WORKSPACE_ID>>",
+                        "parameters": _notebook_parameters(notebook_args, inline_install=True),
+                    },
+                },
+                {
+                    "name": "CheckGate",
+                    "type": "IfCondition",
+                    "dependsOn": [
+                        {"activity": "ProfileDbtOutputs", "dependencyConditions": ["Succeeded"]}
+                    ],
+                    "typeProperties": {
+                        "expression": _expr(f"@{DBT_EXIT_VALUE}.passed"),
+                        "ifTrueActivities": [],
+                        "ifFalseActivities": [
+                            {
+                                "name": "FailGate",
+                                "type": "Fail",
+                                "dependsOn": [],
+                                "typeProperties": {
+                                    "message": _expr(
+                                        "@concat('dbt or Shape gate failed (see ', "
+                                        f"string({DBT_EXIT_VALUE}.reportPath), '): ', "
+                                        f"string({DBT_EXIT_VALUE}.dbtFailed), "
+                                        "' dbt failure(s); ', "
+                                        f"string({DBT_EXIT_VALUE}.violations))"
+                                    ),
+                                    "errorCode": "ShapeDbtGateFailed",
+                                },
+                            }
+                        ],
+                    },
+                },
+            ],
+        }
+    }
+
+
 def build() -> dict[str, dict]:
     return {
         "shape_gate_notebook": _notebook_gate(
@@ -310,6 +414,7 @@ def build() -> dict[str, dict]:
         ),
         "shape_gate_udf": _udf_gate(),
         "shape_generate_gate": _generate_gate(),
+        "shape_dbt_gate": _dbt_gate(),
     }
 
 
@@ -345,9 +450,12 @@ def main() -> None:
     b.add_argument("--workspace-id", required=True)
     b.add_argument("--notebook", action="append", default=[], metavar="NAME=GUID")
     b.add_argument("--function-set", required=True)
+    b.add_argument("--dbt-job", metavar="GUID", help="the dbt job item (only shape_dbt_gate)")
     args = ap.parse_args()
     if args.cmd == "bind":
         rep = {"<<WORKSPACE_ID>>": args.workspace_id, "<<FUNCTION_SET_ID>>": args.function_set}
+        if args.dbt_job:
+            rep["<<DBT_JOB_ID>>"] = args.dbt_job
         for item in args.notebook:
             name, _, guid = item.partition("=")
             rep[f"<<NOTEBOOK_ID:{name}>>"] = guid
