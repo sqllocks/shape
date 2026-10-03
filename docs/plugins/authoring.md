@@ -71,6 +71,13 @@ iban = "my_plugin:IbanDetector"
 | `shape.transforms` | `Transform` | `check_transform` | `tables` |
 | `shape.commands` | `Command` | `check_command` | `argv` (optional `expect_exit`) |
 | `shape.reports` | `ReportFormat` | `check_report_format` | `report` |
+| `shape.behaviors` | `Behavior` | `check_behavior` | none (optional `population`, `seed`, `years`) |
+
+A behavior is a state-machine module for a simulator on a virtual clock
+([behavior.md](behavior.md)): it has `name`, `version`, the `states` it uses, the `attributes` and
+`events` it emits, and `simulate(population, seed, years)`, which returns the events as one Arrow
+table. `check_behavior` runs a small population twice, so a behavior that is not deterministic
+for a seed or emits an event or state it did not declare fails.
 
 A command adds `shape <name>`: it has `name`, `help`, `configure(parser)` and `run(args)`, and
 `run` returns the exit code. A built-in command always wins over a plugin command with the same

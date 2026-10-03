@@ -1,0 +1,255 @@
+{
+  "format": "shape-behavior/1",
+  "name": "healthcare_screening",
+  "initial": "start",
+  "remarks": [
+    "A tiny blood-pressure screening and care pathway, written from scratch (no clinical content copied from any library). Codes: ICD-10-CM I10 (a public code set); the visit, observation and drug codes are placeholders in an 'example' system. Illustrates the event states only; it is not clinical guidance."
+  ],
+  "population_defaults": {
+    "age_at_start": {
+      "kind": "uniform",
+      "low": 0,
+      "high": 85
+    },
+    "lifetime": {
+      "kind": "exponential",
+      "mean": 45,
+      "unit": "years"
+    }
+  },
+  "attributes": {
+    "gender": {
+      "kind": "categorical",
+      "values": {
+        "F": 0.5,
+        "M": 0.5
+      }
+    },
+    "sbp": {
+      "kind": "normal",
+      "mean": 124,
+      "std": 14
+    }
+  },
+  "states": {
+    "start": {
+      "type": "initial",
+      "transition": {
+        "direct": "adult"
+      }
+    },
+    "adult": {
+      "type": "guard",
+      "condition": {
+        "type": "age",
+        "op": ">=",
+        "value": 18,
+        "unit": "years"
+      },
+      "transition": {
+        "direct": "visit"
+      }
+    },
+    "visit": {
+      "type": "encounter",
+      "encounter_class": "ambulatory",
+      "codes": [
+        {
+          "system": "example",
+          "code": "screening-visit",
+          "display": "Screening visit"
+        }
+      ],
+      "transition": {
+        "conditional": [
+          {
+            "if": {
+              "type": "active_condition",
+              "codes": [
+                {
+                  "system": "ICD-10-CM",
+                  "code": "I10",
+                  "display": "Essential (primary) hypertension"
+                }
+              ]
+            },
+            "to": "treated_bp"
+          },
+          {
+            "to": "untreated_bp"
+          }
+        ]
+      }
+    },
+    "treated_bp": {
+      "type": "set_attribute",
+      "attribute": "sbp",
+      "distribution": {
+        "kind": "gaussian",
+        "mean": 133,
+        "std": 12
+      },
+      "transition": {
+        "direct": "record"
+      }
+    },
+    "untreated_bp": {
+      "type": "set_attribute",
+      "attribute": "sbp",
+      "distribution": {
+        "kind": "gaussian",
+        "mean": 124,
+        "std": 14
+      },
+      "transition": {
+        "direct": "record"
+      }
+    },
+    "record": {
+      "type": "observation",
+      "codes": [
+        {
+          "system": "example",
+          "code": "sbp",
+          "display": "Systolic blood pressure"
+        }
+      ],
+      "unit": "mm[Hg]",
+      "attribute": "sbp",
+      "transition": {
+        "direct": "assess"
+      }
+    },
+    "assess": {
+      "type": "simple",
+      "transition": {
+        "conditional": [
+          {
+            "if": {
+              "type": "and",
+              "conditions": [
+                {
+                  "type": "attribute",
+                  "attribute": "sbp",
+                  "op": ">=",
+                  "value": 140
+                },
+                {
+                  "type": "not",
+                  "condition": {
+                    "type": "active_condition",
+                    "codes": [
+                      {
+                        "system": "ICD-10-CM",
+                        "code": "I10",
+                        "display": "Essential (primary) hypertension"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "to": "diagnose"
+          },
+          {
+            "if": {
+              "type": "and",
+              "conditions": [
+                {
+                  "type": "attribute",
+                  "attribute": "sbp",
+                  "op": ">=",
+                  "value": 140
+                },
+                {
+                  "type": "active_condition",
+                  "codes": [
+                    {
+                      "system": "ICD-10-CM",
+                      "code": "I10",
+                      "display": "Essential (primary) hypertension"
+                    }
+                  ]
+                },
+                {
+                  "type": "not",
+                  "condition": {
+                    "type": "active_medication",
+                    "codes": [
+                      {
+                        "system": "example-drug-class",
+                        "code": "combination-therapy"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "to": "intensify"
+          },
+          {
+            "to": "wait"
+          }
+        ]
+      }
+    },
+    "diagnose": {
+      "type": "condition_onset",
+      "codes": [
+        {
+          "system": "ICD-10-CM",
+          "code": "I10",
+          "display": "Essential (primary) hypertension"
+        }
+      ],
+      "transition": {
+        "direct": "start_medication"
+      }
+    },
+    "start_medication": {
+      "type": "medication_order",
+      "codes": [
+        {
+          "system": "example-drug-class",
+          "code": "first-line-agent",
+          "display": "First-line agent"
+        }
+      ],
+      "reason": "diagnose",
+      "transition": {
+        "direct": "wait"
+      }
+    },
+    "intensify": {
+      "type": "medication_end",
+      "medication_order": "start_medication",
+      "transition": {
+        "direct": "add_combination"
+      }
+    },
+    "add_combination": {
+      "type": "medication_order",
+      "codes": [
+        {
+          "system": "example-drug-class",
+          "code": "combination-therapy",
+          "display": "Combination therapy"
+        }
+      ],
+      "transition": {
+        "direct": "wait"
+      }
+    },
+    "wait": {
+      "type": "delay",
+      "delay": {
+        "kind": "exact",
+        "value": 1,
+        "unit": "years"
+      },
+      "transition": {
+        "direct": "visit"
+      }
+    }
+  }
+}

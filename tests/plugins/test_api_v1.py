@@ -27,6 +27,7 @@ PLAN_TABLE = {
     "shape.transforms": "Transform",
     "shape.commands": "Command",
     "shape.reports": "ReportFormat",
+    "shape.behaviors": "Behavior",
 }
 
 

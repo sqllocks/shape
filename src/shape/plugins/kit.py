@@ -506,6 +506,63 @@ def check_report_format(obj: Any, report: Mapping[str, Any]) -> None:
     _require(dict(report) == before, "render() modified its `report` argument")
 
 
+def _names(obj: Any, attr: str, *, nonempty: bool) -> list[str]:
+    value: Any = getattr(obj, attr, None)
+    _require(
+        isinstance(value, Sequence) and not isinstance(value, (str, bytes)),
+        f"`{attr}` must be a sequence of names",
+    )
+    names = list(value)
+    _require(
+        all(isinstance(n, str) and bool(n) for n in names),
+        f"`{attr}` must hold non-empty strings",
+    )
+    _require(len(set(names)) == len(names), f"`{attr}` lists a name twice")
+    if nonempty:
+        _require(bool(names), f"`{attr}` must not be empty")
+    return names
+
+
+def check_behavior(obj: Any, *, population: int = 200, seed: int = 1, years: float = 2.0) -> None:
+    """``Behavior``: a name, a version, the states used and the attributes and events emitted;
+    ``simulate`` runs a small population deterministically per seed (twice, same events) and
+    emits only declared events and states (rows of the engine itself, with an empty ``state``,
+    are allowed)."""
+    check_common(obj, "shape.behaviors")
+    _require(
+        isinstance(obj.version, str) and bool(obj.version),
+        "`version` must be a non-empty string",
+    )
+    states = set(_names(obj, "states", nonempty=True))
+    _names(obj, "attributes", nonempty=False)
+    events = set(_names(obj, "events", nonempty=True))
+    table = obj.simulate(population, seed, years)
+    _require(isinstance(table, pa.Table), "simulate() must return a pyarrow Table")
+    schema = table.schema
+    for column in ("entity_id", "time", "state", "kind"):
+        _require(column in schema.names, f"simulate() must return a `{column}` column")
+    _require(
+        pa.types.is_integer(schema.field("entity_id").type)
+        and pa.types.is_timestamp(schema.field("time").type)
+        and pa.types.is_string(schema.field("state").type)
+        and pa.types.is_string(schema.field("kind").type),
+        "simulate() columns must be entity_id (integer), time (timestamp), state and kind (string)",
+    )
+    _require(table.num_rows > 0, f"simulate({population}, {seed}, {years}) emitted no events")
+    kinds = set(table.column("kind").to_pylist())
+    _require(
+        kinds <= events | {"entity_end"},
+        f"simulate() emitted undeclared event kinds {sorted(kinds - events - {'entity_end'})}",
+    )
+    seen = {s for s in table.column("state").to_pylist() if s}
+    _require(seen <= states, f"simulate() emitted undeclared states {sorted(seen - states)}")
+    _require(
+        min(table.column("entity_id").to_pylist()) >= 0,
+        "simulate() entity ids must be non-negative",
+    )
+    _require(_same(table, obj.simulate(population, seed, years)), "simulate() is not deterministic")
+
+
 CHECKS: dict[str, Callable[..., None]] = {
     "shape.sources": check_source,
     "shape.sinks": check_sink,
@@ -521,8 +578,13 @@ CHECKS: dict[str, Callable[..., None]] = {
     "shape.transforms": check_transform,
     "shape.commands": check_command,
     "shape.reports": check_report_format,
+    "shape.behaviors": check_behavior,
 }
 """Entry-point group -> the check for its Protocol."""
+
+
+SAMPLE_FREE = ("shape.calendars", "shape.domains", "shape.behaviors")
+"""Groups whose full check needs no sample from the plugin author."""
 
 
 def check_plugin(group: str, obj: Any, **sample: Any) -> None:
@@ -530,7 +592,7 @@ def check_plugin(group: str, obj: Any, **sample: Any) -> None:
 
     With no sample, only the rules every plugin shares are checked (:func:`check_common`)."""
     _require(group in CHECKS, f"unknown plugin group {group!r}; known: {sorted(CHECKS)}")
-    if not sample and group not in ("shape.calendars", "shape.domains"):
+    if not sample and group not in SAMPLE_FREE:
         check_common(obj, group)
         return
     CHECKS[group](obj, **sample)
@@ -583,7 +645,8 @@ def check_installed(
         check_module_api(module)
         sample = samples.get(key)
         check_plugin(ep.group, loaded, **dict(sample or {}))
-        lines.append(f"{key}: ok" + ("" if sample else " (shared rules only: no sample given)"))
+        full = bool(sample) or ep.group in SAMPLE_FREE
+        lines.append(f"{key}: ok" + ("" if full else " (shared rules only: no sample given)"))
     return lines
 
 
@@ -622,6 +685,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 __all__ = [
     "CHECKS",
     "ConformanceError",
+    "check_behavior",
     "check_calendar",
     "check_chaos",
     "check_command",

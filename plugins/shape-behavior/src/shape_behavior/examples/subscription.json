@@ -1,0 +1,261 @@
+{
+  "format": "shape-behavior/1",
+  "name": "subscription",
+  "initial": "start",
+  "remarks": [
+    "A subscription lifecycle: adults start a free trial, convert (or not), pay monthly, and may pause or cancel. Written from scratch for Shape."
+  ],
+  "population_defaults": {
+    "arrival": {
+      "kind": "uniform",
+      "days": 365
+    },
+    "age_at_start": {
+      "kind": "uniform",
+      "low": 14,
+      "high": 70
+    }
+  },
+  "attributes": {
+    "plan": {
+      "kind": "categorical",
+      "values": {
+        "basic": 0.6,
+        "plus": 0.3,
+        "pro": 0.1
+      }
+    },
+    "payments": {
+      "kind": "constant",
+      "value": 0
+    }
+  },
+  "states": {
+    "start": {
+      "type": "initial",
+      "transition": {
+        "direct": "adult_only"
+      }
+    },
+    "adult_only": {
+      "type": "guard",
+      "condition": {
+        "type": "age",
+        "op": ">=",
+        "value": 18,
+        "unit": "years"
+      },
+      "transition": {
+        "direct": "trial_started"
+      }
+    },
+    "trial_started": {
+      "type": "event",
+      "event": "trial_started",
+      "text_from": "plan",
+      "transition": {
+        "direct": "trial"
+      }
+    },
+    "trial": {
+      "type": "delay",
+      "delay": {
+        "kind": "exact",
+        "value": 14,
+        "unit": "days"
+      },
+      "transition": {
+        "direct": "decide"
+      }
+    },
+    "decide": {
+      "type": "simple",
+      "transition": {
+        "complex": [
+          {
+            "if": {
+              "type": "attribute",
+              "attribute": "plan",
+              "op": "==",
+              "value": "pro"
+            },
+            "distributed": [
+              {
+                "p": 0.6,
+                "to": "subscribed"
+              },
+              {
+                "p": 0.4,
+                "to": "lapsed"
+              }
+            ]
+          },
+          {
+            "distributed": [
+              {
+                "p": 0.3,
+                "to": "subscribed"
+              },
+              {
+                "p": 0.7,
+                "to": "lapsed"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "lapsed": {
+      "type": "event",
+      "event": "trial_lapsed",
+      "transition": {
+        "direct": "end"
+      }
+    },
+    "subscribed": {
+      "type": "event",
+      "event": "subscription_started",
+      "text_from": "plan",
+      "transition": {
+        "direct": "charge"
+      }
+    },
+    "charge": {
+      "type": "event",
+      "event": "invoice_paid",
+      "text_from": "plan",
+      "payload": {
+        "currency": "USD"
+      },
+      "transition": {
+        "direct": "count"
+      }
+    },
+    "count": {
+      "type": "counter",
+      "attribute": "payments",
+      "transition": {
+        "direct": "cycle"
+      }
+    },
+    "cycle": {
+      "type": "delay",
+      "delay": {
+        "kind": "exact",
+        "value": 30,
+        "unit": "days"
+      },
+      "transition": {
+        "direct": "renew_check"
+      }
+    },
+    "renew_check": {
+      "type": "simple",
+      "transition": {
+        "conditional": [
+          {
+            "if": {
+              "type": "and",
+              "conditions": [
+                {
+                  "type": "attribute",
+                  "attribute": "payments",
+                  "op": ">=",
+                  "value": 12
+                },
+                {
+                  "type": "attribute",
+                  "attribute": "loyal",
+                  "op": "is_nil"
+                }
+              ]
+            },
+            "to": "loyalty"
+          },
+          {
+            "to": "renew"
+          }
+        ]
+      }
+    },
+    "loyalty": {
+      "type": "event",
+      "event": "loyalty_discount",
+      "transition": {
+        "direct": "mark_loyal"
+      }
+    },
+    "mark_loyal": {
+      "type": "set_attribute",
+      "attribute": "loyal",
+      "value": 1,
+      "transition": {
+        "direct": "renew"
+      }
+    },
+    "renew": {
+      "type": "simple",
+      "transition": {
+        "distributed": [
+          {
+            "p": 0.92,
+            "to": "charge"
+          },
+          {
+            "p": 0.05,
+            "to": "paused"
+          },
+          {
+            "p": 0.03,
+            "to": "churned"
+          }
+        ]
+      }
+    },
+    "paused": {
+      "type": "event",
+      "event": "subscription_paused",
+      "transition": {
+        "direct": "pause_wait"
+      }
+    },
+    "pause_wait": {
+      "type": "delay",
+      "delay": {
+        "kind": "uniform",
+        "low": 1,
+        "high": 3,
+        "unit": "months"
+      },
+      "transition": {
+        "distributed": [
+          {
+            "p": 0.6,
+            "to": "resumed"
+          },
+          {
+            "p": 0.4,
+            "to": "churned"
+          }
+        ]
+      }
+    },
+    "resumed": {
+      "type": "event",
+      "event": "subscription_resumed",
+      "transition": {
+        "direct": "charge"
+      }
+    },
+    "churned": {
+      "type": "event",
+      "event": "subscription_cancelled",
+      "transition": {
+        "direct": "end"
+      }
+    },
+    "end": {
+      "type": "terminal"
+    }
+  }
+}
