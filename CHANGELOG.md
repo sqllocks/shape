@@ -5,6 +5,15 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `shape verify --source DATA`: the memorization gate (exact-match rate and nearest-neighbour
+  distance between generated and source rows; fails on a reproduced row in a column classified
+  `CONFIDENTIAL` or above, reporting row indices, never values) and the utility gate (train on
+  generated data, test on held-out real data, fail below a minimum retention; needs the `[advanced]`
+  extra). The verify configuration gains `classifications`, `memorization` and `utility`
+  (`docs/VERIFY.md`).
+- Run manifest: `format`, `version`, the reproducibility tuple (`reproducibility`) and a
+  content-addressed `dataset_id`; `shape pack replay MANIFEST TARGET` regenerates a run and checks
+  the id (`docs/REPRODUCIBILITY.md`).
 - `shape generate --scale-mode local_single|local_mp|fabric_spark` and `shape jobs list|status|cancel|resume`
   (`docs/SCALE.md`): the scale router with sinks (memory, Parquet part files, Lakehouse, Warehouse,
   SQL Database, KQL), a durable job store (submit, status, cancel, resume), the `fabric_spark` router

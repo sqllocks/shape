@@ -61,6 +61,7 @@ from .gatespec import (
     load_gate_schema as load_gate_schema,
 )
 from .infer import infer_rules as infer_rules
+from .memorization import MemorizationGate as MemorizationGate
 from .policy import (
     QualityResult as QualityResult,
 )
@@ -79,6 +80,7 @@ from .quarantine import (
 from .quarantine import (
     QuarantineManager as QuarantineManager,
 )
+from .utility import UtilityGate as UtilityGate
 from .verify import (
     VerifyReport as VerifyReport,
 )
