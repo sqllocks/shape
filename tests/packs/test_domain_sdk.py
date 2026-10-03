@@ -1,3 +1,5 @@
+import pytest
+
 from shape.packs import (
     DomainDefinition,
     DomainField,
@@ -44,3 +46,27 @@ def test_test_domain_reads_slotted_dataclass_rows():
     short = DomainDefinition("s", "1", (DomainField("missing_field", "string"),))
     (issue,) = check_domain(short, rows[:1])
     assert issue.path == "rows.0" and "missing_field" in issue.message
+
+
+@pytest.mark.parametrize(
+    ("text", "needle"),
+    [
+        ('{"name": "x"}', "'version'"),
+        ('{"name": "x", "version": "1", "fields": [{"name": "a"}]}', "logical_type"),
+        (
+            '{"name": "x", "version": "1", "fields": [{"name": "a", "logical_type": "int", '
+            '"colour": 1}]}',
+            "colour",
+        ),
+        ('{"name": "x", "version": "1", "relationships": [{"dependent": "a"}]}', "determinant"),
+        ("[1, 2]", "JSON object"),
+        ("{not json", "not valid JSON"),
+    ],
+)
+def test_a_malformed_domain_file_names_the_file_and_the_problem(tmp_path, text, needle):
+    """#373: a bare KeyError or TypeError used to escape."""
+    p = tmp_path / "bad.json"
+    p.write_text(text)
+    with pytest.raises(ValueError, match="bad.json") as info:
+        load_domain(p)
+    assert needle in str(info.value)
