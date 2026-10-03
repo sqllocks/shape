@@ -5,7 +5,6 @@ from __future__ import annotations
 import datetime
 import enum
 import uuid
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -28,7 +27,7 @@ class Item(BaseModel):
 class Order(BaseModel):
     id: int
     color: Color
-    note: Optional[str] = Field(default=None, max_length=25)
+    note: str | None = Field(default=None, max_length=25)
     placed: datetime.datetime
     token: uuid.UUID
     price: float = Field(ge=1.0, le=50.0)
