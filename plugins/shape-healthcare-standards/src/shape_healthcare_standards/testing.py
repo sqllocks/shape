@@ -671,7 +671,51 @@ def sample_tables() -> dict[str, pa.Table]:
             labeler="Example Pharma",
         ),
     ]
+    acknowledgments = [
+        dict(  # accepted, entity given, payer control number from the claim
+            claim_id="CLM-P-0001",
+            acknowledgment_date=D(2024, 3, 21),
+            status_category_code="A2",
+            status_code="20",
+            entity_identifier_code="PR",
+            reference_number="PCN-0001",
+            received_date=D(2024, 2, 10),
+        ),
+        dict(  # accepted at claim level, with one rejected service line below
+            claim_id="CLM-P-0002",
+            acknowledgment_date=D(2024, 3, 21),
+            status_category_code="A2",
+            status_code="20",
+            entity_identifier_code="PR",
+        ),
+        dict(
+            claim_id="CLM-P-0002",
+            acknowledgment_date=D(2024, 3, 21),
+            status_category_code="A7",
+            status_code="21",
+            line_number=2,
+            entity_identifier_code="PR",
+        ),
+        dict(  # rejected claim, action code given explicitly
+            claim_id="CLM-P-0003",
+            acknowledgment_date=D(2024, 3, 21),
+            status_category_code="A3",
+            status_code="21",
+            entity_identifier_code="PR",
+            action_code="U",
+        ),
+        dict(  # accepted, institutional, on a later date
+            claim_id="CLM-I-0001",
+            acknowledgment_date=D(2024, 6, 22),
+            status_category_code="A1",
+            status_code="20",
+            entity_identifier_code="PR",
+            reference_number="ICN-I-0001",
+            received_date=D(2024, 6, 20),
+        ),
+    ]
     return {
+        "claim_acknowledgment": _table("claim_acknowledgment", acknowledgments),
         "member": _table("member", members),
         "eligibility": _table("eligibility", eligibility),
         "provider": _table("provider", providers),

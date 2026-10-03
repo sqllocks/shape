@@ -30,6 +30,8 @@ Tables
 ``provider``            billing, rendering, facility and pharmacy providers (by NPI).
 ``medical_claim``       claim header, professional (``claim_type`` ``P``) or institutional (``I``).
 ``medical_claim_line``  service lines of a claim.
+``claim_acknowledgment``  acknowledgment of a claim or service line (277CA); key
+                        ``(claim_id, line_number)``, a null ``line_number`` being the claim level.
 ``claim_diagnosis``     ordered ICD-10-CM codes of a claim.
 ``claim_procedure``     ICD-10-PCS codes of an inpatient claim.
 ``pharmacy_claim``      one row per pharmacy claim transaction.
@@ -193,6 +195,22 @@ CONTRACT: dict[str, tuple[Col, ...]] = {
         _c("denial_carc", _S, False, "CARC code when the line was reduced or denied"),
         _c("denial_rarc", _S, False, "RARC code"),
     ),
+    "claim_acknowledgment": (
+        _c("claim_id", _S, True, "acknowledged claim; matches medical_claim.claim_id"),
+        _c("acknowledgment_date", _D, True, "date of the acknowledgment (STC02, DTP*009)"),
+        _c("status_category_code", _S, True, "claim status category, e.g. A1, A2, A3, A6, A7"),
+        _c("status_code", _S, True, "claim status code, 1 to 5 digits"),
+        _c(
+            "line_number",
+            _I,
+            False,
+            "service line (matches medical_claim_line); null for the claim level",
+        ),
+        _c("entity_identifier_code", _S, False, "entity the status refers to, 2 or 3 characters"),
+        _c("action_code", _S, False, "WQ accepted or U rejected; derived from the category"),
+        _c("reference_number", _S, False, "acknowledging party's claim control number"),
+        _c("received_date", _D, False, "date the acknowledging party received the claim"),
+    ),
     "claim_diagnosis": (
         _c("claim_id", _S, True, "claim"),
         _c("sequence", _I, True, "1-based order; 1 is the principal diagnosis"),
@@ -257,11 +275,16 @@ KEYS: dict[str, tuple[str, ...]] = {
     "provider": ("npi",),
     "medical_claim": ("claim_id",),
     "medical_claim_line": ("claim_id", "line_number"),
+    "claim_acknowledgment": ("claim_id", "line_number"),
     "claim_diagnosis": ("claim_id", "sequence"),
     "claim_procedure": ("claim_id", "sequence"),
     "pharmacy_claim": ("rx_claim_id",),
     "drug_reference": ("ndc",),
 }
+
+
+# Key columns that may be null: a null ``line_number`` is the claim level.
+NULLABLE_KEYS: dict[str, tuple[str, ...]] = {"claim_acknowledgment": ("line_number",)}
 
 
 def contract_schema(table: str) -> pa.Schema:
@@ -336,6 +359,8 @@ def check_keys(table: str, data: pa.Table) -> list[str]:
         return []
     problems: list[str] = []
     for k in keys:
+        if k in NULLABLE_KEYS.get(table, ()):
+            continue
         if data.column(k).null_count:
             problems.append(f"{table}.{k}: null key value(s)")
     if not problems and data.num_rows:

@@ -4,6 +4,7 @@ from .fhir.sink import FhirBundleSink, FhirNdjsonSink
 from .ncpdp.sink import NcpdpSink
 from .omop.sink import OmopSink
 from .x12.sink import (
+    X12Acknowledgment277CASink,
     X12Claim837ISink,
     X12Claim837PSink,
     X12Enrollment834Sink,
@@ -18,6 +19,7 @@ __all__ = [
     "FhirNdjsonSink",
     "NcpdpSink",
     "OmopSink",
+    "X12Acknowledgment277CASink",
     "X12Claim837ISink",
     "X12Claim837PSink",
     "X12Enrollment834Sink",

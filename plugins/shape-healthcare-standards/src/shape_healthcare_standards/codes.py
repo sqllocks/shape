@@ -13,6 +13,9 @@ _ICD10 = re.compile(r"^[A-TV-Z][0-9][0-9A-Z]{1,5}$")
 _ICD10PCS = re.compile(r"^[0-9A-HJ-NP-Z]{7}$")
 _NDC11 = re.compile(r"^[0-9]{11}$")
 _NPI = re.compile(r"^[0-9]{10}$")
+_STATUS_CATEGORY = re.compile(r"^[A-Z][A-Z0-9]$")
+_STATUS_CODE = re.compile(r"^[0-9]{1,5}$")
+_ENTITY_ID = re.compile(r"^[A-Z0-9]{2,3}$")
 
 
 def is_icd10cm(code: str) -> bool:
@@ -50,3 +53,18 @@ def luhn_npi(first_nine: str) -> str:
         if npi_check_digit_ok(first_nine + check):
             return first_nine + check
     raise ValueError("unreachable")
+
+
+def is_claim_status_category(code: str) -> bool:
+    """Two characters: an uppercase letter, then an uppercase letter or a digit (``A2``)."""
+    return bool(_STATUS_CATEGORY.match(code))
+
+
+def is_claim_status_code(code: str) -> bool:
+    """One to five digits."""
+    return bool(_STATUS_CODE.match(code))
+
+
+def is_entity_identifier(code: str) -> bool:
+    """Two or three uppercase letters or digits (``PR``, ``QC``, ``1P``, ``MSC``)."""
+    return bool(_ENTITY_ID.match(code))

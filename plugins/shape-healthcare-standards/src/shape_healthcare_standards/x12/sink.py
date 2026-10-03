@@ -14,6 +14,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 
 from ..common import TableSet, build_tables, output_path
 from ..contract import ContractError
+from .ack import AckOptions, build_acknowledgment
 from .claims import ClaimOptions, build_claims
 from .core import Delimiters, EnvelopeOptions
 from .enroll import EnrollmentOptions, build_enrollment
@@ -143,6 +144,24 @@ class X12Enrollment834Sink(_X12Sink):
         )
         spans = ts.by("eligibility", "member_id")
         return files, sum(1 for m in ts.rows("member") if m["member_id"] in spans)
+
+
+class X12Acknowledgment277CASink(_X12Sink):
+    """277CA claim acknowledgments from ``claim_acknowledgment``; one interchange per date.
+
+    Companion tables (``tables=``): ``medical_claim`` is required; ``provider``, ``member`` and
+    ``medical_claim_line`` are used when given (the line table is required for line rows).
+    """
+
+    name = "x12-277ca"
+    primary = "claim_acknowledgment"
+    prefix = "277CA"
+
+    def _build(self, ts: TableSet, options: Mapping[str, Any]) -> tuple[list[str], int]:
+        files = build_acknowledgment(
+            ts, AckOptions(**_fields(AckOptions, options)), envelope_options(options)
+        )
+        return files, len(ts.rows("claim_acknowledgment"))
 
 
 SinkFactory = Callable[[], _X12Sink]

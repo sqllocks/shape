@@ -5,6 +5,12 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `x12-277ca` sink in `sqllocks-shape-healthcare-standards` (W7-06, #143): X12 005010X214 claim
+  acknowledgments (277CA) from a new `claim_acknowledgment` contract table, one interchange per
+  acknowledgment date, with accepted and rejected totals that balance with the claim rows.
+  The action code (`WQ` / `U`) is derived from the status category when empty. Documented in
+  `docs/plugins/healthcare-standards.md`.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
