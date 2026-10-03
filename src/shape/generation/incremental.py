@@ -299,7 +299,8 @@ def _renumber(
             "column, so new rows cannot get new keys"
         )
     for name in integer_keys:
-        existing_max = int(pc.max(_chunked(table, name)).as_py())
+        highest = pc.max(_chunked(table, name)).as_py()
+        existing_max = 0 if highest is None else int(highest)  # an all-null key: start at 1
         start = max(existing_max, high_water.get((table_name, name), existing_max)) + 1
         new = _replace(
             new, name, pa.array(np.arange(start, start + count), type=table.schema.field(name).type)
@@ -371,13 +372,23 @@ def _count(n_existing: int, fraction: float) -> int:
 
 
 def _tag(table: pa.Table, kind: str, config: ContinueConfig, when: dt.datetime) -> pa.Table:
-    if table.num_rows == 0:
-        return table
+    """``table`` with the delta type and time columns (an empty table gets them too, so every
+    delta table has one schema)."""
     n = table.num_rows
     table = table.append_column(config.delta_type_column, pa.array([kind] * n, type=pa.string()))
     return table.append_column(
         config.timestamp_column, pa.array([when] * n, type=pa.timestamp("us"))
     )
+
+
+def _split_target(key: str, tables: Mapping[str, Any]) -> tuple[str, str]:
+    """``table.column`` split at the dot after a table of ``tables`` (a table name may hold dots:
+    ``dbo.orders.status``); at the first dot when none matches."""
+    for i in range(len(key) - 1, -1, -1):
+        if key[i] == "." and key[:i] in tables:
+            return key[:i], key[i + 1 :]
+    table, _, column = key.partition(".")
+    return table, column
 
 
 def _utc_naive(when: dt.datetime) -> dt.datetime:
@@ -472,7 +483,7 @@ class ContinueEngine:
     @staticmethod
     def _check_transitions(config: ContinueConfig, tables: Mapping[str, pa.Table]) -> None:
         for key, transitions in config.state_transitions.items():
-            table, _, column = key.partition(".")
+            table, column = _split_target(key, tables)
             if not column or table not in tables:
                 raise IncrementalError(
                     f"state_transitions key {key!r} must be 'table.column' of a table in the data"
@@ -560,9 +571,9 @@ class ContinueEngine:
         upd = table.take(pa.array(idx))
         moved: set[str] = set()
         for spec, transitions in config.state_transitions.items():
-            tbl, _, col = spec.partition(".")
-            if tbl != name:
-                continue
+            col = spec[len(name) + 1 :]
+            if not spec.startswith(f"{name}.") or col not in table.column_names:
+                continue  # another table's (checked by _check_transitions)
             moved.add(col)
             upd = self._transition(upd, col, transitions, rng)
         skip = set(key) | set(fk_cols) | moved
@@ -776,8 +787,16 @@ class TimeTravelEngine:
         new_rows = _empty_like(table)
         if n_new:
             sample = rng.choice(n_rows, size=n_new, replace=True)
+            # one key column is renumbered: the first integer one (key[:1] was refused when the
+            # key starts with text)
+            integer = [k for k in key if _is_integer(table.schema.field(k).type)]
             new_rows = _renumber(
-                name, table, table.take(pa.array(sample)), key[:1], n_new, self._high_water
+                name,
+                table,
+                table.take(pa.array(sample)),
+                integer[:1] or key[:1],
+                n_new,
+                self._high_water,
             )
         n_churn = int(n_rows * config.churn_rate)
         if n_churn > 0:
