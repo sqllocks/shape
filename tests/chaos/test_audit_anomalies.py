@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import re
+
 import numpy as np
 import pyarrow as pa
+import pytest
 
-from shape.chaos import ValueChaosMutator, inject_anomalies
+from shape.chaos import ChaosConfig, ChaosOverride, ValueChaosMutator, inject_anomalies
 
 
 def test_anomaly_out_of_range_on_a_huge_float_column() -> None:
@@ -30,3 +33,35 @@ def test_value_out_of_range_on_a_huge_finite_column() -> None:
     table = pa.table({"x": [1.0, 1e306] * 10})
     out, _ = ValueChaosMutator().apply_one("out_of_range", table, np.random.default_rng(0), 1.0)
     assert out.num_rows == 20
+
+
+@pytest.mark.parametrize(
+    ("config", "message"),
+    [
+        (
+            ChaosConfig(categories={"value": {"enabled": True, "weight": "high"}}),
+            r"category 'value': weight is a number 0 or more, got 'high'",
+        ),
+        (
+            ChaosConfig(categories={"value": {"enabled": True, "weight": -1}}),
+            r"category 'value': weight is a number 0 or more, got -1",
+        ),
+        (
+            ChaosConfig(categories={"value": True}),  # type: ignore[dict-item]
+            r"category 'value' is a mapping",
+        ),
+        (ChaosConfig(seed=-1), r"seed is an integer 0 or more, got -1"),
+        (
+            ChaosConfig(overrides=[ChaosOverride(10, "nope")]),
+            r"override on day 10: unknown category 'nope'",
+        ),
+    ],
+)
+def test_chaos_config_validate_lists_bad_settings(config: ChaosConfig, message: str) -> None:
+    """#414: validate() lists what would crash or silently never fire at run time."""
+    errors = config.validate()
+    assert any(re.search(message, e) for e in errors), errors
+
+
+def test_chaos_config_validate_accepts_the_defaults() -> None:
+    assert ChaosConfig().validate() == []
