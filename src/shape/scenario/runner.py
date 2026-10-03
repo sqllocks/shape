@@ -186,10 +186,10 @@ class PackRunner:
 
         manifest = builder.finish()
         manifest_path = contained(output_root, manifest.run_id, "_manifest.json")
-        counter = 1
+        base_id, counter = manifest.run_id, 1
         while manifest_path.exists():  # two runs in one second must not overwrite each other
             counter += 1
-            manifest.run_id = f"{manifest.run_id.rsplit('_x', 1)[0]}_x{counter}"
+            manifest.run_id = f"{base_id}_x{counter}"
             manifest_path = contained(output_root, manifest.run_id, "_manifest.json")
         ManifestBuilder.to_file(manifest, manifest_path)
         files.append(str(manifest_path))
