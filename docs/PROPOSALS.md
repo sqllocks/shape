@@ -121,7 +121,7 @@ dataset `{"tables": {"orders": {"columns": {"status": {"dtype": "string"}}}}}`, 
 | `dtype` | `dtype` | every profile has the same type | |
 | `nullable` | `nullable: false` | no profile has a null | |
 | `unique` | `unique: true` | every profile has it unique, for an integer or text column | |
-| `range` | `min`, `max` | a number or a date (no time zone); not a unique column | `observed_min`, `observed_max` |
+| `range` | `min`, `max` | a number or a date (no time zone; a CSV date column, read as text, too); not a unique column | `observed_min`, `observed_max` |
 | `pattern` | `pattern` | every profile found the same pattern (`email`, `uuid`, ...) | `match_rate` (lowest) |
 | `allowed_values` | `allowed_values` | every profile lists all of at most 20 distinct values; the claim is their union | |
 | `no_placeholder` | `no_placeholder: true` | no profile found a placeholder (`N/A`, `99999`, ...) in a text or numeric column | |

@@ -188,16 +188,22 @@ def _range(cols: list[dict[str, Any]]) -> tuple[Any, Any, Any, Any] | None:
         )
     if len(tags) == 1 and tags <= set(_TEMPORAL_TAGS):
         return _temporal_range(mins, maxs, tags.pop())
+    if tags == {"str"} and all(str(c.get("dtype")) == "datetime" for c in cols):
+        # a CSV date column: typed datetime, its extremes the text read from the file (#646)
+        texts = [str(t[1]) for t in (*mins, *maxs) if t is not None]
+        return _temporal_range(
+            mins, maxs, "date" if all(len(x) == 10 for x in texts) else "timestamp"
+        )
     return None
 
 
 def _keep_sign(low: Any, high: Any, lo: Any, hi: Any) -> tuple[Any, Any, Any, Any]:
     """The widened bounds, but a range that was not negative (or not positive) does not cross
     zero: a negative amount is a violation, not margin."""
-    if lo >= 0:
-        low = max(low, 0 * low)
-    if hi <= 0:
-        high = min(high, 0 * high)
+    if lo >= 0 and low < 0:
+        low = 0 * abs(low)  # 0 or 0.0, never -0.0 (#647)
+    if hi <= 0 and high > 0:
+        high = 0 * high
     return low, high, lo, hi
 
 
