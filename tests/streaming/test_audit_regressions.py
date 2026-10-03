@@ -127,3 +127,17 @@ def test_158_a_batch_without_keys_does_not_fix_the_key_kind(first):
     assert d.filter([1, 2, 1]).tolist() == [True, True, False]
     with pytest.raises(TypeError):
         d.filter(["x"])  # the kind is now int
+
+
+def test_159_a_torn_last_window_line_is_cut_on_restart(tmp_path, capsys):
+    events = tmp_path / "ev" / "a.jsonl"
+    _events(events)
+    args = ["stream-profile", str(events), "--window", "tumbling", "--size", "10m", "--windows"]
+    whole = tmp_path / "whole.jsonl"
+    assert main([*args, str(whole)]) == 0
+    lines = whole.read_text().splitlines(keepends=True)
+    torn = tmp_path / "torn.jsonl"
+    torn.write_text("".join(lines[:2]) + lines[2][:40])  # killed while writing the third
+    assert main([*args, str(torn)]) == 0
+    capsys.readouterr()
+    assert torn.read_text() == whole.read_text()
