@@ -782,7 +782,12 @@ class DistributionGate(ValidationGate):
         if n < _DISTRIBUTION_MIN_SAMPLE:
             warnings.append(f"{key}: too few rows ({n}) for chi-squared test — skipped")
             return
-        counts = {row["values"]: int(row["counts"]) for row in pc.value_counts(present).to_pylist()}
+        # an enum's keys are JSON object keys, so always text: the data's values are compared
+        # in their text form (``1`` as ``"1"``, ``True`` as ``"true"`` or ``"True"``)
+        counts: dict[Any, int] = {}
+        for row in pc.value_counts(present).to_pylist():
+            name = _enum_key(row["values"], expected)
+            counts[name] = counts.get(name, 0) + int(row["counts"])
         for value in expected:
             if value not in counts:
                 warnings.append(f"{key}: expected enum value '{value}' is missing from data")
@@ -805,6 +810,21 @@ class DistributionGate(ValidationGate):
             warnings.append(
                 f"{key}: chi-squared p={p:.4f} < α={alpha} — enum distribution may have drifted"
             )
+
+
+def _enum_key(value: Any, expected: Any) -> Any:
+    """The enum key that names ``value``: itself, else its text form when the enum has it."""
+    if isinstance(value, str) and value in expected:
+        return value
+    forms = [str(value)]
+    if isinstance(value, bool):
+        forms = [str(value).lower(), str(value)]
+    elif isinstance(value, float) and value.is_integer():
+        forms.append(str(int(value)))
+    for form in forms:
+        if form in expected:
+            return form
+    return value
 
 
 # ---------------------------------------------------------------------------------------------
