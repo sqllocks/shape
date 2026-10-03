@@ -84,6 +84,15 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   profiles of partitions or days without re-reading the data: exact statistics exactly,
   cardinality, quantiles and top values within each sketch's documented error. Merged profiles
   carry their inputs' content ids (`Profile.merged_from`).
+- `shape.yml` project file and `shape init` (`docs/PROJECT.md`): named sources, a baseline per
+  source (previous run, same weekday, rolling window, month end or a pinned artifact, resolved
+  against the registry), drift thresholds and ignore lists per column, gates with `observe` or
+  `enforce` modes, and column owners and annotations. Versioned (`format`, integer `version`,
+  JSON Schema `shape-project-v1.schema.json`, a frozen version 1 file in the tests).
+  `shape profile`, `diff`, `check` and `verify` read it when present and every flag overrides it;
+  `shape init` scaffolds `shape.yml`, folders, `.gitattributes` and an example CI workflow;
+  `shape project validate` reports every problem with its key path. PyYAML stays an optional
+  extra (`yaml`).
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it
