@@ -137,3 +137,75 @@ Branch `lane/CI-FIX`; merged `origin/build/main-plan` first (no rebase). §11 an
   (set up with `benchmarks/vs_spindle/setup_spindle.sh`): both exit 0, VERDICT PASS.
   My venv held all plugins, so it does not prove the CI venv alone; the CI change mirrors the
   stream-plugins job.
+
+## Round 4
+
+Branch `lane/CI-FIX`; merged `origin/build/main-plan` and `origin/lane/CI-FIX` first (merge commits, no
+rebase). §11 and §2.3 untouched. Failures from CI run 37081340730 (lane/CI-FIX @ 4a6b857). No test was
+skipped, xfailed or weakened, and no bound or tolerance was changed.
+
+### Fixed (root causes)
+
+1. **Windows mypy** (`src/shape/scale/router.py`): `resource` does not exist on Windows. `peak_rss_gb`
+   now branches on `sys.platform == "win32"` (which mypy understands): Windows reads the peak working
+   set from `GetProcessMemoryInfo` (`psapi`, via `ctypes`, in `_windows_peak_working_set_bytes`);
+   POSIX keeps `ru_maxrss`. Any failure still returns 0.0, the documented "platform cannot say".
+2. **Windows 3.14**
+   a. `file:///C:/...` (what `Path.as_uri()` writes): `local_path` in `builtins/sources/files.py`
+      kept the leading `/` of the URI path (`/C:/x`), so `Delta` and the other file sources never found
+      the table. A `/X:` prefix is now the drive path (same rule `streaming/file_source.py` already used);
+      the same fix is in `builtins/emitters/uri_path`. Test: `test_a_file_uri_with_a_drive_letter_is_the_drive_path`
+      (platform independent).
+   b. `git diff` exit 128: git runs a textconv command through `sh`, and the test passed
+      `sys.executable` with backslashes unquoted, which `sh` strips (the CI log shows only the exit code,
+      not git's stderr; the test's `_git` helper now reports stderr). Product: new
+      `shape.cli.gitcmds.python_textconv_command()` writes the interpreter with forward slashes in
+      double quotes; `shape git-setup` uses it when `shape` is not on PATH, and the test uses it. This is
+      the diagnosis from reading the code and the log; it could not be run on Windows here, so the CI run
+      below is the check.
+   c. Job store privacy: Windows ignores POSIX modes. `JobStore` now calls
+      `restrict_to_current_user(root)` once per store: `icacls <dir> /inheritance:r /grant:r
+      DOMAIN\user:(OI)(CI)F`, so the directory has one entry (the current user) and every file created in
+      it inherits that. `icacls` ships with Windows (no pywin32 dependency). Failure to set the ACL raises
+      `OSError` (a store that cannot be private is not used). The test keeps its intent on every platform:
+      POSIX asserts mode 0600 (file) and 0700 (directory); Windows asserts, from `icacls`, that the file
+      has exactly one ACL entry and that it is the current user; both assert that the file holds no token
+      and that no temp files remain.
+   d. Fuzz harness hang detection (`validation/fuzz.py`): SIGALRM does not exist on Windows (nor off the
+      main thread), so the time limit was not enforced, the hang ran to completion and was reported as
+      `slow: over the limit`. Without SIGALRM the target now runs on a worker thread that is waited on
+      for the limit; a call still running is a hang: reported as `timeout`, the worker gets an
+      asynchronous `_Timeout` (ends a Python-level loop; a C-level sleep ends when it returns) and is
+      abandoned as a daemon. The worker has a 64 MB stack so deep-recursion inputs behave as on the main
+      thread. The existing test is parametrized to run both mechanisms on every platform
+      (`sigalrm`, `worker-thread`).
+3. **Ubuntu 3.12 `test_realtime_rate_holds_through_a_full_collection_of_a_large_heap`**: not a host stall.
+   Python 3.12 starts with objects already in the permanent generation (`gc.get_freeze_count()` is 375
+   at startup on 3.12.3; 0 on 3.10, 3.11 and 3.13), and `_gc_frozen` took "the freeze count is not zero"
+   to mean the host had frozen, so on 3.12 it never froze and the collection scanned the whole heap
+   (`max_lag` equals the full-collection time, `per_second` `[1880, 2120, 2000, 2000]`, the same shape as
+   before P5-01b). Reproduced on 3.12 (5 of 5 runs, `max_lag` 0.21 to 0.32 s, with and without
+   `--cov`, under 6 CPU burners on 4 cores; a gen-2 collection of 0.21 to 0.32 s during the run seen
+   with `gc.callbacks`); not on 3.11. Fix in `streaming/emit/runtime.py`: a freeze counts as the host's
+   only when it is larger than the count when the module was imported (`_GC_FROZEN_AT_IMPORT`); a run
+   that starts while another paces freezes again (it used to skip, so objects the host built in between
+   stayed unfrozen). After the fix: 20 of 20 runs pass on 3.12 under the same load. The bound
+   (`max(0.1, full / 2)`) is unchanged. The test's last assertion was `not gc.get_freeze_count()`, which
+   is false at startup on 3.12; it is now `<=` the count at the start of the test (the freeze is lifted).
+   New tests: `test_the_run_freezes_when_the_interpreter_already_froze_some_objects` (fails on the old
+   code on 3.12) and `test_a_freeze_made_by_the_host_is_left_alone`.
+
+### Checks run (this session)
+
+- Python 3.11 venv (`$SHAPE_VENV`): `ruff check` and `ruff format --check` on `src tests plugins
+  benchmarks/vs_spindle` clean; `mypy` clean (347 files); `check_user_facing` clean.
+- Targeted tests on 3.11 and 3.12: `tests/builtins/test_cloud_sources.py`, `tests/cli/test_shape_as_code.py`,
+  `tests/scale/test_jobs.py`, `tests/validation/test_fuzz_smoke.py`, `tests/streaming/emit`.
+- Full `pytest -m "not emulator and not live and not heavy"` (ignoring `tests/demo/fabric` and
+  `tests/demo/content`) on 3.11 with `--cov=shape` (before the fixes in 2.c and 3: 5198 passed, 16 skipped
+  for lack of scikit-learn in that venv) and on 3.12: see the CI section below.
+- Not runnable here: the Windows and macOS behaviour; the CI run is the check.
+
+### CI on lane/CI-FIX (round 4)
+
+(filled in below as runs complete)

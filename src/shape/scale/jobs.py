@@ -17,6 +17,8 @@ import json
 import logging
 import os
 import re
+import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -66,6 +68,44 @@ def default_jobs_dir() -> Path:
     return Path(os.environ.get(JOBS_DIR_ENV) or Path.home() / ".shape" / "jobs")
 
 
+def windows_current_user() -> str:
+    """``DOMAIN\\user`` of the account running this process (the name icacls accepts)."""
+    import getpass
+
+    user = os.environ.get("USERNAME") or getpass.getuser()
+    domain = os.environ.get("USERDOMAIN")
+    return f"{domain}\\{user}" if domain else user
+
+
+def restrict_to_current_user(directory: Path) -> None:
+    """Make ``directory`` readable and writable by the current user only.
+
+    POSIX needs nothing here: the directory is created with mode 0700 and each file with 0600.
+    Windows ignores POSIX modes, so the directory's ACL is rewritten with ``icacls``, which ships
+    with Windows: inheritance from the parent is removed and the current user is the only entry,
+    with object and container inheritance so every file created inside gets the same ACL. Raises
+    ``OSError`` when the ACL cannot be set: a store that cannot be made private is not used.
+    """
+    if sys.platform != "win32":
+        return
+    grant = f"{windows_current_user()}:(OI)(CI)F"
+    try:
+        done = subprocess.run(
+            ["icacls", str(directory), "/inheritance:r", "/grant:r", grant],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise OSError(f"cannot restrict {directory} to the current user: {exc}") from exc
+    if done.returncode != 0:
+        raise OSError(
+            f"cannot restrict {directory} to the current user: icacls exited "
+            f"{done.returncode}: {(done.stderr or done.stdout).strip()}"
+        )
+
+
 @dataclass
 class JobRecord:
     """One job. ``request`` is what was asked (never a secret); ``fabric`` holds the ids of a
@@ -104,6 +144,7 @@ class JobStore:
         self._root = Path(root) if root is not None else None
         self._lock = threading.RLock()
         self._jobs: dict[str, JobRecord] = {}
+        self._secured = False
 
     @classmethod
     def default(cls) -> JobStore:
@@ -124,6 +165,9 @@ class JobStore:
         if self._root is None:
             return
         self._root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        if not self._secured:
+            restrict_to_current_user(self._root)
+            self._secured = True
         target = self._path(record.job_id)
         fd, tmp = tempfile.mkstemp(dir=self._root, prefix=".job-", suffix=".tmp")
         try:

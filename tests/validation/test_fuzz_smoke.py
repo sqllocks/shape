@@ -29,7 +29,12 @@ def test_runs_are_deterministic():
     assert fuzz.mutate_json(rng_a, obj) == fuzz.mutate_json(rng_b, obj)
 
 
-def test_harness_reports_unexpected_exceptions_and_hangs(monkeypatch):
+@pytest.mark.parametrize("use_alarm", [True, False], ids=["sigalrm", "worker-thread"])
+def test_harness_reports_unexpected_exceptions_and_hangs(monkeypatch, use_alarm):
+    # The worker-thread limit is what Windows runs (no SIGALRM); force it on every platform.
+    if not use_alarm:
+        monkeypatch.setattr(fuzz, "_alarm_available", lambda: False)
+
     def boom(data, scratch, seeds):
         raise TypeError("a parser bug")
 
