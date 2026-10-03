@@ -88,9 +88,7 @@ def _run_options(parser: argparse.ArgumentParser) -> None:
             default=None,
             help=f"write {what} statements (default: yes)",
         )
-    xl = parser.add_argument_group(
-        "excel output (--format excel: one workbook, a sheet per table)"
-    )
+    xl = parser.add_argument_group("excel output (--format excel: one workbook, a sheet per table)")
     xl.add_argument(
         "--chaos-log",
         metavar="FILE",
