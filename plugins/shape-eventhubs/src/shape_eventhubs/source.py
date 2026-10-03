@@ -260,6 +260,7 @@ class EventHubsStreamSource:
         # ``stats`` adds up every read of this source (a reconnect reads again): count this one.
         before = self.stats.messages
         for group in groups:
+            used = self.stats.messages - before
             receiver = self._client_factory(target, connect)
             for offset, batch in self._receive(
                 receiver,
@@ -268,7 +269,7 @@ class EventHubsStreamSource:
                 ends,
                 stop_at_end=stop_at_end,
                 idle_timeout=idle_timeout,
-                budget=None if max_messages is None else max_messages - (self.stats.messages - before),
+                budget=None if max_messages is None else max_messages - used,
                 batch_size=batch_size,
                 schema=schema,
                 decode=decode,
