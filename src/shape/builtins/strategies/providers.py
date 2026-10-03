@@ -307,6 +307,7 @@ PROVIDERS: dict[str, _Provider] = {
 
 
 MAX_DIGITS = 18  # the widest zero-padded identifier (it must fit an int64)
+EXACT_DIGITS = 15  # widest number one float64 uniform draws exactly
 
 
 def _digit_width(spec: Mapping[str, Any]) -> int:
@@ -317,7 +318,13 @@ def _digits(spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
     """Fixed-width digit text with leading zeros (ZIP codes, NDCs, member ids): ``spec['width']``
     digits, drawn at random."""
     width = _digit_width(spec)
-    numbers = _ints(ctx, "digits", 0, 10**width)
+    if width <= EXACT_DIGITS:
+        numbers = _ints(ctx, "digits", 0, 10**width)
+    else:
+        # one float64 uniform holds 53 bits, about 15 digits: wider numbers take their last nine
+        # digits from a second stream (#133)
+        high = _ints(ctx, "digits", 0, 10 ** (width - 9))
+        numbers = high * 10**9 + _ints(ctx, "digits_low", 0, 10**9)
     return kernel_ops.template_strings(["", ""], [(0, width)], [arrow_array(numbers)], ctx.n_rows)
 
 
