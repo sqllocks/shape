@@ -65,6 +65,9 @@ shape.profile("orders.csv", reference_pairs=[
 ```
 
 `shape profile orders.csv --reference-pair city,state,zip=zips.csv -o orders.shape` does the same.
+The reference may also be the name of a reference pack's dataset: with `sqllocks-shape-domains`
+installed, `--reference-pair zip,city,state=us_zip_city` checks against the shipped US ZIP table,
+offline (`docs/REFERENCE_PACKS.md`).
 The profile stores the share of rows whose tuple occurs in the reference (values compare as text,
 trimmed and case folded; digit strings without leading zeros) and the commonest mismatches. This is
 what catches a real ZIP that belongs to another city: format and dependency checks cannot.

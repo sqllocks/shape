@@ -1,5 +1,5 @@
 """Contract rules on the joint analysis of a profile (#47): ``fd``, ``implies``,
-``max_implausible_rate`` and the column rule ``no_placeholder``.
+``max_implausible_rate`` and the column rules ``no_placeholder`` and ``valid_as`` (W3-12).
 
 They read what ``shape.profile`` stored (a table's ``joint`` entry and a column's
 ``placeholders``). A rule the profile holds no evidence for is a violation that says "not
@@ -40,6 +40,36 @@ def check_no_placeholder(name: str, rule: Any, col: dict[str, Any]) -> list[dict
                 {"value": p["value"], "kind": p["kind"], "share": p["share"], "count": p["count"]}
                 for p in found
             ],
+        )
+    ]
+
+
+def check_valid_as(name: str, rule: dict[str, Any], col: dict[str, Any]) -> list[dict[str, Any]]:
+    """``valid_as`` on a column: the share of values that are valid codes of ``kind`` (measured
+    by ``shape.profile(..., validators=)``) is at least ``min_valid_rate`` (default 1.0)."""
+    kind = rule["kind"]
+    minimum = float(rule.get("min_valid_rate", 1.0))
+    expected = {"kind": kind, "min_valid_rate": minimum}
+    measured = (col.get("validators") or {}).get(kind)
+    if measured is None:
+        return [
+            _violation(
+                name,
+                "valid_as",
+                expected,
+                f"not measured: profile with validators={{{name!r}: {kind!r}}} "
+                f"(shape profile --validate {name}={kind})",
+            )
+        ]
+    rate = measured.get("valid_rate")
+    if rate is None or rate >= minimum:  # nothing to check: no value is invalid
+        return []
+    return [
+        _violation(
+            name,
+            "valid_as",
+            expected,
+            {k: measured[k] for k in ("checked", "valid", "valid_rate")},
         )
     ]
 

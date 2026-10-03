@@ -21,4 +21,4 @@ retail = "shape_domains.retail:RetailDomain"
 where = ["src"]
 
 [tool.setuptools.package-data]
-shape_domains = ["data/**/*.json", "data/**/*.arrow"]
+shape_domains = ["data/**/*.json", "data/**/*.arrow", "reference_packs/**/*.json", "reference_packs/**/*.arrow"]

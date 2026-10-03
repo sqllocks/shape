@@ -17,5 +17,10 @@ tables = Engine(domain.schema, scale="medium", seed=1).generate().tables
 Scales: `small`, `medium`, `large` and `xlarge` (and the other presets in the schema). The ZIP
 locations are derived from GeoNames (CC BY 4.0); see `THIRD_PARTY_NOTICES.md` in the repository.
 
+It also ships the reference pack `us-zip-city` (dataset `us_zip_city`: ZIP as five-character text,
+city, state code and county; GeoNames, CC BY 4.0), which `shape profile --reference-pair`, the
+`reference_pair` contract rule and the generation strategies read by name; see
+`docs/REFERENCE_PACKS.md` in the repository.
+
 Its version always equals core's (`sqllocks-shape`), and it is released together with core.
 How plugins are written: `docs/plugins/authoring.md` in the repository.

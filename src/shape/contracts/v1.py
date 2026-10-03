@@ -16,7 +16,7 @@ from shape.drift.engine import DEFAULT_THRESHOLDS as DRIFT_DEFAULTS
 from shape.drift.engine import diff_tables, resolve_policy, view_of_profile_column
 from shape.profile.reference.profile import Profile
 
-from .joint import check_joint_rules, check_no_placeholder
+from .joint import check_joint_rules, check_no_placeholder, check_valid_as
 
 # --- contract check ---------------------------------------------------------------
 
@@ -47,6 +47,7 @@ _COLUMN_RULES = {
     "min_true_rate",  # the share of true values of a boolean (or 0/1) column
     "max_true_rate",
     "no_placeholder",  # true, or {"max_share": 0.01, "allow": ["N/A"]} (#47)
+    "valid_as",  # {"kind": "iban", "min_valid_rate": 1.0}: values are valid codes (W3-12)
 }
 
 
@@ -107,6 +108,7 @@ def _validate_contract(contract: dict[str, Any]) -> None:
         raise ContractError("'required_columns' must be a list of column names")
     for name, rules in columns.items():
         _validate_no_placeholder(name, rules)
+        _validate_valid_as(name, rules)
     _validate_joint_rules(contract)
 
 
@@ -127,6 +129,26 @@ def _validate_no_placeholder(name: str, rules: dict[str, Any]) -> None:
         isinstance(rule["allow"], list) and all(isinstance(v, str) for v in rule["allow"])
     ):
         raise ContractError(f"no_placeholder.allow for column {name!r} must be a list of texts")
+
+
+def _validate_valid_as(name: str, rules: dict[str, Any]) -> None:
+    if "valid_as" not in rules:
+        return
+    from shape.validation.valid_as import KINDS
+
+    rule = rules["valid_as"]
+    if not isinstance(rule, dict) or set(rule) - {"kind", "min_valid_rate"}:
+        raise ContractError(
+            f"valid_as for column {name!r} must be an object with 'kind' and 'min_valid_rate'"
+        )
+    if rule.get("kind") not in KINDS:
+        raise ContractError(
+            f"valid_as for column {name!r}: 'kind' must be one of {', '.join(KINDS)}"
+        )
+    if "min_valid_rate" in rule and not (
+        _is_number(rule["min_valid_rate"]) and 0 <= rule["min_valid_rate"] <= 1
+    ):
+        raise ContractError(f"valid_as.min_valid_rate for column {name!r} must be from 0 to 1")
 
 
 def _names(value: Any) -> list[str] | None:
@@ -251,6 +273,8 @@ def _check_column(
     out.extend(_check_true_rate(name, rules, col, row_count))
     if "no_placeholder" in rules:
         out.extend(check_no_placeholder(name, rules["no_placeholder"], col))
+    if "valid_as" in rules:
+        out.extend(check_valid_as(name, rules["valid_as"], col))
     for bound in ("min", "max"):
         if bound not in rules:
             continue

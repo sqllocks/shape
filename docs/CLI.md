@@ -69,6 +69,12 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   (foreign keys, personal data, meaning) in a decision file; `shape generate --from` and
   `shape plan` take it with `--decisions`. See [PROPOSALS.md](PROPOSALS.md).
 
+- `shape reference list|show` lists the reference packs Shape can find (ZIP to city, ISO codes,
+  IBAN lengths; your own in `SHAPE_REFERENCE_PATH`) and shows one with its manifest and first
+  rows; a pack whose file does not match its checksum is exit 2. `shape profile --validate
+  COLUMN=KIND` stores how many values of a column are valid IBANs, ISO codes or US ZIPs. See
+  [REFERENCE_PACKS.md](REFERENCE_PACKS.md).
+
 - `shape bridge` serves Shape's commands as a versioned JSON protocol on standard input and output
   (one request and one response per line; `--once` for a single request; `--jobs-dir DIR` for the
   job files). `shape bridge schema --out DIR` writes its JSON Schemas and `--check DIR` verifies a

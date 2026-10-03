@@ -1,0 +1,26 @@
+{
+  "format": "shape-reference-pack",
+  "version": 1,
+  "name": "iso-3166-1",
+  "pack_version": "1.0.0",
+  "source": "Unicode CLDR 48.2 core.zip (https://unicode.org/Public/cldr/48.2/core.zip), sha256 d2844f9dbf6124d11a7b047f5381a467902d82a673be3d658f4c0791ffa0b83b: regions with idStatus regular in common/validity/region.xml that have a numeric code in common/supplemental/supplementalData.xml, without XK (a user-assigned code); English names from common/main/en.xml",
+  "retrieved": "2026-10-03",
+  "license": "Unicode-3.0",
+  "attribution": "Copyright (c) 2019-2025 Unicode, Inc. Data files of the Unicode Common Locale Data Repository (CLDR) are used under the Unicode License v3 (https://www.unicode.org/license.txt).",
+  "transformation_version": "1",
+  "sensitivity": "public",
+  "datasets": [
+    {
+      "name": "iso_3166_1",
+      "file": "iso_3166_1.arrow",
+      "fields": [
+        "alpha2",
+        "alpha3",
+        "numeric",
+        "name"
+      ],
+      "rows": 249,
+      "sha256": "2d9d3983eba8c6580bde89b0abb1671a4792a6e4be71684f0dacb79ad2dad55e"
+    }
+  ]
+}

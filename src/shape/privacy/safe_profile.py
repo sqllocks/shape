@@ -322,6 +322,8 @@ class SafeColumnProfile:
     hour_histogram: list[float] | None = None
     dow_histogram: list[float] | None = None
     temporal_histogram: dict[str, Any] | None = None
+    # Column validators (counts and a rate per kind, never a value; W3-12).
+    validators: dict[str, Any] | None = None
     # Cells withheld below the minimum cohort: folded categories plus zeroed histogram bins.
     cells_suppressed: int = 0
 
@@ -415,6 +417,7 @@ class SafeColumnProfile:
             hour_histogram=hour,
             dow_histogram=dow,
             temporal_histogram=temporal,
+            validators=_opt_dict(col.get("validators")),
             cells_suppressed=(suppressed or 0) + cells,
         )
 

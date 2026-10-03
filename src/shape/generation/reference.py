@@ -6,7 +6,11 @@ A dataset is looked up in this order:
 1. datasets registered in this process (:func:`register_dataset`; a domain plugin registers the
    ``reference_data`` tables of its ``DomainDefinition`` this way);
 2. ``<name>.json`` in every search directory (:func:`add_search_path`, then the directories of the
-   ``SHAPE_REFERENCE_PATH`` environment variable, separated by ``os.pathsep``).
+   ``SHAPE_REFERENCE_PATH`` environment variable, separated by ``os.pathsep``);
+3. a dataset of a reference pack (``docs/REFERENCE_PACKS.md``): the packs in the search directories
+   (a directory that holds ``pack.json``, or a subdirectory of it that does), then the packs
+   that ship with Shape and with ``sqllocks-shape-domains``. A pack file is checked against the
+   checksum in its manifest before it is read.
 
 A JSON dataset is a list of strings, or a list of objects whose keys are the fields (the first
 object names the fields; a later object without a field reads as null there). A registered dataset
@@ -14,7 +18,8 @@ may also be a ``pyarrow.Table`` (one field per column). Loaded files are cached 
 modification time, so editing a file between runs is seen.
 
 Stable interface: ``Dataset``, ``register_dataset``, ``unregister_dataset``, ``add_search_path``,
-``clear_search_paths``, ``load_dataset``, ``DatasetNotFoundError`` and ``REFERENCE_PATH_ENV``.
+``clear_search_paths``, ``search_directories``, ``load_dataset``, ``DatasetNotFoundError`` and
+``REFERENCE_PATH_ENV``.
 """
 
 from __future__ import annotations
@@ -132,7 +137,9 @@ def clear_search_paths() -> None:
         _search_paths.clear()
 
 
-def _directories() -> list[Path]:
+def search_directories() -> list[Path]:
+    """The directories searched, in order: those of :func:`add_search_path` (the latest first),
+    then ``SHAPE_REFERENCE_PATH``."""
     with _lock:
         added = list(_search_paths)
     env = [Path(p) for p in os.environ.get(REFERENCE_PATH_ENV, "").split(os.pathsep) if p]
@@ -152,6 +159,10 @@ def _from_file(name: str, path: Path) -> Dataset:
     return ds
 
 
+def _from_pack(name: str, pack: Any, entry: Mapping[str, Any]) -> Dataset:
+    return Dataset.from_table(name, pack.table(entry["name"]))
+
+
 def load_dataset(name: str) -> Dataset:
     """The dataset ``name``; raises :class:`DatasetNotFoundError` listing where it looked."""
     with _lock:
@@ -162,12 +173,19 @@ def load_dataset(name: str) -> Dataset:
     if not is_safe_name(name):
         # A dataset name is a file stem in the search path, never a path (P7-04).
         raise DatasetNotFoundError(f"reference dataset name {name!r} is not a plain name")
-    for directory in _directories():
+    for directory in search_directories():
         candidate = directory / f"{name}.json"
         searched.append(str(candidate))
         if candidate.is_file():
             return _from_file(name, candidate)
+    from shape.reference.packs import find_dataset
+
+    in_pack = find_dataset(name, search_directories())
+    if in_pack is not None:
+        pack, entry = in_pack
+        return _from_pack(name, pack, entry)
     where = ", ".join(searched) if searched else "no search path is set"
     raise DatasetNotFoundError(
-        f"reference dataset {name!r} is not registered and has no <name>.json file ({where})"
+        f"reference dataset {name!r} is not registered and has no <name>.json file ({where}), "
+        "and no reference pack has it (`shape reference list`)"
     )

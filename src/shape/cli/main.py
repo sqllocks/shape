@@ -276,6 +276,22 @@ def _reference_pairs(a):
     return out or None
 
 
+def _validators(a, source):
+    """``--validate COLUMN=KIND`` as the profile's ``validators`` dict (one table only)."""
+    out: dict[str, list[str]] = {}
+    for text in getattr(a, "validate", None) or ():
+        column, sep, kind = text.rpartition("=")
+        if not sep or not column.strip() or not kind.strip():
+            raise ValueError(f"--validate {text!r}: expected COLUMN=KIND")
+        out.setdefault(column.strip(), []).append(kind.strip())
+    if out and isinstance(source, dict):
+        raise ValueError(
+            "--validate checks a single table: profile one file, or use "
+            "shape.profile(..., validators={table: {column: kind}}) for several"
+        )
+    return out or None
+
+
 def _profile_source(a):
     """What ``shape profile`` reads. A folder is one table (its files are partitions) unless
     ``--dataset`` asks for one table per file, named by the file's stem. A folder whose files
@@ -343,6 +359,7 @@ def _cmd_profile(a):
     if settings and "://" not in a.src:
         raise ValueError("--auth is for a source in the cloud (onelake://, abfss://, ...)")
     fmt = _csv_format(a)
+    source = _profile_source(a)
     options = dict(
         name=_profile_name(a),
         version=a.delta_version,
@@ -352,6 +369,7 @@ def _cmd_profile(a):
         quotechar=fmt.quotechar,
         header=fmt.header,
         reference_pairs=_reference_pairs(a),
+        validators=_validators(a, source),
         joint=a.joint,
         **_workbook_options(a),
     )
@@ -359,9 +377,9 @@ def _cmd_profile(a):
         from shape.profile.reference.sources import source_options
 
         with source_options(credential=auth.make_credential(settings)):
-            prof = shape.profile(_profile_source(a), **options)
+            prof = shape.profile(source, **options)
     else:
-        prof = shape.profile(_profile_source(a), **options)
+        prof = shape.profile(source, **options)
     _warn_empty(a, prof)
     content_id = shape.save(prof, a.output)
     key_id = _sign_output(a, a.output)
@@ -974,8 +992,17 @@ def _build_parser(plugin_commands=()):
         action="append",
         metavar="COLS=REFERENCE",
         help="check that columns hold real combinations: COLS is a comma list (COLUMN or "
-        "COLUMN:FIELD), REFERENCE a CSV, Parquet or JSONL file, e.g. city,zip=zips.csv "
+        "COLUMN:FIELD), REFERENCE a CSV, Parquet or JSONL file or a reference dataset name "
+        "(`shape reference list`), e.g. city,zip=zips.csv or zip,city,state=us_zip_city "
         "(repeatable; stored in the profile for the reference_pair contract rule)",
+    )
+    pr.add_argument(
+        "--validate",
+        action="append",
+        metavar="COLUMN=KIND",
+        help="check that a column holds valid codes of KIND (iban, iso3166_alpha2, "
+        "iso3166_alpha3, iso4217, iso639_1, us_zip): the profile stores the count and share of "
+        "valid values for the valid_as contract rule, never a value (repeatable; one table only)",
     )
     pr.add_argument(
         "--joint",
@@ -1143,6 +1170,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.proposals import add_arguments as add_proposals_arguments
 
     add_proposals_arguments(sub)
+    from shape.cli.reference import add_arguments as add_reference_arguments
+
+    add_reference_arguments(sub)
     from shape.cli.bridge import add_arguments as add_bridge_arguments
 
     add_bridge_arguments(sub)
@@ -1499,6 +1529,10 @@ def _dispatch(argv):
         from shape.cli.proposals import run as run_proposals
 
         return _run(run_proposals, a)
+    if a.cmd == "reference":
+        from shape.cli.reference import run as run_reference
+
+        return _run(run_reference, a)
     if a.cmd == "jobs":
         from shape.cli.jobs import run as run_jobs
 

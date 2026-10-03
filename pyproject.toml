@@ -304,6 +304,7 @@ source_modules = [
     "shape.proposals",
     "shape.quality",
     "shape.query",
+    "shape.reference",
     "shape.registry",
     "shape.relations",
     "shape.repro",

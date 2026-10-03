@@ -295,6 +295,7 @@ def profile(
     joint: bool | None = None,
     sheet: str | None = None,
     include_hidden: bool = False,
+    validators: Any = None,
 ) -> Profile:
     """Profile a path, glob, directory, Delta table, Arrow table or DataFrame.
 
@@ -315,6 +316,13 @@ def profile(
     reference is stored in the table's ``joint`` entry, where the ``reference_pair`` contract
     rule and ``shape.diff`` read it.
 
+    ``validators`` checks that a column's values are valid codes: ``{"zip": "us_zip", "country":
+    ["iso3166_alpha2", "iso3166_alpha3"]}`` (for several tables, a dict of table name to such a
+    dict). The kinds are ``iban``, ``iso3166_alpha2``, ``iso3166_alpha3``, ``iso4217``,
+    ``iso639_1`` and ``us_zip`` (``docs/REFERENCE_PACKS.md``). The column then holds
+    ``validators: {kind: {checked, valid, valid_rate}}``: counts and a rate, never a value, which
+    the ``valid_as`` contract rule reads.
+
     ``joint`` chooses the joint analysis (dependencies, keys, associations): on by default for
     one table, off by default for a dataset (a dict of tables, a workbook), ``joint=True`` turns
     it on and ``joint=False`` off; without it ``SHAPE_PROFILE_JOINT`` decides (``0`` off, ``1`` on).
@@ -326,13 +334,17 @@ def profile(
     fmt = CsvFormat(delimiter, encoding, quotechar, header)
     with np.errstate(all="ignore"):  # inf / NaN inputs are data, not numpy warnings
         if is_workbook_spec(source):
+            if validators:
+                raise ValueError(
+                    "validators apply to a single table or a dict of tables, not a workbook"
+                )
             from .workbook import profile_workbook
 
             data, title = profile_workbook(source, name, sheet, include_hidden, joint)
             return Profile(data, name=title)
         if sheet is not None or include_hidden:
             raise SourceError("sheet and include_hidden apply to .xlsx workbooks only")
-        return _profile(source, name, version, as_of, fmt, reference_pairs, joint)
+        return _profile(source, name, version, as_of, fmt, reference_pairs, joint, validators)
 
 
 def _load_tables(
@@ -395,6 +407,7 @@ def _profile(
     csv: CsvFormat | None = None,
     reference_pairs: Any = None,
     joint: bool | None = None,
+    validators: Any = None,
 ) -> Profile:
     check_delta_options(version, as_of)
     asked = version is not None or as_of is not None
@@ -416,6 +429,19 @@ def _profile(
                 _attach_reference_pairs(
                     doc["tables"][tname], cols_by_t[tname][0], cols_by_t[tname][1], specs
                 )
+        if validators:
+            if not isinstance(validators, dict) or not all(
+                isinstance(v, dict) for v in validators.values()
+            ):
+                raise ValueError(
+                    "for several tables, validators maps a table name to a {column: kinds} dict"
+                )
+            from shape.validation.valid_as import attach_validators
+
+            for tname, specs in validators.items():
+                if tname not in cols_by_t:
+                    raise ValueError(f"validators names the table {tname!r}, which is not here")
+                attach_validators(doc["tables"][tname], cols_by_t[tname][0], specs)
         return Profile(doc, name=name)
     delta = delta_dir(source)
     if delta is None:
@@ -432,6 +458,10 @@ def _profile(
     table_profile = _profile_cols_table(table_name, cols, rows, None, None, joint)
     doc = table_to_dict(table_profile)
     _attach_reference_pairs(doc, cols, rows, reference_pairs)
+    if validators:
+        from shape.validation.valid_as import attach_validators
+
+        attach_validators(doc, cols, validators)
     return Profile(doc, name=name, provenance=provenance)
 
 

@@ -5,6 +5,23 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Reference packs and column validators (`docs/REFERENCE_PACKS.md`, W3-12, #105). A reference pack is a
+  directory with `pack.json` (`format` `shape-reference-pack`, `version` 1, source, retrieved, license,
+  attribution, transformation version, sensitivity and, per dataset, fields, rows and the SHA-256 of its
+  Arrow IPC file; JSON Schema in `src/shape/schemas/reference-pack-v1.schema.json`). `load_dataset` finds the
+  datasets of the packs in the search paths and of the shipped packs, so `reference_pair`,
+  `--reference-pair` and the strategies that take a dataset name read them unchanged; a file that does not
+  match its checksum is exit 2. `shape reference list|show` print what was found. Shipped: `us-zip-city` in
+  `sqllocks-shape-domains` (GeoNames, CC BY 4.0; ZIP as five-character text, city, state, county),
+  and in core `iso-3166-1`, `iso-639-1` (Unicode CLDR 48.2, Unicode License v3) and `iban-lengths`
+  (schwifty, MIT). `iso-4217` and `iso-639` are not shipped (no redistribution licence could be confirmed);
+  `scripts/build_reference_packs.py` builds them locally from your own copy of the list, and rebuilds and
+  checks the shipped packs from their pinned sources. New contract column rule `valid_as`
+  (`{"kind", "min_valid_rate"}`; kinds `iban`, `iso3166_alpha2`, `iso3166_alpha3`, `iso4217`, `iso639_1`,
+  `us_zip`), `shape profile --validate COLUMN=KIND` and `shape.profile(..., validators=)`, which store
+  `validators: {KIND: {checked, valid, valid_rate}}` on the column (counts and a rate, so the share-safe
+  profile carries them). `shape.validation.iban` checks length and ISO 7064 MOD 97-10.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
