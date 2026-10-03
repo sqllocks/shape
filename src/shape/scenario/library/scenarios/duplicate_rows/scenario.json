@@ -1,0 +1,23 @@
+{
+  "format": "shape-scenario",
+  "version": 1,
+  "id": "duplicate_rows",
+  "domain": "retail",
+  "scale": "small",
+  "seed": 42,
+  "gates": [
+    "schema_conformance",
+    "referential_integrity",
+    "row_count",
+    "null_check",
+    "uniqueness"
+  ],
+  "defects": [
+    {
+      "kind": "duplicate_keys",
+      "table": "return",
+      "column": "return_id",
+      "fraction": 0.05
+    }
+  ]
+}

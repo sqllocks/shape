@@ -24,10 +24,10 @@ def add_arguments(sub: Any) -> None:
         "generate-drift",
         help="generate daily tables with planted drift and an answer key",
         description="Apply the events of PLAN.json (null-rate ramps, new categories, price "
-        "steps, added columns, type changes, each a step, ramp or window) to the generation "
-        "schema one day at a time, and write OUTPUT/<date>/<table>.<format> for every day, "
-        "OUTPUT/_specs/<date>.json (the day's schema) and OUTPUT/ground_truth.json (every planted "
-        "event). The same schema, plan and seed give the same files.",
+        "steps, added, renamed and dropped columns, type changes, each a step, ramp or window) "
+        "to the generation schema one day at a time, and write OUTPUT/<date>/<table>.<format> for "
+        "every day, OUTPUT/_specs/<date>.json (the day's schema) and OUTPUT/ground_truth.json "
+        "(every planted event). The same schema, plan and seed give the same files.",
     )
     gd.add_argument("target", metavar="DOMAIN|SCHEMA.json", help=_TARGET_HELP)
     gd.add_argument("plan", metavar="PLAN.json", help="the drift plan")

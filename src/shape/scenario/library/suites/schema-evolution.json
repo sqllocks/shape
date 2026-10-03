@@ -1,0 +1,13 @@
+{
+  "format": "shape-suite",
+  "version": 1,
+  "name": "schema-evolution",
+  "description": "Every schema change on a schedule: add, rename, drop, retype, and all four together.",
+  "scenarios": [
+    "schema_add_column",
+    "schema_rename_column",
+    "schema_drop_column",
+    "schema_retype_column",
+    "schema_evolution_schedule"
+  ]
+}

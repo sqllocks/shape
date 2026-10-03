@@ -1134,6 +1134,12 @@ def _build_parser(plugin_commands=()):
     from shape.cli.pack import add_arguments as add_pack_arguments
 
     add_pack_arguments(sub)
+    from shape.cli.suite import add_arguments as add_suite_arguments
+
+    add_suite_arguments(sub)
+    from shape.cli.seed import add_arguments as add_seed_arguments
+
+    add_seed_arguments(sub)
     from shape.cli.transform import add_arguments as add_transform_arguments
 
     add_transform_arguments(sub)
@@ -1487,6 +1493,14 @@ def _dispatch(argv):
         from shape.cli.pack import run as run_pack
 
         return _run(run_pack, a)
+    if a.cmd == "suite":
+        from shape.cli.suite import run as run_suite_command
+
+        return _run(run_suite_command, a)
+    if a.cmd == "seed":
+        from shape.cli.seed import run as run_seed
+
+        return _run(run_seed, a)
     if a.cmd == "learn":
         from shape.cli.learn import run as run_learn
 

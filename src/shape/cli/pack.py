@@ -3,7 +3,9 @@
 A *pack* is a YAML file that bundles a domain, a simulation kind, chaos, validation gates and the
 landing paths of a run; a *spec* (GSL, ``*.gsl.yaml``) points at a pack and sets the schema, scale,
 seed, chaos and gates around it. ``run`` and ``validate`` take either. Shape ships no packs of its
-own: ``list`` looks in the directories you give it (default: ``./packs``).
+own: ``list`` looks in the directories you give it (default: ``./packs``). The starter scenario
+library (``library:NAME``, ``list --library``) is a separate set of named scenarios with answer
+keys (``docs/SCENARIO_LIBRARY.md``).
 
 Nothing heavy loads at import time (T-18).
 """
@@ -16,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_ROOT = "packs"
+LIBRARY_PREFIX = "library:"
 
 
 def add_arguments(sub: Any) -> None:
@@ -35,7 +38,8 @@ def add_arguments(sub: Any) -> None:
         p.add_argument(
             "target",
             metavar="PACK.yaml|SPEC.gsl.yaml",
-            help="a pack file or a generation spec; DOMAIN/PACK_ID with --root",
+            help="a pack file or a generation spec; DOMAIN/PACK_ID with --root; "
+            "library:NAME for a starter scenario",
         )
         p.add_argument("--root", metavar="DIR", help="a pack directory: <DIR>/<domain>/<id>.yaml")
         p.add_argument(
@@ -86,7 +90,12 @@ def add_arguments(sub: Any) -> None:
         "list",
         help="list the packs and specs in a directory",
         description="List the pack and spec files under each directory (searched recursively). "
-        "Shape ships none of its own.",
+        "Shape ships no packs of its own; --library lists the starter scenarios instead.",
+    )
+    li.add_argument(
+        "--library",
+        action="store_true",
+        help="list the starter scenario library (run one with `shape pack run library:NAME`)",
     )
     li.add_argument(
         "paths", nargs="*", metavar="DIR", help=f"directories to search (default: ./{DEFAULT_ROOT})"
@@ -96,7 +105,9 @@ def add_arguments(sub: Any) -> None:
 
 def run(a: argparse.Namespace) -> int:
     if a.pack_cmd == "list":
-        return _list(a)
+        return _list_library(a) if a.library else _list(a)
+    if a.pack_cmd in ("run", "validate") and str(a.target).startswith(LIBRARY_PREFIX):
+        return _library(a)
     if a.pack_cmd == "validate":
         return _validate(a)
     if a.pack_cmd == "replay":
@@ -248,6 +259,58 @@ def _replay(a: argparse.Namespace) -> int:
     return 0 if result.match else 1
 
 
+def _library(a: argparse.Namespace) -> int:
+    """``run`` or ``validate`` of ``library:NAME``: run the scenario and compare it with its
+    answer key (exit 0 when met, 1 when not); ``validate`` only loads the scenario and its key."""
+    from shape.scenario.library import load_expect, load_scenario, run_scenario
+
+    name = str(a.target)[len(LIBRARY_PREFIX) :]
+    if a.pack_cmd == "validate":
+        spec, _expect = load_scenario(name), load_expect(name)
+        if a.json:
+            _emit({"kind": "library", "id": name, "valid": True, "errors": [], "warnings": []})
+        else:
+            print(f"library scenario {name}\nvalid: {spec['domain']}, gates {spec['gates']}")
+        return 0
+    if a.root or a.domain:
+        raise ValueError("a library scenario has its own domain: --root and --domain do not apply")
+    result = run_scenario(name, scale=a.scale, seed=a.seed, output=a.output)
+    if a.json:
+        _emit(
+            {
+                "met": result.met,
+                "mismatches": [
+                    {"expected": m.expected, "observed": m.observed} for m in result.mismatches
+                ],
+                "outcome": result.outcome.to_dict(),
+            }
+        )
+    else:
+        print(result.outcome.summary())
+        for m in result.mismatches:
+            print(f"  NOT MET: {m}")
+        print("answer key: " + ("met" if result.met else "NOT met"))
+    return 0 if result.met else 1
+
+
+def _list_library(a: argparse.Namespace) -> int:
+    from shape.scenario.library import list_scenarios, list_suites
+
+    if a.paths:
+        raise ValueError("--library lists the shipped scenarios: it takes no directories")
+    rows = list_scenarios()
+    suites = list_suites()
+    if a.json:
+        _emit({"scenarios": rows, "suites": suites})
+        return 0
+    print(f"{'domain':<10}{'id':<28}description")
+    for r in rows:
+        first = r["description"].split(". ")[0].rstrip(".")
+        print(f"{r['domain']:<10}{r['id']:<28}{first}")
+    print(f"suites: {', '.join(suites)} (shape suite run NAME)")
+    return 0
+
+
 def _list(a: argparse.Namespace) -> int:
     from shape.scenario.gsl import is_spec_document
     from shape.scenario.loader import PackError, PackLoader
@@ -286,7 +349,8 @@ def _list(a: argparse.Namespace) -> int:
     if not rows:
         where = ", ".join(str(r) for r in roots) or f"./{DEFAULT_ROOT}"
         print(
-            f"no packs found in {where} (Shape ships none: write one, see docs/SCENARIO_PACKS.md)"
+            f"no packs found in {where} (Shape ships none: write one, see docs/SCENARIO_PACKS.md; "
+            "the starter scenarios are listed by `shape pack list --library`)"
         )
         return 0
     print(f"{'kind':<10}{'domain':<14}{'id':<28}path")

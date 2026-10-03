@@ -12,7 +12,14 @@ shape pack run estate.gsl.yaml -o out/      # a spec supplies scale, seed, gates
 shape pack list packs/                      # the packs and specs under a directory
 ```
 
-Shape ships **no packs**: write one (below) or keep a directory of your own, laid out as
+Shape ships **no packs**, but it does ship a library of named starter scenarios with answer keys:
+`shape pack list --library` lists them and `shape pack run library:NAME` runs one and checks the
+outcome against its key (`docs/SCENARIO_LIBRARY.md`; `shape suite run` runs a set of them).
+`library:NAME` also works with `shape pack validate`. `--scale` (a preset of the scenario's domain,
+or `tiny`), `--seed`, `-o` and `--json` apply; `--root` and `--domain` do not (exit 2), since a
+library scenario has its own domain. Exit 0 when the scenario met its key (a gate that fails where
+the key says it must is met), 1 when not, 2 for an unknown scenario. For your own packs: write one
+(below) or keep a directory of your own, laid out as
 `<root>/<domain>/<id>.yaml` if you want `shape pack run DOMAIN/ID --root <root>`. Reading YAML
 needs PyYAML (`pip install 'sqllocks-shape[yaml]'`).
 
