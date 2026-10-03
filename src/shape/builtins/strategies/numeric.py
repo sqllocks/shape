@@ -140,7 +140,8 @@ class Empirical:
                     probs, values, kind="cubic", bounds_error=False,
                     fill_value=(values[0], values[-1]),
                 )  # fmt: skip
-                return np.asarray(fn(u), dtype=np.float64)
+                # a spline can overshoot between anchors: keep the outermost anchors (#132)
+                return np.clip(np.asarray(fn(u), dtype=np.float64), values[0], values[-1])
         return np.asarray(np.interp(u, probs, values), dtype=np.float64)
 
 
